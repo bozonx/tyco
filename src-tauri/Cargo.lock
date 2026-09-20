@@ -4441,7 +4441,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-log",
  "tauri-plugin-single-instance",
- "thiserror 1.0.69",
+ "thiserror 2.0.20",
  "tokio",
  "tokio-tungstenite",
  "zbus 4.4.0",

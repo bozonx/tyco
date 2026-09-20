@@ -25,7 +25,7 @@ serde_yaml = "0.9"
 tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
 tauri-plugin-log = "2"
 tauri-plugin-single-instance = "2.4.5"
-thiserror = "1"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt", "sync", "time"] }
 tokio-tungstenite = "0.24"
 zbus = "4"
