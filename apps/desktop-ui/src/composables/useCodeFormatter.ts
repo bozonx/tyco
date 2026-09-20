@@ -1,5 +1,3 @@
-import hljs from 'highlight.js'
-import beautify from 'js-beautify'
 import { visit } from 'unist-util-visit'
 import type { Node } from 'unist'
 import remarkStringify from 'remark-stringify'
@@ -128,6 +126,14 @@ export const useCodeFormatter = () => {
   }
 
   const formatSomeCode = async (text: string): Promise<string> => {
+    // highlight.js registers every bundled language and js-beautify is large;
+    // both are only needed for this one menu action, so keep them out of the
+    // startup bundle.
+    const [{ default: hljs }, { default: beautify }] = await Promise.all([
+      import('highlight.js'),
+      import('js-beautify'),
+    ])
+
     const result = hljs.highlightAuto(text)
 
     if (['css', 'scss', 'less'].includes(result.language ?? '')) {
