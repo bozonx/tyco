@@ -1,6 +1,6 @@
-import type { InputConfigItem } from 'src/types'
+import type { InputConfigItem } from '@/types'
 
-import { PluginContext } from '../../types/plugins'
+import { type PluginContext } from '../../types/plugins'
 
 export default function pluginIndex() {
   return {
@@ -26,7 +26,9 @@ export default function pluginIndex() {
               return
             }
 
-            const baseUrl = ctx.getUserConfig().plugins?.SearchInInternet?.url
+            const pluginConfig = ctx.getUserConfig().plugins
+              ?.SearchInInternet as { url?: string } | undefined
+            const baseUrl = pluginConfig?.url
 
             if (!baseUrl) {
               ctx.toast('toast.noSearchBaseUrl', 'warn')

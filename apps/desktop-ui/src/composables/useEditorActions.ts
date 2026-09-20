@@ -1,7 +1,7 @@
 import { useI18n } from './useI18n'
 import useToast from './useToast'
 import type { ActionItem } from '../stores/actionMenu'
-import type { EditItem } from '../stores/edditMenu'
+import type { EditItem } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 
@@ -79,9 +79,11 @@ export const useEditorActions = () => {
 
     const result = await cb(value)
 
-    editorInputStore.selectedText
-      ? editorInputStore.replaceSelection(result, 'ai')
-      : editorInputStore.setValue(result, 'ai')
+    if (editorInputStore.selectedText) {
+      editorInputStore.replaceSelection(result, 'ai')
+    } else {
+      editorInputStore.setValue(result, 'ai')
+    }
   }
 
   return { getLabel, voiceRecognition, doAction, doEdit }

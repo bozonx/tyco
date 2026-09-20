@@ -47,7 +47,7 @@ export interface LlmModel {
   id: string
   name?: string
   model: string
-  provider?: 'browser-local' | 'ollama' | 'openai-compatible' | string
+  provider?: 'browser-local' | 'ollama' | 'openai-compatible' | (string & {})
   description?: string
   baseUrl?: string
   apiKey?: string
@@ -59,8 +59,8 @@ export interface LlmModel {
 
 export interface SttModel {
   id: string
-  model: 'vosk' | 'whisper-local' | string
-  provider?: 'vosk' | 'whisper-local' | string
+  model: 'vosk' | 'whisper-local' | (string & {})
+  provider?: 'vosk' | 'whisper-local' | (string & {})
   description?: string
   formatWithLlm?: boolean
   restorePunctuation?: boolean
@@ -123,7 +123,7 @@ export interface UserConfig {
     holdAction?: string
   }[]
   chatRoles: { name: string; rule: string }[]
-  plugins: Record<string, any>
+  plugins: Record<string, unknown>
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {

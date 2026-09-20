@@ -52,11 +52,7 @@ const SUPPORTED_UI_LANGUAGE_CODES: readonly string[] =
   SUPPORTED_UI_LANGUAGE_OPTIONS.map((option) => option.id)
 
 function splitLocale(locale: string) {
-  return locale
-    .trim()
-    .replace(/-/g, '_')
-    .split('_')
-    .filter(Boolean)
+  return locale.trim().replace(/-/g, '_').split('_').filter(Boolean)
 }
 
 export function normalizeLocale(locale?: string | null): string {
@@ -165,10 +161,7 @@ export function resolveUiLanguagePreference(
   navigatorLanguages: readonly string[] = getNavigatorLanguages(),
   fallbackLanguage = DEFAULT_UI_LANGUAGE
 ): string {
-  if (
-    configuredAppLanguage &&
-    configuredAppLanguage !== AUTO_LANGUAGE_VALUE
-  ) {
+  if (configuredAppLanguage && configuredAppLanguage !== AUTO_LANGUAGE_VALUE) {
     return (
       findSupportedLocale(configuredAppLanguage, SUPPORTED_UI_LANGUAGE_CODES) ||
       fallbackLanguage
@@ -180,7 +173,10 @@ export function resolveUiLanguagePreference(
     navigatorLanguages
   )
 
-  return resolveUiLanguageFromUserLanguage(resolvedUserLanguage, fallbackLanguage)
+  return resolveUiLanguageFromUserLanguage(
+    resolvedUserLanguage,
+    fallbackLanguage
+  )
 }
 
 export function toHtmlLang(locale: string): string {
@@ -197,7 +193,10 @@ export function buildLanguageOptions(
   values: readonly (string | null | undefined)[] = [],
   includeAuto = true,
   translate?: (key: string) => string,
-  supportedOptions: readonly { id: string; name: string }[] = SUPPORTED_USER_LANGUAGE_OPTIONS
+  supportedOptions: readonly {
+    id: string
+    name: string
+  }[] = SUPPORTED_USER_LANGUAGE_OPTIONS
 ): { id: string; name: string }[] {
   const translateLabel = (value: string, fallbackName: string) => {
     if (!translate) {
@@ -211,17 +210,16 @@ export function buildLanguageOptions(
   }
 
   const options: { id: string; name: string }[] = includeAuto
-    ? [
-      { id: AUTO_LANGUAGE_VALUE, name: 'Авто' },
-      ...supportedOptions,
-    ].map((option) => ({
-      id: option.id,
-      name: translateLabel(option.id, option.name),
-    }))
+    ? [{ id: AUTO_LANGUAGE_VALUE, name: 'Авто' }, ...supportedOptions].map(
+        (option) => ({
+          id: option.id,
+          name: translateLabel(option.id, option.name),
+        })
+      )
     : supportedOptions.map((option) => ({
-      id: option.id,
-      name: translateLabel(option.id, option.name),
-    }))
+        id: option.id,
+        name: translateLabel(option.id, option.name),
+      }))
 
   for (const value of values) {
     if (!value || value === AUTO_LANGUAGE_VALUE) {
@@ -253,7 +251,10 @@ export function syncDocumentLanguageAttributes(userConfig?: {
     userConfig?.userLanguage,
     navigatorLanguages
   )
-  const userLanguage = resolveLanguagePreference(userConfig?.userLanguage, navigatorLanguages)
+  const userLanguage = resolveLanguagePreference(
+    userConfig?.userLanguage,
+    navigatorLanguages
+  )
 
   document.documentElement.setAttribute('lang', toHtmlLang(appLanguage))
   document.documentElement.setAttribute('data-app-language', appLanguage)

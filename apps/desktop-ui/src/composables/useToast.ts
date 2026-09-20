@@ -1,4 +1,3 @@
-// @ts-ignore
 import miniToastr from 'mini-toastr'
 
 import { translate } from '../lib/i18n'

@@ -1,4 +1,4 @@
-import { DEFAULT_INIT_PARAMS, DESKTOP_COMMANDS } from '@shared'
+import { DEFAULT_INIT_PARAMS, DESKTOP_COMMANDS } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createIpcStoreModel, type IpcStoreDeps } from './ipc-store'
@@ -87,11 +87,11 @@ describe('ipc-store', () => {
 
     const result = await store.callFunction('getEditorHistory')
 
-    expect(result).toEqual({
-      success: false,
-      error: 'Error: boom',
-    })
-    expect(deps.notifyError).toHaveBeenCalledWith('Error: boom', 'Api call error')
+    expect(result).toEqual({ success: false, error: 'Error: boom' })
+    expect(deps.notifyError).toHaveBeenCalledWith(
+      'Error: boom',
+      'Api call error'
+    )
     expect(deps.logError).toHaveBeenCalled()
   })
 

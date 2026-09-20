@@ -1,11 +1,17 @@
 <template>
   <div class="flex flex-col h-full overflow-auto">
     <div v-if="filtered.length === 0" role="alert" class="alert">
-      <span>{{ searchQuery ? t('history.nothingFound') : t('history.empty') }}</span>
+      <span>{{
+        searchQuery ? t('history.nothingFound') : t('history.empty')
+      }}</span>
     </div>
 
     <ul v-else class="list bg-base-100 rounded-box shadow-md">
-      <li class="list-row hover:bg-base-200" v-for="item in filtered" :key="item.id">
+      <li
+        class="list-row hover:bg-base-200"
+        v-for="item in filtered"
+        :key="item.id"
+      >
         <div
           @click="emit('text-click', item)"
           :title="textTitle"
@@ -35,34 +41,35 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
-  import { Icon } from "@iconify/vue";
-  import { truncate } from "@/lib/squidlet-lib-local";
-  import { useI18n } from '../composables/useI18n'
+import { computed } from 'vue'
 
-  const { t } = useI18n()
+import { useI18n } from '../composables/useI18n'
+import { truncate } from '@/lib/squidlet-lib-local'
+import { Icon } from '@iconify/vue'
 
-  const emit = defineEmits<{
-    (e: "remove-item", item: {id: string | number, value: string}): void;
-    (e: "clear-history"): void;
-    (e: "text-click", item: {id: string | number, value: string}): void;
-  }>();
+const { t } = useI18n()
 
-  const props = defineProps<{
-    items: {id: string | number, value: string}[];
-    searchQuery?: string;
-    textTitle?: string;
-  }>();
+const emit = defineEmits<{
+  (e: 'remove-item', item: { id: string | number; value: string }): void
+  (e: 'clear-history'): void
+  (e: 'text-click', item: { id: string | number; value: string }): void
+}>()
 
-  const filtered = computed(() => {
-    const query = props.searchQuery?.trim().toLowerCase();
+const props = defineProps<{
+  items: { id: string | number; value: string }[]
+  searchQuery?: string
+  textTitle?: string
+}>()
 
-    if (!query) return props.items;
-    
-    return props.items.filter((item) =>
-      (item.value || '').toLowerCase().includes(query)
-    );
-  });
+const filtered = computed(() => {
+  const query = props.searchQuery?.trim().toLowerCase()
+
+  if (!query) return props.items
+
+  return props.items.filter((item) =>
+    (item.value || '').toLowerCase().includes(query)
+  )
+})
 </script>
 
 <style scoped>

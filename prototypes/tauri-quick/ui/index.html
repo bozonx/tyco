@@ -4,24 +4,55 @@
     <meta charset="utf-8" />
     <title>TyCo Quick Lab</title>
     <style>
-      html, body { margin: 0; height: 100%; background: transparent; }
-      body { display: flex; align-items: flex-end; justify-content: center; }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+      }
+      body {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
       #panel {
-        width: 100%; box-sizing: border-box; padding: 14px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px;
         background: rgba(24, 24, 32, 0.82);
         border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 14px;
         backdrop-filter: blur(12px);
-        font: 14px/1.4 system-ui, sans-serif; color: #e8e8f0;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+        color: #e8e8f0;
       }
-      #panel.hidden { opacity: 0; pointer-events: none; }
+      #panel.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
       textarea {
-        width: 100%; height: 96px; box-sizing: border-box; resize: none;
-        background: rgba(0, 0, 0, 0.35); color: #fff; caret-color: #7aa2ff;
-        border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px;
-        padding: 10px; font: 15px/1.5 system-ui, sans-serif; outline: none;
+        width: 100%;
+        height: 96px;
+        box-sizing: border-box;
+        resize: none;
+        background: rgba(0, 0, 0, 0.35);
+        color: #fff;
+        caret-color: #7aa2ff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        padding: 10px;
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        outline: none;
       }
-      #status { margin-top: 6px; font-size: 11px; opacity: 0.6; }
+      #status {
+        margin-top: 6px;
+        font-size: 11px;
+        opacity: 0.6;
+      }
     </style>
   </head>
   <body>
@@ -31,72 +62,76 @@
     </div>
 
     <script>
-      const api = window.__TAURI__;
-      const invoke = api.core.invoke;
-      const log = (message) => invoke('lab_log', { message: String(message) });
-      window.addEventListener('error', (event) => log('ошибка: ' + event.message));
-      window.addEventListener('unhandledrejection', (event) => log('reject: ' + event.reason));
-      log('скрипт стартовал, __TAURI__=' + Object.keys(api).join(','));
-      const { listen } = api.event;
+      const api = window.__TAURI__
+      const invoke = api.core.invoke
+      const log = (message) => invoke('lab_log', { message: String(message) })
+      window.addEventListener('error', (event) =>
+        log('ошибка: ' + event.message)
+      )
+      window.addEventListener('unhandledrejection', (event) =>
+        log('reject: ' + event.reason)
+      )
+      log('скрипт стартовал, __TAURI__=' + Object.keys(api).join(','))
+      const { listen } = api.event
 
-      const panel = document.getElementById('panel');
-      const slot = document.getElementById('slot');
-      const status = document.getElementById('status');
+      const panel = document.getElementById('panel')
+      const slot = document.getElementById('slot')
+      const status = document.getElementById('status')
 
-      let domMode = 'warm';
-      let trial = 0;
-      let field = null;
+      let domMode = 'warm'
+      let trial = 0
+      let field = null
 
       function createField() {
-        const node = document.createElement('textarea');
-        node.placeholder = 'Введите текст…';
+        const node = document.createElement('textarea')
+        node.placeholder = 'Введите текст…'
         node.addEventListener('input', () => {
           // Каждое изменение уезжает в Rust: так видно, сколько символов долетело.
-          invoke('lab_input', { id: trial, value: node.value });
-          status.textContent = `trial ${trial}: ${node.value.length} симв.`;
-        });
-        slot.appendChild(node);
-        return node;
+          invoke('lab_input', { id: trial, value: node.value })
+          status.textContent = `trial ${trial}: ${node.value.length} симв.`
+        })
+        slot.appendChild(node)
+        return node
       }
 
-      (async () => {
-        domMode = await invoke('lab_config');
-        log('режим DOM: ' + domMode);
+      ;(async () => {
+        domMode = await invoke('lab_config')
+        log('режим DOM: ' + domMode)
 
         // warm: поле существует и держит фокус ещё до того, как окно показано.
         if (domMode === 'warm') {
-          field = createField();
-          field.focus();
+          field = createField()
+          field.focus()
         }
 
         await listen('lab://show', (event) => {
-          trial = event.payload;
-          log('показ, trial ' + trial);
-          panel.classList.remove('hidden');
+          trial = event.payload
+          log('показ, trial ' + trial)
+          panel.classList.remove('hidden')
 
           // cold: поле монтируется только сейчас — так сегодня ведёт себя роутер TyCo.
           if (domMode === 'cold') {
-            slot.innerHTML = '';
-            field = createField();
+            slot.innerHTML = ''
+            field = createField()
           }
 
-          field.value = '';
-          field.focus();
-          invoke('lab_dom_focus', { id: trial });
+          field.value = ''
+          field.focus()
+          invoke('lab_dom_focus', { id: trial })
 
-          requestAnimationFrame(() => invoke('lab_frame', { id: trial }));
-        });
+          requestAnimationFrame(() => invoke('lab_frame', { id: trial }))
+        })
 
-        log('слушатели готовы');
+        log('слушатели готовы')
         await listen('lab://hide', () => {
-          panel.classList.add('hidden');
+          panel.classList.add('hidden')
           if (domMode === 'warm' && field) {
-            field.value = '';
+            field.value = ''
             // Фокус возвращается в поле сразу, чтобы к следующему показу он уже был.
-            field.focus();
+            field.focus()
           }
-        });
-      })();
+        })
+      })()
     </script>
   </body>
 </html>

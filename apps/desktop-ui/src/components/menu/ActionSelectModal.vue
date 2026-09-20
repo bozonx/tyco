@@ -35,9 +35,7 @@ const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 
-const props = defineProps<{
-  onSelect: (actionId: string) => void
-}>()
+const props = defineProps<{ onSelect: (actionId: string) => void }>()
 
 const actions = computed(() => {
   return actionMenuStore

@@ -2,10 +2,10 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import type { Extension } from '@codemirror/state'
 import { Annotation, Compartment, EditorState } from '@codemirror/state'
 import { EditorView, keymap, placeholder } from '@codemirror/view'
-import type { EditorSyntax } from '@shared'
+import type { EditorSyntax } from '@tyco/shared'
 
-import type { EditorMenusOptions } from './contextMenu'
-import { editorMenusExtension } from './contextMenu'
+import type { EditorMenusOptions } from './context-menu'
+import { editorMenusExtension } from './context-menu'
 import type { PasteOptions } from './paste'
 import { pasteExtension } from './paste'
 import { syntaxCompartment, syntaxExtension } from './syntax'
@@ -31,8 +31,7 @@ export interface EditorCallbacks {
 }
 
 export interface CreateEditorStateOptions
-  extends EditorCallbacks,
-    EditorMenusOptions {
+  extends EditorCallbacks, EditorMenusOptions {
   doc?: string
   placeholder?: string
   /** Режим подсветки документа */

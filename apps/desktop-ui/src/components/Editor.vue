@@ -4,10 +4,7 @@
     <div class="flex items-center justify-between gap-2 mb-2">
       <!-- Left column: Case and Format dropdowns -->
       <div class="flex items-center gap-2">
-        <DropdownMenu
-          :label="t('editor.case')"
-          :items="caseDropdownItems"
-        />
+        <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
         <DropdownMenu
           :label="t('editor.format')"
           :items="formatDropdownItems"
@@ -129,8 +126,8 @@ import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
-import type { EditItem } from '../stores/edditMenu'
-import { useEditMenuStore } from '../stores/edditMenu'
+import type { EditItem } from '../stores/editMenu'
+import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useHistoryStore } from '../stores/history'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'

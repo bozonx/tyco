@@ -1,7 +1,7 @@
 import type { EditorView } from '@codemirror/view'
-import type { PasteMode } from '@shared'
+import type { PasteMode } from '@tyco/shared'
 
-import { htmlToMarkdown } from './htmlToMarkdown'
+import { htmlToMarkdown } from './html-to-markdown'
 import { insertPastedText } from './paste'
 
 /** Есть ли в документе что копировать */
@@ -30,10 +30,7 @@ export const cutSelection = async (view: EditorView): Promise<void> => {
 
   const { from, to } = view.state.selection.main
 
-  view.dispatch({
-    changes: { from, to, insert: '' },
-    scrollIntoView: true,
-  })
+  view.dispatch({ changes: { from, to, insert: '' }, scrollIntoView: true })
   view.focus()
 }
 
@@ -54,10 +51,7 @@ const readClipboard = async (): Promise<{ html: string; plain: string }> => {
           : ''
 
         if (item.types.includes('text/html')) {
-          return {
-            html: await (await item.getType('text/html')).text(),
-            plain,
-          }
+          return { html: await (await item.getType('text/html')).text(), plain }
         }
 
         if (plain) return { html: '', plain }

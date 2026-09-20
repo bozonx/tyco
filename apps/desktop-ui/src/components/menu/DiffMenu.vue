@@ -5,7 +5,7 @@
       <DiffInput
         :oldText="props.oldText"
         :newText="props.newText"
-        @update:newText="updateNewText"
+        @update:new-text="updateNewText"
       />
     </div>
 
@@ -22,16 +22,13 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { ActionItem, useActionMenuStore } from '../../stores/actionMenu'
+import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useEditorInputStore } from '../../stores/editorInput'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
 
-const props = defineProps<{
-  oldText: string
-  newText: string
-}>()
+const props = defineProps<{ oldText: string; newText: string }>()
 
 const ipcStore = useIpcStore()
 const editorInputStore = useEditorInputStore()

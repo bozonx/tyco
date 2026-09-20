@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import type { EditorMenuItem } from '../../lib/editor/menuItem'
+import type { EditorMenuItem } from '../../lib/editor/menu-item'
 import { Icon } from '@iconify/vue'
 
 const props = defineProps<{

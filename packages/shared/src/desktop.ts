@@ -76,9 +76,7 @@ export interface LocalState {
   lastMode?: START_MODES | null
 }
 
-export const DEFAULT_LOCAL_STATE: LocalState = {
-  lastChatId: null,
-}
+export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }
 
 export interface InitParams {
   windowId: string | null

@@ -7,10 +7,9 @@ import {
   type ThemeRuntime,
 } from './theme-controller'
 
-function createRuntime(options: {
-  storedTheme?: ThemeMode | null
-  systemTheme?: ThemeName
-} = {}): ThemeRuntime {
+function createRuntime(
+  options: { storedTheme?: ThemeMode | null; systemTheme?: ThemeName } = {}
+): ThemeRuntime {
   let storedTheme = options.storedTheme ?? null
 
   return {
@@ -29,9 +28,7 @@ function createRuntime(options: {
 
 describe('theme-controller', () => {
   it('uses auto mode by default', () => {
-    const runtime = createRuntime({
-      systemTheme: 'dark',
-    })
+    const runtime = createRuntime({ systemTheme: 'dark' })
     const controller = createThemeController(runtime)
 
     expect(controller.resolveInitialThemeMode()).toBe('auto')
@@ -39,10 +36,7 @@ describe('theme-controller', () => {
   })
 
   it('prefers stored theme mode over system theme', () => {
-    const runtime = createRuntime({
-      storedTheme: 'dark',
-      systemTheme: 'light',
-    })
+    const runtime = createRuntime({ storedTheme: 'dark', systemTheme: 'light' })
     const controller = createThemeController(runtime)
 
     expect(controller.resolveInitialThemeMode()).toBe('dark')
@@ -61,10 +55,7 @@ describe('theme-controller', () => {
   })
 
   it('clears stored theme when switching to auto', () => {
-    const runtime = createRuntime({
-      storedTheme: 'dark',
-      systemTheme: 'light',
-    })
+    const runtime = createRuntime({ storedTheme: 'dark', systemTheme: 'light' })
     const controller = createThemeController(runtime)
 
     const nextTheme = controller.setThemeMode('auto')
@@ -75,9 +66,7 @@ describe('theme-controller', () => {
   })
 
   it('reapplies theme on system theme change only in auto mode', () => {
-    const runtime = createRuntime({
-      systemTheme: 'dark',
-    })
+    const runtime = createRuntime({ systemTheme: 'dark' })
     const controller = createThemeController(runtime)
 
     expect(controller.handleSystemThemeChange('dark')).toBeNull()

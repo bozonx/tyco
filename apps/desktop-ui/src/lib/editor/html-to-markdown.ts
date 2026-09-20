@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkStringify from 'remark-stringify'
 import { unified } from 'unified'
 
-import { MARKDOWN_STRINGIFY_OPTIONS } from './markdownOptions'
+import { MARKDOWN_STRINGIFY_OPTIONS } from './markdown-options'
 
 /**
  * Обёртки, которыми офисные редакторы и браузеры оборачивают фрагмент в

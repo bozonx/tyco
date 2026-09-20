@@ -1,11 +1,11 @@
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
-import type { PasteMode } from '@shared'
+import type { PasteMode } from '@tyco/shared'
 
-import { anchorAtPos } from './contextMenu'
-import { EDIT_USER_EVENT } from './editSource'
-import { htmlToMarkdown } from './htmlToMarkdown'
+import { anchorAtPos } from './context-menu'
+import { EDIT_USER_EVENT } from './edit-source'
+import { htmlToMarkdown } from './html-to-markdown'
 
 /**
  * Сколько миллисекунд после Ctrl+Shift+V считаем следующую вставку «только
@@ -29,7 +29,10 @@ export interface PasteAskRequest {
 export interface PasteOptions {
   /** Режим вставки из пользовательских настроек */
   getMode: () => PasteMode
-  /** Спросить у пользователя, как вставлять. Не задан — ведём себя как `markdown` */
+  /**
+   * Спросить у пользователя, как вставлять. Не задан — ведём себя как
+   * `markdown`
+   */
   onAsk?: (request: PasteAskRequest) => void
 }
 

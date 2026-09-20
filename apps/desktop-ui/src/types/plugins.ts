@@ -1,9 +1,9 @@
-import { ActionItem } from '../stores/actionMenu'
-import { EditItem } from '../stores/edditMenu'
-import { MenuModals } from '../stores/menuModals'
-import { DEFAULT_PARAMS } from '../stores/navPanel'
-import { InputConfigItem, IpcResult } from './index'
-import type { UserConfig } from '@shared'
+import { type ActionItem } from '../stores/actionMenu'
+import { type EditItem } from '../stores/editMenu'
+import { type MenuModals } from '../stores/menuModals'
+import { type DEFAULT_PARAMS } from '../stores/navPanel'
+import { type InputConfigItem, type IpcResult } from './index'
+import type { UserConfig } from '@tyco/shared'
 
 export type PluginIndex = () => {
   name: string

@@ -13,23 +13,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { type ActionItem } from '../../stores/actionMenu'
-import { getLanguageLabel } from '../../lib/locale/language'
-import { useIpcStore } from '../../stores/ipc'
 import { useCallAi } from '../../composables/useCallAi'
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
+import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { getLanguageLabel } from '../../lib/locale/language'
+import { type ActionItem } from '../../stores/actionMenu'
 import { useHistoryStore } from '../../stores/history'
+import { useIpcStore } from '../../stores/ipc'
+import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 
-const props = withDefaults(
-  defineProps<{
-    text?: string
-  }>(),
-  {
-    text: '',
-  }
-)
+const props = withDefaults(defineProps<{ text?: string }>(), { text: '' })
 
 const ipcStore = useIpcStore()
 const appConfig = computed(() => ipcStore.params.appConfig)
@@ -39,37 +32,37 @@ const historyStore = useHistoryStore()
 const { toast } = useToast()
 const { t } = useI18n()
 const leftLetterKeys = computed<ActionItem[]>(() =>
-  ipcStore.params.userConfig.toTranslateLanguages.map((lang: string, index: number) => ({
-    name: t(getLanguageLabel(lang)),
-    action: async () => {
-      await translate(index)
-    },
-  }))
+  ipcStore.params.userConfig.toTranslateLanguages.map(
+    (lang: string, index: number) => ({
+      name: t(getLanguageLabel(lang)),
+      action: async () => {
+        await translate(index)
+      },
+    })
+  )
 )
 
 const translate = async (toLangNum: number) => {
   const trimmedText = props.text.trim()
-  
-  if (!trimmedText) {
-    toast(t('toast.noTextToTranslate'), 'warn');
 
-    return;
+  if (!trimmedText) {
+    toast(t('toast.noTextToTranslate'), 'warn')
+
+    return
   }
 
   if (trimmedText.length < appConfig.value.minCorrectionLength) {
-    toast(t('toast.textTooShortToTranslate'), 'warn');
+    toast(t('toast.textTooShortToTranslate'), 'warn')
 
-    return;
+    return
   }
 
   menuModalsStore.setPendingModal({ ai: true })
-  
+
   const newText = await translateText(toLangNum, trimmedText)
 
   await historyStore.saveTransformHistory(newText)
 
-  menuModalsStore.nextModal(MenuModals.PREVIEW, {
-    text: newText,
-  })
+  menuModalsStore.nextModal(MenuModals.PREVIEW, { text: newText })
 }
 </script>

@@ -55,10 +55,7 @@ describe('chat-store', () => {
   it('adds developer instructions for follow-up messages', async () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
-    store.messages.value.push({
-      role: 'assistant',
-      content: 'Earlier answer',
-    })
+    store.messages.value.push({ role: 'assistant', content: 'Earlier answer' })
 
     await store.sendMessage('Next question')
 
@@ -103,11 +100,13 @@ describe('chat-store', () => {
 
   it('updates assistant content from streamed chunks', async () => {
     const deps = createDeps({
-      sendChatMessage: vi.fn(async (_message, _prevMessages, _devInstructions, options) => {
-        options?.onChunk?.('Hello')
-        options?.onChunk?.('!')
-        return 'Hello!'
-      }),
+      sendChatMessage: vi.fn(
+        async (_message, _prevMessages, _devInstructions, options) => {
+          options?.onChunk?.('Hello')
+          options?.onChunk?.('!')
+          return 'Hello!'
+        }
+      ),
     })
     const store = createChatStoreModel(deps)
 
@@ -122,9 +121,7 @@ describe('chat-store', () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
 
-    await store.startChat({
-      initialMessage: 'Start here',
-    })
+    await store.startChat({ initialMessage: 'Start here' })
 
     expect(store.newChatParams.value).toEqual({
       initialMessage: 'Start here',
@@ -134,9 +131,7 @@ describe('chat-store', () => {
   })
 
   it('rolls back optimistic user message when request returns no content', async () => {
-    const deps = createDeps({
-      sendChatMessage: vi.fn(async () => ''),
-    })
+    const deps = createDeps({ sendChatMessage: vi.fn(async () => '') })
     const store = createChatStoreModel(deps)
 
     const result = await store.sendMessage('Hello')

@@ -19,21 +19,14 @@ export const useCallApi = () => {
   }
 
   function resolveText(text?: string): string {
-    let value = ''
-
     if (text) {
-      value = text
-    } else if (editorInputStore.selectedText) {
-      value = editorInputStore.selectedText
-    } else {
-      value = editorInputStore.value
+      return text
     }
-
-    return value || ''
+    if (editorInputStore.selectedText) {
+      return editorInputStore.selectedText
+    }
+    return editorInputStore.value || ''
   }
 
-  return {
-    resolveText,
-    typeIntoWindowAndClose,
-  }
+  return { resolveText, typeIntoWindowAndClose }
 }

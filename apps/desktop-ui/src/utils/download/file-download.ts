@@ -84,13 +84,7 @@ export async function downloadBinaryFile({
 
   const response = await fetch(
     url,
-    resumeFrom > 0
-      ? {
-          headers: {
-            Range: `bytes=${resumeFrom}-`,
-          },
-        }
-      : undefined
+    resumeFrom > 0 ? { headers: { Range: `bytes=${resumeFrom}-` } } : undefined
   )
 
   if (!response.ok) {
@@ -129,22 +123,12 @@ export async function downloadBinaryFile({
 
     loaded += value.length
 
-    onProgress?.({
-      file: fileName,
-      loaded,
-      total,
-      status: 'saving',
-    })
+    onProgress?.({ file: fileName, loaded, total, status: 'saving' })
 
     await onChunk(value, append)
     append = true
 
-    onProgress?.({
-      file: fileName,
-      loaded,
-      total,
-      status: 'downloading',
-    })
+    onProgress?.({ file: fileName, loaded, total, status: 'downloading' })
   }
 
   onProgress?.({

@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, watchEffect } from 'vue'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
-import { createThemeController, type ThemeMode } from '../lib/theme/theme-controller'
+import {
+  createThemeController,
+  type ThemeMode,
+} from '../lib/theme/theme-controller'
 import { useIpcStore } from './ipc'
 
 export const useThemeStore = defineStore('theme', () => {
@@ -31,8 +34,5 @@ export const useThemeStore = defineStore('theme', () => {
     theme.value = nextTheme
   })
 
-  return {
-    theme,
-    themeMode,
-  }
+  return { theme, themeMode }
 })

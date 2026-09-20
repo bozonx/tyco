@@ -19,13 +19,13 @@ import { desktopClient } from './lib/desktop/client'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
+import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useThemeStore } from './stores/theme'
-import { START_MODES } from '@shared'
-import { MODE_ROUTE_MAP } from './lib/navigation/routes'
+import { type START_MODES } from '@tyco/shared'
 
 useThemeStore()
 const ipcStore = useIpcStore()

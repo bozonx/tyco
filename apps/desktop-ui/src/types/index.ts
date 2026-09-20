@@ -1,4 +1,4 @@
-import type { InitParams, IpcResult } from '@shared'
+import type { InitParams, IpcResult } from '@tyco/shared'
 
 export type { InitParams, IpcResult }
 
@@ -42,8 +42,5 @@ export interface InputConfigItem {
   labelKey?: string
   value?: any
   defaultValue?: any
-  options?: {
-    id: string
-    name: string
-  }[]
+  options?: { id: string; name: string }[]
 }

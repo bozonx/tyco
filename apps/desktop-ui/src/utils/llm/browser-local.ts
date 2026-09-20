@@ -1,9 +1,12 @@
 import { desktopClient } from '../../lib/desktop/client'
 import LlmWorker from '../../workers/llm.worker.ts?worker'
-import { DEFAULT_BROWSER_LLM_MODEL, isLlmModelDownloaded } from './model-storage'
+import {
+  DEFAULT_BROWSER_LLM_MODEL,
+  isLlmModelDownloaded,
+} from './model-storage'
 import type { WorkerResponse } from './worker-protocol'
-import type { ChatMessage, LlmModel } from '@shared'
-import { DESKTOP_COMMANDS } from '@shared'
+import type { ChatMessage, LlmModel } from '@tyco/shared'
+import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
 export interface BrowserLocalLlmProgress {
@@ -46,10 +49,7 @@ async function ensureWorkerInitialized() {
 
   const result = await desktopClient.invoke<string>(
     DESKTOP_COMMANDS.GET_LLM_MODEL_PATH,
-    {
-      modelName: '',
-      fileName: '',
-    }
+    { modelName: '', fileName: '' }
   )
 
   let modelPath =

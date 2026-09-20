@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+
 import { Icon } from '@iconify/vue'
 
 export interface DropdownMenuItem {
@@ -51,7 +52,7 @@ export interface DropdownMenuItem {
   action: () => void | Promise<void>
 }
 
-const props = defineProps<{
+defineProps<{
   label: string
   icon?: string
   title?: string

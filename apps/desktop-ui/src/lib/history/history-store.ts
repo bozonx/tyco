@@ -1,8 +1,11 @@
-import type { ChatHistoryItem } from '@shared'
+import type { ChatHistoryItem } from '@tyco/shared'
 import { ref } from 'vue'
 
 export interface HistoryApi {
-  callFunction: (functionName: string, args?: unknown[]) => Promise<{ result?: unknown }>
+  callFunction: (
+    functionName: string,
+    args?: unknown[]
+  ) => Promise<{ result?: unknown }>
 }
 
 export function createHistoryStoreModel(historyApi: HistoryApi) {
@@ -16,7 +19,10 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   }
 
   const loadTransformHistory = async (): Promise<void> => {
-    const loadedHistory = await historyApi.callFunction('getTransformHistory', [])
+    const loadedHistory = await historyApi.callFunction(
+      'getTransformHistory',
+      []
+    )
     transformHistory.value = (loadedHistory.result as string[]) || []
   }
 
@@ -54,7 +60,9 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   const removeFromTransformHistory = async (value: string): Promise<void> => {
     await historyApi.callFunction('removeFromTransformHistory', [value])
-    transformHistory.value = transformHistory.value.filter((item) => item !== value)
+    transformHistory.value = transformHistory.value.filter(
+      (item) => item !== value
+    )
   }
 
   const removeFromChatHistory = async (id: string): Promise<void> => {

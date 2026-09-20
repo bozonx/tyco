@@ -12,8 +12,12 @@
 
 :root {
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas',
+    monospace;
 
   /* Spacing scale */
   --space-xs: 0.25rem;
@@ -56,22 +60,22 @@
    ──────────────────────────────────────────────── */
 
 [data-theme='light'] {
-  --b1: 100% 0 0;             /* base-100: pure white */
-  --b2: 97.5% 0.002 240;      /* base-200: very faint gray */
-  --b3: 94.5% 0.004 240;      /* base-300: light gray (nav bar, panels) */
-  --bc: 22% 0.01 260;         /* base-content: near-black text */
-  --p: 45% 0.18 260;          /* primary: professional indigo */
-  --pc: 98% 0 0;              /* primary-content: white on primary */
-  --n: 30% 0.015 260;         /* neutral: dark slate */
-  --nc: 96% 0 0;              /* neutral-content */
-  --s: 55% 0.12 200;          /* secondary: muted teal */
-  --sc: 98% 0 0;              /* secondary-content */
-  --a: 60% 0.15 80;           /* accent: warm amber */
-  --ac: 20% 0.04 80;          /* accent-content */
-  --in: 60% 0.18 250;         /* info */
-  --su: 60% 0.18 150;         /* success */
-  --wa: 75% 0.15 80;          /* warning */
-  --er: 55% 0.2 25;           /* error */
+  --b1: 100% 0 0; /* base-100: pure white */
+  --b2: 97.5% 0.002 240; /* base-200: very faint gray */
+  --b3: 94.5% 0.004 240; /* base-300: light gray (nav bar, panels) */
+  --bc: 22% 0.01 260; /* base-content: near-black text */
+  --p: 45% 0.18 260; /* primary: professional indigo */
+  --pc: 98% 0 0; /* primary-content: white on primary */
+  --n: 30% 0.015 260; /* neutral: dark slate */
+  --nc: 96% 0 0; /* neutral-content */
+  --s: 55% 0.12 200; /* secondary: muted teal */
+  --sc: 98% 0 0; /* secondary-content */
+  --a: 60% 0.15 80; /* accent: warm amber */
+  --ac: 20% 0.04 80; /* accent-content */
+  --in: 60% 0.18 250; /* info */
+  --su: 60% 0.18 150; /* success */
+  --wa: 75% 0.15 80; /* warning */
+  --er: 55% 0.2 25; /* error */
 
   /* Surfaces / semantic tokens */
   --app-surface: #ffffff;
@@ -100,22 +104,22 @@
 }
 
 [data-theme='dark'] {
-  --b1: 16% 0.01 260;         /* base-100: very dark slate */
-  --b2: 13% 0.01 260;         /* base-200: darker */
-  --b3: 20% 0.012 260;        /* base-300: slightly lighter for panels */
-  --bc: 92% 0.005 240;        /* base-content: off-white text */
-  --p: 65% 0.18 260;          /* primary: lighter indigo for dark bg */
-  --pc: 12% 0.01 260;         /* primary-content */
-  --n: 75% 0.01 240;          /* neutral */
-  --nc: 16% 0.01 260;         /* neutral-content */
-  --s: 60% 0.1 200;           /* secondary */
-  --sc: 14% 0.01 200;         /* secondary-content */
-  --a: 70% 0.13 80;           /* accent */
-  --ac: 16% 0.04 80;          /* accent-content */
-  --in: 65% 0.16 250;         /* info */
-  --su: 65% 0.16 150;         /* success */
-  --wa: 78% 0.13 80;          /* warning */
-  --er: 60% 0.18 25;          /* error */
+  --b1: 16% 0.01 260; /* base-100: very dark slate */
+  --b2: 13% 0.01 260; /* base-200: darker */
+  --b3: 20% 0.012 260; /* base-300: slightly lighter for panels */
+  --bc: 92% 0.005 240; /* base-content: off-white text */
+  --p: 65% 0.18 260; /* primary: lighter indigo for dark bg */
+  --pc: 12% 0.01 260; /* primary-content */
+  --n: 75% 0.01 240; /* neutral */
+  --nc: 16% 0.01 260; /* neutral-content */
+  --s: 60% 0.1 200; /* secondary */
+  --sc: 14% 0.01 200; /* secondary-content */
+  --a: 70% 0.13 80; /* accent */
+  --ac: 16% 0.04 80; /* accent-content */
+  --in: 65% 0.16 250; /* info */
+  --su: 65% 0.16 150; /* success */
+  --wa: 78% 0.13 80; /* warning */
+  --er: 60% 0.18 25; /* error */
 
   /* Surfaces / semantic tokens */
   --app-surface: #1a1d24;
@@ -165,7 +169,11 @@ body {
 }
 
 /* Allow text selection inside editable areas */
-input, textarea, pre, code, [contenteditable],
+input,
+textarea,
+pre,
+code,
+[contenteditable],
 .selectable {
   user-select: text;
 }
@@ -196,7 +204,12 @@ input, textarea, pre, code, [contenteditable],
    Typography Utilities
    ──────────────────────────────────────────────── */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -231,7 +244,9 @@ a:hover {
   border-color: var(--app-border);
   background-color: var(--app-surface);
   color: oklch(var(--bc));
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .input:focus,

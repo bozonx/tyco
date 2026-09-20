@@ -1,4 +1,4 @@
-import { PluginContext } from '../../types/plugins'
+import { type PluginContext } from '../../types/plugins'
 
 const makeRusStress = (text: string): string => {
   // Словарь соответствия обычных гласных и гласных с ударением

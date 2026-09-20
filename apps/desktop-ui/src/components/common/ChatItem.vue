@@ -7,12 +7,11 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
-  import type { ChatMessage } from "@shared";
+import { computed } from 'vue'
 
-  const props = defineProps<{
-    message: ChatMessage;
-  }>();
+import type { ChatMessage } from '@tyco/shared'
 
-  const isUser = computed(() => props.message.role === "user");
+const props = defineProps<{ message: ChatMessage }>()
+
+const isUser = computed(() => props.message.role === 'user')
 </script>

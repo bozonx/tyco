@@ -34,7 +34,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
-import { GlobalEvents, useGlobalEvents } from '../../composables/useGlobalEvents'
+import {
+  GlobalEvents,
+  useGlobalEvents,
+} from '../../composables/useGlobalEvents'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
 import { useHistoryStore } from '../../stores/history'
@@ -178,9 +181,7 @@ const finish = async () => {
     let correctedText: string | undefined
 
     if (shouldFormatRecognizedText()) {
-      menuModalsStore.setPendingModal({
-        correction: true,
-      })
+      menuModalsStore.setPendingModal({ correction: true })
 
       try {
         const formattedText = await voiceCorrection(recognizedText.value)

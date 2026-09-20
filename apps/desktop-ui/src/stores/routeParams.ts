@@ -32,10 +32,5 @@ export const useRouteParams = defineStore('routeParams', () => {
     return appNavigation.isCurrent(APP_ROUTES.EDITOR.path)
   }
 
-  return {
-    params,
-    setParams,
-    toEditor,
-    isEditorPage,
-  }
+  return { params, setParams, toEditor, isEditorPage }
 })

@@ -2,8 +2,15 @@ import { APP_CONFIG } from './app-config'
 import type { ChatMessage } from './desktop'
 import type { LlmModel } from './user-config'
 
+export interface ChatCompletionResult {
+  content?: string
+  error?: string
+  status?: number
+  statusText?: string
+}
+
 export const useAiRequest = () => {
-  function parseOpenAiStreamChunk(line: string) {
+  function parseOpenAiStreamChunk(line: string): string {
     if (!line.startsWith('data: ')) {
       return ''
     }
@@ -14,17 +21,27 @@ export const useAiRequest = () => {
       return ''
     }
 
-    const data = JSON.parse(payload)
-    return data.choices?.[0]?.delta?.content || ''
+    try {
+      const data = JSON.parse(payload) as {
+        choices?: Array<{ delta?: { content?: string } }>
+      }
+      return data.choices?.[0]?.delta?.content || ''
+    } catch {
+      return ''
+    }
   }
 
-  function parseOllamaStreamChunk(line: string) {
+  function parseOllamaStreamChunk(line: string): string {
     if (!line.trim()) {
       return ''
     }
 
-    const data = JSON.parse(line)
-    return data.message?.content || ''
+    try {
+      const data = JSON.parse(line) as { message?: { content?: string } }
+      return data.message?.content || ''
+    } catch {
+      return ''
+    }
   }
 
   async function readStreamingLines(
@@ -120,7 +137,7 @@ export const useAiRequest = () => {
     model: LlmModel,
     messages: string | ChatMessage[],
     options?: { onChunk?: (chunk: string) => void; signal?: AbortSignal }
-  ): Promise<Record<string, any>> {
+  ): Promise<ChatCompletionResult> {
     const provider = model.provider || model.model
 
     if (provider === 'ollama') {
@@ -134,7 +151,7 @@ export const useAiRequest = () => {
     model: LlmModel,
     messages: string | ChatMessage[],
     options?: { onChunk?: (chunk: string) => void; signal?: AbortSignal }
-  ): Promise<Record<string, any>> {
+  ): Promise<ChatCompletionResult> {
     const normalizedMessages = Array.isArray(messages)
       ? messages.map((message) => ({
           role: message.role === 'developer' ? 'system' : message.role,
@@ -183,8 +200,10 @@ export const useAiRequest = () => {
         return { content }
       }
 
-      const data = await result.json()
-      return data.choices[0].message
+      const data = (await result.json()) as {
+        choices?: Array<{ message?: { content?: string } }>
+      }
+      return data.choices?.[0]?.message || { content: '' }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {
         return { content: '' } // Aborted
@@ -197,7 +216,7 @@ export const useAiRequest = () => {
     model: LlmModel,
     messages: string | ChatMessage[],
     options?: { onChunk?: (chunk: string) => void; signal?: AbortSignal }
-  ): Promise<Record<string, any>> {
+  ): Promise<ChatCompletionResult> {
     const normalizedMessages = Array.isArray(messages)
       ? messages.map((message) => ({
           role: message.role === 'developer' ? 'system' : message.role,
@@ -245,7 +264,7 @@ export const useAiRequest = () => {
         return { content }
       }
 
-      const data = await result.json()
+      const data = (await result.json()) as { message?: { content?: string } }
       return { content: data.message?.content || '' }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {

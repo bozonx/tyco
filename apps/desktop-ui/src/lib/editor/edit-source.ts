@@ -5,7 +5,10 @@
  */
 export type EditSource = 'plain' | 'ai' | 'voice' | 'paste'
 
-/** Значения `userEvent` для транзакций — по ним правку можно узнать в логах и в тестах */
+/**
+ * Значения `userEvent` для транзакций — по ним правку можно узнать в логах и в
+ * тестах
+ */
 export const EDIT_USER_EVENT: Record<EditSource, string> = {
   plain: 'tyco.store',
   ai: 'tyco.ai',

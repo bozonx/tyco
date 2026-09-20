@@ -33,10 +33,5 @@ export const useNavPanelStore = defineStore('navPanel', () => {
     }
   }
 
-  return {
-    params,
-    upateNavParams,
-    resetNavParams,
-    handleKeyUp,
-  }
+  return { params, upateNavParams, resetNavParams, handleKeyUp }
 })

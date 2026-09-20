@@ -5,7 +5,7 @@ import {
   type IpcResult,
   type UserConfig,
   type LocalState,
-} from '@shared'
+} from '@tyco/shared'
 import { ref } from 'vue'
 
 export interface DesktopInvoker {
@@ -38,18 +38,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.SAVE_LOCAL_STATE,
       buildArgs: ([localState]) => ({ localState }),
     },
-    getStorageInfo: {
-      command: DESKTOP_COMMANDS.GET_STORAGE_INFO,
-    },
-    getEditorHistory: {
-      command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY,
-    },
-    getTransformHistory: {
-      command: DESKTOP_COMMANDS.GET_TRANSFORM_HISTORY,
-    },
-    getChatHistory: {
-      command: DESKTOP_COMMANDS.GET_CHAT_HISTORY,
-    },
+    getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
+    getEditorHistory: { command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY },
+    getTransformHistory: { command: DESKTOP_COMMANDS.GET_TRANSFORM_HISTORY },
+    getChatHistory: { command: DESKTOP_COMMANDS.GET_CHAT_HISTORY },
     getChat: {
       command: DESKTOP_COMMANDS.GET_CHAT,
       buildArgs: ([id]) => ({ id }),
@@ -58,9 +50,7 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.SAVE_MAIN_INPUT_TMP,
       buildArgs: ([value]) => ({ value }),
     },
-    clearMainInputTmp: {
-      command: DESKTOP_COMMANDS.CLEAR_MAIN_INPUT_TMP,
-    },
+    clearMainInputTmp: { command: DESKTOP_COMMANDS.CLEAR_MAIN_INPUT_TMP },
     saveEditorHistory: {
       command: DESKTOP_COMMANDS.SAVE_EDITOR_HISTORY,
       buildArgs: ([value]) => ({ value }),
@@ -85,21 +75,15 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.REMOVE_FROM_CHAT_HISTORY,
       buildArgs: ([id]) => ({ id }),
     },
-    clearEditorHistory: {
-      command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY,
-    },
+    clearEditorHistory: { command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY },
     clearTransformHistory: {
       command: DESKTOP_COMMANDS.CLEAR_TRANSFORM_HISTORY,
     },
-    clearChatHistory: {
-      command: DESKTOP_COMMANDS.CLEAR_CHAT_HISTORY,
-    },
+    clearChatHistory: { command: DESKTOP_COMMANDS.CLEAR_CHAT_HISTORY },
     startVoiceRecognition: {
       command: DESKTOP_COMMANDS.START_VOICE_RECOGNITION,
     },
-    stopVoiceRecognition: {
-      command: DESKTOP_COMMANDS.STOP_VOICE_RECOGNITION,
-    },
+    stopVoiceRecognition: { command: DESKTOP_COMMANDS.STOP_VOICE_RECOGNITION },
     startLocalVoiceRecording: {
       command: DESKTOP_COMMANDS.START_LOCAL_VOICE_RECORDING,
     },
@@ -176,7 +160,9 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
   }
 
   const saveUserConfig = async (userConfig: UserConfig) => {
-    const result = await callFunction('saveUserConfig', [JSON.stringify(userConfig)])
+    const result = await callFunction('saveUserConfig', [
+      JSON.stringify(userConfig),
+    ])
 
     if (result.success) {
       params.value.userConfig = userConfig

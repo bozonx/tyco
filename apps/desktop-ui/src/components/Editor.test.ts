@@ -5,16 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Editor from './Editor.vue'
 
 vi.mock('../composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string) => key,
-  }),
+  useI18n: () => ({ t: (key: string) => key }),
 }))
 
 const mockTypeIntoWindowAndClose = vi.fn()
 vi.mock('../composables/useCallApi', () => ({
-  useCallApi: () => ({
-    typeIntoWindowAndClose: mockTypeIntoWindowAndClose,
-  }),
+  useCallApi: () => ({ typeIntoWindowAndClose: mockTypeIntoWindowAndClose }),
 }))
 
 describe('Editor.vue toolbar', () => {
@@ -31,11 +27,13 @@ describe('Editor.vue toolbar', () => {
           EditorInput: true,
           DropdownMenu: {
             props: ['label', 'items'],
-            template: '<div class="dropdown-stub" :data-label="label"><button>{{ label }}</button></div>',
+            template:
+              '<div class="dropdown-stub" :data-label="label"><button>{{ label }}</button></div>',
           },
           Button: {
             props: ['title'],
-            template: '<button class="btn-stub" :title="title"><slot /></button>',
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
           },
         },
       },

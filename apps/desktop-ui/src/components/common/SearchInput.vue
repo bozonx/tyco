@@ -12,17 +12,13 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
+import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  placeholder?: string
-  modelValue?: string
-}>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+const props = defineProps<{ placeholder?: string; modelValue?: string }>()
 
 const searchInput = ref<HTMLInputElement | null>(null)
 
@@ -32,9 +28,7 @@ const focus = () => {
   }
 }
 
-defineExpose({
-  focus,
-})
+defineExpose({ focus })
 
 const onInput = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).value

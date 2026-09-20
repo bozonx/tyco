@@ -30,8 +30,8 @@ export interface BubbleMenuRequest extends MenuAnchor {
 
 /**
  * Слово под смещением. Берём штатный `state.wordAt` — он опирается на
- * локаль-независимую категоризацию символов CodeMirror, поэтому кириллица
- * и латиница обрабатываются одинаково
+ * локаль-независимую категоризацию символов CodeMirror, поэтому кириллица и
+ * латиница обрабатываются одинаково
  */
 export const wordAt = (state: EditorState, pos: number): WordRange | null => {
   const range = state.wordAt(pos)

@@ -6,20 +6,11 @@ use serde_json::{json, Value};
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
 pub const STATE_FILE_NAME: &str = "localState.json";
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalState {
     pub last_chat_id: Option<String>,
     pub last_mode: Option<String>,
-}
-
-impl Default for LocalState {
-    fn default() -> Self {
-        Self {
-            last_chat_id: None,
-            last_mode: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -223,7 +214,10 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
     InitParams {
         window_id: None,
         selected_text: None,
-        mode: local_state.last_mode.clone().or(Some(String::from("editor"))),
+        mode: local_state
+            .last_mode
+            .clone()
+            .or(Some(String::from("editor"))),
         user_config,
         local_state,
         app_config: app_config(),

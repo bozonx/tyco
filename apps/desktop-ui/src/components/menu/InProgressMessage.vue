@@ -14,14 +14,8 @@
 import { useI18n } from '../../composables/useI18n'
 
 const props = withDefaults(
-  defineProps<{
-    ai?: boolean
-    correction?: boolean
-  }>(),
-  {
-    ai: false,
-    correction: false,
-  }
+  defineProps<{ ai?: boolean; correction?: boolean }>(),
+  { ai: false, correction: false }
 )
 
 const { t } = useI18n()

@@ -4,9 +4,9 @@ function readStoredTheme(): ThemeMode | null {
   const storedTheme = window.localStorage.getItem('theme')
 
   if (
-    storedTheme === 'auto'
-    || storedTheme === 'light'
-    || storedTheme === 'dark'
+    storedTheme === 'auto' ||
+    storedTheme === 'light' ||
+    storedTheme === 'dark'
   ) {
     return storedTheme
   }
@@ -16,8 +16,8 @@ function readStoredTheme(): ThemeMode | null {
 
 function getSystemTheme(): ThemeName {
   if (
-    window.matchMedia
-    && window.matchMedia('(prefers-color-scheme: dark)').matches
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
   ) {
     return 'dark'
   }

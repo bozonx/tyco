@@ -4,8 +4,8 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { describe, expect, it } from 'vitest'
 
-import { createEditorExtensions } from './createEditorState'
-import { EDIT_USER_EVENT } from './editSource'
+import { createEditorExtensions } from './create-editor-state'
+import { EDIT_USER_EVENT } from './edit-source'
 import {
   applyStoreEdit,
   applyStoreSelection,
@@ -13,7 +13,7 @@ import {
   computeMinimalChange,
   selectAll,
   setPlaceholder,
-} from './editorSync'
+} from './editor-sync'
 
 interface StoreSpy {
   value: string

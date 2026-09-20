@@ -12,5 +12,5 @@
     "resolveJsonModule": true
   },
   "include": ["packages/shared/**/*.ts"],
-  "exclude": ["node_modules", "dist", "apps", "_old", "src-tauri"]
+  "exclude": ["node_modules", "dist", "apps", "src-tauri"]
 }

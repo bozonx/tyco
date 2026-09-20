@@ -32,9 +32,9 @@ describe('language helpers', () => {
   })
 
   it('adds custom current values to select options', () => {
-    expect(buildLanguageOptions(['de_DE']).map((option) => option.id)).toContain(
-      'de_DE'
-    )
+    expect(
+      buildLanguageOptions(['de_DE']).map((option) => option.id)
+    ).toContain('de_DE')
   })
 
   it('maps user language to the same ui locale when possible', () => {
@@ -56,6 +56,8 @@ describe('language helpers', () => {
   })
 
   it('resolves auto ui language from the resolved user language', () => {
-    expect(resolveUiLanguagePreference('auto', 'es_ES', ['ru-RU'])).toBe('es_AR')
+    expect(resolveUiLanguagePreference('auto', 'es_ES', ['ru-RU'])).toBe(
+      'es_AR'
+    )
   })
 })

@@ -5,17 +5,10 @@ import {
 } from '@huggingface/transformers'
 import type { WorkerResponse } from '../utils/llm/worker-protocol'
 
-type ChatMessage = {
-  role: 'user' | 'assistant' | 'developer'
-  content: string
-}
+type ChatMessage = { role: 'user' | 'assistant' | 'developer'; content: string }
 
 type WorkerMessage =
-  | {
-      type: 'init'
-      id: number
-      data: { modelUrl: string }
-    }
+  | { type: 'init'; id: number; data: { modelUrl: string } }
   | {
       type: 'generate'
       id: number
@@ -143,8 +136,7 @@ function extractContent(result: unknown) {
   }
 
   const lastMessage = generated[generated.length - 1] as
-    | { content?: unknown }
-    | undefined
+    { content?: unknown } | undefined
 
   return typeof lastMessage?.content === 'string'
     ? lastMessage.content.trim()
@@ -208,9 +200,7 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
       self.postMessage({
         type: 'result',
         id,
-        data: {
-          content,
-        },
+        data: { content },
       } satisfies WorkerResponse)
     })
     .catch((error: unknown) => {

@@ -16,9 +16,7 @@ vi.mock('../download/file-download', () => ({
 }))
 
 vi.mock('../../lib/desktop/client', () => ({
-  desktopClient: {
-    invoke: invokeMock,
-  },
+  desktopClient: { invoke: invokeMock },
 }))
 
 describe('llm model storage', () => {

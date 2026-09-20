@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { htmlToMarkdown } from './htmlToMarkdown'
+import { htmlToMarkdown } from './html-to-markdown'
 
 describe('htmlToMarkdown', () => {
   it('converts headings', () => {
@@ -52,9 +52,7 @@ describe('htmlToMarkdown', () => {
   })
 
   it('keeps inline code', () => {
-    expect(htmlToMarkdown('<p>run <code>npm i</code></p>')).toBe(
-      'run `npm i`'
-    )
+    expect(htmlToMarkdown('<p>run <code>npm i</code></p>')).toBe('run `npm i`')
   })
 
   it('converts a table', () => {

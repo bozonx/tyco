@@ -88,7 +88,7 @@ import { computed, onMounted, onUnmounted } from 'vue'
 
 import { GlobalEvents, useGlobalEvents } from '../composables/useGlobalEvents'
 import { useI18n } from '../composables/useI18n'
-import { ActionItem } from '../stores/actionMenu'
+import { type ActionItem } from '../stores/actionMenu'
 import { useRouteParams } from '../stores/routeParams'
 import { PRESETS_KEYS } from '../types'
 

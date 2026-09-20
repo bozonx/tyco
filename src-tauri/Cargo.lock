@@ -4345,7 +4345,7 @@ dependencies = [
 
 [[package]]
 name = "tyco"
-version = "0.0.3"
+version = "0.1.0"
 dependencies = [
  "cpal",
  "futures-util",

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -13,22 +13,24 @@
       rel="stylesheet"
     />
     <script>
-      (() => {
-        const storedTheme = window.localStorage.getItem('theme');
+      ;(() => {
+        const storedTheme = window.localStorage.getItem('theme')
         const themeMode =
-          storedTheme === 'auto' || storedTheme === 'light' || storedTheme === 'dark'
+          storedTheme === 'auto' ||
+          storedTheme === 'light' ||
+          storedTheme === 'dark'
             ? storedTheme
-            : 'auto';
+            : 'auto'
         const prefersDark =
-          window.matchMedia
-          && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches
         const resolvedTheme =
-          themeMode === 'auto' ? (prefersDark ? 'dark' : 'light') : themeMode;
+          themeMode === 'auto' ? (prefersDark ? 'dark' : 'light') : themeMode
 
-        document.documentElement.setAttribute('data-theme', resolvedTheme);
-        document.documentElement.setAttribute('data-theme-mode', themeMode);
-        document.documentElement.style.colorScheme = resolvedTheme;
-      })();
+        document.documentElement.setAttribute('data-theme', resolvedTheme)
+        document.documentElement.setAttribute('data-theme-mode', themeMode)
+        document.documentElement.style.colorScheme = resolvedTheme
+      })()
     </script>
   </head>
   <body>

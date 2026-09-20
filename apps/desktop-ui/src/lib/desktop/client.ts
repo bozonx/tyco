@@ -5,7 +5,7 @@ import {
   DESKTOP_EVENTS,
   type InitParams,
   type IpcResult,
-} from '@shared'
+} from '@tyco/shared'
 import { invoke as tauriInvoke } from '@tauri-apps/api/core'
 import { listen as tauriListen } from '@tauri-apps/api/event'
 
@@ -42,8 +42,8 @@ async function invoke<T>(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (
-      message.includes('window is not defined')
-      || message.includes('Cannot read properties of undefined')
+      message.includes('window is not defined') ||
+      message.includes('Cannot read properties of undefined')
     ) {
       return {
         success: false,
@@ -51,10 +51,7 @@ async function invoke<T>(
       }
     }
 
-    return {
-      success: false,
-      error: message,
-    }
+    return { success: false, error: message }
   }
 }
 
@@ -67,7 +64,8 @@ async function listen<EventName extends keyof AppEventPayloads>(
       handler(eventPayload.payload as AppEventPayloads[EventName])
     })
   } catch (_error) {
-    const listeners = localListeners.get(event) || new Set<(payload: unknown) => void>()
+    const listeners =
+      localListeners.get(event) || new Set<(payload: unknown) => void>()
     listeners.add(handler as (payload: unknown) => void)
     localListeners.set(event, listeners)
 
@@ -83,17 +81,9 @@ function getInitParams(): InitParams {
 }
 
 function setLocalParams(nextParams: Partial<InitParams>) {
-  localParams = {
-    ...localParams,
-    ...nextParams,
-  }
+  localParams = { ...localParams, ...nextParams }
 
   emitLocal(DESKTOP_EVENTS.PARAMS_CHANGED, getInitParams())
 }
 
-export const desktopClient = {
-  getInitParams,
-  invoke,
-  listen,
-  setLocalParams,
-}
+export const desktopClient = { getInitParams, invoke, listen, setLocalParams }

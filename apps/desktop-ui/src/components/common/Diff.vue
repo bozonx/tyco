@@ -7,8 +7,8 @@
       No differences found
     </div>
     <div v-else class="diff-content">
-      <span 
-        v-for="(part, index) in diffParts" 
+      <span
+        v-for="(part, index) in diffParts"
         :key="`diff-${index}-${part.added}-${part.removed}`"
         :class="getPartClass(part)"
       >
@@ -19,50 +19,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { diffChars } from 'diff';
+import { diffChars } from 'diff'
+import { computed } from 'vue'
 
 // Определяем интерфейс для части diff
 interface DiffPart {
-  value: string;
-  added?: boolean;
-  removed?: boolean;
+  value: string
+  added?: boolean
+  removed?: boolean
 }
 
-const props = defineProps<{
-  oldText: string;
-  newText: string;
-}>();
+const props = defineProps<{ oldText: string; newText: string }>()
 
-// Состояние для обработки ошибок
-const error = ref<string | null>(null);
-
-// Вычисляем diff с обработкой ошибок
-const diffParts = computed<DiffPart[]>(() => {
+const diffResult = computed<{ parts: DiffPart[]; error: string | null }>(() => {
   try {
-    error.value = null;
-    
-    // Проверяем входные данные
-    if (typeof props.oldText !== 'string' || typeof props.newText !== 'string') {
-      throw new Error('Both oldText and newText must be strings');
+    if (
+      typeof props.oldText !== 'string' ||
+      typeof props.newText !== 'string'
+    ) {
+      throw new Error('Both oldText and newText must be strings')
     }
-    
-    // Вычисляем diff
-    const result = diffChars(props.oldText, props.newText);
-    return result;
+    return { parts: diffChars(props.oldText, props.newText), error: null }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error occurred';
-    return [];
+    return {
+      parts: [],
+      error: err instanceof Error ? err.message : 'Unknown error occurred',
+    }
   }
-});
+})
+
+const diffParts = computed<DiffPart[]>(() => diffResult.value.parts)
+const error = computed<string | null>(() => diffResult.value.error)
 
 // Функция для определения CSS класса части diff
 const getPartClass = (part: DiffPart): string => {
-  if (part.added) return 'added';
-  if (part.removed) return 'removed';
-  return 'unchanged';
-};
-
+  if (part.added) return 'added'
+  if (part.removed) return 'removed'
+  return 'unchanged'
+}
 </script>
 
 <style scoped>

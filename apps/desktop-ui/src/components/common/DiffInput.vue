@@ -8,15 +8,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{
-  oldText: string;
-  newText: string;
-}>();
-const inputText = ref<string>(props.newText);
+const props = defineProps<{ oldText: string; newText: string }>()
+const inputText = ref<string>(props.newText)
 
-const emit = defineEmits<{
-  (e: 'update:newText', value: string): void
-}>();
+const emit = defineEmits<{ (e: 'update:newText', value: string): void }>()
 
 function handleInput(event: Event) {
   const nextValue = (event.target as HTMLTextAreaElement).value

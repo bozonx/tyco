@@ -31,11 +31,5 @@ export const useWriterInputStore = defineStore('writerInput', () => {
     focusCount.value++
   }
 
-  return {
-    value,
-    focusCount,
-    setValue,
-    focus,
-    clear,
-  }
+  return { value, focusCount, setValue, focus, clear }
 })

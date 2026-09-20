@@ -1,4 +1,4 @@
-import type { ChatHistoryItem, ChatMessage } from '@shared'
+import type { ChatHistoryItem, ChatMessage } from '@tyco/shared'
 
 export interface PreparedChatRequest {
   userMessage: ChatMessage
@@ -23,15 +23,14 @@ export function prepareChatRequest(
       role: 'user',
       content: [attachString, message].filter(Boolean).join('\n\n'),
     },
-    preparedMessage: [attachString, roleString, message].filter(Boolean).join('\n\n'),
+    preparedMessage: [attachString, roleString, message]
+      .filter(Boolean)
+      .join('\n\n'),
   }
 }
 
 export function createAssistantMessage(content: string): ChatMessage {
-  return {
-    role: 'assistant',
-    content,
-  }
+  return { role: 'assistant', content }
 }
 
 export function createChatHistoryEntry(params: {

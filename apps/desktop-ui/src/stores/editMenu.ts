@@ -64,8 +64,5 @@ export const useEditMenuStore = defineStore('editMenu', () => {
     registeredEditMenu.value.push(...edit)
   }
 
-  return {
-    getEditMenu,
-    registerEditItems,
-  }
+  return { getEditMenu, registerEditItems }
 })

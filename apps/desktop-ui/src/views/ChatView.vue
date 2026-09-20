@@ -10,19 +10,20 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted } from "vue";
-  import { useNavPanelStore } from "../stores/navPanel";
-  import { useHistoryStore } from "../stores/history";
-  import ChatSidebar from "../components/chat/ChatSidebar.vue";
-  import AiChat from "../components/AiChat.vue";
-  import ContentPadding from "../components/common/ContentPadding.vue";
+import { onMounted } from 'vue'
 
-  const navPanelStore = useNavPanelStore();
-  const historyStore = useHistoryStore();
+import AiChat from '../components/AiChat.vue'
+import ChatSidebar from '../components/chat/ChatSidebar.vue'
+import ContentPadding from '../components/common/ContentPadding.vue'
+import { useHistoryStore } from '../stores/history'
+import { useNavPanelStore } from '../stores/navPanel'
 
-  navPanelStore.resetNavParams({});
+const navPanelStore = useNavPanelStore()
+const historyStore = useHistoryStore()
 
-  onMounted(async () => {
-    await historyStore.loadChatHistory();
-  });
+navPanelStore.resetNavParams({})
+
+onMounted(async () => {
+  await historyStore.loadChatHistory()
+})
 </script>

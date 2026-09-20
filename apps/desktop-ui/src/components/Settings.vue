@@ -107,25 +107,11 @@
         </FieldRow>
       </div>
 
-      <div v-show="currentTab === 1" class="fields-col">
-        <FieldRow :label="t('settings.translateLanguages')">
-          <FieldItems
-            :items="translateLanguagesItems"
-            @update:items="updateTranslateLanguages"
-          >
-            <template #item="{ item, index }">
-              <div class="flex flex-row gap-2 w-full">
-                <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
-                <FieldSelect
-                  class="flex-1"
-                  v-model:value="item.value"
-                  :options="translateLanguageOptions"
-                />
-              </div>
-            </template>
-          </FieldItems>
-        </FieldRow>
-      </div>
+      <SettingsTranslationsTab
+        v-show="currentTab === 1"
+        :user-config="userConfig"
+        @update:to-translate-languages="updateTranslateLanguages"
+      />
 
       <div v-show="currentTab === 2" class="fields-col">
         <FieldRow :label="t('settings.sttProvider')" vertical>
@@ -526,78 +512,25 @@
         </FieldRow>
       </div>
 
-      <div v-show="currentTab === 4">
-        <h2>{{ t('settings.aiRules') }}</h2>
-        <FieldRow :label="t('settings.baseRules')">
-          <FieldTextArea v-model:value="userConfig.aiRules.base" />
-        </FieldRow>
-        <FieldRow :label="t('settings.quickTranslation')">
-          <FieldTextArea v-model:value="userConfig.aiRules.translate" />
-        </FieldRow>
-        <FieldRow :label="t('settings.voiceCorrectionRules')">
-          <FieldTextArea v-model:value="userConfig.aiRules.voiceCorrection" />
-        </FieldRow>
-        <FieldRow :label="t('settings.textCorrection')">
-          <FieldTextArea v-model:value="userConfig.aiRules.correction" />
-        </FieldRow>
-      </div>
+      <SettingsRulesTab v-show="currentTab === 4" :user-config="userConfig" />
 
-      <div v-show="currentTab === 5">
-        <FieldRow :label="t('settings.aiTasks')">
-          <FieldItems :items="userConfig.aiTasks" @update:items="updateAiTasks">
-            <template #item="{ item, index }">
-              <div class="flex flex-row gap-2 w-full">
-                <div>
-                  <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
-                </div>
-                <div class="flex-1">
-                  <FieldRow :label="t('settings.name')" vertical>
-                    <FieldInput v-model:value="item.name" />
-                  </FieldRow>
-                  <FieldRow :label="t('settings.rule')" vertical>
-                    <FieldTextArea v-model:value="item.rule" />
-                  </FieldRow>
-                </div>
-              </div>
-            </template>
-          </FieldItems>
-        </FieldRow>
-      </div>
+      <SettingsTasksTab
+        v-show="currentTab === 5"
+        :user-config="userConfig"
+        @update:ai-tasks="updateAiTasks"
+      />
 
-      <div v-show="currentTab === 6">
-        <FieldRow :label="t('settings.chatRoles')">
-          <FieldItems
-            :items="userConfig.chatRoles"
-            @update:items="updateChatRoles"
-          >
-            <template #item="{ item, index }">
-              <div class="flex flex-row gap-2 w-full">
-                <div>
-                  <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
-                </div>
-                <div class="flex-1">
-                  <FieldRow :label="t('settings.name')" vertical>
-                    <FieldInput v-model:value="item.name" />
-                  </FieldRow>
-                  <FieldRow :label="t('settings.rule')" vertical>
-                    <FieldTextArea v-model:value="item.rule" />
-                  </FieldRow>
-                </div>
-              </div>
-            </template>
-          </FieldItems>
-        </FieldRow>
-      </div>
+      <SettingsRolesTab
+        v-show="currentTab === 6"
+        :user-config="userConfig"
+        @update:chat-roles="updateChatRoles"
+      />
 
-      <div v-show="currentTab === 7">
-        <template v-for="plugin of plugins" :key="plugin.pluginName">
-          <h2>{{ plugin.labelKey ? t(plugin.labelKey) : plugin.label }}</h2>
-          <FieldsByCfg
-            :config="plugin.fields"
-            @update:values="updatePluginConfig(plugin.pluginName, $event)"
-          />
-        </template>
-      </div>
+      <SettingsPluginsTab
+        v-show="currentTab === 7"
+        :user-config="userConfig"
+        @update:plugin-config="updatePluginConfig"
+      />
     </div>
   </div>
 </template>
@@ -620,7 +553,6 @@ import {
 import { pluginIndexes } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
-import { PRESETS_KEYS } from '../types'
 import {
   BROWSER_LLM_MODELS,
   DEFAULT_BROWSER_LLM_MODEL,
@@ -642,12 +574,17 @@ import {
   hasPartialWhisperModelDownload,
   isModelDownloaded,
 } from '../utils/stt/model-storage'
+import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
+import SettingsRolesTab from './settings/SettingsRolesTab.vue'
+import SettingsRulesTab from './settings/SettingsRulesTab.vue'
+import SettingsTasksTab from './settings/SettingsTasksTab.vue'
+import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import {
   DEFAULT_USER_CONFIG,
   type LlmModelMetadata,
   type StorageInfo,
   type WhisperModelMetadata,
-} from '@shared'
+} from '@tyco/shared'
 
 const ipcStore = useIpcStore()
 const themeStore = useThemeStore()
@@ -686,11 +623,7 @@ const whisperModelMetadata = ref<WhisperModelMetadata | null>(null)
 const browserLocalStatusById = ref<
   Record<
     string,
-    {
-      downloaded: boolean
-      partial: boolean
-      metadata: LlmModelMetadata | null
-    }
+    { downloaded: boolean; partial: boolean; metadata: LlmModelMetadata | null }
   >
 >({})
 const storageInfo = ref<StorageInfo | null>(null)
@@ -814,30 +747,6 @@ const whisperModelDownloadedAt = computed(() => {
   }
 
   return new Date(timestamp * 1000).toLocaleString()
-})
-
-const plugins = computed(() => {
-  return Object.keys(userConfig.value.plugins || {})
-    .map((pluginName) => {
-      const pluginCfg = pluginConfigs.find(
-        (plugin: any) => plugin.pluginName === pluginName
-      )
-
-      if (!pluginCfg) {
-        return null
-      }
-
-      const pluginValues = userConfig.value.plugins?.[pluginName] || {}
-
-      return {
-        ...pluginCfg,
-        fields: pluginCfg.fields.map((field: any) => ({
-          ...field,
-          value: pluginValues[field.name],
-        })),
-      }
-    })
-    .filter((plugin) => plugin !== null)
 })
 
 function cloneUserConfig(config: unknown) {
@@ -1162,10 +1071,7 @@ function dedupeLlmModels(models: Record<string, any>[]) {
     }
 
     usedIds.add(nextId)
-    return {
-      ...model,
-      id: nextId,
-    }
+    return { ...model, id: nextId }
   })
 }
 
@@ -1279,28 +1185,12 @@ const userLanguageOptions = computed(() => {
   return buildLanguageOptions([userConfig.value.userLanguage], true, t)
 })
 
-const translateLanguageOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
-  return buildLanguageOptions(
-    userConfig.value.toTranslateLanguages || [],
-    false,
-    t
-  )
-})
-
 watch(
   () => [userConfig.value.appLanguage, userConfig.value.userLanguage],
   ([appLanguage, userLanguage]) => {
     syncI18nLocale(appLanguage, userLanguage)
   }
 )
-
-const translateLanguagesItems = computed(() => {
-  return (userConfig.value.toTranslateLanguages || []).map((lang: string) => ({
-    value: lang,
-  }))
-})
 
 const voskWsUrl = computed(() => {
   const voskModel = (userConfig.value.sttModels || []).find(
@@ -1367,10 +1257,8 @@ watch(
   { immediate: true, deep: true }
 )
 
-const updateTranslateLanguages = (items: Record<string, any>[]) => {
-  userConfig.value.toTranslateLanguages = items.map(
-    (item: Record<string, any>) => item.value
-  )
+const updateTranslateLanguages = (languages: string[]) => {
+  userConfig.value.toTranslateLanguages = languages
 }
 
 const updateWindowInsertionMethod = (value: string | number) => {

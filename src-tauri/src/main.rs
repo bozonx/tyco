@@ -54,7 +54,7 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            runtime::handle_window_event(&window.app_handle(), event);
+            runtime::handle_window_event(window.app_handle(), event);
         })
         .invoke_handler(tauri::generate_handler![
             get_init_params,

@@ -29,10 +29,7 @@ describe('chat-helpers', () => {
   })
 
   it('creates a history entry from prepared messages', () => {
-    const userMessage = {
-      role: 'user' as const,
-      content: 'Question',
-    }
+    const userMessage = { role: 'user' as const, content: 'Question' }
     const assistantMessage = createAssistantMessage('Answer')
 
     expect(

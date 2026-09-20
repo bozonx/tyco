@@ -54,7 +54,7 @@ fn save_whisper_model_file_bytes(
     data: &[u8],
     append: bool,
 ) -> Result<(), AppError> {
-    let file_path = model_dir(&app, &model_name)?.join(sanitize_whisper_file_name(&file_name)?);
+    let file_path = model_dir(app, model_name)?.join(sanitize_whisper_file_name(file_name)?);
 
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent)?;
@@ -66,7 +66,7 @@ fn save_whisper_model_file_bytes(
         .truncate(!append)
         .append(append)
         .open(&file_path)?;
-    file.write_all(&data)?;
+    file.write_all(data)?;
 
     Ok(())
 }
@@ -125,7 +125,7 @@ pub fn complete_whisper_model_download(
 
     for file_name in files {
         let safe_file_name = sanitize_whisper_file_name(&file_name)?;
-        let path = dir.join(&safe_file_name);
+        let path = dir.join(safe_file_name);
         let metadata = fs::metadata(&path)?;
 
         if !metadata.is_file() || metadata.len() == 0 {
@@ -211,7 +211,7 @@ fn read_whisper_model_metadata(
     app: &AppHandle,
     model_name: &str,
 ) -> Result<Option<WhisperModelMetadata>, AppError> {
-    let path = model_dir(&app, &model_name)?.join(METADATA_FILE_NAME);
+    let path = model_dir(app, model_name)?.join(METADATA_FILE_NAME);
 
     if !path.exists() {
         return infer_legacy_metadata(app, model_name);
@@ -326,4 +326,34 @@ fn unix_timestamp_string() -> String {
         .unwrap_or_default()
         .as_secs()
         .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sanitize_whisper_model_dir_name() {
+        assert_eq!(
+            sanitize_model_dir_name("openai/whisper-tiny").unwrap(),
+            "openai_whisper-tiny"
+        );
+        assert!(sanitize_model_dir_name("").is_err());
+        assert!(sanitize_model_dir_name("invalid/../path").is_err());
+        assert!(sanitize_model_dir_name("invalid;name").is_err());
+    }
+
+    #[test]
+    fn test_sanitize_whisper_file_name() {
+        assert_eq!(
+            sanitize_whisper_file_name("config.json").unwrap(),
+            "config.json"
+        );
+        assert_eq!(
+            sanitize_whisper_file_name("onnx/encoder_model_quantized.onnx").unwrap(),
+            "onnx/encoder_model_quantized.onnx"
+        );
+        assert!(sanitize_whisper_file_name("malicious.sh").is_err());
+        assert!(sanitize_whisper_file_name("../secret.txt").is_err());
+    }
 }

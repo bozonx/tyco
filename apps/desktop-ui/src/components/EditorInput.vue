@@ -13,8 +13,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../composables/useI18n'
 import { useEditorActions } from '../composables/useEditorActions'
+import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import {
   copySelection,
@@ -26,26 +26,29 @@ import {
 import type {
   BubbleMenuRequest,
   ContextMenuRequest,
-} from '../lib/editor/contextMenu'
-import { replaceRange } from '../lib/editor/contextMenu'
-import type { EditorMenuItem } from '../lib/editor/menuItem'
-import { createEditorState, setEditorSyntax } from '../lib/editor/createEditorState'
+} from '../lib/editor/context-menu'
+import { replaceRange } from '../lib/editor/context-menu'
+import {
+  createEditorState,
+  setEditorSyntax,
+} from '../lib/editor/create-editor-state'
 import {
   applyStoreEdit,
   selectAll,
   setPlaceholder,
-} from '../lib/editor/editorSync'
+} from '../lib/editor/editor-sync'
+import type { EditorMenuItem } from '../lib/editor/menu-item'
 import type { PasteAskRequest } from '../lib/editor/paste'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
-import type { EditItem } from '../stores/edditMenu'
-import { useEditMenuStore } from '../stores/edditMenu'
+import type { EditItem } from '../stores/editMenu'
+import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
 import { EditorView } from '@codemirror/view'
-import { DEFAULT_USER_CONFIG } from '@shared'
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 
 const editorInputStore = useEditorInputStore()
 const routeParamsStore = useRouteParams()
@@ -151,20 +154,24 @@ const openContextMenu = (request: ContextMenuRequest): void => {
 
 /** Пункты bubble-меню — те же действия, что и в кнопках под редактором */
 const bubbleItems = (): EditorMenuItem[] => [
-  ...editMenuStore.getEditMenu().map((item: EditItem, index: number) => ({
-    id: `edit-${item.labelKey || item.name || index}`,
-    label: getLabel(item),
-    icon: item.icon,
-    action: () => doEdit(item.action),
-  })),
-  ...actionMenuStore.getActionsMenu().map((item: ActionItem, index: number) => ({
-    id: `action-${item.labelKey || item.name || index}`,
-    label: getLabel(item),
-    icon: item.icon,
-    disabled: item.disabled,
-    separatorBefore: index === 0,
-    action: () => doAction(item),
-  })),
+  ...editMenuStore
+    .getEditMenu()
+    .map((item: EditItem, index: number) => ({
+      id: `edit-${item.labelKey || item.name || index}`,
+      label: getLabel(item),
+      icon: item.icon,
+      action: () => doEdit(item.action),
+    })),
+  ...actionMenuStore
+    .getActionsMenu()
+    .map((item: ActionItem, index: number) => ({
+      id: `action-${item.labelKey || item.name || index}`,
+      label: getLabel(item),
+      icon: item.icon,
+      disabled: item.disabled,
+      separatorBefore: index === 0,
+      action: () => doAction(item),
+    })),
 ]
 
 const updateBubbleMenu = (request: BubbleMenuRequest | null): void => {
@@ -227,10 +234,7 @@ onMounted(() => {
       doc: editorInputStore.value,
       placeholder: t('input.textPlaceholder'),
       syntax: editorSyntax.value,
-      paste: {
-        getMode: () => pasteMode.value,
-        onAsk: askPasteMode,
-      },
+      paste: { getMode: () => pasteMode.value, onAsk: askPasteMode },
       onContextMenu: openContextMenu,
       onSelectionMenu: updateBubbleMenu,
       onDocChange: (value) => editorInputStore.setValue(value),

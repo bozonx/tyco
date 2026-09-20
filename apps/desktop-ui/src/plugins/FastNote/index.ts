@@ -1,5 +1,5 @@
-import { InputConfigItem } from 'src/types'
-import { PluginContext } from 'src/types/plugins'
+import type { InputConfigItem } from '@/types'
+import type { PluginContext } from '@/types/plugins'
 
 export default function pluginIndex() {
   return {

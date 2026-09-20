@@ -17,9 +17,7 @@ export const editorTheme: Extension = EditorView.theme({
     fontFamily: 'var(--editor-font-family)',
     fontSize: 'var(--editor-font-size)',
   },
-  '&.cm-focused': {
-    outline: 'none',
-  },
+  '&.cm-focused': { outline: 'none' },
   '.cm-scroller': {
     // «писательский» вид: пропорциональный шрифт и крупный интерлиньяж,
     // а не моноширинный вид редактора кода
@@ -32,35 +30,23 @@ export const editorTheme: Extension = EditorView.theme({
     padding: 'var(--editor-padding)',
     caretColor: 'oklch(var(--p))',
   },
-  '.cm-line': {
-    padding: '0',
-  },
-  '.cm-placeholder': {
-    color: 'var(--app-text-faint)',
-  },
+  '.cm-line': { padding: '0' },
+  '.cm-placeholder': { color: 'var(--app-text-faint)' },
   '&.cm-focused .cm-cursor': {
     borderLeftColor: 'oklch(var(--p))',
     borderLeftWidth: '2px',
   },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection':
-    {
-      backgroundColor: 'var(--editor-selection-bg)',
-    },
-  '.cm-activeLine': {
-    backgroundColor: 'transparent',
-  },
+    { backgroundColor: 'var(--editor-selection-bg)' },
+  '.cm-activeLine': { backgroundColor: 'transparent' },
 })
 
 /**
- * Подсветка Markdown и вложенных блоков кода. Цвета — те же CSS-переменные,
- * так что тема не дублируется для светлой и тёмной
+ * Подсветка Markdown и вложенных блоков кода. Цвета — те же CSS-переменные, так
+ * что тема не дублируется для светлой и тёмной
  */
 export const editorHighlightStyle = HighlightStyle.define([
-  {
-    tag: tags.heading,
-    color: 'var(--app-syntax-heading)',
-    fontWeight: '600',
-  },
+  { tag: tags.heading, color: 'var(--app-syntax-heading)', fontWeight: '600' },
   { tag: tags.heading1, fontSize: '1.35em', lineHeight: '1.3' },
   { tag: tags.heading2, fontSize: '1.2em', lineHeight: '1.35' },
   { tag: tags.heading3, fontSize: '1.1em' },
@@ -84,7 +70,11 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.string, color: 'var(--app-syntax-string)' },
   { tag: tags.number, color: 'var(--app-syntax-number)' },
   { tag: tags.bool, color: 'var(--app-syntax-number)' },
-  { tag: tags.comment, color: 'var(--app-syntax-comment)', fontStyle: 'italic' },
+  {
+    tag: tags.comment,
+    color: 'var(--app-syntax-comment)',
+    fontStyle: 'italic',
+  },
   { tag: tags.function(tags.variableName), color: 'var(--app-syntax-link)' },
   { tag: tags.typeName, color: 'var(--app-syntax-heading)' },
   { tag: tags.propertyName, color: 'var(--app-syntax-code)' },

@@ -6,6 +6,7 @@ export const useHistoryStore = defineStore('history', () => {
   const ipcStore = useIpcStore()
 
   return createHistoryStoreModel({
-    callFunction: (functionName, args = []) => ipcStore.callFunction(functionName, args),
+    callFunction: (functionName, args = []) =>
+      ipcStore.callFunction(functionName, args),
   })
 })

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "cacheDir": ".turbo/cache",
+  "globalDependencies": ["tsconfig.base.json", "eslint.config.js"],
+  "tasks": {
+    "build": { "dependsOn": ["^build"], "outputs": ["dist/**"] },
+    "lint": { "dependsOn": ["^build"], "outputs": [] },
+    "lint:fix": { "cache": false },
+    "type-check": { "dependsOn": ["^build"], "outputs": [] },
+    "test": { "dependsOn": ["^build"], "outputs": [] },
+    "test:cov": { "dependsOn": ["^build"], "outputs": ["coverage/**"] },
+    "dev": { "cache": false, "persistent": true }
+  }
+}

@@ -1,4 +1,4 @@
-import { START_MODES } from '@shared'
+import { START_MODES } from '@tyco/shared'
 
 export const APP_ROUTE_NAMES = {
   HOME: 'home',
@@ -13,45 +13,19 @@ export const APP_ROUTE_NAMES = {
 } as const
 
 export const APP_ROUTES = {
-  HOME: {
-    name: APP_ROUTE_NAMES.HOME,
-    path: '/',
-  },
-  EDITOR: {
-    name: APP_ROUTE_NAMES.EDITOR,
-    path: '/editor',
-  },
-  HISTORY: {
-    name: APP_ROUTE_NAMES.HISTORY,
-    path: '/history',
-  },
-  CONFIG: {
-    name: APP_ROUTE_NAMES.CONFIG,
-    path: '/config',
-  },
-  CHAT: {
-    name: APP_ROUTE_NAMES.CHAT,
-    path: '/chat',
-  },
-  WRITE: {
-    name: APP_ROUTE_NAMES.WRITE,
-    path: '/write',
-  },
-  VOICE: {
-    name: APP_ROUTE_NAMES.VOICE,
-    path: '/voice',
-  },
-  AI_TASKS: {
-    name: APP_ROUTE_NAMES.AI_TASKS,
-    path: '/aiTasks',
-  },
-  SELECT: {
-    name: APP_ROUTE_NAMES.SELECT,
-    path: '/select',
-  },
+  HOME: { name: APP_ROUTE_NAMES.HOME, path: '/' },
+  EDITOR: { name: APP_ROUTE_NAMES.EDITOR, path: '/editor' },
+  HISTORY: { name: APP_ROUTE_NAMES.HISTORY, path: '/history' },
+  CONFIG: { name: APP_ROUTE_NAMES.CONFIG, path: '/config' },
+  CHAT: { name: APP_ROUTE_NAMES.CHAT, path: '/chat' },
+  WRITE: { name: APP_ROUTE_NAMES.WRITE, path: '/write' },
+  VOICE: { name: APP_ROUTE_NAMES.VOICE, path: '/voice' },
+  AI_TASKS: { name: APP_ROUTE_NAMES.AI_TASKS, path: '/aiTasks' },
+  SELECT: { name: APP_ROUTE_NAMES.SELECT, path: '/select' },
 } as const
 
-export type AppRouteName = (typeof APP_ROUTE_NAMES)[keyof typeof APP_ROUTE_NAMES]
+export type AppRouteName =
+  (typeof APP_ROUTE_NAMES)[keyof typeof APP_ROUTE_NAMES]
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 
 export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {

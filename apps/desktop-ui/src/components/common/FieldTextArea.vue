@@ -30,7 +30,7 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const value = computed(() => props.value || '')
 
-const selected = ref<string>('')
+const selection = ref<string>('')
 
 function handleInput(event: Event) {
   emit('update:value', (event.target as HTMLTextAreaElement).value)
@@ -45,15 +45,15 @@ const handleSelect = () => {
 
   if (start === end) {
     // Нет выделения
-    selected.value = ''
+    selection.value = ''
 
     emit('select', '', start, end)
   } else {
     // Есть выделение
     const selectedText = textarea.value.substring(start, end)
-    selected.value = selectedText
+    selection.value = selectedText
 
-    emit('select', selected.value, start, end)
+    emit('select', selection.value, start, end)
   }
 }
 

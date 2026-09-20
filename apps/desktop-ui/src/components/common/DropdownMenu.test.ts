@@ -14,11 +14,7 @@ describe('DropdownMenu', () => {
           { label: 'lowercase', action: vi.fn() },
         ],
       },
-      global: {
-        stubs: {
-          Icon: true,
-        },
-      },
+      global: { stubs: { Icon: true } },
     })
 
     expect(wrapper.text()).toContain('Case')

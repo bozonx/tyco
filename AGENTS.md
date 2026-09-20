@@ -1,0 +1,43 @@
+# Repository Guidelines
+
+## Communication
+
+- Communicate with the user in Russian, including plans and explanations.
+- Write all code-related content in English: code, identifiers, comments, commit messages, logs, and non-i18n strings. Do not use Russian or any other language in code-related content; i18n locales are the only exception.
+- Keep changes focused. Do not refactor unrelated code unless it is necessary for the task.
+
+## Monorepo Layout and Stack
+
+- `apps/desktop-ui/` — Vue 3 + Vite + Tailwind CSS + CodeMirror 6 frontend (`@tyco/desktop-ui`).
+- `packages/shared/` — shared TypeScript contracts and data structures (`@tyco/shared`).
+- `src-tauri/` — Rust backend (Tauri 2, local storage, D-Bus IPC, Whisper/LLM models management).
+- `scripts/` — development, automation, and verification scripts (`check-i18n.js`, `tauri-dev.sh`).
+
+The root workspace uses Node.js 24+, pnpm 11, TypeScript, Turborepo, ESLint (flat config), and Prettier.
+Always use `pnpm`; do not introduce npm or Yarn lockfiles.
+
+## Working Approach & Architecture Principles
+
+- **Thin Pinia Stores + DI Models**:
+  - Keep Pinia stores minimal and focused on reactivity and dependency wiring.
+  - Extract pure business and state logic into decoupled models inside `apps/desktop-ui/src/lib/` (e.g. `history/`, `ipc/`, `action-menu/`, `editor-input/`, `modals/`).
+  - Accompany every DI model with focused unit tests.
+- **Naming Conventions**:
+  - Use kebab-case for filenames across all TypeScript and utility modules (e.g., `context-menu.ts`, `editor-sync.ts`).
+  - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
+- **I18n & Locales**:
+  - Locale messages are isolated in `apps/desktop-ui/src/lib/i18n/locales/*.json`.
+  - All keys across all locales must stay synchronized. Run `pnpm check:i18n` to validate.
+- **IPC & System Contracts**:
+  - Linux D-Bus contract uses `org.tyco.Service`, `/org/tyco/Object`, and `org.tyco.Interface`.
+- **Rust Layer**:
+  - Strict zero-warning policy on `cargo clippy -- -D warnings`.
+  - Code must be formatted via `cargo fmt --check`.
+  - Accompany core commands with unit tests in `src-tauri`.
+
+## Verification Commands
+
+- `pnpm check` — runs i18n validator, ESLint, TypeScript type-check, and Prettier check.
+- `pnpm test` — runs all Vitest test suites.
+- `pnpm validate` — full aggregate check (`pnpm check && pnpm test && pnpm build`).
+- `cargo fmt --check && cargo clippy -- -D warnings && cargo test` (in `src-tauri`) — verifies Rust backend quality.

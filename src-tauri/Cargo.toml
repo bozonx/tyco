@@ -1,6 +1,6 @@
 [package]
 name = "tyco"
-version = "0.0.3"
+version = "0.1.0"
 description = "TyCo - typing AI companion for writers and professionals who work with texts a lot"
 authors = ["Kozyrin Ivan"]
 edition = "2021"

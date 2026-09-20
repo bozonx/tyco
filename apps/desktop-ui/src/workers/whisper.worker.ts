@@ -5,19 +5,11 @@ import {
 } from '@huggingface/transformers'
 
 type WorkerMessage =
-  | {
-      type: 'init'
-      id: number
-      data: { modelUrl: string }
-    }
+  | { type: 'init'; id: number; data: { modelUrl: string } }
   | {
       type: 'transcribe'
       id: number
-      data: {
-        audio: Float32Array
-        modelName: string
-        language?: string
-      }
+      data: { audio: Float32Array; modelName: string; language?: string }
     }
 
 type WorkerResponse =
@@ -67,10 +59,7 @@ async function getTranscriber(modelName: string) {
       transcriber = (await pipeline(
         'automatic-speech-recognition',
         localModelName,
-        {
-          device: 'webgpu',
-          quantized: true,
-        } as any
+        { device: 'webgpu', quantized: true } as any
       )) as AutomaticSpeechRecognitionPipeline
 
       return transcriber
@@ -84,10 +73,7 @@ async function getTranscriber(modelName: string) {
   transcriber = (await pipeline(
     'automatic-speech-recognition',
     localModelName,
-    {
-      device: 'wasm',
-      quantized: true,
-    } as any
+    { device: 'wasm', quantized: true } as any
   )) as AutomaticSpeechRecognitionPipeline
 
   return transcriber

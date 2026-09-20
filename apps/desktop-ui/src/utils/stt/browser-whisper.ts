@@ -1,7 +1,7 @@
 import { desktopClient } from '../../lib/desktop/client'
 import WhisperWorker from '../../workers/whisper.worker.ts?worker'
 import { isModelDownloaded } from './model-storage'
-import { DESKTOP_COMMANDS } from '@shared'
+import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
 interface BrowserWhisperOptions {
@@ -41,10 +41,7 @@ async function ensureWorkerInitialized() {
 
   const result = await desktopClient.invoke<string>(
     DESKTOP_COMMANDS.GET_WHISPER_MODEL_PATH,
-    {
-      modelName: '',
-      fileName: '',
-    }
+    { modelName: '', fileName: '' }
   )
 
   let modelPath =

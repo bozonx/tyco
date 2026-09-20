@@ -27,9 +27,7 @@ const menuModalsStore = useMenuModalsStore()
 const isInsertMenu = ref(false)
 const resText = ref('')
 
-navPanelStore.resetNavParams({
-  panelVisible: false,
-})
+navPanelStore.resetNavParams({ panelVisible: false })
 
 function handleCorrected(resultText: string) {
   resText.value = resultText

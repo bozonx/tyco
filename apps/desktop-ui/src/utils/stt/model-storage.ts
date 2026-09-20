@@ -1,6 +1,6 @@
 import { desktopClient } from '../../lib/desktop/client'
 import { downloadBinaryFile } from '../download/file-download'
-import { DESKTOP_COMMANDS, type WhisperModelMetadata } from '@shared'
+import { DESKTOP_COMMANDS, type WhisperModelMetadata } from '@tyco/shared'
 
 export interface ModelDownloadProgress {
   model: string
@@ -151,11 +151,7 @@ export async function downloadModel(
 
   const metadataResult = await desktopClient.invoke<WhisperModelMetadata>(
     DESKTOP_COMMANDS.COMPLETE_WHISPER_MODEL_DOWNLOAD,
-    {
-      modelName,
-      version: HF_REVISION,
-      files,
-    }
+    { modelName, version: HF_REVISION, files }
   )
 
   if (!metadataResult.success) {
@@ -168,9 +164,7 @@ export async function downloadModel(
 export async function deleteModel(modelName: string): Promise<void> {
   const result = await desktopClient.invoke(
     DESKTOP_COMMANDS.DELETE_WHISPER_MODEL,
-    {
-      modelName,
-    }
+    { modelName }
   )
 
   if (!result.success) {

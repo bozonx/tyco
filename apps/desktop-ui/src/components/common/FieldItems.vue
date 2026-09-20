@@ -39,14 +39,12 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  items: Record<string, any>[]
-}>()
+const props = defineProps<{ items: Record<string, any>[] }>()
 
 const emit = defineEmits<{
   (e: 'update:items', items: Record<string, any>[]): void

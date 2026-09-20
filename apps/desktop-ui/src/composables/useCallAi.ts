@@ -21,7 +21,7 @@ import {
   type LocalState,
   type SttModel,
   useAiRequest,
-} from '@shared'
+} from '@tyco/shared'
 
 interface LocalVoiceRecording {
   sampleRate: number
@@ -67,11 +67,7 @@ export const useCallAi = () => {
       }
     }
 
-    return {
-      provider: 'vosk' as const,
-      streaming: true,
-      model: sttModel,
-    }
+    return { provider: 'vosk' as const, streaming: true, model: sttModel }
   }
 
   const currentWhisperLanguage = () => {
@@ -295,9 +291,7 @@ export const useCallAi = () => {
     const rule = buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE])
     const devInstructions = prepareDevInstructions(
       APP_CONFIG.aiInstructions[AI_TASKS.TRANSLATE],
-      {
-        TRANSLATION_LANG: userConfig.toTranslateLanguages[toLangNum],
-      }
+      { TRANSLATION_LANG: userConfig.toTranslateLanguages[toLangNum] }
     )
 
     return await aiRequest(

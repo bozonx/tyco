@@ -1,11 +1,11 @@
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import type { PasteMode } from '@shared'
+import type { PasteMode } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
-import type { BubbleMenuRequest, ContextMenuRequest } from './contextMenu'
-import { wordAt } from './contextMenu'
-import { createEditorExtensions } from './createEditorState'
+import type { BubbleMenuRequest, ContextMenuRequest } from './context-menu'
+import { wordAt } from './context-menu'
+import { createEditorExtensions } from './create-editor-state'
 
 interface Harness {
   view: EditorView
@@ -120,10 +120,7 @@ describe('paste', () => {
     const { view } = mount('', 'plain')
 
     view.contentDOM.dispatchEvent(
-      pasteEvent({
-        'text/html': '<h1>Title</h1>',
-        'text/plain': 'Title',
-      })
+      pasteEvent({ 'text/html': '<h1>Title</h1>', 'text/plain': 'Title' })
     )
 
     expect(view.state.doc.toString()).toBe('Title')
@@ -147,10 +144,7 @@ describe('paste', () => {
 
     view.dispatch({ selection: { anchor: 5, head: 9 } })
     view.contentDOM.dispatchEvent(
-      pasteEvent({
-        'text/html': '<p>that</p>',
-        'text/plain': 'that',
-      })
+      pasteEvent({ 'text/html': '<p>that</p>', 'text/plain': 'that' })
     )
 
     expect(view.state.doc.toString()).toBe('keep that')

@@ -1,14 +1,14 @@
-import { createRouter, createMemoryHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
-import HistoryView from "../views/HistoryView.vue";
-import ConfigView from "../views/ConfigView.vue";
-import ChatView from "../views/ChatView.vue";
-import WriteModeView from "../views/WriteModeView.vue";
-import VoiceView from "../views/VoiceView.vue";
-import SelectModeView from "../views/SelectModeView.vue";
-import AiTaskView from "../views/AiTaskView.vue";
-import EditorView from "../views/EditorView.vue";
-import { APP_ROUTES } from "../lib/navigation/routes";
+import { createRouter, createMemoryHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import HistoryView from '../views/HistoryView.vue'
+import ConfigView from '../views/ConfigView.vue'
+import ChatView from '../views/ChatView.vue'
+import WriteModeView from '../views/WriteModeView.vue'
+import VoiceView from '../views/VoiceView.vue'
+import SelectModeView from '../views/SelectModeView.vue'
+import AiTaskView from '../views/AiTaskView.vue'
+import EditorView from '../views/EditorView.vue'
+import { APP_ROUTES } from '../lib/navigation/routes'
 
 const router = createRouter({
   history: createMemoryHistory(),
@@ -63,6 +63,6 @@ const router = createRouter({
       component: SelectModeView,
     },
   ],
-});
+})
 
-export default router;
+export default router

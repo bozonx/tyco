@@ -4,43 +4,41 @@ import {
   toSnakeCase,
   toKebabCase,
   normalizeText,
-} from "@/lib/squidlet-lib-local";
+} from '@/lib/squidlet-lib-local'
 
 export function useTextTransform() {
   const toUppercase = (text?: string): string => {
-    if (!text) return "";
+    if (!text) return ''
 
-    return text.toUpperCase();
-  };
+    return text.toUpperCase()
+  }
 
   const toLowercase = (text?: string): string => {
-    if (!text) return "";
+    if (!text) return ''
 
-    return text.toLowerCase();
-  };
+    return text.toLowerCase()
+  }
 
   const doCaseTransform = (text: string, caseType: string): string => {
     switch (caseType) {
-      case "normalize":
-        return normalizeText(text);
-      case "uppercase":
-        return toUppercase(text);
-      case "lowercase":
-        return toLowercase(text);
-      case "camelCase":
-        return toCamelCase(text);
-      case "pascalCase":
-        return toPascalCase(text);
-      case "snakeCase":
-        return toSnakeCase(text);
-      case "kebabCase":
-        return toKebabCase(text);
+      case 'normalize':
+        return normalizeText(text)
+      case 'uppercase':
+        return toUppercase(text)
+      case 'lowercase':
+        return toLowercase(text)
+      case 'camelCase':
+        return toCamelCase(text)
+      case 'pascalCase':
+        return toPascalCase(text)
+      case 'snakeCase':
+        return toSnakeCase(text)
+      case 'kebabCase':
+        return toKebabCase(text)
     }
 
-    return text;
-  };
+    return text
+  }
 
-  return {
-    doCaseTransform,
-  };
+  return { doCaseTransform }
 }

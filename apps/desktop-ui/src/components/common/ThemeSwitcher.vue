@@ -1,5 +1,9 @@
 <template>
-  <div class="theme-switcher" role="radiogroup" :aria-label="t('settings.theme')">
+  <div
+    class="theme-switcher"
+    role="radiogroup"
+    :aria-label="t('settings.theme')"
+  >
     <label
       v-for="option in themeOptions"
       :key="option.id"
@@ -25,13 +29,9 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import type { ThemeMode } from '../../lib/theme/theme-controller'
 
-const props = defineProps<{
-  value: ThemeMode
-}>()
+const props = defineProps<{ value: ThemeMode }>()
 
-const emit = defineEmits<{
-  (e: 'update:value', value: ThemeMode): void
-}>()
+const emit = defineEmits<{ (e: 'update:value', value: ThemeMode): void }>()
 
 const { t } = useI18n()
 

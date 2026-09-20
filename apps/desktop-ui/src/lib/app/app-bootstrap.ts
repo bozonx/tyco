@@ -1,4 +1,4 @@
-import { DESKTOP_EVENTS, type InitParams } from '@shared'
+import { DESKTOP_EVENTS, type InitParams } from '@tyco/shared'
 
 import { GlobalEvents } from '../../composables/useGlobalEvents'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
@@ -15,7 +15,9 @@ export interface AppBootstrapDeps {
   emitGlobal: (event: GlobalEvents, payload?: unknown) => void
   initPlugins: () => void
   handleNavKeyUp: (event: KeyboardEvent) => void
-  addWindowKeyupListener: (handler: (event: KeyboardEvent) => void) => () => void
+  addWindowKeyupListener: (
+    handler: (event: KeyboardEvent) => void
+  ) => () => void
 }
 
 export function createAppBootstrap(deps: AppBootstrapDeps) {
@@ -32,7 +34,9 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     deps.closeAllModals()
 
     const shouldNavigate =
-      options.forceNavigate || lastAppliedMode === undefined || lastAppliedMode !== params.mode
+      options.forceNavigate ||
+      lastAppliedMode === undefined ||
+      lastAppliedMode !== params.mode
 
     lastAppliedMode = params.mode
 
@@ -75,10 +79,5 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     removeVoiceListener?.()
   }
 
-  return {
-    applyParams,
-    handleKeyUp,
-    start,
-    stop,
-  }
+  return { applyParams, handleKeyUp, start, stop }
 }

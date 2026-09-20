@@ -78,9 +78,7 @@ async function doCorrection() {
     correctedText.value = writerInputStore.value
     correctionIsActual.value = true
   } else {
-    menuModalsStore.setPendingModal({
-      correction: true,
-    })
+    menuModalsStore.setPendingModal({ correction: true })
 
     const result = await correctText(writerInputStore.value)
 

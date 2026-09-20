@@ -1,34 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noEmit": true,
     "jsx": "preserve",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@shared": ["../packages/shared/src/index.ts"],
-      "@shared/*": ["../packages/shared/src/*"]
-    },
-    "types": ["vite/client", "node"],
-    "allowJs": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "ignoreDeprecations": "6.0"
+    "allowImportingTsExtensions": true,
+    "paths": { "@/*": ["./src/*"] },
+    "types": ["vite/client", "node"]
   },
   "include": [
     "src/**/*.ts",
@@ -36,6 +14,6 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "components.d.ts",
-    "../packages/shared/**/*.ts"
+    "../../packages/shared/src/**/*.ts"
   ]
 }

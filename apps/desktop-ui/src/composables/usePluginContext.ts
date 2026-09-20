@@ -1,13 +1,12 @@
-import { ActionItem, useActionMenuStore } from '../stores/actionMenu'
-import { useEditMenuStore } from '../stores/edditMenu'
+import { type ActionItem, useActionMenuStore } from '../stores/actionMenu'
+import { type EditItem, useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
-import { DEFAULT_PARAMS, useNavPanelStore } from '../stores/navPanel'
+import { type MenuModals, useMenuModalsStore } from '../stores/menuModals'
+import { type DEFAULT_PARAMS, useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
-import { PluginIndex } from '../types/plugins'
+import { type PluginIndex } from '../types/plugins'
 import useToast from './useToast'
-import type { EditItem } from '../stores/edditMenu'
 
 export default function usePluginContext() {
   const actionMenuStore = useActionMenuStore()
@@ -110,7 +109,5 @@ export default function usePluginContext() {
     plugin.init(ctx)
   }
 
-  return {
-    use,
-  }
+  return { use }
 }

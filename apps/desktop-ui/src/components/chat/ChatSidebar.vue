@@ -6,7 +6,10 @@
     </Button>
 
     <div class="flex-1 overflow-y-auto">
-      <div v-if="historyStore.chatHistory.length === 0" class="text-sm text-gray-500 italic px-2">
+      <div
+        v-if="historyStore.chatHistory.length === 0"
+        class="text-sm text-gray-500 italic px-2"
+      >
         {{ t('history.empty') }}
       </div>
       <ul v-else class="flex flex-col gap-1">
@@ -31,8 +34,8 @@
 import { useI18n } from '../../composables/useI18n'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
-import { Icon } from '@iconify/vue'
 import Button from '../common/Button.vue'
+import { Icon } from '@iconify/vue'
 
 const { t } = useI18n()
 const chatStore = useChatStore()

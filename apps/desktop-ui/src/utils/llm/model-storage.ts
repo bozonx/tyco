@@ -1,6 +1,6 @@
 import { desktopClient } from '../../lib/desktop/client'
 import { downloadBinaryFile } from '../download/file-download'
-import { DESKTOP_COMMANDS, type LlmModelMetadata } from '@shared'
+import { DESKTOP_COMMANDS, type LlmModelMetadata } from '@tyco/shared'
 
 export interface LlmModelDownloadProgress {
   model: string
@@ -198,11 +198,7 @@ export async function downloadLlmModel(
 
   const metadataResult = await desktopClient.invoke<LlmModelMetadata>(
     DESKTOP_COMMANDS.COMPLETE_LLM_MODEL_DOWNLOAD,
-    {
-      modelName,
-      version: HF_REVISION,
-      files,
-    }
+    { modelName, version: HF_REVISION, files }
   )
 
   if (!metadataResult.success) {

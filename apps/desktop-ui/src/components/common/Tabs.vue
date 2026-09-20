@@ -16,15 +16,10 @@ import { computed } from 'vue'
 
 import TabItem from './TabItem.vue'
 
-const emit = defineEmits<{
-  (e: 'update:value', key: string | number): void
-}>()
+const emit = defineEmits<{ (e: 'update:value', key: string | number): void }>()
 
 const props = defineProps<{
-  tabs: {
-    text: string
-    key: string | number
-  }[]
+  tabs: { text: string; key: string | number }[]
   value?: string | number
 }>()
 

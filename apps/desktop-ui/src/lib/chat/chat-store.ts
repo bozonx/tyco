@@ -12,7 +12,7 @@ import {
   type ChatMessage,
   type ChatParams,
   type LocalState,
-} from '@shared'
+} from '@tyco/shared'
 import { APP_ROUTES, type AppRoutePath } from '../navigation/routes'
 
 export interface ChatStoreDeps {
@@ -94,7 +94,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     loadingProgress.value = ''
     abortController.value = new AbortController()
 
-    let result = ''
+    let result: string
 
     try {
       result = await deps.sendChatMessage(

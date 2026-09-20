@@ -3,9 +3,9 @@ import { EditorSelection, Transaction } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { placeholder } from '@codemirror/view'
 
-import { fromStore, placeholderCompartment } from './createEditorState'
-import type { EditSource } from './editSource'
-import { EDIT_USER_EVENT, isolatedEditSources } from './editSource'
+import { fromStore, placeholderCompartment } from './create-editor-state'
+import type { EditSource } from './edit-source'
+import { EDIT_USER_EVENT, isolatedEditSources } from './edit-source'
 
 export interface DocChange {
   from: number

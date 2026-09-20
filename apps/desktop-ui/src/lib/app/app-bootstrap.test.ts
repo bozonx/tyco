@@ -1,4 +1,4 @@
-import { DEFAULT_INIT_PARAMS, START_MODES, type InitParams } from '@shared'
+import { DEFAULT_INIT_PARAMS, START_MODES, type InitParams } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { GlobalEvents } from '../../composables/useGlobalEvents'
@@ -6,7 +6,10 @@ import { APP_ROUTES } from '../navigation/routes'
 import { createAppBootstrap, type AppBootstrapDeps } from './app-bootstrap'
 
 function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
-  const listeners = new Map<string, (payload: unknown) => void | Promise<void>>()
+  const listeners = new Map<
+    string,
+    (payload: unknown) => void | Promise<void>
+  >()
 
   const deps: AppBootstrapDeps = {
     loadInitialParams: vi.fn(async () => ({
@@ -16,10 +19,15 @@ function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
     setParams: vi.fn(),
     closeAllModals: vi.fn(),
     navigateTo: vi.fn(async () => {}),
-    listen: vi.fn(async (event: string, handler: (payload: unknown) => void | Promise<void>) => {
-      listeners.set(event, handler)
-      return vi.fn()
-    }),
+    listen: vi.fn(
+      async (
+        event: string,
+        handler: (payload: unknown) => void | Promise<void>
+      ) => {
+        listeners.set(event, handler)
+        return vi.fn()
+      }
+    ),
     emitGlobal: vi.fn(),
     initPlugins: vi.fn(),
     handleNavKeyUp: vi.fn(),

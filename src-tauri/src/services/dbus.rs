@@ -7,15 +7,15 @@ use zbus::interface;
 use crate::services::runtime;
 use crate::state::AppState;
 
-const MESSAGE_PATH: &str = "/org/librass/Object";
-const MESSAGE_INTERFACE: &str = "org.librass.Interface";
-const MESSAGE_DEST: &str = "org.librass.Service";
+const MESSAGE_PATH: &str = "/org/tyco/Object";
+const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
+const MESSAGE_DEST: &str = "org.tyco.Service";
 
 pub fn spawn_dbus_server(app: AppHandle) {
     thread::spawn(move || {
         let runtime = tauri::async_runtime::handle().clone();
         let connection = runtime.block_on(async {
-            let interface = LibrassDbus { app: app.clone() };
+            let interface = TycoDbus { app: app.clone() };
 
             zbus::ConnectionBuilder::session()
                 .expect("Failed to open DBus session")
@@ -36,17 +36,14 @@ pub fn spawn_dbus_server(app: AppHandle) {
     });
 }
 
-struct LibrassDbus {
+struct TycoDbus {
     app: AppHandle,
 }
 
-#[interface(name = "org.librass.Interface")]
-impl LibrassDbus {
+#[interface(name = "org.tyco.Interface")]
+impl TycoDbus {
     async fn switch_mode(&self, message: &str) -> zbus::fdo::Result<()> {
-        let mut parts = message.splitn(3, '|');
-        let mode = parts.next().unwrap_or("editor");
-        let window_id = parts.next().filter(|value| !value.is_empty());
-        let selected_text = parts.next().filter(|value| !value.is_empty());
+        let (mode, window_id, selected_text) = parse_switch_mode_message(message);
 
         if let Some(state) = self.app.try_state::<AppState>() {
             state.update_params(|params| {
@@ -70,5 +67,44 @@ impl LibrassDbus {
     #[zbus(name = "Ping")]
     async fn ping(&self) -> zbus::fdo::Result<&str> {
         Ok(MESSAGE_INTERFACE)
+    }
+}
+
+pub fn parse_switch_mode_message(message: &str) -> (&str, Option<&str>, Option<&str>) {
+    let mut parts = message.splitn(3, '|');
+    let mode = parts.next().unwrap_or("editor");
+    let window_id = parts.next().filter(|value| !value.is_empty());
+    let selected_text = parts.next().filter(|value| !value.is_empty());
+    (mode, window_id, selected_text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_switch_mode_message_full() {
+        let (mode, window_id, selected_text) =
+            parse_switch_mode_message("chat|12345|some selected text");
+        assert_eq!(mode, "chat");
+        assert_eq!(window_id, Some("12345"));
+        assert_eq!(selected_text, Some("some selected text"));
+    }
+
+    #[test]
+    fn test_parse_switch_mode_message_empty_fields() {
+        let (mode, window_id, selected_text) = parse_switch_mode_message("editor||");
+        assert_eq!(mode, "editor");
+        assert_eq!(window_id, None);
+        assert_eq!(selected_text, None);
+    }
+
+    #[test]
+    fn test_parse_switch_mode_message_with_pipes_in_selected_text() {
+        let (mode, window_id, selected_text) =
+            parse_switch_mode_message("correction|999|text | with | pipes");
+        assert_eq!(mode, "correction");
+        assert_eq!(window_id, Some("999"));
+        assert_eq!(selected_text, Some("text | with | pipes"));
     }
 }

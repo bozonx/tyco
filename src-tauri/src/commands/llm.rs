@@ -83,7 +83,7 @@ fn save_llm_model_file_bytes(
     append: bool,
 ) -> Result<(), AppError> {
     let file_path =
-        model_dir(&app, &model_name)?.join(sanitize_llm_file_name(&model_name, &file_name)?);
+        model_dir(app, model_name)?.join(sanitize_llm_file_name(model_name, file_name)?);
 
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent)?;
@@ -95,7 +95,7 @@ fn save_llm_model_file_bytes(
         .truncate(!append)
         .append(append)
         .open(&file_path)?;
-    file.write_all(&data)?;
+    file.write_all(data)?;
 
     Ok(())
 }
@@ -154,7 +154,7 @@ pub fn complete_llm_model_download(
 
     for file_name in files {
         let safe_file_name = sanitize_llm_file_name(&model_name, &file_name)?;
-        let path = dir.join(&safe_file_name);
+        let path = dir.join(safe_file_name);
         let metadata = fs::metadata(&path)?;
 
         if !metadata.is_file() || metadata.len() == 0 {
@@ -274,4 +274,35 @@ fn unix_timestamp_string() -> String {
         .unwrap_or_default()
         .as_secs()
         .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sanitize_model_dir_name() {
+        assert_eq!(
+            sanitize_model_dir_name("onnx-community/Qwen2.5-0.5B-Instruct").unwrap(),
+            "onnx-community_Qwen2.5-0.5B-Instruct"
+        );
+        assert!(sanitize_model_dir_name("").is_err());
+        assert!(sanitize_model_dir_name("invalid/../path").is_err());
+        assert!(sanitize_model_dir_name("invalid;name").is_err());
+    }
+
+    #[test]
+    fn test_sanitize_llm_file_name() {
+        let model = "onnx-community/Qwen2.5-0.5B-Instruct";
+        assert_eq!(
+            sanitize_llm_file_name(model, "config.json").unwrap(),
+            "config.json"
+        );
+        assert_eq!(
+            sanitize_llm_file_name(model, "onnx/model_q4.onnx").unwrap(),
+            "onnx/model_q4.onnx"
+        );
+        assert!(sanitize_llm_file_name(model, "malicious.exe").is_err());
+        assert!(sanitize_llm_file_name("unknown-model", "config.json").is_err());
+    }
 }

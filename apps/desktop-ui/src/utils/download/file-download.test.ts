@@ -38,13 +38,11 @@ function createResponse(options: {
 
 describe('file download', () => {
   it('skips fetching the body when local file is already complete', async () => {
-    const fetchMock = vi.fn().mockResolvedValueOnce(
-      createResponse({
-        headers: {
-          'Content-Length': '128',
-        },
-      })
-    )
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createResponse({ headers: { 'Content-Length': '128' } })
+      )
 
     vi.stubGlobal('fetch', fetchMock)
     const onChunk = vi.fn()
@@ -68,19 +66,12 @@ describe('file download', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        createResponse({
-          headers: {
-            'Content-Length': '10',
-          },
-        })
+        createResponse({ headers: { 'Content-Length': '10' } })
       )
       .mockResolvedValueOnce(
         createResponse({
           status: 206,
-          headers: {
-            'Content-Length': '6',
-            'Content-Range': 'bytes 4-9/10',
-          },
+          headers: { 'Content-Length': '6', 'Content-Range': 'bytes 4-9/10' },
           chunks: [
             [5, 6, 7],
             [8, 9, 10],
@@ -104,18 +95,12 @@ describe('file download', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       'https://example.com/model.bin',
-      {
-        method: 'HEAD',
-      }
+      { method: 'HEAD' }
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       'https://example.com/model.bin',
-      {
-        headers: {
-          Range: 'bytes=4-',
-        },
-      }
+      { headers: { Range: 'bytes=4-' } }
     )
     expect(onChunk).toHaveBeenNthCalledWith(1, expect.any(Uint8Array), true)
     expect(onChunk).toHaveBeenNthCalledWith(2, expect.any(Uint8Array), true)

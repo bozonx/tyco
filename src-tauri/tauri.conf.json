@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TyCo - typing companion",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "identifier": "com.tyco.app",
   "build": {
     "beforeDevCommand": "pnpm dev:ui",
     "beforeBuildCommand": "pnpm build:ui",
-    "frontendDist": "../ui/dist",
+    "frontendDist": "../apps/desktop-ui/dist",
     "devUrl": "http://localhost:3000"
   },
   "app": {
@@ -25,14 +25,11 @@
     "security": {
       "assetProtocol": {
         "enable": true,
-        "scope": [
-          "$APPDATA/models/whisper/**",
-          "$APPDATA/models/llm/**"
-        ]
+        "scope": ["$APPDATA/models/whisper/**", "$APPDATA/models/llm/**"]
       },
       "csp": {
         "default-src": "'self' asset: http://asset.localhost",
-        "connect-src": "'self' ipc: http://ipc.localhost http: https: ws: wss:",
+        "connect-src": "'self' ipc: http://ipc.localhost http://localhost:11434 http://127.0.0.1:11434 https://huggingface.co https://*.huggingface.co https://openrouter.ai https://api.openai.com",
         "img-src": "'self' asset: http://asset.localhost data: blob:",
         "style-src": "'self' 'unsafe-inline'",
         "font-src": "'self' data:"

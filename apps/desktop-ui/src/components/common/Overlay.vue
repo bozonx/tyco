@@ -20,14 +20,9 @@ import { useMenuModalsStore } from '../../stores/menuModals'
 
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
-withDefaults(
-  defineProps<{
-    navBarVisible?: boolean
-  }>(),
-  {
-    navBarVisible: true,
-  }
-)
+withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
+  navBarVisible: true,
+})
 </script>
 
 <style scoped>

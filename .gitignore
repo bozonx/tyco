@@ -12,6 +12,9 @@ dist/
 node_modules
 *.log
 .DS_Store
+*.tsbuildinfo
+coverage
+.turbo
 
 # IDE
 .vscode

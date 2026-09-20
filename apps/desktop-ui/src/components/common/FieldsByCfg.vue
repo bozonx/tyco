@@ -25,14 +25,12 @@
 </template>
 
 <script setup lang="ts">
-import { InputConfigItem } from 'src/types/index'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import type { InputConfigItem } from '@/types'
 
-const props = defineProps<{
-  config: InputConfigItem[]
-}>()
+const props = defineProps<{ config: InputConfigItem[] }>()
 
 const emit = defineEmits<{
   (e: 'update:values', values: Record<string, any>): void

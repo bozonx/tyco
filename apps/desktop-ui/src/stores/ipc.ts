@@ -1,4 +1,3 @@
-// @ts-ignore
 import miniToastr from 'mini-toastr'
 import { defineStore } from 'pinia'
 

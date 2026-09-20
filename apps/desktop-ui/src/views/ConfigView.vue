@@ -1,13 +1,13 @@
 <template>
-  <ContentPadding> 
+  <ContentPadding>
     <Settings />
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
-  import { useNavPanelStore } from "../stores/navPanel";
+import { useNavPanelStore } from '../stores/navPanel'
 
-  const navPanelStore = useNavPanelStore();
+const navPanelStore = useNavPanelStore()
 
-  navPanelStore.resetNavParams({});
+navPanelStore.resetNavParams({})
 </script>
