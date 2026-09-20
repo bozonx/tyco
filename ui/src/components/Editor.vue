@@ -1,5 +1,43 @@
 <template>
   <div class="flex flex-col w-full h-full">
+    <!-- Toolbar above editor -->
+    <div class="flex items-center justify-between gap-2 mb-2">
+      <!-- Left column: Case and Format dropdowns -->
+      <div class="flex items-center gap-2">
+        <DropdownMenu
+          :label="t('editor.case')"
+          :items="caseDropdownItems"
+        />
+        <DropdownMenu
+          :label="t('editor.format')"
+          :items="formatDropdownItems"
+        />
+      </div>
+
+      <!-- Right column: Insert to window & Translation icon buttons -->
+      <div class="flex items-center gap-2">
+        <Button
+          sm
+          square
+          neutral
+          @click="handleInsertToWindow"
+          :title="t('action.insertIntoWindow')"
+        >
+          <Icon icon="mdi:application-export" height="20" />
+        </Button>
+        <Button
+          sm
+          square
+          neutral
+          @click="handleTranslation"
+          :title="t('action.translation')"
+        >
+          <Icon icon="mdi:translate" height="20" />
+        </Button>
+      </div>
+    </div>
+
+    <!-- Main editor area -->
     <div class="flex-1 flex gap-2 min-w-0">
       <div class="flex-1 min-w-0">
         <EditorInput />
@@ -53,9 +91,12 @@
         {{ t('editor.selectionHint') }}
       </p>
 
-      <div class="flex gap-1 w-full flex-wrap">
+      <div
+        v-if="otherEditItems.length > 0"
+        class="flex gap-1 w-full flex-wrap mb-2"
+      >
         <Button
-          v-for="item in editMenuStore.getEditMenu()"
+          v-for="item in otherEditItems"
           :key="item.labelKey || item.name"
           sm
           neutral
@@ -86,10 +127,13 @@ import { computed, onUnmounted } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
+import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
+import type { EditItem } from '../stores/edditMenu'
 import { useEditMenuStore } from '../stores/edditMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useHistoryStore } from '../stores/history'
+import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
 
 const actionMenuStore = useActionMenuStore()
@@ -99,21 +143,93 @@ const historyStore = useHistoryStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 
-const SIDE_ACTION_KEYS = new Set([
+const CASE_KEYS = [
+  'edit.normalize',
+  'edit.uppercase',
+  'edit.lowercase',
+  'edit.camelCase',
+  'edit.pascalCase',
+  'edit.snakeCase',
+  'edit.kebabCase',
+]
+
+const FORMAT_KEYS = ['edit.beautifyMd', 'edit.formatCode']
+
+const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
+  editMenuStore
+    .getEditMenu()
+    .filter(
+      (item: EditItem) => item.labelKey && CASE_KEYS.includes(item.labelKey)
+    )
+    .map((item: EditItem) => ({
+      label: getLabel(item),
+      icon: item.icon,
+      action: () => doEdit(item.action),
+    }))
+)
+
+const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
+  editMenuStore
+    .getEditMenu()
+    .filter(
+      (item: EditItem) => item.labelKey && FORMAT_KEYS.includes(item.labelKey)
+    )
+    .map((item: EditItem) => ({
+      label: getLabel(item),
+      icon: item.icon,
+      action: () => doEdit(item.action),
+    }))
+)
+
+const otherEditItems = computed(() =>
+  editMenuStore
+    .getEditMenu()
+    .filter(
+      (item: EditItem) =>
+        !item.labelKey ||
+        (!CASE_KEYS.includes(item.labelKey) &&
+          !FORMAT_KEYS.includes(item.labelKey))
+    )
+)
+
+const EXCLUDED_ACTION_KEYS = new Set([
   'action.copyToClipboard',
   'action.correction',
+  'action.insertIntoWindow',
+  'action.translation',
 ])
 
 const bottomActions = computed(() =>
   actionMenuStore
     .getActionsMenu()
-    .filter((item) => !item.labelKey || !SIDE_ACTION_KEYS.has(item.labelKey))
+    .filter(
+      (item: ActionItem) =>
+        !item.labelKey || !EXCLUDED_ACTION_KEYS.has(item.labelKey)
+    )
 )
+
+const handleInsertToWindow = async () => {
+  const insertAction = actionMenuStore
+    .getActionsMenu()
+    .find((item: ActionItem) => item.labelKey === 'action.insertIntoWindow')
+  if (insertAction) {
+    await doAction(insertAction)
+  }
+}
+
+const handleTranslation = async () => {
+  const translationAction = actionMenuStore
+    .getActionsMenu()
+    .find((item: ActionItem) => item.labelKey === 'action.translation')
+  if (translationAction) {
+    await doAction(translationAction)
+  }
+}
 
 const handleCorrection = async () => {
   const correctionAction = actionMenuStore
     .getActionsMenu()
-    .find((item) => item.labelKey === 'action.correction')
+    .find((item: ActionItem) => item.labelKey === 'action.correction')
   if (correctionAction) {
     await doAction(correctionAction)
   }
@@ -122,7 +238,7 @@ const handleCorrection = async () => {
 const handleCopy = async () => {
   const copyAction = actionMenuStore
     .getActionsMenu()
-    .find((item) => item.labelKey === 'action.copyToClipboard')
+    .find((item: ActionItem) => item.labelKey === 'action.copyToClipboard')
   if (copyAction) {
     await doAction(copyAction)
   }

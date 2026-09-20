@@ -24,6 +24,7 @@ declare module 'vue' {
     Diff: typeof import('./src/components/common/Diff.vue')['default']
     DiffInput: typeof import('./src/components/common/DiffInput.vue')['default']
     DiffMenu: typeof import('./src/components/menu/DiffMenu.vue')['default']
+    DropdownMenu: typeof import('./src/components/common/DropdownMenu.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
     EditorContextMenu: typeof import('./src/components/editor/EditorContextMenu.vue')['default']
     EditorInput: typeof import('./src/components/EditorInput.vue')['default']

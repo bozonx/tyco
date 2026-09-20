@@ -216,6 +216,8 @@ export const messages = {
       downloadRequired: 'нужно скачать',
     },
     editor: {
+      case: 'Case',
+      format: 'Формат',
       voiceInput: 'Голосовой ввод',
       clear: 'Очистить',
       selectAll: 'Выбрать всё',
@@ -525,6 +527,8 @@ export const messages = {
       downloadRequired: 'download required',
     },
     editor: {
+      case: 'Case',
+      format: 'Format',
       voiceInput: 'Voice input',
       clear: 'Clear',
       selectAll: 'Select all',
@@ -835,6 +839,8 @@ export const messages = {
       downloadRequired: 'requiere descarga',
     },
     editor: {
+      case: 'Case',
+      format: 'Formato',
       voiceInput: 'Entrada por voz',
       clear: 'Limpiar',
       selectAll: 'Seleccionar todo',
@@ -1144,6 +1150,8 @@ export const messages = {
       downloadRequired: 'indirme gerekli',
     },
     editor: {
+      case: 'Case',
+      format: 'Biçim',
       voiceInput: 'Ses girişi',
       clear: 'Temizle',
       selectAll: 'Tümünü seç',
