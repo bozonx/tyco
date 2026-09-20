@@ -62,7 +62,7 @@ const getPartClass = (part: DiffPart): string => {
 <style scoped>
 .diff-container {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;

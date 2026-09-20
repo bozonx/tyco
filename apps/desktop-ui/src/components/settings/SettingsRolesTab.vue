@@ -1,24 +1,28 @@
 <template>
-  <div>
-    <FieldRow :label="t('settings.chatRoles')">
-      <FieldItems :items="userConfig.chatRoles" @update:items="updateChatRoles">
-        <template #item="{ item, index }">
-          <div class="flex flex-row gap-2 w-full">
-            <div>
-              <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
+  <div class="settings-roles-tab py-1">
+    <FieldItems :items="userConfig.chatRoles" @update:items="updateChatRoles">
+      <template #item="{ item, index }">
+        <div class="flex flex-row items-start gap-3 w-full">
+          <div class="pt-1">
+            <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
+          </div>
+          <div class="flex-1 flex flex-col gap-2 min-w-0">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-muted">
+                {{ t('settings.name') }}
+              </label>
+              <FieldInput v-model:value="item.name" />
             </div>
-            <div class="flex-1">
-              <FieldRow :label="t('settings.name')" vertical>
-                <FieldInput v-model:value="item.name" />
-              </FieldRow>
-              <FieldRow :label="t('settings.rule')" vertical>
-                <FieldTextArea v-model:value="item.rule" />
-              </FieldRow>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-muted">
+                {{ t('settings.rule') }}
+              </label>
+              <FieldTextArea v-model:value="item.rule" />
             </div>
           </div>
-        </template>
-      </FieldItems>
-    </FieldRow>
+        </div>
+      </template>
+    </FieldItems>
   </div>
 </template>
 
@@ -27,7 +31,6 @@ import { useI18n } from '../../composables/useI18n'
 import { PRESETS_KEYS } from '../../types'
 import FieldInput from '../common/FieldInput.vue'
 import FieldItems from '../common/FieldItems.vue'
-import FieldRow from '../common/FieldRow.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import KeyButton from '../common/KeyButton.vue'
 

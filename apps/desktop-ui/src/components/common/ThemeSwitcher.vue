@@ -67,7 +67,7 @@ function handleThemeChange(value: number | string | undefined) {
   border-radius: var(--radius-md);
   background: var(--app-surface);
   color: oklch(var(--bc));
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.2;
   cursor: pointer;
   transition:

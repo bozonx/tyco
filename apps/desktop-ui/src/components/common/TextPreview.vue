@@ -14,7 +14,7 @@ pre {
   width: 100%;
   overflow-y: auto;
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   margin: 0;
   white-space: pre-wrap;

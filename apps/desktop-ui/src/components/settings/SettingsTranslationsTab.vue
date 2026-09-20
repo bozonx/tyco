@@ -1,22 +1,20 @@
 <template>
-  <div class="fields-col">
-    <FieldRow :label="t('settings.translateLanguages')">
-      <FieldItems
-        :items="translateLanguagesItems"
-        @update:items="updateTranslateLanguages"
-      >
-        <template #item="{ item, index }">
-          <div class="flex flex-row gap-2 w-full">
-            <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
-            <FieldSelect
-              class="flex-1"
-              v-model:value="item.value"
-              :options="translateLanguageOptions"
-            />
-          </div>
-        </template>
-      </FieldItems>
-    </FieldRow>
+  <div class="settings-translations-tab py-1">
+    <FieldItems
+      :items="translateLanguagesItems"
+      @update:items="updateTranslateLanguages"
+    >
+      <template #item="{ item, index }">
+        <div class="flex flex-row items-center gap-3 w-full">
+          <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
+          <FieldSelect
+            class="flex-1"
+            v-model:value="item.value"
+            :options="translateLanguageOptions"
+          />
+        </div>
+      </template>
+    </FieldItems>
   </div>
 </template>
 
@@ -27,7 +25,6 @@ import { useI18n } from '../../composables/useI18n'
 import { buildLanguageOptions } from '../../lib/locale/language'
 import { PRESETS_KEYS } from '../../types'
 import FieldItems from '../common/FieldItems.vue'
-import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import KeyButton from '../common/KeyButton.vue'
 

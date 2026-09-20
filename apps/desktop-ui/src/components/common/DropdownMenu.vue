@@ -26,7 +26,7 @@
         v-for="(item, idx) in items"
         :key="idx"
         type="button"
-        class="w-full text-left px-3 py-1.5 text-xs text-base-content hover:bg-base-300 flex items-center gap-2 transition-colors cursor-pointer"
+        class="w-full text-left px-3 py-1.5 text-sm text-base-content hover:bg-base-300 flex items-center gap-2 transition-colors cursor-pointer"
         @click="selectItem(item)"
       >
         <Icon
