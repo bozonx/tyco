@@ -62,7 +62,7 @@ export const useEditorActions = () => {
   }
 
   const doEdit = async (
-    cb: (text: string) => Promise<string>
+    cb: (text: string) => Promise<string> | string
   ): Promise<void> => {
     let value = editorInputStore.value
 

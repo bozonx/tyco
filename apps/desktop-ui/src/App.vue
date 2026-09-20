@@ -43,7 +43,7 @@ const bootstrap = createAppBootstrap({
     desktopClient.listen(event as never, handler as never),
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
   initPlugins: () => {
-    usePlugins()
+    usePlugins().reloadPlugins()
   },
   handleNavKeyUp: (event) => navPanelStore.handleKeyUp(event),
   addWindowKeyupListener: (handler) => {
@@ -54,6 +54,14 @@ const bootstrap = createAppBootstrap({
     }
   },
 })
+
+watch(
+  () => ipcStore.params?.userConfig?.plugins,
+  (plugins) => {
+    usePlugins().reloadPlugins({ plugins } as any)
+  },
+  { deep: true }
+)
 
 watch(
   () => [

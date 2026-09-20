@@ -85,6 +85,9 @@
     "tasksTab": "Tareas de IA",
     "rolesTab": "Roles del chat",
     "pluginsTab": "Plugins",
+    "pluginEnabled": "Habilitado",
+    "pluginSettings": "Configuración del plugin",
+    "noInstalledPlugins": "No hay plugins instalados",
     "theme": "Tema",
     "appLanguage": "Idioma de la interfaz",
     "userLanguage": "Idioma del usuario",
@@ -204,6 +207,7 @@
     "selectAll": "Seleccionar todo",
     "selectionHint": "Consejo: puedes seleccionar una parte del texto y solo esa parte se modificará.",
     "actions": "Acciones",
+    "inputLabel": "Editor de texto",
     "menu": {
       "cut": "Cortar",
       "copy": "Copiar",
@@ -241,7 +245,10 @@
     "role": "Rol",
     "sendMessage": "Enviar mensaje",
     "clearInput": "Limpiar entrada",
-    "voiceInput": "Entrada por voz"
+    "voiceInput": "Entrada por voz",
+    "attachEditorText": "Adjuntar texto del editor",
+    "attachEditorTextTitle": "Adjuntar el texto actual del editor como contexto",
+    "removeAttachment": "Eliminar adjunto"
   },
   "action": {
     "insertIntoWindow": "Insertar en la ventana",
@@ -249,8 +256,7 @@
     "aiTask": "Tarea de IA",
     "correction": "Corrección",
     "translation": "Traducción",
-    "askAi": "Preguntar a la IA",
-    "askAiAboutText": "Preguntar a la IA sobre el texto",
+    "askInChat": "Preguntar en el chat",
     "searchInInternet": "Buscar en internet",
     "insertIntoEditor": "Insertar en el editor"
   },

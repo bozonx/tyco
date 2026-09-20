@@ -56,25 +56,12 @@ export function createEditorInputStoreModel(
     void historyApi.saveMainInputTmp(newValue)
   }
 
-  const setValueAtCursor = (
-    newText: string,
-    source: EditSource = 'plain'
-  ): void => {
-    const beforeSelection = value.value.substring(0, selectionStart.value)
-    const afterSelection = value.value.substring(selectionEnd.value)
-    const newValue = beforeSelection + newText + afterSelection
-    const newCursorPosition = selectionStart.value + newText.length
-
-    lastEditSource.value = source
-    value.value = newValue
-    setSelection('', newCursorPosition, newCursorPosition)
-
-    void historyApi.saveMainInputTmp(newValue)
-  }
-
   const clear = (): void => {
     lastEditSource.value = 'plain'
     value.value = ''
+    // the editor does not echo store edits back, so the old selection would
+    // survive an empty document and leak into the next AI action
+    setSelection('', 0, 0)
     void historyApi.clearMainInputTmp()
   }
 
@@ -105,7 +92,6 @@ export function createEditorInputStoreModel(
     selectAll,
     setSelection,
     replaceSelection,
-    setValueAtCursor,
     clear,
   }
 }

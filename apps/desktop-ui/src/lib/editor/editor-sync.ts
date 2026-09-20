@@ -152,3 +152,13 @@ export const setPlaceholder = (view: EditorView, text: string): void => {
     annotations: fromStore.of(true),
   })
 }
+
+/** Заменить диапазон в документе — точка входа для спеллчекера и вставок */
+export const replaceRange = (
+  view: EditorView,
+  from: number,
+  to: number,
+  insert: string
+): void => {
+  view.dispatch({ changes: { from, to, insert }, scrollIntoView: true })
+}

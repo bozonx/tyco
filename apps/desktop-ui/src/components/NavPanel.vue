@@ -61,6 +61,7 @@ import { useI18n } from '../composables/useI18n'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useChatStore } from '../stores/chat'
+import { useEditorInputStore } from '../stores/editorInput'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
@@ -68,6 +69,7 @@ import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useRouteParams()
 const chatStore = useChatStore()
+const editorInputStore = useEditorInputStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
@@ -87,7 +89,12 @@ function openSettings() {
 
 function openChat() {
   menuModalsStore.closeAll()
-  void chatStore.openLastOrNewChat()
+  const selectedText = editorInputStore.selectedText?.trim()
+  if (selectedText) {
+    void chatStore.startChat({ attachments: [selectedText] })
+  } else {
+    void chatStore.openLastOrNewChat()
+  }
 }
 
 function openHistory() {

@@ -5,7 +5,10 @@
     v-if="menu"
     :x="menu.x"
     :y="menu.y"
+    :bottom="menu.bottom"
     :items="menu.items"
+    :placement="menu.placement"
+    :keyboardNav="menu.kind !== 'bubble'"
     @close="closeMenu"
   />
 </template>
@@ -19,7 +22,6 @@ import useToast from '../composables/useToast'
 import {
   copySelection,
   cutSelection,
-  hasSelection,
   pasteFromClipboard,
   pastePlainFromClipboard,
 } from '../lib/editor/clipboard'
@@ -27,7 +29,6 @@ import type {
   BubbleMenuRequest,
   ContextMenuRequest,
 } from '../lib/editor/context-menu'
-import { replaceRange } from '../lib/editor/context-menu'
 import {
   createEditorState,
   setEditorSyntax,
@@ -37,7 +38,7 @@ import {
   selectAll,
   setPlaceholder,
 } from '../lib/editor/editor-sync'
-import type { EditorMenuItem } from '../lib/editor/menu-item'
+import type { EditorMenuItem, MenuPlacement } from '../lib/editor/menu-item'
 import type { PasteAskRequest } from '../lib/editor/paste'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
@@ -67,6 +68,8 @@ interface OpenMenu {
   kind: 'context' | 'paste' | 'bubble'
   x: number
   y: number
+  bottom: number
+  placement: MenuPlacement
   items: EditorMenuItem[]
 }
 
@@ -88,8 +91,11 @@ const showBubbleMenu = computed(
     DEFAULT_USER_CONFIG.showBubbleMenu
 )
 
-const closeMenu = (): void => {
+const closeMenu = (restoreFocus = false): void => {
   menu.value = null
+
+  // the menu took keyboard focus, so the editor has to get it back
+  if (restoreFocus) view?.focus()
 }
 
 /** Обёртка над операциями с буфером обмена: без прав они бросают исключение */
@@ -148,6 +154,8 @@ const openContextMenu = (request: ContextMenuRequest): void => {
     kind: 'context',
     x: request.x,
     y: request.y,
+    bottom: request.bottom,
+    placement: 'point',
     items: [...spellcheckItems(request), ...clipboardItems(request)],
   }
 }
@@ -189,6 +197,9 @@ const updateBubbleMenu = (request: BubbleMenuRequest | null): void => {
     kind: 'bubble',
     x: request.x,
     y: request.y,
+    bottom: request.bottom,
+    // never cover the selection the menu belongs to
+    placement: 'above',
     items: bubbleItems(),
   }
 }
@@ -198,6 +209,8 @@ const askPasteMode = (request: PasteAskRequest): void => {
     kind: 'paste',
     x: request.x,
     y: request.y,
+    bottom: request.bottom,
+    placement: 'below',
     items: [
       {
         id: 'paste-markdown',
@@ -233,6 +246,7 @@ onMounted(() => {
     state: createEditorState({
       doc: editorInputStore.value,
       placeholder: t('input.textPlaceholder'),
+      ariaLabel: t('editor.inputLabel'),
       syntax: editorSyntax.value,
       paste: { getMode: () => pasteMode.value, onAsk: askPasteMode },
       onContextMenu: openContextMenu,
@@ -322,14 +336,6 @@ watch(
     }
   }
 )
-
-defineExpose({
-  /** Заменить диапазон в документе — точка входа для будущего спеллчекера */
-  replaceRange: (from: number, to: number, insert: string) => {
-    if (view) replaceRange(view, from, to, insert)
-  },
-  hasSelection: () => (view ? hasSelection(view) : false),
-})
 </script>
 
 <style scoped>

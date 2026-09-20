@@ -530,6 +530,7 @@
         v-show="currentTab === 7"
         :user-config="userConfig"
         @update:plugin-config="updatePluginConfig"
+        @update:plugin-enabled="updatePluginEnabled"
       />
     </div>
   </div>
@@ -550,7 +551,7 @@ import {
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
-import { pluginIndexes } from '../plugins'
+import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
 import {
@@ -602,16 +603,6 @@ type DownloadState = {
   status: string
   error: string
 }
-
-const pluginConfigs = pluginIndexes
-  .map((pluginIndex) => pluginIndex())
-  .filter((plugin) => plugin.defaultConfig)
-  .map((plugin) => ({
-    pluginName: plugin.name,
-    labelKey: plugin.labelKey,
-    label: plugin.label,
-    fields: plugin.defaultConfig!.fields,
-  }))
 
 const currentTab = ref(0)
 const currentSttProvider = ref<'vosk' | 'whisper-local'>('vosk')
@@ -777,14 +768,21 @@ function ensurePluginDefaults(config: Record<string, any>) {
     config.plugins = {}
   }
 
-  for (const pluginCfg of pluginConfigs) {
-    if (!config.plugins[pluginCfg.pluginName]) {
-      config.plugins[pluginCfg.pluginName] = {}
+  for (const pluginFactory of pluginIndexes) {
+    const plugin = pluginFactory()
+    if (!config.plugins[plugin.name]) {
+      config.plugins[plugin.name] = {}
     }
 
-    for (const field of pluginCfg.fields) {
-      if (config.plugins[pluginCfg.pluginName][field.name] === undefined) {
-        config.plugins[pluginCfg.pluginName][field.name] = field.defaultValue
+    if (config.plugins[plugin.name].enabled === undefined) {
+      config.plugins[plugin.name].enabled = true
+    }
+
+    if (plugin.defaultConfig?.fields) {
+      for (const field of plugin.defaultConfig.fields) {
+        if (config.plugins[plugin.name][field.name] === undefined) {
+          config.plugins[plugin.name][field.name] = field.defaultValue
+        }
       }
     }
   }
@@ -1788,11 +1786,23 @@ const updateChatRoles = (items: any[]) => {
   userConfig.value.chatRoles = items
 }
 
+const updatePluginEnabled = (pluginName: string, enabled: boolean) => {
+  if (!userConfig.value.plugins[pluginName]) {
+    userConfig.value.plugins[pluginName] = {}
+  }
+  userConfig.value.plugins[pluginName].enabled = enabled
+  usePlugins().reloadPlugins(userConfig.value)
+}
+
 const updatePluginConfig = (
   pluginName: string,
   values: Record<string, any>
 ) => {
-  userConfig.value.plugins[pluginName] = values
+  userConfig.value.plugins[pluginName] = {
+    ...userConfig.value.plugins[pluginName],
+    ...values,
+  }
+  usePlugins().reloadPlugins(userConfig.value)
 }
 onMounted(() => {
   void loadStorageInfo()

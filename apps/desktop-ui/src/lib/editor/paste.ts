@@ -3,6 +3,7 @@ import type { Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import type { PasteMode } from '@tyco/shared'
 
+import type { MenuAnchor } from './context-menu'
 import { anchorAtPos } from './context-menu'
 import { EDIT_USER_EVENT } from './edit-source'
 import { htmlToMarkdown } from './html-to-markdown'
@@ -14,10 +15,7 @@ import { htmlToMarkdown } from './html-to-markdown'
  */
 const PLAIN_PASTE_WINDOW_MS = 500
 
-export interface PasteAskRequest {
-  /** Координаты каретки на экране — там откроется меню выбора */
-  x: number
-  y: number
+export interface PasteAskRequest extends MenuAnchor {
   /** Что вставится в режиме «как текст» */
   plain: string
   /** Что вставится в режиме «с форматированием» */
@@ -50,14 +48,32 @@ export const insertPastedText = (view: EditorView, text: string): void => {
  * иначе вставляем `text/plain` как есть. Ctrl+Shift+V всегда вставляет текстом
  */
 export const pasteExtension = (options: PasteOptions): Extension => {
-  let plainPasteRequestedAt = 0
+  let plainPasteRequested = false
+  let plainPasteTimer: ReturnType<typeof setTimeout> | null = null
+
+  // the flag has to expire on its own: if the webview swallowed Ctrl+Shift+V
+  // and no paste followed, the next plain Ctrl+V must not be downgraded
+  const forgetPlainRequest = (): void => {
+    plainPasteRequested = false
+
+    if (plainPasteTimer === null) return
+
+    clearTimeout(plainPasteTimer)
+    plainPasteTimer = null
+  }
+
+  const requestPlainPaste = (): void => {
+    forgetPlainRequest()
+    plainPasteRequested = true
+    plainPasteTimer = setTimeout(forgetPlainRequest, PLAIN_PASTE_WINDOW_MS)
+  }
 
   const consumePlainRequest = (): boolean => {
-    if (Date.now() - plainPasteRequestedAt > PLAIN_PASTE_WINDOW_MS) return false
+    const requested = plainPasteRequested
 
-    plainPasteRequestedAt = 0
+    forgetPlainRequest()
 
-    return true
+    return requested
   }
 
   return [
@@ -65,7 +81,7 @@ export const pasteExtension = (options: PasteOptions): Extension => {
       {
         key: 'Mod-Shift-v',
         run: () => {
-          plainPasteRequestedAt = Date.now()
+          requestPlainPaste()
 
           // не перехватываем: нативная вставка всё равно должна произойти,
           // обработчик ниже увидит отметку и вставит plain text
@@ -105,11 +121,10 @@ export const pasteExtension = (options: PasteOptions): Extension => {
         event.preventDefault()
 
         if (mode === 'ask' && options.onAsk) {
-          const { x, y } = anchorAtPos(view, view.state.selection.main.head)
+          const anchor = anchorAtPos(view, view.state.selection.main.head)
 
           options.onAsk({
-            x,
-            y,
+            ...anchor,
             plain,
             markdown,
             apply: (text: string) => insertPastedText(view, text),

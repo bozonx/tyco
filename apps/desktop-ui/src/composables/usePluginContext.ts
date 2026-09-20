@@ -5,12 +5,18 @@ import { useIpcStore } from '../stores/ipc'
 import { type MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { type DEFAULT_PARAMS, useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
-import { type PluginIndex } from '../types/plugins'
+import { useToolbarStore } from '../stores/toolbar'
+import {
+  type PluginContext as IPluginContext,
+  type PluginIndex,
+  type ToolbarItem,
+} from '../types/plugins'
 import useToast from './useToast'
 
 export default function usePluginContext() {
   const actionMenuStore = useActionMenuStore()
   const editMenuStore = useEditMenuStore()
+  const toolbarStore = useToolbarStore()
   const editorInputStore = useEditorInputStore()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
@@ -18,7 +24,7 @@ export default function usePluginContext() {
   const ipcStore = useIpcStore()
   const { toast } = useToast()
 
-  class PluginContext {
+  class PluginContext implements IPluginContext {
     constructor(private pluginName: string) {}
 
     registerActionsItems(actions: ActionItem[]) {
@@ -27,6 +33,18 @@ export default function usePluginContext() {
 
     registerEditItems(edit: EditItem[]) {
       editMenuStore.registerEditItems(edit)
+    }
+
+    registerCaseItems(items: EditItem[]) {
+      editMenuStore.registerCaseItems(items)
+    }
+
+    registerFormatItems(items: EditItem[]) {
+      editMenuStore.registerFormatItems(items)
+    }
+
+    registerToolbarItems(items: ToolbarItem[]) {
+      toolbarStore.registerToolbarItems(items)
     }
 
     getEditorInputValue() {
@@ -102,6 +120,10 @@ export default function usePluginContext() {
     }
   }
 
+  function createContext(pluginName: string): IPluginContext {
+    return new PluginContext(pluginName)
+  }
+
   function use(pluginIndex: PluginIndex) {
     const plugin = pluginIndex()
     const ctx = new PluginContext(plugin.name)
@@ -109,5 +131,5 @@ export default function usePluginContext() {
     plugin.init(ctx)
   }
 
-  return { use }
+  return { use, createContext }
 }

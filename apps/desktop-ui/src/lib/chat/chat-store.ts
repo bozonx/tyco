@@ -212,6 +212,20 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     startChat,
     openChat,
     clearChat,
+    addAttachment: (attachment: string) => {
+      const trimmed = attachment?.trim()
+      if (!trimmed) return
+      const current = newChatParams.value.attachments || []
+      if (!current.includes(trimmed)) {
+        newChatParams.value.attachments = [...current, trimmed]
+      }
+    },
+    removeAttachment: (index: number) => {
+      const current = newChatParams.value.attachments || []
+      if (index >= 0 && index < current.length) {
+        newChatParams.value.attachments = current.filter((_, i) => i !== index)
+      }
+    },
     openLastOrNewChat: async () => {
       if (newChatParams.value.id) {
         await deps.navigateTo(APP_ROUTES.CHAT.path)

@@ -13,9 +13,21 @@ export type PluginIndex = () => {
   init: (ctx: PluginContext) => void
 }
 
+export interface ToolbarItem {
+  id: string
+  icon: string
+  tooltip?: string
+  tooltipKey?: string
+  position?: 'left' | 'right'
+  action: () => void | Promise<void>
+}
+
 export interface PluginContext {
   registerActionsItems(actions: ActionItem[]): void
   registerEditItems(edit: EditItem[]): void
+  registerCaseItems(items: EditItem[]): void
+  registerFormatItems(items: EditItem[]): void
+  registerToolbarItems(items: ToolbarItem[]): void
   getEditorInputValue(): string
   getEditorInputSelectedText(): string
   setEditorInputValue(value: string): void

@@ -32,12 +32,12 @@ export const editorTheme: Extension = EditorView.theme({
   },
   '.cm-line': { padding: '0' },
   '.cm-placeholder': { color: 'var(--app-text-faint)' },
-  '&.cm-focused .cm-cursor': {
-    borderLeftColor: 'oklch(var(--p))',
-    borderLeftWidth: '2px',
-  },
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection':
-    { backgroundColor: 'var(--editor-selection-bg)' },
+  // `drawSelection` is deliberately not enabled: a single-cursor text buffer is
+  // better served by the native caret and selection, which behave correctly
+  // with IME. Hence the caret is styled through `caretColor` above and
+  // `.cm-cursor` / `.cm-selectionBackground` are never rendered at all
+  '.cm-content ::selection': { backgroundColor: 'var(--editor-selection-bg)' },
+  '.cm-specialChar': { color: 'oklch(var(--er))' },
   '.cm-activeLine': { backgroundColor: 'transparent' },
 })
 

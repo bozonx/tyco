@@ -5,7 +5,7 @@ import { htmlToMarkdown } from './html-to-markdown'
 import { insertPastedText } from './paste'
 
 /** Есть ли в документе что копировать */
-export const hasSelection = (view: EditorView): boolean => {
+const hasSelection = (view: EditorView): boolean => {
   const { from, to } = view.state.selection.main
 
   return from !== to

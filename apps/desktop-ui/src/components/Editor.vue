@@ -2,17 +2,39 @@
   <div class="flex flex-col w-full h-full">
     <!-- Toolbar above editor -->
     <div class="flex items-center justify-between gap-2 mb-2">
-      <!-- Left column: Case and Format dropdowns -->
+      <!-- Left column: Case and Format dropdowns + plugin left buttons -->
       <div class="flex items-center gap-2">
         <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
         <DropdownMenu
           :label="t('editor.format')"
           :items="formatDropdownItems"
         />
+        <Button
+          v-for="item in leftToolbarItems"
+          :key="item.id"
+          sm
+          square
+          neutral
+          :title="getToolbarTooltip(item)"
+          @click="item.action"
+        >
+          <Icon :icon="item.icon" height="20" />
+        </Button>
       </div>
 
-      <!-- Right column: Insert to window & Translation icon buttons -->
+      <!-- Right column: plugin right buttons & Insert to window & Translation icon buttons -->
       <div class="flex items-center gap-2">
+        <Button
+          v-for="item in rightToolbarItems"
+          :key="item.id"
+          sm
+          square
+          neutral
+          :title="getToolbarTooltip(item)"
+          @click="item.action"
+        >
+          <Icon :icon="item.icon" height="20" />
+        </Button>
         <Button
           sm
           square
@@ -130,34 +152,22 @@ import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useHistoryStore } from '../stores/history'
+import { useToolbarStore } from '../stores/toolbar'
+import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
 
 const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
+const toolbarStore = useToolbarStore()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 
-const CASE_KEYS = [
-  'edit.normalize',
-  'edit.uppercase',
-  'edit.lowercase',
-  'edit.camelCase',
-  'edit.pascalCase',
-  'edit.snakeCase',
-  'edit.kebabCase',
-]
-
-const FORMAT_KEYS = ['edit.beautifyMd', 'edit.formatCode']
-
 const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
   editMenuStore
-    .getEditMenu()
-    .filter(
-      (item: EditItem) => item.labelKey && CASE_KEYS.includes(item.labelKey)
-    )
+    .getCaseItems()
     .map((item: EditItem) => ({
       label: getLabel(item),
       icon: item.icon,
@@ -167,10 +177,7 @@ const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
 
 const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
   editMenuStore
-    .getEditMenu()
-    .filter(
-      (item: EditItem) => item.labelKey && FORMAT_KEYS.includes(item.labelKey)
-    )
+    .getFormatItems()
     .map((item: EditItem) => ({
       label: getLabel(item),
       icon: item.icon,
@@ -178,22 +185,24 @@ const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
     }))
 )
 
-const otherEditItems = computed(() =>
-  editMenuStore
-    .getEditMenu()
-    .filter(
-      (item: EditItem) =>
-        !item.labelKey ||
-        (!CASE_KEYS.includes(item.labelKey) &&
-          !FORMAT_KEYS.includes(item.labelKey))
-    )
-)
+const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
+
+const leftToolbarItems = computed(() => toolbarStore.getLeftToolbarItems())
+const rightToolbarItems = computed(() => toolbarStore.getRightToolbarItems())
+
+const getToolbarTooltip = (item: ToolbarItem): string => {
+  if (item.tooltipKey) {
+    return t(item.tooltipKey)
+  }
+  return item.tooltip || ''
+}
 
 const EXCLUDED_ACTION_KEYS = new Set([
   'action.copyToClipboard',
   'action.correction',
   'action.insertIntoWindow',
   'action.translation',
+  'action.askInChat',
 ])
 
 const bottomActions = computed(() =>

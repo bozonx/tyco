@@ -46,9 +46,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         newText,
       })
     },
-    startChatWithInitialMessage: (text: string) => {
-      chatStore.startChat({ initialMessage: text })
-    },
     startChatWithAttachment: (text: string) => {
       chatStore.startChat({ attachments: [text] })
     },

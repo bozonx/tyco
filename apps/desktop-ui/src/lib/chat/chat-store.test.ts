@@ -167,4 +167,25 @@ describe('chat-store', () => {
     ])
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
   })
+
+  it('adds and removes attachments', () => {
+    const deps = createDeps()
+    const store = createChatStoreModel(deps)
+
+    store.addAttachment('attachment 1')
+    store.addAttachment('attachment 2')
+    store.addAttachment('attachment 1') // duplicate should not be added
+    store.addAttachment('   ') // empty should be ignored
+
+    expect(store.newChatParams.value.attachments).toEqual([
+      'attachment 1',
+      'attachment 2',
+    ])
+
+    store.removeAttachment(0)
+    expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
+
+    store.removeAttachment(5) // invalid index does nothing
+    expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
+  })
 })

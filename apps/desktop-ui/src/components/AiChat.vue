@@ -18,15 +18,36 @@
 
     <Card class="flex flex-col gap-2">
       <div class="flex flex-row gap-2">
-        <div class="flex-1 flex flex-row gap-2">
-          <Button
-            small
-            secondary
-            v-for="attachment in attachments"
-            :key="attachment"
+        <div class="flex-1 flex flex-row gap-2 flex-wrap items-center">
+          <span
+            v-for="(attachment, index) in attachments"
+            :key="index"
+            class="badge badge-neutral gap-1 py-3 px-2 text-xs flex items-center"
             :title="attachment"
           >
-            {{ truncate(attachment, 24) }}
+            <Icon icon="mdi:file-document-outline" height="14" />
+            <span>{{ truncate(attachment, 28) }}</span>
+            <button
+              type="button"
+              class="hover:text-error ml-1 inline-flex items-center cursor-pointer"
+              @click="chatStore.removeAttachment(index)"
+              :title="t('chat.removeAttachment')"
+            >
+              <Icon icon="mdi:close" height="14" />
+            </button>
+          </span>
+
+          <Button
+            v-if="canAttachEditorText"
+            xs
+            neutral
+            ghost
+            class="border border-dashed border-base-content/30 hover:border-base-content/60"
+            @click="attachEditorText"
+            :title="t('chat.attachEditorTextTitle')"
+          >
+            <Icon icon="mdi:paperclip" height="14" class="mr-1" />
+            {{ t('chat.attachEditorText') }}
           </Button>
         </div>
         <div v-if="roles && roles.length > 0" class="flex flex-col gap-2">
@@ -90,12 +111,14 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
+import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { truncate } from '@/lib/squidlet-lib-local'
 import { Icon } from '@iconify/vue'
 
 const chatInputStore = useChatInputStore()
+const editorInputStore = useEditorInputStore()
 const ipcStore = useIpcStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
@@ -109,6 +132,19 @@ const roles = computed<Array<{ id: string; name: string }>>(() =>
   }))
 )
 const selectedRole = ref<string | undefined>(undefined)
+
+const canAttachEditorText = computed(() => {
+  const text = editorInputStore.value?.trim()
+  if (!text) return false
+  return !attachments.value.includes(text)
+})
+
+const attachEditorText = () => {
+  const text = editorInputStore.value?.trim()
+  if (text) {
+    chatStore.addAttachment(text)
+  }
+}
 
 watch(
   () => chatStore.newChatParams?.id,

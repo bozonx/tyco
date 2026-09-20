@@ -85,6 +85,9 @@
     "tasksTab": "AI görevleri",
     "rolesTab": "Sohbet rolleri",
     "pluginsTab": "Eklentiler",
+    "pluginEnabled": "Etkin",
+    "pluginSettings": "Eklenti ayarları",
+    "noInstalledPlugins": "Yüklü eklenti yok",
     "theme": "Tema",
     "appLanguage": "Arayüz dili",
     "userLanguage": "Kullanıcı dili",
@@ -204,6 +207,7 @@
     "selectAll": "Tümünü seç",
     "selectionHint": "İpucu: metnin bir kısmını seçebilir ve sadece seçilen bölümü değiştirebilirsin.",
     "actions": "Eylemler",
+    "inputLabel": "Metin düzenleyici",
     "menu": {
       "cut": "Kes",
       "copy": "Kopyala",
@@ -241,7 +245,10 @@
     "role": "Rol",
     "sendMessage": "Mesaj gönder",
     "clearInput": "Girdiyi temizle",
-    "voiceInput": "Ses girişi"
+    "voiceInput": "Ses girişi",
+    "attachEditorText": "Düzenleyici metnini ekle",
+    "attachEditorTextTitle": "Mevcut düzenleyici metnini bağlam olarak ekle",
+    "removeAttachment": "Eki kaldır"
   },
   "action": {
     "insertIntoWindow": "Pencereye ekle",
@@ -249,8 +256,7 @@
     "aiTask": "AI görevi",
     "correction": "Düzeltme",
     "translation": "Çeviri",
-    "askAi": "AI'ya sor",
-    "askAiAboutText": "AI'ya metin hakkında sor",
+    "askInChat": "Sohbette sor",
     "searchInInternet": "İnternette ara",
     "insertIntoEditor": "Editöre ekle"
   },

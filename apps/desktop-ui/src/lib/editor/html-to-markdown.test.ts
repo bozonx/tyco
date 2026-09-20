@@ -73,6 +73,45 @@ describe('htmlToMarkdown', () => {
     expect(markdown).toBe('текст')
   })
 
+  it('unwraps the Google Docs bold wrapper and keeps the inner emphasis', () => {
+    const markdown = htmlToMarkdown(
+      '<b style="font-weight:normal" id="docs-internal-guid-42">' +
+        '<p dir="ltr"><span style="font-weight:700">Bold</span> and ' +
+        '<span style="font-style:italic">italic</span></p></b>'
+    )
+
+    expect(markdown).toBe('**Bold** and *italic*')
+  })
+
+  it('converts a struck-through span into GFM strikethrough', () => {
+    expect(
+      htmlToMarkdown(
+        '<p><span style="text-decoration:line-through">no</span></p>'
+      )
+    ).toBe('~~no~~')
+  })
+
+  it('drops base64 images but keeps linked ones', () => {
+    expect(
+      htmlToMarkdown('<p>a<img src="data:image/png;base64,AAAA">b</p>')
+    ).toBe('ab')
+    expect(
+      htmlToMarkdown('<p><img src="https://a.b/c.png" alt="pic"></p>')
+    ).toBe('![pic](https://a.b/c.png)')
+  })
+
+  it('does not escape intra-word underscores', () => {
+    expect(htmlToMarkdown('<p>snake_case_name</p>')).toBe('snake_case_name')
+  })
+
+  it('still escapes underscores that would start emphasis', () => {
+    expect(htmlToMarkdown('<p>_em_</p>')).toBe('\\_em\\_')
+  })
+
+  it('drops a meta tag whose attribute contains an angle bracket', () => {
+    expect(htmlToMarkdown('<meta content="a>b"><p>after</p>')).toBe('after')
+  })
+
   it('returns an empty string for empty markup', () => {
     expect(htmlToMarkdown('<div></div>')).toBe('')
   })

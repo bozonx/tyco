@@ -16,7 +16,6 @@ export interface ActionMenuDependencies {
   openAiTaskModal: (text: string) => void
   openTranslateModal: (text: string) => void
   startCorrection: (text: string) => Promise<void>
-  startChatWithInitialMessage: (text: string) => void
   startChatWithAttachment: (text: string) => void
   showToast: (
     message: string,
@@ -85,15 +84,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
-      labelKey: 'action.askAi',
-      useFullEditorText: true,
-      preserveWhitespace: true,
-      action: async (text: string) => {
-        deps.startChatWithInitialMessage(text)
-      },
-    },
-    {
-      labelKey: 'action.askAiAboutText',
+      labelKey: 'action.askInChat',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')
@@ -112,5 +103,14 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     registeredActionsMenu.value.push(...actions)
   }
 
-  return { getDefaultActions, getActionsMenu, registerActionsItems }
+  const clearRegisteredActions = () => {
+    registeredActionsMenu.value = []
+  }
+
+  return {
+    getDefaultActions,
+    getActionsMenu,
+    registerActionsItems,
+    clearRegisteredActions,
+  }
 }

@@ -85,6 +85,9 @@
     "tasksTab": "AI tasks",
     "rolesTab": "Chat roles",
     "pluginsTab": "Plugins",
+    "pluginEnabled": "Enabled",
+    "pluginSettings": "Plugin settings",
+    "noInstalledPlugins": "No plugins installed",
     "theme": "Theme",
     "appLanguage": "Interface language",
     "userLanguage": "User language",
@@ -204,6 +207,7 @@
     "selectAll": "Select all",
     "selectionHint": "Hint: you can select part of the text, and only the selected fragment will be changed.",
     "actions": "Actions",
+    "inputLabel": "Text editor",
     "menu": {
       "cut": "Cut",
       "copy": "Copy",
@@ -241,7 +245,10 @@
     "role": "Role",
     "sendMessage": "Send message",
     "clearInput": "Clear input",
-    "voiceInput": "Voice input"
+    "voiceInput": "Voice input",
+    "attachEditorText": "Attach editor text",
+    "attachEditorTextTitle": "Attach current editor text as context",
+    "removeAttachment": "Remove attachment"
   },
   "action": {
     "insertIntoWindow": "Insert into window",
@@ -249,8 +256,7 @@
     "aiTask": "AI task",
     "correction": "Correction",
     "translation": "Translation",
-    "askAi": "Ask AI",
-    "askAiAboutText": "Ask AI about the text",
+    "askInChat": "Ask in chat",
     "searchInInternet": "Search the internet",
     "insertIntoEditor": "Insert into editor"
   },

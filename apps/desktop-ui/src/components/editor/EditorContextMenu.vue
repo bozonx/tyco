@@ -30,48 +30,84 @@
 </template>
 
 <script setup lang="ts">
+import type { CSSProperties } from 'vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import type { EditorMenuItem } from '../../lib/editor/menu-item'
+import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  /** Координаты в системе viewport — так их отдаёт CodeMirror */
-  x: number
-  y: number
-  items: EditorMenuItem[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** Viewport coordinates, the way CodeMirror reports them */
+    x: number
+    y: number
+    /** Bottom of the anchored text line; used by `above` / `below` */
+    bottom?: number
+    items: EditorMenuItem[]
+    placement?: MenuPlacement
+    /**
+     * Arrow-key navigation. Off for the bubble menu: it is open for as long as
+     * there is a selection, and the arrows must keep moving the caret
+     */
+    keyboardNav?: boolean
+  }>(),
+  { placement: 'point', keyboardNav: false }
+)
 
-const emit = defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<{ (e: 'close', restoreFocus: boolean): void }>()
 
-/** Зазор от края окна, чтобы меню не прилипало к границе */
+/** Gap from the window edge, so the menu does not stick to the border */
 const VIEWPORT_GAP = 8
+/** Gap between the menu and the text line it is anchored to */
+const ANCHOR_GAP = 6
 
 const menuRef = ref<HTMLElement | null>(null)
 const position = ref({ x: props.x, y: props.y })
+const placed = ref(false)
 
-const style = computed(() => ({
+const style = computed<CSSProperties>(() => ({
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
+  // the menu has to be measured before it can be placed; showing it at the raw
+  // anchor for that one frame would make it jump
+  visibility: placed.value ? 'visible' : 'hidden',
 }))
 
-/** Развернуть меню внутрь окна, если оно не влезает вправо или вниз */
-const fitIntoViewport = (): void => {
+/** Put the menu next to its anchor, keeping it inside the window */
+const place = (): void => {
   const element = menuRef.value
 
   if (!element) return
 
   const { width, height } = element.getBoundingClientRect()
-  const maxX = window.innerWidth - width - VIEWPORT_GAP
-  const maxY = window.innerHeight - height - VIEWPORT_GAP
+  const bottom = props.bottom ?? props.y
+  const above = props.y - height - ANCHOR_GAP
+
+  let y = props.y
+
+  if (props.placement === 'above') {
+    y = above >= VIEWPORT_GAP ? above : bottom + ANCHOR_GAP
+  } else if (props.placement === 'below') {
+    y = bottom + ANCHOR_GAP
+  }
 
   position.value = {
-    x: Math.max(VIEWPORT_GAP, Math.min(props.x, maxX)),
-    y: Math.max(VIEWPORT_GAP, Math.min(props.y, maxY)),
+    x: Math.max(
+      VIEWPORT_GAP,
+      Math.min(props.x, window.innerWidth - width - VIEWPORT_GAP)
+    ),
+    y: Math.max(
+      VIEWPORT_GAP,
+      Math.min(y, window.innerHeight - height - VIEWPORT_GAP)
+    ),
   }
+  placed.value = true
 }
 
-const close = (): void => emit('close')
+const holdsFocus = (): boolean =>
+  Boolean(menuRef.value?.contains(document.activeElement))
+
+const close = (): void => emit('close', holdsFocus())
 
 const select = async (item: EditorMenuItem): Promise<void> => {
   if (item.disabled) return
@@ -84,29 +120,62 @@ const select = async (item: EditorMenuItem): Promise<void> => {
 const onPointerDown = (event: MouseEvent): void => {
   if (menuRef.value?.contains(event.target as Node)) return
 
-  close()
+  emit('close', false)
+}
+
+/** Move focus between enabled items, wrapping around */
+const moveFocus = (delta: number): void => {
+  const buttons = Array.from(
+    menuRef.value?.querySelectorAll<HTMLButtonElement>(
+      'button:not(:disabled)'
+    ) ?? []
+  )
+
+  if (buttons.length === 0) return
+
+  const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
+  const next =
+    current === -1
+      ? delta > 0
+        ? 0
+        : buttons.length - 1
+      : (current + delta + buttons.length) % buttons.length
+
+  buttons[next].focus()
 }
 
 const onKeyDown = (event: KeyboardEvent): void => {
   if (event.key === 'Escape') {
     event.stopPropagation()
     close()
+
+    return
   }
+
+  if (!props.keyboardNav) return
+
+  const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
+
+  if (delta === 0) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  moveFocus(delta)
 }
 
-// bubble-меню переезжает вслед за растущим выделением, не пересоздаваясь
+// the bubble menu follows a growing selection without being recreated
 watch(
-  () => [props.x, props.y, props.items.length],
-  () => fitIntoViewport()
+  () => [props.x, props.y, props.bottom, props.placement, props.items.length],
+  () => place()
 )
 
 onMounted(() => {
-  fitIntoViewport()
+  place()
 
   window.addEventListener('mousedown', onPointerDown, true)
   window.addEventListener('keydown', onKeyDown, true)
   window.addEventListener('resize', close)
-  // скролл редактора уводит меню от своей позиции — проще закрыть
+  // scrolling the editor moves the menu away from its anchor — simpler to close
   window.addEventListener('scroll', close, true)
 })
 
@@ -152,6 +221,12 @@ onUnmounted(() => {
 
 .editor-context-menu__item:hover:not(:disabled) {
   background-color: var(--app-surface-raised);
+}
+
+.editor-context-menu__item:focus-visible {
+  background-color: var(--app-surface-raised);
+  outline: 2px solid oklch(var(--p));
+  outline-offset: -2px;
 }
 
 .editor-context-menu__item:disabled {

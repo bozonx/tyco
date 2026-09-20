@@ -41,6 +41,19 @@ describe('createEditorInputStoreModel', () => {
     expect(historyApi.clearMainInputTmp).toHaveBeenCalled()
   })
 
+  it('drops the selection on clear', () => {
+    const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
+    const store = createEditorInputStoreModel(historyApi)
+
+    store.setValue('temporary text')
+    store.setSelection('temporary', 0, 9)
+    store.clear()
+
+    expect(store.selectedText.value).toBe('')
+    expect(store.selectionStart.value).toBe(0)
+    expect(store.selectionEnd.value).toBe(0)
+  })
+
   it('increments focus and selectAll counters', () => {
     const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
     const store = createEditorInputStoreModel(historyApi)

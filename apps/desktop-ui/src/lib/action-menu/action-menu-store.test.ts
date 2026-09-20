@@ -10,7 +10,6 @@ describe('createActionMenuStoreModel', () => {
       openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
-      startChatWithInitialMessage: vi.fn(),
       startChatWithAttachment: vi.fn(),
       showToast: vi.fn(),
       minCorrectionLength: () => 10,
@@ -65,6 +64,26 @@ describe('createActionMenuStoreModel', () => {
     expect(deps.startCorrection).not.toHaveBeenCalled()
   })
 
+  it('triggers startChatWithAttachment for askInChat action', async () => {
+    const { store, deps } = setup()
+    const actions = store.getDefaultActions()
+
+    const askInChatAction = actions.find(
+      (a) => a.labelKey === 'action.askInChat'
+    )
+    await askInChatAction?.action('   ')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+    expect(deps.startChatWithAttachment).not.toHaveBeenCalled()
+
+    await askInChatAction?.action('some context text')
+    expect(deps.startChatWithAttachment).toHaveBeenCalledWith(
+      'some context text'
+    )
+  })
+
   it('allows registering custom action items', () => {
     const { store } = setup()
 
@@ -73,5 +92,19 @@ describe('createActionMenuStoreModel', () => {
 
     const allActions = store.getActionsMenu()
     expect(allActions).toContain(customAction)
+  })
+
+  it('allows clearing registered action items', () => {
+    const { store } = setup()
+
+    const customAction = { name: 'custom', action: vi.fn() }
+    store.registerActionsItems([customAction])
+    expect(store.getActionsMenu()).toContain(customAction)
+
+    store.clearRegisteredActions()
+    expect(store.getActionsMenu()).not.toContain(customAction)
+    expect(store.getActionsMenu()).toHaveLength(
+      store.getDefaultActions().length
+    )
   })
 })

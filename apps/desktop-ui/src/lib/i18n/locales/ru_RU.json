@@ -85,6 +85,9 @@
     "tasksTab": "Задания для AI",
     "rolesTab": "Роли чата",
     "pluginsTab": "Плагины",
+    "pluginEnabled": "Включен",
+    "pluginSettings": "Настройки плагина",
+    "noInstalledPlugins": "Нет установленных плагинов",
     "theme": "Тема",
     "appLanguage": "Язык интерфейса",
     "userLanguage": "Язык пользователя",
@@ -204,6 +207,7 @@
     "selectAll": "Выбрать всё",
     "selectionHint": "Подсказка: можно выделить текст, и тогда изменения будут касаться только того, что выделено.",
     "actions": "Действия",
+    "inputLabel": "Текстовый редактор",
     "menu": {
       "cut": "Вырезать",
       "copy": "Копировать",
@@ -241,7 +245,10 @@
     "role": "Роль",
     "sendMessage": "Отправить сообщение",
     "clearInput": "Очистить поле ввода",
-    "voiceInput": "Голосовой ввод"
+    "voiceInput": "Голосовой ввод",
+    "attachEditorText": "Прикрепить текст из редактора",
+    "attachEditorTextTitle": "Прикрепить текущий текст из редактора как контекст",
+    "removeAttachment": "Удалить вложение"
   },
   "action": {
     "insertIntoWindow": "Вставить в окно",
@@ -249,8 +256,7 @@
     "aiTask": "Задание для AI",
     "correction": "Коррекция",
     "translation": "Перевод",
-    "askAi": "Спросить у AI",
-    "askAiAboutText": "Спросить по тексту у AI",
+    "askInChat": "Спросить в чате",
     "searchInInternet": "Поиск в интернете",
     "insertIntoEditor": "Вставить в редактор"
   },

@@ -1,7 +1,13 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import type { Extension } from '@codemirror/state'
 import { Annotation, Compartment, EditorState } from '@codemirror/state'
-import { EditorView, keymap, placeholder } from '@codemirror/view'
+import {
+  EditorView,
+  dropCursor,
+  highlightSpecialChars,
+  keymap,
+  placeholder,
+} from '@codemirror/view'
 import type { EditorSyntax } from '@tyco/shared'
 
 import type { EditorMenusOptions } from './context-menu'
@@ -38,6 +44,8 @@ export interface CreateEditorStateOptions
   syntax?: EditorSyntax
   /** Обработка вставки из буфера обмена; не задана — вставка остаётся нативной */
   paste?: PasteOptions
+  /** Accessible name of the input, announced by screen readers */
+  ariaLabel?: string
 }
 
 /** Набор расширений редактора */
@@ -48,7 +56,14 @@ export const createEditorExtensions = (
   keymap.of([...defaultKeymap, ...historyKeymap]),
   EditorView.lineWrapping,
   EditorState.allowMultipleSelections.of(false),
-  EditorView.contentAttributes.of({ spellcheck: 'false' }),
+  // shows an insertion point while text is dragged into the editor
+  dropCursor(),
+  // control characters pasted from the clipboard would be invisible otherwise
+  highlightSpecialChars(),
+  EditorView.contentAttributes.of({
+    spellcheck: 'false',
+    ...(options.ariaLabel ? { 'aria-label': options.ariaLabel } : {}),
+  }),
   placeholderCompartment.of(placeholder(options.placeholder ?? '')),
   syntaxCompartment.of(syntaxExtension(options.syntax ?? 'markdown')),
   editorAppearance,
