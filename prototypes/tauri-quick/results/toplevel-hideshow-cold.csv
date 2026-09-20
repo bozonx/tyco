@@ -1,0 +1,6 @@
+trial,strategy,chars_sent,chars_landed,lost,ms_show,ms_frame,ms_os_focus,ms_dom_focus,ms_first_char
+1,toplevel-hideshow-cold,8,0,8,0.3,,,818.2,
+2,toplevel-hideshow-cold,8,6,2,0.3,,148.2,39.0,215.1
+3,toplevel-hideshow-cold,8,6,2,0.3,49.4,89.4,49.2,125.5
+4,toplevel-hideshow-cold,8,7,1,0.3,20.1,12.6,2.9,28.1
+5,toplevel-hideshow-cold,8,7,1,0.3,21.1,16.4,4.1,29.6

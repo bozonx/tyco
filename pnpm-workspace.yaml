@@ -3,5 +3,10 @@ packages:
   - 'ui'
   - 'packages/*'
 
+allowBuilds:
+  onnxruntime-node: true
+  protobufjs: true
+  sharp: true
+
 ignoredBuiltDependencies:
   - electron-winstaller

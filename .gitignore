@@ -19,3 +19,10 @@ node_modules
 
 # Tauri build artefacts
 src-tauri/target
+# Генерируется tauri-build при каждой сборке, в репозиторий не нужен.
+src-tauri/gen/schemas
+
+# Прототипы: свои Cargo-таргеты и та же генерация схем
+prototypes/*/target
+prototypes/*/gen/schemas
+

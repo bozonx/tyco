@@ -4,7 +4,7 @@
   "private": true,
   "description": "TyCo - AI typing companion for writers and professionals who work with texts a lot",
   "scripts": {
-    "dev:ui": "pnpm --env-file=.env --filter tyco-ui dev",
+    "dev:ui": "dotenv -e .env -- pnpm --filter tyco-ui dev",
     "build:ui": "pnpm --filter tyco-ui build",
     "type-check": "pnpm --filter tyco-ui type-check",
     "test:ui": "pnpm --filter tyco-ui test",
