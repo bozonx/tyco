@@ -18,13 +18,13 @@
   "author": "Ivan K",
   "license": "MIT",
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.8",
     "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
-    "prettier": "^3.8.3",
-    "prettier-plugin-jsdoc": "^1.8.0",
+    "prettier": "^3.9.8",
+    "prettier-plugin-jsdoc": "^1.8.1",
     "typescript": "^6.0.3"
   }
 }
