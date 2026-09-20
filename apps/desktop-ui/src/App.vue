@@ -3,7 +3,13 @@
   <div class="layout">
     <NavPanel v-if="navPanelStore.params.panelVisible" />
     <div class="main">
-      <RouterView />
+      <!-- always mounted: its input keeps the focus between activations -->
+      <div v-show="quickPanelStore.isActive" class="layer">
+        <QuickPanel />
+      </div>
+      <div v-show="!quickPanelStore.isActive" class="layer">
+        <RouterView />
+      </div>
     </div>
   </div>
 </template>
@@ -24,6 +30,7 @@ import { usePlugins } from './plugins'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
+import { useQuickPanelStore } from './stores/quickPanel'
 import { useThemeStore } from './stores/theme'
 import { type START_MODES } from '@tyco/shared'
 
@@ -33,6 +40,7 @@ const { locale, t } = useI18n()
 const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
+const quickPanelStore = useQuickPanelStore()
 const route = useRoute()
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
@@ -102,6 +110,25 @@ watch(
   }
 )
 
+// the quick panel is outside the router, so entering and leaving it is driven
+// by the route instead of by mount and unmount hooks
+watch(
+  () => route.path,
+  (path) => {
+    quickPanelStore.syncRoute(path)
+  },
+  { immediate: true }
+)
+
+// a hidden panel has to keep the focus in its field: the compositor hands the
+// keyboard over before the frontend learns about the next show
+watch(
+  () => ipcStore.params.isWindowShown,
+  () => {
+    quickPanelStore.syncWindowVisibility()
+  }
+)
+
 onMounted(() => {
   void bootstrap.start()
 })
@@ -124,5 +151,11 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+.layer {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 </style>

@@ -151,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted } from 'vue'
+import { computed } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
@@ -160,7 +160,6 @@ import { useActionMenuStore } from '../stores/actionMenu'
 import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
-import { useHistoryStore } from '../stores/history'
 import { useToolbarStore } from '../stores/toolbar'
 import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
@@ -170,7 +169,6 @@ const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
-const historyStore = useHistoryStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 
@@ -268,12 +266,4 @@ const handleCopy = async () => {
     await doAction(copyAction)
   }
 }
-
-onUnmounted(async () => {
-  if (editorInputStore.value) {
-    historyStore.saveEditorHistory(editorInputStore.value)
-  }
-
-  await historyStore.clearMainInputTmp()
-})
 </script>

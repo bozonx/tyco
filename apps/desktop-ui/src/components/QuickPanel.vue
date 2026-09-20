@@ -20,25 +20,16 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * Quick input panel. Unlike the routed views it stays mounted for the whole
+ * lifetime of the app and is only toggled with `v-show`, so the input field and
+ * its focus survive between hotkey activations. Activation side effects live in
+ * `useQuickPanelStore`, because there is no mount to hang them on.
+ */
 import { useI18n } from '../composables/useI18n'
 import { APP_ROUTES } from '../lib/navigation/routes'
-import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
 
 const ipcStore = useIpcStore()
-const navPanelStore = useNavPanelStore()
-const menuModalsStore = useMenuModalsStore()
-const editorInputStore = useEditorInputStore()
 const { t } = useI18n()
-
-navPanelStore.resetNavParams({
-  escBtnAction: () => {
-    menuModalsStore.nextModal(MenuModals.INSERT, {
-      text: editorInputStore.value,
-    })
-  },
-  escBtnLabelKey: 'menu.insert',
-})
 </script>

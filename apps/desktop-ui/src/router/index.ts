@@ -7,7 +7,7 @@ import WriteModeView from '../views/WriteModeView.vue'
 import VoiceView from '../views/VoiceView.vue'
 import SelectModeView from '../views/SelectModeView.vue'
 import AiTaskView from '../views/AiTaskView.vue'
-import EditorView from '../views/EditorView.vue'
+import QuickPanelHostView from '../views/quick-panel-host-view'
 import { APP_ROUTES } from '../lib/navigation/routes'
 
 const router = createRouter({
@@ -23,8 +23,8 @@ const router = createRouter({
     {
       path: APP_ROUTES.EDITOR.path,
       name: APP_ROUTES.EDITOR.name,
-      component: EditorView,
-      props: true,
+      // rendered by the always mounted quick panel, see `QuickPanelHostView`
+      component: QuickPanelHostView,
     },
     {
       path: APP_ROUTES.HISTORY.path,
