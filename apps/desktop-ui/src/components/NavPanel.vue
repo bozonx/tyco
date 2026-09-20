@@ -1,6 +1,6 @@
 <template>
   <div class="navbar bg-base-300 text-neutral-content shadow-sm panel">
-    <div class="flex-1 flex flex-row gap-2 min-w-0">
+    <div class="flex-1 flex flex-row gap-2 min-w-0 items-center">
       <Button
         v-if="navPanelStore.params.escBtnAction"
         sm
@@ -8,37 +8,42 @@
         @click="navPanelStore.params.escBtnAction"
         >{{ escBtnText }}</Button
       >
+      <div
+        v-if="navPanelStore.params.rightPanelVisible"
+        role="tablist"
+        class="tabs tabs-border nav-tabs"
+        :class="{ 'ml-2': navPanelStore.params.escBtnAction }"
+      >
+        <a
+          role="tab"
+          class="tab"
+          :class="{
+            'tab-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
+          }"
+          @click="routeParamsStore.toEditor()"
+        >
+          <Icon icon="mdi:pencil" height="16" class="mr-1" />
+          {{ t('nav.editor') }}
+        </a>
+        <a
+          role="tab"
+          class="tab"
+          :class="{
+            'tab-active': appNavigation.isCurrent(APP_ROUTES.CHAT.path),
+          }"
+          @click="openChat"
+        >
+          <Icon icon="mdi:chat-processing-outline" height="16" class="mr-1" />
+          {{ t('nav.aiChat') }}
+        </a>
+      </div>
     </div>
     <div
       class="flex flex-row gap-1 items-center"
       v-if="navPanelStore.params.rightPanelVisible"
     >
-      <Button
-        :disabled="appNavigation.isCurrent(APP_ROUTES.EDITOR.path)"
-        sm
-        neutral
-        @click="routeParamsStore.toEditor()"
-      >
-        <Icon icon="mdi:pencil" height="16" />
-        {{ t('nav.editor') }}
-      </Button>
-      <Button
-        :disabled="appNavigation.isCurrent(APP_ROUTES.CHAT.path)"
-        sm
-        neutral
-        @click="openChat"
-      >
-        <Icon icon="mdi:chat-processing-outline" height="16" />
-        {{ t('nav.aiChat') }}
-      </Button>
-      <Button
-        :disabled="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"
-        sm
-        neutral
-        @click="openHistory"
-      >
-        <Icon icon="mdi:history" height="16" />
-        {{ t('nav.history') }}
+      <Button sm neutral square @click="openHistory" :title="t('nav.history')">
+        <Icon icon="mdi:history" height="20" />
       </Button>
       <Button
         :disabled="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
@@ -75,11 +80,9 @@ const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
 const escBtnText = computed(() => {
-  const baseText = navPanelStore.params.escBtnLabelKey
+  return navPanelStore.params.escBtnLabelKey
     ? t(navPanelStore.params.escBtnLabelKey)
     : navPanelStore.params.escBtnText || ''
-
-  return baseText + t('nav.escSuffix')
 })
 
 function openSettings() {
@@ -107,5 +110,16 @@ function openHistory() {
 .panel {
   min-height: 44px;
   padding: 0.375rem var(--space-lg);
+}
+
+/* Tab group inside the navbar — remove the bottom border line of tabs-border */
+.nav-tabs {
+  --tab-border-color: var(--app-border);
+  gap: 0;
+}
+
+.nav-tabs::before,
+.nav-tabs::after {
+  display: none;
 }
 </style>
