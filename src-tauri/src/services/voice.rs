@@ -30,7 +30,7 @@ pub async fn start(app: AppHandle, state: &AppState, ws_url: String) -> Result<(
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let thread = thread::spawn(move || {
         if let Err(error) = run_voice_thread(app, ws_url, shutdown_rx) {
-            eprintln!("Voice recognition error: {error}");
+            log::error!("Voice recognition error: {error}");
         }
     });
 
@@ -64,7 +64,7 @@ pub async fn start_local_recording(state: &AppState) -> Result<(), AppError> {
             run_local_recording_thread(thread_stop_flag, thread_samples, setup_tx.clone())
         {
             let _ = setup_tx.send(Err(error.to_string()));
-            eprintln!("Local voice recording error: {error}");
+            log::error!("Local voice recording error: {error}");
         }
     });
 
@@ -271,7 +271,7 @@ where
 {
     let channels = usize::from(config.channels);
     let error_callback = |error| {
-        eprintln!("Audio input stream error: {error}");
+        log::error!("Audio input stream error: {error}");
     };
 
     device
@@ -351,7 +351,7 @@ where
 {
     let channels = usize::from(config.channels);
     let error_callback = |error| {
-        eprintln!("Local recording audio input stream error: {error}");
+        log::error!("Local recording audio input stream error: {error}");
     };
 
     device

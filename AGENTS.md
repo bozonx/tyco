@@ -37,7 +37,28 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
 
 ## Verification Commands
 
-- `pnpm check` — runs i18n validator, ESLint, TypeScript type-check, and Prettier check.
+- `pnpm check` — version sync, i18n validator, ESLint, TypeScript type-check, Prettier check.
 - `pnpm test` — runs all Vitest test suites.
-- `pnpm validate` — full aggregate check (`pnpm check && pnpm test && pnpm build`).
-- `cargo fmt --check && cargo clippy -- -D warnings && cargo test` (in `src-tauri`) — verifies Rust backend quality.
+- `pnpm validate` — `pnpm check && pnpm test && pnpm build`.
+- `pnpm check:rust` / `pnpm test:rust` — `cargo fmt --check` + `cargo clippy --all-targets -D warnings`, and `cargo test`.
+- `pnpm validate:all` — everything above in one go.
+
+## Offline Constraint
+
+The app must work without network access. Do not add fonts, icons, stylesheets
+or scripts loaded from a CDN. Icons come from `@iconify-json/mdi` and are
+subsetted at build time by `apps/desktop-ui/build/offline-icons-plugin.ts`,
+which scans the sources for `mdi:*` names; referencing a new icon is enough.
+
+## CSP
+
+`src-tauri/tauri.conf.json` holds the production CSP. `scripts/tauri-dev.sh`
+overrides only `devUrl` and the CSP entries needed to reach the dev server —
+keep it that way, so that anything working in dev also works in a bundle. In
+particular, never rely on inline scripts: `script-src` does not allow them.
+
+## Versioning
+
+The root `package.json` is the single source of truth. `pnpm sync:version`
+propagates it to `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, and
+`pnpm check` fails when they drift apart.

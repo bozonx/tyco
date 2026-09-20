@@ -1,16 +1,11 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    // "strict": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true
+    "lib": ["ES2022"],
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "types": ["node"]
   },
-  "include": ["packages/shared/**/*.ts"],
-  "exclude": ["node_modules", "dist", "apps", "src-tauri"]
+  "include": ["scripts/**/*"]
 }

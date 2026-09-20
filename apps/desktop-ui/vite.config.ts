@@ -1,68 +1,42 @@
-import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { resolve } from 'node:path'
 
-import Components from 'unplugin-vue-components/vite'
 import tailwindcss from '@tailwindcss/vite'
+import vue from '@vitejs/plugin-vue'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig, loadEnv } from 'vite'
+
+import { offlineIconsPlugin } from './build/offline-icons-plugin.ts'
+
+const rootDir = import.meta.dirname
+const srcDir = resolve(rootDir, 'src')
+
+// Tauri ships a fixed webview per platform, so the build can target it directly.
+const webviewTarget =
+  process.env.TAURI_ENV_PLATFORM === 'darwin' ? 'safari13' : 'chrome105'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const envDir = resolve(import.meta.dirname, '../..')
+  const envDir = resolve(rootDir, '../..')
   const env = loadEnv(mode, envDir, '')
   const port = parseInt(env.PORT || '3000')
+  const isDebugBuild = Boolean(process.env.TAURI_ENV_DEBUG)
 
   return {
-    plugins: [vue(), tailwindcss(), Components({/* options */})],
-    resolve: { alias: { '@': resolve(import.meta.dirname, 'src') } },
+    plugins: [vue(), tailwindcss(), Components({}), offlineIconsPlugin(srcDir)],
+    resolve: { alias: { '@': srcDir } },
     base: './',
+    // Keep the Tauri CLI output readable.
+    clearScreen: false,
+    envPrefix: ['VITE_', 'TAURI_ENV_'],
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
       emptyOutDir: true,
-      target: 'es2020',
-      rollupOptions: {
-        input: { main: resolve(import.meta.dirname, 'index.html') },
-      },
-      minify: false,
-      // minify: "esbuild",
-      // minify: "terser",
-      // terserOptions: {
-      //   compress: {
-      //     drop_console: true,
-      //     drop_debugger: true,
-      //   },
-      // },
+      target: webviewTarget,
+      minify: !isDebugBuild,
+      sourcemap: isDebugBuild,
+      rollupOptions: { input: { main: resolve(rootDir, 'index.html') } },
     },
-    optimizeDeps: {
-      include: [
-        'vue',
-        'mini-toastr',
-        'pinia',
-        'vue-router',
-        'vue-i18n',
-        '@codemirror/state',
-        '@codemirror/view',
-        '@codemirror/commands',
-        '@codemirror/lang-markdown',
-        '@codemirror/language',
-        '@codemirror/language-data',
-        '@lezer/highlight',
-        'diff',
-        'highlight.js',
-        'js-beautify',
-        'rehype-parse',
-        'rehype-remark',
-        'remark-gfm',
-        'remark-normalize-headings',
-        'remark-parse',
-        'remark-stringify',
-        'remark-truncate-links',
-        'unified',
-        'unist-util-visit',
-        '@iconify/vue',
-        '@tauri-apps/api',
-      ],
-    },
-    server: { port: port, strictPort: true },
+    server: { port, strictPort: true, watch: { ignored: ['**/src-tauri/**'] } },
   }
 })

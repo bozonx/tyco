@@ -20,7 +20,15 @@ if (localeFiles.length === 0) {
   process.exit(1)
 }
 
+/**
+ * Flattens a locale object into dot-separated key paths.
+ *
+ * @param {Record<string, unknown>} obj
+ * @param {string} prefix
+ * @returns {string[]}
+ */
 function getAllKeys(obj, prefix = '') {
+  /** @type {string[]} */
   const keys = []
   for (const key in obj) {
     const fullKey = prefix ? `${prefix}.${key}` : key
@@ -29,7 +37,12 @@ function getAllKeys(obj, prefix = '') {
       obj[key] !== null &&
       !Array.isArray(obj[key])
     ) {
-      keys.push(...getAllKeys(obj[key], fullKey))
+      keys.push(
+        ...getAllKeys(
+          /** @type {Record<string, unknown>} */ (obj[key]),
+          fullKey
+        )
+      )
     } else {
       keys.push(fullKey)
     }

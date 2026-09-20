@@ -18,3 +18,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+declare module 'virtual:offline-icons' {
+  import type { IconifyJSON } from '@iconify/types'
+
+  const collection: IconifyJSON
+  export default collection
+}

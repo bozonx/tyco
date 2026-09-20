@@ -17,6 +17,7 @@ export default defineConfig(
       '**/src-tauri/gen/**',
       '**/.turbo/**',
       '**/components.d.ts',
+      'prototypes/**',
     ],
   },
   eslint.configs.recommended,
@@ -80,28 +81,28 @@ export default defineConfig(
 
   {
     files: ['**/*.test.ts', '**/test/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      'no-console': 'off',
+    rules: { 'no-console': 'off' },
+  },
+
+  // Plain Node scripts and config files: no TS parser, Node globals only.
+  {
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
     },
+    rules: { 'no-console': 'off' },
   },
 
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.js', '*.config.js', '*.config.ts'],
-    rules: {
-      'no-console': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
+    files: [
+      'scripts/**/*.ts',
+      '**/build/**/*.ts',
+      '*.config.js',
+      '*.config.ts',
+    ],
+    rules: { 'no-console': 'off' },
   },
 
   prettierConfig

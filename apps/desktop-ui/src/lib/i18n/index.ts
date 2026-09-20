@@ -17,6 +17,11 @@ type GlobalI18n = {
 
 const globalI18n = i18n.global as GlobalI18n
 
+/** Converts an internal locale id (`en_US`) into a BCP 47 tag (`en-US`). */
+function toHtmlLang(locale: UiLocale): string {
+  return locale.replace('_', '-')
+}
+
 export function resolveUiLocale(
   configuredAppLanguage?: string | null,
   configuredUserLanguage?: string | null
@@ -30,6 +35,10 @@ export function resolveUiLocale(
 
 export function setI18nLocale(locale: UiLocale) {
   globalI18n.locale.value = locale
+
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('lang', toHtmlLang(locale))
+  }
 }
 
 export function syncI18nLocale(

@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  LINUX_TAURI_DEPS: >-
+    libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev
+    libayatana-appindicator3-dev librsvg2-dev
 
 jobs:
   frontend:
@@ -27,10 +35,19 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
+      - name: Setup Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
+            ${{ runner.os }}-turbo-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run validation (lint, type-check, format, test, build)
+      - name: Run validation (version, i18n, lint, type-check, format, test, build)
         run: pnpm validate
 
   rust:
@@ -43,20 +60,13 @@ jobs:
       - name: Install Linux system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
+          sudo apt-get install -y ${{ env.LINUX_TAURI_DEPS }}
 
+      # Pinned by src-tauri/rust-toolchain.toml so CI and local runs agree.
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Rust cache
@@ -69,9 +79,48 @@ jobs:
         working-directory: src-tauri
 
       - name: Run Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
         working-directory: src-tauri
 
       - name: Run Rust tests
         run: cargo test
         working-directory: src-tauri
+
+  bundle:
+    name: Tauri Bundle
+    runs-on: ubuntu-latest
+    needs: [frontend, rust]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ env.LINUX_TAURI_DEPS }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Verifies that the app actually bundles; artefacts are not published here.
+      - name: Build the desktop bundle
+        run: pnpm tauri:build --no-bundle

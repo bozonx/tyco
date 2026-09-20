@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # The toolchain moves together; one PR instead of a dozen.
+      dev-tooling:
+        patterns:
+          - '@types/*'
+          - 'eslint*'
+          - 'prettier*'
+          - 'typescript*'
+          - 'vite'
+          - 'vitest'
+          - '@vitest/*'
+          - 'turbo'
+      tauri:
+        patterns:
+          - '@tauri-apps/*'
+
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      tauri:
+        patterns:
+          - 'tauri'
+          - 'tauri-*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -484,3 +484,138 @@ fn remove_orphan_chat_files(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    /// Creates a unique empty directory under the system temp dir.
+    fn temp_dir(label: &str) -> PathBuf {
+        static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
+        let dir = std::env::temp_dir().join(format!(
+            "tyco-storage-test-{}-{}-{}",
+            label,
+            std::process::id(),
+            unique
+        ));
+
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).expect("failed to create the temp dir");
+
+        dir
+    }
+
+    fn chat_item(id: &str) -> ChatHistoryItem {
+        ChatHistoryItem {
+            id: id.to_string(),
+            description: String::from("chat"),
+            last_msg_date: String::from("0"),
+            messages: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn history_limit_falls_back_to_the_default() {
+        let config = json!({ "editorHistoryLimit": 0, "chatHistoryLimit": "many" });
+
+        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 50);
+        assert_eq!(history_limit(&config, "chatHistoryLimit", 20), 20);
+        assert_eq!(history_limit(&config, "missing", 10), 10);
+    }
+
+    #[test]
+    fn history_limit_reads_a_positive_value() {
+        let config = json!({ "editorHistoryLimit": 5 });
+
+        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 5);
+    }
+
+    #[test]
+    fn sanitize_chat_id_rejects_path_traversal() {
+        assert!(sanitize_chat_id("../../etc/passwd").is_err());
+        assert!(sanitize_chat_id("chat/id").is_err());
+        assert!(sanitize_chat_id("").is_err());
+        assert_eq!(sanitize_chat_id("chat-1_A").unwrap(), "chat-1_A");
+    }
+
+    #[test]
+    fn normalize_window_insertion_migrates_the_legacy_key() {
+        let mut config = json!({ "xdotoolBin": "/opt/bin/xdotool" });
+
+        assert!(normalize_window_insertion_config(&mut config));
+        assert_eq!(
+            config["windowInsertion"],
+            json!({
+                "method": "xdotool",
+                "xdotoolBin": "/opt/bin/xdotool",
+                "ydotoolBin": "/usr/bin/ydotool",
+            })
+        );
+    }
+
+    #[test]
+    fn normalize_window_insertion_replaces_an_unknown_method() {
+        let mut config = json!({ "windowInsertion": { "method": "wtype" } });
+
+        assert!(normalize_window_insertion_config(&mut config));
+        assert_eq!(config["windowInsertion"]["method"], json!("xdotool"));
+    }
+
+    #[test]
+    fn normalize_window_insertion_is_idempotent() {
+        let mut config = json!({});
+
+        assert!(normalize_window_insertion_config(&mut config));
+        assert!(!normalize_window_insertion_config(&mut config));
+    }
+
+    #[test]
+    fn jsonl_round_trip_skips_blank_and_broken_lines() {
+        let dir = temp_dir("jsonl");
+        let path = dir.join("history.jsonl");
+
+        write_jsonl(&path, &[String::from("first"), String::from("second")]).unwrap();
+        let mut raw = fs::read_to_string(&path).unwrap();
+        raw.push_str("\n{not json}\n");
+        fs::write(&path, raw).unwrap();
+
+        let items: Vec<String> = read_jsonl(&path).unwrap();
+
+        assert_eq!(items, vec![String::from("first"), String::from("second")]);
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn read_jsonl_returns_empty_for_a_missing_file() {
+        let items: Vec<String> = read_jsonl(&PathBuf::from("/nonexistent/history.jsonl")).unwrap();
+
+        assert!(items.is_empty());
+    }
+
+    #[test]
+    fn read_json_returns_the_fallback_for_a_missing_file() {
+        let value: Value = read_json(&PathBuf::from("/nonexistent/state.json"), json!({})).unwrap();
+
+        assert_eq!(value, json!({}));
+    }
+
+    #[test]
+    fn remove_orphan_chat_files_keeps_active_chats_and_the_index() {
+        let dir = temp_dir("orphans");
+        fs::write(dir.join("index.json"), "[]").unwrap();
+        fs::write(dir.join("kept.json"), "{}").unwrap();
+        fs::write(dir.join("orphan.json"), "{}").unwrap();
+
+        remove_orphan_chat_files(&dir, &[chat_item("kept")]).unwrap();
+
+        assert!(dir.join("index.json").exists());
+        assert!(dir.join("kept.json").exists());
+        assert!(!dir.join("orphan.json").exists());
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+}

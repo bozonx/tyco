@@ -1,5 +1,4 @@
 use std::thread;
-use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 use zbus::interface;
@@ -11,27 +10,35 @@ const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
 const MESSAGE_DEST: &str = "org.tyco.Service";
 
+/// Serves the D-Bus interface on a dedicated thread. A failure here (no session
+/// bus, the name already taken by another instance) must not take the app down:
+/// the rest of the UI works without the hotkey integration.
 pub fn spawn_dbus_server(app: AppHandle) {
     thread::spawn(move || {
         let runtime = tauri::async_runtime::handle().clone();
         let connection = runtime.block_on(async {
             let interface = TycoDbus { app: app.clone() };
 
-            zbus::ConnectionBuilder::session()
-                .expect("Failed to open DBus session")
-                .name(MESSAGE_DEST)
-                .expect("Failed to acquire DBus name")
-                .serve_at(MESSAGE_PATH, interface)
-                .expect("Failed to register DBus object")
+            zbus::ConnectionBuilder::session()?
+                .name(MESSAGE_DEST)?
+                .serve_at(MESSAGE_PATH, interface)?
                 .build()
                 .await
-                .expect("Failed to build DBus connection")
         });
 
-        let _connection = connection;
+        let _connection = match connection {
+            Ok(connection) => connection,
+            Err(error) => {
+                log::error!("D-Bus server is unavailable: {error}");
+                return;
+            }
+        };
 
+        log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
+
+        // Keep the connection alive for the lifetime of the process.
         loop {
-            thread::sleep(Duration::from_secs(60));
+            thread::park();
         }
     });
 }
