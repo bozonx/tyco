@@ -16,10 +16,18 @@
         <Button
           sm
           square
-          @click="editorInputStore.clear"
-          :title="t('editor.clear')"
+          @click="handleCorrection"
+          :title="t('action.correction')"
         >
-          <Icon icon="mdi:clear" height="24" />
+          <Icon icon="mdi:auto-fix" height="24" />
+        </Button>
+        <Button
+          sm
+          square
+          @click="handleCopy"
+          :title="t('action.copyToClipboard')"
+        >
+          <Icon icon="mdi:content-copy" height="24" />
         </Button>
         <Button
           sm
@@ -28,6 +36,14 @@
           :title="t('editor.selectAll')"
         >
           <Icon icon="mdi:select-all" height="24" />
+        </Button>
+        <Button
+          sm
+          square
+          @click="editorInputStore.clear"
+          :title="t('editor.clear')"
+        >
+          <Icon icon="mdi:clear" height="24" />
         </Button>
       </div>
     </div>
@@ -52,7 +68,7 @@
       <h2 class="mt-4 mb-1 text-sm">{{ t('editor.actions') }}</h2>
       <div class="flex gap-1 w-full flex-wrap">
         <Button
-          v-for="item in actionMenuStore.getActionsMenu()"
+          v-for="item in bottomActions"
           :key="item.labelKey || item.name"
           :icon="item.icon"
           @click="doAction(item)"
@@ -66,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted } from 'vue'
+import { computed, onUnmounted } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
@@ -82,6 +98,35 @@ const editMenuStore = useEditMenuStore()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
+
+const SIDE_ACTION_KEYS = new Set([
+  'action.copyToClipboard',
+  'action.correction',
+])
+
+const bottomActions = computed(() =>
+  actionMenuStore
+    .getActionsMenu()
+    .filter((item) => !item.labelKey || !SIDE_ACTION_KEYS.has(item.labelKey))
+)
+
+const handleCorrection = async () => {
+  const correctionAction = actionMenuStore
+    .getActionsMenu()
+    .find((item) => item.labelKey === 'action.correction')
+  if (correctionAction) {
+    await doAction(correctionAction)
+  }
+}
+
+const handleCopy = async () => {
+  const copyAction = actionMenuStore
+    .getActionsMenu()
+    .find((item) => item.labelKey === 'action.copyToClipboard')
+  if (copyAction) {
+    await doAction(copyAction)
+  }
+}
 
 onUnmounted(async () => {
   if (editorInputStore.value) {
