@@ -18,7 +18,7 @@ export const useQuickPanelStore = defineStore('quickPanel', () => {
     },
     applyNavParams: () => {
       navPanelStore.resetNavParams({
-        escBtnLabelKey: 'menu.insert',
+        escBtnLabelKey: 'nav.actions',
         escBtnAction: () => {
           menuModalsStore.nextModal(MenuModals.INSERT, {
             text: editorInputStore.value,

@@ -47,6 +47,7 @@
     "history": "History",
     "menu": "Menu",
     "settings": "Settings",
+    "actions": "Actions (Esc)",
     "escSuffix": " (Esc)"
   },
   "mode": {

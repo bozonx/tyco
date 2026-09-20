@@ -1,18 +1,10 @@
 <template>
   <div class="navbar bg-base-300 text-neutral-content shadow-sm panel">
     <div class="flex-1 flex flex-row gap-2 min-w-0 items-center">
-      <Button
-        v-if="navPanelStore.params.escBtnAction"
-        sm
-        neutral
-        @click="navPanelStore.params.escBtnAction"
-        >{{ escBtnText }}</Button
-      >
       <div
         v-if="navPanelStore.params.rightPanelVisible"
         role="tablist"
         class="tabs tabs-border nav-tabs"
-        :class="{ 'ml-2': navPanelStore.params.escBtnAction }"
       >
         <a
           role="tab"
@@ -42,6 +34,13 @@
       class="flex flex-row gap-1 items-center"
       v-if="navPanelStore.params.rightPanelVisible"
     >
+      <Button
+        v-if="navPanelStore.params.escBtnAction"
+        sm
+        neutral
+        @click="navPanelStore.params.escBtnAction"
+        >{{ escBtnText }}</Button
+      >
       <Button sm neutral square @click="openHistory" :title="t('nav.history')">
         <Icon icon="mdi:history" height="20" />
       </Button>
