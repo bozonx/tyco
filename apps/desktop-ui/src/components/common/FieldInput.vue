@@ -1,15 +1,19 @@
 <template>
   <input
-    type="text"
+    :type="type"
     :value="String(value ?? '')"
     :placeholder="placeholder"
     class="input"
+    :class="{ 'input--number': type === 'number' }"
     @input="handleInput"
   />
 </template>
 
 <script setup lang="ts">
-defineProps<{ value?: string | number; placeholder?: string }>()
+withDefaults(
+  defineProps<{ value?: string | number; placeholder?: string; type?: string }>(),
+  { type: 'text' },
+)
 
 const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
 
@@ -21,5 +25,9 @@ function handleInput(event: Event) {
 <style scoped>
 input {
   width: 100%;
+}
+
+.input--number {
+  width: 6rem;
 }
 </style>
