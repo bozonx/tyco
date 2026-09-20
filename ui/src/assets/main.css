@@ -40,6 +40,13 @@
 
   /* Field row label width — global token so FieldRow and FieldsByCfg stay in sync */
   --field-label-width: 180px;
+
+  /* Editor (CodeMirror) — "writer" look, not an IDE look:
+     proportional font, generous line height, comfortable padding */
+  --editor-font-family: var(--font-sans);
+  --editor-font-size: 0.9375rem;
+  --editor-line-height: 1.7;
+  --editor-padding: 0.75rem 0.875rem;
 }
 
 /* ────────────────────────────────────────────────
@@ -78,6 +85,18 @@
   --app-diff-added-fg: #166534;
   --app-diff-removed-bg: #fee2e2;
   --app-diff-removed-fg: #991b1b;
+
+  /* Editor syntax highlighting */
+  --editor-selection-bg: #cfd8ef;
+  --app-syntax-heading: #1d4ed8;
+  --app-syntax-link: #0369a1;
+  --app-syntax-quote: #6b7280;
+  --app-syntax-meta: #9333ea;
+  --app-syntax-code: #b91c1c;
+  --app-syntax-keyword: #7c3aed;
+  --app-syntax-string: #15803d;
+  --app-syntax-number: #b45309;
+  --app-syntax-comment: #6b7280;
 }
 
 [data-theme='dark'] {
@@ -110,6 +129,18 @@
   --app-diff-added-fg: #86efac;
   --app-diff-removed-bg: #450a0a;
   --app-diff-removed-fg: #fca5a5;
+
+  /* Editor syntax highlighting */
+  --editor-selection-bg: #33405c;
+  --app-syntax-heading: #93c5fd;
+  --app-syntax-link: #7dd3fc;
+  --app-syntax-quote: #9ca3af;
+  --app-syntax-meta: #d8b4fe;
+  --app-syntax-code: #fca5a5;
+  --app-syntax-keyword: #c4b5fd;
+  --app-syntax-string: #86efac;
+  --app-syntax-number: #fcd34d;
+  --app-syntax-comment: #6b7280;
 }
 
 /* ────────────────────────────────────────────────

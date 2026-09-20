@@ -1,9 +1,13 @@
 import { undo } from '@codemirror/commands'
+import type { Extension } from '@codemirror/state'
+import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { describe, expect, it } from 'vitest'
 
-import { createEditorState } from './createEditorState'
+import { createEditorExtensions } from './createEditorState'
+import { EDIT_USER_EVENT } from './editSource'
 import {
+  applyStoreEdit,
   applyStoreSelection,
   applyStoreValue,
   computeMinimalChange,
@@ -20,7 +24,10 @@ interface StoreSpy {
   selectionChanges: number
 }
 
-const mountView = (doc = ''): { view: EditorView; spy: StoreSpy } => {
+const mountView = (
+  doc = '',
+  extraExtensions: Extension = []
+): { view: EditorView; spy: StoreSpy } => {
   const spy: StoreSpy = {
     value: doc,
     selectedText: '',
@@ -36,19 +43,24 @@ const mountView = (doc = ''): { view: EditorView; spy: StoreSpy } => {
 
   const view = new EditorView({
     parent,
-    state: createEditorState({
+    state: EditorState.create({
       doc,
-      placeholder: 'holder',
-      onDocChange: (value) => {
-        spy.value = value
-        spy.docChanges++
-      },
-      onSelectionChange: (text, start, end) => {
-        spy.selectedText = text
-        spy.start = start
-        spy.end = end
-        spy.selectionChanges++
-      },
+      extensions: [
+        createEditorExtensions({
+          placeholder: 'holder',
+          onDocChange: (value) => {
+            spy.value = value
+            spy.docChanges++
+          },
+          onSelectionChange: (text, start, end) => {
+            spy.selectedText = text
+            spy.start = start
+            spy.end = end
+            spy.selectionChanges++
+          },
+        }),
+        extraExtensions,
+      ],
     }),
   })
 
@@ -234,6 +246,133 @@ describe('setPlaceholder', () => {
     setPlaceholder(view, 'другой текст')
 
     expect(view.state.doc.toString()).toBe('text')
+    expect(spy.docChanges).toBe(0)
+    expect(spy.selectionChanges).toBe(0)
+
+    view.destroy()
+  })
+})
+
+describe('applyStoreEdit', () => {
+  it('applies text and selection in one transaction', () => {
+    const { view } = mountView('hello world')
+
+    applyStoreEdit(view, {
+      value: 'hello brave world',
+      selectionStart: 6,
+      selectionEnd: 11,
+      source: 'ai',
+    })
+
+    expect(view.state.doc.toString()).toBe('hello brave world')
+    expect(view.state.selection.main.from).toBe(6)
+    expect(view.state.selection.main.to).toBe(11)
+
+    view.destroy()
+  })
+
+  it('marks the transaction with the source user event', () => {
+    const seen: string[] = []
+    const { view } = mountView(
+      'one',
+      EditorView.updateListener.of((update) => {
+        for (const tr of update.transactions) {
+          for (const source of ['ai', 'voice', 'plain'] as const) {
+            if (tr.isUserEvent(EDIT_USER_EVENT[source])) seen.push(source)
+          }
+        }
+      })
+    )
+
+    applyStoreEdit(view, { value: 'one two', source: 'voice' })
+
+    expect(seen).toEqual(['voice'])
+
+    view.destroy()
+  })
+
+  it('undoes an AI edit in a single step, restoring text and selection', () => {
+    const { view } = mountView('hello world')
+
+    // пользователь выделил слово и применил AI-преобразование
+    view.dispatch({ selection: { anchor: 6, head: 11 } })
+
+    applyStoreEdit(view, {
+      value: 'hello planet',
+      selectionStart: 6,
+      selectionEnd: 12,
+      source: 'ai',
+    })
+
+    expect(view.state.doc.toString()).toBe('hello planet')
+
+    undo(view)
+
+    expect(view.state.doc.toString()).toBe('hello world')
+    expect(view.state.selection.main.from).toBe(6)
+    expect(view.state.selection.main.to).toBe(11)
+
+    view.destroy()
+  })
+
+  it('does not glue an AI edit together with typing', () => {
+    const { view } = mountView('')
+
+    view.dispatch(view.state.replaceSelection('typed'))
+
+    applyStoreEdit(view, { value: 'typed + ai', source: 'ai' })
+    expect(view.state.doc.toString()).toBe('typed + ai')
+
+    undo(view)
+    expect(view.state.doc.toString()).toBe('typed')
+
+    undo(view)
+    expect(view.state.doc.toString()).toBe('')
+
+    view.destroy()
+  })
+
+  it('does nothing when text and selection already match', () => {
+    const { view } = mountView('same')
+
+    view.dispatch({ selection: { anchor: 1, head: 3 } })
+
+    expect(
+      applyStoreEdit(view, {
+        value: 'same',
+        selectionStart: 1,
+        selectionEnd: 3,
+      })
+    ).toBe(false)
+
+    view.destroy()
+  })
+
+  it('clamps the selection to the new document length', () => {
+    const { view } = mountView('hello world')
+
+    applyStoreEdit(view, {
+      value: 'hi',
+      selectionStart: 0,
+      selectionEnd: 100,
+      source: 'ai',
+    })
+
+    expect(view.state.selection.main.to).toBe(2)
+
+    view.destroy()
+  })
+
+  it('does not echo the edit back to the store', () => {
+    const { view, spy } = mountView('one')
+
+    applyStoreEdit(view, {
+      value: 'one two',
+      selectionStart: 7,
+      selectionEnd: 7,
+      source: 'ai',
+    })
+
     expect(spy.docChanges).toBe(0)
     expect(spy.selectionChanges).toBe(0)
 

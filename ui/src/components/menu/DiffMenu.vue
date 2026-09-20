@@ -50,7 +50,7 @@ const leftLetterKeys = computed(
       {
         labelKey: 'action.insertIntoEditor',
         action: async () => {
-          editorInputStore.setValue(editedNewText.value)
+          editorInputStore.setValue(editedNewText.value, 'ai')
           routeParams.setParams({ text: editedNewText.value })
           editorInputStore.focus()
           menuModalsStore.closeAll()

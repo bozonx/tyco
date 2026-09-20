@@ -8,6 +8,8 @@ import { unified } from "unified";
 import { remarkTruncateLinks } from 'remark-truncate-links'
 import remarkNormalizeHeadings from 'remark-normalize-headings'
 
+import { MARKDOWN_STRINGIFY_OPTIONS } from '../lib/editor/markdownOptions'
+
 // Функция для удаления точек и запятых в конце текста
 const removeEndingPunctuation = (text: string): string => {
   return text.replace(/[.,]$/, "");
@@ -128,7 +130,7 @@ export const useCodeFormatter = () => {
       .use(remarkNormalizeHeadings)
       .use(removePunctuationRemarkPlugin)
       .use(bracketsToItalicRemarkPlugin)
-      .use(remarkStringify, { bullet: "-" })
+      .use(remarkStringify, MARKDOWN_STRINGIFY_OPTIONS)
       .process(text);
 
       return processed.toString();

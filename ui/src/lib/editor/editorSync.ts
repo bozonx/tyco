@@ -1,8 +1,11 @@
-import { EditorSelection } from '@codemirror/state'
+import { isolateHistory } from '@codemirror/commands'
+import { EditorSelection, Transaction } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { placeholder } from '@codemirror/view'
 
 import { fromStore, placeholderCompartment } from './createEditorState'
+import type { EditSource } from './editSource'
+import { EDIT_USER_EVENT, isolatedEditSources } from './editSource'
 
 export interface DocChange {
   from: number
@@ -45,20 +48,77 @@ export const computeMinimalChange = (
   }
 }
 
+export interface StoreEdit {
+  /** Новое содержимое документа */
+  value: string
+  /** Выделение после правки; не задано — оставляем как есть */
+  selectionStart?: number
+  selectionEnd?: number
+  /** Источник правки, по умолчанию обычная замена значения */
+  source?: EditSource
+}
+
+const clamp = (value: number, length: number): number =>
+  Math.max(0, Math.min(value, length))
+
+/**
+ * Единственная точка, через которую правки стора попадают в редактор.
+ *
+ * Текст и выделение применяются одной транзакцией — иначе AI-преобразование
+ * разъехалось бы на два шага Ctrl+Z. Правки от AI и распознавания речи
+ * изолируются в истории, чтобы не склеиваться с ручным вводом
+ *
+ * @returns True, если транзакция была отправлена
+ */
+export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
+  const source = edit.source ?? 'plain'
+  const change = computeMinimalChange(view.state.doc.toString(), edit.value)
+  const nextLength = edit.value.length
+  const current = view.state.selection.main
+
+  const wantsSelection =
+    edit.selectionStart !== undefined && edit.selectionEnd !== undefined
+  const from = wantsSelection ? clamp(edit.selectionStart!, nextLength) : 0
+  const to = wantsSelection ? clamp(edit.selectionEnd!, nextLength) : 0
+  const selectionChanged =
+    wantsSelection &&
+    (current.from !== Math.min(from, to) || current.to !== Math.max(from, to))
+
+  // при правке текста выделение всё равно пересчитывается, поэтому ставим его
+  // в ту же транзакцию, даже если по старым смещениям оно совпадает
+  const needSelection = wantsSelection && (selectionChanged || change !== null)
+
+  if (!change && !needSelection) return false
+
+  const annotations = [
+    fromStore.of(true),
+    Transaction.userEvent.of(EDIT_USER_EVENT[source]),
+  ]
+
+  if (isolatedEditSources.has(source)) {
+    annotations.push(isolateHistory.of('full'))
+  }
+
+  view.dispatch({
+    ...(change ? { changes: change } : {}),
+    ...(needSelection ? { selection: EditorSelection.single(from, to) } : {}),
+    annotations,
+    scrollIntoView: true,
+  })
+
+  return true
+}
+
 /**
  * Применить значение стора к редактору транзакцией
  *
  * @returns True, если документ действительно изменился
  */
-export const applyStoreValue = (view: EditorView, value: string): boolean => {
-  const change = computeMinimalChange(view.state.doc.toString(), value)
-
-  if (!change) return false
-
-  view.dispatch({ changes: change, annotations: fromStore.of(true) })
-
-  return true
-}
+export const applyStoreValue = (
+  view: EditorView,
+  value: string,
+  source: EditSource = 'plain'
+): boolean => applyStoreEdit(view, { value, source })
 
 /**
  * Применить выделение стора к редактору. Смещения подрезаются по длине
@@ -70,26 +130,12 @@ export const applyStoreSelection = (
   view: EditorView,
   start: number,
   end: number
-): boolean => {
-  const length = view.state.doc.length
-  const from = Math.max(0, Math.min(start, length))
-  const to = Math.max(0, Math.min(end, length))
-  const current = view.state.selection.main
-
-  if (
-    current.from === Math.min(from, to) &&
-    current.to === Math.max(from, to)
-  ) {
-    return false
-  }
-
-  view.dispatch({
-    selection: EditorSelection.single(from, to),
-    annotations: fromStore.of(true),
+): boolean =>
+  applyStoreEdit(view, {
+    value: view.state.doc.toString(),
+    selectionStart: start,
+    selectionEnd: end,
   })
-
-  return true
-}
 
 /** Выделить весь документ */
 export const selectAll = (view: EditorView): void => {

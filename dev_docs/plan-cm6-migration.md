@@ -1,6 +1,6 @@
 # План перехода редактора TyCo на CodeMirror 6
 
-Статус: этап 1 реализован, этапы 2-6 не начаты.
+Статус: этапы 1-5 реализованы, этап 6 (спеллчек) не начат.
 Дата: 2026-09-20
 
 ## 1. Зачем уходим с `<textarea>`
@@ -105,9 +105,11 @@ EditorView.vue
 @codemirror/commands        — history(), defaultKeymap, historyKeymap
 @codemirror/language        — syntaxTree, HighlightStyle
 @codemirror/lang-markdown   — подсветка Markdown и вложенного кода
+@codemirror/language-data   — ленивая загрузка грамматик для fenced-блоков
 @lezer/highlight            — теги для темы подсветки
 rehype-parse
 rehype-remark
+remark-gfm                  — таблицы и зачёркивание при вставке из буфера
 ```
 
 Намеренно **не** берём метапакет `codemirror` — он тянет автодополнение, поиск, lint и подсветку
@@ -138,7 +140,7 @@ rehype-remark
 результата распознавания речи, `clear`, `selectAll`, сохранение черновика в историю
 (`saveMainInputTmp` по дебаунсу 600 мс).
 
-### Этап 2. Undo и программные правки
+### Этап 2. Undo и программные правки — сделано
 
 1. Все правки из стора (`replaceSelection`, `setValueAtCursor`, `setValue` извне) проходят через
    один helper `applyStoreEdit(view, ...)`, который ставит транзакцию с `userEvent`
@@ -147,7 +149,7 @@ rehype-remark
 2. `isolateHistory` на транзакциях AI-правок, чтобы они не склеивались с ручным вводом.
 3. Тесты: применить преобразование → Ctrl+Z возвращает исходный текст с прежним выделением.
 
-### Этап 3. Вставка и форматирование
+### Этап 3. Вставка и форматирование — сделано
 
 1. `ui/src/lib/editor/paste.ts`: `EditorView.domEventHandlers({ paste })`.
 2. `htmlToMarkdown(html: string): string` на `rehype-parse` → `rehype-remark` → `remark-stringify`
@@ -160,7 +162,7 @@ rehype-remark
 6. Тесты на `htmlToMarkdown`: заголовки, вложенные списки, ссылки, `<pre><code>` → fenced-блок,
    таблица, мусорные обёртки от офисных редакторов.
 
-### Этап 4. Контекстное меню и bubble-меню
+### Этап 4. Контекстное меню и bubble-меню — сделано
 
 Меню делаем своё, на HTML — варианты исправлений приходят из собственного словаря, и меню должно
 следовать теме приложения (daisyUI). На `contextmenu` вызываем `preventDefault()` — в Tauri webview
@@ -171,6 +173,9 @@ rehype-remark
 2. ПКМ: `view.posAtCoords({ x, y })` → определяем слово под курсором → пункты:
    варианты исправления (из спеллчекера), «Добавить в словарь», «Пропустить», разделитель,
    Вырезать/Копировать/Вставить/Вставить как текст.
+   Реализовано: пункты работы с буфером обмена. Пункты спеллчекера подключаются в
+   `EditorInput.vue` через `spellcheckItems()` — сейчас она возвращает пустой список,
+   ключи `editor.menu.addToDictionary` / `editor.menu.ignoreWord` уже заведены.
 3. Bubble-меню при непустом выделении: позиция из `view.coordsAtPos(selection.from)`, содержимое —
    AI-действия из `stores/actionMenu.ts` и `stores/edditMenu.ts` (переиспользуем те же элементы,
    что рисует `Editor.vue`, без дублирования логики).
@@ -178,7 +183,7 @@ rehype-remark
    выделением. Включается настройкой `showBubbleMenu` (по умолчанию включено).
 5. Все подписи — через `ui/src/lib/i18n/messages.ts`; новые ключи в неймспейсе `editor.menu.*`.
 
-### Этап 5. Подсветка и внешний вид
+### Этап 5. Подсветка и внешний вид — сделано
 
 1. Подключить `@codemirror/lang-markdown`; режим документа — настройка
    `editorSyntax: 'none' | 'markdown'` (по умолчанию `markdown`).

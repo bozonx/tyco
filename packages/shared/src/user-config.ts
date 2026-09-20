@@ -69,6 +69,12 @@ export interface SttModel {
   localModel?: string
 }
 
+/** Что делать при вставке HTML из буфера обмена */
+export type PasteMode = 'plain' | 'markdown' | 'ask'
+
+/** Режим подсветки документа в редакторе */
+export type EditorSyntax = 'none' | 'markdown'
+
 export interface UserConfig {
   theme: 'auto' | 'light' | 'dark'
   xdotoolBin: string
@@ -80,6 +86,9 @@ export interface UserConfig {
   appLanguage: string
   userLanguage: string
   toTranslateLanguages: string[]
+  pasteMode: PasteMode
+  editorSyntax: EditorSyntax
+  showBubbleMenu: boolean
   editorHistoryMaxItems: number
   transformHistoryMaxItems: number
   chatHistoryMaxItems: number
@@ -128,6 +137,9 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   appLanguage: 'auto',
   userLanguage: 'auto',
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
+  pasteMode: 'markdown',
+  editorSyntax: 'markdown',
+  showBubbleMenu: true,
   editorHistoryMaxItems: 50,
   transformHistoryMaxItems: 50,
   chatHistoryMaxItems: 50,

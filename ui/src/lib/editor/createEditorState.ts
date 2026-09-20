@@ -2,6 +2,14 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import type { Extension } from '@codemirror/state'
 import { Annotation, Compartment, EditorState } from '@codemirror/state'
 import { EditorView, keymap, placeholder } from '@codemirror/view'
+import type { EditorSyntax } from '@shared'
+
+import type { EditorMenusOptions } from './contextMenu'
+import { editorMenusExtension } from './contextMenu'
+import type { PasteOptions } from './paste'
+import { pasteExtension } from './paste'
+import { syntaxCompartment, syntaxExtension } from './syntax'
+import { editorAppearance } from './theme'
 
 /**
  * Помечает транзакции, которые редактор получил из стора. Слушатель обновлений
@@ -22,12 +30,18 @@ export interface EditorCallbacks {
   onSelectionChange?: (text: string, start: number, end: number) => void
 }
 
-export interface CreateEditorStateOptions extends EditorCallbacks {
+export interface CreateEditorStateOptions
+  extends EditorCallbacks,
+    EditorMenusOptions {
   doc?: string
   placeholder?: string
+  /** Режим подсветки документа */
+  syntax?: EditorSyntax
+  /** Обработка вставки из буфера обмена; не задана — вставка остаётся нативной */
+  paste?: PasteOptions
 }
 
-/** Минимальный набор расширений: паритет с обычной textarea */
+/** Набор расширений редактора */
 export const createEditorExtensions = (
   options: CreateEditorStateOptions = {}
 ): Extension[] => [
@@ -37,6 +51,13 @@ export const createEditorExtensions = (
   EditorState.allowMultipleSelections.of(false),
   EditorView.contentAttributes.of({ spellcheck: 'false' }),
   placeholderCompartment.of(placeholder(options.placeholder ?? '')),
+  syntaxCompartment.of(syntaxExtension(options.syntax ?? 'markdown')),
+  editorAppearance,
+  ...(options.paste ? [pasteExtension(options.paste)] : []),
+  editorMenusExtension({
+    onContextMenu: options.onContextMenu,
+    onSelectionMenu: options.onSelectionMenu,
+  }),
   EditorView.updateListener.of((update) => {
     // правки, пришедшие из стора, наружу не отдаём
     if (update.transactions.some((tr) => tr.annotation(fromStore))) return
@@ -64,3 +85,11 @@ export const createEditorState = (
     doc: options.doc ?? '',
     extensions: createEditorExtensions(options),
   })
+
+/** Сменить режим подсветки без пересоздания редактора */
+export const setEditorSyntax = (view: EditorView, mode: EditorSyntax): void => {
+  view.dispatch({
+    effects: syntaxCompartment.reconfigure(syntaxExtension(mode)),
+    annotations: fromStore.of(true),
+  })
+}

@@ -54,6 +54,22 @@
           />
         </FieldRow>
 
+        <FieldRow :label="t('settings.pasteMode')">
+          <FieldSelect
+            v-model:value="userConfig.pasteMode"
+            :options="pasteModeOptions"
+          />
+        </FieldRow>
+        <FieldRow :label="t('settings.editorSyntax')">
+          <FieldSelect
+            v-model:value="userConfig.editorSyntax"
+            :options="editorSyntaxOptions"
+          />
+        </FieldRow>
+        <FieldRow :label="t('settings.showBubbleMenu')">
+          <FieldCheckbox v-model:value="userConfig.showBubbleMenu" />
+        </FieldRow>
+
         <FieldRow :label="t('settings.windowInsertion')" vertical>
           <div class="flex flex-col gap-3 w-full">
             <Tabs
@@ -834,6 +850,7 @@ function createPreparedUserConfig(config: unknown) {
   ensurePluginDefaults(nextConfig)
   normalizeLanguageConfig(nextConfig)
   normalizeWindowInsertionConfig(nextConfig)
+  normalizeEditorConfig(nextConfig)
   normalizeSttConfig(nextConfig)
   normalizeLlmConfig(nextConfig)
   normalizeChatRoles(nextConfig)
@@ -871,6 +888,14 @@ function normalizeLanguageConfig(config: Record<string, any>) {
   config.toTranslateLanguages = (config.toTranslateLanguages || []).map(
     (lang: string) => lang || DEFAULT_LANGUAGE
   )
+}
+
+// конфиги, созданные до появления настроек редактора, приходят без этих ключей
+function normalizeEditorConfig(config: Record<string, any>) {
+  config.pasteMode = config.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
+  config.editorSyntax = config.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
+  config.showBubbleMenu =
+    config.showBubbleMenu ?? DEFAULT_USER_CONFIG.showBubbleMenu
 }
 
 function normalizeWindowInsertionConfig(config: Record<string, any>) {
@@ -1217,6 +1242,25 @@ function flushPendingAutosave() {
   saveTimer = null
   void persistUserConfig()
 }
+
+const pasteModeOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  locale.value
+  return [
+    { id: 'markdown', name: t('settings.pasteModeMarkdown') },
+    { id: 'plain', name: t('settings.pasteModePlain') },
+    { id: 'ask', name: t('settings.pasteModeAsk') },
+  ]
+})
+
+const editorSyntaxOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  locale.value
+  return [
+    { id: 'markdown', name: t('settings.editorSyntaxMarkdown') },
+    { id: 'none', name: t('settings.editorSyntaxNone') },
+  ]
+})
 
 const appLanguageOptions = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions

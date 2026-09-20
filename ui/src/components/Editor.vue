@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col w-full h-full">
-    <div class="flex-1 flex gap-2">
-      <div class="flex-1">
+    <div class="flex-1 flex gap-2 min-w-0">
+      <div class="flex-1 min-w-0">
         <EditorInput />
       </div>
       <div class="flex gap-2 flex-col">
@@ -68,24 +68,20 @@
 <script setup lang="ts">
 import { onUnmounted } from 'vue'
 
+import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
-import useToast from '../composables/useToast'
-import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
-import type { EditItem } from '../stores/edditMenu'
 import { useEditMenuStore } from '../stores/edditMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useHistoryStore } from '../stores/history'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { Icon } from '@iconify/vue'
 
 const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
-const menuModalsStore = useMenuModalsStore()
-const { toast } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
+const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 
 onUnmounted(async () => {
   if (editorInputStore.value) {
@@ -94,70 +90,4 @@ onUnmounted(async () => {
 
   await historyStore.clearMainInputTmp()
 })
-
-function voiceRecognition() {
-  const initialValue = editorInputStore.value
-  const selectionStart = editorInputStore.selectionStart
-  const selectionEnd = editorInputStore.selectionEnd
-
-  menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
-    onCorrected: (resultText: string) => {
-      if (!resultText?.trim()) {
-        toast(t('toast.textNotSelected'), 'error')
-        return
-      }
-
-      const newValue =
-        initialValue.substring(0, selectionStart) +
-        resultText +
-        initialValue.substring(selectionEnd)
-      const newCursorPosition = selectionStart + resultText.length
-
-      editorInputStore.setValue(newValue)
-      editorInputStore.setSelection('', newCursorPosition, newCursorPosition)
-      menuModalsStore.closeAll()
-      editorInputStore.focus()
-    },
-    onCancel: () => menuModalsStore.closeAll(),
-  })
-}
-
-const doAction = async (item: ActionItem): Promise<void> => {
-  let value = editorInputStore.value
-
-  if (!item.useFullEditorText && editorInputStore.selectedText) {
-    value = editorInputStore.selectedText
-  }
-
-  if (!item.preserveWhitespace) {
-    value = value.trim()
-  }
-
-  return item.action(value)
-}
-
-async function doEdit(cb: (text: string) => Promise<string>): Promise<void> {
-  let value = editorInputStore.value
-
-  if (editorInputStore.selectedText) {
-    value = editorInputStore.selectedText
-  }
-
-  value = value.trim()
-
-  if (!value) {
-    toast(t('toast.textNotSelected'), 'error')
-    return
-  }
-
-  const result = await cb(value)
-
-  editorInputStore.selectedText
-    ? editorInputStore.replaceSelection(result)
-    : editorInputStore.setValue(result)
-}
-
-function getLabel(item: ActionItem | EditItem) {
-  return item.labelKey ? t(item.labelKey) : item.name || ''
-}
 </script>
