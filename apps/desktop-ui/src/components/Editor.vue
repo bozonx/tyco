@@ -22,7 +22,7 @@
         </Button>
       </div>
 
-      <!-- Right column: plugin right buttons & Insert to window & Translation icon buttons -->
+      <!-- Right column: plugin right buttons, AI task, Translation & Insert to window icon buttons -->
       <div class="flex items-center gap-2">
         <Button
           v-for="item in rightToolbarItems"
@@ -39,10 +39,10 @@
           sm
           square
           neutral
-          @click="handleInsertToWindow"
-          :title="t('action.insertIntoWindow')"
+          @click="handleAiTask"
+          :title="t('action.aiTask')"
         >
-          <Icon icon="mdi:application-export" height="20" />
+          <Icon icon="mdi:robot" height="20" />
         </Button>
         <Button
           sm
@@ -52,6 +52,15 @@
           :title="t('action.translation')"
         >
           <Icon icon="mdi:translate" height="20" />
+        </Button>
+        <Button
+          sm
+          square
+          neutral
+          @click="handleInsertToWindow"
+          :title="t('action.insertIntoWindow')"
+        >
+          <Icon icon="mdi:application-export" height="20" />
         </Button>
       </div>
     </div>
@@ -203,6 +212,7 @@ const EXCLUDED_ACTION_KEYS = new Set([
   'action.insertIntoWindow',
   'action.translation',
   'action.askInChat',
+  'action.aiTask',
 ])
 
 const bottomActions = computed(() =>
@@ -213,6 +223,15 @@ const bottomActions = computed(() =>
         !item.labelKey || !EXCLUDED_ACTION_KEYS.has(item.labelKey)
     )
 )
+
+const handleAiTask = async () => {
+  const aiTaskAction = actionMenuStore
+    .getActionsMenu()
+    .find((item: ActionItem) => item.labelKey === 'action.aiTask')
+  if (aiTaskAction) {
+    await doAction(aiTaskAction)
+  }
+}
 
 const handleInsertToWindow = async () => {
   const insertAction = actionMenuStore

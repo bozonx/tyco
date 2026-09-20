@@ -45,12 +45,26 @@ describe('Editor.vue toolbar', () => {
     expect(dropdowns[0].attributes('data-label')).toBe('editor.case')
     expect(dropdowns[1].attributes('data-label')).toBe('editor.format')
 
-    // Check top right buttons: insertIntoWindow and translation
-    const insertBtn = wrapper.find('button[title="action.insertIntoWindow"]')
-    expect(insertBtn.exists()).toBe(true)
+    // Check top right buttons: AI task, translation and insertIntoWindow
+    const aiTaskBtn = wrapper.find('button[title="action.aiTask"]')
+    expect(aiTaskBtn.exists()).toBe(true)
 
     const translateBtn = wrapper.find('button[title="action.translation"]')
     expect(translateBtn.exists()).toBe(true)
+
+    const insertBtn = wrapper.find('button[title="action.insertIntoWindow"]')
+    expect(insertBtn.exists()).toBe(true)
+
+    const rightColumn = wrapper.findAll(
+      '.flex.items-center.justify-between > .flex.items-center'
+    )[1]
+    const rightButtons = rightColumn.findAll('.btn-stub')
+    const titles = rightButtons.map((btn) => btn.attributes('title'))
+    expect(titles).toEqual([
+      'action.aiTask',
+      'action.translation',
+      'action.insertIntoWindow',
+    ])
   })
 
   it('renders plugin toolbar buttons in left and right positions', async () => {
