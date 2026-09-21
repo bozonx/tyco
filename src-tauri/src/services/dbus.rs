@@ -1,10 +1,10 @@
 use std::thread;
 
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use zbus::interface;
 
+use crate::services::activation::{Activation, ActivationSource, StartMode};
 use crate::services::runtime;
-use crate::state::AppState;
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -52,21 +52,13 @@ impl TycoDbus {
     async fn switch_mode(&self, message: &str) -> zbus::fdo::Result<()> {
         let (mode, window_id, selected_text) = parse_switch_mode_message(message);
 
-        if let Some(state) = self.app.try_state::<AppState>() {
-            state.update_params(|params| {
-                params.mode = Some(mode.to_string());
-                params.window_id = window_id.map(str::to_string);
-                params.selected_text = selected_text.map(str::to_string);
-                params.is_window_shown = true;
-            });
-
-            let _ = runtime::show_main_window(&self.app, &state, Some(mode));
-        }
-
-        if let Some(window) = self.app.get_webview_window(runtime::MAIN_WINDOW_LABEL) {
-            let _ = window.show();
-            let _ = window.set_focus();
-        }
+        let mode = StartMode::parse(mode)
+            .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))?;
+        let mut activation = Activation::new(mode, ActivationSource::Dbus);
+        activation.window_id = window_id.map(str::to_string);
+        activation.selected_text = selected_text.map(str::to_string);
+        runtime::activate(&self.app, activation)
+            .map_err(|error| zbus::fdo::Error::Failed(error.to_string()))?;
 
         Ok(())
     }

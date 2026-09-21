@@ -59,9 +59,20 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(logger_plugin())
-        .plugin(single_instance(|app, _args, _cwd| {
-            if let Some(state) = app.try_state::<AppState>() {
-                let _ = runtime::show_main_window(app, &state, None);
+        .plugin(single_instance(|app, args, _cwd| {
+            let activation = runtime::Activation::from_args(&args).map(|value| {
+                value.unwrap_or_else(|| {
+                    let mode = app
+                        .try_state::<AppState>()
+                        .and_then(|state| state.params().mode)
+                        .and_then(|mode| runtime::StartMode::parse(&mode).ok())
+                        .unwrap_or(runtime::StartMode::Editor);
+                    runtime::Activation::new(mode, runtime::ActivationSource::Cli)
+                })
+            });
+            match activation.and_then(|activation| runtime::activate(app, activation)) {
+                Ok(()) => {}
+                Err(error) => log::error!("CLI activation failed: {error}"),
             }
         }))
         .setup(|app| {
@@ -69,6 +80,12 @@ pub fn run() {
             let local_state = storage::read_or_create_local_state(app.handle())?;
             app.manage(AppState::new(default_init_params(user_config, local_state)));
             runtime::setup(app)?;
+            let args = std::env::args().collect::<Vec<_>>();
+            match runtime::Activation::from_args(&args) {
+                Ok(Some(activation)) => runtime::activate(app.handle(), activation)?,
+                Ok(None) => {}
+                Err(error) => log::error!("CLI activation failed: {error}"),
+            }
             #[cfg(target_os = "linux")]
             dbus::spawn_dbus_server(app.handle().clone());
             Ok(())

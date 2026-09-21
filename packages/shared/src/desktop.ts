@@ -19,6 +19,8 @@ export enum START_MODES {
   EDITOR = 'editor',
   WRITE = 'write',
   CHAT = 'chat',
+  HISTORY = 'history',
+  CONFIG = 'config',
 }
 
 export interface ChatParams {

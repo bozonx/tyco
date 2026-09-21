@@ -35,6 +35,8 @@ export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
   [START_MODES.EDITOR]: APP_ROUTES.EDITOR.path,
   [START_MODES.WRITE]: APP_ROUTES.WRITE.path,
   [START_MODES.CHAT]: APP_ROUTES.CHAT.path,
+  [START_MODES.HISTORY]: APP_ROUTES.HISTORY.path,
+  [START_MODES.CONFIG]: APP_ROUTES.CONFIG.path,
 }
 
 export function resolveModeRoute(mode: START_MODES | null): AppRoutePath {
