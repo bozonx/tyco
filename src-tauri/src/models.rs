@@ -84,7 +84,7 @@ pub fn default_user_config() -> Value {
           "baseUrl": "http://localhost:11434/v1",
           "apiKey": "",
           "temperature": 0.2,
-          "maxTokens": 256
+          "maxTokens": 512
         }
       ],
       "sttModels": [

@@ -150,7 +150,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       baseUrl: 'http://localhost:11434/v1',
       apiKey: '',
       temperature: 0.2,
-      maxTokens: 256,
+      maxTokens: 512,
     },
   ],
   sttModels: [
