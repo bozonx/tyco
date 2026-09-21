@@ -45,14 +45,17 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.GET_CHAT,
       buildArgs: ([id]) => ({ id }),
     },
-    saveMainInputTmp: {
-      command: DESKTOP_COMMANDS.SAVE_MAIN_INPUT_TMP,
-      buildArgs: ([value]) => ({ value }),
-    },
-    clearMainInputTmp: { command: DESKTOP_COMMANDS.CLEAR_MAIN_INPUT_TMP },
     saveEditorHistory: {
       command: DESKTOP_COMMANDS.SAVE_EDITOR_HISTORY,
       buildArgs: ([entry]) => ({ entry }),
+    },
+    setEditorHistoryResult: {
+      command: DESKTOP_COMMANDS.SET_EDITOR_HISTORY_RESULT,
+      buildArgs: ([id, result]) => ({ id, result }),
+    },
+    restoreEditorHistoryItem: {
+      command: DESKTOP_COMMANDS.RESTORE_EDITOR_HISTORY_ITEM,
+      buildArgs: ([item]) => ({ item }),
     },
     saveChatHistory: {
       command: DESKTOP_COMMANDS.SAVE_CHAT_HISTORY,

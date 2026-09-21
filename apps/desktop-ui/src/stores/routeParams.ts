@@ -28,7 +28,7 @@ export const useRouteParams = defineStore('routeParams', () => {
       params.value = { text }
 
       if (typeof sourceText === 'undefined') {
-        editorInputStore.setValue(text)
+        editorInputStore.replaceValue(text)
       } else {
         editorInputStore.applyResult(text, sourceText)
       }

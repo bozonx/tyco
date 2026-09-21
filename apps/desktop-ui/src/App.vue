@@ -27,11 +27,13 @@ import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
+import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useQuickPanelStore } from './stores/quickPanel'
 import { useThemeStore } from './stores/theme'
+import { useWriterInputStore } from './stores/writerInput'
 import { type START_MODES } from '@tyco/shared'
 
 useThemeStore()
@@ -41,6 +43,8 @@ const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
 const quickPanelStore = useQuickPanelStore()
+const editorInputStore = useEditorInputStore()
+const writerInputStore = useWriterInputStore()
 const route = useRoute()
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
@@ -126,6 +130,17 @@ watch(
   () => ipcStore.params.isWindowShown,
   () => {
     quickPanelStore.syncWindowVisibility()
+  }
+)
+
+// the texts outlive a hidden window, but not a quit or a crash
+watch(
+  () => ipcStore.params.isWindowShown,
+  (isShown) => {
+    if (isShown) return
+
+    void editorInputStore.snapshotDraft()
+    void writerInputStore.snapshotDraft()
   }
 )
 

@@ -8,12 +8,7 @@ import {
 } from './quick-panel'
 
 function createDeps(overrides: Partial<QuickPanelDeps> = {}): QuickPanelDeps {
-  return {
-    focusInput: vi.fn(),
-    applyNavParams: vi.fn(),
-    persistInput: vi.fn(),
-    ...overrides,
-  }
+  return { focusInput: vi.fn(), applyNavParams: vi.fn(), ...overrides }
 }
 
 describe('quick-panel', () => {
@@ -37,7 +32,6 @@ describe('quick-panel', () => {
     expect(model.isActive.value).toBe(true)
     expect(deps.applyNavParams).toHaveBeenCalledTimes(1)
     expect(deps.focusInput).toHaveBeenCalledTimes(1)
-    expect(deps.persistInput).not.toHaveBeenCalled()
   })
 
   it('does nothing when the route changes within the quick panel', () => {
@@ -51,15 +45,13 @@ describe('quick-panel', () => {
     expect(deps.focusInput).toHaveBeenCalledTimes(1)
   })
 
-  it('persists the input on leave', () => {
-    const deps = createDeps()
-    const model = createQuickPanelModel(deps)
+  it('becomes inactive on leave', () => {
+    const model = createQuickPanelModel(createDeps())
 
     model.syncRoute(APP_ROUTES.EDITOR.path)
     model.syncRoute(APP_ROUTES.CONFIG.path)
 
     expect(model.isActive.value).toBe(false)
-    expect(deps.persistInput).toHaveBeenCalledTimes(1)
   })
 
   it('re-enters after leaving', () => {

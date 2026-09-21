@@ -21,23 +21,32 @@ pub fn get_chat(app: AppHandle, id: String) -> Result<Option<ChatHistoryItem>, A
 }
 
 #[tauri::command]
-pub fn save_main_input_tmp(app: AppHandle, value: String) -> Result<(), AppError> {
-    storage::save_main_input_tmp(&app, value)
-}
-
-#[tauri::command]
-pub fn clear_main_input_tmp(app: AppHandle) -> Result<(), AppError> {
-    storage::clear_main_input_tmp(&app)
-}
-
-#[tauri::command]
 pub fn save_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,
     entry: EditorHistoryEntry,
-) -> Result<(), AppError> {
+) -> Result<Option<String>, AppError> {
     let params = state.params();
     storage::save_editor_history(&app, &params.user_config, entry)
+}
+
+#[tauri::command]
+pub fn set_editor_history_result(
+    app: AppHandle,
+    id: String,
+    result: String,
+) -> Result<(), AppError> {
+    storage::set_editor_history_result(&app, id, result)
+}
+
+#[tauri::command]
+pub fn restore_editor_history_item(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    item: EditorHistoryItem,
+) -> Result<(), AppError> {
+    let params = state.params();
+    storage::restore_editor_history_item(&app, &params.user_config, item)
 }
 
 #[tauri::command]

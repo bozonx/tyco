@@ -69,11 +69,12 @@ async function makeDiff(index: number) {
     return
   }
 
-  await historyStore.saveSource(trimmedText, 'ai-task')
+  const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
 
   menuModalsStore.setPendingModal({ ai: true })
 
   const newText = await aiTasks(index, trimmedText)
+  void historyStore.saveSourceResult(sourceId, newText)
 
   menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
 }

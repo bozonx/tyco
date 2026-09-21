@@ -97,16 +97,24 @@
           </SettingsSection>
 
           <SettingsSection :title="t('settings.sectionHistory')">
-            <FieldRow :label="t('settings.editorHistoryMaxItems')">
+            <FieldRow
+              :label="t('settings.editorHistoryMaxItems')"
+              :hint="t('settings.historyLimitHint')"
+            >
               <FieldInput
                 type="number"
-                v-model:value="userConfig.editorHistoryMaxItems"
+                :value="userConfig.editorHistoryMaxItems"
+                @update:value="setHistoryLimit('editorHistoryMaxItems', $event)"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.chatHistoryMaxItems')">
+            <FieldRow
+              :label="t('settings.chatHistoryMaxItems')"
+              :hint="t('settings.historyLimitHint')"
+            >
               <FieldInput
                 type="number"
-                v-model:value="userConfig.chatHistoryMaxItems"
+                :value="userConfig.chatHistoryMaxItems"
+                @update:value="setHistoryLimit('chatHistoryMaxItems', $event)"
               />
             </FieldRow>
           </SettingsSection>
@@ -803,6 +811,21 @@ function toNumberOrDefault(value: unknown, fallback: number) {
   const parsed = Number(value)
 
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+/**
+ * The field hands over text; the backend expects a number and treats 0 as "keep
+ * nothing". A half typed value (empty, negative) is not stored
+ */
+function setHistoryLimit(
+  key: 'editorHistoryMaxItems' | 'chatHistoryMaxItems',
+  value: string
+) {
+  const parsed = Number(value)
+
+  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
+
+  userConfig.value[key] = Math.round(parsed)
 }
 
 function toIntegerOrDefault(value: unknown, fallback: number) {

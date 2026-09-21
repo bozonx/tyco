@@ -55,13 +55,9 @@ watch(
   }
 )
 
-onUnmounted(async () => {
-  if (writerInputStore.value) {
-    await historyStore.saveDraft(writerInputStore.value)
-    writerInputStore.value = ''
-  }
-
-  await historyStore.clearMainInputTmp()
+// leaving the mode discards the text; the history keeps it
+onUnmounted(() => {
+  writerInputStore.clear()
 })
 
 const clear = () => {
@@ -81,10 +77,14 @@ async function doCorrection() {
     correctedText.value = writerInputStore.value
     correctionIsActual.value = true
   } else {
-    await historyStore.saveSource(writerInputStore.value, 'correction')
+    const sourceId = await historyStore.saveSource(
+      writerInputStore.value,
+      'correction'
+    )
     menuModalsStore.setPendingModal({ correction: true })
 
     const result = await correctText(writerInputStore.value)
+    void historyStore.saveSourceResult(sourceId, result)
 
     correctedText.value = result
     correctionIsActual.value = true

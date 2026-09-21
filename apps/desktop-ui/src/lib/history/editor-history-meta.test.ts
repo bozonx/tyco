@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  formatEditorHistoryDate,
-  getEditorHistoryMeta,
-} from './editor-history-meta'
+import { getEditorHistoryMeta } from './editor-history-meta'
 
 describe('getEditorHistoryMeta', () => {
   it('describes outputs and drafts', () => {
@@ -32,26 +29,5 @@ describe('getEditorHistoryMeta', () => {
     expect(getEditorHistoryMeta({ kind: 'source' }).labelKey).toBe(
       'history.kindSource'
     )
-  })
-})
-
-describe('formatEditorHistoryDate', () => {
-  it('returns an empty string for an unknown time', () => {
-    expect(formatEditorHistoryDate(0, 'en_US')).toBe('')
-  })
-
-  it('formats with the app locale', () => {
-    const createdAt = Date.UTC(2026, 8, 21, 12, 0)
-
-    expect(formatEditorHistoryDate(createdAt, 'en_US')).toBe(
-      new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      }).format(createdAt)
-    )
-  })
-
-  it('survives a locale Intl does not accept', () => {
-    expect(formatEditorHistoryDate(Date.UTC(2026, 0, 1), '!!')).not.toBe('')
   })
 })

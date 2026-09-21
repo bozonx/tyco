@@ -48,7 +48,8 @@ pub struct ChatHistoryItem {
 pub enum EditorHistoryKind {
     /// Inserted into a window or copied to the clipboard.
     Output,
-    /// Left in the editor when the user moved away from it.
+    /// Unsent text: discarded from the editor or kept there while the window
+    /// was hidden.
     Draft,
     /// Snapshot taken right before an AI transformation.
     Source,
@@ -74,6 +75,9 @@ pub struct EditorHistoryItem {
     pub operation: Option<EditorHistoryOperation>,
     /// Unix time in milliseconds, 0 when unknown (entries of the legacy format).
     pub created_at: u64,
+    /// What the AI turned a `Source` entry into.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub result: Option<String>,
 }
 
 /// What the UI sends to add a text; id and time are assigned by the backend.
@@ -84,6 +88,9 @@ pub struct EditorHistoryEntry {
     pub kind: EditorHistoryKind,
     #[serde(default)]
     pub operation: Option<EditorHistoryOperation>,
+    /// A draft entry this one supersedes: the same editing session saved again.
+    #[serde(default)]
+    pub replace_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -26,7 +26,7 @@ export function getEditorHistoryMeta(
   item: Pick<EditorHistoryItem, 'kind' | 'operation'>
 ): EditorHistoryMeta {
   if (item.kind === 'output') {
-    return { icon: 'mdi:send-outline', labelKey: 'history.kindOutput' }
+    return { icon: 'mdi:export-variant', labelKey: 'history.kindOutput' }
   }
 
   if (item.kind === 'source') {
@@ -39,29 +39,4 @@ export function getEditorHistoryMeta(
   }
 
   return { icon: 'mdi:pencil-outline', labelKey: 'history.kindDraft' }
-}
-
-/**
- * Short local date and time of an entry; empty when the time is unknown
- * (entries of the legacy format). `locale` is an app locale like `en_US`.
- */
-export function formatEditorHistoryDate(
-  createdAt: number,
-  locale: string
-): string {
-  if (!createdAt) return ''
-
-  const options: Intl.DateTimeFormatOptions = {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }
-  const date = new Date(createdAt)
-
-  try {
-    return new Intl.DateTimeFormat(locale.replace('_', '-'), options).format(
-      date
-    )
-  } catch {
-    return new Intl.DateTimeFormat(undefined, options).format(date)
-  }
 }

@@ -1,35 +1,35 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { DebounceCallIncreasing } from '@/lib/squidlet-lib-local'
 
+import { createDraftSession } from '../lib/history/draft-session'
 import { useHistoryStore } from './history'
 
 export const useWriterInputStore = defineStore('writerInput', () => {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
 
-  const debounced = new DebounceCallIncreasing()
   const historyStore = useHistoryStore()
+  const drafts = createDraftSession((text, replaceId) =>
+    historyStore.saveDraft(text, replaceId)
+  )
 
   // replace value
   const setValue = (newText: string): void => {
     value.value = newText
-
-    debounced.invoke(() => {
-      // TODO: может отдельное хранилище для каждого интута
-      historyStore.saveMainInputTmp(newText)
-    }, 600)
   }
 
+  /** Empties the input; the text it held goes to the history. */
   const clear = (): void => {
+    void drafts.end(value.value)
     value.value = ''
-
-    historyStore.clearMainInputTmp()
   }
+
+  /** The window is hidden: the text survives that, but not a quit. */
+  const snapshotDraft = (): Promise<void> => drafts.snapshot(value.value)
 
   const focus = (): void => {
     focusCount.value++
   }
 
-  return { value, focusCount, setValue, focus, clear }
+  return { value, focusCount, setValue, clear, snapshotDraft, focus }
 })

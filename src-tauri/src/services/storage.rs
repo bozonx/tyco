@@ -83,8 +83,18 @@ fn read_json<T: DeserializeOwned>(path: &PathBuf, fallback: T) -> Result<T, AppE
 }
 
 fn write_json<T: Serialize>(path: &PathBuf, value: &T) -> Result<(), AppError> {
-    let raw = serde_json::to_string_pretty(value)?;
-    fs::write(path, raw)?;
+    write_atomic(path, &serde_json::to_string_pretty(value)?)
+}
+
+/// Writes a temporary file next to `path` and renames it over: a crash in the
+/// middle of the write leaves the previous content intact instead of a torn file
+fn write_atomic(path: &PathBuf, raw: &str) -> Result<(), AppError> {
+    let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
+    tmp_name.push(".tmp");
+    let tmp_path = path.with_file_name(tmp_name);
+
+    fs::write(&tmp_path, raw)?;
+    fs::rename(&tmp_path, path)?;
     Ok(())
 }
 
@@ -112,16 +122,22 @@ fn write_jsonl<T: Serialize>(path: &PathBuf, items: &[T]) -> Result<(), AppError
         raw.push_str(&serde_json::to_string(item)?);
         raw.push('\n');
     }
-    fs::write(path, raw)?;
-    Ok(())
+    write_atomic(path, &raw)
 }
 
+/// How many entries to keep; 0 turns the history off. A missing or invalid
+/// value falls back to `default`. Numeric strings are accepted, as older
+/// settings screens stored the field as text
 fn history_limit(user_config: &Value, key: &str, default: usize) -> usize {
-    user_config
-        .get(key)
-        .and_then(Value::as_u64)
+    let value = user_config.get(key);
+    let parsed = match value {
+        Some(Value::Number(number)) => number.as_u64(),
+        Some(Value::String(text)) => text.trim().parse::<u64>().ok(),
+        _ => None,
+    };
+
+    parsed
         .and_then(|value| usize::try_from(value).ok())
-        .filter(|value| *value > 0)
         .unwrap_or(default)
 }
 
@@ -291,27 +307,27 @@ fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppErro
                 kind: EditorHistoryKind::Draft,
                 operation: None,
                 created_at: 0,
+                result: None,
             },
         })
         .collect())
 }
 
+/// Adds an entry and returns its id, or `None` when nothing was stored: the
+/// text is blank or the history is turned off
 pub fn save_editor_history(
     app: &AppHandle,
     user_config: &Value,
     entry: EditorHistoryEntry,
-) -> Result<(), AppError> {
-    if entry.text.trim().is_empty() {
-        return Ok(());
+) -> Result<Option<String>, AppError> {
+    let limit = editor_history_limit(user_config);
+
+    if entry.text.trim().is_empty() || limit == 0 {
+        return Ok(None);
     }
 
     let path = editor_history_path(app)?;
     let mut history = read_editor_history(&path)?;
-    let limit = history_limit(
-        user_config,
-        "editorHistoryMaxItems",
-        DEFAULT_EDITOR_HISTORY_LIMIT,
-    );
     let created_at = now_ms();
     let item = EditorHistoryItem {
         id: new_history_id(created_at),
@@ -319,34 +335,157 @@ pub fn save_editor_history(
         kind: entry.kind,
         operation: entry.operation,
         created_at,
+        result: None,
     };
+    let id = item.id.clone();
 
-    push_editor_history(&mut history, item, limit);
-    write_jsonl(&path, &history)
+    push_editor_history(&mut history, item, entry.replace_id.as_deref(), limit);
+    write_jsonl(&path, &history)?;
+
+    Ok(Some(id))
 }
 
-/// Puts `item` on top. An older entry with the same text is dropped; if it
-/// was an output, the new entry stays an output: a text the user already sent
-/// somewhere must not turn into a draft just because it is still in the editor
+fn editor_history_limit(user_config: &Value) -> usize {
+    history_limit(
+        user_config,
+        "editorHistoryMaxItems",
+        DEFAULT_EDITOR_HISTORY_LIMIT,
+    )
+}
+
+/// How much an entry says about the text: a text that was sent somewhere or
+/// fed to the AI must not turn into a plain draft just because it is still in
+/// the editor
+fn kind_rank(kind: EditorHistoryKind) -> u8 {
+    match kind {
+        EditorHistoryKind::Draft => 0,
+        EditorHistoryKind::Source => 1,
+        EditorHistoryKind::Output => 2,
+    }
+}
+
+/// Puts `item` on top. The draft `replace_id` points to is dropped: it is an
+/// older snapshot of the same editing session. An older entry with the same
+/// text is dropped too, and the new entry inherits its kind when that kind
+/// ranks higher; an AI result attached to it is kept
 fn push_editor_history(
     history: &mut Vec<EditorHistoryItem>,
     mut item: EditorHistoryItem,
+    replace_id: Option<&str>,
     limit: usize,
 ) {
+    if let Some(replace_id) = replace_id {
+        history.retain(|existing| {
+            existing.id != replace_id || existing.kind != EditorHistoryKind::Draft
+        });
+    }
+
     let text = item.text.trim();
-    let was_output = history
+    let duplicates: Vec<EditorHistoryItem> = history
         .iter()
-        .any(|existing| existing.text.trim() == text && existing.kind == EditorHistoryKind::Output);
+        .filter(|existing| existing.text.trim() == text)
+        .cloned()
+        .collect();
 
     history.retain(|existing| existing.text.trim() != text);
 
-    if was_output {
-        item.kind = EditorHistoryKind::Output;
-        item.operation = None;
+    if let Some(stronger) = duplicates
+        .iter()
+        .filter(|existing| kind_rank(existing.kind) > kind_rank(item.kind))
+        .max_by_key(|existing| kind_rank(existing.kind))
+    {
+        item.kind = stronger.kind;
+        item.operation = stronger.operation;
+    }
+
+    // what the AI made of the text stays comparable whatever happens to it next
+    if item.result.is_none() {
+        item.result = duplicates.into_iter().find_map(|existing| existing.result);
     }
 
     history.insert(0, item);
     history.truncate(limit);
+}
+
+/// Attaches the AI result to the `Source` entry it was produced from.
+pub fn set_editor_history_result(
+    app: &AppHandle,
+    id: String,
+    result: String,
+) -> Result<(), AppError> {
+    let path = editor_history_path(app)?;
+    let mut history = read_editor_history(&path)?;
+
+    if !apply_editor_history_result(&mut history, &id, result) {
+        return Ok(());
+    }
+
+    write_jsonl(&path, &history)
+}
+
+fn apply_editor_history_result(
+    history: &mut [EditorHistoryItem],
+    id: &str,
+    result: String,
+) -> bool {
+    let Some(item) = history.iter_mut().find(|item| item.id == id) else {
+        return false;
+    };
+
+    item.result = (!result.trim().is_empty()).then_some(result);
+    true
+}
+
+/// Puts a removed entry back where it was (undo of a removal).
+pub fn restore_editor_history_item(
+    app: &AppHandle,
+    user_config: &Value,
+    item: EditorHistoryItem,
+) -> Result<(), AppError> {
+    let limit = editor_history_limit(user_config);
+
+    if limit == 0 {
+        return Ok(());
+    }
+
+    let path = editor_history_path(app)?;
+    let mut history = read_editor_history(&path)?;
+
+    if insert_restored_item(&mut history, item, limit) {
+        write_jsonl(&path, &history)?;
+    }
+
+    Ok(())
+}
+
+/// Entries are ordered newest first, so the item goes before the first older
+/// one. Nothing is inserted when the same text has been added again meanwhile
+fn insert_restored_item(
+    history: &mut Vec<EditorHistoryItem>,
+    item: EditorHistoryItem,
+    limit: usize,
+) -> bool {
+    let text = item.text.trim();
+
+    if history
+        .iter()
+        .any(|existing| existing.id == item.id || existing.text.trim() == text)
+    {
+        return false;
+    }
+
+    let index = history
+        .iter()
+        .position(|existing| existing.created_at < item.created_at)
+        .unwrap_or(history.len());
+
+    if index >= limit {
+        return false;
+    }
+
+    history.insert(index, item);
+    history.truncate(limit);
+    true
 }
 
 pub fn remove_from_editor_history(app: &AppHandle, id: String) -> Result<(), AppError> {
@@ -372,9 +511,14 @@ pub fn save_chat_history(
     user_config: &Value,
     chat_history_item: ChatHistoryItem,
 ) -> Result<(), AppError> {
+    let limit = history_limit(user_config, "chatHistoryMaxItems", 50);
+
+    if limit == 0 {
+        return Ok(());
+    }
+
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = get_chat_history(app)?;
-    let limit = history_limit(user_config, "chatHistoryMaxItems", 50);
 
     // Save full chat to its own file
     let chat_file_path =
@@ -452,26 +596,6 @@ pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn save_main_input_tmp(app: &AppHandle, value: String) -> Result<(), AppError> {
-    write_json(
-        &app_data_sub_dir(app, "history")?.join("main-input-tmp.json"),
-        &serde_json::json!({
-            "value": value,
-            "lastSaved": chrono_like_now(),
-        }),
-    )
-}
-
-pub fn clear_main_input_tmp(app: &AppHandle) -> Result<(), AppError> {
-    write_json(
-        &app_data_sub_dir(app, "history")?.join("main-input-tmp.json"),
-        &serde_json::json!({
-            "value": "",
-            "lastSaved": "",
-        }),
-    )
-}
-
 fn now_ms() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -487,17 +611,6 @@ fn new_history_id(now_ms: u64) -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
 
     format!("{now_ms:x}-{:x}", COUNTER.fetch_add(1, Ordering::Relaxed))
-}
-
-fn chrono_like_now() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-
-    now.to_string()
 }
 
 fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
@@ -573,18 +686,41 @@ mod tests {
 
     #[test]
     fn history_limit_falls_back_to_the_default() {
-        let config = json!({ "editorHistoryLimit": 0, "chatHistoryLimit": "many" });
+        let config = json!({ "chatHistoryLimit": "many", "negative": -3 });
 
-        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 50);
         assert_eq!(history_limit(&config, "chatHistoryLimit", 20), 20);
+        assert_eq!(history_limit(&config, "negative", 20), 20);
         assert_eq!(history_limit(&config, "missing", 10), 10);
     }
 
     #[test]
-    fn history_limit_reads_a_positive_value() {
-        let config = json!({ "editorHistoryLimit": 5 });
+    fn history_limit_reads_a_number_or_a_numeric_string() {
+        let config = json!({ "editorHistoryLimit": 5, "chatHistoryLimit": " 7 " });
 
         assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 5);
+        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 7);
+    }
+
+    #[test]
+    fn history_limit_zero_turns_the_history_off() {
+        let config = json!({ "editorHistoryLimit": 0, "chatHistoryLimit": "0" });
+
+        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 0);
+        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 0);
+    }
+
+    #[test]
+    fn write_atomic_replaces_the_file_and_leaves_no_temp_file() {
+        let dir = temp_dir("atomic");
+        let path = dir.join("state.json");
+
+        write_atomic(&path, "old").unwrap();
+        write_atomic(&path, "new").unwrap();
+
+        assert_eq!(fs::read_to_string(&path).unwrap(), "new");
+        assert!(!dir.join("state.json.tmp").exists());
+
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -660,6 +796,7 @@ mod tests {
             kind,
             operation: None,
             created_at: 1,
+            result: None,
         }
     }
 
@@ -671,18 +808,19 @@ mod tests {
     fn push_editor_history_moves_a_duplicate_to_the_top() {
         let mut history = vec![
             history_item("b", "second", EditorHistoryKind::Draft),
-            history_item("a", "first", EditorHistoryKind::Source),
+            history_item("a", "first", EditorHistoryKind::Draft),
         ];
 
         push_editor_history(
             &mut history,
-            history_item("c", "  first\n", EditorHistoryKind::Draft),
+            history_item("c", "  first\n", EditorHistoryKind::Source),
+            None,
             10,
         );
 
         assert_eq!(history_texts(&history), vec!["  first\n", "second"]);
         assert_eq!(history[0].id, "c");
-        assert_eq!(history[0].kind, EditorHistoryKind::Draft);
+        assert_eq!(history[0].kind, EditorHistoryKind::Source);
     }
 
     #[test]
@@ -691,11 +829,83 @@ mod tests {
         let mut source = history_item("b", "sent", EditorHistoryKind::Source);
         source.operation = Some(EditorHistoryOperation::Translate);
 
-        push_editor_history(&mut history, source, 10);
+        push_editor_history(&mut history, source, None, 10);
 
         assert_eq!(history.len(), 1);
+        assert_eq!(history[0].id, "b");
         assert_eq!(history[0].kind, EditorHistoryKind::Output);
         assert_eq!(history[0].operation, None);
+    }
+
+    #[test]
+    fn push_editor_history_does_not_turn_a_source_into_a_draft() {
+        let mut source = history_item("a", "text", EditorHistoryKind::Source);
+        source.operation = Some(EditorHistoryOperation::Correction);
+        source.result = Some(String::from("Text."));
+        let mut history = vec![source];
+
+        push_editor_history(
+            &mut history,
+            history_item("b", "text", EditorHistoryKind::Draft),
+            None,
+            10,
+        );
+
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].kind, EditorHistoryKind::Source);
+        assert_eq!(
+            history[0].operation,
+            Some(EditorHistoryOperation::Correction)
+        );
+        assert_eq!(history[0].result.as_deref(), Some("Text."));
+    }
+
+    #[test]
+    fn push_editor_history_keeps_the_ai_result_of_a_sent_source() {
+        let mut source = history_item("a", "text", EditorHistoryKind::Source);
+        source.result = Some(String::from("Text."));
+        let mut history = vec![source];
+
+        push_editor_history(
+            &mut history,
+            history_item("b", "text", EditorHistoryKind::Output),
+            None,
+            10,
+        );
+
+        assert_eq!(history[0].kind, EditorHistoryKind::Output);
+        assert_eq!(history[0].result.as_deref(), Some("Text."));
+    }
+
+    #[test]
+    fn push_editor_history_replaces_the_draft_of_the_same_session() {
+        let mut history = vec![
+            history_item("d", "hello", EditorHistoryKind::Draft),
+            history_item("o", "older", EditorHistoryKind::Output),
+        ];
+
+        push_editor_history(
+            &mut history,
+            history_item("e", "hello world", EditorHistoryKind::Draft),
+            Some("d"),
+            10,
+        );
+
+        assert_eq!(history_texts(&history), vec!["hello world", "older"]);
+    }
+
+    #[test]
+    fn push_editor_history_never_replaces_a_non_draft() {
+        let mut history = vec![history_item("o", "sent", EditorHistoryKind::Output)];
+
+        push_editor_history(
+            &mut history,
+            history_item("e", "sent and edited", EditorHistoryKind::Draft),
+            Some("o"),
+            10,
+        );
+
+        assert_eq!(history_texts(&history), vec!["sent and edited", "sent"]);
     }
 
     #[test]
@@ -708,10 +918,74 @@ mod tests {
         push_editor_history(
             &mut history,
             history_item("c", "third", EditorHistoryKind::Output),
+            None,
             2,
         );
 
         assert_eq!(history_texts(&history), vec!["third", "second"]);
+    }
+
+    #[test]
+    fn apply_editor_history_result_sets_and_clears_the_result() {
+        let mut history = vec![history_item("a", "text", EditorHistoryKind::Source)];
+
+        assert!(apply_editor_history_result(
+            &mut history,
+            "a",
+            String::from("Text.")
+        ));
+        assert_eq!(history[0].result.as_deref(), Some("Text."));
+
+        assert!(apply_editor_history_result(
+            &mut history,
+            "a",
+            String::from("  ")
+        ));
+        assert_eq!(history[0].result, None);
+
+        assert!(!apply_editor_history_result(
+            &mut history,
+            "missing",
+            String::from("x")
+        ));
+    }
+
+    #[test]
+    fn insert_restored_item_goes_back_to_its_place() {
+        let mut newer = history_item("n", "newer", EditorHistoryKind::Draft);
+        newer.created_at = 30;
+        let mut older = history_item("o", "older", EditorHistoryKind::Draft);
+        older.created_at = 10;
+        let mut history = vec![newer, older];
+        let mut removed = history_item("r", "removed", EditorHistoryKind::Output);
+        removed.created_at = 20;
+
+        assert!(insert_restored_item(&mut history, removed, 10));
+        assert_eq!(history_texts(&history), vec!["newer", "removed", "older"]);
+    }
+
+    #[test]
+    fn insert_restored_item_skips_a_text_added_again() {
+        let mut history = vec![history_item("n", "same", EditorHistoryKind::Draft)];
+
+        assert!(!insert_restored_item(
+            &mut history,
+            history_item("r", " same ", EditorHistoryKind::Output),
+            10
+        ));
+        assert_eq!(history.len(), 1);
+    }
+
+    #[test]
+    fn insert_restored_item_respects_the_limit() {
+        let mut newer = history_item("n", "newer", EditorHistoryKind::Draft);
+        newer.created_at = 30;
+        let mut history = vec![newer];
+        let mut removed = history_item("r", "removed", EditorHistoryKind::Draft);
+        removed.created_at = 10;
+
+        assert!(!insert_restored_item(&mut history, removed, 1));
+        assert_eq!(history_texts(&history), vec!["newer"]);
     }
 
     #[test]
@@ -741,6 +1015,7 @@ mod tests {
     fn editor_history_item_uses_the_ui_field_names() {
         let mut item = history_item("x", "text", EditorHistoryKind::Source);
         item.operation = Some(EditorHistoryOperation::VoiceCorrection);
+        item.result = Some(String::from("Text."));
 
         assert_eq!(
             serde_json::to_value(&item).unwrap(),
@@ -750,8 +1025,21 @@ mod tests {
                 "kind": "source",
                 "operation": "voice-correction",
                 "createdAt": 1,
+                "result": "Text.",
             })
         );
+    }
+
+    #[test]
+    fn editor_history_entry_reads_the_replace_id() {
+        let entry: EditorHistoryEntry = serde_json::from_value(json!({
+            "text": "text",
+            "kind": "draft",
+            "replaceId": "abc",
+        }))
+        .unwrap();
+
+        assert_eq!(entry.replace_id.as_deref(), Some("abc"));
     }
 
     #[test]

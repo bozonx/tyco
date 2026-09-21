@@ -21,8 +21,6 @@ export interface QuickPanelDeps {
   focusInput: () => void
   /** Re-applies the nav panel setup the panel owns while it is visible. */
   applyNavParams: () => void
-  /** Flushes the input into history; the panel itself is never unmounted. */
-  persistInput: () => Promise<void> | void
 }
 
 export function createQuickPanelModel(deps: QuickPanelDeps) {
@@ -34,9 +32,9 @@ export function createQuickPanelModel(deps: QuickPanelDeps) {
     deps.focusInput()
   }
 
+  // the panel is never unmounted, so its text stays put and needs no saving
   const leave = (): void => {
     isActive.value = false
-    void deps.persistInput()
   }
 
   /** Called on every route change; only the edges do any work. */

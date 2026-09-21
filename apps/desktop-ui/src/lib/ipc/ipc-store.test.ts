@@ -24,11 +24,11 @@ describe('ipc-store', () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)
 
-    await store.callFunction('saveMainInputTmp', ['abc'])
+    await store.callFunction('setEditorHistoryResult', ['id-1', 'abc'])
 
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.SAVE_MAIN_INPUT_TMP,
-      { value: 'abc' }
+      DESKTOP_COMMANDS.SET_EDITOR_HISTORY_RESULT,
+      { id: 'id-1', result: 'abc' }
     )
   })
 

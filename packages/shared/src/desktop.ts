@@ -41,7 +41,8 @@ export interface ChatHistoryItem {
  * Why a text got into the editor history:
  *
  * - `output` — inserted into a window or copied to the clipboard;
- * - `draft` — left in the editor when the user moved away from it;
+ * - `draft` — unsent text: discarded from the editor or kept there while the
+ *   window was hidden;
  * - `source` — snapshot taken right before an AI transformation.
  */
 export type EditorHistoryKind = 'output' | 'draft' | 'source'
@@ -54,12 +55,19 @@ export interface EditorHistoryEntry {
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation
+  /** A draft this entry supersedes: the same editing session saved again. */
+  replaceId?: string
 }
 
-export interface EditorHistoryItem extends EditorHistoryEntry {
+export interface EditorHistoryItem {
   id: string
+  text: string
+  kind: EditorHistoryKind
+  operation?: EditorHistoryOperation
   /** Unix time in milliseconds, 0 when unknown. */
   createdAt: number
+  /** What the AI turned a `source` entry into. */
+  result?: string
 }
 
 export interface StorageInfo {
@@ -116,9 +124,9 @@ export const DESKTOP_COMMANDS = {
   GET_EDITOR_HISTORY: 'get_editor_history',
   GET_CHAT_HISTORY: 'get_chat_history',
   GET_CHAT: 'get_chat',
-  SAVE_MAIN_INPUT_TMP: 'save_main_input_tmp',
-  CLEAR_MAIN_INPUT_TMP: 'clear_main_input_tmp',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
+  SET_EDITOR_HISTORY_RESULT: 'set_editor_history_result',
+  RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',
   SAVE_CHAT_HISTORY: 'save_chat_history',
   REMOVE_FROM_EDITOR_HISTORY: 'remove_from_editor_history',
   REMOVE_FROM_CHAT_HISTORY: 'remove_from_chat_history',

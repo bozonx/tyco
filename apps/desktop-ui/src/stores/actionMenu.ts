@@ -30,7 +30,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     putIntoClipboardAndClose: async (text: string) => {
       await ipcStore.callFunction('putIntoClipboardAndClose', [text])
     },
-    saveOutput: (text: string) => historyStore.saveOutput(text),
+    saveOutput: async (text: string) => {
+      await historyStore.saveOutput(text)
+    },
     openAiTaskModal: (text: string) => {
       menuModalsStore.nextModal(MenuModals.AI_TASK, { text })
     },
@@ -38,9 +40,10 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text })
     },
     startCorrection: async (text: string) => {
-      await historyStore.saveSource(text, 'correction')
+      const sourceId = await historyStore.saveSource(text, 'correction')
       menuModalsStore.setPendingModal({ correction: true })
       const newText = await correctText(text)
+      void historyStore.saveSourceResult(sourceId, newText)
       menuModalsStore.clearPendingModal()
       menuModalsStore.nextModal(MenuModals.CORRECTION, {
         oldText: text,
