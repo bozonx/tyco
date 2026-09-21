@@ -13,6 +13,17 @@ pub enum StartMode {
 }
 
 impl StartMode {
+    pub const ALL: [Self; 8] = [
+        Self::Editor,
+        Self::Write,
+        Self::Chat,
+        Self::Voice,
+        Self::Select,
+        Self::AiTasks,
+        Self::History,
+        Self::Config,
+    ];
+
     pub fn parse(value: &str) -> Result<Self, AppError> {
         match value {
             "editor" => Ok(Self::Editor),

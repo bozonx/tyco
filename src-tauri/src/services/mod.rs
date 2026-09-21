@@ -3,6 +3,8 @@ pub mod activation_socket;
 #[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod foreground_context;
+#[cfg(target_os = "linux")]
+pub mod hotkeys;
 pub mod runtime;
 pub mod storage;
 pub mod voice;

@@ -132,7 +132,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         let raw = fs::read_to_string(&path)?;
         let mut value = serde_yaml::from_str(&raw)?;
 
-        if normalize_window_insertion_config(&mut value) {
+        if normalize_window_insertion_config(&mut value) | normalize_hotkeys_config(&mut value) {
             save_user_config(app, &value)?;
         }
 
@@ -143,6 +143,31 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     save_user_config(app, &default_config)?;
 
     Ok(default_config)
+}
+
+fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config()
+        .get("hotkeys")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut hotkeys = config
+        .get("hotkeys")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    let previous = hotkeys.clone();
+    for (mode, shortcut) in defaults {
+        hotkeys.entry(mode).or_insert(shortcut);
+    }
+    if hotkeys == previous && config.get("hotkeys").and_then(Value::as_object).is_some() {
+        return false;
+    }
+    config.insert(String::from("hotkeys"), Value::Object(hotkeys));
+    true
 }
 
 fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
@@ -550,6 +575,16 @@ mod tests {
 
         assert!(normalize_window_insertion_config(&mut config));
         assert!(!normalize_window_insertion_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_hotkeys_adds_defaults_and_keeps_overrides() {
+        let mut config = json!({ "hotkeys": { "editor": "Super+Space" } });
+
+        assert!(normalize_hotkeys_config(&mut config));
+        assert_eq!(config["hotkeys"]["editor"], json!("Super+Space"));
+        assert_eq!(config["hotkeys"]["voice"], json!("Ctrl+Alt+V"));
+        assert!(!normalize_hotkeys_config(&mut config));
     }
 
     #[test]

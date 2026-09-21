@@ -70,6 +70,8 @@ pub fn run() {
             let user_config = storage::read_or_create_user_config(app.handle())?;
             let local_state = storage::read_or_create_local_state(app.handle())?;
             app.manage(AppState::new(default_init_params(user_config, local_state)));
+            #[cfg(target_os = "linux")]
+            services::hotkeys::setup(app)?;
             runtime::setup(app)?;
             let args = std::env::args().collect::<Vec<_>>();
             match runtime::Activation::from_args(&args) {

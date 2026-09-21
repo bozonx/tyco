@@ -58,6 +58,16 @@ pub fn default_user_config() -> Value {
     let ydotool_bin = default_binary_path("ydotool");
 
     json!({
+      "hotkeys": {
+        "editor": "Ctrl+Alt+E",
+        "write": "Ctrl+Alt+W",
+        "chat": "Ctrl+Alt+C",
+        "voice": "Ctrl+Alt+V",
+        "select": "Ctrl+Alt+S",
+        "aiTasks": "Ctrl+Alt+A",
+        "history": "Ctrl+Alt+H",
+        "config": "Ctrl+Alt+Comma"
+      },
       "theme": "auto",
       "xdotoolBin": xdotool_bin,
       "windowInsertion": {

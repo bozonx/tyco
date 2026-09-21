@@ -73,6 +73,7 @@ export type PasteMode = 'plain' | 'markdown' | 'ask'
 export type EditorSyntax = 'none' | 'markdown'
 
 export interface UserConfig {
+  hotkeys: Record<string, string>
   theme: 'auto' | 'light' | 'dark'
   xdotoolBin: string
   windowInsertion: {
@@ -124,6 +125,16 @@ export interface UserConfig {
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
+  hotkeys: {
+    editor: 'Ctrl+Alt+E',
+    write: 'Ctrl+Alt+W',
+    chat: 'Ctrl+Alt+C',
+    voice: 'Ctrl+Alt+V',
+    select: 'Ctrl+Alt+S',
+    aiTasks: 'Ctrl+Alt+A',
+    history: 'Ctrl+Alt+H',
+    config: 'Ctrl+Alt+Comma',
+  },
   theme: 'auto',
   xdotoolBin: '/usr/bin/xdotool',
   windowInsertion: {
