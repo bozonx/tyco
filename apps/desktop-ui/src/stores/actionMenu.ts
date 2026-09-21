@@ -43,7 +43,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       const sourceId = await historyStore.saveSource(text, 'correction')
       menuModalsStore.setPendingModal({ correction: true })
       const newText = await correctText(text)
-      void historyStore.saveSourceResult(sourceId, newText)
+      await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+        toast('history.operationFailed', 'error')
+      })
       menuModalsStore.clearPendingModal()
       menuModalsStore.nextModal(MenuModals.CORRECTION, {
         oldText: text,

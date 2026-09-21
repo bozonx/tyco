@@ -74,7 +74,9 @@ async function makeDiff(index: number) {
   menuModalsStore.setPendingModal({ ai: true })
 
   const newText = await aiTasks(index, trimmedText)
-  void historyStore.saveSourceResult(sourceId, newText)
+  await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+    toast(t('history.operationFailed'), 'error')
+  })
 
   menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
 }

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   filterEditorHistory,
+  formatHistoryDateTime,
   formatHistoryTime,
   groupByDay,
   parseHistoryTime,
@@ -86,6 +87,19 @@ describe('formatHistoryTime', () => {
 
   it('survives a locale Intl does not accept', () => {
     expect(formatHistoryTime(Date.UTC(2026, 0, 1), '!!')).not.toBe('')
+  })
+})
+
+describe('formatHistoryDateTime', () => {
+  it('formats a full localized timestamp', () => {
+    const time = Date.UTC(2026, 8, 21, 12, 0)
+
+    expect(formatHistoryDateTime(time, 'en_US')).toBe(
+      new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'long',
+        timeStyle: 'medium',
+      }).format(time)
+    )
   })
 })
 

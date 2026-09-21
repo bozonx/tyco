@@ -29,6 +29,16 @@ function createApi() {
             ],
           }
         }
+        if (functionName === 'getChat') {
+          return {
+            result: {
+              id: 'chat-1',
+              description: 'Hello',
+              lastMsgDate: '2026-04-22T00:00:00.000Z',
+              messages: [{ role: 'user', content: 'Hello' }],
+            },
+          }
+        }
 
         return {}
       }
@@ -186,6 +196,21 @@ describe('history-store', () => {
     expect(store.editorHistory.value).toHaveLength(2)
   })
 
+  it('returns and restores the full removed chat', async () => {
+    const api = createApi()
+    const store = createHistoryStoreModel(api)
+    store.chatHistory.value = [
+      { id: 'chat-1', description: 'Hello', lastMsgDate: 'x', messages: [] },
+    ]
+
+    const removed = await store.removeFromChatHistory('chat-1')
+    expect(removed?.messages).toEqual([{ role: 'user', content: 'Hello' }])
+
+    await store.restoreChatItem(removed!)
+    expect(api.callFunction).toHaveBeenCalledWith('saveChatHistory', [removed])
+    expect(store.chatHistory.value).toHaveLength(1)
+  })
+
   it('clears in-memory state after clear commands', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api)
@@ -199,5 +224,37 @@ describe('history-store', () => {
 
     expect(store.editorHistory.value).toEqual([])
     expect(store.chatHistory.value).toEqual([])
+  })
+
+  it('keeps local state when a destructive command fails', async () => {
+    const api = {
+      callFunction: vi.fn(async () => ({
+        success: false,
+        error: 'disk is read-only',
+      })),
+    }
+    const store = createHistoryStoreModel(api)
+    store.editorHistory.value = [editorItem('1', 'one')]
+
+    await expect(store.removeFromEditorHistory('1')).rejects.toThrow(
+      'disk is read-only'
+    )
+    await expect(store.clearEditorHistory()).rejects.toThrow(
+      'disk is read-only'
+    )
+
+    expect(store.editorHistory.value).toEqual([editorItem('1', 'one')])
+  })
+
+  it('keeps loaded state when refreshing fails', async () => {
+    const api = {
+      callFunction: vi.fn(async () => ({ success: false, error: 'broken' })),
+    }
+    const store = createHistoryStoreModel(api)
+    store.editorHistory.value = [editorItem('1', 'one')]
+
+    await expect(store.loadEditorHistory()).rejects.toThrow('broken')
+
+    expect(store.editorHistory.value).toEqual([editorItem('1', 'one')])
   })
 })

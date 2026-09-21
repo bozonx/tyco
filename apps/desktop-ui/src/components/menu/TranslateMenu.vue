@@ -62,7 +62,9 @@ const translate = async (toLangNum: number) => {
   menuModalsStore.setPendingModal({ ai: true })
 
   const newText = await translateText(toLangNum, trimmedText)
-  void historyStore.saveSourceResult(sourceId, newText)
+  await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+    toast(t('history.operationFailed'), 'error')
+  })
 
   menuModalsStore.nextModal(MenuModals.PREVIEW, {
     text: newText,

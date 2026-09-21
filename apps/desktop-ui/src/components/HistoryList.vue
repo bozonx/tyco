@@ -21,7 +21,7 @@
       <div class="history-toolbar">
         <template v-if="confirmingClear">
           <span class="text-sm">
-            {{ t('history.clearConfirm', { count: items.length }) }}
+            {{ t('history.clearConfirm', { count: totalCount }) }}
           </span>
           <span class="history-toolbar-buttons">
             <Button xs ghost @click="confirmingClear = false">
@@ -78,7 +78,12 @@
                     <span>{{ item.meta.label }}</span>
                   </template>
                   <span v-if="item.time" class="history-date">
-                    {{ formatHistoryTime(item.time, locale) }}
+                    <time
+                      :datetime="new Date(item.time).toISOString()"
+                      :title="formatHistoryDateTime(item.time, locale)"
+                    >
+                      {{ formatHistoryTime(item.time, locale) }}
+                    </time>
                   </span>
                 </span>
                 <span
@@ -151,7 +156,11 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
-import { formatHistoryTime, groupByDay } from '../lib/history/history-list'
+import {
+  formatHistoryDateTime,
+  formatHistoryTime,
+  groupByDay,
+} from '../lib/history/history-list'
 import { truncate } from '@/lib/squidlet-lib-local'
 import { Icon } from '@iconify/vue'
 
@@ -164,6 +173,8 @@ export interface HistoryListItem {
   meta?: { icon: string; label: string }
   /** Unix time in milliseconds; 0 or missing when unknown. */
   time?: number
+  /** Additional localized terms included in search. */
+  searchText?: string
 }
 
 export interface HistoryListAction {
@@ -191,6 +202,8 @@ const props = withDefaults(
     emptyHint?: string
     /** The list owns the keyboard: arrows, Enter and action shortcuts. */
     active?: boolean
+    /** Number affected by clearing; may be larger than a filtered list. */
+    totalCount?: number
   }>(),
   {
     searchQuery: '',
@@ -198,6 +211,7 @@ const props = withDefaults(
     actions: () => [],
     emptyHint: '',
     active: false,
+    totalCount: 0,
   }
 )
 
@@ -212,7 +226,9 @@ const filtered = computed(() => {
   if (!query) return props.items
 
   return props.items.filter((item) =>
-    (item.value || '').toLowerCase().includes(query)
+    `${item.value || ''}\n${item.searchText || ''}`
+      .toLowerCase()
+      .includes(query)
   )
 })
 
@@ -313,7 +329,8 @@ function shortcutOf(event: KeyboardEvent): string {
 }
 
 /** Focused controls with keys of their own: buttons, radio groups and such. */
-const OWN_KEYS_SELECTOR = 'button, a, select, textarea, input[type="radio"]'
+const OWN_KEYS_SELECTOR =
+  'button, a, select, textarea, input, [contenteditable]'
 
 function handleKeyDown(event: KeyboardEvent) {
   if (!props.active || event.isComposing) return

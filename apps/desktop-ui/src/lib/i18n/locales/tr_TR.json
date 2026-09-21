@@ -101,6 +101,9 @@
     "clearConfirmButton": "Tümünü sil",
     "itemRemoved": "Kayıt silindi",
     "undo": "Geri al",
+    "retry": "Yeniden dene",
+    "loadFailed": "Geçmiş yüklenemedi.",
+    "operationFailed": "Geçmiş işlemi başarısız oldu. Verileriniz değiştirilmedi.",
     "textsDisabled": "Metin kaydetme ayarlarda kapalı (sınır 0).",
     "chatsDisabled": "Sohbet kaydetme ayarlarda kapalı (sınır 0)."
   },
@@ -207,7 +210,7 @@
     "rolesHint": "Rol, sohbet için sistem talimatlarını belirler.",
     "hotkey": "Kısayol tuşu",
     "dragToReorder": "Sıralamak için sürükleyin",
-    "historyLimitHint": "0 — kaydetme"
+    "historyLimitHint": "0 — kaydetme. Veriler yerel olarak okunabilir dosyalarda saklanır."
   },
   "editor": {
     "case": "Case",

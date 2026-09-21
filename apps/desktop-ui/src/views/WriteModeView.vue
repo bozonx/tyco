@@ -84,7 +84,9 @@ async function doCorrection() {
     menuModalsStore.setPendingModal({ correction: true })
 
     const result = await correctText(writerInputStore.value)
-    void historyStore.saveSourceResult(sourceId, result)
+    await historyStore.saveSourceResult(sourceId, result).catch(() => {
+      toast(t('history.operationFailed'), 'error')
+    })
 
     correctedText.value = result
     correctionIsActual.value = true

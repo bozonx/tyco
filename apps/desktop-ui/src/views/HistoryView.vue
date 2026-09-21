@@ -30,11 +30,19 @@
       :actions="editorActions"
       :emptyHint="t('history.emptyHint')"
       :active="currentTab === TEXTS_TAB && !modalOpen"
+      :totalCount="historyStore.editorHistory.length"
       @open="toEditor"
       @action="onEditorAction"
       @clear="clearEditorHistory"
     >
       <template #notice>
+        <div v-if="editorLoadError" class="history-notice is-error">
+          <Icon icon="mdi:alert-circle-outline" height="16" />
+          <span>{{ t('history.loadFailed') }}</span>
+          <Button xs ghost icon="mdi:reload" @click="loadEditorHistory">
+            {{ t('history.retry') }}
+          </Button>
+        </div>
         <div v-if="removedItem" class="history-notice">
           <Icon icon="mdi:trash-can-outline" height="16" />
           <span>{{ t('history.itemRemoved') }}</span>
@@ -56,11 +64,26 @@
       :openTitle="t('history.view')"
       :actions="chatActions"
       :active="currentTab === CHATS_TAB && !modalOpen"
+      :totalCount="historyStore.chatHistory.length"
       @open="toChat"
       @action="onChatAction"
       @clear="clearChatHistory"
     >
       <template #notice>
+        <div v-if="chatLoadError" class="history-notice is-error">
+          <Icon icon="mdi:alert-circle-outline" height="16" />
+          <span>{{ t('history.loadFailed') }}</span>
+          <Button xs ghost icon="mdi:reload" @click="loadChatHistory">
+            {{ t('history.retry') }}
+          </Button>
+        </div>
+        <div v-if="removedChat" class="history-notice">
+          <Icon icon="mdi:trash-can-outline" height="16" />
+          <span>{{ t('history.itemRemoved') }}</span>
+          <Button xs ghost icon="mdi:undo" @click="undoRemoveChat">
+            {{ t('history.undo') }}
+          </Button>
+        </div>
         <div v-if="chatHistoryDisabled" class="history-notice">
           <Icon icon="mdi:information-outline" height="16" />
           <span>{{ t('history.chatsDisabled') }}</span>
@@ -93,7 +116,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
 import { Icon } from '@iconify/vue'
-import type { EditorHistoryItem } from '@tyco/shared'
+import type { ChatHistoryItem, EditorHistoryItem } from '@tyco/shared'
 
 const TEXTS_TAB = 0
 const CHATS_TAB = 1
@@ -111,7 +134,11 @@ const routeParams = useRouteParams()
 const currentTab = ref(TEXTS_TAB)
 const editorFilter = ref<EditorHistoryFilter>('all')
 const removedItem = ref<EditorHistoryItem | null>(null)
+const removedChat = ref<ChatHistoryItem | null>(null)
+const editorLoadError = ref(false)
+const chatLoadError = ref(false)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
+let chatUndoTimer: ReturnType<typeof setTimeout> | undefined
 
 const tabs = computed(() => [
   {
@@ -165,6 +192,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
         id: item.id,
         value: item.text,
         meta: { icon: meta.icon, label: t(meta.labelKey) },
+        searchText: t(meta.labelKey),
         time: item.createdAt,
       }
     }
@@ -175,6 +203,7 @@ const chatItems = computed<HistoryListItem[]>(() =>
   historyStore.chatHistory.map((item) => ({
     id: item.id,
     value: item.description,
+    searchText: t('history.chatTab'),
     time: parseHistoryTime(item.lastMsgDate),
   }))
 )
@@ -221,15 +250,15 @@ const chatActions = computed<HistoryListAction[]>(() => [
   },
 ])
 
-onMounted(async () => {
+onMounted(() => {
   searchInput.value?.focus()
-
-  await historyStore.loadEditorHistory()
-  await historyStore.loadChatHistory()
+  void loadEditorHistory()
+  void loadChatHistory()
 })
 
 onUnmounted(() => {
   clearTimeout(undoTimer)
+  clearTimeout(chatUndoTimer)
 })
 
 navPanelStore.resetNavParams({})
@@ -238,10 +267,36 @@ const onTabChange = () => {
   searchInput.value?.focus()
 }
 
+const loadEditorHistory = async () => {
+  try {
+    await historyStore.loadEditorHistory()
+    editorLoadError.value = false
+  } catch {
+    editorLoadError.value = true
+  }
+}
+
+const loadChatHistory = async () => {
+  try {
+    await historyStore.loadChatHistory()
+    chatLoadError.value = false
+  } catch {
+    chatLoadError.value = true
+  }
+}
+
+const reportOperationError = () => {
+  toast.toast(t('history.operationFailed'), 'error')
+}
+
 const clearEditorHistory = async () => {
   hideUndo()
-  await historyStore.clearEditorHistory()
-  toast.toast(t('history.inputCleared'), 'success')
+  try {
+    await historyStore.clearEditorHistory()
+    toast.toast(t('history.inputCleared'), 'success')
+  } catch {
+    reportOperationError()
+  }
 }
 
 const hideUndo = () => {
@@ -250,7 +305,14 @@ const hideUndo = () => {
 }
 
 const removeEditorItem = async (item: HistoryListItem) => {
-  const removed = await historyStore.removeFromEditorHistory(item.id)
+  let removed: EditorHistoryItem | null
+
+  try {
+    removed = await historyStore.removeFromEditorHistory(item.id)
+  } catch {
+    reportOperationError()
+    return
+  }
 
   if (!removed) return
 
@@ -264,7 +326,13 @@ const undoRemove = async () => {
 
   hideUndo()
 
-  if (item) await historyStore.restoreEditorItem(item)
+  if (!item) return
+
+  try {
+    await historyStore.restoreEditorItem(item)
+  } catch {
+    reportOperationError()
+  }
 }
 
 const onEditorAction = async (actionId: string, item: HistoryListItem) => {
@@ -295,15 +363,46 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
 }
 
 const clearChatHistory = async () => {
-  await historyStore.clearChatHistory()
-  toast.toast(t('history.chatsCleared'), 'success')
+  hideChatUndo()
+  try {
+    await historyStore.clearChatHistory()
+    toast.toast(t('history.chatsCleared'), 'success')
+  } catch {
+    reportOperationError()
+  }
+}
+
+const hideChatUndo = () => {
+  clearTimeout(chatUndoTimer)
+  removedChat.value = null
+}
+
+const undoRemoveChat = async () => {
+  const item = removedChat.value
+
+  hideChatUndo()
+  if (!item) return
+
+  try {
+    await historyStore.restoreChatItem(item)
+  } catch {
+    reportOperationError()
+  }
 }
 
 const onChatAction = async (actionId: string, item: HistoryListItem) => {
   if (actionId !== 'remove') return
 
-  await historyStore.removeFromChatHistory(item.id)
-  toast.toast(t('history.chatsRemoved'), 'success')
+  try {
+    const removed = await historyStore.removeFromChatHistory(item.id)
+
+    if (!removed) return
+    clearTimeout(chatUndoTimer)
+    removedChat.value = removed
+    chatUndoTimer = setTimeout(hideChatUndo, UNDO_TIMEOUT_MS)
+  } catch {
+    reportOperationError()
+  }
 }
 
 const toEditor = (item: HistoryListItem) => {
@@ -357,5 +456,10 @@ const toChat = async (item: HistoryListItem) => {
 
 .history-notice :deep(.btn) {
   margin-left: auto;
+}
+
+.history-notice.is-error {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 35%, var(--app-border));
 }
 </style>

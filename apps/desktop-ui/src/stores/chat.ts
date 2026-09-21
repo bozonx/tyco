@@ -18,7 +18,9 @@ export const useChatStore = defineStore('chat', () => {
   return createChatStoreModel({
     sendChatMessage,
     saveChatHistory: (item) => {
-      void historyStore.saveChatHistory(item)
+      void historyStore.saveChatHistory(item).catch(() => {
+        toast(translate('history.operationFailed'), 'error')
+      })
     },
     loadChatHistoryItem: (id) => historyStore.loadChat(id),
     navigateTo: (path) => appNavigation.push(path),

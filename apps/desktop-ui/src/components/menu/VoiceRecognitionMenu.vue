@@ -199,7 +199,11 @@ const finish = async () => {
         if (formattedText.trim()) {
           resultText = formattedText
           correctedText = formattedText
-          void historyStore.saveSourceResult(sourceId, formattedText)
+          await historyStore
+            .saveSourceResult(sourceId, formattedText)
+            .catch(() => {
+              toast(t('history.operationFailed'), 'error')
+            })
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)

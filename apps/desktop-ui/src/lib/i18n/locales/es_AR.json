@@ -101,6 +101,9 @@
     "clearConfirmButton": "Borrar todo",
     "itemRemoved": "Entrada eliminada",
     "undo": "Deshacer",
+    "retry": "Reintentar",
+    "loadFailed": "No se pudo cargar el historial.",
+    "operationFailed": "La operación del historial falló. Los datos no se modificaron.",
     "textsDisabled": "Guardar textos está desactivado en la configuración (límite 0).",
     "chatsDisabled": "Guardar chats está desactivado en la configuración (límite 0)."
   },
@@ -207,7 +210,7 @@
     "rolesHint": "Un rol define las instrucciones del sistema para el chat.",
     "hotkey": "Tecla rápida",
     "dragToReorder": "Arrastra para reordenar",
-    "historyLimitHint": "0 — no guardar"
+    "historyLimitHint": "0 — no guardar. Los datos se almacenan localmente en archivos legibles."
   },
   "editor": {
     "case": "Case",

@@ -10,7 +10,14 @@ export interface HistoryApi {
   callFunction: (
     functionName: string,
     args?: unknown[]
-  ) => Promise<{ result?: unknown }>
+  ) => Promise<{ success?: boolean; error?: string; result?: unknown }>
+}
+
+export class HistoryOperationError extends Error {
+  constructor(operation: string, message?: string) {
+    super(message || `History operation failed: ${operation}`)
+    this.name = 'HistoryOperationError'
+  }
 }
 
 export function createHistoryStoreModel(historyApi: HistoryApi) {
@@ -27,21 +34,31 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     return write
   }
 
+  const call = async (functionName: string, args: unknown[] = []) => {
+    const response = await historyApi.callFunction(functionName, args)
+
+    if (response.success === false) {
+      throw new HistoryOperationError(functionName, response.error)
+    }
+
+    return response.result
+  }
+
   const loadEditorHistory = async (): Promise<void> => {
     await Promise.allSettled([...pendingWrites])
 
-    const loadedHistory = await historyApi.callFunction('getEditorHistory', [])
-    editorHistory.value = (loadedHistory.result as EditorHistoryItem[]) || []
+    const loadedHistory = await call('getEditorHistory')
+    editorHistory.value = (loadedHistory as EditorHistoryItem[]) || []
   }
 
   const loadChatHistory = async (): Promise<void> => {
-    const loadedHistory = await historyApi.callFunction('getChatHistory', [])
-    chatHistory.value = (loadedHistory.result as ChatHistoryItem[]) || []
+    const loadedHistory = await call('getChatHistory')
+    chatHistory.value = (loadedHistory as ChatHistoryItem[]) || []
   }
 
   const loadChat = async (id: string): Promise<ChatHistoryItem | null> => {
-    const loadedChat = await historyApi.callFunction('getChat', [id])
-    return (loadedChat.result as ChatHistoryItem | null) || null
+    const loadedChat = await call('getChat', [id])
+    return (loadedChat as ChatHistoryItem | null) || null
   }
 
   /** Resolves to the id of the stored entry, null when nothing was stored. */
@@ -50,11 +67,9 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   ): Promise<string | null> => {
     if (!entry.text.trim()) return null
 
-    const saved = await track(
-      historyApi.callFunction('saveEditorHistory', [entry])
-    )
+    const saved = await track(call('saveEditorHistory', [entry]))
 
-    return typeof saved?.result === 'string' ? saved.result : null
+    return typeof saved === 'string' ? saved : null
   }
 
   /** The text is leaving the app: inserted into a window or copied. */
@@ -81,11 +96,11 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   ): Promise<void> => {
     if (!id) return
 
-    await track(historyApi.callFunction('setEditorHistoryResult', [id, result]))
+    await track(call('setEditorHistoryResult', [id, result]))
   }
 
   const saveChatHistory = async (chatHistoryItem: ChatHistoryItem) => {
-    await historyApi.callFunction('saveChatHistory', [chatHistoryItem])
+    await call('saveChatHistory', [chatHistoryItem])
     await loadChatHistory()
   }
 
@@ -95,7 +110,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   ): Promise<EditorHistoryItem | null> => {
     const removed = editorHistory.value.find((item) => item.id === id) ?? null
 
-    await historyApi.callFunction('removeFromEditorHistory', [id])
+    await call('removeFromEditorHistory', [id])
     editorHistory.value = editorHistory.value.filter((item) => item.id !== id)
 
     return removed
@@ -103,22 +118,33 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   /** Puts a removed entry back to its place. */
   const restoreEditorItem = async (item: EditorHistoryItem): Promise<void> => {
-    await track(historyApi.callFunction('restoreEditorHistoryItem', [item]))
+    await track(call('restoreEditorHistoryItem', [item]))
     await loadEditorHistory()
   }
 
-  const removeFromChatHistory = async (id: string): Promise<void> => {
-    await historyApi.callFunction('removeFromChatHistory', [id])
+  const removeFromChatHistory = async (
+    id: string
+  ): Promise<ChatHistoryItem | null> => {
+    const removed = await loadChat(id)
+
+    await call('removeFromChatHistory', [id])
     chatHistory.value = chatHistory.value.filter((item) => item.id !== id)
+
+    return removed
+  }
+
+  const restoreChatItem = async (item: ChatHistoryItem): Promise<void> => {
+    await call('saveChatHistory', [item])
+    await loadChatHistory()
   }
 
   const clearEditorHistory = async (): Promise<void> => {
-    await historyApi.callFunction('clearEditorHistory', [])
+    await call('clearEditorHistory')
     editorHistory.value = []
   }
 
   const clearChatHistory = async (): Promise<void> => {
-    await historyApi.callFunction('clearChatHistory', [])
+    await call('clearChatHistory')
     chatHistory.value = []
   }
 
@@ -137,6 +163,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     removeFromEditorHistory,
     restoreEditorItem,
     removeFromChatHistory,
+    restoreChatItem,
     clearEditorHistory,
     clearChatHistory,
   }

@@ -19,6 +19,7 @@ pub struct LocalVoiceRecordingSession {
 
 pub struct AppState {
     params: Mutex<InitParams>,
+    history_storage: Mutex<()>,
     quitting: AtomicBool,
     voice_session: Mutex<Option<VoiceSession>>,
     local_voice_recording_session: Mutex<Option<LocalVoiceRecordingSession>>,
@@ -28,10 +29,18 @@ impl AppState {
     pub fn new(params: InitParams) -> Self {
         Self {
             params: Mutex::new(params),
+            history_storage: Mutex::new(()),
             quitting: AtomicBool::new(false),
             voice_session: Mutex::new(None),
             local_voice_recording_session: Mutex::new(None),
         }
+    }
+
+    /// Serializes read-modify-write operations on history files.
+    pub fn lock_history_storage(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.history_storage
+            .lock()
+            .expect("history storage lock poisoned")
     }
 
     pub fn params(&self) -> InitParams {
