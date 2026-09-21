@@ -10,6 +10,8 @@
     </div>
 
     <ShortcutList
+      :text="editedNewText"
+      :sourceText="props.oldText"
       :leftLetterKeys="leftLetterKeys"
       :spaceKey="spaceKey"
       :toEditorVisible="true"
