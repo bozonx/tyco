@@ -57,12 +57,15 @@ const translate = async (toLangNum: number) => {
     return
   }
 
+  await historyStore.saveSource(trimmedText, 'translate')
+
   menuModalsStore.setPendingModal({ ai: true })
 
   const newText = await translateText(toLangNum, trimmedText)
 
-  await historyStore.saveTransformHistory(newText)
-
-  menuModalsStore.nextModal(MenuModals.PREVIEW, { text: newText })
+  menuModalsStore.nextModal(MenuModals.PREVIEW, {
+    text: newText,
+    sourceText: trimmedText,
+  })
 }
 </script>

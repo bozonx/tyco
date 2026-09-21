@@ -42,9 +42,7 @@ impl Response {
     }
 }
 
-pub fn read_message<T: for<'de> Deserialize<'de>>(
-    reader: &mut impl BufRead,
-) -> Result<T, String> {
+pub fn read_message<T: for<'de> Deserialize<'de>>(reader: &mut impl BufRead) -> Result<T, String> {
     let mut bytes = Vec::new();
     Read::take(reader, (MAX_MESSAGE_BYTES + 1) as u64)
         .read_until(b'\n', &mut bytes)

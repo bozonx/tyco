@@ -13,6 +13,8 @@ export interface ActionItem {
 export interface ActionMenuDependencies {
   typeIntoWindowAndClose: (text: string) => void
   putIntoClipboardAndClose: (text: string) => Promise<void>
+  /** Records a text that leaves the app; runs before the window closes. */
+  saveOutput: (text: string) => Promise<void>
   openAiTaskModal: (text: string) => void
   openTranslateModal: (text: string) => void
   startCorrection: (text: string) => Promise<void>
@@ -35,6 +37,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
           deps.showToast('toast.textNotSelected', 'error')
           return
         }
+        await deps.saveOutput(text)
         deps.typeIntoWindowAndClose(text)
       },
     },
@@ -45,6 +48,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
           deps.showToast('toast.textNotSelected', 'error')
           return
         }
+        await deps.saveOutput(text)
         await deps.putIntoClipboardAndClose(text)
       },
     },

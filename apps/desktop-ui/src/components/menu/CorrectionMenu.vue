@@ -12,6 +12,7 @@
 
     <ShortcutList
       :text="props.newText"
+      :sourceText="props.oldText"
       :spaceKey="spaceKey"
       :toEditorVisible="true"
     />

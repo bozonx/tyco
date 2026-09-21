@@ -1,76 +1,97 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { createThemeController, type ThemeRuntime } from './theme-controller'
 import {
-  createThemeController,
-  type ThemeMode,
-  type ThemeName,
-  type ThemeRuntime,
-} from './theme-controller'
+  DEFAULT_APPEARANCE,
+  type AppearanceSettings,
+  type SystemAppearance,
+} from '@tyco/shared/appearance'
 
 function createRuntime(
-  options: { storedTheme?: ThemeMode | null; systemTheme?: ThemeName } = {}
+  options: {
+    stored?: AppearanceSettings | null
+    system?: Partial<SystemAppearance>
+  } = {}
 ): ThemeRuntime {
-  let storedTheme = options.storedTheme ?? null
+  let stored = options.stored ?? null
+  const system: SystemAppearance = {
+    prefersDark: false,
+    prefersMoreContrast: false,
+    prefersReducedMotion: false,
+    ...options.system,
+  }
 
   return {
-    getStoredTheme: vi.fn(() => storedTheme),
-    setStoredTheme: vi.fn((theme: ThemeMode) => {
-      storedTheme = theme
+    getStoredAppearance: vi.fn(() => stored),
+    setStoredAppearance: vi.fn((settings: AppearanceSettings) => {
+      stored = settings
     }),
-    clearStoredTheme: vi.fn(() => {
-      storedTheme = null
-    }),
-    applyTheme: vi.fn(),
-    getSystemTheme: vi.fn(() => options.systemTheme ?? 'light'),
-    onSystemThemeChange: vi.fn(() => () => {}),
+    getSystemAppearance: vi.fn(() => system),
+    onSystemAppearanceChange: vi.fn(() => () => {}),
+    applyAppearance: vi.fn(),
   }
 }
 
 describe('theme-controller', () => {
-  it('uses auto mode by default', () => {
-    const runtime = createRuntime({ systemTheme: 'dark' })
-    const controller = createThemeController(runtime)
+  it('uses default settings when nothing is stored', () => {
+    const controller = createThemeController(createRuntime())
 
-    expect(controller.resolveInitialThemeMode()).toBe('auto')
-    expect(controller.resolveTheme('auto')).toBe('dark')
+    expect(controller.resolveInitialSettings()).toEqual(DEFAULT_APPEARANCE)
   })
 
-  it('prefers stored theme mode over system theme', () => {
-    const runtime = createRuntime({ storedTheme: 'dark', systemTheme: 'light' })
-    const controller = createThemeController(runtime)
+  it('prefers stored settings', () => {
+    const stored: AppearanceSettings = {
+      ...DEFAULT_APPEARANCE,
+      theme: 'dark',
+      uiScale: 130,
+    }
+    const controller = createThemeController(createRuntime({ stored }))
 
-    expect(controller.resolveInitialThemeMode()).toBe('dark')
-    expect(controller.resolveTheme('dark')).toBe('dark')
+    expect(controller.resolveInitialSettings()).toEqual(stored)
   })
 
-  it('persists explicit theme mode changes', () => {
+  it('resolves auto values against system preferences', () => {
+    const controller = createThemeController(
+      createRuntime({
+        system: {
+          prefersDark: true,
+          prefersMoreContrast: true,
+          prefersReducedMotion: true,
+        },
+      })
+    )
+
+    expect(controller.resolve(DEFAULT_APPEARANCE)).toEqual({
+      theme: 'dark',
+      contrast: 'more',
+      motion: 'reduce',
+      uiScale: 100,
+    })
+  })
+
+  it('persists and applies settings on change', () => {
+    const runtime = createRuntime()
+    const controller = createThemeController(runtime)
+    const settings: AppearanceSettings = {
+      ...DEFAULT_APPEARANCE,
+      theme: 'light',
+      contrast: 'more',
+    }
+
+    const resolved = controller.setSettings(settings)
+
+    expect(runtime.setStoredAppearance).toHaveBeenCalledWith(settings)
+    expect(runtime.applyAppearance).toHaveBeenCalledWith(resolved)
+    expect(resolved).toMatchObject({ theme: 'light', contrast: 'more' })
+  })
+
+  it('applies without persisting', () => {
     const runtime = createRuntime()
     const controller = createThemeController(runtime)
 
-    const nextTheme = controller.setThemeMode('dark')
+    controller.applySettings(DEFAULT_APPEARANCE)
 
-    expect(nextTheme).toBe('dark')
-    expect(runtime.setStoredTheme).toHaveBeenCalledWith('dark')
-    expect(runtime.applyTheme).toHaveBeenCalledWith('dark', 'dark')
-  })
-
-  it('clears stored theme when switching to auto', () => {
-    const runtime = createRuntime({ storedTheme: 'dark', systemTheme: 'light' })
-    const controller = createThemeController(runtime)
-
-    const nextTheme = controller.setThemeMode('auto')
-
-    expect(nextTheme).toBe('light')
-    expect(runtime.clearStoredTheme).toHaveBeenCalledOnce()
-    expect(runtime.applyTheme).toHaveBeenCalledWith('light', 'auto')
-  })
-
-  it('reapplies theme on system theme change only in auto mode', () => {
-    const runtime = createRuntime({ systemTheme: 'dark' })
-    const controller = createThemeController(runtime)
-
-    expect(controller.handleSystemThemeChange('dark')).toBeNull()
-    expect(controller.handleSystemThemeChange('auto')).toBe('dark')
-    expect(runtime.applyTheme).toHaveBeenCalledWith('dark', 'auto')
+    expect(runtime.setStoredAppearance).not.toHaveBeenCalled()
+    expect(runtime.applyAppearance).toHaveBeenCalledOnce()
   })
 })

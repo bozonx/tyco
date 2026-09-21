@@ -134,9 +134,7 @@ const onTabClick = (key: string | number) => {
 
 .app-tabs--segmented :deep(.app-tab.is-active) {
   background-color: var(--app-surface);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.08),
-    0 0 0 1px var(--app-border-subtle);
+  box-shadow: var(--app-shadow-segment);
 }
 
 /* ── vertical (sidebar navigation) ─────────── */

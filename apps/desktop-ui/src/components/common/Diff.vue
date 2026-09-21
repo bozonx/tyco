@@ -94,6 +94,7 @@ const getPartClass = (part: DiffPart): string => {
 .added {
   background-color: var(--app-diff-added-bg);
   color: var(--app-diff-added-fg);
+  text-decoration: var(--app-diff-added-decoration);
   padding: 1px 2px;
   border-radius: 3px;
 }

@@ -40,7 +40,6 @@ export function createCommandMap(): Record<string, CommandEntry> {
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
     getEditorHistory: { command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY },
-    getTransformHistory: { command: DESKTOP_COMMANDS.GET_TRANSFORM_HISTORY },
     getChatHistory: { command: DESKTOP_COMMANDS.GET_CHAT_HISTORY },
     getChat: {
       command: DESKTOP_COMMANDS.GET_CHAT,
@@ -53,11 +52,7 @@ export function createCommandMap(): Record<string, CommandEntry> {
     clearMainInputTmp: { command: DESKTOP_COMMANDS.CLEAR_MAIN_INPUT_TMP },
     saveEditorHistory: {
       command: DESKTOP_COMMANDS.SAVE_EDITOR_HISTORY,
-      buildArgs: ([value]) => ({ value }),
-    },
-    saveTransformHistory: {
-      command: DESKTOP_COMMANDS.SAVE_TRANSFORM_HISTORY,
-      buildArgs: ([value]) => ({ value }),
+      buildArgs: ([entry]) => ({ entry }),
     },
     saveChatHistory: {
       command: DESKTOP_COMMANDS.SAVE_CHAT_HISTORY,
@@ -65,20 +60,13 @@ export function createCommandMap(): Record<string, CommandEntry> {
     },
     removeFromEditorHistory: {
       command: DESKTOP_COMMANDS.REMOVE_FROM_EDITOR_HISTORY,
-      buildArgs: ([value]) => ({ value }),
-    },
-    removeFromTransformHistory: {
-      command: DESKTOP_COMMANDS.REMOVE_FROM_TRANSFORM_HISTORY,
-      buildArgs: ([value]) => ({ value }),
+      buildArgs: ([id]) => ({ id }),
     },
     removeFromChatHistory: {
       command: DESKTOP_COMMANDS.REMOVE_FROM_CHAT_HISTORY,
       buildArgs: ([id]) => ({ id }),
     },
     clearEditorHistory: { command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY },
-    clearTransformHistory: {
-      command: DESKTOP_COMMANDS.CLEAR_TRANSFORM_HISTORY,
-    },
     clearChatHistory: { command: DESKTOP_COMMANDS.CLEAR_CHAT_HISTORY },
     startVoiceRecognition: {
       command: DESKTOP_COMMANDS.START_VOICE_RECOGNITION,

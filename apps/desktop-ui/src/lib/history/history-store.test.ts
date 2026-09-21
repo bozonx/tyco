@@ -1,15 +1,17 @@
+import type { EditorHistoryItem } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createHistoryStoreModel } from './history-store'
+
+function editorItem(id: string, text: string): EditorHistoryItem {
+  return { id, text, kind: 'draft', createdAt: 1 }
+}
 
 function createApi() {
   return {
     callFunction: vi.fn(async (functionName: string) => {
       if (functionName === 'getEditorHistory') {
-        return { result: ['one', 'two'] }
-      }
-      if (functionName === 'getTransformHistory') {
-        return { result: ['alpha'] }
+        return { result: [editorItem('1', 'one'), editorItem('2', 'two')] }
       }
       if (functionName === 'getChatHistory') {
         return {
@@ -30,15 +32,16 @@ function createApi() {
 }
 
 describe('history-store', () => {
-  it('loads editor and transform history into state', async () => {
+  it('loads editor history into state', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api)
 
     await store.loadEditorHistory()
-    await store.loadTransformHistory()
 
-    expect(store.editorHistory.value).toEqual(['one', 'two'])
-    expect(store.transformHistory.value).toEqual(['alpha'])
+    expect(store.editorHistory.value.map((item) => item.text)).toEqual([
+      'one',
+      'two',
+    ])
   })
 
   it('loads chat history into state', async () => {
@@ -51,40 +54,65 @@ describe('history-store', () => {
     expect(store.chatHistory.value[0]?.id).toBe('chat-1')
   })
 
+  it('saves texts with their kind and operation', async () => {
+    const api = createApi()
+    const store = createHistoryStoreModel(api)
+
+    await store.saveOutput('sent')
+    await store.saveDraft('left')
+    await store.saveSource('before', 'translate')
+
+    expect(api.callFunction.mock.calls).toEqual([
+      ['saveEditorHistory', [{ text: 'sent', kind: 'output' }]],
+      ['saveEditorHistory', [{ text: 'left', kind: 'draft' }]],
+      [
+        'saveEditorHistory',
+        [{ text: 'before', kind: 'source', operation: 'translate' }],
+      ],
+    ])
+  })
+
+  it('does not save blank texts', async () => {
+    const api = createApi()
+    const store = createHistoryStoreModel(api)
+
+    await store.saveOutput('')
+    await store.saveDraft('  \n')
+
+    expect(api.callFunction).not.toHaveBeenCalled()
+  })
+
   it('removes items from local state after delete commands', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api)
-    store.editorHistory.value = ['one', 'two']
-    store.transformHistory.value = ['alpha', 'beta']
+    store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
     store.chatHistory.value = [
       { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
       { id: 'chat-2', description: 'B', lastMsgDate: 'y', messages: [] },
     ]
 
-    await store.removeFromEditorHistory('one')
-    await store.removeFromTransformHistory('beta')
+    await store.removeFromEditorHistory('1')
     await store.removeFromChatHistory('chat-1')
 
-    expect(store.editorHistory.value).toEqual(['two'])
-    expect(store.transformHistory.value).toEqual(['alpha'])
+    expect(api.callFunction).toHaveBeenCalledWith('removeFromEditorHistory', [
+      '1',
+    ])
+    expect(store.editorHistory.value.map((item) => item.id)).toEqual(['2'])
     expect(store.chatHistory.value.map((item) => item.id)).toEqual(['chat-2'])
   })
 
   it('clears in-memory state after clear commands', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api)
-    store.editorHistory.value = ['one']
-    store.transformHistory.value = ['alpha']
+    store.editorHistory.value = [editorItem('1', 'one')]
     store.chatHistory.value = [
       { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
     ]
 
     await store.clearEditorHistory()
-    await store.clearTransformHistory()
     await store.clearChatHistory()
 
     expect(store.editorHistory.value).toEqual([])
-    expect(store.transformHistory.value).toEqual([])
     expect(store.chatHistory.value).toEqual([])
   })
 })

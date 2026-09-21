@@ -27,17 +27,6 @@
 
     <HistoryList
       v-show="currentTab === 1"
-      :items="transformItems"
-      :searchQuery="searchQuery"
-      :textTitle="t('history.placeIntoEditor')"
-      openIcon="mdi:pencil-outline"
-      @remove-item="removeTransformItem"
-      @clear-history="clearTransformHistory()"
-      @text-click="toEditor"
-    />
-
-    <HistoryList
-      v-show="currentTab === 2"
       :items="chatItems"
       :searchQuery="searchQuery"
       :textTitle="t('history.view')"
@@ -52,15 +41,20 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import type { HistoryListItem } from '../components/HistoryList.vue'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import {
+  formatEditorHistoryDate,
+  getEditorHistoryMeta,
+} from '../lib/history/editor-history-meta'
 import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
 
 const toast = useToast()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
@@ -74,14 +68,8 @@ const tabs = computed(() => [
     badge: historyStore.editorHistory.length,
   },
   {
-    text: t('history.transformTab'),
-    key: 1,
-    icon: 'mdi:auto-fix',
-    badge: historyStore.transformHistory.length,
-  },
-  {
     text: t('history.chatTab'),
-    key: 2,
+    key: 1,
     icon: 'mdi:chat-outline',
     badge: historyStore.chatHistory.length,
   },
@@ -89,17 +77,17 @@ const tabs = computed(() => [
 
 const searchQuery = ref<string>('')
 const searchInput = ref<HTMLInputElement | null>(null)
-const editorItems = computed(() =>
-  historyStore.editorHistory.map((item: string, index: number) => ({
-    id: index,
-    value: item,
-  }))
-)
-const transformItems = computed(() =>
-  historyStore.transformHistory.map((item: string, index: number) => ({
-    id: index,
-    value: item,
-  }))
+const editorItems = computed<HistoryListItem[]>(() =>
+  historyStore.editorHistory.map((item) => {
+    const meta = getEditorHistoryMeta(item)
+
+    return {
+      id: item.id,
+      value: item.text,
+      meta: { icon: meta.icon, label: t(meta.labelKey) },
+      date: formatEditorHistoryDate(item.createdAt, locale.value),
+    }
+  })
 )
 const chatItems = computed(() =>
   historyStore.chatHistory.map((item: { id: string; description: string }) => ({
@@ -114,7 +102,6 @@ onMounted(async () => {
   }
 
   await historyStore.loadEditorHistory()
-  await historyStore.loadTransformHistory()
   await historyStore.loadChatHistory()
 })
 
@@ -131,25 +118,9 @@ const clearEditorHistory = async () => {
   toast.toast(t('history.inputCleared'), 'success')
 }
 
-const clearTransformHistory = async () => {
-  await historyStore.clearTransformHistory()
-  toast.toast(t('history.transformsCleared'), 'success')
-}
-
-const removeEditorItem = async (item: {
-  id: string | number
-  value: string
-}) => {
-  await historyStore.removeFromEditorHistory(item.value)
+const removeEditorItem = async (item: HistoryListItem) => {
+  await historyStore.removeFromEditorHistory(item.id.toString())
   toast.toast(t('history.inputRemoved'), 'success')
-}
-
-const removeTransformItem = async (item: {
-  id: string | number
-  value: string
-}) => {
-  await historyStore.removeFromTransformHistory(item.value)
-  toast.toast(t('history.transformsRemoved'), 'success')
 }
 
 const clearChatHistory = async () => {

@@ -27,9 +27,7 @@ export const useQuickPanelStore = defineStore('quickPanel', () => {
       })
     },
     persistInput: async () => {
-      if (editorInputStore.value) {
-        await historyStore.saveEditorHistory(editorInputStore.value)
-      }
+      await historyStore.saveDraft(editorInputStore.value)
 
       await historyStore.clearMainInputTmp()
     },

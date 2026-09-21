@@ -17,7 +17,7 @@
         v-if="props.toEditorVisible"
         :keys="['Tab']"
         icon="mdi:pencil-outline"
-        @click="routeParamsStore.toEditor(props.text)"
+        @click="routeParamsStore.toEditor(props.text, props.sourceText)"
         >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
       >
     </div>
@@ -54,6 +54,8 @@ import { PRESETS_KEYS } from '../types'
 const props = withDefaults(
   defineProps<{
     text?: string
+    /** What `text` was transformed from, see `routeParams.toEditor`. */
+    sourceText?: string
     spaceKey?: ActionItem
     toEditorVisible?: boolean
     leftLetterKeys?: ActionItem[]
@@ -106,7 +108,7 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
   if (event.code === 'Space' && !props.spaceKey?.disabled) {
     props.spaceKey?.action(props.text || '')
   } else if (event.code === 'Tab' && props.toEditorVisible) {
-    routeParamsStore.toEditor(props.text)
+    routeParamsStore.toEditor(props.text, props.sourceText)
   }
 
   let codeLetter

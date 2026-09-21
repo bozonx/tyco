@@ -1,0 +1,69 @@
+/* ────────────────────────────────────────────────
+   Accessibility modifiers
+
+   Independent of the palette: `data-contrast` and `data-motion` on `<html>`
+   are resolved from the user settings and the system preferences
+   (`resolveAppearance`). The `[data-…] [data-theme]` selectors re-apply the
+   overrides inside subtrees with their own palette, which would otherwise
+   recompute the semantic tokens from scratch.
+   ──────────────────────────────────────────────── */
+
+/* ── high contrast ─────────────────────────── */
+
+[data-contrast='more'],
+[data-contrast='more'] [data-theme] {
+  --app-border: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+  --app-border-subtle: color-mix(
+    in oklab,
+    var(--color-base-content) 35%,
+    transparent
+  );
+  --app-border-strong: var(--color-base-content);
+  --app-hover: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  --app-active: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  --app-text-muted: color-mix(
+    in oklab,
+    var(--color-base-content) 90%,
+    transparent
+  );
+  --app-text-faint: color-mix(
+    in oklab,
+    var(--color-base-content) 80%,
+    transparent
+  );
+  --app-accent-soft: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  --app-focus-ring: 0 0 0 3px var(--color-primary);
+  --app-focus-outline-width: 3px;
+  --app-shadow-segment: 0 0 0 2px var(--color-base-content);
+  /* Color is not the only cue for inserted text */
+  --app-diff-added-decoration: underline;
+}
+
+/* ── reduced motion ────────────────────────── */
+
+[data-motion='reduce'] {
+  --transition-fast: 0s;
+  --transition-base: 0s;
+  scroll-behavior: auto;
+}
+
+/* Catches daisyUI and scoped animations that do not use the tokens */
+[data-motion='reduce'] *,
+[data-motion='reduce'] *::before,
+[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* ── forced colors (Windows High Contrast and alike) ── */
+
+@media (forced-colors: active) {
+  /* Selection drawn with backgrounds and shadows disappears when the system
+     repaints them; mark it with an outline instead. */
+  [aria-selected='true'],
+  label:has(> input:checked) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

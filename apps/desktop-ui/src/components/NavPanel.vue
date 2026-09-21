@@ -155,9 +155,7 @@ function openHistory() {
 .topbar-tab.is-active {
   color: var(--color-base-content);
   background-color: var(--app-surface);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.06),
-    0 0 0 1px var(--app-border);
+  box-shadow: var(--app-shadow-segment);
 }
 
 .app-topbar :deep(.btn-ghost) {

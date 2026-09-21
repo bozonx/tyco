@@ -1,7 +1,7 @@
 <template>
-  <!-- The overlay is always dark: it is a keyboard HUD on top of the app,
-       not a page of it -->
-  <div class="overlay" data-theme="dark">
+  <!-- The overlay is dark: it is a keyboard HUD on top of the app, not a page
+       of it. E-ink keeps its own flat palette instead. -->
+  <div class="overlay" :data-theme="overlayTheme">
     <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
       <button
         v-if="navBarVisible"
@@ -20,11 +20,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/useI18n'
 import { useMenuModalsStore } from '../../stores/menuModals'
+import { useThemeStore } from '../../stores/theme'
 import KeyButton from './KeyButton.vue'
 
 const menuModalsStore = useMenuModalsStore()
+const themeStore = useThemeStore()
+const overlayTheme = computed(() =>
+  themeStore.resolved.theme === 'e-ink' ? 'e-ink' : 'dark'
+)
 const { t } = useI18n()
 withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   navBarVisible: true,
@@ -39,7 +46,7 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   display: flex;
   padding: var(--space-lg);
   background-color: var(--app-overlay-bg);
-  backdrop-filter: blur(6px);
+  backdrop-filter: var(--app-overlay-backdrop);
   color: var(--color-base-content);
   animation: overlay-in 140ms ease-out;
 }
@@ -56,9 +63,7 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   border: 1px solid var(--app-border);
   border-radius: 14px;
   background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
-  box-shadow:
-    0 24px 64px -12px rgb(0 0 0 / 0.6),
-    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  box-shadow: var(--app-shadow-overlay);
 }
 
 .overlay-panel.is-compact {

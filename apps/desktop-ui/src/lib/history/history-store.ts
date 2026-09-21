@@ -1,4 +1,9 @@
-import type { ChatHistoryItem } from '@tyco/shared'
+import type {
+  ChatHistoryItem,
+  EditorHistoryEntry,
+  EditorHistoryItem,
+  EditorHistoryOperation,
+} from '@tyco/shared'
 import { ref } from 'vue'
 
 export interface HistoryApi {
@@ -9,21 +14,12 @@ export interface HistoryApi {
 }
 
 export function createHistoryStoreModel(historyApi: HistoryApi) {
-  const editorHistory = ref<string[]>([])
-  const transformHistory = ref<string[]>([])
+  const editorHistory = ref<EditorHistoryItem[]>([])
   const chatHistory = ref<ChatHistoryItem[]>([])
 
   const loadEditorHistory = async (): Promise<void> => {
     const loadedHistory = await historyApi.callFunction('getEditorHistory', [])
-    editorHistory.value = (loadedHistory.result as string[]) || []
-  }
-
-  const loadTransformHistory = async (): Promise<void> => {
-    const loadedHistory = await historyApi.callFunction(
-      'getTransformHistory',
-      []
-    )
-    transformHistory.value = (loadedHistory.result as string[]) || []
+    editorHistory.value = (loadedHistory.result as EditorHistoryItem[]) || []
   }
 
   const loadChatHistory = async (): Promise<void> => {
@@ -40,29 +36,31 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     await historyApi.callFunction('saveMainInputTmp', [value])
   }
 
-  const saveEditorHistory = async (value: string) => {
-    await historyApi.callFunction('saveEditorHistory', [value])
+  const saveEditorHistory = async (entry: EditorHistoryEntry) => {
+    if (!entry.text.trim()) return
+
+    await historyApi.callFunction('saveEditorHistory', [entry])
   }
 
-  const saveTransformHistory = async (value: string) => {
-    await historyApi.callFunction('saveTransformHistory', [value])
-  }
+  /** The text is leaving the app: inserted into a window or copied. */
+  const saveOutput = (text: string) =>
+    saveEditorHistory({ text, kind: 'output' })
+
+  /** The text stays in the editor while the user moves away from it. */
+  const saveDraft = (text: string) => saveEditorHistory({ text, kind: 'draft' })
+
+  /** The text is about to be replaced by the result of an AI operation. */
+  const saveSource = (text: string, operation: EditorHistoryOperation) =>
+    saveEditorHistory({ text, kind: 'source', operation })
 
   const saveChatHistory = async (chatHistoryItem: ChatHistoryItem) => {
     await historyApi.callFunction('saveChatHistory', [chatHistoryItem])
     await loadChatHistory()
   }
 
-  const removeFromEditorHistory = async (value: string): Promise<void> => {
-    await historyApi.callFunction('removeFromEditorHistory', [value])
-    editorHistory.value = editorHistory.value.filter((item) => item !== value)
-  }
-
-  const removeFromTransformHistory = async (value: string): Promise<void> => {
-    await historyApi.callFunction('removeFromTransformHistory', [value])
-    transformHistory.value = transformHistory.value.filter(
-      (item) => item !== value
-    )
+  const removeFromEditorHistory = async (id: string): Promise<void> => {
+    await historyApi.callFunction('removeFromEditorHistory', [id])
+    editorHistory.value = editorHistory.value.filter((item) => item.id !== id)
   }
 
   const removeFromChatHistory = async (id: string): Promise<void> => {
@@ -79,11 +77,6 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     editorHistory.value = []
   }
 
-  const clearTransformHistory = async (): Promise<void> => {
-    await historyApi.callFunction('clearTransformHistory', [])
-    transformHistory.value = []
-  }
-
   const clearChatHistory = async (): Promise<void> => {
     await historyApi.callFunction('clearChatHistory', [])
     chatHistory.value = []
@@ -91,22 +84,20 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   return {
     editorHistory,
-    transformHistory,
     chatHistory,
     loadEditorHistory,
-    loadTransformHistory,
     loadChatHistory,
     loadChat,
     saveMainInputTmp,
     saveEditorHistory,
-    saveTransformHistory,
+    saveOutput,
+    saveDraft,
+    saveSource,
     saveChatHistory,
     removeFromEditorHistory,
-    removeFromTransformHistory,
     removeFromChatHistory,
     clearMainInputTmp,
     clearEditorHistory,
-    clearTransformHistory,
     clearChatHistory,
   }
 }

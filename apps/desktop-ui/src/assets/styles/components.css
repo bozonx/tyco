@@ -1,0 +1,190 @@
+/* ────────────────────────────────────────────────
+   daisyUI overrides and shared component classes
+
+   daisyUI 5 puts its components in the `daisyui` cascade layer, which comes
+   after Tailwind's `utilities`. An override placed in any layer would lose to
+   it, so the rules below are deliberately unlayered.
+   ──────────────────────────────────────────────── */
+
+/* ── form controls: tighten daisyUI defaults ── */
+
+.input,
+.select,
+.textarea {
+  font-size: 0.875rem;
+  border-color: var(--app-border);
+  background-color: var(--app-surface);
+  color: var(--color-base-content);
+  box-shadow: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  border-color: var(--app-border-strong);
+}
+
+.input:focus,
+.input:focus-within,
+.select:focus,
+.textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--app-focus-ring);
+  outline: none;
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  background-color: var(--app-surface-raised);
+  border-color: var(--app-border-subtle);
+  color: var(--app-text-muted);
+}
+
+.input input:focus,
+.input input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder,
+.textarea::placeholder,
+.input input::placeholder {
+  color: var(--app-text-faint);
+}
+
+.checkbox,
+.toggle {
+  border-color: var(--app-border-strong);
+}
+
+/* ── buttons ───────────────────────────────────
+   `btn-neutral` in this app is a quiet bordered button on the surface
+   color, not daisyUI's filled dark one. */
+
+.btn {
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.btn-neutral {
+  --btn-bg: var(--app-surface);
+  --btn-fg: var(--color-base-content);
+  --btn-border: var(--app-border);
+  color: var(--color-base-content);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.btn-neutral:hover,
+.btn-neutral.btn-active {
+  --btn-bg: color-mix(
+    in oklab,
+    var(--color-base-content) 5%,
+    var(--app-surface)
+  );
+  --btn-border: var(--app-border-strong);
+}
+
+.btn-ghost {
+  --btn-fg: var(--color-base-content);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  --btn-bg: var(--app-hover);
+  --btn-border: transparent;
+}
+
+.btn-ghost.btn-active {
+  --btn-bg: var(--app-active);
+}
+
+.btn:disabled,
+.btn.btn-disabled {
+  box-shadow: none;
+}
+
+.btn-neutral:disabled,
+.btn-neutral.btn-disabled {
+  --btn-bg: var(--app-surface);
+  --btn-border: var(--app-border-subtle);
+  color: var(--app-text-faint);
+}
+
+/* ── kbd (keyboard key) ────────────────────── */
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding-inline: 0.375rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--app-border-strong);
+  border-bottom-width: 2px;
+  background-color: var(--app-surface-raised);
+  color: var(--color-base-content);
+  text-transform: uppercase;
+}
+
+/* ── toasts ────────────────────────────────────
+   mini-toastr injects its own styles; the id selector wins. */
+
+#mini-toastr {
+  z-index: var(--z-toast);
+  top: 12px;
+  right: 12px;
+}
+
+#mini-toastr .mini-toastr__notification {
+  width: 320px;
+  margin: 0 0 8px;
+  padding: 10px 14px 10px 16px;
+  border: 1px solid var(--app-border);
+  border-left: 3px solid var(--color-info);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface);
+  color: var(--color-base-content);
+  box-shadow: var(--app-shadow-lg);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 1;
+}
+
+#mini-toastr .mini-toastr__notification.-success {
+  border-left-color: var(--color-success);
+}
+
+#mini-toastr .mini-toastr__notification.-warn {
+  border-left-color: var(--color-warning);
+}
+
+#mini-toastr .mini-toastr__notification.-error {
+  border-left-color: var(--color-error);
+}
+
+#mini-toastr .mini-toastr-notification__message {
+  display: block;
+  width: auto;
+  padding: 0;
+}
+
+/* ── app utilities ───────────────────────────── */
+
+/* Bordered panel on the base surface */
+@utility surface {
+  background-color: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+}
+
+@utility text-muted {
+  color: var(--app-text-muted);
+}
+
+@utility text-faint {
+  color: var(--app-text-faint);
+}

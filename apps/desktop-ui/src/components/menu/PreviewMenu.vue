@@ -7,6 +7,7 @@
 
     <ShortcutList
       :text="props.text"
+      :sourceText="props.sourceText"
       :leftLetterKeys="leftLetterKeys"
       :spaceKey="spaceKey"
       :toEditorVisible="true"
@@ -21,7 +22,7 @@ import { useI18n } from '../../composables/useI18n'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
 
-const props = defineProps<{ text: string }>()
+const props = defineProps<{ text: string; sourceText?: string }>()
 
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()

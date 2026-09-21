@@ -37,6 +37,31 @@ export interface ChatHistoryItem {
   messages: ChatMessage[]
 }
 
+/**
+ * Why a text got into the editor history:
+ *
+ * - `output` — inserted into a window or copied to the clipboard;
+ * - `draft` — left in the editor when the user moved away from it;
+ * - `source` — snapshot taken right before an AI transformation.
+ */
+export type EditorHistoryKind = 'output' | 'draft' | 'source'
+
+/** The AI transformation a `source` entry was taken before. */
+export type EditorHistoryOperation =
+  'ai-task' | 'translate' | 'correction' | 'voice-correction'
+
+export interface EditorHistoryEntry {
+  text: string
+  kind: EditorHistoryKind
+  operation?: EditorHistoryOperation
+}
+
+export interface EditorHistoryItem extends EditorHistoryEntry {
+  id: string
+  /** Unix time in milliseconds, 0 when unknown. */
+  createdAt: number
+}
+
 export interface StorageInfo {
   configDir: string
   dataDir: string
@@ -89,19 +114,15 @@ export const DESKTOP_COMMANDS = {
   SAVE_USER_CONFIG: 'save_user_config',
   SAVE_LOCAL_STATE: 'save_local_state',
   GET_EDITOR_HISTORY: 'get_editor_history',
-  GET_TRANSFORM_HISTORY: 'get_transform_history',
   GET_CHAT_HISTORY: 'get_chat_history',
   GET_CHAT: 'get_chat',
   SAVE_MAIN_INPUT_TMP: 'save_main_input_tmp',
   CLEAR_MAIN_INPUT_TMP: 'clear_main_input_tmp',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
-  SAVE_TRANSFORM_HISTORY: 'save_transform_history',
   SAVE_CHAT_HISTORY: 'save_chat_history',
   REMOVE_FROM_EDITOR_HISTORY: 'remove_from_editor_history',
-  REMOVE_FROM_TRANSFORM_HISTORY: 'remove_from_transform_history',
   REMOVE_FROM_CHAT_HISTORY: 'remove_from_chat_history',
   CLEAR_EDITOR_HISTORY: 'clear_editor_history',
-  CLEAR_TRANSFORM_HISTORY: 'clear_transform_history',
   CLEAR_CHAT_HISTORY: 'clear_chat_history',
   CLOSE_WINDOW: 'close_window',
   OPEN_IN_BROWSER_AND_CLOSE: 'open_in_browser_and_close',

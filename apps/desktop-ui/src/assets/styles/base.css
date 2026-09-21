@@ -1,0 +1,109 @@
+/* ────────────────────────────────────────────────
+   Base element styles
+
+   In the `base` layer, so Tailwind utilities, daisyUI components and scoped
+   component styles all override them without specificity fights.
+   ──────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    /* Everything sized in rem follows the interface scale setting */
+    font-size: calc(16px * var(--ui-scale));
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Desktop-only: disable text selection on UI chrome */
+    user-select: none;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Tauri window manages its own scrolling */
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+  }
+
+  /* Allow text selection inside editable areas */
+  input,
+  textarea,
+  pre,
+  code,
+  [contenteditable],
+  .selectable {
+    user-select: text;
+  }
+
+  /* ── scrollbars ──────────────────────────── */
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--app-border);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--app-text-faint);
+  }
+
+  /* ── typography ──────────────────────────── */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Page / menu title */
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 2rem;
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  /* Section caption: small, muted, uppercase */
+  h2 {
+    font-size: 0.75rem;
+    margin: var(--space-xl) 0 var(--space-sm);
+    color: var(--app-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: opacity var(--transition-fast);
+  }
+
+  a:hover {
+    opacity: 0.8;
+  }
+
+  /* ── keyboard focus ──────────────────────── */
+
+  :focus-visible {
+    outline: var(--app-focus-outline-width) solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

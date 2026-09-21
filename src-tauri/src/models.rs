@@ -42,6 +42,50 @@ pub struct ChatHistoryItem {
     pub messages: Vec<ChatMessage>,
 }
 
+/// Why a text got into the editor history.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EditorHistoryKind {
+    /// Inserted into a window or copied to the clipboard.
+    Output,
+    /// Left in the editor when the user moved away from it.
+    Draft,
+    /// Snapshot taken right before an AI transformation.
+    Source,
+}
+
+/// The AI transformation a `Source` entry was taken before.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EditorHistoryOperation {
+    AiTask,
+    Translate,
+    Correction,
+    VoiceCorrection,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorHistoryItem {
+    pub id: String,
+    pub text: String,
+    pub kind: EditorHistoryKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operation: Option<EditorHistoryOperation>,
+    /// Unix time in milliseconds, 0 when unknown (entries of the legacy format).
+    pub created_at: u64,
+}
+
+/// What the UI sends to add a text; id and time are assigned by the backend.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorHistoryEntry {
+    pub text: String,
+    pub kind: EditorHistoryKind,
+    #[serde(default)]
+    pub operation: Option<EditorHistoryOperation>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageInfo {
@@ -69,6 +113,9 @@ pub fn default_user_config() -> Value {
         "config": "Ctrl+Alt+Comma"
       },
       "theme": "auto",
+      "contrast": "auto",
+      "motion": "auto",
+      "uiScale": 100,
       "xdotoolBin": xdotool_bin,
       "windowInsertion": {
         "method": "xdotool",
@@ -81,8 +128,7 @@ pub fn default_user_config() -> Value {
       "pasteMode": "markdown",
       "editorSyntax": "markdown",
       "showBubbleMenu": true,
-      "editorHistoryMaxItems": 50,
-      "transformHistoryMaxItems": 50,
+      "editorHistoryMaxItems": 100,
       "chatHistoryMaxItems": 50,
       "llmModels": [
         {

@@ -57,7 +57,7 @@ watch(
 
 onUnmounted(async () => {
   if (writerInputStore.value) {
-    await historyStore.saveEditorHistory(writerInputStore.value)
+    await historyStore.saveDraft(writerInputStore.value)
     writerInputStore.value = ''
   }
 
@@ -81,11 +81,10 @@ async function doCorrection() {
     correctedText.value = writerInputStore.value
     correctionIsActual.value = true
   } else {
+    await historyStore.saveSource(writerInputStore.value, 'correction')
     menuModalsStore.setPendingModal({ correction: true })
 
     const result = await correctText(writerInputStore.value)
-
-    historyStore.saveTransformHistory(result)
 
     correctedText.value = result
     correctionIsActual.value = true

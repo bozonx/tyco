@@ -7,6 +7,7 @@ describe('createActionMenuStoreModel', () => {
     const deps = {
       typeIntoWindowAndClose: vi.fn(),
       putIntoClipboardAndClose: vi.fn().mockResolvedValue(undefined),
+      saveOutput: vi.fn().mockResolvedValue(undefined),
       openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
@@ -32,6 +33,7 @@ describe('createActionMenuStoreModel', () => {
       'error'
     )
     expect(deps.typeIntoWindowAndClose).not.toHaveBeenCalled()
+    expect(deps.saveOutput).not.toHaveBeenCalled()
   })
 
   it('triggers insert action when valid text provided', async () => {
@@ -46,6 +48,29 @@ describe('createActionMenuStoreModel', () => {
     expect(deps.typeIntoWindowAndClose).toHaveBeenCalledWith(
       'some text to insert'
     )
+  })
+
+  it('saves the text to history before it leaves the app', async () => {
+    const { store, deps } = setup()
+    const order: string[] = []
+    deps.saveOutput.mockImplementation(async () => {
+      order.push('save')
+    })
+    deps.typeIntoWindowAndClose.mockImplementation(() => order.push('insert'))
+    deps.putIntoClipboardAndClose.mockImplementation(async () => {
+      order.push('copy')
+    })
+    const actions = store.getDefaultActions()
+
+    await actions
+      .find((a) => a.labelKey === 'action.insertIntoWindow')
+      ?.action('inserted')
+    await actions
+      .find((a) => a.labelKey === 'action.copyToClipboard')
+      ?.action('copied')
+
+    expect(deps.saveOutput.mock.calls).toEqual([['inserted'], ['copied']])
+    expect(order).toEqual(['save', 'insert', 'save', 'copy'])
   })
 
   it('warns when text is too short for correction', async () => {

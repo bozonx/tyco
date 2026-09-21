@@ -1,34 +1,18 @@
 /**
- * Applies the persisted theme before the app renders to avoid a flash of the
- * wrong color scheme. Loaded as a module script from `index.html`, so it must
- * not import anything that pulls in the application bundle.
+ * Applies the persisted appearance before the app renders to avoid a flash of
+ * the wrong theme or scale. Loaded as a module script from `index.html`, so it
+ * must not import anything that pulls in the application bundle.
  */
-type ThemeMode = 'auto' | 'light' | 'dark'
+import {
+  applyAppearanceToDocument,
+  readStoredAppearance,
+  readSystemAppearance,
+} from './lib/theme/document-appearance'
+import { DEFAULT_APPEARANCE, resolveAppearance } from '@tyco/shared/appearance'
 
-const THEME_STORAGE_KEY = 'theme'
+const settings = readStoredAppearance(window.localStorage) ?? DEFAULT_APPEARANCE
 
-function readThemeMode(): ThemeMode {
-  let stored: string | null
-
-  try {
-    stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-  } catch {
-    // Storage can be unavailable (private mode, blocked site data).
-    stored = null
-  }
-
-  return stored === 'auto' || stored === 'light' || stored === 'dark'
-    ? stored
-    : 'auto'
-}
-
-const themeMode = readThemeMode()
-const prefersDark =
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-color-scheme: dark)').matches
-const resolvedTheme =
-  themeMode === 'auto' ? (prefersDark ? 'dark' : 'light') : themeMode
-
-document.documentElement.setAttribute('data-theme', resolvedTheme)
-document.documentElement.setAttribute('data-theme-mode', themeMode)
-document.documentElement.style.colorScheme = resolvedTheme
+applyAppearanceToDocument(
+  document.documentElement,
+  resolveAppearance(settings, readSystemAppearance())
+)

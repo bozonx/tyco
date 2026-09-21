@@ -1,38 +1,32 @@
 import { defineStore } from 'pinia'
 import { ref, watchEffect } from 'vue'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
-import {
-  createThemeController,
-  type ThemeMode,
-} from '../lib/theme/theme-controller'
+import { createThemeController } from '../lib/theme/theme-controller'
 import { useIpcStore } from './ipc'
+import { normalizeAppearance } from '@tyco/shared/appearance'
 
 export const useThemeStore = defineStore('theme', () => {
   const ipcStore = useIpcStore()
   const controller = createThemeController(browserThemeRuntime)
-  const themeMode = ref(controller.resolveInitialThemeMode())
-  const theme = ref(controller.applyTheme(themeMode.value))
+  const settings = ref(controller.resolveInitialSettings())
+  const resolved = ref(controller.applySettings(settings.value))
 
   watchEffect(() => {
-    const nextMode = ipcStore.params.userConfig?.theme
-    const resolvedMode: ThemeMode =
-      nextMode === 'light' || nextMode === 'dark' || nextMode === 'auto'
-        ? nextMode
-        : controller.resolveInitialThemeMode()
+    const userConfig = ipcStore.params.userConfig
 
-    themeMode.value = resolvedMode
-    theme.value = controller.setThemeMode(resolvedMode)
-  })
-
-  controller.onSystemThemeChange(() => {
-    const nextTheme = controller.handleSystemThemeChange(themeMode.value)
-
-    if (!nextTheme) {
+    // Until the config arrives keep what the bootstrap applied from storage.
+    if (!userConfig) {
       return
     }
 
-    theme.value = nextTheme
+    settings.value = normalizeAppearance(userConfig)
+    resolved.value = controller.setSettings(settings.value)
   })
 
-  return { theme, themeMode }
+  // The store lives as long as the app, so the subscription is never removed.
+  controller.onSystemAppearanceChange(() => {
+    resolved.value = controller.applySettings(settings.value)
+  })
+
+  return { settings, resolved }
 })

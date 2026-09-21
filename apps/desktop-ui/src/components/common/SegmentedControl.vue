@@ -1,67 +1,53 @@
 <template>
-  <div
-    class="theme-switcher"
-    role="radiogroup"
-    :aria-label="t('settings.theme')"
-  >
+  <div class="segmented-control" role="radiogroup" :aria-label="label">
     <label
-      v-for="option in themeOptions"
+      v-for="option in options"
       :key="option.id"
-      class="theme-option"
+      class="segmented-option"
       :class="{ active: option.id === props.value }"
     >
       <input
         class="sr-only"
         type="radio"
-        name="theme-mode"
+        :name="name"
         :value="option.id"
         :checked="option.id === props.value"
-        @change="handleThemeChange(option.id)"
+        @change="emit('update:value', option.id)"
       />
-      <Icon :icon="option.icon" height="15" />
+      <Icon v-if="option.icon" :icon="option.icon" height="15" />
       <span>{{ option.name }}</span>
     </label>
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script setup lang="ts" generic="T extends string | number">
+import { useId } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import type { ThemeMode } from '../../lib/theme/theme-controller'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{ value: ThemeMode }>()
+const props = defineProps<{
+  value: T
+  label: string
+  options: { id: T; name: string; icon?: string }[]
+}>()
 
-const emit = defineEmits<{ (e: 'update:value', value: ThemeMode): void }>()
+const emit = defineEmits<{ (e: 'update:value', value: T): void }>()
 
-const { t } = useI18n()
-
-const themeOptions = computed(() => [
-  { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
-  { id: 'light', name: t('theme.light'), icon: 'mdi:white-balance-sunny' },
-  { id: 'dark', name: t('theme.dark'), icon: 'mdi:weather-night' },
-])
-
-function handleThemeChange(value: number | string | undefined) {
-  if (value !== 'auto' && value !== 'light' && value !== 'dark') {
-    return
-  }
-
-  emit('update:value', value)
-}
+// Radio groups need a unique name for arrow-key navigation within the group.
+const name = useId()
 </script>
 
 <style scoped>
-.theme-switcher {
+.segmented-control {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 2px;
   padding: 3px;
   border-radius: var(--radius-md);
   background-color: var(--app-surface-sunken);
 }
 
-.theme-option {
+.segmented-option {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -78,20 +64,18 @@ function handleThemeChange(value: number | string | undefined) {
     box-shadow var(--transition-fast);
 }
 
-.theme-option:hover {
+.segmented-option:hover {
   color: var(--color-base-content);
 }
 
-.theme-option.active {
+.segmented-option.active {
   background-color: var(--app-surface);
   color: var(--color-base-content);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.08),
-    0 0 0 1px var(--app-border-subtle);
+  box-shadow: var(--app-shadow-segment);
 }
 
-.theme-option:has(:focus-visible) {
-  outline: 2px solid var(--color-primary);
+.segmented-option:has(:focus-visible) {
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
   outline-offset: 1px;
 }
 </style>

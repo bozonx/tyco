@@ -1,58 +1,49 @@
-export type ThemeName = 'light' | 'dark'
-export type ThemeMode = 'auto' | ThemeName
+import {
+  DEFAULT_APPEARANCE,
+  resolveAppearance,
+  type AppearanceSettings,
+  type ResolvedAppearance,
+  type SystemAppearance,
+} from '@tyco/shared/appearance'
 
 export interface ThemeRuntime {
-  getStoredTheme: () => ThemeMode | null
-  setStoredTheme: (theme: ThemeMode) => void
-  clearStoredTheme: () => void
-  applyTheme: (theme: ThemeName, mode: ThemeMode) => void
-  getSystemTheme: () => ThemeName
-  onSystemThemeChange: (handler: (theme: ThemeName) => void) => () => void
+  getStoredAppearance: () => AppearanceSettings | null
+  setStoredAppearance: (settings: AppearanceSettings) => void
+  getSystemAppearance: () => SystemAppearance
+  onSystemAppearanceChange: (handler: () => void) => () => void
+  applyAppearance: (appearance: ResolvedAppearance) => void
 }
 
 export function createThemeController(runtime: ThemeRuntime) {
-  const resolveTheme = (mode: ThemeMode): ThemeName => {
-    return mode === 'auto' ? runtime.getSystemTheme() : mode
+  const resolveInitialSettings = (): AppearanceSettings => {
+    return runtime.getStoredAppearance() ?? { ...DEFAULT_APPEARANCE }
   }
 
-  const resolveInitialThemeMode = (): ThemeMode => {
-    return runtime.getStoredTheme() || 'auto'
+  const resolve = (settings: AppearanceSettings): ResolvedAppearance => {
+    return resolveAppearance(settings, runtime.getSystemAppearance())
   }
 
-  const applyTheme = (mode: ThemeMode): ThemeName => {
-    const resolvedTheme = resolveTheme(mode)
-    runtime.applyTheme(resolvedTheme, mode)
-    return resolvedTheme
+  const applySettings = (settings: AppearanceSettings): ResolvedAppearance => {
+    const resolved = resolve(settings)
+    runtime.applyAppearance(resolved)
+    return resolved
   }
 
-  const setThemeMode = (mode: ThemeMode): ThemeName => {
-    if (mode === 'auto') {
-      runtime.clearStoredTheme()
-    } else {
-      runtime.setStoredTheme(mode)
-    }
-
-    return applyTheme(mode)
+  /** Persists settings for the pre-render bootstrap and applies them */
+  const setSettings = (settings: AppearanceSettings): ResolvedAppearance => {
+    runtime.setStoredAppearance(settings)
+    return applySettings(settings)
   }
 
-  const handleSystemThemeChange = (mode: ThemeMode): ThemeName | null => {
-    if (mode !== 'auto') {
-      return null
-    }
-
-    return applyTheme(mode)
-  }
-
-  const onSystemThemeChange = (handler: (theme: ThemeName) => void) => {
-    return runtime.onSystemThemeChange(handler)
+  const onSystemAppearanceChange = (handler: () => void) => {
+    return runtime.onSystemAppearanceChange(handler)
   }
 
   return {
-    resolveInitialThemeMode,
-    resolveTheme,
-    applyTheme,
-    setThemeMode,
-    handleSystemThemeChange,
-    onSystemThemeChange,
+    resolveInitialSettings,
+    resolve,
+    applySettings,
+    setSettings,
+    onSystemAppearanceChange,
   }
 }

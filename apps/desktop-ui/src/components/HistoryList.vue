@@ -39,6 +39,13 @@
             :title="textTitle"
             @click="emit('text-click', item)"
           >
+            <span v-if="item.meta || item.date" class="history-meta">
+              <template v-if="item.meta">
+                <Icon :icon="item.meta.icon" height="14" />
+                <span>{{ item.meta.label }}</span>
+              </template>
+              <span v-if="item.date" class="history-date">{{ item.date }}</span>
+            </span>
             <span v-if="item.value" class="history-text-value">{{
               truncate(item.value, 400)
             }}</span>
@@ -83,15 +90,23 @@ import { Icon } from '@iconify/vue'
 
 const { t } = useI18n()
 
+export interface HistoryListItem {
+  id: string | number
+  value: string
+  /** Why the entry is in the history, shown above the text. */
+  meta?: { icon: string; label: string }
+  date?: string
+}
+
 const emit = defineEmits<{
-  (e: 'remove-item', item: { id: string | number; value: string }): void
+  (e: 'remove-item', item: HistoryListItem): void
   (e: 'clear-history'): void
-  (e: 'text-click', item: { id: string | number; value: string }): void
+  (e: 'text-click', item: HistoryListItem): void
 }>()
 
 const props = withDefaults(
   defineProps<{
-    items: { id: string | number; value: string }[]
+    items: HistoryListItem[]
     searchQuery?: string
     textTitle?: string
     openIcon?: string
@@ -177,6 +192,20 @@ const filtered = computed(() => {
 .history-text:focus-visible {
   outline-offset: -2px;
   border-radius: var(--radius-sm);
+}
+
+.history-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+.history-date {
+  margin-left: auto;
+  color: var(--app-text-faint);
 }
 
 .history-text-value {

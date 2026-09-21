@@ -185,6 +185,9 @@ const finish = async () => {
     let correctedText: string | undefined
 
     if (shouldFormatRecognizedText()) {
+      // the raw transcript is the only copy of what was said: the LLM may
+      // distort it, and it cannot be dictated the same way twice
+      await historyStore.saveSource(recognizedText.value, 'voice-correction')
       menuModalsStore.setPendingModal({ correction: true })
 
       try {
@@ -193,7 +196,6 @@ const finish = async () => {
         if (formattedText.trim()) {
           resultText = formattedText
           correctedText = formattedText
-          await historyStore.saveTransformHistory(formattedText)
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)

@@ -16,7 +16,11 @@
         <div v-show="currentTab === 0">
           <SettingsSection :title="t('settings.sectionAppearance')">
             <FieldRow :label="t('settings.theme')">
-              <ThemeSwitcher v-model:value="userConfig.theme" />
+              <SegmentedControl
+                v-model:value="userConfig.theme"
+                :label="t('settings.theme')"
+                :options="themeOptions"
+              />
             </FieldRow>
             <FieldRow :label="t('settings.appLanguage')">
               <div class="flex items-center gap-2 w-full">
@@ -44,6 +48,36 @@
             </FieldRow>
           </SettingsSection>
 
+          <SettingsSection :title="t('settings.sectionAccessibility')">
+            <FieldRow
+              :label="t('settings.contrast')"
+              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+            >
+              <SegmentedControl
+                v-model:value="userConfig.contrast"
+                :label="t('settings.contrast')"
+                :options="contrastOptions"
+              />
+            </FieldRow>
+            <FieldRow
+              :label="t('settings.motion')"
+              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+            >
+              <SegmentedControl
+                v-model:value="userConfig.motion"
+                :label="t('settings.motion')"
+                :options="motionOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.uiScale')">
+              <FieldSelect
+                :value="userConfig.uiScale"
+                :options="uiScaleOptions"
+                @update:value="updateUiScale"
+              />
+            </FieldRow>
+          </SettingsSection>
+
           <SettingsSection :title="t('settings.sectionEditor')">
             <FieldRow :label="t('settings.pasteMode')">
               <FieldSelect
@@ -67,12 +101,6 @@
               <FieldInput
                 type="number"
                 v-model:value="userConfig.editorHistoryMaxItems"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.transformHistoryMaxItems')">
-              <FieldInput
-                type="number"
-                v-model:value="userConfig.transformHistoryMaxItems"
               />
             </FieldRow>
             <FieldRow :label="t('settings.chatHistoryMaxItems')">
@@ -342,7 +370,16 @@ import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import { Icon } from '@iconify/vue'
-import { DEFAULT_USER_CONFIG, type StorageInfo } from '@tyco/shared'
+import {
+  type ContrastMode,
+  DEFAULT_USER_CONFIG,
+  type MotionMode,
+  type StorageInfo,
+  type ThemeMode,
+  UI_SCALES,
+  isUiScale,
+  normalizeAppearance,
+} from '@tyco/shared'
 
 const ipcStore = useIpcStore()
 const themeStore = useThemeStore()
@@ -381,6 +418,34 @@ const sttProviderTabs = computed(() => [
   { text: 'OpenAI-compatible', key: 'openai-compatible' },
   { text: 'WebSocket', key: 'websocket' },
 ])
+
+const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
+  () => [
+    { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
+    { id: 'light', name: t('theme.light'), icon: 'mdi:white-balance-sunny' },
+    { id: 'dark', name: t('theme.dark'), icon: 'mdi:weather-night' },
+    { id: 'e-ink', name: t('theme.eInk'), icon: 'mdi:book-open-page-variant' },
+  ]
+)
+
+const contrastOptions = computed<{ id: ContrastMode; name: string }[]>(() => [
+  { id: 'auto', name: t('settings.contrastAuto') },
+  { id: 'normal', name: t('settings.contrastNormal') },
+  { id: 'more', name: t('settings.contrastMore') },
+])
+
+const motionOptions = computed<{ id: MotionMode; name: string }[]>(() => [
+  { id: 'auto', name: t('settings.motionAuto') },
+  { id: 'normal', name: t('settings.motionNormal') },
+  { id: 'reduce', name: t('settings.motionReduce') },
+])
+
+const uiScaleOptions = UI_SCALES.map((scale) => ({
+  id: scale,
+  name: `${scale}%`,
+}))
+
+const isEInkTheme = computed(() => userConfig.value.theme === 'e-ink')
 
 const windowInsertionTabs = computed(() => [
   { text: 'xdotool', key: 'xdotool' },
@@ -465,6 +530,7 @@ function createPreparedUserConfig(config: unknown) {
   const nextConfig = cloneUserConfig(config)
 
   ensurePluginDefaults(nextConfig)
+  normalizeAppearanceConfig(nextConfig)
   normalizeLanguageConfig(nextConfig)
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
@@ -505,8 +571,16 @@ function ensurePluginDefaults(config: Record<string, any>) {
   }
 }
 
+// configs created before the accessibility settings come without these keys;
+// the theme falls back to what the pre-render bootstrap applied
+function normalizeAppearanceConfig(config: Record<string, any>) {
+  Object.assign(
+    config,
+    normalizeAppearance({ ...themeStore.settings, ...config })
+  )
+}
+
 function normalizeLanguageConfig(config: Record<string, any>) {
-  config.theme = config.theme || themeStore.themeMode
   config.appLanguage = config.appLanguage || AUTO_LANGUAGE_VALUE
   config.userLanguage = config.userLanguage || AUTO_LANGUAGE_VALUE
   config.toTranslateLanguages = (config.toTranslateLanguages || []).map(
@@ -863,6 +937,15 @@ const updateWindowInsertionMethod = (value: string | number) => {
   }
 
   userConfig.value.windowInsertion.method = value
+}
+
+// <select> reports option values as strings
+const updateUiScale = (value: string | number | undefined) => {
+  const scale = Number(value)
+
+  if (isUiScale(scale)) {
+    userConfig.value.uiScale = scale
+  }
 }
 
 watch(

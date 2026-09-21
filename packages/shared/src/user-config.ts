@@ -1,3 +1,5 @@
+import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
+
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
 const BASE_TASK = `
@@ -74,7 +76,10 @@ export type EditorSyntax = 'none' | 'markdown'
 
 export interface UserConfig {
   hotkeys: Record<string, string>
-  theme: 'auto' | 'light' | 'dark'
+  theme: ThemeMode
+  contrast: ContrastMode
+  motion: MotionMode
+  uiScale: UiScale
   xdotoolBin: string
   windowInsertion: {
     method: 'xdotool' | 'ydotool'
@@ -88,7 +93,6 @@ export interface UserConfig {
   editorSyntax: EditorSyntax
   showBubbleMenu: boolean
   editorHistoryMaxItems: number
-  transformHistoryMaxItems: number
   chatHistoryMaxItems: number
   llmModels: LlmModel[]
   sttModels: SttModel[]
@@ -136,6 +140,9 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     config: 'Ctrl+Alt+Comma',
   },
   theme: 'auto',
+  contrast: 'auto',
+  motion: 'auto',
+  uiScale: 100,
   xdotoolBin: '/usr/bin/xdotool',
   windowInsertion: {
     method: 'xdotool',
@@ -148,8 +155,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   pasteMode: 'markdown',
   editorSyntax: 'markdown',
   showBubbleMenu: true,
-  editorHistoryMaxItems: 50,
-  transformHistoryMaxItems: 50,
+  editorHistoryMaxItems: 100,
   chatHistoryMaxItems: 50,
   llmModels: [
     {

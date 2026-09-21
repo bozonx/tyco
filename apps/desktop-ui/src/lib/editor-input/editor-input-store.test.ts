@@ -30,6 +30,42 @@ describe('createEditorInputStoreModel', () => {
     expect(store.lastEditSource.value).toBe('ai')
   })
 
+  it('applies a result to the selection it was made from', () => {
+    const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
+    const store = createEditorInputStoreModel(historyApi)
+
+    store.setValue('Intro. hello world \nOutro.')
+    store.setSelection(' hello world \n', 6, 20)
+
+    store.applyResult('Hola mundo\n', 'hello world')
+
+    expect(store.value.value).toBe('Intro. Hola mundo \nOutro.')
+    expect(store.lastEditSource.value).toBe('ai')
+  })
+
+  it('replaces the whole document when there is no selection', () => {
+    const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
+    const store = createEditorInputStoreModel(historyApi)
+
+    store.setValue('hello world')
+
+    store.applyResult('Hola mundo', 'hello world')
+
+    expect(store.value.value).toBe('Hola mundo')
+  })
+
+  it('ignores a selection the result was not made from', () => {
+    const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
+    const store = createEditorInputStoreModel(historyApi)
+
+    store.setValue('Intro. hello world')
+    store.setSelection('Intro.', 0, 6)
+
+    store.applyResult('Texto externo', 'external text')
+
+    expect(store.value.value).toBe('Texto externo')
+  })
+
   it('clears text and notifies history clear', () => {
     const historyApi = { saveMainInputTmp: vi.fn(), clearMainInputTmp: vi.fn() }
     const store = createEditorInputStoreModel(historyApi)

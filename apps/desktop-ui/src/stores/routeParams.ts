@@ -19,10 +19,19 @@ export const useRouteParams = defineStore('routeParams', () => {
     params.value = value
   }
 
-  function toEditor(text?: string) {
+  /**
+   * @param sourceText What `text` was transformed from; lets the result replace
+   *   only the editor selection the transformation was started on
+   */
+  function toEditor(text?: string, sourceText?: string) {
     if (typeof text !== 'undefined') {
       params.value = { text }
-      editorInputStore.setValue(text)
+
+      if (typeof sourceText === 'undefined') {
+        editorInputStore.setValue(text)
+      } else {
+        editorInputStore.applyResult(text, sourceText)
+      }
     }
     menuModalsStore.closeAll()
     void appNavigation.goToEditor()

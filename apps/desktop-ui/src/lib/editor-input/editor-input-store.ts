@@ -56,6 +56,31 @@ export function createEditorInputStoreModel(
     void historyApi.saveMainInputTmp(newValue)
   }
 
+  /**
+   * Puts the result of a transformation of `sourceText` into the editor. When
+   * the source is the current selection (the action was started on it), only
+   * the selection is replaced and its surrounding whitespace is kept; otherwise
+   * the source came from elsewhere and the result replaces the whole document
+   */
+  const applyResult = (
+    result: string,
+    sourceText: string,
+    source: EditSource = 'ai'
+  ): void => {
+    const selected = selectedText.value
+    const trimmedSource = sourceText.trim()
+
+    if (!selected.trim() || selected.trim() !== trimmedSource) {
+      setValue(result, source)
+      return
+    }
+
+    const leading = selected.match(/^\s*/)?.[0] ?? ''
+    const trailing = selected.match(/\s*$/)?.[0] ?? ''
+
+    replaceSelection(leading + result.trim() + trailing, source)
+  }
+
   const clear = (): void => {
     lastEditSource.value = 'plain'
     value.value = ''
@@ -92,6 +117,7 @@ export function createEditorInputStoreModel(
     selectAll,
     setSelection,
     replaceSelection,
+    applyResult,
     clear,
   }
 }
