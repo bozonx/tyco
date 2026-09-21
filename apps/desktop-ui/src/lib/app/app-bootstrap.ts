@@ -1,11 +1,15 @@
-import { DESKTOP_EVENTS, type InitParams } from '@tyco/shared'
+import {
+  DESKTOP_EVENTS,
+  type CapturedContext,
+  type InitParams,
+} from '@tyco/shared'
 
 import { GlobalEvents } from '../../composables/useGlobalEvents'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
 export interface AppBootstrapDeps {
   loadInitialParams: () => Promise<InitParams>
-  setParams: (params: InitParams) => void
+  setParams: (params: Partial<InitParams>) => void
   closeAllModals: () => void
   navigateTo: (path: AppRoutePath) => Promise<void>
   listen: (
@@ -22,6 +26,7 @@ export interface AppBootstrapDeps {
 
 export function createAppBootstrap(deps: AppBootstrapDeps) {
   let removeParamsListener: (() => void) | undefined
+  let removeContextListener: (() => void) | undefined
   let removeVoiceListener: (() => void) | undefined
   let removeWindowKeyupListener: (() => void) | undefined
   let lastAppliedMode: InitParams['mode'] | undefined
@@ -61,6 +66,13 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
       }
     )
 
+    removeContextListener = await deps.listen(
+      DESKTOP_EVENTS.CONTEXT_CAPTURED,
+      (context) => {
+        deps.setParams(context as CapturedContext)
+      }
+    )
+
     removeVoiceListener = await deps.listen(
       DESKTOP_EVENTS.VOICE_TEXT,
       (data) => {
@@ -76,6 +88,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
   const stop = () => {
     removeWindowKeyupListener?.()
     removeParamsListener?.()
+    removeContextListener?.()
     removeVoiceListener?.()
   }
 

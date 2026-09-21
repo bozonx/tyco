@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::{thread, time::Duration};
 
 pub use super::activation::{Activation, ActivationIntent, ActivationSource, StartMode};
@@ -8,10 +8,12 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{App, AppHandle, Emitter, Manager, WindowEvent};
 
 use crate::errors::AppError;
+use crate::services::foreground_context::{ForegroundContext, SystemForegroundContext};
 use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
+pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const VOICE_TEXT_EVENT: &str = "app://voice-text";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_QUIT_ID: &str = "quit";
@@ -38,9 +40,26 @@ pub fn emit_voice_text(app: &AppHandle, text: String) -> Result<(), AppError> {
     Ok(())
 }
 
+fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Result<(), AppError> {
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        window
+            .emit(
+                CONTEXT_CAPTURED_EVENT,
+                serde_json::json!({ "selectedText": selected_text }),
+            )
+            .map_err(|error| AppError::Message(error.to_string()))?;
+    }
+    Ok(())
+}
+
 #[derive(Default)]
 struct Warmup {
     cancelled: AtomicBool,
+}
+
+#[derive(Default)]
+struct ContextCapture {
+    generation: AtomicU64,
 }
 
 impl Warmup {
@@ -78,11 +97,50 @@ fn on_main_thread(
         .map_err(|error| AppError::Message(error.to_string()))?
 }
 
-pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
+    let context = SystemForegroundContext::detect();
+    let source = if activation.window_id.is_none() {
+        context.capture_source()
+    } else {
+        activation.window_id.clone()
+    };
+    if activation.window_id.is_none() {
+        activation.window_id.clone_from(&source);
+    }
+    let capture_selection = activation.selected_text.is_none();
+    let generation = app
+        .state::<ContextCapture>()
+        .generation
+        .fetch_add(1, Ordering::SeqCst)
+        + 1;
+
     on_main_thread(app, move |app| {
         cancel_warmup(app);
         activate_on_main_thread(app, activation)
-    })
+    })?;
+
+    if capture_selection {
+        let handle = app.clone();
+        thread::spawn(move || {
+            let selected_text = tauri::async_runtime::block_on(context.capture_selection(source));
+            if let Err(error) = on_main_thread(&handle, move |app| {
+                if app
+                    .state::<ContextCapture>()
+                    .generation
+                    .load(Ordering::SeqCst)
+                    != generation
+                {
+                    return Ok(());
+                }
+                let state = app.state::<AppState>();
+                state.update_params(|params| params.selected_text.clone_from(&selected_text));
+                emit_captured_context(app, selected_text)
+            }) {
+                log::warn!("Could not publish captured foreground context: {error}");
+            }
+        });
+    }
+    Ok(())
 }
 
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
@@ -181,6 +239,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(Warmup::default());
+    app.manage(ContextCapture::default());
     setup_tray(app)?;
     schedule_warmup(app.handle())?;
     Ok(())

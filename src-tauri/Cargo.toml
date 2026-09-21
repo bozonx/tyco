@@ -6,6 +6,10 @@ authors = ["Kozyrin Ivan"]
 edition = "2021"
 rust-version = "1.98"
 
+[workspace]
+members = [".", "crates/activation-protocol", "tyco-ctl"]
+resolver = "2"
+
 [lib]
 # `staticlib`/`cdylib` keep the mobile targets buildable; `rlib` lets integration
 # tests in `tests/` link against the crate.
@@ -28,6 +32,7 @@ tauri-plugin-single-instance = "2.4.5"
 thiserror = "1"
 tokio = { version = "1", features = ["macros", "rt", "sync", "time"] }
 tokio-tungstenite = "0.24"
+tyco-activation-protocol = { path = "crates/activation-protocol" }
 zbus = "4"
 
 [profile.release]

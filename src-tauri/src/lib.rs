@@ -79,6 +79,7 @@ pub fn run() {
             }
             #[cfg(target_os = "linux")]
             dbus::spawn_dbus_server(app.handle().clone());
+            services::activation_socket::spawn_server(app.handle().clone());
             Ok(())
         })
         .on_window_event(|window, event| {

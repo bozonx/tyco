@@ -63,9 +63,13 @@ dev server URL and the CSP entries that allow talking to it. Running
 
 ## Linux integration
 
-The app exposes a D-Bus interface (`org.tyco.Service`, `/org/tyco/Object`,
-`org.tyco.Interface`). `run-ui.sh` shows how to trigger it from a hotkey:
+Build the lightweight activation client and use it from a desktop environment
+or window-manager hotkey:
 
 ```bash
-./run-ui.sh editor
+cargo build --release --manifest-path src-tauri/Cargo.toml -p tyco-ctl
+./src-tauri/target/release/tyco-ctl activate editor
 ```
+
+The app also keeps the Linux D-Bus compatibility interface
+(`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).

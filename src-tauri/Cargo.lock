@@ -4437,7 +4437,23 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite",
+ "tyco-activation-protocol",
  "zbus 4.4.0",
+]
+
+[[package]]
+name = "tyco-activation-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "tyco-ctl"
+version = "0.1.0"
+dependencies = [
+ "tyco-activation-protocol",
 ]
 
 [[package]]

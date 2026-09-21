@@ -67,10 +67,10 @@ describe('app-bootstrap', () => {
 
     expect(deps.initPlugins).toHaveBeenCalledOnce()
     expect(deps.addWindowKeyupListener).toHaveBeenCalledOnce()
-    expect(deps.listen).toHaveBeenCalledTimes(2)
+    expect(deps.listen).toHaveBeenCalledTimes(3)
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.WRITE.path)
     expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
-    expect(listeners.size).toBe(2)
+    expect(listeners.size).toBe(3)
   })
 
   it('does not navigate again when params change without mode change', async () => {
@@ -120,6 +120,26 @@ describe('app-bootstrap', () => {
     })
 
     expect(deps.navigateTo).toHaveBeenNthCalledWith(2, APP_ROUTES.WRITE.path)
+  })
+
+  it('merges captured context without navigation or modal side effects', async () => {
+    const { deps, listeners } = createDeps()
+    const bootstrap = createAppBootstrap(deps)
+
+    await bootstrap.start()
+    vi.mocked(deps.setParams).mockClear()
+    vi.mocked(deps.closeAllModals).mockClear()
+    vi.mocked(deps.navigateTo).mockClear()
+
+    await listeners.get('app://context-captured')?.({
+      selectedText: 'captured text',
+    })
+
+    expect(deps.setParams).toHaveBeenCalledWith({
+      selectedText: 'captured text',
+    })
+    expect(deps.closeAllModals).not.toHaveBeenCalled()
+    expect(deps.navigateTo).not.toHaveBeenCalled()
   })
 
   it('forwards keyup events to global events and nav handler', () => {

@@ -155,7 +155,7 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     return fallback
   }
 
-  const setParams = (incomingData: InitParams) => {
+  const setParams = (incomingData: Partial<InitParams>) => {
     params.value = { ...params.value, ...incomingData }
   }
 

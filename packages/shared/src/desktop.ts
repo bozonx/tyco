@@ -64,6 +64,8 @@ export interface InitParams {
   isWindowShown: boolean
 }
 
+export type CapturedContext = Pick<InitParams, 'selectedText'>
+
 export const DEFAULT_INIT_PARAMS: InitParams = {
   windowId: null,
   selectedText: null,
@@ -77,6 +79,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
 
 export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
+  CONTEXT_CAPTURED: 'app://context-captured',
   VOICE_TEXT: 'app://voice-text',
 } as const
 
