@@ -207,8 +207,6 @@
     "rolesHint": "Un rol define las instrucciones del sistema para el chat.",
     "hotkey": "Tecla rápida",
     "dragToReorder": "Arrastra para reordenar",
-    "moveUp": "Subir",
-    "moveDown": "Bajar",
     "historyLimitHint": "0 — no guardar"
   },
   "editor": {

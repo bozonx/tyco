@@ -1,70 +1,41 @@
 <template>
   <div class="field-items flex flex-col gap-2">
-    <div
-      v-for="(item, index) in localItems"
-      :key="item.id || index"
-      class="item-card group"
-      :class="{
-        'is-dragged': draggedIndex === index,
-        'is-drop-target': dragOverIndex === index && draggedIndex !== index,
-      }"
-      @dragover.prevent="handleDragOver(index)"
-      @dragenter.prevent="handleDragEnter(index)"
-      @dragleave="handleDragLeave(index)"
-      @drop.prevent="handleDrop(index)"
-    >
-      <!-- Drag Handle -->
+    <div ref="listRef" class="flex flex-col gap-2">
       <div
-        class="drag-handle"
-        draggable="true"
-        :title="t('settings.dragToReorder')"
-        @dragstart="handleDragStart(index, $event)"
-        @dragend="handleDragEnd"
+        v-for="(item, index) in localItems"
+        :key="item.id || index"
+        data-sortable-item
+        class="item-card group"
+        :class="{
+          'is-sorting': isSorting,
+          'is-dragged': draggedIndex === index,
+        }"
+        :style="itemStyle(index)"
       >
-        <Icon icon="mdi:drag-vertical" width="18" height="18" />
-      </div>
+        <div
+          class="drag-handle"
+          :title="t('settings.dragToReorder')"
+          @pointerdown="startDrag(index, $event)"
+        >
+          <Icon icon="mdi:drag-vertical" width="18" height="18" />
+        </div>
 
-      <!-- Item Content Slot -->
-      <div class="flex-1 min-w-0">
-        <slot name="item" :item="item" :index="index" />
-      </div>
+        <div class="flex-1 min-w-0">
+          <slot name="item" :item="item" :index="index" />
+        </div>
 
-      <!-- Controls: Up / Down / Remove -->
-      <div class="item-controls">
-        <div class="flex items-center">
+        <div class="item-controls">
           <Button
-            class="control-btn"
+            class="delete-btn"
             xs
             ghost
             square
-            :disabled="index === 0"
-            :title="t('settings.moveUp')"
-            @click="moveItemUp(index)"
+            :title="t('common.delete')"
+            @click="removeItem(index)"
           >
-            <Icon icon="mdi:arrow-up" width="15" height="15" />
-          </Button>
-          <Button
-            class="control-btn"
-            xs
-            ghost
-            square
-            :disabled="index === localItems.length - 1"
-            :title="t('settings.moveDown')"
-            @click="moveItemDown(index)"
-          >
-            <Icon icon="mdi:arrow-down" width="15" height="15" />
+            <Icon icon="mdi:trash-can-outline" width="16" height="16" />
           </Button>
         </div>
-        <Button
-          class="delete-btn"
-          xs
-          ghost
-          square
-          :title="t('common.delete')"
-          @click="removeItem(index)"
-        >
-          <Icon icon="mdi:trash-can-outline" width="16" height="16" />
-        </Button>
       </div>
     </div>
 
@@ -79,6 +50,8 @@
 import { ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import { useSortableList } from '../../composables/useSortableList'
+import { moveItem } from '../../lib/sortable/sortable-list'
 import Button from './Button.vue'
 import { Icon } from '@iconify/vue'
 
@@ -89,8 +62,7 @@ const emit = defineEmits<{
 }>()
 
 const localItems = ref<Record<string, any>[]>([...props.items])
-const draggedIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
+const listRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
 watch(
@@ -105,6 +77,20 @@ const syncItems = () => {
   emit('update:items', [...localItems.value])
 }
 
+const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
+  listRef,
+  (from, to) => {
+    localItems.value = moveItem(localItems.value, from, to)
+    syncItems()
+  }
+)
+
+const itemStyle = (index: number) => {
+  const offset = itemOffset(index)
+
+  return offset ? { transform: `translateY(${offset}px)` } : undefined
+}
+
 const addItem = () => {
   localItems.value.push({})
   syncItems()
@@ -113,65 +99,6 @@ const addItem = () => {
 const removeItem = (index: number) => {
   localItems.value.splice(index, 1)
   syncItems()
-}
-
-const moveItemUp = (index: number) => {
-  if (index <= 0) return
-  const item = localItems.value.splice(index, 1)[0]
-  localItems.value.splice(index - 1, 0, item)
-  syncItems()
-}
-
-const moveItemDown = (index: number) => {
-  if (index >= localItems.value.length - 1) return
-  const item = localItems.value.splice(index, 1)[0]
-  localItems.value.splice(index + 1, 0, item)
-  syncItems()
-}
-
-const handleDragStart = (index: number, event: DragEvent) => {
-  draggedIndex.value = index
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', String(index))
-  }
-}
-
-const handleDragOver = (index: number) => {
-  if (draggedIndex.value !== null && draggedIndex.value !== index) {
-    dragOverIndex.value = index
-  }
-}
-
-const handleDragEnter = (index: number) => {
-  if (draggedIndex.value !== null && draggedIndex.value !== index) {
-    dragOverIndex.value = index
-  }
-}
-
-const handleDragLeave = (index: number) => {
-  if (dragOverIndex.value === index) {
-    dragOverIndex.value = null
-  }
-}
-
-const handleDrop = (targetIndex: number) => {
-  const sourceIndex = draggedIndex.value
-  draggedIndex.value = null
-  dragOverIndex.value = null
-
-  if (sourceIndex === null || sourceIndex === targetIndex) {
-    return
-  }
-
-  const [movedItem] = localItems.value.splice(sourceIndex, 1)
-  localItems.value.splice(targetIndex, 0, movedItem)
-  syncItems()
-}
-
-const handleDragEnd = () => {
-  draggedIndex.value = null
-  dragOverIndex.value = null
 }
 </script>
 
@@ -195,15 +122,21 @@ const handleDragEnd = () => {
   border-color: var(--app-border-strong);
 }
 
-.item-card.is-dragged {
-  opacity: 0.5;
-  border-style: dashed;
-  border-color: var(--color-primary);
+/* Neighbours glide into place only while a drag is in progress, so the
+   final reorder lands without animating back from the old offsets. */
+.item-card.is-sorting {
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-base);
 }
 
-.item-card.is-drop-target {
+.item-card.is-dragged {
+  position: relative;
+  z-index: 1;
   border-color: var(--color-primary);
-  box-shadow: var(--app-focus-ring);
+  box-shadow: var(--app-shadow-lg);
+  transition: none;
 }
 
 .drag-handle {
@@ -215,15 +148,13 @@ const handleDragEnd = () => {
   border-radius: var(--radius-sm);
   color: var(--app-text-faint);
   cursor: grab;
+  /* Touch and pen drags must not scroll the page instead */
+  touch-action: none;
   transition: color var(--transition-fast);
 }
 
 .drag-handle:hover {
   color: var(--color-base-content);
-}
-
-.drag-handle:active {
-  cursor: grabbing;
 }
 
 .item-controls {
@@ -241,7 +172,6 @@ const handleDragEnd = () => {
   opacity: 1;
 }
 
-.control-btn,
 .delete-btn {
   color: var(--app-text-muted);
 }

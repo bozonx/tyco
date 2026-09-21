@@ -207,8 +207,6 @@
     "rolesHint": "A role sets the system instructions for the chat.",
     "hotkey": "Hotkey",
     "dragToReorder": "Drag to reorder",
-    "moveUp": "Move up",
-    "moveDown": "Move down",
     "historyLimitHint": "0 — do not save"
   },
   "editor": {

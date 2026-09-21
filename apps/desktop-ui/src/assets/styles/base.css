@@ -36,6 +36,13 @@
     user-select: text;
   }
 
+  /* Set by useSortableList while a list item is being dragged */
+  body.is-sorting,
+  body.is-sorting * {
+    cursor: grabbing !important;
+    user-select: none;
+  }
+
   /* ── scrollbars ──────────────────────────── */
 
   ::-webkit-scrollbar {

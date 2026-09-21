@@ -49,48 +49,88 @@ describe('FieldItems.vue', () => {
     expect(wrapper.emitted('update:items')![0][0]).toEqual([{ name: 'Item 2' }])
   })
 
-  it('handles move up and down', async () => {
-    const items = [{ name: 'First' }, { name: 'Second' }]
+  it('has no manual move buttons', () => {
     const wrapper = mount(FieldItems, {
-      props: { items },
+      props: { items: [{ name: 'First' }, { name: 'Second' }] },
       global: { stubs: { Icon: true } },
     })
 
-    const moveDownBtns = wrapper.findAll('.control-btn:nth-child(2)')
-    expect(moveDownBtns).toHaveLength(2)
-    await moveDownBtns[0].trigger('click')
-
-    expect(wrapper.emitted('update:items')).toBeTruthy()
-    expect(wrapper.emitted('update:items')![0][0]).toEqual([
-      { name: 'Second' },
-      { name: 'First' },
-    ])
+    expect(wrapper.findAll('.control-btn')).toHaveLength(0)
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(2)
   })
 
-  it('handles drag and drop reordering', async () => {
+  it('reorders items by dragging the handle', async () => {
     const items = [{ name: 'Alpha' }, { name: 'Beta' }, { name: 'Gamma' }]
     const wrapper = mount(FieldItems, {
       props: { items },
+      attachTo: document.body,
       global: { stubs: { Icon: true } },
     })
+    mockItemRects(wrapper.findAll('.item-card'))
 
+    dispatchPointer('pointerdown', 20, wrapper.find('.drag-handle').element)
+    await wrapper.vm.$nextTick()
+    expect(document.body.classList.contains('is-sorting')).toBe(true)
+
+    dispatchPointer('pointermove', 125)
+    await wrapper.vm.$nextTick()
     const cards = wrapper.findAll('.item-card')
-    const handles = wrapper.findAll('.drag-handle')
+    expect(cards[0].classes()).toContain('is-dragged')
+    expect(cards[0].attributes('style')).toContain('translateY(105px)')
+    expect(cards[1].attributes('style')).toContain('translateY(-48px)')
 
-    const dataTransfer = {
-      effectAllowed: '',
-      setData: vi.fn(),
-      getData: vi.fn(),
-    }
+    dispatchPointer('pointerup', 125)
+    await wrapper.vm.$nextTick()
 
-    await handles[0].trigger('dragstart', { dataTransfer })
-    await cards[2].trigger('drop')
-
-    expect(wrapper.emitted('update:items')).toBeTruthy()
+    expect(document.body.classList.contains('is-sorting')).toBe(false)
     expect(wrapper.emitted('update:items')![0][0]).toEqual([
       { name: 'Beta' },
       { name: 'Gamma' },
       { name: 'Alpha' },
     ])
+    wrapper.unmount()
+  })
+
+  it('cancels dragging on Escape', async () => {
+    const wrapper = mount(FieldItems, {
+      props: { items: [{ name: 'Alpha' }, { name: 'Beta' }] },
+      attachTo: document.body,
+      global: { stubs: { Icon: true } },
+    })
+    mockItemRects(wrapper.findAll('.item-card'))
+
+    dispatchPointer('pointerdown', 20, wrapper.find('.drag-handle').element)
+    await wrapper.vm.$nextTick()
+    dispatchPointer('pointermove', 120)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    dispatchPointer('pointerup', 120)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('update:items')).toBeFalsy()
+    expect(wrapper.findAll('.item-card')[0].attributes('style')).toBeUndefined()
+    wrapper.unmount()
   })
 })
+
+// Three 40px cards spaced by 8px, as laid out by the real stylesheet.
+function mockItemRects(cards: { element: Element }[]) {
+  cards.forEach(({ element }, index) => {
+    const top = index * 48
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+      top,
+      bottom: top + 40,
+      height: 40,
+    } as DOMRect)
+  })
+}
+
+// jsdom has no PointerEvent; a MouseEvent with a pointerId stands in for it.
+function dispatchPointer(
+  type: string,
+  clientY: number,
+  target: EventTarget = window
+) {
+  const event = new MouseEvent(type, { clientY, bubbles: true })
+  Object.defineProperty(event, 'pointerId', { value: 1 })
+  target.dispatchEvent(event)
+}

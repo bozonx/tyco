@@ -207,8 +207,6 @@
     "rolesHint": "Rol, sohbet için sistem talimatlarını belirler.",
     "hotkey": "Kısayol tuşu",
     "dragToReorder": "Sıralamak için sürükleyin",
-    "moveUp": "Yukarı taşı",
-    "moveDown": "Aşağı taşı",
     "historyLimitHint": "0 — kaydetme"
   },
   "editor": {
