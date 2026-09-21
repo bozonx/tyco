@@ -47,11 +47,10 @@ export interface LlmModel {
   id: string
   name?: string
   model: string
-  provider?: 'browser-local' | 'ollama' | 'openai-compatible' | (string & {})
+  provider: 'openai-compatible'
   description?: string
   baseUrl?: string
   apiKey?: string
-  localModel?: string
   temperature?: number
   maxTokens?: number
   tags?: ModelTag[]
@@ -59,14 +58,12 @@ export interface LlmModel {
 
 export interface SttModel {
   id: string
-  model: 'vosk' | 'whisper-local' | (string & {})
-  provider?: 'vosk' | 'whisper-local' | (string & {})
+  model: string
+  provider: 'openai-compatible' | 'websocket'
   description?: string
   formatWithLlm?: boolean
-  restorePunctuation?: boolean
   baseUrl?: string
   apiKey?: string
-  localModel?: string
 }
 
 /** Что делать при вставке HTML из буфера обмена */
@@ -145,44 +142,45 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   chatHistoryMaxItems: 50,
   llmModels: [
     {
-      id: 'browser-llm-local-default',
-      name: 'Local browser model',
-      model: 'browser-local',
-      provider: 'browser-local',
-      description: 'Browser local LLM via Transformers.js',
-      localModel: 'HuggingFaceTB/SmolLM2-360M-Instruct',
+      id: 'openai-compatible-default',
+      name: 'OpenAI-compatible model',
+      model: 'qwen2.5:7b',
+      provider: 'openai-compatible',
+      description: 'OpenAI-compatible LLM endpoint',
+      baseUrl: 'http://localhost:11434/v1',
+      apiKey: '',
       temperature: 0.2,
       maxTokens: 256,
     },
   ],
   sttModels: [
     {
-      id: 'browser-whisper-local',
-      model: 'whisper-local',
-      provider: 'whisper-local',
-      description: 'Browser Whisper via Transformers.js',
+      id: 'openai-compatible-stt',
+      model: 'whisper-1',
+      provider: 'openai-compatible',
+      description: 'OpenAI-compatible transcription endpoint',
       formatWithLlm: false,
-      restorePunctuation: true,
-      localModel: 'Xenova/whisper-tiny',
+      baseUrl: 'http://localhost:8000/v1',
+      apiKey: '',
     },
     {
-      id: 'system-vosk',
-      model: 'vosk',
-      provider: 'vosk',
-      description: 'Системный Vosk WebSocket сервер',
+      id: 'websocket-stt',
+      model: 'whisper',
+      provider: 'websocket',
+      description: 'Streaming STT WebSocket endpoint',
       formatWithLlm: true,
       baseUrl: 'ws://localhost:2700',
     },
   ],
   ttsModels: [],
   aiModelUsage: {
-    stt: 'system-vosk',
+    stt: 'openai-compatible-stt',
     tts: '',
-    translate: 'browser-llm-local-default',
-    voiceCorrection: 'browser-llm-local-default',
-    correction: 'browser-llm-local-default',
-    aiTasks: 'browser-llm-local-default',
-    chat: 'browser-llm-local-default',
+    translate: 'openai-compatible-default',
+    voiceCorrection: 'openai-compatible-default',
+    correction: 'openai-compatible-default',
+    aiTasks: 'openai-compatible-default',
+    chat: 'openai-compatible-default',
   },
   aiRules: {
     base: BASE_TASK,

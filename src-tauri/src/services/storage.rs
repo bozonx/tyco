@@ -49,30 +49,11 @@ pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(dir)
 }
 
-pub fn app_models_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app_data_dir(app)?.join("models");
-    fs::create_dir_all(&dir)?;
-    Ok(dir)
-}
-
-pub fn app_whisper_models_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app_models_dir(app)?.join("whisper");
-    fs::create_dir_all(&dir)?;
-    Ok(dir)
-}
-
-pub fn app_llm_models_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app_models_dir(app)?.join("llm");
-    fs::create_dir_all(&dir)?;
-    Ok(dir)
-}
-
 pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
     let config_dir = app_config_dir(app)?;
     let data_dir = app_data_dir(app)?;
     let history_dir = app_data_sub_dir(app, "history")?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    let models_dir = app_models_dir(app)?;
     let cache_dir = app_cache_dir(app)?;
     let user_config_file = config_dir.join(CONFIG_FILE_NAME);
 
@@ -81,7 +62,6 @@ pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
         data_dir: path_to_string(data_dir),
         history_dir: path_to_string(history_dir),
         chats_dir: path_to_string(chats_dir),
-        models_dir: path_to_string(models_dir),
         cache_dir: path_to_string(cache_dir),
         user_config_file: path_to_string(user_config_file),
     })

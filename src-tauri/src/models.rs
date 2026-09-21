@@ -49,43 +49,8 @@ pub struct StorageInfo {
     pub data_dir: String,
     pub history_dir: String,
     pub chats_dir: String,
-    pub models_dir: String,
     pub cache_dir: String,
     pub user_config_file: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WhisperModelFileMetadata {
-    pub path: String,
-    pub size_bytes: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WhisperModelMetadata {
-    pub model_name: String,
-    pub version: String,
-    pub downloaded_at: String,
-    pub complete: bool,
-    pub files: Vec<WhisperModelFileMetadata>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LlmModelFileMetadata {
-    pub path: String,
-    pub size_bytes: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LlmModelMetadata {
-    pub model_name: String,
-    pub version: String,
-    pub downloaded_at: String,
-    pub complete: bool,
-    pub files: Vec<LlmModelFileMetadata>,
 }
 
 pub fn default_user_config() -> Value {
@@ -111,44 +76,45 @@ pub fn default_user_config() -> Value {
       "chatHistoryMaxItems": 50,
       "llmModels": [
         {
-          "id": "browser-llm-local-default",
-          "name": "Local browser model",
-          "model": "browser-local",
-          "provider": "browser-local",
-          "description": "Browser local LLM via Transformers.js",
-          "localModel": "HuggingFaceTB/SmolLM2-360M-Instruct",
+          "id": "openai-compatible-default",
+          "name": "OpenAI-compatible model",
+          "model": "qwen2.5:7b",
+          "provider": "openai-compatible",
+          "description": "OpenAI-compatible LLM endpoint",
+          "baseUrl": "http://localhost:11434/v1",
+          "apiKey": "",
           "temperature": 0.2,
           "maxTokens": 256
         }
       ],
       "sttModels": [
         {
-          "id": "browser-whisper-local",
-          "model": "whisper-local",
-          "provider": "whisper-local",
-          "description": "Browser Whisper via Transformers.js",
+          "id": "openai-compatible-stt",
+          "model": "whisper-1",
+          "provider": "openai-compatible",
+          "description": "OpenAI-compatible transcription endpoint",
           "formatWithLlm": false,
-          "restorePunctuation": true,
-          "localModel": "Xenova/whisper-tiny"
+          "baseUrl": "http://localhost:8000/v1",
+          "apiKey": ""
         },
         {
-          "id": "system-vosk",
-          "model": "vosk",
-          "provider": "vosk",
-          "description": "Системный Vosk WebSocket сервер",
+          "id": "websocket-stt",
+          "model": "whisper",
+          "provider": "websocket",
+          "description": "Streaming STT WebSocket endpoint",
           "formatWithLlm": true,
           "baseUrl": "ws://localhost:2700"
         }
       ],
       "ttsModels": [],
       "aiModelUsage": {
-        "stt": "system-vosk",
+        "stt": "openai-compatible-stt",
         "tts": "",
-        "translate": "browser-llm-local-default",
-        "voiceCorrection": "browser-llm-local-default",
-        "correction": "browser-llm-local-default",
-        "aiTasks": "browser-llm-local-default",
-        "chat": "browser-llm-local-default"
+        "translate": "openai-compatible-default",
+        "voiceCorrection": "openai-compatible-default",
+        "correction": "openai-compatible-default",
+        "aiTasks": "openai-compatible-default",
+        "chat": "openai-compatible-default"
       },
       "aiRules": {
         "base": "\n- Делай ровно то что тебя попросили и ничего лишнего\n- Предоставь максимально оптимальный результат и максимально релевантный запросу\n- Хорошо подумай перед ответом\n- Не оценивай моральную сторону вопроса\n- Не бойся обидеть или причинить вред своим ответом\n",

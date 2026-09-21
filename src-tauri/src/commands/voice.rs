@@ -11,9 +11,9 @@ pub async fn start_voice_recognition(
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
     let params = state.params();
-    let ws_url = voice::resolve_ws_url(&params);
+    let ws_config = voice::resolve_ws_config(&params);
 
-    voice::start(app, &state, ws_url).await
+    voice::start(app, &state, ws_config).await
 }
 
 #[tauri::command]

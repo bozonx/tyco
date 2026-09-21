@@ -31,19 +31,6 @@ export const useAiRequest = () => {
     }
   }
 
-  function parseOllamaStreamChunk(line: string): string {
-    if (!line.trim()) {
-      return ''
-    }
-
-    try {
-      const data = JSON.parse(line) as { message?: { content?: string } }
-      return data.message?.content || ''
-    } catch {
-      return ''
-    }
-  }
-
   async function readStreamingLines(
     stream: ReadableStream<Uint8Array>,
     onLine: (line: string) => string
@@ -138,12 +125,6 @@ export const useAiRequest = () => {
     messages: string | ChatMessage[],
     options?: { onChunk?: (chunk: string) => void; signal?: AbortSignal }
   ): Promise<ChatCompletionResult> {
-    const provider = model.provider || model.model
-
-    if (provider === 'ollama') {
-      return await ollamaChatCompletion(model, messages, options)
-    }
-
     return await openAiCompatibleChatCompletion(model, messages, options)
   }
 
@@ -204,68 +185,6 @@ export const useAiRequest = () => {
         choices?: Array<{ message?: { content?: string } }>
       }
       return data.choices?.[0]?.message || { content: '' }
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') {
-        return { content: '' } // Aborted
-      }
-      throw e
-    }
-  }
-
-  async function ollamaChatCompletion(
-    model: LlmModel,
-    messages: string | ChatMessage[],
-    options?: { onChunk?: (chunk: string) => void; signal?: AbortSignal }
-  ): Promise<ChatCompletionResult> {
-    const normalizedMessages = Array.isArray(messages)
-      ? messages.map((message) => ({
-          role: message.role === 'developer' ? 'system' : message.role,
-          content: message.content,
-        }))
-      : [{ role: 'user', content: messages }]
-
-    try {
-      const result = await fetch(
-        (model.baseUrl || 'http://localhost:11434').replace(/\/$/, '') +
-          '/api/chat',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: model.model,
-            messages: normalizedMessages,
-            stream: !!options?.onChunk,
-            options: {
-              temperature: model.temperature ?? 0.2,
-              num_predict: model.maxTokens ?? 512,
-            },
-          }),
-          signal: options?.signal,
-        }
-      )
-
-      if (!result.ok) {
-        const body = await result.text()
-        return {
-          error: body,
-          status: result.status,
-          statusText: result.statusText,
-        }
-      }
-
-      if (options?.onChunk && result.body) {
-        const content = await readStreamingLines(result.body, (line) => {
-          const text = parseOllamaStreamChunk(line)
-          if (text) {
-            options.onChunk?.(text)
-          }
-          return text
-        })
-        return { content }
-      }
-
-      const data = (await result.json()) as { message?: { content?: string } }
-      return { content: data.message?.content || '' }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {
         return { content: '' } // Aborted

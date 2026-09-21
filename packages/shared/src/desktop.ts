@@ -42,35 +42,8 @@ export interface StorageInfo {
   dataDir: string
   historyDir: string
   chatsDir: string
-  modelsDir: string
   cacheDir: string
   userConfigFile: string
-}
-
-export interface WhisperModelFileMetadata {
-  path: string
-  sizeBytes: number
-}
-
-export interface WhisperModelMetadata {
-  modelName: string
-  version: string
-  downloadedAt: string
-  complete: boolean
-  files: WhisperModelFileMetadata[]
-}
-
-export interface LlmModelFileMetadata {
-  path: string
-  sizeBytes: number
-}
-
-export interface LlmModelMetadata {
-  modelName: string
-  version: string
-  downloadedAt: string
-  complete: boolean
-  files: LlmModelFileMetadata[]
 }
 
 export interface LocalState {
@@ -135,22 +108,6 @@ export const DESKTOP_COMMANDS = {
   STOP_LOCAL_VOICE_RECORDING: 'stop_local_voice_recording',
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
   PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
-  IS_WHISPER_MODEL_DOWNLOADED: 'is_whisper_model_downloaded',
-  SAVE_WHISPER_MODEL_FILE: 'save_whisper_model_file',
-  SAVE_WHISPER_MODEL_FILE_CHUNK: 'save_whisper_model_file_chunk',
-  COMPLETE_WHISPER_MODEL_DOWNLOAD: 'complete_whisper_model_download',
-  GET_WHISPER_MODEL_METADATA: 'get_whisper_model_metadata',
-  DELETE_WHISPER_MODEL: 'delete_whisper_model',
-  GET_WHISPER_MODEL_PATH: 'get_whisper_model_path',
-  GET_WHISPER_MODEL_FILE_SIZE: 'get_whisper_model_file_size',
-  IS_LLM_MODEL_DOWNLOADED: 'is_llm_model_downloaded',
-  SAVE_LLM_MODEL_FILE: 'save_llm_model_file',
-  SAVE_LLM_MODEL_FILE_CHUNK: 'save_llm_model_file_chunk',
-  COMPLETE_LLM_MODEL_DOWNLOAD: 'complete_llm_model_download',
-  GET_LLM_MODEL_METADATA: 'get_llm_model_metadata',
-  DELETE_LLM_MODEL: 'delete_llm_model',
-  GET_LLM_MODEL_PATH: 'get_llm_model_path',
-  GET_LLM_MODEL_FILE_SIZE: 'get_llm_model_file_size',
 } as const
 
 export type DesktopCommandName =

@@ -117,137 +117,48 @@
         <FieldRow :label="t('settings.sttProvider')" vertical>
           <Tabs :tabs="sttProviderTabs" v-model:value="currentSttProvider" />
         </FieldRow>
-
-        <div v-show="currentSttProvider === 'whisper-local'">
-          <FieldRow :label="t('settings.whisperLocal')" vertical>
-            <div class="flex flex-col gap-3 w-full">
-              <FieldCheckbox
-                :value="whisperLocalConfig.formatWithLlm !== false"
-                :label="t('settings.formatWithLlm')"
-                @update:value="setWhisperFormatWithLlm"
-              />
-              <FieldRow :label="t('settings.whisperLocalModel')" vertical>
-                <FieldSelect
-                  :value="whisperLocalModel"
-                  :options="WHISPER_LOCAL_MODELS"
-                  @update:value="setWhisperLocalModel"
-                />
-              </FieldRow>
-              <div class="flex flex-col gap-2 text-sm">
-                <div>
-                  {{
-                    isWhisperModelDownloaded
-                      ? t('settings.whisperLocalDownloaded')
-                      : isWhisperModelPartiallyDownloaded
-                        ? t('settings.whisperLocalPartial')
-                        : t('settings.whisperLocalNotDownloaded')
-                  }}
-                </div>
-                <div class="text-xs text-muted">
-                  {{ t('settings.whisperLocalStorageHint') }}
-                </div>
-                <div
-                  v-if="whisperModelMetadata"
-                  class="flex flex-col gap-1 text-xs text-muted"
-                >
-                  <div>
-                    {{ t('settings.whisperLocalVersion') }}:
-                    {{ whisperModelMetadata.version }}
-                  </div>
-                  <div>
-                    {{ t('settings.whisperLocalDownloadedAt') }}:
-                    {{ whisperModelDownloadedAt }}
-                  </div>
-                </div>
-                <div
-                  v-if="downloadState.error"
-                  class="text-error text-xs whitespace-pre-wrap"
-                >
-                  {{ downloadState.error }}
-                </div>
-                <div
-                  v-if="downloadState.loading"
-                  class="flex flex-col gap-1 text-xs text-muted"
-                >
-                  <div class="flex justify-between gap-2">
-                    <span
-                      >{{ downloadState.status }}:
-                      {{ downloadState.file }}</span
-                    >
-                    <span>{{ Math.round(downloadState.progress) }}%</span>
-                  </div>
-                  <progress
-                    class="progress progress-primary w-full"
-                    :value="downloadState.progress"
-                    max="100"
-                  />
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <Button
-                    v-if="
-                      !isWhisperModelDownloaded ||
-                      isWhisperModelPartiallyDownloaded
-                    "
-                    sm
-                    :disabled="downloadState.loading"
-                    @click="downloadWhisperModel"
-                  >
-                    {{
-                      isWhisperModelPartiallyDownloaded
-                        ? t('settings.whisperLocalResume')
-                        : t('settings.whisperLocalDownload')
-                    }}
-                  </Button>
-                  <span v-if="isWhisperModelDownloaded" class="text-success">
-                    {{ t('settings.whisperLocalReady') }}
-                  </span>
-                  <Button
-                    v-if="
-                      (isWhisperModelDownloaded ||
-                        isWhisperModelPartiallyDownloaded) &&
-                      !downloadState.loading
-                    "
-                    sm
-                    neutral
-                    @click="deleteWhisperModel"
-                  >
-                    {{ t('settings.whisperLocalDelete') }}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </FieldRow>
-        </div>
-
-        <div v-show="currentSttProvider === 'vosk'">
-          <FieldRow :label="t('settings.voskWsUrl')">
-            <FieldInput
-              :value="voskWsUrl"
-              placeholder="ws://localhost:2700"
-              @update:value="setVoskWsUrl"
-            />
-          </FieldRow>
-          <FieldRow :label="t('settings.formatWithLlm')">
-            <FieldCheckbox
-              :value="voskConfig.formatWithLlm !== false"
-              :label="t('settings.formatWithLlm')"
-              @update:value="setVoskFormatWithLlm"
-            />
-          </FieldRow>
-        </div>
+        <FieldRow :label="t('settings.baseUrl')" vertical>
+          <FieldInput
+            :value="currentSttModel.baseUrl || ''"
+            :placeholder="
+              currentSttProvider === 'websocket'
+                ? 'ws://localhost:2700'
+                : 'http://localhost:8000/v1'
+            "
+            @update:value="setSttField('baseUrl', $event)"
+          />
+        </FieldRow>
+        <FieldRow :label="t('settings.model')" vertical>
+          <FieldInput
+            :value="currentSttModel.model || ''"
+            placeholder="whisper-1"
+            @update:value="setSttField('model', $event)"
+          />
+        </FieldRow>
+        <FieldRow
+          v-if="currentSttProvider === 'openai-compatible'"
+          :label="t('settings.apiKey')"
+          vertical
+        >
+          <FieldInput
+            :value="currentSttModel.apiKey || ''"
+            @update:value="setSttField('apiKey', $event)"
+          />
+        </FieldRow>
+        <FieldRow :label="t('settings.formatWithLlm')">
+          <FieldCheckbox
+            :value="currentSttModel.formatWithLlm !== false"
+            :label="t('settings.formatWithLlm')"
+            @update:value="setSttFormatWithLlm"
+          />
+        </FieldRow>
       </div>
 
       <div v-show="currentTab === 3" class="fields-col">
         <FieldRow :label="t('settings.llmModels')" vertical>
           <div class="flex flex-col gap-3 w-full">
             <div class="flex flex-wrap gap-2">
-              <Button sm @click="addBrowserLocalLlmModel">
-                {{ t('settings.addBrowserLocalModel') }}
-              </Button>
-              <Button sm neutral @click="addOllamaLlmModel">
-                {{ t('settings.addOllamaModel') }}
-              </Button>
-              <Button sm neutral @click="addOpenAiCompatibleLlmModel">
+              <Button sm @click="addOpenAiCompatibleLlmModel">
                 {{ t('settings.addOpenAiCompatibleModel') }}
               </Button>
             </div>
@@ -278,203 +189,41 @@
                 />
               </FieldRow>
 
-              <FieldRow :label="t('settings.llmProvider')" vertical>
-                <div class="text-sm text-muted">
-                  {{
-                    model.provider === 'ollama'
-                      ? t('settings.ollama')
-                      : model.provider === 'openai-compatible'
-                        ? t('settings.openAiCompatible')
-                        : t('settings.browserLocalLlm')
-                  }}
-                </div>
+              <FieldRow :label="t('settings.baseUrl')" vertical>
+                <FieldInput
+                  :value="model.baseUrl || ''"
+                  placeholder="https://openrouter.ai/api/v1"
+                  @update:value="setOpenAiCompatibleBaseUrl(model.id, $event)"
+                />
               </FieldRow>
-
-              <template v-if="model.provider === 'browser-local'">
-                <FieldRow :label="t('settings.browserLocalLlmModel')" vertical>
-                  <FieldSelect
-                    :value="model.localModel || DEFAULT_BROWSER_LLM_MODEL"
-                    :options="BROWSER_LLM_MODELS"
-                    @update:value="setBrowserLocalModel(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.temperature')" vertical>
-                  <FieldInput
-                    :value="String(model.temperature ?? 0.2)"
-                    @update:value="setBrowserLocalTemperature(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.maxTokens')" vertical>
-                  <FieldInput
-                    :value="String(model.maxTokens ?? 256)"
-                    @update:value="setBrowserLocalMaxTokens(model.id, $event)"
-                  />
-                </FieldRow>
-                <div class="flex flex-col gap-2 text-sm">
-                  <div>
-                    {{
-                      browserLocalStatusById[model.id]?.downloaded
-                        ? t('settings.browserLocalLlmDownloaded')
-                        : browserLocalStatusById[model.id]?.partial
-                          ? t('settings.browserLocalLlmPartial')
-                          : t('settings.browserLocalLlmNotDownloaded')
-                    }}
-                  </div>
-                  <div class="text-xs text-muted">
-                    {{ t('settings.browserLocalLlmStorageHint') }}
-                  </div>
-                  <div
-                    v-if="browserLocalStatusById[model.id]?.metadata"
-                    class="flex flex-col gap-1 text-xs text-muted"
-                  >
-                    <div>
-                      {{ t('settings.browserLocalLlmVersion') }}:
-                      {{ browserLocalStatusById[model.id]?.metadata?.version }}
-                    </div>
-                    <div>
-                      {{ t('settings.browserLocalLlmDownloadedAt') }}:
-                      {{
-                        formatDownloadedAt(
-                          browserLocalStatusById[model.id]?.metadata
-                            ?.downloadedAt
-                        )
-                      }}
-                    </div>
-                  </div>
-                  <div
-                    v-if="browserLocalDownloadStateById[model.id]?.error"
-                    class="text-error text-xs whitespace-pre-wrap"
-                  >
-                    {{ browserLocalDownloadStateById[model.id]?.error }}
-                  </div>
-                  <div
-                    v-if="browserLocalDownloadStateById[model.id]?.loading"
-                    class="flex flex-col gap-1 text-xs text-muted"
-                  >
-                    <div class="flex justify-between gap-2">
-                      <span>
-                        {{ browserLocalDownloadStateById[model.id]?.status }}:
-                        {{
-                          browserLocalDownloadStateById[model.id]?.fileCount
-                            ? `${browserLocalDownloadStateById[model.id]?.fileIndex + 1}/${browserLocalDownloadStateById[model.id]?.fileCount}`
-                            : ''
-                        }}
-                        {{ browserLocalDownloadStateById[model.id]?.file }}
-                      </span>
-                      <span>
-                        {{
-                          Math.round(
-                            browserLocalDownloadStateById[model.id]?.progress ||
-                              0
-                          )
-                        }}%
-                      </span>
-                    </div>
-                    <progress
-                      class="progress progress-primary w-full"
-                      :value="
-                        browserLocalDownloadStateById[model.id]?.progress || 0
-                      "
-                      max="100"
-                    />
-                  </div>
-                  <div class="flex flex-wrap gap-2">
-                    <Button
-                      v-if="
-                        !browserLocalStatusById[model.id]?.downloaded ||
-                        browserLocalStatusById[model.id]?.partial ||
-                        browserLocalDownloadStateById[model.id]?.loading
-                      "
-                      sm
-                      :disabled="
-                        browserLocalDownloadStateById[model.id]?.loading
-                      "
-                      @click="downloadBrowserLlmModel(model.id)"
-                    >
-                      {{
-                        browserLocalStatusById[model.id]?.partial
-                          ? t('settings.browserLocalLlmResume')
-                          : t('settings.browserLocalLlmDownload')
-                      }}
-                    </Button>
-                    <span v-else class="text-success flex items-center">
-                      {{ t('settings.browserLocalLlmReady') }}
-                    </span>
-                    <Button
-                      v-if="
-                        (browserLocalStatusById[model.id]?.downloaded ||
-                          browserLocalStatusById[model.id]?.partial) &&
-                        !browserLocalDownloadStateById[model.id]?.loading
-                      "
-                      sm
-                      neutral
-                      @click="deleteBrowserLlmModel(model.id)"
-                    >
-                      {{ t('settings.browserLocalLlmDelete') }}
-                    </Button>
-                  </div>
-                </div>
-                <div class="text-xs text-muted whitespace-pre-wrap">
-                  {{ t('settings.browserLocalLlmHint') }}
-                </div>
-              </template>
-
-              <template v-else-if="model.provider === 'ollama'">
-                <FieldRow :label="t('settings.baseUrl')" vertical>
-                  <FieldInput
-                    :value="model.baseUrl || 'http://localhost:11434'"
-                    placeholder="http://localhost:11434"
-                    @update:value="setOllamaBaseUrl(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.ollamaModel')" vertical>
-                  <FieldInput
-                    :value="model.model || DEFAULT_OLLAMA_MODEL"
-                    placeholder="qwen2.5:0.5b"
-                    @update:value="setOllamaModel(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.temperature')" vertical>
-                  <FieldInput
-                    :value="String(model.temperature ?? 0.2)"
-                    @update:value="setOllamaTemperature(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.maxTokens')" vertical>
-                  <FieldInput
-                    :value="String(model.maxTokens ?? 512)"
-                    @update:value="setOllamaMaxTokens(model.id, $event)"
-                  />
-                </FieldRow>
-                <div class="text-xs text-muted whitespace-pre-wrap">
-                  {{ t('settings.ollamaHint') }}
-                </div>
-              </template>
-              <template v-else>
-                <FieldRow :label="t('settings.baseUrl')" vertical>
-                  <FieldInput
-                    :value="model.baseUrl || ''"
-                    placeholder="https://openrouter.ai/api/v1"
-                    @update:value="setOpenAiCompatibleBaseUrl(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.apiKey')" vertical>
-                  <FieldInput
-                    :value="model.apiKey || ''"
-                    @update:value="setOpenAiCompatibleApiKey(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.model')" vertical>
-                  <FieldInput
-                    :value="model.model || ''"
-                    placeholder="openai/gpt-4.1-mini"
-                    @update:value="setOpenAiCompatibleModel(model.id, $event)"
-                  />
-                </FieldRow>
-                <div class="text-xs text-muted whitespace-pre-wrap">
-                  {{ t('settings.openAiCompatibleHint') }}
-                </div>
-              </template>
+              <FieldRow :label="t('settings.apiKey')" vertical>
+                <FieldInput
+                  :value="model.apiKey || ''"
+                  @update:value="setOpenAiCompatibleApiKey(model.id, $event)"
+                />
+              </FieldRow>
+              <FieldRow :label="t('settings.model')" vertical>
+                <FieldInput
+                  :value="model.model || ''"
+                  placeholder="openai/gpt-4.1-mini"
+                  @update:value="setOpenAiCompatibleModel(model.id, $event)"
+                />
+              </FieldRow>
+              <FieldRow :label="t('settings.temperature')" vertical>
+                <FieldInput
+                  :value="String(model.temperature ?? 0.2)"
+                  @update:value="setLlmTemperature(model.id, $event)"
+                />
+              </FieldRow>
+              <FieldRow :label="t('settings.maxTokens')" vertical>
+                <FieldInput
+                  :value="String(model.maxTokens ?? 512)"
+                  @update:value="setLlmMaxTokens(model.id, $event)"
+                />
+              </FieldRow>
+              <div class="text-xs text-muted whitespace-pre-wrap">
+                {{ t('settings.openAiCompatibleHint') }}
+              </div>
             </div>
           </div>
         </FieldRow>
@@ -554,38 +303,12 @@ import {
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
-import {
-  BROWSER_LLM_MODELS,
-  DEFAULT_BROWSER_LLM_MODEL,
-  DEFAULT_OLLAMA_MODEL,
-  type LlmModelDownloadProgress,
-  deleteLlmModel,
-  downloadLlmModel,
-  getLlmModelMetadata,
-  hasPartialLlmModelDownload,
-  isLlmModelDownloaded,
-} from '../utils/llm/model-storage'
-import {
-  DEFAULT_WHISPER_LOCAL_MODEL,
-  type ModelDownloadProgress,
-  WHISPER_LOCAL_MODELS,
-  deleteModel,
-  downloadModel,
-  getModelMetadata,
-  hasPartialWhisperModelDownload,
-  isModelDownloaded,
-} from '../utils/stt/model-storage'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsRolesTab from './settings/SettingsRolesTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
-import {
-  DEFAULT_USER_CONFIG,
-  type LlmModelMetadata,
-  type StorageInfo,
-  type WhisperModelMetadata,
-} from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, type StorageInfo } from '@tyco/shared'
 
 const ipcStore = useIpcStore()
 const themeStore = useThemeStore()
@@ -594,40 +317,13 @@ const { toast } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
-type DownloadState = {
-  loading: boolean
-  progress: number
-  file: string
-  fileIndex: number
-  fileCount: number
-  status: string
-  error: string
-}
-
 const currentTab = ref(0)
-const currentSttProvider = ref<'vosk' | 'whisper-local'>('vosk')
+const currentSttProvider = ref<'openai-compatible' | 'websocket'>(
+  'openai-compatible'
+)
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
-const isWhisperModelDownloaded = ref(false)
-const isWhisperModelPartiallyDownloaded = ref(false)
-const whisperModelMetadata = ref<WhisperModelMetadata | null>(null)
-const browserLocalStatusById = ref<
-  Record<
-    string,
-    { downloaded: boolean; partial: boolean; metadata: LlmModelMetadata | null }
-  >
->({})
 const storageInfo = ref<StorageInfo | null>(null)
-const downloadState = ref<DownloadState>({
-  loading: false,
-  progress: 0,
-  file: '',
-  fileIndex: 0,
-  fileCount: 0,
-  status: '',
-  error: '',
-})
-const browserLocalDownloadStateById = ref<Record<string, DownloadState>>({})
 let isComponentActive = true
 let skipNextAutosave = false
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -644,8 +340,8 @@ const tabs = computed(() => [
 ])
 
 const sttProviderTabs = computed(() => [
-  { text: 'Whisper local', key: 'whisper-local' },
-  { text: 'Vosk', key: 'vosk' },
+  { text: 'OpenAI-compatible', key: 'openai-compatible' },
+  { text: 'WebSocket', key: 'websocket' },
 ])
 
 const windowInsertionTabs = computed(() => [
@@ -698,14 +394,8 @@ watch(
       return
     }
 
-    if (provider === 'whisper-local') {
-      const whisperModel = ensureWhisperLocalModel(userConfig.value)
-      userConfig.value.aiModelUsage.stt = whisperModel.id
-      return
-    }
-
-    const voskModel = ensureVoskModel(userConfig.value)
-    userConfig.value.aiModelUsage.stt = voskModel.id
+    const model = ensureSttModel(userConfig.value, provider)
+    userConfig.value.aiModelUsage.stt = model.id
   }
 )
 
@@ -725,19 +415,8 @@ const storageInfoItems = computed(() => {
       value: storageInfo.value.historyDir,
     },
     { label: t('settings.storageChats'), value: storageInfo.value.chatsDir },
-    { label: t('settings.storageModels'), value: storageInfo.value.modelsDir },
     { label: t('settings.storageCache'), value: storageInfo.value.cacheDir },
   ]
-})
-
-const whisperModelDownloadedAt = computed(() => {
-  const timestamp = Number(whisperModelMetadata.value?.downloadedAt || 0)
-
-  if (!timestamp) {
-    return ''
-  }
-
-  return new Date(timestamp * 1000).toLocaleString()
 })
 
 function cloneUserConfig(config: unknown) {
@@ -834,28 +513,22 @@ function normalizeSttConfig(config: Record<string, any>) {
     config.aiModelUsage = {}
   }
 
-  const existingWhisperModel = config.sttModels.filter(
-    (model: Record<string, any>) => {
-      const provider = model.provider || model.model
-      return provider === 'whisper-local'
-    }
-  )[0]
-  const existingVoskModel = config.sttModels.find(
-    (model: Record<string, any>) => {
-      const provider = model.provider || model.model || 'vosk'
-      return provider !== 'whisper-local'
-    }
-  )
-  const whisperModel = createWhisperLocalModel(existingWhisperModel)
-  const voskModel = createVoskModel(existingVoskModel)
   const activeModel = config.sttModels.find(
     (model: Record<string, any>) => model.id === config.aiModelUsage.stt
   )
-  const activeProvider = activeModel?.provider || activeModel?.model
+  const activeProvider = activeModel?.provider
+  const oldHttpModel = config.sttModels.find(
+    (model: Record<string, any>) => model.provider === 'openai-compatible'
+  )
+  const oldWebSocketModel = config.sttModels.find(
+    (model: Record<string, any>) => model.provider === 'websocket'
+  )
+  const httpModel = createSttModel('openai-compatible', oldHttpModel)
+  const webSocketModel = createSttModel('websocket', oldWebSocketModel)
 
-  config.sttModels = [whisperModel, voskModel]
+  config.sttModels = [httpModel, webSocketModel]
   config.aiModelUsage.stt =
-    activeProvider === 'whisper-local' ? whisperModel.id : voskModel.id
+    activeProvider === 'websocket' ? webSocketModel.id : httpModel.id
 }
 
 function normalizeLlmConfig(config: Record<string, any>) {
@@ -874,7 +547,7 @@ function normalizeLlmConfig(config: Record<string, any>) {
     normalizedModels as Record<string, any>[]
   )
   const llmModels =
-    dedupedModels.length > 0 ? dedupedModels : [createBrowserLocalLlmModel()]
+    dedupedModels.length > 0 ? dedupedModels : [createOpenAiCompatibleModel()]
 
   config.llmModels = llmModels
 
@@ -921,61 +594,23 @@ function normalizeAiTasks(config: Record<string, any>) {
   }))
 }
 
-function createWhisperLocalModel(existingModel?: Record<string, any>) {
+function createSttModel(
+  provider: 'openai-compatible' | 'websocket',
+  existingModel?: Record<string, any>
+) {
+  const isWebSocket = provider === 'websocket'
   return {
-    id: existingModel?.id || 'browser-whisper-local',
-    model: 'whisper-local',
-    provider: 'whisper-local',
-    description:
-      existingModel?.description || t('settings.whisperLocalDescription'),
-    formatWithLlm: existingModel?.formatWithLlm ?? false,
-    restorePunctuation: true,
-    localModel: existingModel?.localModel || DEFAULT_WHISPER_LOCAL_MODEL,
-  }
-}
-
-function createVoskModel(existingModel?: Record<string, any>) {
-  return {
-    id: 'system-vosk',
-    model: 'vosk',
-    provider: 'vosk',
-    description:
-      existingModel?.description || t('settings.systemVoskDescription'),
-    formatWithLlm: existingModel?.formatWithLlm !== false,
-    baseUrl: existingModel?.baseUrl || 'ws://localhost:2700',
-  }
-}
-
-function createBrowserLocalLlmModel(existingModel?: Record<string, any>) {
-  return {
-    id: existingModel?.id || createLlmModelId('browser-local'),
-    name:
-      existingModel?.name ||
-      existingModel?.label ||
-      t('settings.browserLocalModelDefaultName'),
-    model: 'browser-local',
-    provider: 'browser-local',
-    description:
-      existingModel?.description || t('settings.browserLocalLlmDescription'),
-    localModel: existingModel?.localModel || DEFAULT_BROWSER_LLM_MODEL,
-    temperature: toNumberOrDefault(existingModel?.temperature, 0.2),
-    maxTokens: toIntegerOrDefault(existingModel?.maxTokens, 256),
-  }
-}
-
-function createOllamaModel(existingModel?: Record<string, any>) {
-  return {
-    id: existingModel?.id || createLlmModelId('ollama'),
-    name:
-      existingModel?.name ||
-      existingModel?.label ||
-      t('settings.ollamaModelDefaultName'),
-    model: existingModel?.model || DEFAULT_OLLAMA_MODEL,
-    provider: 'ollama',
-    description: existingModel?.description || t('settings.ollamaDescription'),
-    baseUrl: existingModel?.baseUrl || 'http://localhost:11434',
-    temperature: toNumberOrDefault(existingModel?.temperature, 0.2),
-    maxTokens: toIntegerOrDefault(existingModel?.maxTokens, 512),
+    id: isWebSocket ? 'websocket-stt' : 'openai-compatible-stt',
+    model: existingModel?.model || (isWebSocket ? 'whisper' : 'whisper-1'),
+    provider,
+    description: isWebSocket
+      ? 'Streaming STT WebSocket endpoint'
+      : 'OpenAI-compatible transcription endpoint',
+    formatWithLlm: existingModel?.formatWithLlm ?? isWebSocket,
+    baseUrl:
+      existingModel?.baseUrl ||
+      (isWebSocket ? 'ws://localhost:2700' : 'http://localhost:8000/v1'),
+    apiKey: isWebSocket ? undefined : existingModel?.apiKey || '',
   }
 }
 
@@ -992,32 +627,24 @@ function createOpenAiCompatibleModel(existingModel?: Record<string, any>) {
       existingModel?.description || t('settings.openAiCompatibleDescription'),
     baseUrl: existingModel?.baseUrl || '',
     apiKey: existingModel?.apiKey || '',
+    temperature: toNumberOrDefault(existingModel?.temperature, 0.2),
+    maxTokens: toIntegerOrDefault(existingModel?.maxTokens, 512),
   }
 }
 
-function ensureWhisperLocalModel(config: Record<string, any>) {
+function ensureSttModel(
+  config: Record<string, any>,
+  provider: 'openai-compatible' | 'websocket'
+) {
   const existingModel = (config.sttModels || []).find(
-    (model: Record<string, any>) => model.provider === 'whisper-local'
+    (model: Record<string, any>) => model.provider === provider
   )
-  const nextModel = createWhisperLocalModel(existingModel)
-  const otherModels = (config.sttModels || []).filter(
-    (model: Record<string, any>) => model.provider !== 'whisper-local'
-  )
+  const nextModel = createSttModel(provider, existingModel)
 
-  config.sttModels = [nextModel, ...otherModels]
-  return nextModel
-}
-
-function ensureVoskModel(config: Record<string, any>) {
-  const existingModel = (config.sttModels || []).find(
-    (model: Record<string, any>) => model.provider === 'vosk'
+  config.sttModels = (config.sttModels || []).map(
+    (model: Record<string, any>) =>
+      model.provider === provider ? nextModel : model
   )
-  const nextModel = createVoskModel(existingModel)
-  const otherModels = (config.sttModels || []).filter(
-    (model: Record<string, any>) => model.provider !== 'vosk'
-  )
-
-  config.sttModels = [...otherModels, nextModel]
   return nextModel
 }
 
@@ -1027,29 +654,12 @@ function resolveCurrentSttProvider(config: Record<string, any>) {
     (item: Record<string, any>) => item.id === usageId
   )
 
-  return model?.provider === 'whisper-local' ? 'whisper-local' : 'vosk'
+  return model?.provider === 'websocket' ? 'websocket' : 'openai-compatible'
 }
 
 function normalizeSingleLlmModel(model: Record<string, any>) {
-  const provider = model.provider || model.model
-
-  if (provider === 'browser-local') {
-    return createBrowserLocalLlmModel(model)
-  }
-
-  if (provider === 'ollama') {
-    return createOllamaModel(model)
-  }
-
-  if (provider === 'openai-compatible') {
+  if (model.provider === 'openai-compatible') {
     return createOpenAiCompatibleModel(model)
-  }
-
-  if (provider) {
-    return createOpenAiCompatibleModel({
-      ...model,
-      provider: 'openai-compatible',
-    })
   }
 
   return null
@@ -1190,70 +800,20 @@ watch(
   }
 )
 
-const voskWsUrl = computed(() => {
-  const voskModel = (userConfig.value.sttModels || []).find(
-    (model: Record<string, any>) => model.provider === 'vosk'
+const currentSttModel = computed(() =>
+  (userConfig.value.sttModels || []).find(
+    (model: Record<string, any>) => model.provider === currentSttProvider.value
   )
-
-  return voskModel?.baseUrl || 'ws://localhost:2700'
-})
-
-const whisperLocalConfig = computed(() => {
-  return (
-    (userConfig.value.sttModels || []).find(
-      (model: Record<string, any>) => model.provider === 'whisper-local'
-    ) || createWhisperLocalModel()
-  )
-})
-
-const voskConfig = computed(() => {
-  return (
-    (userConfig.value.sttModels || []).find(
-      (model: Record<string, any>) => model.provider === 'vosk'
-    ) || createVoskModel()
-  )
-})
-
-const whisperLocalModel = computed(() => {
-  return whisperLocalConfig.value.localModel || DEFAULT_WHISPER_LOCAL_MODEL
-})
+)
 
 const llmUsageOptions = computed(() => {
   return (userConfig.value.llmModels || []).map(
     (model: Record<string, any>, index: number) => ({
       id: model.id,
-      name:
-        model.provider === 'browser-local' &&
-        !browserLocalStatusById.value[model.id]?.downloaded
-          ? `${modelDisplayName(model, index)} (${t('settings.downloadRequired')})`
-          : modelDisplayName(model, index),
+      name: modelDisplayName(model, index),
     })
   )
 })
-
-watch(
-  whisperLocalModel,
-  () => {
-    void refreshWhisperModelStatus()
-  },
-  { immediate: true }
-)
-
-watch(
-  () =>
-    userConfig.value.llmModels
-      .filter(
-        (model: Record<string, any>) => model.provider === 'browser-local'
-      )
-      .map(
-        (model: Record<string, any>) =>
-          `${model.id}:${model.localModel || DEFAULT_BROWSER_LLM_MODEL}`
-      ),
-  () => {
-    void refreshAllBrowserLlmStatuses()
-  },
-  { immediate: true, deep: true }
-)
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
@@ -1294,38 +854,12 @@ const toggleAppLanguageMode = () => {
   userConfig.value.appLanguage = effectiveAppLanguage.value
 }
 
-const setVoskWsUrl = (baseUrl: string) => {
-  const whisperModel = ensureWhisperLocalModel(userConfig.value)
-  const nextVoskModel = {
-    id: 'system-vosk',
-    model: 'vosk',
-    provider: 'vosk',
-    description: t('settings.systemVoskDescription'),
-    baseUrl: baseUrl || 'ws://localhost:2700',
-  }
-
-  userConfig.value.sttModels = [whisperModel, nextVoskModel]
-  userConfig.value.aiModelUsage.stt = nextVoskModel.id
+const setSttField = (field: 'baseUrl' | 'model' | 'apiKey', value: string) => {
+  currentSttModel.value[field] = value
 }
 
-const setWhisperLocalModel = (modelName: string | number | undefined) => {
-  if (typeof modelName !== 'string') {
-    return
-  }
-
-  const whisperModel = ensureWhisperLocalModel(userConfig.value)
-  whisperModel.localModel = modelName
-  userConfig.value.aiModelUsage.stt = whisperModel.id
-}
-
-const setWhisperFormatWithLlm = (value: boolean) => {
-  const whisperModel = ensureWhisperLocalModel(userConfig.value)
-  whisperModel.formatWithLlm = value
-}
-
-const setVoskFormatWithLlm = (value: boolean) => {
-  const voskModel = ensureVoskModel(userConfig.value)
-  voskModel.formatWithLlm = value
+const setSttFormatWithLlm = (value: boolean) => {
+  currentSttModel.value.formatWithLlm = value
 }
 
 function modelDisplayName(model: Record<string, any>, index: number | string) {
@@ -1336,51 +870,13 @@ function modelDisplayName(model: Record<string, any>, index: number | string) {
     return customName
   }
 
-  if (model.provider === 'ollama') {
-    return `${t('settings.ollama')} ${displayIndex}`
-  }
-
-  if (model.provider === 'openai-compatible') {
-    return `${t('settings.openAiCompatible')} ${displayIndex}`
-  }
-
-  return `${t('settings.browserLocalLlm')} ${displayIndex}`
-}
-
-function formatDownloadedAt(value?: string) {
-  const timestamp = Number(value || 0)
-
-  if (!timestamp) {
-    return ''
-  }
-
-  return new Date(timestamp * 1000).toLocaleString()
+  return `${t('settings.openAiCompatible')} ${displayIndex}`
 }
 
 function getLlmModelById(modelId: string) {
   return (userConfig.value.llmModels || []).find(
     (model: Record<string, any>) => model.id === modelId
   )
-}
-
-function getEmptyDownloadState(): DownloadState {
-  return {
-    loading: false,
-    progress: 0,
-    file: '',
-    fileIndex: 0,
-    fileCount: 0,
-    status: '',
-    error: '',
-  }
-}
-
-function ensureBrowserLocalDownloadState(modelId: string) {
-  if (!browserLocalDownloadStateById.value[modelId]) {
-    browserLocalDownloadStateById.value[modelId] = getEmptyDownloadState()
-  }
-
-  return browserLocalDownloadStateById.value[modelId]
 }
 
 function setLlmModelName(modelId: string, value: string) {
@@ -1393,14 +889,6 @@ function setLlmModelName(modelId: string, value: string) {
   model.name = value
 }
 
-function addBrowserLocalLlmModel() {
-  userConfig.value.llmModels.push(createBrowserLocalLlmModel())
-}
-
-function addOllamaLlmModel() {
-  userConfig.value.llmModels.push(createOllamaModel())
-}
-
 function addOpenAiCompatibleLlmModel() {
   userConfig.value.llmModels.push(createOpenAiCompatibleModel())
 }
@@ -1411,13 +899,10 @@ function removeLlmModel(modelId: string) {
   )
 
   if (nextModels.length === 0) {
-    nextModels.push(createBrowserLocalLlmModel())
+    nextModels.push(createOpenAiCompatibleModel())
   }
 
   userConfig.value.llmModels = nextModels
-  delete browserLocalStatusById.value[modelId]
-  delete browserLocalDownloadStateById.value[modelId]
-
   const fallbackModelId = nextModels[0].id
   const usageKeys = [
     'translate',
@@ -1432,83 +917,6 @@ function removeLlmModel(modelId: string) {
       userConfig.value.aiModelUsage[usageKey] = fallbackModelId
     }
   }
-}
-
-const setBrowserLocalModel = (
-  modelId: string,
-  modelName: string | number | undefined
-) => {
-  if (typeof modelName !== 'string') {
-    return
-  }
-
-  const browserLocalModel = getLlmModelById(modelId)
-
-  if (!browserLocalModel) {
-    return
-  }
-
-  browserLocalModel.localModel = modelName
-}
-
-const setBrowserLocalTemperature = (modelId: string, value: string) => {
-  const browserLocalModel = getLlmModelById(modelId)
-
-  if (!browserLocalModel) {
-    return
-  }
-
-  browserLocalModel.temperature = toNumberOrDefault(value, 0.2)
-}
-
-const setBrowserLocalMaxTokens = (modelId: string, value: string) => {
-  const browserLocalModel = getLlmModelById(modelId)
-
-  if (!browserLocalModel) {
-    return
-  }
-
-  browserLocalModel.maxTokens = toIntegerOrDefault(value, 256)
-}
-
-const setOllamaBaseUrl = (modelId: string, baseUrl: string) => {
-  const ollamaModel = getLlmModelById(modelId)
-
-  if (!ollamaModel) {
-    return
-  }
-
-  ollamaModel.baseUrl = baseUrl || 'http://localhost:11434'
-}
-
-const setOllamaModel = (modelId: string, value: string) => {
-  const ollamaModel = getLlmModelById(modelId)
-
-  if (!ollamaModel) {
-    return
-  }
-
-  ollamaModel.model = value || DEFAULT_OLLAMA_MODEL
-}
-
-const setOllamaTemperature = (modelId: string, value: string) => {
-  const ollamaModel = getLlmModelById(modelId)
-
-  if (!ollamaModel) {
-    return
-  }
-
-  ollamaModel.temperature = toNumberOrDefault(value, 0.2)
-}
-
-const setOllamaMaxTokens = (modelId: string, value: string) => {
-  const ollamaModel = getLlmModelById(modelId)
-
-  if (!ollamaModel) {
-    return
-  }
-
-  ollamaModel.maxTokens = toIntegerOrDefault(value, 512)
 }
 
 const setOpenAiCompatibleBaseUrl = (modelId: string, baseUrl: string) => {
@@ -1541,60 +949,24 @@ const setOpenAiCompatibleModel = (modelId: string, value: string) => {
   model.model = value
 }
 
-async function refreshWhisperModelStatus() {
-  const [downloaded, partial, metadata] = await Promise.all([
-    isModelDownloaded(whisperLocalModel.value),
-    hasPartialWhisperModelDownload(whisperLocalModel.value),
-    getModelMetadata(whisperLocalModel.value),
-  ])
-  isWhisperModelDownloaded.value = downloaded
-  isWhisperModelPartiallyDownloaded.value = !downloaded && partial
-  whisperModelMetadata.value = downloaded ? metadata : null
-}
-
-async function refreshBrowserLlmModelStatus(modelId: string) {
+const setLlmTemperature = (modelId: string, value: string) => {
   const model = getLlmModelById(modelId)
 
-  if (!model || model.provider !== 'browser-local') {
-    delete browserLocalStatusById.value[modelId]
+  if (!model) {
     return
   }
 
-  const modelName = model.localModel || DEFAULT_BROWSER_LLM_MODEL
-  const [downloaded, partial, metadata] = await Promise.all([
-    isLlmModelDownloaded(modelName),
-    hasPartialLlmModelDownload(modelName),
-    getLlmModelMetadata(modelName),
-  ])
-
-  browserLocalStatusById.value[modelId] = {
-    downloaded,
-    partial: !downloaded && partial,
-    metadata: downloaded ? metadata : null,
-  }
+  model.temperature = toNumberOrDefault(value, 0.2)
 }
 
-async function refreshAllBrowserLlmStatuses() {
-  const browserLocalIds = new Set(
-    (userConfig.value.llmModels || [])
-      .filter(
-        (model: Record<string, any>) => model.provider === 'browser-local'
-      )
-      .map((model: Record<string, any>) => model.id)
-  )
+const setLlmMaxTokens = (modelId: string, value: string) => {
+  const model = getLlmModelById(modelId)
 
-  await Promise.all(
-    [...browserLocalIds].map((modelId) =>
-      refreshBrowserLlmModelStatus(modelId as string)
-    )
-  )
+  if (!model) {
+    return
+  }
 
-  Object.keys(browserLocalStatusById.value).forEach((modelId) => {
-    if (!browserLocalIds.has(modelId)) {
-      delete browserLocalStatusById.value[modelId]
-      delete browserLocalDownloadStateById.value[modelId]
-    }
-  })
+  model.maxTokens = toIntegerOrDefault(value, 512)
 }
 
 async function loadStorageInfo() {
@@ -1602,180 +974,6 @@ async function loadStorageInfo() {
   storageInfo.value = result.success
     ? (result.result as StorageInfo | null) || null
     : null
-}
-
-async function downloadWhisperModel() {
-  if (downloadState.value.loading) {
-    return
-  }
-
-  downloadState.value = {
-    loading: true,
-    progress: 0,
-    file: '',
-    fileIndex: 0,
-    fileCount: 0,
-    status: '',
-    error: '',
-  }
-
-  try {
-    await downloadModel(
-      whisperLocalModel.value,
-      (progress: ModelDownloadProgress) => {
-        downloadState.value = {
-          loading: true,
-          progress:
-            progress.total > 0 ? (progress.loaded / progress.total) * 100 : 0,
-          file: progress.file,
-          fileIndex: 0,
-          fileCount: 0,
-          status: progress.status,
-          error: '',
-        }
-      }
-    )
-    await refreshWhisperModelStatus()
-  } catch (error) {
-    downloadState.value = {
-      loading: false,
-      progress: 0,
-      file: '',
-      fileIndex: 0,
-      fileCount: 0,
-      status: 'error',
-      error: error instanceof Error ? error.message : String(error),
-    }
-    return
-  } finally {
-    if (downloadState.value.status !== 'error') {
-      downloadState.value = {
-        loading: false,
-        progress: 0,
-        file: '',
-        fileIndex: 0,
-        fileCount: 0,
-        status: '',
-        error: '',
-      }
-    }
-  }
-}
-
-async function deleteWhisperModel() {
-  downloadState.value = {
-    loading: false,
-    progress: 0,
-    file: '',
-    fileIndex: 0,
-    fileCount: 0,
-    status: '',
-    error: '',
-  }
-
-  try {
-    await deleteModel(whisperLocalModel.value)
-    await refreshWhisperModelStatus()
-  } catch (error) {
-    downloadState.value = {
-      loading: false,
-      progress: 0,
-      file: '',
-      fileIndex: 0,
-      fileCount: 0,
-      status: 'error',
-      error: error instanceof Error ? error.message : String(error),
-    }
-  }
-}
-
-async function downloadBrowserLlmModel(modelId: string) {
-  const model = getLlmModelById(modelId)
-
-  if (!model || model.provider !== 'browser-local') {
-    return
-  }
-
-  const modelName = model.localModel || DEFAULT_BROWSER_LLM_MODEL
-  const currentState = ensureBrowserLocalDownloadState(modelId)
-
-  if (currentState.loading) {
-    return
-  }
-
-  browserLocalDownloadStateById.value[modelId] = {
-    loading: true,
-    progress: 0,
-    file: '',
-    fileIndex: 0,
-    fileCount: 0,
-    status: '',
-    error: '',
-  }
-
-  try {
-    await downloadLlmModel(modelName, (progress: LlmModelDownloadProgress) => {
-      browserLocalDownloadStateById.value[modelId] = {
-        loading: true,
-        progress: progress.overallProgress,
-        file: progress.file,
-        fileIndex: progress.fileIndex,
-        fileCount: progress.fileCount,
-        status: progress.status,
-        error: '',
-      }
-    })
-    await refreshAllBrowserLlmStatuses()
-  } catch (error) {
-    browserLocalDownloadStateById.value[modelId] = {
-      loading: false,
-      progress: 0,
-      file: '',
-      fileIndex: 0,
-      fileCount: 0,
-      status: 'error',
-      error: error instanceof Error ? error.message : String(error),
-    }
-    return
-  } finally {
-    if (browserLocalDownloadStateById.value[modelId]?.status !== 'error') {
-      browserLocalDownloadStateById.value[modelId] = {
-        loading: false,
-        progress: 0,
-        file: '',
-        fileIndex: 0,
-        fileCount: 0,
-        status: '',
-        error: '',
-      }
-    }
-  }
-}
-
-async function deleteBrowserLlmModel(modelId: string) {
-  const model = getLlmModelById(modelId)
-
-  if (!model || model.provider !== 'browser-local') {
-    return
-  }
-
-  const modelName = model.localModel || DEFAULT_BROWSER_LLM_MODEL
-  browserLocalDownloadStateById.value[modelId] = getEmptyDownloadState()
-
-  try {
-    await deleteLlmModel(modelName)
-    await refreshAllBrowserLlmStatuses()
-  } catch (error) {
-    browserLocalDownloadStateById.value[modelId] = {
-      loading: false,
-      progress: 0,
-      file: '',
-      fileIndex: 0,
-      fileCount: 0,
-      status: 'error',
-      error: error instanceof Error ? error.message : String(error),
-    }
-  }
 }
 
 const updateAiTasks = (items: any[]) => {
@@ -1806,7 +1004,6 @@ const updatePluginConfig = (
 }
 onMounted(() => {
   void loadStorageInfo()
-  void refreshAllBrowserLlmStatuses()
 })
 onUnmounted(() => {
   isComponentActive = false

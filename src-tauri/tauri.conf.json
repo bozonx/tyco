@@ -23,15 +23,11 @@
       }
     ],
     "security": {
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["$APPDATA/models/whisper/**", "$APPDATA/models/llm/**"]
-      },
       "csp": {
         "default-src": "'self'",
         "script-src": "'self' 'wasm-unsafe-eval'",
         "worker-src": "'self' blob:",
-        "connect-src": "'self' ipc: asset: http://asset.localhost http://ipc.localhost http://localhost:11434 http://127.0.0.1:11434 https://huggingface.co https://*.huggingface.co https://openrouter.ai https://api.openai.com",
+        "connect-src": "'self' ipc: http://ipc.localhost http: https: ws: wss:",
         "media-src": "'self' blob: asset: http://asset.localhost",
         "img-src": "'self' asset: http://asset.localhost data: blob:",
         "style-src": "'self' 'unsafe-inline'",

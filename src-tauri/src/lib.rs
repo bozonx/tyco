@@ -11,18 +11,9 @@ use commands::history::{
     remove_from_chat_history, remove_from_editor_history, remove_from_transform_history,
     save_chat_history, save_editor_history, save_main_input_tmp, save_transform_history,
 };
-use commands::llm::{
-    complete_llm_model_download, delete_llm_model, get_llm_model_file_size, get_llm_model_metadata,
-    get_llm_model_path, is_llm_model_downloaded, save_llm_model_file, save_llm_model_file_chunk,
-};
 use commands::voice::{
     start_local_voice_recording, start_voice_recognition, stop_local_voice_recording,
     stop_voice_recognition,
-};
-use commands::whisper::{
-    complete_whisper_model_download, delete_whisper_model, get_whisper_model_file_size,
-    get_whisper_model_metadata, get_whisper_model_path, is_whisper_model_downloaded,
-    save_whisper_model_file, save_whisper_model_file_chunk,
 };
 use commands::window::{
     close_window, open_in_browser_and_close, put_into_clipboard_and_close,
@@ -120,23 +111,7 @@ pub fn run() {
             stop_local_voice_recording,
             open_in_browser_and_close,
             type_into_window_and_close,
-            put_into_clipboard_and_close,
-            is_whisper_model_downloaded,
-            save_whisper_model_file,
-            save_whisper_model_file_chunk,
-            complete_whisper_model_download,
-            get_whisper_model_metadata,
-            delete_whisper_model,
-            get_whisper_model_path,
-            get_whisper_model_file_size,
-            is_llm_model_downloaded,
-            save_llm_model_file,
-            save_llm_model_file_chunk,
-            complete_llm_model_download,
-            get_llm_model_metadata,
-            delete_llm_model,
-            get_llm_model_path,
-            get_llm_model_file_size
+            put_into_clipboard_and_close
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

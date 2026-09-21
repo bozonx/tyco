@@ -18,6 +18,12 @@ use crate::errors::AppError;
 use crate::services::runtime;
 use crate::state::{AppState, LocalVoiceRecordingSession, VoiceSession};
 
+pub struct WebSocketSttConfig {
+    pub url: String,
+    pub model: String,
+    pub language: Option<String>,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalVoiceRecording {
@@ -25,11 +31,15 @@ pub struct LocalVoiceRecording {
     pub samples: Vec<f32>,
 }
 
-pub async fn start(app: AppHandle, state: &AppState, ws_url: String) -> Result<(), AppError> {
+pub async fn start(
+    app: AppHandle,
+    state: &AppState,
+    config: WebSocketSttConfig,
+) -> Result<(), AppError> {
     stop(state).await?;
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let thread = thread::spawn(move || {
-        if let Err(error) = run_voice_thread(app, ws_url, shutdown_rx) {
+        if let Err(error) = run_voice_thread(app, config, shutdown_rx) {
             log::error!("Voice recognition error: {error}");
         }
     });
@@ -107,7 +117,7 @@ pub async fn stop_local_recording(state: &AppState) -> Result<LocalVoiceRecordin
 
 fn run_voice_thread(
     app: AppHandle,
-    ws_url: String,
+    config: WebSocketSttConfig,
     shutdown_rx: watch::Receiver<bool>,
 ) -> Result<(), AppError> {
     let runtime = Builder::new_current_thread()
@@ -148,24 +158,29 @@ fn run_voice_thread(
             .play()
             .map_err(|error| AppError::Message(error.to_string()))?;
 
-        run_voice_session(app, ws_url, sample_rate, audio_rx, shutdown_rx).await
+        run_voice_session(app, config, sample_rate, audio_rx, shutdown_rx).await
     })
 }
 
 async fn run_voice_session(
     app: AppHandle,
-    ws_url: String,
+    config: WebSocketSttConfig,
     sample_rate: u32,
     mut audio_rx: mpsc::UnboundedReceiver<Vec<u8>>,
     mut shutdown_rx: watch::Receiver<bool>,
 ) -> Result<(), AppError> {
-    let (mut ws, _) = connect_async(&ws_url)
+    let (mut ws, _) = connect_async(&config.url)
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;
     let config_message = serde_json::json!({
-        "config": {
-            "sample_rate": sample_rate
-        }
+        "type": "start",
+        "audio": {
+            "encoding": "pcm_s16le",
+            "sampleRate": sample_rate,
+            "channels": 1
+        },
+        "model": config.model,
+        "language": config.language
     });
 
     ws.send(Message::Text(config_message.to_string()))
@@ -199,7 +214,7 @@ async fn run_voice_session(
             }
             changed = shutdown_rx.changed() => {
                 if changed.is_ok() && *shutdown_rx.borrow() {
-                    let _ = ws.send(Message::Text(String::from("{\"eof\": 1}"))).await;
+                    let _ = ws.send(Message::Text(String::from("{\"type\":\"stop\"}"))).await;
                     drain_final_messages(&app, &mut parts, &mut ws).await?;
                     break;
                 }
@@ -252,8 +267,15 @@ fn handle_ws_message(
 
     if let Some(text) = json.get("text").and_then(Value::as_str) {
         if !text.trim().is_empty() {
-            parts.push(text.to_string());
-            let _ = runtime::emit_voice_text(app, parts.join(" ").trim().to_string());
+            let message_type = json.get("type").and_then(Value::as_str).unwrap_or("final");
+            if message_type == "partial" {
+                let committed = parts.join(" ");
+                let combined = format!("{committed} {text}").trim().to_string();
+                let _ = runtime::emit_voice_text(app, combined);
+            } else if message_type == "final" || json.get("type").is_none() {
+                parts.push(text.to_string());
+                let _ = runtime::emit_voice_text(app, parts.join(" ").trim().to_string());
+            }
         }
     }
 
@@ -374,7 +396,7 @@ where
         .map_err(|error| AppError::Message(error.to_string()))
 }
 
-pub fn resolve_ws_url(params: &crate::models::InitParams) -> String {
+pub fn resolve_ws_config(params: &crate::models::InitParams) -> WebSocketSttConfig {
     let usage_id = params
         .user_config
         .get("aiModelUsage")
@@ -382,25 +404,36 @@ pub fn resolve_ws_url(params: &crate::models::InitParams) -> String {
         .and_then(Value::as_str)
         .unwrap_or_default();
 
-    if let Some(url) = params
+    let selected_model = params
         .user_config
         .get("sttModels")
         .and_then(Value::as_array)
         .and_then(|items| {
-            items.iter().find_map(|item| {
-                let id = item.get("id").and_then(Value::as_str)?;
-                let url = item.get("baseUrl").and_then(Value::as_str)?;
+            items
+                .iter()
+                .find(|item| item.get("id").and_then(Value::as_str) == Some(usage_id))
+        });
+    let url = selected_model
+        .and_then(|model| model.get("baseUrl"))
+        .and_then(Value::as_str)
+        .unwrap_or("ws://localhost:2700")
+        .to_string();
+    let model = selected_model
+        .and_then(|value| value.get("model"))
+        .and_then(Value::as_str)
+        .unwrap_or("whisper")
+        .to_string();
+    let language = params
+        .user_config
+        .get("userLanguage")
+        .and_then(Value::as_str)
+        .filter(|value| *value != "auto")
+        .and_then(|value| value.split(['_', '-']).next())
+        .map(str::to_string);
 
-                if !usage_id.is_empty() && id == usage_id {
-                    Some(url.to_string())
-                } else {
-                    None
-                }
-            })
-        })
-    {
-        return url;
+    WebSocketSttConfig {
+        url,
+        model,
+        language,
     }
-
-    String::from("ws://localhost:2700")
 }

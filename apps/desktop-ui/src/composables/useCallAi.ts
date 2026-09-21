@@ -5,13 +5,7 @@ import {
 } from '../lib/locale/language'
 import { useIpcStore } from '../stores/ipc'
 import { AI_TASKS } from '../types'
-import { runBrowserLocalChatCompletion } from '../utils/llm/browser-local'
-import {
-  cancelBrowserWhisperRecognition,
-  startBrowserWhisperRecognition,
-  stopBrowserWhisperRecognition,
-} from '../utils/stt/browser-whisper'
-import { DEFAULT_WHISPER_LOCAL_MODEL } from '../utils/stt/model-storage'
+import { transcribeOpenAiCompatible } from '../utils/stt/openai-compatible'
 import { GlobalEvents, useGlobalEvents } from './useGlobalEvents'
 import useToast from './useToast'
 import {
@@ -57,17 +51,20 @@ export const useCallAi = () => {
 
   const getVoiceRecognitionRuntime = () => {
     const sttModel = currentSttModel()
-    const provider = sttModel?.provider || sttModel?.model
 
-    if (provider === 'whisper-local') {
+    if (!sttModel) {
+      throw new Error(translate('toast.modelNotFound'))
+    }
+
+    if (sttModel.provider === 'openai-compatible') {
       return {
-        provider: 'whisper-local' as const,
+        provider: 'openai-compatible' as const,
         streaming: false,
         model: sttModel,
       }
     }
 
-    return { provider: 'vosk' as const, streaming: true, model: sttModel }
+    return { provider: 'websocket' as const, streaming: true, model: sttModel }
   }
 
   const currentWhisperLanguage = () => {
@@ -128,66 +125,22 @@ export const useCallAi = () => {
       }) => void
     }
   ): Promise<Record<string, any>> {
-    const provider = model.provider || model.model
     const normalizedMessages = Array.isArray(messages)
       ? messages
       : [{ role: 'user', content: messages } satisfies ChatMessage]
-
-    if (provider === 'browser-local') {
-      try {
-        return await runBrowserLocalChatCompletion(
-          model,
-          normalizedMessages,
-          options
-        )
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          return { content: '' }
-        }
-        return {
-          error: error instanceof Error ? error.message : String(error),
-          status: 500,
-          statusText: 'Browser local LLM error',
-        }
-      }
-    }
 
     return await chatCompletion(model, normalizedMessages, options)
   }
 
   const startVoiceRecognition = async () => {
     const runtime = getVoiceRecognitionRuntime()
-    const sttModel = runtime.model
 
-    if (runtime.provider === 'whisper-local') {
-      await startBrowserWhisperRecognition({
-        modelName: sttModel?.localModel || DEFAULT_WHISPER_LOCAL_MODEL,
-        language: currentWhisperLanguage(),
-        restorePunctuation: true,
-        startRecording: async () => {
-          const result = await ipcStore.callFunction('startLocalVoiceRecording')
+    if (runtime.provider === 'openai-compatible') {
+      const result = await ipcStore.callFunction('startLocalVoiceRecording')
 
-          if (!result.success) {
-            throw new Error(
-              result.error || 'Failed to start local voice recording'
-            )
-          }
-        },
-        stopRecording: async () => {
-          const result = await ipcStore.callFunction('stopLocalVoiceRecording')
-
-          if (!result.success || !result.result) {
-            throw new Error(
-              result.error || 'Failed to stop local voice recording'
-            )
-          }
-
-          return result.result as LocalVoiceRecording
-        },
-        onText: (text) => {
-          globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
-        },
-      })
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to start local voice recording')
+      }
       return
     }
 
@@ -197,8 +150,18 @@ export const useCallAi = () => {
   const stopVoiceRecognition = async () => {
     const runtime = getVoiceRecognitionRuntime()
 
-    if (runtime.provider === 'whisper-local') {
-      const text = await stopBrowserWhisperRecognition()
+    if (runtime.provider === 'openai-compatible') {
+      const result = await ipcStore.callFunction('stopLocalVoiceRecording')
+
+      if (!result.success || !result.result || !runtime.model) {
+        throw new Error(result.error || 'Failed to stop local voice recording')
+      }
+
+      const text = await transcribeOpenAiCompatible(
+        runtime.model,
+        result.result as LocalVoiceRecording,
+        currentWhisperLanguage()
+      )
 
       if (text) {
         globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
@@ -214,8 +177,8 @@ export const useCallAi = () => {
   const cancelVoiceRecognition = async () => {
     const runtime = getVoiceRecognitionRuntime()
 
-    if (runtime.provider === 'whisper-local') {
-      await cancelBrowserWhisperRecognition()
+    if (runtime.provider === 'openai-compatible') {
+      await ipcStore.callFunction('stopLocalVoiceRecording')
       return
     }
 
