@@ -31,6 +31,8 @@ pub struct InitParams {
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attachments: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

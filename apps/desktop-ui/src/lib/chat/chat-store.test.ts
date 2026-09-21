@@ -140,6 +140,41 @@ describe('chat-store', () => {
     expect(store.messages.value).toEqual([])
   })
 
+  it('keeps a failed user turn and retries it', async () => {
+    const sendChatMessage = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Provider unavailable'))
+      .mockResolvedValueOnce('Recovered answer')
+    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+
+    await store.sendMessage('Keep this question')
+
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: 'Keep this question' },
+    ])
+    expect(store.error.value).toBe('Provider unavailable')
+
+    await store.retryLastTurn()
+
+    expect(store.messages.value.at(-1)?.content).toBe('Recovered answer')
+    expect(store.error.value).toBe('')
+  })
+
+  it('regenerates an assistant turn from its user message', async () => {
+    const store = createChatStoreModel(createDeps())
+    store.messages.value = [
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Old answer' },
+    ]
+
+    await store.regenerateMessage(1)
+
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Assistant reply' },
+    ])
+  })
+
   it('opens a stored chat and navigates to chat page', async () => {
     const deps = createDeps({
       loadChatHistoryItem: vi.fn(async () => ({

@@ -47,6 +47,12 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const newChatParams = ref<ChatParams>({})
   const isGenerating = ref(false)
   const loadingProgress = ref('')
+  const error = ref('')
+  const lastFailedTurn = ref<{
+    message: string
+    attachments?: string[]
+    role?: string
+  } | null>(null)
   const abortController = ref<AbortController | null>(null)
 
   const stopGeneration = () => {
@@ -69,6 +75,9 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     if (isGenerating.value) {
       return
     }
+
+    error.value = ''
+    lastFailedTurn.value = null
 
     let devInstructions: string | undefined
     // Keep only the last 20 messages for context to avoid overflowing context limits
@@ -128,10 +137,10 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       if (e instanceof Error && e.message === 'AbortError') {
         // User aborted, it's fine
       } else {
-        deps.notifyError(e instanceof Error ? e.message : String(e))
-        // Roll back the optimistic user/assistant pair when nothing was produced.
+        error.value = e instanceof Error ? e.message : String(e)
         if (!assistantMessage.content) {
-          messages.value.splice(userMessageIndex, 2)
+          messages.value.splice(userMessageIndex + 1, 1)
+          lastFailedTurn.value = { message, attachments, role }
           isGenerating.value = false
           abortController.value = null
           return ''
@@ -144,7 +153,6 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
 
     if (!assistantMessage.content) {
-      // Request failed or was aborted with no content
       messages.value.splice(userMessageIndex, 2)
       return ''
     }
@@ -176,6 +184,39 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const clearChat = () => {
     messages.value = []
     newChatParams.value = {}
+    error.value = ''
+    lastFailedTurn.value = null
+  }
+
+  const retryLastTurn = async () => {
+    const failed = lastFailedTurn.value
+    if (!failed || isGenerating.value) return ''
+
+    const last = messages.value.at(-1)
+    if (last?.role === 'user' && last.content === failed.message) {
+      messages.value.pop()
+    }
+
+    return sendMessage(failed.message, failed.attachments, failed.role)
+  }
+
+  const regenerateMessage = async (assistantIndex: number) => {
+    if (
+      isGenerating.value ||
+      messages.value[assistantIndex]?.role !== 'assistant'
+    ) {
+      return ''
+    }
+
+    let userIndex = assistantIndex - 1
+    while (userIndex >= 0 && messages.value[userIndex]?.role !== 'user') {
+      userIndex -= 1
+    }
+    const userMessage = messages.value[userIndex]
+    if (!userMessage) return ''
+
+    messages.value = messages.value.slice(0, userIndex)
+    return sendMessage(userMessage.content, userMessage.attachments)
   }
 
   const startChat = async (chatParams: ChatParams) => {
@@ -207,8 +248,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     newChatParams,
     isGenerating,
     loadingProgress,
+    error,
     sendMessage,
     stopGeneration,
+    retryLastTurn,
+    regenerateMessage,
     startChat,
     openChat,
     clearChat,

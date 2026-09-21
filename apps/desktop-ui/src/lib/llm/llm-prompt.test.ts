@@ -41,6 +41,17 @@ describe('llm-prompt', () => {
     ])
   })
 
+  it('includes stored attachments in conversation context', () => {
+    const prompt = buildLlmPrompt(
+      [{ role: 'user', content: 'Explain it', attachments: ['Source text'] }],
+      { rulePrefix: 'Rules' }
+    )
+
+    expect(prompt.messages[0]?.content).toContain('=== ATTACHMENT START ===')
+    expect(prompt.messages[0]?.content).toContain('Source text')
+    expect(prompt.messages[0]?.content).toContain('Explain it')
+  })
+
   it('fills every placeholder occurrence', () => {
     expect(
       fillTemplate('to {{LANG}}, only {{LANG}}; {{OTHER}}', { LANG: 'en_US' })

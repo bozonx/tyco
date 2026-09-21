@@ -15,6 +15,17 @@ export interface LlmPromptOptions {
   rulePrefix: string
 }
 
+function messageContent(message: ChatMessage): string {
+  const attachments = (message.attachments || [])
+    .map(
+      (attachment) =>
+        `=== ATTACHMENT START ===\n${attachment}\n=== ATTACHMENT END ===`
+    )
+    .join('\n\n')
+
+  return [attachments, message.content].filter(Boolean).join('\n\n').trim()
+}
+
 /**
  * Instructions and rules go to the system prompt; the text to work on, or the
  * conversation, stays in the messages, so the task's "the last user message"
@@ -42,7 +53,7 @@ export function buildLlmPrompt(
     .filter((message) => message.role !== 'developer')
     .map((message): ModelMessage => ({
       role: message.role as 'user' | 'assistant',
-      content: message.content.trim(),
+      content: messageContent(message),
     }))
 
   return system ? { system, messages } : { messages }

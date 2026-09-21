@@ -21,7 +21,8 @@ export function prepareChatRequest(
   return {
     userMessage: {
       role: 'user',
-      content: [attachString, message].filter(Boolean).join('\n\n'),
+      content: message,
+      ...(attachments.length ? { attachments: [...attachments] } : {}),
     },
     preparedMessage: [attachString, roleString, message]
       .filter(Boolean)

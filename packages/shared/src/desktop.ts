@@ -10,6 +10,7 @@ export interface IpcResult<T = unknown> {
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'developer'
   content: string
+  attachments?: string[]
 }
 
 export enum START_MODES {

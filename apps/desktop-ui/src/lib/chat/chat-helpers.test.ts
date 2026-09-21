@@ -16,11 +16,8 @@ describe('chat-helpers', () => {
 
     expect(result.userMessage).toEqual({
       role: 'user',
-      content: [
-        '=== ATTACHMENT START ===\nfile-a\n=== ATTACHMENT END ===',
-        '=== ATTACHMENT START ===\nfile-b\n=== ATTACHMENT END ===',
-        'Hello',
-      ].join('\n\n'),
+      content: 'Hello',
+      attachments: ['file-a', 'file-b'],
     })
 
     expect(result.preparedMessage).toContain('=== ROLE/RULES START ===')
