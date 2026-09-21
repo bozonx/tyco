@@ -5,7 +5,9 @@ pub mod dbus;
 pub mod foreground_context;
 #[cfg(target_os = "linux")]
 pub mod hotkeys;
+pub mod net;
 pub mod notes;
 pub mod runtime;
+pub mod secrets;
 pub mod storage;
 pub mod voice;

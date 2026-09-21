@@ -10,7 +10,12 @@ use commands::history::{
     remove_from_chat_history, remove_from_editor_history, restore_editor_history_item,
     save_chat_history, save_editor_history, set_editor_history_result,
 };
+use commands::net::{
+    net_cancel, net_fetch, net_socket_close, net_socket_open, net_socket_send_binary,
+    net_socket_send_text,
+};
 use commands::notes::save_note;
+use commands::secrets::{secrets_remove, secrets_set, secrets_status};
 use commands::voice::{
     start_local_voice_recording, start_voice_recognition, stop_local_voice_recording,
     stop_voice_recognition,
@@ -70,6 +75,8 @@ pub fn run() {
             let user_config = storage::read_or_create_user_config(app.handle())?;
             let local_state = storage::read_or_create_local_state(app.handle())?;
             app.manage(AppState::new(default_init_params(user_config, local_state)));
+            app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
+            app.manage(services::net::NetState::new()?);
             #[cfg(target_os = "linux")]
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
@@ -111,7 +118,16 @@ pub fn run() {
             open_in_browser_and_close,
             type_into_window_and_close,
             put_into_clipboard_and_close,
-            save_note
+            save_note,
+            net_fetch,
+            net_cancel,
+            net_socket_open,
+            net_socket_send_text,
+            net_socket_send_binary,
+            net_socket_close,
+            secrets_status,
+            secrets_set,
+            secrets_remove
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -35,3 +35,6 @@ catalog:
   vitest: '^4.1.11'
   vue-eslint-parser: '^10.1.1'
   'vue-tsc': '^3.3.11'
+
+minimumReleaseAgeExclude:
+  - '@bozonx/ai-kit@0.4.0'

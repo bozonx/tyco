@@ -141,6 +141,15 @@ export const DESKTOP_COMMANDS = {
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
   PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
   SAVE_NOTE: 'save_note',
+  NET_FETCH: 'net_fetch',
+  NET_CANCEL: 'net_cancel',
+  NET_SOCKET_OPEN: 'net_socket_open',
+  NET_SOCKET_SEND_TEXT: 'net_socket_send_text',
+  NET_SOCKET_SEND_BINARY: 'net_socket_send_binary',
+  NET_SOCKET_CLOSE: 'net_socket_close',
+  SECRETS_STATUS: 'secrets_status',
+  SECRETS_SET: 'secrets_set',
+  SECRETS_REMOVE: 'secrets_remove',
 } as const
 
 export type DesktopCommandName =
