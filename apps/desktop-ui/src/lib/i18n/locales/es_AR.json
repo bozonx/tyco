@@ -6,7 +6,8 @@
     "save": "Guardar",
     "empty": "vacío",
     "inProgress": "En progreso",
-    "search": "Buscar"
+    "search": "Buscar",
+    "delete": "Eliminar"
   },
   "theme": { "auto": "Auto", "light": "Clara", "dark": "Oscura" },
   "language": {
@@ -75,7 +76,8 @@
     "chatsCleared": "Historial de chats limpiado",
     "inputRemoved": "Eliminado del historial de entrada",
     "transformsRemoved": "Eliminado del historial de transformaciones",
-    "chatsRemoved": "Eliminado del historial de chats"
+    "chatsRemoved": "Eliminado del historial de chats",
+    "emptyHint": "Aquí aparecerán los textos con los que trabajes."
   },
   "settings": {
     "generalTab": "General",
@@ -158,7 +160,20 @@
     "chatRoles": "Roles del chat",
     "saving": "Guardando...",
     "saved": "Configuración guardada",
-    "downloadRequired": "requiere descarga"
+    "downloadRequired": "requiere descarga",
+    "autosaveHint": "Los cambios se guardan automáticamente",
+    "sectionAppearance": "Apariencia",
+    "sectionEditor": "Editor",
+    "sectionHistory": "Historial",
+    "sectionSystem": "Sistema",
+    "aiModelUsageHint": "Elige qué modelo atiende cada tipo de solicitud.",
+    "translationsHint": "Idiomas de destino para traducir. Cada uno tiene una tecla rápida en el menú de traducción.",
+    "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
+    "rolesHint": "Un rol define las instrucciones del sistema para el chat.",
+    "hotkey": "Tecla rápida",
+    "dragToReorder": "Arrastra para reordenar",
+    "moveUp": "Subir",
+    "moveDown": "Bajar"
   },
   "editor": {
     "case": "Case",
@@ -187,7 +202,10 @@
     "alreadyCorrected": "El texto ya está corregido",
     "textTooShortForCorrection": "El texto es demasiado corto para corregir"
   },
-  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insertar en el editor",
+    "hint": "Pulsa una tecla o elige una acción"
+  },
   "menu": {
     "insert": "Insertar",
     "translate": "Traducir",
@@ -209,7 +227,11 @@
     "voiceInput": "Entrada por voz",
     "attachEditorText": "Adjuntar texto del editor",
     "attachEditorTextTitle": "Adjuntar el texto actual del editor como contexto",
-    "removeAttachment": "Eliminar adjunto"
+    "removeAttachment": "Eliminar adjunto",
+    "newChat": "Nuevo chat",
+    "stop": "Detener",
+    "emptyTitle": "Inicia una conversación",
+    "emptyHint": "Haz una pregunta o adjunta el texto del editor como contexto."
   },
   "action": {
     "insertIntoWindow": "Insertar en la ventana",

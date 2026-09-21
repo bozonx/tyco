@@ -1,7 +1,15 @@
 <template>
-  <div>
-    <textarea :value="inputText" @input="handleInput" />
-    <Diff :oldText="props.oldText" :newText="inputText" />
+  <div class="diff-input">
+    <textarea
+      class="textarea diff-input-text"
+      :value="inputText"
+      @input="handleInput"
+    />
+    <Diff
+      :oldText="props.oldText"
+      :newText="inputText"
+      class="diff-input-diff"
+    />
   </div>
 </template>
 
@@ -21,8 +29,27 @@ function handleInput(event: Event) {
 </script>
 
 <style scoped>
-textarea {
+.diff-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: 100%;
+  min-height: 0;
+}
+
+.diff-input-text {
+  flex: 1 1 50%;
   width: 100%;
-  height: 150px;
+  max-width: none;
+  min-height: 5rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  resize: none;
+}
+
+.diff-input-diff {
+  flex: 1 1 50%;
+  min-height: 3rem;
+  overflow-y: auto;
 }
 </style>

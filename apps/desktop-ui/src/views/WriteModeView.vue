@@ -1,15 +1,18 @@
 <template>
   <ContentPadding>
-    <div class="write-mode-container flex-1 flex flex-col min-h-0">
-      <div class="flex flex-row gap-2 flex-1 min-h-0">
+    <div class="write-mode-container">
+      <div class="write-frame">
         <WriteModeInput class="flex-1" />
-        <div class="flex gap-2 flex-col">
-          <Button sm square @click="clear" :title="t('editor.clear')">
-            <Icon icon="mdi:clear" height="24" />
+        <div class="write-rail">
+          <Button sm ghost square @click="clear" :title="t('editor.clear')">
+            <Icon icon="mdi:eraser" height="18" />
           </Button>
         </div>
       </div>
-      <p class="text-xs mt-1 text-muted">{{ t('write.escNext') }}</p>
+      <p class="write-hint">
+        <KeyButton>Esc</KeyButton>
+        <span>{{ t('write.next') }}</span>
+      </p>
     </div>
   </ContentPadding>
 </template>
@@ -95,3 +98,68 @@ async function doCorrection() {
   })
 }
 </script>
+
+<style scoped>
+.write-mode-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+  min-height: 0;
+}
+
+.write-frame {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.write-frame:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  box-shadow:
+    var(--app-shadow-sm),
+    0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
+.write-frame :deep(.main-input) {
+  padding: var(--editor-padding);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+}
+
+.write-rail {
+  display: flex;
+  flex-direction: column;
+  padding: 0.375rem;
+  border-left: 1px solid var(--app-border-subtle);
+}
+
+.write-rail :deep(.btn-ghost) {
+  color: var(--app-text-muted);
+}
+
+.write-rail :deep(.btn-ghost:hover) {
+  color: var(--color-error);
+}
+
+.write-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+</style>

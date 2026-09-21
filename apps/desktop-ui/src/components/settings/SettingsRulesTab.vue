@@ -1,19 +1,18 @@
 <template>
-  <div>
-    <h2>{{ t('settings.aiRules') }}</h2>
-    <FieldRow :label="t('settings.baseRules')">
+  <SettingsSection>
+    <FieldRow :label="t('settings.baseRules')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.base" />
     </FieldRow>
-    <FieldRow :label="t('settings.quickTranslation')">
+    <FieldRow :label="t('settings.quickTranslation')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.translate" />
     </FieldRow>
-    <FieldRow :label="t('settings.voiceCorrectionRules')">
+    <FieldRow :label="t('settings.voiceCorrectionRules')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.voiceCorrection" />
     </FieldRow>
-    <FieldRow :label="t('settings.textCorrection')">
+    <FieldRow :label="t('settings.textCorrection')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.correction" />
     </FieldRow>
-  </div>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">

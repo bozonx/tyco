@@ -1,127 +1,139 @@
 <template>
-  <div class="flex flex-col w-full h-full">
-    <!-- Toolbar above editor -->
-    <div class="flex items-center justify-between gap-2 mb-2">
-      <!-- Left column: Case and Format dropdowns + plugin left buttons -->
-      <div class="flex items-center gap-2">
-        <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
-        <DropdownMenu
-          :label="t('editor.format')"
-          :items="formatDropdownItems"
-        />
-        <Button
-          v-for="item in leftToolbarItems"
-          :key="item.id"
-          sm
-          square
-          neutral
-          :title="getToolbarTooltip(item)"
-          @click="item.action"
-        >
-          <Icon :icon="item.icon" height="20" />
-        </Button>
+  <div class="editor-root">
+    <div class="editor-frame">
+      <!-- Toolbar above editor -->
+      <div class="editor-toolbar flex items-center justify-between gap-2">
+        <!-- Left column: Case and Format dropdowns + plugin left buttons -->
+        <div class="flex items-center gap-1">
+          <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
+          <DropdownMenu
+            :label="t('editor.format')"
+            :items="formatDropdownItems"
+          />
+          <Button
+            v-for="item in leftToolbarItems"
+            :key="item.id"
+            sm
+            square
+            ghost
+            :title="getToolbarTooltip(item)"
+            @click="item.action"
+          >
+            <Icon :icon="item.icon" height="18" />
+          </Button>
+        </div>
+
+        <!-- Right column: plugin right buttons, AI task, Translation & Insert to window icon buttons -->
+        <div class="flex items-center gap-1">
+          <Button
+            v-for="item in rightToolbarItems"
+            :key="item.id"
+            sm
+            square
+            ghost
+            :title="getToolbarTooltip(item)"
+            @click="item.action"
+          >
+            <Icon :icon="item.icon" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            @click="handleAiTask"
+            :title="t('action.aiTask')"
+          >
+            <Icon icon="mdi:robot-outline" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            @click="handleTranslation"
+            :title="t('action.translation')"
+          >
+            <Icon icon="mdi:translate" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            @click="handleInsertToWindow"
+            :title="t('action.insertIntoWindow')"
+          >
+            <Icon icon="mdi:application-export" height="18" />
+          </Button>
+        </div>
       </div>
 
-      <!-- Right column: plugin right buttons, AI task, Translation & Insert to window icon buttons -->
-      <div class="flex items-center gap-2">
-        <Button
-          v-for="item in rightToolbarItems"
-          :key="item.id"
-          sm
-          square
-          neutral
-          :title="getToolbarTooltip(item)"
-          @click="item.action"
-        >
-          <Icon :icon="item.icon" height="20" />
-        </Button>
-        <Button
-          sm
-          square
-          neutral
-          @click="handleAiTask"
-          :title="t('action.aiTask')"
-        >
-          <Icon icon="mdi:robot" height="20" />
-        </Button>
-        <Button
-          sm
-          square
-          neutral
-          @click="handleTranslation"
-          :title="t('action.translation')"
-        >
-          <Icon icon="mdi:translate" height="20" />
-        </Button>
-        <Button
-          sm
-          square
-          neutral
-          @click="handleInsertToWindow"
-          :title="t('action.insertIntoWindow')"
-        >
-          <Icon icon="mdi:application-export" height="20" />
-        </Button>
+      <!-- Main editor area -->
+      <div class="editor-body">
+        <div class="flex-1 min-w-0">
+          <EditorInput />
+        </div>
+        <div class="editor-rail">
+          <Button
+            sm
+            square
+            ghost
+            class="rail-accent"
+            @click="voiceRecognition"
+            :title="t('editor.voiceInput')"
+          >
+            <Icon icon="mdi:microphone-outline" height="20" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            class="rail-accent"
+            @click="handleCorrection"
+            :title="t('action.correction')"
+          >
+            <Icon icon="mdi:auto-fix" height="20" />
+          </Button>
+          <div class="rail-divider" />
+          <Button
+            sm
+            square
+            ghost
+            @click="handleCopy"
+            :title="t('action.copyToClipboard')"
+          >
+            <Icon icon="mdi:content-copy" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            @click="editorInputStore.selectAll"
+            :title="t('editor.selectAll')"
+          >
+            <Icon icon="mdi:select-all" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            ghost
+            class="rail-danger"
+            @click="editorInputStore.clear"
+            :title="t('editor.clear')"
+          >
+            <Icon icon="mdi:eraser" height="18" />
+          </Button>
+        </div>
       </div>
     </div>
 
-    <!-- Main editor area -->
-    <div class="flex-1 flex gap-2 min-w-0">
-      <div class="flex-1 min-w-0">
-        <EditorInput />
-      </div>
-      <div class="flex gap-2 flex-col">
-        <Button
-          sm
-          square
-          @click="voiceRecognition"
-          :title="t('editor.voiceInput')"
-        >
-          <Icon icon="mdi:microphone" height="24" />
-        </Button>
-        <Button
-          sm
-          square
-          @click="handleCorrection"
-          :title="t('action.correction')"
-        >
-          <Icon icon="mdi:auto-fix" height="24" />
-        </Button>
-        <Button
-          sm
-          square
-          @click="handleCopy"
-          :title="t('action.copyToClipboard')"
-        >
-          <Icon icon="mdi:content-copy" height="24" />
-        </Button>
-        <Button
-          sm
-          square
-          @click="editorInputStore.selectAll"
-          :title="t('editor.selectAll')"
-        >
-          <Icon icon="mdi:select-all" height="24" />
-        </Button>
-        <Button
-          sm
-          square
-          @click="editorInputStore.clear"
-          :title="t('editor.clear')"
-        >
-          <Icon icon="mdi:clear" height="24" />
-        </Button>
-      </div>
-    </div>
-
-    <div>
-      <p class="text-xs mt-1 mb-2 text-muted">
+    <div class="editor-footer">
+      <p class="editor-hint">
+        <Icon icon="mdi:information-outline" height="14" class="shrink-0" />
         {{ t('editor.selectionHint') }}
       </p>
 
       <div
         v-if="otherEditItems.length > 0"
-        class="flex gap-1 w-full flex-wrap mb-2"
+        class="flex gap-1.5 w-full flex-wrap"
       >
         <Button
           v-for="item in otherEditItems"
@@ -134,15 +146,19 @@
         >
       </div>
 
-      <h2 class="mt-4 mb-1 text-sm">{{ t('editor.actions') }}</h2>
-      <div class="flex gap-1 w-full flex-wrap">
-        <Button
-          v-for="item in bottomActions"
-          :key="item.labelKey || item.name"
-          :icon="item.icon"
-          @click="doAction(item)"
-          >{{ getLabel(item) }}</Button
-        >
+      <div v-if="bottomActions.length > 0" class="editor-actions">
+        <h2 class="editor-actions-title">{{ t('editor.actions') }}</h2>
+        <div class="flex gap-1.5 w-full flex-wrap">
+          <Button
+            v-for="item in bottomActions"
+            :key="item.labelKey || item.name"
+            sm
+            neutral
+            :icon="item.icon"
+            @click="doAction(item)"
+            >{{ getLabel(item) }}</Button
+          >
+        </div>
       </div>
 
       <slot />
@@ -267,3 +283,117 @@ const handleCopy = async () => {
   }
 }
 </script>
+
+<style scoped>
+.editor-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.editor-frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.editor-frame:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  box-shadow:
+    var(--app-shadow-sm),
+    0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
+.editor-toolbar {
+  padding: 0.3125rem 0.375rem;
+  border-bottom: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+}
+
+.editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-body :deep(.main-input) {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.editor-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0.375rem;
+  border-left: 1px solid var(--app-border-subtle);
+}
+
+.rail-divider {
+  width: 1.25rem;
+  height: 1px;
+  margin: 0.25rem 0;
+  background-color: var(--app-border);
+}
+
+.editor-root :deep(.btn-ghost) {
+  color: var(--app-text-muted);
+}
+
+.editor-root :deep(.btn-ghost:hover) {
+  color: var(--color-base-content);
+}
+
+.editor-root :deep(.btn-ghost.rail-accent) {
+  color: var(--color-primary);
+}
+
+.editor-root :deep(.btn-ghost.rail-accent:hover) {
+  --btn-bg: var(--app-accent-soft);
+}
+
+.editor-root :deep(.btn-ghost.rail-danger:hover) {
+  color: var(--color-error);
+}
+
+.editor-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+
+.editor-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--app-text-faint);
+}
+
+.editor-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.editor-actions-title {
+  margin: 0;
+}
+</style>

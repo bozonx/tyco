@@ -6,7 +6,8 @@
     "save": "Kaydet",
     "empty": "boş",
     "inProgress": "İşleniyor",
-    "search": "Ara"
+    "search": "Ara",
+    "delete": "Sil"
   },
   "theme": { "auto": "Otomatik", "light": "Açık", "dark": "Koyu" },
   "language": {
@@ -75,7 +76,8 @@
     "chatsCleared": "Sohbet geçmişi temizlendi",
     "inputRemoved": "Giriş geçmişinden kaldırıldı",
     "transformsRemoved": "Dönüşüm geçmişinden kaldırıldı",
-    "chatsRemoved": "Sohbet geçmişinden kaldırıldı"
+    "chatsRemoved": "Sohbet geçmişinden kaldırıldı",
+    "emptyHint": "Üzerinde çalıştığınız metinler burada görünecek."
   },
   "settings": {
     "generalTab": "Genel",
@@ -158,7 +160,20 @@
     "chatRoles": "Sohbet rolleri",
     "saving": "Kaydediliyor...",
     "saved": "Ayarlar kaydedildi",
-    "downloadRequired": "indirme gerekli"
+    "downloadRequired": "indirme gerekli",
+    "autosaveHint": "Değişiklikler otomatik olarak kaydedilir",
+    "sectionAppearance": "Görünüm",
+    "sectionEditor": "Düzenleyici",
+    "sectionHistory": "Geçmiş",
+    "sectionSystem": "Sistem",
+    "aiModelUsageHint": "Her istek türünü hangi modelin işleyeceğini seçin.",
+    "translationsHint": "Çeviri için hedef diller. Her birine çeviri menüsünde bir kısayol tuşu atanır.",
+    "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
+    "rolesHint": "Rol, sohbet için sistem talimatlarını belirler.",
+    "hotkey": "Kısayol tuşu",
+    "dragToReorder": "Sıralamak için sürükleyin",
+    "moveUp": "Yukarı taşı",
+    "moveDown": "Aşağı taşı"
   },
   "editor": {
     "case": "Case",
@@ -187,7 +202,10 @@
     "alreadyCorrected": "Metin zaten düzeltildi",
     "textTooShortForCorrection": "Metin düzeltme için çok kısa"
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle",
+    "hint": "Bir tuşa basın veya bir eylem seçin"
+  },
   "menu": {
     "insert": "Ekle",
     "translate": "Çevir",
@@ -209,7 +227,11 @@
     "voiceInput": "Ses girişi",
     "attachEditorText": "Düzenleyici metnini ekle",
     "attachEditorTextTitle": "Mevcut düzenleyici metnini bağlam olarak ekle",
-    "removeAttachment": "Eki kaldır"
+    "removeAttachment": "Eki kaldır",
+    "newChat": "Yeni sohbet",
+    "stop": "Durdur",
+    "emptyTitle": "Bir sohbet başlatın",
+    "emptyHint": "Bir soru sorun veya düzenleyici metnini bağlam olarak ekleyin."
   },
   "action": {
     "insertIntoWindow": "Pencereye ekle",

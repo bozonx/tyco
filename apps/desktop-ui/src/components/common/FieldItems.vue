@@ -1,13 +1,12 @@
 <template>
-  <div class="field-items flex flex-col gap-2.5">
+  <div class="field-items flex flex-col gap-2">
     <div
       v-for="(item, index) in localItems"
       :key="item.id || index"
-      class="item-card group flex items-start gap-3 p-3 rounded-xl border border-base-300 bg-base-100/60 hover:bg-base-100 transition-all duration-150"
+      class="item-card group"
       :class="{
-        'opacity-50 border-dashed border-primary': draggedIndex === index,
-        'ring-2 ring-primary/40 bg-base-200/60':
-          dragOverIndex === index && draggedIndex !== index,
+        'is-dragged': draggedIndex === index,
+        'is-drop-target': dragOverIndex === index && draggedIndex !== index,
       }"
       @dragover.prevent="handleDragOver(index)"
       @dragenter.prevent="handleDragEnter(index)"
@@ -16,13 +15,13 @@
     >
       <!-- Drag Handle -->
       <div
-        class="drag-handle flex items-center justify-center p-1 mt-0.5 rounded cursor-grab active:cursor-grabbing text-base-content/40 hover:text-base-content/80 hover:bg-base-200 transition-colors select-none"
+        class="drag-handle"
         draggable="true"
-        :title="t('settings.dragToReorder') || 'Drag to reorder'"
+        :title="t('settings.dragToReorder')"
         @dragstart="handleDragStart(index, $event)"
         @dragend="handleDragEnd"
       >
-        <Icon icon="mdi:drag-vertical" width="20" height="20" />
+        <Icon icon="mdi:drag-vertical" width="18" height="18" />
       </div>
 
       <!-- Item Content Slot -->
@@ -31,50 +30,48 @@
       </div>
 
       <!-- Controls: Up / Down / Remove -->
-      <div class="flex items-center gap-1 shrink-0 mt-0.5">
-        <div class="flex flex-col gap-0.5">
+      <div class="item-controls">
+        <div class="flex items-center">
           <Button
             class="control-btn"
             xs
-            neutral
+            ghost
             square
             :disabled="index === 0"
-            :title="t('settings.moveUp') || 'Move up'"
+            :title="t('settings.moveUp')"
             @click="moveItemUp(index)"
           >
-            <Icon icon="mdi:arrow-up" width="14" height="14" />
+            <Icon icon="mdi:arrow-up" width="15" height="15" />
           </Button>
           <Button
             class="control-btn"
             xs
-            neutral
+            ghost
             square
             :disabled="index === localItems.length - 1"
-            :title="t('settings.moveDown') || 'Move down'"
+            :title="t('settings.moveDown')"
             @click="moveItemDown(index)"
           >
-            <Icon icon="mdi:arrow-down" width="14" height="14" />
+            <Icon icon="mdi:arrow-down" width="15" height="15" />
           </Button>
         </div>
         <Button
           class="delete-btn"
-          sm
-          neutral
+          xs
+          ghost
           square
-          :title="t('common.delete') || 'Delete'"
+          :title="t('common.delete')"
           @click="removeItem(index)"
         >
-          <Icon icon="mdi:close" width="16" height="16" />
+          <Icon icon="mdi:trash-can-outline" width="16" height="16" />
         </Button>
       </div>
     </div>
 
-    <div class="flex flex-row justify-end gap-2 mt-1">
-      <Button sm @click="addItem">
-        <Icon icon="mdi:plus" width="16" height="16" />
-        {{ t('common.add') }}
-      </Button>
-    </div>
+    <Button class="add-btn" sm ghost @click="addItem">
+      <Icon icon="mdi:plus" width="16" height="16" />
+      {{ t('common.add') }}
+    </Button>
   </div>
 </template>
 
@@ -179,23 +176,89 @@ const handleDragEnd = () => {
 </script>
 
 <style scoped>
-.control-btn {
-  height: 18px;
-  min-height: 18px;
-  width: 22px;
-  min-width: 22px;
-  padding: 0;
-}
-
-.delete-btn {
-  height: 38px;
-  min-height: 38px;
-  width: 32px;
-  min-width: 32px;
-  padding: 0;
-}
-
 .item-card {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-sm) var(--space-md) var(--space-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.item-card:hover {
+  border-color: var(--app-border-strong);
+}
+
+.item-card.is-dragged {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: var(--color-primary);
+}
+
+.item-card.is-drop-target {
+  border-color: var(--color-primary);
+  box-shadow: var(--app-focus-ring);
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  color: var(--app-text-faint);
+  cursor: grab;
+  transition: color var(--transition-fast);
+}
+
+.drag-handle:hover {
+  color: var(--color-base-content);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 2.25rem;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity var(--transition-fast);
+}
+
+.item-card:hover .item-controls,
+.item-card:focus-within .item-controls {
+  opacity: 1;
+}
+
+.control-btn,
+.delete-btn {
+  color: var(--app-text-muted);
+}
+
+.delete-btn:hover {
+  color: var(--color-error);
+}
+
+.add-btn {
+  justify-content: center;
+  width: 100%;
+  border: 1px dashed var(--app-border-strong);
+  color: var(--app-text-muted);
+}
+
+.add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 </style>

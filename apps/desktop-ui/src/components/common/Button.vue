@@ -4,7 +4,7 @@
     :disabled="props.disabled"
     @click="onClick"
   >
-    <Icon v-if="props.icon" :icon="props.icon" />
+    <Icon v-if="props.icon" :icon="props.icon" class="shrink-0" height="16" />
     <slot></slot>
   </button>
 </template>
@@ -28,8 +28,8 @@ const props = defineProps<{
 
 const buttonClass = computed(() => {
   return {
-    'btn-neutral': props.neutral,
-    'btn-primary': !props.neutral,
+    'btn-neutral': props.neutral && !props.ghost,
+    'btn-primary': !props.neutral && !props.ghost,
     'btn-xs': props.xs,
     'btn-sm': props.sm,
     'btn-active': props.active,

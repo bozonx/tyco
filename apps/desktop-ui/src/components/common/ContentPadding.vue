@@ -9,7 +9,7 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: var(--space-xl);
+  padding: var(--space-lg) var(--space-xl);
   overflow: hidden;
   display: flex;
   flex-direction: column;

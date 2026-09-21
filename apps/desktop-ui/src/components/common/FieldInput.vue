@@ -11,8 +11,12 @@
 
 <script setup lang="ts">
 withDefaults(
-  defineProps<{ value?: string | number; placeholder?: string; type?: string }>(),
-  { type: 'text' },
+  defineProps<{
+    value?: string | number
+    placeholder?: string
+    type?: string
+  }>(),
+  { type: 'text' }
 )
 
 const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
@@ -28,6 +32,6 @@ input {
 }
 
 .input--number {
-  width: 6rem;
+  width: 7.5rem;
 }
 </style>

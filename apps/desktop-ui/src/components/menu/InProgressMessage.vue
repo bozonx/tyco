@@ -1,12 +1,11 @@
 <template>
-  <div class="flex flex-col w-full h-full justify-center items-center">
-    <h2>
-      <span v-if="props.ai">{{ t('menu.aiRequest') }} </span>
-      <span v-else-if="props.correction">{{ t('menu.correction') }} </span>
-      <span v-else>{{ t('common.inProgress') }} </span>
-
-      <span class="loading loading-spinner loading-lg"></span>
-    </h2>
+  <div class="in-progress">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+    <div class="in-progress-label">
+      <span v-if="props.ai">{{ t('menu.aiRequest') }}</span>
+      <span v-else-if="props.correction">{{ t('menu.correction') }}</span>
+      <span v-else>{{ t('common.inProgress') }}</span>
+    </div>
   </div>
 </template>
 
@@ -20,3 +19,21 @@ const props = withDefaults(
 
 const { t } = useI18n()
 </script>
+
+<style scoped>
+.in-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  width: 100%;
+  height: 100%;
+}
+
+.in-progress-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+</style>

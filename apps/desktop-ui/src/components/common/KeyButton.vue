@@ -1,5 +1,5 @@
 <template>
-  <span class="kbd kbd-lg">
+  <kbd class="kbd">
     <slot></slot>
-  </span>
+  </kbd>
 </template>

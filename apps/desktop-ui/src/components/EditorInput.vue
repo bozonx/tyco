@@ -351,12 +351,6 @@ watch(
   overflow: hidden;
 }
 
-.main-input:focus-within {
-  border-color: oklch(var(--p));
-  box-shadow: 0 0 0 2px oklch(var(--p) / 0.15);
-  outline: none;
-}
-
 /* остальной вид редактора — в lib/editor/theme.ts, чтобы цвета брались из
    переменных темы приложения */
 .main-input :deep(.cm-editor) {

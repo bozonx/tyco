@@ -8,23 +8,20 @@ defineProps<{ text?: string }>()
 
 <style scoped>
 pre {
-  text-align: left;
-  padding: var(--space-lg);
   height: 100%;
   width: 100%;
-  overflow-y: auto;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.6;
   margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  overflow-y: auto;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  text-align: left;
   white-space: pre-wrap;
   word-break: break-word;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--color-base-content);
   background-color: var(--app-surface-raised);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--app-border);
-  color: oklch(var(--bc));
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-lg);
 }
 </style>

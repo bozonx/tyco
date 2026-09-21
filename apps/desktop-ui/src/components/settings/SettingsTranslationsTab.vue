@@ -1,11 +1,11 @@
 <template>
-  <div class="settings-translations-tab py-1">
+  <SettingsSection :description="t('settings.translationsHint')" bare>
     <FieldItems
       :items="translateLanguagesItems"
       @update:items="updateTranslateLanguages"
     >
       <template #item="{ item, index }">
-        <div class="flex flex-row items-center gap-3 w-full">
+        <div class="flex flex-row items-center gap-2 w-full">
           <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
           <FieldSelect
             class="flex-1"
@@ -15,7 +15,7 @@
         </div>
       </template>
     </FieldItems>
-  </div>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">

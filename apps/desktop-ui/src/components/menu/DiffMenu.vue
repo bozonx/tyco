@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4 w-full h-full">
     <h1 class="menu-title">{{ t('menu.compareResult') }}</h1>
-    <div class="flex-1 relative">
+    <div class="flex-1 min-h-0 relative">
       <DiffInput
         :oldText="props.oldText"
         :newText="props.newText"

@@ -6,7 +6,8 @@
     "save": "Save",
     "empty": "empty",
     "inProgress": "In progress",
-    "search": "Search"
+    "search": "Search",
+    "delete": "Delete"
   },
   "theme": { "auto": "Auto", "light": "Light", "dark": "Dark" },
   "language": {
@@ -75,7 +76,8 @@
     "chatsCleared": "Chat history cleared",
     "inputRemoved": "Removed from input history",
     "transformsRemoved": "Removed from transform history",
-    "chatsRemoved": "Removed from chat history"
+    "chatsRemoved": "Removed from chat history",
+    "emptyHint": "Texts you work with will appear here."
   },
   "settings": {
     "generalTab": "General",
@@ -158,7 +160,20 @@
     "chatRoles": "Chat roles",
     "saving": "Saving...",
     "saved": "Settings saved",
-    "downloadRequired": "download required"
+    "downloadRequired": "download required",
+    "autosaveHint": "Changes are saved automatically",
+    "sectionAppearance": "Appearance",
+    "sectionEditor": "Editor",
+    "sectionHistory": "History",
+    "sectionSystem": "System",
+    "aiModelUsageHint": "Choose which model handles each kind of request.",
+    "translationsHint": "Target languages for translation. Each one gets a hotkey in the translation menu.",
+    "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
+    "rolesHint": "A role sets the system instructions for the chat.",
+    "hotkey": "Hotkey",
+    "dragToReorder": "Drag to reorder",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "editor": {
     "case": "Case",
@@ -187,7 +202,10 @@
     "alreadyCorrected": "Text is already corrected",
     "textTooShortForCorrection": "Text is too short for correction"
   },
-  "shortcuts": { "insertIntoEditor": "Insert into editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insert into editor",
+    "hint": "Press a key or click an action"
+  },
   "menu": {
     "insert": "Insert",
     "translate": "Translate",
@@ -209,7 +227,11 @@
     "voiceInput": "Voice input",
     "attachEditorText": "Attach editor text",
     "attachEditorTextTitle": "Attach current editor text as context",
-    "removeAttachment": "Remove attachment"
+    "removeAttachment": "Remove attachment",
+    "newChat": "New chat",
+    "stop": "Stop",
+    "emptyTitle": "Start a conversation",
+    "emptyHint": "Ask a question or attach the editor text as context."
   },
   "action": {
     "insertIntoWindow": "Insert into window",

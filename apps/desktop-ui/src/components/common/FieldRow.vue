@@ -1,42 +1,76 @@
 <template>
   <div class="field-row" :class="{ vertical: vertical }">
-    <div class="field-row-label text-muted">
-      {{ label }}
+    <div class="field-row-label">
+      <div class="field-row-title">{{ label }}</div>
+      <div v-if="hint" class="field-row-hint">{{ hint }}</div>
     </div>
-    <div class="flex-1">
+    <div class="field-row-control">
       <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ label: string; vertical?: boolean }>()
+defineProps<{ label: string; hint?: string; vertical?: boolean }>()
 </script>
 
 <style scoped>
 .field-row {
-  display: flex;
-  flex-direction: row;
-  gap: 14px;
-  padding: var(--space-md) var(--space-sm);
+  display: grid;
+  grid-template-columns: var(--field-label-width) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.field-row + .field-row {
+  border-top: 1px solid var(--app-border-subtle);
 }
 
 .field-row-label {
-  width: var(--field-label-width);
-  text-align: right;
-  line-height: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 2.25rem;
+  justify-content: center;
+}
+
+.field-row-title {
   font-size: 0.875rem;
   font-weight: 500;
+  line-height: 1.3;
+}
+
+.field-row-hint {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--app-text-muted);
+}
+
+.field-row-control {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 2.25rem;
 }
 
 .vertical {
-  flex-direction: column;
-  gap: 0px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
 }
 
 .vertical .field-row-label {
-  text-align: left;
+  min-height: 0;
+}
+
+.vertical .field-row-title {
   font-size: 0.8125rem;
-  line-height: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .field-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
 }
 </style>

@@ -18,6 +18,7 @@
         :checked="option.id === props.value"
         @change="handleThemeChange(option.id)"
       />
+      <Icon :icon="option.icon" height="15" />
       <span>{{ option.name }}</span>
     </label>
   </div>
@@ -28,6 +29,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import type { ThemeMode } from '../../lib/theme/theme-controller'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{ value: ThemeMode }>()
 
@@ -36,9 +38,9 @@ const emit = defineEmits<{ (e: 'update:value', value: ThemeMode): void }>()
 const { t } = useI18n()
 
 const themeOptions = computed(() => [
-  { id: 'auto', name: t('theme.auto') },
-  { id: 'light', name: t('theme.light') },
-  { id: 'dark', name: t('theme.dark') },
+  { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
+  { id: 'light', name: t('theme.light'), icon: 'mdi:white-balance-sunny' },
+  { id: 'dark', name: t('theme.dark'), icon: 'mdi:weather-night' },
 ])
 
 function handleThemeChange(value: number | string | undefined) {
@@ -53,37 +55,43 @@ function handleThemeChange(value: number | string | undefined) {
 <style scoped>
 .theme-switcher {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-sunken);
 }
 
 .theme-option {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.375rem 0.75rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background: var(--app-surface);
-  color: oklch(var(--bc));
-  font-size: 0.875rem;
-  line-height: 1.2;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.75rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  color: var(--app-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   transition:
-    border-color var(--transition-fast),
+    color var(--transition-fast),
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    box-shadow var(--transition-fast);
 }
 
 .theme-option:hover {
-  background: var(--app-surface-raised);
-  border-color: color-mix(in srgb, var(--app-border) 55%, oklch(var(--p)) 45%);
+  color: var(--color-base-content);
 }
 
 .theme-option.active {
-  border-color: oklch(var(--p));
-  background: color-mix(in srgb, var(--app-surface) 84%, oklch(var(--p)) 16%);
-  color: oklch(var(--bc));
+  background-color: var(--app-surface);
+  color: var(--color-base-content);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 0 0 1px var(--app-border-subtle);
+}
+
+.theme-option:has(:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
 }
 </style>

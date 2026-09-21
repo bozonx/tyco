@@ -1,29 +1,26 @@
 <template>
-  <div class="settings-tasks-tab py-1">
+  <SettingsSection :description="t('settings.tasksHint')" bare>
     <FieldItems :items="userConfig.aiTasks" @update:items="updateAiTasks">
       <template #item="{ item, index }">
-        <div class="flex flex-row items-start gap-3 w-full">
-          <div class="pt-1">
-            <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
+        <div class="flex flex-col gap-2 w-full">
+          <div class="flex items-center gap-2">
+            <KeyButton :title="t('settings.hotkey')">{{
+              PRESETS_KEYS[index]
+            }}</KeyButton>
+            <FieldInput
+              v-model:value="item.name"
+              :placeholder="t('settings.name')"
+              class="font-medium"
+            />
           </div>
-          <div class="flex-1 flex flex-col gap-2 min-w-0">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-muted">
-                {{ t('settings.name') }}
-              </label>
-              <FieldInput v-model:value="item.name" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-muted">
-                {{ t('settings.rule') }}
-              </label>
-              <FieldTextArea v-model:value="item.rule" />
-            </div>
-          </div>
+          <FieldTextArea
+            v-model:value="item.rule"
+            :placeholder="t('settings.rule')"
+          />
         </div>
       </template>
     </FieldItems>
-  </div>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">

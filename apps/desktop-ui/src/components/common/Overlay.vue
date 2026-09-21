@@ -1,22 +1,28 @@
 <template>
-  <div class="overlay">
-    <div
-      v-if="navBarVisible"
-      class="navbar bg-neutral text-neutral-content shadow-sm overlay-header"
-    >
-      <Button neutral @click="menuModalsStore.back">
-        {{ t('common.back') }}{{ t('nav.escSuffix') }}
-      </Button>
+  <!-- The overlay is always dark: it is a keyboard HUD on top of the app,
+       not a page of it -->
+  <div class="overlay" data-theme="dark">
+    <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
+      <button
+        v-if="navBarVisible"
+        type="button"
+        class="overlay-back"
+        @click="menuModalsStore.back"
+      >
+        <KeyButton>Esc</KeyButton>
+        <span>{{ t('common.back') }}</span>
+      </button>
+      <div class="overlay-body">
+        <slot />
+      </div>
     </div>
-    <ContentPadding class="flex-1">
-      <slot />
-    </ContentPadding>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '../../composables/useI18n'
 import { useMenuModalsStore } from '../../stores/menuModals'
+import KeyButton from './KeyButton.vue'
 
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
@@ -27,18 +33,77 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
 
 <style scoped>
 .overlay {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  z-index: var(--z-overlay);
   position: fixed;
   inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  padding: var(--space-lg);
   background-color: var(--app-overlay-bg);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  color: var(--color-base-content);
+  animation: overlay-in 140ms ease-out;
 }
 
-.overlay-header {
-  padding: var(--space-sm) var(--space-xl);
+.overlay-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 920px;
+  min-height: 0;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-xl) var(--space-xl);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
+  box-shadow:
+    0 24px 64px -12px rgb(0 0 0 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.overlay-panel.is-compact {
+  align-self: center;
+  max-width: 360px;
+  padding: var(--space-2xl);
+}
+
+.overlay-back {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.overlay-back:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
+.overlay-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* keep menu titles clear of the back button */
+.overlay-body :deep(h1) {
+  padding-right: 7rem;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
 }
 </style>

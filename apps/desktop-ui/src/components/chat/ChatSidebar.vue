@@ -1,33 +1,31 @@
 <template>
-  <div class="chat-sidebar flex flex-col gap-4 h-full">
-    <Button class="w-full" @click="chatStore.startChat({})">
-      <Icon icon="mdi:plus" height="20" />
+  <aside class="chat-sidebar">
+    <Button sm class="w-full" icon="mdi:plus" @click="chatStore.startChat({})">
       {{ t('chat.newChat') }}
     </Button>
 
-    <div class="flex-1 overflow-y-auto">
-      <div
-        v-if="historyStore.chatHistory.length === 0"
-        class="text-sm text-gray-500 italic px-2"
-      >
+    <div class="flex-1 min-h-0 overflow-y-auto">
+      <div v-if="historyStore.chatHistory.length === 0" class="chat-list-empty">
         {{ t('history.empty') }}
       </div>
-      <ul v-else class="flex flex-col gap-1">
+      <ul v-else class="chat-list">
         <li v-for="item in historyStore.chatHistory" :key="item.id">
-          <Button
-            class="w-full justify-start text-left normal-case font-normal"
-            sm
-            :ghost="chatStore.newChatParams?.id !== item.id"
+          <button
+            type="button"
+            class="chat-list-item"
+            :class="{ 'is-active': chatStore.newChatParams?.id === item.id }"
+            :title="item.description"
             @click="chatStore.openChat(item.id)"
           >
-            <div class="truncate w-full">
+            <Icon icon="mdi:message-outline" height="15" class="shrink-0" />
+            <span class="truncate">
               {{ item.description || t('common.empty') }}
-            </div>
-          </Button>
+            </span>
+          </button>
         </li>
       </ul>
     </div>
-  </div>
+  </aside>
 </template>
 
 <script setup lang="ts">
@@ -44,28 +42,56 @@ const historyStore = useHistoryStore()
 
 <style scoped>
 .chat-sidebar {
-  width: 280px;
-  border-right: 1px solid var(--color-border);
-  padding: 1rem;
-  background-color: var(--color-base-200);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 232px;
+  flex-shrink: 0;
+  height: 100%;
+  padding: var(--space-lg) var(--space-md);
+  border-right: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
 }
 
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-li {
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 
-/* Custom scrollbar for better look */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 4px;
+.chat-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  text-align: left;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
 }
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: var(--color-base-300);
-  border-radius: 10px;
+
+.chat-list-item:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
+.chat-list-item.is-active {
+  color: var(--color-base-content);
+  background-color: var(--app-active);
+  font-weight: 500;
+}
+
+.chat-list-empty {
+  padding: var(--space-sm) var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--app-text-faint);
 }
 </style>

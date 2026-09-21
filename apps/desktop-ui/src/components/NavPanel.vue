@@ -1,35 +1,34 @@
 <template>
-  <div class="navbar bg-base-300 text-neutral-content shadow-sm panel">
-    <div class="flex-1 flex flex-row gap-2 min-w-0 items-center">
-      <div
-        v-if="navPanelStore.params.rightPanelVisible"
-        role="tablist"
-        class="tabs tabs-border nav-tabs"
+  <header class="app-topbar">
+    <nav
+      v-if="navPanelStore.params.rightPanelVisible"
+      class="topbar-nav"
+      role="tablist"
+    >
+      <button
+        type="button"
+        role="tab"
+        class="topbar-tab"
+        :class="{
+          'is-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
+        }"
+        @click="routeParamsStore.toEditor()"
       >
-        <a
-          role="tab"
-          class="tab"
-          :class="{
-            'tab-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
-          }"
-          @click="routeParamsStore.toEditor()"
-        >
-          <Icon icon="mdi:pencil" height="16" class="mr-1" />
-          {{ t('nav.editor') }}
-        </a>
-        <a
-          role="tab"
-          class="tab"
-          :class="{
-            'tab-active': appNavigation.isCurrent(APP_ROUTES.CHAT.path),
-          }"
-          @click="openChat"
-        >
-          <Icon icon="mdi:chat-processing-outline" height="16" class="mr-1" />
-          {{ t('nav.aiChat') }}
-        </a>
-      </div>
-    </div>
+        <Icon icon="mdi:pencil-outline" height="16" />
+        {{ t('nav.editor') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="topbar-tab"
+        :class="{ 'is-active': appNavigation.isCurrent(APP_ROUTES.CHAT.path) }"
+        @click="openChat"
+      >
+        <Icon icon="mdi:chat-processing-outline" height="16" />
+        {{ t('nav.aiChat') }}
+      </button>
+    </nav>
+    <div class="flex-1" />
     <div
       class="flex flex-row gap-1 items-center"
       v-if="navPanelStore.params.rightPanelVisible"
@@ -38,24 +37,33 @@
         v-if="navPanelStore.params.escBtnAction"
         sm
         neutral
+        icon="mdi:lightning-bolt-outline"
+        class="mr-1"
         @click="navPanelStore.params.escBtnAction"
         >{{ escBtnText }}</Button
       >
-      <Button sm neutral square @click="openHistory" :title="t('nav.history')">
+      <Button
+        sm
+        ghost
+        square
+        :active="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"
+        @click="openHistory"
+        :title="t('nav.history')"
+      >
         <Icon icon="mdi:history" height="20" />
       </Button>
       <Button
-        :disabled="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
         sm
-        neutral
+        ghost
         square
+        :active="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
         @click="openSettings"
         :title="t('nav.settings')"
       >
-        <Icon icon="mdi:cog" height="24" />
+        <Icon icon="mdi:cog-outline" height="20" />
       </Button>
     </div>
-  </div>
+  </header>
 </template>
 
 <script setup lang="ts">
@@ -106,19 +114,58 @@ function openHistory() {
 </script>
 
 <style scoped>
-.panel {
-  min-height: 44px;
-  padding: 0.375rem var(--space-lg);
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  height: 48px;
+  flex-shrink: 0;
+  padding: 0 var(--space-md);
+  border-bottom: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
 }
 
-/* Tab group inside the navbar — remove the bottom border line of tabs-border */
-.nav-tabs {
-  --tab-border-color: var(--app-border);
-  gap: 0;
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.nav-tabs::before,
-.nav-tabs::after {
-  display: none;
+.topbar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.topbar-tab:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
+.topbar-tab.is-active {
+  color: var(--color-base-content);
+  background-color: var(--app-surface);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 0 0 1px var(--app-border);
+}
+
+.app-topbar :deep(.btn-ghost) {
+  color: var(--app-text-muted);
+}
+
+.app-topbar :deep(.btn-ghost:hover),
+.app-topbar :deep(.btn-ghost.btn-active) {
+  color: var(--color-base-content);
 }
 </style>

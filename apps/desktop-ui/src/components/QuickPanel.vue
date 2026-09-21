@@ -1,20 +1,24 @@
 <template>
   <ContentPadding>
     <Editor v-if="ipcStore.params">
-      <div class="mt-4 flex flex-row gap-2 text-xs">
-        <RouterLink :to="APP_ROUTES.WRITE.path">{{
-          t('mode.write')
-        }}</RouterLink>
-        <RouterLink :to="APP_ROUTES.VOICE.path">{{
-          t('mode.voice')
-        }}</RouterLink>
-        <RouterLink :to="APP_ROUTES.AI_TASKS.path">{{
-          t('mode.aiTasks')
-        }}</RouterLink>
-        <RouterLink :to="APP_ROUTES.SELECT.path">{{
-          t('mode.select')
-        }}</RouterLink>
-      </div>
+      <nav class="mode-links">
+        <RouterLink :to="APP_ROUTES.WRITE.path" class="mode-link">
+          <Icon icon="mdi:text-box-edit-outline" height="14" />
+          {{ t('mode.write') }}
+        </RouterLink>
+        <RouterLink :to="APP_ROUTES.VOICE.path" class="mode-link">
+          <Icon icon="mdi:microphone-outline" height="14" />
+          {{ t('mode.voice') }}
+        </RouterLink>
+        <RouterLink :to="APP_ROUTES.AI_TASKS.path" class="mode-link">
+          <Icon icon="mdi:robot-outline" height="14" />
+          {{ t('mode.aiTasks') }}
+        </RouterLink>
+        <RouterLink :to="APP_ROUTES.SELECT.path" class="mode-link">
+          <Icon icon="mdi:cursor-text" height="14" />
+          {{ t('mode.select') }}
+        </RouterLink>
+      </nav>
     </Editor>
   </ContentPadding>
 </template>
@@ -29,7 +33,38 @@
 import { useI18n } from '../composables/useI18n'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useIpcStore } from '../stores/ipc'
+import { Icon } from '@iconify/vue'
 
 const ipcStore = useIpcStore()
 const { t } = useI18n()
 </script>
+
+<style scoped>
+.mode-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.mode-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.mode-link:hover {
+  opacity: 1;
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+</style>

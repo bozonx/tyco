@@ -2,30 +2,34 @@
   <div class="flex flex-col gap-4 w-full h-full">
     <h1>{{ t('menu.voiceRecognition') }}</h1>
 
-    <div class="flex-1">
-      <p v-if="statusText" class="text-sm text-muted mb-2">
+    <div class="flex-1 flex flex-col gap-2 min-h-0">
+      <p v-if="statusText" class="voice-status">
+        <span class="voice-dot" :class="{ 'is-live': isStarted }" />
         {{ statusText }}
       </p>
-      <TextPreview :text="recognizedText" />
+      <div class="flex-1 min-h-0">
+        <TextPreview :text="recognizedText" />
+      </div>
     </div>
 
-    <div class="shortcuts-list">
-      <div class="flex flex-col gap-2">
-        <span class="flex flex-row gap-1">
-          <KeyButton>Esc</KeyButton>
-          <Button sm neutral :disabled="isFinishing" @click="cancel">
-            {{ t('common.cancel') }}
-          </Button>
-        </span>
-
-        <span class="flex flex-row gap-1">
-          <KeyButton>Space</KeyButton>
-          <KeyButton>Enter</KeyButton>
-          <Button sm neutral :disabled="isFinishing" @click="finish">
-            {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-          </Button>
-        </span>
-      </div>
+    <div class="voice-shortcuts">
+      <ShortcutButton
+        :keys="['Space', 'Enter']"
+        icon="mdi:check"
+        primary
+        :disabled="isFinishing"
+        @click="finish"
+      >
+        {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
+      </ShortcutButton>
+      <ShortcutButton
+        :keys="['Esc']"
+        icon="mdi:close"
+        :disabled="isFinishing"
+        @click="cancel"
+      >
+        {{ t('common.cancel') }}
+      </ShortcutButton>
     </div>
   </div>
 </template>
@@ -253,13 +257,36 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.shortcuts-list {
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
+.voice-status {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.voice-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background-color: var(--app-text-faint);
+}
+
+.voice-dot.is-live {
+  background-color: var(--color-error);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+.voice-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.35;
+  }
 }
 </style>

@@ -2,7 +2,7 @@
   <div ref="containerRef" class="relative inline-block text-left">
     <button
       type="button"
-      class="btn btn-sm btn-neutral flex items-center gap-1 font-normal"
+      class="btn btn-sm btn-ghost dropdown-trigger flex items-center gap-1"
       :class="{ 'btn-active': isOpen }"
       :title="title"
       :aria-expanded="isOpen"
@@ -20,13 +20,13 @@
 
     <div
       v-if="isOpen"
-      class="absolute left-0 top-full mt-1 min-w-44 max-w-64 py-1 bg-base-200 border border-base-300 rounded-box shadow-xl z-50 overflow-hidden"
+      class="dropdown-panel absolute left-0 top-full mt-1 min-w-44 max-w-64 z-50"
     >
       <button
         v-for="(item, idx) in items"
         :key="idx"
         type="button"
-        class="w-full text-left px-3 py-1.5 text-sm text-base-content hover:bg-base-300 flex items-center gap-2 transition-colors cursor-pointer"
+        class="dropdown-item"
         @click="selectItem(item)"
       >
         <Icon
@@ -101,3 +101,40 @@ onUnmounted(() => {
   document.removeEventListener('keydown', onKeyDown)
 })
 </script>
+
+<style scoped>
+.dropdown-trigger {
+  font-weight: 500;
+}
+
+.dropdown-panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-lg);
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 0.375rem var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  text-align: left;
+  color: var(--color-base-content);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus-visible {
+  background-color: var(--app-hover);
+  outline: none;
+}
+</style>

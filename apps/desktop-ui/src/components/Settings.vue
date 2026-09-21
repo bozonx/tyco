@@ -1,286 +1,319 @@
 <template>
-  <div class="settings-panel flex flex-col gap-3 w-full h-full">
-    <Tabs :tabs="tabs" v-model:value="currentTab" />
-
-    <div class="flex-1 overflow-y-auto">
-      <div v-show="currentTab === 0" class="fields-col">
-        <FieldRow :label="t('settings.theme')">
-          <ThemeSwitcher v-model:value="userConfig.theme" />
-        </FieldRow>
-        <FieldRow :label="t('settings.userLanguage')">
-          <FieldSelect
-            v-model:value="userConfig.userLanguage"
-            :options="userLanguageOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.appLanguage')">
-          <div class="flex items-center gap-2 w-full">
-            <FieldSelect
-              class="flex-1"
-              :value="effectiveAppLanguage"
-              :options="appLanguageOptions"
-              :disabled="!isAppLanguageManual"
-              @update:value="updateAppLanguage"
-            />
-            <button
-              type="button"
-              class="text-sm underline underline-offset-2 disabled:no-underline opacity-80 hover:opacity-100"
-              @click="toggleAppLanguageMode"
-            >
-              {{
-                isAppLanguageManual
-                  ? t('settings.appLanguageAuto')
-                  : t('settings.appLanguageManual')
-              }}
-            </button>
-          </div>
-        </FieldRow>
-        <FieldRow :label="t('settings.editorHistoryMaxItems')">
-          <FieldInput
-            type="number"
-            v-model:value="userConfig.editorHistoryMaxItems"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.transformHistoryMaxItems')">
-          <FieldInput
-            type="number"
-            v-model:value="userConfig.transformHistoryMaxItems"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.chatHistoryMaxItems')">
-          <FieldInput
-            type="number"
-            v-model:value="userConfig.chatHistoryMaxItems"
-          />
-        </FieldRow>
-
-        <FieldRow :label="t('settings.pasteMode')">
-          <FieldSelect
-            v-model:value="userConfig.pasteMode"
-            :options="pasteModeOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.editorSyntax')">
-          <FieldSelect
-            v-model:value="userConfig.editorSyntax"
-            :options="editorSyntaxOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.showBubbleMenu')">
-          <FieldCheckbox v-model:value="userConfig.showBubbleMenu" />
-        </FieldRow>
-
-        <FieldRow :label="t('settings.windowInsertion')" vertical>
-          <div class="flex flex-col gap-3 w-full">
-            <Tabs
-              :tabs="windowInsertionTabs"
-              :value="userConfig.windowInsertion.method"
-              @update:value="updateWindowInsertionMethod"
-            />
-            <FieldInput
-              v-show="userConfig.windowInsertion.method === 'xdotool'"
-              v-model:value="userConfig.windowInsertion.xdotoolBin"
-            />
-            <FieldInput
-              v-show="userConfig.windowInsertion.method === 'ydotool'"
-              v-model:value="userConfig.windowInsertion.ydotoolBin"
-            />
-          </div>
-        </FieldRow>
-
-        <FieldRow :label="t('settings.storageLocations')" vertical>
-          <div class="flex flex-col gap-2 text-xs w-full">
-            <div v-if="!storageInfo" class="text-muted">
-              {{ t('settings.storageLocationsUnavailable') }}
-            </div>
-            <template v-else>
-              <div
-                v-for="item in storageInfoItems"
-                :key="item.label"
-                class="grid grid-cols-[140px_1fr] gap-2"
-              >
-                <span class="text-muted">{{ item.label }}</span>
-                <code class="break-all">{{ item.value }}</code>
-              </div>
-            </template>
-          </div>
-        </FieldRow>
+  <div class="settings-panel">
+    <aside class="settings-nav">
+      <div class="settings-nav-title">{{ t('nav.settings') }}</div>
+      <Tabs :tabs="tabs" v-model:value="currentTab" variant="vertical" />
+      <div class="settings-nav-footer">
+        <Icon icon="mdi:cloud-check-outline" height="14" />
+        <span>{{ t('settings.autosaveHint') }}</span>
       </div>
+    </aside>
 
-      <SettingsTranslationsTab
-        v-show="currentTab === 1"
-        :user-config="userConfig"
-        @update:to-translate-languages="updateTranslateLanguages"
-      />
+    <div class="settings-content">
+      <div class="settings-content-inner">
+        <h1 class="settings-page-title">{{ currentTabTitle }}</h1>
 
-      <div v-show="currentTab === 2" class="fields-col">
-        <FieldRow :label="t('settings.sttProvider')" vertical>
-          <Tabs :tabs="sttProviderTabs" v-model:value="currentSttProvider" />
-        </FieldRow>
-        <FieldRow :label="t('settings.baseUrl')" vertical>
-          <FieldInput
-            :value="currentSttModel.baseUrl || ''"
-            :placeholder="
-              currentSttProvider === 'websocket'
-                ? 'ws://localhost:2700'
-                : 'http://localhost:8000/v1'
-            "
-            @update:value="setSttField('baseUrl', $event)"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.model')" vertical>
-          <FieldInput
-            :value="currentSttModel.model || ''"
-            placeholder="whisper-1"
-            @update:value="setSttField('model', $event)"
-          />
-        </FieldRow>
-        <FieldRow
-          v-if="currentSttProvider === 'openai-compatible'"
-          :label="t('settings.apiKey')"
-          vertical
-        >
-          <FieldInput
-            :value="currentSttModel.apiKey || ''"
-            @update:value="setSttField('apiKey', $event)"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.formatWithLlm')">
-          <FieldCheckbox
-            :value="currentSttModel.formatWithLlm !== false"
-            :label="t('settings.formatWithLlm')"
-            @update:value="setSttFormatWithLlm"
-          />
-        </FieldRow>
-      </div>
-
-      <div v-show="currentTab === 3" class="fields-col">
-        <FieldRow :label="t('settings.llmModels')" vertical>
-          <div class="flex flex-col gap-3 w-full">
-            <div class="flex flex-wrap gap-2">
-              <Button sm @click="addOpenAiCompatibleLlmModel">
-                {{ t('settings.addOpenAiCompatibleModel') }}
-              </Button>
-            </div>
-
-            <div
-              v-for="(model, index) in userConfig.llmModels"
-              :key="model.id"
-              class="flex flex-col gap-3 p-3 rounded-box border border-base-300"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="font-medium">
-                  {{ modelDisplayName(model, index) }}
-                </div>
-                <Button
-                  sm
-                  neutral
-                  :disabled="userConfig.llmModels.length <= 1"
-                  @click="removeLlmModel(model.id)"
-                >
-                  {{ t('settings.removeModel') }}
+        <div v-show="currentTab === 0">
+          <SettingsSection :title="t('settings.sectionAppearance')">
+            <FieldRow :label="t('settings.theme')">
+              <ThemeSwitcher v-model:value="userConfig.theme" />
+            </FieldRow>
+            <FieldRow :label="t('settings.appLanguage')">
+              <div class="flex items-center gap-2 w-full">
+                <FieldSelect
+                  class="flex-1"
+                  :value="effectiveAppLanguage"
+                  :options="appLanguageOptions"
+                  :disabled="!isAppLanguageManual"
+                  @update:value="updateAppLanguage"
+                />
+                <Button sm ghost @click="toggleAppLanguageMode">
+                  {{
+                    isAppLanguageManual
+                      ? t('settings.appLanguageAuto')
+                      : t('settings.appLanguageManual')
+                  }}
                 </Button>
               </div>
+            </FieldRow>
+            <FieldRow :label="t('settings.userLanguage')">
+              <FieldSelect
+                v-model:value="userConfig.userLanguage"
+                :options="userLanguageOptions"
+              />
+            </FieldRow>
+          </SettingsSection>
 
-              <FieldRow :label="t('settings.name')" vertical>
-                <FieldInput
-                  :value="model.name || ''"
-                  @update:value="setLlmModelName(model.id, $event)"
-                />
-              </FieldRow>
+          <SettingsSection :title="t('settings.sectionEditor')">
+            <FieldRow :label="t('settings.pasteMode')">
+              <FieldSelect
+                v-model:value="userConfig.pasteMode"
+                :options="pasteModeOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.editorSyntax')">
+              <FieldSelect
+                v-model:value="userConfig.editorSyntax"
+                :options="editorSyntaxOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.showBubbleMenu')">
+              <FieldCheckbox v-model:value="userConfig.showBubbleMenu" />
+            </FieldRow>
+          </SettingsSection>
 
-              <FieldRow :label="t('settings.baseUrl')" vertical>
-                <FieldInput
-                  :value="model.baseUrl || ''"
-                  placeholder="https://openrouter.ai/api/v1"
-                  @update:value="setOpenAiCompatibleBaseUrl(model.id, $event)"
+          <SettingsSection :title="t('settings.sectionHistory')">
+            <FieldRow :label="t('settings.editorHistoryMaxItems')">
+              <FieldInput
+                type="number"
+                v-model:value="userConfig.editorHistoryMaxItems"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.transformHistoryMaxItems')">
+              <FieldInput
+                type="number"
+                v-model:value="userConfig.transformHistoryMaxItems"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.chatHistoryMaxItems')">
+              <FieldInput
+                type="number"
+                v-model:value="userConfig.chatHistoryMaxItems"
+              />
+            </FieldRow>
+          </SettingsSection>
+
+          <SettingsSection :title="t('settings.sectionSystem')">
+            <FieldRow :label="t('settings.windowInsertion')">
+              <div class="flex flex-col gap-2 w-full">
+                <Tabs
+                  variant="segmented"
+                  :tabs="windowInsertionTabs"
+                  :value="userConfig.windowInsertion.method"
+                  @update:value="updateWindowInsertionMethod"
                 />
-              </FieldRow>
-              <FieldRow :label="t('settings.apiKey')" vertical>
                 <FieldInput
-                  :value="model.apiKey || ''"
-                  @update:value="setOpenAiCompatibleApiKey(model.id, $event)"
+                  v-show="userConfig.windowInsertion.method === 'xdotool'"
+                  v-model:value="userConfig.windowInsertion.xdotoolBin"
                 />
-              </FieldRow>
-              <FieldRow :label="t('settings.model')" vertical>
                 <FieldInput
-                  :value="model.model || ''"
-                  placeholder="openai/gpt-4.1-mini"
-                  @update:value="setOpenAiCompatibleModel(model.id, $event)"
+                  v-show="userConfig.windowInsertion.method === 'ydotool'"
+                  v-model:value="userConfig.windowInsertion.ydotoolBin"
                 />
-              </FieldRow>
-              <FieldRow :label="t('settings.temperature')" vertical>
-                <FieldInput
-                  :value="String(model.temperature ?? 0.2)"
-                  @update:value="setLlmTemperature(model.id, $event)"
-                />
-              </FieldRow>
-              <FieldRow :label="t('settings.maxTokens')" vertical>
-                <FieldInput
-                  :value="String(model.maxTokens ?? 512)"
-                  @update:value="setLlmMaxTokens(model.id, $event)"
-                />
-              </FieldRow>
-              <div class="text-xs text-muted whitespace-pre-wrap">
-                {{ t('settings.openAiCompatibleHint') }}
+              </div>
+            </FieldRow>
+            <FieldRow :label="t('settings.storageLocations')" vertical>
+              <div v-if="!storageInfo" class="text-sm text-muted">
+                {{ t('settings.storageLocationsUnavailable') }}
+              </div>
+              <dl v-else class="storage-list">
+                <template v-for="item in storageInfoItems" :key="item.label">
+                  <dt>{{ item.label }}</dt>
+                  <dd>
+                    <code>{{ item.value }}</code>
+                  </dd>
+                </template>
+              </dl>
+            </FieldRow>
+          </SettingsSection>
+        </div>
+
+        <SettingsTranslationsTab
+          v-show="currentTab === 1"
+          :user-config="userConfig"
+          @update:to-translate-languages="updateTranslateLanguages"
+        />
+
+        <div v-show="currentTab === 2">
+          <SettingsSection>
+            <FieldRow :label="t('settings.sttProvider')">
+              <Tabs
+                variant="segmented"
+                :tabs="sttProviderTabs"
+                v-model:value="currentSttProvider"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.baseUrl')">
+              <FieldInput
+                :value="currentSttModel.baseUrl || ''"
+                :placeholder="
+                  currentSttProvider === 'websocket'
+                    ? 'ws://localhost:2700'
+                    : 'http://localhost:8000/v1'
+                "
+                @update:value="setSttField('baseUrl', $event)"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.model')">
+              <FieldInput
+                :value="currentSttModel.model || ''"
+                placeholder="whisper-1"
+                @update:value="setSttField('model', $event)"
+              />
+            </FieldRow>
+            <FieldRow
+              v-if="currentSttProvider === 'openai-compatible'"
+              :label="t('settings.apiKey')"
+            >
+              <FieldInput
+                type="password"
+                :value="currentSttModel.apiKey || ''"
+                @update:value="setSttField('apiKey', $event)"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.formatWithLlm')">
+              <FieldCheckbox
+                :value="currentSttModel.formatWithLlm !== false"
+                @update:value="setSttFormatWithLlm"
+              />
+            </FieldRow>
+          </SettingsSection>
+        </div>
+
+        <div v-show="currentTab === 3">
+          <SettingsSection
+            :title="t('settings.llmModels')"
+            :description="t('settings.openAiCompatibleHint')"
+            bare
+          >
+            <template #actions>
+              <Button sm icon="mdi:plus" @click="addOpenAiCompatibleLlmModel">
+                {{ t('settings.addOpenAiCompatibleModel') }}
+              </Button>
+            </template>
+
+            <div class="flex flex-col gap-3">
+              <div
+                v-for="(model, index) in userConfig.llmModels"
+                :key="model.id"
+                class="surface model-card"
+              >
+                <div class="model-card-header">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <Icon
+                      icon="mdi:cube-outline"
+                      height="18"
+                      class="text-muted shrink-0"
+                    />
+                    <span class="font-medium truncate">
+                      {{ modelDisplayName(model, index) }}
+                    </span>
+                  </div>
+                  <Button
+                    sm
+                    ghost
+                    icon="mdi:trash-can-outline"
+                    class="danger-ghost"
+                    :disabled="userConfig.llmModels.length <= 1"
+                    @click="removeLlmModel(model.id)"
+                  >
+                    {{ t('settings.removeModel') }}
+                  </Button>
+                </div>
+
+                <FieldRow :label="t('settings.name')">
+                  <FieldInput
+                    :value="model.name || ''"
+                    @update:value="setLlmModelName(model.id, $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.baseUrl')">
+                  <FieldInput
+                    :value="model.baseUrl || ''"
+                    placeholder="https://openrouter.ai/api/v1"
+                    @update:value="setOpenAiCompatibleBaseUrl(model.id, $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.apiKey')">
+                  <FieldInput
+                    type="password"
+                    :value="model.apiKey || ''"
+                    @update:value="setOpenAiCompatibleApiKey(model.id, $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.model')">
+                  <FieldInput
+                    :value="model.model || ''"
+                    placeholder="openai/gpt-4.1-mini"
+                    @update:value="setOpenAiCompatibleModel(model.id, $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.temperature')">
+                  <FieldInput
+                    type="number"
+                    :value="String(model.temperature ?? 0.2)"
+                    @update:value="setLlmTemperature(model.id, $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.maxTokens')">
+                  <FieldInput
+                    type="number"
+                    :value="String(model.maxTokens ?? 512)"
+                    @update:value="setLlmMaxTokens(model.id, $event)"
+                  />
+                </FieldRow>
               </div>
             </div>
-          </div>
-        </FieldRow>
+          </SettingsSection>
 
-        <h2>{{ t('settings.aiModelUsage') }}</h2>
-        <FieldRow :label="t('settings.translate')">
-          <FieldSelect
-            v-model:value="userConfig.aiModelUsage.translate"
-            :options="llmUsageOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.voiceCorrection')">
-          <FieldSelect
-            v-model:value="userConfig.aiModelUsage.voiceCorrection"
-            :options="llmUsageOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.correction')">
-          <FieldSelect
-            v-model:value="userConfig.aiModelUsage.correction"
-            :options="llmUsageOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.aiTasks')">
-          <FieldSelect
-            v-model:value="userConfig.aiModelUsage.aiTasks"
-            :options="llmUsageOptions"
-          />
-        </FieldRow>
-        <FieldRow :label="t('settings.chat')">
-          <FieldSelect
-            v-model:value="userConfig.aiModelUsage.chat"
-            :options="llmUsageOptions"
-          />
-        </FieldRow>
+          <SettingsSection
+            :title="t('settings.aiModelUsage')"
+            :description="t('settings.aiModelUsageHint')"
+          >
+            <FieldRow :label="t('settings.translate')">
+              <FieldSelect
+                v-model:value="userConfig.aiModelUsage.translate"
+                :options="llmUsageOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.voiceCorrection')">
+              <FieldSelect
+                v-model:value="userConfig.aiModelUsage.voiceCorrection"
+                :options="llmUsageOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.correction')">
+              <FieldSelect
+                v-model:value="userConfig.aiModelUsage.correction"
+                :options="llmUsageOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.aiTasks')">
+              <FieldSelect
+                v-model:value="userConfig.aiModelUsage.aiTasks"
+                :options="llmUsageOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.chat')">
+              <FieldSelect
+                v-model:value="userConfig.aiModelUsage.chat"
+                :options="llmUsageOptions"
+              />
+            </FieldRow>
+          </SettingsSection>
+        </div>
+
+        <SettingsRulesTab v-show="currentTab === 4" :user-config="userConfig" />
+
+        <SettingsTasksTab
+          v-show="currentTab === 5"
+          :user-config="userConfig"
+          @update:ai-tasks="updateAiTasks"
+        />
+
+        <SettingsRolesTab
+          v-show="currentTab === 6"
+          :user-config="userConfig"
+          @update:chat-roles="updateChatRoles"
+        />
+
+        <SettingsPluginsTab
+          v-show="currentTab === 7"
+          :user-config="userConfig"
+          @update:plugin-config="updatePluginConfig"
+          @update:plugin-enabled="updatePluginEnabled"
+        />
       </div>
-
-      <SettingsRulesTab v-show="currentTab === 4" :user-config="userConfig" />
-
-      <SettingsTasksTab
-        v-show="currentTab === 5"
-        :user-config="userConfig"
-        @update:ai-tasks="updateAiTasks"
-      />
-
-      <SettingsRolesTab
-        v-show="currentTab === 6"
-        :user-config="userConfig"
-        @update:chat-roles="updateChatRoles"
-      />
-
-      <SettingsPluginsTab
-        v-show="currentTab === 7"
-        :user-config="userConfig"
-        @update:plugin-config="updatePluginConfig"
-        @update:plugin-enabled="updatePluginEnabled"
-      />
     </div>
   </div>
 </template>
@@ -308,6 +341,7 @@ import SettingsRolesTab from './settings/SettingsRolesTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
+import { Icon } from '@iconify/vue'
 import { DEFAULT_USER_CONFIG, type StorageInfo } from '@tyco/shared'
 
 const ipcStore = useIpcStore()
@@ -329,15 +363,19 @@ let skipNextAutosave = false
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 const tabs = computed(() => [
-  { text: t('settings.generalTab'), key: 0 },
-  { text: t('settings.translationsTab'), key: 1 },
-  { text: t('settings.sttTab'), key: 2 },
-  { text: t('settings.llmTab'), key: 3 },
-  { text: t('settings.rulesTab'), key: 4 },
-  { text: t('settings.tasksTab'), key: 5 },
-  { text: t('settings.rolesTab'), key: 6 },
-  { text: t('settings.pluginsTab'), key: 7 },
+  { text: t('settings.generalTab'), key: 0, icon: 'mdi:tune-variant' },
+  { text: t('settings.translationsTab'), key: 1, icon: 'mdi:translate' },
+  { text: t('settings.sttTab'), key: 2, icon: 'mdi:microphone-outline' },
+  { text: t('settings.llmTab'), key: 3, icon: 'mdi:cube-outline' },
+  { text: t('settings.rulesTab'), key: 4, icon: 'mdi:script-text-outline' },
+  { text: t('settings.tasksTab'), key: 5, icon: 'mdi:robot-outline' },
+  { text: t('settings.rolesTab'), key: 6, icon: 'mdi:account-voice' },
+  { text: t('settings.pluginsTab'), key: 7, icon: 'mdi:puzzle-outline' },
 ])
+
+const currentTabTitle = computed(
+  () => tabs.value.find((tab) => tab.key === currentTab.value)?.text || ''
+)
 
 const sttProviderTabs = computed(() => [
   { text: 'OpenAI-compatible', key: 'openai-compatible' },
@@ -1012,32 +1050,118 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.settings-panel :deep(.field-row) {
-  padding-top: 0.4375rem;
-  padding-bottom: 0.4375rem;
+.settings-panel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
-.settings-panel :deep(.field-row-label) {
-  line-height: 1.875rem;
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 216px;
+  flex-shrink: 0;
+  padding: var(--space-lg) var(--space-md);
+  border-right: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+  overflow-y: auto;
 }
 
-.settings-panel :deep(.input),
-.settings-panel :deep(.select) {
-  min-height: 2rem;
-  height: 2rem;
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
+.settings-nav-title {
+  padding: 0 var(--space-sm) var(--space-xs);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+
+.settings-nav-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: auto;
+  padding: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--app-text-faint);
+}
+
+.settings-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.settings-content-inner {
+  max-width: 820px;
+  padding: var(--space-xl) var(--space-2xl) var(--space-3xl);
+}
+
+.settings-page-title {
+  margin: 0 0 var(--space-xl);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.model-card {
+  overflow: hidden;
+  box-shadow: var(--app-shadow-sm);
+}
+
+.model-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+}
+
+.danger-ghost:not(:disabled):hover {
+  color: var(--color-error);
+}
+
+.storage-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.375rem var(--space-lg);
+  width: 100%;
+  margin: 0;
   font-size: 0.8125rem;
 }
 
-.settings-panel :deep(.textarea) {
-  min-height: 5.5rem;
-  padding-top: 0.375rem;
-  padding-bottom: 0.375rem;
-  font-size: 0.8125rem;
+.storage-list dt {
+  color: var(--app-text-muted);
 }
 
-.settings-panel :deep(.tabs) {
-  gap: 0.125rem;
+.storage-list dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.storage-list code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+@media (max-width: 720px) {
+  .settings-nav {
+    width: 64px;
+    padding-inline: var(--space-sm);
+  }
+
+  .settings-nav-title,
+  .settings-nav-footer span,
+  .settings-nav :deep(.app-tab .truncate) {
+    display: none;
+  }
+
+  .settings-nav :deep(.app-tab) {
+    justify-content: center;
+  }
 }
 </style>

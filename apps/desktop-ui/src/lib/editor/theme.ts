@@ -28,7 +28,7 @@ export const editorTheme: Extension = EditorView.theme({
   },
   '.cm-content': {
     padding: 'var(--editor-padding)',
-    caretColor: 'oklch(var(--p))',
+    caretColor: 'var(--color-primary)',
   },
   '.cm-line': { padding: '0' },
   '.cm-placeholder': { color: 'var(--app-text-faint)' },
@@ -37,7 +37,7 @@ export const editorTheme: Extension = EditorView.theme({
   // with IME. Hence the caret is styled through `caretColor` above and
   // `.cm-cursor` / `.cm-selectionBackground` are never rendered at all
   '.cm-content ::selection': { backgroundColor: 'var(--editor-selection-bg)' },
-  '.cm-specialChar': { color: 'oklch(var(--er))' },
+  '.cm-specialChar': { color: 'var(--color-error)' },
   '.cm-activeLine': { backgroundColor: 'transparent' },
 })
 
@@ -78,7 +78,7 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.function(tags.variableName), color: 'var(--app-syntax-link)' },
   { tag: tags.typeName, color: 'var(--app-syntax-heading)' },
   { tag: tags.propertyName, color: 'var(--app-syntax-code)' },
-  { tag: tags.invalid, color: 'oklch(var(--er))' },
+  { tag: tags.invalid, color: 'var(--color-error)' },
 ])
 
 /** Тема + подсветка одним расширением */

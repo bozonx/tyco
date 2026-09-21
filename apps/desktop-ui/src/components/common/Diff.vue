@@ -61,14 +61,13 @@ const getPartClass = (part: DiffPart): string => {
 
 <style scoped>
 .diff-container {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
   background-color: var(--app-surface-raised);
 }
 
@@ -77,11 +76,11 @@ const getPartClass = (part: DiffPart): string => {
 }
 
 .error-message {
-  color: oklch(var(--er));
-  background-color: oklch(var(--er) / 0.1);
+  color: var(--color-error);
+  background-color: color-mix(in oklab, var(--color-error) 10%, transparent);
   padding: var(--space-sm) var(--space-lg);
   border-radius: var(--radius-sm);
-  border-left: 3px solid oklch(var(--er));
+  border-left: 3px solid var(--color-error);
   font-weight: 500;
 }
 
@@ -95,21 +94,19 @@ const getPartClass = (part: DiffPart): string => {
 .added {
   background-color: var(--app-diff-added-bg);
   color: var(--app-diff-added-fg);
-  padding: 1px 3px;
-  border-radius: 2px;
-  font-weight: 500;
+  padding: 1px 2px;
+  border-radius: 3px;
 }
 
 .removed {
   background-color: var(--app-diff-removed-bg);
   color: var(--app-diff-removed-fg);
-  padding: 1px 3px;
-  border-radius: 2px;
+  padding: 1px 2px;
+  border-radius: 3px;
   text-decoration: line-through;
-  font-weight: 500;
 }
 
 .unchanged {
-  color: oklch(var(--bc));
+  color: var(--color-base-content);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-3">
     <div v-if="installedPlugins.length === 0" class="text-sm text-muted">
       {{ t('settings.noInstalledPlugins') }}
     </div>
@@ -7,12 +7,16 @@
     <div
       v-for="plugin of installedPlugins"
       :key="plugin.name"
-      class="p-4 rounded-lg border border-base-300 bg-base-100 flex flex-col gap-3"
+      class="surface plugin-card"
+      :class="{ 'is-disabled': !plugin.enabled }"
       :data-plugin="plugin.name"
     >
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex flex-col">
-          <h3 class="font-semibold text-base leading-tight">
+      <div class="plugin-card-header">
+        <div class="plugin-icon">
+          <Icon icon="mdi:puzzle-outline" height="18" />
+        </div>
+        <div class="flex flex-col min-w-0 flex-1">
+          <h3 class="font-medium text-sm leading-tight">
             {{
               plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
             }}
@@ -38,11 +42,8 @@
 
       <div
         v-if="plugin.enabled && plugin.fields.length > 0"
-        class="border-t border-base-200 pt-3 flex flex-col gap-2"
+        class="plugin-card-body"
       >
-        <span class="text-xs font-semibold text-muted uppercase tracking-wider">
-          {{ t('settings.pluginSettings') }}
-        </span>
         <FieldsByCfg
           :config="plugin.fields"
           @update:values="updatePluginConfig(plugin.name, $event)"
@@ -59,6 +60,7 @@ import { useI18n } from '../../composables/useI18n'
 import { pluginIndexes } from '../../plugins'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldsByCfg from '../common/FieldsByCfg.vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{ userConfig: Record<string, any> }>()
 
@@ -103,3 +105,39 @@ const updatePluginConfig = (
   emit('update:pluginConfig', pluginName, values)
 }
 </script>
+
+<style scoped>
+.plugin-card {
+  overflow: hidden;
+  box-shadow: var(--app-shadow-sm);
+}
+
+.plugin-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.plugin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--app-accent-soft);
+  color: var(--color-primary);
+}
+
+.plugin-card.is-disabled .plugin-icon {
+  background-color: var(--app-hover);
+  color: var(--app-text-faint);
+}
+
+.plugin-card-body {
+  border-top: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
+}
+</style>

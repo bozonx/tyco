@@ -1,83 +1,42 @@
 <template>
   <div class="shortcuts-list">
-    <div>
-      <div class="flex flex-row gap-2">
-        <span v-if="props.spaceKey" class="flex flex-row gap-1"
-          ><KeyButton>Space</KeyButton>
-          <Button
-            :disabled="props.spaceKey.disabled"
-            sm
-            neutral
-            @click="props.spaceKey.action(props.text || '')"
-            >{{ getActionLabel(props.spaceKey) }}</Button
-          >
-        </span>
-        <span v-if="props.toEditorVisible" class="flex flex-row gap-2">
-          <KeyButton>Tab</KeyButton>
-          <Button sm neutral @click="routeParamsStore.toEditor(props.text)">{{
-            t('shortcuts.insertIntoEditor')
-          }}</Button>
-        </span>
-      </div>
+    <div
+      v-if="props.spaceKey || props.toEditorVisible"
+      class="shortcuts-primary"
+    >
+      <ShortcutButton
+        v-if="props.spaceKey"
+        :keys="['Space']"
+        :icon="props.spaceKey.icon"
+        :disabled="props.spaceKey.disabled"
+        primary
+        @click="props.spaceKey.action(props.text || '')"
+        >{{ getActionLabel(props.spaceKey) }}</ShortcutButton
+      >
+      <ShortcutButton
+        v-if="props.toEditorVisible"
+        :keys="['Tab']"
+        icon="mdi:pencil-outline"
+        @click="routeParamsStore.toEditor(props.text)"
+        >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
+      >
+    </div>
 
-      <div class="flex flex-row gap-4 mt-2">
-        <div class="flex flex-col gap-1">
-          <div
-            v-for="item in col1"
-            :key="item.labelKey || item.name || item.key"
-          >
-            <span class="flex flex-row gap-1">
-              <KeyButton>{{ item.key }}</KeyButton>
-              <Button
-                v-if="getActionLabel(item)"
-                :disabled="item.disabled"
-                sm
-                neutral
-                :icon="item.icon"
-                @click="item.action(props.text || '')"
-                >{{ getActionLabel(item) }}</Button
-              >
-            </span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1">
-          <div
-            v-for="item in col2"
-            :key="item.labelKey || item.name || item.key"
-          >
-            <span class="flex flex-row gap-1"
-              ><KeyButton>{{ item.key }}</KeyButton>
-              <Button
-                v-if="getActionLabel(item)"
-                :disabled="item.disabled"
-                sm
-                neutral
-                :icon="item.icon"
-                @click="item.action(props.text || '')"
-                >{{ getActionLabel(item) }}</Button
-              ></span
-            >
-          </div>
-        </div>
-        <div class="flex flex-col gap-1">
-          <div
-            v-for="item in col3"
-            :key="item.labelKey || item.name || item.key"
-          >
-            <span class="flex flex-row gap-1"
-              ><KeyButton>{{ item.key }}</KeyButton>
-              <Button
-                v-if="getActionLabel(item)"
-                :disabled="item.disabled"
-                sm
-                neutral
-                :icon="item.icon"
-                @click="item.action(props.text || '')"
-                >{{ getActionLabel(item) }}</Button
-              ></span
-            >
-          </div>
-        </div>
+    <div v-if="columns.length > 0" class="shortcuts-grid">
+      <div
+        v-for="(column, index) in columns"
+        :key="index"
+        class="shortcuts-col"
+      >
+        <ShortcutButton
+          v-for="item in column"
+          :key="item.key"
+          :keys="[item.key]"
+          :icon="item.icon"
+          :disabled="item.disabled"
+          @click="item.action(props.text || '')"
+          >{{ getActionLabel(item) }}</ShortcutButton
+        >
       </div>
     </div>
   </div>
@@ -114,23 +73,18 @@ const { globalEvents } = useGlobalEvents()
 const { t } = useI18n()
 let keyUpHanlderIndex: number
 
-const col1 = computed(() =>
-  PRESETS_KEYS.slice(0, 5).map((key, index) => ({
-    key,
-    ...props.leftLetterKeys[index],
-  }))
-)
-const col2 = computed(() =>
-  PRESETS_KEYS.slice(5, 10).map((key, index) => ({
-    key,
-    ...props.leftLetterKeys[index + 5],
-  }))
-)
-const col3 = computed(() =>
-  PRESETS_KEYS.slice(10, 15).map((key, index) => ({
-    key,
-    ...props.leftLetterKeys[index + 10],
-  }))
+/**
+ * One column per row of preset keys (q–t, a–g, z–b), so the layout mirrors the
+ * keyboard. Keys without an action are left out, empty columns too
+ */
+const columns = computed(() =>
+  [0, 5, 10]
+    .map((offset) =>
+      PRESETS_KEYS.slice(offset, offset + 5)
+        .map((key, index) => ({ key, ...props.leftLetterKeys[index + offset] }))
+        .filter((item) => getActionLabel(item as ActionItem))
+    )
+    .filter((column) => column.length > 0)
 )
 
 onMounted(() => {
@@ -178,12 +132,29 @@ function getActionLabel(item?: ActionItem) {
 
 <style scoped>
 .shortcuts-list {
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.shortcuts-primary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2px var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.shortcuts-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 </style>

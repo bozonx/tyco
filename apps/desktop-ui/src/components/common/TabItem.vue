@@ -1,15 +1,15 @@
 <template>
-  <a role="tab" class="tab" :class="tabClass">
+  <button
+    type="button"
+    role="tab"
+    class="app-tab"
+    :class="{ 'is-active': active }"
+    :aria-selected="active ? 'true' : 'false'"
+  >
     <slot></slot>
-  </a>
+  </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
-const props = defineProps<{ active?: boolean }>()
-
-const tabClass = computed(() => {
-  return { 'tab-active': props.active }
-})
+defineProps<{ active?: boolean }>()
 </script>

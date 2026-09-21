@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-4 w-full h-full">
     <h1>{{ t('menu.aiTask') }}</h1>
 
-    <div class="flex-1">
+    <div class="flex-1 min-h-0">
       <TextPreview :text="props.text" />
     </div>
 

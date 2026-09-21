@@ -1,68 +1,97 @@
 <template>
-  <div class="flex flex-col gap-2 h-full">
-    <Card class="flex-1">
-      <div class="overflow-y-auto">
-        <ChatItem
-          v-for="(message, index) in chatStore.messages"
-          :key="`${message.role}-${index}`"
-          :message="message"
-        />
-        <div
-          v-if="chatStore.isGenerating && chatStore.loadingProgress"
-          class="text-sm text-gray-500 italic mt-2 px-4 py-2 opacity-70"
-        >
-          {{ chatStore.loadingProgress }}
+  <div class="ai-chat">
+    <div class="chat-messages">
+      <div v-if="chatStore.messages.length === 0" class="chat-empty">
+        <div class="chat-empty-icon">
+          <Icon icon="mdi:chat-processing-outline" height="26" />
         </div>
+        <div class="font-medium">{{ t('chat.emptyTitle') }}</div>
+        <div class="text-sm text-muted">{{ t('chat.emptyHint') }}</div>
       </div>
-    </Card>
+      <ChatItem
+        v-for="(message, index) in chatStore.messages"
+        :key="`${message.role}-${index}`"
+        :message="message"
+      />
+      <div
+        v-if="chatStore.isGenerating && chatStore.loadingProgress"
+        class="chat-progress"
+      >
+        <span class="loading loading-dots loading-sm"></span>
+        {{ chatStore.loadingProgress }}
+      </div>
+    </div>
 
-    <Card class="flex flex-col gap-2">
-      <div class="flex flex-row gap-2">
-        <div class="flex-1 flex flex-row gap-2 flex-wrap items-center">
-          <span
-            v-for="(attachment, index) in attachments"
-            :key="index"
-            class="badge badge-neutral gap-1 py-3 px-2 text-xs flex items-center"
-            :title="attachment"
+    <div class="chat-composer">
+      <div
+        v-if="attachments.length > 0 || canAttachEditorText"
+        class="flex flex-row gap-1.5 flex-wrap items-center"
+      >
+        <span
+          v-for="(attachment, index) in attachments"
+          :key="index"
+          class="chat-attachment"
+          :title="attachment"
+        >
+          <Icon icon="mdi:file-document-outline" height="14" />
+          <span>{{ truncate(attachment, 28) }}</span>
+          <button
+            type="button"
+            class="chat-attachment-remove"
+            @click="chatStore.removeAttachment(index)"
+            :title="t('chat.removeAttachment')"
           >
-            <Icon icon="mdi:file-document-outline" height="14" />
-            <span>{{ truncate(attachment, 28) }}</span>
-            <button
-              type="button"
-              class="hover:text-error ml-1 inline-flex items-center cursor-pointer"
-              @click="chatStore.removeAttachment(index)"
-              :title="t('chat.removeAttachment')"
-            >
-              <Icon icon="mdi:close" height="14" />
-            </button>
-          </span>
+            <Icon icon="mdi:close" height="14" />
+          </button>
+        </span>
 
-          <Button
-            v-if="canAttachEditorText"
-            xs
-            neutral
-            ghost
-            class="border border-dashed border-base-content/30 hover:border-base-content/60"
-            @click="attachEditorText"
-            :title="t('chat.attachEditorTextTitle')"
-          >
-            <Icon icon="mdi:paperclip" height="14" class="mr-1" />
-            {{ t('chat.attachEditorText') }}
-          </Button>
-        </div>
-        <div v-if="roles && roles.length > 0" class="flex flex-col gap-2">
+        <Button
+          v-if="canAttachEditorText"
+          xs
+          ghost
+          icon="mdi:paperclip"
+          class="chat-attach-btn"
+          @click="attachEditorText"
+          :title="t('chat.attachEditorTextTitle')"
+        >
+          {{ t('chat.attachEditorText') }}
+        </Button>
+      </div>
+
+      <ChatInput :disabled="chatStore.isGenerating" />
+
+      <div class="chat-composer-bar">
+        <div class="flex items-center gap-1 min-w-0">
           <FieldSelect
+            v-if="roles && roles.length > 0"
+            class="chat-role-select"
             :options="roles"
             v-model:value="selectedRole"
             :title="t('chat.role')"
             :disabled="chatStore.isGenerating"
           />
         </div>
-      </div>
-
-      <div class="flex flex-row gap-2 items-end">
-        <ChatInput :disabled="chatStore.isGenerating" />
-        <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-1">
+          <Button
+            sm
+            ghost
+            square
+            @click="voiceInput"
+            :title="t('chat.voiceInput')"
+            :disabled="chatStore.isGenerating"
+          >
+            <Icon icon="mdi:microphone-outline" height="18" />
+          </Button>
+          <Button
+            sm
+            ghost
+            square
+            @click="clearInput"
+            :title="t('chat.clearInput')"
+            :disabled="chatStore.isGenerating"
+          >
+            <Icon icon="mdi:eraser" height="18" />
+          </Button>
           <Button
             v-if="!chatStore.isGenerating"
             sm
@@ -70,7 +99,7 @@
             @click="sendMessage"
             :title="t('chat.sendMessage')"
           >
-            <Icon icon="mdi:send" height="24" />
+            <Icon icon="mdi:send" height="18" />
           </Button>
           <Button
             v-else
@@ -79,29 +108,11 @@
             @click="chatStore.stopGeneration()"
             :title="t('chat.stop')"
           >
-            <Icon icon="mdi:stop" height="24" />
-          </Button>
-          <Button
-            sm
-            square
-            @click="clearInput"
-            :title="t('chat.clearInput')"
-            :disabled="chatStore.isGenerating"
-          >
-            <Icon icon="mdi:clear" height="24" />
-          </Button>
-          <Button
-            sm
-            square
-            @click="voiceInput"
-            :title="t('chat.voiceInput')"
-            :disabled="chatStore.isGenerating"
-          >
-            <Icon icon="mdi:microphone" height="24" />
+            <Icon icon="mdi:stop" height="18" />
           </Button>
         </div>
       </div>
-    </Card>
+    </div>
   </div>
 </template>
 
@@ -203,3 +214,132 @@ const voiceInput = () => {
   })
 }
 </script>
+
+<style scoped>
+.ai-chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  height: 100%;
+  min-height: 0;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-xs) var(--space-xs) var(--space-sm);
+}
+
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin: auto;
+  padding: var(--space-3xl) var(--space-lg);
+  text-align: center;
+}
+
+.chat-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: var(--space-sm);
+  border-radius: 999px;
+  background-color: var(--app-accent-soft);
+  color: var(--color-primary);
+}
+
+.chat-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.chat-composer:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+}
+
+.chat-composer :deep(.main-input) {
+  min-height: 4.5rem;
+  max-height: 12rem;
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.9375rem;
+}
+
+.chat-composer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.chat-composer-bar :deep(.btn-ghost) {
+  color: var(--app-text-muted);
+}
+
+.chat-role-select {
+  width: auto;
+  max-width: 12rem;
+  height: 2rem;
+  font-size: 0.8125rem;
+  border-color: transparent;
+  background-color: var(--app-hover);
+}
+
+.chat-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  height: 1.625rem;
+  padding: 0 0.25rem 0 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--app-surface-raised);
+  font-size: 0.75rem;
+}
+
+.chat-attachment-remove {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 4px;
+  color: var(--app-text-muted);
+  cursor: pointer;
+}
+
+.chat-attachment-remove:hover {
+  color: var(--color-error);
+  background-color: var(--app-hover);
+}
+
+.chat-attach-btn {
+  border: 1px dashed var(--app-border-strong);
+  color: var(--app-text-muted);
+}
+</style>

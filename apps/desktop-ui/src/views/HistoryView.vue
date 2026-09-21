@@ -1,24 +1,25 @@
 <template>
-  <ContentPadding>
-    <SearchInput
-      v-model="searchQuery"
-      :placeholder="t('input.historySearchPlaceholder')"
-      ref="searchInput"
-      class="mb-4 w-full"
-    />
-
-    <Tabs
-      :tabs="tabs"
-      v-model:value="currentTab"
-      class="mb-4"
-      @update:value="onTabChange"
-    />
+  <div class="history-page">
+    <div class="history-header">
+      <SearchInput
+        v-model="searchQuery"
+        :placeholder="t('input.historySearchPlaceholder')"
+        ref="searchInput"
+      />
+      <Tabs
+        :tabs="tabs"
+        v-model:value="currentTab"
+        variant="segmented"
+        @update:value="onTabChange"
+      />
+    </div>
 
     <HistoryList
       v-show="currentTab === 0"
       :items="editorItems"
       :searchQuery="searchQuery"
       :textTitle="t('history.placeIntoEditor')"
+      openIcon="mdi:pencil-outline"
       @remove-item="removeEditorItem"
       @clear-history="clearEditorHistory()"
       @text-click="toEditor"
@@ -29,6 +30,7 @@
       :items="transformItems"
       :searchQuery="searchQuery"
       :textTitle="t('history.placeIntoEditor')"
+      openIcon="mdi:pencil-outline"
       @remove-item="removeTransformItem"
       @clear-history="clearTransformHistory()"
       @text-click="toEditor"
@@ -39,11 +41,12 @@
       :items="chatItems"
       :searchQuery="searchQuery"
       :textTitle="t('history.view')"
+      openIcon="mdi:chat-outline"
       @remove-item="removeChatItem"
       @clear-history="clearChatHistory()"
       @text-click="toChat"
     />
-  </ContentPadding>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -64,9 +67,24 @@ const historyStore = useHistoryStore()
 const routeParams = useRouteParams()
 const currentTab = ref(0)
 const tabs = computed(() => [
-  { text: t('history.inputTab'), key: 0 },
-  { text: t('history.transformTab'), key: 1 },
-  { text: t('history.chatTab'), key: 2 },
+  {
+    text: t('history.inputTab'),
+    key: 0,
+    icon: 'mdi:text-box-outline',
+    badge: historyStore.editorHistory.length,
+  },
+  {
+    text: t('history.transformTab'),
+    key: 1,
+    icon: 'mdi:auto-fix',
+    badge: historyStore.transformHistory.length,
+  },
+  {
+    text: t('history.chatTab'),
+    key: 2,
+    icon: 'mdi:chat-outline',
+    badge: historyStore.chatHistory.length,
+  },
 ])
 
 const searchQuery = ref<string>('')
@@ -152,3 +170,23 @@ const toChat = async (item: { id: string | number; value: string }) => {
   await chatStore.openChat(item.id.toString())
 }
 </script>
+
+<style scoped>
+.history-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: 880px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-xl) 0;
+}
+
+.history-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+</style>

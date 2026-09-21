@@ -201,16 +201,16 @@ onUnmounted(() => {
   background-color: var(--app-surface);
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--app-shadow-lg);
 }
 
 .editor-context-menu__item {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
-  padding: var(--space-xs) var(--space-sm);
+  padding: 0.375rem var(--space-sm);
   font-size: 0.8125rem;
-  color: oklch(var(--bc));
+  color: var(--color-base-content);
   text-align: left;
   background: none;
   border: none;
@@ -220,12 +220,12 @@ onUnmounted(() => {
 }
 
 .editor-context-menu__item:hover:not(:disabled) {
-  background-color: var(--app-surface-raised);
+  background-color: var(--app-hover);
 }
 
 .editor-context-menu__item:focus-visible {
-  background-color: var(--app-surface-raised);
-  outline: 2px solid oklch(var(--p));
+  background-color: var(--app-hover);
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 

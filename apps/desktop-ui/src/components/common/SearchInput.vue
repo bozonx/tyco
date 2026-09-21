@@ -1,6 +1,6 @@
 <template>
-  <label class="input">
-    <Icon icon="mdi:search" height="18" />
+  <label class="input search-input">
+    <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
     <input
       :value="modelValue"
       ref="searchInput"
@@ -35,3 +35,9 @@ const onInput = (event: Event) => {
   emit('update:modelValue', newValue)
 }
 </script>
+
+<style scoped>
+.search-input {
+  width: 100%;
+}
+</style>

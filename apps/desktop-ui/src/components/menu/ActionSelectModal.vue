@@ -8,7 +8,7 @@
           v-for="action in actions"
           :key="action.id"
           neutral
-          class="justify-start text-left"
+          class="justify-start text-left w-full"
           @click="selectAction(action.id)"
         >
           {{ action.name }}

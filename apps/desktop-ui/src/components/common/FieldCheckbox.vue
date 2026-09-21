@@ -1,12 +1,12 @@
 <template>
-  <label class="label">
+  <label class="field-checkbox">
     <input
       type="checkbox"
       :checked="value"
       @change="handleChange"
-      class="checkbox"
+      class="toggle toggle-primary toggle-sm"
     />
-    {{ label }}
+    <span v-if="label" class="field-checkbox-label">{{ label }}</span>
   </label>
 </template>
 
@@ -19,3 +19,17 @@ function handleChange() {
   emit('update:value', !props.value)
 }
 </script>
+
+<style scoped>
+.field-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.field-checkbox-label {
+  color: var(--app-text-muted);
+}
+</style>

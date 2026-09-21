@@ -1,7 +1,5 @@
 <template>
-  <ContentPadding>
-    <Settings />
-  </ContentPadding>
+  <Settings />
 </template>
 
 <script setup lang="ts">
