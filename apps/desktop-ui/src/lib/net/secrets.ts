@@ -6,7 +6,7 @@ import type { NetIpc } from './net-ipc'
 /** Stands in for a key; the Rust proxy substitutes the value on the way out */
 export const SECRET_REF_PREFIX = 'tyco-secret:'
 
-/** Providers that may be called without a key, e.g. a local Ollama */
+/** Provider ids that may be called without a key by default */
 export const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
 
 /** What the webview may know about a secret: that it exists, and where it goes */
@@ -50,7 +50,9 @@ export function createSecretsClient(ipc: NetIpc): SecretsClient {
  */
 export function createSecretKeyProvider(
   status: () => Promise<SecretsStatus>,
-  keyless: readonly string[] = KEYLESS_PROVIDERS
+  /** Whether a provider may be called without a key, e.g. a local Ollama */
+  isKeyless: (provider: string) => boolean = (provider) =>
+    KEYLESS_PROVIDERS.includes(provider)
 ): KeyProvider {
   return {
     async get(provider) {
@@ -59,7 +61,7 @@ export function createSecretKeyProvider(
       if (Object.hasOwn(secrets, provider)) {
         return secretRef(provider)
       }
-      if (keyless.includes(provider)) {
+      if (isKeyless(provider)) {
         return ''
       }
 

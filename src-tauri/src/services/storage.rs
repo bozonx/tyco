@@ -11,6 +11,7 @@ use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
     LocalState, StorageInfo, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
+use crate::services::llm_config;
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = app
@@ -148,7 +149,10 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         let raw = fs::read_to_string(&path)?;
         let mut value = serde_yaml::from_str(&raw)?;
 
-        if normalize_window_insertion_config(&mut value) | normalize_hotkeys_config(&mut value) {
+        if normalize_window_insertion_config(&mut value)
+            | normalize_hotkeys_config(&mut value)
+            | llm_config::migrate_user_config(app, &mut value)
+        {
             save_user_config(app, &value)?;
         }
 

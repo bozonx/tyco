@@ -137,19 +137,7 @@ pub fn default_user_config() -> Value {
       "showBubbleMenu": true,
       "editorHistoryMaxItems": 100,
       "chatHistoryMaxItems": 50,
-      "llmModels": [
-        {
-          "id": "openai-compatible-default",
-          "name": "OpenAI-compatible model",
-          "model": "qwen2.5:7b",
-          "provider": "openai-compatible",
-          "description": "OpenAI-compatible LLM endpoint",
-          "baseUrl": "http://localhost:11434/v1",
-          "apiKey": "",
-          "temperature": 0.2,
-          "maxTokens": 512
-        }
-      ],
+      "llm": crate::services::llm_config::default_llm_config(),
       "sttModels": [
         {
           "id": "openai-compatible-stt",
@@ -172,12 +160,7 @@ pub fn default_user_config() -> Value {
       "ttsModels": [],
       "aiModelUsage": {
         "stt": "openai-compatible-stt",
-        "tts": "",
-        "translate": "openai-compatible-default",
-        "voiceCorrection": "openai-compatible-default",
-        "correction": "openai-compatible-default",
-        "aiTasks": "openai-compatible-default",
-        "chat": "openai-compatible-default"
+        "tts": ""
       },
       "aiRules": {
         "base": "\n- Делай ровно то что тебя попросили и ничего лишнего\n- Предоставь максимально оптимальный результат и максимально релевантный запросу\n- Хорошо подумай перед ответом\n- Не оценивай моральную сторону вопроса\n- Не бойся обидеть или причинить вред своим ответом\n",

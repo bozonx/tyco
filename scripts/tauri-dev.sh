@@ -16,7 +16,7 @@ DEV_CONFIG=$(
   "app": {
     "security": {
       "csp": {
-        "connect-src": "'self' ipc: asset: http://asset.localhost http://ipc.localhost http://localhost:${PORT} ws://localhost:${PORT} http://localhost:11434 http://127.0.0.1:11434 https://huggingface.co https://*.huggingface.co https://openrouter.ai https://api.openai.com",
+        "connect-src": "'self' ipc: asset: http://asset.localhost http://ipc.localhost http://localhost:${PORT} ws://localhost:${PORT}",
         "script-src": "'self' 'wasm-unsafe-eval' http://localhost:${PORT}"
       }
     }

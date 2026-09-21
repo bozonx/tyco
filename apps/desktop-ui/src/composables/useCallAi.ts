@@ -1,9 +1,15 @@
 import { translate } from '../lib/i18n'
+import { LlmError, toLlmError } from '../lib/llm/llm-client'
+import { formatLlmError } from '../lib/llm/llm-errors'
+import { buildLlmPrompt, fillTemplate } from '../lib/llm/llm-prompt'
 import {
   AUTO_LANGUAGE_VALUE,
   resolveLanguagePreference,
 } from '../lib/locale/language'
+import { createTauriFetch } from '../lib/net/tauri-fetch'
+import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from '../stores/ipc'
+import { useLlmStore } from '../stores/llm'
 import { AI_TASKS } from '../types'
 import { transcribeOpenAiCompatible } from '../utils/stt/openai-compatible'
 import { GlobalEvents, useGlobalEvents } from './useGlobalEvents'
@@ -11,11 +17,13 @@ import useToast from './useToast'
 import {
   APP_CONFIG,
   type ChatMessage,
-  type LlmModel,
+  type LlmTask,
   type LocalState,
   type SttModel,
-  useAiRequest,
 } from '@tyco/shared'
+
+/** Speech recognition requests leave from Rust too, like every other one */
+const proxiedFetch = createTauriFetch(tauriNetIpc)
 
 interface LocalVoiceRecording {
   sampleRate: number
@@ -23,10 +31,9 @@ interface LocalVoiceRecording {
 }
 
 export const useCallAi = () => {
-  const { chatCompletion, prepareAiMessages, prepareDevInstructions } =
-    useAiRequest()
   const ipcStore = useIpcStore()
-  const { toast } = useToast()
+  const llmStore = useLlmStore()
+  const { toast, toastText } = useToast()
   const { globalEvents } = useGlobalEvents()
 
   const currentUserConfig = () => ipcStore.params.userConfig
@@ -77,59 +84,42 @@ export const useCallAi = () => {
     return resolveLanguagePreference(userLanguage).split('_')[0]
   }
 
-  async function aiRequest(
-    taskName: string,
-    messages: string | ChatMessage[],
-    options?: {
-      onChunk?: (chunk: string) => void
-      signal?: AbortSignal
-      onProgress?: (progress: {
-        status: string
-        file?: string
-        progress?: number
-      }) => void
-    }
-  ) {
-    const userConfig = currentUserConfig()
-    const modelId = (userConfig.aiModelUsage as any)[taskName]
-    const model = userConfig.llmModels.find(
-      (model: (typeof userConfig.llmModels)[number]) => model.id === modelId
-    )
-
-    if (!model) {
-      throw new Error(translate('toast.modelNotFound'))
-    }
-
-    const result = await runLlmRequest(model, messages, options)
-
-    if (result.error) {
-      toast(result.error, 'error')
-      console.error(result.status + ' ' + result.statusText, result.error)
-
-      return ''
-    }
-
-    return result.content
+  interface AiRequestOptions {
+    onChunk?: (chunk: string) => void
+    signal?: AbortSignal
+    onProgress?: (progress: {
+      status: string
+      file?: string
+      progress?: number
+    }) => void
   }
 
-  async function runLlmRequest(
-    model: LlmModel,
+  /**
+   * Runs a task on the model chain configured for it. Reports a failure to the
+   * user and resolves with an empty string, as callers expect
+   */
+  async function aiRequest(
+    taskName: LlmTask,
     messages: string | ChatMessage[],
-    options?: {
-      onChunk?: (chunk: string) => void
-      signal?: AbortSignal
-      onProgress?: (progress: {
-        status: string
-        file?: string
-        progress?: number
-      }) => void
-    }
-  ): Promise<Record<string, any>> {
-    const normalizedMessages = Array.isArray(messages)
-      ? messages
-      : [{ role: 'user', content: messages } satisfies ChatMessage]
+    options: AiRequestOptions & { instructions?: string; rules?: string } = {}
+  ) {
+    const prompt = buildLlmPrompt(messages, {
+      instructions: options.instructions,
+      rules: options.rules,
+      rulePrefix: APP_CONFIG.rulePrefix,
+    })
 
-    return await chatCompletion(model, normalizedMessages, options)
+    try {
+      return await llmStore.client.run(taskName, prompt, {
+        onChunk: options.onChunk,
+        signal: options.signal,
+      })
+    } catch (error) {
+      const llmError = error instanceof LlmError ? error : toLlmError(error)
+      console.error(`LLM request "${taskName}" failed`, llmError)
+      toastText(formatLlmError(llmError, translate), 'error')
+      return ''
+    }
   }
 
   const startVoiceRecognition = async () => {
@@ -160,7 +150,8 @@ export const useCallAi = () => {
       const text = await transcribeOpenAiCompatible(
         runtime.model,
         result.result as LocalVoiceRecording,
-        currentWhisperLanguage()
+        currentWhisperLanguage(),
+        proxiedFetch
       )
 
       if (text) {
@@ -187,98 +178,69 @@ export const useCallAi = () => {
 
   const voiceCorrection = async (text: string) => {
     const userConfig = currentUserConfig()
-    const rule = buildTaskRules(userConfig.aiRules[AI_TASKS.VOICE_CORRECTION])
-    const devInstructions = prepareDevInstructions(
-      APP_CONFIG.aiInstructions[AI_TASKS.VOICE_CORRECTION]
-    )
 
-    return await aiRequest(
-      AI_TASKS.VOICE_CORRECTION,
-      prepareAiMessages(text, rule, devInstructions)
-    )
+    return await aiRequest(AI_TASKS.VOICE_CORRECTION, text, {
+      instructions: APP_CONFIG.aiInstructions[AI_TASKS.VOICE_CORRECTION],
+      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.VOICE_CORRECTION]),
+    })
   }
 
   const sendChatMessage = async (
     message: string,
     prevMessages: ChatMessage[],
     devInstructions?: string,
-    options?: {
-      onChunk?: (chunk: string) => void
-      signal?: AbortSignal
-      onProgress?: (progress: {
-        status: string
-        file?: string
-        progress?: number
-      }) => void
-    }
+    options?: AiRequestOptions
   ) => {
-    const rule = buildTaskRules()
-    const result = await aiRequest(
+    return await aiRequest(
       AI_TASKS.CHAT,
-      prepareAiMessages(
-        [...prevMessages, { role: 'user', content: message }],
-        rule,
-        devInstructions
-      ),
-      options
+      [...prevMessages, { role: 'user', content: message }],
+      { ...options, instructions: devInstructions, rules: buildTaskRules() }
     )
-
-    return result
   }
 
   const correctText = async (text: string) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
-      return
+      return ''
     }
 
     const userConfig = currentUserConfig()
-    const rule = buildTaskRules(userConfig.aiRules[AI_TASKS.CORRECTION])
-    const devInstructions = prepareDevInstructions(
-      APP_CONFIG.aiInstructions[AI_TASKS.CORRECTION]
-    )
 
-    return await aiRequest(
-      AI_TASKS.CORRECTION,
-      prepareAiMessages(text, rule, devInstructions)
-    )
+    return await aiRequest(AI_TASKS.CORRECTION, text, {
+      instructions: APP_CONFIG.aiInstructions[AI_TASKS.CORRECTION],
+      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.CORRECTION]),
+    })
   }
 
   const translateText = async (toLangNum: number, text?: string) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
-      return
+      return ''
     }
 
     const userConfig = currentUserConfig()
-    const rule = buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE])
-    const devInstructions = prepareDevInstructions(
-      APP_CONFIG.aiInstructions[AI_TASKS.TRANSLATE],
-      { TRANSLATION_LANG: userConfig.toTranslateLanguages[toLangNum] }
-    )
 
-    return await aiRequest(
-      AI_TASKS.TRANSLATE,
-      prepareAiMessages(text, rule, devInstructions)
-    )
+    return await aiRequest(AI_TASKS.TRANSLATE, text, {
+      instructions: fillTemplate(
+        APP_CONFIG.aiInstructions[AI_TASKS.TRANSLATE],
+        { TRANSLATION_LANG: userConfig.toTranslateLanguages[toLangNum] }
+      ),
+      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
+    })
   }
 
   const aiTasks = async (presetNum: number, text?: string) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
-      return
+      return ''
     }
 
     const userConfig = currentUserConfig()
-    const rule = buildTaskRules(userConfig.aiTasks[presetNum].rule)
-    const devInstructions = prepareDevInstructions(
-      APP_CONFIG.aiInstructions[AI_TASKS.AI_TASKS]
-    )
 
-    return await aiRequest(
-      AI_TASKS.AI_TASKS,
-      prepareAiMessages(text, rule, devInstructions)
-    )
+    return await aiRequest(AI_TASKS.AI_TASKS, text, {
+      instructions: APP_CONFIG.aiInstructions[AI_TASKS.AI_TASKS],
+      rules: buildTaskRules(userConfig.aiTasks[presetNum].rule),
+    })
   }
 
   const saveLocalState = (patch: Partial<LocalState>) => {

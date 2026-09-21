@@ -45,17 +45,109 @@ export type ModelTag =
   | 'lowCost'
   | 'free'
 
+/** Provider families the app can talk to; see `@bozonx/ai-kit` */
+export type LlmProviderType =
+  'google' | 'openrouter' | 'deepseek' | 'openai-compatible'
+
+/** Providers that always exist once; their id equals their type */
+export const BUILTIN_LLM_PROVIDERS = [
+  'google',
+  'openrouter',
+  'deepseek',
+] as const
+
+/**
+ * One place models are served from. The id doubles as the id of its API key in
+ * the Rust-side secret store; keys are never part of this config
+ */
+export interface LlmProvider {
+  id: string
+  type: LlmProviderType
+  name?: string
+  /** Required for `openai-compatible`, e.g. `http://localhost:11434/v1` */
+  baseUrl?: string
+}
+
 export interface LlmModel {
   id: string
-  name?: string
+  /** Id of an `LlmProvider` */
+  provider: string
+  /** The provider's own model id */
   model: string
-  provider: 'openai-compatible'
-  description?: string
-  baseUrl?: string
-  apiKey?: string
+  name?: string
   temperature?: number
-  maxTokens?: number
-  tags?: ModelTag[]
+  maxOutputTokens?: number
+  contextSize?: number
+}
+
+export const LLM_TASKS = [
+  'translate',
+  'voiceCorrection',
+  'correction',
+  'aiTasks',
+  'chat',
+] as const
+
+export type LlmTask = (typeof LLM_TASKS)[number]
+
+export interface LlmConfig {
+  providers: LlmProvider[]
+  models: LlmModel[]
+  /** Model ids per task: the first answers, the rest are its fallbacks */
+  tasks: Record<LlmTask, string[]>
+}
+
+export const DEFAULT_LLM_MODEL_ID = 'local-qwen'
+
+export const DEFAULT_LLM_CONFIG: LlmConfig = {
+  providers: [
+    { id: 'google', type: 'google', name: 'Google Gemini' },
+    { id: 'openrouter', type: 'openrouter', name: 'OpenRouter' },
+    { id: 'deepseek', type: 'deepseek', name: 'DeepSeek' },
+    {
+      id: 'local',
+      type: 'openai-compatible',
+      name: 'Ollama',
+      baseUrl: 'http://localhost:11434/v1',
+    },
+  ],
+  models: [
+    {
+      id: DEFAULT_LLM_MODEL_ID,
+      provider: 'local',
+      model: 'qwen2.5:7b',
+      name: 'Qwen 2.5 7B',
+      temperature: 0.2,
+    },
+    {
+      id: 'gemini-flash',
+      provider: 'google',
+      model: 'gemini-2.5-flash',
+      name: 'Gemini 2.5 Flash',
+      temperature: 0.2,
+    },
+    {
+      id: 'deepseek-chat',
+      provider: 'deepseek',
+      model: 'deepseek-chat',
+      name: 'DeepSeek Chat',
+      temperature: 0.2,
+    },
+    {
+      id: 'openrouter-gpt-4-1-mini',
+      provider: 'openrouter',
+      model: 'openai/gpt-4.1-mini',
+      name: 'GPT-4.1 mini',
+      temperature: 0.2,
+    },
+  ],
+  tasks: {
+    translate: [DEFAULT_LLM_MODEL_ID],
+    voiceCorrection: [DEFAULT_LLM_MODEL_ID],
+    correction: [DEFAULT_LLM_MODEL_ID],
+    aiTasks: [DEFAULT_LLM_MODEL_ID],
+    chat: [DEFAULT_LLM_MODEL_ID],
+  },
 }
 
 export interface SttModel {
@@ -94,7 +186,7 @@ export interface UserConfig {
   showBubbleMenu: boolean
   editorHistoryMaxItems: number
   chatHistoryMaxItems: number
-  llmModels: LlmModel[]
+  llm: LlmConfig
   sttModels: SttModel[]
   ttsModels: {
     id: string
@@ -103,15 +195,7 @@ export interface UserConfig {
     baseUrl?: string
     apiKey?: string
   }[]
-  aiModelUsage: {
-    stt: string
-    tts: string
-    translate: string
-    voiceCorrection: string
-    correction: string
-    aiTasks: string
-    chat: string
-  }
+  aiModelUsage: { stt: string; tts: string }
   aiRules: {
     base: string
     translate: string
@@ -157,19 +241,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   showBubbleMenu: true,
   editorHistoryMaxItems: 100,
   chatHistoryMaxItems: 50,
-  llmModels: [
-    {
-      id: 'openai-compatible-default',
-      name: 'OpenAI-compatible model',
-      model: 'qwen2.5:7b',
-      provider: 'openai-compatible',
-      description: 'OpenAI-compatible LLM endpoint',
-      baseUrl: 'http://localhost:11434/v1',
-      apiKey: '',
-      temperature: 0.2,
-      maxTokens: 512,
-    },
-  ],
+  llm: DEFAULT_LLM_CONFIG,
   sttModels: [
     {
       id: 'openai-compatible-stt',
@@ -190,15 +262,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     },
   ],
   ttsModels: [],
-  aiModelUsage: {
-    stt: 'openai-compatible-stt',
-    tts: '',
-    translate: 'openai-compatible-default',
-    voiceCorrection: 'openai-compatible-default',
-    correction: 'openai-compatible-default',
-    aiTasks: 'openai-compatible-default',
-    chat: 'openai-compatible-default',
-  },
+  aiModelUsage: { stt: 'openai-compatible-stt', tts: '' },
   aiRules: {
     base: BASE_TASK,
     translate: TRANSLATION_TASK,

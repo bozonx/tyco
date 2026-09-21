@@ -206,128 +206,7 @@
           </SettingsSection>
         </div>
 
-        <div v-show="currentTab === 3">
-          <SettingsSection
-            :title="t('settings.llmModels')"
-            :description="t('settings.openAiCompatibleHint')"
-            bare
-          >
-            <template #actions>
-              <Button sm icon="mdi:plus" @click="addOpenAiCompatibleLlmModel">
-                {{ t('settings.addOpenAiCompatibleModel') }}
-              </Button>
-            </template>
-
-            <div class="flex flex-col gap-3">
-              <div
-                v-for="(model, index) in userConfig.llmModels"
-                :key="model.id"
-                class="surface model-card"
-              >
-                <div class="model-card-header">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <Icon
-                      icon="mdi:cube-outline"
-                      height="18"
-                      class="text-muted shrink-0"
-                    />
-                    <span class="font-medium truncate">
-                      {{ modelDisplayName(model, index) }}
-                    </span>
-                  </div>
-                  <Button
-                    sm
-                    ghost
-                    icon="mdi:trash-can-outline"
-                    class="danger-ghost"
-                    :disabled="userConfig.llmModels.length <= 1"
-                    @click="removeLlmModel(model.id)"
-                  >
-                    {{ t('settings.removeModel') }}
-                  </Button>
-                </div>
-
-                <FieldRow :label="t('settings.name')">
-                  <FieldInput
-                    :value="model.name || ''"
-                    @update:value="setLlmModelName(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.baseUrl')">
-                  <FieldInput
-                    :value="model.baseUrl || ''"
-                    placeholder="https://openrouter.ai/api/v1"
-                    @update:value="setOpenAiCompatibleBaseUrl(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.apiKey')">
-                  <FieldInput
-                    type="password"
-                    :value="model.apiKey || ''"
-                    @update:value="setOpenAiCompatibleApiKey(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.model')">
-                  <FieldInput
-                    :value="model.model || ''"
-                    placeholder="openai/gpt-4.1-mini"
-                    @update:value="setOpenAiCompatibleModel(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.temperature')">
-                  <FieldInput
-                    type="number"
-                    :value="String(model.temperature ?? 0.2)"
-                    @update:value="setLlmTemperature(model.id, $event)"
-                  />
-                </FieldRow>
-                <FieldRow :label="t('settings.maxTokens')">
-                  <FieldInput
-                    type="number"
-                    :value="String(model.maxTokens ?? 512)"
-                    @update:value="setLlmMaxTokens(model.id, $event)"
-                  />
-                </FieldRow>
-              </div>
-            </div>
-          </SettingsSection>
-
-          <SettingsSection
-            :title="t('settings.aiModelUsage')"
-            :description="t('settings.aiModelUsageHint')"
-          >
-            <FieldRow :label="t('settings.translate')">
-              <FieldSelect
-                v-model:value="userConfig.aiModelUsage.translate"
-                :options="llmUsageOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.voiceCorrection')">
-              <FieldSelect
-                v-model:value="userConfig.aiModelUsage.voiceCorrection"
-                :options="llmUsageOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.correction')">
-              <FieldSelect
-                v-model:value="userConfig.aiModelUsage.correction"
-                :options="llmUsageOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.aiTasks')">
-              <FieldSelect
-                v-model:value="userConfig.aiModelUsage.aiTasks"
-                :options="llmUsageOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.chat')">
-              <FieldSelect
-                v-model:value="userConfig.aiModelUsage.chat"
-                :options="llmUsageOptions"
-              />
-            </FieldRow>
-          </SettingsSection>
-        </div>
+        <SettingsLlmTab v-show="currentTab === 3" :llm="userConfig.llm" />
 
         <SettingsRulesTab v-show="currentTab === 4" :user-config="userConfig" />
 
@@ -360,6 +239,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { syncI18nLocale } from '../lib/i18n'
+import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
   AUTO_LANGUAGE_VALUE,
   DEFAULT_LANGUAGE,
@@ -372,6 +252,7 @@ import {
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
+import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsRolesTab from './settings/SettingsRolesTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
@@ -543,7 +424,7 @@ function createPreparedUserConfig(config: unknown) {
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
   normalizeSttConfig(nextConfig)
-  normalizeLlmConfig(nextConfig)
+  normalizeLlmConfigSection(nextConfig)
   normalizeChatRoles(nextConfig)
   normalizeAiTasks(nextConfig)
 
@@ -647,49 +528,15 @@ function normalizeSttConfig(config: Record<string, any>) {
   const webSocketModel = createSttModel('websocket', oldWebSocketModel)
 
   config.sttModels = [httpModel, webSocketModel]
-  config.aiModelUsage.stt =
-    activeProvider === 'websocket' ? webSocketModel.id : httpModel.id
+  config.aiModelUsage = {
+    stt: activeProvider === 'websocket' ? webSocketModel.id : httpModel.id,
+    tts: config.aiModelUsage.tts ?? '',
+  }
 }
 
-function normalizeLlmConfig(config: Record<string, any>) {
-  if (!Array.isArray(config.llmModels)) {
-    config.llmModels = []
-  }
-
-  if (!config.aiModelUsage) {
-    config.aiModelUsage = {}
-  }
-
-  const normalizedModels = config.llmModels
-    .map((model: Record<string, any>) => normalizeSingleLlmModel(model))
-    .filter((model: Record<string, any> | null) => model !== null)
-  const dedupedModels = dedupeLlmModels(
-    normalizedModels as Record<string, any>[]
-  )
-  const llmModels =
-    dedupedModels.length > 0 ? dedupedModels : [createOpenAiCompatibleModel()]
-
-  config.llmModels = llmModels
-
-  const usageKeys = [
-    'translate',
-    'voiceCorrection',
-    'correction',
-    'aiTasks',
-    'chat',
-  ] as const
-
-  const validIds = new Set(
-    llmModels.map((model: Record<string, any>) => model.id)
-  )
-  const fallbackModelId = llmModels[0].id
-
-  for (const usageKey of usageKeys) {
-    const currentId = config.aiModelUsage[usageKey]
-    config.aiModelUsage[usageKey] = validIds.has(currentId)
-      ? currentId
-      : fallbackModelId
-  }
+function normalizeLlmConfigSection(config: Record<string, any>) {
+  config.llm = normalizeLlmConfig(config.llm)
+  delete config.llmModels
 }
 
 function normalizeChatRoles(config: Record<string, any>) {
@@ -734,24 +581,6 @@ function createSttModel(
   }
 }
 
-function createOpenAiCompatibleModel(existingModel?: Record<string, any>) {
-  return {
-    id: existingModel?.id || createLlmModelId('openai-compatible'),
-    name:
-      existingModel?.name ||
-      existingModel?.label ||
-      t('settings.openAiCompatibleModelDefaultName'),
-    model: existingModel?.model || '',
-    provider: 'openai-compatible',
-    description:
-      existingModel?.description || t('settings.openAiCompatibleDescription'),
-    baseUrl: existingModel?.baseUrl || '',
-    apiKey: existingModel?.apiKey || '',
-    temperature: toNumberOrDefault(existingModel?.temperature, 0.2),
-    maxTokens: toIntegerOrDefault(existingModel?.maxTokens, 512),
-  }
-}
-
 function ensureSttModel(
   config: Record<string, any>,
   provider: 'openai-compatible' | 'websocket'
@@ -777,42 +606,6 @@ function resolveCurrentSttProvider(config: Record<string, any>) {
   return model?.provider === 'websocket' ? 'websocket' : 'openai-compatible'
 }
 
-function normalizeSingleLlmModel(model: Record<string, any>) {
-  if (model.provider === 'openai-compatible') {
-    return createOpenAiCompatibleModel(model)
-  }
-
-  return null
-}
-
-function dedupeLlmModels(models: Record<string, any>[]) {
-  const usedIds = new Set<string>()
-
-  return models.map((model) => {
-    let nextId =
-      typeof model.id === 'string' && model.id.trim()
-        ? model.id.trim()
-        : createLlmModelId(model.provider)
-
-    while (usedIds.has(nextId)) {
-      nextId = createLlmModelId(model.provider)
-    }
-
-    usedIds.add(nextId)
-    return { ...model, id: nextId }
-  })
-}
-
-function createLlmModelId(provider: string) {
-  return `${provider}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function toNumberOrDefault(value: unknown, fallback: number) {
-  const parsed = Number(value)
-
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
 /**
  * The field hands over text; the backend expects a number and treats 0 as "keep
  * nothing". A half typed value (empty, negative) is not stored
@@ -826,12 +619,6 @@ function setHistoryLimit(
   if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
 
   userConfig.value[key] = Math.round(parsed)
-}
-
-function toIntegerOrDefault(value: unknown, fallback: number) {
-  const parsed = Number(value)
-
-  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : fallback
 }
 
 const navigatorLanguages = computed(() => getNavigatorLanguages())
@@ -941,15 +728,6 @@ const currentSttModel = computed(() =>
   )
 )
 
-const llmUsageOptions = computed(() => {
-  return (userConfig.value.llmModels || []).map(
-    (model: Record<string, any>, index: number) => ({
-      id: model.id,
-      name: modelDisplayName(model, index),
-    })
-  )
-})
-
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
 }
@@ -1004,113 +782,6 @@ const setSttField = (field: 'baseUrl' | 'model' | 'apiKey', value: string) => {
 
 const setSttFormatWithLlm = (value: boolean) => {
   currentSttModel.value.formatWithLlm = value
-}
-
-function modelDisplayName(model: Record<string, any>, index: number | string) {
-  const customName = String(model.name || '').trim()
-  const displayIndex = Number(index) + 1
-
-  if (customName) {
-    return customName
-  }
-
-  return `${t('settings.openAiCompatible')} ${displayIndex}`
-}
-
-function getLlmModelById(modelId: string) {
-  return (userConfig.value.llmModels || []).find(
-    (model: Record<string, any>) => model.id === modelId
-  )
-}
-
-function setLlmModelName(modelId: string, value: string) {
-  const model = getLlmModelById(modelId)
-
-  if (!model) {
-    return
-  }
-
-  model.name = value
-}
-
-function addOpenAiCompatibleLlmModel() {
-  userConfig.value.llmModels.push(createOpenAiCompatibleModel())
-}
-
-function removeLlmModel(modelId: string) {
-  const nextModels = userConfig.value.llmModels.filter(
-    (model: Record<string, any>) => model.id !== modelId
-  )
-
-  if (nextModels.length === 0) {
-    nextModels.push(createOpenAiCompatibleModel())
-  }
-
-  userConfig.value.llmModels = nextModels
-  const fallbackModelId = nextModels[0].id
-  const usageKeys = [
-    'translate',
-    'voiceCorrection',
-    'correction',
-    'aiTasks',
-    'chat',
-  ] as const
-
-  for (const usageKey of usageKeys) {
-    if (userConfig.value.aiModelUsage[usageKey] === modelId) {
-      userConfig.value.aiModelUsage[usageKey] = fallbackModelId
-    }
-  }
-}
-
-const setOpenAiCompatibleBaseUrl = (modelId: string, baseUrl: string) => {
-  const model = getLlmModelById(modelId)
-
-  if (!model || model.provider !== 'openai-compatible') {
-    return
-  }
-
-  model.baseUrl = baseUrl
-}
-
-const setOpenAiCompatibleApiKey = (modelId: string, apiKey: string) => {
-  const model = getLlmModelById(modelId)
-
-  if (!model || model.provider !== 'openai-compatible') {
-    return
-  }
-
-  model.apiKey = apiKey
-}
-
-const setOpenAiCompatibleModel = (modelId: string, value: string) => {
-  const model = getLlmModelById(modelId)
-
-  if (!model || model.provider !== 'openai-compatible') {
-    return
-  }
-
-  model.model = value
-}
-
-const setLlmTemperature = (modelId: string, value: string) => {
-  const model = getLlmModelById(modelId)
-
-  if (!model) {
-    return
-  }
-
-  model.temperature = toNumberOrDefault(value, 0.2)
-}
-
-const setLlmMaxTokens = (modelId: string, value: string) => {
-  const model = getLlmModelById(modelId)
-
-  if (!model) {
-    return
-  }
-
-  model.maxTokens = toIntegerOrDefault(value, 512)
 }
 
 async function loadStorageInfo() {
@@ -1209,25 +880,6 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xl);
   font-size: 1.25rem;
   font-weight: 600;
-}
-
-.model-card {
-  overflow: hidden;
-  box-shadow: var(--app-shadow-sm);
-}
-
-.model-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
-  border-bottom: 1px solid var(--app-border-subtle);
-  background-color: var(--app-surface-raised);
-}
-
-.danger-ghost:not(:disabled):hover {
-  color: var(--color-error);
 }
 
 .storage-list {

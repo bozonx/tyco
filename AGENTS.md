@@ -57,6 +57,12 @@ overrides only `devUrl` and the CSP entries needed to reach the dev server —
 keep it that way, so that anything working in dev also works in a bundle. In
 particular, never rely on inline scripts: `script-src` does not allow them.
 
+The webview does not reach the network itself: `connect-src` allows only IPC.
+HTTP and WebSocket requests go through the Rust proxy
+(`src-tauri/src/services/net`) via `apps/desktop-ui/src/lib/net`. Provider API
+keys live in the Rust secret store (`services/secrets.rs`), bound to their
+provider's origin; the webview only ever handles `tyco-secret:<id>` references.
+
 ## Versioning
 
 The root `package.json` is the single source of truth. `pnpm sync:version`

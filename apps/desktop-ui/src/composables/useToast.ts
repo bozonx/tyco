@@ -11,5 +11,14 @@ export default function useToast() {
     miniToastr[type](translate(message), '', timeout)
   }
 
-  return { toast }
+  /** For text that is already final, e.g. an error message from a provider */
+  const toastText = (
+    text: string,
+    type: 'success' | 'error' | 'warn' | 'info' = 'info',
+    timeout = 10000
+  ) => {
+    miniToastr[type](text, '', timeout)
+  }
+
+  return { toast, toastText }
 }

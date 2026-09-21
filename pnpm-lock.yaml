@@ -146,9 +146,18 @@ importers:
 
   apps/desktop-ui:
     dependencies:
+      '@ai-sdk/deepseek':
+        specifier: ^3.0.50
+        version: 3.0.50(zod@4.6.5)
+      '@ai-sdk/google':
+        specifier: ^4.0.76
+        version: 4.0.76(zod@4.6.5)
+      '@ai-sdk/openai-compatible':
+        specifier: ^3.0.53
+        version: 3.0.53(zod@4.6.5)
       '@bozonx/ai-kit':
         specifier: ^0.4.0
-        version: 0.4.0(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(zod@4.6.5)
+        version: 0.4.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
       '@codemirror/commands':
         specifier: ^6.11.1
         version: 6.11.1
@@ -173,6 +182,9 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
+      '@openrouter/ai-sdk-provider':
+        specifier: ^3.1.0
+        version: 3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.0(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3))
@@ -246,9 +258,6 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@ai-sdk/openai-compatible':
-        specifier: ^3.0.53
-        version: 3.0.53(zod@4.6.5)
       '@iconify-json/mdi':
         specifier: ^1.2.3
         version: 1.2.3
@@ -311,8 +320,20 @@ importers:
 
 packages:
 
+  '@ai-sdk/deepseek@3.0.50':
+    resolution: {integrity: sha512-xqQwo+nlsr/LQDU1TTk14LpW6a8BlepkCMadjj8Myoq9eOMZ7zv7Y/YC62OMTQYjC1dds7oYtZWMN6nTpMeKzg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/gateway@4.0.87':
     resolution: {integrity: sha512-6wJmX/D5OO7tvDJbtFdXdBuRt8AkCnW+FLK+W35UHe/tHgolAa4hclXtJcMSYnlTDy/t5DNRgdesVaoMXtwzow==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/google@4.0.76':
+    resolution: {integrity: sha512-RHYTfsrlzM2D7VS4dxq2TWFj0tzE+ALesbTIkrFgyqBbBER8TLw/r93h9IVhR27cLcl4II1tLyiuzZq44IyoCQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -742,6 +763,13 @@ packages:
 
   '@one-ini/wasm@0.2.1':
     resolution: {integrity: sha512-TUqERXGNTifZ9y2g3wPxQrw3HpHv/02DsW3D90T9x0hhonrL1ZqpSmNrU2XkoIq0fP1N6gZfVQzy2Fw1ZvGBNg==}
+
+  '@openrouter/ai-sdk-provider@3.1.0':
+    resolution: {integrity: sha512-BQy1TA9fKrh47s9ivsO6FY5QimN7GUF0i8Qon3pkxQclEgShso0dClpcWn8OIyPLEZZPFaFKgI8TW4S/O0p0Dw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      ai: ^7.0.0
+      zod: ^3.25.76 || ^4.1.8
 
   '@oxc-project/types@0.150.0':
     resolution: {integrity: sha512-rDS5/31E9HfPl/CIzGrn0DOlvBbXFseQ5URJ9sYMfstbKLD/c6Gm9vmRzRGDdAXyOIL4zmO37lc9RIwYqVruZw==}
@@ -2947,11 +2975,23 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/deepseek@3.0.50(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
+      zod: 4.6.5
+
   '@ai-sdk/gateway@4.0.87(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       '@vercel/oidc': 3.2.0
+      zod: 4.6.5
+
+  '@ai-sdk/google@4.0.76(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
   '@ai-sdk/openai-compatible@3.0.53(zod@4.6.5)':
@@ -3047,13 +3087,16 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bozonx/ai-kit@0.4.0(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(zod@4.6.5)':
+  '@bozonx/ai-kit@0.4.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
     dependencies:
       ai: 7.0.107(zod@4.6.5)
       js-yaml: 5.4.2
       zod: 4.6.5
     optionalDependencies:
+      '@ai-sdk/deepseek': 3.0.50(zod@4.6.5)
+      '@ai-sdk/google': 4.0.76(zod@4.6.5)
       '@ai-sdk/openai-compatible': 3.0.53(zod@4.6.5)
+      '@openrouter/ai-sdk-provider': 3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5)
 
   '@bramus/specificity@2.4.2':
     dependencies:
@@ -3563,6 +3606,11 @@ snapshots:
   '@one-ini/wasm@0.1.1': {}
 
   '@one-ini/wasm@0.2.1': {}
+
+  '@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5)':
+    dependencies:
+      ai: 7.0.107(zod@4.6.5)
+      zod: 4.6.5
 
   '@oxc-project/types@0.150.0': {}
 

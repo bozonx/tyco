@@ -5,6 +5,7 @@ pub mod dbus;
 pub mod foreground_context;
 #[cfg(target_os = "linux")]
 pub mod hotkeys;
+pub mod llm_config;
 pub mod net;
 pub mod notes;
 pub mod runtime;

@@ -43,7 +43,8 @@ function createWavFile(recording: RecordedAudio) {
 export async function transcribeOpenAiCompatible(
   model: SttModel,
   recording: RecordedAudio,
-  language?: string
+  language?: string,
+  fetchImpl: typeof fetch = fetch
 ) {
   const form = new FormData()
   form.append('file', createWavFile(recording))
@@ -53,7 +54,7 @@ export async function transcribeOpenAiCompatible(
     form.append('language', language)
   }
 
-  const response = await fetch(
+  const response = await fetchImpl(
     `${(model.baseUrl || '').replace(/\/$/, '')}/audio/transcriptions`,
     {
       method: 'POST',
