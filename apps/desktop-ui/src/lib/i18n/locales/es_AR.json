@@ -201,7 +201,6 @@
     "clear": "Limpiar",
     "selectAll": "Seleccionar todo",
     "selectionHint": "Consejo: puedes seleccionar una parte del texto y solo esa parte se modificará.",
-    "actions": "Acciones",
     "inputLabel": "Editor de texto",
     "menu": {
       "cut": "Cortar",
@@ -259,7 +258,6 @@
     "correction": "Corrección",
     "translation": "Traducción",
     "askInChat": "Preguntar en el chat",
-    "searchInInternet": "Buscar en internet",
     "insertIntoEditor": "Insertar en el editor"
   },
   "plugin": {
@@ -295,6 +293,9 @@
     "nothingRecognized": "No se reconoció nada",
     "voiceRecognitionFailed": "No se pudo iniciar el reconocimiento de voz",
     "noSearchBaseUrl": "No hay URL base configurada para la búsqueda",
-    "modelNotFound": "Modelo no encontrado"
+    "modelNotFound": "Modelo no encontrado",
+    "noNotesPath": "No hay carpeta de notas configurada en el plugin Nota rápida",
+    "noteSaved": "Nota guardada",
+    "noteSaveFailed": "No se pudo guardar la nota"
   }
 }

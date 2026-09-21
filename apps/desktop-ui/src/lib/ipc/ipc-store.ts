@@ -90,6 +90,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.OPEN_IN_BROWSER_AND_CLOSE,
       buildArgs: ([url]) => ({ url: String(url) }),
     },
+    saveNote: {
+      command: DESKTOP_COMMANDS.SAVE_NOTE,
+      buildArgs: ([dir, fileName, text]) => ({ dir, fileName, text }),
+    },
   }
 }
 

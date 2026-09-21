@@ -44,6 +44,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the save note command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('saveNote', ['/notes', 'note.md', 'text'])
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.SAVE_NOTE,
+      { dir: '/notes', fileName: 'note.md', text: 'text' }
+    )
+  })
+
   it('returns an error for unknown function names', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

@@ -132,6 +132,7 @@ export const DESKTOP_COMMANDS = {
   STOP_LOCAL_VOICE_RECORDING: 'stop_local_voice_recording',
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
   PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
+  SAVE_NOTE: 'save_note',
 } as const
 
 export type DesktopCommandName =

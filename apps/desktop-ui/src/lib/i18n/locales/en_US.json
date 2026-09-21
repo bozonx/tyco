@@ -201,7 +201,6 @@
     "clear": "Clear",
     "selectAll": "Select all",
     "selectionHint": "Hint: you can select part of the text, and only the selected fragment will be changed.",
-    "actions": "Actions",
     "inputLabel": "Text editor",
     "menu": {
       "cut": "Cut",
@@ -259,7 +258,6 @@
     "correction": "Correction",
     "translation": "Translation",
     "askInChat": "Ask in chat",
-    "searchInInternet": "Search the internet",
     "insertIntoEditor": "Insert into editor"
   },
   "plugin": {
@@ -292,6 +290,9 @@
     "nothingRecognized": "Nothing recognized",
     "voiceRecognitionFailed": "Failed to start voice recognition",
     "noSearchBaseUrl": "No base URL configured for internet search",
-    "modelNotFound": "Model not found"
+    "modelNotFound": "Model not found",
+    "noNotesPath": "Notes folder is not configured in the Quick note plugin settings",
+    "noteSaved": "Note saved",
+    "noteSaveFailed": "Failed to save the note"
   }
 }

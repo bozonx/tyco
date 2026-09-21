@@ -44,6 +44,8 @@ export interface PluginContext {
   toast(message: string, type: 'success' | 'error' | 'warn' | 'info'): void
   callApiFunction(functionName: string, args: any[]): Promise<IpcResult>
   getUserConfig(): UserConfig
+  /** Returns the saved settings of the calling plugin, if any. */
+  getMyConfig<T extends object>(): Partial<T> | undefined
 }
 
 export interface PluginConfig {

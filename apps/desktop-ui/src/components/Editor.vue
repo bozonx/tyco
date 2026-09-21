@@ -3,7 +3,7 @@
     <div class="editor-frame">
       <!-- Toolbar above editor -->
       <div class="editor-toolbar flex items-center justify-between gap-2">
-        <!-- Left column: Case and Format dropdowns + plugin left buttons -->
+        <!-- Left column: Case and Format dropdowns, then plugin items -->
         <div class="flex items-center gap-1">
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
           <DropdownMenu
@@ -23,7 +23,7 @@
           </Button>
         </div>
 
-        <!-- Right column: plugin right buttons, AI task, Translation & Insert to window icon buttons -->
+        <!-- Right column: plugin items, then AI task, Translation & Insert to window -->
         <div class="flex items-center gap-1">
           <Button
             v-for="item in rightToolbarItems"
@@ -146,21 +146,6 @@
         >
       </div>
 
-      <div v-if="bottomActions.length > 0" class="editor-actions">
-        <h2 class="editor-actions-title">{{ t('editor.actions') }}</h2>
-        <div class="flex gap-1.5 w-full flex-wrap">
-          <Button
-            v-for="item in bottomActions"
-            :key="item.labelKey || item.name"
-            sm
-            neutral
-            :icon="item.icon"
-            @click="doAction(item)"
-            >{{ getLabel(item) }}</Button
-          >
-        </div>
-      </div>
-
       <slot />
     </div>
   </div>
@@ -219,24 +204,6 @@ const getToolbarTooltip = (item: ToolbarItem): string => {
   }
   return item.tooltip || ''
 }
-
-const EXCLUDED_ACTION_KEYS = new Set([
-  'action.copyToClipboard',
-  'action.correction',
-  'action.insertIntoWindow',
-  'action.translation',
-  'action.askInChat',
-  'action.aiTask',
-])
-
-const bottomActions = computed(() =>
-  actionMenuStore
-    .getActionsMenu()
-    .filter(
-      (item: ActionItem) =>
-        !item.labelKey || !EXCLUDED_ACTION_KEYS.has(item.labelKey)
-    )
-)
 
 const handleAiTask = async () => {
   const aiTaskAction = actionMenuStore
@@ -385,15 +352,5 @@ const handleCopy = async () => {
   margin: 0;
   font-size: 0.75rem;
   color: var(--app-text-faint);
-}
-
-.editor-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.editor-actions-title {
-  margin: 0;
 }
 </style>

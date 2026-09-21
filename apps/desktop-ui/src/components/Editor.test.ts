@@ -108,6 +108,46 @@ describe('Editor.vue toolbar', () => {
 
     const rightBtn = wrapper.find('button[title="tool.right"]')
     expect(rightBtn.exists()).toBe(true)
+
+    const [leftColumn, rightColumn] = wrapper.findAll(
+      '.flex.items-center.justify-between > .flex.items-center'
+    )
+    expect(
+      leftColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
+    ).toEqual(['tool.left'])
+    expect(
+      rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
+    ).toEqual([
+      'tool.right',
+      'action.aiTask',
+      'action.translation',
+      'action.insertIntoWindow',
+    ])
+  })
+
+  it('does not render the bottom actions block for registered actions', async () => {
+    const { useActionMenuStore } = await import('../stores/actionMenu')
+    useActionMenuStore().registerActionsItems([
+      { labelKey: 'plugin.custom', action: vi.fn() },
+    ])
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('editor.actions')
+    expect(wrapper.text()).not.toContain('plugin.custom')
   })
 
   it('includes registered plugin case and format items in dropdowns', async () => {

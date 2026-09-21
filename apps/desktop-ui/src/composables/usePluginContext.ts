@@ -115,8 +115,9 @@ export default function usePluginContext() {
       return ipcStore.params!.userConfig
     }
 
-    getMyConfig() {
-      return ipcStore.params!.userConfig.plugins[this.pluginName]
+    getMyConfig<T extends object>() {
+      return ipcStore.params!.userConfig.plugins?.[this.pluginName] as
+        Partial<T> | undefined
     }
   }
 

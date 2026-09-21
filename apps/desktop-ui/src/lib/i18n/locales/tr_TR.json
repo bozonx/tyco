@@ -201,7 +201,6 @@
     "clear": "Temizle",
     "selectAll": "Tümünü seç",
     "selectionHint": "İpucu: metnin bir kısmını seçebilir ve sadece seçilen bölümü değiştirebilirsin.",
-    "actions": "Eylemler",
     "inputLabel": "Metin düzenleyici",
     "menu": {
       "cut": "Kes",
@@ -259,7 +258,6 @@
     "correction": "Düzeltme",
     "translation": "Çeviri",
     "askInChat": "Sohbette sor",
-    "searchInInternet": "İnternette ara",
     "insertIntoEditor": "Editöre ekle"
   },
   "plugin": {
@@ -292,6 +290,9 @@
     "nothingRecognized": "Hiçbir şey tanınmadı",
     "voiceRecognitionFailed": "Ses tanıma başlatılamadı",
     "noSearchBaseUrl": "İnternet araması için temel URL ayarlanmamış",
-    "modelNotFound": "Model bulunamadı"
+    "modelNotFound": "Model bulunamadı",
+    "noNotesPath": "Hızlı not eklentisinin ayarlarında not klasörü belirtilmemiş",
+    "noteSaved": "Not kaydedildi",
+    "noteSaveFailed": "Not kaydedilemedi"
   }
 }

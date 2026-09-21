@@ -27,6 +27,7 @@ describe('createPluginManager', () => {
       toast: vi.fn(),
       callApiFunction: vi.fn(),
       getUserConfig: vi.fn(),
+      getMyConfig: vi.fn(),
     }) as unknown as PluginContext
 
   it('loads all plugins when no disabled status is specified', () => {
