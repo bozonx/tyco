@@ -2,7 +2,11 @@
   <div class="settings-panel">
     <aside class="settings-nav">
       <div class="settings-nav-title">{{ t('nav.settings') }}</div>
-      <Tabs :tabs="tabs" v-model:value="currentTab" variant="vertical" />
+      <Tabs :tabs="primaryTabs" v-model:value="currentTab" variant="vertical" />
+      <div class="settings-nav-category">
+        {{ t('settings.actionsCategory') }}
+      </div>
+      <Tabs :tabs="actionTabs" v-model:value="currentTab" variant="vertical" />
       <div class="settings-nav-footer">
         <Icon icon="mdi:cloud-check-outline" height="14" />
         <span>{{ t('settings.autosaveHint') }}</span>
@@ -13,7 +17,7 @@
       <div class="settings-content-inner">
         <h1 class="settings-page-title">{{ currentTabTitle }}</h1>
 
-        <div v-show="currentTab === 0">
+        <template v-if="currentTab === 'general'">
           <SettingsSection :title="t('settings.sectionAppearance')">
             <FieldRow :label="t('settings.theme')">
               <SegmentedControl
@@ -22,15 +26,24 @@
                 :options="themeOptions"
               />
             </FieldRow>
+            <FieldRow :label="t('settings.userLanguage')">
+              <FieldSelect
+                v-model:value="userConfig.userLanguage"
+                :options="userLanguageOptions"
+              />
+            </FieldRow>
             <FieldRow :label="t('settings.appLanguage')">
               <div class="flex items-center gap-2 w-full">
                 <FieldSelect
+                  v-if="isAppLanguageManual"
                   class="flex-1"
                   :value="effectiveAppLanguage"
                   :options="appLanguageOptions"
-                  :disabled="!isAppLanguageManual"
                   @update:value="updateAppLanguage"
                 />
+                <span v-else class="flex-1 text-sm text-muted">
+                  {{ getLanguageName(effectiveAppLanguage) }}
+                </span>
                 <Button sm ghost @click="toggleAppLanguageMode">
                   {{
                     isAppLanguageManual
@@ -39,42 +52,6 @@
                   }}
                 </Button>
               </div>
-            </FieldRow>
-            <FieldRow :label="t('settings.userLanguage')">
-              <FieldSelect
-                v-model:value="userConfig.userLanguage"
-                :options="userLanguageOptions"
-              />
-            </FieldRow>
-          </SettingsSection>
-
-          <SettingsSection :title="t('settings.sectionAccessibility')">
-            <FieldRow
-              :label="t('settings.contrast')"
-              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-            >
-              <SegmentedControl
-                v-model:value="userConfig.contrast"
-                :label="t('settings.contrast')"
-                :options="contrastOptions"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.motion')"
-              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-            >
-              <SegmentedControl
-                v-model:value="userConfig.motion"
-                :label="t('settings.motion')"
-                :options="motionOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.uiScale')">
-              <FieldSelect
-                :value="userConfig.uiScale"
-                :options="uiScaleOptions"
-                @update:value="updateUiScale"
-              />
             </FieldRow>
           </SettingsSection>
 
@@ -129,16 +106,17 @@
                   @update:value="updateWindowInsertionMethod"
                 />
                 <FieldInput
-                  v-show="userConfig.windowInsertion.method === 'xdotool'"
+                  v-if="userConfig.windowInsertion.method === 'xdotool'"
                   v-model:value="userConfig.windowInsertion.xdotoolBin"
                 />
                 <FieldInput
-                  v-show="userConfig.windowInsertion.method === 'ydotool'"
+                  v-if="userConfig.windowInsertion.method === 'ydotool'"
                   v-model:value="userConfig.windowInsertion.ydotoolBin"
                 />
               </div>
             </FieldRow>
-            <FieldRow :label="t('settings.storageLocations')" vertical>
+            <details class="storage-details">
+              <summary>{{ t('settings.storageLocations') }}</summary>
               <div v-if="!storageInfo" class="text-sm text-muted">
                 {{ t('settings.storageLocationsUnavailable') }}
               </div>
@@ -150,17 +128,49 @@
                   </dd>
                 </template>
               </dl>
+            </details>
+          </SettingsSection>
+        </template>
+
+        <template v-else-if="currentTab === 'accessibility'">
+          <SettingsSection :title="t('settings.sectionAccessibility')">
+            <FieldRow
+              :label="t('settings.contrast')"
+              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+            >
+              <SegmentedControl
+                v-model:value="userConfig.contrast"
+                :label="t('settings.contrast')"
+                :options="contrastOptions"
+              />
+            </FieldRow>
+            <FieldRow
+              :label="t('settings.motion')"
+              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+            >
+              <SegmentedControl
+                v-model:value="userConfig.motion"
+                :label="t('settings.motion')"
+                :options="motionOptions"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.uiScale')">
+              <FieldSelect
+                :value="userConfig.uiScale"
+                :options="uiScaleOptions"
+                @update:value="updateUiScale"
+              />
             </FieldRow>
           </SettingsSection>
-        </div>
+        </template>
 
         <SettingsTranslationsTab
-          v-show="currentTab === 1"
+          v-else-if="currentTab === 'translations'"
           :user-config="userConfig"
           @update:to-translate-languages="updateTranslateLanguages"
         />
 
-        <div v-show="currentTab === 2">
+        <div v-else-if="currentTab === 'stt'">
           <SettingsSection>
             <FieldRow :label="t('settings.sttProvider')">
               <Tabs
@@ -206,24 +216,30 @@
           </SettingsSection>
         </div>
 
-        <SettingsLlmTab v-show="currentTab === 3" :llm="userConfig.llm" />
+        <SettingsLlmTab
+          v-else-if="currentTab === 'llm'"
+          :llm="userConfig.llm"
+        />
 
-        <SettingsRulesTab v-show="currentTab === 4" :user-config="userConfig" />
+        <SettingsRulesTab
+          v-else-if="currentTab === 'rules'"
+          :user-config="userConfig"
+        />
 
         <SettingsTasksTab
-          v-show="currentTab === 5"
+          v-else-if="currentTab === 'tasks'"
           :user-config="userConfig"
           @update:ai-tasks="updateAiTasks"
         />
 
         <SettingsRolesTab
-          v-show="currentTab === 6"
+          v-else-if="currentTab === 'roles'"
           :user-config="userConfig"
           @update:chat-roles="updateChatRoles"
         />
 
         <SettingsPluginsTab
-          v-show="currentTab === 7"
+          v-else-if="currentTab === 'plugins'"
           :user-config="userConfig"
           @update:plugin-config="updatePluginConfig"
           @update:plugin-enabled="updatePluginEnabled"
@@ -277,7 +293,7 @@ const { toast } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
-const currentTab = ref(0)
+const currentTab = ref('general')
 const currentSttProvider = ref<'openai-compatible' | 'websocket'>(
   'openai-compatible'
 )
@@ -288,19 +304,42 @@ let isComponentActive = true
 let skipNextAutosave = false
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
-const tabs = computed(() => [
-  { text: t('settings.generalTab'), key: 0, icon: 'mdi:tune-variant' },
-  { text: t('settings.translationsTab'), key: 1, icon: 'mdi:translate' },
-  { text: t('settings.sttTab'), key: 2, icon: 'mdi:microphone-outline' },
-  { text: t('settings.llmTab'), key: 3, icon: 'mdi:cube-outline' },
-  { text: t('settings.rulesTab'), key: 4, icon: 'mdi:script-text-outline' },
-  { text: t('settings.tasksTab'), key: 5, icon: 'mdi:robot-outline' },
-  { text: t('settings.rolesTab'), key: 6, icon: 'mdi:account-voice' },
-  { text: t('settings.pluginsTab'), key: 7, icon: 'mdi:puzzle-outline' },
+const primaryTabs = computed(() => [
+  { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
+  {
+    text: t('settings.sectionAccessibility'),
+    key: 'accessibility',
+    icon: 'mdi:human-handsup',
+  },
+  { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
+  { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
+  {
+    text: t('settings.rulesTab'),
+    key: 'rules',
+    icon: 'mdi:script-text-outline',
+  },
+  {
+    text: t('settings.pluginsTab'),
+    key: 'plugins',
+    icon: 'mdi:puzzle-outline',
+  },
+])
+
+const actionTabs = computed(() => [
+  {
+    text: t('settings.translationsTab'),
+    key: 'translations',
+    icon: 'mdi:translate',
+  },
+  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
+  { text: t('settings.rolesTab'), key: 'roles', icon: 'mdi:account-voice' },
 ])
 
 const currentTabTitle = computed(
-  () => tabs.value.find((tab) => tab.key === currentTab.value)?.text || ''
+  () =>
+    [...primaryTabs.value, ...actionTabs.value].find(
+      (tab) => tab.key === currentTab.value
+    )?.text || ''
 )
 
 const sttProviderTabs = computed(() => [
@@ -715,6 +754,10 @@ const userLanguageOptions = computed(() => {
   return buildLanguageOptions([userConfig.value.userLanguage], true, t)
 })
 
+const getLanguageName = (language: string) =>
+  appLanguageOptions.value.find((option) => option.id === language)?.name ||
+  language
+
 watch(
   () => [userConfig.value.appLanguage, userConfig.value.userLanguage],
   ([appLanguage, userLanguage]) => {
@@ -855,6 +898,15 @@ onUnmounted(() => {
   color: var(--app-text-faint);
 }
 
+.settings-nav-category {
+  padding: var(--space-md) var(--space-sm) var(--space-xs);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+
 .settings-nav-footer {
   display: flex;
   align-items: center;
@@ -891,6 +943,20 @@ onUnmounted(() => {
   font-size: 0.8125rem;
 }
 
+.storage-details {
+  padding: var(--space-sm) 0;
+}
+
+.storage-details summary {
+  color: var(--app-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.storage-details > :not(summary) {
+  margin-top: var(--space-md);
+}
+
 .storage-list dt {
   color: var(--app-text-muted);
 }
@@ -913,6 +979,7 @@ onUnmounted(() => {
   }
 
   .settings-nav-title,
+  .settings-nav-category,
   .settings-nav-footer span,
   .settings-nav :deep(.app-tab .truncate) {
     display: none;

@@ -148,13 +148,25 @@ const removeItem = (index: number) => {
   border-radius: var(--radius-sm);
   color: var(--app-text-faint);
   cursor: grab;
+  opacity: 0;
+  pointer-events: none;
   /* Touch and pen drags must not scroll the page instead */
   touch-action: none;
-  transition: color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
 .drag-handle:hover {
   color: var(--color-base-content);
+}
+
+.item-card:hover .drag-handle,
+.item-card:focus-within .drag-handle,
+.item-card.is-sorting .drag-handle,
+.item-card.is-dragged .drag-handle {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .item-controls {
@@ -163,13 +175,17 @@ const removeItem = (index: number) => {
   gap: 2px;
   height: 2.25rem;
   flex-shrink: 0;
-  opacity: 0.55;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity var(--transition-fast);
 }
 
 .item-card:hover .item-controls,
-.item-card:focus-within .item-controls {
+.item-card:focus-within .item-controls,
+.item-card.is-sorting .item-controls,
+.item-card.is-dragged .item-controls {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .delete-btn {

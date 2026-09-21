@@ -109,6 +109,7 @@
   },
   "settings": {
     "generalTab": "General",
+    "actionsCategory": "Actions",
     "modelsTab": "Models",
     "sttTab": "STT",
     "llmTab": "LLM",
