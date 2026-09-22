@@ -1,6 +1,9 @@
 import { shallowRef } from 'vue'
 
+import type { MainActionConfig, StandardActionId } from '@tyco/shared'
+
 export interface ActionItem {
+  id?: StandardActionId
   name?: string
   labelKey?: string
   icon?: string
@@ -24,6 +27,7 @@ export interface ActionMenuDependencies {
     type?: 'info' | 'warn' | 'error' | 'success'
   ) => void
   minCorrectionLength?: () => number
+  mainActions?: () => readonly (MainActionConfig | null)[] | undefined
 }
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
@@ -31,6 +35,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
 
   const getDefaultActions = (): ActionItem[] => [
     {
+      id: 'insertIntoWindow',
       labelKey: 'action.insertIntoWindow',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -42,6 +47,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
+      id: 'copyToClipboard',
       labelKey: 'action.copyToClipboard',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -53,6 +59,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
+      id: 'aiTask',
       labelKey: 'action.aiTask',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -63,6 +70,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
+      id: 'correction',
       labelKey: 'action.correction',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -78,6 +86,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
+      id: 'translation',
       labelKey: 'action.translation',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -88,6 +97,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       },
     },
     {
+      id: 'askInChat',
       labelKey: 'action.askInChat',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -100,7 +110,41 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   ]
 
   const getActionsMenu = () => {
-    return [...getDefaultActions(), ...registeredActionsMenu.value]
+    const defaultActions = getDefaultActions()
+    const actionsById = new Map(
+      defaultActions.map((action) => [action.id, action] as const)
+    )
+    const configuredActions = deps.mainActions?.()
+    const standardActions = configuredActions
+      ? configuredActions.flatMap((item) => {
+          if (!item || item.type !== 'standard') return []
+          const action = actionsById.get(item.actionId)
+          return action ? [action] : []
+        })
+      : defaultActions
+
+    return [...standardActions, ...registeredActionsMenu.value]
+  }
+
+  const getShortcutActions = (): (ActionItem | undefined)[] => {
+    const configuredActions = deps.mainActions?.()
+    if (!configuredActions) return getActionsMenu()
+
+    const actionsById = new Map(
+      getDefaultActions().map((action) => [action.id, action] as const)
+    )
+    const slots = configuredActions.map((item) =>
+      item?.type === 'standard' ? actionsById.get(item.actionId) : undefined
+    )
+    let lastConfiguredIndex = -1
+    slots.forEach((action, index) => {
+      if (action) lastConfiguredIndex = index
+    })
+
+    return [
+      ...slots.slice(0, lastConfiguredIndex + 1),
+      ...registeredActionsMenu.value,
+    ]
   }
 
   const registerActionsItems = (actions: ActionItem[]) => {
@@ -114,6 +158,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   return {
     getDefaultActions,
     getActionsMenu,
+    getShortcutActions,
     registerActionsItems,
     clearRegisteredActions,
   }

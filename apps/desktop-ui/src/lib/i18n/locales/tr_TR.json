@@ -111,6 +111,7 @@
   "settings": {
     "generalTab": "Genel",
     "actionsCategory": "Eylemler",
+    "mainActionsTab": "Ana eylemler",
     "modelsTab": "Modeller",
     "sttTab": "STT",
     "llmTab": "LLM",
@@ -201,6 +202,7 @@
     "sectionSystem": "Sistem",
     "aiModelUsageHint": "İlk model yanıt verir; başarısız olursa sıradakiler denenir.",
     "translationsHint": "Çeviri için hedef diller. Her birine çeviri menüsünde bir kısayol tuşu atanır.",
+    "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
     "hotkey": "Kısayol tuşu",
     "hotkeysTab": "Kısayollar",

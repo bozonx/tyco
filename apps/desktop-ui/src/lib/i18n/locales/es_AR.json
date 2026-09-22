@@ -111,6 +111,7 @@
   "settings": {
     "generalTab": "General",
     "actionsCategory": "Acciones",
+    "mainActionsTab": "Acciones principales",
     "modelsTab": "Modelos",
     "sttTab": "STT",
     "llmTab": "LLM",
@@ -201,6 +202,7 @@
     "sectionSystem": "Sistema",
     "aiModelUsageHint": "Responde el primer modelo; si falla, se prueban los siguientes en orden.",
     "translationsHint": "Idiomas de destino para traducir. Cada uno tiene una tecla rápida en el menú de traducción.",
+    "mainActionsHint": "Acciones disponibles en el menú principal. Arrastrá las tarjetas para asignarlas a distintas teclas rápidas.",
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
     "hotkey": "Tecla rápida",
     "hotkeysTab": "Atajos",

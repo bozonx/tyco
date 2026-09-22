@@ -58,15 +58,14 @@ const emit = defineEmits<{ (e: 'update:text', value: string): void }>()
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
 const actionsMenu = computed(
-  () => props.actions || actionMenuStore.getActionsMenu()
+  () => props.actions || actionMenuStore.getShortcutActions()
 )
 const { t } = useI18n()
 
-const leftLetterKeys = computed<ActionItem[]>(() =>
-  actionsMenu.value.map((item: ActionItem, index: number) => ({
-    ...item,
-    disabled: shouldDisablePrimaryAction(index),
-  }))
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
+  actionsMenu.value.map((item: ActionItem | undefined, index: number) =>
+    item ? { ...item, disabled: shouldDisablePrimaryAction(index) } : undefined
+  )
 )
 
 const spaceKey = computed<ActionItem | undefined>(() => {

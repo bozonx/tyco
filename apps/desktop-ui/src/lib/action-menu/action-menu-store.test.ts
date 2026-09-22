@@ -132,4 +132,34 @@ describe('createActionMenuStoreModel', () => {
       store.getDefaultActions().length
     )
   })
+
+  it('maps configured actions to their shortcut slots', () => {
+    const mainActions = [
+      null,
+      { type: 'standard' as const, actionId: 'translation' as const },
+      { type: 'standard' as const, actionId: 'copyToClipboard' as const },
+    ]
+    const deps = {
+      typeIntoWindowAndClose: vi.fn(),
+      putIntoClipboardAndClose: vi.fn().mockResolvedValue(undefined),
+      saveOutput: vi.fn().mockResolvedValue(undefined),
+      openAiTaskModal: vi.fn(),
+      openTranslateModal: vi.fn(),
+      startCorrection: vi.fn().mockResolvedValue(undefined),
+      startChatWithAttachment: vi.fn(),
+      showToast: vi.fn(),
+      mainActions: () => mainActions,
+    }
+    const store = createActionMenuStoreModel(deps)
+
+    expect(store.getShortcutActions().map((action) => action?.id)).toEqual([
+      undefined,
+      'translation',
+      'copyToClipboard',
+    ])
+    expect(store.getActionsMenu().map((action) => action.id)).toEqual([
+      'translation',
+      'copyToClipboard',
+    ])
+  })
 })

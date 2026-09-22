@@ -160,6 +160,27 @@ export interface SttModel {
   apiKey?: string
 }
 
+export const STANDARD_ACTION_IDS = [
+  'insertIntoWindow',
+  'copyToClipboard',
+  'aiTask',
+  'correction',
+  'translation',
+  'askInChat',
+] as const
+
+export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]
+
+export interface StandardMainAction {
+  type: 'standard'
+  actionId: StandardActionId
+}
+
+export type MainActionConfig = StandardMainAction
+
+export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
+  STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
+
 /** Что делать при вставке HTML из буфера обмена */
 export type PasteMode = 'plain' | 'markdown' | 'ask'
 
@@ -181,6 +202,7 @@ export interface UserConfig {
   appLanguage: string
   userLanguage: string
   toTranslateLanguages: (string | null)[]
+  mainActions: (MainActionConfig | null)[]
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
   showBubbleMenu: boolean
@@ -235,6 +257,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   appLanguage: 'auto',
   userLanguage: 'auto',
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
+  mainActions: DEFAULT_MAIN_ACTIONS,
   pasteMode: 'markdown',
   editorSyntax: 'markdown',
   showBubbleMenu: true,

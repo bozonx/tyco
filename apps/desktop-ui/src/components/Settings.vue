@@ -176,6 +176,12 @@
           @update:to-translate-languages="updateTranslateLanguages"
         />
 
+        <SettingsMainActionsTab
+          v-else-if="currentTab === 'main-actions'"
+          :user-config="userConfig"
+          @update:main-actions="updateMainActions"
+        />
+
         <div v-else-if="currentTab === 'stt'">
           <SettingsSection>
             <FieldRow :label="t('settings.sttProvider')">
@@ -254,6 +260,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { normalizeMainActions } from '../lib/action-menu/main-actions'
 import { syncI18nLocale } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
@@ -270,6 +277,7 @@ import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
 import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
+import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
@@ -278,6 +286,7 @@ import { Icon } from '@iconify/vue'
 import {
   type ContrastMode,
   DEFAULT_USER_CONFIG,
+  type MainActionConfig,
   type MotionMode,
   type StorageInfo,
   type ThemeMode,
@@ -331,6 +340,11 @@ const primaryTabs = computed(() => [
 ])
 
 const actionTabs = computed(() => [
+  {
+    text: t('settings.mainActionsTab'),
+    key: 'main-actions',
+    icon: 'mdi:gesture-tap-button',
+  },
   {
     text: t('settings.translationsTab'),
     key: 'translations',
@@ -464,6 +478,7 @@ function createPreparedUserConfig(config: unknown) {
   ensurePluginDefaults(nextConfig)
   normalizeAppearanceConfig(nextConfig)
   normalizeLanguageConfig(nextConfig)
+  nextConfig.mainActions = normalizeMainActions(nextConfig.mainActions)
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
   normalizeHotkeysConfig(nextConfig)
@@ -772,6 +787,10 @@ const currentSttModel = computed(() =>
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
+}
+
+const updateMainActions = (actions: (MainActionConfig | null)[]) => {
+  userConfig.value.mainActions = actions
 }
 
 const updateHotkey = (mode: string, shortcut: string) => {

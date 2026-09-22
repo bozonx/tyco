@@ -135,6 +135,14 @@ pub fn default_user_config() -> Value {
       "appLanguage": "auto",
       "userLanguage": "auto",
       "toTranslateLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+      "mainActions": [
+        { "type": "standard", "actionId": "insertIntoWindow" },
+        { "type": "standard", "actionId": "copyToClipboard" },
+        { "type": "standard", "actionId": "aiTask" },
+        { "type": "standard", "actionId": "correction" },
+        { "type": "standard", "actionId": "translation" },
+        { "type": "standard", "actionId": "askInChat" }
+      ],
       "pasteMode": "markdown",
       "editorSyntax": "markdown",
       "showBubbleMenu": true,

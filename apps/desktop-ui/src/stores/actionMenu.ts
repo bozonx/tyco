@@ -59,5 +59,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       toast(message, type)
     },
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
+    mainActions: () => ipcStore.params.userConfig.mainActions,
   })
 })

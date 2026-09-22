@@ -111,6 +111,7 @@
   "settings": {
     "generalTab": "General",
     "actionsCategory": "Actions",
+    "mainActionsTab": "Main actions",
     "modelsTab": "Models",
     "sttTab": "STT",
     "llmTab": "LLM",
@@ -201,6 +202,7 @@
     "sectionSystem": "System",
     "aiModelUsageHint": "The first model answers; if it fails, the next ones are tried in order.",
     "translationsHint": "Target languages for translation. Each one gets a hotkey in the translation menu.",
+    "mainActionsHint": "Actions available from the main action menu. Drag cards to assign them to different hotkeys.",
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
     "hotkey": "Hotkey",
     "hotkeysTab": "Hotkeys",
