@@ -39,6 +39,7 @@ export function createCommandMap(): Record<string, CommandEntry> {
       buildArgs: ([localState]) => ({ localState }),
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
+    closeWindow: { command: DESKTOP_COMMANDS.CLOSE_WINDOW },
     applyHotkey: {
       command: DESKTOP_COMMANDS.APPLY_HOTKEY,
       buildArgs: ([request]) => ({ request }),

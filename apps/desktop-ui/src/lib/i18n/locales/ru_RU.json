@@ -56,6 +56,7 @@
     "actions": "Действия (Esc)",
     "escSuffix": " (Esc)"
   },
+  "window": { "close": "Закрыть окно" },
   "mode": {
     "write": "Режим написания",
     "voice": "Режим голоса",

@@ -1,4 +1,5 @@
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Mutex;
 use std::{thread, time::Duration};
 
 pub use super::activation::{Activation, ActivationIntent, ActivationSource, StartMode};
@@ -14,6 +15,7 @@ use crate::services::layer_shell;
 use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
+pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
 pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const VOICE_TEXT_EVENT: &str = "app://voice-text";
@@ -22,8 +24,9 @@ const TRAY_QUIT_ID: &str = "quit";
 
 pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let params = state.params();
+    let label = app.state::<RuntimeWindows>().active_label();
 
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+    if let Some(window) = app.get_webview_window(label) {
         window
             .emit(PARAMS_CHANGED_EVENT, params)
             .map_err(|error| AppError::Message(error.to_string()))?;
@@ -33,7 +36,8 @@ pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
 }
 
 pub fn emit_voice_text(app: &AppHandle, text: String) -> Result<(), AppError> {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+    let label = app.state::<RuntimeWindows>().active_label();
+    if let Some(window) = app.get_webview_window(label) {
         window
             .emit(VOICE_TEXT_EVENT, text)
             .map_err(|error| AppError::Message(error.to_string()))?;
@@ -43,7 +47,8 @@ pub fn emit_voice_text(app: &AppHandle, text: String) -> Result<(), AppError> {
 }
 
 fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Result<(), AppError> {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+    let label = app.state::<RuntimeWindows>().active_label();
+    if let Some(window) = app.get_webview_window(label) {
         window
             .emit(
                 CONTEXT_CAPTURED_EVENT,
@@ -68,6 +73,34 @@ struct ContextCapture {
 #[derive(Default)]
 struct LayerShell {
     supported: bool,
+}
+
+struct RuntimeWindows {
+    active_label: Mutex<&'static str>,
+}
+
+impl Default for RuntimeWindows {
+    fn default() -> Self {
+        Self {
+            active_label: Mutex::new(MAIN_WINDOW_LABEL),
+        }
+    }
+}
+
+impl RuntimeWindows {
+    fn active_label(&self) -> &'static str {
+        *self
+            .active_label
+            .lock()
+            .expect("window label lock poisoned")
+    }
+
+    fn set_active_label(&self, label: &'static str) {
+        *self
+            .active_label
+            .lock()
+            .expect("window label lock poisoned") = label;
+    }
 }
 
 impl Warmup {
@@ -152,9 +185,16 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
 }
 
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+    let is_panel = activation.mode.profile() == super::activation::WindowProfile::Panel;
+    let window_label = if is_panel {
+        QUICK_WINDOW_LABEL
+    } else {
+        MAIN_WINDOW_LABEL
+    };
+    app.state::<RuntimeWindows>().set_active_label(window_label);
     let window = app
-        .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        .get_webview_window(window_label)
+        .ok_or_else(|| AppError::Message(format!("Window {window_label} not found")))?;
     let state = app.state::<AppState>();
 
     let (width, height) = activation.mode.profile().size();
@@ -166,7 +206,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     let has_layer_shell = false;
 
     #[cfg(target_os = "linux")]
-    if has_layer_shell {
+    if has_layer_shell && is_panel {
         let gtk_window = window.gtk_window()?;
         match activation.mode.profile() {
             super::activation::WindowProfile::Panel => {
@@ -199,6 +239,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.window_id = activation.window_id;
         params.selected_text = activation.selected_text;
         params.is_window_shown = true;
+        params.quick_input = activation.mode == StartMode::Editor;
     });
     log::debug!(
         "Activated {:?} from {:?}",
@@ -210,8 +251,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
 
 fn schedule_warmup(app: &AppHandle) -> Result<(), AppError> {
     let initially_visible = app
-        .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Main window not found".into()))?
+        .get_webview_window(QUICK_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Quick window not found".into()))?
         .is_visible()?;
     let handle = app.clone();
     thread::spawn(move || {
@@ -222,8 +263,8 @@ fn schedule_warmup(app: &AppHandle) -> Result<(), AppError> {
                     return Ok(());
                 };
                 let window = app
-                    .get_webview_window(MAIN_WINDOW_LABEL)
-                    .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+                    .get_webview_window(QUICK_WINDOW_LABEL)
+                    .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
                 if show {
                     window.show()?;
                 } else {
@@ -253,12 +294,13 @@ pub fn hide_main_window(app: &AppHandle, _state: &AppState) -> Result<(), AppErr
 
 fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<AppState>();
+    let label = app.state::<RuntimeWindows>().active_label();
     let window = app
-        .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message(String::from("Main window not found")))?;
+        .get_webview_window(label)
+        .ok_or_else(|| AppError::Message(format!("Window {label} not found")))?;
 
     #[cfg(target_os = "linux")]
-    if app.state::<LayerShell>().supported {
+    if label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
         layer_shell::set_keyboard(&window.gtk_window()?, false);
     }
 
@@ -275,13 +317,14 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(Warmup::default());
     app.manage(ContextCapture::default());
+    app.manage(RuntimeWindows::default());
     #[cfg(target_os = "linux")]
     {
         let supported = layer_shell::is_supported();
         if supported {
             let window = app
-                .get_webview_window(MAIN_WINDOW_LABEL)
-                .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+                .get_webview_window(QUICK_WINDOW_LABEL)
+                .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
             layer_shell::attach(&window.gtk_window()?);
             log::info!("Using gtk-layer-shell for the main window");
         } else {
@@ -361,12 +404,19 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn handle_window_event(app: &AppHandle, event: &WindowEvent) {
+pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEvent) {
     if let Some(state) = app.try_state::<AppState>() {
         match event {
             WindowEvent::CloseRequested { api, .. } => {
                 if !state.is_quitting() {
                     api.prevent_close();
+                    if window_label == MAIN_WINDOW_LABEL {
+                        app.state::<RuntimeWindows>()
+                            .set_active_label(MAIN_WINDOW_LABEL);
+                    } else if window_label == QUICK_WINDOW_LABEL {
+                        app.state::<RuntimeWindows>()
+                            .set_active_label(QUICK_WINDOW_LABEL);
+                    }
                     let _ = hide_main_window(app, &state);
                 }
             }

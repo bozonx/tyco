@@ -1,25 +1,37 @@
 <template>
   <MenuModals />
-  <div class="layout" :class="{ 'quick-layout': quickPanelStore.isActive }">
-    <NavPanel
-      v-if="navPanelStore.params.panelVisible && !quickPanelStore.isActive"
-    />
-    <div class="main">
-      <!-- always mounted: its input keeps the focus between activations -->
-      <div v-show="quickPanelStore.isActive" class="layer">
-        <QuickPanel />
-      </div>
-      <div v-show="!quickPanelStore.isActive" class="layer routed-layer">
-        <RouterView />
+  <div
+    class="layout"
+    :class="{
+      'quick-layout': quickPanelStore.isActive && ipcStore.params.quickInput,
+    }"
+  >
+    <WindowTitlebar v-if="sheetTitle" :title="sheetTitle" />
+    <div class="layout-body">
+      <NavPanel
+        v-if="
+          navPanelStore.params.panelVisible &&
+          !(quickPanelStore.isActive && ipcStore.params.quickInput)
+        "
+      />
+      <div class="main">
+        <!-- always mounted: its input keeps the focus between activations -->
+        <div v-show="quickPanelStore.isActive" class="layer">
+          <QuickPanel />
+        </div>
+        <div v-show="!quickPanelStore.isActive" class="layer routed-layer">
+          <RouterView />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import WindowTitlebar from './components/WindowTitlebar.vue'
 import { useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
@@ -28,6 +40,7 @@ import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
+import { sheetTitleKey } from './lib/window-profile/window-profile'
 import { usePlugins } from './plugins'
 import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
@@ -48,6 +61,10 @@ const quickPanelStore = useQuickPanelStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const route = useRoute()
+const sheetTitle = computed(() => {
+  const key = sheetTitleKey(route.path)
+  return key ? t(key) : ''
+})
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
   setParams: (params) => ipcStore.setParams(params),
@@ -161,6 +178,14 @@ onUnmounted(() => {
   width: 100dvw;
   display: flex;
   flex-direction: column;
+  background-color: var(--color-base-100);
+}
+.layout-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
 }
 .quick-layout {
   justify-content: flex-end;
@@ -169,12 +194,14 @@ onUnmounted(() => {
 .main {
   flex: 1 1 0%;
   min-height: 0; /* Важно для flexbox, чтобы потомки могли сжиматься */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 .quick-layout .main {
   flex: 0 1 auto;
+  width: 100%;
 }
 .layer {
   flex: 1 1 0%;

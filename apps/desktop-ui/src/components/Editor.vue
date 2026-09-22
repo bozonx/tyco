@@ -1,8 +1,11 @@
 <template>
-  <div class="editor-root">
+  <div class="editor-root" :class="{ 'is-compact': compact }">
     <div class="editor-frame">
       <!-- Toolbar above editor -->
-      <div class="editor-toolbar flex items-center justify-between gap-2">
+      <div
+        v-show="!compact"
+        class="editor-toolbar flex items-center justify-between gap-2"
+      >
         <!-- Left column: Case and Format dropdowns, then plugin items -->
         <div class="flex items-center gap-1">
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
@@ -72,67 +75,81 @@
           <EditorInput />
         </div>
         <div class="editor-rail">
-          <Button
-            sm
-            square
-            ghost
-            class="rail-accent"
-            @click="voiceRecognition"
-            :title="t('editor.voiceInput')"
-          >
-            <Icon icon="mdi:microphone-outline" height="20" />
-          </Button>
-          <Button
-            sm
-            square
-            ghost
-            class="rail-accent"
-            @click="handleCorrection"
-            :title="t('action.correction')"
-          >
-            <Icon icon="mdi:auto-fix" height="20" />
-          </Button>
-          <div class="rail-divider" />
-          <Button
-            sm
-            square
-            ghost
-            @click="handleCopy"
-            :title="t('action.copyToClipboard')"
-          >
-            <Icon icon="mdi:content-copy" height="18" />
-          </Button>
-          <Button
-            sm
-            square
-            ghost
-            @click="editorInputStore.selectAll"
-            :title="t('editor.selectAll')"
-          >
-            <Icon icon="mdi:select-all" height="18" />
-          </Button>
-          <Button
-            sm
-            square
-            ghost
-            class="rail-danger"
-            @click="editorInputStore.clear"
-            :title="t('editor.clear')"
-          >
-            <Icon icon="mdi:eraser" height="18" />
-          </Button>
+          <template v-if="compact">
+            <Button
+              sm
+              square
+              ghost
+              class="rail-danger"
+              @click="editorInputStore.clear"
+              :title="t('editor.clear')"
+            >
+              <Icon icon="mdi:eraser" height="18" />
+            </Button>
+          </template>
+          <template v-else>
+            <Button
+              sm
+              square
+              ghost
+              class="rail-accent"
+              @click="voiceRecognition"
+              :title="t('editor.voiceInput')"
+            >
+              <Icon icon="mdi:microphone-outline" height="20" />
+            </Button>
+            <Button
+              sm
+              square
+              ghost
+              class="rail-accent"
+              @click="handleCorrection"
+              :title="t('action.correction')"
+            >
+              <Icon icon="mdi:auto-fix" height="20" />
+            </Button>
+            <div class="rail-divider" />
+            <Button
+              sm
+              square
+              ghost
+              @click="handleCopy"
+              :title="t('action.copyToClipboard')"
+            >
+              <Icon icon="mdi:content-copy" height="18" />
+            </Button>
+            <Button
+              sm
+              square
+              ghost
+              @click="editorInputStore.selectAll"
+              :title="t('editor.selectAll')"
+            >
+              <Icon icon="mdi:select-all" height="18" />
+            </Button>
+            <Button
+              sm
+              square
+              ghost
+              class="rail-danger"
+              @click="editorInputStore.clear"
+              :title="t('editor.clear')"
+            >
+              <Icon icon="mdi:eraser" height="18" />
+            </Button>
+          </template>
         </div>
       </div>
     </div>
 
     <div class="editor-footer">
-      <p class="editor-hint">
+      <p v-show="!compact" class="editor-hint">
         <Icon icon="mdi:information-outline" height="14" class="shrink-0" />
         {{ t('editor.selectionHint') }}
       </p>
 
       <div
-        v-if="otherEditItems.length > 0"
+        v-if="!compact && otherEditItems.length > 0"
         class="flex gap-1.5 w-full flex-wrap"
       >
         <Button
@@ -165,6 +182,8 @@ import { useToolbarStore } from '../stores/toolbar'
 import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
+
+withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
@@ -259,6 +278,24 @@ const handleCopy = async () => {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+.editor-root.is-compact {
+  height: auto;
+  gap: var(--space-xs);
+}
+
+.is-compact .editor-frame {
+  flex: 0 1 auto;
+}
+
+.is-compact .editor-body {
+  flex: 0 1 auto;
+  align-items: flex-end;
+}
+
+.is-compact .editor-footer {
+  gap: 0;
 }
 
 .editor-frame {

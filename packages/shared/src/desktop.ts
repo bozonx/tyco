@@ -96,6 +96,7 @@ export interface InitParams {
   appConfig: AppConfig
   NODE_ENV: string
   isWindowShown: boolean
+  quickInput: boolean
 }
 
 export type CapturedContext = Pick<InitParams, 'selectedText'>
@@ -109,6 +110,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
   appConfig: APP_CONFIG,
   NODE_ENV: 'development',
   isWindowShown: true,
+  quickInput: false,
 }
 
 export const DESKTOP_EVENTS = {

@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/capabilities.json",
   "identifier": "main-capability",
-  "description": "Capability for the main window",
-  "windows": ["main"],
+  "description": "Capability for the main and quick input windows",
+  "windows": ["main", "quick"],
   "permissions": [
     "core:default",
     "core:event:default",

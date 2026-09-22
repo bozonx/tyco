@@ -1,19 +1,10 @@
 <template>
-  <div ref="panelRef" class="quick-panel">
-    <div v-if="ipcStore.params" class="quick-input-shell">
-      <EditorInput class="quick-input" />
-      <Button
-        sm
-        square
-        ghost
-        class="clear-button"
-        :title="t('editor.clear')"
-        @click="clear"
-      >
-        <Icon icon="mdi:eraser" height="18" />
-      </Button>
-    </div>
-    <footer class="quick-footer">
+  <div
+    ref="panelRef"
+    class="quick-panel"
+    :class="{ 'is-compact': ipcStore.params.quickInput }"
+  >
+    <Editor v-if="ipcStore.params" :compact="ipcStore.params.quickInput">
       <nav class="mode-links">
         <RouterLink :to="APP_ROUTES.WRITE.path" class="mode-link">
           <Icon icon="mdi:text-box-edit-outline" height="14" />
@@ -32,8 +23,7 @@
           {{ t('mode.select') }}
         </RouterLink>
       </nav>
-      <span class="quick-hint">Esc · {{ t('nav.actions') }}</span>
-    </footer>
+    </Editor>
   </div>
 </template>
 
@@ -52,7 +42,6 @@ import {
   QUICK_PANEL_WIDTH,
   quickPanelWindowHeight,
 } from '../lib/quick-panel/quick-panel-size'
-import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { useQuickPanelStore } from '../stores/quickPanel'
 import { Icon } from '@iconify/vue'
@@ -60,7 +49,6 @@ import { LogicalSize } from '@tauri-apps/api/dpi'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const ipcStore = useIpcStore()
-const editorInputStore = useEditorInputStore()
 const quickPanelStore = useQuickPanelStore()
 const panelRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
@@ -68,7 +56,12 @@ let resizeObserver: ResizeObserver | null = null
 let lastWindowHeight = 0
 
 const resizeWindow = async (): Promise<void> => {
-  if (!quickPanelStore.isActive || !panelRef.value) return
+  if (
+    !quickPanelStore.isActive ||
+    !ipcStore.params.quickInput ||
+    !panelRef.value
+  )
+    return
 
   const height = quickPanelWindowHeight(
     panelRef.value.getBoundingClientRect().height
@@ -100,15 +93,17 @@ watch(
     void resizeWindow()
   }
 )
-
-const clear = (): void => {
-  editorInputStore.clear()
-  editorInputStore.focus()
-}
 </script>
 
 <style scoped>
 .quick-panel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-lg) var(--space-xl);
+}
+
+.quick-panel.is-compact {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -123,48 +118,19 @@ const clear = (): void => {
   backdrop-filter: blur(16px);
 }
 
-.quick-input-shell {
-  display: flex;
-  align-items: flex-end;
-  min-height: 3.25rem;
-  overflow: hidden;
-}
-
-.quick-input {
-  flex: 1;
-  min-width: 0;
-  height: auto;
-  max-height: 13rem;
-}
-
-.quick-panel :deep(.quick-input.main-input),
-.quick-input :deep(.cm-editor) {
+.is-compact :deep(.main-input),
+.is-compact :deep(.cm-editor) {
   height: auto;
 }
 
-.quick-input :deep(.cm-scroller) {
+.is-compact :deep(.cm-scroller) {
   max-height: 13rem;
   overflow-y: auto;
 }
 
-.quick-input :deep(.cm-content) {
+.is-compact :deep(.cm-content) {
   min-height: calc(var(--editor-line-height) * 1em);
   padding: 0.625rem 0.75rem;
-}
-
-.clear-button {
-  flex: 0 0 auto;
-  margin: 0.375rem;
-  color: var(--app-text-muted);
-}
-
-.quick-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  min-height: 1.75rem;
-  padding: 0 var(--space-xs);
 }
 
 .mode-links {
@@ -185,12 +151,6 @@ const clear = (): void => {
   transition:
     color var(--transition-fast),
     background-color var(--transition-fast);
-}
-
-.quick-hint {
-  flex: 0 0 auto;
-  font-size: 0.7rem;
-  color: var(--app-text-faint);
 }
 
 .mode-link:hover {

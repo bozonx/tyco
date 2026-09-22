@@ -1,7 +1,7 @@
 <template>
   <SettingsSection
     :title="t('settings.hotkeysTitle')"
-    :hint="t('settings.hotkeysHint')"
+    :description="t('settings.hotkeysHint')"
   >
     <FieldRow
       v-for="action in actions"

@@ -20,6 +20,19 @@
         "minWidth": 640,
         "minHeight": 96,
         "resizable": true,
+        "transparent": false,
+        "decorations": true,
+        "skipTaskbar": false
+      },
+      {
+        "label": "quick",
+        "title": "TyCo - quick input",
+        "width": 800,
+        "height": 320,
+        "minWidth": 640,
+        "minHeight": 96,
+        "resizable": true,
+        "visible": false,
         "transparent": true,
         "decorations": false,
         "skipTaskbar": true
