@@ -122,13 +122,6 @@
             >
               <Icon icon="mdi:microphone-outline" height="18" />
             </Button>
-            <FieldSelect
-              v-if="roles.length"
-              v-model:value="selectedRole"
-              class="chat-role-select"
-              :options="roles"
-              :title="t('chat.role')"
-            />
           </div>
           <Button
             v-if="!chatStore.isGenerating"
@@ -166,7 +159,6 @@ import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { AI_TASKS } from '../types'
-import { truncate } from '@/lib/squidlet-lib-local'
 import { Icon } from '@iconify/vue'
 
 const chatInputStore = useChatInputStore()
@@ -175,7 +167,6 @@ const ipcStore = useIpcStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
-const selectedRole = ref<string | undefined>()
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
@@ -191,12 +182,6 @@ const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
   return last?.role === 'assistant' && Boolean(last.content)
 })
-const roles = computed(() =>
-  (userConfig.value?.chatRoles || []).map((role) => ({
-    id: role.name,
-    name: truncate(role.name, 18),
-  }))
-)
 const activeModel = computed(() => {
   const llm = userConfig.value?.llm
   const modelId = llm?.tasks?.[AI_TASKS.CHAT]?.[0]
@@ -248,13 +233,7 @@ function useStarter(prompt: string, attach: boolean) {
 async function sendMessage() {
   const message = chatInputStore.value.trim()
   if (!message || chatStore.isGenerating) return
-  const pending = chatStore.sendMessage(
-    message,
-    attachments.value,
-    (userConfig.value?.chatRoles || []).find(
-      (role) => role.name === selectedRole.value
-    )?.rule || ''
-  )
+  const pending = chatStore.sendMessage(message, attachments.value)
   chatInputStore.clear()
   pinnedToBottom.value = true
   const result = await pending
@@ -317,16 +296,6 @@ watch(
     pinnedToBottom.value = true
     void scrollToBottom()
   }
-)
-
-watch(
-  roles,
-  (items) => {
-    if (!items.some((item) => item.id === selectedRole.value)) {
-      selectedRole.value = items[0]?.id
-    }
-  },
-  { immediate: true }
 )
 </script>
 
@@ -494,14 +463,6 @@ watch(
 }
 .attachment-list {
   flex-wrap: wrap;
-}
-.chat-role-select {
-  width: auto;
-  max-width: 11rem;
-  height: 2rem;
-  border-color: transparent;
-  background: var(--app-hover);
-  font-size: 0.75rem;
 }
 .chat-attachment {
   display: inline-flex;

@@ -116,7 +116,6 @@
     "llmTab": "LLM",
     "rulesTab": "AI kuralları",
     "tasksTab": "AI görevleri",
-    "rolesTab": "Sohbet rolleri",
     "pluginsTab": "Eklentiler",
     "pluginEnabled": "Etkin",
     "pluginSettings": "Eklenti ayarları",
@@ -181,7 +180,6 @@
     "nativeDefault": "Yerel (varsayılan)",
     "resetToDefault": "Varsayılana sıfırla",
     "selectAction": "Eylem seç",
-    "chatRoles": "Sohbet rolleri",
     "saving": "Kaydediliyor...",
     "saved": "Ayarlar kaydedildi",
     "downloadRequired": "indirme gerekli",
@@ -204,7 +202,6 @@
     "aiModelUsageHint": "İlk model yanıt verir; başarısız olursa sıradakiler denenir.",
     "translationsHint": "Çeviri için hedef diller. Her birine çeviri menüsünde bir kısayol tuşu atanır.",
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
-    "rolesHint": "Rol, sohbet için sistem talimatlarını belirler.",
     "hotkey": "Kısayol tuşu",
     "hotkeysTab": "Kısayollar",
     "hotkeysTitle": "Etkinleştirme kısayolları",
@@ -316,7 +313,6 @@
     "correction": "Düzeltme"
   },
   "chat": {
-    "role": "Rol",
     "sendMessage": "Mesaj gönder",
     "clearInput": "Girdiyi temizle",
     "voiceInput": "Ses girişi",

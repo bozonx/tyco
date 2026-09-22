@@ -208,7 +208,6 @@ export interface UserConfig {
     tapAction?: string
     holdAction?: string
   }[]
-  chatRoles: { name: string; rule: string }[]
   plugins: Record<string, unknown>
 }
 
@@ -275,6 +274,5 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       rule: 'убрать косноязычие , добавить местоимения где они нужны, исправление смысла и запутанности, убрать дублирование, подобрать уместные синонимы',
     },
   ],
-  chatRoles: [],
   plugins: {},
 }

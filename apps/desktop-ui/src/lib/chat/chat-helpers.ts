@@ -7,16 +7,11 @@ export interface PreparedChatRequest {
 
 export function prepareChatRequest(
   message: string,
-  attachments: string[] = [],
-  role = ''
+  attachments: string[] = []
 ): PreparedChatRequest {
   const attachString = attachments
     .map((item) => `=== ATTACHMENT START ===\n${item}\n=== ATTACHMENT END ===`)
     .join('\n\n')
-
-  const roleString = role
-    ? `=== ROLE/RULES START ===\n${role}\n=== ROLE/RULES END ===`
-    : ''
 
   return {
     userMessage: {
@@ -24,9 +19,7 @@ export function prepareChatRequest(
       content: message,
       ...(attachments.length ? { attachments: [...attachments] } : {}),
     },
-    preparedMessage: [attachString, roleString, message]
-      .filter(Boolean)
-      .join('\n\n'),
+    preparedMessage: [attachString, message].filter(Boolean).join('\n\n'),
   }
 }
 

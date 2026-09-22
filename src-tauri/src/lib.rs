@@ -5,7 +5,8 @@ mod services;
 mod state;
 
 use commands::app::{
-    apply_hotkey, get_init_params, get_storage_info, save_local_state, save_user_config,
+    apply_hotkey, get_init_params, get_storage_info, mark_activation_metric,
+    save_local_state, save_user_config, submit_activation_metric_value,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
@@ -82,6 +83,7 @@ pub fn run() {
             #[cfg(target_os = "linux")]
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
+            services::activation_metrics::setup(app)?;
             let args = std::env::args().collect::<Vec<_>>();
             match runtime::Activation::from_args(&args) {
                 Ok(Some(activation)) => runtime::activate(app.handle(), activation)?,
@@ -100,6 +102,8 @@ pub fn run() {
             get_init_params,
             get_storage_info,
             apply_hotkey,
+            mark_activation_metric,
+            submit_activation_metric_value,
             save_user_config,
             save_local_state,
             close_window,

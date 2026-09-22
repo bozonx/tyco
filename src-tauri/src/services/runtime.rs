@@ -225,6 +225,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     }
     window.set_focusable(activation.intent == ActivationIntent::KeyboardFirst)?;
     window.show()?;
+    super::activation_metrics::mark_show(app);
     if let Err(error) = window.unminimize() {
         log::warn!("Could not unminimize window: {error}");
     }
@@ -420,6 +421,7 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                     let _ = hide_main_window(app, &state);
                 }
             }
+            WindowEvent::Focused(true) => super::activation_metrics::mark_os_focus(app),
             WindowEvent::Focused(false) => {}
             _ => {}
         }

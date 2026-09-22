@@ -7,12 +7,8 @@ import {
 } from './chat-helpers'
 
 describe('chat-helpers', () => {
-  it('prepares a chat request with attachments and role instructions', () => {
-    const result = prepareChatRequest(
-      'Hello',
-      ['file-a', 'file-b'],
-      'Be concise'
-    )
+  it('prepares a chat request with attachments', () => {
+    const result = prepareChatRequest('Hello', ['file-a', 'file-b'])
 
     expect(result.userMessage).toEqual({
       role: 'user',
@@ -20,8 +16,7 @@ describe('chat-helpers', () => {
       attachments: ['file-a', 'file-b'],
     })
 
-    expect(result.preparedMessage).toContain('=== ROLE/RULES START ===')
-    expect(result.preparedMessage).toContain('Be concise')
+    expect(result.preparedMessage).toContain('=== ATTACHMENT START ===')
     expect(result.preparedMessage).toContain('Hello')
   })
 

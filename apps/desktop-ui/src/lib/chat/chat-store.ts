@@ -51,7 +51,6 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const lastFailedTurn = ref<{
     message: string
     attachments?: string[]
-    role?: string
   } | null>(null)
   const abortController = ref<AbortController | null>(null)
 
@@ -62,11 +61,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
   }
 
-  const sendMessage = async (
-    message: string,
-    attachments?: string[],
-    role?: string
-  ) => {
+  const sendMessage = async (message: string, attachments?: string[]) => {
     if (!message?.trim()) {
       deps.notifyError(deps.emptyMessageError())
       return
@@ -89,8 +84,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     const { preparedMessage, userMessage } = prepareChatRequest(
       message,
-      attachments,
-      role
+      attachments
     )
 
     const userMessageIndex = messages.value.length
@@ -140,7 +134,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         error.value = e instanceof Error ? e.message : String(e)
         if (!assistantMessage.content) {
           messages.value.splice(userMessageIndex + 1, 1)
-          lastFailedTurn.value = { message, attachments, role }
+          lastFailedTurn.value = { message, attachments }
           isGenerating.value = false
           abortController.value = null
           return ''
@@ -197,7 +191,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       messages.value.pop()
     }
 
-    return sendMessage(failed.message, failed.attachments, failed.role)
+    return sendMessage(failed.message, failed.attachments)
   }
 
   const regenerateMessage = async (assistantIndex: number) => {

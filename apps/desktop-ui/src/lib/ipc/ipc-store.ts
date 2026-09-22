@@ -44,6 +44,14 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.APPLY_HOTKEY,
       buildArgs: ([request]) => ({ request }),
     },
+    markActivationMetric: {
+      command: DESKTOP_COMMANDS.MARK_ACTIVATION_METRIC,
+      buildArgs: ([id, mark]) => ({ id, mark }),
+    },
+    submitActivationMetricValue: {
+      command: DESKTOP_COMMANDS.SUBMIT_ACTIVATION_METRIC_VALUE,
+      buildArgs: ([id, value]) => ({ id, value }),
+    },
     getEditorHistory: { command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY },
     getChatHistory: { command: DESKTOP_COMMANDS.GET_CHAT_HISTORY },
     getChat: {

@@ -238,12 +238,6 @@
           @update:ai-tasks="updateAiTasks"
         />
 
-        <SettingsRolesTab
-          v-else-if="currentTab === 'roles'"
-          :user-config="userConfig"
-          @update:chat-roles="updateChatRoles"
-        />
-
         <SettingsPluginsTab
           v-else-if="currentTab === 'plugins'"
           :user-config="userConfig"
@@ -277,7 +271,6 @@ import { useThemeStore } from '../stores/theme'
 import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
-import SettingsRolesTab from './settings/SettingsRolesTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
@@ -344,7 +337,6 @@ const actionTabs = computed(() => [
     icon: 'mdi:translate',
   },
   { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
-  { text: t('settings.rolesTab'), key: 'roles', icon: 'mdi:account-voice' },
 ])
 
 const currentTabTitle = computed(
@@ -477,7 +469,7 @@ function createPreparedUserConfig(config: unknown) {
   normalizeHotkeysConfig(nextConfig)
   normalizeSttConfig(nextConfig)
   normalizeLlmConfigSection(nextConfig)
-  normalizeChatRoles(nextConfig)
+  delete nextConfig.chatRoles
   normalizeAiTasks(nextConfig)
 
   return nextConfig
@@ -593,17 +585,6 @@ function normalizeSttConfig(config: Record<string, any>) {
 function normalizeLlmConfigSection(config: Record<string, any>) {
   config.llm = normalizeLlmConfig(config.llm)
   delete config.llmModels
-}
-
-function normalizeChatRoles(config: Record<string, any>) {
-  if (!Array.isArray(config.chatRoles)) {
-    config.chatRoles = []
-  }
-
-  config.chatRoles = config.chatRoles.map((role: Record<string, any>) => ({
-    name: role.name || '',
-    rule: role.rule || '',
-  }))
 }
 
 function normalizeAiTasks(config: Record<string, any>) {
@@ -857,10 +838,6 @@ async function loadStorageInfo() {
 
 const updateAiTasks = (items: any[]) => {
   userConfig.value.aiTasks = items
-}
-
-const updateChatRoles = (items: any[]) => {
-  userConfig.value.chatRoles = items
 }
 
 const updatePluginEnabled = (pluginName: string, enabled: boolean) => {

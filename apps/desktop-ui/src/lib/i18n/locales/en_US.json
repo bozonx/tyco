@@ -116,7 +116,6 @@
     "llmTab": "LLM",
     "rulesTab": "AI rules",
     "tasksTab": "AI tasks",
-    "rolesTab": "Chat roles",
     "pluginsTab": "Plugins",
     "pluginEnabled": "Enabled",
     "pluginSettings": "Plugin settings",
@@ -181,7 +180,6 @@
     "nativeDefault": "Native (default)",
     "resetToDefault": "Reset to default",
     "selectAction": "Select action",
-    "chatRoles": "Chat roles",
     "saving": "Saving...",
     "saved": "Settings saved",
     "downloadRequired": "download required",
@@ -204,7 +202,6 @@
     "aiModelUsageHint": "The first model answers; if it fails, the next ones are tried in order.",
     "translationsHint": "Target languages for translation. Each one gets a hotkey in the translation menu.",
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
-    "rolesHint": "A role sets the system instructions for the chat.",
     "hotkey": "Hotkey",
     "hotkeysTab": "Hotkeys",
     "hotkeysTitle": "Activation hotkeys",
@@ -316,7 +313,6 @@
     "correction": "Correction"
   },
   "chat": {
-    "role": "Role",
     "sendMessage": "Send message",
     "clearInput": "Clear input",
     "voiceInput": "Voice input",

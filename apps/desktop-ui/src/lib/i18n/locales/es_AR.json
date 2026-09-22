@@ -116,7 +116,6 @@
     "llmTab": "LLM",
     "rulesTab": "Reglas de IA",
     "tasksTab": "Tareas de IA",
-    "rolesTab": "Roles del chat",
     "pluginsTab": "Plugins",
     "pluginEnabled": "Habilitado",
     "pluginSettings": "Configuración del plugin",
@@ -181,7 +180,6 @@
     "nativeDefault": "Nativo (predeterminado)",
     "resetToDefault": "Restablecer al valor predeterminado",
     "selectAction": "Seleccionar acción",
-    "chatRoles": "Roles del chat",
     "saving": "Guardando...",
     "saved": "Configuración guardada",
     "downloadRequired": "requiere descarga",
@@ -204,7 +202,6 @@
     "aiModelUsageHint": "Responde el primer modelo; si falla, se prueban los siguientes en orden.",
     "translationsHint": "Idiomas de destino para traducir. Cada uno tiene una tecla rápida en el menú de traducción.",
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
-    "rolesHint": "Un rol define las instrucciones del sistema para el chat.",
     "hotkey": "Tecla rápida",
     "hotkeysTab": "Atajos",
     "hotkeysTitle": "Atajos de activación",
@@ -316,7 +313,6 @@
     "correction": "Corrección"
   },
   "chat": {
-    "role": "Rol",
     "sendMessage": "Enviar mensaje",
     "clearInput": "Limpiar entrada",
     "voiceInput": "Entrada por voz",

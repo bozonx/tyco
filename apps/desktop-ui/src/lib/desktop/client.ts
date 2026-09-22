@@ -12,6 +12,8 @@ import { listen as tauriListen } from '@tauri-apps/api/event'
 type AppEventPayloads = {
   [DESKTOP_EVENTS.PARAMS_CHANGED]: InitParams
   [DESKTOP_EVENTS.VOICE_TEXT]: string
+  [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
+  [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
 }
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()

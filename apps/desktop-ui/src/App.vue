@@ -35,6 +35,7 @@ import WindowTitlebar from './components/WindowTitlebar.vue'
 import { useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
+import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { desktopClient } from './lib/desktop/client'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
@@ -50,6 +51,7 @@ import { useQuickPanelStore } from './stores/quickPanel'
 import { useThemeStore } from './stores/theme'
 import { useWriterInputStore } from './stores/writerInput'
 import { type START_MODES } from '@tyco/shared'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
 const ipcStore = useIpcStore()
@@ -61,6 +63,26 @@ const quickPanelStore = useQuickPanelStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const route = useRoute()
+const activationMetrics = createActivationMetricsClient({
+  listen: (event, handler) =>
+    desktopClient.listen(
+      event === 'start'
+        ? DESKTOP_EVENTS.ACTIVATION_METRICS_START
+        : DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT,
+      handler
+    ),
+  mark: (id, mark) => {
+    void ipcStore.callFunction('markActivationMetric', [id, mark])
+  },
+  submitValue: (id) => {
+    void ipcStore.callFunction('submitActivationMetricValue', [
+      id,
+      editorInputStore.value,
+    ])
+  },
+  requestFrame: (handler) => requestAnimationFrame(handler),
+  eventTarget: document,
+})
 const sheetTitle = computed(() => {
   const key = sheetTitleKey(route.path)
   return key ? t(key) : ''
@@ -165,10 +187,12 @@ watch(
 
 onMounted(() => {
   void bootstrap.start()
+  void activationMetrics.start()
 })
 
 onUnmounted(() => {
   bootstrap.stop()
+  activationMetrics.stop()
 })
 </script>
 

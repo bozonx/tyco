@@ -117,12 +117,16 @@ export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
   VOICE_TEXT: 'app://voice-text',
+  ACTIVATION_METRICS_START: 'app://activation-metrics-start',
+  ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
 } as const
 
 export const DESKTOP_COMMANDS = {
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
+  MARK_ACTIVATION_METRIC: 'mark_activation_metric',
+  SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',
   SAVE_USER_CONFIG: 'save_user_config',
   SAVE_LOCAL_STATE: 'save_local_state',
   GET_EDITOR_HISTORY: 'get_editor_history',

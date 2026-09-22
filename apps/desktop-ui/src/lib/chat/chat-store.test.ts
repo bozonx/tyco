@@ -41,7 +41,7 @@ describe('chat-store', () => {
       attachments: ['file-a'],
     }
 
-    const result = await store.sendMessage('Hello', ['file-a'], 'Be concise')
+    const result = await store.sendMessage('Hello', ['file-a'])
 
     expect(result).toBe('Assistant reply')
     expect(store.messages.value).toHaveLength(2)

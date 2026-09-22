@@ -39,6 +39,16 @@ pub fn save_user_config(
 pub fn get_storage_info(app: AppHandle) -> Result<StorageInfo, AppError> {
     storage::get_storage_info(&app)
 }
+
+#[tauri::command]
+pub fn mark_activation_metric(app: AppHandle, id: u64, mark: String) {
+    crate::services::activation_metrics::mark_from_frontend(&app, id, &mark);
+}
+
+#[tauri::command]
+pub fn submit_activation_metric_value(app: AppHandle, id: u64, value: String) {
+    crate::services::activation_metrics::submit_value(&app, id, value);
+}
 #[tauri::command]
 pub fn save_local_state(
     app: AppHandle,

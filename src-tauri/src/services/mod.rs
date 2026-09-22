@@ -1,4 +1,5 @@
 pub mod activation;
+pub mod activation_metrics;
 pub mod activation_socket;
 #[cfg(target_os = "linux")]
 pub mod dbus;

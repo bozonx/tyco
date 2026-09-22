@@ -39,6 +39,7 @@ url = "2"
 zbus = "4"
 
 [dev-dependencies]
+evdev = "0.13"
 tokio = { version = "1", features = ["macros", "rt", "net", "io-util", "time"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
