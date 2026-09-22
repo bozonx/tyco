@@ -97,7 +97,9 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     }
     if (typeof item.name === 'string') model.name = item.name
     const temperature = finiteNumber(item.temperature)
-    if (temperature !== undefined) model.temperature = temperature
+    if (temperature !== undefined && temperature >= 0 && temperature <= 2) {
+      model.temperature = temperature
+    }
     const maxOutputTokens = positiveInteger(item.maxOutputTokens)
     if (maxOutputTokens !== undefined) model.maxOutputTokens = maxOutputTokens
     const contextSize = positiveInteger(item.contextSize)

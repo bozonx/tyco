@@ -90,6 +90,8 @@ async function doCorrection() {
 
       correctedText.value = result
       correctionIsActual.value = true
+    } catch {
+      return
     } finally {
       menuModalsStore.clearPendingModal()
     }

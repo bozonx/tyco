@@ -51,6 +51,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
           oldText: text,
           newText,
         })
+      } catch {
+        // The request layer already reported the actionable error.
       } finally {
         menuModalsStore.clearPendingModal()
       }

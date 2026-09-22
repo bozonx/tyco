@@ -1,7 +1,13 @@
 <template>
   <aside class="chat-sidebar">
     <div class="sidebar-header">
-      <Button class="flex-1" sm icon="mdi:plus" @click="startChat">
+      <Button
+        class="flex-1"
+        sm
+        icon="mdi:plus"
+        :disabled="chatStore.isGenerating"
+        @click="startChat"
+      >
         {{ t('chat.newChat') }}
       </Button>
       <Button
@@ -46,6 +52,7 @@
               <button
                 type="button"
                 class="chat-list-item"
+                :disabled="chatStore.isGenerating"
                 :class="{
                   'is-active': chatStore.newChatParams?.id === item.id,
                 }"

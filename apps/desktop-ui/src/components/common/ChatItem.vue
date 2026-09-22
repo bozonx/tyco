@@ -23,6 +23,9 @@
       </div>
 
       <div v-if="message.content" class="message-actions">
+        <span v-if="message.status === 'stopped'" class="message-status">
+          {{ t('chat.stopped') }}
+        </span>
         <button type="button" class="message-action" @click="copyMessage">
           <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
           {{ copied ? t('chat.copied') : t('chat.copy') }}
@@ -225,6 +228,11 @@ onUpdated(enhanceCodeBlocks)
   margin-top: var(--space-xs);
   opacity: 0;
   transition: opacity var(--transition-fast);
+}
+.message-status {
+  align-self: center;
+  color: var(--app-text-faint);
+  font-size: 0.72rem;
 }
 .chat-item-content:hover .message-actions,
 .message-actions:focus-within {

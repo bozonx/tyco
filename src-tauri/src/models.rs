@@ -34,6 +34,8 @@ pub struct ChatMessage {
     pub content: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attachments: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -157,8 +159,7 @@ pub fn default_user_config() -> Value {
           "provider": "openai-compatible",
           "description": "OpenAI-compatible transcription endpoint",
           "formatWithLlm": false,
-          "baseUrl": "http://localhost:8000/v1",
-          "apiKey": ""
+          "baseUrl": "http://localhost:8000/v1"
         },
         {
           "id": "websocket-stt",

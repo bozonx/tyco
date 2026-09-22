@@ -55,6 +55,7 @@ export interface LlmRunOptions {
   /** Streams the answer; each piece of text as it arrives */
   onChunk?: (text: string) => void
   signal?: AbortSignal
+  onModel?: (model: { provider: string; model: string }) => void
 }
 
 export interface LlmClient {
@@ -72,82 +73,92 @@ export interface LlmClient {
 }
 
 export function createLlmClient(deps: LlmClientDeps): LlmClient {
-  let cachedKey: string | undefined
-  let cachedKit: AiKit | null = null
+  const kits = new Map<string, AiKit>()
 
   /** Rebuilt when the config changes, reused otherwise */
-  const kitFor = (config: LlmConfig): AiKit => {
-    const key = JSON.stringify(config)
+  const kitFor = (config: LlmConfig, timeoutMs = CALL_TIMEOUT_MS): AiKit => {
+    const key = `${timeoutMs}:${JSON.stringify(config)}`
 
-    if (key !== cachedKey) {
-      try {
-        const catalog = buildLlmCatalog(config)
-        cachedKit =
-          catalog &&
-          createAiKit({
-            catalog,
-            keys: deps.keys,
-            transport: deps.transport,
-            providers: buildProviderFactories(config),
-            retry: { totalTimeoutMs: CALL_TIMEOUT_MS },
-          })
-      } catch (error) {
-        throw toLlmError(error)
-      }
-      cachedKey = key
-    }
-
-    if (!cachedKit) {
+    const cached = kits.get(key)
+    if (cached) return cached
+    const catalog = buildLlmCatalog(config)
+    if (!catalog) {
       throw new LlmError('no_model', 'No language model is configured')
     }
-    return cachedKit
+    const kit = createAiKit({
+      catalog,
+      keys: deps.keys,
+      transport: deps.transport,
+      providers: buildProviderFactories(config),
+      retry: { totalTimeoutMs: timeoutMs },
+    })
+    kits.set(key, kit)
+    return kit
   }
 
   return {
     async run(task, prompt, options = {}) {
       const config = deps.getConfig()
-      const kit = kitFor(config)
-      const primary = config.models.find(
-        (model) => model.id === config.tasks[task]?.[0]
-      )
-      const request: StreamRequest = {
-        name: task,
-        policy: { taskClass: task },
-        ...prompt,
-        ...(primary?.temperature === undefined
-          ? {}
-          : { temperature: primary.temperature }),
-        ...(primary?.maxOutputTokens === undefined
-          ? {}
-          : { maxOutputTokens: primary.maxOutputTokens }),
-        ...(options.signal ? { abortSignal: options.signal } : {}),
+      const candidates = (config.tasks[task] || [])
+        .map((id) => config.models.find((model) => model.id === id))
+        .filter((model) => model !== undefined)
+      if (candidates.length === 0) {
+        throw new LlmError(
+          'no_model',
+          `No language model is configured for ${task}`
+        )
       }
 
-      if (!options.onChunk) {
+      let firstError: LlmError | undefined
+      const candidateTimeoutMs = Math.max(
+        1_000,
+        Math.floor(CALL_TIMEOUT_MS / candidates.length)
+      )
+      for (const model of candidates) {
+        let emittedText = false
+        const scopedConfig: LlmConfig = {
+          ...config,
+          tasks: { ...config.tasks, [task]: [model.id] },
+        }
         try {
-          return (await kit.generate(request)).text
+          const kit = kitFor(scopedConfig, candidateTimeoutMs)
+          const request: StreamRequest = {
+            name: task,
+            policy: { taskClass: task },
+            ...prompt,
+            ...(model.temperature === undefined
+              ? {}
+              : { temperature: model.temperature }),
+            ...(model.maxOutputTokens === undefined
+              ? {}
+              : { maxOutputTokens: model.maxOutputTokens }),
+            ...(options.signal ? { abortSignal: options.signal } : {}),
+          }
+
+          if (!options.onChunk) return (await kit.generate(request)).text
+
+          let text = ''
+          for await (const part of kit.stream(request)) {
+            if (part.type === 'model') {
+              options.onModel?.({ provider: part.provider, model: part.model })
+            } else if (part.type === 'text-delta') {
+              emittedText = true
+              text += part.text
+              options.onChunk(part.text)
+            } else if (part.type === 'error') {
+              if (part.kind === 'aborted') return text
+              throw new LlmError(errorKind(part.kind), part.message)
+            }
+          }
+          return text
         } catch (error) {
           if (options.signal?.aborted) return ''
-          throw toLlmError(error)
+          const llmError = toLlmError(error)
+          if (emittedText) throw llmError
+          firstError ??= llmError
         }
       }
-
-      let text = ''
-      try {
-        for await (const part of kit.stream(request)) {
-          if (part.type === 'text-delta') {
-            text += part.text
-            options.onChunk(part.text)
-          } else if (part.type === 'error') {
-            if (part.kind === 'aborted') return text
-            throw new LlmError(errorKind(part.kind), part.message)
-          }
-        }
-      } catch (error) {
-        if (options.signal?.aborted) return text
-        throw toLlmError(error)
-      }
-      return text
+      throw firstError ?? new LlmError('unknown', 'All language models failed')
     },
   }
 }

@@ -189,6 +189,9 @@
                 <FieldRow :label="t('settings.temperature')">
                   <FieldInput
                     type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
                     :value="model.temperature ?? ''"
                     @update:value="setNumber(model, 'temperature', $event)"
                   />
@@ -196,9 +199,19 @@
                 <FieldRow :label="t('settings.maxTokens')">
                   <FieldInput
                     type="number"
+                    min="1"
                     :value="model.maxOutputTokens ?? ''"
                     :placeholder="t('settings.providerDefault')"
                     @update:value="setNumber(model, 'maxOutputTokens', $event)"
+                  />
+                </FieldRow>
+                <FieldRow :label="t('settings.contextSize')">
+                  <FieldInput
+                    type="number"
+                    min="1"
+                    :value="model.contextSize ?? ''"
+                    :placeholder="t('settings.providerDefault')"
+                    @update:value="setNumber(model, 'contextSize', $event)"
                   />
                 </FieldRow>
               </template>
@@ -336,6 +349,7 @@ import {
 
 type ConnectionState = 'checking' | 'success' | 'error'
 const props = defineProps<{ llm: LlmConfig }>()
+const emit = defineEmits<{ (event: 'providerRemoved', id: string): void }>()
 const { t } = useI18n()
 const { toast, toastText } = useToast()
 const llmStore = useLlmStore()
@@ -398,7 +412,7 @@ function statusLabel(provider: LlmProvider) {
   if (connectionState[provider.id] === 'success')
     return t('settings.connectionReady')
   if (provider.type === 'openai-compatible' && !hasKey(provider.id))
-    return t('settings.keyNotRequired')
+    return t('settings.connectionUnchecked')
   return hasKey(provider.id)
     ? t('settings.connectionConfigured')
     : t('settings.connectionNotConfigured')
@@ -453,10 +467,11 @@ function addProvider() {
   const provider = addCompatibleProvider(props.llm)
   expandedProviders.add(provider.id)
 }
-async function removeProviderById(id: string) {
+function removeProviderById(id: string) {
+  if (!window.confirm(t('settings.removeProviderConfirm'))) return
   removeProvider(props.llm, id)
   expandedProviders.delete(id)
-  if (hasKey(id)) await removeKey(id)
+  emit('providerRemoved', id)
 }
 function addModelTo(id: string) {
   const model = addModel(props.llm, id)
@@ -484,15 +499,19 @@ async function checkConnection(provider: LlmProvider) {
 }
 function setNumber(
   model: LlmModel,
-  field: 'temperature' | 'maxOutputTokens',
+  field: 'temperature' | 'maxOutputTokens' | 'contextSize',
   value: string
 ) {
   const parsed = Number(value)
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) {
+  const invalid =
+    value.trim() === '' ||
+    !Number.isFinite(parsed) ||
+    (field === 'temperature' ? parsed < 0 || parsed > 2 : parsed < 1)
+  if (invalid) {
     delete model[field]
     return
   }
-  model[field] = field === 'maxOutputTokens' ? Math.round(parsed) : parsed
+  model[field] = field === 'temperature' ? parsed : Math.round(parsed)
 }
 function nextFallback(task: LlmTask) {
   return props.llm.models.find(

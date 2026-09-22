@@ -108,9 +108,12 @@ pub fn migrate_llm_config(config: &mut Value) -> Option<Vec<MigratedSecret>> {
 /// would lose it.
 pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
     let mut migrated = config.clone();
-    let Some(secrets) = migrate_llm_config(&mut migrated) else {
+    let llm_migration = migrate_llm_config(&mut migrated);
+    let mut secrets = llm_migration.clone().unwrap_or_default();
+    let stt_changed = take_stt_secrets(&mut migrated, &mut secrets);
+    if llm_migration.is_none() && !stt_changed {
         return false;
-    };
+    }
 
     if !secrets.is_empty() {
         let stored = SecretStore::load_for_app(app).and_then(|store| {
@@ -126,6 +129,39 @@ pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
 
     *config = migrated;
     true
+}
+
+/// Moves legacy STT credentials out of userConfig into the origin-bound store.
+fn take_stt_secrets(config: &mut Value, secrets: &mut Vec<MigratedSecret>) -> bool {
+    let Some(models) = config.get_mut("sttModels").and_then(Value::as_array_mut) else {
+        return false;
+    };
+    let mut changed = false;
+    for model in models {
+        let Some(fields) = model.as_object_mut() else {
+            continue;
+        };
+        let Some(api_key) = fields.remove("apiKey") else {
+            continue;
+        };
+        changed = true;
+        let value = api_key.as_str().map(str::trim).unwrap_or_default();
+        let id = fields.get("id").and_then(Value::as_str).unwrap_or_default();
+        let base_url = fields
+            .get("baseUrl")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if !value.is_empty() {
+            if let Ok(origin) = normalize_origin(base_url) {
+                secrets.push(MigratedSecret {
+                    id: id.to_string(),
+                    value: value.to_string(),
+                    origin,
+                });
+            }
+        }
+    }
+    changed
 }
 
 fn take_legacy_usage(object: &mut Map<String, Value>) -> Map<String, Value> {
@@ -292,6 +328,31 @@ fn migrate_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn moves_stt_keys_out_of_user_config() {
+        let mut config = json!({
+          "sttModels": [{
+            "id": "openai-compatible-stt",
+            "provider": "openai-compatible",
+            "model": "whisper-1",
+            "baseUrl": "https://speech.example/v1",
+            "apiKey": "stt-secret"
+          }]
+        });
+        let mut secrets = Vec::new();
+
+        assert!(take_stt_secrets(&mut config, &mut secrets));
+        assert!(config["sttModels"][0].get("apiKey").is_none());
+        assert_eq!(
+            secrets,
+            vec![MigratedSecret {
+                id: String::from("openai-compatible-stt"),
+                value: String::from("stt-secret"),
+                origin: String::from("https://speech.example"),
+            }]
+        );
+    }
 
     fn legacy_config() -> Value {
         json!({

@@ -75,12 +75,16 @@ async function makeDiff(index: number) {
   const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
 
   menuModalsStore.setPendingModal({ ai: true })
-
-  const newText = await aiTasks(index, trimmedText)
-  await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-    toast(t('history.operationFailed'), 'error')
-  })
-
-  menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
+  try {
+    const newText = await aiTasks(index, trimmedText)
+    await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+      toast(t('history.operationFailed'), 'error')
+    })
+    menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
+  } catch {
+    // The request layer already reported the actionable error.
+  } finally {
+    menuModalsStore.clearPendingModal()
+  }
 }
 </script>

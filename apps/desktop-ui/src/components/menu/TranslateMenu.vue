@@ -63,15 +63,19 @@ const translate = async (toLangNum: number) => {
   const sourceId = await historyStore.saveSource(trimmedText, 'translate')
 
   menuModalsStore.setPendingModal({ ai: true })
-
-  const newText = await translateText(toLangNum, trimmedText)
-  await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-    toast(t('history.operationFailed'), 'error')
-  })
-
-  menuModalsStore.nextModal(MenuModals.PREVIEW, {
-    text: newText,
-    sourceText: trimmedText,
-  })
+  try {
+    const newText = await translateText(toLangNum, trimmedText)
+    await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+      toast(t('history.operationFailed'), 'error')
+    })
+    menuModalsStore.nextModal(MenuModals.PREVIEW, {
+      text: newText,
+      sourceText: trimmedText,
+    })
+  } catch {
+    // The request layer already reported the actionable error.
+  } finally {
+    menuModalsStore.clearPendingModal()
+  }
 }
 </script>

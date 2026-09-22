@@ -11,6 +11,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'developer'
   content: string
   attachments?: string[]
+  status?: 'complete' | 'stopped'
 }
 
 export enum START_MODES {

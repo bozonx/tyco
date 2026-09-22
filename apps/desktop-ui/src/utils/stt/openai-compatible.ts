@@ -1,5 +1,7 @@
 import type { SttModel } from '@tyco/shared'
 
+import { secretRef } from '../../lib/net/secrets'
+
 interface RecordedAudio {
   sampleRate: number
   samples: number[]
@@ -44,7 +46,8 @@ export async function transcribeOpenAiCompatible(
   model: SttModel,
   recording: RecordedAudio,
   language?: string,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  hasApiKey = false
 ) {
   const form = new FormData()
   form.append('file', createWavFile(recording))
@@ -58,8 +61,8 @@ export async function transcribeOpenAiCompatible(
     `${(model.baseUrl || '').replace(/\/$/, '')}/audio/transcriptions`,
     {
       method: 'POST',
-      headers: model.apiKey
-        ? { Authorization: `Bearer ${model.apiKey}` }
+      headers: hasApiKey
+        ? { Authorization: `Bearer ${secretRef(model.id)}` }
         : undefined,
       body: form,
     }

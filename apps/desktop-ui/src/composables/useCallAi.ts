@@ -87,17 +87,10 @@ export const useCallAi = () => {
   interface AiRequestOptions {
     onChunk?: (chunk: string) => void
     signal?: AbortSignal
-    onProgress?: (progress: {
-      status: string
-      file?: string
-      progress?: number
-    }) => void
+    onModel?: (model: { provider: string; model: string }) => void
   }
 
-  /**
-   * Runs a task on the model chain configured for it. Reports a failure to the
-   * user and resolves with an empty string, as callers expect
-   */
+  /** Runs a task on the configured model chain and preserves typed failures. */
   async function aiRequest(
     taskName: LlmTask,
     messages: string | ChatMessage[],
@@ -113,12 +106,13 @@ export const useCallAi = () => {
       return await llmStore.client.run(taskName, prompt, {
         onChunk: options.onChunk,
         signal: options.signal,
+        onModel: options.onModel,
       })
     } catch (error) {
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error(`LLM request "${taskName}" failed`, llmError)
       toastText(formatLlmError(llmError, translate), 'error')
-      return ''
+      throw llmError
     }
   }
 
@@ -151,7 +145,8 @@ export const useCallAi = () => {
         runtime.model,
         result.result as LocalVoiceRecording,
         currentWhisperLanguage(),
-        proxiedFetch
+        proxiedFetch,
+        Object.hasOwn(llmStore.secrets, runtime.model.id)
       )
 
       if (text) {

@@ -129,6 +129,52 @@ describe('llm-client', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
+  it('uses each fallback model own generation settings', async () => {
+    const fetch = vi.fn<FetchFunction>(async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as { model: string }
+      return body.model === 'first-model'
+        ? jsonResponse(503, { error: { message: 'busy' } })
+        : streamResponse(sse(['fallback']))
+    })
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    llm.models = [
+      {
+        id: 'first',
+        provider: 'local',
+        model: 'first-model',
+        temperature: 0.9,
+        maxOutputTokens: 100,
+      },
+      {
+        id: 'second',
+        provider: 'local',
+        model: 'second-model',
+        temperature: 0.1,
+        maxOutputTokens: 200,
+      },
+    ]
+    llm.tasks.chat = ['first', 'second']
+    const { client } = setup(fetch, llm)
+
+    await expect(
+      client.run('chat', prompt, { onChunk: () => undefined })
+    ).resolves.toBe('fallback')
+
+    const bodies = fetch.mock.calls.map((call) =>
+      JSON.parse(String(call[1]?.body))
+    )
+    expect(bodies[0]).toMatchObject({
+      model: 'first-model',
+      temperature: 0.9,
+      max_tokens: 100,
+    })
+    expect(bodies.at(-1)).toMatchObject({
+      model: 'second-model',
+      temperature: 0.1,
+      max_tokens: 200,
+    })
+  })
+
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)

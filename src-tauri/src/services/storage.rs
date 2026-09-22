@@ -85,7 +85,19 @@ fn write_atomic(path: &PathBuf, raw: &str) -> Result<(), AppError> {
     tmp_name.push(".tmp");
     let tmp_path = path.with_file_name(tmp_name);
 
-    fs::write(&tmp_path, raw)?;
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    {
+        use std::io::Write;
+        let mut file = options.open(&tmp_path)?;
+        file.write_all(raw.as_bytes())?;
+        file.sync_all()?;
+    }
     fs::rename(&tmp_path, path)?;
     Ok(())
 }

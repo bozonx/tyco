@@ -12,10 +12,12 @@ function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
     notifyError: vi.fn(),
     emptyMessageError: () => 'No text selected',
     chatNotFoundError: () => 'Chat not found',
+    messageTooLongError: () => 'Message too long',
     createId: vi.fn(() => 'chat-id-1'),
     nowIso: vi.fn(() => '2026-04-22T00:00:00.000Z'),
     saveLocalState: vi.fn(),
     getLastChatId: vi.fn(() => null),
+    getContextBudgetCharacters: vi.fn(() => 100_000),
     ...overrides,
   }
 }
@@ -52,21 +54,19 @@ describe('chat-store', () => {
     expect(store.newChatParams.value.attachments).toEqual([])
   })
 
-  it('adds developer instructions for follow-up messages', async () => {
+  it('adds developer instructions from the first message', async () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
-    store.messages.value.push({ role: 'assistant', content: 'Earlier answer' })
 
-    await store.sendMessage('Next question')
+    await store.sendMessage('First question')
 
     expect(deps.sendChatMessage).toHaveBeenCalledWith(
-      'Next question',
+      'First question',
       expect.any(Array),
       expect.any(String),
       expect.objectContaining({
         signal: expect.any(AbortSignal),
         onChunk: expect.any(Function),
-        onProgress: expect.any(Function),
       })
     )
   })
@@ -160,6 +160,31 @@ describe('chat-store', () => {
     expect(store.error.value).toBe('')
   })
 
+  it('marks an interrupted partial response and can retry the turn', async () => {
+    const sendChatMessage = vi
+      .fn()
+      .mockImplementationOnce(
+        async (_message, _previous, _instructions, options) => {
+          options?.onChunk?.('Partial')
+          throw new Error('Stream interrupted')
+        }
+      )
+      .mockResolvedValueOnce('Complete answer')
+    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+
+    await store.sendMessage('Question')
+    expect(store.messages.value.at(-1)).toMatchObject({
+      content: 'Partial',
+      status: 'stopped',
+    })
+
+    await store.retryLastTurn()
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Complete answer' },
+    ])
+  })
+
   it('regenerates an assistant turn from its user message', async () => {
     const store = createChatStoreModel(createDeps())
     store.messages.value = [
@@ -222,5 +247,22 @@ describe('chat-store', () => {
 
     store.removeAttachment(5) // invalid index does nothing
     expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
+  })
+
+  it('ignores a late answer after starting another chat', async () => {
+    let resolveRequest!: (value: string) => void
+    const sendChatMessage = vi.fn(
+      () => new Promise<string>((resolve) => (resolveRequest = resolve))
+    )
+    const deps = createDeps({ sendChatMessage })
+    const store = createChatStoreModel(deps)
+
+    const pending = store.sendMessage('Old chat')
+    await store.startChat({})
+    resolveRequest('Late answer')
+    await pending
+
+    expect(store.messages.value).toEqual([])
+    expect(deps.saveChatHistory).not.toHaveBeenCalled()
   })
 })

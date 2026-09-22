@@ -29,11 +29,21 @@ export const useChatStore = defineStore('chat', () => {
     },
     emptyMessageError: () => translate('toast.textNotSelected'),
     chatNotFoundError: () => translate('history.empty'),
+    messageTooLongError: () => translate('llmErrors.contextLength'),
     createId: () => makeUniqId(8),
     nowIso: () => new Date().toISOString(),
     saveLocalState: async (patch) => {
       await saveLocalState(patch)
     },
     getLastChatId: () => ipcStore.params.localState?.lastChatId,
+    getContextBudgetCharacters: () => {
+      const llm = ipcStore.params.userConfig.llm
+      const modelId = llm.tasks.chat[0]
+      const contextSize =
+        llm.models.find((model) => model.id === modelId)?.contextSize ?? 128_000
+      // Reserve roughly 25% for instructions and output; 3 chars/token is
+      // deliberately conservative for multilingual text.
+      return Math.max(4_000, Math.floor(contextSize * 3 * 0.75))
+    },
   })
 })

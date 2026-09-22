@@ -52,9 +52,6 @@
           :aria-label="t('chat.generating')"
         >
           <span /><span /><span />
-          <small v-if="chatStore.loadingProgress">
-            {{ chatStore.loadingProgress }}
-          </small>
         </div>
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
@@ -183,6 +180,7 @@ const streamHasContent = computed(() => {
   return last?.role === 'assistant' && Boolean(last.content)
 })
 const activeModel = computed(() => {
+  if (chatStore.activeModel) return chatStore.activeModel
   const llm = userConfig.value?.llm
   const modelId = llm?.tasks?.[AI_TASKS.CHAT]?.[0]
   const model = llm?.models?.find((item) => item.id === modelId)
@@ -237,7 +235,7 @@ async function sendMessage() {
   chatInputStore.clear()
   pinnedToBottom.value = true
   const result = await pending
-  if (!result && chatStore.error) chatInputStore.setValue(message)
+  if (!result) chatInputStore.setValue(message)
 }
 
 async function retry() {
@@ -407,9 +405,6 @@ watch(
 }
 .typing-indicator > span:nth-child(3) {
   animation-delay: 300ms;
-}
-.typing-indicator small {
-  margin-left: var(--space-xs);
 }
 .stream-cursor {
   width: 0.45rem;

@@ -157,7 +157,6 @@ export interface SttModel {
   description?: string
   formatWithLlm?: boolean
   baseUrl?: string
-  apiKey?: string
 }
 
 export const STANDARD_ACTION_IDS = [
@@ -215,7 +214,6 @@ export interface UserConfig {
     model: string
     description?: string
     baseUrl?: string
-    apiKey?: string
   }[]
   aiModelUsage: { stt: string; tts: string }
   aiRules: {
@@ -273,7 +271,6 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       description: 'OpenAI-compatible transcription endpoint',
       formatWithLlm: false,
       baseUrl: 'http://localhost:8000/v1',
-      apiKey: '',
     },
     {
       id: 'websocket-stt',

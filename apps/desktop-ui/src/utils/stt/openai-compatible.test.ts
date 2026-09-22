@@ -24,17 +24,20 @@ describe('transcribeOpenAiCompatible', () => {
         provider: 'openai-compatible',
         model: 'whisper-1',
         baseUrl: 'http://localhost:8000/v1/',
-        apiKey: 'secret',
       },
       { sampleRate: 16_000, samples: [-1, 0, 1] },
-      'en'
+      'en',
+      fetchMock,
+      true
     )
 
     expect(text).toBe('recognized text')
     expect(fetchMock).toHaveBeenCalledOnce()
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('http://localhost:8000/v1/audio/transcriptions')
-    expect(init.headers).toEqual({ Authorization: 'Bearer secret' })
+    expect(init.headers).toEqual({
+      Authorization: 'Bearer tyco-secret:local-stt',
+    })
 
     const form = init.body as FormData
     expect(form.get('model')).toBe('whisper-1')

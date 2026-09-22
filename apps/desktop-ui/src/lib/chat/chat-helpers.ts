@@ -27,6 +27,33 @@ export function createAssistantMessage(content: string): ChatMessage {
   return { role: 'assistant', content }
 }
 
+/** Keeps complete recent turns within a conservative character budget. */
+export function trimChatContext(
+  messages: ChatMessage[],
+  maxCharacters: number
+): ChatMessage[] {
+  const turns: ChatMessage[][] = []
+  for (const message of messages) {
+    if (message.role === 'user' || turns.length === 0) turns.push([message])
+    else turns.at(-1)!.push(message)
+  }
+
+  const selected: ChatMessage[][] = []
+  let used = 0
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index]
+    const size = turn.reduce(
+      (sum, item) =>
+        sum + item.content.length + (item.attachments || []).join('').length,
+      0
+    )
+    if (selected.length > 0 && used + size > maxCharacters) break
+    selected.unshift(turn)
+    used += size
+  }
+  return selected.flat()
+}
+
 export function createChatHistoryEntry(params: {
   id: string
   description: string

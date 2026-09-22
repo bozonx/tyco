@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 use super::request::PreparedRequest;
 use super::EventSink;
 
+const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
+const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FetchRequest {
@@ -34,9 +37,13 @@ pub enum FetchEvent {
 
 pub fn decode_body(body: Option<&str>) -> Result<Option<Vec<u8>>, String> {
     body.map(|body| {
-        base64::engine::general_purpose::STANDARD
+        let decoded = base64::engine::general_purpose::STANDARD
             .decode(body)
-            .map_err(|error| format!("Invalid request body: {error}"))
+            .map_err(|error| format!("Invalid request body: {error}"))?;
+        if decoded.len() > MAX_REQUEST_BODY_BYTES {
+            return Err(String::from("Request body exceeds the 128 MiB limit"));
+        }
+        Ok(decoded)
     })
     .transpose()
 }
@@ -93,9 +100,17 @@ pub async fn run_fetch<S: EventSink>(
     }
 
     let mut stream = response.bytes_stream();
+    let mut received = 0usize;
     while let Some(chunk) = stream.next().await {
         match chunk {
             Ok(bytes) => {
+                received = received.saturating_add(bytes.len());
+                if received > MAX_RESPONSE_BODY_BYTES {
+                    sink.event(&FetchEvent::Error {
+                        message: String::from("Response body exceeds the 128 MiB limit"),
+                    });
+                    return;
+                }
                 if !bytes.is_empty() && !sink.bytes(bytes.to_vec()) {
                     return;
                 }
@@ -121,6 +136,13 @@ fn describe(error: &reqwest::Error) -> String {
         message.push_str(": ");
         message.push_str(&cause.to_string());
         source = cause.source();
+    }
+    if let Some(url) = error.url() {
+        let mut redacted = url.clone();
+        if redacted.query().is_some() {
+            redacted.set_query(Some("<redacted>"));
+            message = message.replace(url.as_str(), redacted.as_str());
+        }
     }
     message
 }

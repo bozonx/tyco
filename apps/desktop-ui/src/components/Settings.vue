@@ -213,11 +213,25 @@
               v-if="currentSttProvider === 'openai-compatible'"
               :label="t('settings.apiKey')"
             >
-              <FieldInput
-                type="password"
-                :value="currentSttModel.apiKey || ''"
-                @update:value="setSttField('apiKey', $event)"
-              />
+              <div class="flex items-center gap-2 w-full">
+                <FieldInput
+                  class="flex-1"
+                  type="password"
+                  :value="sttKeyDraft"
+                  :placeholder="
+                    hasSttKey
+                      ? t('settings.apiKeyReplacePlaceholder')
+                      : t('settings.apiKeyPlaceholder')
+                  "
+                  @update:value="sttKeyDraft = $event"
+                />
+                <Button sm :disabled="!sttKeyDraft.trim()" @click="saveSttKey">
+                  {{ t('settings.saveKey') }}
+                </Button>
+                <Button v-if="hasSttKey" sm ghost @click="removeSttKey">
+                  {{ t('settings.removeKey') }}
+                </Button>
+              </div>
             </FieldRow>
             <FieldRow :label="t('settings.formatWithLlm')">
               <FieldCheckbox
@@ -231,6 +245,7 @@
         <SettingsLlmTab
           v-else-if="currentTab === 'llm'"
           :llm="userConfig.llm"
+          @provider-removed="finishProviderRemoval"
         />
 
         <SettingsRulesTab
@@ -274,6 +289,7 @@ import {
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
+import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
 import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
@@ -296,6 +312,7 @@ import {
 } from '@tyco/shared'
 
 const ipcStore = useIpcStore()
+const llmStore = useLlmStore()
 const themeStore = useThemeStore()
 const { t, locale } = useI18n()
 const { toast } = useToast()
@@ -309,9 +326,11 @@ const currentSttProvider = ref<'openai-compatible' | 'websocket'>(
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
 const storageInfo = ref<StorageInfo | null>(null)
+const sttKeyDraft = ref('')
 let isComponentActive = true
 let skipNextAutosave = false
 let saveTimer: ReturnType<typeof setTimeout> | null = null
+let saveQueue: Promise<void> = Promise.resolve()
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
@@ -630,7 +649,6 @@ function createSttModel(
     baseUrl:
       existingModel?.baseUrl ||
       (isWebSocket ? 'ws://localhost:2700' : 'http://localhost:8000/v1'),
-    apiKey: isWebSocket ? undefined : existingModel?.apiKey || '',
   }
 }
 
@@ -691,23 +709,34 @@ const effectiveAppLanguage = computed(() =>
 async function persistUserConfig() {
   const preparedConfig = createPreparedUserConfig(userConfig.value)
   const serializedConfig = serializeUserConfig(preparedConfig)
-  const previousPersistedConfig = lastPersistedConfig.value
+  saveQueue = saveQueue.then(async () => {
+    if (serializedConfig === lastPersistedConfig.value) return
+    const previousPersistedConfig = lastPersistedConfig.value
 
-  if (serializedConfig === lastPersistedConfig.value) {
+    // Serialize writes so a slower old save can never overwrite a newer edit.
+    lastPersistedConfig.value = serializedConfig
+    const result = await ipcStore.saveUserConfig(preparedConfig)
+
+    if (!result.success) {
+      lastPersistedConfig.value = previousPersistedConfig
+      if (isComponentActive) {
+        toast(result.error || t('toast.settingsSaveFailed'), 'error')
+      }
+    }
+  })
+  await saveQueue
+}
+
+async function finishProviderRemoval(id: string) {
+  await persistUserConfig()
+  if (
+    serializeUserConfig(createPreparedUserConfig(userConfig.value)) !==
+    lastPersistedConfig.value
+  ) {
     return
   }
-
-  // Mark this snapshot as persisted before the store echoes it back into params.
-  lastPersistedConfig.value = serializedConfig
-  const result = await ipcStore.saveUserConfig(preparedConfig)
-
-  if (!result.success) {
-    lastPersistedConfig.value = previousPersistedConfig
-
-    if (isComponentActive) {
-      toast(result.error || t('toast.settingsSaveFailed'), 'error')
-    }
-    return
+  if (Object.hasOwn(llmStore.secrets, id)) {
+    await llmStore.removeSecret(id)
   }
 }
 
@@ -841,8 +870,42 @@ const toggleAppLanguageMode = () => {
   userConfig.value.appLanguage = effectiveAppLanguage.value
 }
 
-const setSttField = (field: 'baseUrl' | 'model' | 'apiKey', value: string) => {
+const setSttField = (field: 'baseUrl' | 'model', value: string) => {
   currentSttModel.value[field] = value
+}
+
+const hasSttKey = computed(() =>
+  Boolean(
+    currentSttModel.value?.id &&
+    Object.hasOwn(llmStore.secrets, currentSttModel.value.id)
+  )
+)
+
+function currentSttOrigin() {
+  try {
+    const url = new URL(currentSttModel.value?.baseUrl || '')
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.origin
+      : null
+  } catch {
+    return null
+  }
+}
+
+async function saveSttKey() {
+  const origin = currentSttOrigin()
+  if (!origin) {
+    toast(t('settings.invalidBaseUrl'), 'error')
+    return
+  }
+  await llmStore.setSecret(currentSttModel.value.id, sttKeyDraft.value.trim(), [
+    origin,
+  ])
+  sttKeyDraft.value = ''
+}
+
+async function removeSttKey() {
+  await llmStore.removeSecret(currentSttModel.value.id)
 }
 
 const setSttFormatWithLlm = (value: boolean) => {
@@ -880,6 +943,7 @@ const updatePluginConfig = (
 }
 onMounted(() => {
   void loadStorageInfo()
+  void llmStore.refreshSecrets()
 })
 onUnmounted(() => {
   isComponentActive = false
