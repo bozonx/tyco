@@ -205,6 +205,27 @@
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
     "rolesHint": "Rol, sohbet için sistem talimatlarını belirler.",
     "hotkey": "Kısayol tuşu",
+    "hotkeysTab": "Kısayollar",
+    "hotkeysTitle": "Etkinleştirme kısayolları",
+    "hotkeysHint": "Bir alana odaklanın ve yeni tuş birleşimine basın.",
+    "hotkeyRecording": "Bir tuş birleşimine basın…",
+    "copyHotkeyCommand": "Bağlamayı kopyala",
+    "hotkeyActions": {
+      "editor": "Hızlı düzenleyici",
+      "write": "Yazma modu",
+      "chat": "Sohbet",
+      "voice": "Sesli giriş",
+      "select": "Seçim eylemleri",
+      "aiTasks": "Yapay zekâ görevleri",
+      "history": "Geçmiş",
+      "config": "Ayarlar"
+    },
+    "hotkeyStatus": {
+      "ready": "Hazır",
+      "conflict": "Bu birleşim kullanılamıyor",
+      "confirmation-required": "Sistem iletişim kutusunda kısayolu onaylayın; değişiklikler yeniden başlatınca uygulanır",
+      "external": "Bu bağlamayı compositor yapılandırmasına ekleyin"
+    },
     "dragToReorder": "Sıralamak için sürükleyin",
     "historyLimitHint": "0 — kaydetme. Veriler yerel olarak okunabilir dosyalarda saklanır.",
     "llmProviders": "Sağlayıcılar",

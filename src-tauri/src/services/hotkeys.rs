@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::env;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 use ashpd::desktop::global_shortcuts::{BindShortcutsOptions, GlobalShortcuts, NewShortcut};
 use ashpd::desktop::CreateSessionOptions;
 use futures_util::StreamExt;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -29,6 +30,29 @@ struct HotkeyBinding {
     shortcut: String,
 }
 
+#[derive(Default)]
+pub struct HotkeyRegistry {
+    modes: RwLock<HashMap<u32, StartMode>>,
+    shortcuts: RwLock<HashMap<StartMode, Shortcut>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyHotkeyRequest {
+    pub mode: String,
+    pub shortcut: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyHotkeyResult {
+    status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    external_command: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message: Option<String>,
+}
+
 trait HotkeyProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError>;
 }
@@ -45,6 +69,110 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         ProviderKind::Portal => PortalProvider.register(app, bindings),
         ProviderKind::GlobalShortcut => GlobalShortcutProvider.register(app, bindings),
         ProviderKind::External => ExternalProvider.register(app, bindings),
+    }
+}
+
+pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
+    let mode = StartMode::parse(&request.mode)?;
+    let shortcut = request
+        .shortcut
+        .parse::<Shortcut>()
+        .map_err(|error| AppError::Message(format!("Invalid hotkey: {error}")))?;
+
+    match provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref()) {
+        ProviderKind::GlobalShortcut => apply_global_shortcut(app, mode, shortcut),
+        ProviderKind::Portal => Ok(ApplyHotkeyResult {
+            status: "confirmation-required",
+            external_command: None,
+            message: Some(String::from(
+                "The desktop portal applies changed shortcuts after Tyco restarts",
+            )),
+        }),
+        ProviderKind::External => Ok(ApplyHotkeyResult {
+            status: "external",
+            external_command: Some(external_command(mode, &request.shortcut)),
+            message: None,
+        }),
+    }
+}
+
+fn apply_global_shortcut(
+    app: &AppHandle,
+    mode: StartMode,
+    shortcut: Shortcut,
+) -> Result<ApplyHotkeyResult, AppError> {
+    let registry = app.state::<HotkeyRegistry>();
+    let previous = registry
+        .shortcuts
+        .read()
+        .expect("hotkey shortcuts lock poisoned")
+        .get(&mode)
+        .copied();
+
+    if previous == Some(shortcut) {
+        return Ok(ApplyHotkeyResult {
+            status: "ready",
+            external_command: None,
+            message: None,
+        });
+    }
+    if let Some(previous) = previous {
+        app.global_shortcut()
+            .unregister(previous)
+            .map_err(|error| AppError::Message(error.to_string()))?;
+        registry
+            .modes
+            .write()
+            .expect("hotkey bindings lock poisoned")
+            .remove(&previous.id());
+    }
+    if let Err(error) = app.global_shortcut().register(shortcut) {
+        if let Some(previous) = previous {
+            let _ = app.global_shortcut().register(previous);
+            registry
+                .modes
+                .write()
+                .expect("hotkey bindings lock poisoned")
+                .insert(previous.id(), mode);
+        }
+        return Ok(ApplyHotkeyResult {
+            status: "conflict",
+            external_command: None,
+            message: Some(error.to_string()),
+        });
+    }
+
+    registry
+        .modes
+        .write()
+        .expect("hotkey bindings lock poisoned")
+        .insert(shortcut.id(), mode);
+    registry
+        .shortcuts
+        .write()
+        .expect("hotkey shortcuts lock poisoned")
+        .insert(mode, shortcut);
+    Ok(ApplyHotkeyResult {
+        status: "ready",
+        external_command: None,
+        message: None,
+    })
+}
+
+fn external_command(mode: StartMode, shortcut: &str) -> String {
+    match env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        desktop if desktop.contains("hyprland") => format!(
+            "bind = {shortcut}, exec, tyco-ctl activate {}",
+            mode.as_str()
+        ),
+        _ => format!(
+            "bindsym {shortcut} exec tyco-ctl activate {}",
+            mode.as_str()
+        ),
     }
 }
 
@@ -98,15 +226,16 @@ impl HotkeyProvider for ExternalProvider {
 
 impl HotkeyProvider for GlobalShortcutProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
-        let modes = Arc::new(RwLock::new(HashMap::<u32, StartMode>::new()));
-        let handler_modes = Arc::clone(&modes);
+        app.manage(HotkeyRegistry::default());
         app.handle().plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, shortcut, event| {
                     if event.state != ShortcutState::Pressed {
                         return;
                     }
-                    let mode = handler_modes
+                    let mode = app
+                        .state::<HotkeyRegistry>()
+                        .modes
                         .read()
                         .expect("hotkey bindings lock poisoned")
                         .get(&shortcut.id())
@@ -132,10 +261,17 @@ impl HotkeyProvider for GlobalShortcutProvider {
             };
             match app.global_shortcut().register(shortcut) {
                 Ok(()) => {
-                    modes
+                    let registry = app.state::<HotkeyRegistry>();
+                    registry
+                        .modes
                         .write()
                         .expect("hotkey bindings lock poisoned")
                         .insert(shortcut.id(), binding.mode);
+                    registry
+                        .shortcuts
+                        .write()
+                        .expect("hotkey shortcuts lock poisoned")
+                        .insert(binding.mode, shortcut);
                 }
                 Err(error) => log::warn!(
                     "Could not register hotkey for {}: {error}",

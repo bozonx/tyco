@@ -205,6 +205,27 @@
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
     "rolesHint": "A role sets the system instructions for the chat.",
     "hotkey": "Hotkey",
+    "hotkeysTab": "Hotkeys",
+    "hotkeysTitle": "Activation hotkeys",
+    "hotkeysHint": "Focus a field and press the new key combination.",
+    "hotkeyRecording": "Press a key combination…",
+    "copyHotkeyCommand": "Copy binding",
+    "hotkeyActions": {
+      "editor": "Quick editor",
+      "write": "Writing mode",
+      "chat": "Chat",
+      "voice": "Voice input",
+      "select": "Selection actions",
+      "aiTasks": "AI tasks",
+      "history": "History",
+      "config": "Settings"
+    },
+    "hotkeyStatus": {
+      "ready": "Ready",
+      "conflict": "This combination is unavailable",
+      "confirmation-required": "Confirm the shortcut in the system dialog; changed shortcuts take effect after restart",
+      "external": "Add this binding to your compositor configuration"
+    },
     "dragToReorder": "Drag to reorder",
     "historyLimitHint": "0 — do not save. Stored locally in readable files.",
     "llmProviders": "Providers",

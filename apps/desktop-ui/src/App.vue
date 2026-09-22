@@ -1,13 +1,15 @@
 <template>
   <MenuModals />
-  <div class="layout">
-    <NavPanel v-if="navPanelStore.params.panelVisible" />
+  <div class="layout" :class="{ 'quick-layout': quickPanelStore.isActive }">
+    <NavPanel
+      v-if="navPanelStore.params.panelVisible && !quickPanelStore.isActive"
+    />
     <div class="main">
       <!-- always mounted: its input keeps the focus between activations -->
       <div v-show="quickPanelStore.isActive" class="layer">
         <QuickPanel />
       </div>
-      <div v-show="!quickPanelStore.isActive" class="layer">
+      <div v-show="!quickPanelStore.isActive" class="layer routed-layer">
         <RouterView />
       </div>
     </div>
@@ -160,6 +162,10 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
 }
+.quick-layout {
+  justify-content: flex-end;
+  background: transparent;
+}
 .main {
   flex: 1 1 0%;
   min-height: 0; /* Важно для flexbox, чтобы потомки могли сжиматься */
@@ -167,10 +173,16 @@ onUnmounted(() => {
   flex-direction: column;
   position: relative;
 }
+.quick-layout .main {
+  flex: 0 1 auto;
+}
 .layer {
   flex: 1 1 0%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+.routed-layer {
+  background-color: var(--color-base-100);
 }
 </style>

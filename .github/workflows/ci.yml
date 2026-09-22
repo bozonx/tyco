@@ -16,7 +16,7 @@ concurrency:
 env:
   LINUX_TAURI_DEPS: >-
     libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev
-    libayatana-appindicator3-dev librsvg2-dev
+    libayatana-appindicator3-dev librsvg2-dev libgtk-layer-shell-dev
 
 jobs:
   frontend:

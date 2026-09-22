@@ -14,7 +14,8 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
 
 - Node.js 24+ and pnpm 11 (`corepack enable`)
 - Rust toolchain pinned by `src-tauri/rust-toolchain.toml`
-- Linux system packages for Tauri: see the `bundle` job in `.github/workflows/ci.yml`
+- Linux system packages for Tauri, including `gtk-layer-shell`: see the
+  `bundle` job in `.github/workflows/ci.yml`
 - `xdotool` (X11) or `ydotool` (Wayland) for typing into other windows
 
 Development is supported on Linux and macOS. Windows development is not

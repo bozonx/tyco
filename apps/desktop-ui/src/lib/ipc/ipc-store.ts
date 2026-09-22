@@ -39,6 +39,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
       buildArgs: ([localState]) => ({ localState }),
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
+    applyHotkey: {
+      command: DESKTOP_COMMANDS.APPLY_HOTKEY,
+      buildArgs: ([request]) => ({ request }),
+    },
     getEditorHistory: { command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY },
     getChatHistory: { command: DESKTOP_COMMANDS.GET_CHAT_HISTORY },
     getChat: {

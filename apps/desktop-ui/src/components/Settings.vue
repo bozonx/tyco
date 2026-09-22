@@ -164,6 +164,12 @@
           </SettingsSection>
         </template>
 
+        <SettingsHotkeysTab
+          v-else-if="currentTab === 'hotkeys'"
+          :user-config="userConfig"
+          @update:hotkey="updateHotkey"
+        />
+
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
           :user-config="userConfig"
@@ -268,6 +274,7 @@ import {
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
+import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsRolesTab from './settings/SettingsRolesTab.vue'
@@ -310,6 +317,11 @@ const primaryTabs = computed(() => [
     text: t('settings.sectionAccessibility'),
     key: 'accessibility',
     icon: 'mdi:human-handsup',
+  },
+  {
+    text: t('settings.hotkeysTab'),
+    key: 'hotkeys',
+    icon: 'mdi:keyboard-outline',
   },
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
@@ -462,12 +474,17 @@ function createPreparedUserConfig(config: unknown) {
   normalizeLanguageConfig(nextConfig)
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
+  normalizeHotkeysConfig(nextConfig)
   normalizeSttConfig(nextConfig)
   normalizeLlmConfigSection(nextConfig)
   normalizeChatRoles(nextConfig)
   normalizeAiTasks(nextConfig)
 
   return nextConfig
+}
+
+function normalizeHotkeysConfig(config: Record<string, any>) {
+  config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
 }
 
 function serializeUserConfig(config: unknown) {
@@ -773,6 +790,10 @@ const currentSttModel = computed(() =>
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
+}
+
+const updateHotkey = (mode: string, shortcut: string) => {
+  userConfig.value.hotkeys[mode] = shortcut
 }
 
 const updateWindowInsertionMethod = (value: string | number) => {

@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum StartMode {
     Editor,
     Write,
@@ -69,8 +69,7 @@ pub enum WindowProfile {
 impl WindowProfile {
     pub fn size(self) -> (f64, f64) {
         match self {
-            // The panel keeps the current UI minimums until task 7.
-            Self::Panel => (800.0, 600.0),
+            Self::Panel => (800.0, 320.0),
             Self::Sheet => (1000.0, 800.0),
         }
     }
@@ -165,6 +164,7 @@ mod tests {
     #[test]
     fn selects_geometry_profile() {
         assert_eq!(StartMode::Editor.profile(), WindowProfile::Panel);
+        assert_eq!(StartMode::Write.profile(), WindowProfile::Panel);
         assert_eq!(StartMode::Voice.profile(), WindowProfile::Panel);
         for mode in [StartMode::Chat, StartMode::History, StartMode::Config] {
             assert_eq!(mode.profile(), WindowProfile::Sheet);

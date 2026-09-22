@@ -4762,6 +4762,8 @@ dependencies = [
  "base64 0.22.1",
  "cpal",
  "futures-util",
+ "gtk",
+ "gtk-sys",
  "log",
  "reqwest 0.12.28",
  "serde",

@@ -9,6 +9,8 @@ use tauri::{App, AppHandle, Emitter, Manager, WindowEvent};
 
 use crate::errors::AppError;
 use crate::services::foreground_context::{ForegroundContext, SystemForegroundContext};
+#[cfg(target_os = "linux")]
+use crate::services::layer_shell;
 use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
@@ -60,6 +62,12 @@ struct Warmup {
 #[derive(Default)]
 struct ContextCapture {
     generation: AtomicU64,
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Default)]
+struct LayerShell {
+    supported: bool,
 }
 
 impl Warmup {
@@ -149,10 +157,32 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;
     let state = app.state::<AppState>();
 
-    // Native-window fallback; layer-shell will replace this in task 6.
     let (width, height) = activation.mode.profile().size();
     window.set_size(tauri::LogicalSize::new(width, height))?;
-    window.center()?;
+
+    #[cfg(target_os = "linux")]
+    let has_layer_shell = app.state::<LayerShell>().supported;
+    #[cfg(not(target_os = "linux"))]
+    let has_layer_shell = false;
+
+    #[cfg(target_os = "linux")]
+    if has_layer_shell {
+        let gtk_window = window.gtk_window()?;
+        match activation.mode.profile() {
+            super::activation::WindowProfile::Panel => {
+                layer_shell::set_panel_profile(&gtk_window, 48);
+            }
+            super::activation::WindowProfile::Sheet => {
+                layer_shell::set_sheet_profile(&gtk_window);
+            }
+        }
+        layer_shell::set_keyboard(
+            &gtk_window,
+            activation.intent == ActivationIntent::KeyboardFirst,
+        );
+    } else {
+        window.center()?;
+    }
     window.set_focusable(activation.intent == ActivationIntent::KeyboardFirst)?;
     window.show()?;
     if let Err(error) = window.unminimize() {
@@ -227,6 +257,11 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message(String::from("Main window not found")))?;
 
+    #[cfg(target_os = "linux")]
+    if app.state::<LayerShell>().supported {
+        layer_shell::set_keyboard(&window.gtk_window()?, false);
+    }
+
     state.update_params(|params| {
         params.is_window_shown = false;
     });
@@ -240,6 +275,20 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(Warmup::default());
     app.manage(ContextCapture::default());
+    #[cfg(target_os = "linux")]
+    {
+        let supported = layer_shell::is_supported();
+        if supported {
+            let window = app
+                .get_webview_window(MAIN_WINDOW_LABEL)
+                .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+            layer_shell::attach(&window.gtk_window()?);
+            log::info!("Using gtk-layer-shell for the main window");
+        } else {
+            log::info!("gtk-layer-shell is unavailable; using a regular window");
+        }
+        app.manage(LayerShell { supported });
+    }
     setup_tray(app)?;
     schedule_warmup(app.handle())?;
     Ok(())

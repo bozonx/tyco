@@ -18,8 +18,11 @@
         "width": 800,
         "height": 600,
         "minWidth": 640,
-        "minHeight": 480,
-        "resizable": true
+        "minHeight": 96,
+        "resizable": true,
+        "transparent": true,
+        "decorations": false,
+        "skipTaskbar": true
       }
     ],
     "security": {

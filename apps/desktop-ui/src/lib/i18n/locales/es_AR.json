@@ -205,6 +205,27 @@
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
     "rolesHint": "Un rol define las instrucciones del sistema para el chat.",
     "hotkey": "Tecla rápida",
+    "hotkeysTab": "Atajos",
+    "hotkeysTitle": "Atajos de activación",
+    "hotkeysHint": "Enfocá un campo y presioná la nueva combinación.",
+    "hotkeyRecording": "Presioná una combinación…",
+    "copyHotkeyCommand": "Copiar enlace",
+    "hotkeyActions": {
+      "editor": "Editor rápido",
+      "write": "Modo escritura",
+      "chat": "Chat",
+      "voice": "Entrada de voz",
+      "select": "Acciones de selección",
+      "aiTasks": "Tareas de IA",
+      "history": "Historial",
+      "config": "Configuración"
+    },
+    "hotkeyStatus": {
+      "ready": "Listo",
+      "conflict": "Esta combinación no está disponible",
+      "confirmation-required": "Confirmá el atajo en el diálogo del sistema; los cambios se aplican al reiniciar",
+      "external": "Agregá este enlace a la configuración del compositor"
+    },
     "dragToReorder": "Arrastra para reordenar",
     "historyLimitHint": "0 — no guardar. Los datos se almacenan localmente en archivos legibles.",
     "llmProviders": "Proveedores",

@@ -4,7 +4,9 @@ mod models;
 mod services;
 mod state;
 
-use commands::app::{get_init_params, get_storage_info, save_local_state, save_user_config};
+use commands::app::{
+    apply_hotkey, get_init_params, get_storage_info, save_local_state, save_user_config,
+};
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
     remove_from_chat_history, remove_from_editor_history, restore_editor_history_item,
@@ -97,6 +99,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_init_params,
             get_storage_info,
+            apply_hotkey,
             save_user_config,
             save_local_state,
             close_window,

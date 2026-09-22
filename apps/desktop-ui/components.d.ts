@@ -49,6 +49,7 @@ declare module 'vue' {
     SearchInput: typeof import('./src/components/common/SearchInput.vue')['default']
     SegmentedControl: typeof import('./src/components/common/SegmentedControl.vue')['default']
     Settings: typeof import('./src/components/Settings.vue')['default']
+    SettingsHotkeysTab: typeof import('./src/components/settings/SettingsHotkeysTab.vue')['default']
     SettingsLlmTab: typeof import('./src/components/settings/SettingsLlmTab.vue')['default']
     SettingsPluginsTab: typeof import('./src/components/settings/SettingsPluginsTab.vue')['default']
     SettingsRolesTab: typeof import('./src/components/settings/SettingsRolesTab.vue')['default']

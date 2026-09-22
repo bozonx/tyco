@@ -12,6 +12,14 @@ pub fn get_init_params(state: State<'_, AppState>) -> Result<InitParams, AppErro
 }
 
 #[tauri::command]
+pub fn apply_hotkey(
+    app: AppHandle,
+    request: crate::services::hotkeys::ApplyHotkeyRequest,
+) -> Result<crate::services::hotkeys::ApplyHotkeyResult, AppError> {
+    crate::services::hotkeys::apply(&app, request)
+}
+
+#[tauri::command]
 pub fn save_user_config(
     app: AppHandle,
     state: State<'_, AppState>,

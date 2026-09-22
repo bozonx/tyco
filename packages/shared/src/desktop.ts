@@ -120,6 +120,7 @@ export const DESKTOP_EVENTS = {
 export const DESKTOP_COMMANDS = {
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
+  APPLY_HOTKEY: 'apply_hotkey',
   SAVE_USER_CONFIG: 'save_user_config',
   SAVE_LOCAL_STATE: 'save_local_state',
   GET_EDITOR_HISTORY: 'get_editor_history',
