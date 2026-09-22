@@ -5,8 +5,8 @@ mod services;
 mod state;
 
 use commands::app::{
-    apply_hotkey, get_init_params, get_storage_info, mark_activation_metric,
-    save_local_state, save_user_config, submit_activation_metric_value,
+    apply_hotkey, get_init_params, get_storage_info, mark_activation_metric, save_local_state,
+    save_user_config, submit_activation_metric_value,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,

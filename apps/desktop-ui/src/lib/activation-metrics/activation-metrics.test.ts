@@ -10,7 +10,7 @@ describe('activation metrics client', () => {
     const client = createActivationMetricsClient({
       listen: async (event, handler) => {
         handlers.set(event, handler)
-        return vi.fn()
+        return () => undefined
       },
       mark,
       submitValue,
@@ -38,7 +38,7 @@ describe('activation metrics client', () => {
     const client = createActivationMetricsClient({
       listen: async (event, handler) => {
         handlers.set(event, handler)
-        return vi.fn()
+        return () => undefined
       },
       mark,
       submitValue: vi.fn(),
@@ -48,8 +48,12 @@ describe('activation metrics client', () => {
     await client.start()
     handlers.get('start')?.({ id: 9 })
 
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }))
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: '1', bubbles: true })
+    )
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: '2', bubbles: true })
+    )
 
     expect(mark.mock.calls.filter((call) => call[1] === 'first-char')).toEqual([
       [9, 'first-char'],

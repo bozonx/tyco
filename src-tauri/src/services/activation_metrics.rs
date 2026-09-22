@@ -275,7 +275,8 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
                 match metrics.wait_for_result(id) {
                     Some(trial) => {
                         metrics.write_row(&trial, chars_sent);
-                        serde_json::to_string(&trial).unwrap_or_else(|error| format!("error: {error}"))
+                        serde_json::to_string(&trial)
+                            .unwrap_or_else(|error| format!("error: {error}"))
                     }
                     None => String::from("error: unknown trial"),
                 }
@@ -303,8 +304,12 @@ mod tests {
             csv: Mutex::new(None),
         };
         metrics.start(7, 10);
-        metrics.mark(7, |trial| trial.t3_frame.get_or_insert(20));
-        metrics.mark(7, |trial| trial.t3_frame.get_or_insert(30));
+        metrics.mark(7, |trial| {
+            trial.t3_frame.get_or_insert(20);
+        });
+        metrics.mark(7, |trial| {
+            trial.t3_frame.get_or_insert(30);
+        });
         metrics.submit_value(7, String::from("123"));
         assert_eq!(metrics.wait_for_result(7).unwrap().t3_frame, Some(20));
     }

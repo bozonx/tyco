@@ -354,12 +354,13 @@ Windows/macOS-провайдеры и NSServices остаются частью �
 его дефолты соответствуют критерию: 20 попыток, первая клавиша через 100 мс,
 пауза между попытками 10 секунд.
 
-Запуск приложения:
+Сборка и запуск приложения:
 
 ```sh
+pnpm tauri build
 TYCO_ACTIVATION_BENCH=1 \
 TYCO_METRICS_CSV=activation-release.csv \
-pnpm tauri build
+./src-tauri/target/release/tyco
 ```
 
 Запуск зонда при работающем приложении:

@@ -101,10 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if arrived {
             successful += 1;
         }
-        println!(
-            "{id:>3}: {} {value:?}",
-            if arrived { "OK" } else { "LOST" }
-        );
+        println!("{id:>3}: {} {value:?}", if arrived { "OK" } else { "LOST" });
         request("hide")?;
         sleep(Duration::from_millis(300));
     }
