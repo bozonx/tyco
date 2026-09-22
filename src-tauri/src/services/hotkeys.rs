@@ -5,6 +5,7 @@ use std::sync::RwLock;
 
 use ashpd::desktop::global_shortcuts::{BindShortcutsOptions, GlobalShortcuts, NewShortcut};
 use ashpd::desktop::CreateSessionOptions;
+use ashpd::{register_host_app, AppID};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -363,6 +364,12 @@ impl HotkeyProvider for PortalProvider {
 }
 
 async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+    let app_id = AppID::try_from(app.config().identifier.as_str())
+        .map_err(|error| AppError::Message(error.to_string()))?;
+    if let Err(error) = register_host_app(app_id.clone()).await {
+        log::warn!("Could not register host app ID {app_id} with the desktop portal: {error}");
+    }
+
     let portal = GlobalShortcuts::new()
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;

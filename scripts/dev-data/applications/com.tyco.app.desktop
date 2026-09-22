@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=TyCo (Development)
+Comment=AI typing companion development build
+Exec=tyco
+Icon=com.tyco.app
+Terminal=false
+NoDisplay=true
+StartupWMClass=com.tyco.app
+X-Tyco-Development=true

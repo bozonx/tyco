@@ -141,6 +141,7 @@ export const useCallAi = () => {
         throw new Error(result.error || 'Failed to stop local voice recording')
       }
 
+      await llmStore.refreshSecrets()
       const text = await transcribeOpenAiCompatible(
         runtime.model,
         result.result as LocalVoiceRecording,

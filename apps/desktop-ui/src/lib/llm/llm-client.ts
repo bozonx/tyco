@@ -92,6 +92,7 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
       providers: buildProviderFactories(config),
       retry: { totalTimeoutMs: timeoutMs },
     })
+    if (kits.size >= 20) kits.clear()
     kits.set(key, kit)
     return kit
   }

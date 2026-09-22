@@ -315,7 +315,7 @@ const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const themeStore = useThemeStore()
 const { t, locale } = useI18n()
-const { toast } = useToast()
+const { toast, toastText } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -736,7 +736,11 @@ async function finishProviderRemoval(id: string) {
     return
   }
   if (Object.hasOwn(llmStore.secrets, id)) {
-    await llmStore.removeSecret(id)
+    try {
+      await llmStore.removeSecret(id)
+    } catch (error) {
+      toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+    }
   }
 }
 
@@ -898,14 +902,24 @@ async function saveSttKey() {
     toast(t('settings.invalidBaseUrl'), 'error')
     return
   }
-  await llmStore.setSecret(currentSttModel.value.id, sttKeyDraft.value.trim(), [
-    origin,
-  ])
-  sttKeyDraft.value = ''
+  try {
+    await llmStore.setSecret(
+      currentSttModel.value.id,
+      sttKeyDraft.value.trim(),
+      [origin]
+    )
+    sttKeyDraft.value = ''
+  } catch (error) {
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+  }
 }
 
 async function removeSttKey() {
-  await llmStore.removeSecret(currentSttModel.value.id)
+  try {
+    await llmStore.removeSecret(currentSttModel.value.id)
+  } catch (error) {
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+  }
 }
 
 const setSttFormatWithLlm = (value: boolean) => {
