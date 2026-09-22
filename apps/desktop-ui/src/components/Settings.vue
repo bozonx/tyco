@@ -258,13 +258,13 @@ import { syncI18nLocale } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
   AUTO_LANGUAGE_VALUE,
-  DEFAULT_LANGUAGE,
   SUPPORTED_UI_LANGUAGE_OPTIONS,
   buildLanguageOptions,
   getNavigatorLanguages,
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
+import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useThemeStore } from '../stores/theme'
@@ -520,9 +520,9 @@ function normalizeAppearanceConfig(config: Record<string, any>) {
 function normalizeLanguageConfig(config: Record<string, any>) {
   config.appLanguage = config.appLanguage || AUTO_LANGUAGE_VALUE
   config.userLanguage = config.userLanguage || AUTO_LANGUAGE_VALUE
-  config.toTranslateLanguages = (config.toTranslateLanguages || []).map(
-    (lang: string) => lang || DEFAULT_LANGUAGE
-  )
+  config.toTranslateLanguages = normalizeShortcutSlots<string>(
+    config.toTranslateLanguages
+  ).map((lang) => (typeof lang === 'string' ? lang : null))
 }
 
 // конфиги, созданные до появления настроек редактора, приходят без этих ключей
@@ -592,10 +592,11 @@ function normalizeAiTasks(config: Record<string, any>) {
     config.aiTasks = []
   }
 
-  config.aiTasks = config.aiTasks.map((task: Record<string, any>) => ({
-    name: task.name || '',
-    rule: task.rule || '',
-  }))
+  config.aiTasks = normalizeShortcutSlots<Record<string, any>>(
+    config.aiTasks
+  ).map((task) =>
+    task ? { name: task.name || '', rule: task.rule || '' } : null
+  )
 }
 
 function createSttModel(

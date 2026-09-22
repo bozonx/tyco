@@ -5,6 +5,8 @@ export interface ActivationMetricsDeps {
   ) => Promise<() => void>
   mark: (id: number, mark: 'frame' | 'dom-focus' | 'first-char') => void
   submitValue: (id: number) => void
+  prepareTrial: () => void
+  activeElement: () => EventTarget | null
   requestFrame: (handler: () => void) => void
   eventTarget: Pick<Document, 'addEventListener' | 'removeEventListener'>
 }
@@ -42,8 +44,12 @@ export function createActivationMetricsClient(deps: ActivationMetricsDeps) {
     async start() {
       stops.push(
         await deps.listen('start', ({ id }) => {
+          deps.prepareTrial()
           activeId = id
           firstCharacterMarked = false
+          if (isEditorTarget(deps.activeElement())) {
+            deps.mark(id, 'dom-focus')
+          }
           deps.requestFrame(() => deps.mark(id, 'frame'))
         }),
         await deps.listen('collect', ({ id }) => deps.submitValue(id))

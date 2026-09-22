@@ -219,11 +219,13 @@ export const useCallAi = () => {
     }
 
     const userConfig = currentUserConfig()
+    const language = userConfig.toTranslateLanguages[toLangNum]
+    if (!language) return ''
 
     return await aiRequest(AI_TASKS.TRANSLATE, text, {
       instructions: fillTemplate(
         APP_CONFIG.aiInstructions[AI_TASKS.TRANSLATE],
-        { TRANSLATION_LANG: userConfig.toTranslateLanguages[toLangNum] }
+        { TRANSLATION_LANG: language }
       ),
       rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
     })
@@ -236,10 +238,12 @@ export const useCallAi = () => {
     }
 
     const userConfig = currentUserConfig()
+    const task = userConfig.aiTasks[presetNum]
+    if (!task) return ''
 
     return await aiRequest(AI_TASKS.AI_TASKS, text, {
       instructions: APP_CONFIG.aiInstructions[AI_TASKS.AI_TASKS],
-      rules: buildTaskRules(userConfig.aiTasks[presetNum].rule),
+      rules: buildTaskRules(task.rule),
     })
   }
 

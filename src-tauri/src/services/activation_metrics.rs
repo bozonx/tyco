@@ -36,6 +36,8 @@ pub struct Trial {
     pub t4_dom_focus: Option<u128>,
     pub t5_first_char: Option<u128>,
     pub value: String,
+    #[serde(skip)]
+    pub result_submitted: bool,
 }
 
 pub struct ActivationMetrics {
@@ -114,7 +116,10 @@ impl ActivationMetrics {
     }
 
     fn submit_value(&self, id: u64, value: String) {
-        self.mark(id, |trial| trial.value = value);
+        self.mark(id, |trial| {
+            trial.value = value;
+            trial.result_submitted = true;
+        });
         self.result_ready.notify_all();
     }
 
@@ -123,7 +128,7 @@ impl ActivationMetrics {
         let (trials, _) = self
             .result_ready
             .wait_timeout_while(trials, Duration::from_secs(2), |trials| {
-                trials.get(&id).is_none_or(|trial| trial.value.is_empty())
+                trials.get(&id).is_none_or(|trial| !trial.result_submitted)
             })
             .expect("metrics lock poisoned");
         trials.get(&id).cloned()

@@ -1,20 +1,20 @@
 <template>
   <SettingsSection :description="t('settings.translationsHint')" bare>
-    <FieldItems
-      :items="translateLanguagesItems"
-      @update:items="updateTranslateLanguages"
+    <ShortcutSlots
+      :items="translateLanguageSlots"
+      @move="moveLanguage"
+      @add="addLanguage"
+      @remove="removeLanguage"
     >
       <template #item="{ item, index }">
-        <div class="flex flex-row items-center gap-2 w-full">
-          <KeyButton>{{ PRESETS_KEYS[index] }}</KeyButton>
-          <FieldSelect
-            class="flex-1"
-            v-model:value="item.value"
-            :options="translateLanguageOptions"
-          />
-        </div>
+        <FieldSelect
+          class="w-full"
+          :value="item"
+          :options="translateLanguageOptions"
+          @update:value="updateLanguage(index, $event)"
+        />
       </template>
-    </FieldItems>
+    </ShortcutSlots>
   </SettingsSection>
 </template>
 
@@ -22,11 +22,16 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { buildLanguageOptions } from '../../lib/locale/language'
-import { PRESETS_KEYS } from '../../types'
-import FieldItems from '../common/FieldItems.vue'
+import {
+  DEFAULT_LANGUAGE,
+  buildLanguageOptions,
+} from '../../lib/locale/language'
+import {
+  moveShortcutSlot,
+  normalizeShortcutSlots,
+} from '../../lib/shortcut-slots/shortcut-slots'
 import FieldSelect from '../common/FieldSelect.vue'
-import KeyButton from '../common/KeyButton.vue'
+import ShortcutSlots from '../common/ShortcutSlots.vue'
 
 const props = defineProps<{ userConfig: Record<string, any> }>()
 
@@ -40,22 +45,40 @@ const translateLanguageOptions = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   locale.value
   return buildLanguageOptions(
-    props.userConfig.toTranslateLanguages || [],
+    (props.userConfig.toTranslateLanguages || []).filter(Boolean),
     false,
     t
   )
 })
 
-const translateLanguagesItems = computed(() => {
-  return (props.userConfig.toTranslateLanguages || []).map((lang: string) => ({
-    value: lang,
-  }))
-})
+const translateLanguageSlots = computed(() =>
+  normalizeShortcutSlots<string>(props.userConfig.toTranslateLanguages)
+)
 
-const updateTranslateLanguages = (items: Record<string, any>[]) => {
-  emit(
-    'update:toTranslateLanguages',
-    items.map((item: Record<string, any>) => item.value)
-  )
+function emitSlots(slots: (string | null)[]) {
+  emit('update:toTranslateLanguages', slots as string[])
+}
+
+function moveLanguage(from: number, to: number) {
+  emitSlots(moveShortcutSlot(translateLanguageSlots.value, from, to))
+}
+
+function addLanguage(index: number) {
+  const slots = [...translateLanguageSlots.value]
+  slots[index] = DEFAULT_LANGUAGE
+  emitSlots(slots)
+}
+
+function removeLanguage(index: number) {
+  const slots = [...translateLanguageSlots.value]
+  slots[index] = null
+  emitSlots(slots)
+}
+
+function updateLanguage(index: number, value: string | number | undefined) {
+  if (typeof value !== 'string') return
+  const slots = [...translateLanguageSlots.value]
+  slots[index] = value
+  emitSlots(slots)
 }
 </script>

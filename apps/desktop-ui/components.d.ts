@@ -58,6 +58,7 @@ declare module 'vue' {
     SettingsTranslationsTab: typeof import('./src/components/settings/SettingsTranslationsTab.vue')['default']
     ShortcutButton: typeof import('./src/components/common/ShortcutButton.vue')['default']
     ShortcutList: typeof import('./src/components/ShortcutList.vue')['default']
+    ShortcutSlots: typeof import('./src/components/common/ShortcutSlots.vue')['default']
     TabItem: typeof import('./src/components/common/TabItem.vue')['default']
     Tabs: typeof import('./src/components/common/Tabs.vue')['default']
     TextPreview: typeof import('./src/components/common/TextPreview.vue')['default']

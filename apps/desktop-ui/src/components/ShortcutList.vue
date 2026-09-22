@@ -58,7 +58,7 @@ const props = withDefaults(
     sourceText?: string
     spaceKey?: ActionItem
     toEditorVisible?: boolean
-    leftLetterKeys?: ActionItem[]
+    leftLetterKeys?: (ActionItem | undefined)[]
     stopListening?: boolean
   }>(),
   {
@@ -83,8 +83,13 @@ const columns = computed(() =>
   [0, 5, 10]
     .map((offset) =>
       PRESETS_KEYS.slice(offset, offset + 5)
-        .map((key, index) => ({ key, ...props.leftLetterKeys[index + offset] }))
-        .filter((item) => getActionLabel(item as ActionItem))
+        .map((key, index) => {
+          const action = props.leftLetterKeys[index + offset]
+          return action ? { key, ...action } : null
+        })
+        .filter((item): item is ActionItem & { key: string } =>
+          Boolean(item && getActionLabel(item))
+        )
     )
     .filter((column) => column.length > 0)
 )

@@ -80,6 +80,8 @@ const activationMetrics = createActivationMetricsClient({
       editorInputStore.value,
     ])
   },
+  prepareTrial: () => editorInputStore.clear(),
+  activeElement: () => document.activeElement,
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,
 })

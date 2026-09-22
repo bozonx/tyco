@@ -31,14 +31,17 @@ const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
 const { toast } = useToast()
 const { t } = useI18n()
-const leftLetterKeys = computed<ActionItem[]>(() =>
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   ipcStore.params.userConfig.toTranslateLanguages.map(
-    (lang: string, index: number) => ({
-      name: t(getLanguageLabel(lang)),
-      action: async () => {
-        await translate(index)
-      },
-    })
+    (lang: string | null, index: number) =>
+      lang
+        ? {
+            name: t(getLanguageLabel(lang)),
+            action: async () => {
+              await translate(index)
+            },
+          }
+        : undefined
   )
 )
 

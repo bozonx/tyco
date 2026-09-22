@@ -14,6 +14,8 @@ describe('activation metrics client', () => {
       },
       mark,
       submitValue,
+      prepareTrial: vi.fn(),
+      activeElement: () => null,
       requestFrame: (handler) => handler(),
       eventTarget: document,
     })
@@ -42,6 +44,8 @@ describe('activation metrics client', () => {
       },
       mark,
       submitValue: vi.fn(),
+      prepareTrial: vi.fn(),
+      activeElement: () => null,
       requestFrame: vi.fn(),
       eventTarget: document,
     })

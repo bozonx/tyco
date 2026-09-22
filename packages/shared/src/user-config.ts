@@ -180,7 +180,7 @@ export interface UserConfig {
   }
   appLanguage: string
   userLanguage: string
-  toTranslateLanguages: string[]
+  toTranslateLanguages: (string | null)[]
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
   showBubbleMenu: boolean
@@ -202,12 +202,12 @@ export interface UserConfig {
     voiceCorrection: string
     correction: string
   }
-  aiTasks: {
+  aiTasks: ({
     name: string
     rule: string
     tapAction?: string
     holdAction?: string
-  }[]
+  } | null)[]
   plugins: Record<string, unknown>
 }
 

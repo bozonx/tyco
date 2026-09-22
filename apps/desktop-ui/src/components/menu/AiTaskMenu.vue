@@ -40,17 +40,20 @@ const appConfig = computed(() => ipcStore.params.appConfig)
 const { toast } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
-const leftLetterKeys = computed<ActionItem[]>(() =>
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   ipcStore.params.userConfig.aiTasks.map(
     (
       item: (typeof ipcStore.params.userConfig.aiTasks)[number],
       index: number
-    ) => ({
-      name: item.name,
-      action: async () => {
-        await makeDiff(index)
-      },
-    })
+    ) =>
+      item
+        ? {
+            name: item.name,
+            action: async () => {
+              await makeDiff(index)
+            },
+          }
+        : undefined
   )
 )
 
