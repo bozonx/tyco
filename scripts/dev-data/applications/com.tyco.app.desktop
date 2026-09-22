@@ -2,7 +2,9 @@
 Type=Application
 Name=TyCo (Development)
 Comment=AI typing companion development build
-Exec=tyco
+# The portal validates the executable while resolving the desktop app ID.
+# `tyco` is not normally on PATH in development, while env is always present.
+Exec=/usr/bin/env tyco
 Icon=com.tyco.app
 Terminal=false
 NoDisplay=true

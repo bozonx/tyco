@@ -26,7 +26,8 @@ if [[ "${DEV_OS}" == "linux" ]]; then
   USER_DATA_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}"
   DESKTOP_ENTRY_TARGET="${USER_DATA_DIR}/applications/com.tyco.app.desktop"
   if [[ ! -e "${DESKTOP_ENTRY_TARGET}" ]] || \
-    grep -q '^X-Tyco-Development=true$' "${DESKTOP_ENTRY_TARGET}"; then
+    { grep -q '^X-Tyco-Development=true$' "${DESKTOP_ENTRY_TARGET}" && \
+      ! cmp -s "${DESKTOP_ENTRY_SOURCE}" "${DESKTOP_ENTRY_TARGET}"; }; then
     install -Dm644 "${DESKTOP_ENTRY_SOURCE}" "${DESKTOP_ENTRY_TARGET}"
   fi
 fi

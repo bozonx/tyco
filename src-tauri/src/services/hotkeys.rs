@@ -432,15 +432,15 @@ fn to_portal_trigger(shortcut: &str) -> String {
     let modifiers = parts
         .into_iter()
         .map(|modifier| match modifier.to_ascii_lowercase().as_str() {
-            "ctrl" | "control" => "<Ctrl>",
-            "alt" => "<Alt>",
-            "shift" => "<Shift>",
-            "super" | "meta" | "cmd" | "command" => "<Super>",
+            "ctrl" | "control" => "CTRL+",
+            "alt" => "ALT+",
+            "shift" => "SHIFT+",
+            "super" | "meta" | "cmd" | "command" => "LOGO+",
             _ => "",
         })
         .collect::<String>();
     let key = match key.to_ascii_lowercase().as_str() {
-        "comma" => ",".to_owned(),
+        "comma" => "comma".to_owned(),
         value => value.to_owned(),
     };
     format!("{modifiers}{key}")
@@ -473,8 +473,8 @@ mod tests {
 
     #[test]
     fn converts_shortcuts_to_xdg_trigger_syntax() {
-        assert_eq!(to_portal_trigger("Ctrl+Alt+E"), "<Ctrl><Alt>e");
-        assert_eq!(to_portal_trigger("Super+Shift+Comma"), "<Super><Shift>,");
+        assert_eq!(to_portal_trigger("Ctrl+Alt+E"), "CTRL+ALT+e");
+        assert_eq!(to_portal_trigger("Super+Shift+Comma"), "LOGO+SHIFT+comma");
     }
 
     #[test]
