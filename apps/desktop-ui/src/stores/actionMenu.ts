@@ -42,15 +42,18 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     startCorrection: async (text: string) => {
       const sourceId = await historyStore.saveSource(text, 'correction')
       menuModalsStore.setPendingModal({ correction: true })
-      const newText = await correctText(text)
-      await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-        toast('history.operationFailed', 'error')
-      })
-      menuModalsStore.clearPendingModal()
-      menuModalsStore.nextModal(MenuModals.CORRECTION, {
-        oldText: text,
-        newText,
-      })
+      try {
+        const newText = await correctText(text)
+        await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+          toast('history.operationFailed', 'error')
+        })
+        menuModalsStore.nextModal(MenuModals.CORRECTION, {
+          oldText: text,
+          newText,
+        })
+      } finally {
+        menuModalsStore.clearPendingModal()
+      }
     },
     startChatWithAttachment: (text: string) => {
       chatStore.startChat({ attachments: [text] })

@@ -7,6 +7,7 @@ import WriteModeView from '../views/WriteModeView.vue'
 import VoiceView from '../views/VoiceView.vue'
 import SelectModeView from '../views/SelectModeView.vue'
 import AiTaskView from '../views/AiTaskView.vue'
+import CorrectionModeView from '../views/CorrectionModeView.vue'
 import QuickPanelHostView from '../views/quick-panel-host-view'
 import { APP_ROUTES } from '../lib/navigation/routes'
 
@@ -56,6 +57,11 @@ const router = createRouter({
       path: APP_ROUTES.AI_TASKS.path,
       name: APP_ROUTES.AI_TASKS.name,
       component: AiTaskView,
+    },
+    {
+      path: APP_ROUTES.CORRECTION.path,
+      name: APP_ROUTES.CORRECTION.name,
+      component: CorrectionModeView,
     },
     {
       path: APP_ROUTES.SELECT.path,

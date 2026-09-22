@@ -217,6 +217,7 @@
       "voice": "Voice input",
       "select": "Selection actions",
       "aiTasks": "AI tasks",
+      "correction": "Correct selected text",
       "history": "History",
       "config": "Settings"
     },

@@ -241,6 +241,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     voice: 'Ctrl+Alt+V',
     select: 'Ctrl+Alt+S',
     aiTasks: 'Ctrl+Alt+A',
+    correction: 'Ctrl+Alt+R',
     history: 'Ctrl+Alt+H',
     config: 'Ctrl+Alt+Comma',
   },

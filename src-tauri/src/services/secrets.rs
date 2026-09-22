@@ -12,10 +12,11 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use url::Url;
 
 use crate::errors::AppError;
+use crate::services::app_paths::AppPaths;
 
 pub const SECRETS_FILE_NAME: &str = "secrets.json";
 pub const SECRET_REF_PREFIX: &str = "tyco-secret:";
@@ -71,10 +72,7 @@ pub struct SecretStore {
 
 impl SecretStore {
     pub fn load_for_app(app: &AppHandle) -> Result<Self, AppError> {
-        let dir = app
-            .path()
-            .app_config_dir()
-            .map_err(|error| AppError::Message(error.to_string()))?;
+        let dir = AppPaths::resolve(app)?.config_dir;
         fs::create_dir_all(&dir)?;
         Self::load(dir.join(SECRETS_FILE_NAME))
     }

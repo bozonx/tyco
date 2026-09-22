@@ -20,6 +20,15 @@ pub fn apply_hotkey(
 }
 
 #[tauri::command]
+pub fn open_main_editor(
+    app: AppHandle,
+    text: Option<String>,
+    source_text: Option<String>,
+) -> Result<(), AppError> {
+    runtime::open_main_editor(&app, text, source_text)
+}
+
+#[tauri::command]
 pub fn save_user_config(
     app: AppHandle,
     state: State<'_, AppState>,

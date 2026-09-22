@@ -8,18 +8,20 @@ pub enum StartMode {
     Voice,
     Select,
     AiTasks,
+    Correction,
     History,
     Config,
 }
 
 impl StartMode {
-    pub const ALL: [Self; 8] = [
+    pub const ALL: [Self; 9] = [
         Self::Editor,
         Self::Write,
         Self::Chat,
         Self::Voice,
         Self::Select,
         Self::AiTasks,
+        Self::Correction,
         Self::History,
         Self::Config,
     ];
@@ -32,6 +34,7 @@ impl StartMode {
             "voice" => Ok(Self::Voice),
             "select" => Ok(Self::Select),
             "aiTasks" => Ok(Self::AiTasks),
+            "correction" => Ok(Self::Correction),
             "history" => Ok(Self::History),
             "config" => Ok(Self::Config),
             _ => Err(AppError::Message(format!(
@@ -48,6 +51,7 @@ impl StartMode {
             Self::Voice => "voice",
             Self::Select => "select",
             Self::AiTasks => "aiTasks",
+            Self::Correction => "correction",
             Self::History => "history",
             Self::Config => "config",
         }
@@ -144,7 +148,15 @@ mod tests {
     #[test]
     fn modes_round_trip_and_select_intent() {
         for value in [
-            "editor", "write", "chat", "voice", "select", "aiTasks", "history", "config",
+            "editor",
+            "write",
+            "chat",
+            "voice",
+            "select",
+            "aiTasks",
+            "correction",
+            "history",
+            "config",
         ] {
             let mode = StartMode::parse(value).unwrap();
             assert_eq!(mode.as_str(), value);
@@ -158,6 +170,14 @@ mod tests {
             );
         }
         assert!(StartMode::parse("unknown").is_err());
+    }
+
+    #[test]
+    fn activation_protocol_has_the_same_modes() {
+        assert_eq!(
+            StartMode::ALL.map(StartMode::as_str).as_slice(),
+            tyco_activation_protocol::START_MODES
+        );
     }
 
     #[test]

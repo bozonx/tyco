@@ -4,6 +4,7 @@ import {
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
   type InitParams,
+  type EditorTransfer,
   type IpcResult,
 } from '@tyco/shared'
 import { invoke as tauriInvoke } from '@tauri-apps/api/core'
@@ -12,6 +13,7 @@ import { listen as tauriListen } from '@tauri-apps/api/event'
 type AppEventPayloads = {
   [DESKTOP_EVENTS.PARAMS_CHANGED]: InitParams
   [DESKTOP_EVENTS.VOICE_TEXT]: string
+  [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
   [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
   [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
 }

@@ -6,7 +6,7 @@
       'quick-layout': quickPanelStore.isActive && ipcStore.params.quickInput,
     }"
   >
-    <WindowTitlebar v-if="sheetTitle" :title="sheetTitle" />
+    <WindowTitlebar v-if="isQuickWindow && sheetTitle" :title="sheetTitle" />
     <div class="layout-body">
       <NavPanel
         v-if="
@@ -48,9 +48,12 @@ import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useQuickPanelStore } from './stores/quickPanel'
+import { useRouteParams } from './stores/routeParams'
 import { useThemeStore } from './stores/theme'
 import { useWriterInputStore } from './stores/writerInput'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { type START_MODES } from '@tyco/shared'
+import { type EditorTransfer } from '@tyco/shared'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
@@ -62,6 +65,7 @@ const navPanelStore = useNavPanelStore()
 const quickPanelStore = useQuickPanelStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
+const routeParamsStore = useRouteParams()
 const route = useRoute()
 const activationMetrics = createActivationMetricsClient({
   listen: (event, handler) =>
@@ -85,6 +89,8 @@ const activationMetrics = createActivationMetricsClient({
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,
 })
+const isQuickWindow = getCurrentWindow().label === 'quick'
+let removeMainEditorListener: (() => void) | undefined
 const sheetTitle = computed(() => {
   const key = sheetTitleKey(route.path)
   return key ? t(key) : ''
@@ -190,11 +196,23 @@ watch(
 onMounted(() => {
   void bootstrap.start()
   void activationMetrics.start()
+  void desktopClient
+    .listen(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, (payload) => {
+      if (!isQuickWindow) {
+        const transfer = payload as EditorTransfer
+        routeParamsStore.applyEditorTransfer(transfer.text, transfer.sourceText)
+        void appNavigation.goToEditor()
+      }
+    })
+    .then((remove) => {
+      removeMainEditorListener = remove
+    })
 })
 
 onUnmounted(() => {
   bootstrap.stop()
   activationMetrics.stop()
+  removeMainEditorListener?.()
 })
 </script>
 

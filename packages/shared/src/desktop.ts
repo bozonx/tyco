@@ -17,6 +17,7 @@ export enum START_MODES {
   SELECT = 'select',
   VOICE = 'voice',
   AI_TASKS = 'aiTasks',
+  CORRECTION = 'correction',
   EDITOR = 'editor',
   WRITE = 'write',
   CHAT = 'chat',
@@ -101,6 +102,11 @@ export interface InitParams {
 
 export type CapturedContext = Pick<InitParams, 'selectedText'>
 
+export interface EditorTransfer {
+  text?: string
+  sourceText?: string
+}
+
 export const DEFAULT_INIT_PARAMS: InitParams = {
   windowId: null,
   selectedText: null,
@@ -116,6 +122,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
 export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
+  OPEN_MAIN_EDITOR: 'app://open-main-editor',
   VOICE_TEXT: 'app://voice-text',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
@@ -125,6 +132,7 @@ export const DESKTOP_COMMANDS = {
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
+  OPEN_MAIN_EDITOR: 'open_main_editor',
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',
   SAVE_USER_CONFIG: 'save_user_config',

@@ -44,6 +44,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps a transfer to the decorated editor window', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('openMainEditor', ['result', 'source'])
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
+      { text: 'result', sourceText: 'source' }
+    )
+  })
+
   it('maps the save note command', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

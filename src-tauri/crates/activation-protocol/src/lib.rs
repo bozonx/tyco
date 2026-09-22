@@ -5,7 +5,15 @@ use serde::{Deserialize, Serialize};
 pub const ACTIVATION_ADDRESS: &str = "127.0.0.1:47829";
 pub const MAX_MESSAGE_BYTES: usize = 8 * 1024;
 pub const START_MODES: &[&str] = &[
-    "editor", "write", "chat", "voice", "select", "aiTasks", "history", "config",
+    "editor",
+    "write",
+    "chat",
+    "voice",
+    "select",
+    "aiTasks",
+    "correction",
+    "history",
+    "config",
 ];
 
 pub fn is_start_mode(value: &str) -> bool {

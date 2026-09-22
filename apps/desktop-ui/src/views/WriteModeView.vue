@@ -82,14 +82,17 @@ async function doCorrection() {
       'correction'
     )
     menuModalsStore.setPendingModal({ correction: true })
+    try {
+      const result = await correctText(writerInputStore.value)
+      await historyStore.saveSourceResult(sourceId, result).catch(() => {
+        toast(t('history.operationFailed'), 'error')
+      })
 
-    const result = await correctText(writerInputStore.value)
-    await historyStore.saveSourceResult(sourceId, result).catch(() => {
-      toast(t('history.operationFailed'), 'error')
-    })
-
-    correctedText.value = result
-    correctionIsActual.value = true
+      correctedText.value = result
+      correctionIsActual.value = true
+    } finally {
+      menuModalsStore.clearPendingModal()
+    }
   }
 
   // TODO: текст могут отредактировать в diff ???

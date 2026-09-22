@@ -18,6 +18,7 @@ pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
 pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
+pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 pub const VOICE_TEXT_EVENT: &str = "app://voice-text";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_QUIT_ID: &str = "quit";
@@ -186,7 +187,7 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
 
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
     let window_label = window_label_for_mode(activation.mode);
-    let is_panel = window_label == QUICK_WINDOW_LABEL;
+    let is_quick_window = window_label == QUICK_WINDOW_LABEL;
     app.state::<RuntimeWindows>().set_active_label(window_label);
     hide_inactive_window(app, window_label)?;
     let window = app
@@ -203,7 +204,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     let has_layer_shell = false;
 
     #[cfg(target_os = "linux")]
-    if has_layer_shell && is_panel {
+    if has_layer_shell && is_quick_window {
         let gtk_window = window.gtk_window()?;
         match activation.mode.profile() {
             super::activation::WindowProfile::Panel => {
@@ -247,12 +248,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     emit_params(app, &state)
 }
 
-fn window_label_for_mode(mode: StartMode) -> &'static str {
-    if mode.profile() == super::activation::WindowProfile::Panel {
-        QUICK_WINDOW_LABEL
-    } else {
-        MAIN_WINDOW_LABEL
-    }
+fn window_label_for_mode(_mode: StartMode) -> &'static str {
+    QUICK_WINDOW_LABEL
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -292,6 +289,26 @@ pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
     on_main_thread(app, |app| {
         cancel_warmup(app);
         show_application_on_main_thread(app)
+    })
+}
+
+pub fn open_main_editor(
+    app: &AppHandle,
+    text: Option<String>,
+    source_text: Option<String>,
+) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        cancel_warmup(app);
+        show_application_on_main_thread(app)?;
+        let window = app
+            .get_webview_window(MAIN_WINDOW_LABEL)
+            .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        window
+            .emit(
+                OPEN_MAIN_EDITOR_EVENT,
+                serde_json::json!({ "text": text, "sourceText": source_text }),
+            )
+            .map_err(|error| AppError::Message(error.to_string()))
     })
 }
 
@@ -522,18 +539,9 @@ mod tests {
     }
 
     #[test]
-    fn panel_modes_use_the_quick_window_and_sheet_modes_use_the_main_window() {
-        for mode in [
-            StartMode::Editor,
-            StartMode::Write,
-            StartMode::Voice,
-            StartMode::Select,
-            StartMode::AiTasks,
-        ] {
+    fn every_activation_mode_uses_the_quick_window() {
+        for mode in StartMode::ALL {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
-        }
-        for mode in [StartMode::Chat, StartMode::History, StartMode::Config] {
-            assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }
     }
 

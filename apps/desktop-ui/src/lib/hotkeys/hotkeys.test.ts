@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
-import { hotkeyFromKeyboardEvent, normalizeHotkey } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  START_MODES,
+  hotkeyFromKeyboardEvent,
+  normalizeHotkey,
+} from '@tyco/shared'
 
 describe('hotkeys', () => {
+  it('defines a default binding for every activation mode', () => {
+    expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
+      Object.values(START_MODES).sort()
+    )
+  })
+
   it('normalizes aliases and modifier order', () => {
     expect(normalizeHotkey('shift+command+,')).toBe('Shift+Super+Comma')
     expect(normalizeHotkey('alt+ctrl+e')).toBe('Ctrl+Alt+E')

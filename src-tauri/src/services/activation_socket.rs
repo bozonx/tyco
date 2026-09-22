@@ -68,7 +68,7 @@ mod tests {
         let received = Arc::new(Mutex::new(Vec::new()));
         let server_received = Arc::clone(&received);
         thread::spawn(move || {
-            for stream in listener.incoming().take(9) {
+            for stream in listener.incoming().take(10) {
                 handle_stream(stream.unwrap(), &|request| {
                     let Request::Activate { mode } = request;
                     match StartMode::parse(&mode) {
@@ -86,7 +86,16 @@ mod tests {
         });
 
         for mode in [
-            "editor", "write", "chat", "voice", "select", "aiTasks", "history", "config", "unknown",
+            "editor",
+            "write",
+            "chat",
+            "voice",
+            "select",
+            "aiTasks",
+            "correction",
+            "history",
+            "config",
+            "unknown",
         ] {
             let mut stream = TcpStream::connect(address).unwrap();
             write_message(
@@ -99,6 +108,6 @@ mod tests {
             let response: Response = read_message(&mut BufReader::new(stream)).unwrap();
             assert_eq!(response.success, mode != "unknown");
         }
-        assert_eq!(received.lock().unwrap().len(), 8);
+        assert_eq!(received.lock().unwrap().len(), 9);
     }
 }

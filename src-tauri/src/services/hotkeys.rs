@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::env;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::RwLock;
 
 use ashpd::desktop::global_shortcuts::{BindShortcutsOptions, GlobalShortcuts, NewShortcut};
@@ -22,6 +23,40 @@ enum ProviderKind {
     Portal,
     GlobalShortcut,
     External,
+}
+
+impl ProviderKind {
+    fn as_u8(self) -> u8 {
+        match self {
+            Self::Portal => 0,
+            Self::GlobalShortcut => 1,
+            Self::External => 2,
+        }
+    }
+
+    fn from_u8(value: u8) -> Self {
+        match value {
+            0 => Self::Portal,
+            1 => Self::GlobalShortcut,
+            _ => Self::External,
+        }
+    }
+}
+
+struct ProviderState(AtomicU8);
+
+impl ProviderState {
+    fn new(kind: ProviderKind) -> Self {
+        Self(AtomicU8::new(kind.as_u8()))
+    }
+
+    fn get(&self) -> ProviderKind {
+        ProviderKind::from_u8(self.0.load(Ordering::SeqCst))
+    }
+
+    fn set(&self, kind: ProviderKind) {
+        self.0.store(kind.as_u8(), Ordering::SeqCst);
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,7 +100,11 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let user_config = app.state::<AppState>().params().user_config;
     let bindings = bindings_from_config(&user_config);
 
-    match provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref()) {
+    let kind = provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref());
+    app.manage(ProviderState::new(kind));
+    app.manage(HotkeyRegistry::default());
+
+    match kind {
         ProviderKind::Portal => PortalProvider.register(app, bindings),
         ProviderKind::GlobalShortcut => GlobalShortcutProvider.register(app, bindings),
         ProviderKind::External => ExternalProvider.register(app, bindings),
@@ -79,7 +118,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         .parse::<Shortcut>()
         .map_err(|error| AppError::Message(format!("Invalid hotkey: {error}")))?;
 
-    match provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref()) {
+    match app.state::<ProviderState>().get() {
         ProviderKind::GlobalShortcut => apply_global_shortcut(app, mode, shortcut),
         ProviderKind::Portal => Ok(ApplyHotkeyResult {
             status: "confirmation-required",
@@ -165,15 +204,39 @@ fn external_command(mode: StartMode, shortcut: &str) -> String {
         .to_ascii_lowercase()
         .as_str()
     {
-        desktop if desktop.contains("hyprland") => format!(
-            "bind = {shortcut}, exec, tyco-ctl activate {}",
-            mode.as_str()
-        ),
+        desktop if desktop.contains("hyprland") => {
+            let (modifiers, key) = hyprland_shortcut(shortcut);
+            format!(
+                "bind = {modifiers}, {key}, exec, tyco-ctl activate {}",
+                mode.as_str()
+            )
+        }
         _ => format!(
             "bindsym {shortcut} exec tyco-ctl activate {}",
             mode.as_str()
         ),
     }
+}
+
+fn hyprland_shortcut(shortcut: &str) -> (String, String) {
+    let mut parts = shortcut.split('+').collect::<Vec<_>>();
+    let key = parts.pop().unwrap_or_default();
+    let modifiers = parts
+        .into_iter()
+        .map(|modifier| match modifier.to_ascii_lowercase().as_str() {
+            "ctrl" | "control" => "CTRL",
+            "alt" => "ALT",
+            "shift" => "SHIFT",
+            "super" | "meta" | "cmd" | "command" => "SUPER",
+            _ => modifier,
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    let key = match key.to_ascii_lowercase().as_str() {
+        "comma" => "comma".to_owned(),
+        _ => key.to_owned(),
+    };
+    (modifiers, key)
 }
 
 fn provider_kind(session_type: Option<&str>) -> ProviderKind {
@@ -212,6 +275,7 @@ fn default_shortcut(mode: StartMode) -> &'static str {
         StartMode::Voice => "Ctrl+Alt+V",
         StartMode::Select => "Ctrl+Alt+S",
         StartMode::AiTasks => "Ctrl+Alt+A",
+        StartMode::Correction => "Ctrl+Alt+R",
         StartMode::History => "Ctrl+Alt+H",
         StartMode::Config => "Ctrl+Alt+Comma",
     }
@@ -226,7 +290,6 @@ impl HotkeyProvider for ExternalProvider {
 
 impl HotkeyProvider for GlobalShortcutProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
-        app.manage(HotkeyRegistry::default());
         app.handle().plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, shortcut, event| {
@@ -287,8 +350,12 @@ impl HotkeyProvider for PortalProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         let app = app.handle().clone();
         tauri::async_runtime::spawn(async move {
-            if let Err(error) = run_portal(app, bindings).await {
+            if let Err(error) = run_portal(app.clone(), bindings).await {
                 log::warn!("GlobalShortcuts portal is unavailable: {error}; use tyco-ctl or D-Bus");
+                // Wayland compositors without GlobalShortcuts must expose the
+                // external binding workflow in settings instead of claiming
+                // that a system confirmation is pending.
+                app.state::<ProviderState>().set(ProviderKind::External);
             }
         });
         Ok(())
@@ -346,6 +413,7 @@ fn description(mode: StartMode) -> &'static str {
         StartMode::Voice => "Start voice input",
         StartMode::Select => "Open selection actions",
         StartMode::AiTasks => "Open AI tasks",
+        StartMode::Correction => "Correct selected text",
         StartMode::History => "Open history",
         StartMode::Config => "Open settings",
     }
@@ -400,5 +468,17 @@ mod tests {
     fn converts_shortcuts_to_xdg_trigger_syntax() {
         assert_eq!(to_portal_trigger("Ctrl+Alt+E"), "<Ctrl><Alt>e");
         assert_eq!(to_portal_trigger("Super+Shift+Comma"), "<Super><Shift>,");
+    }
+
+    #[test]
+    fn converts_shortcuts_to_hyprland_syntax() {
+        assert_eq!(
+            hyprland_shortcut("Ctrl+Alt+E"),
+            (String::from("CTRL ALT"), String::from("E"))
+        );
+        assert_eq!(
+            hyprland_shortcut("Super+Shift+Comma"),
+            (String::from("SUPER SHIFT"), String::from("comma"))
+        );
     }
 }

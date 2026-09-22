@@ -5,8 +5,8 @@ mod services;
 mod state;
 
 use commands::app::{
-    apply_hotkey, get_init_params, get_storage_info, mark_activation_metric, save_local_state,
-    save_user_config, submit_activation_metric_value,
+    apply_hotkey, get_init_params, get_storage_info, mark_activation_metric, open_main_editor,
+    save_local_state, save_user_config, submit_activation_metric_value,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
@@ -45,12 +45,18 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         log::LevelFilter::Info
     };
 
+    let file_target = services::app_paths::dev_paths_from_env("com.tyco.app")
+        .expect("TYCO_DEV_HOME must contain a valid absolute path")
+        .map_or(TargetKind::LogDir { file_name: None }, |paths| {
+            TargetKind::Folder {
+                path: paths.log_dir,
+                file_name: None,
+            }
+        });
+
     tauri_plugin_log::Builder::new()
         .level(level)
-        .targets([
-            Target::new(TargetKind::Stdout),
-            Target::new(TargetKind::LogDir { file_name: None }),
-        ])
+        .targets([Target::new(TargetKind::Stdout), Target::new(file_target)])
         .build()
 }
 
@@ -102,6 +108,7 @@ pub fn run() {
             get_init_params,
             get_storage_info,
             apply_hotkey,
+            open_main_editor,
             mark_activation_metric,
             submit_activation_metric_value,
             save_user_config,

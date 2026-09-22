@@ -4,20 +4,17 @@ use std::path::PathBuf;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
     LocalState, StorageInfo, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
-use crate::services::llm_config;
+use crate::services::{app_paths::AppPaths, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app
-        .path()
-        .app_config_dir()
-        .map_err(|error| AppError::Message(error.to_string()))?;
+    let dir = AppPaths::resolve(app)?.config_dir;
 
     fs::create_dir_all(&dir)?;
 
@@ -25,10 +22,7 @@ fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
 }
 
 pub fn app_data_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| AppError::Message(error.to_string()))?;
+    let dir = AppPaths::resolve(app)?.data_dir;
 
     fs::create_dir_all(&dir)?;
 
@@ -42,10 +36,7 @@ fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
 }
 
 pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = app
-        .path()
-        .app_cache_dir()
-        .map_err(|error| AppError::Message(error.to_string()))?;
+    let dir = AppPaths::resolve(app)?.cache_dir;
     fs::create_dir_all(&dir)?;
     Ok(dir)
 }
