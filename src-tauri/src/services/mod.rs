@@ -14,4 +14,5 @@ pub mod notes;
 pub mod runtime;
 pub mod secrets;
 pub mod storage;
+pub mod text_injector;
 pub mod voice;

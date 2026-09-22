@@ -185,13 +185,10 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
 }
 
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
-    let is_panel = activation.mode.profile() == super::activation::WindowProfile::Panel;
-    let window_label = if is_panel {
-        QUICK_WINDOW_LABEL
-    } else {
-        MAIN_WINDOW_LABEL
-    };
+    let window_label = window_label_for_mode(activation.mode);
+    let is_panel = window_label == QUICK_WINDOW_LABEL;
     app.state::<RuntimeWindows>().set_active_label(window_label);
+    hide_inactive_window(app, window_label)?;
     let window = app
         .get_webview_window(window_label)
         .ok_or_else(|| AppError::Message(format!("Window {window_label} not found")))?;
@@ -247,6 +244,82 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         activation.mode,
         activation.source
     );
+    emit_params(app, &state)
+}
+
+fn window_label_for_mode(mode: StartMode) -> &'static str {
+    if mode.profile() == super::activation::WindowProfile::Panel {
+        QUICK_WINDOW_LABEL
+    } else {
+        MAIN_WINDOW_LABEL
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum TrayClickAction {
+    HideActiveWindow,
+    ShowApplication,
+}
+
+fn tray_click_action(is_window_shown: bool) -> TrayClickAction {
+    if is_window_shown {
+        TrayClickAction::HideActiveWindow
+    } else {
+        TrayClickAction::ShowApplication
+    }
+}
+
+fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppError> {
+    let inactive_label = if active_label == MAIN_WINDOW_LABEL {
+        QUICK_WINDOW_LABEL
+    } else {
+        MAIN_WINDOW_LABEL
+    };
+    let Some(window) = app.get_webview_window(inactive_label) else {
+        return Ok(());
+    };
+
+    #[cfg(target_os = "linux")]
+    if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
+        layer_shell::set_keyboard(&window.gtk_window()?, false);
+    }
+
+    window.hide()?;
+    Ok(())
+}
+
+pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
+    on_main_thread(app, |app| {
+        cancel_warmup(app);
+        show_application_on_main_thread(app)
+    })
+}
+
+fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
+    app.state::<RuntimeWindows>()
+        .set_active_label(MAIN_WINDOW_LABEL);
+    hide_inactive_window(app, MAIN_WINDOW_LABEL)?;
+
+    let window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+    let state = app.state::<AppState>();
+
+    window.set_focusable(true)?;
+    window.show()?;
+    if let Err(error) = window.unminimize() {
+        log::warn!("Could not unminimize window: {error}");
+    }
+    if let Err(error) = window.set_focus() {
+        log::warn!("Could not focus window: {error}");
+    }
+
+    state.update_params(|params| {
+        params.mode = Some(StartMode::Editor.as_str().into());
+        params.is_window_shown = true;
+        params.quick_input = false;
+    });
+    log::debug!("Showed main application from tray");
     emit_params(app, &state)
 }
 
@@ -361,10 +434,7 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
             if let Some(state) = app.try_state::<AppState>() {
                 match event.id.as_ref() {
                     TRAY_SHOW_ID => {
-                        let _ = activate(
-                            app,
-                            Activation::new(StartMode::Editor, ActivationSource::Tray),
-                        );
+                        let _ = show_application(app);
                     }
                     TRAY_QUIT_ID => {
                         state.set_quitting(true);
@@ -384,13 +454,9 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
                 let app = tray.app_handle();
                 if let Some(state) = app.try_state::<AppState>() {
                     let params = state.params();
-                    let result = if params.is_window_shown {
-                        hide_main_window(app, &state)
-                    } else {
-                        activate(
-                            app,
-                            Activation::new(StartMode::Editor, ActivationSource::Tray),
-                        )
+                    let result = match tray_click_action(params.is_window_shown) {
+                        TrayClickAction::HideActiveWindow => hide_main_window(app, &state),
+                        TrayClickAction::ShowApplication => show_application(app),
                     };
 
                     let _ = result;
@@ -453,5 +519,27 @@ mod tests {
         for step in 1..7 {
             assert_eq!(warmup.visibility(step, true), None);
         }
+    }
+
+    #[test]
+    fn panel_modes_use_the_quick_window_and_sheet_modes_use_the_main_window() {
+        for mode in [
+            StartMode::Editor,
+            StartMode::Write,
+            StartMode::Voice,
+            StartMode::Select,
+            StartMode::AiTasks,
+        ] {
+            assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
+        }
+        for mode in [StartMode::Chat, StartMode::History, StartMode::Config] {
+            assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
+        }
+    }
+
+    #[test]
+    fn tray_click_hides_a_visible_window_and_shows_the_application_otherwise() {
+        assert_eq!(tray_click_action(true), TrayClickAction::HideActiveWindow);
+        assert_eq!(tray_click_action(false), TrayClickAction::ShowApplication);
     }
 }

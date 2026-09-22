@@ -1,13 +1,10 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
-use std::thread;
-use std::time::Duration;
-
-use serde_json::Value;
 use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::services::runtime;
+use crate::services::text_injector::SystemTextInjector;
 use crate::state::AppState;
 
 #[tauri::command]
@@ -32,43 +29,9 @@ pub fn type_into_window_and_close(
     text: String,
 ) -> Result<(), AppError> {
     let params = state.params();
-    let window_insertion = params.user_config.get("windowInsertion");
-    let insertion_method = window_insertion
-        .and_then(|config| config.get("method"))
-        .and_then(Value::as_str)
-        .unwrap_or("xdotool");
-
     copy_to_clipboard(&text)?;
-
-    if insertion_method == "ydotool" {
-        let ydotool_bin = window_insertion
-            .and_then(|config| config.get("ydotoolBin"))
-            .and_then(Value::as_str)
-            .unwrap_or("/usr/bin/ydotool");
-
-        runtime::hide_main_window(&app, &state)?;
-        thread::sleep(Duration::from_millis(300));
-        run_command(ydotool_bin, &["key", "29:1", "47:1", "47:0", "29:0"])?;
-
-        return Ok(());
-    }
-
-    let window_id = params.window_id.ok_or_else(|| {
-        AppError::Message(String::from(
-            "Target window is not available for text insertion",
-        ))
-    })?;
-    let xdotool_bin = window_insertion
-        .and_then(|config| config.get("xdotoolBin"))
-        .and_then(Value::as_str)
-        .or_else(|| params.user_config.get("xdotoolBin").and_then(Value::as_str))
-        .unwrap_or("/usr/bin/xdotool");
-
-    run_command(xdotool_bin, &["windowactivate", &window_id])?;
-    thread::sleep(Duration::from_millis(300));
-    run_command(xdotool_bin, &["key", "ctrl+v"])?;
-
-    runtime::hide_main_window(&app, &state)
+    runtime::hide_main_window(&app, &state)?;
+    SystemTextInjector::detect().inject_paste(&params.user_config, params.window_id.as_deref())
 }
 
 #[tauri::command]
