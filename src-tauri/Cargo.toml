@@ -33,7 +33,7 @@ tauri-plugin-log = "2"
 tauri-plugin-single-instance = "2.4.5"
 thiserror = "1"
 tokio = { version = "1", features = ["macros", "rt", "sync", "time"] }
-tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+tokio-tungstenite = { version = "0.30", features = ["rustls-tls-webpki-roots"] }
 tyco-activation-protocol = { path = "crates/activation-protocol" }
 url = "2"
 zbus = "4"
