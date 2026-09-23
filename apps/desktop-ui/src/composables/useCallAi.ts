@@ -243,6 +243,7 @@ export const useCallAi = () => {
         rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
       })
     } catch (error) {
+      if (options.signal?.aborted) return ''
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error('Translation request failed', llmError)
       toastText(formatLlmError(llmError, translate), 'error')

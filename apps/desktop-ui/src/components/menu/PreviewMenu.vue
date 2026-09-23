@@ -11,7 +11,7 @@
     >
       <div>
         {{ t('menu.translationProviderResult') }}:
-        {{ props.translationMeta.provider }}
+        {{ providerLabel }}
         <template v-if="props.translationMeta.model">
           · {{ props.translationMeta.model }}
         </template>
@@ -21,6 +21,14 @@
         class="text-warning"
       >
         {{ t('menu.translationQualityRepairFailed') }}
+        <template v-if="problemCodes">: {{ problemCodes }}</template>
+      </div>
+      <div
+        v-else-if="props.translationMeta.quality.remainingProblems.length"
+        class="text-warning"
+      >
+        {{ t('menu.translationQualityRemaining') }}:
+        {{ problemCodes }}
       </div>
       <div v-else-if="props.translationMeta.quality.repaired" class="text-info">
         {{ t('menu.translationQualityRepaired') }}
@@ -71,11 +79,25 @@ const props = defineProps<{
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
-const problemCodes = computed(() =>
-  props.translationMeta?.quality.problems
+const providerLabel = computed(() => {
+  const providerKeys: Record<string, string> = {
+    deepl: 'settings.translationProviderDeepl',
+    google: 'settings.translationProviderGoogle',
+    'google-translate': 'settings.translationProviderGoogle',
+    llm: 'settings.translationProviderLlm',
+  }
+  const key = providerKeys[props.translationMeta?.provider || '']
+  return key ? t(key) : props.translationMeta?.provider
+})
+const problemCodes = computed(() => {
+  const quality = props.translationMeta?.quality
+  const problems = quality?.remainingProblems.length
+    ? quality.remainingProblems
+    : (quality?.problems ?? [])
+  return problems
     .map((problem) => t(`translationProblems.${problem.code}`))
     .join(', ')
-)
+})
 const defaultActions = computed(() => actionMenuStore.getDefaultActions())
 
 const leftLetterKeys = computed(

@@ -344,10 +344,12 @@
     "translationProviderResult": "Translated with",
     "translationQualityRepaired": "Quality issues were repaired automatically.",
     "translationQualityRepairFailed": "The quality pass failed; the first translation was kept.",
+    "translationQualityRemaining": "Some quality issues remain after the repair",
     "translationQualityProblems": "Possible quality issues",
     "translationQualityClean": "Quality check passed."
   },
   "translationProblems": {
+    "empty_output": "empty translation",
     "foreign_script": "unexpected writing system",
     "untranslated": "untranslated fragment",
     "length_gap": "suspicious length",

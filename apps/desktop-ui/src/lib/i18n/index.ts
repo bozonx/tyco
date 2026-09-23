@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n'
 
-import { resolveUiLanguagePreference } from '../locale/language'
+import { resolveUiLanguagePreference, toHtmlLang } from '../locale/language'
 import { DEFAULT_UI_LOCALE, type UiLocale, messages } from './messages'
 
 export const i18n = createI18n({
@@ -16,11 +16,6 @@ type GlobalI18n = {
 }
 
 const globalI18n = i18n.global as GlobalI18n
-
-/** Converts an internal locale id (`en_US`) into a BCP 47 tag (`en-US`). */
-function toHtmlLang(locale: UiLocale): string {
-  return locale.replace('_', '-')
-}
 
 export function resolveUiLocale(
   configuredAppLanguage?: string | null,

@@ -1,5 +1,6 @@
 import {
   Catalog,
+  AiError,
   buildPrompt,
   chunkText,
   createAiKit,
@@ -12,6 +13,7 @@ import {
   restoreKeptTerms,
   runTranslationPipeline,
   selectGlossaryForText,
+  splitParallelText,
   type GlossaryEntry,
   type TranslationProblem,
   type TranslationQualityReport,
@@ -21,8 +23,9 @@ import type { TranslationConfig } from '@tyco/shared'
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
 
-const MT_CHUNK_LIMIT = 18_000
+const MT_CHUNK_LIMIT = 4_500
 const LLM_CHUNK_LIMIT = 36_000
+const LLM_REPAIR_COMBINED_LIMIT = 48_000
 
 export interface TranslationClientDeps {
   getConfig: () => TranslationConfig
@@ -142,26 +145,42 @@ async function translateWithMachine(
     keys: deps.keys,
     transport: deps.transport,
   })
-  const protectedText = protectTranslationText(text)
+  const applicableGlossary = selectGlossaryForText(config.glossary, text)
+  const protectedText = protectTranslationText(
+    text,
+    applicableGlossary
+      .filter((entry) => entry.doNotTranslate)
+      .map((entry) => entry.term)
+  )
   const chunks = chunkText(protectedText.text, MT_CHUNK_LIMIT)
-  const result = await kit.translate({
-    policy: { taskClass: 'machineTranslate' },
-    texts: chunks,
-    targetLanguage: normalizeLanguage(options.targetLanguage),
-    ...(options.sourceLanguage && options.sourceLanguage !== 'auto'
-      ? { sourceLanguage: normalizeLanguage(options.sourceLanguage) }
-      : {}),
-    format: 'text',
-    ...(options.signal ? { abortSignal: options.signal } : {}),
-  })
+  const translated: string[] = []
+  let detectedSourceLanguage: string | undefined
+  let resultProvider = provider
+  let resultModel = model
+  for (const chunk of chunks) {
+    options.signal?.throwIfAborted()
+    const result = await kit.translate({
+      policy: { taskClass: 'machineTranslate' },
+      texts: [chunk],
+      targetLanguage: normalizeLanguage(options.targetLanguage),
+      ...(options.sourceLanguage && options.sourceLanguage !== 'auto'
+        ? { sourceLanguage: normalizeLanguage(options.sourceLanguage) }
+        : {}),
+      format: 'text',
+      ...(options.signal ? { abortSignal: options.signal } : {}),
+    })
+    options.signal?.throwIfAborted()
+    translated.push(result.translations[0] ?? '')
+    detectedSourceLanguage ??= result.detectedSourceLanguage
+    resultProvider = result.provider
+    resultModel = result.model
+  }
 
   return {
-    translation: protectedText.restore(result.translations.join('')),
-    provider: result.provider,
-    model: result.model,
-    ...(result.detectedSourceLanguage
-      ? { detectedSourceLanguage: result.detectedSourceLanguage }
-      : {}),
+    translation: protectedText.restore(translated.join('')),
+    provider: resultProvider,
+    model: resultModel,
+    ...(detectedSourceLanguage ? { detectedSourceLanguage } : {}),
   }
 }
 
@@ -191,6 +210,8 @@ async function translateWithLlm(
       },
       options.signal
     )
+    options.signal?.throwIfAborted()
+    ensureTranslationOutput(result, chunk)
     translated.push(
       restoreKeptTerms({
         source: chunk,
@@ -210,39 +231,49 @@ async function repairWithLlm(
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
-  const prompt = buildPrompt({
-    system: [
-      translationSystem(options, selectGlossaryForText(glossary, source)),
-      renderProblemsForPrompt(problems),
-    ]
-      .filter(Boolean)
-      .join('\n\n'),
-    data: [
-      { source: 'source_text', content: source },
-      { source: 'translation', content: translation },
-    ],
-  })
-  const result = await deps.runLlm(
-    {
-      system: prompt.system,
-      messages: [
-        {
-          role: 'user',
-          content: `The translation block is a translation of the source_text block into ${normalizeLanguage(options.targetLanguage)}. Fix only the listed problems. Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
-        },
+  const repaired: string[] = []
+  for (const pair of splitParallelText(
+    source,
+    translation,
+    LLM_REPAIR_COMBINED_LIMIT
+  )) {
+    options.signal?.throwIfAborted()
+    const applicable = selectGlossaryForText(glossary, pair.source)
+    const prompt = buildPrompt({
+      system: [
+        translationSystem(options, applicable),
+        renderProblemsForPrompt(problems),
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
+      data: [
+        { source: 'source_text', content: pair.source },
+        { source: 'translation', content: pair.translated },
       ],
-    },
-    options.signal
-  )
-  const applicable = selectGlossaryForText(glossary, source)
-  return {
-    translation: restoreKeptTerms({
-      source,
-      translated: result,
-      entries: applicable,
-    }).text,
-    provider: 'llm',
+    })
+    const result = await deps.runLlm(
+      {
+        system: prompt.system,
+        messages: [
+          {
+            role: 'user',
+            content: `The translation block is a translation of the source_text block into ${normalizeLanguage(options.targetLanguage)}. ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
+          },
+        ],
+      },
+      options.signal
+    )
+    options.signal?.throwIfAborted()
+    ensureTranslationOutput(result, pair.source)
+    repaired.push(
+      restoreKeptTerms({
+        source: pair.source,
+        translated: result,
+        entries: applicable,
+      }).text
+    )
   }
+  return { translation: repaired.join(''), provider: 'llm' }
 }
 
 function translationSystem(
@@ -263,4 +294,19 @@ function translationSystem(
 
 function normalizeLanguage(language: string): string {
   return language.trim().replaceAll('_', '-')
+}
+
+function ensureTranslationOutput(result: string, source: string): void {
+  if (source.trim() && !result.trim()) {
+    throw new AiError(
+      'invalid_output',
+      'The translation provider returned an empty result'
+    )
+  }
+}
+
+function repairInstruction(problems: TranslationProblem[]): string {
+  return problems.length > 0
+    ? 'Fix only the listed problems.'
+    : 'Review it once and fix any translation errors you find.'
 }

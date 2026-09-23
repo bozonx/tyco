@@ -46,21 +46,21 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 const translate = async (toLangNum: number) => {
-  const trimmedText = props.text.trim()
+  const sourceText = props.text
 
-  if (!trimmedText) {
+  if (!sourceText.trim()) {
     toast(t('toast.noTextToTranslate'), 'warn')
 
     return
   }
 
-  if (trimmedText.length < appConfig.value.minCorrectionLength) {
+  if (sourceText.trim().length < appConfig.value.minCorrectionLength) {
     toast(t('toast.textTooShortToTranslate'), 'warn')
 
     return
   }
 
-  const sourceId = await historyStore.saveSource(trimmedText, 'translate')
+  const sourceId = await historyStore.saveSource(sourceText, 'translate')
 
   const controller = new AbortController()
   const stageLabels = {
@@ -75,7 +75,7 @@ const translate = async (toLangNum: number) => {
     })
   setStage('translating')
   try {
-    const result = await translateText(toLangNum, trimmedText, {
+    const result = await translateText(toLangNum, sourceText, {
       signal: controller.signal,
       onStage: setStage,
     })
@@ -85,7 +85,7 @@ const translate = async (toLangNum: number) => {
     })
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
       text: result.text,
-      sourceText: trimmedText,
+      sourceText,
       translationMeta: {
         provider: result.provider,
         model: result.model,
