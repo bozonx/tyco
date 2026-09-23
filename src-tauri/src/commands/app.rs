@@ -25,6 +25,11 @@ pub async fn configure_hotkeys(app: AppHandle) -> Result<(), AppError> {
 }
 
 #[tauri::command]
+pub fn get_hotkey_provider_info(app: AppHandle) -> crate::services::hotkeys::HotkeyProviderInfo {
+    crate::services::hotkeys::provider_info(&app)
+}
+
+#[tauri::command]
 pub fn open_main_editor(
     app: AppHandle,
     text: Option<String>,

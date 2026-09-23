@@ -5,8 +5,9 @@ mod services;
 mod state;
 
 use commands::app::{
-    apply_hotkey, configure_hotkeys, get_init_params, get_storage_info, mark_activation_metric,
-    open_main_editor, save_local_state, save_user_config, submit_activation_metric_value,
+    apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params, get_storage_info,
+    mark_activation_metric, open_main_editor, save_local_state, save_user_config,
+    submit_activation_metric_value,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
@@ -86,7 +87,6 @@ pub fn run() {
             app.manage(AppState::new(default_init_params(user_config, local_state)));
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             app.manage(services::net::NetState::new()?);
-            #[cfg(target_os = "linux")]
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
             services::activation_metrics::setup(app)?;
@@ -109,6 +109,7 @@ pub fn run() {
             get_storage_info,
             apply_hotkey,
             configure_hotkeys,
+            get_hotkey_provider_info,
             open_main_editor,
             mark_activation_metric,
             submit_activation_metric_value,

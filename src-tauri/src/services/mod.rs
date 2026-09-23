@@ -5,13 +5,13 @@ pub mod app_paths;
 #[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod foreground_context;
-#[cfg(target_os = "linux")]
 pub mod hotkeys;
 #[cfg(target_os = "linux")]
 pub mod layer_shell;
 pub mod llm_config;
 pub mod net;
 pub mod notes;
+pub mod platform;
 pub mod runtime;
 pub mod secrets;
 pub mod storage;

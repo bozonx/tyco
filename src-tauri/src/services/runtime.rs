@@ -9,10 +9,9 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{App, AppHandle, Emitter, Manager, WindowEvent};
 
 use crate::errors::AppError;
-use crate::services::foreground_context::{ForegroundContext, SystemForegroundContext};
-#[cfg(target_os = "linux")]
-use crate::services::layer_shell;
 use crate::state::AppState;
+#[cfg(target_os = "linux")]
+use gtk::prelude::WidgetExt;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
@@ -140,9 +139,8 @@ fn on_main_thread(
 }
 
 pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
-    let context = SystemForegroundContext::detect();
     let source = if activation.window_id.is_none() {
-        context.capture_source()
+        super::platform::capture_source()
     } else {
         activation.window_id.clone()
     };
@@ -164,7 +162,8 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     if capture_selection {
         let handle = app.clone();
         thread::spawn(move || {
-            let selected_text = tauri::async_runtime::block_on(context.capture_selection(source));
+            let selected_text =
+                tauri::async_runtime::block_on(super::platform::capture_selection(source));
             if let Err(error) = on_main_thread(&handle, move |app| {
                 if app
                     .state::<ContextCapture>()
@@ -195,6 +194,9 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         .ok_or_else(|| AppError::Message(format!("Window {window_label} not found")))?;
     let state = app.state::<AppState>();
 
+    #[cfg(target_os = "linux")]
+    window.gtk_window()?.set_opacity(1.0);
+
     let (width, height) = activation.mode.profile().size();
     window.set_size(tauri::LogicalSize::new(width, height))?;
 
@@ -203,21 +205,13 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     #[cfg(not(target_os = "linux"))]
     let has_layer_shell = false;
 
-    #[cfg(target_os = "linux")]
-    if has_layer_shell && is_quick_window {
-        let gtk_window = window.gtk_window()?;
-        match activation.mode.profile() {
-            super::activation::WindowProfile::Panel => {
-                layer_shell::set_panel_profile(&gtk_window, 48);
-            }
-            super::activation::WindowProfile::Sheet => {
-                layer_shell::set_sheet_profile(&gtk_window);
-            }
-        }
-        layer_shell::set_keyboard(
-            &gtk_window,
-            activation.intent == ActivationIntent::KeyboardFirst,
-        );
+    if is_quick_window {
+        super::platform::apply_panel_surface(
+            &window,
+            activation.mode.profile(),
+            activation.intent,
+            has_layer_shell,
+        )?;
     } else {
         window.center()?;
     }
@@ -239,6 +233,10 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.selected_text = activation.selected_text;
         params.is_window_shown = true;
         params.quick_input = activation.mode == StartMode::Editor;
+        params.window_profile = match activation.mode.profile() {
+            super::activation::WindowProfile::Panel => String::from("panel"),
+            super::activation::WindowProfile::Sheet => String::from("sheet"),
+        };
     });
     log::debug!(
         "Activated {:?} from {:?}",
@@ -278,7 +276,7 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
 
     #[cfg(target_os = "linux")]
     if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
-        layer_shell::set_keyboard(&window.gtk_window()?, false);
+        super::platform::disable_panel_keyboard(&window)?;
     }
 
     window.hide()?;
@@ -335,6 +333,7 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         params.mode = Some(StartMode::Editor.as_str().into());
         params.is_window_shown = true;
         params.quick_input = false;
+        params.window_profile = String::from("sheet");
     });
     log::debug!("Showed main application from tray");
     emit_params(app, &state)
@@ -357,9 +356,15 @@ fn schedule_warmup(app: &AppHandle) -> Result<(), AppError> {
                     .get_webview_window(QUICK_WINDOW_LABEL)
                     .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
                 if show {
+                    #[cfg(target_os = "linux")]
+                    window
+                        .gtk_window()?
+                        .set_opacity(if step == 6 { 1.0 } else { 0.0 });
                     window.show()?;
                 } else {
                     window.hide()?;
+                    #[cfg(target_os = "linux")]
+                    window.gtk_window()?.set_opacity(1.0);
                 }
                 Ok(())
             });
@@ -392,7 +397,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 
     #[cfg(target_os = "linux")]
     if label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
-        layer_shell::set_keyboard(&window.gtk_window()?, false);
+        super::platform::disable_panel_keyboard(&window)?;
     }
 
     state.update_params(|params| {
@@ -411,12 +416,12 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(RuntimeWindows::default());
     #[cfg(target_os = "linux")]
     {
-        let supported = layer_shell::is_supported();
+        let supported = super::platform::panel_surface_supported();
         if supported {
             let window = app
                 .get_webview_window(QUICK_WINDOW_LABEL)
                 .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-            layer_shell::attach(&window.gtk_window()?);
+            super::platform::attach_panel_surface(&window)?;
             log::info!("Using gtk-layer-shell for the main window");
         } else {
             log::info!("gtk-layer-shell is unavailable; using a regular window");

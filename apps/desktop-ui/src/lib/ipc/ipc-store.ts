@@ -49,6 +49,9 @@ export function createCommandMap(): Record<string, CommandEntry> {
       buildArgs: ([request]) => ({ request }),
     },
     configureHotkeys: { command: DESKTOP_COMMANDS.CONFIGURE_HOTKEYS },
+    getHotkeyProviderInfo: {
+      command: DESKTOP_COMMANDS.GET_HOTKEY_PROVIDER_INFO,
+    },
     markActivationMetric: {
       command: DESKTOP_COMMANDS.MARK_ACTIVATION_METRIC,
       buildArgs: ([id, mark]) => ({ id, mark }),

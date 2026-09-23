@@ -68,7 +68,7 @@ mod tests {
         let received = Arc::new(Mutex::new(Vec::new()));
         let server_received = Arc::clone(&received);
         thread::spawn(move || {
-            for stream in listener.incoming().take(10) {
+            for stream in listener.incoming().take(12) {
                 handle_stream(stream.unwrap(), &|request| {
                     let Request::Activate { mode } = request;
                     match StartMode::parse(&mode) {
@@ -109,5 +109,13 @@ mod tests {
             assert_eq!(response.success, mode != "unknown");
         }
         assert_eq!(received.lock().unwrap().len(), 9);
+
+        for invalid in ["not-json\n", "{\"command\":\"unknown\"}\n"] {
+            use std::io::Write;
+            let mut stream = TcpStream::connect(address).unwrap();
+            stream.write_all(invalid.as_bytes()).unwrap();
+            let response: Response = read_message(&mut BufReader::new(stream)).unwrap();
+            assert!(!response.success);
+        }
     }
 }

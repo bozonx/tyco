@@ -4822,6 +4822,7 @@ dependencies = [
  "tokio-tungstenite",
  "tyco-activation-protocol",
  "url",
+ "windows-sys 0.61.2",
  "zbus 4.4.0",
 ]
 

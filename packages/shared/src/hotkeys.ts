@@ -85,3 +85,9 @@ export interface HotkeyApplyResult {
   externalCommand?: string
   message?: string
 }
+
+export interface HotkeyProviderInfo {
+  provider: 'portal' | 'global-shortcut' | 'external'
+  canConfigure: boolean
+  actions: Record<string, HotkeyApplyResult>
+}

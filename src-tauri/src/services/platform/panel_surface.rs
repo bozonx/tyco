@@ -1,0 +1,111 @@
+use tauri::WebviewWindow;
+
+use crate::errors::AppError;
+use crate::services::activation::{ActivationIntent, WindowProfile};
+
+pub(crate) trait PanelSurface {
+    fn supported(&self) -> bool;
+}
+
+struct SystemPanelSurface;
+
+impl PanelSurface for SystemPanelSurface {
+    fn supported(&self) -> bool {
+        panel_surface_supported_impl()
+    }
+}
+
+pub fn panel_surface_supported() -> bool {
+    SystemPanelSurface.supported()
+}
+
+#[cfg(target_os = "linux")]
+fn panel_surface_supported_impl() -> bool {
+    crate::services::layer_shell::is_supported()
+}
+
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+fn panel_surface_supported_impl() -> bool {
+    true
+}
+
+#[cfg(target_os = "linux")]
+pub fn attach_panel_surface(window: &WebviewWindow) -> Result<(), AppError> {
+    crate::services::layer_shell::attach(&window.gtk_window()?);
+    Ok(())
+}
+
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+pub fn attach_panel_surface(_window: &WebviewWindow) -> Result<(), AppError> {
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
+    crate::services::layer_shell::set_keyboard(&window.gtk_window()?, false);
+    Ok(())
+}
+
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub fn apply_panel_surface(
+    window: &WebviewWindow,
+    profile: WindowProfile,
+    intent: ActivationIntent,
+    enabled: bool,
+) -> Result<(), AppError> {
+    if !enabled {
+        window.center()?;
+        return Ok(());
+    }
+    let gtk_window = window.gtk_window()?;
+    match profile {
+        WindowProfile::Panel => crate::services::layer_shell::set_panel_profile(&gtk_window, 48),
+        WindowProfile::Sheet => crate::services::layer_shell::set_sheet_profile(&gtk_window),
+    }
+    crate::services::layer_shell::set_keyboard(
+        &gtk_window,
+        intent == ActivationIntent::KeyboardFirst,
+    );
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+pub fn apply_panel_surface(
+    window: &WebviewWindow,
+    _profile: WindowProfile,
+    intent: ActivationIntent,
+    _enabled: bool,
+) -> Result<(), AppError> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetWindowLongW, SetWindowLongW, GWL_EXSTYLE, WS_EX_NOACTIVATE, WS_EX_TOPMOST,
+    };
+
+    let handle = window.hwnd()?.0 as windows_sys::Win32::Foundation::HWND;
+    let mut style = unsafe { GetWindowLongW(handle, GWL_EXSTYLE) } as u32;
+    style |= WS_EX_TOPMOST;
+    if intent == ActivationIntent::ContextFirst {
+        style |= WS_EX_NOACTIVATE;
+    } else {
+        style &= !WS_EX_NOACTIVATE;
+    }
+    unsafe { SetWindowLongW(handle, GWL_EXSTYLE, style as i32) };
+    window.center()?;
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn apply_panel_surface(
+    window: &WebviewWindow,
+    _profile: WindowProfile,
+    _intent: ActivationIntent,
+    _enabled: bool,
+) -> Result<(), AppError> {
+    window.set_always_on_top(true)?;
+    window.center()?;
+    Ok(())
+}

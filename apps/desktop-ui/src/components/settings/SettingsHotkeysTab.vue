@@ -3,7 +3,7 @@
     :title="t('settings.hotkeysTitle')"
     :description="t('settings.hotkeysHint')"
   >
-    <div class="configure-hotkeys">
+    <div v-if="canConfigure" class="configure-hotkeys">
       <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
         {{ t('settings.configureGlobalHotkeys') }}
       </Button>
@@ -57,9 +57,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, reactive, ref, toRef } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -67,6 +68,7 @@ import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_USER_CONFIG,
   type HotkeyApplyResult,
+  type HotkeyProviderInfo,
   type UserConfig,
   hotkeyFromKeyboardEvent,
 } from '@tyco/shared'
@@ -78,7 +80,12 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const ipcStore = useIpcStore()
 const recordingMode = ref<string | null>(null)
-const statuses = ref<Record<string, HotkeyApplyResult>>({})
+const providerState = reactive({
+  canConfigure: false,
+  statuses: {} as Record<string, HotkeyApplyResult>,
+})
+const canConfigure = toRef(providerState, 'canConfigure')
+const statuses = toRef(providerState, 'statuses')
 const configureError = ref('')
 
 const actions = Object.entries(DEFAULT_USER_CONFIG.hotkeys).map(
@@ -121,6 +128,13 @@ async function configureHotkeys() {
     configureError.value = result.error || t('settings.configureHotkeysError')
   }
 }
+
+onMounted(async () => {
+  const result = await ipcStore.callFunction('getHotkeyProviderInfo')
+  if (result.success) {
+    applyProviderInfo(providerState, result.result as HotkeyProviderInfo)
+  }
+})
 </script>
 
 <style scoped>

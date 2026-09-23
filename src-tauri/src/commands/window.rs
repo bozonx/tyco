@@ -4,7 +4,6 @@ use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::services::runtime;
-use crate::services::text_injector::SystemTextInjector;
 use crate::state::AppState;
 
 #[tauri::command]
@@ -31,7 +30,7 @@ pub fn type_into_window_and_close(
     let params = state.params();
     copy_to_clipboard(&text)?;
     runtime::hide_main_window(&app, &state)?;
-    SystemTextInjector::detect().inject_paste(&params.user_config, params.window_id.as_deref())
+    crate::services::platform::inject_paste(&params.user_config, params.window_id.as_deref())
 }
 
 #[tauri::command]

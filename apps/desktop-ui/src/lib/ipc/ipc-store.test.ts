@@ -56,6 +56,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the hotkey provider info command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('getHotkeyProviderInfo')
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.GET_HOTKEY_PROVIDER_INFO,
+      undefined
+    )
+  })
+
   it('maps a transfer to the decorated editor window', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

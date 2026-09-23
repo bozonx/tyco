@@ -99,6 +99,7 @@ export interface InitParams {
   NODE_ENV: string
   isWindowShown: boolean
   quickInput: boolean
+  windowProfile: 'panel' | 'sheet'
 }
 
 export type CapturedContext = Pick<InitParams, 'selectedText'>
@@ -118,6 +119,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
   NODE_ENV: 'development',
   isWindowShown: true,
   quickInput: false,
+  windowProfile: 'sheet',
 }
 
 export const DESKTOP_EVENTS = {
@@ -134,6 +136,7 @@ export const DESKTOP_COMMANDS = {
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
+  GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
   OPEN_MAIN_EDITOR: 'open_main_editor',
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',

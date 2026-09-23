@@ -148,7 +148,10 @@ fn ydotool_socket_paths() -> Vec<PathBuf> {
 }
 
 fn ensure_ydotool_access() -> Result<(), AppError> {
-    if ydotool_socket_paths().iter().any(|path| path.exists()) {
+    if ydotool_socket_paths()
+        .iter()
+        .any(|path| std::os::unix::net::UnixStream::connect(path).is_ok())
+    {
         return Ok(());
     }
     if OpenOptions::new().write(true).open("/dev/uinput").is_ok() {

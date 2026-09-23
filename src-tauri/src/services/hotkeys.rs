@@ -1,15 +1,21 @@
 use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicU8, Ordering};
+#[cfg(target_os = "linux")]
 use std::sync::Arc;
 use std::sync::RwLock;
 
+#[cfg(target_os = "linux")]
 use ashpd::desktop::global_shortcuts::{
     BindShortcutsOptions, ConfigureShortcutsOptions, GlobalShortcuts, NewShortcut,
 };
+#[cfg(target_os = "linux")]
 use ashpd::desktop::CreateSessionOptions;
+#[cfg(target_os = "linux")]
 use ashpd::desktop::Session;
+#[cfg(target_os = "linux")]
 use ashpd::{register_host_app, AppID};
+#[cfg(target_os = "linux")]
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -65,7 +71,7 @@ impl ProviderState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct HotkeyBinding {
+pub(crate) struct HotkeyBinding {
     mode: StartMode,
     shortcut: String,
 }
@@ -76,11 +82,13 @@ pub struct HotkeyRegistry {
     shortcuts: RwLock<HashMap<StartMode, Shortcut>>,
 }
 
+#[cfg(target_os = "linux")]
 struct PortalRegistration {
     portal: GlobalShortcuts,
     session: Session<GlobalShortcuts>,
 }
 
+#[cfg(target_os = "linux")]
 #[derive(Default)]
 struct PortalState(RwLock<Option<Arc<PortalRegistration>>>);
 
@@ -94,14 +102,22 @@ pub struct ApplyHotkeyRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyHotkeyResult {
-    status: &'static str,
+    pub status: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    external_command: Option<String>,
+    pub external_command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    message: Option<String>,
+    pub message: Option<String>,
 }
 
-trait HotkeyProvider {
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HotkeyProviderInfo {
+    provider: &'static str,
+    can_configure: bool,
+    actions: HashMap<String, ApplyHotkeyResult>,
+}
+
+pub(crate) trait HotkeyProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError>;
 }
 
@@ -116,6 +132,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let kind = provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref());
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
+    #[cfg(target_os = "linux")]
     app.manage(PortalState::default());
 
     match kind {
@@ -132,6 +149,12 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
         )));
     }
 
+    #[cfg(not(target_os = "linux"))]
+    return Err(AppError::Message(String::from(
+        "System hotkey configuration is unavailable",
+    )));
+
+    #[cfg(target_os = "linux")]
     let registration = app
         .state::<PortalState>()
         .0
@@ -140,7 +163,8 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
         .clone()
         .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
 
-    registration
+    #[cfg(target_os = "linux")]
+    return registration
         .portal
         .configure_shortcuts(
             &registration.session,
@@ -148,7 +172,44 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
             ConfigureShortcutsOptions::default(),
         )
         .await
-        .map_err(|error| AppError::Message(error.to_string()))
+        .map_err(|error| AppError::Message(error.to_string()));
+}
+
+pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
+    let kind = app.state::<ProviderState>().get();
+    let config = app.state::<AppState>().params().user_config;
+    let actions = bindings_from_config(&config)
+        .into_iter()
+        .map(|binding| {
+            let result = match kind {
+                ProviderKind::Portal => ApplyHotkeyResult {
+                    status: "confirmation-required",
+                    external_command: None,
+                    message: None,
+                },
+                ProviderKind::GlobalShortcut => ApplyHotkeyResult {
+                    status: "ready",
+                    external_command: None,
+                    message: None,
+                },
+                ProviderKind::External => ApplyHotkeyResult {
+                    status: "external",
+                    external_command: Some(external_command(binding.mode, &binding.shortcut)),
+                    message: None,
+                },
+            };
+            (binding.mode.as_str().to_owned(), result)
+        })
+        .collect();
+    HotkeyProviderInfo {
+        provider: match kind {
+            ProviderKind::Portal => "portal",
+            ProviderKind::GlobalShortcut => "global-shortcut",
+            ProviderKind::External => "external",
+        },
+        can_configure: kind == ProviderKind::Portal,
+        actions,
+    }
 }
 
 pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
@@ -251,11 +312,28 @@ fn external_command(mode: StartMode, shortcut: &str) -> String {
                 mode.as_str()
             )
         }
-        _ => format!(
-            "bindsym {shortcut} exec tyco-ctl activate {}",
+        desktop if desktop.contains("sway") || desktop.contains("i3") => format!(
+            "bindsym {} exec tyco-ctl activate {}",
+            sway_shortcut(shortcut),
             mode.as_str()
         ),
+        _ => format!("tyco-ctl activate {}", mode.as_str()),
     }
+}
+
+fn sway_shortcut(shortcut: &str) -> String {
+    shortcut
+        .split('+')
+        .map(|part| match part.to_ascii_lowercase().as_str() {
+            "ctrl" | "control" => String::from("Control"),
+            "alt" => String::from("Mod1"),
+            "super" | "meta" | "cmd" | "command" => String::from("Mod4"),
+            "shift" => String::from("Shift"),
+            "comma" => String::from("comma"),
+            _ => part.to_ascii_lowercase(),
+        })
+        .collect::<Vec<_>>()
+        .join("+")
 }
 
 fn hyprland_shortcut(shortcut: &str) -> (String, String) {
@@ -280,6 +358,9 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
 }
 
 fn provider_kind(session_type: Option<&str>) -> ProviderKind {
+    if !cfg!(target_os = "linux") {
+        return ProviderKind::GlobalShortcut;
+    }
     match session_type.map(str::to_ascii_lowercase).as_deref() {
         Some("wayland") => ProviderKind::Portal,
         Some("x11") => ProviderKind::GlobalShortcut,
@@ -325,6 +406,15 @@ impl HotkeyProvider for ExternalProvider {
     fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         log::info!("No in-process hotkey provider is available; use tyco-ctl or D-Bus");
         Ok(())
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+impl HotkeyProvider for PortalProvider {
+    fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+        Err(AppError::Message(String::from(
+            "The global shortcuts portal is only available on Linux",
+        )))
     }
 }
 
@@ -386,6 +476,7 @@ impl HotkeyProvider for GlobalShortcutProvider {
     }
 }
 
+#[cfg(target_os = "linux")]
 impl HotkeyProvider for PortalProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         let app = app.handle().clone();
@@ -402,6 +493,7 @@ impl HotkeyProvider for PortalProvider {
     }
 }
 
+#[cfg(target_os = "linux")]
 async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
     let app_id = AppID::try_from(app.config().identifier.as_str())
         .map_err(|error| AppError::Message(error.to_string()))?;
@@ -532,5 +624,11 @@ mod tests {
             hyprland_shortcut("Super+Shift+Comma"),
             (String::from("SUPER SHIFT"), String::from("comma"))
         );
+    }
+
+    #[test]
+    fn converts_shortcuts_to_sway_syntax() {
+        assert_eq!(sway_shortcut("Ctrl+Alt+E"), "Control+Mod1+e");
+        assert_eq!(sway_shortcut("Super+Shift+Comma"), "Mod4+Shift+comma");
     }
 }

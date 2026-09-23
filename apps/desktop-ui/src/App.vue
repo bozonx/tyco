@@ -3,6 +3,8 @@
   <div
     class="layout"
     :class="{
+      'panel-layout':
+        isQuickWindow && ipcStore.params.windowProfile === 'panel',
       'quick-layout': quickPanelStore.isActive && ipcStore.params.quickInput,
     }"
   >
@@ -234,6 +236,21 @@ onUnmounted(() => {
 .quick-layout {
   justify-content: flex-end;
   background: transparent;
+}
+.panel-layout {
+  background: transparent;
+}
+.panel-layout .layout-body {
+  justify-content: flex-end;
+  padding: var(--space-sm);
+}
+.panel-layout .routed-layer {
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--app-surface) 94%, transparent);
+  box-shadow: var(--app-shadow-lg);
+  backdrop-filter: blur(16px);
 }
 .main {
   flex: 1 1 0%;
