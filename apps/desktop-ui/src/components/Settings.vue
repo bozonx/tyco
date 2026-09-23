@@ -287,6 +287,7 @@ import {
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
+import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
@@ -503,6 +504,7 @@ function createPreparedUserConfig(config: unknown) {
   normalizeHotkeysConfig(nextConfig)
   normalizeSttConfig(nextConfig)
   normalizeLlmConfigSection(nextConfig)
+  nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
   delete nextConfig.chatRoles
   normalizeAiTasks(nextConfig)
 

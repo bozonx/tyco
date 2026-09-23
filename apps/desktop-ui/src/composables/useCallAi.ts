@@ -1,7 +1,7 @@
 import { translate } from '../lib/i18n'
 import { LlmError, toLlmError } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
-import { buildLlmPrompt, fillTemplate } from '../lib/llm/llm-prompt'
+import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import {
   AUTO_LANGUAGE_VALUE,
   resolveLanguagePreference,
@@ -10,6 +10,7 @@ import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
+import { useTranslationStore } from '../stores/translation'
 import { AI_TASKS } from '../types'
 import { transcribeOpenAiCompatible } from '../utils/stt/openai-compatible'
 import { GlobalEvents, useGlobalEvents } from './useGlobalEvents'
@@ -33,6 +34,7 @@ interface LocalVoiceRecording {
 export const useCallAi = () => {
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
+  const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
   const { globalEvents } = useGlobalEvents()
 
@@ -208,7 +210,14 @@ export const useCallAi = () => {
     })
   }
 
-  const translateText = async (toLangNum: number, text?: string) => {
+  const translateText = async (
+    toLangNum: number,
+    text?: string,
+    options: {
+      signal?: AbortSignal
+      onStage?: (stage: 'translating' | 'checking' | 'repairing') => void
+    } = {}
+  ) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
       return ''
@@ -218,13 +227,19 @@ export const useCallAi = () => {
     const language = userConfig.toTranslateLanguages[toLangNum]
     if (!language) return ''
 
-    return await aiRequest(AI_TASKS.TRANSLATE, text, {
-      instructions: fillTemplate(
-        APP_CONFIG.aiInstructions[AI_TASKS.TRANSLATE],
-        { TRANSLATION_LANG: language }
-      ),
-      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
-    })
+    try {
+      return await translationStore.client.translate(text, {
+        targetLanguage: language,
+        signal: options.signal,
+        onStage: options.onStage,
+        rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
+      })
+    } catch (error) {
+      const llmError = error instanceof LlmError ? error : toLlmError(error)
+      console.error('Translation request failed', llmError)
+      toastText(formatLlmError(llmError, translate), 'error')
+      throw llmError
+    }
   }
 
   const aiTasks = async (presetNum: number, text?: string) => {

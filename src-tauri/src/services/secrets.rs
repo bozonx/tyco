@@ -28,6 +28,10 @@ const MAX_ID_LEN: usize = 64;
 const BUILTIN_ORIGINS: &[(&str, &[&str])] = &[
     ("google", &["https://generativelanguage.googleapis.com"]),
     ("google-translate", &["https://translation.googleapis.com"]),
+    (
+        "deepl",
+        &["https://api.deepl.com", "https://api-free.deepl.com"],
+    ),
     ("openrouter", &["https://openrouter.ai"]),
     ("deepseek", &["https://api.deepseek.com"]),
     ("openai", &["https://api.openai.com"]),
@@ -267,6 +271,7 @@ mod tests {
     fn builtin_id_gets_provider_origins() {
         let store = SecretStore::in_memory();
         store.set("google", " key ", None).unwrap();
+        store.set("deepl", " deepl-key ", None).unwrap();
 
         let snapshot = store.snapshot();
         let entry = snapshot.get("google").unwrap();
@@ -274,6 +279,10 @@ mod tests {
         assert_eq!(
             entry.origins,
             vec!["https://generativelanguage.googleapis.com"]
+        );
+        assert_eq!(
+            snapshot.get("deepl").unwrap().origins,
+            vec!["https://api.deepl.com", "https://api-free.deepl.com"]
         );
     }
 

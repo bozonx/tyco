@@ -97,6 +97,36 @@ export interface LlmConfig {
   tasks: Record<LlmTask, string[]>
 }
 
+export const TRANSLATION_PROVIDERS = ['deepl', 'google', 'llm'] as const
+export type TranslationProvider = (typeof TRANSLATION_PROVIDERS)[number]
+
+export const TRANSLATION_QUALITY_GATES = [
+  'off',
+  'on_problems',
+  'always',
+] as const
+export type TranslationQualityGate = (typeof TRANSLATION_QUALITY_GATES)[number]
+
+export interface TranslationGlossaryEntry {
+  term: string
+  use: string
+  doNotTranslate: boolean
+}
+
+export interface TranslationConfig {
+  provider: TranslationProvider
+  qualityGate: TranslationQualityGate
+  deeplEndpoint: 'free' | 'pro'
+  glossary: TranslationGlossaryEntry[]
+}
+
+export const DEFAULT_TRANSLATION_CONFIG: TranslationConfig = {
+  provider: 'llm',
+  qualityGate: 'on_problems',
+  deeplEndpoint: 'free',
+  glossary: [],
+}
+
 export const DEFAULT_LLM_MODEL_ID = 'local-qwen'
 
 export const DEFAULT_LLM_CONFIG: LlmConfig = {
@@ -201,6 +231,7 @@ export interface UserConfig {
   appLanguage: string
   userLanguage: string
   toTranslateLanguages: (string | null)[]
+  translation: TranslationConfig
   mainActions: (MainActionConfig | null)[]
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
@@ -256,6 +287,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   appLanguage: 'auto',
   userLanguage: 'auto',
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
+  translation: DEFAULT_TRANSLATION_CONFIG,
   mainActions: DEFAULT_MAIN_ACTIONS,
   pasteMode: 'markdown',
   editorSyntax: 'markdown',

@@ -134,6 +134,16 @@ mod tests {
             },
         );
         secrets.insert(
+            "deepl".into(),
+            SecretEntry {
+                value: "deepl-key".into(),
+                origins: vec![
+                    "https://api.deepl.com".into(),
+                    "https://api-free.deepl.com".into(),
+                ],
+            },
+        );
+        secrets.insert(
             "deepgram".into(),
             SecretEntry {
                 value: "dg-key".into(),

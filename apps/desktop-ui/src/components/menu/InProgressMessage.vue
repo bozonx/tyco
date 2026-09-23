@@ -2,10 +2,14 @@
   <div class="in-progress">
     <span class="loading loading-spinner loading-lg text-primary"></span>
     <div class="in-progress-label">
-      <span v-if="props.ai">{{ t('menu.aiRequest') }}</span>
+      <span v-if="props.label">{{ props.label }}</span>
+      <span v-else-if="props.ai">{{ t('menu.aiRequest') }}</span>
       <span v-else-if="props.correction">{{ t('menu.correction') }}</span>
       <span v-else>{{ t('common.inProgress') }}</span>
     </div>
+    <button v-if="props.onCancel" class="btn btn-ghost" @click="props.onCancel">
+      {{ t('common.cancel') }}
+    </button>
   </div>
 </template>
 
@@ -13,7 +17,12 @@
 import { useI18n } from '../../composables/useI18n'
 
 const props = withDefaults(
-  defineProps<{ ai?: boolean; correction?: boolean }>(),
+  defineProps<{
+    ai?: boolean
+    correction?: boolean
+    label?: string
+    onCancel?: () => void
+  }>(),
   { ai: false, correction: false }
 )
 

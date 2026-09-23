@@ -62,15 +62,35 @@ const translate = async (toLangNum: number) => {
 
   const sourceId = await historyStore.saveSource(trimmedText, 'translate')
 
-  menuModalsStore.setPendingModal({ ai: true })
+  const controller = new AbortController()
+  const stageLabels = {
+    translating: 'translationProgressTranslating',
+    checking: 'translationProgressChecking',
+    repairing: 'translationProgressRepairing',
+  } as const
+  const setStage = (stage: keyof typeof stageLabels) =>
+    menuModalsStore.setPendingModal({
+      label: t(`menu.${stageLabels[stage]}`),
+      onCancel: () => controller.abort(),
+    })
+  setStage('translating')
   try {
-    const newText = await translateText(toLangNum, trimmedText)
-    await historyStore.saveSourceResult(sourceId, newText).catch(() => {
+    const result = await translateText(toLangNum, trimmedText, {
+      signal: controller.signal,
+      onStage: setStage,
+    })
+    if (!result) return
+    await historyStore.saveSourceResult(sourceId, result.text).catch(() => {
       toast(t('history.operationFailed'), 'error')
     })
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
-      text: newText,
+      text: result.text,
       sourceText: trimmedText,
+      translationMeta: {
+        provider: result.provider,
+        model: result.model,
+        quality: result.quality,
+      },
     })
   } catch {
     // The request layer already reported the actionable error.

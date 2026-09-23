@@ -156,8 +156,8 @@ importers:
         specifier: ^3.0.53
         version: 3.0.53(zod@4.6.5)
       '@bozonx/ai-kit':
-        specifier: ^0.4.0
-        version: 0.4.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
+        specifier: link:../../../ai-kit
+        version: link:../../../ai-kit
       '@codemirror/commands':
         specifier: ^6.11.1
         version: 6.11.1
@@ -421,34 +421,6 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
-
-  '@bozonx/ai-kit@0.4.0':
-    resolution: {integrity: sha512-Lx2UdevVk7zKv6Lq8plUmkOdNYyQkhJ8irtTEbji+UyR/FyjgkllZopJUqdO0mRApz04kdsL11b1hC8wEJT3YA==}
-    engines: {node: '>=22.0.0'}
-    peerDependencies:
-      '@ai-sdk/anthropic': ^4.0.46
-      '@ai-sdk/deepseek': ^3.0.50
-      '@ai-sdk/google': ^4.0.76
-      '@ai-sdk/openai': ^4.0.71
-      '@ai-sdk/openai-compatible': ^3.0.53
-      '@openrouter/ai-sdk-provider': ^3.1.0
-      ws: ^8.21.3
-      zod: ^4.0.0
-    peerDependenciesMeta:
-      '@ai-sdk/anthropic':
-        optional: true
-      '@ai-sdk/deepseek':
-        optional: true
-      '@ai-sdk/google':
-        optional: true
-      '@ai-sdk/openai':
-        optional: true
-      '@ai-sdk/openai-compatible':
-        optional: true
-      '@openrouter/ai-sdk-provider':
-        optional: true
-      ws:
-        optional: true
 
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
@@ -1397,9 +1369,6 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
-  argparse@2.0.1:
-    resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
@@ -1944,10 +1913,6 @@ packages:
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-
-  js-yaml@5.4.2:
-    resolution: {integrity: sha512-m+aqu+LwO1O6sIopafj8HUVl5aawITwZQe/yHpMCKjaWBaA/d07B/QdMb3529REftiU+RMMHL3Vlsw3hON7vWg==}
-    hasBin: true
 
   jsdom@29.1.1:
     resolution: {integrity: sha512-ECi4Fi2f7BdJtUKTflYRTiaMxIB0O6zfR1fX0GXpUrf6flp8QIYn1UT20YQqdSOfk2dfkCwS8LAFoJDEppNK5Q==}
@@ -3108,17 +3073,6 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bozonx/ai-kit@0.4.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
-    dependencies:
-      ai: 7.0.107(zod@4.6.5)
-      js-yaml: 5.4.2
-      zod: 4.6.5
-    optionalDependencies:
-      '@ai-sdk/deepseek': 3.0.50(zod@4.6.5)
-      '@ai-sdk/google': 4.0.76(zod@4.6.5)
-      '@ai-sdk/openai-compatible': 3.0.53(zod@4.6.5)
-      '@openrouter/ai-sdk-provider': 3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5)
-
   '@bramus/specificity@2.4.2':
     dependencies:
       css-tree: 3.2.1
@@ -4209,8 +4163,6 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  argparse@2.0.1: {}
-
   assertion-error@2.0.1: {}
 
   ast-kit@2.2.0:
@@ -4782,10 +4734,6 @@ snapshots:
   js-tokens@10.0.0: {}
 
   js-tokens@4.0.0: {}
-
-  js-yaml@5.4.2:
-    dependencies:
-      argparse: 2.0.1
 
   jsdom@29.1.1:
     dependencies:
