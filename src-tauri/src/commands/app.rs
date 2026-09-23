@@ -20,6 +20,11 @@ pub fn apply_hotkey(
 }
 
 #[tauri::command]
+pub async fn configure_hotkeys(app: AppHandle) -> Result<(), AppError> {
+    crate::services::hotkeys::configure(&app).await
+}
+
+#[tauri::command]
 pub fn open_main_editor(
     app: AppHandle,
     text: Option<String>,

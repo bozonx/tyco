@@ -211,6 +211,8 @@
     "hotkeysHint": "Выберите поле и нажмите новую комбинацию клавиш.",
     "hotkeyRecording": "Нажмите комбинацию клавиш…",
     "copyHotkeyCommand": "Копировать бинд",
+    "configureGlobalHotkeys": "Переназначить глобальные хоткеи",
+    "configureHotkeysError": "Не удалось открыть системные настройки хоткеев",
     "hotkeyActions": {
       "editor": "Быстрый редактор",
       "write": "Режим письма",

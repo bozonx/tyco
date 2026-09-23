@@ -44,6 +44,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the system hotkey configuration command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('configureHotkeys')
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.CONFIGURE_HOTKEYS,
+      undefined
+    )
+  })
+
   it('maps a transfer to the decorated editor window', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

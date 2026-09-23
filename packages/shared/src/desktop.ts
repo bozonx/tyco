@@ -133,6 +133,7 @@ export const DESKTOP_COMMANDS = {
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
+  CONFIGURE_HOTKEYS: 'configure_hotkeys',
   OPEN_MAIN_EDITOR: 'open_main_editor',
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',

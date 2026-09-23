@@ -3,6 +3,14 @@
     :title="t('settings.hotkeysTitle')"
     :description="t('settings.hotkeysHint')"
   >
+    <div class="configure-hotkeys">
+      <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
+        {{ t('settings.configureGlobalHotkeys') }}
+      </Button>
+      <p v-if="configureError" class="configure-error">
+        {{ configureError }}
+      </p>
+    </div>
     <FieldRow
       v-for="action in actions"
       :key="action.mode"
@@ -71,6 +79,7 @@ const { t } = useI18n()
 const ipcStore = useIpcStore()
 const recordingMode = ref<string | null>(null)
 const statuses = ref<Record<string, HotkeyApplyResult>>({})
+const configureError = ref('')
 
 const actions = Object.entries(DEFAULT_USER_CONFIG.hotkeys).map(
   ([mode, defaultValue]) => ({ mode, defaultValue })
@@ -104,9 +113,31 @@ async function copyCommand(mode: string) {
   const command = statuses.value[mode]?.externalCommand
   if (command) await navigator.clipboard.writeText(command)
 }
+
+async function configureHotkeys() {
+  configureError.value = ''
+  const result = await ipcStore.callFunction('configureHotkeys')
+  if (!result.success) {
+    configureError.value = result.error || t('settings.configureHotkeysError')
+  }
+}
 </script>
 
 <style scoped>
+.configure-hotkeys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.configure-error {
+  margin: 0;
+  color: var(--app-error);
+  font-size: 0.75rem;
+}
+
 .hotkey-control {
   display: flex;
   flex-wrap: wrap;

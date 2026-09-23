@@ -211,6 +211,8 @@
     "hotkeysHint": "Bir alana odaklanın ve yeni tuş birleşimine basın.",
     "hotkeyRecording": "Bir tuş birleşimine basın…",
     "copyHotkeyCommand": "Bağlamayı kopyala",
+    "configureGlobalHotkeys": "Genel kısayolları yapılandır",
+    "configureHotkeysError": "Sistem kısayol ayarları açılamadı",
     "hotkeyActions": {
       "editor": "Hızlı düzenleyici",
       "write": "Yazma modu",

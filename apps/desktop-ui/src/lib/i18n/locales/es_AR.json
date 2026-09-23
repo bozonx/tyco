@@ -211,6 +211,8 @@
     "hotkeysHint": "Enfocá un campo y presioná la nueva combinación.",
     "hotkeyRecording": "Presioná una combinación…",
     "copyHotkeyCommand": "Copiar enlace",
+    "configureGlobalHotkeys": "Configurar atajos globales",
+    "configureHotkeysError": "No se pudo abrir la configuración de atajos del sistema",
     "hotkeyActions": {
       "editor": "Editor rápido",
       "write": "Modo escritura",

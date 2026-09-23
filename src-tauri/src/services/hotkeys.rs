@@ -1,10 +1,14 @@
 use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::Arc;
 use std::sync::RwLock;
 
-use ashpd::desktop::global_shortcuts::{BindShortcutsOptions, GlobalShortcuts, NewShortcut};
+use ashpd::desktop::global_shortcuts::{
+    BindShortcutsOptions, ConfigureShortcutsOptions, GlobalShortcuts, NewShortcut,
+};
 use ashpd::desktop::CreateSessionOptions;
+use ashpd::desktop::Session;
 use ashpd::{register_host_app, AppID};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -72,6 +76,14 @@ pub struct HotkeyRegistry {
     shortcuts: RwLock<HashMap<StartMode, Shortcut>>,
 }
 
+struct PortalRegistration {
+    portal: GlobalShortcuts,
+    session: Session<GlobalShortcuts>,
+}
+
+#[derive(Default)]
+struct PortalState(RwLock<Option<Arc<PortalRegistration>>>);
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyHotkeyRequest {
@@ -104,12 +116,39 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let kind = provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref());
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
+    app.manage(PortalState::default());
 
     match kind {
         ProviderKind::Portal => PortalProvider.register(app, bindings),
         ProviderKind::GlobalShortcut => GlobalShortcutProvider.register(app, bindings),
         ProviderKind::External => ExternalProvider.register(app, bindings),
     }
+}
+
+pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
+    if app.state::<ProviderState>().get() != ProviderKind::Portal {
+        return Err(AppError::Message(String::from(
+            "System hotkey configuration is unavailable",
+        )));
+    }
+
+    let registration = app
+        .state::<PortalState>()
+        .0
+        .read()
+        .expect("portal registration lock poisoned")
+        .clone()
+        .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
+
+    registration
+        .portal
+        .configure_shortcuts(
+            &registration.session,
+            None,
+            ConfigureShortcutsOptions::default(),
+        )
+        .await
+        .map_err(|error| AppError::Message(error.to_string()))
 }
 
 pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
@@ -399,6 +438,12 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     request
         .response()
         .map_err(|error| AppError::Message(error.to_string()))?;
+
+    app.state::<PortalState>()
+        .0
+        .write()
+        .expect("portal registration lock poisoned")
+        .replace(Arc::new(PortalRegistration { portal, session }));
 
     while let Some(event) = activated.next().await {
         if let Some(mode) = modes.get(event.shortcut_id()).copied() {

@@ -211,6 +211,8 @@
     "hotkeysHint": "Focus a field and press the new key combination.",
     "hotkeyRecording": "Press a key combination…",
     "copyHotkeyCommand": "Copy binding",
+    "configureGlobalHotkeys": "Configure global hotkeys",
+    "configureHotkeysError": "Could not open the system hotkey settings",
     "hotkeyActions": {
       "editor": "Quick editor",
       "write": "Writing mode",
