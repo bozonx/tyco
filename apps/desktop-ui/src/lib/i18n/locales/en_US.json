@@ -202,7 +202,8 @@
     "uiScale": "Interface scale",
     "forcedByEInk": "Always high contrast and no animations with the e-ink theme",
     "sectionSystem": "System",
-    "aiModelUsageHint": "The first model answers; if it fails, the next ones are tried in order.",
+    "aiModelUsageHint": "The first model answers; if it fails, the request may be sent to each following provider in order.",
+    "chatHistoryPrivacyHint": "Stored locally without encryption. Set to 0 to disable chat history.",
     "translationsHint": "Target languages for translation. Each one gets a hotkey in the translation menu.",
     "translationEngine": "Translation engine",
     "translationEngineHint": "Choose the first translation pass and when an AI model may perform one quality repair pass.",
@@ -291,6 +292,7 @@
     "primaryModel": "Primary",
     "fallbackModel": "Fallback {index}",
     "addFallback": "Add fallback",
+    "addPrimaryModel": "Assign model",
     "removeFallback": "Remove"
   },
   "editor": {
@@ -371,6 +373,7 @@
     "copied": "Copied",
     "copyCode": "Copy code",
     "regenerate": "Regenerate",
+    "regenerateConfirm": "Regenerating this response will remove all later messages. Continue?",
     "retry": "Retry",
     "generating": "Generating a response",
     "editorContext": "Editor context",

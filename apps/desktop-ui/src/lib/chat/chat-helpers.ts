@@ -10,7 +10,7 @@ export function prepareChatRequest(
   attachments: string[] = []
 ): PreparedChatRequest {
   const attachString = attachments
-    .map((item) => `=== ATTACHMENT START ===\n${item}\n=== ATTACHMENT END ===`)
+    .map((item) => `<attachment>${JSON.stringify(item)}</attachment>`)
     .join('\n\n')
 
   return {
@@ -47,7 +47,7 @@ export function trimChatContext(
         sum + item.content.length + (item.attachments || []).join('').length,
       0
     )
-    if (selected.length > 0 && used + size > maxCharacters) break
+    if (used + size > maxCharacters) break
     selected.unshift(turn)
     used += size
   }

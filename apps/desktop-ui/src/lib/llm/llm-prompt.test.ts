@@ -47,7 +47,9 @@ describe('llm-prompt', () => {
       { rulePrefix: 'Rules' }
     )
 
-    expect(prompt.messages[0]?.content).toContain('=== ATTACHMENT START ===')
+    expect(prompt.messages[0]?.content).toContain(
+      '<attachment>"Source text"</attachment>'
+    )
     expect(prompt.messages[0]?.content).toContain('Source text')
     expect(prompt.messages[0]?.content).toContain('Explain it')
   })

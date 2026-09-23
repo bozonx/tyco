@@ -63,6 +63,7 @@ impl NetState {
         let client = reqwest::Client::builder()
             .connect_timeout(CONNECT_TIMEOUT)
             .read_timeout(READ_TIMEOUT)
+            .redirect(reqwest::redirect::Policy::none())
             .build()
             .map_err(|error| AppError::Message(format!("HTTP client: {error}")))?;
 

@@ -86,7 +86,7 @@
             </FieldRow>
             <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
-              :hint="t('settings.historyLimitHint')"
+              :hint="t('settings.chatHistoryPrivacyHint')"
             >
               <FieldInput
                 type="number"

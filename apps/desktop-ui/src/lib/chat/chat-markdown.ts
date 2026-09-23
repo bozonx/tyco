@@ -9,6 +9,8 @@ const schema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
+    // Keep link text but prevent model output from navigating the app webview.
+    a: ['title'],
     code: [
       ...(defaultSchema.attributes?.code || []),
       ['className', /^language-[\w-]+$/],

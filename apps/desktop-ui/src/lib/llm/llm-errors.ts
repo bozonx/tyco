@@ -31,7 +31,9 @@ export function formatLlmError(
   translate: (key: string) => string
 ): string {
   const summary = translate(llmErrorKey(error.kind))
-  const detail = error.message.trim()
+  const rawDetail = error.message.trim()
+  const detail =
+    rawDetail.length > 500 ? `${rawDetail.slice(0, 500).trimEnd()}…` : rawDetail
 
   return detail ? `${summary}\n${detail}` : summary
 }

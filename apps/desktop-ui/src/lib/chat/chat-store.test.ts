@@ -265,4 +265,33 @@ describe('chat-store', () => {
     expect(store.messages.value).toEqual([])
     expect(deps.saveChatHistory).not.toHaveBeenCalled()
   })
+
+  it('reserves context space for the current message', async () => {
+    const deps = createDeps({ getContextBudgetCharacters: () => 20 })
+    const store = createChatStoreModel(deps)
+    store.messages.value = [
+      { role: 'user', content: '1234567890' },
+      { role: 'assistant', content: '1234567890' },
+    ]
+
+    await store.sendMessage('1234567890')
+
+    expect(deps.sendChatMessage).toHaveBeenCalledWith(
+      '1234567890',
+      [],
+      expect.any(String),
+      expect.any(Object)
+    )
+  })
+
+  it('keeps an in-memory answer when persistence fails', async () => {
+    const deps = createDeps({
+      saveChatHistory: vi.fn().mockRejectedValue(new Error('Disk full')),
+    })
+    const store = createChatStoreModel(deps)
+
+    await expect(store.sendMessage('Hello')).resolves.toBe('Assistant reply')
+    expect(store.messages.value.at(-1)?.content).toBe('Assistant reply')
+    expect(deps.saveLocalState).not.toHaveBeenCalled()
+  })
 })

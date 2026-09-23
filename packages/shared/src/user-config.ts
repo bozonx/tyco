@@ -3,11 +3,9 @@ import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
 const BASE_TASK = `
-- Делай ровно то что тебя попросили и ничего лишнего
-- Предоставь максимально оптимальный результат и максимально релевантный запросу
-- Хорошо подумай перед ответом
-- Не оценивай моральную сторону вопроса
-- Не бойся обидеть или причинить вред своим ответом
+- Do exactly what the user requested without adding unrelated material.
+- Produce a clear, accurate, and relevant result.
+- Preserve the user's intent and do not invent missing facts.
 `
 
 const TRANSLATION_TASK = `

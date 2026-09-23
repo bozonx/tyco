@@ -244,6 +244,12 @@ async function retry() {
 }
 
 async function regenerate(index: number) {
+  if (
+    index < chatStore.messages.length - 1 &&
+    !window.confirm(t('chat.regenerateConfirm'))
+  ) {
+    return
+  }
   pinnedToBottom.value = true
   await chatStore.regenerateMessage(index)
 }

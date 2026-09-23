@@ -296,7 +296,6 @@
             square
             icon="mdi:close"
             :title="t('settings.removeFallback')"
-            :disabled="index === 0"
             @click="llm.tasks[task].splice(index, 1)"
           />
         </div>
@@ -308,7 +307,11 @@
             :disabled="!nextFallback(task)"
             @click="addFallback(task)"
           >
-            {{ t('settings.addFallback') }}
+            {{
+              llm.tasks[task].length
+                ? t('settings.addFallback')
+                : t('settings.addPrimaryModel')
+            }}
           </Button>
         </div>
       </div>
@@ -375,10 +378,23 @@ const PROVIDER_ICONS: Record<string, string> = {
   'openai-compatible': 'mdi:server-network',
 }
 const modelOptions = computed(() =>
-  props.llm.models.map((model) => ({
-    id: model.id,
-    name: `${modelLabel(model)} · ${providerName(model.provider)}`,
-  }))
+  props.llm.models
+    .filter((model) => {
+      const provider = props.llm.providers.find(
+        (item) => item.id === model.provider
+      )
+      return (
+        Boolean(model.model.trim()) &&
+        Boolean(
+          provider &&
+          (provider.type !== 'openai-compatible' || originOf(provider.baseUrl))
+        )
+      )
+    })
+    .map((model) => ({
+      id: model.id,
+      name: `${modelLabel(model)} · ${providerName(model.provider)}`,
+    }))
 )
 
 function providerLabel(provider: LlmProvider) {
@@ -418,7 +434,7 @@ function statusLabel(provider: LlmProvider) {
     : t('settings.connectionNotConfigured')
 }
 function statusClass(provider: LlmProvider) {
-  return connectionState[provider.id] === 'success' || hasKey(provider.id)
+  return connectionState[provider.id] === 'success'
     ? 'badge-success'
     : 'badge-ghost'
 }
@@ -514,8 +530,10 @@ function setNumber(
   model[field] = field === 'temperature' ? parsed : Math.round(parsed)
 }
 function nextFallback(task: LlmTask) {
+  const usableIds = new Set(modelOptions.value.map((option) => option.id))
   return props.llm.models.find(
-    (model) => !props.llm.tasks[task].includes(model.id)
+    (model) =>
+      usableIds.has(model.id) && !props.llm.tasks[task].includes(model.id)
   )
 }
 function addFallback(task: LlmTask) {

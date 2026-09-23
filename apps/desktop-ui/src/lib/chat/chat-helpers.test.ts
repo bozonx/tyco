@@ -17,7 +17,9 @@ describe('chat-helpers', () => {
       attachments: ['file-a', 'file-b'],
     })
 
-    expect(result.preparedMessage).toContain('=== ATTACHMENT START ===')
+    expect(result.preparedMessage).toContain(
+      '<attachment>"file-a"</attachment>'
+    )
     expect(result.preparedMessage).toContain('Hello')
   })
 
@@ -51,8 +53,8 @@ describe('chat-helpers', () => {
     expect(trimChatContext(messages, 25)).toEqual(messages.slice(2))
   })
 
-  it('keeps the newest turn when it alone exceeds the budget', () => {
+  it('drops the newest turn when it alone exceeds the budget', () => {
     const newest = { role: 'user' as const, content: 'x'.repeat(100) }
-    expect(trimChatContext([newest], 10)).toEqual([newest])
+    expect(trimChatContext([newest], 10)).toEqual([])
   })
 })

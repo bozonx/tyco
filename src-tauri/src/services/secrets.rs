@@ -83,6 +83,11 @@ impl SecretStore {
 
     pub fn load(path: PathBuf) -> Result<Self, AppError> {
         let file = if path.exists() {
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
+            }
             serde_json::from_str::<SecretsFile>(&fs::read_to_string(&path)?)?
         } else {
             SecretsFile::default()

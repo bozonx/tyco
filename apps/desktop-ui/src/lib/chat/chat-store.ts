@@ -84,7 +84,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
               messages: [...messages.value],
             })
           )
-        ).catch(() => deps.notifyError('Failed to save stopped response'))
+        ).catch(() => undefined)
       }
     }
   }
@@ -102,7 +102,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const inputSize =
       message.length +
       (attachments || []).reduce((sum, item) => sum + item.length, 0)
-    if (inputSize > deps.getContextBudgetCharacters()) {
+    const contextBudget = deps.getContextBudgetCharacters()
+    if (inputSize > contextBudget) {
       deps.notifyError(deps.messageTooLongError())
       return
     }
@@ -122,7 +123,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
     const prevMessages = trimChatContext(
       messages.value,
-      deps.getContextBudgetCharacters()
+      Math.max(0, contextBudget - inputSize)
     )
 
     const { preparedMessage, userMessage } = prepareChatRequest(
@@ -132,6 +133,13 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     const userMessageIndex = messages.value.length
     messages.value.push(userMessage)
+
+    if (!newChatParams.value.id) {
+      newChatParams.value.id = deps.createId()
+    }
+    if (!newChatParams.value.initialMessage) {
+      newChatParams.value.initialMessage = message
+    }
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)
@@ -193,25 +201,21 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       return ''
     }
 
-    if (!newChatParams.value.id) {
-      newChatParams.value.id = deps.createId()
-    }
-    if (!newChatParams.value.initialMessage) {
-      newChatParams.value.initialMessage = message
-    }
     newChatParams.value.attachments = []
 
-    await deps.saveChatHistory(
-      createChatHistoryEntry({
-        id: newChatParams.value.id,
-        description: newChatParams.value.initialMessage,
-        lastMsgDate: deps.nowIso(),
-        messages: [...messages.value],
-      })
-    )
-
-    if (newChatParams.value.id) {
+    try {
+      await deps.saveChatHistory(
+        createChatHistoryEntry({
+          id: newChatParams.value.id,
+          description: newChatParams.value.initialMessage,
+          lastMsgDate: deps.nowIso(),
+          messages: [...messages.value],
+        })
+      )
       await deps.saveLocalState({ lastChatId: newChatParams.value.id })
+    } catch {
+      // The response remains usable in memory; the dependency reports the
+      // persistence failure to the user.
     }
 
     return assistantMessage.content

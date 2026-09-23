@@ -202,7 +202,8 @@
     "uiScale": "Arayüz ölçeği",
     "forcedByEInk": "E-ink temasında kontrast her zaman yüksektir ve animasyonlar kapalıdır",
     "sectionSystem": "Sistem",
-    "aiModelUsageHint": "İlk model yanıt verir; başarısız olursa sıradakiler denenir.",
+    "aiModelUsageHint": "İlk model yanıt verir; başarısız olursa istek sırayla sonraki sağlayıcılara gönderilebilir.",
+    "chatHistoryPrivacyHint": "Yerel olarak şifrelenmeden saklanır. Sohbet geçmişini kapatmak için 0 ayarlayın.",
     "translationsHint": "Çeviri için hedef diller. Her birine çeviri menüsünde bir kısayol tuşu atanır.",
     "translationEngine": "Çeviri motoru",
     "translationEngineHint": "İlk çeviri adımını ve yapay zekânın ne zaman tek bir düzeltme adımı uygulayacağını seçin.",
@@ -291,6 +292,7 @@
     "primaryModel": "Birincil",
     "fallbackModel": "Yedek {index}",
     "addFallback": "Yedek ekle",
+    "addPrimaryModel": "Model ata",
     "removeFallback": "Kaldır"
   },
   "editor": {
@@ -371,6 +373,7 @@
     "copied": "Kopyalandı",
     "copyCode": "Kodu kopyala",
     "regenerate": "Yeniden oluştur",
+    "regenerateConfirm": "Bu yanıtı yeniden oluşturmak sonraki tüm mesajları silecek. Devam edilsin mi?",
     "retry": "Yeniden dene",
     "generating": "Yanıt oluşturuluyor",
     "editorContext": "Düzenleyici bağlamı",

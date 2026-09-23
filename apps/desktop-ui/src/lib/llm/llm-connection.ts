@@ -18,9 +18,7 @@ export function createLlmConnectionChecker(options: {
       : undefined
     const response = await options.fetch(`${baseUrl}/models`, { headers })
 
-    // Some compatible servers implement chat completions but not model listing;
-    // 404/405 still prove that the configured endpoint is reachable.
-    if (!response.ok && response.status !== 404 && response.status !== 405) {
+    if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
     await response.body?.cancel()

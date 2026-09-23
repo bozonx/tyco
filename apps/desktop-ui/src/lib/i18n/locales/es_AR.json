@@ -202,7 +202,8 @@
     "uiScale": "Escala de la interfaz",
     "forcedByEInk": "Con el tema e-ink el contraste siempre es alto y las animaciones están desactivadas",
     "sectionSystem": "Sistema",
-    "aiModelUsageHint": "Responde el primer modelo; si falla, se prueban los siguientes en orden.",
+    "aiModelUsageHint": "Responde el primer modelo; si falla, la solicitud puede enviarse en orden a cada proveedor siguiente.",
+    "chatHistoryPrivacyHint": "Se guarda localmente sin cifrado. Usá 0 para desactivar el historial de chats.",
     "translationsHint": "Idiomas de destino para traducir. Cada uno tiene una tecla rápida en el menú de traducción.",
     "translationEngine": "Motor de traducción",
     "translationEngineHint": "Elegí el primer paso y cuándo un modelo de IA puede realizar un paso de corrección.",
@@ -291,6 +292,7 @@
     "primaryModel": "Principal",
     "fallbackModel": "Alternativo {index}",
     "addFallback": "Agregar alternativa",
+    "addPrimaryModel": "Asignar modelo",
     "removeFallback": "Quitar"
   },
   "editor": {
@@ -371,6 +373,7 @@
     "copied": "Copiado",
     "copyCode": "Copiar código",
     "regenerate": "Regenerar",
+    "regenerateConfirm": "Al regenerar esta respuesta se eliminarán todos los mensajes posteriores. ¿Continuar?",
     "retry": "Reintentar",
     "generating": "Generando una respuesta",
     "editorContext": "Contexto del editor",

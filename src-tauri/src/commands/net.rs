@@ -9,6 +9,7 @@ use crate::services::net::request::{prepare, Protocol};
 use crate::services::net::socket::{self, SocketCommand, SocketRequest};
 use crate::services::net::NetState;
 use crate::services::secrets::SecretStore;
+use crate::state::AppState;
 
 /// Header that names the socket a raw binary frame is for.
 const SOCKET_ID_HEADER: &str = "x-tyco-socket-id";
@@ -20,14 +21,22 @@ const SOCKET_ID_HEADER: &str = "x-tyco-socket-id";
 pub fn net_fetch(
     net: State<'_, NetState>,
     secrets: State<'_, SecretStore>,
+    app_state: State<'_, AppState>,
     request: FetchRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
+    let secret_snapshot = secrets.snapshot();
+    ensure_allowed_origin(
+        Protocol::Http,
+        &request.url,
+        &app_state.params().user_config,
+        &secret_snapshot,
+    )?;
     let prepared = prepare(
         Protocol::Http,
         &request.url,
         &request.headers,
-        &secrets.snapshot(),
+        &secret_snapshot,
     )
     .map_err(AppError::Message)?;
     let method = http::parse_method(&request.method).map_err(AppError::Message)?;
@@ -58,14 +67,22 @@ pub fn net_cancel(net: State<'_, NetState>, id: u64) {
 pub async fn net_socket_open(
     net: State<'_, NetState>,
     secrets: State<'_, SecretStore>,
+    app_state: State<'_, AppState>,
     request: SocketRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
+    let secret_snapshot = secrets.snapshot();
+    ensure_allowed_origin(
+        Protocol::WebSocket,
+        &request.url,
+        &app_state.params().user_config,
+        &secret_snapshot,
+    )?;
     let prepared = prepare(
         Protocol::WebSocket,
         &request.url,
         &request.headers,
-        &secrets.snapshot(),
+        &secret_snapshot,
     )
     .map_err(AppError::Message)?;
     let connection = socket::connect(&prepared, &request.protocols)
@@ -83,6 +100,50 @@ pub async fn net_socket_open(
     });
 
     Ok(id)
+}
+
+fn ensure_allowed_origin(
+    protocol: Protocol,
+    url: &str,
+    user_config: &serde_json::Value,
+    secrets: &crate::services::secrets::Secrets,
+) -> Result<(), AppError> {
+    let origin =
+        crate::services::net::request::request_origin(protocol, url).map_err(AppError::Message)?;
+    let secret_allows = secrets
+        .values()
+        .any(|entry| entry.origins.contains(&origin));
+    let config_allows = configured_base_urls(user_config)
+        .filter_map(|value| url::Url::parse(value).ok())
+        .filter_map(|value| crate::services::secrets::origin_of(&value))
+        .any(|configured| configured == origin);
+
+    if secret_allows || config_allows {
+        Ok(())
+    } else {
+        Err(AppError::Message(format!(
+            "Network origin \"{origin}\" is not configured"
+        )))
+    }
+}
+
+fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str> {
+    let llm = config
+        .get("llm")
+        .and_then(|value| value.get("providers"))
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|provider| provider.get("baseUrl"))
+        .filter_map(serde_json::Value::as_str);
+    let stt = config
+        .get("sttModels")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|model| model.get("baseUrl"))
+        .filter_map(serde_json::Value::as_str);
+    llm.chain(stt)
 }
 
 #[tauri::command]
@@ -123,4 +184,57 @@ pub fn net_socket_close(
     // Closing a socket that has already gone is not an error.
     let _ = net.socket_command(id, SocketCommand::Close(payload));
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::secrets::SecretEntry;
+
+    #[test]
+    fn allows_only_configured_or_secret_bound_origins() {
+        let config = serde_json::json!({
+            "llm": {
+                "providers": [{ "baseUrl": "http://localhost:11434/v1" }]
+            },
+            "sttModels": [{ "baseUrl": "wss://speech.example/v1" }]
+        });
+        let mut secrets = crate::services::secrets::Secrets::new();
+        secrets.insert(
+            "google".into(),
+            SecretEntry {
+                value: "key".into(),
+                origins: vec!["https://generativelanguage.googleapis.com".into()],
+            },
+        );
+
+        assert!(ensure_allowed_origin(
+            Protocol::Http,
+            "http://localhost:11434/v1/models",
+            &config,
+            &secrets
+        )
+        .is_ok());
+        assert!(ensure_allowed_origin(
+            Protocol::WebSocket,
+            "wss://speech.example/v1",
+            &config,
+            &secrets
+        )
+        .is_ok());
+        assert!(ensure_allowed_origin(
+            Protocol::Http,
+            "https://generativelanguage.googleapis.com/v1/models",
+            &config,
+            &secrets
+        )
+        .is_ok());
+        assert!(ensure_allowed_origin(
+            Protocol::Http,
+            "http://169.254.169.254/latest/meta-data",
+            &config,
+            &secrets
+        )
+        .is_err());
+    }
 }

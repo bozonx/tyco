@@ -3,11 +3,13 @@
     <div class="chat-item-content">
       <div v-if="message.attachments?.length" class="message-attachments">
         <span
+          v-for="(attachment, index) in message.attachments"
+          :key="index"
           class="message-attachment"
-          :title="message.attachments.join('\n')"
+          :title="attachment"
         >
           <Icon icon="mdi:file-document-outline" height="14" />
-          <span>{{ t('chat.editorContext') }}</span>
+          <span>{{ t('chat.editorContext') }} · {{ attachment.length }}</span>
         </span>
       </div>
 
@@ -46,7 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUpdated, ref } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
+} from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { renderChatMarkdown } from '../../lib/chat/chat-markdown'
@@ -58,6 +67,7 @@ const emit = defineEmits<{ (e: 'regenerate'): void }>()
 const { t } = useI18n()
 const markdownRoot = ref<HTMLElement | null>(null)
 const copied = ref(false)
+let highlightTimer: number | undefined
 const renderedContent = computed(() =>
   renderChatMarkdown(props.message.content)
 )
@@ -79,6 +89,14 @@ async function enhanceCodeBlocks() {
   })
 }
 
+function scheduleCodeBlockEnhancement() {
+  if (highlightTimer !== undefined) window.clearTimeout(highlightTimer)
+  highlightTimer = window.setTimeout(() => {
+    highlightTimer = undefined
+    void enhanceCodeBlocks()
+  }, 100)
+}
+
 async function copyText(value: string) {
   await navigator.clipboard.writeText(value)
   copied.value = true
@@ -97,8 +115,11 @@ function handleMarkdownClick(event: MouseEvent) {
   if (button && code) void copyText(code)
 }
 
-onMounted(enhanceCodeBlocks)
-onUpdated(enhanceCodeBlocks)
+onMounted(scheduleCodeBlockEnhancement)
+onUpdated(scheduleCodeBlockEnhancement)
+onBeforeUnmount(() => {
+  if (highlightTimer !== undefined) window.clearTimeout(highlightTimer)
+})
 </script>
 
 <style scoped>
@@ -257,7 +278,9 @@ onUpdated(enhanceCodeBlocks)
 }
 .message-attachments {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--space-xs);
   margin-bottom: var(--space-xs);
 }
 .message-attachment {

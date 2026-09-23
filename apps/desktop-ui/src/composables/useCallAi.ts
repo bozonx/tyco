@@ -90,6 +90,7 @@ export const useCallAi = () => {
     onChunk?: (chunk: string) => void
     signal?: AbortSignal
     onModel?: (model: { provider: string; model: string }) => void
+    notifyError?: boolean
   }
 
   /** Runs a task on the configured model chain and preserves typed failures. */
@@ -113,7 +114,9 @@ export const useCallAi = () => {
     } catch (error) {
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error(`LLM request "${taskName}" failed`, llmError)
-      toastText(formatLlmError(llmError, translate), 'error')
+      if (options.notifyError !== false) {
+        toastText(formatLlmError(llmError, translate), 'error')
+      }
       throw llmError
     }
   }
@@ -192,7 +195,12 @@ export const useCallAi = () => {
     return await aiRequest(
       AI_TASKS.CHAT,
       [...prevMessages, { role: 'user', content: message }],
-      { ...options, instructions: devInstructions, rules: buildTaskRules() }
+      {
+        ...options,
+        notifyError: false,
+        instructions: devInstructions,
+        rules: buildTaskRules(),
+      }
     )
   }
 

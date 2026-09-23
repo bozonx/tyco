@@ -96,7 +96,7 @@ describe('llm-config', () => {
     ])
   })
 
-  it('keeps task chains to known models and never leaves one empty', () => {
+  it('keeps task chains to known models without silently assigning defaults', () => {
     const config = normalizeLlmConfig({
       models: [
         { id: 'a', provider: 'google', model: 'g' },
@@ -106,8 +106,8 @@ describe('llm-config', () => {
     })
 
     expect(config.tasks.chat).toEqual(['b', 'a'])
-    expect(config.tasks.translate).toEqual(['a'])
-    expect(config.tasks.correction).toEqual(['a'])
+    expect(config.tasks.translate).toEqual([])
+    expect(config.tasks.correction).toEqual([])
   })
 
   it('generates unique ids', () => {

@@ -18,8 +18,7 @@ export interface LlmPromptOptions {
 function messageContent(message: ChatMessage): string {
   const attachments = (message.attachments || [])
     .map(
-      (attachment) =>
-        `=== ATTACHMENT START ===\n${attachment}\n=== ATTACHMENT END ===`
+      (attachment) => `<attachment>${JSON.stringify(attachment)}</attachment>`
     )
     .join('\n\n')
 

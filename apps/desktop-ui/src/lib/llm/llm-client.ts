@@ -111,18 +111,15 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
       }
 
       let firstError: LlmError | undefined
-      const candidateTimeoutMs = Math.max(
-        1_000,
-        Math.floor(CALL_TIMEOUT_MS / candidates.length)
-      )
       for (const model of candidates) {
         let emittedText = false
+        let streamedText = ''
         const scopedConfig: LlmConfig = {
           ...config,
           tasks: { ...config.tasks, [task]: [model.id] },
         }
         try {
-          const kit = kitFor(scopedConfig, candidateTimeoutMs)
+          const kit = kitFor(scopedConfig)
           const request: StreamRequest = {
             name: task,
             policy: { taskClass: task },
@@ -138,22 +135,21 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
 
           if (!options.onChunk) return (await kit.generate(request)).text
 
-          let text = ''
           for await (const part of kit.stream(request)) {
             if (part.type === 'model') {
               options.onModel?.({ provider: part.provider, model: part.model })
             } else if (part.type === 'text-delta') {
               emittedText = true
-              text += part.text
+              streamedText += part.text
               options.onChunk(part.text)
             } else if (part.type === 'error') {
-              if (part.kind === 'aborted') return text
+              if (part.kind === 'aborted') return streamedText
               throw new LlmError(errorKind(part.kind), part.message)
             }
           }
-          return text
+          return streamedText
         } catch (error) {
-          if (options.signal?.aborted) return ''
+          if (options.signal?.aborted) return streamedText
           const llmError = toLlmError(error)
           if (emittedText) throw llmError
           firstError ??= llmError

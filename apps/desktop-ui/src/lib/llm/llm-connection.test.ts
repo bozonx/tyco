@@ -62,4 +62,17 @@ describe('LLM connection checker', () => {
       })
     ).rejects.toThrow('HTTP 401')
   })
+
+  it('does not report an unrelated reachable server as ready', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
+    const check = createLlmConnectionChecker({ fetch, hasKey: () => false })
+
+    await expect(
+      check({
+        id: 'local',
+        type: 'openai-compatible',
+        baseUrl: 'http://localhost:11434/v1',
+      })
+    ).rejects.toThrow('HTTP 404')
+  })
 })

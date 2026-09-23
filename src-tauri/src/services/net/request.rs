@@ -33,6 +33,18 @@ pub enum Protocol {
     WebSocket,
 }
 
+pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, String> {
+    let url = Url::parse(value).map_err(|error| format!("Invalid URL \"{value}\": {error}"))?;
+    let allowed_schemes: &[&str] = match protocol {
+        Protocol::Http => &["http", "https"],
+        Protocol::WebSocket => &["ws", "wss"],
+    };
+    if !allowed_schemes.contains(&url.scheme()) {
+        return Err(format!("Unsupported URL scheme \"{}\"", url.scheme()));
+    }
+    origin_of(&url).ok_or_else(|| format!("URL \"{url}\" has no host"))
+}
+
 /// Validates the URL and fills secret references in the headers and the
 /// query string. References anywhere else are left as they are: the body is
 /// the caller's data and never gets a key written into it.

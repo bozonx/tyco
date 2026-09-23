@@ -118,7 +118,6 @@ function normalizeTasks(
 ): Record<LlmTask, string[]> {
   const source = isRecord(raw) ? raw : {}
   const modelIds = new Set(models.map((model) => model.id))
-  const fallback = models[0] ? [models[0].id] : []
 
   return Object.fromEntries(
     LLM_TASKS.map((task) => {
@@ -130,7 +129,7 @@ function normalizeTasks(
           )
         ),
       ]
-      return [task, ids.length > 0 ? ids : [...fallback]]
+      return [task, ids]
     })
   ) as Record<LlmTask, string[]>
 }
