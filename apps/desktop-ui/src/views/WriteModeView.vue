@@ -106,13 +106,13 @@ const clear = () => {
 
 async function doCorrection() {
   if (!writerInputStore.value?.trim()) {
-    toast(t('write.enterTextForCorrection'), 'warn')
+    correctedText.value = ''
+    correctionIsActual.value = true
+    menuModalsStore.nextModal(MenuModals.INSERT, { text: '', oldText: '' })
     return
   } else if (correctionIsActual.value) {
-    toast(t('write.alreadyCorrected'), 'warn')
+    // Proceed directly with existing correction
   } else if (writerInputStore.value.length < appConfig.minCorrectionLength) {
-    toast(t('write.textTooShortForCorrection'), 'warn')
-
     correctedText.value = writerInputStore.value
     correctionIsActual.value = true
   } else {

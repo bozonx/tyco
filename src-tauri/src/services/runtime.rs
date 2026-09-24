@@ -342,6 +342,8 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
                 ActivationIntent::KeyboardFirst,
                 has_layer_shell,
             )?;
+            let _ = window.show();
+            let _ = window.set_focus();
         }
         let state = app.state::<AppState>();
         state.update_params(|params| {
@@ -350,6 +352,7 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
                 WindowProfile::Sheet => String::from("sheet"),
             };
         });
+        log::info!("Updated window profile to {profile:?}");
         Ok(())
     })
 }

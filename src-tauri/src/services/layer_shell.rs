@@ -58,15 +58,19 @@ pub fn set_panel_profile(window: &ApplicationWindow, margin_bottom: i32) {
     }
 }
 
-pub fn set_sheet_profile(window: &ApplicationWindow) {
+pub fn set_sheet_profile(window: &ApplicationWindow, margin_top: i32) {
     let pointer = raw(window);
-    // With no anchors the compositor centers the layer surface.
+    // Anchor to top with margin to center vertically; unanchored left/right centers horizontally.
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
-        for edge in [EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, EDGE_BOTTOM] {
-            gtk_layer_set_anchor(pointer, edge, 0);
-            gtk_layer_set_margin(pointer, edge, 0);
-        }
+        gtk_layer_set_anchor(pointer, EDGE_TOP, 1);
+        gtk_layer_set_anchor(pointer, EDGE_BOTTOM, 0);
+        gtk_layer_set_anchor(pointer, EDGE_LEFT, 0);
+        gtk_layer_set_anchor(pointer, EDGE_RIGHT, 0);
+        gtk_layer_set_margin(pointer, EDGE_TOP, margin_top);
+        gtk_layer_set_margin(pointer, EDGE_BOTTOM, 0);
+        gtk_layer_set_margin(pointer, EDGE_LEFT, 0);
+        gtk_layer_set_margin(pointer, EDGE_RIGHT, 0);
     }
 }
 

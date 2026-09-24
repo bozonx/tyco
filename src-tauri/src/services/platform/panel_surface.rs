@@ -1,5 +1,8 @@
 use tauri::WebviewWindow;
 
+#[cfg(target_os = "linux")]
+use gtk::prelude::*;
+
 use crate::errors::AppError;
 use crate::services::activation::{ActivationIntent, WindowProfile};
 
@@ -65,12 +68,25 @@ pub fn apply_panel_surface(
     let gtk_window = window.gtk_window()?;
     match profile {
         WindowProfile::Panel => crate::services::layer_shell::set_panel_profile(&gtk_window, 48),
-        WindowProfile::Sheet => crate::services::layer_shell::set_sheet_profile(&gtk_window),
+        WindowProfile::Sheet => {
+            let margin_top = window
+                .current_monitor()
+                .ok()
+                .flatten()
+                .map(|m| {
+                    let scale = m.scale_factor();
+                    let screen_h = m.size().height as f64 / scale;
+                    ((screen_h - 560.0) / 2.0).max(40.0) as i32
+                })
+                .unwrap_or(200);
+            crate::services::layer_shell::set_sheet_profile(&gtk_window, margin_top);
+        }
     }
     crate::services::layer_shell::set_keyboard(
         &gtk_window,
         intent == ActivationIntent::KeyboardFirst,
     );
+    gtk_window.queue_resize();
     Ok(())
 }
 
