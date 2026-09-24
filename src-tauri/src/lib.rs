@@ -63,17 +63,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(logger_plugin())
         .plugin(single_instance(|app, args, _cwd| {
-            let activation = runtime::Activation::from_args(&args).map(|value| {
-                value.unwrap_or_else(|| {
-                    let mode = app
-                        .try_state::<AppState>()
-                        .and_then(|state| state.params().mode)
-                        .and_then(|mode| runtime::StartMode::parse(&mode).ok())
-                        .unwrap_or(runtime::StartMode::Editor);
-                    runtime::Activation::new(mode, runtime::ActivationSource::Cli)
-                })
+            let result = runtime::Activation::from_args(&args).and_then(|activation| {
+                if let Some(activation) = activation {
+                    runtime::activate(app, activation)
+                } else {
+                    runtime::show_application(app)
+                }
             });
-            match activation.and_then(|activation| runtime::activate(app, activation)) {
+            match result {
                 Ok(()) => {}
                 Err(error) => log::error!("CLI activation failed: {error}"),
             }
@@ -90,7 +87,7 @@ pub fn run() {
             let args = std::env::args().collect::<Vec<_>>();
             match runtime::Activation::from_args(&args) {
                 Ok(Some(activation)) => runtime::activate(app.handle(), activation)?,
-                Ok(None) => {}
+                Ok(None) => runtime::show_application(app.handle())?,
                 Err(error) => log::error!("CLI activation failed: {error}"),
             }
             #[cfg(target_os = "linux")]

@@ -32,7 +32,6 @@ import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
-import { useQuickPanelStore } from './stores/quickPanel'
 import { useRouteParams } from './stores/routeParams'
 import { useThemeStore } from './stores/theme'
 import { useWriterInputStore } from './stores/writerInput'
@@ -47,11 +46,11 @@ const { locale, t } = useI18n()
 const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
-const quickPanelStore = useQuickPanelStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
 const route = useRoute()
+const isQuickWindow = getCurrentWindow().label === 'quick'
 const activationMetrics = createActivationMetricsClient({
   listen: (event, handler) =>
     desktopClient.listen(
@@ -66,15 +65,20 @@ const activationMetrics = createActivationMetricsClient({
   submitValue: (id) => {
     void ipcStore.callFunction('submitActivationMetricValue', [
       id,
-      editorInputStore.value,
+      isQuickWindow ? writerInputStore.value : editorInputStore.value,
     ])
   },
-  prepareTrial: () => editorInputStore.clear(),
+  prepareTrial: () => {
+    if (isQuickWindow) {
+      writerInputStore.clear()
+    } else {
+      editorInputStore.clear()
+    }
+  },
   activeElement: () => document.activeElement,
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,
 })
-const isQuickWindow = getCurrentWindow().label === 'quick'
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
 }
@@ -144,25 +148,6 @@ watch(
     if (mode) {
       void ipcStore.patchLocalState({ lastMode: mode })
     }
-  }
-)
-
-// the quick panel is outside the router, so entering and leaving it is driven
-// by the route instead of by mount and unmount hooks
-watch(
-  () => route.path,
-  (path) => {
-    quickPanelStore.syncRoute(path)
-  },
-  { immediate: true }
-)
-
-// a hidden panel has to keep the focus in its field: the compositor hands the
-// keyboard over before the frontend learns about the next show
-watch(
-  () => ipcStore.params.isWindowShown,
-  () => {
-    quickPanelStore.syncWindowVisibility()
   }
 )
 

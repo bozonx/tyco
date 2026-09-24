@@ -20,6 +20,7 @@
         "minWidth": 640,
         "minHeight": 96,
         "resizable": true,
+        "visible": false,
         "transparent": false,
         "decorations": true,
         "skipTaskbar": false

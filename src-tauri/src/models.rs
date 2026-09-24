@@ -25,7 +25,6 @@ pub struct InitParams {
     #[serde(rename = "NODE_ENV")]
     pub node_env: String,
     pub is_window_shown: bool,
-    pub quick_input: bool,
     pub window_profile: String,
 }
 
@@ -264,8 +263,7 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
         } else {
             String::from("production")
         },
-        is_window_shown: true,
-        quick_input: false,
+        is_window_shown: false,
         window_profile: String::from("sheet"),
     }
 }

@@ -98,7 +98,6 @@ export interface InitParams {
   appConfig: AppConfig
   NODE_ENV: string
   isWindowShown: boolean
-  quickInput: boolean
   windowProfile: 'panel' | 'sheet'
 }
 
@@ -117,8 +116,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
   localState: DEFAULT_LOCAL_STATE,
   appConfig: APP_CONFIG,
   NODE_ENV: 'development',
-  isWindowShown: true,
-  quickInput: false,
+  isWindowShown: false,
   windowProfile: 'sheet',
 }
 

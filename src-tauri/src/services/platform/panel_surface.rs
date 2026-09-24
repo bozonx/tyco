@@ -1,4 +1,4 @@
-use tauri::WebviewWindow;
+use tauri::{PhysicalPosition, Position, WebviewWindow};
 
 #[cfg(target_os = "linux")]
 use gtk::prelude::*;
@@ -62,8 +62,7 @@ pub fn apply_panel_surface(
     enabled: bool,
 ) -> Result<(), AppError> {
     if !enabled {
-        window.center()?;
-        return Ok(());
+        return position_regular_panel(window, profile);
     }
     let gtk_window = window.gtk_window()?;
     match profile {
@@ -93,7 +92,7 @@ pub fn apply_panel_surface(
 #[cfg(target_os = "windows")]
 pub fn apply_panel_surface(
     window: &WebviewWindow,
-    _profile: WindowProfile,
+    profile: WindowProfile,
     intent: ActivationIntent,
     _enabled: bool,
 ) -> Result<(), AppError> {
@@ -110,18 +109,44 @@ pub fn apply_panel_surface(
         style &= !WS_EX_NOACTIVATE;
     }
     unsafe { SetWindowLongW(handle, GWL_EXSTYLE, style as i32) };
-    window.center()?;
-    Ok(())
+    position_regular_panel(window, profile)
 }
 
 #[cfg(target_os = "macos")]
 pub fn apply_panel_surface(
     window: &WebviewWindow,
-    _profile: WindowProfile,
+    profile: WindowProfile,
     _intent: ActivationIntent,
     _enabled: bool,
 ) -> Result<(), AppError> {
     window.set_always_on_top(true)?;
-    window.center()?;
+    position_regular_panel(window, profile)?;
+    Ok(())
+}
+
+fn position_regular_panel(window: &WebviewWindow, profile: WindowProfile) -> Result<(), AppError> {
+    let Some(monitor) = window.current_monitor()? else {
+        window.center()?;
+        return Ok(());
+    };
+
+    let monitor_position = monitor.position();
+    let monitor_size = monitor.size();
+    let window_size = window.outer_size()?;
+    let x =
+        monitor_position.x + ((monitor_size.width.saturating_sub(window_size.width)) / 2) as i32;
+    let y = match profile {
+        WindowProfile::Panel => {
+            let bottom_gap = (24.0 * monitor.scale_factor()).round() as i32;
+            monitor_position.y + monitor_size.height.saturating_sub(window_size.height) as i32
+                - bottom_gap
+        }
+        WindowProfile::Sheet => {
+            monitor_position.y
+                + ((monitor_size.height.saturating_sub(window_size.height)) / 2) as i32
+        }
+    };
+
+    window.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
     Ok(())
 }

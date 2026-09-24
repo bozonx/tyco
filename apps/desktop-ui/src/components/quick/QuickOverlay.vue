@@ -16,9 +16,6 @@
       >
         <SelectModeView />
       </div>
-      <div v-show="currentMode === 'editor'" class="quick-mode-layer">
-        <QuickPanel />
-      </div>
     </div>
   </div>
 </template>
@@ -30,7 +27,6 @@ import {
   QUICK_PANEL_WIDTH,
   quickPanelWindowHeight,
 } from '../../lib/quick-panel/quick-panel-size'
-import { useEditorInputStore } from '../../stores/editorInput'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useWriterInputStore } from '../../stores/writerInput'
@@ -38,14 +34,12 @@ import AiTaskView from '../../views/AiTaskView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'
-import QuickPanel from '../QuickPanel.vue'
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const writerInputStore = useWriterInputStore()
-const editorInputStore = useEditorInputStore()
 const cardRef = ref<HTMLElement | null>(null)
 
 const currentMode = computed(() => ipcStore.params?.mode || 'write')
@@ -80,8 +74,6 @@ const resizeWindow = async (): Promise<void> => {
 const syncFocus = () => {
   if (currentMode.value === 'write') {
     writerInputStore.focus()
-  } else if (currentMode.value === 'editor') {
-    editorInputStore.focus()
   }
 }
 

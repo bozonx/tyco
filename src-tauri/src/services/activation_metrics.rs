@@ -254,11 +254,9 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
             (Ok(id), Ok(t0)) => {
                 let metrics = app.state::<ActivationMetrics>();
                 metrics.start(id, t0);
-                let state = app.state::<AppState>();
-                state.update_params(|params| params.quick_input = true);
                 match runtime::activate(
                     app,
-                    Activation::new(StartMode::Editor, ActivationSource::Cli),
+                    Activation::new(StartMode::Write, ActivationSource::Cli),
                 ) {
                     Ok(()) => {
                         if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {

@@ -1,10 +1,9 @@
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
-use std::{thread, time::Duration};
+use std::thread;
 
-pub use super::activation::{
-    Activation, ActivationIntent, ActivationSource, StartMode, WindowProfile,
-};
+pub use super::activation::Activation;
+use super::activation::{ActivationIntent, StartMode, WindowProfile};
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -50,11 +49,6 @@ fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Resu
 }
 
 #[derive(Default)]
-struct Warmup {
-    cancelled: AtomicBool,
-}
-
-#[derive(Default)]
 struct ContextCapture {
     generation: AtomicU64,
 }
@@ -93,25 +87,6 @@ impl RuntimeWindows {
     }
 }
 
-impl Warmup {
-    fn visibility(&self, step: usize, initially_visible: bool) -> Option<bool> {
-        if self.cancelled.load(Ordering::SeqCst) {
-            return None;
-        }
-        match step {
-            0..=5 => Some(step.is_multiple_of(2)),
-            6 if initially_visible => Some(true),
-            _ => None,
-        }
-    }
-}
-
-fn cancel_warmup(app: &AppHandle) {
-    if let Some(warmup) = app.try_state::<Warmup>() {
-        warmup.cancelled.store(true, Ordering::SeqCst);
-    }
-}
-
 /// Execute window operations serially and return their actual result to the caller.
 /// Tauri executes this closure inline when already on the main thread.
 fn on_main_thread(
@@ -144,10 +119,7 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         .fetch_add(1, Ordering::SeqCst)
         + 1;
 
-    on_main_thread(app, move |app| {
-        cancel_warmup(app);
-        activate_on_main_thread(app, activation)
-    })?;
+    on_main_thread(app, move |app| activate_on_main_thread(app, activation))?;
 
     if capture_selection {
         let handle = app.clone();
@@ -222,7 +194,6 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.window_id = activation.window_id;
         params.selected_text = activation.selected_text;
         params.is_window_shown = true;
-        params.quick_input = activation.mode == StartMode::Editor;
         params.window_profile = match activation.mode.profile() {
             super::activation::WindowProfile::Panel => String::from("panel"),
             super::activation::WindowProfile::Sheet => String::from("sheet"),
@@ -283,10 +254,7 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
 }
 
 pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
-    on_main_thread(app, |app| {
-        cancel_warmup(app);
-        show_application_on_main_thread(app)
-    })
+    on_main_thread(app, show_application_on_main_thread)
 }
 
 pub fn open_main_editor(
@@ -295,7 +263,6 @@ pub fn open_main_editor(
     source_text: Option<String>,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        cancel_warmup(app);
         show_application_on_main_thread(app)?;
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
@@ -330,8 +297,6 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
                 ActivationIntent::KeyboardFirst,
                 has_layer_shell,
             )?;
-            let _ = window.show();
-            let _ = window.set_focus();
         }
         let state = app.state::<AppState>();
         state.update_params(|params| {
@@ -367,60 +332,14 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     state.update_params(|params| {
         params.mode = Some(StartMode::Editor.as_str().into());
         params.is_window_shown = true;
-        params.quick_input = false;
         params.window_profile = String::from("sheet");
     });
     log::debug!("Showed main application from tray");
     emit_params(app, &state)
 }
 
-fn schedule_warmup(app: &AppHandle) -> Result<(), AppError> {
-    let initially_visible = app
-        .get_webview_window(QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Quick window not found".into()))?
-        .is_visible()?;
-    let handle = app.clone();
-    thread::spawn(move || {
-        thread::sleep(Duration::from_millis(400));
-        for step in 0..7 {
-            let result = on_main_thread(&handle, move |app| {
-                let Some(show) = app.state::<Warmup>().visibility(step, initially_visible) else {
-                    return Ok(());
-                };
-                let window = app
-                    .get_webview_window(QUICK_WINDOW_LABEL)
-                    .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-                if show {
-                    #[cfg(target_os = "linux")]
-                    window
-                        .gtk_window()?
-                        .set_opacity(if step == 6 { 1.0 } else { 0.0 });
-                    window.show()?;
-                } else {
-                    window.hide()?;
-                    #[cfg(target_os = "linux")]
-                    window.gtk_window()?.set_opacity(1.0);
-                }
-                Ok(())
-            });
-            if let Err(error) = result {
-                log::warn!("Window warmup failed: {error}");
-                return;
-            }
-            if handle.state::<Warmup>().cancelled.load(Ordering::SeqCst) {
-                return;
-            }
-            thread::sleep(Duration::from_millis(250));
-        }
-    });
-    Ok(())
-}
-
 pub fn hide_main_window(app: &AppHandle, _state: &AppState) -> Result<(), AppError> {
-    on_main_thread(app, |app| {
-        cancel_warmup(app);
-        hide_on_main_thread(app)
-    })
+    on_main_thread(app, hide_on_main_thread)
 }
 
 fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
@@ -446,7 +365,6 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
-    app.manage(Warmup::default());
     app.manage(ContextCapture::default());
     app.manage(RuntimeWindows::default());
     #[cfg(target_os = "linux")]
@@ -464,7 +382,6 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         app.manage(LayerShell { supported });
     }
     setup_tray(app)?;
-    schedule_warmup(app.handle())?;
     Ok(())
 }
 
@@ -554,29 +471,6 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn warmup_runs_three_cycles_and_restores_visibility() {
-        let warmup = Warmup::default();
-        assert_eq!(
-            (0..7)
-                .filter_map(|step| warmup.visibility(step, false))
-                .collect::<Vec<_>>(),
-            vec![true, false, true, false, true, false]
-        );
-        assert_eq!(warmup.visibility(6, true), Some(true));
-        assert_eq!(warmup.visibility(7, true), None);
-    }
-
-    #[test]
-    fn user_action_cancels_every_remaining_warmup_operation() {
-        let warmup = Warmup::default();
-        assert_eq!(warmup.visibility(0, true), Some(true));
-        warmup.cancelled.store(true, Ordering::SeqCst);
-        for step in 1..7 {
-            assert_eq!(warmup.visibility(step, true), None);
-        }
-    }
 
     #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
