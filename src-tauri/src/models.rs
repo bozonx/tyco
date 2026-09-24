@@ -16,6 +16,7 @@ pub struct LocalState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitParams {
+    pub activation_id: u64,
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
     pub mode: Option<String>,
@@ -249,6 +250,7 @@ pub fn app_config() -> Value {
 
 pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitParams {
     InitParams {
+        activation_id: 0,
         window_id: None,
         selected_text: None,
         mode: local_state

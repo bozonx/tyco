@@ -168,6 +168,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     let has_layer_shell = false;
 
     if is_quick_window {
+        window.set_decorations(false)?;
         super::platform::apply_panel_surface(
             &window,
             activation.mode.profile(),
@@ -175,6 +176,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
             has_layer_shell,
         )?;
     } else {
+        window.set_decorations(true)?;
+        window.set_resizable(true)?;
         window.center()?;
     }
     window.set_focusable(activation.intent == ActivationIntent::KeyboardFirst)?;
@@ -190,6 +193,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     }
 
     state.update_params(|params| {
+        params.activation_id = params.activation_id.wrapping_add(1);
         params.mode = Some(activation.mode.as_str().into());
         params.window_id = activation.window_id;
         params.selected_text = activation.selected_text;
@@ -320,6 +324,8 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;
     let state = app.state::<AppState>();
 
+    window.set_decorations(true)?;
+    window.set_resizable(true)?;
     window.set_focusable(true)?;
     window.show()?;
     if let Err(error) = window.unminimize() {

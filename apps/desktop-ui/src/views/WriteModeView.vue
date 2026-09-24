@@ -51,19 +51,18 @@ const { t } = useI18n()
 let keyUpListenerIndex = -1
 
 function resetNav() {
-  navPanelStore.resetNavParams({
-    escBtnLabelKey: 'write.next',
-    escBtnAction: doCorrection,
-    panelVisible: false,
-  })
+  navPanelStore.resetNavParams({ panelVisible: false })
 }
 
 resetNav()
 
 watch(
-  () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
-  ([isShown, mode]) => {
-    if (isShown && mode === 'write') {
+  () => ipcStore.params?.activationId,
+  () => {
+    const { isWindowShown, mode } = ipcStore.params
+    if (isWindowShown && mode === 'write') {
+      menuModalsStore.closeAll()
+      writerInputStore.clear()
       resetNav()
       writerInputStore.focus()
     }
@@ -79,7 +78,21 @@ watch(
 )
 
 function handleKeyUp(event: KeyboardEvent) {
-  if (event.code === 'Tab' && !menuModalsStore.anyModalOpen) {
+  if (
+    !ipcStore.params.isWindowShown ||
+    ipcStore.params.mode !== 'write' ||
+    menuModalsStore.anyModalOpen
+  ) {
+    return
+  }
+
+  if (event.code === 'Escape') {
+    event.preventDefault()
+    void doCorrection()
+    return
+  }
+
+  if (event.code === 'Tab') {
     event.preventDefault()
     routeParamsStore.toEditor(writerInputStore.value)
   }

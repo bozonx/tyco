@@ -66,7 +66,6 @@ declare module 'vue' {
     TextPreview: typeof import('./src/components/common/TextPreview.vue')['default']
     TranslateMenu: typeof import('./src/components/menu/TranslateMenu.vue')['default']
     VoiceRecognitionMenu: typeof import('./src/components/menu/VoiceRecognitionMenu.vue')['default']
-    WindowTitlebar: typeof import('./src/components/WindowTitlebar.vue')['default']
     WriteModeInput: typeof import('./src/components/WriteModeInput.vue')['default']
   }
 }

@@ -90,6 +90,7 @@ export interface LocalState {
 export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }
 
 export interface InitParams {
+  activationId: number
   windowId: string | null
   selectedText: string | null
   mode: START_MODES | null
@@ -109,6 +110,7 @@ export interface EditorTransfer {
 }
 
 export const DEFAULT_INIT_PARAMS: InitParams = {
+  activationId: 0,
   windowId: null,
   selectedText: null,
   mode: START_MODES.EDITOR,

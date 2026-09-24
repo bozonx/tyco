@@ -24,7 +24,7 @@ export const useNavPanelStore = defineStore('navPanel', () => {
   }
 
   function handleKeyUp(event: KeyboardEvent) {
-    if (event.code !== 'Escape') return
+    if (event.code !== 'Escape' || event.defaultPrevented) return
 
     if (menuModalsStore.anyModalOpen) {
       menuModalsStore.back()
