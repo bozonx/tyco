@@ -36,7 +36,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     options: { forceNavigate?: boolean } = {}
   ) => {
     deps.setParams(params)
-    deps.closeAllModals()
 
     const shouldNavigate =
       options.forceNavigate ||
@@ -46,6 +45,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     lastAppliedMode = params.mode
 
     if (shouldNavigate) {
+      deps.closeAllModals()
       await deps.navigateTo(resolveModeRoute(params.mode))
     }
   }

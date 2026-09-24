@@ -130,7 +130,7 @@ async function doCorrection() {
       correctedText.value = result
       correctionIsActual.value = true
     } catch {
-      return
+      correctedText.value = writerInputStore.value
     } finally {
       menuModalsStore.clearPendingModal()
     }

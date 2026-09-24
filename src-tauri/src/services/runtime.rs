@@ -350,7 +350,7 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
                 WindowProfile::Sheet => String::from("sheet"),
             };
         });
-        emit_params(app, &state)
+        Ok(())
     })
 }
 
