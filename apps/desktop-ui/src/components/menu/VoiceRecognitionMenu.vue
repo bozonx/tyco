@@ -23,6 +23,14 @@
         {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
       </ShortcutButton>
       <ShortcutButton
+        :keys="['Tab']"
+        icon="mdi:pencil-outline"
+        :disabled="isFinishing"
+        @click="goToEditor"
+      >
+        {{ t('shortcuts.insertIntoEditor') }}
+      </ShortcutButton>
+      <ShortcutButton
         :keys="['Esc']"
         icon="mdi:close"
         :disabled="isFinishing"
@@ -35,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
 import {
@@ -47,6 +55,7 @@ import useToast from '../../composables/useToast'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
+import { useRouteParams } from '../../stores/routeParams'
 
 const props = defineProps<{
   onCorrected?: (
@@ -81,6 +90,7 @@ const { t } = useI18n()
 const ipcStore = useIpcStore()
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
+const routeParamsStore = useRouteParams()
 
 const recognizedText = ref('')
 const lastRecognizedTextMs = ref(0)
@@ -220,9 +230,22 @@ const finish = async () => {
   }
 }
 
+function goToEditor() {
+  if (isFinishing.value) return
+  stopVoiceUpdates()
+  void cancelVoiceRecognition()
+  routeParamsStore.toEditor(recognizedText.value)
+}
+
 function handleKeyUp(event: KeyboardEvent) {
   if (event.code === 'Escape') {
     void cancel()
+    return
+  }
+
+  if (event.code === 'Tab') {
+    event.preventDefault()
+    goToEditor()
     return
   }
 
@@ -230,6 +253,34 @@ function handleKeyUp(event: KeyboardEvent) {
     void finish()
   }
 }
+
+async function startSession() {
+  if (isStarted.value || isFinishing.value) return
+  recognizedText.value = ''
+  lastRecognizedTextMs.value = 0
+  try {
+    await startVoiceRecognition()
+    isStarted.value = true
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    toast(message || t('toast.voiceRecognitionFailed'), 'error')
+    stopVoiceUpdates()
+    notifyCancelled()
+  }
+}
+
+watch(
+  () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
+  ([isShown, mode]) => {
+    if (isShown && mode === 'voice') {
+      void startSession()
+    } else {
+      if (isStarted.value && !isFinishing.value) {
+        void cancel()
+      }
+    }
+  }
+)
 
 onMounted(async () => {
   voiceListenerIndex = globalEvents.addListener(
@@ -241,14 +292,8 @@ onMounted(async () => {
   )
   keyUpHandlerIndex = globalEvents.addListener(GlobalEvents.KEY_UP, handleKeyUp)
 
-  try {
-    await startVoiceRecognition()
-    isStarted.value = true
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    toast(message || t('toast.voiceRecognitionFailed'), 'error')
-    stopVoiceUpdates()
-    notifyCancelled()
+  if (ipcStore.params?.isWindowShown && ipcStore.params?.mode === 'voice') {
+    await startSession()
   }
 })
 

@@ -43,6 +43,7 @@ declare module 'vue' {
     NavPanel: typeof import('./src/components/NavPanel.vue')['default']
     Overlay: typeof import('./src/components/common/Overlay.vue')['default']
     PreviewMenu: typeof import('./src/components/menu/PreviewMenu.vue')['default']
+    QuickOverlay: typeof import('./src/components/quick/QuickOverlay.vue')['default']
     QuickPanel: typeof import('./src/components/QuickPanel.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -1,0 +1,138 @@
+<template>
+  <div class="quick-overlay-root">
+    <div ref="cardRef" class="quick-overlay-card">
+      <div v-show="currentMode === 'write'" class="quick-mode-layer">
+        <WriteModeView />
+      </div>
+      <div v-show="currentMode === 'voice'" class="quick-mode-layer">
+        <VoiceView />
+      </div>
+      <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
+        <AiTaskView />
+      </div>
+      <div
+        v-show="currentMode === 'select' || currentMode === 'correction'"
+        class="quick-mode-layer"
+      >
+        <SelectModeView />
+      </div>
+      <div v-show="currentMode === 'editor'" class="quick-mode-layer">
+        <QuickPanel />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import {
+  QUICK_PANEL_WIDTH,
+  quickPanelWindowHeight,
+} from '../../lib/quick-panel/quick-panel-size'
+import { useEditorInputStore } from '../../stores/editorInput'
+import { useIpcStore } from '../../stores/ipc'
+import { useWriterInputStore } from '../../stores/writerInput'
+import AiTaskView from '../../views/AiTaskView.vue'
+import SelectModeView from '../../views/SelectModeView.vue'
+import VoiceView from '../../views/VoiceView.vue'
+import WriteModeView from '../../views/WriteModeView.vue'
+import QuickPanel from '../QuickPanel.vue'
+import { LogicalSize } from '@tauri-apps/api/dpi'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+
+const ipcStore = useIpcStore()
+const writerInputStore = useWriterInputStore()
+const editorInputStore = useEditorInputStore()
+const cardRef = ref<HTMLElement | null>(null)
+
+const currentMode = computed(() => ipcStore.params?.mode || 'write')
+
+let resizeObserver: ResizeObserver | null = null
+let lastWindowHeight = 0
+
+const resizeWindow = async (): Promise<void> => {
+  if (!cardRef.value) return
+
+  const height = quickPanelWindowHeight(
+    cardRef.value.getBoundingClientRect().height
+  )
+  if (height === lastWindowHeight) return
+
+  try {
+    await getCurrentWindow().setSize(new LogicalSize(QUICK_PANEL_WIDTH, height))
+    lastWindowHeight = height
+  } catch {
+    // Browser dev fallback
+  }
+}
+
+const syncFocus = () => {
+  if (currentMode.value === 'write') {
+    writerInputStore.focus()
+  } else if (currentMode.value === 'editor') {
+    editorInputStore.focus()
+  }
+}
+
+onMounted(() => {
+  resizeObserver = new ResizeObserver(() => void resizeWindow())
+  if (cardRef.value) resizeObserver.observe(cardRef.value)
+  syncFocus()
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+})
+
+// Keep focus in the input field when window is shown or hidden so focus arrives immediately
+watch(
+  () => ipcStore.params.isWindowShown,
+  () => {
+    syncFocus()
+  }
+)
+
+watch(
+  () => currentMode.value,
+  async () => {
+    await nextTick()
+    syncFocus()
+    void resizeWindow()
+  }
+)
+</script>
+
+<style scoped>
+.quick-overlay-root {
+  height: 100dvh;
+  width: 100dvw;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-sm);
+  box-sizing: border-box;
+}
+
+.quick-overlay-card {
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--app-surface) 94%, transparent);
+  box-shadow: var(--app-shadow-lg);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 100%;
+}
+
+.quick-mode-layer {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+}
+</style>

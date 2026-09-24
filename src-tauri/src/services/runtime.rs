@@ -246,8 +246,17 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     emit_params(app, &state)
 }
 
-fn window_label_for_mode(_mode: StartMode) -> &'static str {
-    QUICK_WINDOW_LABEL
+fn window_label_for_mode(mode: StartMode) -> &'static str {
+    match mode {
+        StartMode::Write
+        | StartMode::Voice
+        | StartMode::Select
+        | StartMode::AiTasks
+        | StartMode::Correction => QUICK_WINDOW_LABEL,
+        StartMode::Editor | StartMode::Chat | StartMode::History | StartMode::Config => {
+            MAIN_WINDOW_LABEL
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -544,9 +553,23 @@ mod tests {
     }
 
     #[test]
-    fn every_activation_mode_uses_the_quick_window() {
-        for mode in StartMode::ALL {
+    fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
+        for mode in [
+            StartMode::Write,
+            StartMode::Voice,
+            StartMode::Select,
+            StartMode::AiTasks,
+            StartMode::Correction,
+        ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
+        }
+        for mode in [
+            StartMode::Editor,
+            StartMode::Chat,
+            StartMode::History,
+            StartMode::Config,
+        ] {
+            assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }
     }
 

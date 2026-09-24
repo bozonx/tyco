@@ -12,26 +12,33 @@
       <p class="write-hint">
         <KeyButton>Esc</KeyButton>
         <span>{{ t('write.next') }}</span>
+        <span class="opacity-40">•</span>
+        <KeyButton>Tab</KeyButton>
+        <span>{{ t('shortcuts.insertIntoEditor') }}</span>
       </p>
     </div>
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../composables/useCallAi'
+import { GlobalEvents, useGlobalEvents } from '../composables/useGlobalEvents'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
+import { useRouteParams } from '../stores/routeParams'
 import { useWriterInputStore } from '../stores/writerInput'
 import { Icon } from '@iconify/vue'
 
 const navPanelStore = useNavPanelStore()
 const writerInputStore = useWriterInputStore()
+const routeParamsStore = useRouteParams()
+const { globalEvents } = useGlobalEvents()
 const ipcStore = useIpcStore()
 const { correctText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()
@@ -41,12 +48,28 @@ const appConfig = ipcStore.params!.appConfig
 const correctedText = ref('')
 const correctionIsActual = ref(true)
 const { t } = useI18n()
+let keyUpListenerIndex = -1
 
-navPanelStore.resetNavParams({
-  escBtnLabelKey: 'write.next',
-  escBtnAction: doCorrection,
-  panelVisible: false,
-})
+function resetNav() {
+  navPanelStore.resetNavParams({
+    escBtnLabelKey: 'write.next',
+    escBtnAction: doCorrection,
+    panelVisible: false,
+  })
+}
+
+resetNav()
+
+watch(
+  () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
+  ([isShown, mode]) => {
+    if (isShown && mode === 'write') {
+      resetNav()
+      writerInputStore.focus()
+    }
+  },
+  { immediate: true }
+)
 
 watch(
   () => writerInputStore.value,
@@ -55,9 +78,25 @@ watch(
   }
 )
 
-// leaving the mode discards the text; the history keeps it
+function handleKeyUp(event: KeyboardEvent) {
+  if (event.code === 'Tab' && !menuModalsStore.anyModalOpen) {
+    event.preventDefault()
+    routeParamsStore.toEditor(writerInputStore.value)
+  }
+}
+
+onMounted(() => {
+  keyUpListenerIndex = globalEvents.addListener(
+    GlobalEvents.KEY_UP,
+    handleKeyUp
+  )
+})
+
 onUnmounted(() => {
-  writerInputStore.clear()
+  if (keyUpListenerIndex >= 0) {
+    globalEvents.removeListener(keyUpListenerIndex)
+    keyUpListenerIndex = -1
+  }
 })
 
 const clear = () => {

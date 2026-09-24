@@ -1,39 +1,23 @@
 <template>
   <MenuModals />
-  <div
-    class="layout"
-    :class="{
-      'panel-layout':
-        isQuickWindow && ipcStore.params.windowProfile === 'panel',
-      'quick-layout': quickPanelStore.isActive && ipcStore.params.quickInput,
-    }"
-  >
-    <WindowTitlebar v-if="isQuickWindow && sheetTitle" :title="sheetTitle" />
-    <div class="layout-body">
-      <NavPanel
-        v-if="
-          navPanelStore.params.panelVisible &&
-          !(quickPanelStore.isActive && ipcStore.params.quickInput)
-        "
-      />
+  <template v-if="isQuickWindow">
+    <QuickOverlay />
+  </template>
+  <template v-else>
+    <div class="layout">
+      <NavPanel v-if="navPanelStore.params.panelVisible" />
       <div class="main">
-        <!-- always mounted: its input keeps the focus between activations -->
-        <div v-show="quickPanelStore.isActive" class="layer">
-          <QuickPanel />
-        </div>
-        <div v-show="!quickPanelStore.isActive" class="layer routed-layer">
-          <RouterView />
-        </div>
+        <RouterView />
       </div>
     </div>
-  </div>
+  </template>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import WindowTitlebar from './components/WindowTitlebar.vue'
+import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
@@ -43,7 +27,6 @@ import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
-import { sheetTitleKey } from './lib/window-profile/window-profile'
 import { usePlugins } from './plugins'
 import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
@@ -93,10 +76,6 @@ const activationMetrics = createActivationMetricsClient({
 })
 const isQuickWindow = getCurrentWindow().label === 'quick'
 let removeMainEditorListener: (() => void) | undefined
-const sheetTitle = computed(() => {
-  const key = sheetTitleKey(route.path)
-  return key ? t(key) : ''
-})
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
   setParams: (params) => ipcStore.setParams(params),
