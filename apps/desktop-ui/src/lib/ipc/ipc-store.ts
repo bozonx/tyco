@@ -96,10 +96,6 @@ export function createCommandMap(): Record<string, CommandEntry> {
     },
     clearEditorHistory: { command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY },
     clearChatHistory: { command: DESKTOP_COMMANDS.CLEAR_CHAT_HISTORY },
-    startVoiceRecognition: {
-      command: DESKTOP_COMMANDS.START_VOICE_RECOGNITION,
-    },
-    stopVoiceRecognition: { command: DESKTOP_COMMANDS.STOP_VOICE_RECOGNITION },
     startLocalVoiceRecording: {
       command: DESKTOP_COMMANDS.START_LOCAL_VOICE_RECORDING,
     },

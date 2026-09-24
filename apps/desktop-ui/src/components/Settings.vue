@@ -191,14 +191,13 @@
                 v-model:value="currentSttProvider"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.baseUrl')">
+            <FieldRow
+              v-if="currentSttProvider === 'openai-compatible'"
+              :label="t('settings.baseUrl')"
+            >
               <FieldInput
                 :value="currentSttModel.baseUrl || ''"
-                :placeholder="
-                  currentSttProvider === 'websocket'
-                    ? 'ws://localhost:2700'
-                    : 'http://localhost:8000/v1'
-                "
+                placeholder="http://localhost:8000/v1"
                 @update:value="setSttField('baseUrl', $event)"
               />
             </FieldRow>
@@ -209,10 +208,7 @@
                 @update:value="setSttField('model', $event)"
               />
             </FieldRow>
-            <FieldRow
-              v-if="currentSttProvider === 'openai-compatible'"
-              :label="t('settings.apiKey')"
-            >
+            <FieldRow :label="t('settings.apiKey')">
               <div class="flex items-center gap-2 w-full">
                 <FieldInput
                   class="flex-1"
@@ -287,6 +283,7 @@ import {
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
+import { secretId } from '../lib/stt/stt-client'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
@@ -305,7 +302,9 @@ import {
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
+  STT_PROVIDERS,
   type StorageInfo,
+  type SttProvider,
   type ThemeMode,
   UI_SCALES,
   isUiScale,
@@ -321,9 +320,7 @@ const { toast, toastText } = useToast()
 const SAVE_DEBOUNCE_MS = 500
 
 const currentTab = ref('general')
-const currentSttProvider = ref<'openai-compatible' | 'websocket'>(
-  'openai-compatible'
-)
+const currentSttProvider = ref<SttProvider>('openai-compatible')
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
 const storageInfo = ref<StorageInfo | null>(null)
@@ -380,10 +377,19 @@ const currentTabTitle = computed(
     )?.text || ''
 )
 
-const sttProviderTabs = computed(() => [
-  { text: 'OpenAI-compatible', key: 'openai-compatible' },
-  { text: 'WebSocket', key: 'websocket' },
-])
+const sttProviderNames: Record<SttProvider, string> = {
+  assemblyai: 'AssemblyAI',
+  deepgram: 'Deepgram',
+  groq: 'Groq',
+  'openai-compatible': 'OpenAI-compatible',
+}
+
+const sttProviderTabs = computed(() =>
+  STT_PROVIDERS.map((provider) => ({
+    text: sttProviderNames[provider],
+    key: provider,
+  }))
+)
 
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   () => [
@@ -601,19 +607,19 @@ function normalizeSttConfig(config: Record<string, any>) {
   const activeModel = config.sttModels.find(
     (model: Record<string, any>) => model.id === config.aiModelUsage.stt
   )
-  const activeProvider = activeModel?.provider
-  const oldHttpModel = config.sttModels.find(
-    (model: Record<string, any>) => model.provider === 'openai-compatible'
+  const activeProvider = STT_PROVIDERS.includes(activeModel?.provider)
+    ? activeModel.provider
+    : 'openai-compatible'
+  config.sttModels = STT_PROVIDERS.map((provider) =>
+    createSttModel(
+      provider,
+      config.sttModels.find(
+        (model: Record<string, any>) => model.provider === provider
+      )
+    )
   )
-  const oldWebSocketModel = config.sttModels.find(
-    (model: Record<string, any>) => model.provider === 'websocket'
-  )
-  const httpModel = createSttModel('openai-compatible', oldHttpModel)
-  const webSocketModel = createSttModel('websocket', oldWebSocketModel)
-
-  config.sttModels = [httpModel, webSocketModel]
   config.aiModelUsage = {
-    stt: activeProvider === 'websocket' ? webSocketModel.id : httpModel.id,
+    stt: createSttModel(activeProvider).id,
     tts: config.aiModelUsage.tts ?? '',
   }
 }
@@ -636,28 +642,44 @@ function normalizeAiTasks(config: Record<string, any>) {
 }
 
 function createSttModel(
-  provider: 'openai-compatible' | 'websocket',
+  provider: SttProvider,
   existingModel?: Record<string, any>
 ) {
-  const isWebSocket = provider === 'websocket'
+  const defaults: Record<SttProvider, Record<string, any>> = {
+    assemblyai: {
+      id: 'assemblyai-stt',
+      model: 'universal-3-pro',
+      description: 'AssemblyAI speech recognition',
+    },
+    deepgram: {
+      id: 'deepgram-stt',
+      model: 'nova-3',
+      description: 'Deepgram speech recognition',
+    },
+    groq: {
+      id: 'groq-stt',
+      model: 'whisper-large-v3-turbo',
+      description: 'Groq speech recognition',
+    },
+    'openai-compatible': {
+      id: 'openai-compatible-stt',
+      model: 'whisper-1',
+      description: 'OpenAI-compatible transcription endpoint',
+      baseUrl: 'http://localhost:8000/v1',
+    },
+  }
+  const fallback = defaults[provider]
   return {
-    id: isWebSocket ? 'websocket-stt' : 'openai-compatible-stt',
-    model: existingModel?.model || (isWebSocket ? 'whisper' : 'whisper-1'),
+    ...fallback,
+    ...existingModel,
+    id: fallback.id,
     provider,
-    description: isWebSocket
-      ? 'Streaming STT WebSocket endpoint'
-      : 'OpenAI-compatible transcription endpoint',
-    formatWithLlm: existingModel?.formatWithLlm ?? isWebSocket,
-    baseUrl:
-      existingModel?.baseUrl ||
-      (isWebSocket ? 'ws://localhost:2700' : 'http://localhost:8000/v1'),
+    formatWithLlm:
+      existingModel?.formatWithLlm ?? provider !== 'openai-compatible',
   }
 }
 
-function ensureSttModel(
-  config: Record<string, any>,
-  provider: 'openai-compatible' | 'websocket'
-) {
+function ensureSttModel(config: Record<string, any>, provider: SttProvider) {
   const existingModel = (config.sttModels || []).find(
     (model: Record<string, any>) => model.provider === provider
   )
@@ -676,7 +698,9 @@ function resolveCurrentSttProvider(config: Record<string, any>) {
     (item: Record<string, any>) => item.id === usageId
   )
 
-  return model?.provider === 'websocket' ? 'websocket' : 'openai-compatible'
+  return STT_PROVIDERS.includes(model?.provider)
+    ? model.provider
+    : 'openai-compatible'
 }
 
 /**
@@ -882,8 +906,8 @@ const setSttField = (field: 'baseUrl' | 'model', value: string) => {
 
 const hasSttKey = computed(() =>
   Boolean(
-    currentSttModel.value?.id &&
-    Object.hasOwn(llmStore.secrets, currentSttModel.value.id)
+    currentSttModel.value &&
+    Object.hasOwn(llmStore.secrets, secretId(currentSttModel.value))
   )
 )
 
@@ -899,16 +923,17 @@ function currentSttOrigin() {
 }
 
 async function saveSttKey() {
-  const origin = currentSttOrigin()
-  if (!origin) {
+  const customProvider = currentSttProvider.value === 'openai-compatible'
+  const origin = customProvider ? currentSttOrigin() : undefined
+  if (customProvider && !origin) {
     toast(t('settings.invalidBaseUrl'), 'error')
     return
   }
   try {
     await llmStore.setSecret(
-      currentSttModel.value.id,
+      secretId(currentSttModel.value),
       sttKeyDraft.value.trim(),
-      [origin]
+      origin ? [origin] : undefined
     )
     sttKeyDraft.value = ''
   } catch (error) {
@@ -918,7 +943,7 @@ async function saveSttKey() {
 
 async function removeSttKey() {
   try {
-    await llmStore.removeSecret(currentSttModel.value.id)
+    await llmStore.removeSecret(secretId(currentSttModel.value))
   } catch (error) {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   }

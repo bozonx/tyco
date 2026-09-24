@@ -6,13 +6,12 @@ import {
   AUTO_LANGUAGE_VALUE,
   resolveLanguagePreference,
 } from '../lib/locale/language'
-import { createTauriFetch } from '../lib/net/tauri-fetch'
-import { tauriNetIpc } from '../lib/net/tauri-net'
+import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
+import { createSttClient, secretId } from '../lib/stt/stt-client'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
 import { AI_TASKS } from '../types'
-import { transcribeOpenAiCompatible } from '../utils/stt/openai-compatible'
 import { GlobalEvents, useGlobalEvents } from './useGlobalEvents'
 import useToast from './useToast'
 import {
@@ -24,7 +23,9 @@ import {
 } from '@tyco/shared'
 
 /** Speech recognition requests leave from Rust too, like every other one */
-const proxiedFetch = createTauriFetch(tauriNetIpc)
+const sttClient = createSttClient({
+  transport: createTauriTransport(tauriNetIpc),
+})
 
 interface LocalVoiceRecording {
   sampleRate: number
@@ -65,15 +66,7 @@ export const useCallAi = () => {
       throw new Error(translate('toast.modelNotFound'))
     }
 
-    if (sttModel.provider === 'openai-compatible') {
-      return {
-        provider: 'openai-compatible' as const,
-        streaming: false,
-        model: sttModel,
-      }
-    }
-
-    return { provider: 'websocket' as const, streaming: true, model: sttModel }
+    return { streaming: false, model: sttModel }
   }
 
   const currentWhisperLanguage = () => {
@@ -122,59 +115,42 @@ export const useCallAi = () => {
   }
 
   const startVoiceRecognition = async () => {
-    const runtime = getVoiceRecognitionRuntime()
+    getVoiceRecognitionRuntime()
 
-    if (runtime.provider === 'openai-compatible') {
-      const result = await ipcStore.callFunction('startLocalVoiceRecording')
+    const result = await ipcStore.callFunction('startLocalVoiceRecording')
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to start local voice recording')
-      }
-      return
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to start local voice recording')
     }
-
-    await ipcStore.callFunction('startVoiceRecognition')
   }
 
   const stopVoiceRecognition = async () => {
     const runtime = getVoiceRecognitionRuntime()
 
-    if (runtime.provider === 'openai-compatible') {
-      const result = await ipcStore.callFunction('stopLocalVoiceRecording')
+    const result = await ipcStore.callFunction('stopLocalVoiceRecording')
 
-      if (!result.success || !result.result || !runtime.model) {
-        throw new Error(result.error || 'Failed to stop local voice recording')
-      }
-
-      await llmStore.refreshSecrets()
-      const text = await transcribeOpenAiCompatible(
-        runtime.model,
-        result.result as LocalVoiceRecording,
-        currentWhisperLanguage(),
-        proxiedFetch,
-        Object.hasOwn(llmStore.secrets, runtime.model.id)
-      )
-
-      if (text) {
-        globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
-      }
-
-      return text
+    if (!result.success || !result.result) {
+      throw new Error(result.error || 'Failed to stop local voice recording')
     }
 
-    await ipcStore.callFunction('stopVoiceRecognition')
-    return ''
+    await llmStore.refreshSecrets()
+    const text = await sttClient.transcribe({
+      model: runtime.model,
+      recording: result.result as LocalVoiceRecording,
+      language: currentWhisperLanguage(),
+      hasApiKey: Object.hasOwn(llmStore.secrets, secretId(runtime.model)),
+    })
+
+    if (text) {
+      globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
+    }
+
+    return text
   }
 
   const cancelVoiceRecognition = async () => {
-    const runtime = getVoiceRecognitionRuntime()
-
-    if (runtime.provider === 'openai-compatible') {
-      await ipcStore.callFunction('stopLocalVoiceRecording')
-      return
-    }
-
-    await ipcStore.callFunction('stopVoiceRecognition')
+    getVoiceRecognitionRuntime()
+    await ipcStore.callFunction('stopLocalVoiceRecording')
   }
 
   const voiceCorrection = async (text: string) => {

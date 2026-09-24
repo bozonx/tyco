@@ -126,7 +126,6 @@ export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
-  VOICE_TEXT: 'app://voice-text',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
 } as const
@@ -156,8 +155,6 @@ export const DESKTOP_COMMANDS = {
   CLOSE_WINDOW: 'close_window',
   SET_WINDOW_PROFILE: 'set_window_profile',
   OPEN_IN_BROWSER_AND_CLOSE: 'open_in_browser_and_close',
-  START_VOICE_RECOGNITION: 'start_voice_recognition',
-  STOP_VOICE_RECOGNITION: 'stop_voice_recognition',
   START_LOCAL_VOICE_RECORDING: 'start_local_voice_recording',
   STOP_LOCAL_VOICE_RECORDING: 'stop_local_voice_recording',
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',

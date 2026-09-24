@@ -20,7 +20,6 @@ pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
 pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
-pub const VOICE_TEXT_EVENT: &str = "app://voice-text";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_QUIT_ID: &str = "quit";
 
@@ -31,17 +30,6 @@ pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     if let Some(window) = app.get_webview_window(label) {
         window
             .emit(PARAMS_CHANGED_EVENT, params)
-            .map_err(|error| AppError::Message(error.to_string()))?;
-    }
-
-    Ok(())
-}
-
-pub fn emit_voice_text(app: &AppHandle, text: String) -> Result<(), AppError> {
-    let label = app.state::<RuntimeWindows>().active_label();
-    if let Some(window) = app.get_webview_window(label) {
-        window
-            .emit(VOICE_TEXT_EVENT, text)
             .map_err(|error| AppError::Message(error.to_string()))?;
     }
 

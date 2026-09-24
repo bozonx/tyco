@@ -163,12 +163,25 @@ pub fn default_user_config() -> Value {
           "baseUrl": "http://localhost:8000/v1"
         },
         {
-          "id": "websocket-stt",
-          "model": "whisper",
-          "provider": "websocket",
-          "description": "Streaming STT WebSocket endpoint",
-          "formatWithLlm": true,
-          "baseUrl": "ws://localhost:2700"
+          "id": "assemblyai-stt",
+          "model": "universal-3-pro",
+          "provider": "assemblyai",
+          "description": "AssemblyAI speech recognition",
+          "formatWithLlm": true
+        },
+        {
+          "id": "deepgram-stt",
+          "model": "nova-3",
+          "provider": "deepgram",
+          "description": "Deepgram speech recognition",
+          "formatWithLlm": true
+        },
+        {
+          "id": "groq-stt",
+          "model": "whisper-large-v3-turbo",
+          "provider": "groq",
+          "description": "Groq speech recognition",
+          "formatWithLlm": true
         }
       ],
       "ttsModels": [],

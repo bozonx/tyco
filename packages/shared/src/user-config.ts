@@ -181,11 +181,20 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
 export interface SttModel {
   id: string
   model: string
-  provider: 'openai-compatible' | 'websocket'
+  provider: SttProvider
   description?: string
   formatWithLlm?: boolean
   baseUrl?: string
 }
+
+export const STT_PROVIDERS = [
+  'assemblyai',
+  'deepgram',
+  'groq',
+  'openai-compatible',
+] as const
+
+export type SttProvider = (typeof STT_PROVIDERS)[number]
 
 export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
@@ -303,12 +312,25 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       baseUrl: 'http://localhost:8000/v1',
     },
     {
-      id: 'websocket-stt',
-      model: 'whisper',
-      provider: 'websocket',
-      description: 'Streaming STT WebSocket endpoint',
+      id: 'assemblyai-stt',
+      model: 'universal-3-pro',
+      provider: 'assemblyai',
+      description: 'AssemblyAI speech recognition',
       formatWithLlm: true,
-      baseUrl: 'ws://localhost:2700',
+    },
+    {
+      id: 'deepgram-stt',
+      model: 'nova-3',
+      provider: 'deepgram',
+      description: 'Deepgram speech recognition',
+      formatWithLlm: true,
+    },
+    {
+      id: 'groq-stt',
+      model: 'whisper-large-v3-turbo',
+      provider: 'groq',
+      description: 'Groq speech recognition',
+      formatWithLlm: true,
     },
   ],
   ttsModels: [],

@@ -67,10 +67,10 @@ describe('app-bootstrap', () => {
 
     expect(deps.initPlugins).toHaveBeenCalledOnce()
     expect(deps.addWindowKeyupListener).toHaveBeenCalledOnce()
-    expect(deps.listen).toHaveBeenCalledTimes(3)
+    expect(deps.listen).toHaveBeenCalledTimes(2)
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.WRITE.path)
     expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
-    expect(listeners.size).toBe(3)
+    expect(listeners.size).toBe(2)
   })
 
   it('does not navigate again when params change without mode change', async () => {

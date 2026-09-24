@@ -1,14 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use tokio::sync::watch;
-
 use crate::models::InitParams;
-
-pub struct VoiceSession {
-    pub shutdown_tx: watch::Sender<bool>,
-    pub thread: std::thread::JoinHandle<()>,
-}
 
 pub struct LocalVoiceRecordingSession {
     pub stop_flag: Arc<AtomicBool>,
@@ -21,7 +14,6 @@ pub struct AppState {
     params: Mutex<InitParams>,
     history_storage: Mutex<()>,
     quitting: AtomicBool,
-    voice_session: Mutex<Option<VoiceSession>>,
     local_voice_recording_session: Mutex<Option<LocalVoiceRecordingSession>>,
 }
 
@@ -31,7 +23,6 @@ impl AppState {
             params: Mutex::new(params),
             history_storage: Mutex::new(()),
             quitting: AtomicBool::new(false),
-            voice_session: Mutex::new(None),
             local_voice_recording_session: Mutex::new(None),
         }
     }
@@ -62,14 +53,6 @@ impl AppState {
 
     pub fn is_quitting(&self) -> bool {
         self.quitting.load(Ordering::SeqCst)
-    }
-
-    pub fn replace_voice_session(&self, session: Option<VoiceSession>) -> Option<VoiceSession> {
-        let mut guard = self
-            .voice_session
-            .lock()
-            .expect("voice session lock poisoned");
-        std::mem::replace(&mut *guard, session)
     }
 
     pub fn replace_local_voice_recording_session(

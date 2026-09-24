@@ -27,7 +27,6 @@ export interface AppBootstrapDeps {
 export function createAppBootstrap(deps: AppBootstrapDeps) {
   let removeParamsListener: (() => void) | undefined
   let removeContextListener: (() => void) | undefined
-  let removeVoiceListener: (() => void) | undefined
   let removeWindowKeyupListener: (() => void) | undefined
   let lastAppliedMode: InitParams['mode'] | undefined
 
@@ -73,13 +72,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
       }
     )
 
-    removeVoiceListener = await deps.listen(
-      DESKTOP_EVENTS.VOICE_TEXT,
-      (data) => {
-        deps.emitGlobal(GlobalEvents.VOICE_RECOGNITION, data)
-      }
-    )
-
     const initialParams = await deps.loadInitialParams()
     await applyParams(initialParams, { forceNavigate: true })
     deps.emitGlobal(GlobalEvents.INITED)
@@ -89,7 +81,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     removeWindowKeyupListener?.()
     removeParamsListener?.()
     removeContextListener?.()
-    removeVoiceListener?.()
   }
 
   return { applyParams, handleKeyUp, start, stop }
