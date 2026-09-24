@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col gap-4 w-full h-full">
+  <div class="insert-menu">
     <h1>{{ t('menu.insert') }}</h1>
 
-    <div class="flex-1 min-h-0">
+    <div class="insert-preview">
       <DiffInput
         v-if="props.oldText"
         :oldText="props.oldText"
@@ -100,3 +100,24 @@ function shouldDisablePrimaryAction(index: number) {
   return !needShowInsertButton()
 }
 </script>
+
+<style scoped>
+.insert-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.insert-menu > :not(.insert-preview) {
+  flex-shrink: 0;
+}
+
+.insert-preview {
+  flex: 1 0 10rem;
+  min-height: 10rem;
+}
+</style>

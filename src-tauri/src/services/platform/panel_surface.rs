@@ -65,6 +65,11 @@ pub fn apply_panel_surface(
         return position_regular_panel(window, profile);
     }
     let gtk_window = window.gtk_window()?;
+    let (width, height) = profile.size();
+    // Layer-shell remaps use the default size; resize alone can retain the
+    // previous allocation while the surface is hidden.
+    gtk_window.set_default_size(width as i32, height as i32);
+    gtk_window.resize(width as i32, height as i32);
     match profile {
         WindowProfile::Panel => crate::services::layer_shell::set_panel_profile(&gtk_window, 48),
         WindowProfile::Sheet => {

@@ -26,6 +26,11 @@
     color: var(--color-base-content);
   }
 
+  html[data-window='quick'] {
+    background: transparent;
+    --root-bg: transparent;
+  }
+
   /* Allow text selection inside editable areas */
   input,
   textarea,
