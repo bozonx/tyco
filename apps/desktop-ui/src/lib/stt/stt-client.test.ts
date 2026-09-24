@@ -9,9 +9,25 @@ const model = {
   baseUrl: 'http://localhost:8000/v1/',
 }
 
-const wav = new Uint8Array(50)
-wav.set(new TextEncoder().encode('RIFF'), 0)
-wav.set(new TextEncoder().encode('WAVE'), 8)
+function pcm16Wav(sampleRate = 16_000, samples = 4_000): Uint8Array {
+  const wav = new Uint8Array(44 + samples * 2)
+  const view = new DataView(wav.buffer)
+  wav.set(new TextEncoder().encode('RIFF'), 0)
+  view.setUint32(4, wav.byteLength - 8, true)
+  wav.set(new TextEncoder().encode('WAVEfmt '), 8)
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * 2, true)
+  view.setUint16(32, 2, true)
+  view.setUint16(34, 16, true)
+  wav.set(new TextEncoder().encode('data'), 36)
+  view.setUint32(40, samples * 2, true)
+  return wav
+}
+
+const wav = pcm16Wav()
 
 describe('buildSttCatalog', () => {
   it('maps the configured model to an unpriced speech task', () => {
@@ -111,6 +127,18 @@ describe('createSttClient', () => {
         },
       })
     ).rejects.toThrow('valid WAV')
+    await expect(
+      client.transcribe({
+        model,
+        recording: { sampleRate: 8_000, durationMs: 250, wav },
+      })
+    ).rejects.toThrow('sample rate does not match')
+    await expect(
+      client.transcribe({
+        model,
+        recording: { sampleRate: 16_000, durationMs: 5_000, wav },
+      })
+    ).rejects.toThrow('duration does not match')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

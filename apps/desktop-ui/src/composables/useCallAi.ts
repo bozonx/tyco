@@ -17,7 +17,6 @@ import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
 import { AI_TASKS } from '../types'
-import { GlobalEvents, useGlobalEvents } from './useGlobalEvents'
 import useToast from './useToast'
 import {
   APP_CONFIG,
@@ -44,7 +43,6 @@ export const useCallAi = () => {
   const llmStore = useLlmStore()
   const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
-  const { globalEvents } = useGlobalEvents()
   let activeSttModel: SttModel | undefined
 
   const currentUserConfig = () => ipcStore.params.userConfig
@@ -67,14 +65,14 @@ export const useCallAi = () => {
     return currentSttModel()?.formatWithLlm !== false
   }
 
-  const getVoiceRecognitionRuntime = () => {
+  const currentVoiceModel = () => {
     const sttModel = currentSttModel()
 
     if (!sttModel) {
       throw new Error(translate('toast.modelNotFound'))
     }
 
-    return { streaming: false, model: sttModel }
+    return sttModel
   }
 
   const currentWhisperLanguage = () => {
@@ -123,16 +121,14 @@ export const useCallAi = () => {
   }
 
   const startVoiceRecognition = async () => {
-    const runtime = getVoiceRecognitionRuntime()
-    buildSttCatalog(runtime.model)
+    const model = currentVoiceModel()
+    buildSttCatalog(model)
     await llmStore.refreshSecrets()
     if (
-      runtime.model.provider !== 'openai-compatible' &&
-      !Object.hasOwn(llmStore.secrets, secretId(runtime.model))
+      model.provider !== 'openai-compatible' &&
+      !Object.hasOwn(llmStore.secrets, secretId(model))
     ) {
-      throw new Error(
-        `No API key configured for provider "${runtime.model.provider}"`
-      )
+      throw new Error(`No API key configured for provider "${model.provider}"`)
     }
 
     const result = await ipcStore.callFunction('startLocalVoiceRecording')
@@ -140,11 +136,11 @@ export const useCallAi = () => {
     if (!result.success) {
       throw new Error(result.error || 'Failed to start local voice recording')
     }
-    activeSttModel = runtime.model
+    activeSttModel = model
   }
 
   const stopVoiceRecognition = async (signal?: AbortSignal) => {
-    const model = activeSttModel ?? getVoiceRecognitionRuntime().model
+    const model = activeSttModel ?? currentVoiceModel()
 
     const result = await ipcStore.callFunction('stopLocalVoiceRecording')
     activeSttModel = undefined
@@ -169,10 +165,6 @@ export const useCallAi = () => {
       hasApiKey: Object.hasOwn(llmStore.secrets, secretId(model)),
       signal,
     })
-
-    if (text) {
-      globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
-    }
 
     return { text, limitReached: recording.limitReached }
   }
@@ -282,7 +274,6 @@ export const useCallAi = () => {
 
   return {
     aiRequest,
-    getVoiceRecognitionRuntime,
     shouldFormatRecognizedText,
     startVoiceRecognition,
     stopVoiceRecognition,

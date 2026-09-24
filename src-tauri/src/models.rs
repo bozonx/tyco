@@ -234,7 +234,6 @@ pub fn app_config() -> Value {
       "windowWidth": 800,
       "windowHeight": 600,
       "minCorrectionLength": 30,
-      "recognitionWaitTimeSec": 5,
       "devServerUrl": "http://localhost:3000",
       "indexHtmlPath": "../../apps/desktop-ui/dist/index.html",
       "rulePrefix": "Используй следующие правила для выполнения задания",

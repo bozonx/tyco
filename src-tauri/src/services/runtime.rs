@@ -286,14 +286,22 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
         _ => WindowProfile::Panel,
     };
     on_main_thread(app, move |app| {
+        let state = app.state::<AppState>();
+        let should_remap = should_remap_quick_window(
+            app.state::<RuntimeWindows>().active_label(),
+            state.params().is_window_shown,
+        );
         let (width, height) = profile.size();
         if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
-            window.set_size(tauri::LogicalSize::new(width, height))?;
-
             #[cfg(target_os = "linux")]
             let has_layer_shell = app.state::<LayerShell>().supported;
             #[cfg(not(target_os = "linux"))]
             let has_layer_shell = false;
+
+            if should_unmap_for_profile_change(should_remap, has_layer_shell) {
+                window.hide()?;
+            }
+            window.set_size(tauri::LogicalSize::new(width, height))?;
 
             super::platform::apply_panel_surface(
                 &window,
@@ -301,8 +309,11 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
                 ActivationIntent::KeyboardFirst,
                 has_layer_shell,
             )?;
+            if should_remap {
+                window.show()?;
+                window.set_focus()?;
+            }
         }
-        let state = app.state::<AppState>();
         state.update_params(|params| {
             params.window_profile = match profile {
                 WindowProfile::Panel => String::from("panel"),
@@ -312,6 +323,14 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
         log::info!("Updated window profile to {profile:?}");
         Ok(())
     })
+}
+
+fn should_remap_quick_window(active_label: &str, is_window_shown: bool) -> bool {
+    active_label == QUICK_WINDOW_LABEL && is_window_shown
+}
+
+fn should_unmap_for_profile_change(should_remap: bool, has_layer_shell: bool) -> bool {
+    should_remap && has_layer_shell
 }
 
 fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
@@ -381,7 +400,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
                 .get_webview_window(QUICK_WINDOW_LABEL)
                 .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
             super::platform::attach_panel_surface(&window)?;
-            log::info!("Using gtk-layer-shell for the main window");
+            log::info!("Using gtk-layer-shell for the quick window");
         } else {
             log::info!("gtk-layer-shell is unavailable; using a regular window");
         }
@@ -503,5 +522,19 @@ mod tests {
     fn tray_click_hides_a_visible_window_and_shows_the_application_otherwise() {
         assert_eq!(tray_click_action(true), TrayClickAction::HideActiveWindow);
         assert_eq!(tray_click_action(false), TrayClickAction::ShowApplication);
+    }
+
+    #[test]
+    fn remaps_only_the_visible_active_quick_window() {
+        assert!(should_remap_quick_window(QUICK_WINDOW_LABEL, true));
+        assert!(!should_remap_quick_window(QUICK_WINDOW_LABEL, false));
+        assert!(!should_remap_quick_window(MAIN_WINDOW_LABEL, true));
+    }
+
+    #[test]
+    fn unmaps_only_a_visible_layer_shell_window_before_reconfiguration() {
+        assert!(should_unmap_for_profile_change(true, true));
+        assert!(!should_unmap_for_profile_change(true, false));
+        assert!(!should_unmap_for_profile_change(false, true));
     }
 }

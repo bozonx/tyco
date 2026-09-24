@@ -33,7 +33,7 @@
       <ShortcutButton
         :keys="['Esc']"
         icon="mdi:close"
-        :disabled="isCancelling"
+        :disabled="isCancelling || isFinishing"
         @click="cancel"
       >
         {{ t('common.cancel') }}
@@ -79,7 +79,6 @@ const emit = defineEmits<{
 
 const {
   cancelVoiceRecognition,
-  getVoiceRecognitionRuntime,
   shouldFormatRecognizedText,
   startVoiceRecognition,
   stopVoiceRecognition,
@@ -94,15 +93,11 @@ const menuModalsStore = useMenuModalsStore()
 const routeParamsStore = useRouteParams()
 
 const recognizedText = ref('')
-const lastRecognizedTextMs = ref(0)
 const isFinishing = ref(false)
 const isCancelling = ref(false)
 const isStarted = ref(false)
 const isTranscribing = ref(false)
-const appConfig = computed(() => ipcStore.params.appConfig)
-const voiceRuntime = computed(() => getVoiceRecognitionRuntime())
 
-let voiceListenerIndex = -1
 let keyUpHandlerIndex = -1
 const MAX_RECORDING_MS = 300_000
 const voiceSession = createVoiceSession({
@@ -124,45 +119,17 @@ const statusText = computed(() => {
   return ''
 })
 
-async function waitForStreamingRecognition() {
-  if (!voiceRuntime.value.streaming) {
-    return
-  }
-
-  if (!lastRecognizedTextMs.value) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, appConfig.value.recognitionWaitTimeSec * 1000)
-    )
-    return
-  }
-
-  const elapsedMs = Date.now() - lastRecognizedTextMs.value
-  const remainingMs = appConfig.value.recognitionWaitTimeSec * 1000 - elapsedMs
-
-  if (remainingMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, remainingMs))
-  }
-}
-
-function stopVoiceUpdates() {
-  if (voiceListenerIndex >= 0) {
-    globalEvents.removeListener(voiceListenerIndex)
-    voiceListenerIndex = -1
-  }
-}
-
 function notifyCancelled() {
   props.onCancel?.()
   emit('cancelled')
 }
 
 const cancel = async () => {
-  if (isCancelling.value) return
+  if (isCancelling.value || isFinishing.value) return
   isCancelling.value = true
   voiceSession.abort()
 
   try {
-    stopVoiceUpdates()
     await cancelVoiceRecognition()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -177,7 +144,7 @@ const cancel = async () => {
 }
 
 const finish = async () => {
-  if (isFinishing.value) {
+  if (isFinishing.value || isCancelling.value) {
     return
   }
 
@@ -185,9 +152,7 @@ const finish = async () => {
   voiceSession.stopTimer()
 
   try {
-    await waitForStreamingRecognition()
-
-    isTranscribing.value = !voiceRuntime.value.streaming
+    isTranscribing.value = true
     const transcription = await stopVoiceRecognition(voiceSession.signal)
     const finalRecognizedText = transcription.text
     isStarted.value = false
@@ -199,7 +164,6 @@ const finish = async () => {
 
     if (finalRecognizedText) {
       recognizedText.value = finalRecognizedText
-      lastRecognizedTextMs.value = Date.now()
     }
 
     if (!recognizedText.value.trim()) {
@@ -207,8 +171,6 @@ const finish = async () => {
       notifyCancelled()
       return
     }
-
-    stopVoiceUpdates()
 
     let resultText = recognizedText.value
     let correctedText: string | undefined
@@ -264,7 +226,6 @@ const finish = async () => {
 
 function goToEditor() {
   if (isFinishing.value) return
-  stopVoiceUpdates()
   voiceSession.abort()
   void cancelVoiceRecognition().catch(() => undefined)
   routeParamsStore.toEditor(recognizedText.value)
@@ -290,7 +251,6 @@ function handleKeyUp(event: KeyboardEvent) {
 async function startSession() {
   if (isStarted.value || isFinishing.value) return
   recognizedText.value = ''
-  lastRecognizedTextMs.value = 0
   try {
     await startVoiceRecognition()
     voiceSession.begin()
@@ -299,7 +259,6 @@ async function startSession() {
     const message = error instanceof Error ? error.message : String(error)
     toast(message || t('toast.voiceRecognitionFailed'), 'error')
     voiceSession.abort()
-    stopVoiceUpdates()
     notifyCancelled()
   }
 }
@@ -318,13 +277,6 @@ watch(
 )
 
 onMounted(async () => {
-  voiceListenerIndex = globalEvents.addListener(
-    GlobalEvents.VOICE_RECOGNITION,
-    (text: string) => {
-      recognizedText.value = text
-      lastRecognizedTextMs.value = Date.now()
-    }
-  )
   keyUpHandlerIndex = globalEvents.addListener(GlobalEvents.KEY_UP, handleKeyUp)
 
   if (ipcStore.params?.isWindowShown && ipcStore.params?.mode === 'voice') {
@@ -333,7 +285,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  stopVoiceUpdates()
   voiceSession.dispose()
 
   if (keyUpHandlerIndex >= 0) {

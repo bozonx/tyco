@@ -85,6 +85,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
   const kitFor = (model: SttModel): AiKit => {
     const key = JSON.stringify({
       id: model.id,
+      provider: model.provider,
       model: model.model,
       baseUrl: model.baseUrl,
     })
@@ -142,11 +143,65 @@ function validateRecording(recording: VoiceRecording): void {
   if (recording.durationMs > 300_500) {
     throw new Error('The recording exceeds the five minute limit')
   }
+  const wav = recording.wav
   if (
-    recording.wav.byteLength < 44 ||
-    new TextDecoder().decode(recording.wav.subarray(0, 4)) !== 'RIFF' ||
-    new TextDecoder().decode(recording.wav.subarray(8, 12)) !== 'WAVE'
+    wav.byteLength < 44 ||
+    ascii(wav, 0, 4) !== 'RIFF' ||
+    ascii(wav, 8, 4) !== 'WAVE'
   ) {
     throw new Error('The recording is not a valid WAV file')
   }
+
+  const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength)
+  const declaredSize = view.getUint32(4, true) + 8
+  if (declaredSize > wav.byteLength) {
+    throw new Error('The recording has a truncated WAV container')
+  }
+
+  let offset = 12
+  let format:
+    { channels: number; sampleRate: number; bitsPerSample: number } | undefined
+  let dataBytes: number | undefined
+  while (offset + 8 <= declaredSize) {
+    const chunkId = ascii(wav, offset, 4)
+    const chunkSize = view.getUint32(offset + 4, true)
+    const chunkEnd = offset + 8 + chunkSize
+    if (chunkEnd > declaredSize) {
+      throw new Error('The recording has a truncated WAV chunk')
+    }
+    if (chunkId === 'fmt ' && chunkSize >= 16) {
+      if (view.getUint16(offset + 8, true) !== 1) {
+        throw new Error('The recording WAV encoding is not PCM')
+      }
+      format = {
+        channels: view.getUint16(offset + 10, true),
+        sampleRate: view.getUint32(offset + 12, true),
+        bitsPerSample: view.getUint16(offset + 22, true),
+      }
+    } else if (chunkId === 'data') {
+      dataBytes = chunkSize
+    }
+    offset = chunkEnd + (chunkSize % 2)
+  }
+
+  if (!format || dataBytes === undefined || dataBytes === 0) {
+    throw new Error('The recording WAV file has no audio data')
+  }
+  if (format.channels !== 1 || format.bitsPerSample !== 16) {
+    throw new Error('The recording WAV format must be mono PCM16')
+  }
+  if (format.sampleRate !== recording.sampleRate) {
+    throw new Error('The recording sample rate does not match its WAV header')
+  }
+  const wavDurationMs =
+    (dataBytes /
+      (format.sampleRate * format.channels * (format.bitsPerSample / 8))) *
+    1000
+  if (Math.abs(wavDurationMs - recording.durationMs) > 1_000) {
+    throw new Error('The recording duration does not match its WAV audio data')
+  }
+}
+
+function ascii(bytes: Uint8Array, offset: number, length: number): string {
+  return String.fromCharCode(...bytes.subarray(offset, offset + length))
 }
