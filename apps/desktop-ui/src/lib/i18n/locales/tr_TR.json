@@ -438,6 +438,7 @@
     "noTextToProcess": "İşlenecek metin yok",
     "textTooShortToProcess": "Metin işlemek için çok kısa",
     "nothingRecognized": "Hiçbir şey tanınmadı",
+    "recordingLimitReached": "Beş dakikalık kayıt sınırına ulaşıldı",
     "voiceRecognitionFailed": "Ses tanıma başlatılamadı",
     "noSearchBaseUrl": "İnternet araması için temel URL ayarlanmamış",
     "modelNotFound": "Model bulunamadı",

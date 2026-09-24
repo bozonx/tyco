@@ -441,6 +441,7 @@
     "noTextToProcess": "Нет текста для обработки",
     "textTooShortToProcess": "Слишком короткий текст для обработки",
     "nothingRecognized": "Ничего не распознано",
+    "recordingLimitReached": "Достигнут лимит записи в пять минут",
     "voiceRecognitionFailed": "Не удалось запустить распознавание голоса",
     "noSearchBaseUrl": "Не указан базовый URL для поиска в интернете",
     "modelNotFound": "Модель не найдена",

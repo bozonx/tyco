@@ -441,6 +441,7 @@
     "noTextToProcess": "No hay texto para procesar",
     "textTooShortToProcess": "El texto es demasiado corto para procesar",
     "nothingRecognized": "No se reconoció nada",
+    "recordingLimitReached": "Se alcanzó el límite de grabación de cinco minutos",
     "voiceRecognitionFailed": "No se pudo iniciar el reconocimiento de voz",
     "noSearchBaseUrl": "No hay URL base configurada para la búsqueda",
     "modelNotFound": "Modelo no encontrado",

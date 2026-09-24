@@ -9,6 +9,10 @@ const model = {
   baseUrl: 'http://localhost:8000/v1/',
 }
 
+const wav = new Uint8Array(50)
+wav.set(new TextEncoder().encode('RIFF'), 0)
+wav.set(new TextEncoder().encode('WAVE'), 8)
+
 describe('buildSttCatalog', () => {
   it('maps the configured model to an unpriced speech task', () => {
     const catalog = buildSttCatalog(model)
@@ -20,6 +24,15 @@ describe('buildSttCatalog', () => {
       model: 'whisper-1',
       baseUrl: 'http://localhost:8000/v1/',
     })
+  })
+
+  it('rejects incomplete custom endpoint configuration', () => {
+    expect(() => buildSttCatalog({ ...model, model: ' ' })).toThrow(
+      'model name is empty'
+    )
+    expect(() => buildSttCatalog({ ...model, baseUrl: 'file:///tmp' })).toThrow(
+      'valid HTTP URL'
+    )
   })
 })
 
@@ -61,7 +74,7 @@ describe('createSttClient', () => {
 
     const text = await client.transcribe({
       model,
-      recording: { sampleRate: 16_000, samples: [-1, 0, 1] },
+      recording: { sampleRate: 16_000, durationMs: 250, wav },
       language: 'en',
       hasApiKey: true,
     })
@@ -71,5 +84,33 @@ describe('createSttClient', () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       'http://localhost:8000/v1/audio/transcriptions'
     )
+  })
+
+  it('rejects empty and malformed recordings before making a request', async () => {
+    const fetchMock = vi.fn()
+    const client = createSttClient({
+      transport: {
+        fetch: fetchMock,
+        openSocket: vi.fn(() => Promise.reject(new Error('Unexpected socket'))),
+      },
+    })
+
+    await expect(
+      client.transcribe({
+        model,
+        recording: { sampleRate: 16_000, durationMs: 0, wav },
+      })
+    ).rejects.toThrow('empty or too short')
+    await expect(
+      client.transcribe({
+        model,
+        recording: {
+          sampleRate: 16_000,
+          durationMs: 250,
+          wav: new Uint8Array(44),
+        },
+      })
+    ).rejects.toThrow('valid WAV')
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

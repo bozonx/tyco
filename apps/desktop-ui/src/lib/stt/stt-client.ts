@@ -5,16 +5,18 @@ import {
   type KeyProvider,
   type Transport,
 } from '@bozonx/ai-kit'
-import { pcm16ToWav } from '@bozonx/ai-kit/stt'
 import type { SttModel } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
 const TRANSCRIPTION_TASK = 'transcription'
+const TRANSCRIPTION_TIMEOUT_MS = 600_000
 
 export interface VoiceRecording {
   sampleRate: number
-  samples: number[]
+  durationMs: number
+  wav: Uint8Array
+  limitReached?: boolean
 }
 
 export interface SttClientDeps {
@@ -36,6 +38,13 @@ export interface SttClient {
 
 /** Builds a speech catalog for one user-configured OpenAI-compatible model. */
 export function buildSttCatalog(model: SttModel): Catalog {
+  if (!model.model.trim()) {
+    throw new Error('The speech recognition model name is empty')
+  }
+  if (model.provider === 'openai-compatible' && !isHttpUrl(model.baseUrl)) {
+    throw new Error('The speech recognition endpoint is not a valid HTTP URL')
+  }
+
   return Catalog.fromObject({
     requirePricing: false,
     models: [
@@ -52,6 +61,16 @@ export function buildSttCatalog(model: SttModel): Catalog {
     ],
     taskClasses: { [TRANSCRIPTION_TASK]: [model.id] },
   })
+}
+
+function isHttpUrl(value: string | undefined): boolean {
+  if (!value?.trim()) return false
+  try {
+    const url = new URL(value.trim())
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 export function createSttClient(deps: SttClientDeps): SttClient {
@@ -76,6 +95,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
       catalog: buildSttCatalog(model),
       keys: deps.keys ?? defaultKeys,
       transport: deps.transport,
+      retry: { totalTimeoutMs: TRANSCRIPTION_TIMEOUT_MS },
     })
     if (kits.size >= 20) kits.clear()
     kits.set(key, kit)
@@ -84,12 +104,9 @@ export function createSttClient(deps: SttClientDeps): SttClient {
 
   return {
     async transcribe(request) {
-      const wav = pcm16ToWav(
-        toPcm16(request.recording.samples),
-        request.recording.sampleRate
-      )
+      validateRecording(request.recording)
       const result = await kitFor(request.model).transcribe({
-        source: { data: wav, mimeType: 'audio/wav' },
+        source: { data: request.recording.wav, mimeType: 'audio/wav' },
         policy: {
           mode: 'manual',
           taskClass: TRANSCRIPTION_TASK,
@@ -115,15 +132,21 @@ export function secretId(model: SttModel): string {
   return model.provider === 'openai-compatible' ? model.id : model.provider
 }
 
-function toPcm16(samples: number[]): Uint8Array {
-  const pcm = new Uint8Array(samples.length * 2)
-  const view = new DataView(pcm.buffer)
-
-  samples.forEach((sample, index) => {
-    const clamped = Math.max(-1, Math.min(1, sample))
-    const value = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff
-    view.setInt16(index * 2, Math.round(value), true)
-  })
-
-  return pcm
+function validateRecording(recording: VoiceRecording): void {
+  if (!Number.isInteger(recording.sampleRate) || recording.sampleRate <= 0) {
+    throw new Error('The recording has an invalid sample rate')
+  }
+  if (!Number.isFinite(recording.durationMs) || recording.durationMs < 100) {
+    throw new Error('The recording is empty or too short')
+  }
+  if (recording.durationMs > 300_500) {
+    throw new Error('The recording exceeds the five minute limit')
+  }
+  if (
+    recording.wav.byteLength < 44 ||
+    new TextDecoder().decode(recording.wav.subarray(0, 4)) !== 'RIFF' ||
+    new TextDecoder().decode(recording.wav.subarray(8, 12)) !== 'WAVE'
+  ) {
+    throw new Error('The recording is not a valid WAV file')
+  }
 }

@@ -7,7 +7,12 @@ import {
   resolveLanguagePreference,
 } from '../lib/locale/language'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import { createSttClient, secretId } from '../lib/stt/stt-client'
+import { base64ToBytes } from '../lib/net/base64'
+import {
+  buildSttCatalog,
+  createSttClient,
+  secretId,
+} from '../lib/stt/stt-client'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
@@ -29,7 +34,9 @@ const sttClient = createSttClient({
 
 interface LocalVoiceRecording {
   sampleRate: number
-  samples: number[]
+  durationMs: number
+  wavBase64: string
+  limitReached: boolean
 }
 
 export const useCallAi = () => {
@@ -38,6 +45,7 @@ export const useCallAi = () => {
   const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
   const { globalEvents } = useGlobalEvents()
+  let activeSttModel: SttModel | undefined
 
   const currentUserConfig = () => ipcStore.params.userConfig
 
@@ -115,50 +123,75 @@ export const useCallAi = () => {
   }
 
   const startVoiceRecognition = async () => {
-    getVoiceRecognitionRuntime()
+    const runtime = getVoiceRecognitionRuntime()
+    buildSttCatalog(runtime.model)
+    await llmStore.refreshSecrets()
+    if (
+      runtime.model.provider !== 'openai-compatible' &&
+      !Object.hasOwn(llmStore.secrets, secretId(runtime.model))
+    ) {
+      throw new Error(
+        `No API key configured for provider "${runtime.model.provider}"`
+      )
+    }
 
     const result = await ipcStore.callFunction('startLocalVoiceRecording')
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to start local voice recording')
     }
+    activeSttModel = runtime.model
   }
 
-  const stopVoiceRecognition = async () => {
-    const runtime = getVoiceRecognitionRuntime()
+  const stopVoiceRecognition = async (signal?: AbortSignal) => {
+    const model = activeSttModel ?? getVoiceRecognitionRuntime().model
 
     const result = await ipcStore.callFunction('stopLocalVoiceRecording')
+    activeSttModel = undefined
 
     if (!result.success || !result.result) {
       throw new Error(result.error || 'Failed to stop local voice recording')
     }
 
+    signal?.throwIfAborted()
     await llmStore.refreshSecrets()
+    signal?.throwIfAborted()
+    const recording = result.result as LocalVoiceRecording
     const text = await sttClient.transcribe({
-      model: runtime.model,
-      recording: result.result as LocalVoiceRecording,
+      model,
+      recording: {
+        sampleRate: recording.sampleRate,
+        durationMs: recording.durationMs,
+        wav: base64ToBytes(recording.wavBase64),
+        limitReached: recording.limitReached,
+      },
       language: currentWhisperLanguage(),
-      hasApiKey: Object.hasOwn(llmStore.secrets, secretId(runtime.model)),
+      hasApiKey: Object.hasOwn(llmStore.secrets, secretId(model)),
+      signal,
     })
 
     if (text) {
       globalEvents.emit(GlobalEvents.VOICE_RECOGNITION, text)
     }
 
-    return text
+    return { text, limitReached: recording.limitReached }
   }
 
   const cancelVoiceRecognition = async () => {
-    getVoiceRecognitionRuntime()
-    await ipcStore.callFunction('stopLocalVoiceRecording')
+    activeSttModel = undefined
+    const result = await ipcStore.callFunction('stopLocalVoiceRecording')
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to stop local voice recording')
+    }
   }
 
-  const voiceCorrection = async (text: string) => {
+  const voiceCorrection = async (text: string, signal?: AbortSignal) => {
     const userConfig = currentUserConfig()
 
     return await aiRequest(AI_TASKS.VOICE_CORRECTION, text, {
       instructions: APP_CONFIG.aiInstructions[AI_TASKS.VOICE_CORRECTION],
       rules: buildTaskRules(userConfig.aiRules[AI_TASKS.VOICE_CORRECTION]),
+      signal,
     })
   }
 

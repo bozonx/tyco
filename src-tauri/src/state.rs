@@ -6,7 +6,9 @@ use crate::models::InitParams;
 pub struct LocalVoiceRecordingSession {
     pub stop_flag: Arc<AtomicBool>,
     pub thread: std::thread::JoinHandle<()>,
-    pub samples: Arc<Mutex<Vec<f32>>>,
+    pub samples: Arc<Mutex<Vec<i16>>>,
+    pub stream_error: Arc<Mutex<Option<String>>>,
+    pub limit_reached: Arc<AtomicBool>,
     pub sample_rate: u32,
 }
 

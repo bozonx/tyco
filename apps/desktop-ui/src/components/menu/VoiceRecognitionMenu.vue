@@ -33,7 +33,7 @@
       <ShortcutButton
         :keys="['Esc']"
         icon="mdi:close"
-        :disabled="isFinishing"
+        :disabled="isCancelling"
         @click="cancel"
       >
         {{ t('common.cancel') }}
@@ -52,6 +52,7 @@ import {
 } from '../../composables/useGlobalEvents'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
@@ -95,6 +96,7 @@ const routeParamsStore = useRouteParams()
 const recognizedText = ref('')
 const lastRecognizedTextMs = ref(0)
 const isFinishing = ref(false)
+const isCancelling = ref(false)
 const isStarted = ref(false)
 const isTranscribing = ref(false)
 const appConfig = computed(() => ipcStore.params.appConfig)
@@ -102,6 +104,13 @@ const voiceRuntime = computed(() => getVoiceRecognitionRuntime())
 
 let voiceListenerIndex = -1
 let keyUpHandlerIndex = -1
+const MAX_RECORDING_MS = 300_000
+const voiceSession = createVoiceSession({
+  maxRecordingMs: MAX_RECORDING_MS,
+  onLimit: () => {
+    void finish()
+  },
+})
 
 const statusText = computed(() => {
   if (isTranscribing.value) {
@@ -148,18 +157,22 @@ function notifyCancelled() {
 }
 
 const cancel = async () => {
-  if (isFinishing.value) {
-    return
-  }
-
-  isFinishing.value = true
+  if (isCancelling.value) return
+  isCancelling.value = true
+  voiceSession.abort()
 
   try {
     stopVoiceUpdates()
     await cancelVoiceRecognition()
-    notifyCancelled()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    toast(message || t('toast.voiceRecognitionFailed'), 'error')
   } finally {
+    isStarted.value = false
+    isTranscribing.value = false
     isFinishing.value = false
+    isCancelling.value = false
+    notifyCancelled()
   }
 }
 
@@ -169,14 +182,20 @@ const finish = async () => {
   }
 
   isFinishing.value = true
+  voiceSession.stopTimer()
 
   try {
     await waitForStreamingRecognition()
 
     isTranscribing.value = !voiceRuntime.value.streaming
-    const finalRecognizedText = await stopVoiceRecognition()
+    const transcription = await stopVoiceRecognition(voiceSession.signal)
+    const finalRecognizedText = transcription.text
     isStarted.value = false
     isTranscribing.value = false
+
+    if (transcription.limitReached) {
+      toast(t('toast.recordingLimitReached'), 'warn')
+    }
 
     if (finalRecognizedText) {
       recognizedText.value = finalRecognizedText
@@ -204,7 +223,10 @@ const finish = async () => {
       menuModalsStore.setPendingModal({ correction: true })
 
       try {
-        const formattedText = await voiceCorrection(recognizedText.value)
+        const formattedText = await voiceCorrection(
+          recognizedText.value,
+          voiceSession.signal
+        )
 
         if (formattedText.trim()) {
           resultText = formattedText
@@ -223,9 +245,19 @@ const finish = async () => {
       }
     }
 
-    props.onCorrected?.(resultText, recognizedText.value, correctedText)
-    emit('corrected', resultText, recognizedText.value, correctedText)
+    if (!voiceSession.signal?.aborted) {
+      props.onCorrected?.(resultText, recognizedText.value, correctedText)
+      emit('corrected', resultText, recognizedText.value, correctedText)
+    }
+  } catch (error) {
+    if (!voiceSession.signal?.aborted) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast(message || t('toast.voiceRecognitionFailed'), 'error')
+      notifyCancelled()
+    }
   } finally {
+    isStarted.value = false
+    isTranscribing.value = false
     isFinishing.value = false
   }
 }
@@ -233,7 +265,8 @@ const finish = async () => {
 function goToEditor() {
   if (isFinishing.value) return
   stopVoiceUpdates()
-  void cancelVoiceRecognition()
+  voiceSession.abort()
+  void cancelVoiceRecognition().catch(() => undefined)
   routeParamsStore.toEditor(recognizedText.value)
 }
 
@@ -260,10 +293,12 @@ async function startSession() {
   lastRecognizedTextMs.value = 0
   try {
     await startVoiceRecognition()
+    voiceSession.begin()
     isStarted.value = true
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     toast(message || t('toast.voiceRecognitionFailed'), 'error')
+    voiceSession.abort()
     stopVoiceUpdates()
     notifyCancelled()
   }
@@ -299,15 +334,14 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopVoiceUpdates()
+  voiceSession.dispose()
 
   if (keyUpHandlerIndex >= 0) {
     globalEvents.removeListener(keyUpHandlerIndex)
     keyUpHandlerIndex = -1
   }
 
-  if (!isFinishing.value) {
-    void cancelVoiceRecognition()
-  }
+  void cancelVoiceRecognition().catch(() => undefined)
 })
 </script>
 
