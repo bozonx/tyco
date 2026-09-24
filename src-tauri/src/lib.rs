@@ -25,7 +25,7 @@ use commands::voice::{
     stop_voice_recognition,
 };
 use commands::window::{
-    close_window, open_in_browser_and_close, put_into_clipboard_and_close,
+    close_window, open_in_browser_and_close, put_into_clipboard_and_close, set_window_profile,
     type_into_window_and_close,
 };
 use models::default_init_params;
@@ -116,6 +116,7 @@ pub fn run() {
             save_user_config,
             save_local_state,
             close_window,
+            set_window_profile,
             get_editor_history,
             get_chat_history,
             get_chat,

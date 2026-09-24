@@ -75,6 +75,9 @@ const activationMetrics = createActivationMetricsClient({
   eventTarget: document,
 })
 const isQuickWindow = getCurrentWindow().label === 'quick'
+if (typeof document !== 'undefined') {
+  document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
+}
 let removeMainEditorListener: (() => void) | undefined
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),

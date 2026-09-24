@@ -1,5 +1,5 @@
 <template>
-  <div class="quick-overlay-root">
+  <div class="quick-overlay-root" :class="isSheet ? 'is-sheet' : 'is-panel'">
     <div ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'write'" class="quick-mode-layer">
         <WriteModeView />
@@ -32,6 +32,7 @@ import {
 } from '../../lib/quick-panel/quick-panel-size'
 import { useEditorInputStore } from '../../stores/editorInput'
 import { useIpcStore } from '../../stores/ipc'
+import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useWriterInputStore } from '../../stores/writerInput'
 import AiTaskView from '../../views/AiTaskView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
@@ -42,17 +43,26 @@ import { LogicalSize } from '@tauri-apps/api/dpi'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const ipcStore = useIpcStore()
+const menuModalsStore = useMenuModalsStore()
 const writerInputStore = useWriterInputStore()
 const editorInputStore = useEditorInputStore()
 const cardRef = ref<HTMLElement | null>(null)
 
 const currentMode = computed(() => ipcStore.params?.mode || 'write')
 
+const isSheet = computed(() => {
+  return (
+    currentMode.value !== 'write' ||
+    menuModalsStore.currentModal !== MenuModals.NONE ||
+    Boolean(menuModalsStore.pendingModal)
+  )
+})
+
 let resizeObserver: ResizeObserver | null = null
 let lastWindowHeight = 0
 
 const resizeWindow = async (): Promise<void> => {
-  if (!cardRef.value) return
+  if (!cardRef.value || isSheet.value) return
 
   const height = quickPanelWindowHeight(
     cardRef.value.getBoundingClientRect().height
@@ -85,6 +95,25 @@ onUnmounted(() => {
   resizeObserver?.disconnect()
 })
 
+watch(
+  isSheet,
+  async (sheet) => {
+    try {
+      await ipcStore.callFunction('setWindowProfile', [
+        sheet ? 'sheet' : 'panel',
+      ])
+    } catch {
+      // IPC fallback
+    }
+    if (!sheet) {
+      lastWindowHeight = 0
+      await nextTick()
+      void resizeWindow()
+    }
+  },
+  { immediate: true }
+)
+
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
 watch(
   () => ipcStore.params.isWindowShown,
@@ -98,7 +127,9 @@ watch(
   async () => {
     await nextTick()
     syncFocus()
-    void resizeWindow()
+    if (!isSheet.value) {
+      void resizeWindow()
+    }
   }
 )
 </script>
@@ -110,9 +141,17 @@ watch(
   background: transparent;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   padding: var(--space-sm);
   box-sizing: border-box;
+}
+
+.quick-overlay-root.is-panel {
+  justify-content: flex-end;
+}
+
+.quick-overlay-root.is-sheet {
+  justify-content: center;
+  align-items: center;
 }
 
 .quick-overlay-card {
@@ -125,6 +164,14 @@ watch(
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+.quick-overlay-root.is-panel .quick-overlay-card {
+  max-height: 100%;
+}
+
+.quick-overlay-root.is-sheet .quick-overlay-card {
+  height: 100%;
   max-height: 100%;
 }
 

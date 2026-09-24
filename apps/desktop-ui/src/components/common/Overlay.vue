@@ -51,6 +51,14 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   animation: overlay-in 140ms ease-out;
 }
 
+:global([data-window='quick']) .overlay {
+  border-radius: var(--radius-lg);
+  margin: var(--space-sm);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-lg);
+  overflow: hidden;
+}
+
 .overlay-panel {
   position: relative;
   display: flex;

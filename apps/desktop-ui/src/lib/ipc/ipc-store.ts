@@ -40,6 +40,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
     closeWindow: { command: DESKTOP_COMMANDS.CLOSE_WINDOW },
+    setWindowProfile: {
+      command: DESKTOP_COMMANDS.SET_WINDOW_PROFILE,
+      buildArgs: ([profile]) => ({ profile }),
+    },
     openMainEditor: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
       buildArgs: ([text, sourceText]) => ({ text, sourceText }),

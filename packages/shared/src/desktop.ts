@@ -154,6 +154,7 @@ export const DESKTOP_COMMANDS = {
   CLEAR_EDITOR_HISTORY: 'clear_editor_history',
   CLEAR_CHAT_HISTORY: 'clear_chat_history',
   CLOSE_WINDOW: 'close_window',
+  SET_WINDOW_PROFILE: 'set_window_profile',
   OPEN_IN_BROWSER_AND_CLOSE: 'open_in_browser_and_close',
   START_VOICE_RECOGNITION: 'start_voice_recognition',
   STOP_VOICE_RECOGNITION: 'stop_voice_recognition',

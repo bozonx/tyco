@@ -2,7 +2,9 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::{thread, time::Duration};
 
-pub use super::activation::{Activation, ActivationIntent, ActivationSource, StartMode};
+pub use super::activation::{
+    Activation, ActivationIntent, ActivationSource, StartMode, WindowProfile,
+};
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -316,6 +318,39 @@ pub fn open_main_editor(
                 serde_json::json!({ "text": text, "sourceText": source_text }),
             )
             .map_err(|error| AppError::Message(error.to_string()))
+    })
+}
+
+pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppError> {
+    let profile = match profile {
+        "sheet" => WindowProfile::Sheet,
+        _ => WindowProfile::Panel,
+    };
+    on_main_thread(app, move |app| {
+        let (width, height) = profile.size();
+        if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
+            window.set_size(tauri::LogicalSize::new(width, height))?;
+
+            #[cfg(target_os = "linux")]
+            let has_layer_shell = app.state::<LayerShell>().supported;
+            #[cfg(not(target_os = "linux"))]
+            let has_layer_shell = false;
+
+            super::platform::apply_panel_surface(
+                &window,
+                profile,
+                ActivationIntent::KeyboardFirst,
+                has_layer_shell,
+            )?;
+        }
+        let state = app.state::<AppState>();
+        state.update_params(|params| {
+            params.window_profile = match profile {
+                WindowProfile::Panel => String::from("panel"),
+                WindowProfile::Sheet => String::from("sheet"),
+            };
+        });
+        emit_params(app, &state)
     })
 }
 

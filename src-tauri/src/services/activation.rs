@@ -58,8 +58,8 @@ impl StartMode {
     }
     pub fn profile(self) -> WindowProfile {
         match self {
-            Self::Chat | Self::History | Self::Config => WindowProfile::Sheet,
-            _ => WindowProfile::Panel,
+            Self::Write => WindowProfile::Panel,
+            _ => WindowProfile::Sheet,
         }
     }
 }
@@ -74,7 +74,7 @@ impl WindowProfile {
     pub fn size(self) -> (f64, f64) {
         match self {
             Self::Panel => (800.0, 320.0),
-            Self::Sheet => (1000.0, 800.0),
+            Self::Sheet => (800.0, 560.0),
         }
     }
 }
@@ -182,10 +182,17 @@ mod tests {
 
     #[test]
     fn selects_geometry_profile() {
-        assert_eq!(StartMode::Editor.profile(), WindowProfile::Panel);
         assert_eq!(StartMode::Write.profile(), WindowProfile::Panel);
-        assert_eq!(StartMode::Voice.profile(), WindowProfile::Panel);
-        for mode in [StartMode::Chat, StartMode::History, StartMode::Config] {
+        for mode in [
+            StartMode::Editor,
+            StartMode::Voice,
+            StartMode::Select,
+            StartMode::AiTasks,
+            StartMode::Correction,
+            StartMode::Chat,
+            StartMode::History,
+            StartMode::Config,
+        ] {
             assert_eq!(mode.profile(), WindowProfile::Sheet);
         }
     }

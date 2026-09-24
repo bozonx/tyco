@@ -12,6 +12,11 @@ pub fn close_window(app: AppHandle, state: State<'_, AppState>) -> Result<(), Ap
 }
 
 #[tauri::command]
+pub fn set_window_profile(app: AppHandle, profile: String) -> Result<(), AppError> {
+    runtime::update_window_profile(&app, &profile)
+}
+
+#[tauri::command]
 pub fn open_in_browser_and_close(
     app: AppHandle,
     state: State<'_, AppState>,
