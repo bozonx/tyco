@@ -168,6 +168,7 @@
           v-else-if="currentTab === 'hotkeys'"
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
+          @update:quick-input-submit="updateQuickInputSubmit"
         />
 
         <SettingsTranslationsTab
@@ -302,6 +303,7 @@ import {
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
+  type QuickInputSubmitMode,
   STT_PROVIDERS,
   type StorageInfo,
   type SttProvider,
@@ -519,6 +521,8 @@ function createPreparedUserConfig(config: unknown) {
 
 function normalizeHotkeysConfig(config: Record<string, any>) {
   config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
+  config.quickInputSubmit =
+    config.quickInputSubmit === 'ctrlEnter' ? 'ctrlEnter' : 'enter'
 }
 
 function serializeUserConfig(config: unknown) {
@@ -854,6 +858,10 @@ const updateMainActions = (actions: (MainActionConfig | null)[]) => {
 
 const updateHotkey = (mode: string, shortcut: string) => {
   userConfig.value.hotkeys[mode] = shortcut
+}
+
+const updateQuickInputSubmit = (mode: QuickInputSubmitMode) => {
+  userConfig.value.quickInputSubmit = mode
 }
 
 const updateWindowInsertionMethod = (value: string | number) => {

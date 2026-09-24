@@ -10,23 +10,26 @@
         </div>
       </div>
       <p class="write-hint">
-        <KeyButton>Esc</KeyButton>
+        <KeyButton>{{ submitShortcutLabel }}</KeyButton>
         <span>{{ t('write.next') }}</span>
         <span class="opacity-40">•</span>
         <KeyButton>Tab</KeyButton>
         <span>{{ t('shortcuts.insertIntoEditor') }}</span>
+        <span class="opacity-40">•</span>
+        <KeyButton>Esc</KeyButton>
+        <span>{{ t('write.cancel') }}</span>
       </p>
     </div>
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../composables/useCallAi'
-import { GlobalEvents, useGlobalEvents } from '../composables/useGlobalEvents'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { resolveQuickInputKeyAction } from '../lib/quick-input/quick-input-keys'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
@@ -38,7 +41,6 @@ import { Icon } from '@iconify/vue'
 const navPanelStore = useNavPanelStore()
 const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
-const { globalEvents } = useGlobalEvents()
 const ipcStore = useIpcStore()
 const { correctText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()
@@ -48,7 +50,13 @@ const appConfig = ipcStore.params!.appConfig
 const correctedText = ref('')
 const correctionIsActual = ref(true)
 const { t } = useI18n()
-let keyUpListenerIndex = -1
+
+const submitMode = computed(
+  () => ipcStore.params?.userConfig?.quickInputSubmit || 'enter'
+)
+const submitShortcutLabel = computed(() =>
+  submitMode.value === 'ctrlEnter' ? 'Ctrl+Enter' : 'Enter'
+)
 
 function resetNav() {
   navPanelStore.resetNavParams({ panelVisible: false })
@@ -77,7 +85,14 @@ watch(
   }
 )
 
-function handleKeyUp(event: KeyboardEvent) {
+function cancelAndClose() {
+  writerInputStore.clear()
+  menuModalsStore.closeAll()
+  resetNav()
+  void ipcStore.callFunction('closeWindow', [])
+}
+
+function handleKeyDown(event: KeyboardEvent) {
   if (
     !ipcStore.params.isWindowShown ||
     ipcStore.params.mode !== 'write' ||
@@ -86,30 +101,31 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  if (event.code === 'Escape') {
+  const action = resolveQuickInputKeyAction(event, submitMode.value)
+  if (action === 'cancel') {
+    event.preventDefault()
+    cancelAndClose()
+    return
+  }
+
+  if (action === 'submit') {
     event.preventDefault()
     void doCorrection()
     return
   }
 
-  if (event.code === 'Tab') {
+  if (action === 'to-editor') {
     event.preventDefault()
     routeParamsStore.toEditor(writerInputStore.value)
   }
 }
 
 onMounted(() => {
-  keyUpListenerIndex = globalEvents.addListener(
-    GlobalEvents.KEY_UP,
-    handleKeyUp
-  )
+  window.addEventListener('keydown', handleKeyDown)
 })
 
 onUnmounted(() => {
-  if (keyUpListenerIndex >= 0) {
-    globalEvents.removeListener(keyUpListenerIndex)
-    keyUpListenerIndex = -1
-  }
+  window.removeEventListener('keydown', handleKeyDown)
 })
 
 const clear = () => {

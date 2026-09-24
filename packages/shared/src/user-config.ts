@@ -223,8 +223,11 @@ export type PasteMode = 'plain' | 'markdown' | 'ask'
 /** Режим подсветки документа в редакторе */
 export type EditorSyntax = 'none' | 'markdown'
 
+export type QuickInputSubmitMode = 'enter' | 'ctrlEnter'
+
 export interface UserConfig {
   hotkeys: Record<string, string>
+  quickInputSubmit?: QuickInputSubmitMode
   theme: ThemeMode
   contrast: ContrastMode
   motion: MotionMode
@@ -281,6 +284,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     history: 'Ctrl+Alt+H',
     config: 'Ctrl+Alt+Comma',
   },
+  quickInputSubmit: 'enter',
   theme: 'auto',
   contrast: 'auto',
   motion: 'auto',

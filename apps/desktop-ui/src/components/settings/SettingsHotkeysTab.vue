@@ -1,63 +1,84 @@
 <template>
-  <SettingsSection
-    :title="t('settings.hotkeysTitle')"
-    :description="t('settings.hotkeysHint')"
-  >
-    <div v-if="canConfigure" class="configure-hotkeys">
-      <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
-        {{ t('settings.configureGlobalHotkeys') }}
-      </Button>
-      <p v-if="configureError" class="configure-error">
-        {{ configureError }}
-      </p>
-    </div>
-    <FieldRow
-      v-for="action in actions"
-      :key="action.mode"
-      :label="t(`settings.hotkeyActions.${action.mode}`)"
+  <div class="flex flex-col gap-6">
+    <SettingsSection
+      :title="t('settings.hotkeysTitle')"
+      :description="t('settings.hotkeysHint')"
     >
-      <div class="hotkey-control">
-        <input
-          class="input hotkey-input"
-          :value="userConfig.hotkeys[action.mode]"
-          :aria-label="t(`settings.hotkeyActions.${action.mode}`)"
-          readonly
-          @focus="recordingMode = action.mode"
-          @blur="recordingMode = null"
-          @keydown="record($event, action.mode)"
-        />
-        <Button
-          sm
-          neutral
-          :disabled="userConfig.hotkeys[action.mode] === action.defaultValue"
-          @click="setShortcut(action.mode, action.defaultValue)"
-        >
-          {{ t('settings.resetToDefault') }}
+      <div v-if="canConfigure" class="configure-hotkeys">
+        <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
+          {{ t('settings.configureGlobalHotkeys') }}
         </Button>
-        <p class="hotkey-status" :data-status="statuses[action.mode]?.status">
-          {{ statusText(action.mode) }}
+        <p v-if="configureError" class="configure-error">
+          {{ configureError }}
         </p>
-        <div
-          v-if="statuses[action.mode]?.externalCommand"
-          class="external-command"
-        >
-          <code>{{ statuses[action.mode].externalCommand }}</code>
+      </div>
+      <FieldRow
+        v-for="action in actions"
+        :key="action.mode"
+        :label="t(`settings.hotkeyActions.${action.mode}`)"
+      >
+        <div class="hotkey-control">
+          <input
+            class="input hotkey-input"
+            :value="userConfig.hotkeys[action.mode]"
+            :aria-label="t(`settings.hotkeyActions.${action.mode}`)"
+            readonly
+            @focus="recordingMode = action.mode"
+            @blur="recordingMode = null"
+            @keydown="record($event, action.mode)"
+          />
           <Button
             sm
-            ghost
-            icon="mdi:content-copy"
-            @click="copyCommand(action.mode)"
+            neutral
+            :disabled="userConfig.hotkeys[action.mode] === action.defaultValue"
+            @click="setShortcut(action.mode, action.defaultValue)"
           >
-            {{ t('settings.copyHotkeyCommand') }}
+            {{ t('settings.resetToDefault') }}
           </Button>
+          <p class="hotkey-status" :data-status="statuses[action.mode]?.status">
+            {{ statusText(action.mode) }}
+          </p>
+          <div
+            v-if="statuses[action.mode]?.externalCommand"
+            class="external-command"
+          >
+            <code>{{ statuses[action.mode].externalCommand }}</code>
+            <Button
+              sm
+              ghost
+              icon="mdi:content-copy"
+              @click="copyCommand(action.mode)"
+            >
+              {{ t('settings.copyHotkeyCommand') }}
+            </Button>
+          </div>
         </div>
-      </div>
-    </FieldRow>
-  </SettingsSection>
+      </FieldRow>
+    </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.quickInputSectionTitle')"
+      :description="t('settings.quickInputSectionHint')"
+    >
+      <FieldRow
+        :label="t('settings.quickInputSubmitLabel')"
+        :hint="t('settings.quickInputSubmitHint')"
+      >
+        <div class="flex flex-col gap-2 w-full">
+          <Tabs
+            variant="segmented"
+            :tabs="quickInputSubmitTabs"
+            :value="userConfig.quickInputSubmit || 'enter'"
+            @update:value="setQuickInputSubmit"
+          />
+        </div>
+      </FieldRow>
+    </SettingsSection>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, toRef } from 'vue'
+import { computed, onMounted, reactive, ref, toRef } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
@@ -69,15 +90,28 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyApplyResult,
   type HotkeyProviderInfo,
+  type QuickInputSubmitMode,
   type UserConfig,
   hotkeyFromKeyboardEvent,
 } from '@tyco/shared'
 
-defineProps<{ userConfig: UserConfig }>()
+const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:hotkey', mode: string, shortcut: string): void
+  (event: 'update:quickInputSubmit', mode: QuickInputSubmitMode): void
 }>()
 const { t } = useI18n()
+
+const quickInputSubmitTabs = computed(() => [
+  { key: 'enter', text: t('settings.quickInputSubmitEnter') },
+  { key: 'ctrlEnter', text: t('settings.quickInputSubmitCtrlEnter') },
+])
+
+function setQuickInputSubmit(value: string | number) {
+  const mode = value as QuickInputSubmitMode
+  props.userConfig.quickInputSubmit = mode
+  emit('update:quickInputSubmit', mode)
+}
 const ipcStore = useIpcStore()
 const recordingMode = ref<string | null>(null)
 const providerState = reactive({
