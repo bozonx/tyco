@@ -48,6 +48,8 @@ function handleCorrected(resultText: string) {
 }
 
 function handleCancelled() {
+  if (!ipcStore.params.isWindowShown || ipcStore.params.mode !== 'voice') return
+
   if (getCurrentWindow().label === 'quick') {
     void ipcStore.callFunction('closeWindow', [])
   } else {

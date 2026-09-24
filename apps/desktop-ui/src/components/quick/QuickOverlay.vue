@@ -1,20 +1,32 @@
 <template>
-  <div class="quick-overlay-root" :class="isSheet ? 'is-sheet' : 'is-panel'">
+  <div
+    class="quick-overlay-root"
+    :class="[isSheet ? 'is-sheet' : 'is-panel', { 'has-modal': hasModal }]"
+  >
     <div ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'write'" class="quick-mode-layer">
         <WriteModeView />
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
-        <VoiceView />
+        <VoiceView
+          v-if="currentMode === 'voice' && ipcStore.params.isWindowShown"
+        />
       </div>
       <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
-        <AiTaskView />
+        <AiTaskView
+          v-if="currentMode === 'aiTasks' && ipcStore.params.isWindowShown"
+        />
       </div>
       <div
         v-show="currentMode === 'select' || currentMode === 'correction'"
         class="quick-mode-layer"
       >
-        <SelectModeView />
+        <SelectModeView
+          v-if="
+            (currentMode === 'select' || currentMode === 'correction') &&
+            ipcStore.params.isWindowShown
+          "
+        />
       </div>
     </div>
   </div>
@@ -43,6 +55,9 @@ const writerInputStore = useWriterInputStore()
 const cardRef = ref<HTMLElement | null>(null)
 
 const currentMode = computed(() => ipcStore.params?.mode || 'write')
+const hasModal = computed(
+  () => menuModalsStore.currentModal !== MenuModals.NONE
+)
 
 const isSheet = computed(() => {
   return (
@@ -54,22 +69,31 @@ const isSheet = computed(() => {
 
 let resizeObserver: ResizeObserver | null = null
 let lastWindowHeight = 0
+let windowUpdate = Promise.resolve()
 
-const resizeWindow = async (): Promise<void> => {
-  if (!cardRef.value || isSheet.value) return
-
-  const height = quickPanelWindowHeight(
-    cardRef.value.getBoundingClientRect().height
-  )
-  if (height === lastWindowHeight) return
-
-  try {
-    await getCurrentWindow().setSize(new LogicalSize(QUICK_PANEL_WIDTH, height))
-    lastWindowHeight = height
-  } catch {
-    // Browser dev fallback
-  }
+const queueWindowUpdate = (update: () => Promise<void>): Promise<void> => {
+  windowUpdate = windowUpdate.then(update, update)
+  return windowUpdate
 }
+
+const resizeWindow = (): Promise<void> =>
+  queueWindowUpdate(async () => {
+    if (!cardRef.value || isSheet.value) return
+
+    const height = quickPanelWindowHeight(
+      cardRef.value.getBoundingClientRect().height
+    )
+    if (height === lastWindowHeight) return
+
+    try {
+      await getCurrentWindow().setSize(
+        new LogicalSize(QUICK_PANEL_WIDTH, height)
+      )
+      lastWindowHeight = height
+    } catch {
+      // Browser dev fallback
+    }
+  })
 
 const syncFocus = () => {
   if (currentMode.value === 'write') {
@@ -89,19 +113,21 @@ onUnmounted(() => {
 
 watch(
   isSheet,
-  async (sheet) => {
-    try {
-      await ipcStore.callFunction('setWindowProfile', [
-        sheet ? 'sheet' : 'panel',
-      ])
-    } catch {
-      // IPC fallback
-    }
-    if (!sheet) {
-      lastWindowHeight = 0
-      await nextTick()
-      void resizeWindow()
-    }
+  (sheet) => {
+    void queueWindowUpdate(async () => {
+      try {
+        await ipcStore.callFunction('setWindowProfile', [
+          sheet ? 'sheet' : 'panel',
+        ])
+      } catch {
+        // IPC fallback
+      }
+      if (!sheet) {
+        lastWindowHeight = 0
+        await nextTick()
+        void resizeWindow()
+      }
+    })
   },
   { immediate: true }
 )
@@ -165,6 +191,10 @@ watch(
 .quick-overlay-root.is-sheet .quick-overlay-card {
   height: 100%;
   max-height: 100%;
+}
+
+.quick-overlay-root.has-modal .quick-overlay-card {
+  visibility: hidden;
 }
 
 .quick-mode-layer {

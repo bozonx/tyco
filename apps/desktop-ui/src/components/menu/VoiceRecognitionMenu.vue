@@ -232,6 +232,8 @@ function goToEditor() {
 }
 
 function handleKeyUp(event: KeyboardEvent) {
+  if (event.defaultPrevented) return
+
   if (event.code === 'Escape') {
     void cancel()
     return
