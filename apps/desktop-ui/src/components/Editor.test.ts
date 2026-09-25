@@ -194,4 +194,42 @@ describe('Editor.vue toolbar', () => {
       formatItemsPassed.some((item) => item.label === 'edit.customFormat')
     ).toBe(true)
   })
+
+  it('renders dev quick buttons and activates mode with editor text', async () => {
+    const { useEditorInputStore } = await import('../stores/editorInput')
+    const { useIpcStore } = await import('../stores/ipc')
+    const editorInputStore = useEditorInputStore()
+    const ipcStore = useIpcStore()
+
+    editorInputStore.setValue('hello from editor test', 'plain')
+
+    const callFunctionSpy = vi
+      .spyOn(ipcStore, 'callFunction')
+      .mockResolvedValue({ success: true, result: undefined } as any)
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const aiTasksQuickBtn = wrapper.find('button[title="Open Quick AI Tasks"]')
+    expect(aiTasksQuickBtn.exists()).toBe(true)
+
+    await aiTasksQuickBtn.trigger('click')
+
+    expect(callFunctionSpy).toHaveBeenCalledWith('activateMode', [
+      'aiTasks',
+      'hello from editor test',
+    ])
+  })
 })

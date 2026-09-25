@@ -169,6 +169,7 @@ export const DESKTOP_COMMANDS = {
   SECRETS_STATUS: 'secrets_status',
   SECRETS_SET: 'secrets_set',
   SECRETS_REMOVE: 'secrets_remove',
+  ACTIVATE_MODE: 'activate_mode',
 } as const
 
 export type DesktopCommandName =

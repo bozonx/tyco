@@ -82,3 +82,28 @@ pub fn save_local_state(
 
     Ok(())
 }
+
+#[tauri::command]
+pub fn activate_mode(app: AppHandle, mode: String, text: Option<String>) -> Result<(), AppError> {
+    let parsed_mode = crate::services::activation::StartMode::parse(&mode)?;
+    let mut activation = crate::services::activation::Activation::new(
+        parsed_mode,
+        crate::services::activation::ActivationSource::Ui,
+    );
+    activation.selected_text = text;
+    runtime::activate(&app, activation)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::services::activation::StartMode;
+
+    #[test]
+    fn parses_valid_and_invalid_modes() {
+        assert_eq!(StartMode::parse("write").unwrap(), StartMode::Write);
+        assert_eq!(StartMode::parse("aiTasks").unwrap(), StartMode::AiTasks);
+        assert_eq!(StartMode::parse("voice").unwrap(), StartMode::Voice);
+        assert_eq!(StartMode::parse("select").unwrap(), StartMode::Select);
+        assert!(StartMode::parse("invalidMode").is_err());
+    }
+}

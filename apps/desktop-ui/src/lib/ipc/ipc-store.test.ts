@@ -80,6 +80,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the activate mode command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('activateMode', ['aiTasks', 'sample text'])
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.ACTIVATE_MODE,
+      { mode: 'aiTasks', text: 'sample text' }
+    )
+  })
+
   it('maps the save note command', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

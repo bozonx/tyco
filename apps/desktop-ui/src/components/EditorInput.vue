@@ -1,5 +1,5 @@
 <template>
-  <div ref="hostRef" class="main-input textarea" />
+  <div ref="hostRef" class="main-input" />
 
   <EditorContextMenu
     v-if="menu"
@@ -340,15 +340,15 @@ watch(
 
 <style scoped>
 .main-input {
-  /* daisyUI задаёт .textarea ширину clamp(3rem, 20rem, 100%) — редактор из-за
-     неё занимал 20rem вместо всей доступной ширины */
   display: flex;
   width: 100%;
-  max-width: none;
   height: 100%;
   min-width: 0;
   padding: 0;
   overflow: hidden;
+  border: none;
+  outline: none;
+  background-color: transparent;
 }
 
 /* остальной вид редактора — в lib/editor/theme.ts, чтобы цвета брались из
@@ -356,5 +356,7 @@ watch(
 .main-input :deep(.cm-editor) {
   flex: 1;
   min-width: 0;
+  height: 100%;
+  outline: none;
 }
 </style>

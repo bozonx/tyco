@@ -47,9 +47,9 @@ export const editorTheme: Extension = EditorView.theme({
  */
 export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.heading, color: 'var(--app-syntax-heading)', fontWeight: '600' },
-  { tag: tags.heading1, fontSize: '1.35em', lineHeight: '1.3' },
-  { tag: tags.heading2, fontSize: '1.2em', lineHeight: '1.35' },
-  { tag: tags.heading3, fontSize: '1.1em' },
+  { tag: tags.heading1, fontSize: '1.25em', lineHeight: '1.3' },
+  { tag: tags.heading2, fontSize: '1.15em', lineHeight: '1.35' },
+  { tag: tags.heading3, fontSize: '1.05em' },
   { tag: tags.strong, fontWeight: '700' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strikethrough, textDecoration: 'line-through' },

@@ -48,6 +48,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
       buildArgs: ([text, sourceText]) => ({ text, sourceText }),
     },
+    activateMode: {
+      command: DESKTOP_COMMANDS.ACTIVATE_MODE,
+      buildArgs: ([mode, text]) => ({ mode, text }),
+    },
     applyHotkey: {
       command: DESKTOP_COMMANDS.APPLY_HOTKEY,
       buildArgs: ([request]) => ({ request }),

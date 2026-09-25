@@ -92,6 +92,7 @@ pub enum ActivationSource {
     Hotkey,
     Dbus,
     Cli,
+    Ui,
 }
 
 #[derive(Debug)]

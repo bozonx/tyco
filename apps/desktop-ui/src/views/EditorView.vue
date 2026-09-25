@@ -1,11 +1,14 @@
 <template>
-  <div class="editor-view">
-    <Editor v-if="ipcStore.params" :compact="false" />
-  </div>
+  <ContentPadding>
+    <div class="editor-view">
+      <Editor v-if="ipcStore.params" :compact="false" />
+    </div>
+  </ContentPadding>
 </template>
 
 <script setup lang="ts">
 import Editor from '../components/Editor.vue'
+import ContentPadding from '../components/common/ContentPadding.vue'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'

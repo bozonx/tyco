@@ -163,6 +163,39 @@
         >
       </div>
 
+      <div
+        v-if="!compact && isDev"
+        class="dev-quick-panel flex items-center gap-1.5 w-full flex-wrap pt-2 border-t border-[var(--app-border-subtle)] text-xs text-[var(--app-text-muted)]"
+      >
+        <span class="font-mono font-medium">DEV Quick:</span>
+        <Button sm neutral @click="openQuick('write')" title="Open Quick Write">
+          <Icon icon="mdi:pencil-outline" height="15" />
+          Write
+        </Button>
+        <Button
+          sm
+          neutral
+          @click="openQuick('aiTasks')"
+          title="Open Quick AI Tasks"
+        >
+          <Icon icon="mdi:robot-outline" height="15" />
+          AI Tasks
+        </Button>
+        <Button
+          sm
+          neutral
+          @click="openQuick('select')"
+          title="Open Quick Select"
+        >
+          <Icon icon="mdi:format-list-checks" height="15" />
+          Select
+        </Button>
+        <Button sm neutral @click="openQuick('voice')" title="Open Quick Voice">
+          <Icon icon="mdi:microphone-outline" height="15" />
+          Voice
+        </Button>
+      </div>
+
       <slot />
     </div>
   </div>
@@ -173,15 +206,20 @@ import { computed } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
+import { desktopClient } from '../lib/desktop/client'
+import { appNavigation } from '../lib/navigation/navigation'
+import { resolveModeRoute } from '../lib/navigation/routes'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
 import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
+import { useIpcStore } from '../stores/ipc'
 import { useToolbarStore } from '../stores/toolbar'
 import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
+import type { START_MODES } from '@tyco/shared'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
@@ -189,8 +227,25 @@ const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
+const ipcStore = useIpcStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
+const isDev = import.meta.env.DEV
+
+const openQuick = async (mode: 'write' | 'voice' | 'aiTasks' | 'select') => {
+  const text =
+    editorInputStore.selectedText || editorInputStore.value || undefined
+
+  const res = await ipcStore.callFunction('activateMode', [mode, text])
+  if (!res?.success) {
+    desktopClient.setLocalParams({
+      mode: mode as unknown as START_MODES,
+      selectedText: text ?? '',
+      isWindowShown: true,
+    })
+    void appNavigation.push(resolveModeRoute(mode as unknown as START_MODES))
+  }
+}
 
 const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
   editMenuStore
@@ -359,7 +414,8 @@ const handleCopy = async () => {
   color: var(--app-text-muted);
 }
 
-.editor-root :deep(.btn-ghost:hover) {
+.editor-root :deep(.btn-ghost:hover),
+.editor-root :deep(.btn-ghost.btn-active) {
   color: var(--color-base-content);
 }
 

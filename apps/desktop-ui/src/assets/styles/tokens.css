@@ -54,12 +54,11 @@
   /* Field row label width — global token so FieldRow and FieldsByCfg stay in sync */
   --field-label-width: 220px;
 
-  /* Editor (CodeMirror) — "writer" look, not an IDE look:
-     proportional font, generous line height, comfortable padding */
+  /* Editor (CodeMirror) typography and padding */
   --editor-font-family: var(--font-sans);
-  --editor-font-size: 1.0625rem;
-  --editor-line-height: 1.7;
-  --editor-padding: 0.875rem 1rem;
+  --editor-font-size: 0.875rem;
+  --editor-line-height: 1.55;
+  --editor-padding: 0.75rem 0.875rem;
 }
 
 /* Semantic tokens, derived from the active palette.

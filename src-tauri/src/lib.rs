@@ -5,8 +5,8 @@ mod services;
 mod state;
 
 use commands::app::{
-    apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params, get_storage_info,
-    mark_activation_metric, open_main_editor, save_local_state, save_user_config,
+    activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
+    get_storage_info, mark_activation_metric, open_main_editor, save_local_state, save_user_config,
     submit_activation_metric_value,
 };
 use commands::history::{
@@ -105,6 +105,7 @@ pub fn run() {
             configure_hotkeys,
             get_hotkey_provider_info,
             open_main_editor,
+            activate_mode,
             mark_activation_metric,
             submit_activation_metric_value,
             save_user_config,
