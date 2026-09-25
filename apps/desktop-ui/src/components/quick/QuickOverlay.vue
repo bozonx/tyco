@@ -2,6 +2,7 @@
   <div
     class="quick-overlay-root"
     :class="[isSheet ? 'is-sheet' : 'is-panel', { 'has-modal': hasModal }]"
+    @pointerdown="handleRootPointerDown"
   >
     <div ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'write'" class="quick-mode-layer">
@@ -80,6 +81,21 @@ const dismiss = () => {
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   void ipcStore.callFunction('dismissQuickWindow', []).catch(() => {})
+}
+
+const handleRootPointerDown = (event: PointerEvent) => {
+  if (!cardRef.value) return
+  const target = event.target as Node | null
+  const writeFrame = cardRef.value.querySelector('.write-frame')
+  if (currentMode.value === 'write' && writeFrame) {
+    if (target && !writeFrame.contains(target)) {
+      dismiss()
+    }
+    return
+  }
+  if (target && !cardRef.value.contains(target)) {
+    dismiss()
+  }
 }
 
 const focusLoss = createFocusLossWatcher({
@@ -201,7 +217,10 @@ watch(hasModal, (open) => {
   border: none;
   box-shadow: none;
   backdrop-filter: none;
+  height: 100%;
   max-height: 100%;
+  justify-content: flex-end;
+  overflow: visible;
 }
 
 .quick-overlay-root.is-sheet .quick-overlay-card {
@@ -221,8 +240,10 @@ watch(hasModal, (open) => {
 .quick-mode-layer {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   flex: 1 1 0%;
   min-height: 0;
   width: 100%;
+  height: 100%;
 }
 </style>

@@ -3,7 +3,7 @@
     ref="textareaRef"
     class="main-input"
     auto-resize
-    :max-auto-height="380"
+    :max-auto-height="200"
     :placeholder="t('input.textPlaceholder')"
     :value="writerInputStore.value"
     @update:value="handleInput"

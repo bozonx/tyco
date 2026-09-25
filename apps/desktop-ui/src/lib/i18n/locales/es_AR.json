@@ -330,6 +330,7 @@
   },
   "write": {
     "next": "Siguiente",
+    "newLine": "Nueva línea",
     "cancel": "Cancelar",
     "escNext": "Esc - siguiente",
     "enterTextForCorrection": "Ingresa texto para corregir",

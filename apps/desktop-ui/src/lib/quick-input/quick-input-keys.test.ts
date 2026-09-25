@@ -12,12 +12,10 @@ describe('resolveQuickInputKeyAction', () => {
     )
   })
 
-  it('returns to-editor on Tab regardless of submit mode', () => {
-    expect(resolveQuickInputKeyAction({ code: 'Tab' }, 'enter')).toBe(
-      'to-editor'
-    )
+  it('returns none on Tab regardless of submit mode', () => {
+    expect(resolveQuickInputKeyAction({ code: 'Tab' }, 'enter')).toBe('none')
     expect(resolveQuickInputKeyAction({ code: 'Tab' }, 'ctrlEnter')).toBe(
-      'to-editor'
+      'none'
     )
   })
 

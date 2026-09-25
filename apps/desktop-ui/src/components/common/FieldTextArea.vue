@@ -2,6 +2,7 @@
   <textarea
     class="textarea"
     :class="{ 'is-auto-resize': autoResize }"
+    :rows="autoResize ? 1 : undefined"
     :placeholder="placeholder"
     :value="value"
     @input="handleInput"
@@ -39,10 +40,13 @@ function adjustHeight() {
   if (!props.autoResize || !textareaRef.value) return
   const el = textareaRef.value
   el.style.height = 'auto'
-  const maxHeight = props.maxAutoHeight ?? 380
+  const maxHeight = props.maxAutoHeight ?? 200
   const targetHeight = Math.min(el.scrollHeight, maxHeight)
   el.style.height = `${targetHeight}px`
   el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
+  if (el.scrollHeight <= maxHeight) {
+    el.scrollTop = 0
+  }
 }
 
 function handleInput(event: Event) {
@@ -111,7 +115,7 @@ textarea {
 }
 
 textarea.is-auto-resize {
-  min-height: 2.75rem;
+  min-height: 0 !important;
   resize: none;
   overflow-y: hidden;
   box-sizing: border-box;

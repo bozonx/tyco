@@ -24,7 +24,7 @@ vi.mock('../../stores/ipc', () => ({
   }),
 }))
 vi.mock('../../stores/writerInput', () => ({
-  useWriterInputStore: () => ({ focus: mocks.focus }),
+  useWriterInputStore: () => ({ focus: mocks.focus, markDismissed: vi.fn() }),
 }))
 vi.mock('../../stores/menuModals', () => ({
   MenuModals: { NONE: 'none' },
@@ -101,6 +101,26 @@ describe('quick overlay keyboard ownership', () => {
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.closeWindow).not.toHaveBeenCalled()
       expect(wrapper.find('textarea').exists()).toBe(true)
+    } finally {
+      wrapper.unmount()
+    }
+  })
+
+  it('dismisses quick window when clicking outside the card', async () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+    const params = reactive(mocks.params)
+    params.mode = 'write'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      await wrapper.find('.quick-overlay-root').trigger('pointerdown')
+      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
     } finally {
       wrapper.unmount()
     }

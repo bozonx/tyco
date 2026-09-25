@@ -1,6 +1,6 @@
 import type { QuickInputSubmitMode } from '@tyco/shared'
 
-export type QuickInputKeyAction = 'submit' | 'cancel' | 'to-editor' | 'none'
+export type QuickInputKeyAction = 'submit' | 'cancel' | 'none'
 
 export interface QuickInputKeyEvent {
   code: string
@@ -15,10 +15,6 @@ export function resolveQuickInputKeyAction(
 ): QuickInputKeyAction {
   if (event.code === 'Escape') {
     return 'cancel'
-  }
-
-  if (event.code === 'Tab') {
-    return 'to-editor'
   }
 
   if (event.code === 'Enter') {

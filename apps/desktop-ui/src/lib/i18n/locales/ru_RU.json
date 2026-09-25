@@ -330,6 +330,7 @@
   },
   "write": {
     "next": "Далее",
+    "newLine": "Новая строка",
     "cancel": "Отмена",
     "escNext": "Esc - далее",
     "enterTextForCorrection": "Введите текст для коррекции",

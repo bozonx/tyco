@@ -330,6 +330,7 @@
   },
   "write": {
     "next": "Devam",
+    "newLine": "Yeni satır",
     "cancel": "İptal",
     "escNext": "Esc - devam",
     "enterTextForCorrection": "Düzeltme için metin girin",

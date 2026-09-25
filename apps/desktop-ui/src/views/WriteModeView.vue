@@ -1,26 +1,19 @@
 <template>
-  <ContentPadding>
-    <div class="write-mode-container">
-      <div class="write-frame">
-        <WriteModeInput class="flex-1" />
-        <div class="write-rail">
-          <Button sm ghost square @click="clear" :title="t('editor.clear')">
-            <Icon icon="mdi:eraser" height="18" />
-          </Button>
-        </div>
-      </div>
-      <p class="write-hint">
-        <KeyButton>{{ submitShortcutLabel }}</KeyButton>
-        <span>{{ t('write.next') }}</span>
-        <span class="opacity-40">•</span>
-        <KeyButton>Tab</KeyButton>
-        <span>{{ t('shortcuts.insertIntoEditor') }}</span>
-        <span class="opacity-40">•</span>
-        <KeyButton>Esc</KeyButton>
-        <span>{{ t('write.cancel') }}</span>
-      </p>
+  <div class="write-mode-container">
+    <div class="write-frame">
+      <WriteModeInput class="flex-1" />
     </div>
-  </ContentPadding>
+    <p class="write-hint">
+      <KeyButton>{{ submitShortcutLabel }}</KeyButton>
+      <span>{{ t('write.next') }}</span>
+      <span class="opacity-40">•</span>
+      <KeyButton>{{ newlineShortcutLabel }}</KeyButton>
+      <span>{{ t('write.newLine') }}</span>
+      <span class="opacity-40">•</span>
+      <KeyButton>Esc</KeyButton>
+      <span>{{ t('write.cancel') }}</span>
+    </p>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -41,13 +34,10 @@ import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
-import { useRouteParams } from '../stores/routeParams'
 import { useWriterInputStore } from '../stores/writerInput'
-import { Icon } from '@iconify/vue'
 
 const navPanelStore = useNavPanelStore()
 const writerInputStore = useWriterInputStore()
-const routeParamsStore = useRouteParams()
 const ipcStore = useIpcStore()
 const { correctText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()
@@ -64,6 +54,9 @@ const correctionMode = computed(
 )
 const submitShortcutLabel = computed(() =>
   submitMode.value === 'ctrlEnter' ? 'Ctrl+Enter' : 'Enter'
+)
+const newlineShortcutLabel = computed(() =>
+  submitMode.value === 'ctrlEnter' ? 'Enter' : 'Shift+Enter'
 )
 
 const quickCorrection = createQuickCorrection({
@@ -160,12 +153,6 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
-  if (action === 'to-editor') {
-    event.preventDefault()
-    routeParamsStore.toEditor(writerInputStore.value)
-    return
-  }
-
   if (
     event.code === 'ArrowUp' &&
     !writerInputStore.value &&
@@ -184,11 +171,6 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   quickCorrection.cancel()
 })
-
-const clear = () => {
-  writerInputStore.clear()
-  writerInputStore.focus()
-}
 
 function describeError(error: unknown): string {
   if (error instanceof LlmError) return formatLlmError(error, translate)
@@ -284,23 +266,24 @@ async function submit() {
   flex-direction: column;
   justify-content: flex-end;
   gap: var(--space-sm);
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .write-frame {
   display: flex;
-  min-height: 3rem;
-  max-height: 400px;
+  align-items: center;
+  min-height: 2.25rem;
+  max-height: 200px;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   background-color: color-mix(in oklab, var(--app-surface) 96%, transparent);
   backdrop-filter: blur(16px);
   box-shadow: var(--app-shadow-md);
-  overflow: hidden;
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .write-frame:focus-within {
@@ -311,28 +294,16 @@ async function submit() {
 }
 
 .write-frame :deep(.main-input) {
-  padding: var(--editor-padding);
+  min-height: 0 !important;
+  height: auto;
+  padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 0;
   box-shadow: none;
   background: transparent;
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);
-}
-
-.write-rail {
-  display: flex;
-  flex-direction: column;
-  padding: 0.375rem;
-  border-left: 1px solid var(--app-border-subtle);
-}
-
-.write-rail :deep(.btn-ghost) {
-  color: var(--app-text-muted);
-}
-
-.write-rail :deep(.btn-ghost:hover) {
-  color: var(--color-error);
+  box-sizing: border-box;
 }
 
 .write-hint {
@@ -342,5 +313,6 @@ async function submit() {
   margin: 0;
   font-size: 0.75rem;
   color: var(--app-text-muted);
+  flex-shrink: 0;
 }
 </style>
