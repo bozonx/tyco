@@ -8,7 +8,8 @@
     "empty": "empty",
     "inProgress": "In progress",
     "search": "Search",
-    "delete": "Delete"
+    "delete": "Delete",
+    "close": "Close"
   },
   "theme": {
     "auto": "Auto",
@@ -354,6 +355,14 @@
     "translationQualityRemaining": "Some quality issues remain after the repair",
     "translationQualityProblems": "Possible quality issues",
     "translationQualityClean": "Quality check passed."
+  },
+  "diff": {
+    "modeUnified": "Inline",
+    "modeSplit": "Side by side",
+    "modeResult": "Result only",
+    "original": "Original",
+    "modified": "Modified",
+    "noDiff": "No differences found"
   },
   "translationProblems": {
     "empty_output": "empty translation",

@@ -115,6 +115,10 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   padding-right: 7rem;
 }
 
+.overlay-body :deep(.action-overlay-header h1) {
+  padding-right: 0;
+}
+
 @keyframes overlay-in {
   from {
     opacity: 0;

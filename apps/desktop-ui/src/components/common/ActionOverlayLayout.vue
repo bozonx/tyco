@@ -53,6 +53,7 @@ defineProps<{ title?: string }>()
   gap: var(--space-md);
   flex-shrink: 0;
   min-height: 1.75rem;
+  padding-right: 7.5rem;
 }
 
 .action-overlay-title {

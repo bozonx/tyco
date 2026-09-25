@@ -8,7 +8,8 @@
     "empty": "vacío",
     "inProgress": "En progreso",
     "search": "Buscar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "close": "Cerrar"
   },
   "theme": {
     "auto": "Auto",
@@ -354,6 +355,14 @@
     "translationQualityRemaining": "Quedaron problemas de calidad después de la corrección",
     "translationQualityProblems": "Posibles problemas de calidad",
     "translationQualityClean": "La comprobación de calidad fue correcta."
+  },
+  "diff": {
+    "modeUnified": "En una línea",
+    "modeSplit": "Dos columnas",
+    "modeResult": "Solo resultado",
+    "original": "Original",
+    "modified": "Modificado",
+    "noDiff": "Sin diferencias"
   },
   "translationProblems": {
     "empty_output": "traducción vacía",

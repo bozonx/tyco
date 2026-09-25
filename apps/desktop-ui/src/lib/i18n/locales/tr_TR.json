@@ -8,7 +8,8 @@
     "empty": "boş",
     "inProgress": "İşleniyor",
     "search": "Ara",
-    "delete": "Sil"
+    "delete": "Sil",
+    "close": "Kapat"
   },
   "theme": {
     "auto": "Otomatik",
@@ -354,6 +355,14 @@
     "translationQualityRemaining": "Düzeltmeden sonra bazı kalite sorunları kaldı",
     "translationQualityProblems": "Olası kalite sorunları",
     "translationQualityClean": "Kalite kontrolü başarılı."
+  },
+  "diff": {
+    "modeUnified": "Tek satır",
+    "modeSplit": "İki sütun",
+    "modeResult": "Yalnızca sonuç",
+    "original": "Orijinal",
+    "modified": "Değiştirilmiş",
+    "noDiff": "Fark bulunamadı"
   },
   "translationProblems": {
     "empty_output": "boş çeviri",

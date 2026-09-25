@@ -8,7 +8,8 @@
     "empty": "пусто",
     "inProgress": "Выполняется",
     "search": "Поиск",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "close": "Закрыть"
   },
   "theme": {
     "auto": "Авто",
@@ -354,6 +355,14 @@
     "translationQualityRemaining": "После исправления остались проблемы качества",
     "translationQualityProblems": "Возможные проблемы качества",
     "translationQualityClean": "Проверка качества пройдена."
+  },
+  "diff": {
+    "modeUnified": "В одну строку",
+    "modeSplit": "В две колонки",
+    "modeResult": "Только результат",
+    "original": "Было",
+    "modified": "Стало",
+    "noDiff": "Нет различий"
   },
   "translationProblems": {
     "empty_output": "пустой перевод",
