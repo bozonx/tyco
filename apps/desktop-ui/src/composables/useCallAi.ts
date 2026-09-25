@@ -205,7 +205,10 @@ export const useCallAi = () => {
     )
   }
 
-  const correctText = async (text: string) => {
+  const correctText = async (
+    text: string,
+    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
+  ) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
       return ''
@@ -214,6 +217,7 @@ export const useCallAi = () => {
     const userConfig = currentUserConfig()
 
     return await aiRequest(AI_TASKS.CORRECTION, text, {
+      ...options,
       instructions: APP_CONFIG.aiInstructions[AI_TASKS.CORRECTION],
       rules: buildTaskRules(userConfig.aiRules[AI_TASKS.CORRECTION]),
     })

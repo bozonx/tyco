@@ -19,7 +19,8 @@ import { useWriterInputStore } from '../stores/writerInput'
 
 const writerInputStore = useWriterInputStore()
 const menuModalsStore = useMenuModalsStore()
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
+// FieldTextArea exposes these
+const textareaRef = ref<{ focus: () => void; select: () => void } | null>(null)
 const { t } = useI18n()
 
 // set value from route params and focus
@@ -43,6 +44,16 @@ watch(
     if (newValue > oldValue) {
       textareaRef.value?.focus()
     }
+  }
+)
+
+watch(
+  () => writerInputStore.selectAllCount,
+  async (newValue, oldValue) => {
+    if (newValue <= oldValue) return
+    await nextTick()
+    textareaRef.value?.focus()
+    textareaRef.value?.select()
   }
 )
 

@@ -59,4 +59,36 @@ describe('createMenuModalsStoreModel', () => {
     expect(store.menuBreadcrumbs.value).toEqual([])
     expect(store.pendingModal.value).toBeNull()
   })
+
+  it('cancels the pending operation through its onCancel', () => {
+    const store = createMenuModalsStoreModel()
+    const onCancel = vi.fn()
+
+    store.setPendingModal({ correction: true, onCancel })
+    store.cancelPending()
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(store.pendingModal.value).toBeNull()
+    expect(() => store.cancelPending()).not.toThrow()
+  })
+
+  it('updates the params only of the modal still on screen', () => {
+    const store = createMenuModalsStoreModel()
+
+    store.nextModal(MenuModals.INSERT, { text: 'a', correcting: true })
+
+    expect(
+      store.updateModalParams(MenuModals.INSERT, { correcting: false })
+    ).toBe(true)
+    expect(store.currentModalParams.value).toEqual({
+      text: 'a',
+      correcting: false,
+    })
+
+    store.closeAll()
+    expect(store.updateModalParams(MenuModals.INSERT, { text: 'b' })).toBe(
+      false
+    )
+    expect(store.currentModalParams.value).toEqual({})
+  })
 })

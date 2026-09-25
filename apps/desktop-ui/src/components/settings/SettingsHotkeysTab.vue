@@ -73,6 +73,28 @@
           />
         </div>
       </FieldRow>
+      <FieldRow
+        :label="t('settings.quickCorrectionLabel')"
+        :hint="t('settings.quickCorrectionHint')"
+      >
+        <div class="flex flex-col gap-2 w-full">
+          <Tabs
+            variant="segmented"
+            :tabs="quickCorrectionTabs"
+            :value="userConfig.quickCorrection || 'background'"
+            @update:value="setQuickCorrection"
+          />
+        </div>
+      </FieldRow>
+      <FieldRow
+        :label="t('settings.quickHideOnBlurLabel')"
+        :hint="t('settings.quickHideOnBlurHint')"
+      >
+        <FieldCheckbox
+          :value="userConfig.quickHideOnBlur !== false"
+          @update:value="userConfig.quickHideOnBlur = $event"
+        />
+      </FieldRow>
     </SettingsSection>
   </div>
 </template>
@@ -84,12 +106,15 @@ import { useI18n } from '../../composables/useI18n'
 import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_USER_CONFIG,
   type HotkeyApplyResult,
   type HotkeyProviderInfo,
+  QUICK_CORRECTION_MODES,
+  type QuickCorrectionMode,
   type QuickInputSubmitMode,
   type UserConfig,
   hotkeyFromKeyboardEvent,
@@ -106,6 +131,17 @@ const quickInputSubmitTabs = computed(() => [
   { key: 'enter', text: t('settings.quickInputSubmitEnter') },
   { key: 'ctrlEnter', text: t('settings.quickInputSubmitCtrlEnter') },
 ])
+
+const quickCorrectionTabs = computed(() =>
+  QUICK_CORRECTION_MODES.map((mode) => ({
+    key: mode,
+    text: t(`settings.quickCorrection_${mode}`),
+  }))
+)
+
+function setQuickCorrection(value: string | number) {
+  props.userConfig.quickCorrection = value as QuickCorrectionMode
+}
 
 function setQuickInputSubmit(value: string | number) {
   const mode = value as QuickInputSubmitMode

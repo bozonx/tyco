@@ -24,11 +24,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import { useCallAi } from '../composables/useCallAi'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { translate } from '../lib/i18n'
+import { LlmError } from '../lib/llm/llm-client'
+import { formatLlmError } from '../lib/llm/llm-errors'
+import {
+  createQuickCorrection,
+  isCorrectionAborted,
+} from '../lib/quick-input/quick-correction'
 import { resolveQuickInputKeyAction } from '../lib/quick-input/quick-input-keys'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
@@ -45,18 +52,32 @@ const ipcStore = useIpcStore()
 const { correctText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
-const { toast } = useToast()
+const { toast, toastText } = useToast()
 const appConfig = ipcStore.params!.appConfig
-const correctedText = ref('')
-const correctionIsActual = ref(true)
 const { t } = useI18n()
 
 const submitMode = computed(
   () => ipcStore.params?.userConfig?.quickInputSubmit || 'enter'
 )
+const correctionMode = computed(
+  () => ipcStore.params?.userConfig?.quickCorrection || 'background'
+)
 const submitShortcutLabel = computed(() =>
   submitMode.value === 'ctrlEnter' ? 'Ctrl+Enter' : 'Enter'
 )
+
+const quickCorrection = createQuickCorrection({
+  // errors are shown by the step that needed the result
+  correct: (text, signal) => correctText(text, { signal, notifyError: false }),
+})
+
+/** Bumped by every submit and cancel: late results of older ones are dropped */
+let submitId = 0
+
+const needsCorrection = (text: string) =>
+  correctionMode.value !== 'manual' &&
+  text.trim().length > 0 &&
+  text.length >= appConfig.minCorrectionLength
 
 function resetNav() {
   navPanelStore.resetNavParams({ panelVisible: false })
@@ -70,22 +91,39 @@ watch(
     const { isWindowShown, mode } = ipcStore.params
     if (isWindowShown && mode === 'write') {
       menuModalsStore.closeAll()
-      writerInputStore.clear()
       resetNav()
-      writerInputStore.focus()
+      if (writerInputStore.startSession()) {
+        writerInputStore.focusAndSelectAll()
+      } else {
+        writerInputStore.focus()
+      }
     }
   },
   { immediate: true }
 )
 
+// correct in advance while the user pauses, so the submit rarely waits
 watch(
   () => writerInputStore.value,
-  () => {
-    correctionIsActual.value = false
+  (text) => {
+    quickCorrection.speculate(needsCorrection(text) ? text : null)
   }
 )
 
+watch(
+  () => ipcStore.params?.isWindowShown,
+  (isShown) => {
+    if (!isShown) cancelCorrection()
+  }
+)
+
+function cancelCorrection() {
+  submitId += 1
+  quickCorrection.cancel()
+}
+
 function cancelAndClose() {
+  cancelCorrection()
   writerInputStore.clear()
   menuModalsStore.closeAll()
   resetNav()
@@ -102,6 +140,14 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 
   const action = resolveQuickInputKeyAction(event, submitMode.value)
+
+  // while waiting for the correction, Esc returns to the text
+  if (menuModalsStore.pendingModal) {
+    if (action !== 'none') event.preventDefault()
+    if (action === 'cancel') menuModalsStore.cancelPending()
+    return
+  }
+
   if (action === 'cancel') {
     event.preventDefault()
     cancelAndClose()
@@ -110,13 +156,23 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (action === 'submit') {
     event.preventDefault()
-    void doCorrection()
+    void submit()
     return
   }
 
   if (action === 'to-editor') {
     event.preventDefault()
     routeParamsStore.toEditor(writerInputStore.value)
+    return
+  }
+
+  if (
+    event.code === 'ArrowUp' &&
+    !writerInputStore.value &&
+    writerInputStore.lastSubmitted
+  ) {
+    event.preventDefault()
+    writerInputStore.setValue(writerInputStore.lastSubmitted)
   }
 }
 
@@ -126,6 +182,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  quickCorrection.cancel()
 })
 
 const clear = () => {
@@ -133,43 +190,91 @@ const clear = () => {
   writerInputStore.focus()
 }
 
-async function doCorrection() {
-  if (!writerInputStore.value?.trim()) {
-    correctedText.value = ''
-    correctionIsActual.value = true
-    menuModalsStore.nextModal(MenuModals.INSERT, { text: '', oldText: '' })
-    return
-  } else if (correctionIsActual.value) {
-    // Proceed directly with existing correction
-  } else if (writerInputStore.value.length < appConfig.minCorrectionLength) {
-    correctedText.value = writerInputStore.value
-    correctionIsActual.value = true
-  } else {
-    const sourceId = await historyStore.saveSource(
-      writerInputStore.value,
-      'correction'
-    )
-    menuModalsStore.setPendingModal({ correction: true })
-    try {
-      const result = await correctText(writerInputStore.value)
-      await historyStore.saveSourceResult(sourceId, result).catch(() => {
-        toast(t('history.operationFailed'), 'error')
-      })
+function describeError(error: unknown): string {
+  if (error instanceof LlmError) return formatLlmError(error, translate)
+  return error instanceof Error ? error.message : String(error)
+}
 
-      correctedText.value = result
-      correctionIsActual.value = true
-    } catch {
-      correctedText.value = writerInputStore.value
-    } finally {
-      menuModalsStore.clearPendingModal()
-    }
+async function saveCorrection(text: string, result: string) {
+  try {
+    const sourceId = await historyStore.saveSource(text, 'correction')
+    await historyStore.saveSourceResult(sourceId, result)
+  } catch {
+    toast(t('history.operationFailed'), 'error')
+  }
+}
+
+/** Params of the insert step showing the correction of `text`. */
+function correctedParams(text: string, result: string) {
+  return result === text
+    ? { text, oldText: '', originalText: undefined }
+    : { text: result, oldText: text, originalText: text }
+}
+
+async function submit() {
+  const text = writerInputStore.value
+  const id = ++submitId
+  writerInputStore.rememberSubmitted(text)
+
+  if (!needsCorrection(text)) {
+    menuModalsStore.nextModal(MenuModals.INSERT, { text, oldText: '' })
+    return
   }
 
-  // TODO: текст могут отредактировать в diff ???
-  menuModalsStore.nextModal(MenuModals.INSERT, {
-    text: correctedText.value,
-    oldText: writerInputStore.value,
-  })
+  const ready = quickCorrection.peek(text)
+  if (ready !== undefined) {
+    void saveCorrection(text, ready)
+    menuModalsStore.nextModal(MenuModals.INSERT, correctedParams(text, ready))
+    return
+  }
+
+  const background = correctionMode.value === 'background'
+  if (background) {
+    menuModalsStore.nextModal(MenuModals.INSERT, {
+      text,
+      oldText: '',
+      correcting: true,
+    })
+  } else {
+    menuModalsStore.setPendingModal({
+      correction: true,
+      onCancel: cancelCorrection,
+    })
+  }
+
+  try {
+    const result = await quickCorrection.request(text)
+    if (id !== submitId) return
+    void saveCorrection(text, result)
+    if (background) {
+      menuModalsStore.updateModalParams(MenuModals.INSERT, {
+        ...correctedParams(text, result),
+        correcting: false,
+      })
+    } else {
+      menuModalsStore.nextModal(
+        MenuModals.INSERT,
+        correctedParams(text, result)
+      )
+    }
+  } catch (error) {
+    if (isCorrectionAborted(error) || id !== submitId) return
+    const message = describeError(error)
+    toastText(message, 'error')
+    // the text can still be inserted as it was typed
+    if (background) {
+      menuModalsStore.updateModalParams(MenuModals.INSERT, {
+        correcting: false,
+        correctionError: message,
+      })
+    } else {
+      menuModalsStore.nextModal(MenuModals.INSERT, {
+        text,
+        oldText: '',
+        correctionError: message,
+      })
+    }
+  }
 }
 </script>
 

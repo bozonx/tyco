@@ -40,10 +40,16 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text })
     },
     startCorrection: async (text: string) => {
-      const sourceId = await historyStore.saveSource(text, 'correction')
-      menuModalsStore.setPendingModal({ correction: true })
+      const controller = new AbortController()
+      menuModalsStore.setPendingModal({
+        correction: true,
+        onCancel: () => controller.abort(),
+      })
       try {
-        const newText = await correctText(text)
+        const newText = await correctText(text, { signal: controller.signal })
+        if (controller.signal.aborted) return
+        // a cancelled correction leaves no trace in the history
+        const sourceId = await historyStore.saveSource(text, 'correction')
         await historyStore.saveSourceResult(sourceId, newText).catch(() => {
           toast('history.operationFailed', 'error')
         })

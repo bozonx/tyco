@@ -17,6 +17,16 @@
       </ShortcutButton>
 
       <ShortcutButton
+        v-if="altVisible"
+        :keys="['Shift', 'Space']"
+        icon="mdi:undo-variant"
+        :disabled="props.spaceKey?.disabled"
+        @click="props.spaceKey?.action(props.altText || '')"
+      >
+        {{ t('write.insertOriginal') }}
+      </ShortcutButton>
+
+      <ShortcutButton
         v-if="props.toEditorVisible"
         :keys="['Tab']"
         icon="mdi:pencil-outline"
@@ -79,6 +89,8 @@ const props = withDefaults(
     /** What `text` was transformed from, see `routeParams.toEditor`. */
     sourceText?: string
     spaceKey?: ActionItem
+    /** Another version of the text, run through Shift+Space: the original */
+    altText?: string
     toEditorVisible?: boolean
     escVisible?: boolean
     escAction?: () => void
@@ -89,6 +101,7 @@ const props = withDefaults(
     text: '',
     sourceText: '',
     spaceKey: undefined,
+    altText: undefined,
     toEditorVisible: false,
     escVisible: true,
     escAction: undefined,
@@ -118,6 +131,25 @@ const slots = computed<ShortcutSlotItem[]>(() =>
   })
 )
 
+const altVisible = computed(
+  () =>
+    Boolean(props.spaceKey) &&
+    props.altText !== undefined &&
+    props.altText !== props.text
+)
+
+/**
+ * Text on screen when each key went down. A key acts on its release, and only
+ * if it went down here and the text did not change meanwhile: the key that
+ * opened this list, or a correction arriving mid-press, must not run an action
+ * on a text the user has not seen
+ */
+const pressedKeys = new Map<string, string>()
+
+const handleWindowBlur = () => {
+  pressedKeys.clear()
+}
+
 const hasPresetActions = computed(() =>
   slots.value.some((slot) => Boolean(slot.action))
 )
@@ -125,15 +157,18 @@ const hasPresetActions = computed(() =>
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleShortCutKeyUp)
+  window.addEventListener('blur', handleWindowBlur)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleShortCutKeyUp)
+  window.removeEventListener('blur', handleWindowBlur)
 })
 
 function handleKeyDown(event: KeyboardEvent) {
   if (props.stopListening) return
+  if (!event.repeat) pressedKeys.set(event.code, props.text)
 
   // Prevent browser default tab focus movement and space scroll
   if (event.code === 'Tab' && props.toEditorVisible) {
@@ -148,9 +183,20 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function handleShortCutKeyUp(event: KeyboardEvent) {
-  if (props.stopListening) return
+  const textAtKeyDown = pressedKeys.get(event.code)
+  pressedKeys.delete(event.code)
+  if (props.stopListening || textAtKeyDown === undefined) return
+  if (textAtKeyDown !== props.text) return
 
   if (
+    (event.code === 'Space' || event.code === 'Enter') &&
+    event.shiftKey &&
+    altVisible.value
+  ) {
+    if (!props.spaceKey?.disabled) {
+      props.spaceKey?.action(props.altText || '')
+    }
+  } else if (
     (event.code === 'Space' || event.code === 'Enter') &&
     props.spaceKey &&
     !props.spaceKey.disabled

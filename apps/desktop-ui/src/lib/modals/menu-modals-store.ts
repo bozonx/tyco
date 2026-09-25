@@ -59,6 +59,23 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     pendingModal.value = null
   }
 
+  /** Aborts the operation in progress, if it can be cancelled. */
+  const cancelPending = () => {
+    const onCancel = pendingModal.value?.onCancel
+    pendingModal.value = null
+    if (typeof onCancel === 'function') onCancel()
+  }
+
+  /** Changes the params of the modal on screen; false when it is gone. */
+  const updateModalParams = (
+    modal: MenuModals,
+    params: Record<string, any>
+  ): boolean => {
+    if (currentModal.value !== modal) return false
+    currentModalParams.value = { ...currentModalParams.value, ...params }
+    return true
+  }
+
   const anyModalOpen = computed(() => {
     return currentModal.value !== MenuModals.NONE
   })
@@ -73,6 +90,8 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     closeAll,
     setPendingModal,
     clearPendingModal,
+    cancelPending,
+    updateModalParams,
     anyModalOpen,
   }
 }

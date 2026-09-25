@@ -287,7 +287,7 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
     };
     on_main_thread(app, move |app| {
         let state = app.state::<AppState>();
-        let should_remap = should_remap_quick_window(
+        let should_remap = is_quick_window_shown(
             app.state::<RuntimeWindows>().active_label(),
             state.params().is_window_shown,
         );
@@ -325,7 +325,7 @@ pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppEr
     })
 }
 
-fn should_remap_quick_window(active_label: &str, is_window_shown: bool) -> bool {
+fn is_quick_window_shown(active_label: &str, is_window_shown: bool) -> bool {
     active_label == QUICK_WINDOW_LABEL && is_window_shown
 }
 
@@ -361,6 +361,17 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     });
     log::debug!("Showed main application from tray");
     emit_params(app, &state)
+}
+
+pub fn dismiss_quick_window(app: &AppHandle) -> Result<(), AppError> {
+    on_main_thread(app, |app| {
+        let is_shown = app.state::<AppState>().params().is_window_shown;
+        let active_label = app.state::<RuntimeWindows>().active_label();
+        if !is_quick_window_shown(active_label, is_shown) {
+            return Ok(());
+        }
+        hide_on_main_thread(app)
+    })
 }
 
 pub fn hide_main_window(app: &AppHandle, _state: &AppState) -> Result<(), AppError> {
@@ -526,9 +537,9 @@ mod tests {
 
     #[test]
     fn remaps_only_the_visible_active_quick_window() {
-        assert!(should_remap_quick_window(QUICK_WINDOW_LABEL, true));
-        assert!(!should_remap_quick_window(QUICK_WINDOW_LABEL, false));
-        assert!(!should_remap_quick_window(MAIN_WINDOW_LABEL, true));
+        assert!(is_quick_window_shown(QUICK_WINDOW_LABEL, true));
+        assert!(!is_quick_window_shown(QUICK_WINDOW_LABEL, false));
+        assert!(!is_quick_window_shown(MAIN_WINDOW_LABEL, true));
     }
 
     #[test]

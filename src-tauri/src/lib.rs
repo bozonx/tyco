@@ -22,8 +22,8 @@ use commands::notes::save_note;
 use commands::secrets::{secrets_remove, secrets_set, secrets_status};
 use commands::voice::{start_local_voice_recording, stop_local_voice_recording};
 use commands::window::{
-    close_window, open_in_browser_and_close, put_into_clipboard_and_close, set_window_profile,
-    type_into_window_and_close,
+    close_window, dismiss_quick_window, open_in_browser_and_close, put_into_clipboard_and_close,
+    set_window_profile, type_into_window_and_close,
 };
 use models::default_init_params;
 #[cfg(target_os = "linux")]
@@ -111,6 +111,7 @@ pub fn run() {
             save_user_config,
             save_local_state,
             close_window,
+            dismiss_quick_window,
             set_window_profile,
             get_editor_history,
             get_chat_history,

@@ -11,6 +11,13 @@ pub fn close_window(app: AppHandle, state: State<'_, AppState>) -> Result<(), Ap
     runtime::hide_main_window(&app, &state)
 }
 
+/// Hides the quick window after it lost focus. Unlike `close_window`, it
+/// leaves the main window alone when that one became active meanwhile.
+#[tauri::command]
+pub fn dismiss_quick_window(app: AppHandle) -> Result<(), AppError> {
+    runtime::dismiss_quick_window(&app)
+}
+
 #[tauri::command]
 pub fn set_window_profile(app: AppHandle, profile: String) -> Result<(), AppError> {
     runtime::update_window_profile(&app, &profile)

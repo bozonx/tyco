@@ -35,6 +35,11 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: 'main' }),
 }))
 
+const press = (code: string, init: KeyboardEventInit = {}) => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { code, ...init }))
+  window.dispatchEvent(new KeyboardEvent('keyup', { code, ...init }))
+}
+
 describe('ShortcutList', () => {
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
     const qAction = vi.fn()
@@ -92,11 +97,11 @@ describe('ShortcutList', () => {
     expect(mocks.toEditor).toHaveBeenCalledWith('test text', 'source text')
 
     // Keyup Space should trigger primary space action
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }))
+    press('Space')
     expect(spaceAction).toHaveBeenCalledWith('test text')
 
     // Keyup Escape should trigger escAction
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
+    press('Escape')
     expect(escAction).toHaveBeenCalled()
   })
 
@@ -106,7 +111,58 @@ describe('ShortcutList', () => {
 
     mount(ShortcutList, { props: { text: 'text for q', leftLetterKeys } })
 
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyQ' }))
+    press('KeyQ')
     expect(qAction).toHaveBeenCalledWith('text for q')
+  })
+
+  it('ignores the release of a key pressed before the list appeared', () => {
+    const spaceAction = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'text',
+        spaceKey: { name: 'Insert', action: spaceAction },
+      },
+    })
+
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Enter' }))
+
+    expect(spaceAction).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('ignores a key whose text changed while it was held', async () => {
+    const spaceAction = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'original',
+        spaceKey: { name: 'Insert', action: spaceAction },
+      },
+    })
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
+    await wrapper.setProps({ text: 'corrected' })
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }))
+    expect(spaceAction).not.toHaveBeenCalled()
+
+    press('Space')
+    expect(spaceAction).toHaveBeenCalledWith('corrected')
+    wrapper.unmount()
+  })
+
+  it('runs the primary action on the alternative text with Shift+Space', () => {
+    const spaceAction = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'corrected',
+        altText: 'original',
+        spaceKey: { name: 'Insert', action: spaceAction },
+      },
+    })
+
+    expect(wrapper.text()).toContain('write.insertOriginal')
+    press('Space', { shiftKey: true })
+
+    expect(spaceAction).toHaveBeenCalledWith('original')
+    wrapper.unmount()
   })
 })

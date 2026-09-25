@@ -235,6 +235,13 @@
     "quickInputSubmitHint": "Key to proceed or send to AI.",
     "quickInputSubmitEnter": "Enter (Shift+Enter for newline)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter for newline)",
+    "quickCorrectionLabel": "Correction on submit",
+    "quickCorrectionHint": "Wait shows the next step once the text is corrected. Background shows it at once and swaps in the correction when it is ready. Manual leaves correcting to the correction action.",
+    "quickCorrection_wait": "Wait",
+    "quickCorrection_background": "Background",
+    "quickCorrection_manual": "Manual",
+    "quickHideOnBlurLabel": "Hide on focus loss",
+    "quickHideOnBlurHint": "Hide the quick window when you click elsewhere. The typed text is kept and restored on the next opening.",
     "copyHotkeyCommand": "Copy binding",
     "configureGlobalHotkeys": "Configure global hotkeys",
     "configureHotkeysError": "Could not open the system hotkey settings",
@@ -327,7 +334,10 @@
     "escNext": "Esc - next",
     "enterTextForCorrection": "Enter text for correction",
     "alreadyCorrected": "Text is already corrected",
-    "textTooShortForCorrection": "Text is too short for correction"
+    "textTooShortForCorrection": "Text is too short for correction",
+    "correcting": "Correcting…",
+    "correctionFailed": "Could not correct the text",
+    "insertOriginal": "Original"
   },
   "shortcuts": {
     "insertIntoEditor": "Insert into editor",

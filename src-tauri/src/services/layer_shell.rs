@@ -11,7 +11,9 @@ const EDGE_RIGHT: u32 = 1;
 const EDGE_TOP: u32 = 2;
 const EDGE_BOTTOM: u32 = 3;
 const KEYBOARD_NONE: u32 = 0;
-const KEYBOARD_EXCLUSIVE: u32 = 1;
+// Unlike exclusive mode, on-demand lets the compositor move the focus away when
+// the user clicks another window, so the panel learns it was left
+const KEYBOARD_ON_DEMAND: u32 = 2;
 
 #[link(name = "gtk-layer-shell")]
 unsafe extern "C" {
@@ -74,13 +76,13 @@ pub fn set_sheet_profile(window: &ApplicationWindow, margin_top: i32) {
     }
 }
 
-pub fn set_keyboard(window: &ApplicationWindow, exclusive: bool) {
+pub fn set_keyboard(window: &ApplicationWindow, enabled: bool) {
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
         gtk_layer_set_keyboard_mode(
             raw(window),
-            if exclusive {
-                KEYBOARD_EXCLUSIVE
+            if enabled {
+                KEYBOARD_ON_DEMAND
             } else {
                 KEYBOARD_NONE
             },

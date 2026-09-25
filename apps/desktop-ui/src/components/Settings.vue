@@ -303,6 +303,7 @@ import {
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
+  QUICK_CORRECTION_MODES,
   type QuickInputSubmitMode,
   STT_PROVIDERS,
   type StorageInfo,
@@ -523,6 +524,12 @@ function normalizeHotkeysConfig(config: Record<string, any>) {
   config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
   config.quickInputSubmit =
     config.quickInputSubmit === 'ctrlEnter' ? 'ctrlEnter' : 'enter'
+  config.quickCorrection = QUICK_CORRECTION_MODES.includes(
+    config.quickCorrection
+  )
+    ? config.quickCorrection
+    : DEFAULT_USER_CONFIG.quickCorrection
+  config.quickHideOnBlur = config.quickHideOnBlur !== false
 }
 
 function serializeUserConfig(config: unknown) {

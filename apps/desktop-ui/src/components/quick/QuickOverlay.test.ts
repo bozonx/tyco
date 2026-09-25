@@ -28,10 +28,23 @@ vi.mock('../../stores/writerInput', () => ({
 }))
 vi.mock('../../stores/menuModals', () => ({
   MenuModals: { NONE: 'none' },
-  useMenuModalsStore: () => ({ currentModal: 'none', pendingModal: null }),
+  useMenuModalsStore: () => ({
+    currentModal: 'none',
+    pendingModal: null,
+    cancelPending: vi.fn(),
+    closeAll: vi.fn(),
+  }),
+}))
+vi.mock('../../stores/quickDismiss', () => ({
+  useQuickDismissStore: () => ({ isHeld: false }),
 }))
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ setSize: vi.fn(async () => {}) }),
+  getCurrentWindow: () => ({
+    setSize: vi.fn(async () => {}),
+    onFocusChanged: vi.fn(async () => () => {}),
+    isVisible: vi.fn(async () => true),
+    isFocused: vi.fn(async () => true),
+  }),
 }))
 vi.mock('../../views/WriteModeView.vue', () => ({
   default: { template: '<textarea />' },

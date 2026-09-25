@@ -67,6 +67,7 @@ import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
+import { useQuickDismissStore } from '../../stores/quickDismiss'
 import { useRouteParams } from '../../stores/routeParams'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
@@ -105,6 +106,8 @@ const ipcStore = useIpcStore()
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
 const routeParamsStore = useRouteParams()
+// a click elsewhere must not cut a dictation short
+const releaseDismissHold = useQuickDismissStore().hold()
 
 const recognizedText = ref('')
 const isFinishing = ref(false)
@@ -367,6 +370,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  releaseDismissHold()
   sessionGeneration += 1
   stopRecordingTimer()
   voiceSession.dispose()

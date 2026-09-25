@@ -235,6 +235,13 @@
     "quickInputSubmitHint": "Devam etmek veya yapay zekaya göndermek için tuş.",
     "quickInputSubmitEnter": "Enter (Yeni satır için Shift+Enter)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Yeni satır için Enter)",
+    "quickCorrectionLabel": "Gönderirken düzeltme",
+    "quickCorrectionHint": "Bekle: sonraki adım metin düzeltildikten sonra açılır. Arka planda: hemen açılır, düzeltme hazır olunca metin değiştirilir. Elle: düzeltme yalnızca düzeltme eylemiyle yapılır.",
+    "quickCorrection_wait": "Bekle",
+    "quickCorrection_background": "Arka planda",
+    "quickCorrection_manual": "Elle",
+    "quickHideOnBlurLabel": "Odak kaybında gizle",
+    "quickHideOnBlurHint": "Başka bir yere tıklandığında hızlı giriş penceresini gizler. Yazılan metin korunur ve bir sonraki açılışta geri yüklenir.",
     "copyHotkeyCommand": "Bağlamayı kopyala",
     "configureGlobalHotkeys": "Genel kısayolları yapılandır",
     "configureHotkeysError": "Sistem kısayol ayarları açılamadı",
@@ -327,7 +334,10 @@
     "escNext": "Esc - devam",
     "enterTextForCorrection": "Düzeltme için metin girin",
     "alreadyCorrected": "Metin zaten düzeltildi",
-    "textTooShortForCorrection": "Metin düzeltme için çok kısa"
+    "textTooShortForCorrection": "Metin düzeltme için çok kısa",
+    "correcting": "Düzeltiliyor…",
+    "correctionFailed": "Metin düzeltilemedi",
+    "insertOriginal": "Orijinal"
   },
   "shortcuts": {
     "insertIntoEditor": "Editöre ekle",

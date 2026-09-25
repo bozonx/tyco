@@ -1,5 +1,22 @@
 <template>
   <ActionOverlayLayout :title="t('menu.insert')">
+    <template v-if="props.correcting || props.correctionError" #header-extra>
+      <span
+        class="correction-status"
+        :class="{ 'is-error': !props.correcting }"
+        :title="props.correctionError"
+      >
+        <span
+          v-if="props.correcting"
+          class="loading loading-spinner loading-xs"
+        ></span>
+        <Icon v-else icon="mdi:alert-circle-outline" height="14" />
+        {{
+          props.correcting ? t('write.correcting') : t('write.correctionFailed')
+        }}
+      </span>
+    </template>
+
     <template #preview>
       <Diff
         v-if="props.oldText"
@@ -15,6 +32,7 @@
         :sourceText="props.oldText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
+        :altText="props.originalText"
         :stopListening="props.stopListening"
         :toEditorVisible="
           props.toEditorVisible ?? !routeParamsStore.isEditorPage()
@@ -35,6 +53,7 @@ import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
 import TextPreview from '../common/TextPreview.vue'
+import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useRouteParams()
 
@@ -46,6 +65,12 @@ const props = withDefaults(
     allowInsertButton?: boolean
     stopListening?: boolean
     toEditorVisible?: boolean
+    /** The text before correction, still insertable with Shift+Space */
+    originalText?: string
+    /** A correction of `text` is on its way and will replace it */
+    correcting?: boolean
+    /** Why the correction failed; `text` is then the uncorrected one */
+    correctionError?: string
   }>(),
   {
     text: '',
@@ -54,6 +79,9 @@ const props = withDefaults(
     allowInsertButton: true,
     stopListening: false,
     toEditorVisible: undefined,
+    originalText: undefined,
+    correcting: false,
+    correctionError: undefined,
   }
 )
 
@@ -98,3 +126,21 @@ function shouldDisablePrimaryAction(index: number) {
   return !needShowInsertButton()
 }
 </script>
+
+<style scoped>
+.correction-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 16rem;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.correction-status.is-error {
+  color: var(--color-warning);
+}
+</style>
