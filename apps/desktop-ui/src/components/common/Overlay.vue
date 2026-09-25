@@ -51,7 +51,8 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   animation: overlay-in 140ms ease-out;
 }
 
-:global([data-window='quick']) .overlay {
+:global([data-window='quick'] .overlay) {
+  inset: var(--space-sm);
   background-color: var(--app-overlay-bg);
   backdrop-filter: none;
   padding: var(--space-sm);
