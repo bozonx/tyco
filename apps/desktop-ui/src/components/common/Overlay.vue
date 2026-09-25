@@ -4,12 +4,12 @@
   <div class="overlay" :data-theme="overlayTheme">
     <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
       <button
-        v-if="navBarVisible"
+        v-if="navBarVisible && canGoBack"
         type="button"
         class="overlay-back"
         @click="menuModalsStore.back"
       >
-        <KeyButton>Esc</KeyButton>
+        <KeyButton>{{ backKeyBadge }}</KeyButton>
         <span>{{ t('common.back') }}</span>
       </button>
       <div class="overlay-body">
@@ -23,7 +23,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { useMenuModalsStore } from '../../stores/menuModals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useThemeStore } from '../../stores/theme'
 import KeyButton from './KeyButton.vue'
 
@@ -36,6 +36,20 @@ const { t } = useI18n()
 withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   navBarVisible: true,
 })
+
+const isSelectionModal = computed(() => {
+  const modal = menuModalsStore.currentModal
+  return (
+    modal === MenuModals.AI_TASK ||
+    modal === MenuModals.TRANSLATE ||
+    modal === MenuModals.ACTION_SELECT
+  )
+})
+
+const canGoBack = computed(() => menuModalsStore.menuBreadcrumbs.length > 0)
+const backKeyBadge = computed(() =>
+  isSelectionModal.value ? 'Esc' : 'Backspace'
+)
 </script>
 
 <style scoped>

@@ -1,13 +1,19 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ShortcutList from './ShortcutList.vue'
 
 const mocks = vi.hoisted(() => ({
   toEditor: vi.fn(),
   back: vi.fn(),
+  closeAll: vi.fn(),
   closeWindow: vi.fn(),
   goToEditor: vi.fn(),
+  clearWriterInput: vi.fn(),
+  currentWindowLabel: 'main',
+  currentModal: 'insert',
+  breadcrumbs: ['insert'] as string[],
+  mode: 'write',
 }))
 
 vi.mock('../composables/useI18n', () => ({
@@ -18,13 +24,40 @@ vi.mock('../stores/routeParams', () => ({
   useRouteParams: () => ({ toEditor: mocks.toEditor }),
 }))
 
+vi.mock('../stores/writerInput', () => ({
+  useWriterInputStore: () => ({ clear: mocks.clearWriterInput }),
+}))
+
 vi.mock('../stores/menuModals', () => ({
-  MenuModals: { NONE: 'none', INSERT: 'insert' },
-  useMenuModalsStore: () => ({ currentModal: 'insert', back: mocks.back }),
+  MenuModals: {
+    NONE: 'none',
+    INSERT: 'insert',
+    AI_TASK: 'ai-task',
+    TRANSLATE: 'translate',
+    DIFF: 'diff',
+    PREVIEW: 'preview',
+    ACTION_SELECT: 'action-select',
+    CORRECTION: 'correction',
+  },
+  useMenuModalsStore: () => ({
+    get currentModal() {
+      return mocks.currentModal
+    },
+    get menuBreadcrumbs() {
+      return mocks.breadcrumbs
+    },
+    back: mocks.back,
+    closeAll: mocks.closeAll,
+  }),
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunction: mocks.closeWindow }),
+  useIpcStore: () => ({
+    callFunction: mocks.closeWindow,
+    get params() {
+      return { mode: mocks.mode }
+    },
+  }),
 }))
 
 vi.mock('../lib/navigation/navigation', () => ({
@@ -32,15 +65,38 @@ vi.mock('../lib/navigation/navigation', () => ({
 }))
 
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: 'main' }),
+  getCurrentWindow: () => ({
+    get label() {
+      return mocks.currentWindowLabel
+    },
+  }),
 }))
 
-const press = (code: string, init: KeyboardEventInit = {}) => {
-  window.dispatchEvent(new KeyboardEvent('keydown', { code, ...init }))
-  window.dispatchEvent(new KeyboardEvent('keyup', { code, ...init }))
+const press = (
+  code: string,
+  init: KeyboardEventInit = {},
+  target?: EventTarget
+) => {
+  const down = new KeyboardEvent('keydown', { code, ...init })
+  const up = new KeyboardEvent('keyup', { code, ...init })
+  if (target) {
+    target.dispatchEvent(down)
+    target.dispatchEvent(up)
+  } else {
+    window.dispatchEvent(down)
+    window.dispatchEvent(up)
+  }
 }
 
 describe('ShortcutList', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.currentWindowLabel = 'main'
+    mocks.currentModal = 'insert'
+    mocks.breadcrumbs = ['insert']
+    mocks.mode = 'write'
+  })
+
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
     const qAction = vi.fn()
     const aAction = vi.fn()
@@ -67,13 +123,14 @@ describe('ShortcutList', () => {
     // Empty slots exist to preserve grid coordinates
     const emptySlots = wrapper.findAll('.shortcut-empty-slot')
     expect(emptySlots.length).toBe(13) // 15 - 2 filled = 13 empty slots
+    wrapper.unmount()
   })
 
-  it('handles Tab, Space/Enter, and Esc keyboard shortcuts', async () => {
+  it('handles Tab, Space/Enter, and custom escAction keyboard shortcuts', async () => {
     const spaceAction = vi.fn()
     const escAction = vi.fn()
 
-    mount(ShortcutList, {
+    const wrapper = mount(ShortcutList, {
       props: {
         text: 'test text',
         sourceText: 'source text',
@@ -100,19 +157,97 @@ describe('ShortcutList', () => {
     press('Space')
     expect(spaceAction).toHaveBeenCalledWith('test text')
 
-    // Keyup Escape should trigger escAction
+    // Keyup Escape should trigger custom escAction
     press('Escape')
     expect(escAction).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('resolves Esc to close mode on result screens and closes quick window', () => {
+    mocks.currentWindowLabel = 'quick'
+    mocks.currentModal = 'insert'
+    mocks.mode = 'write'
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'result text', escVisible: true },
+    })
+
+    expect(wrapper.text()).toContain('common.close')
+    press('Escape')
+
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(mocks.clearWriterInput).toHaveBeenCalled()
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
+    wrapper.unmount()
+  })
+
+  it('resolves Esc to back mode on intermediate selection screens', () => {
+    mocks.currentModal = 'ai-task'
+    mocks.breadcrumbs = ['insert', 'ai-task']
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'task text', escVisible: true },
+    })
+
+    expect(wrapper.text()).toContain('common.back')
+    press('Escape')
+
+    expect(mocks.back).toHaveBeenCalled()
+    expect(mocks.closeAll).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('respects explicit escMode prop', () => {
+    mocks.currentModal = 'insert'
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'text', escVisible: true, escMode: 'back' },
+    })
+
+    expect(wrapper.text()).toContain('common.back')
+    press('Escape')
+    expect(mocks.back).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('handles Backspace keyup when canGoBack is true', () => {
+    mocks.currentModal = 'diff'
+    mocks.breadcrumbs = ['ai-task', 'diff']
+
+    const wrapper = mount(ShortcutList, { props: { text: 'diff text' } })
+
+    press('Backspace')
+    expect(mocks.back).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('does not trigger Backspace navigation when focused in an editable input', () => {
+    mocks.currentModal = 'diff'
+    mocks.breadcrumbs = ['ai-task', 'diff']
+
+    const wrapper = mount(ShortcutList, { props: { text: 'diff text' } })
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+
+    press('Backspace', {}, input)
+    expect(mocks.back).not.toHaveBeenCalled()
+
+    document.body.removeChild(input)
+    wrapper.unmount()
   })
 
   it('triggers mapped letter key action on keyup', async () => {
     const qAction = vi.fn()
     const leftLetterKeys: any[] = [{ name: 'Action Q', action: qAction }]
 
-    mount(ShortcutList, { props: { text: 'text for q', leftLetterKeys } })
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'text for q', leftLetterKeys },
+    })
 
     press('KeyQ')
     expect(qAction).toHaveBeenCalledWith('text for q')
+    wrapper.unmount()
   })
 
   it('ignores the release of a key pressed before the list appeared', () => {

@@ -290,6 +290,7 @@ function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
 
   if (event.code === 'Escape') {
+    event.preventDefault()
     void cancel()
     return
   }

@@ -38,10 +38,10 @@
       <ShortcutButton
         v-if="props.escVisible"
         :keys="['Esc']"
-        icon="mdi:close"
+        :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
         @click="handleEsc"
       >
-        {{ t('common.close') }}
+        {{ resolvedEscMode === 'back' ? t('common.back') : t('common.close') }}
       </ShortcutButton>
     </div>
 
@@ -73,6 +73,7 @@ import { type ActionItem } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
+import { useWriterInputStore } from '../stores/writerInput'
 import { PRESETS_KEYS } from '../types'
 import ShortcutButton from './common/ShortcutButton.vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -94,6 +95,7 @@ const props = withDefaults(
     toEditorVisible?: boolean
     escVisible?: boolean
     escAction?: () => void
+    escMode?: 'close' | 'back' | 'auto'
     leftLetterKeys?: (ActionItem | undefined)[]
     stopListening?: boolean
   }>(),
@@ -105,6 +107,7 @@ const props = withDefaults(
     toEditorVisible: false,
     escVisible: true,
     escAction: undefined,
+    escMode: 'auto',
     leftLetterKeys: () => [],
     stopListening: false,
   }
@@ -113,6 +116,7 @@ const props = withDefaults(
 const routeParamsStore = useRouteParams()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
+const writerInputStore = useWriterInputStore()
 const { t } = useI18n()
 
 /**
@@ -154,6 +158,45 @@ const hasPresetActions = computed(() =>
   slots.value.some((slot) => Boolean(slot.action))
 )
 
+const resolvedEscMode = computed<'close' | 'back'>(() => {
+  if (props.escMode && props.escMode !== 'auto') {
+    return props.escMode
+  }
+
+  const modal = menuModalsStore.currentModal
+  if (modal === MenuModals.NONE) {
+    return 'close'
+  }
+
+  if (
+    modal === MenuModals.AI_TASK ||
+    modal === MenuModals.TRANSLATE ||
+    modal === MenuModals.ACTION_SELECT
+  ) {
+    return 'back'
+  }
+
+  return 'close'
+})
+
+const canGoBack = computed(() => {
+  if (menuModalsStore.currentModal !== MenuModals.NONE) {
+    return menuModalsStore.menuBreadcrumbs.length > 0
+  }
+  return false
+})
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) return false
+  const tagName = target.tagName.toLowerCase()
+  return (
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    target.isContentEditable ||
+    Boolean(target.closest('.cm-editor'))
+  )
+}
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleShortCutKeyUp)
@@ -177,6 +220,12 @@ function handleKeyDown(event: KeyboardEvent) {
     (event.code === 'Space' || event.code === 'Enter') &&
     props.spaceKey &&
     !props.spaceKey.disabled
+  ) {
+    event.preventDefault()
+  } else if (
+    event.code === 'Backspace' &&
+    canGoBack.value &&
+    !isEditableTarget(event.target)
   ) {
     event.preventDefault()
   }
@@ -205,7 +254,15 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
   } else if (event.code === 'Tab' && props.toEditorVisible) {
     goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
+    event.preventDefault()
     handleEsc()
+  } else if (
+    event.code === 'Backspace' &&
+    canGoBack.value &&
+    !isEditableTarget(event.target)
+  ) {
+    event.preventDefault()
+    handleBack()
   } else {
     let codeLetter: string | undefined
     if (event.code.length === 4 && event.code.startsWith('Key')) {
@@ -226,24 +283,38 @@ function goToEditor() {
   routeParamsStore.toEditor(props.text, props.sourceText)
 }
 
+function handleClose() {
+  menuModalsStore.closeAll()
+  try {
+    if (getCurrentWindow().label === 'quick') {
+      if (ipcStore.params?.mode === 'write') {
+        writerInputStore.clear()
+      }
+      void ipcStore.callFunction('closeWindow', [])
+    } else {
+      void appNavigation.goToEditor()
+    }
+  } catch {
+    // Dev mode fallback
+  }
+}
+
+function handleBack() {
+  if (menuModalsStore.currentModal !== MenuModals.NONE) {
+    menuModalsStore.back()
+  }
+}
+
 function handleEsc() {
   if (props.escAction) {
     props.escAction()
     return
   }
 
-  if (menuModalsStore.currentModal !== MenuModals.NONE) {
-    menuModalsStore.back()
+  if (resolvedEscMode.value === 'back') {
+    handleBack()
   } else {
-    try {
-      if (getCurrentWindow().label === 'quick') {
-        void ipcStore.callFunction('closeWindow', [])
-      } else {
-        void appNavigation.goToEditor()
-      }
-    } catch {
-      // Dev mode fallback
-    }
+    handleClose()
   }
 }
 

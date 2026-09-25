@@ -161,6 +161,12 @@ watch(
     syncFocus()
   }
 )
+
+watch(hasModal, (open) => {
+  if (!open) {
+    void nextTick(() => syncFocus())
+  }
+})
 </script>
 
 <style scoped>
