@@ -1,43 +1,41 @@
 <template>
-  <div class="flex flex-col gap-4 w-full h-full">
-    <h1>{{ t('menu.reviewCorrectionResult') }}</h1>
+  <ActionOverlayLayout :title="t('menu.reviewCorrectionResult')">
+    <template #preview>
+      <Diff :oldText="props.oldText" :newText="props.newText" />
+    </template>
 
-    <div class="flex-1 min-h-0">
-      <DiffInput
-        :oldText="props.oldText"
-        :newText="props.newText"
-        @update:new-text="handleNewText"
+    <template #actions>
+      <ShortcutList
+        :text="props.newText"
+        :sourceText="props.oldText"
+        :leftLetterKeys="leftLetterKeys"
+        :spaceKey="spaceKey"
+        :toEditorVisible="true"
       />
-    </div>
-
-    <ShortcutList
-      :text="props.newText"
-      :sourceText="props.oldText"
-      :spaceKey="spaceKey"
-      :toEditorVisible="true"
-    />
-  </div>
+    </template>
+  </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { useActionMenuStore } from '../../stores/actionMenu'
+import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
+import ShortcutList from '../ShortcutList.vue'
+import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Diff from '../common/Diff.vue'
+
+const props = defineProps<{ newText: string; oldText: string }>()
 
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
 const { t } = useI18n()
 const defaultActions = computed(() => actionMenuStore.getDefaultActions())
 
-const props = defineProps<{ newText: string; oldText: string }>()
-
-const emit = defineEmits<{ (e: 'update:text', value: string): void }>()
-
-function handleNewText(newText: string) {
-  emit('update:text', newText)
-}
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
+  return actionMenuStore.getShortcutActions()
+})
 
 const spaceKey = computed(() =>
   ipcStore.params?.windowId ? defaultActions.value[0] : undefined

@@ -1,27 +1,27 @@
 <template>
-  <div class="insert-menu">
-    <h1>{{ t('menu.insert') }}</h1>
-
-    <div class="insert-preview">
-      <DiffInput
+  <ActionOverlayLayout :title="t('menu.insert')">
+    <template #preview>
+      <Diff
         v-if="props.oldText"
         :oldText="props.oldText"
         :newText="props.text"
-        @update:new-text="handleNewText"
       />
       <TextPreview v-else :text="props.text" />
-    </div>
+    </template>
 
-    <ShortcutList
-      :text="props.text"
-      :leftLetterKeys="leftLetterKeys"
-      :spaceKey="spaceKey"
-      :stopListening="props.stopListening"
-      :toEditorVisible="
-        props.toEditorVisible ?? !routeParamsStore.isEditorPage()
-      "
-    />
-  </div>
+    <template #actions>
+      <ShortcutList
+        :text="props.text"
+        :sourceText="props.oldText"
+        :leftLetterKeys="leftLetterKeys"
+        :spaceKey="spaceKey"
+        :stopListening="props.stopListening"
+        :toEditorVisible="
+          props.toEditorVisible ?? !routeParamsStore.isEditorPage()
+        "
+      />
+    </template>
+  </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
@@ -31,6 +31,10 @@ import { useI18n } from '../../composables/useI18n'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
 import { useRouteParams } from '../../stores/routeParams'
+import ShortcutList from '../ShortcutList.vue'
+import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Diff from '../common/Diff.vue'
+import TextPreview from '../common/TextPreview.vue'
 
 const routeParamsStore = useRouteParams()
 
@@ -52,8 +56,6 @@ const props = withDefaults(
     toEditorVisible: undefined,
   }
 )
-
-const emit = defineEmits<{ (e: 'update:text', value: string): void }>()
 
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
@@ -78,10 +80,6 @@ const spaceKey = computed<ActionItem | undefined>(() => {
   return { ...firstItem, disabled: shouldDisablePrimaryAction(0) }
 })
 
-function handleNewText(newText: string) {
-  emit('update:text', newText)
-}
-
 function needShowInsertButton() {
   return Boolean(
     ipcStore.params?.windowId && props.text && props.allowInsertButton
@@ -100,24 +98,3 @@ function shouldDisablePrimaryAction(index: number) {
   return !needShowInsertButton()
 }
 </script>
-
-<style scoped>
-.insert-menu {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.insert-menu > :not(.insert-preview) {
-  flex-shrink: 0;
-}
-
-.insert-preview {
-  flex: 1 0 10rem;
-  min-height: 10rem;
-}
-</style>

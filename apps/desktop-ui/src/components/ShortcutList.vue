@@ -1,7 +1,8 @@
 <template>
   <div class="shortcuts-list">
+    <!-- Primary / System actions row: Space/Enter, Tab, Esc -->
     <div
-      v-if="props.spaceKey || props.toEditorVisible"
+      v-if="props.spaceKey || props.toEditorVisible || props.escVisible"
       class="shortcuts-primary"
     >
       <ShortcutButton
@@ -11,33 +12,44 @@
         :disabled="props.spaceKey.disabled"
         primary
         @click="props.spaceKey.action(props.text || '')"
-        >{{ getActionLabel(props.spaceKey) }}</ShortcutButton
       >
+        {{ getActionLabel(props.spaceKey) }}
+      </ShortcutButton>
+
       <ShortcutButton
         v-if="props.toEditorVisible"
         :keys="['Tab']"
         icon="mdi:pencil-outline"
-        @click="routeParamsStore.toEditor(props.text, props.sourceText)"
-        >{{ t('shortcuts.insertIntoEditor') }}</ShortcutButton
+        @click="goToEditor"
       >
+        {{ t('shortcuts.insertIntoEditor') }}
+      </ShortcutButton>
+
+      <ShortcutButton
+        v-if="props.escVisible"
+        :keys="['Esc']"
+        icon="mdi:close"
+        @click="handleEsc"
+      >
+        {{ t('common.close') }}
+      </ShortcutButton>
     </div>
 
-    <div v-if="columns.length > 0" class="shortcuts-grid">
-      <div
-        v-for="(column, index) in columns"
-        :key="index"
-        class="shortcuts-col"
-      >
+    <!-- 5 columns x 3 rows grid for physical keyboard layout: qwert / asdfg / zxcvb -->
+    <div v-if="hasPresetActions" class="shortcuts-grid-5x3">
+      <template v-for="slot in slots" :key="slot.key">
         <ShortcutButton
-          v-for="item in column"
-          :key="item.key"
-          :keys="[item.key]"
-          :icon="item.icon"
-          :disabled="item.disabled"
-          @click="item.action(props.text || '')"
-          >{{ getActionLabel(item) }}</ShortcutButton
+          v-if="slot.action"
+          sm
+          :keys="[slot.key.toUpperCase()]"
+          :icon="slot.action.icon"
+          :disabled="slot.action.disabled"
+          @click="slot.action.action(props.text || '')"
         >
-      </div>
+          {{ slot.label }}
+        </ShortcutButton>
+        <div v-else class="shortcut-empty-slot" aria-hidden="true" />
+      </template>
     </div>
   </div>
 </template>
@@ -45,11 +57,21 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
-import { GlobalEvents, useGlobalEvents } from '../composables/useGlobalEvents'
 import { useI18n } from '../composables/useI18n'
+import { appNavigation } from '../lib/navigation/navigation'
 import { type ActionItem } from '../stores/actionMenu'
+import { useIpcStore } from '../stores/ipc'
+import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
 import { PRESETS_KEYS } from '../types'
+import ShortcutButton from './common/ShortcutButton.vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+
+interface ShortcutSlotItem {
+  key: string
+  action?: ActionItem
+  label?: string
+}
 
 const props = withDefaults(
   defineProps<{
@@ -58,81 +80,129 @@ const props = withDefaults(
     sourceText?: string
     spaceKey?: ActionItem
     toEditorVisible?: boolean
+    escVisible?: boolean
+    escAction?: () => void
     leftLetterKeys?: (ActionItem | undefined)[]
     stopListening?: boolean
   }>(),
   {
     text: '',
+    sourceText: '',
     spaceKey: undefined,
     toEditorVisible: false,
+    escVisible: true,
+    escAction: undefined,
     leftLetterKeys: () => [],
     stopListening: false,
   }
 )
 
 const routeParamsStore = useRouteParams()
-const { globalEvents } = useGlobalEvents()
+const menuModalsStore = useMenuModalsStore()
+const ipcStore = useIpcStore()
 const { t } = useI18n()
-let keyUpHanlderIndex: number
 
 /**
- * One column per row of preset keys (q–t, a–g, z–b), so the layout mirrors the
- * keyboard. Keys without an action are left out, empty columns too
+ * Exactly 15 slots mapping 1:1 to physical keys: Row 1 (0..4): Q W E R T Row 2
+ * (5..9): A S D F G Row 3 (10..14): Z X C V B
  */
-const columns = computed(() =>
-  [0, 5, 10]
-    .map((offset) =>
-      PRESETS_KEYS.slice(offset, offset + 5)
-        .map((key, index) => {
-          const action = props.leftLetterKeys[index + offset]
-          return action ? { key, ...action } : null
-        })
-        .filter((item): item is ActionItem & { key: string } =>
-          Boolean(item && getActionLabel(item))
-        )
-    )
-    .filter((column) => column.length > 0)
+const slots = computed<ShortcutSlotItem[]>(() =>
+  PRESETS_KEYS.map((key, index) => {
+    const action = props.leftLetterKeys[index]
+    const label = action ? getActionLabel(action) : ''
+    return {
+      key,
+      action: label ? action : undefined,
+      label: label || undefined,
+    }
+  })
+)
+
+const hasPresetActions = computed(() =>
+  slots.value.some((slot) => Boolean(slot.action))
 )
 
 onMounted(() => {
-  keyUpHanlderIndex = globalEvents.addListener(
-    GlobalEvents.KEY_UP,
-    handleShortCutKeyUp
-  )
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleShortCutKeyUp)
 })
 
 onUnmounted(() => {
-  globalEvents.removeListener(keyUpHanlderIndex)
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleShortCutKeyUp)
 })
 
+function handleKeyDown(event: KeyboardEvent) {
+  if (props.stopListening) return
+
+  // Prevent browser default tab focus movement and space scroll
+  if (event.code === 'Tab' && props.toEditorVisible) {
+    event.preventDefault()
+  } else if (
+    (event.code === 'Space' || event.code === 'Enter') &&
+    props.spaceKey &&
+    !props.spaceKey.disabled
+  ) {
+    event.preventDefault()
+  }
+}
+
 function handleShortCutKeyUp(event: KeyboardEvent) {
-  if (props.stopListening) {
+  if (props.stopListening) return
+
+  if (
+    (event.code === 'Space' || event.code === 'Enter') &&
+    props.spaceKey &&
+    !props.spaceKey.disabled
+  ) {
+    props.spaceKey.action(props.text || '')
+  } else if (event.code === 'Tab' && props.toEditorVisible) {
+    goToEditor()
+  } else if (event.code === 'Escape' && props.escVisible) {
+    handleEsc()
+  } else {
+    let codeLetter: string | undefined
+    if (event.code.length === 4 && event.code.startsWith('Key')) {
+      codeLetter = event.code.slice(3).toLowerCase()
+    }
+
+    if (codeLetter && PRESETS_KEYS.includes(codeLetter)) {
+      const index = PRESETS_KEYS.indexOf(codeLetter)
+      const action = props.leftLetterKeys[index]
+      if (action && !action.disabled) {
+        action.action(props.text || '')
+      }
+    }
+  }
+}
+
+function goToEditor() {
+  routeParamsStore.toEditor(props.text, props.sourceText)
+}
+
+function handleEsc() {
+  if (props.escAction) {
+    props.escAction()
     return
   }
 
-  if (event.code === 'Space' && !props.spaceKey?.disabled) {
-    props.spaceKey?.action(props.text || '')
-  } else if (event.code === 'Tab' && props.toEditorVisible) {
-    routeParamsStore.toEditor(props.text, props.sourceText)
-  }
-
-  let codeLetter
-  if (event.code.length === 4 && event.code.startsWith('Key')) {
-    codeLetter = event.code.slice(3).toLowerCase()
-  }
-
-  if (codeLetter && PRESETS_KEYS.includes(codeLetter)) {
-    props.leftLetterKeys[PRESETS_KEYS.indexOf(codeLetter)]?.action(
-      props.text || ''
-    )
+  if (menuModalsStore.currentModal !== MenuModals.NONE) {
+    menuModalsStore.back()
+  } else {
+    try {
+      if (getCurrentWindow().label === 'quick') {
+        void ipcStore.callFunction('closeWindow', [])
+      } else {
+        void appNavigation.goToEditor()
+      }
+    } catch {
+      // Dev mode fallback
+    }
   }
 }
 
 function getActionLabel(item?: ActionItem) {
-  if (!item) {
-    return ''
-  }
-
+  if (!item) return ''
   return item.labelKey ? t(item.labelKey) : item.name || ''
 }
 </script>
@@ -141,27 +211,29 @@ function getActionLabel(item?: ActionItem) {
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
+  width: 100%;
 }
 
 .shortcuts-primary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 2.25rem;
 }
 
-.shortcuts-grid {
+.shortcuts-grid-5x3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2px var(--space-sm);
-  padding-top: var(--space-md);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(3, 2.125rem);
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
 }
 
-.shortcuts-col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.shortcut-empty-slot {
+  min-height: 2.125rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed transparent;
 }
 </style>

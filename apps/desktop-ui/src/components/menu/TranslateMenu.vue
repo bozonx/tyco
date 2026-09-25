@@ -1,13 +1,17 @@
 <template>
-  <div class="flex flex-col gap-4 w-full h-full">
-    <h1>{{ t('menu.translate') }}</h1>
-
-    <div class="flex-1 min-h-0">
+  <ActionOverlayLayout :title="t('menu.translate')">
+    <template #preview>
       <TextPreview :text="props.text" />
-    </div>
+    </template>
 
-    <ShortcutList :text="props.text" :leftLetterKeys="leftLetterKeys" />
-  </div>
+    <template #actions>
+      <ShortcutList
+        :text="props.text"
+        :leftLetterKeys="leftLetterKeys"
+        :toEditorVisible="!routeParamsStore.isEditorPage()"
+      />
+    </template>
+  </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
@@ -21,10 +25,15 @@ import { type ActionItem } from '../../stores/actionMenu'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
+import { useRouteParams } from '../../stores/routeParams'
+import ShortcutList from '../ShortcutList.vue'
+import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import TextPreview from '../common/TextPreview.vue'
 
 const props = withDefaults(defineProps<{ text?: string }>(), { text: '' })
 
 const ipcStore = useIpcStore()
+const routeParamsStore = useRouteParams()
 const appConfig = computed(() => ipcStore.params.appConfig)
 const { translateText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()

@@ -191,6 +191,11 @@ watch(
 .quick-overlay-root.is-sheet .quick-overlay-card {
   height: 100%;
   max-height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--app-overlay-bg);
+  backdrop-filter: none;
 }
 
 .quick-overlay-root.has-modal .quick-overlay-card {

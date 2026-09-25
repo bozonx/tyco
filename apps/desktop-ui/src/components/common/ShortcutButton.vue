@@ -2,7 +2,7 @@
   <button
     type="button"
     class="shortcut"
-    :class="{ 'is-primary': primary }"
+    :class="{ 'is-primary': primary, 'is-sm': sm }"
     :disabled="disabled"
     @click="emit('click')"
   >
@@ -26,8 +26,9 @@ withDefaults(
     icon?: string
     disabled?: boolean
     primary?: boolean
+    sm?: boolean
   }>(),
-  { icon: undefined, disabled: false, primary: false }
+  { icon: undefined, disabled: false, primary: false, sm: false }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -97,5 +98,17 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 .shortcut.is-primary .shortcut-keys :deep(.kbd) {
   border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
   color: var(--color-primary);
+}
+
+.shortcut.is-sm {
+  gap: 0.375rem;
+  padding: 0.2rem 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.shortcut.is-sm .shortcut-keys :deep(.kbd) {
+  min-width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.75rem;
 }
 </style>

@@ -140,7 +140,7 @@
 }
 
 [data-theme='dark'] {
-  --app-overlay-bg: rgb(4 5 8 / 0.78);
+  --app-overlay-bg: #000000;
   --app-diff-added-bg: color-mix(
     in oklab,
     var(--color-green-500) 16%,

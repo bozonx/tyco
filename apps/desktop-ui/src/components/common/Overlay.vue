@@ -52,8 +52,9 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
 }
 
 :global([data-window='quick']) .overlay {
-  background: transparent;
+  background-color: var(--app-overlay-bg);
   backdrop-filter: none;
+  padding: var(--space-sm);
 }
 
 .overlay-panel {
@@ -64,17 +65,20 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   max-width: 920px;
   min-height: 0;
   margin: 0 auto;
-  padding: var(--space-lg) var(--space-xl) var(--space-xl);
-  border: 1px solid var(--app-border);
-  border-radius: 14px;
-  background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
-  box-shadow: var(--app-shadow-overlay);
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .overlay-panel.is-compact {
   align-self: center;
   max-width: 360px;
   padding: var(--space-2xl);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
 }
 
 .overlay-back {

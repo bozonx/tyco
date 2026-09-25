@@ -1,45 +1,46 @@
 <template>
-  <div class="flex flex-col gap-4 w-full h-full">
-    <h1>{{ t('menu.voiceRecognition') }}</h1>
-
-    <div class="flex-1 flex flex-col gap-2 min-h-0">
+  <ActionOverlayLayout :title="t('menu.voiceRecognition')">
+    <template #header-extra>
       <p v-if="statusText" class="voice-status">
         <span class="voice-dot" :class="{ 'is-live': isStarted }" />
         {{ statusText }}
       </p>
-      <div class="flex-1 min-h-0">
-        <TextPreview :text="recognizedText" />
-      </div>
-    </div>
+    </template>
 
-    <div class="voice-shortcuts">
-      <ShortcutButton
-        :keys="['Space', 'Enter']"
-        icon="mdi:check"
-        primary
-        :disabled="isFinishing"
-        @click="finish"
-      >
-        {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-      </ShortcutButton>
-      <ShortcutButton
-        :keys="['Tab']"
-        icon="mdi:pencil-outline"
-        :disabled="isFinishing"
-        @click="goToEditor"
-      >
-        {{ t('shortcuts.insertIntoEditor') }}
-      </ShortcutButton>
-      <ShortcutButton
-        :keys="['Esc']"
-        icon="mdi:close"
-        :disabled="isCancelling || isFinishing"
-        @click="cancel"
-      >
-        {{ t('common.cancel') }}
-      </ShortcutButton>
-    </div>
-  </div>
+    <template #preview>
+      <TextPreview :text="recognizedText" />
+    </template>
+
+    <template #actions>
+      <div class="voice-shortcuts">
+        <ShortcutButton
+          :keys="['Space', 'Enter']"
+          icon="mdi:check"
+          primary
+          :disabled="isFinishing"
+          @click="finish"
+        >
+          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
+        </ShortcutButton>
+        <ShortcutButton
+          :keys="['Tab']"
+          icon="mdi:pencil-outline"
+          :disabled="isFinishing"
+          @click="goToEditor"
+        >
+          {{ t('shortcuts.insertIntoEditor') }}
+        </ShortcutButton>
+        <ShortcutButton
+          :keys="['Esc']"
+          icon="mdi:close"
+          :disabled="isCancelling || isFinishing"
+          @click="cancel"
+        >
+          {{ t('common.cancel') }}
+        </ShortcutButton>
+      </div>
+    </template>
+  </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
@@ -57,6 +58,7 @@ import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
+import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 
 const props = defineProps<{
   onCorrected?: (
