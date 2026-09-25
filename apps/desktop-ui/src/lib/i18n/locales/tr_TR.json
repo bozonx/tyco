@@ -343,6 +343,8 @@
     "reviewCorrectionResult": "Düzeltme sonucunu inceleyin",
     "finish": "Bitir",
     "listening": "Dinleniyor...",
+    "speakNow": "Mikrofona konuşun...",
+    "micError": "Mikrofon hatası",
     "transcribing": "Yazıya dökülüyor...",
     "aiRequest": "AI isteği",
     "correction": "Düzeltme",

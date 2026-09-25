@@ -128,6 +128,8 @@ export const DESKTOP_EVENTS = {
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
+  VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
+  VOICE_STREAM_ERROR: 'app://voice-stream-error',
 } as const
 
 export const DESKTOP_COMMANDS = {

@@ -6,8 +6,11 @@ use crate::services::voice::LocalVoiceRecording;
 use crate::state::AppState;
 
 #[tauri::command]
-pub async fn start_local_voice_recording(state: State<'_, AppState>) -> Result<(), AppError> {
-    voice::start_local_recording(&state).await
+pub async fn start_local_voice_recording(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), AppError> {
+    voice::start_local_recording(&app, &state).await
 }
 
 #[tauri::command]

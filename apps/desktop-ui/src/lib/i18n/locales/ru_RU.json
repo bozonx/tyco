@@ -343,6 +343,8 @@
     "reviewCorrectionResult": "Проверьте результат коррекции",
     "finish": "Закончить",
     "listening": "Слушаю...",
+    "speakNow": "Говорите в микрофон...",
+    "micError": "Ошибка микрофона",
     "transcribing": "Распознаю...",
     "aiRequest": "Запрос к AI",
     "correction": "Коррекция",

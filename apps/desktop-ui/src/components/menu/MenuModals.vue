@@ -19,6 +19,8 @@
     <VoiceRecognitionMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION"
       v-bind="menuModalsStore.currentModalParams"
+      @cancelled="handleVoiceCancelled"
+      @corrected="handleVoiceCorrected"
     />
     <TranslateMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.TRANSLATE"
@@ -44,4 +46,12 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import ActionSelectModal from './ActionSelectModal.vue'
 
 const menuModalsStore = useMenuModalsStore()
+
+function handleVoiceCancelled() {
+  menuModalsStore.closeAll()
+}
+
+function handleVoiceCorrected() {
+  menuModalsStore.closeAll()
+}
 </script>

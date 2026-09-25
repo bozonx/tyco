@@ -7,12 +7,23 @@ use base64::Engine;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Sample;
 use serde::Serialize;
+use tauri::{AppHandle, Emitter};
 
 use crate::errors::AppError;
 use crate::state::{AppState, LocalVoiceRecordingSession};
 
+pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
+pub const VOICE_STREAM_ERROR_EVENT: &str = "app://voice-stream-error";
+
 const MAX_RECORDING_SECONDS: usize = 300;
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
+
+#[derive(Clone, Serialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceAudioLevelPayload {
+    pub level: f32,
+    pub peak: f32,
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,11 +34,12 @@ pub struct LocalVoiceRecording {
     pub limit_reached: bool,
 }
 
-pub async fn start_local_recording(state: &AppState) -> Result<(), AppError> {
+pub async fn start_local_recording(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let _operation = state.lock_local_voice_recording().await;
     let _ = stop_local_recording_unlocked(state).await;
 
-    let session = tokio::task::spawn_blocking(create_local_recording_session)
+    let app_handle = app.clone();
+    let session = tokio::task::spawn_blocking(move || create_local_recording_session(app_handle))
         .await
         .map_err(|error| AppError::Message(format!("recording setup task failed: {error}")))??;
     state.replace_local_voice_recording_session(Some(session));
@@ -35,7 +47,7 @@ pub async fn start_local_recording(state: &AppState) -> Result<(), AppError> {
     Ok(())
 }
 
-fn create_local_recording_session() -> Result<LocalVoiceRecordingSession, AppError> {
+fn create_local_recording_session(app: AppHandle) -> Result<LocalVoiceRecordingSession, AppError> {
     let stop_flag = Arc::new(AtomicBool::new(false));
     let samples = Arc::new(Mutex::new(Vec::<i16>::new()));
     let stream_error = Arc::new(Mutex::new(None));
@@ -47,6 +59,7 @@ fn create_local_recording_session() -> Result<LocalVoiceRecordingSession, AppErr
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, String>>(1);
     let thread = thread::spawn(move || {
         if let Err(error) = run_local_recording_thread(
+            app,
             thread_stop_flag,
             thread_samples,
             thread_stream_error,
@@ -139,6 +152,7 @@ fn finish_local_recording_session(
 }
 
 fn run_local_recording_thread(
+    app: AppHandle,
     stop_flag: Arc<AtomicBool>,
     samples: Arc<Mutex<Vec<i16>>>,
     stream_error: Arc<Mutex<Option<String>>>,
@@ -154,35 +168,30 @@ fn run_local_recording_thread(
         .map_err(|error| AppError::Message(error.to_string()))?;
     let sample_rate = supported_config.sample_rate().0;
     let stream_config = supported_config.config();
+    let current_level = Arc::new(Mutex::new((0.0_f32, 0.0_f32)));
+
+    let context = StreamContext {
+        samples,
+        stop_flag: Arc::clone(&stop_flag),
+        stream_error: stream_error.clone(),
+        limit_reached,
+        current_level: Arc::clone(&current_level),
+        sample_rate,
+    };
 
     let stream = match supported_config.sample_format() {
-        cpal::SampleFormat::F32 => build_local_recording_stream::<f32>(
-            &device,
-            &stream_config,
-            samples,
-            Arc::clone(&stop_flag),
-            stream_error,
-            limit_reached,
-            sample_rate,
-        )?,
-        cpal::SampleFormat::I16 => build_local_recording_stream::<i16>(
-            &device,
-            &stream_config,
-            samples,
-            Arc::clone(&stop_flag),
-            stream_error,
-            limit_reached,
-            sample_rate,
-        )?,
-        cpal::SampleFormat::U16 => build_local_recording_stream::<u16>(
-            &device,
-            &stream_config,
-            samples,
-            Arc::clone(&stop_flag),
-            stream_error,
-            limit_reached,
-            sample_rate,
-        )?,
+        cpal::SampleFormat::F32 => {
+            build_local_recording_stream::<f32>(&device, &stream_config, &context)?
+        }
+        cpal::SampleFormat::I16 => {
+            build_local_recording_stream::<i16>(&device, &stream_config, &context)?
+        }
+        cpal::SampleFormat::U16 => {
+            build_local_recording_stream::<u16>(&device, &stream_config, &context)?
+        }
+        cpal::SampleFormat::I32 => {
+            build_local_recording_stream::<i32>(&device, &stream_config, &context)?
+        }
         sample_format => {
             return Err(AppError::Message(format!(
                 "Unsupported sample format: {sample_format:?}"
@@ -198,29 +207,64 @@ fn run_local_recording_thread(
         .send(Ok(sample_rate))
         .map_err(|error| AppError::Message(error.to_string()))?;
 
+    let mut last_emit = std::time::Instant::now();
     while !stop_flag.load(Ordering::SeqCst) {
         thread::sleep(Duration::from_millis(20));
+
+        if let Ok(guard) = stream_error.lock() {
+            if let Some(error_msg) = guard.as_ref() {
+                let _ = app.emit(VOICE_STREAM_ERROR_EVENT, error_msg.clone());
+                break;
+            }
+        }
+
+        if last_emit.elapsed() >= Duration::from_millis(40) {
+            last_emit = std::time::Instant::now();
+            let (level, peak) = current_level.lock().map(|lvl| *lvl).unwrap_or((0.0, 0.0));
+            let _ = app.emit(
+                VOICE_AUDIO_LEVEL_EVENT,
+                VoiceAudioLevelPayload { level, peak },
+            );
+        }
     }
 
+    let _ = app.emit(
+        VOICE_AUDIO_LEVEL_EVENT,
+        VoiceAudioLevelPayload {
+            level: 0.0,
+            peak: 0.0,
+        },
+    );
+
     Ok(())
+}
+
+struct StreamContext {
+    samples: Arc<Mutex<Vec<i16>>>,
+    stop_flag: Arc<AtomicBool>,
+    stream_error: Arc<Mutex<Option<String>>>,
+    limit_reached: Arc<AtomicBool>,
+    current_level: Arc<Mutex<(f32, f32)>>,
+    sample_rate: u32,
 }
 
 fn build_local_recording_stream<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    samples: Arc<Mutex<Vec<i16>>>,
-    stop_flag: Arc<AtomicBool>,
-    stream_error: Arc<Mutex<Option<String>>>,
-    limit_reached: Arc<AtomicBool>,
-    sample_rate: u32,
+    context: &StreamContext,
 ) -> Result<cpal::Stream, AppError>
 where
     T: cpal::SizedSample,
     f32: cpal::FromSample<T>,
 {
     let channels = usize::from(config.channels);
-    let max_samples = sample_rate as usize * MAX_RECORDING_SECONDS;
-    let error_stop_flag = Arc::clone(&stop_flag);
+    let max_samples = context.sample_rate as usize * MAX_RECORDING_SECONDS;
+    let stop_flag = Arc::clone(&context.stop_flag);
+    let error_stop_flag = Arc::clone(&context.stop_flag);
+    let stream_error = Arc::clone(&context.stream_error);
+    let limit_reached = Arc::clone(&context.limit_reached);
+    let samples = Arc::clone(&context.samples);
+    let level_monitor = Arc::clone(&context.current_level);
     let error_callback = move |error| {
         log::error!("Local recording audio input stream error: {error}");
         if let Ok(mut current_error) = stream_error.lock() {
@@ -228,7 +272,6 @@ where
         }
         error_stop_flag.store(true, Ordering::SeqCst);
     };
-
     device
         .build_input_stream(
             config,
@@ -237,6 +280,7 @@ where
                     let remaining = max_samples.saturating_sub(samples.len());
                     samples.reserve((data.len() / channels).min(remaining));
 
+                    let mut chunk_samples = Vec::with_capacity(data.len() / channels);
                     for frame in data.chunks(channels) {
                         if samples.len() >= max_samples {
                             limit_reached.store(true, Ordering::SeqCst);
@@ -244,7 +288,16 @@ where
                             break;
                         }
                         if !frame.is_empty() {
-                            samples.push(mix_frame_to_pcm16(frame));
+                            let pcm = mix_frame_to_pcm16(frame);
+                            chunk_samples.push(pcm);
+                            samples.push(pcm);
+                        }
+                    }
+
+                    if !chunk_samples.is_empty() {
+                        let levels = compute_audio_level(&chunk_samples);
+                        if let Ok(mut lvl) = level_monitor.lock() {
+                            *lvl = levels;
                         }
                     }
                 }
@@ -303,6 +356,23 @@ fn pcm16_to_wav(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>, AppError> 
     Ok(wav)
 }
 
+pub fn compute_audio_level(samples: &[i16]) -> (f32, f32) {
+    if samples.is_empty() {
+        return (0.0, 0.0);
+    }
+    let mut sum_sq = 0.0_f32;
+    let mut peak = 0.0_f32;
+    for &sample in samples {
+        let norm = (sample as f32 / 32768.0).abs();
+        if norm > peak {
+            peak = norm;
+        }
+        sum_sq += norm * norm;
+    }
+    let rms = (sum_sq / samples.len() as f32).sqrt();
+    (rms.clamp(0.0, 1.0), peak.clamp(0.0, 1.0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -328,5 +398,23 @@ mod tests {
         assert_eq!(u32::from_le_bytes(wav[24..28].try_into().unwrap()), 16_000);
         assert_eq!(u32::from_le_bytes(wav[40..44].try_into().unwrap()), 6);
         assert_eq!(wav.len(), 50);
+    }
+
+    #[test]
+    fn computes_audio_level_for_empty_slice() {
+        let (level, peak) = compute_audio_level(&[]);
+        assert_eq!(level, 0.0);
+        assert_eq!(peak, 0.0);
+    }
+
+    #[test]
+    fn computes_audio_level_for_silence_and_signals() {
+        let (level, peak) = compute_audio_level(&[0, 0, 0]);
+        assert_eq!(level, 0.0);
+        assert_eq!(peak, 0.0);
+
+        let (level, peak) = compute_audio_level(&[16_384, -16_384]);
+        assert!((peak - 0.5).abs() < 1e-3);
+        assert!((level - 0.5).abs() < 1e-3);
     }
 }

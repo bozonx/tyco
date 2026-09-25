@@ -343,6 +343,8 @@
     "reviewCorrectionResult": "Revisa la corrección",
     "finish": "Finalizar",
     "listening": "Escuchando...",
+    "speakNow": "Hable al micrófono...",
+    "micError": "Error del micrófono",
     "transcribing": "Transcribiendo...",
     "aiRequest": "Solicitud a IA",
     "correction": "Corrección",

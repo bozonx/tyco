@@ -15,6 +15,7 @@ declare module 'vue' {
     ActionSelectModal: typeof import('./src/components/menu/ActionSelectModal.vue')['default']
     AiChat: typeof import('./src/components/AiChat.vue')['default']
     AiTaskMenu: typeof import('./src/components/menu/AiTaskMenu.vue')['default']
+    AudioWaveform: typeof import('./src/components/voice/AudioWaveform.vue')['default']
     Button: typeof import('./src/components/common/Button.vue')['default']
     Card: typeof import('./src/components/common/Card.vue')['default']
     ChatInput: typeof import('./src/components/ChatInput.vue')['default']

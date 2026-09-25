@@ -8,7 +8,16 @@
     </template>
 
     <template #preview>
-      <TextPreview :text="recognizedText" />
+      <AudioWaveform
+        v-if="!recognizedText"
+        :level="audioLevel"
+        :peak="audioPeak"
+        :duration-ms="recordingDurationMs"
+        :max-duration-ms="MAX_RECORDING_MS"
+        :is-live="isStarted"
+        :is-transcribing="isTranscribing"
+      />
+      <TextPreview v-else :text="recognizedText" />
     </template>
 
     <template #actions>
@@ -53,12 +62,15 @@ import {
 } from '../../composables/useGlobalEvents'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { desktopClient } from '../../lib/desktop/client'
 import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import AudioWaveform from '../voice/AudioWaveform.vue'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const props = defineProps<{
   onCorrected?: (
@@ -99,11 +111,38 @@ const isFinishing = ref(false)
 const isCancelling = ref(false)
 const isStarted = ref(false)
 const isTranscribing = ref(false)
+const audioLevel = ref(0)
+const audioPeak = ref(0)
+const recordingDurationMs = ref(0)
 
+let recordingTimer: ReturnType<typeof setInterval> | undefined
+let unlistenAudioLevel: (() => void) | undefined
+let unlistenStreamError: (() => void) | undefined
 let keyUpHandlerIndex = -1
 let sessionGeneration = 0
 let starting: Promise<void> | undefined
 const MAX_RECORDING_MS = 300_000
+
+function startRecordingTimer() {
+  recordingDurationMs.value = 0
+  const startTime = Date.now()
+  if (recordingTimer !== undefined) {
+    clearInterval(recordingTimer)
+  }
+  recordingTimer = setInterval(() => {
+    recordingDurationMs.value = Date.now() - startTime
+  }, 100)
+}
+
+function stopRecordingTimer() {
+  if (recordingTimer !== undefined) {
+    clearInterval(recordingTimer)
+    recordingTimer = undefined
+  }
+  audioLevel.value = 0
+  audioPeak.value = 0
+}
+
 const voiceSession = createVoiceSession({
   maxRecordingMs: MAX_RECORDING_MS,
   onLimit: () => {
@@ -132,6 +171,7 @@ const cancel = async () => {
   if (isCancelling.value) return
   isCancelling.value = true
   sessionGeneration += 1
+  stopRecordingTimer()
   voiceSession.abort()
 
   try {
@@ -155,6 +195,7 @@ const finish = async (toEditor = false) => {
   }
 
   isFinishing.value = true
+  stopRecordingTimer()
   voiceSession.stopTimer()
 
   try {
@@ -273,6 +314,7 @@ async function startSession() {
         return
       }
       voiceSession.begin()
+      startRecordingTimer()
       isStarted.value = true
     } catch (error) {
       if (generation !== sessionGeneration) return
@@ -288,9 +330,9 @@ async function startSession() {
 }
 
 watch(
-  () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
-  ([isShown, mode]) => {
-    if (isShown && mode === 'voice') {
+  () => ipcStore.params?.isWindowShown,
+  (isShown) => {
+    if (isShown) {
       void startSession()
     } else {
       if ((isStarted.value || starting) && !isFinishing.value) {
@@ -303,14 +345,34 @@ watch(
 onMounted(async () => {
   keyUpHandlerIndex = globalEvents.addListener(GlobalEvents.KEY_UP, handleKeyUp)
 
-  if (ipcStore.params?.isWindowShown && ipcStore.params?.mode === 'voice') {
+  unlistenAudioLevel = await desktopClient.listen(
+    DESKTOP_EVENTS.VOICE_AUDIO_LEVEL,
+    (payload) => {
+      audioLevel.value = payload.level
+      audioPeak.value = payload.peak
+    }
+  )
+
+  unlistenStreamError = await desktopClient.listen(
+    DESKTOP_EVENTS.VOICE_STREAM_ERROR,
+    (errorMessage) => {
+      toast(errorMessage || t('menu.micError'), 'error')
+      void cancel()
+    }
+  )
+
+  if (ipcStore.params?.isWindowShown !== false) {
     await startSession()
   }
 })
 
 onUnmounted(() => {
   sessionGeneration += 1
+  stopRecordingTimer()
   voiceSession.dispose()
+
+  unlistenAudioLevel?.()
+  unlistenStreamError?.()
 
   if (keyUpHandlerIndex >= 0) {
     globalEvents.removeListener(keyUpHandlerIndex)

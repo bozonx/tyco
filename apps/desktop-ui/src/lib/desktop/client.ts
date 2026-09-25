@@ -15,6 +15,8 @@ type AppEventPayloads = {
   [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
   [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
   [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
+  [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
+  [DESKTOP_EVENTS.VOICE_STREAM_ERROR]: string
 }
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()

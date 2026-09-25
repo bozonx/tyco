@@ -343,6 +343,8 @@
     "reviewCorrectionResult": "Review the correction result",
     "finish": "Finish",
     "listening": "Listening...",
+    "speakNow": "Speak into the microphone...",
+    "micError": "Microphone error",
     "transcribing": "Transcribing...",
     "aiRequest": "AI request",
     "correction": "Correction",

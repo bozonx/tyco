@@ -28,7 +28,7 @@ export const useEditorActions = () => {
     menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
       onCorrected: (resultText: string) => {
         if (!resultText?.trim()) {
-          toast(t('toast.textNotSelected'), 'error')
+          menuModalsStore.closeAll()
           return
         }
 
