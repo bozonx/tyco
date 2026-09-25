@@ -33,12 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
-import {
-  QUICK_PANEL_WIDTH,
-  quickPanelWindowHeight,
-} from '../../lib/quick-panel/quick-panel-size'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useWriterInputStore } from '../../stores/writerInput'
@@ -46,8 +42,6 @@ import AiTaskView from '../../views/AiTaskView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'
-import { LogicalSize } from '@tauri-apps/api/dpi'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
@@ -67,33 +61,12 @@ const isSheet = computed(() => {
   )
 })
 
-let resizeObserver: ResizeObserver | null = null
-let lastWindowHeight = 0
 let windowUpdate = Promise.resolve()
 
 const queueWindowUpdate = (update: () => Promise<void>): Promise<void> => {
   windowUpdate = windowUpdate.then(update, update)
   return windowUpdate
 }
-
-const resizeWindow = (): Promise<void> =>
-  queueWindowUpdate(async () => {
-    if (!cardRef.value || isSheet.value) return
-
-    const height = quickPanelWindowHeight(
-      cardRef.value.getBoundingClientRect().height
-    )
-    if (height === lastWindowHeight) return
-
-    try {
-      await getCurrentWindow().setSize(
-        new LogicalSize(QUICK_PANEL_WIDTH, height)
-      )
-      lastWindowHeight = height
-    } catch {
-      // Browser dev fallback
-    }
-  })
 
 const syncFocus = () => {
   if (currentMode.value === 'write') {
@@ -102,13 +75,7 @@ const syncFocus = () => {
 }
 
 onMounted(() => {
-  resizeObserver = new ResizeObserver(() => void resizeWindow())
-  if (cardRef.value) resizeObserver.observe(cardRef.value)
   syncFocus()
-})
-
-onUnmounted(() => {
-  resizeObserver?.disconnect()
 })
 
 watch(
@@ -121,11 +88,6 @@ watch(
         ])
       } catch {
         // IPC fallback
-      }
-      if (!sheet) {
-        lastWindowHeight = 0
-        await nextTick()
-        void resizeWindow()
       }
     })
   },
@@ -145,9 +107,6 @@ watch(
   async () => {
     await nextTick()
     syncFocus()
-    if (!isSheet.value) {
-      void resizeWindow()
-    }
   }
 )
 </script>
@@ -174,28 +133,27 @@ watch(
 
 .quick-overlay-card {
   overflow: hidden;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background: color-mix(in oklab, var(--app-surface) 94%, transparent);
-  box-shadow: var(--app-shadow-lg);
-  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
 .quick-overlay-root.is-panel .quick-overlay-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
   max-height: 100%;
 }
 
 .quick-overlay-root.is-sheet .quick-overlay-card {
   height: 100%;
   max-height: 100%;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--app-shadow-lg);
   background: var(--app-overlay-bg);
-  backdrop-filter: none;
+  backdrop-filter: blur(16px);
 }
 
 .quick-overlay-root.has-modal .quick-overlay-card {

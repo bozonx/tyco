@@ -2,6 +2,8 @@
   <FieldTextArea
     ref="textareaRef"
     class="main-input"
+    auto-resize
+    :max-auto-height="380"
     :placeholder="t('input.textPlaceholder')"
     :value="writerInputStore.value"
     @update:value="handleInput"
@@ -51,7 +53,7 @@ const handleInput = (value: string): void => {
 
 <style scoped>
 .main-input {
-  height: 100%;
+  width: 100%;
   resize: none;
 }
 </style>

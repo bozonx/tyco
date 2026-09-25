@@ -34,6 +34,7 @@ defineProps<{ title?: string }>()
   gap: var(--space-md);
   width: 100%;
   height: 100%;
+  flex: 1 1 0%;
   min-height: 0;
   box-sizing: border-box;
 }

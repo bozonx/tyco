@@ -73,8 +73,8 @@ pub enum WindowProfile {
 impl WindowProfile {
     pub fn size(self) -> (f64, f64) {
         match self {
-            Self::Panel => (800.0, 320.0),
-            Self::Sheet => (800.0, 560.0),
+            Self::Panel => (800.0, 500.0),
+            Self::Sheet => (800.0, 500.0),
         }
     }
 }

@@ -80,7 +80,7 @@ pub fn apply_panel_surface(
                 .map(|m| {
                     let scale = m.scale_factor();
                     let screen_h = m.size().height as f64 / scale;
-                    ((screen_h - 560.0) / 2.0).max(40.0) as i32
+                    ((screen_h - height) / 2.0).max(40.0) as i32
                 })
                 .unwrap_or(200);
             crate::services::layer_shell::set_sheet_profile(&gtk_window, margin_top);

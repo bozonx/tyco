@@ -54,8 +54,12 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
 :global([data-window='quick'] .overlay) {
   inset: var(--space-sm);
   background-color: var(--app-overlay-bg);
-  backdrop-filter: none;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--app-shadow-lg);
   padding: var(--space-sm);
+  overflow: hidden;
 }
 
 .overlay-panel {

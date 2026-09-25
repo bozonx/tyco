@@ -177,6 +177,7 @@ async function doCorrection() {
 .write-mode-container {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: var(--space-sm);
   flex: 1;
   min-height: 0;
@@ -184,12 +185,13 @@ async function doCorrection() {
 
 .write-frame {
   display: flex;
-  flex: 1;
-  min-height: 0;
+  min-height: 3rem;
+  max-height: 400px;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
+  background-color: color-mix(in oklab, var(--app-surface) 96%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--app-shadow-md);
   overflow: hidden;
   transition:
     border-color var(--transition-fast),

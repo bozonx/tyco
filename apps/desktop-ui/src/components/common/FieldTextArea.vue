@@ -1,6 +1,7 @@
 <template>
   <textarea
     class="textarea"
+    :class="{ 'is-auto-resize': autoResize }"
     :placeholder="placeholder"
     :value="value"
     @input="handleInput"
@@ -12,12 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   value?: string
   placeholder?: string
   selected?: string
+  autoResize?: boolean
+  maxAutoHeight?: number
 }>()
 
 const emit = defineEmits<{
@@ -32,8 +35,21 @@ const value = computed(() => props.value || '')
 
 const selection = ref<string>('')
 
+function adjustHeight() {
+  if (!props.autoResize || !textareaRef.value) return
+  const el = textareaRef.value
+  el.style.height = 'auto'
+  const maxHeight = props.maxAutoHeight ?? 380
+  const targetHeight = Math.min(el.scrollHeight, maxHeight)
+  el.style.height = `${targetHeight}px`
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
+}
+
 function handleInput(event: Event) {
   emit('update:value', (event.target as HTMLTextAreaElement).value)
+  if (props.autoResize) {
+    adjustHeight()
+  }
 }
 
 const handleSelect = () => {
@@ -57,6 +73,23 @@ const handleSelect = () => {
   }
 }
 
+watch(
+  () => props.value,
+  async () => {
+    if (props.autoResize) {
+      await nextTick()
+      adjustHeight()
+    }
+  }
+)
+
+onMounted(async () => {
+  if (props.autoResize) {
+    await nextTick()
+    adjustHeight()
+  }
+})
+
 // Экспортируем функцию focus для внешнего использования
 defineExpose({
   focus: () => textareaRef.value?.focus(),
@@ -75,5 +108,12 @@ textarea {
   width: 100%;
   min-height: 100px;
   resize: vertical;
+}
+
+textarea.is-auto-resize {
+  min-height: 2.75rem;
+  resize: none;
+  overflow-y: hidden;
+  box-sizing: border-box;
 }
 </style>

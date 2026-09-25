@@ -29,7 +29,7 @@
         "label": "quick",
         "title": "TyCo - quick input",
         "width": 800,
-        "height": 320,
+        "height": 500,
         "minWidth": 640,
         "minHeight": 96,
         "resizable": true,
