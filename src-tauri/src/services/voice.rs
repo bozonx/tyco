@@ -24,7 +24,8 @@ pub struct LocalVoiceRecording {
 }
 
 pub async fn start_local_recording(state: &AppState) -> Result<(), AppError> {
-    let _ = stop_local_recording(state).await;
+    let _operation = state.lock_local_voice_recording().await;
+    let _ = stop_local_recording_unlocked(state).await;
 
     let session = tokio::task::spawn_blocking(create_local_recording_session)
         .await
@@ -81,6 +82,11 @@ fn create_local_recording_session() -> Result<LocalVoiceRecordingSession, AppErr
 }
 
 pub async fn stop_local_recording(state: &AppState) -> Result<LocalVoiceRecording, AppError> {
+    let _operation = state.lock_local_voice_recording().await;
+    stop_local_recording_unlocked(state).await
+}
+
+async fn stop_local_recording_unlocked(state: &AppState) -> Result<LocalVoiceRecording, AppError> {
     if let Some(session) = state.replace_local_voice_recording_session(None) {
         return tokio::task::spawn_blocking(move || finish_local_recording_session(session))
             .await

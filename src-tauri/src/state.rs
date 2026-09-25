@@ -17,6 +17,7 @@ pub struct AppState {
     history_storage: Mutex<()>,
     quitting: AtomicBool,
     local_voice_recording_session: Mutex<Option<LocalVoiceRecordingSession>>,
+    local_voice_recording_operation: tokio::sync::Mutex<()>,
 }
 
 impl AppState {
@@ -26,6 +27,7 @@ impl AppState {
             history_storage: Mutex::new(()),
             quitting: AtomicBool::new(false),
             local_voice_recording_session: Mutex::new(None),
+            local_voice_recording_operation: tokio::sync::Mutex::new(()),
         }
     }
 
@@ -66,5 +68,9 @@ impl AppState {
             .lock()
             .expect("local voice recording session lock poisoned");
         std::mem::replace(&mut *guard, session)
+    }
+
+    pub async fn lock_local_voice_recording(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.local_voice_recording_operation.lock().await
     }
 }

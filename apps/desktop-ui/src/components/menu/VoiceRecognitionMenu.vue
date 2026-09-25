@@ -18,7 +18,7 @@
           icon="mdi:check"
           primary
           :disabled="isFinishing"
-          @click="finish"
+          @click="() => finish()"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
         </ShortcutButton>
@@ -33,7 +33,7 @@
         <ShortcutButton
           :keys="['Esc']"
           icon="mdi:close"
-          :disabled="isCancelling || isFinishing"
+          :disabled="isCancelling"
           @click="cancel"
         >
           {{ t('common.cancel') }}
@@ -101,6 +101,8 @@ const isStarted = ref(false)
 const isTranscribing = ref(false)
 
 let keyUpHandlerIndex = -1
+let sessionGeneration = 0
+let starting: Promise<void> | undefined
 const MAX_RECORDING_MS = 300_000
 const voiceSession = createVoiceSession({
   maxRecordingMs: MAX_RECORDING_MS,
@@ -127,11 +129,13 @@ function notifyCancelled() {
 }
 
 const cancel = async () => {
-  if (isCancelling.value || isFinishing.value) return
+  if (isCancelling.value) return
   isCancelling.value = true
+  sessionGeneration += 1
   voiceSession.abort()
 
   try {
+    await starting
     await cancelVoiceRecognition()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -145,7 +149,7 @@ const cancel = async () => {
   }
 }
 
-const finish = async () => {
+const finish = async (toEditor = false) => {
   if (isFinishing.value || isCancelling.value) {
     return
   }
@@ -154,6 +158,8 @@ const finish = async () => {
   voiceSession.stopTimer()
 
   try {
+    await starting
+    if (!isStarted.value || voiceSession.signal?.aborted) return
     isTranscribing.value = true
     const transcription = await stopVoiceRecognition(voiceSession.signal)
     const finalRecognizedText = transcription.text
@@ -171,6 +177,11 @@ const finish = async () => {
     if (!recognizedText.value.trim()) {
       toast(t('toast.nothingRecognized'), 'warn')
       notifyCancelled()
+      return
+    }
+
+    if (toEditor) {
+      routeParamsStore.toEditor(recognizedText.value)
       return
     }
 
@@ -228,9 +239,7 @@ const finish = async () => {
 
 function goToEditor() {
   if (isFinishing.value) return
-  voiceSession.abort()
-  void cancelVoiceRecognition().catch(() => undefined)
-  routeParamsStore.toEditor(recognizedText.value)
+  void finish(true)
 }
 
 function handleKeyUp(event: KeyboardEvent) {
@@ -253,18 +262,29 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 async function startSession() {
-  if (isStarted.value || isFinishing.value) return
+  if (isStarted.value || isFinishing.value || starting) return
   recognizedText.value = ''
-  try {
-    await startVoiceRecognition()
-    voiceSession.begin()
-    isStarted.value = true
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    toast(message || t('toast.voiceRecognitionFailed'), 'error')
-    voiceSession.abort()
-    notifyCancelled()
-  }
+  const generation = ++sessionGeneration
+  starting = (async () => {
+    try {
+      await startVoiceRecognition()
+      if (generation !== sessionGeneration) {
+        await cancelVoiceRecognition()
+        return
+      }
+      voiceSession.begin()
+      isStarted.value = true
+    } catch (error) {
+      if (generation !== sessionGeneration) return
+      const message = error instanceof Error ? error.message : String(error)
+      toast(message || t('toast.voiceRecognitionFailed'), 'error')
+      voiceSession.abort()
+      notifyCancelled()
+    }
+  })().finally(() => {
+    starting = undefined
+  })
+  await starting
 }
 
 watch(
@@ -273,7 +293,7 @@ watch(
     if (isShown && mode === 'voice') {
       void startSession()
     } else {
-      if (isStarted.value && !isFinishing.value) {
+      if ((isStarted.value || starting) && !isFinishing.value) {
         void cancel()
       }
     }
@@ -289,6 +309,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  sessionGeneration += 1
   voiceSession.dispose()
 
   if (keyUpHandlerIndex >= 0) {
@@ -296,7 +317,10 @@ onUnmounted(() => {
     keyUpHandlerIndex = -1
   }
 
-  void cancelVoiceRecognition().catch(() => undefined)
+  void (async () => {
+    await starting
+    await cancelVoiceRecognition()
+  })().catch(() => undefined)
 })
 </script>
 
