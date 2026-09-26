@@ -63,12 +63,18 @@ import LiveTranscript from '../voice/LiveTranscript.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const props = defineProps<{
-  onCorrected?: (
-    resultText: string,
-    recognizedText: string,
-    correctedText?: string
-  ) => void
-  onCancel?: () => void
+  onCorrected?:
+    | ((
+        resultText: string,
+        recognizedText: string,
+        correctedText?: string
+      ) => void)
+    | ((
+        resultText: string,
+        recognizedText: string,
+        correctedText?: string
+      ) => void)[]
+  onCancel?: (() => void) | (() => void)[]
 }>()
 
 const emit = defineEmits<{
@@ -145,8 +151,23 @@ const voiceSession = createVoiceSession({
   },
 })
 
+function invokeCallback<Args extends unknown[]>(
+  callback: ((...args: Args) => void) | ((...args: Args) => void)[] | undefined,
+  ...args: Args
+) {
+  if (typeof callback === 'function') {
+    callback(...args)
+  } else if (Array.isArray(callback)) {
+    for (const fn of callback) {
+      if (typeof fn === 'function') {
+        fn(...args)
+      }
+    }
+  }
+}
+
 function notifyCancelled() {
-  props.onCancel?.()
+  invokeCallback(props.onCancel)
   emit('cancelled')
 }
 
@@ -234,7 +255,6 @@ const finish = async () => {
     }
 
     if (!voiceSession.signal?.aborted) {
-      props.onCorrected?.(resultText, recognizedText, correctedText)
       emit('corrected', resultText, recognizedText, correctedText)
     }
   } catch (error) {

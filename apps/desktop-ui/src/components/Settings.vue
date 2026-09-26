@@ -228,8 +228,17 @@
             </FieldRow>
             <FieldRow :label="t('settings.formatWithLlm')">
               <FieldCheckbox
-                :value="currentSttModel.formatWithLlm !== false"
+                :value="Boolean(currentSttModel.formatWithLlm)"
                 @update:value="setSttFormatWithLlm"
+              />
+            </FieldRow>
+            <FieldRow
+              v-if="Boolean(currentSttModel.formatWithLlm)"
+              :label="t('settings.voiceCorrectionRules')"
+              vertical
+            >
+              <FieldTextArea
+                v-model:value="userConfig.aiRules.voiceCorrection"
               />
             </FieldRow>
           </SettingsSection>
@@ -479,6 +488,10 @@ function createPreparedUserConfig(config: unknown) {
   nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
   delete nextConfig.chatRoles
   normalizeAiTasks(nextConfig)
+  nextConfig.aiRules = {
+    ...DEFAULT_USER_CONFIG.aiRules,
+    ...(nextConfig.aiRules || {}),
+  }
 
   return nextConfig
 }

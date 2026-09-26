@@ -19,8 +19,8 @@ export const useTranslationStore = defineStore('translation', () => {
       normalizeTranslationConfig(ipcStore.params.userConfig?.translation),
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(() => secretsClient.status()),
-    runLlm: (prompt, signal) =>
-      llmStore.client.run('translate', prompt, { signal }),
+    runLlm: (prompt, signal, options = {}) =>
+      llmStore.client.run('translate', prompt, { signal, ...options }),
   })
 
   return { client }

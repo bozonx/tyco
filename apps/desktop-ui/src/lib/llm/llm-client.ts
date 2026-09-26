@@ -133,7 +133,14 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
             ...(options.signal ? { abortSignal: options.signal } : {}),
           }
 
-          if (!options.onChunk) return (await kit.generate(request)).text
+          if (!options.onChunk) {
+            const result = await kit.generate(request)
+            options.onModel?.({
+              provider: result.provider,
+              model: result.model,
+            })
+            return result.text
+          }
 
           for await (const part of kit.stream(request)) {
             if (part.type === 'model') {

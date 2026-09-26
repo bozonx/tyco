@@ -446,12 +446,12 @@
     }
   },
   "action": {
-    "insertIntoWindow": "Вставить в окно",
-    "copyToClipboard": "В буфер обмена",
+    "insertIntoWindow": "В окно",
+    "copyToClipboard": "В буфер",
     "aiTask": "Задание для AI",
     "correction": "Коррекция",
     "translation": "Перевод",
-    "askInChat": "Спросить в чате",
+    "askInChat": "В чат",
     "insertIntoEditor": "Вставить в редактор"
   },
   "plugin": {

@@ -31,7 +31,11 @@ export interface TranslationClientDeps {
   getConfig: () => TranslationConfig
   transport: Transport
   keys: KeyProvider
-  runLlm: (prompt: LlmPrompt, signal?: AbortSignal) => Promise<string>
+  runLlm: (
+    prompt: LlmPrompt,
+    signal?: AbortSignal,
+    options?: { onModel?: (model: { provider: string; model: string }) => void }
+  ) => Promise<string>
 }
 
 export interface TranslationRunOptions {
@@ -191,6 +195,8 @@ async function translateWithLlm(
   glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
   const translated: string[] = []
+  let detectedProvider = 'llm'
+  let detectedModel: string | undefined
   for (const chunk of chunkText(text, LLM_CHUNK_LIMIT)) {
     options.signal?.throwIfAborted()
     const applicable = selectGlossaryForText(glossary, chunk)
@@ -208,7 +214,13 @@ async function translateWithLlm(
           },
         ],
       },
-      options.signal
+      options.signal,
+      {
+        onModel: (info) => {
+          detectedProvider = info.provider
+          detectedModel = info.model
+        },
+      }
     )
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, chunk)
@@ -220,7 +232,11 @@ async function translateWithLlm(
       }).text
     )
   }
-  return { translation: translated.join(''), provider: 'llm' }
+  return {
+    translation: translated.join(''),
+    provider: detectedProvider,
+    ...(detectedModel ? { model: detectedModel } : {}),
+  }
 }
 
 async function repairWithLlm(
@@ -232,6 +248,8 @@ async function repairWithLlm(
   glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
   const repaired: string[] = []
+  let detectedProvider = 'llm'
+  let detectedModel: string | undefined
   for (const pair of splitParallelText(
     source,
     translation,
@@ -261,7 +279,13 @@ async function repairWithLlm(
           },
         ],
       },
-      options.signal
+      options.signal,
+      {
+        onModel: (info) => {
+          detectedProvider = info.provider
+          detectedModel = info.model
+        },
+      }
     )
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, pair.source)
@@ -273,7 +297,11 @@ async function repairWithLlm(
       }).text
     )
   }
-  return { translation: repaired.join(''), provider: 'llm' }
+  return {
+    translation: repaired.join(''),
+    provider: detectedProvider,
+    ...(detectedModel ? { model: detectedModel } : {}),
+  }
 }
 
 function translationSystem(

@@ -59,7 +59,7 @@ export const useCallAi = () => {
   }
 
   const shouldFormatRecognizedText = () => {
-    return currentSttModel()?.formatWithLlm !== false
+    return Boolean(currentSttModel()?.formatWithLlm)
   }
 
   const currentVoiceModel = () => {

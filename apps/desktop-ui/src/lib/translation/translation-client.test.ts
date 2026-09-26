@@ -133,4 +133,23 @@ describe('createTranslationClient', () => {
       })
     ).rejects.toMatchObject({ name: 'AbortError' })
   })
+
+  it('captures and returns the LLM provider and model when reported', async () => {
+    const runLlm = vi.fn((_prompt, _signal, options) => {
+      options?.onModel?.({ provider: 'openai', model: 'gpt-4o-mini' })
+      return Promise.resolve('Привет.')
+    })
+    const client = createTranslationClient({
+      getConfig: () => config(),
+      keys: { get: vi.fn() },
+      transport: { fetch: vi.fn(), openSocket: vi.fn() },
+      runLlm,
+    })
+
+    const result = await client.translate('Hello.', { targetLanguage: 'ru' })
+
+    expect(result.text).toBe('Привет.')
+    expect(result.provider).toBe('openai')
+    expect(result.model).toBe('gpt-4o-mini')
+  })
 })

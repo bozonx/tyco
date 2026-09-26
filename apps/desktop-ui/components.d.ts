@@ -45,6 +45,8 @@ declare module 'vue' {
     MenuModals: typeof import('./src/components/menu/MenuModals.vue')['default']
     NavPanel: typeof import('./src/components/NavPanel.vue')['default']
     Overlay: typeof import('./src/components/common/Overlay.vue')['default']
+    ParallelModeToggle: typeof import('./src/components/common/ParallelModeToggle.vue')['default']
+    ParallelTextPreview: typeof import('./src/components/common/ParallelTextPreview.vue')['default']
     PreviewMenu: typeof import('./src/components/menu/PreviewMenu.vue')['default']
     QuickOverlay: typeof import('./src/components/quick/QuickOverlay.vue')['default']
     QuickPanel: typeof import('./src/components/QuickPanel.vue')['default']

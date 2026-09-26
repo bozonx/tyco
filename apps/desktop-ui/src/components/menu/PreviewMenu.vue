@@ -1,11 +1,15 @@
 <template>
   <ActionOverlayLayout :title="t('menu.reviewResult')">
-    <template #header-extra v-if="props.translationMeta">
-      <div class="translation-provider-badge">
-        <span>{{ providerLabel }}</span>
-        <span v-if="props.translationMeta.model" class="opacity-70">
-          · {{ props.translationMeta.model }}
-        </span>
+    <template #header-extra>
+      <div class="translation-header-tools">
+        <ParallelModeToggle v-if="props.sourceText" v-model="viewMode" />
+        <div v-if="props.translationMeta" class="translation-provider-badge">
+          <Icon icon="mdi:translate" height="14" class="opacity-70" />
+          <span>{{ providerLabel }}</span>
+          <span v-if="props.translationMeta.model" class="opacity-70">
+            · {{ props.translationMeta.model }}
+          </span>
+        </div>
       </div>
     </template>
 
@@ -19,15 +23,22 @@
           {{ qualityStatusText }}
         </div>
         <div class="flex-1 min-h-0">
-          <TextPreview :text="props.text" />
+          <ParallelTextPreview
+            v-if="viewMode === 'split' && props.sourceText"
+            :left-text="props.sourceText"
+            :right-text="currentText"
+            @update:right-text="currentText = $event"
+          />
+          <TextPreview v-else :text="currentText" />
         </div>
       </div>
     </template>
 
     <template #actions>
       <ShortcutList
-        :text="props.text"
+        :text="currentText"
         :sourceText="props.sourceText"
+        :altText="props.sourceText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
         :toEditorVisible="true"
@@ -37,15 +48,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import ParallelModeToggle, {
+  type ParallelViewMode,
+} from '../common/ParallelModeToggle.vue'
+import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import TextPreview from '../common/TextPreview.vue'
 import type { TranslationQualityReport } from '@bozonx/ai-kit/translate'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
   text: string
@@ -56,6 +72,62 @@ const props = defineProps<{
     quality: TranslationQualityReport
   }
 }>()
+
+const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
+
+function readStoredTranslationMode(): ParallelViewMode {
+  try {
+    const stored = localStorage.getItem(TRANSLATION_VIEW_MODE_KEY)
+    if (stored === 'split' || stored === 'result') return stored
+  } catch {
+    // Ignore storage access errors
+  }
+  return 'split'
+}
+
+const currentText = ref(props.text)
+watch(
+  () => props.text,
+  (newText) => {
+    currentText.value = newText
+  }
+)
+
+const viewMode = ref<ParallelViewMode>(
+  props.sourceText ? readStoredTranslationMode() : 'result'
+)
+
+watch(viewMode, (newMode) => {
+  try {
+    localStorage.setItem(TRANSLATION_VIEW_MODE_KEY, newMode)
+  } catch {
+    // Ignore storage access errors
+  }
+})
+
+function cycleMode() {
+  if (!props.sourceText) return
+  viewMode.value = viewMode.value === 'split' ? 'result' : 'split'
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (
+    event.key.toLowerCase() === 'd' &&
+    (event.ctrlKey || event.altKey) &&
+    !event.shiftKey
+  ) {
+    event.preventDefault()
+    cycleMode()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
@@ -99,9 +171,6 @@ const qualityStatusText = computed(() => {
   if (quality.problems.length) {
     return `${t('menu.translationQualityProblems')}: ${problemCodes.value}`
   }
-  if (quality.gate !== 'off') {
-    return t('menu.translationQualityClean')
-  }
   return ''
 })
 
@@ -138,6 +207,12 @@ const spaceKey = computed(() =>
   flex-direction: column;
   width: 100%;
   height: 100%;
+}
+
+.translation-header-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .translation-provider-badge {

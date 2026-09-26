@@ -322,7 +322,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       model: 'nova-3',
       provider: 'deepgram',
       description: 'Deepgram speech recognition',
-      formatWithLlm: true,
+      formatWithLlm: false,
       language: 'auto',
     },
   ],

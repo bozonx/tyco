@@ -159,7 +159,7 @@ pub fn default_user_config() -> Value {
           "model": "nova-3",
           "provider": "deepgram",
           "description": "Deepgram speech recognition",
-          "formatWithLlm": true,
+          "formatWithLlm": false,
           "language": "auto"
         }
       ],
