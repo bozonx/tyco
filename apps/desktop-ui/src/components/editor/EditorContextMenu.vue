@@ -6,8 +6,54 @@
       :style="style"
       role="menu"
       @contextmenu.prevent
+      @mousedown.prevent
     >
       <template v-for="(item, index) in items" :key="item.id">
+        <div
+          v-if="item.separatorBefore && Number(index) > 0"
+          class="editor-context-menu__separator"
+          role="separator"
+        />
+        <button
+          type="button"
+          role="menuitem"
+          class="editor-context-menu__item"
+          :class="{
+            'is-accent': item.accent,
+            'is-open': subIndex === Number(index),
+          }"
+          :data-index="index"
+          :disabled="item.disabled"
+          :aria-haspopup="item.children ? 'menu' : undefined"
+          :aria-expanded="
+            item.children ? subIndex === Number(index) : undefined
+          "
+          @mouseenter="onItemHover(Number(index))"
+          @click="select(item, Number(index))"
+        >
+          <Icon v-if="item.icon" :icon="item.icon" height="16" />
+          <span v-else-if="hasIcons" class="editor-context-menu__icon-gap" />
+          <span class="editor-context-menu__label">{{ item.label }}</span>
+          <Icon
+            v-if="item.children"
+            icon="mdi:chevron-right"
+            height="16"
+            class="editor-context-menu__chevron"
+          />
+        </button>
+      </template>
+    </div>
+
+    <div
+      v-if="subItems"
+      ref="subRef"
+      class="editor-context-menu"
+      :style="subStyle"
+      role="menu"
+      @contextmenu.prevent
+      @mousedown.prevent
+    >
+      <template v-for="(item, index) in subItems" :key="item.id">
         <div
           v-if="item.separatorBefore && Number(index) > 0"
           class="editor-context-menu__separator"
@@ -31,9 +77,10 @@
 
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
+import { placeMenu, placeSubmenu } from '../../lib/editor/menu-placement'
 import { Icon } from '@iconify/vue'
 
 const props = withDefaults(
@@ -45,33 +92,46 @@ const props = withDefaults(
     bottom?: number
     items: EditorMenuItem[]
     placement?: MenuPlacement
-    /**
-     * Arrow-key navigation. Off for the bubble menu: it is open for as long as
-     * there is a selection, and the arrows must keep moving the caret
-     */
-    keyboardNav?: boolean
+    /** Focus the first item on open, e.g. for a dropdown opened by a click */
+    autofocus?: boolean
   }>(),
-  { placement: 'point', keyboardNav: false }
+  { placement: 'point', autofocus: false }
 )
 
 const emit = defineEmits<{ (e: 'close', restoreFocus: boolean): void }>()
 
-/** Gap from the window edge, so the menu does not stick to the border */
-const VIEWPORT_GAP = 8
-/** Gap between the menu and the text line it is anchored to */
-const ANCHOR_GAP = 6
-
 const menuRef = ref<HTMLElement | null>(null)
+const subRef = ref<HTMLElement | null>(null)
 const position = ref({ x: props.x, y: props.y })
 const placed = ref(false)
+const subIndex = ref<number | null>(null)
+const subPosition = ref({ x: 0, y: 0 })
+const subPlaced = ref(false)
 
+const hasIcons = computed(() => props.items.some((item) => item.icon))
+
+const subItems = computed(() =>
+  subIndex.value === null ? null : props.items[subIndex.value]?.children
+)
+
+// the menu has to be measured before it can be placed; showing it at the raw
+// anchor for that one frame would make it jump
 const style = computed<CSSProperties>(() => ({
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
-  // the menu has to be measured before it can be placed; showing it at the raw
-  // anchor for that one frame would make it jump
   visibility: placed.value ? 'visible' : 'hidden',
 }))
+
+const subStyle = computed<CSSProperties>(() => ({
+  left: `${subPosition.value.x}px`,
+  top: `${subPosition.value.y}px`,
+  visibility: subPlaced.value ? 'visible' : 'hidden',
+}))
+
+const viewport = () => ({
+  width: window.innerWidth,
+  height: window.innerHeight,
+})
 
 /** Put the menu next to its anchor, keeping it inside the window */
 const place = (): void => {
@@ -80,56 +140,105 @@ const place = (): void => {
   if (!element) return
 
   const { width, height } = element.getBoundingClientRect()
-  const bottom = props.bottom ?? props.y
-  const above = props.y - height - ANCHOR_GAP
 
-  let y = props.y
-
-  if (props.placement === 'above') {
-    y = above >= VIEWPORT_GAP ? above : bottom + ANCHOR_GAP
-  } else if (props.placement === 'below') {
-    y = bottom + ANCHOR_GAP
-  }
-
-  position.value = {
-    x: Math.max(
-      VIEWPORT_GAP,
-      Math.min(props.x, window.innerWidth - width - VIEWPORT_GAP)
-    ),
-    y: Math.max(
-      VIEWPORT_GAP,
-      Math.min(y, window.innerHeight - height - VIEWPORT_GAP)
-    ),
-  }
+  position.value = placeMenu(
+    { x: props.x, y: props.y, bottom: props.bottom },
+    { width, height },
+    props.placement,
+    viewport()
+  )
   placed.value = true
 }
 
+const itemButton = (index: number): HTMLButtonElement | null =>
+  menuRef.value?.querySelector<HTMLButtonElement>(`[data-index="${index}"]`) ??
+  null
+
+const enabledButtons = (container: HTMLElement | null): HTMLButtonElement[] =>
+  Array.from(
+    container?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ??
+      []
+  )
+
+const openSubmenu = async (
+  index: number,
+  focusFirst = false
+): Promise<void> => {
+  if (subIndex.value !== index) {
+    subIndex.value = index
+    subPlaced.value = false
+  }
+
+  await nextTick()
+
+  const parent = itemButton(index)
+  const element = subRef.value
+
+  if (!parent || !element) return
+
+  const { width, height } = element.getBoundingClientRect()
+
+  subPosition.value = placeSubmenu(
+    parent.getBoundingClientRect(),
+    { width, height },
+    viewport()
+  )
+  subPlaced.value = true
+
+  if (focusFirst) enabledButtons(element)[0]?.focus()
+}
+
+const closeSubmenu = (focusParent: boolean): void => {
+  const index = subIndex.value
+
+  subIndex.value = null
+
+  if (focusParent && index !== null) itemButton(index)?.focus()
+}
+
+const onItemHover = (index: number): void => {
+  const item = props.items[index]
+
+  if (item?.children && !item.disabled) void openSubmenu(index)
+  else if (subIndex.value !== null) closeSubmenu(false)
+}
+
 const holdsFocus = (): boolean =>
-  Boolean(menuRef.value?.contains(document.activeElement))
+  Boolean(
+    menuRef.value?.contains(document.activeElement) ||
+    subRef.value?.contains(document.activeElement)
+  )
 
 const close = (): void => emit('close', holdsFocus())
 
-const select = async (item: EditorMenuItem): Promise<void> => {
+const select = async (item: EditorMenuItem, index?: number): Promise<void> => {
   if (item.disabled) return
+
+  if (item.children) {
+    if (index !== undefined) await openSubmenu(index, true)
+
+    return
+  }
 
   close()
 
-  await item.action()
+  await item.action?.()
 }
 
 const onPointerDown = (event: MouseEvent): void => {
-  if (menuRef.value?.contains(event.target as Node)) return
+  const target = event.target as Node
+
+  if (menuRef.value?.contains(target) || subRef.value?.contains(target)) return
 
   emit('close', false)
 }
 
-/** Move focus between enabled items, wrapping around */
+const inSubmenu = (): boolean =>
+  Boolean(subRef.value?.contains(document.activeElement))
+
+/** Move focus between enabled items of the active panel, wrapping around */
 const moveFocus = (delta: number): void => {
-  const buttons = Array.from(
-    menuRef.value?.querySelectorAll<HTMLButtonElement>(
-      'button:not(:disabled)'
-    ) ?? []
-  )
+  const buttons = enabledButtons(inSubmenu() ? subRef.value : menuRef.value)
 
   if (buttons.length === 0) return
 
@@ -144,33 +253,65 @@ const moveFocus = (delta: number): void => {
   buttons[next].focus()
 }
 
+const focusedIndex = (): number | null => {
+  const value = (document.activeElement as HTMLElement | null)?.dataset?.index
+
+  return value === undefined ? null : Number(value)
+}
+
 const onKeyDown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
+  const handled = (): void => {
+    event.preventDefault()
     event.stopPropagation()
-    close()
+  }
+
+  if (event.key === 'Escape') {
+    handled()
+
+    if (inSubmenu()) closeSubmenu(true)
+    else close()
 
     return
   }
 
-  if (!props.keyboardNav) return
+  // the arrows belong to the editor caret until the menu itself has focus
+  if (!holdsFocus()) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      handled()
+      moveFocus(event.key === 'ArrowDown' ? 1 : -1)
+    }
 
-  const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
+    return
+  }
 
-  if (delta === 0) return
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    handled()
+    moveFocus(event.key === 'ArrowDown' ? 1 : -1)
+  } else if (event.key === 'ArrowRight' && !inSubmenu()) {
+    const index = focusedIndex()
 
-  event.preventDefault()
-  event.stopPropagation()
-  moveFocus(delta)
+    if (index !== null && props.items[index]?.children) {
+      handled()
+      void openSubmenu(index, true)
+    }
+  } else if (event.key === 'ArrowLeft' && inSubmenu()) {
+    handled()
+    closeSubmenu(true)
+  }
 }
 
-// the bubble menu follows a growing selection without being recreated
 watch(
-  () => [props.x, props.y, props.bottom, props.placement, props.items.length],
-  () => place()
+  () => [props.x, props.y, props.bottom, props.placement, props.items],
+  () => {
+    subIndex.value = null
+    void nextTick(place)
+  }
 )
 
 onMounted(() => {
   place()
+
+  if (props.autofocus) enabledButtons(menuRef.value)[0]?.focus()
 
   window.addEventListener('mousedown', onPointerDown, true)
   window.addEventListener('keydown', onKeyDown, true)
@@ -219,7 +360,8 @@ onUnmounted(() => {
   transition: background-color var(--transition-fast);
 }
 
-.editor-context-menu__item:hover:not(:disabled) {
+.editor-context-menu__item:hover:not(:disabled),
+.editor-context-menu__item.is-open {
   background-color: var(--app-hover);
 }
 
@@ -238,10 +380,23 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
+/* keeps labels aligned when some items of the menu have icons */
+.editor-context-menu__icon-gap {
+  flex-shrink: 0;
+  width: 16px;
+}
+
 .editor-context-menu__label {
+  flex: 1;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.editor-context-menu__chevron {
+  flex-shrink: 0;
+  margin-right: -0.25rem;
+  color: var(--app-text-faint);
 }
 
 .editor-context-menu__separator {

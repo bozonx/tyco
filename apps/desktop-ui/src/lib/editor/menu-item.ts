@@ -8,7 +8,9 @@ export interface EditorMenuItem {
   separatorBefore?: boolean
   /** Подсветить как основной вариант (например, вариант исправления слова) */
   accent?: boolean
-  action: () => void | Promise<void>
+  /** Nested items: the item opens a submenu instead of running an action */
+  children?: EditorMenuItem[]
+  action?: () => void | Promise<void>
 }
 
 /**

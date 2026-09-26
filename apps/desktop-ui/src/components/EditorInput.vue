@@ -1,14 +1,23 @@
 <template>
   <div ref="hostRef" class="main-input" />
 
+  <EditorBubbleToolbar
+    v-if="menu?.kind === 'bubble'"
+    :x="menu.x"
+    :y="menu.y"
+    :bottom="menu.bottom"
+    :items="menu.items"
+    @close="closeMenu()"
+    @open-group="openGroupDropdown"
+  />
   <EditorContextMenu
-    v-if="menu"
+    v-else-if="menu"
     :x="menu.x"
     :y="menu.y"
     :bottom="menu.bottom"
     :items="menu.items"
     :placement="menu.placement"
-    :keyboardNav="menu.kind !== 'bubble'"
+    :autofocus="menu.autofocus"
     @close="closeMenu"
   />
 </template>
@@ -38,7 +47,17 @@ import {
   selectAll,
   setPlaceholder,
 } from '../lib/editor/editor-sync'
+import type {
+  EditorMenuCommands,
+  EditorMenuGroups,
+} from '../lib/editor/menu-builder'
+import {
+  actionIcon,
+  buildBubbleToolbar,
+  buildContextMenu,
+} from '../lib/editor/menu-builder'
 import type { EditorMenuItem, MenuPlacement } from '../lib/editor/menu-item'
+import type { Rect } from '../lib/editor/menu-placement'
 import type { PasteAskRequest } from '../lib/editor/paste'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
@@ -71,6 +90,8 @@ interface OpenMenu {
   bottom: number
   placement: MenuPlacement
   items: EditorMenuItem[]
+  /** Focus the first item, for menus opened by a click rather than the mouse */
+  autofocus?: boolean
 }
 
 const menu = ref<OpenMenu | null>(null)
@@ -107,39 +128,42 @@ const withClipboard = async (run: () => Promise<void>): Promise<void> => {
   }
 }
 
-const clipboardItems = (request: ContextMenuRequest): EditorMenuItem[] => {
-  const selected = Boolean(request.selectedText)
+const commands: EditorMenuCommands = {
+  cut: () => withClipboard(() => cutSelection(view!)),
+  copy: () => withClipboard(() => copySelection(view!)),
+  paste: () => withClipboard(() => pasteFromClipboard(view!, pasteMode.value)),
+  pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
+  selectAll: () => {
+    if (!view) return
 
-  return [
-    {
-      id: 'cut',
-      label: t('editor.menu.cut'),
-      icon: 'mdi:content-cut',
-      disabled: !selected,
-      separatorBefore: true,
-      action: () => withClipboard(() => cutSelection(view!)),
-    },
-    {
-      id: 'copy',
-      label: t('editor.menu.copy'),
-      icon: 'mdi:content-copy',
-      disabled: !selected,
-      action: () => withClipboard(() => copySelection(view!)),
-    },
-    {
-      id: 'paste',
-      label: t('editor.menu.paste'),
-      icon: 'mdi:content-paste',
-      action: () =>
-        withClipboard(() => pasteFromClipboard(view!, pasteMode.value)),
-    },
-    {
-      id: 'paste-plain',
-      label: t('editor.menu.pasteAsText'),
-      action: () => withClipboard(() => pastePlainFromClipboard(view!)),
-    },
-  ]
+    selectAll(view)
+    view.focus()
+  },
 }
+
+const editItems = (items: EditItem[], group: string): EditorMenuItem[] =>
+  items.map((item, index) => ({
+    id: `${group}-${item.id || item.labelKey || item.name || index}`,
+    label: getLabel(item),
+    icon: item.icon,
+    action: () => doEdit(item.action),
+  }))
+
+/** Transforms and actions — the same ones as the buttons around the editor */
+const menuGroups = (): EditorMenuGroups => ({
+  caseItems: editItems(editMenuStore.getCaseItems(), 'case'),
+  formatItems: editItems(editMenuStore.getFormatItems(), 'format'),
+  otherEditItems: editItems(editMenuStore.getOtherEditItems(), 'edit'),
+  actionItems: actionMenuStore
+    .getActionsMenu()
+    .map((item: ActionItem, index: number) => ({
+      id: item.id || item.labelKey || item.name || `action-${index}`,
+      label: getLabel(item),
+      icon: actionIcon(item.id, item.icon),
+      disabled: item.disabled,
+      action: () => doAction(item),
+    })),
+})
 
 /**
  * Варианты исправления слова. Спеллчекер появится этапом позже
@@ -156,31 +180,52 @@ const openContextMenu = (request: ContextMenuRequest): void => {
     y: request.y,
     bottom: request.bottom,
     placement: 'point',
-    items: [...spellcheckItems(request), ...clipboardItems(request)],
+    items: buildContextMenu({
+      t,
+      commands,
+      groups: menuGroups(),
+      selected: Boolean(request.selectedText),
+      suggestions: spellcheckItems(request),
+    }),
   }
 }
 
-/** Пункты bubble-меню — те же действия, что и в кнопках под редактором */
-const bubbleItems = (): EditorMenuItem[] => [
-  ...editMenuStore
-    .getEditMenu()
-    .map((item: EditItem, index: number) => ({
-      id: `edit-${item.labelKey || item.name || index}`,
-      label: getLabel(item),
-      icon: item.icon,
-      action: () => doEdit(item.action),
-    })),
-  ...actionMenuStore
-    .getActionsMenu()
-    .map((item: ActionItem, index: number) => ({
-      id: `action-${item.labelKey || item.name || index}`,
-      label: getLabel(item),
-      icon: item.icon,
-      disabled: item.disabled,
-      separatorBefore: index === 0,
-      action: () => doAction(item),
-    })),
-]
+/** The full context menu, opened from the "more" button of the toolbar */
+const openFullMenu = (): void => {
+  const current = menu.value
+
+  if (!view || !current) return
+
+  menu.value = {
+    kind: 'context',
+    x: current.x,
+    y: current.y,
+    bottom: current.bottom,
+    placement: 'below',
+    autofocus: true,
+    items: buildContextMenu({
+      t,
+      commands,
+      groups: menuGroups(),
+      selected: !view.state.selection.main.empty,
+    }),
+  }
+}
+
+/** A toolbar button with nested items opens them as a dropdown under itself */
+const openGroupDropdown = (item: EditorMenuItem, anchor: Rect): void => {
+  if (!item.children) return
+
+  menu.value = {
+    kind: 'context',
+    x: anchor.left,
+    y: anchor.top,
+    bottom: anchor.bottom,
+    placement: 'below',
+    autofocus: true,
+    items: item.children,
+  }
+}
 
 const updateBubbleMenu = (request: BubbleMenuRequest | null): void => {
   if (!request) {
@@ -200,7 +245,12 @@ const updateBubbleMenu = (request: BubbleMenuRequest | null): void => {
     bottom: request.bottom,
     // never cover the selection the menu belongs to
     placement: 'above',
-    items: bubbleItems(),
+    items: buildBubbleToolbar({
+      t,
+      commands,
+      groups: menuGroups(),
+      openFullMenu,
+    }),
   }
 }
 

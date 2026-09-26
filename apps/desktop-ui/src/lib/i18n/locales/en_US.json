@@ -335,6 +335,9 @@
       "paste": "Paste",
       "pasteAsText": "Paste as plain text",
       "pasteFormatted": "Paste with formatting",
+      "selectAll": "Select all",
+      "actions": "Actions",
+      "more": "More",
       "clipboardUnavailable": "Clipboard is not available",
       "addToDictionary": "Add to dictionary",
       "ignoreWord": "Ignore"
@@ -468,7 +471,7 @@
     "russianStress": { "label": "Russian stress" }
   },
   "edit": {
-    "beautifyMd": "Beautify MD",
+    "beautifyMd": "Beautify Markdown",
     "formatCode": "Format JS/JSON/CSS/HTML/XML",
     "normalize": "Normalize",
     "uppercase": "UPPERCASE",

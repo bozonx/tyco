@@ -338,6 +338,9 @@
       "paste": "Yapıştır",
       "pasteAsText": "Düz metin olarak yapıştır",
       "pasteFormatted": "Biçimlendirmeyle yapıştır",
+      "selectAll": "Tümünü seç",
+      "actions": "Eylemler",
+      "more": "Daha fazla",
       "clipboardUnavailable": "Panoya erişilemiyor",
       "addToDictionary": "Sözlüğe ekle",
       "ignoreWord": "Yoksay"

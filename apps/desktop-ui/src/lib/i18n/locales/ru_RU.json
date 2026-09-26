@@ -338,6 +338,9 @@
       "paste": "Вставить",
       "pasteAsText": "Вставить как текст",
       "pasteFormatted": "Вставить с форматированием",
+      "selectAll": "Выделить всё",
+      "actions": "Действия",
+      "more": "Ещё",
       "clipboardUnavailable": "Нет доступа к буферу обмена",
       "addToDictionary": "Добавить в словарь",
       "ignoreWord": "Пропустить"
@@ -474,7 +477,7 @@
     "russianStress": { "label": "Русское ударение" }
   },
   "edit": {
-    "beautifyMd": "Beautyfy MD",
+    "beautifyMd": "Оформить Markdown",
     "formatCode": "Формат JS/JSON/CSS/HTML/XML",
     "normalize": "Нормализовать",
     "uppercase": "UPPERCASE",

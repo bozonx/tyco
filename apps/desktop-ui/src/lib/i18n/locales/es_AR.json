@@ -338,6 +338,9 @@
       "paste": "Pegar",
       "pasteAsText": "Pegar como texto plano",
       "pasteFormatted": "Pegar con formato",
+      "selectAll": "Seleccionar todo",
+      "actions": "Acciones",
+      "more": "Más",
       "clipboardUnavailable": "No hay acceso al portapapeles",
       "addToDictionary": "Agregar al diccionario",
       "ignoreWord": "Omitir"

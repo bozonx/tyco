@@ -111,10 +111,11 @@
   --app-overlay-backdrop: blur(6px);
 
   --app-diff-added-decoration: none;
+  /* Translucent, so it stands out on whatever surface the editor sits on */
   --editor-selection-bg: color-mix(
     in oklab,
-    var(--color-primary) 20%,
-    var(--color-base-100)
+    var(--color-primary) 30%,
+    transparent
   );
 }
 
@@ -157,8 +158,8 @@
   --app-shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.6);
   --editor-selection-bg: color-mix(
     in oklab,
-    var(--color-primary) 32%,
-    var(--color-base-100)
+    var(--color-primary) 50%,
+    transparent
   );
 
   /* Editor syntax highlighting */

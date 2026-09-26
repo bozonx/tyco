@@ -1,0 +1,197 @@
+import { describe, expect, it, vi } from 'vitest'
+
+import type { EditorMenuCommands, EditorMenuGroups } from './menu-builder'
+import {
+  actionIcon,
+  ACTIONS_ICON,
+  buildBubbleToolbar,
+  buildContextMenu,
+} from './menu-builder'
+import type { EditorMenuItem } from './menu-item'
+
+const t = (key: string): string => key
+
+const commands = (): EditorMenuCommands => ({
+  cut: vi.fn(),
+  copy: vi.fn(),
+  paste: vi.fn(),
+  pastePlain: vi.fn(),
+  selectAll: vi.fn(),
+})
+
+const item = (id: string, extra: Partial<EditorMenuItem> = {}) => ({
+  id,
+  label: id,
+  action: vi.fn(),
+  ...extra,
+})
+
+const groups = (
+  overrides: Partial<EditorMenuGroups> = {}
+): EditorMenuGroups => ({
+  caseItems: [item('upper'), item('lower')],
+  formatItems: [item('md'), item('code')],
+  otherEditItems: [],
+  actionItems: [
+    item('translation'),
+    item('correction'),
+    item('aiTask'),
+    item('askInChat'),
+  ],
+  ...overrides,
+})
+
+const ids = (items: EditorMenuItem[]) => items.map((entry) => entry.id)
+
+describe('buildContextMenu', () => {
+  it('lists clipboard commands, then transforms folded into submenus', () => {
+    const menu = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups(),
+      selected: true,
+    })
+
+    expect(ids(menu)).toEqual([
+      'cut',
+      'copy',
+      'paste',
+      'paste-plain',
+      'select-all',
+      'actions',
+      'case',
+      'format',
+    ])
+    expect(ids(menu[5].children!)).toEqual([
+      'translation',
+      'correction',
+      'aiTask',
+      'askInChat',
+    ])
+    expect(ids(menu[6].children!)).toEqual(['upper', 'lower'])
+    expect(menu[5].separatorBefore).toBe(true)
+  })
+
+  it('disables cut and copy without a selection', () => {
+    const menu = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups(),
+      selected: false,
+    })
+
+    expect(menu.find((entry) => entry.id === 'cut')?.disabled).toBe(true)
+    expect(menu.find((entry) => entry.id === 'copy')?.disabled).toBe(true)
+    expect(menu.find((entry) => entry.id === 'paste')?.disabled).toBeFalsy()
+  })
+
+  it('puts spelling suggestions on top, separated from the clipboard', () => {
+    const menu = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups(),
+      selected: false,
+      suggestions: [item('fix', { accent: true })],
+    })
+
+    expect(menu[0].id).toBe('fix')
+    expect(menu[1]).toMatchObject({ id: 'cut', separatorBefore: true })
+  })
+
+  it('drops empty submenus', () => {
+    const menu = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups({ actionItems: [], formatItems: [] }),
+      selected: false,
+    })
+
+    expect(ids(menu)).not.toContain('actions')
+    expect(ids(menu)).not.toContain('format')
+    expect(ids(menu)).toContain('case')
+  })
+
+  it('appends plugin edit items to the format submenu after a separator', () => {
+    const menu = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups({ otherEditItems: [item('plugin')] }),
+      selected: false,
+    })
+    const format = menu.find((entry) => entry.id === 'format')!
+
+    expect(ids(format.children!)).toEqual(['md', 'code', 'plugin'])
+    expect(format.children![2].separatorBefore).toBe(true)
+  })
+})
+
+describe('buildBubbleToolbar', () => {
+  it('shows clipboard, transform dropdowns, the first actions and more', () => {
+    const toolbar = buildBubbleToolbar({
+      t,
+      commands: commands(),
+      groups: groups(),
+      openFullMenu: vi.fn(),
+    })
+
+    expect(ids(toolbar)).toEqual([
+      'copy',
+      'cut',
+      'case',
+      'format',
+      'translation',
+      'correction',
+      'aiTask',
+      'more',
+    ])
+    expect(toolbar.every((entry) => entry.icon)).toBe(true)
+  })
+
+  it('skips disabled actions and respects the limit', () => {
+    const toolbar = buildBubbleToolbar({
+      t,
+      commands: commands(),
+      groups: groups({
+        actionItems: [
+          item('translation', { disabled: true }),
+          item('correction'),
+          item('aiTask'),
+        ],
+      }),
+      openFullMenu: vi.fn(),
+      maxActions: 1,
+    })
+
+    expect(ids(toolbar)).toEqual([
+      'copy',
+      'cut',
+      'case',
+      'format',
+      'correction',
+      'more',
+    ])
+  })
+
+  it('opens the full menu from the more button', async () => {
+    const openFullMenu = vi.fn()
+    const toolbar = buildBubbleToolbar({
+      t,
+      commands: commands(),
+      groups: groups(),
+      openFullMenu,
+    })
+
+    await toolbar.at(-1)!.action!()
+
+    expect(openFullMenu).toHaveBeenCalledOnce()
+  })
+})
+
+describe('actionIcon', () => {
+  it('prefers the own icon, then the standard one, then the fallback', () => {
+    expect(actionIcon('translation', 'mdi:star')).toBe('mdi:star')
+    expect(actionIcon('translation')).toBe('mdi:translate')
+    expect(actionIcon('plugin-x')).toBe(ACTIONS_ICON)
+    expect(actionIcon()).toBe(ACTIONS_ICON)
+  })
+})
