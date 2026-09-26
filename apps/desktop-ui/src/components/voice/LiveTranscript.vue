@@ -2,7 +2,9 @@
   <div ref="container" class="live-transcript selectable">
     <Transition name="fade" mode="out-in">
       <div v-if="!hasContent" class="live-transcript-placeholder">
-        <span class="placeholder-text">{{ placeholder || t('menu.speakNow') }}</span>
+        <span class="placeholder-text">{{
+          placeholder || t('menu.speakNow')
+        }}</span>
         <span class="placeholder-cursor" aria-hidden="true" />
       </div>
       <div v-else class="live-transcript-content">

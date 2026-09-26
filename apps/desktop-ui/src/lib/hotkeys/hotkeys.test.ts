@@ -35,4 +35,27 @@ describe('hotkeys', () => {
       })
     ).toBe('Ctrl+Alt+E')
   })
+
+  it('records the physical key regardless of the keyboard layout', () => {
+    expect(
+      hotkeyFromKeyboardEvent({
+        key: 'п',
+        code: 'KeyG',
+        ctrlKey: true,
+        altKey: true,
+        shiftKey: false,
+        metaKey: false,
+      })
+    ).toBe('Ctrl+Alt+G')
+    expect(
+      hotkeyFromKeyboardEvent({
+        key: '!',
+        code: 'Digit1',
+        ctrlKey: true,
+        altKey: false,
+        shiftKey: true,
+        metaKey: false,
+      })
+    ).toBe('Ctrl+Shift+1')
+  })
 })

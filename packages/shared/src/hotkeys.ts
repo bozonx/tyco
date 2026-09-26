@@ -55,8 +55,38 @@ export function normalizeHotkey(value: string): string | null {
   ].join('+')
 }
 
+const CODE_KEYS: Record<string, string> = {
+  Space: 'Space',
+  Comma: 'Comma',
+  Period: 'Period',
+  Minus: 'Minus',
+  Equal: 'Equal',
+  Slash: 'Slash',
+  Backslash: 'Backslash',
+  Semicolon: 'Semicolon',
+  Quote: 'Quote',
+  BracketLeft: 'BracketLeft',
+  BracketRight: 'BracketRight',
+  Backquote: 'Backquote',
+}
+
+/**
+ * Resolves the physical key, so that a shortcut recorded under a non-Latin
+ * layout (or with Shift held) matches what the global shortcut providers bind.
+ */
+function keyFromCode(code: string | undefined): string | null {
+  if (!code) return null
+  const letter = /^Key([A-Z])$/.exec(code)
+  if (letter) return letter[1]
+  const digit = /^(?:Digit|Numpad)([0-9])$/.exec(code)
+  if (digit) return digit[1]
+  if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) return code
+  return CODE_KEYS[code] ?? null
+}
+
 export function hotkeyFromKeyboardEvent(event: {
   key: string
+  code?: string
   ctrlKey: boolean
   altKey: boolean
   shiftKey: boolean
@@ -70,7 +100,7 @@ export function hotkeyFromKeyboardEvent(event: {
       event.altKey && 'Alt',
       event.shiftKey && 'Shift',
       event.metaKey && 'Super',
-      event.key,
+      keyFromCode(event.code) ?? event.key,
     ]
       .filter(Boolean)
       .join('+')
