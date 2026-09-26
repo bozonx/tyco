@@ -9,9 +9,13 @@ import {
 import type { SttClient } from './stt-client'
 import type { VoiceCaptureControl } from './voice-capture'
 
+/** How long the provider may take for its last words once the audio ends */
+const FINISH_TIMEOUT_MS = 10_000
+
 export interface LiveDictationDeps {
   capture: VoiceCaptureControl
   stt: SttClient
+  finishTimeoutMs?: number
 }
 
 export interface LiveDictationStart {
@@ -87,7 +91,16 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
 
     async finish() {
       await deps.capture.stop()
-      await session
+      // a provider that never closes must not hold the text hostage
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const timedOut = new Promise<void>((resolve) => {
+        timer = setTimeout(() => {
+          controller?.abort()
+          resolve()
+        }, deps.finishTimeoutMs ?? FINISH_TIMEOUT_MS)
+      })
+      await Promise.race([session, timedOut])
+      clearTimeout(timer)
       if (failure && !liveTranscriptText(state)) throw failure
       return liveTranscriptText(state)
     },

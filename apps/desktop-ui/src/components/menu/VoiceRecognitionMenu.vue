@@ -6,7 +6,6 @@
         :level="audioLevel"
         :peak="audioPeak"
         :duration-ms="recordingDurationMs"
-        :is-live="isStarted"
         :is-transcribing="isTranscribing"
         :compact="hasText"
       />

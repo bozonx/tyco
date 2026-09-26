@@ -14,7 +14,7 @@ const model = {
 }
 
 /** A microphone whose audio ends when stopped, and a provider driven by hand */
-function setup() {
+function setup(finishTimeoutMs?: number) {
   const audio = createAsyncQueue<AudioChunk>()
   const parts = createAsyncQueue<TranscriptPart>()
   const requests: SttLiveRequest[] = []
@@ -30,7 +30,7 @@ function setup() {
   }
   const texts: LiveTranscriptState[] = []
   const onError = vi.fn()
-  const dictation = createLiveDictation({ capture, stt })
+  const dictation = createLiveDictation({ capture, stt, finishTimeoutMs })
   const start = () =>
     dictation.start({
       model,
@@ -97,6 +97,20 @@ describe('createLiveDictation', () => {
     await tick()
 
     await expect(t.dictation.finish()).rejects.toThrow('Invalid credentials')
+  })
+
+  it('keeps the text when the provider never sends its last words', async () => {
+    const t = setup(20)
+    await t.start()
+
+    t.parts.push({
+      type: 'final',
+      segment: { index: 0, startMs: 0, endMs: 900, text: 'Kept.' },
+    })
+    await tick()
+
+    expect(await t.dictation.finish()).toBe('Kept.')
+    expect(t.requests[0].signal?.aborted).toBe(true)
   })
 
   it('cancels quietly', async () => {

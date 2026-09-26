@@ -184,6 +184,11 @@ export interface SttModel {
   provider: SttProvider
   description?: string
   formatWithLlm?: boolean
+  /**
+   * `auto` (the default) follows the user language, `multi` lets the
+   * multilingual model guess; anything else is a locale such as `de_DE`
+   */
+  language?: string
 }
 
 /** Dictation is live only, and Deepgram is the provider that serves it */
@@ -258,13 +263,7 @@ export interface UserConfig {
   chatHistoryMaxItems: number
   llm: LlmConfig
   sttModels: SttModel[]
-  ttsModels: {
-    id: string
-    model: string
-    description?: string
-    baseUrl?: string
-  }[]
-  aiModelUsage: { stt: string; tts: string }
+  aiModelUsage: { stt: string }
   aiRules: {
     base: string
     translate: string
@@ -324,10 +323,10 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       provider: 'deepgram',
       description: 'Deepgram speech recognition',
       formatWithLlm: true,
+      language: 'auto',
     },
   ],
-  ttsModels: [],
-  aiModelUsage: { stt: 'deepgram-stt', tts: '' },
+  aiModelUsage: { stt: 'deepgram-stt' },
   aiRules: {
     base: BASE_TASK,
     translate: TRANSLATION_TASK,

@@ -15,10 +15,11 @@ const TRANSCRIPTION_TASK = 'transcription'
 /** Covers opening the provider socket only; the session itself has no limit */
 const CONNECT_TIMEOUT_MS = 20_000
 /**
- * Deepgram's multilingual model: a live session cannot detect the language,
- * this one follows whatever is spoken, switching mid-sentence included.
+ * Deepgram's multilingual model. Named explicitly: a live session cannot detect
+ * the language, and the kit's batch fallback (`detect_language`) is ignored
+ * there, leaving English.
  */
-export const AUTO_LIVE_LANGUAGE = 'multi'
+const MULTILINGUAL_LANGUAGE = 'multi'
 
 export interface SttClientDeps {
   transport: Transport
@@ -30,7 +31,7 @@ export interface SttLiveRequest {
   /** PCM16 mono, ending when the dictation does */
   audio: AsyncIterable<AudioChunk>
   sampleRate: number
-  /** Omitted: any language the multilingual model knows */
+  /** Omitted: the provider's multilingual model follows the speech */
   language?: string
   hasApiKey?: boolean
   signal?: AbortSignal
@@ -106,7 +107,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
           requestedModel: request.model.id,
         },
         options: {
-          language: request.language ?? AUTO_LIVE_LANGUAGE,
+          language: request.language ?? MULTILINGUAL_LANGUAGE,
           punctuation: true,
         },
         ...(request.hasApiKey

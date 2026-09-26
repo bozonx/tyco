@@ -3,8 +3,9 @@ import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite'
 
+import { resolveLocalAiKit } from './build/local-ai-kit.ts'
 import { offlineIconsPlugin } from './build/offline-icons-plugin.ts'
 
 const rootDir = import.meta.dirname
@@ -15,15 +16,29 @@ const webviewTarget =
   process.env.TAURI_ENV_PLATFORM === 'darwin' ? 'safari13' : 'chrome105'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const envDir = resolve(rootDir, '../..')
   const env = loadEnv(mode, envDir, '')
   const port = parseInt(env.PORT || '3000')
   const isDebugBuild = Boolean(process.env.TAURI_ENV_DEBUG)
+  // dev server and tests only: a bundle always ships the published kit
+  const localAiKit =
+    command === 'serve'
+      ? resolveLocalAiKit(env.TYCO_LOCAL_AI_KIT, envDir)
+      : undefined
+  if (localAiKit) {
+    // eslint-disable-next-line no-console
+    console.info(`Using @bozonx/ai-kit sources from ${localAiKit.dir}`)
+  }
 
   return {
     plugins: [vue(), tailwindcss(), Components({}), offlineIconsPlugin(srcDir)],
-    resolve: { alias: { '@': srcDir } },
+    resolve: {
+      alias: [
+        { find: '@', replacement: srcDir },
+        ...(localAiKit?.aliases ?? []),
+      ],
+    },
     base: './',
     // Keep the Tauri CLI output readable.
     clearScreen: false,
@@ -37,6 +52,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: isDebugBuild,
       rollupOptions: { input: { main: resolve(rootDir, 'index.html') } },
     },
-    server: { port, strictPort: true, watch: { ignored: ['**/src-tauri/**'] } },
+    server: {
+      port,
+      strictPort: true,
+      watch: { ignored: ['**/src-tauri/**'] },
+      ...(localAiKit
+        ? { fs: { allow: [searchForWorkspaceRoot(rootDir), localAiKit.dir] } }
+        : {}),
+    },
   }
 })

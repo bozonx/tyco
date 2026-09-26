@@ -152,7 +152,6 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         let raw = fs::read_to_string(&path)?;
         let mut value = serde_yaml::from_str(&raw)?;
 
-        // the LLM migration runs first: it moves legacy STT keys to the store
         if normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
             | llm_config::migrate_user_config(app, &mut value)
@@ -201,7 +200,6 @@ fn normalize_stt_config(user_config: &mut Value) -> bool {
         model.extend(existing.clone());
     }
     model.insert(String::from("id"), default_id.clone());
-    model.remove("baseUrl");
     let models = json!([model]);
 
     let mut usage = config
@@ -210,7 +208,6 @@ fn normalize_stt_config(user_config: &mut Value) -> bool {
         .cloned()
         .unwrap_or_default();
     usage.insert(String::from("stt"), default_id);
-    usage.entry("tts").or_insert_with(|| json!(""));
     let usage = Value::Object(usage);
 
     if config.get("sttModels") == Some(&models) && config.get("aiModelUsage") == Some(&usage) {
@@ -847,7 +844,7 @@ mod tests {
                     "formatWithLlm": false
                 }
             ],
-            "aiModelUsage": { "stt": "assemblyai-stt", "tts": "voice" }
+            "aiModelUsage": { "stt": "assemblyai-stt" }
         });
 
         assert!(normalize_stt_config(&mut config));
@@ -858,13 +855,11 @@ mod tests {
                 "provider": "deepgram",
                 "model": "nova-3-general",
                 "description": "Deepgram speech recognition",
-                "formatWithLlm": false
+                "formatWithLlm": false,
+                "language": "auto"
             }])
         );
-        assert_eq!(
-            config["aiModelUsage"],
-            json!({ "stt": "deepgram-stt", "tts": "voice" })
-        );
+        assert_eq!(config["aiModelUsage"], json!({ "stt": "deepgram-stt" }));
         assert!(!normalize_stt_config(&mut config));
     }
 

@@ -28,14 +28,6 @@
         </div>
         <div class="waveform-timer">{{ formattedDuration }}</div>
       </div>
-
-      <!-- Sensitivity level bar -->
-      <div class="volume-meter-wrapper">
-        <div
-          class="volume-meter-fill"
-          :style="{ width: `${Math.min(100, Math.round(props.level * 100))}%` }"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -57,18 +49,10 @@ const props = withDefaults(
     level?: number
     peak?: number
     durationMs?: number
-    isLive?: boolean
     isTranscribing?: boolean
     compact?: boolean
   }>(),
-  {
-    level: 0,
-    peak: 0,
-    durationMs: 0,
-    isLive: true,
-    isTranscribing: false,
-    compact: false,
-  }
+  { level: 0, peak: 0, durationMs: 0, isTranscribing: false, compact: false }
 )
 
 const { t } = useI18n()
@@ -191,6 +175,7 @@ onUnmounted(() => {
 
 .audio-waveform-container.compact {
   flex: 0 0 auto;
+  height: auto;
   min-height: 0;
   padding: var(--space-sm) var(--space-lg) 0;
 }
@@ -282,24 +267,5 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono, monospace);
   color: var(--app-text-faint);
-}
-
-.volume-meter-wrapper {
-  width: 100%;
-  height: 3px;
-  background-color: var(--app-border-subtle);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.volume-meter-fill {
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--color-primary) 0%,
-    color-mix(in oklab, var(--color-primary) 70%, var(--color-success)) 100%
-  );
-  border-radius: 999px;
-  transition: width 0.08s ease-out;
 }
 </style>

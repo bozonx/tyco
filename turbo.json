@@ -5,19 +5,28 @@
     "tsconfig.base.json",
     "eslint.config.js",
     ".prettierrc.yml",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    ".env"
   ],
   "tasks": {
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**"] },
     "lint": { "dependsOn": ["^build"], "outputs": [] },
     "type-check": { "dependsOn": ["^build"], "outputs": [] },
-    "test": { "dependsOn": ["^build"], "outputs": [], "env": ["CI"] },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "env": ["CI", "TYCO_LOCAL_AI_KIT"]
+    },
     "test:cov": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["CI"]
+      "env": ["CI", "TYCO_LOCAL_AI_KIT"]
     },
     "lint:fix": { "cache": false },
-    "dev": { "cache": false, "persistent": true, "env": ["NODE_ENV", "PORT"] }
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": ["NODE_ENV", "PORT", "TYCO_LOCAL_AI_KIT"]
+    }
   }
 }

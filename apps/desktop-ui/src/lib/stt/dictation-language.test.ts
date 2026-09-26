@@ -1,21 +1,31 @@
 import { describe, expect, it } from 'vitest'
 
-import { liveLanguageFor } from './live-language'
+import {
+  DICTATION_LANGUAGE_MULTI,
+  DICTATION_LANGUAGE_USER,
+  dictationLanguageFor,
+} from './dictation-language'
 
-describe('liveLanguageFor', () => {
-  it('leaves languages of the multilingual model to it', () => {
-    expect(liveLanguageFor('ru_RU')).toBeUndefined()
-    expect(liveLanguageFor('en-GB')).toBeUndefined()
-    expect(liveLanguageFor('pt_BR')).toBeUndefined()
+describe('dictationLanguageFor', () => {
+  it('names the user language by default', () => {
+    expect(dictationLanguageFor(undefined, 'ru_RU')).toBe('ru')
+    expect(dictationLanguageFor('', 'en-GB')).toBe('en')
+    expect(dictationLanguageFor(DICTATION_LANGUAGE_USER, 'tr_TR')).toBe('tr')
   })
 
-  it('names a language the multilingual model does not cover', () => {
-    expect(liveLanguageFor('tr_TR')).toBe('tr')
-    expect(liveLanguageFor('uk')).toBe('uk')
+  it('uses the language chosen for dictation', () => {
+    expect(dictationLanguageFor('de_DE', 'ru_RU')).toBe('de')
+    expect(dictationLanguageFor('zh_TW', 'ru_RU')).toBe('zh-TW')
   })
 
-  it('falls back to the multilingual model without a locale', () => {
-    expect(liveLanguageFor(undefined)).toBeUndefined()
-    expect(liveLanguageFor('')).toBeUndefined()
+  it('leaves the multilingual model to follow the speech', () => {
+    expect(dictationLanguageFor(DICTATION_LANGUAGE_MULTI, 'ru_RU')).toBe(
+      undefined
+    )
+  })
+
+  it('falls back to the multilingual model without any locale', () => {
+    expect(dictationLanguageFor(undefined, undefined)).toBeUndefined()
+    expect(dictationLanguageFor(undefined, ' ')).toBeUndefined()
   })
 })

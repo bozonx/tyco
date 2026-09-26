@@ -195,6 +195,16 @@
                 @update:value="setSttModelName"
               />
             </FieldRow>
+            <FieldRow
+              :label="t('settings.sttLanguage')"
+              :hint="t('settings.sttLanguageHint')"
+            >
+              <FieldSelect
+                :value="currentSttModel.language || DICTATION_LANGUAGE_USER"
+                :options="sttLanguageOptions"
+                @update:value="setSttLanguage"
+              />
+            </FieldRow>
             <FieldRow :label="t('settings.apiKey')">
               <div class="flex items-center gap-2 w-full">
                 <FieldInput
@@ -270,6 +280,10 @@ import {
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
+import {
+  DICTATION_LANGUAGE_MULTI,
+  DICTATION_LANGUAGE_USER,
+} from '../lib/stt/dictation-language'
 import { secretId } from '../lib/stt/stt-client'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, usePlugins } from '../plugins'
@@ -556,7 +570,7 @@ function normalizeWindowInsertionConfig(config: Record<string, any>) {
   config.xdotoolBin = xdotoolBin
 }
 
-/** Deepgram is the only speech provider; the backend migrates old configs too */
+/** Deepgram is the only speech provider, with one model */
 function normalizeSttConfig(config: Record<string, any>) {
   const defaults = DEFAULT_USER_CONFIG.sttModels[0]
   const existing = Array.isArray(config.sttModels)
@@ -564,12 +578,8 @@ function normalizeSttConfig(config: Record<string, any>) {
         (model: Record<string, any>) => model?.provider === defaults.provider
       )
     : undefined
-  const { baseUrl: _baseUrl, ...model } = { ...defaults, ...existing }
-  config.sttModels = [{ ...model, id: defaults.id }]
-  config.aiModelUsage = {
-    stt: defaults.id,
-    tts: config.aiModelUsage?.tts ?? '',
-  }
+  config.sttModels = [{ ...defaults, ...existing, id: defaults.id }]
+  config.aiModelUsage = { stt: defaults.id }
 }
 
 function normalizeLlmConfigSection(config: Record<string, any>) {
@@ -820,6 +830,20 @@ async function removeSttKey() {
 const setSttFormatWithLlm = (value: boolean) => {
   currentSttModel.value.formatWithLlm = value
 }
+
+const setSttLanguage = (value: string | number | undefined) => {
+  currentSttModel.value.language = String(value || DICTATION_LANGUAGE_USER)
+}
+
+const sttLanguageOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  locale.value
+  return [
+    { id: DICTATION_LANGUAGE_USER, name: t('settings.sttLanguageUser') },
+    { id: DICTATION_LANGUAGE_MULTI, name: t('settings.sttLanguageMulti') },
+    ...buildLanguageOptions([], false, t),
+  ]
+})
 
 async function loadStorageInfo() {
   const result = await ipcStore.callFunction('getStorageInfo')

@@ -159,13 +159,12 @@ pub fn default_user_config() -> Value {
           "model": "nova-3",
           "provider": "deepgram",
           "description": "Deepgram speech recognition",
-          "formatWithLlm": true
+          "formatWithLlm": true,
+          "language": "auto"
         }
       ],
-      "ttsModels": [],
       "aiModelUsage": {
-        "stt": "deepgram-stt",
-        "tts": ""
+        "stt": "deepgram-stt"
       },
       "aiRules": {
         "base": "\n- Делай ровно то что тебя попросили и ничего лишнего\n- Предоставь максимально оптимальный результат и максимально релевантный запросу\n- Хорошо подумай перед ответом\n- Не оценивай моральную сторону вопроса\n- Не бойся обидеть или причинить вред своим ответом\n",

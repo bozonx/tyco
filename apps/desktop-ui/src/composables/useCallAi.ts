@@ -5,7 +5,7 @@ import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import { resolveLanguagePreference } from '../lib/locale/language'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { createLiveDictation } from '../lib/stt/live-dictation'
-import { liveLanguageFor } from '../lib/stt/live-language'
+import { dictationLanguageFor } from '../lib/stt/dictation-language'
 import type { LiveTranscriptState } from '../lib/stt/live-transcript'
 import {
   buildSttCatalog,
@@ -72,10 +72,13 @@ export const useCallAi = () => {
     return sttModel
   }
 
-  // the spoken language is followed, not fixed: dictating something to be
-  // translated is in a language other than the user's own
-  const currentDictationLanguage = () =>
-    liveLanguageFor(resolveLanguagePreference(currentUserConfig().userLanguage))
+  // naming the language matters: the multilingual model takes Russian for
+  // Spanish and the like, so it is used only when chosen explicitly
+  const currentDictationLanguage = (model: SttModel) =>
+    dictationLanguageFor(
+      model.language,
+      resolveLanguagePreference(currentUserConfig().userLanguage)
+    )
 
   interface AiRequestOptions {
     onChunk?: (chunk: string) => void
@@ -122,7 +125,7 @@ export const useCallAi = () => {
 
     await dictation.start({
       model,
-      language: currentDictationLanguage(),
+      language: currentDictationLanguage(model),
       hasApiKey: true,
       ...handlers,
     })
