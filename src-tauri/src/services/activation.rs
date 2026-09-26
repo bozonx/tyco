@@ -79,12 +79,6 @@ pub enum WindowProfile {
 pub const WINDOW_SIZE: (f64, f64) = (800.0, 500.0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ActivationIntent {
-    KeyboardFirst,
-    ContextFirst,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationSource {
     // Reserved for the in-process providers introduced in task 4.
     #[allow(dead_code)]
@@ -97,7 +91,6 @@ pub enum ActivationSource {
 #[derive(Debug)]
 pub struct Activation {
     pub mode: StartMode,
-    pub intent: ActivationIntent,
     pub source: ActivationSource,
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
@@ -107,14 +100,6 @@ impl Activation {
     pub fn new(mode: StartMode, source: ActivationSource) -> Self {
         Self {
             mode,
-            intent: match mode {
-                StartMode::Editor
-                | StartMode::Write
-                | StartMode::Chat
-                | StartMode::History
-                | StartMode::Config => ActivationIntent::KeyboardFirst,
-                _ => ActivationIntent::ContextFirst,
-            },
             source,
             window_id: None,
             selected_text: None,
@@ -146,7 +131,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn modes_round_trip_and_select_intent() {
+    fn modes_round_trip() {
         for value in [
             "editor",
             "write",
@@ -160,14 +145,6 @@ mod tests {
         ] {
             let mode = StartMode::parse(value).unwrap();
             assert_eq!(mode.as_str(), value);
-            assert_eq!(
-                Activation::new(mode, ActivationSource::Dbus).intent,
-                if ["editor", "write", "chat", "history", "config"].contains(&value) {
-                    ActivationIntent::KeyboardFirst
-                } else {
-                    ActivationIntent::ContextFirst
-                }
-            );
         }
         assert!(StartMode::parse("unknown").is_err());
     }

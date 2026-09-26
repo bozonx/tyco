@@ -5,7 +5,7 @@ use tauri::{PhysicalPosition, Position, WebviewWindow};
 use gtk::prelude::*;
 
 use crate::errors::AppError;
-use crate::services::activation::{ActivationIntent, WindowProfile, WINDOW_SIZE};
+use crate::services::activation::{WindowProfile, WINDOW_SIZE};
 
 /// Part of the window, in logical pixels from its top left corner, that takes
 /// pointer input.
@@ -117,7 +117,6 @@ pub fn set_panel_input_region(
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    intent: ActivationIntent,
     enabled: bool,
 ) -> Result<(), AppError> {
     if !enabled {
@@ -145,10 +144,7 @@ pub fn apply_panel_surface(
             crate::services::layer_shell::set_sheet_profile(&gtk_window, margin_top);
         }
     }
-    crate::services::layer_shell::set_keyboard(
-        &gtk_window,
-        intent == ActivationIntent::KeyboardFirst,
-    );
+    crate::services::layer_shell::set_keyboard(&gtk_window, true);
     gtk_window.queue_resize();
     Ok(())
 }
@@ -157,7 +153,6 @@ pub fn apply_panel_surface(
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    intent: ActivationIntent,
     _enabled: bool,
 ) -> Result<(), AppError> {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
@@ -167,11 +162,8 @@ pub fn apply_panel_surface(
     let handle = window.hwnd()?.0 as windows_sys::Win32::Foundation::HWND;
     let mut style = unsafe { GetWindowLongW(handle, GWL_EXSTYLE) } as u32;
     style |= WS_EX_TOPMOST;
-    if intent == ActivationIntent::ContextFirst {
-        style |= WS_EX_NOACTIVATE;
-    } else {
-        style &= !WS_EX_NOACTIVATE;
-    }
+    // the panel takes the keyboard like any other window
+    style &= !WS_EX_NOACTIVATE;
     unsafe { SetWindowLongW(handle, GWL_EXSTYLE, style as i32) };
     position_regular_panel(window, profile)
 }
@@ -180,7 +172,6 @@ pub fn apply_panel_surface(
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    _intent: ActivationIntent,
     _enabled: bool,
 ) -> Result<(), AppError> {
     window.set_always_on_top(true)?;

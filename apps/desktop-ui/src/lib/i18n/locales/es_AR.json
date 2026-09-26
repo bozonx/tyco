@@ -58,7 +58,10 @@
     "actions": "Acciones (Esc)",
     "escSuffix": " (Esc)"
   },
-  "window": { "close": "Cerrar ventana" },
+  "window": {
+    "close": "Cerrar ventana",
+    "clickToFocus": "Hacé clic para continuar"
+  },
   "mode": {
     "write": "Modo escritura",
     "voice": "Modo voz",

@@ -17,6 +17,12 @@ const mocks = vi.hoisted(() => ({
   closeWindow: vi.fn(),
   markDismissed: vi.fn(),
   modals: { currentModal: 'none', pendingModal: null as string | null },
+  windowFocused: true,
+  focusHandlers: [] as ((event: { payload: boolean }) => void)[],
+}))
+
+vi.mock('../../composables/useI18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
 }))
 
 vi.mock('../../stores/ipc', () => ({
@@ -45,9 +51,14 @@ vi.mock('../../stores/quickDismiss', () => ({
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({
     setSize: vi.fn(async () => {}),
-    onFocusChanged: vi.fn(async () => () => {}),
+    onFocusChanged: vi.fn(
+      async (handler: (event: { payload: boolean }) => void) => {
+        mocks.focusHandlers.push(handler)
+        return () => {}
+      }
+    ),
     isVisible: vi.fn(async () => true),
-    isFocused: vi.fn(async () => true),
+    isFocused: vi.fn(async () => mocks.windowFocused),
   }),
 }))
 vi.mock('../../views/WriteModeView.vue', () => ({
@@ -78,6 +89,8 @@ vi.mock('../../views/VoiceView.vue', () => ({
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.clearAllMocks()
+  mocks.windowFocused = true
+  mocks.focusHandlers = []
 })
 
 describe('quick overlay keyboard ownership', () => {
@@ -233,6 +246,62 @@ describe('quick overlay input region', () => {
     } finally {
       wrapper.unmount()
       rectSpy.mockRestore()
+      params.mode = 'write'
+    }
+  })
+})
+
+describe('quick overlay menus', () => {
+  const stubResizeObserver = () =>
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+
+  it('keeps the menus of the other modes when clicking outside the card', async () => {
+    stubResizeObserver()
+    const params = reactive(mocks.params)
+    params.mode = 'aiTasks'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      await wrapper.find('.quick-overlay-root').trigger('pointerdown')
+      expect(mocks.callFunction).not.toHaveBeenCalledWith(
+        'dismissQuickWindow',
+        []
+      )
+    } finally {
+      wrapper.unmount()
+      params.mode = 'write'
+    }
+  })
+
+  it('tells when the window does not take the keys', async () => {
+    stubResizeObserver()
+    vi.useFakeTimers()
+    const params = reactive(mocks.params)
+    params.mode = 'aiTasks'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      await vi.waitFor(() => expect(mocks.focusHandlers).toHaveLength(1))
+      expect(wrapper.find('.quick-focus-hint').exists()).toBe(false)
+      expect(document.documentElement.dataset.windowFocused).toBe('true')
+
+      mocks.focusHandlers[0]!({ payload: false })
+      await vi.advanceTimersByTimeAsync(200)
+      expect(wrapper.find('.quick-focus-hint').exists()).toBe(true)
+      expect(document.documentElement.dataset.windowFocused).toBe('false')
+
+      mocks.focusHandlers[0]!({ payload: true })
+      await nextTick()
+      expect(wrapper.find('.quick-focus-hint').exists()).toBe(false)
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
       params.mode = 'write'
     }
   })

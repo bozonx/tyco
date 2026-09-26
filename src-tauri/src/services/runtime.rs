@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use std::thread;
 
 pub use super::activation::Activation;
-use super::activation::{ActivationIntent, StartMode, WINDOW_SIZE};
+use super::activation::{StartMode, WINDOW_SIZE};
 use super::platform::InputRegion;
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
@@ -172,27 +172,20 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         window.set_decorations(false)?;
         // a region left by the previous session must not hide the new content
         super::platform::set_panel_input_region(&window, None)?;
-        super::platform::apply_panel_surface(
-            &window,
-            activation.mode.profile(),
-            activation.intent,
-            has_layer_shell,
-        )?;
+        super::platform::apply_panel_surface(&window, activation.mode.profile(), has_layer_shell)?;
     } else {
         window.set_decorations(true)?;
         window.set_resizable(true)?;
         window.center()?;
     }
-    window.set_focusable(activation.intent == ActivationIntent::KeyboardFirst)?;
+    window.set_focusable(true)?;
     window.show()?;
     super::activation_metrics::mark_show(app);
     if let Err(error) = window.unminimize() {
         log::warn!("Could not unminimize window: {error}");
     }
-    if activation.intent == ActivationIntent::KeyboardFirst {
-        if let Err(error) = window.set_focus() {
-            log::warn!("Could not focus window: {error}");
-        }
+    if let Err(error) = window.set_focus() {
+        log::warn!("Could not focus window: {error}");
     }
 
     state.update_params(|params| {

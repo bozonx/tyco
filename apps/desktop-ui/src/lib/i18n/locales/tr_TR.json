@@ -58,7 +58,10 @@
     "actions": "Eylemler (Esc)",
     "escSuffix": " (Esc)"
   },
-  "window": { "close": "Pencereyi kapat" },
+  "window": {
+    "close": "Pencereyi kapat",
+    "clickToFocus": "Devam etmek için tıklayın"
+  },
   "mode": {
     "write": "Yazma modu",
     "voice": "Ses modu",

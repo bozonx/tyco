@@ -4,6 +4,15 @@
     :class="[isSheet ? 'is-sheet' : 'is-panel', { 'has-modal': hasModal }]"
     @pointerdown="handleRootPointerDown"
   >
+    <!-- without decorations nothing else tells that the keys go elsewhere -->
+    <div
+      v-if="showFocusHint"
+      class="quick-focus-hint"
+      role="status"
+      aria-live="polite"
+    >
+      {{ t('window.clickToFocus') }}
+    </div>
     <div ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'write'" class="quick-mode-layer">
         <WriteModeView />
@@ -36,6 +45,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useI18n } from '../../composables/useI18n'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
   type InputRect,
@@ -43,6 +53,7 @@ import {
   inputRegion,
   unionRect,
 } from '../../lib/quick-panel/input-region'
+import { createWindowFocus } from '../../lib/quick-panel/window-focus'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
@@ -58,6 +69,7 @@ const menuModalsStore = useMenuModalsStore()
 const writerInputStore = useWriterInputStore()
 const quickDismissStore = useQuickDismissStore()
 const cardRef = ref<HTMLElement | null>(null)
+const { t } = useI18n()
 
 const currentMode = computed(() => ipcStore.params?.mode || 'write')
 const hasModal = computed(
@@ -75,16 +87,16 @@ const isSheet = computed(() => {
 /** What stays clickable while only the input is shown. */
 const INPUT_PARTS = '.write-frame, .write-hint'
 
-const QUICK_MODES = ['write', 'voice', 'select', 'aiTasks', 'correction']
-
 /**
- * The step after the input (its actions, a correction on its way) stays until
- * the user closes it with Esc: a click elsewhere must not lose it
+ * Only the input itself goes away on a click elsewhere. Everything past it (the
+ * step after the input, the menus of the other modes, a correction on its way)
+ * stays until the user closes it with Esc: a click must not lose it
  */
-const isWriteFollowUp = computed(
+const keepsOnFocusLoss = computed(
   () =>
-    currentMode.value === 'write' &&
-    (hasModal.value || Boolean(menuModalsStore.pendingModal))
+    currentMode.value !== 'write' ||
+    hasModal.value ||
+    Boolean(menuModalsStore.pendingModal)
 )
 
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
@@ -96,21 +108,13 @@ const dismiss = () => {
 }
 
 const handleRootPointerDown = (event: PointerEvent) => {
-  if (!cardRef.value || isWriteFollowUp.value) return
+  if (!cardRef.value || keepsOnFocusLoss.value) return
   const target = event.target as Node | null
-  if (
-    currentMode.value === 'write' &&
-    cardRef.value.querySelector('.write-frame')
-  ) {
-    const isInputPart = Array.from(
-      cardRef.value.querySelectorAll(INPUT_PARTS)
-    ).some((part) => target && part.contains(target))
-    if (target && !isInputPart) dismiss()
-    return
-  }
-  if (target && !cardRef.value.contains(target)) {
-    dismiss()
-  }
+  if (!cardRef.value.querySelector('.write-frame')) return
+  const isInputPart = Array.from(
+    cardRef.value.querySelectorAll(INPUT_PARTS)
+  ).some((part) => target && part.contains(target))
+  if (target && !isInputPart) dismiss()
 }
 
 const focusLoss = createFocusLossWatcher({
@@ -121,13 +125,35 @@ const focusLoss = createFocusLossWatcher({
   },
   canDismiss: () =>
     Boolean(ipcStore.params.isWindowShown) &&
-    QUICK_MODES.includes(currentMode.value) &&
-    !isWriteFollowUp.value &&
+    !keepsOnFocusLoss.value &&
     ipcStore.params.userConfig?.quickHideOnBlur !== false &&
     !quickDismissStore.isHeld,
   onLost: dismiss,
 })
 let removeFocusListener: (() => void) | undefined
+
+const isWindowFocused = ref(true)
+const windowFocus = createWindowFocus({
+  isFocused: () => getCurrentWindow().isFocused(),
+  onChange: (focused) => {
+    isWindowFocused.value = focused
+  },
+})
+// the modal menus render outside this component, so the mark goes on the root
+watch(
+  isWindowFocused,
+  (focused) => {
+    document.documentElement.dataset.windowFocused = String(focused)
+  },
+  { immediate: true }
+)
+/** The input alone shows it by its frame; a hint there would cover the page. */
+const showFocusHint = computed(
+  () =>
+    !isWindowFocused.value &&
+    isSheet.value &&
+    Boolean(ipcStore.params.isWindowShown)
+)
 let unmounted = false
 
 // The window keeps one size; while it shows only the input, the rest of it
@@ -178,7 +204,10 @@ onMounted(() => {
   window.addEventListener('resize', updateInputRegion)
   updateInputRegionAfterRender()
   void getCurrentWindow()
-    .onFocusChanged(({ payload }) => focusLoss.handleFocusChange(payload))
+    .onFocusChanged(({ payload }) => {
+      windowFocus.handleFocusChange(payload)
+      focusLoss.handleFocusChange(payload)
+    })
     .then((remove) => {
       if (unmounted) remove()
       else removeFocusListener = remove
@@ -192,7 +221,9 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateInputRegion)
   regionSync.dispose()
   focusLoss.dispose()
+  windowFocus.dispose()
   removeFocusListener?.()
+  delete document.documentElement.dataset.windowFocused
 })
 
 // whatever hid the window, work started for it has no one to show it to
@@ -224,8 +255,9 @@ watch(
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
 watch(
   () => ipcStore.params.isWindowShown,
-  () => {
+  (isShown) => {
     syncFocus()
+    if (isShown) void windowFocus.refresh()
   }
 )
 
@@ -290,6 +322,57 @@ watch(hasModal, (open) => {
   box-shadow: var(--app-shadow-lg);
   background: var(--app-surface);
   backdrop-filter: none;
+}
+
+.quick-overlay-root.is-sheet .quick-overlay-card,
+:global([data-window='quick'] .overlay) {
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+/* The window has no title bar: its frame tells whether it takes the keys */
+:global([data-window='quick'][data-window-focused='true'] .overlay),
+:global(
+  [data-window-focused='true'] .quick-overlay-root.is-sheet .quick-overlay-card
+) {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  box-shadow:
+    var(--app-shadow-lg),
+    0 0 0 3px color-mix(in oklab, var(--color-primary) 16%, transparent);
+}
+
+:global([data-window='quick'][data-window-focused='false'] .overlay),
+:global(
+  [data-window-focused='false'] .quick-overlay-root.is-sheet .quick-overlay-card
+),
+:global([data-window-focused='false'] .write-frame),
+:global([data-window-focused='false'] .write-hint) {
+  opacity: 0.72;
+}
+
+/* a caret left in the input does not mean the keys go there */
+:global([data-window-focused='false'] .write-frame:focus-within) {
+  border-color: var(--app-border);
+  box-shadow: var(--app-shadow-md);
+}
+
+.quick-focus-hint {
+  position: fixed;
+  top: calc(var(--space-sm) + var(--space-md));
+  left: 50%;
+  z-index: var(--z-toast);
+  transform: translateX(-50%);
+  padding: 0.375rem 0.875rem;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+  font-size: 0.8125rem;
+  color: var(--color-base-content);
+  /* the click goes to the window below the hint and gives it the focus */
+  pointer-events: none;
 }
 
 .quick-overlay-root.has-modal .quick-overlay-card {
