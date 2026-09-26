@@ -289,6 +289,7 @@ function goToEditor() {
 function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
 
+  // Esc cancels the whole dictation and closes the quick window, never a step back
   if (event.code === 'Escape') {
     event.preventDefault()
     void cancel()

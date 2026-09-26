@@ -224,7 +224,7 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('goes back on Escape in the quick window when asked to', () => {
+  it('cancels the quick window on Escape even when asked to go back', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert', 'insert']
@@ -233,10 +233,12 @@ describe('ShortcutList', () => {
       props: { text: 'text', escVisible: true, escMode: 'back' },
     })
 
-    expect(wrapper.text()).toContain('common.back')
+    expect(wrapper.text()).toContain('common.cancel')
     press('Escape')
-    expect(mocks.back).toHaveBeenCalled()
-    expect(mocks.closeAll).not.toHaveBeenCalled()
+    expect(mocks.back).not.toHaveBeenCalled()
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(mocks.discardWriterInput).toHaveBeenCalled()
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
     wrapper.unmount()
   })
 

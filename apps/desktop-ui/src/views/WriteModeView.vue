@@ -167,6 +167,7 @@ watch(
 function cancelAndClose() {
   correctionStore.cancelSpeculation()
   writerInputStore.clear()
+  menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   resetNav()
   void ipcStore.callFunction('closeWindow', [])
@@ -190,9 +191,7 @@ function submitAltFromHint() {
 
 function cancelFromHint() {
   if (!acceptsInput()) return
-  // while waiting for the correction, cancel returns to the text
-  if (menuModalsStore.pendingModal) menuModalsStore.cancelPending()
-  else cancelAndClose()
+  cancelAndClose()
 }
 
 /** Inserts a line break at the caret, as the newline shortcut does. */
@@ -213,16 +212,16 @@ function handleKeyDown(event: KeyboardEvent) {
 
   const action = resolveQuickInputKeyAction(event, submitMode.value)
 
-  // while waiting for the correction, Esc returns to the text
-  if (menuModalsStore.pendingModal) {
-    if (action !== 'none') event.preventDefault()
-    if (action === 'cancel') menuModalsStore.cancelPending()
-    return
-  }
-
+  // Esc always cancels: it drops the text and closes the window, also while
+  // waiting for the correction. Do not make it return to the previous step
   if (action === 'cancel') {
     event.preventDefault()
     cancelAndClose()
+    return
+  }
+
+  if (menuModalsStore.pendingModal) {
+    if (action !== 'none') event.preventDefault()
     return
   }
 

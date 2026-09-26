@@ -175,10 +175,13 @@ const hasPresetActions = computed(() =>
 )
 
 const resolvedEscMode = computed<'close' | 'back'>(() => {
+  // In the quick window Esc always cancels: it drops the text and closes the
+  // window, on every step and whatever `escMode` asks. Do not make it go back
+  // to the previous step: that is what Backspace is for
+  if (isQuickWindow) return 'close'
   if (props.escMode && props.escMode !== 'auto') {
     return props.escMode
   }
-  if (isQuickWindow) return 'close'
 
   const modal = menuModalsStore.currentModal
   if (modal === MenuModals.NONE) {

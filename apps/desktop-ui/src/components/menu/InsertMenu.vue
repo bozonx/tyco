@@ -86,7 +86,7 @@ const props = withDefaults(
     allowInsertButton?: boolean
     stopListening?: boolean
     toEditorVisible?: boolean
-    /** A correction step: Esc goes back to the text before it */
+    /** A correction step: in the main window Esc goes back to the text before it */
     correction?: boolean
     /** The text before correction, still insertable with Shift+Space */
     originalText?: string
