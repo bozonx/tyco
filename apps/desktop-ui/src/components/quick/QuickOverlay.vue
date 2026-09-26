@@ -72,6 +72,9 @@ const isSheet = computed(() => {
   )
 })
 
+/** What stays clickable while only the input is shown. */
+const INPUT_PARTS = '.write-frame, .write-hint'
+
 const QUICK_MODES = ['write', 'voice', 'select', 'aiTasks', 'correction']
 
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
@@ -85,11 +88,14 @@ const dismiss = () => {
 const handleRootPointerDown = (event: PointerEvent) => {
   if (!cardRef.value) return
   const target = event.target as Node | null
-  const writeFrame = cardRef.value.querySelector('.write-frame')
-  if (currentMode.value === 'write' && writeFrame) {
-    if (target && !writeFrame.contains(target)) {
-      dismiss()
-    }
+  if (
+    currentMode.value === 'write' &&
+    cardRef.value.querySelector('.write-frame')
+  ) {
+    const isInputPart = Array.from(
+      cardRef.value.querySelectorAll(INPUT_PARTS)
+    ).some((part) => target && part.contains(target))
+    if (target && !isInputPart) dismiss()
     return
   }
   if (target && !cardRef.value.contains(target)) {
@@ -112,9 +118,6 @@ const focusLoss = createFocusLossWatcher({
 })
 let removeFocusListener: (() => void) | undefined
 let unmounted = false
-
-/** What stays clickable while only the input is shown. */
-const INPUT_PARTS = '.write-frame, .write-hint'
 
 // The window keeps one size; while it shows only the input, the rest of it
 // lets clicks through to the windows below

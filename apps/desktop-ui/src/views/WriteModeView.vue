@@ -3,21 +3,43 @@
     <div ref="frameRef" class="write-frame">
       <WriteModeInput class="flex-1" :max-height="inputMaxHeight" />
     </div>
+    <!-- mousedown.prevent keeps the focus and the caret in the input -->
     <p ref="hintRef" class="write-hint">
-      <KeyButton>{{ submitShortcutLabel }}</KeyButton>
-      <span>{{ t('write.next') }}</span>
+      <button
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="submitFromHint"
+      >
+        <KeyButton>{{ submitShortcutLabel }}</KeyButton>
+        <span>{{ t('write.next') }}</span>
+      </button>
       <span class="opacity-40">•</span>
-      <KeyButton>{{ newlineShortcutLabel }}</KeyButton>
-      <span>{{ t('write.newLine') }}</span>
+      <button
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="insertNewline"
+      >
+        <KeyButton>{{ newlineShortcutLabel }}</KeyButton>
+        <span>{{ t('write.newLine') }}</span>
+      </button>
       <span class="opacity-40">•</span>
-      <KeyButton>Esc</KeyButton>
-      <span>{{ t('write.cancel') }}</span>
+      <button
+        type="button"
+        class="write-hint-action"
+        @mousedown.prevent
+        @click="cancelFromHint"
+      >
+        <KeyButton>Esc</KeyButton>
+        <span>{{ t('write.cancel') }}</span>
+      </button>
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../composables/useCallAi'
 import { useI18n } from '../composables/useI18n'
@@ -152,14 +174,39 @@ function cancelAndClose() {
   void ipcStore.callFunction('closeWindow', [])
 }
 
+/** Whether the input takes commands: not while a modal is over it. */
+const acceptsInput = () =>
+  ipcStore.params.isWindowShown &&
+  ipcStore.params.mode === 'write' &&
+  !menuModalsStore.anyModalOpen
+
+function submitFromHint() {
+  if (!acceptsInput() || menuModalsStore.pendingModal) return
+  void submit()
+}
+
+function cancelFromHint() {
+  if (!acceptsInput()) return
+  // while waiting for the correction, cancel returns to the text
+  if (menuModalsStore.pendingModal) menuModalsStore.cancelPending()
+  else cancelAndClose()
+}
+
+/** Inserts a line break at the caret, as the newline shortcut does. */
+async function insertNewline() {
+  if (!acceptsInput() || menuModalsStore.pendingModal) return
+  const textarea = frameRef.value?.querySelector('textarea')
+  const text = writerInputStore.value
+  const start = textarea?.selectionStart ?? text.length
+  const end = textarea?.selectionEnd ?? text.length
+  writerInputStore.setValue(`${text.slice(0, start)}\n${text.slice(end)}`)
+  await nextTick()
+  textarea?.focus()
+  textarea?.setSelectionRange(start + 1, start + 1)
+}
+
 function handleKeyDown(event: KeyboardEvent) {
-  if (
-    !ipcStore.params.isWindowShown ||
-    ipcStore.params.mode !== 'write' ||
-    menuModalsStore.anyModalOpen
-  ) {
-    return
-  }
+  if (!acceptsInput()) return
 
   const action = resolveQuickInputKeyAction(event, submitMode.value)
 
@@ -365,5 +412,23 @@ async function submit() {
   font-size: 0.75rem;
   color: var(--app-text-muted);
   flex-shrink: 0;
+}
+
+.write-hint-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.125rem 0.375rem 0.125rem 0.125rem;
+  border-radius: var(--radius-md);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.write-hint-action:hover {
+  background-color: var(--app-hover);
+  color: var(--color-base-content);
 }
 </style>

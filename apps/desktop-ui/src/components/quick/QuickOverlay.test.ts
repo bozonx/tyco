@@ -109,6 +109,30 @@ describe('quick overlay keyboard ownership', () => {
     }
   })
 
+  it('keeps the quick window when clicking the shortcut hint', async () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+    const params = reactive(mocks.params)
+    params.mode = 'write'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      await wrapper.find('.write-hint').trigger('pointerdown')
+      await wrapper.find('textarea').trigger('pointerdown')
+      expect(mocks.callFunction).not.toHaveBeenCalledWith(
+        'dismissQuickWindow',
+        []
+      )
+    } finally {
+      wrapper.unmount()
+    }
+  })
+
   it('dismisses quick window when clicking outside the card', async () => {
     vi.stubGlobal(
       'ResizeObserver',
