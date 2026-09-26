@@ -12,7 +12,7 @@ export interface FocusLossDeps {
 
 /**
  * Tells a real focus loss (the user clicked another window) from the short
- * blurs the app causes itself, such as remapping the window to resize it
+ * blurs the window system causes by itself
  */
 export function createFocusLossWatcher(deps: FocusLossDeps) {
   const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
@@ -23,7 +23,6 @@ export function createFocusLossWatcher(deps: FocusLossDeps) {
 
   let generation = 0
   let timer: unknown = null
-  let suppressions = 0
 
   const stopTimer = () => {
     if (timer === null) return
@@ -32,7 +31,7 @@ export function createFocusLossWatcher(deps: FocusLossDeps) {
   }
 
   const check = async (checkGeneration: number) => {
-    const current = () => checkGeneration === generation && suppressions === 0
+    const current = () => checkGeneration === generation
     if (!current() || !deps.canDismiss()) return
     // when the question cannot be answered, keeping the window is safer
     const focused = await deps.isFocused().catch(() => true)
@@ -52,25 +51,10 @@ export function createFocusLossWatcher(deps: FocusLossDeps) {
     }, settleMs)
   }
 
-  /**
-   * Runs a task that makes the window blur by itself; blurs during it and
-   * shortly after it are not losses
-   */
-  const suppress = async <T>(task: () => Promise<T>): Promise<T> => {
-    suppressions += 1
-    try {
-      return await task()
-    } finally {
-      setTimer(() => {
-        suppressions -= 1
-      }, settleMs * 2)
-    }
-  }
-
   const dispose = () => {
     generation += 1
     stopTimer()
   }
 
-  return { handleFocusChange, suppress, dispose }
+  return { handleFocusChange, dispose }
 }

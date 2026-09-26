@@ -14,5 +14,6 @@ mod windows;
 pub use foreground_context::{capture_selection, capture_source};
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, panel_surface_supported,
+    set_panel_input_region, InputRegion,
 };
 pub use text_injector::inject_paste;

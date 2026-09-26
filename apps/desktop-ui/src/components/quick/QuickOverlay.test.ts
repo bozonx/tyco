@@ -11,8 +11,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import QuickOverlay from './QuickOverlay.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: { mode: 'write', isWindowShown: true },
-  callFunction: vi.fn(async () => {}),
+  params: { mode: 'write', isWindowShown: true, activationId: 1 },
+  callFunction: vi.fn(async () => ({ success: true })),
   focus: vi.fn(),
   closeWindow: vi.fn(),
 }))
@@ -47,7 +47,10 @@ vi.mock('@tauri-apps/api/window', () => ({
   }),
 }))
 vi.mock('../../views/WriteModeView.vue', () => ({
-  default: { template: '<textarea />' },
+  default: {
+    template:
+      '<div><div class="write-frame"><textarea /></div><p class="write-hint" /></div>',
+  },
 }))
 vi.mock('../../views/AiTaskView.vue', () => ({
   default: { template: '<div />' },
@@ -123,6 +126,53 @@ describe('quick overlay keyboard ownership', () => {
       expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
     } finally {
       wrapper.unmount()
+    }
+  })
+})
+
+describe('quick overlay input region', () => {
+  const rects: Record<string, DOMRect> = {
+    'write-frame': new DOMRect(8, 420, 784, 40),
+    'write-hint': new DOMRect(8, 468, 300, 24),
+  }
+
+  it('takes clicks only on the input while nothing else is shown', async () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+    vi.stubGlobal('innerWidth', 800)
+    vi.stubGlobal('innerHeight', 500)
+    const rectSpy = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: Element) {
+        return rects[this.className] ?? new DOMRect()
+      })
+    const params = reactive(mocks.params)
+    params.mode = 'write'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      await vi.waitFor(() =>
+        expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
+          { x: 0, y: 412, width: 800, height: 88 },
+        ])
+      )
+
+      mocks.callFunction.mockClear()
+      params.mode = 'voice'
+      await vi.waitFor(() =>
+        expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
+          null,
+        ])
+      )
+    } finally {
+      wrapper.unmount()
+      rectSpy.mockRestore()
+      params.mode = 'write'
     }
   })
 })

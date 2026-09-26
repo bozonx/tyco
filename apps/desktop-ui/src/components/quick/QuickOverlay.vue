@@ -37,6 +37,12 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
+import {
+  type InputRect,
+  createInputRegionSync,
+  inputRegion,
+  unionRect,
+} from '../../lib/quick-panel/input-region'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
@@ -65,13 +71,6 @@ const isSheet = computed(() => {
     Boolean(menuModalsStore.pendingModal)
   )
 })
-
-let windowUpdate = Promise.resolve()
-
-const queueWindowUpdate = (update: () => Promise<void>): Promise<void> => {
-  windowUpdate = windowUpdate.then(update, update)
-  return windowUpdate
-}
 
 const QUICK_MODES = ['write', 'voice', 'select', 'aiTasks', 'correction']
 
@@ -114,6 +113,42 @@ const focusLoss = createFocusLossWatcher({
 let removeFocusListener: (() => void) | undefined
 let unmounted = false
 
+/** What stays clickable while only the input is shown. */
+const INPUT_PARTS = '.write-frame, .write-hint'
+
+// The window keeps one size; while it shows only the input, the rest of it
+// lets clicks through to the windows below
+const regionSync = createInputRegionSync({
+  apply: async (region) => {
+    const result = await ipcStore.callFunction('setQuickInputRegion', [region])
+    if (!result.success) throw new Error(result.error)
+  },
+})
+
+const measureInputRegion = (): InputRect | null => {
+  if (isSheet.value || !ipcStore.params.isWindowShown || !cardRef.value) {
+    return null
+  }
+  const rects = Array.from(cardRef.value.querySelectorAll(INPUT_PARTS))
+    .map((element) => element.getBoundingClientRect())
+    .filter((rect) => rect.width > 0 && rect.height > 0)
+    .map(({ x, y, width, height }) => ({ x, y, width, height }))
+  return inputRegion(unionRect(rects), {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
+}
+
+const updateInputRegion = () => {
+  void regionSync.update(measureInputRegion()).catch(() => {})
+}
+
+const updateInputRegionAfterRender = () => {
+  void nextTick(updateInputRegion)
+}
+
+let inputResizeObserver: ResizeObserver | undefined
+
 const syncFocus = () => {
   if (currentMode.value === 'write') {
     writerInputStore.focus()
@@ -122,6 +157,12 @@ const syncFocus = () => {
 
 onMounted(() => {
   syncFocus()
+  inputResizeObserver = new ResizeObserver(updateInputRegion)
+  cardRef.value
+    ?.querySelectorAll(INPUT_PARTS)
+    .forEach((element) => inputResizeObserver?.observe(element))
+  window.addEventListener('resize', updateInputRegion)
+  updateInputRegionAfterRender()
   void getCurrentWindow()
     .onFocusChanged(({ payload }) => focusLoss.handleFocusChange(payload))
     .then((remove) => {
@@ -133,6 +174,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   unmounted = true
+  inputResizeObserver?.disconnect()
+  window.removeEventListener('resize', updateInputRegion)
+  regionSync.dispose()
   focusLoss.dispose()
   removeFocusListener?.()
 })
@@ -145,21 +189,19 @@ watch(
   }
 )
 
+// every activation starts with the whole window taking clicks
 watch(
-  isSheet,
-  (sheet) => {
-    void queueWindowUpdate(async () => {
-      try {
-        // the remap to the new size blurs the window for a moment
-        await focusLoss.suppress(() =>
-          ipcStore.callFunction('setWindowProfile', [sheet ? 'sheet' : 'panel'])
-        )
-      } catch {
-        // IPC fallback
-      }
-    })
-  },
-  { immediate: true }
+  () => ipcStore.params.activationId,
+  () => regionSync.invalidate()
+)
+
+watch(
+  [
+    isSheet,
+    () => ipcStore.params.isWindowShown,
+    () => ipcStore.params.activationId,
+  ],
+  updateInputRegionAfterRender
 )
 
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
@@ -229,8 +271,8 @@ watch(hasModal, (open) => {
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--app-shadow-lg);
-  background: var(--app-overlay-bg);
-  backdrop-filter: blur(16px);
+  background: var(--app-surface);
+  backdrop-filter: none;
 }
 
 .quick-overlay-root.has-modal .quick-overlay-card {

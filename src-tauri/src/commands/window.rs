@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
+use crate::services::platform::InputRegion;
 use crate::services::runtime;
 use crate::state::AppState;
 
@@ -19,8 +20,8 @@ pub fn dismiss_quick_window(app: AppHandle) -> Result<(), AppError> {
 }
 
 #[tauri::command]
-pub fn set_window_profile(app: AppHandle, profile: String) -> Result<(), AppError> {
-    runtime::update_window_profile(&app, &profile)
+pub fn set_quick_input_region(app: AppHandle, region: Option<InputRegion>) -> Result<(), AppError> {
+    runtime::set_quick_input_region(&app, region)
 }
 
 #[tauri::command]

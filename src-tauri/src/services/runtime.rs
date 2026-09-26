@@ -3,7 +3,8 @@ use std::sync::Mutex;
 use std::thread;
 
 pub use super::activation::Activation;
-use super::activation::{ActivationIntent, StartMode, WindowProfile};
+use super::activation::{ActivationIntent, StartMode, WINDOW_SIZE};
+use super::platform::InputRegion;
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -159,7 +160,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     #[cfg(target_os = "linux")]
     window.gtk_window()?.set_opacity(1.0);
 
-    let (width, height) = activation.mode.profile().size();
+    let (width, height) = WINDOW_SIZE;
     window.set_size(tauri::LogicalSize::new(width, height))?;
 
     #[cfg(target_os = "linux")]
@@ -169,6 +170,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
 
     if is_quick_window {
         window.set_decorations(false)?;
+        // a region left by the previous session must not hide the new content
+        super::platform::set_panel_input_region(&window, None)?;
         super::platform::apply_panel_surface(
             &window,
             activation.mode.profile(),
@@ -280,57 +283,29 @@ pub fn open_main_editor(
     })
 }
 
-pub fn update_window_profile(app: &AppHandle, profile: &str) -> Result<(), AppError> {
-    let profile = match profile {
-        "sheet" => WindowProfile::Sheet,
-        _ => WindowProfile::Panel,
-    };
+/// Limits pointer input of the visible quick window to `region`; the rest of
+/// the window lets clicks through to the windows below. `None` restores input
+/// over the whole window.
+pub fn set_quick_input_region(
+    app: &AppHandle,
+    region: Option<InputRegion>,
+) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        let state = app.state::<AppState>();
-        let should_remap = is_quick_window_shown(
-            app.state::<RuntimeWindows>().active_label(),
-            state.params().is_window_shown,
-        );
-        let (width, height) = profile.size();
-        if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
-            #[cfg(target_os = "linux")]
-            let has_layer_shell = app.state::<LayerShell>().supported;
-            #[cfg(not(target_os = "linux"))]
-            let has_layer_shell = false;
-
-            if should_unmap_for_profile_change(should_remap, has_layer_shell) {
-                window.hide()?;
-            }
-            window.set_size(tauri::LogicalSize::new(width, height))?;
-
-            super::platform::apply_panel_surface(
-                &window,
-                profile,
-                ActivationIntent::KeyboardFirst,
-                has_layer_shell,
-            )?;
-            if should_remap {
-                window.show()?;
-                window.set_focus()?;
-            }
+        let is_shown = app.state::<AppState>().params().is_window_shown;
+        let active_label = app.state::<RuntimeWindows>().active_label();
+        // a late request must not narrow the window of the next session
+        if region.is_some() && !is_quick_window_shown(active_label, is_shown) {
+            return Ok(());
         }
-        state.update_params(|params| {
-            params.window_profile = match profile {
-                WindowProfile::Panel => String::from("panel"),
-                WindowProfile::Sheet => String::from("sheet"),
-            };
-        });
-        log::info!("Updated window profile to {profile:?}");
-        Ok(())
+        let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) else {
+            return Ok(());
+        };
+        super::platform::set_panel_input_region(&window, region)
     })
 }
 
 fn is_quick_window_shown(active_label: &str, is_window_shown: bool) -> bool {
     active_label == QUICK_WINDOW_LABEL && is_window_shown
-}
-
-fn should_unmap_for_profile_change(should_remap: bool, has_layer_shell: bool) -> bool {
-    should_remap && has_layer_shell
 }
 
 fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
@@ -536,16 +511,9 @@ mod tests {
     }
 
     #[test]
-    fn remaps_only_the_visible_active_quick_window() {
+    fn detects_only_the_visible_active_quick_window() {
         assert!(is_quick_window_shown(QUICK_WINDOW_LABEL, true));
         assert!(!is_quick_window_shown(QUICK_WINDOW_LABEL, false));
         assert!(!is_quick_window_shown(MAIN_WINDOW_LABEL, true));
-    }
-
-    #[test]
-    fn unmaps_only_a_visible_layer_shell_window_before_reconfiguration() {
-        assert!(should_unmap_for_profile_change(true, true));
-        assert!(!should_unmap_for_profile_change(true, false));
-        assert!(!should_unmap_for_profile_change(false, true));
     }
 }

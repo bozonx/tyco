@@ -87,6 +87,11 @@ watch(
   }
 )
 
+watch(
+  () => props.maxAutoHeight,
+  () => adjustHeight()
+)
+
 onMounted(async () => {
   if (props.autoResize) {
     await nextTick()

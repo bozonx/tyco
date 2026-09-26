@@ -64,20 +64,19 @@ impl StartMode {
     }
 }
 
+/// Where the window is placed. Its size never depends on it: every activation
+/// uses `WINDOW_SIZE`, so the window is never resized while it is shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WindowProfile {
+    /// Anchored to the bottom of the screen.
     Panel,
+    /// Centered on the screen.
     Sheet,
 }
 
-impl WindowProfile {
-    pub fn size(self) -> (f64, f64) {
-        match self {
-            Self::Panel => (800.0, 280.0),
-            Self::Sheet => (800.0, 500.0),
-        }
-    }
-}
+/// Logical size of every activated window. The quick input panel draws only
+/// its input field and lets clicks through the rest of the window.
+pub const WINDOW_SIZE: (f64, f64) = (800.0, 500.0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationIntent {

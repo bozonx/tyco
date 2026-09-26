@@ -1,9 +1,14 @@
 <template>
   <ActionOverlayLayout :title="t('menu.insert')">
-    <template v-if="props.correcting || props.correctionError" #header-extra>
+    <template
+      v-if="props.correcting || props.correctionError || hasDiff"
+      #header-extra
+    >
+      <DiffModeToggle v-if="hasDiff" v-model="diffMode" />
       <span
         class="correction-status"
         :class="{ 'is-error': !props.correcting }"
+        v-if="props.correcting || props.correctionError"
         :title="props.correctionError"
       >
         <span
@@ -15,6 +20,14 @@
           props.correcting ? t('write.correcting') : t('write.correctionFailed')
         }}
       </span>
+      <button
+        v-if="props.correcting && props.onCancelCorrection"
+        type="button"
+        class="correction-cancel"
+        @click="props.onCancelCorrection"
+      >
+        {{ t('common.cancel') }}
+      </button>
     </template>
 
     <template #preview>
@@ -22,6 +35,7 @@
         v-if="props.oldText"
         :oldText="props.oldText"
         :newText="props.text"
+        :mode="diffMode"
       />
       <TextPreview v-else :text="props.text" />
     </template>
@@ -43,15 +57,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import {
+  type DiffViewMode,
+  readStoredDiffMode,
+  writeStoredDiffMode,
+} from '../../lib/diff/diff-model'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
 import { useRouteParams } from '../../stores/routeParams'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
+import DiffModeToggle from '../common/DiffModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
 import { Icon } from '@iconify/vue'
 
@@ -71,6 +91,7 @@ const props = withDefaults(
     correcting?: boolean
     /** Why the correction failed; `text` is then the uncorrected one */
     correctionError?: string
+    onCancelCorrection?: () => void
   }>(),
   {
     text: '',
@@ -82,6 +103,7 @@ const props = withDefaults(
     originalText: undefined,
     correcting: false,
     correctionError: undefined,
+    onCancelCorrection: undefined,
   }
 )
 
@@ -91,6 +113,26 @@ const actionsMenu = computed(
   () => props.actions || actionMenuStore.getShortcutActions()
 )
 const { t } = useI18n()
+const hasDiff = computed(() => Boolean(props.oldText))
+const diffMode = ref<DiffViewMode>(readStoredDiffMode())
+
+watch(diffMode, (mode) => writeStoredDiffMode(mode))
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (
+    hasDiff.value &&
+    event.key.toLowerCase() === 'd' &&
+    (event.ctrlKey || event.altKey) &&
+    !event.shiftKey
+  ) {
+    event.preventDefault()
+    const modes: DiffViewMode[] = ['unified', 'split', 'result']
+    diffMode.value = modes[(modes.indexOf(diffMode.value) + 1) % modes.length]
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeyDown))
+onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   actionsMenu.value.map((item: ActionItem | undefined, index: number) =>
@@ -142,5 +184,14 @@ function shouldDisablePrimaryAction(index: number) {
 
 .correction-status.is-error {
   color: var(--color-warning);
+}
+
+.correction-cancel {
+  color: var(--app-text-muted);
+  cursor: pointer;
+}
+
+.correction-cancel:hover {
+  color: var(--color-base-content);
 }
 </style>

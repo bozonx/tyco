@@ -1,9 +1,9 @@
 <template>
-  <div class="write-mode-container">
-    <div class="write-frame">
-      <WriteModeInput class="flex-1" />
+  <div ref="containerRef" class="write-mode-container">
+    <div ref="frameRef" class="write-frame">
+      <WriteModeInput class="flex-1" :max-height="inputMaxHeight" />
     </div>
-    <p class="write-hint">
+    <p ref="hintRef" class="write-hint">
       <KeyButton>{{ submitShortcutLabel }}</KeyButton>
       <span>{{ t('write.next') }}</span>
       <span class="opacity-40">•</span>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../composables/useCallAi'
 import { useI18n } from '../composables/useI18n'
@@ -30,6 +30,7 @@ import {
   isCorrectionAborted,
 } from '../lib/quick-input/quick-correction'
 import { resolveQuickInputKeyAction } from '../lib/quick-input/quick-input-keys'
+import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
@@ -58,6 +59,34 @@ const submitShortcutLabel = computed(() =>
 const newlineShortcutLabel = computed(() =>
   submitMode.value === 'ctrlEnter' ? 'Enter' : 'Shift+Enter'
 )
+
+const containerRef = ref<HTMLElement | null>(null)
+const frameRef = ref<HTMLElement | null>(null)
+const hintRef = ref<HTMLElement | null>(null)
+// the input grows up to the top of the window, then scrolls
+const inputMaxHeight = ref(200)
+
+const px = (value: string) => Number.parseFloat(value) || 0
+
+function measureInputMaxHeight() {
+  const container = containerRef.value
+  const frame = frameRef.value
+  const hint = hintRef.value
+  if (!container || !frame || !hint || container.clientHeight === 0) return
+  const frameStyle = getComputedStyle(frame)
+  inputMaxHeight.value = maxInputHeight({
+    containerHeight: container.clientHeight,
+    siblingsHeight: hint.offsetHeight,
+    gapsHeight: px(getComputedStyle(container).rowGap),
+    frameChromeHeight:
+      px(frameStyle.borderTopWidth) +
+      px(frameStyle.borderBottomWidth) +
+      px(frameStyle.paddingTop) +
+      px(frameStyle.paddingBottom),
+  })
+}
+
+let layoutObserver: ResizeObserver | undefined
 
 const quickCorrection = createQuickCorrection({
   // errors are shown by the step that needed the result
@@ -165,10 +194,15 @@ function handleKeyDown(event: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+  layoutObserver = new ResizeObserver(measureInputMaxHeight)
+  if (containerRef.value) layoutObserver.observe(containerRef.value)
+  if (hintRef.value) layoutObserver.observe(hintRef.value)
+  measureInputMaxHeight()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  layoutObserver?.disconnect()
   quickCorrection.cancel()
 })
 
@@ -216,6 +250,13 @@ async function submit() {
       text,
       oldText: '',
       correcting: true,
+      onCancelCorrection: () => {
+        cancelCorrection()
+        menuModalsStore.updateModalParams(MenuModals.INSERT, {
+          correcting: false,
+          onCancelCorrection: undefined,
+        })
+      },
     })
   } else {
     menuModalsStore.setPendingModal({
@@ -232,6 +273,7 @@ async function submit() {
       menuModalsStore.updateModalParams(MenuModals.INSERT, {
         ...correctedParams(text, result),
         correcting: false,
+        onCancelCorrection: undefined,
       })
     } else {
       menuModalsStore.nextModal(
@@ -248,6 +290,7 @@ async function submit() {
       menuModalsStore.updateModalParams(MenuModals.INSERT, {
         correcting: false,
         correctionError: message,
+        onCancelCorrection: undefined,
       })
     } else {
       menuModalsStore.nextModal(MenuModals.INSERT, {
@@ -274,7 +317,6 @@ async function submit() {
   display: flex;
   align-items: center;
   min-height: 2.25rem;
-  max-height: 200px;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   background-color: color-mix(in oklab, var(--app-surface) 96%, transparent);

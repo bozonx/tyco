@@ -27,6 +27,13 @@ export const useWriterInputStore = defineStore('writerInput', () => {
     value.value = ''
   }
 
+  /** Drops a cancelled input without saving it as a draft. */
+  const discard = (): void => {
+    value.value = ''
+    lastSubmitted.value = ''
+    void drafts.end('')
+  }
+
   /** The window is hidden: the text survives that, but not a quit. */
   const snapshotDraft = (): Promise<void> => drafts.snapshot(value.value)
 
@@ -58,6 +65,7 @@ export const useWriterInputStore = defineStore('writerInput', () => {
     lastSubmitted,
     setValue,
     clear,
+    discard,
     snapshotDraft,
     markDismissed,
     startSession,

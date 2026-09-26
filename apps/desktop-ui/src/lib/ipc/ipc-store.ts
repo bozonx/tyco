@@ -41,9 +41,9 @@ export function createCommandMap(): Record<string, CommandEntry> {
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
     closeWindow: { command: DESKTOP_COMMANDS.CLOSE_WINDOW },
     dismissQuickWindow: { command: DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW },
-    setWindowProfile: {
-      command: DESKTOP_COMMANDS.SET_WINDOW_PROFILE,
-      buildArgs: ([profile]) => ({ profile }),
+    setQuickInputRegion: {
+      command: DESKTOP_COMMANDS.SET_QUICK_INPUT_REGION,
+      buildArgs: ([region]) => ({ region }),
     },
     openMainEditor: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,

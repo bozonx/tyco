@@ -26,6 +26,7 @@ import { useI18n } from '../../composables/useI18n'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useThemeStore } from '../../stores/theme'
 import KeyButton from './KeyButton.vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const menuModalsStore = useMenuModalsStore()
 const themeStore = useThemeStore()
@@ -48,7 +49,9 @@ const isSelectionModal = computed(() => {
 
 const canGoBack = computed(() => menuModalsStore.menuBreadcrumbs.length > 0)
 const backKeyBadge = computed(() =>
-  isSelectionModal.value ? 'Esc' : 'Backspace'
+  isSelectionModal.value && getCurrentWindow().label !== 'quick'
+    ? 'Esc'
+    : 'Backspace'
 )
 </script>
 
@@ -67,8 +70,8 @@ const backKeyBadge = computed(() =>
 
 :global([data-window='quick'] .overlay) {
   inset: var(--space-sm);
-  background-color: var(--app-overlay-bg);
-  backdrop-filter: blur(16px);
+  background-color: var(--color-base-100);
+  backdrop-filter: none;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--app-shadow-lg);

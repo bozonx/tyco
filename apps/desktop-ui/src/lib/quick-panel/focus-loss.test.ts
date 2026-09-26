@@ -66,22 +66,6 @@ describe('createFocusLossWatcher', () => {
     expect(onLost).not.toHaveBeenCalled()
   })
 
-  it('ignores blurs caused by a suppressed task and just after it', async () => {
-    const { watcher, onLost } = setup()
-
-    await watcher.suppress(async () => {
-      watcher.handleFocusChange(false)
-      await vi.advanceTimersByTimeAsync(150)
-    })
-    watcher.handleFocusChange(false)
-    await vi.advanceTimersByTimeAsync(150)
-    expect(onLost).not.toHaveBeenCalled()
-
-    watcher.handleFocusChange(false)
-    await vi.advanceTimersByTimeAsync(150)
-    expect(onLost).toHaveBeenCalledTimes(1)
-  })
-
   it('does nothing after dispose', async () => {
     const { watcher, onLost } = setup()
 

@@ -1,10 +1,38 @@
+use serde::Deserialize;
 use tauri::{PhysicalPosition, Position, WebviewWindow};
 
 #[cfg(target_os = "linux")]
 use gtk::prelude::*;
 
 use crate::errors::AppError;
-use crate::services::activation::{ActivationIntent, WindowProfile};
+use crate::services::activation::{ActivationIntent, WindowProfile, WINDOW_SIZE};
+
+/// Part of the window, in logical pixels from its top left corner, that takes
+/// pointer input.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+pub struct InputRegion {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl InputRegion {
+    /// Whole pixels covering the region: it may grow by a fraction of a
+    /// pixel, never shrink, so its edges always stay clickable.
+    pub fn to_pixels(self) -> (i32, i32, i32, i32) {
+        let left = self.x.floor().max(0.0);
+        let top = self.y.floor().max(0.0);
+        let right = (self.x + self.width).ceil().max(left);
+        let bottom = (self.y + self.height).ceil().max(top);
+        (
+            left as i32,
+            top as i32,
+            (right - left) as i32,
+            (bottom - top) as i32,
+        )
+    }
+}
 
 pub(crate) trait PanelSurface {
     fn supported(&self) -> bool;
@@ -54,6 +82,37 @@ pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Lets pointer input outside `region` through to the windows below; `None`
+/// makes the whole window take input again.
+#[cfg(target_os = "linux")]
+pub fn set_panel_input_region(
+    window: &WebviewWindow,
+    region: Option<InputRegion>,
+) -> Result<(), AppError> {
+    let gtk_window = window.gtk_window()?;
+    match region {
+        Some(region) => {
+            let (x, y, width, height) = region.to_pixels();
+            let shape = gtk::cairo::Region::create_rectangle(&gtk::cairo::RectangleInt::new(
+                x, y, width, height,
+            ));
+            gtk_window.input_shape_combine_region(Some(&shape));
+        }
+        None => gtk_window.input_shape_combine_region(None),
+    }
+    Ok(())
+}
+
+// TODO: Windows (SetWindowRgn) and macOS (ignoresMouseEvents by the cursor
+// position); until then the transparent area dismisses the panel on a click
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+pub fn set_panel_input_region(
+    _window: &WebviewWindow,
+    _region: Option<InputRegion>,
+) -> Result<(), AppError> {
+    Ok(())
+}
+
 #[cfg(target_os = "linux")]
 pub fn apply_panel_surface(
     window: &WebviewWindow,
@@ -65,7 +124,7 @@ pub fn apply_panel_surface(
         return position_regular_panel(window, profile);
     }
     let gtk_window = window.gtk_window()?;
-    let (width, height) = profile.size();
+    let (width, height) = WINDOW_SIZE;
     // Layer-shell remaps use the default size; resize alone can retain the
     // previous allocation while the surface is hidden.
     gtk_window.set_default_size(width as i32, height as i32);
@@ -154,4 +213,47 @@ fn position_regular_panel(window: &WebviewWindow, profile: WindowProfile) -> Res
 
     window.set_position(Position::Physical(PhysicalPosition::new(x, y)))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn region(x: f64, y: f64, width: f64, height: f64) -> InputRegion {
+        InputRegion {
+            x,
+            y,
+            width,
+            height,
+        }
+    }
+
+    #[test]
+    fn keeps_whole_pixel_regions_as_they_are() {
+        assert_eq!(
+            region(8.0, 300.0, 784.0, 192.0).to_pixels(),
+            (8, 300, 784, 192)
+        );
+    }
+
+    #[test]
+    fn covers_fractional_edges() {
+        assert_eq!(
+            region(7.5, 300.4, 784.2, 60.1).to_pixels(),
+            (7, 300, 785, 61)
+        );
+    }
+
+    #[test]
+    fn clamps_to_the_window_origin_and_never_goes_negative() {
+        assert_eq!(region(-4.0, -2.5, 10.0, 5.0).to_pixels(), (0, 0, 6, 3));
+        assert_eq!(region(10.0, 10.0, -5.0, 0.0).to_pixels(), (10, 10, 0, 0));
+    }
+
+    #[test]
+    fn reads_the_region_sent_by_the_webview() {
+        let value = serde_json::json!({ "x": 8, "y": 300.5, "width": 784, "height": 60 });
+        let parsed: InputRegion = serde_json::from_value(value).unwrap();
+        assert_eq!(parsed, region(8.0, 300.5, 784.0, 60.0));
+    }
 }

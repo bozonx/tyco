@@ -7,9 +7,11 @@ const mocks = vi.hoisted(() => ({
   toEditor: vi.fn(),
   back: vi.fn(),
   closeAll: vi.fn(),
+  cancelPending: vi.fn(),
+  currentModalParams: {} as Record<string, unknown>,
   closeWindow: vi.fn(),
   goToEditor: vi.fn(),
-  clearWriterInput: vi.fn(),
+  discardWriterInput: vi.fn(),
   currentWindowLabel: 'main',
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
@@ -25,7 +27,7 @@ vi.mock('../stores/routeParams', () => ({
 }))
 
 vi.mock('../stores/writerInput', () => ({
-  useWriterInputStore: () => ({ clear: mocks.clearWriterInput }),
+  useWriterInputStore: () => ({ discard: mocks.discardWriterInput }),
 }))
 
 vi.mock('../stores/menuModals', () => ({
@@ -46,8 +48,12 @@ vi.mock('../stores/menuModals', () => ({
     get menuBreadcrumbs() {
       return mocks.breadcrumbs
     },
+    get currentModalParams() {
+      return mocks.currentModalParams
+    },
     back: mocks.back,
     closeAll: mocks.closeAll,
+    cancelPending: mocks.cancelPending,
   }),
 }))
 
@@ -95,6 +101,7 @@ describe('ShortcutList', () => {
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert']
     mocks.mode = 'write'
+    mocks.currentModalParams = {}
   })
 
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
@@ -172,11 +179,11 @@ describe('ShortcutList', () => {
       props: { text: 'result text', escVisible: true },
     })
 
-    expect(wrapper.text()).toContain('common.close')
+    expect(wrapper.text()).toContain('common.cancel')
     press('Escape')
 
     expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.clearWriterInput).toHaveBeenCalled()
+    expect(mocks.discardWriterInput).toHaveBeenCalled()
     expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
     wrapper.unmount()
   })
@@ -194,6 +201,29 @@ describe('ShortcutList', () => {
 
     expect(mocks.back).toHaveBeenCalled()
     expect(mocks.closeAll).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('cancels the quick window from the second step on Escape', () => {
+    mocks.currentWindowLabel = 'quick'
+    mocks.currentModal = 'ai-task'
+    mocks.breadcrumbs = ['insert', 'ai-task']
+    const cancelCorrection = vi.fn()
+    mocks.currentModalParams = { onCancelCorrection: cancelCorrection }
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'task text', escVisible: true },
+    })
+
+    expect(wrapper.text()).toContain('common.cancel')
+    press('Escape')
+
+    expect(mocks.back).not.toHaveBeenCalled()
+    expect(cancelCorrection).toHaveBeenCalledOnce()
+    expect(mocks.cancelPending).toHaveBeenCalled()
+    expect(mocks.closeAll).toHaveBeenCalled()
+    expect(mocks.discardWriterInput).toHaveBeenCalled()
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
     wrapper.unmount()
   })
 

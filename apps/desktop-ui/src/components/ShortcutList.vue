@@ -7,7 +7,7 @@
     >
       <ShortcutButton
         v-if="props.spaceKey"
-        :keys="['Space']"
+        :keys="['Space', 'Enter']"
         :icon="props.spaceKey.icon"
         :disabled="props.spaceKey.disabled"
         primary
@@ -41,7 +41,13 @@
         :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
         @click="handleEsc"
       >
-        {{ resolvedEscMode === 'back' ? t('common.back') : t('common.close') }}
+        {{
+          isQuickWindow
+            ? t('common.cancel')
+            : resolvedEscMode === 'back'
+              ? t('common.back')
+              : t('common.close')
+        }}
       </ShortcutButton>
     </div>
 
@@ -118,6 +124,7 @@ const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const writerInputStore = useWriterInputStore()
 const { t } = useI18n()
+const isQuickWindow = getCurrentWindow().label === 'quick'
 
 /**
  * Exactly 15 slots mapping 1:1 to physical keys: Row 1 (0..4): Q W E R T Row 2
@@ -159,6 +166,7 @@ const hasPresetActions = computed(() =>
 )
 
 const resolvedEscMode = computed<'close' | 'back'>(() => {
+  if (isQuickWindow) return 'close'
   if (props.escMode && props.escMode !== 'auto') {
     return props.escMode
   }
@@ -284,11 +292,15 @@ function goToEditor() {
 }
 
 function handleClose() {
+  const cancelCorrection =
+    menuModalsStore.currentModalParams?.onCancelCorrection
+  if (typeof cancelCorrection === 'function') cancelCorrection()
+  menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   try {
     if (getCurrentWindow().label === 'quick') {
       if (ipcStore.params?.mode === 'write') {
-        writerInputStore.clear()
+        writerInputStore.discard()
       }
       void ipcStore.callFunction('closeWindow', [])
     } else {
