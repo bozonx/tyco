@@ -29,6 +29,7 @@ impl SystemForegroundContext {
         {
             "x11" => Session::X11,
             "wayland" => Session::Wayland,
+            _ if std::env::var_os("WAYLAND_DISPLAY").is_some() => Session::Wayland,
             _ if std::env::var_os("DISPLAY").is_some() => Session::X11,
             _ => Session::Unsupported,
         };

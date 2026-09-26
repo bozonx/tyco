@@ -2,15 +2,12 @@
   <ActionOverlayLayout :title="t('menu.voiceInput')">
     <template #preview>
       <AudioWaveform
-        v-if="isStarted || !hasText"
         :level="audioLevel"
         :peak="audioPeak"
         :duration-ms="recordingDurationMs"
         :is-transcribing="isTranscribing"
-        :compact="hasText"
       />
       <LiveTranscript
-        v-if="hasText"
         :committed="transcript.committed"
         :draft="transcript.draft"
       />

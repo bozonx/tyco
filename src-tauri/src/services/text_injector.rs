@@ -1,4 +1,3 @@
-use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus};
 use std::thread;
@@ -10,6 +9,9 @@ use crate::errors::AppError;
 
 const FOCUS_TIMEOUT: Duration = Duration::from_secs(2);
 const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
+/// Wayland offers no way to activate a foreign window, so the paste relies on
+/// the compositor returning focus to the source window once Tyco hides.
+const WAYLAND_REFOCUS_DELAY: Duration = Duration::from_millis(120);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Session {
@@ -65,7 +67,10 @@ impl SystemTextInjector {
         let command = command_spec(method, insertion, user_config, source_window_id)?;
 
         if method == InjectionMethod::Ydotool {
-            ensure_ydotool_access()?;
+            ensure_ydotool_daemon()?;
+        }
+        if self.session == Session::Wayland {
+            thread::sleep(WAYLAND_REFOCUS_DELAY);
         }
         run_spec(&command)
     }
@@ -147,18 +152,17 @@ fn ydotool_socket_paths() -> Vec<PathBuf> {
     paths
 }
 
-fn ensure_ydotool_access() -> Result<(), AppError> {
+/// The ydotool 1.x client only talks to the ydotoold socket; access to
+/// `/dev/uinput` alone is not enough.
+fn ensure_ydotool_daemon() -> Result<(), AppError> {
     if ydotool_socket_paths()
         .iter()
         .any(|path| std::os::unix::net::UnixStream::connect(path).is_ok())
     {
         return Ok(());
     }
-    if OpenOptions::new().write(true).open("/dev/uinput").is_ok() {
-        return Ok(());
-    }
     Err(AppError::Message(String::from(
-        "ydotool cannot insert text: start ydotoold with access to /dev/uinput, or grant your user access through the input group or a udev rule",
+        "ydotool cannot insert text: ydotoold is not running. Start it, for example with `systemctl --user enable --now ydotool`, and make sure it can access /dev/uinput",
     )))
 }
 

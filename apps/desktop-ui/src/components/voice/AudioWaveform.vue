@@ -24,7 +24,7 @@
       <div class="waveform-meta">
         <div class="waveform-status">
           <Icon icon="mdi:microphone" class="mic-icon animate-pulse" />
-          <span>{{ t('menu.speakNow') }}</span>
+          <span>{{ t('menu.listening') }}</span>
         </div>
         <div class="waveform-timer">{{ formattedDuration }}</div>
       </div>
@@ -39,7 +39,7 @@ import { useI18n } from '../../composables/useI18n'
 import { Icon } from '@iconify/vue'
 
 const BAR_COUNT = 32
-const MIN_BAR_HEIGHT = 6
+const MIN_BAR_HEIGHT = 4
 const MAX_BAR_HEIGHT = 72
 /** Room left for the recognized text below */
 const COMPACT_MAX_BAR_HEIGHT = 28
@@ -52,7 +52,7 @@ const props = withDefaults(
     isTranscribing?: boolean
     compact?: boolean
   }>(),
-  { level: 0, peak: 0, durationMs: 0, isTranscribing: false, compact: false }
+  { level: 0, peak: 0, durationMs: 0, isTranscribing: false, compact: true }
 )
 
 const { t } = useI18n()
@@ -167,51 +167,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  min-height: 140px;
-  padding: var(--space-md);
-  box-sizing: border-box;
-}
-
-.audio-waveform-container.compact {
   flex: 0 0 auto;
-  height: auto;
-  min-height: 0;
-  padding: var(--space-sm) var(--space-lg) 0;
-}
-
-.compact .listening-state {
-  gap: var(--space-sm);
-  max-width: none;
-}
-
-.compact .waveform-visualizer {
-  height: 32px;
-}
-
-.compact .transcribing-state {
-  flex-direction: row;
-  padding: var(--space-sm);
-}
-
-.compact .loading-lg {
-  width: 1.25rem;
-}
-
-.transcribing-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  padding: var(--space-xl);
-}
-
-.transcribing-label {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--app-text-muted);
-  margin: 0;
+  box-sizing: border-box;
+  background-color: var(--app-surface-raised);
+  border-bottom: 1px solid var(--app-border-subtle);
+  padding: var(--space-sm) var(--space-lg);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .listening-state {
@@ -219,9 +181,8 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-lg);
+  gap: var(--space-xs);
   width: 100%;
-  max-width: 480px;
 }
 
 .waveform-visualizer {
@@ -229,7 +190,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  height: 80px;
+  height: 32px;
   width: 100%;
 }
 
@@ -267,5 +228,52 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono, monospace);
   color: var(--app-text-faint);
+}
+
+.transcribing-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.transcribing-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+/* Explicit full-size mode when compact is set to false */
+.audio-waveform-container:not(.compact) {
+  flex: 1 1 0%;
+  height: 100%;
+  min-height: 140px;
+  padding: var(--space-md);
+  border-bottom: none;
+  background-color: transparent;
+}
+
+.audio-waveform-container:not(.compact) .listening-state {
+  gap: var(--space-lg);
+  max-width: 480px;
+}
+
+.audio-waveform-container:not(.compact) .waveform-visualizer {
+  height: 80px;
+}
+
+.audio-waveform-container:not(.compact) .transcribing-state {
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+  min-height: 140px;
+}
+
+.audio-waveform-container:not(.compact) .transcribing-label {
+  font-size: 0.9375rem;
 }
 </style>
