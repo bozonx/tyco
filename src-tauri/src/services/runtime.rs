@@ -276,6 +276,18 @@ pub fn open_main_editor(
     })
 }
 
+pub fn open_main_chat(app: &AppHandle, text: Option<String>) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        show_application_on_main_thread(app)?;
+        let window = app
+            .get_webview_window(MAIN_WINDOW_LABEL)
+            .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        window
+            .emit("app://open-main-chat", serde_json::json!({ "text": text }))
+            .map_err(|error| AppError::Message(error.to_string()))
+    })
+}
+
 /// Limits pointer input of the visible quick window to `region`; the rest of
 /// the window lets clicks through to the windows below. `None` restores input
 /// over the whole window.

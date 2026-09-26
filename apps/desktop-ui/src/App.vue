@@ -28,6 +28,7 @@ import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
+import { useChatStore } from './stores/chat'
 import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
@@ -46,6 +47,7 @@ const { locale, t } = useI18n()
 const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
+const chatStore = useChatStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
@@ -82,6 +84,7 @@ const activationMetrics = createActivationMetricsClient({
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
 }
+let removeMainChatListener: (() => void) | undefined
 let removeMainEditorListener: (() => void) | undefined
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
@@ -170,6 +173,16 @@ onMounted(() => {
   void bootstrap.start()
   void activationMetrics.start()
   void desktopClient
+    .listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, (payload) => {
+      if (isQuickWindow) return
+      menuModalsStore.closeAll()
+      const { text } = payload as { text?: string }
+      void chatStore.startChat({ attachments: text ? [text] : [] })
+    })
+    .then((remove) => {
+      removeMainChatListener = remove
+    })
+  void desktopClient
     .listen(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, (payload) => {
       if (!isQuickWindow) {
         const transfer = payload as EditorTransfer
@@ -186,6 +199,7 @@ onUnmounted(() => {
   bootstrap.stop()
   activationMetrics.stop()
   removeMainEditorListener?.()
+  removeMainChatListener?.()
 })
 </script>
 

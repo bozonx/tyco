@@ -6,8 +6,8 @@ mod state;
 
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
-    get_storage_info, mark_activation_metric, open_main_editor, save_local_state, save_user_config,
-    submit_activation_metric_value,
+    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor, save_local_state,
+    save_user_config, submit_activation_metric_value,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
@@ -104,6 +104,7 @@ pub fn run() {
             apply_hotkey,
             configure_hotkeys,
             get_hotkey_provider_info,
+            open_main_chat,
             open_main_editor,
             activate_mode,
             mark_activation_metric,

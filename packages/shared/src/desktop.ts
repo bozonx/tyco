@@ -125,6 +125,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
 export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
+  OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
@@ -137,6 +138,7 @@ export const DESKTOP_COMMANDS = {
   APPLY_HOTKEY: 'apply_hotkey',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
   GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
+  OPEN_MAIN_CHAT: 'open_main_chat',
   OPEN_MAIN_EDITOR: 'open_main_editor',
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',

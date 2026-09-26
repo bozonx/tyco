@@ -7,6 +7,8 @@
     <template #actions>
       <ShortcutList
         :text="props.text"
+        :enterKey="chatAction"
+        :ctrlSKey="actionsAction"
         :leftLetterKeys="leftLetterKeys"
         :stopListening="props.stopListening"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
@@ -22,6 +24,7 @@ import { useCallAi } from '../../composables/useCallAi'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
 import { type ActionItem } from '../../stores/actionMenu'
+import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
@@ -43,6 +46,22 @@ const appConfig = computed(() => ipcStore.params.appConfig)
 const { toast } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
+const chatStore = useChatStore()
+const chatAction: ActionItem = {
+  labelKey: 'action.askInChat',
+  icon: 'mdi:chat-outline',
+  action: async (text) => {
+    menuModalsStore.closeAll()
+    await chatStore.startChat({ attachments: [text] })
+  },
+}
+const actionsAction: ActionItem = {
+  labelKey: 'settings.actionsCategory',
+  icon: 'mdi:format-list-bulleted',
+  action: async (text) => {
+    menuModalsStore.nextModal(MenuModals.INSERT, { text })
+  },
+}
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   ipcStore.params.userConfig.aiTasks.map(
     (

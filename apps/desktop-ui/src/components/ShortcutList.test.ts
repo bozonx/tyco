@@ -104,6 +104,47 @@ describe('ShortcutList', () => {
     mocks.currentModalParams = {}
   })
 
+  it('runs Enter and Ctrl+S actions without triggering the S preset', async () => {
+    const chat = vi.fn()
+    const actions = vi.fn()
+    const preset = vi.fn()
+    const slots = new Array(7).fill(undefined)
+    slots[6] = { name: 'Preset', action: preset }
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: '  context text  ',
+        enterKey: { name: 'Chat', action: chat },
+        ctrlSKey: { name: 'Actions', action: actions },
+        leftLetterKeys: slots,
+      },
+    })
+    press('Enter')
+    expect(chat).toHaveBeenCalledWith('  context text  ')
+    const down = new KeyboardEvent('keydown', {
+      code: 'KeyS',
+      ctrlKey: true,
+      cancelable: true,
+    })
+    window.dispatchEvent(down)
+    expect(down.defaultPrevented).toBe(true)
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyS', ctrlKey: true })
+    )
+    expect(actions).toHaveBeenCalledWith('  context text  ')
+    expect(preset).not.toHaveBeenCalled()
+    await wrapper.setProps({ stopListening: true })
+    press('Enter')
+    press('KeyS', { ctrlKey: true })
+    expect(chat).toHaveBeenCalledTimes(1)
+    expect(actions).toHaveBeenCalledTimes(1)
+    await wrapper.setProps({ stopListening: false })
+    await wrapper.findAll('button')[0].trigger('click')
+    await wrapper.findAll('button')[1].trigger('click')
+    expect(chat).toHaveBeenCalledTimes(2)
+    expect(actions).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
     const qAction = vi.fn()
     const aAction = vi.fn()

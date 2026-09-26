@@ -45,6 +45,10 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.SET_QUICK_INPUT_REGION,
       buildArgs: ([region]) => ({ region }),
     },
+    openMainChat: {
+      command: DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
+      buildArgs: ([text]) => ({ text }),
+    },
     openMainEditor: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
       buildArgs: ([text, sourceText]) => ({ text, sourceText }),

@@ -2,9 +2,25 @@
   <div class="shortcuts-list">
     <!-- Primary / System actions row: Space/Enter, Tab, Esc -->
     <div
-      v-if="props.spaceKey || props.toEditorVisible || props.escVisible"
+      v-if="
+        props.enterKey ||
+        props.ctrlSKey ||
+        props.spaceKey ||
+        props.toEditorVisible ||
+        props.escVisible
+      "
       class="shortcuts-primary"
     >
+      <ShortcutButton
+        v-for="entry in extraActions"
+        :key="entry.keys.join('+')"
+        :keys="entry.keys"
+        :icon="entry.action.icon"
+        :disabled="entry.action.disabled"
+        @click="entry.action.action(props.text)"
+      >
+        {{ getActionLabel(entry.action) }}
+      </ShortcutButton>
       <ShortcutButton
         v-if="props.spaceKey"
         :keys="['Space', 'Enter']"
@@ -96,6 +112,8 @@ const props = withDefaults(
     text?: string
     /** What `text` was transformed from, see `routeParams.toEditor`. */
     sourceText?: string
+    enterKey?: ActionItem
+    ctrlSKey?: ActionItem
     spaceKey?: ActionItem
     /** Another version of the text, run through Shift+Space: the original */
     altText?: string
@@ -113,6 +131,8 @@ const props = withDefaults(
   {
     text: '',
     sourceText: '',
+    enterKey: undefined,
+    ctrlSKey: undefined,
     spaceKey: undefined,
     altText: undefined,
     altAlwaysVisible: false,
@@ -149,6 +169,31 @@ const slots = computed<ShortcutSlotItem[]>(() =>
   })
 )
 
+const extraActions = computed(() => [
+  ...(props.enterKey ? [{ keys: ['Enter'], action: props.enterKey }] : []),
+  ...(props.ctrlSKey ? [{ keys: ['Ctrl', 'S'], action: props.ctrlSKey }] : []),
+])
+
+function extraAction(event: KeyboardEvent) {
+  if (
+    event.code === 'Enter' &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  )
+    return props.enterKey
+  if (
+    event.code === 'KeyS' &&
+    event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  )
+    return props.ctrlSKey
+  return undefined
+}
+
 const altKey = computed(() => props.altAction ?? props.spaceKey)
 
 const altVisible = computed(
@@ -165,9 +210,11 @@ const altVisible = computed(
  * on a text the user has not seen
  */
 const pressedKeys = new Map<string, string>()
+const pressedExtraActions = new Map<string, ActionItem>()
 
 const handleWindowBlur = () => {
   pressedKeys.clear()
+  pressedExtraActions.clear()
 }
 
 const hasPresetActions = computed(() =>
@@ -233,6 +280,13 @@ function handleKeyDown(event: KeyboardEvent) {
   if (props.stopListening) return
   if (!event.repeat) pressedKeys.set(event.code, props.text)
 
+  const action = extraAction(event)
+  if (action) {
+    pressedExtraActions.set(event.code, action)
+    event.preventDefault()
+    return
+  }
+
   // Prevent browser default tab focus movement and space scroll
   if (event.code === 'Tab' && props.toEditorVisible) {
     event.preventDefault()
@@ -254,8 +308,16 @@ function handleKeyDown(event: KeyboardEvent) {
 function handleShortCutKeyUp(event: KeyboardEvent) {
   const textAtKeyDown = pressedKeys.get(event.code)
   pressedKeys.delete(event.code)
+  const action = pressedExtraActions.get(event.code)
+  pressedExtraActions.delete(event.code)
   if (props.stopListening || textAtKeyDown === undefined) return
   if (textAtKeyDown !== props.text) return
+  if (action) {
+    event.preventDefault()
+    if (!action.disabled) void action.action(props.text)
+    return
+  }
+  if (event.ctrlKey || event.altKey || event.metaKey) return
 
   if (
     (event.code === 'Space' || event.code === 'Enter') &&

@@ -30,6 +30,11 @@ pub fn get_hotkey_provider_info(app: AppHandle) -> crate::services::hotkeys::Hot
 }
 
 #[tauri::command]
+pub fn open_main_chat(app: AppHandle, text: Option<String>) -> Result<(), AppError> {
+    runtime::open_main_chat(&app, text)
+}
+
+#[tauri::command]
 pub fn open_main_editor(
     app: AppHandle,
     text: Option<String>,

@@ -1,4 +1,7 @@
 import { defineStore } from 'pinia'
+import { nextTick } from 'vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useChatInputStore } from './chatInput'
 
 import { useCallAi } from '../composables/useCallAi'
 import useToast from '../composables/useToast'
@@ -15,7 +18,8 @@ export const useChatStore = defineStore('chat', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
 
-  return createChatStoreModel({
+  const chatInputStore = useChatInputStore()
+  const model = createChatStoreModel({
     sendChatMessage,
     saveChatHistory: async (item) => {
       try {
@@ -54,4 +58,16 @@ export const useChatStore = defineStore('chat', () => {
         : 4_000
     },
   })
+  return {
+    ...model,
+    async startChat(params: Parameters<typeof model.startChat>[0]) {
+      if (getCurrentWindow().label === 'quick') {
+        await ipcStore.callFunction('openMainChat', [params.attachments?.[0]])
+        return
+      }
+      await model.startChat(params)
+      await nextTick()
+      chatInputStore.focus()
+    },
+  }
 })
