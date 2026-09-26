@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { createDraftSession } from '../lib/history/draft-session'
+import { shouldRestoreDraft } from '../lib/quick-input/draft-restore'
 import { useHistoryStore } from './history'
 
 export const useWriterInputStore = defineStore('writerInput', () => {
@@ -10,6 +11,7 @@ export const useWriterInputStore = defineStore('writerInput', () => {
   const selectAllCount = ref<number>(0)
   /** The last text sent to the next step, offered again on ArrowUp. */
   const lastSubmitted = ref<string>('')
+  let dismissedAt: number | null = null
 
   const historyStore = useHistoryStore()
   const drafts = createDraftSession((text, replaceId) =>
@@ -37,13 +39,21 @@ export const useWriterInputStore = defineStore('writerInput', () => {
   /** The window is hidden: the text survives that, but not a quit. */
   const snapshotDraft = (): Promise<void> => drafts.snapshot(value.value)
 
-  /** The window lost focus. */
-  const markDismissed = (): void => {}
+  /** The window lost focus: its text is offered again on the next opening. */
+  const markDismissed = (): void => {
+    dismissedAt = Date.now()
+  }
 
-  /** Prepares the input for a new opening: always starts with a clean string. */
+  /**
+   * Prepares the input for a new opening: keeps the text of a recent dismissal,
+   * clears anything else. Returns whether the text was kept
+   */
   const startSession = (): boolean => {
-    clear()
-    return false
+    const restore = shouldRestoreDraft(value.value, dismissedAt, Date.now())
+    dismissedAt = null
+    if (!restore) clear()
+
+    return restore
   }
 
   const rememberSubmitted = (text: string): void => {

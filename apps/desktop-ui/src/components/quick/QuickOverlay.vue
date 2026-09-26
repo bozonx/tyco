@@ -77,6 +77,16 @@ const INPUT_PARTS = '.write-frame, .write-hint'
 
 const QUICK_MODES = ['write', 'voice', 'select', 'aiTasks', 'correction']
 
+/**
+ * The step after the input (its actions, a correction on its way) stays until
+ * the user closes it with Esc: a click elsewhere must not lose it
+ */
+const isWriteFollowUp = computed(
+  () =>
+    currentMode.value === 'write' &&
+    (hasModal.value || Boolean(menuModalsStore.pendingModal))
+)
+
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
 const dismiss = () => {
   if (currentMode.value === 'write') writerInputStore.markDismissed()
@@ -86,7 +96,7 @@ const dismiss = () => {
 }
 
 const handleRootPointerDown = (event: PointerEvent) => {
-  if (!cardRef.value) return
+  if (!cardRef.value || isWriteFollowUp.value) return
   const target = event.target as Node | null
   if (
     currentMode.value === 'write' &&
@@ -112,6 +122,7 @@ const focusLoss = createFocusLossWatcher({
   canDismiss: () =>
     Boolean(ipcStore.params.isWindowShown) &&
     QUICK_MODES.includes(currentMode.value) &&
+    !isWriteFollowUp.value &&
     ipcStore.params.userConfig?.quickHideOnBlur !== false &&
     !quickDismissStore.isHeld,
   onLost: dismiss,

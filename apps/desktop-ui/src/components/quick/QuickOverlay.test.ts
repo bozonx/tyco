@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   callFunction: vi.fn(async () => ({ success: true })),
   focus: vi.fn(),
   closeWindow: vi.fn(),
+  markDismissed: vi.fn(),
+  modals: { currentModal: 'none', pendingModal: null as string | null },
 }))
 
 vi.mock('../../stores/ipc', () => ({
@@ -24,16 +26,18 @@ vi.mock('../../stores/ipc', () => ({
   }),
 }))
 vi.mock('../../stores/writerInput', () => ({
-  useWriterInputStore: () => ({ focus: mocks.focus, markDismissed: vi.fn() }),
+  useWriterInputStore: () => ({
+    focus: mocks.focus,
+    markDismissed: mocks.markDismissed,
+  }),
 }))
 vi.mock('../../stores/menuModals', () => ({
   MenuModals: { NONE: 'none' },
-  useMenuModalsStore: () => ({
-    currentModal: 'none',
-    pendingModal: null,
-    cancelPending: vi.fn(),
-    closeAll: vi.fn(),
-  }),
+  useMenuModalsStore: () =>
+    Object.assign(reactive(mocks.modals), {
+      cancelPending: vi.fn(),
+      closeAll: vi.fn(),
+    }),
 }))
 vi.mock('../../stores/quickDismiss', () => ({
   useQuickDismissStore: () => ({ isHeld: false }),
@@ -148,8 +152,41 @@ describe('quick overlay keyboard ownership', () => {
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
       expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
+      expect(mocks.markDismissed).toHaveBeenCalledOnce()
     } finally {
       wrapper.unmount()
+    }
+  })
+
+  it('keeps the step after the input when clicking outside the card', async () => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+    const params = reactive(mocks.params)
+    params.mode = 'write'
+    params.isWindowShown = true
+    const modals = reactive(mocks.modals)
+    modals.currentModal = 'insert'
+    const wrapper = mount(QuickOverlay)
+    try {
+      await wrapper.find('.quick-overlay-root').trigger('pointerdown')
+      modals.currentModal = 'none'
+      modals.pendingModal = 'insert'
+      await nextTick()
+      await wrapper.find('.quick-overlay-root').trigger('pointerdown')
+      expect(mocks.callFunction).not.toHaveBeenCalledWith(
+        'dismissQuickWindow',
+        []
+      )
+      expect(mocks.markDismissed).not.toHaveBeenCalled()
+    } finally {
+      wrapper.unmount()
+      modals.currentModal = 'none'
+      modals.pendingModal = null
     }
   })
 })

@@ -132,6 +132,12 @@ watch(
   () => {
     const { isWindowShown, mode } = ipcStore.params
     if (isWindowShown && mode === 'write') {
+      // the step after the input was left open, not closed with Esc: its text
+      // comes back like after a focus loss
+      if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) {
+        writerInputStore.markDismissed()
+      }
+      menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
       if (writerInputStore.startSession()) {
