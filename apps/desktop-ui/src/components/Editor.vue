@@ -61,6 +61,7 @@
             sm
             square
             ghost
+            :disabled="!ipcStore.params.windowId"
             @click="handleInsertToWindow"
             :title="t('action.insertIntoWindow')"
           >

@@ -141,6 +141,11 @@ pub fn run() {
             secrets_set,
             secrets_remove
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            if let tauri::RunEvent::Exit = event {
+                services::kwin_windows::stop_tracker();
+            }
+        });
 }

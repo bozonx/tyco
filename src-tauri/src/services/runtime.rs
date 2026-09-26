@@ -52,6 +52,29 @@ fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Resu
 #[derive(Default)]
 struct ContextCapture {
     generation: AtomicU64,
+    /// The selection seen by the previous capture; `None` until the first one.
+    last_selection: Mutex<Option<Option<String>>>,
+}
+
+impl ContextCapture {
+    /// Records `captured` and returns it unless the previous capture already
+    /// saw it. The primary selection outlives a deselection in most apps, so an
+    /// unchanged one is most likely a leftover rather than a fresh selection.
+    fn fresh_selection(&self, captured: Option<String>) -> Option<String> {
+        let mut last = self.last_selection.lock().expect("selection lock poisoned");
+        let previous = last.replace(captured.clone());
+        match previous {
+            Some(previous) if previous == captured => None,
+            _ => captured,
+        }
+    }
+
+    fn seed_selection(&self, captured: Option<String>) {
+        self.last_selection
+            .lock()
+            .expect("selection lock poisoned")
+            .get_or_insert(captured);
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -113,7 +136,10 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     if activation.window_id.is_none() {
         activation.window_id.clone_from(&source);
     }
-    let capture_selection = activation.selected_text.is_none();
+    let editor_mode = activation.mode == StartMode::Editor;
+    // the editor must not take over a selection made in Tyco itself
+    let capture_selection =
+        activation.selected_text.is_none() && !(editor_mode && has_focused_window(app));
     let generation = app
         .state::<ContextCapture>()
         .generation
@@ -125,8 +151,13 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     if capture_selection {
         let handle = app.clone();
         thread::spawn(move || {
-            let selected_text =
+            let captured =
                 tauri::async_runtime::block_on(super::platform::capture_selection(source));
+            let fresh = handle
+                .state::<ContextCapture>()
+                .fresh_selection(captured.clone());
+            // the editor takes the selection over, so only a fresh one may replace its text
+            let selected_text = if editor_mode { fresh } else { captured };
             if let Err(error) = on_main_thread(&handle, move |app| {
                 if app
                     .state::<ContextCapture>()
@@ -145,6 +176,26 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         });
     }
     Ok(())
+}
+
+fn has_focused_window(app: &AppHandle) -> bool {
+    app.webview_windows()
+        .values()
+        .any(|window| window.is_focused().unwrap_or(false))
+}
+
+/// The target window was closed: nothing can be inserted into it any more.
+pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppError> {
+    let state = app.state::<AppState>();
+    if state.params().window_id.as_deref() != Some(window_id) {
+        return Ok(());
+    }
+    state.update_params(|params| {
+        if params.window_id.as_deref() == Some(window_id) {
+            params.window_id = None;
+        }
+    });
+    emit_params(app, &state)
 }
 
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
@@ -383,6 +434,11 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ContextCapture::default());
     app.manage(RuntimeWindows::default());
+    let handle = app.handle().clone();
+    thread::spawn(move || {
+        let selection = tauri::async_runtime::block_on(super::platform::capture_selection(None));
+        handle.state::<ContextCapture>().seed_selection(selection);
+    });
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;
@@ -511,6 +567,40 @@ mod tests {
         ] {
             assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }
+    }
+
+    #[test]
+    fn only_a_changed_selection_is_fresh() {
+        let capture = ContextCapture::default();
+        assert_eq!(
+            capture.fresh_selection(Some("a".into())).as_deref(),
+            Some("a")
+        );
+        assert_eq!(capture.fresh_selection(Some("a".into())), None);
+        assert_eq!(
+            capture.fresh_selection(Some("b".into())).as_deref(),
+            Some("b")
+        );
+        assert_eq!(capture.fresh_selection(None), None);
+        assert_eq!(
+            capture.fresh_selection(Some("b".into())).as_deref(),
+            Some("b")
+        );
+    }
+
+    #[test]
+    fn the_selection_present_at_startup_is_not_fresh() {
+        let capture = ContextCapture::default();
+        capture.seed_selection(Some("old".into()));
+        assert_eq!(capture.fresh_selection(Some("old".into())), None);
+
+        let captured_first = ContextCapture::default();
+        assert_eq!(
+            captured_first.fresh_selection(Some("a".into())).as_deref(),
+            Some("a")
+        );
+        captured_first.seed_selection(Some("b".into()));
+        assert_eq!(captured_first.fresh_selection(Some("a".into())), None);
     }
 
     #[test]

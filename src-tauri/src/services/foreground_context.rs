@@ -56,9 +56,11 @@ impl ForegroundContext for SystemForegroundContext {
     type Source = String;
 
     fn capture_source(&self) -> Option<Self::Source> {
-        (self.session == Session::X11)
-            .then(|| Self::command_output("xdotool", &["getactivewindow"]))
-            .flatten()
+        match self.session {
+            Session::X11 => Self::command_output("xdotool", &["getactivewindow"]),
+            Session::Wayland => super::kwin_windows::tracker().last_foreign(),
+            Session::Unsupported => None,
+        }
     }
 
     async fn capture_selection(&self, _source: Option<Self::Source>) -> Option<String> {

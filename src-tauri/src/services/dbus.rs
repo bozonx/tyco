@@ -4,7 +4,7 @@ use tauri::AppHandle;
 use zbus::interface;
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::runtime;
+use crate::services::{kwin_windows, runtime};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -36,6 +36,13 @@ pub fn spawn_dbus_server(app: AppHandle) {
 
         log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
 
+        if kwin_windows::is_kde_wayland_session() {
+            match kwin_windows::start_tracker() {
+                Ok(()) => log::info!("Tracking foreign windows with a KWin script"),
+                Err(error) => log::warn!("KWin window tracker is unavailable: {error}"),
+            }
+        }
+
         // Keep the connection alive for the lifetime of the process.
         loop {
             thread::park();
@@ -61,6 +68,25 @@ impl TycoDbus {
             .map_err(|error| zbus::fdo::Error::Failed(error.to_string()))?;
 
         Ok(())
+    }
+
+    /// Reported by the KWin tracker script, see `kwin_windows`.
+    #[zbus(name = "KwinWindowActivated")]
+    async fn kwin_window_activated(&self, id: String, foreign: bool) {
+        kwin_windows::tracker().window_activated(&id, foreign);
+    }
+
+    #[zbus(name = "KwinWindowClosed")]
+    async fn kwin_window_closed(&self, id: String) {
+        kwin_windows::tracker().window_closed(&id);
+        if let Err(error) = runtime::forget_target_window(&self.app, &id) {
+            log::warn!("Could not forget the closed target window: {error}");
+        }
+    }
+
+    #[zbus(name = "KwinWindowMissing")]
+    async fn kwin_window_missing(&self, id: String) {
+        kwin_windows::tracker().window_missing(&id);
     }
 
     #[zbus(name = "Ping")]

@@ -23,6 +23,7 @@ import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
 import { desktopClient } from './lib/desktop/client'
+import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { appNavigation } from './lib/navigation/navigation'
@@ -155,6 +156,23 @@ watch(
     if (mode) {
       void ipcStore.patchLocalState({ lastMode: mode })
     }
+  }
+)
+
+// the text selected in another app when the editor was called goes into it
+const capturedSelection = createCapturedSelection({
+  replaceValue: (text) => editorInputStore.replaceValue(text),
+  focus: () => editorInputStore.focus(),
+})
+watch(
+  () => [
+    ipcStore.params.activationId,
+    ipcStore.params.mode,
+    ipcStore.params.isWindowShown,
+    ipcStore.params.selectedText,
+  ],
+  () => {
+    if (!isQuickWindow) capturedSelection.apply(ipcStore.params)
   }
 )
 

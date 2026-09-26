@@ -6,6 +6,7 @@ pub mod app_paths;
 pub mod dbus;
 pub mod foreground_context;
 pub mod hotkeys;
+pub mod kwin_windows;
 #[cfg(target_os = "linux")]
 pub mod layer_shell;
 pub mod llm_config;

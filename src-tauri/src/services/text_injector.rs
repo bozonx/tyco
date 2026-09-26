@@ -9,9 +9,9 @@ use crate::errors::AppError;
 
 const FOCUS_TIMEOUT: Duration = Duration::from_secs(2);
 const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
-/// Wayland offers no way to activate a foreign window, so the paste relies on
-/// the compositor returning focus to the source window once Tyco hides.
-const WAYLAND_REFOCUS_DELAY: Duration = Duration::from_millis(120);
+/// KWin reports the activation before the client gets keyboard focus, so the
+/// paste waits a moment longer.
+const WAYLAND_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(80);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Session {
@@ -70,7 +70,15 @@ impl SystemTextInjector {
             ensure_ydotool_daemon()?;
         }
         if self.session == Session::Wayland {
-            thread::sleep(WAYLAND_REFOCUS_DELAY);
+            // Wayland has no generic way to activate a foreign window; only
+            // KWin windows reported by the tracker script can be targeted
+            let window_id = source_window_id.ok_or_else(|| {
+                AppError::Message(String::from(
+                    "Target window is not available for text insertion",
+                ))
+            })?;
+            super::kwin_windows::activate_window(window_id)?;
+            thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
         }
         run_spec(&command)
     }
@@ -153,12 +161,13 @@ fn ydotool_socket_paths() -> Vec<PathBuf> {
 }
 
 /// The ydotool 1.x client only talks to the ydotoold socket; access to
-/// `/dev/uinput` alone is not enough.
+/// `/dev/uinput` alone is not enough. The socket is a datagram one.
 fn ensure_ydotool_daemon() -> Result<(), AppError> {
-    if ydotool_socket_paths()
-        .iter()
-        .any(|path| std::os::unix::net::UnixStream::connect(path).is_ok())
-    {
+    if ydotool_socket_paths().iter().any(|path| {
+        std::os::unix::net::UnixDatagram::unbound()
+            .and_then(|socket| socket.connect(path))
+            .is_ok()
+    }) {
         return Ok(());
     }
     Err(AppError::Message(String::from(
