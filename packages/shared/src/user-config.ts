@@ -184,15 +184,10 @@ export interface SttModel {
   provider: SttProvider
   description?: string
   formatWithLlm?: boolean
-  baseUrl?: string
 }
 
-export const STT_PROVIDERS = [
-  'assemblyai',
-  'deepgram',
-  'groq',
-  'openai-compatible',
-] as const
+/** Dictation is live only, and Deepgram is the provider that serves it */
+export const STT_PROVIDERS = ['deepgram'] as const
 
 export type SttProvider = (typeof STT_PROVIDERS)[number]
 
@@ -324,37 +319,15 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   llm: DEFAULT_LLM_CONFIG,
   sttModels: [
     {
-      id: 'openai-compatible-stt',
-      model: 'whisper-1',
-      provider: 'openai-compatible',
-      description: 'OpenAI-compatible transcription endpoint',
-      formatWithLlm: false,
-      baseUrl: 'http://localhost:8000/v1',
-    },
-    {
-      id: 'assemblyai-stt',
-      model: 'universal-3-pro',
-      provider: 'assemblyai',
-      description: 'AssemblyAI speech recognition',
-      formatWithLlm: true,
-    },
-    {
       id: 'deepgram-stt',
       model: 'nova-3',
       provider: 'deepgram',
       description: 'Deepgram speech recognition',
       formatWithLlm: true,
     },
-    {
-      id: 'groq-stt',
-      model: 'whisper-large-v3-turbo',
-      provider: 'groq',
-      description: 'Groq speech recognition',
-      formatWithLlm: true,
-    },
   ],
   ttsModels: [],
-  aiModelUsage: { stt: 'openai-compatible-stt', tts: '' },
+  aiModelUsage: { stt: 'deepgram-stt', tts: '' },
   aiRules: {
     base: BASE_TASK,
     translate: TRANSLATION_TASK,

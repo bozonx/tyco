@@ -186,27 +186,13 @@
         <div v-else-if="currentTab === 'stt'">
           <SettingsSection>
             <FieldRow :label="t('settings.sttProvider')">
-              <Tabs
-                variant="segmented"
-                :tabs="sttProviderTabs"
-                v-model:value="currentSttProvider"
-              />
-            </FieldRow>
-            <FieldRow
-              v-if="currentSttProvider === 'openai-compatible'"
-              :label="t('settings.baseUrl')"
-            >
-              <FieldInput
-                :value="currentSttModel.baseUrl || ''"
-                placeholder="http://localhost:8000/v1"
-                @update:value="setSttField('baseUrl', $event)"
-              />
+              <span>Deepgram</span>
             </FieldRow>
             <FieldRow :label="t('settings.model')">
               <FieldInput
                 :value="currentSttModel.model || ''"
-                placeholder="whisper-1"
-                @update:value="setSttField('model', $event)"
+                placeholder="nova-3"
+                @update:value="setSttModelName"
               />
             </FieldRow>
             <FieldRow :label="t('settings.apiKey')">
@@ -305,9 +291,7 @@ import {
   type MotionMode,
   QUICK_CORRECTION_MODES,
   type QuickInputSubmitMode,
-  STT_PROVIDERS,
   type StorageInfo,
-  type SttProvider,
   type ThemeMode,
   UI_SCALES,
   isUiScale,
@@ -323,7 +307,6 @@ const { toast, toastText } = useToast()
 const SAVE_DEBOUNCE_MS = 500
 
 const currentTab = ref('general')
-const currentSttProvider = ref<SttProvider>('openai-compatible')
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
 const storageInfo = ref<StorageInfo | null>(null)
@@ -378,20 +361,6 @@ const currentTabTitle = computed(
     [...primaryTabs.value, ...actionTabs.value].find(
       (tab) => tab.key === currentTab.value
     )?.text || ''
-)
-
-const sttProviderNames: Record<SttProvider, string> = {
-  assemblyai: 'AssemblyAI',
-  deepgram: 'Deepgram',
-  groq: 'Groq',
-  'openai-compatible': 'OpenAI-compatible',
-}
-
-const sttProviderTabs = computed(() =>
-  STT_PROVIDERS.map((provider) => ({
-    text: sttProviderNames[provider],
-    key: provider,
-  }))
 )
 
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
@@ -455,26 +424,6 @@ watch(
     scheduleAutosave()
   },
   { deep: true }
-)
-
-watch(
-  () => userConfig.value.aiModelUsage?.stt,
-  () => {
-    currentSttProvider.value = resolveCurrentSttProvider(userConfig.value)
-  },
-  { immediate: true }
-)
-
-watch(
-  () => currentSttProvider.value,
-  (provider) => {
-    if (provider === resolveCurrentSttProvider(userConfig.value)) {
-      return
-    }
-
-    const model = ensureSttModel(userConfig.value, provider)
-    userConfig.value.aiModelUsage.stt = model.id
-  }
 )
 
 const storageInfoItems = computed(() => {
@@ -607,32 +556,19 @@ function normalizeWindowInsertionConfig(config: Record<string, any>) {
   config.xdotoolBin = xdotoolBin
 }
 
+/** Deepgram is the only speech provider; the backend migrates old configs too */
 function normalizeSttConfig(config: Record<string, any>) {
-  if (!Array.isArray(config.sttModels)) {
-    config.sttModels = []
-  }
-
-  if (!config.aiModelUsage) {
-    config.aiModelUsage = {}
-  }
-
-  const activeModel = config.sttModels.find(
-    (model: Record<string, any>) => model.id === config.aiModelUsage.stt
-  )
-  const activeProvider = STT_PROVIDERS.includes(activeModel?.provider)
-    ? activeModel.provider
-    : 'openai-compatible'
-  config.sttModels = STT_PROVIDERS.map((provider) =>
-    createSttModel(
-      provider,
-      config.sttModels.find(
-        (model: Record<string, any>) => model.provider === provider
+  const defaults = DEFAULT_USER_CONFIG.sttModels[0]
+  const existing = Array.isArray(config.sttModels)
+    ? config.sttModels.find(
+        (model: Record<string, any>) => model?.provider === defaults.provider
       )
-    )
-  )
+    : undefined
+  const { baseUrl: _baseUrl, ...model } = { ...defaults, ...existing }
+  config.sttModels = [{ ...model, id: defaults.id }]
   config.aiModelUsage = {
-    stt: createSttModel(activeProvider).id,
-    tts: config.aiModelUsage.tts ?? '',
+    stt: defaults.id,
+    tts: config.aiModelUsage?.tts ?? '',
   }
 }
 
@@ -651,68 +587,6 @@ function normalizeAiTasks(config: Record<string, any>) {
   ).map((task) =>
     task ? { name: task.name || '', rule: task.rule || '' } : null
   )
-}
-
-function createSttModel(
-  provider: SttProvider,
-  existingModel?: Record<string, any>
-) {
-  const defaults: Record<SttProvider, Record<string, any>> = {
-    assemblyai: {
-      id: 'assemblyai-stt',
-      model: 'universal-3-pro',
-      description: 'AssemblyAI speech recognition',
-    },
-    deepgram: {
-      id: 'deepgram-stt',
-      model: 'nova-3',
-      description: 'Deepgram speech recognition',
-    },
-    groq: {
-      id: 'groq-stt',
-      model: 'whisper-large-v3-turbo',
-      description: 'Groq speech recognition',
-    },
-    'openai-compatible': {
-      id: 'openai-compatible-stt',
-      model: 'whisper-1',
-      description: 'OpenAI-compatible transcription endpoint',
-      baseUrl: 'http://localhost:8000/v1',
-    },
-  }
-  const fallback = defaults[provider]
-  return {
-    ...fallback,
-    ...existingModel,
-    id: fallback.id,
-    provider,
-    formatWithLlm:
-      existingModel?.formatWithLlm ?? provider !== 'openai-compatible',
-  }
-}
-
-function ensureSttModel(config: Record<string, any>, provider: SttProvider) {
-  const existingModel = (config.sttModels || []).find(
-    (model: Record<string, any>) => model.provider === provider
-  )
-  const nextModel = createSttModel(provider, existingModel)
-
-  config.sttModels = (config.sttModels || []).map(
-    (model: Record<string, any>) =>
-      model.provider === provider ? nextModel : model
-  )
-  return nextModel
-}
-
-function resolveCurrentSttProvider(config: Record<string, any>) {
-  const usageId = config.aiModelUsage?.stt
-  const model = (config.sttModels || []).find(
-    (item: Record<string, any>) => item.id === usageId
-  )
-
-  return STT_PROVIDERS.includes(model?.provider)
-    ? model.provider
-    : 'openai-compatible'
 }
 
 /**
@@ -850,11 +724,7 @@ watch(
   }
 )
 
-const currentSttModel = computed(() =>
-  (userConfig.value.sttModels || []).find(
-    (model: Record<string, any>) => model.provider === currentSttProvider.value
-  )
-)
+const currentSttModel = computed(() => userConfig.value.sttModels[0])
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
@@ -916,8 +786,8 @@ const toggleAppLanguageMode = () => {
   userConfig.value.appLanguage = effectiveAppLanguage.value
 }
 
-const setSttField = (field: 'baseUrl' | 'model', value: string) => {
-  currentSttModel.value[field] = value
+const setSttModelName = (value: string) => {
+  currentSttModel.value.model = value
 }
 
 const hasSttKey = computed(() =>
@@ -927,29 +797,11 @@ const hasSttKey = computed(() =>
   )
 )
 
-function currentSttOrigin() {
-  try {
-    const url = new URL(currentSttModel.value?.baseUrl || '')
-    return url.protocol === 'http:' || url.protocol === 'https:'
-      ? url.origin
-      : null
-  } catch {
-    return null
-  }
-}
-
 async function saveSttKey() {
-  const customProvider = currentSttProvider.value === 'openai-compatible'
-  const origin = customProvider ? currentSttOrigin() : undefined
-  if (customProvider && !origin) {
-    toast(t('settings.invalidBaseUrl'), 'error')
-    return
-  }
   try {
     await llmStore.setSecret(
       secretId(currentSttModel.value),
-      sttKeyDraft.value.trim(),
-      origin ? [origin] : undefined
+      sttKeyDraft.value.trim()
     )
     sttKeyDraft.value = ''
   } catch (error) {

@@ -1,5 +1,9 @@
 <template>
-  <div class="audio-waveform-container" data-testid="audio-waveform">
+  <div
+    class="audio-waveform-container"
+    :class="{ compact }"
+    data-testid="audio-waveform"
+  >
     <!-- Transcribing mode -->
     <div v-if="isTranscribing" class="transcribing-state">
       <span class="loading loading-spinner loading-lg text-primary" />
@@ -22,9 +26,7 @@
           <Icon icon="mdi:microphone" class="mic-icon animate-pulse" />
           <span>{{ t('menu.speakNow') }}</span>
         </div>
-        <div class="waveform-timer">
-          {{ formattedDuration }} / {{ formattedMaxDuration }}
-        </div>
+        <div class="waveform-timer">{{ formattedDuration }}</div>
       </div>
 
       <!-- Sensitivity level bar -->
@@ -47,23 +49,25 @@ import { Icon } from '@iconify/vue'
 const BAR_COUNT = 32
 const MIN_BAR_HEIGHT = 6
 const MAX_BAR_HEIGHT = 72
+/** Room left for the recognized text below */
+const COMPACT_MAX_BAR_HEIGHT = 28
 
 const props = withDefaults(
   defineProps<{
     level?: number
     peak?: number
     durationMs?: number
-    maxDurationMs?: number
     isLive?: boolean
     isTranscribing?: boolean
+    compact?: boolean
   }>(),
   {
     level: 0,
     peak: 0,
     durationMs: 0,
-    maxDurationMs: 300_000,
     isLive: true,
     isTranscribing: false,
+    compact: false,
   }
 )
 
@@ -83,20 +87,22 @@ let phase = 0
 
 function formatTime(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
   const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${pad(minutes)}:${pad(seconds)}`
+  const clock = `${pad(minutes)}:${pad(seconds)}`
+  return hours > 0 ? `${hours}:${clock}` : clock
 }
 
 const formattedDuration = computed(() => formatTime(props.durationMs))
-const formattedMaxDuration = computed(() => formatTime(props.maxDurationMs))
 
 function updateAnimation() {
   phase += 0.08
   const currentLevel = Math.max(0, Math.min(1, props.level))
   const currentPeak = Math.max(0, Math.min(1, props.peak))
   const effectiveLevel = Math.max(currentLevel * 1.5, currentPeak * 0.8)
+  const maxBarHeight = props.compact ? COMPACT_MAX_BAR_HEIGHT : MAX_BAR_HEIGHT
 
   const newHeights: number[] = []
   const newOpacities: number[] = []
@@ -116,7 +122,7 @@ function updateAnimation() {
       weights[i] *
         voiceModulation *
         effectiveLevel *
-        (MAX_BAR_HEIGHT - MIN_BAR_HEIGHT)
+        (maxBarHeight - MIN_BAR_HEIGHT)
 
     const targetHeight = Math.max(ambientHeight, voiceHeight)
     const prevHeight = barHeights.value[i] || MIN_BAR_HEIGHT
@@ -131,7 +137,7 @@ function updateAnimation() {
 
     const opacity =
       effectiveLevel > 0.03
-        ? 0.45 + (smoothedHeight / MAX_BAR_HEIGHT) * 0.55
+        ? 0.45 + (smoothedHeight / maxBarHeight) * 0.55
         : 0.35 + ambient * 0.25
     newOpacities.push(Math.min(1, Math.max(0.2, opacity)))
   }
@@ -181,6 +187,30 @@ onUnmounted(() => {
   min-height: 140px;
   padding: var(--space-md);
   box-sizing: border-box;
+}
+
+.audio-waveform-container.compact {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: var(--space-sm) var(--space-lg) 0;
+}
+
+.compact .listening-state {
+  gap: var(--space-sm);
+  max-width: none;
+}
+
+.compact .waveform-visualizer {
+  height: 32px;
+}
+
+.compact .transcribing-state {
+  flex-direction: row;
+  padding: var(--space-sm);
+}
+
+.compact .loading-lg {
+  width: 1.25rem;
 }
 
 .transcribing-state {

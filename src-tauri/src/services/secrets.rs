@@ -38,13 +38,6 @@ const BUILTIN_ORIGINS: &[(&str, &[&str])] = &[
     ("anthropic", &["https://api.anthropic.com"]),
     ("groq", &["https://api.groq.com"]),
     ("deepgram", &["https://api.deepgram.com"]),
-    (
-        "assemblyai",
-        &[
-            "https://api.assemblyai.com",
-            "https://streaming.assemblyai.com",
-        ],
-    ),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -129,7 +129,6 @@ export const DESKTOP_EVENTS = {
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
-  VOICE_STREAM_ERROR: 'app://voice-stream-error',
 } as const
 
 export const DESKTOP_COMMANDS = {
@@ -158,8 +157,8 @@ export const DESKTOP_COMMANDS = {
   DISMISS_QUICK_WINDOW: 'dismiss_quick_window',
   SET_QUICK_INPUT_REGION: 'set_quick_input_region',
   OPEN_IN_BROWSER_AND_CLOSE: 'open_in_browser_and_close',
-  START_LOCAL_VOICE_RECORDING: 'start_local_voice_recording',
-  STOP_LOCAL_VOICE_RECORDING: 'stop_local_voice_recording',
+  START_VOICE_CAPTURE: 'start_voice_capture',
+  STOP_VOICE_CAPTURE: 'stop_voice_capture',
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
   PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
   SAVE_NOTE: 'save_note',

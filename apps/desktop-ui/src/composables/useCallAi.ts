@@ -2,17 +2,17 @@ import { translate } from '../lib/i18n'
 import { LlmError, toLlmError } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { buildLlmPrompt } from '../lib/llm/llm-prompt'
-import {
-  AUTO_LANGUAGE_VALUE,
-  resolveLanguagePreference,
-} from '../lib/locale/language'
+import { resolveLanguagePreference } from '../lib/locale/language'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import { base64ToBytes } from '../lib/net/base64'
+import { createLiveDictation } from '../lib/stt/live-dictation'
+import { liveLanguageFor } from '../lib/stt/live-language'
+import type { LiveTranscriptState } from '../lib/stt/live-transcript'
 import {
   buildSttCatalog,
   createSttClient,
   secretId,
 } from '../lib/stt/stt-client'
+import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
@@ -26,16 +26,15 @@ import {
   type SttModel,
 } from '@tyco/shared'
 
-/** Speech recognition requests leave from Rust too, like every other one */
-const sttClient = createSttClient({
-  transport: createTauriTransport(tauriNetIpc),
+/** The microphone streams from Rust, and the provider socket leaves from it */
+const dictation = createLiveDictation({
+  capture: createVoiceCaptureControl(tauriNetIpc),
+  stt: createSttClient({ transport: createTauriTransport(tauriNetIpc) }),
 })
 
-interface LocalVoiceRecording {
-  sampleRate: number
-  durationMs: number
-  wavBase64: string
-  limitReached: boolean
+export interface DictationHandlers {
+  onText: (state: LiveTranscriptState) => void
+  onError: (error: Error) => void
 }
 
 export const useCallAi = () => {
@@ -43,8 +42,6 @@ export const useCallAi = () => {
   const llmStore = useLlmStore()
   const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
-  let activeSttModel: SttModel | undefined
-
   const currentUserConfig = () => ipcStore.params.userConfig
 
   const buildTaskRules = (taskRule?: string) => {
@@ -75,15 +72,10 @@ export const useCallAi = () => {
     return sttModel
   }
 
-  const currentWhisperLanguage = () => {
-    const userLanguage = currentUserConfig().userLanguage
-
-    if (!userLanguage || userLanguage === AUTO_LANGUAGE_VALUE) {
-      return undefined
-    }
-
-    return resolveLanguagePreference(userLanguage).split('_')[0]
-  }
+  // the spoken language is followed, not fixed: dictating something to be
+  // translated is in a language other than the user's own
+  const currentDictationLanguage = () =>
+    liveLanguageFor(resolveLanguagePreference(currentUserConfig().userLanguage))
 
   interface AiRequestOptions {
     onChunk?: (chunk: string) => void
@@ -120,62 +112,25 @@ export const useCallAi = () => {
     }
   }
 
-  const startVoiceRecognition = async () => {
+  const startDictation = async (handlers: DictationHandlers) => {
     const model = currentVoiceModel()
     buildSttCatalog(model)
     await llmStore.refreshSecrets()
-    if (
-      model.provider !== 'openai-compatible' &&
-      !Object.hasOwn(llmStore.secrets, secretId(model))
-    ) {
+    if (!Object.hasOwn(llmStore.secrets, secretId(model))) {
       throw new Error(`No API key configured for provider "${model.provider}"`)
     }
 
-    const result = await ipcStore.callFunction('startLocalVoiceRecording')
-
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to start local voice recording')
-    }
-    activeSttModel = model
-  }
-
-  const stopVoiceRecognition = async (signal?: AbortSignal) => {
-    const model = activeSttModel ?? currentVoiceModel()
-
-    const result = await ipcStore.callFunction('stopLocalVoiceRecording')
-    activeSttModel = undefined
-
-    if (!result.success || !result.result) {
-      throw new Error(result.error || 'Failed to stop local voice recording')
-    }
-
-    signal?.throwIfAborted()
-    await llmStore.refreshSecrets()
-    signal?.throwIfAborted()
-    const recording = result.result as LocalVoiceRecording
-    const text = await sttClient.transcribe({
+    await dictation.start({
       model,
-      recording: {
-        sampleRate: recording.sampleRate,
-        durationMs: recording.durationMs,
-        wav: base64ToBytes(recording.wavBase64),
-        limitReached: recording.limitReached,
-      },
-      language: currentWhisperLanguage(),
-      hasApiKey: Object.hasOwn(llmStore.secrets, secretId(model)),
-      signal,
+      language: currentDictationLanguage(),
+      hasApiKey: true,
+      ...handlers,
     })
-
-    return { text, limitReached: recording.limitReached }
   }
 
-  const cancelVoiceRecognition = async () => {
-    activeSttModel = undefined
-    const result = await ipcStore.callFunction('stopLocalVoiceRecording')
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to stop local voice recording')
-    }
-  }
+  const finishDictation = () => dictation.finish()
+
+  const cancelDictation = () => dictation.cancel()
 
   const voiceCorrection = async (text: string, signal?: AbortSignal) => {
     const userConfig = currentUserConfig()
@@ -279,9 +234,9 @@ export const useCallAi = () => {
   return {
     aiRequest,
     shouldFormatRecognizedText,
-    startVoiceRecognition,
-    stopVoiceRecognition,
-    cancelVoiceRecognition,
+    startDictation,
+    finishDictation,
+    cancelDictation,
     voiceCorrection,
     sendChatMessage,
     correctText,

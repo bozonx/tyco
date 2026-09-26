@@ -2,15 +2,19 @@
   <ActionOverlayLayout :title="t('menu.voiceInput')">
     <template #preview>
       <AudioWaveform
-        v-if="!recognizedText"
+        v-if="isStarted || !hasText"
         :level="audioLevel"
         :peak="audioPeak"
         :duration-ms="recordingDurationMs"
-        :max-duration-ms="MAX_RECORDING_MS"
         :is-live="isStarted"
         :is-transcribing="isTranscribing"
+        :compact="hasText"
       />
-      <TextPreview v-else :text="recognizedText" />
+      <LiveTranscript
+        v-if="hasText"
+        :committed="transcript.committed"
+        :draft="transcript.draft"
+      />
     </template>
 
     <template #actions>
@@ -38,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
 import {
@@ -48,6 +52,10 @@ import {
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
 import { desktopClient } from '../../lib/desktop/client'
+import {
+  createLiveTranscriptState,
+  liveTranscriptText,
+} from '../../lib/stt/live-transcript'
 import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -55,6 +63,7 @@ import { useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
+import LiveTranscript from '../voice/LiveTranscript.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const props = defineProps<{
@@ -77,14 +86,14 @@ const emit = defineEmits<{
 }>()
 
 const {
-  cancelVoiceRecognition,
+  cancelDictation,
+  finishDictation,
   shouldFormatRecognizedText,
-  startVoiceRecognition,
-  stopVoiceRecognition,
+  startDictation,
   voiceCorrection,
 } = useCallAi()
 const { globalEvents } = useGlobalEvents()
-const { toast } = useToast()
+const { toast, toastText } = useToast()
 const { t } = useI18n()
 const ipcStore = useIpcStore()
 const historyStore = useHistoryStore()
@@ -92,7 +101,8 @@ const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
 const releaseDismissHold = useQuickDismissStore().hold()
 
-const recognizedText = ref('')
+const transcript = ref(createLiveTranscriptState())
+const hasText = computed(() => Boolean(liveTranscriptText(transcript.value)))
 const isFinishing = ref(false)
 const isCancelling = ref(false)
 const isStarted = ref(false)
@@ -103,11 +113,13 @@ const recordingDurationMs = ref(0)
 
 let recordingTimer: ReturnType<typeof setInterval> | undefined
 let unlistenAudioLevel: (() => void) | undefined
-let unlistenStreamError: (() => void) | undefined
 let keyUpHandlerIndex = -1
 let sessionGeneration = 0
 let starting: Promise<void> | undefined
-const MAX_RECORDING_MS = 300_000
+/** Set once a dictation started; it stays finishable after a failure */
+let hasSession = false
+// Silence is billed too: a forgotten dictation must not run all day
+const MAX_RECORDING_MS = 3_600_000
 
 function startRecordingTimer() {
   recordingDurationMs.value = 0
@@ -132,6 +144,7 @@ function stopRecordingTimer() {
 const voiceSession = createVoiceSession({
   maxRecordingMs: MAX_RECORDING_MS,
   onLimit: () => {
+    toast(t('toast.recordingLimitReached'), 'warn')
     void finish()
   },
 })
@@ -145,12 +158,13 @@ const cancel = async () => {
   if (isCancelling.value) return
   isCancelling.value = true
   sessionGeneration += 1
+  hasSession = false
   stopRecordingTimer()
   voiceSession.abort()
 
   try {
     await starting
-    await cancelVoiceRecognition()
+    await cancelDictation()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     toast(message || t('toast.voiceRecognitionFailed'), 'error')
@@ -174,42 +188,35 @@ const finish = async () => {
 
   try {
     await starting
-    if (!isStarted.value || voiceSession.signal?.aborted) return
+    if (!hasSession || voiceSession.signal?.aborted) return
+    hasSession = false
     isTranscribing.value = true
-    const transcription = await stopVoiceRecognition(voiceSession.signal)
-    const finalRecognizedText = transcription.text
+    // the provider's last words arrive after the microphone is off
+    const recognizedText = await finishDictation()
     isStarted.value = false
     isTranscribing.value = false
 
-    if (transcription.limitReached) {
-      toast(t('toast.recordingLimitReached'), 'warn')
-    }
-
-    if (finalRecognizedText) {
-      recognizedText.value = finalRecognizedText
-    }
-
-    if (!recognizedText.value.trim()) {
+    if (!recognizedText.trim()) {
       toast(t('toast.nothingRecognized'), 'warn')
       notifyCancelled()
       return
     }
 
-    let resultText = recognizedText.value
+    let resultText = recognizedText
     let correctedText: string | undefined
 
     if (shouldFormatRecognizedText()) {
       // the raw transcript is the only copy of what was said: the LLM may
       // distort it, and it cannot be dictated the same way twice
       const sourceId = await historyStore.saveSource(
-        recognizedText.value,
+        recognizedText,
         'voice-correction'
       )
       menuModalsStore.setPendingModal({ correction: true })
 
       try {
         const formattedText = await voiceCorrection(
-          recognizedText.value,
+          recognizedText,
           voiceSession.signal
         )
 
@@ -231,8 +238,8 @@ const finish = async () => {
     }
 
     if (!voiceSession.signal?.aborted) {
-      props.onCorrected?.(resultText, recognizedText.value, correctedText)
-      emit('corrected', resultText, recognizedText.value, correctedText)
+      props.onCorrected?.(resultText, recognizedText, correctedText)
+      emit('corrected', resultText, recognizedText, correctedText)
     }
   } catch (error) {
     if (!voiceSession.signal?.aborted) {
@@ -245,6 +252,24 @@ const finish = async () => {
     isTranscribing.value = false
     isFinishing.value = false
   }
+}
+
+/** The microphone or the provider failed mid-dictation; the text so far is kept */
+function handleSessionError(error: Error) {
+  if (voiceSession.signal?.aborted) return
+  stopRecordingTimer()
+  voiceSession.stopTimer()
+  isStarted.value = false
+
+  if (!hasText.value) {
+    hasSession = false
+    toast(error.message || t('toast.voiceRecognitionFailed'), 'error')
+    voiceSession.abort()
+    notifyCancelled()
+    return
+  }
+
+  toastText(`${error.message}\n${t('menu.dictationInterrupted')}`, 'error')
 }
 
 function handleKeyUp(event: KeyboardEvent) {
@@ -264,17 +289,28 @@ function handleKeyUp(event: KeyboardEvent) {
 
 async function startSession() {
   if (isStarted.value || isFinishing.value || starting) return
-  recognizedText.value = ''
+  transcript.value = createLiveTranscriptState()
   const generation = ++sessionGeneration
   starting = (async () => {
     try {
-      await startVoiceRecognition()
+      await startDictation({
+        onText: (state) => {
+          if (generation === sessionGeneration) transcript.value = state
+        },
+        // a fast failure must not overtake the start it belongs to
+        onError: (error) => {
+          void Promise.resolve(starting).then(() => {
+            if (generation === sessionGeneration) handleSessionError(error)
+          })
+        },
+      })
       if (generation !== sessionGeneration) {
-        await cancelVoiceRecognition()
+        await cancelDictation()
         return
       }
       voiceSession.begin()
       startRecordingTimer()
+      hasSession = true
       isStarted.value = true
     } catch (error) {
       if (generation !== sessionGeneration) return
@@ -313,14 +349,6 @@ onMounted(async () => {
     }
   )
 
-  unlistenStreamError = await desktopClient.listen(
-    DESKTOP_EVENTS.VOICE_STREAM_ERROR,
-    (errorMessage) => {
-      toast(errorMessage || t('menu.micError'), 'error')
-      void cancel()
-    }
-  )
-
   if (ipcStore.params?.isWindowShown !== false) {
     await startSession()
   }
@@ -333,7 +361,6 @@ onUnmounted(() => {
   voiceSession.dispose()
 
   unlistenAudioLevel?.()
-  unlistenStreamError?.()
 
   if (keyUpHandlerIndex >= 0) {
     globalEvents.removeListener(keyUpHandlerIndex)
@@ -342,7 +369,7 @@ onUnmounted(() => {
 
   void (async () => {
     await starting
-    await cancelVoiceRecognition()
+    await cancelDictation()
   })().catch(() => undefined)
 })
 </script>

@@ -41,6 +41,7 @@ declare module 'vue' {
     InProgressMessage: typeof import('./src/components/menu/InProgressMessage.vue')['default']
     InsertMenu: typeof import('./src/components/menu/InsertMenu.vue')['default']
     KeyButton: typeof import('./src/components/common/KeyButton.vue')['default']
+    LiveTranscript: typeof import('./src/components/voice/LiveTranscript.vue')['default']
     MenuModals: typeof import('./src/components/menu/MenuModals.vue')['default']
     NavPanel: typeof import('./src/components/NavPanel.vue')['default']
     Overlay: typeof import('./src/components/common/Overlay.vue')['default']

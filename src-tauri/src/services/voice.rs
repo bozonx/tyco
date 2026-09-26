@@ -1,21 +1,31 @@
+//! Microphone capture for live dictation.
+//!
+//! Nothing is kept: the audio leaves as PCM16 mono chunks through the channel
+//! the webview passed in, which hands it on to the speech provider's socket.
+//! A dictation can therefore last as long as the user keeps talking.
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use base64::Engine;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Sample;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::errors::AppError;
-use crate::state::{AppState, LocalVoiceRecordingSession};
+use crate::services::net::EventSink;
+use crate::state::{AppState, VoiceCaptureSession};
 
 pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
-pub const VOICE_STREAM_ERROR_EVENT: &str = "app://voice-stream-error";
 
-const MAX_RECORDING_SECONDS: usize = 300;
+/// What speech models are trained on; a higher device rate is averaged down.
+const TARGET_SAMPLE_RATE: u32 = 16_000;
+/// Chunks of about 100 ms: what Deepgram recommends, and few enough IPC calls.
+const CHUNK_MS: usize = 100;
+const POLL_INTERVAL: Duration = Duration::from_millis(20);
+const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
@@ -27,136 +37,94 @@ pub struct VoiceAudioLevelPayload {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LocalVoiceRecording {
+pub struct VoiceCaptureInfo {
+    /// Rate of the PCM16 mono chunks that follow.
     pub sample_rate: u32,
-    pub duration_ms: u64,
-    pub wav_base64: String,
-    pub limit_reached: bool,
 }
 
-pub async fn start_local_recording(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
-    let _operation = state.lock_local_voice_recording().await;
-    let _ = stop_local_recording_unlocked(state).await;
+/// Control messages on the audio channel; the audio itself goes as raw bytes.
+#[derive(Serialize, Debug, PartialEq)]
+#[serde(tag = "type", rename_all = "camelCase")]
+enum CaptureEvent {
+    /// Every captured sample has been sent.
+    End,
+    Error {
+        message: String,
+    },
+}
+
+pub async fn start_capture<S: EventSink>(
+    app: &AppHandle,
+    state: &AppState,
+    sink: S,
+) -> Result<VoiceCaptureInfo, AppError> {
+    let _operation = state.lock_voice_capture().await;
+    stop_capture_unlocked(state).await?;
 
     let app_handle = app.clone();
-    let session = tokio::task::spawn_blocking(move || create_local_recording_session(app_handle))
-        .await
-        .map_err(|error| AppError::Message(format!("recording setup task failed: {error}")))??;
-    state.replace_local_voice_recording_session(Some(session));
+    let (session, sample_rate) =
+        tokio::task::spawn_blocking(move || create_capture_session(app_handle, sink))
+            .await
+            .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
+    state.replace_voice_capture_session(Some(session));
 
-    Ok(())
+    Ok(VoiceCaptureInfo { sample_rate })
 }
 
-fn create_local_recording_session(app: AppHandle) -> Result<LocalVoiceRecordingSession, AppError> {
+/// Stops the microphone; returns once the last chunk and `end` are sent.
+pub async fn stop_capture(state: &AppState) -> Result<(), AppError> {
+    let _operation = state.lock_voice_capture().await;
+    stop_capture_unlocked(state).await
+}
+
+async fn stop_capture_unlocked(state: &AppState) -> Result<(), AppError> {
+    let Some(session) = state.replace_voice_capture_session(None) else {
+        return Ok(());
+    };
+    tokio::task::spawn_blocking(move || {
+        session.stop_flag.store(true, Ordering::SeqCst);
+        session
+            .thread
+            .join()
+            .map_err(|_| AppError::Message(String::from("voice capture thread panicked")))
+    })
+    .await
+    .map_err(|error| AppError::Message(format!("capture stop task failed: {error}")))?
+}
+
+fn create_capture_session<S: EventSink>(
+    app: AppHandle,
+    sink: S,
+) -> Result<(VoiceCaptureSession, u32), AppError> {
     let stop_flag = Arc::new(AtomicBool::new(false));
-    let samples = Arc::new(Mutex::new(Vec::<i16>::new()));
-    let stream_error = Arc::new(Mutex::new(None));
-    let limit_reached = Arc::new(AtomicBool::new(false));
     let thread_stop_flag = Arc::clone(&stop_flag);
-    let thread_samples = Arc::clone(&samples);
-    let thread_stream_error = Arc::clone(&stream_error);
-    let thread_limit_reached = Arc::clone(&limit_reached);
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, String>>(1);
     let thread = thread::spawn(move || {
-        if let Err(error) = run_local_recording_thread(
-            app,
-            thread_stop_flag,
-            thread_samples,
-            thread_stream_error,
-            thread_limit_reached,
-            &setup_tx,
-        ) {
+        // only setup can fail; later failures go through the channel
+        if let Err(error) = run_capture_thread(&app, &sink, &thread_stop_flag, &setup_tx) {
+            log::error!("Voice capture error: {error}");
             let _ = setup_tx.send(Err(error.to_string()));
-            log::error!("Local voice recording error: {error}");
         }
     });
 
-    let sample_rate = match setup_rx.recv_timeout(SETUP_TIMEOUT) {
-        Ok(Ok(sample_rate)) => sample_rate,
+    match setup_rx.recv_timeout(SETUP_TIMEOUT) {
+        Ok(Ok(sample_rate)) => Ok((VoiceCaptureSession { stop_flag, thread }, sample_rate)),
         Ok(Err(error)) => {
             let _ = thread.join();
-            return Err(AppError::Message(error));
+            Err(AppError::Message(error))
         }
         Err(error) => {
             stop_flag.store(true, Ordering::SeqCst);
             let _ = thread.join();
-            return Err(AppError::Message(error.to_string()));
+            Err(AppError::Message(error.to_string()))
         }
-    };
-
-    Ok(LocalVoiceRecordingSession {
-        stop_flag,
-        thread,
-        samples,
-        stream_error,
-        limit_reached,
-        sample_rate,
-    })
-}
-
-pub async fn stop_local_recording(state: &AppState) -> Result<LocalVoiceRecording, AppError> {
-    let _operation = state.lock_local_voice_recording().await;
-    stop_local_recording_unlocked(state).await
-}
-
-async fn stop_local_recording_unlocked(state: &AppState) -> Result<LocalVoiceRecording, AppError> {
-    if let Some(session) = state.replace_local_voice_recording_session(None) {
-        return tokio::task::spawn_blocking(move || finish_local_recording_session(session))
-            .await
-            .map_err(|error| AppError::Message(format!("recording stop task failed: {error}")))?;
     }
-
-    Ok(LocalVoiceRecording {
-        sample_rate: 16_000,
-        duration_ms: 0,
-        wav_base64: base64::engine::general_purpose::STANDARD.encode(pcm16_to_wav(&[], 16_000)?),
-        limit_reached: false,
-    })
 }
 
-fn finish_local_recording_session(
-    session: LocalVoiceRecordingSession,
-) -> Result<LocalVoiceRecording, AppError> {
-    let LocalVoiceRecordingSession {
-        stop_flag,
-        thread,
-        samples,
-        stream_error,
-        limit_reached,
-        sample_rate,
-    } = session;
-    stop_flag.store(true, Ordering::SeqCst);
-    thread
-        .join()
-        .map_err(|_| AppError::Message(String::from("local recording thread panicked")))?;
-    if let Some(error) = stream_error
-        .lock()
-        .map_err(|_| AppError::Message(String::from("local recording error lock poisoned")))?
-        .take()
-    {
-        return Err(AppError::Message(error));
-    }
-    let samples = Arc::try_unwrap(samples)
-        .map_err(|_| AppError::Message(String::from("local recording samples are still in use")))?
-        .into_inner()
-        .map_err(|_| AppError::Message(String::from("local recording samples lock poisoned")))?;
-    let duration_ms = samples.len() as u64 * 1_000 / u64::from(sample_rate);
-    let wav = pcm16_to_wav(&samples, sample_rate)?;
-
-    Ok(LocalVoiceRecording {
-        sample_rate,
-        duration_ms,
-        wav_base64: base64::engine::general_purpose::STANDARD.encode(wav),
-        limit_reached: limit_reached.load(Ordering::SeqCst),
-    })
-}
-
-fn run_local_recording_thread(
-    app: AppHandle,
-    stop_flag: Arc<AtomicBool>,
-    samples: Arc<Mutex<Vec<i16>>>,
-    stream_error: Arc<Mutex<Option<String>>>,
-    limit_reached: Arc<AtomicBool>,
+fn run_capture_thread<S: EventSink>(
+    app: &AppHandle,
+    sink: &S,
+    stop_flag: &Arc<AtomicBool>,
     setup_tx: &std_mpsc::SyncSender<Result<u32, String>>,
 ) -> Result<(), AppError> {
     let host = cpal::default_host();
@@ -166,32 +134,24 @@ fn run_local_recording_thread(
     let supported_config = device
         .default_input_config()
         .map_err(|error| AppError::Message(error.to_string()))?;
-    let sample_rate = supported_config.sample_rate().0;
+    let device_rate = supported_config.sample_rate().0;
+    let sample_rate = device_rate.min(TARGET_SAMPLE_RATE);
     let stream_config = supported_config.config();
-    let current_level = Arc::new(Mutex::new((0.0_f32, 0.0_f32)));
 
     let context = StreamContext {
-        samples,
-        stop_flag: Arc::clone(&stop_flag),
-        stream_error: stream_error.clone(),
-        limit_reached,
-        current_level: Arc::clone(&current_level),
+        pending: Arc::new(Mutex::new(Vec::new())),
+        stream_error: Arc::new(Mutex::new(None)),
+        current_level: Arc::new(Mutex::new((0.0, 0.0))),
+        stop_flag: Arc::clone(stop_flag),
+        device_rate,
         sample_rate,
     };
 
     let stream = match supported_config.sample_format() {
-        cpal::SampleFormat::F32 => {
-            build_local_recording_stream::<f32>(&device, &stream_config, &context)?
-        }
-        cpal::SampleFormat::I16 => {
-            build_local_recording_stream::<i16>(&device, &stream_config, &context)?
-        }
-        cpal::SampleFormat::U16 => {
-            build_local_recording_stream::<u16>(&device, &stream_config, &context)?
-        }
-        cpal::SampleFormat::I32 => {
-            build_local_recording_stream::<i32>(&device, &stream_config, &context)?
-        }
+        cpal::SampleFormat::F32 => build_input_stream::<f32>(&device, &stream_config, &context)?,
+        cpal::SampleFormat::I16 => build_input_stream::<i16>(&device, &stream_config, &context)?,
+        cpal::SampleFormat::U16 => build_input_stream::<u16>(&device, &stream_config, &context)?,
+        cpal::SampleFormat::I32 => build_input_stream::<i32>(&device, &stream_config, &context)?,
         sample_format => {
             return Err(AppError::Message(format!(
                 "Unsupported sample format: {sample_format:?}"
@@ -207,20 +167,24 @@ fn run_local_recording_thread(
         .send(Ok(sample_rate))
         .map_err(|error| AppError::Message(error.to_string()))?;
 
-    let mut last_emit = std::time::Instant::now();
+    let chunk_samples = sample_rate as usize * CHUNK_MS / 1_000;
+    let mut last_level = Instant::now();
     while !stop_flag.load(Ordering::SeqCst) {
-        thread::sleep(Duration::from_millis(20));
+        thread::sleep(POLL_INTERVAL);
 
-        if let Ok(guard) = stream_error.lock() {
-            if let Some(error_msg) = guard.as_ref() {
-                let _ = app.emit(VOICE_STREAM_ERROR_EVENT, error_msg.clone());
-                break;
-            }
+        if !flush_pending(&context.pending, sink, chunk_samples) {
+            // nobody is listening any more: the webview went away
+            stop_flag.store(true, Ordering::SeqCst);
+            break;
         }
 
-        if last_emit.elapsed() >= Duration::from_millis(40) {
-            last_emit = std::time::Instant::now();
-            let (level, peak) = current_level.lock().map(|lvl| *lvl).unwrap_or((0.0, 0.0));
+        if last_level.elapsed() >= LEVEL_INTERVAL {
+            last_level = Instant::now();
+            let (level, peak) = context
+                .current_level
+                .lock()
+                .map(|level| *level)
+                .unwrap_or((0.0, 0.0));
             let _ = app.emit(
                 VOICE_AUDIO_LEVEL_EVENT,
                 VoiceAudioLevelPayload { level, peak },
@@ -228,6 +192,8 @@ fn run_local_recording_thread(
         }
     }
 
+    // no sample may arrive after the final flush
+    drop(stream);
     let _ = app.emit(
         VOICE_AUDIO_LEVEL_EVENT,
         VoiceAudioLevelPayload {
@@ -236,19 +202,42 @@ fn run_local_recording_thread(
         },
     );
 
+    let stream_error = context
+        .stream_error
+        .lock()
+        .ok()
+        .and_then(|mut error| error.take());
+    if let Some(message) = stream_error {
+        sink.event(&CaptureEvent::Error { message });
+        return Ok(());
+    }
+
+    if flush_pending(&context.pending, sink, 1) {
+        sink.event(&CaptureEvent::End);
+    }
     Ok(())
 }
 
+/// Sends what has accumulated once it reaches `min_samples`; false when the
+/// receiving side is gone.
+fn flush_pending<S: EventSink>(pending: &Mutex<Vec<i16>>, sink: &S, min_samples: usize) -> bool {
+    let samples = match pending.lock() {
+        Ok(mut pending) if pending.len() >= min_samples => std::mem::take(&mut *pending),
+        _ => return true,
+    };
+    sink.bytes(pcm16_to_bytes(&samples))
+}
+
 struct StreamContext {
-    samples: Arc<Mutex<Vec<i16>>>,
-    stop_flag: Arc<AtomicBool>,
+    pending: Arc<Mutex<Vec<i16>>>,
     stream_error: Arc<Mutex<Option<String>>>,
-    limit_reached: Arc<AtomicBool>,
     current_level: Arc<Mutex<(f32, f32)>>,
+    stop_flag: Arc<AtomicBool>,
+    device_rate: u32,
     sample_rate: u32,
 }
 
-fn build_local_recording_stream<T>(
+fn build_input_stream<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
     context: &StreamContext,
@@ -258,15 +247,14 @@ where
     f32: cpal::FromSample<T>,
 {
     let channels = usize::from(config.channels);
-    let max_samples = context.sample_rate as usize * MAX_RECORDING_SECONDS;
-    let stop_flag = Arc::clone(&context.stop_flag);
-    let error_stop_flag = Arc::clone(&context.stop_flag);
-    let stream_error = Arc::clone(&context.stream_error);
-    let limit_reached = Arc::clone(&context.limit_reached);
-    let samples = Arc::clone(&context.samples);
+    let pending = Arc::clone(&context.pending);
     let level_monitor = Arc::clone(&context.current_level);
+    let stream_error = Arc::clone(&context.stream_error);
+    let error_stop_flag = Arc::clone(&context.stop_flag);
+    let mut downsampler = Downsampler::new(context.device_rate, context.sample_rate);
+    let mut converted = Vec::new();
     let error_callback = move |error| {
-        log::error!("Local recording audio input stream error: {error}");
+        log::error!("Voice capture audio input stream error: {error}");
         if let Ok(mut current_error) = stream_error.lock() {
             *current_error = Some(format!("Audio input stream failed: {error}"));
         }
@@ -276,30 +264,20 @@ where
         .build_input_stream(
             config,
             move |data: &[T], _| {
-                if let Ok(mut samples) = samples.lock() {
-                    let remaining = max_samples.saturating_sub(samples.len());
-                    samples.reserve((data.len() / channels).min(remaining));
-
-                    let mut chunk_samples = Vec::with_capacity(data.len() / channels);
-                    for frame in data.chunks(channels) {
-                        if samples.len() >= max_samples {
-                            limit_reached.store(true, Ordering::SeqCst);
-                            stop_flag.store(true, Ordering::SeqCst);
-                            break;
-                        }
-                        if !frame.is_empty() {
-                            let pcm = mix_frame_to_pcm16(frame);
-                            chunk_samples.push(pcm);
-                            samples.push(pcm);
-                        }
+                converted.clear();
+                for frame in data.chunks(channels) {
+                    if !frame.is_empty() {
+                        downsampler.push(mix_frame(frame), &mut converted);
                     }
-
-                    if !chunk_samples.is_empty() {
-                        let levels = compute_audio_level(&chunk_samples);
-                        if let Ok(mut lvl) = level_monitor.lock() {
-                            *lvl = levels;
-                        }
-                    }
+                }
+                if converted.is_empty() {
+                    return;
+                }
+                if let Ok(mut level) = level_monitor.lock() {
+                    *level = compute_audio_level(&converted);
+                }
+                if let Ok(mut pending) = pending.lock() {
+                    pending.extend_from_slice(&converted);
                 }
             },
             error_callback,
@@ -308,17 +286,49 @@ where
         .map_err(|error| AppError::Message(error.to_string()))
 }
 
-fn mix_frame_to_pcm16<T>(frame: &[T]) -> i16
+/// Averages each window of input samples into one output sample: a box
+/// filter, enough to keep hiss above 8 kHz from folding into speech.
+struct Downsampler {
+    /// Input samples per output sample, at least 1.
+    step: f64,
+    phase: f64,
+    sum: f32,
+    count: u32,
+}
+
+impl Downsampler {
+    fn new(input_rate: u32, output_rate: u32) -> Self {
+        Self {
+            step: (f64::from(input_rate) / f64::from(output_rate)).max(1.0),
+            phase: 0.0,
+            sum: 0.0,
+            count: 0,
+        }
+    }
+
+    fn push(&mut self, sample: f32, output: &mut Vec<i16>) {
+        self.sum += sample;
+        self.count += 1;
+        self.phase += 1.0;
+        if self.phase >= self.step {
+            output.push(float_to_pcm16(self.sum / self.count as f32));
+            self.phase -= self.step;
+            self.sum = 0.0;
+            self.count = 0;
+        }
+    }
+}
+
+fn mix_frame<T>(frame: &[T]) -> f32
 where
     T: Copy,
     f32: cpal::FromSample<T>,
 {
-    let mixed = frame
+    frame
         .iter()
         .map(|sample| f32::from_sample(*sample))
         .sum::<f32>()
-        / frame.len() as f32;
-    float_to_pcm16(mixed)
+        / frame.len() as f32
 }
 
 fn float_to_pcm16(sample: f32) -> i16 {
@@ -331,29 +341,11 @@ fn float_to_pcm16(sample: f32) -> i16 {
     value.round() as i16
 }
 
-fn pcm16_to_wav(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>, AppError> {
-    let data_len = samples
-        .len()
-        .checked_mul(2)
-        .and_then(|length| u32::try_from(length).ok())
-        .ok_or_else(|| AppError::Message(String::from("recording is too large for WAV")))?;
-    let mut wav = Vec::with_capacity(44 + data_len as usize);
-    wav.extend_from_slice(b"RIFF");
-    wav.extend_from_slice(&(36 + data_len).to_le_bytes());
-    wav.extend_from_slice(b"WAVEfmt ");
-    wav.extend_from_slice(&16_u32.to_le_bytes());
-    wav.extend_from_slice(&1_u16.to_le_bytes());
-    wav.extend_from_slice(&1_u16.to_le_bytes());
-    wav.extend_from_slice(&sample_rate.to_le_bytes());
-    wav.extend_from_slice(&(sample_rate * 2).to_le_bytes());
-    wav.extend_from_slice(&2_u16.to_le_bytes());
-    wav.extend_from_slice(&16_u16.to_le_bytes());
-    wav.extend_from_slice(b"data");
-    wav.extend_from_slice(&data_len.to_le_bytes());
-    for sample in samples {
-        wav.extend_from_slice(&sample.to_le_bytes());
-    }
-    Ok(wav)
+fn pcm16_to_bytes(samples: &[i16]) -> Vec<u8> {
+    samples
+        .iter()
+        .flat_map(|sample| sample.to_le_bytes())
+        .collect()
 }
 
 pub fn compute_audio_level(samples: &[i16]) -> (f32, f32) {
@@ -377,6 +369,28 @@ pub fn compute_audio_level(samples: &[i16]) -> (f32, f32) {
 mod tests {
     use super::*;
 
+    #[derive(Default)]
+    struct RecordingSink {
+        chunks: Mutex<Vec<Vec<u8>>>,
+        events: Mutex<Vec<String>>,
+        closed: bool,
+    }
+
+    impl EventSink for RecordingSink {
+        fn event<T: Serialize>(&self, event: &T) -> bool {
+            self.events
+                .lock()
+                .unwrap()
+                .push(serde_json::to_string(event).unwrap());
+            !self.closed
+        }
+
+        fn bytes(&self, bytes: Vec<u8>) -> bool {
+            self.chunks.lock().unwrap().push(bytes);
+            !self.closed
+        }
+    }
+
     #[test]
     fn converts_float_samples_without_overflow() {
         assert_eq!(float_to_pcm16(-2.0), i16::MIN);
@@ -386,32 +400,94 @@ mod tests {
 
     #[test]
     fn mixes_every_channel_in_a_frame() {
-        assert_eq!(mix_frame_to_pcm16(&[1.0_f32, -1.0_f32]), 0);
-        assert_eq!(mix_frame_to_pcm16(&[0.5_f32, 0.5_f32]), 16_384);
+        assert_eq!(mix_frame(&[1.0_f32, -1.0_f32]), 0.0);
+        assert_eq!(mix_frame(&[0.5_f32, 0.5_f32]), 0.5);
     }
 
     #[test]
-    fn writes_a_mono_pcm16_wav() {
-        let wav = pcm16_to_wav(&[i16::MIN, 0, i16::MAX], 16_000).unwrap();
-        assert_eq!(&wav[0..4], b"RIFF");
-        assert_eq!(&wav[8..12], b"WAVE");
-        assert_eq!(u32::from_le_bytes(wav[24..28].try_into().unwrap()), 16_000);
-        assert_eq!(u32::from_le_bytes(wav[40..44].try_into().unwrap()), 6);
-        assert_eq!(wav.len(), 50);
+    fn averages_each_window_when_downsampling() {
+        let mut downsampler = Downsampler::new(48_000, 16_000);
+        let mut output = Vec::new();
+        for sample in [0.0, 0.3, 0.6, 1.0, 1.0, 1.0, -1.0] {
+            downsampler.push(sample, &mut output);
+        }
+        assert_eq!(output, vec![float_to_pcm16(0.3), i16::MAX]);
+    }
+
+    #[test]
+    fn keeps_the_output_rate_for_fractional_ratios() {
+        let mut downsampler = Downsampler::new(44_100, 16_000);
+        let mut output = Vec::new();
+        for _ in 0..44_100 {
+            downsampler.push(0.0, &mut output);
+        }
+        // the step is not exact in binary, so one sample either way is fine
+        assert!(output.len().abs_diff(16_000) <= 1);
+    }
+
+    #[test]
+    fn passes_audio_through_at_or_below_the_target_rate() {
+        let mut downsampler = Downsampler::new(8_000, 8_000);
+        let mut output = Vec::new();
+        downsampler.push(0.5, &mut output);
+        downsampler.push(-0.5, &mut output);
+        assert_eq!(output, vec![float_to_pcm16(0.5), float_to_pcm16(-0.5)]);
+    }
+
+    #[test]
+    fn encodes_pcm16_little_endian() {
+        assert_eq!(pcm16_to_bytes(&[1, -2]), vec![1, 0, 0xfe, 0xff]);
+    }
+
+    #[test]
+    fn flushes_only_full_chunks_until_forced() {
+        let sink = RecordingSink::default();
+        let pending = Mutex::new(vec![1_i16, 2, 3]);
+
+        assert!(flush_pending(&pending, &sink, 4));
+        assert!(sink.chunks.lock().unwrap().is_empty());
+
+        assert!(flush_pending(&pending, &sink, 1));
+        assert_eq!(sink.chunks.lock().unwrap().len(), 1);
+        assert!(pending.lock().unwrap().is_empty());
+
+        // nothing left: no empty frame goes out
+        assert!(flush_pending(&pending, &sink, 1));
+        assert_eq!(sink.chunks.lock().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn reports_a_gone_listener() {
+        let sink = RecordingSink {
+            closed: true,
+            ..RecordingSink::default()
+        };
+        assert!(!flush_pending(&Mutex::new(vec![1_i16]), &sink, 1));
+    }
+
+    #[test]
+    fn serializes_control_events() {
+        assert_eq!(
+            serde_json::to_string(&CaptureEvent::End).unwrap(),
+            r#"{"type":"end"}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&CaptureEvent::Error {
+                message: "boom".into()
+            })
+            .unwrap(),
+            r#"{"type":"error","message":"boom"}"#
+        );
     }
 
     #[test]
     fn computes_audio_level_for_empty_slice() {
-        let (level, peak) = compute_audio_level(&[]);
-        assert_eq!(level, 0.0);
-        assert_eq!(peak, 0.0);
+        assert_eq!(compute_audio_level(&[]), (0.0, 0.0));
     }
 
     #[test]
     fn computes_audio_level_for_silence_and_signals() {
-        let (level, peak) = compute_audio_level(&[0, 0, 0]);
-        assert_eq!(level, 0.0);
-        assert_eq!(peak, 0.0);
+        assert_eq!(compute_audio_level(&[0, 0, 0]), (0.0, 0.0));
 
         let (level, peak) = compute_audio_level(&[16_384, -16_384]);
         assert!((peak - 0.5).abs() < 1e-3);

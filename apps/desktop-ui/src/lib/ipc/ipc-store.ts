@@ -101,12 +101,6 @@ export function createCommandMap(): Record<string, CommandEntry> {
     },
     clearEditorHistory: { command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY },
     clearChatHistory: { command: DESKTOP_COMMANDS.CLEAR_CHAT_HISTORY },
-    startLocalVoiceRecording: {
-      command: DESKTOP_COMMANDS.START_LOCAL_VOICE_RECORDING,
-    },
-    stopLocalVoiceRecording: {
-      command: DESKTOP_COMMANDS.STOP_LOCAL_VOICE_RECORDING,
-    },
     typeIntoWindowAndClose: {
       command: DESKTOP_COMMANDS.TYPE_INTO_WINDOW_AND_CLOSE,
       buildArgs: ([text]) => ({ text }),

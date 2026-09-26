@@ -1,144 +1,165 @@
+import type { SocketOpener, TranscriptPart } from '@bozonx/ai-kit'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createAsyncQueue } from '../net/async-queue'
 import { buildSttCatalog, createSttClient } from './stt-client'
 
 const model = {
-  id: 'local-stt',
-  provider: 'openai-compatible' as const,
-  model: 'whisper-1',
-  baseUrl: 'http://localhost:8000/v1/',
+  id: 'deepgram-stt',
+  provider: 'deepgram' as const,
+  model: 'nova-3',
 }
 
-function pcm16Wav(sampleRate = 16_000, samples = 4_000): Uint8Array {
-  const wav = new Uint8Array(44 + samples * 2)
-  const view = new DataView(wav.buffer)
-  wav.set(new TextEncoder().encode('RIFF'), 0)
-  view.setUint32(4, wav.byteLength - 8, true)
-  wav.set(new TextEncoder().encode('WAVEfmt '), 8)
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * 2, true)
-  view.setUint16(32, 2, true)
-  view.setUint16(34, 16, true)
-  wav.set(new TextEncoder().encode('data'), 36)
-  view.setUint32(40, samples * 2, true)
-  return wav
+function results(text: string, isFinal: boolean, start = 0) {
+  return JSON.stringify({
+    type: 'Results',
+    is_final: isFinal,
+    start,
+    duration: 1,
+    channel: { alternatives: [{ transcript: text }] },
+  })
 }
 
-const wav = pcm16Wav()
+/** A Deepgram stand-in: answers once the client sends `CloseStream` */
+function fakeDeepgram(replies: string[]) {
+  const opened: { url: string; headers?: Record<string, string> }[] = []
+  const sent: (string | Uint8Array)[] = []
+  const openSocket: SocketOpener = async (url, options) => {
+    opened.push({ url, headers: options.headers })
+    const messages = createAsyncQueue<string>()
+    return {
+      messages: messages.values,
+      send: (data) => sent.push(data),
+      close: (payload) => {
+        if (payload) sent.push(payload)
+        replies.forEach((reply) => messages.push(reply))
+        messages.end()
+      },
+    }
+  }
+  return { openSocket, opened, sent }
+}
+
+async function* audio(...chunks: number[][]) {
+  for (const chunk of chunks) yield { data: new Uint8Array(chunk) }
+}
+
+async function collect(parts: AsyncIterable<TranscriptPart>) {
+  const result: TranscriptPart[] = []
+  for await (const part of parts) result.push(part)
+  return result
+}
 
 describe('buildSttCatalog', () => {
-  it('maps the configured model to an unpriced speech task', () => {
+  it('maps the configured model to an unpriced live speech task', () => {
     const catalog = buildSttCatalog(model)
 
     expect(catalog.kindOf('transcription')).toBe('stt')
-    expect(catalog.require('local-stt')).toMatchObject({
+    expect(catalog.require('deepgram-stt')).toMatchObject({
       kind: 'stt',
-      provider: 'openai-compatible',
-      model: 'whisper-1',
-      baseUrl: 'http://localhost:8000/v1/',
+      provider: 'deepgram',
+      model: 'nova-3',
+      sttCapabilities: { realtime: true },
     })
   })
 
-  it('rejects incomplete custom endpoint configuration', () => {
+  it('rejects an empty model name', () => {
     expect(() => buildSttCatalog({ ...model, model: ' ' })).toThrow(
       'model name is empty'
-    )
-    expect(() => buildSttCatalog({ ...model, baseUrl: 'file:///tmp' })).toThrow(
-      'valid HTTP URL'
     )
   })
 })
 
 describe('createSttClient', () => {
-  it('transcribes recorded audio through ai-kit and the supplied transport', async () => {
-    const fetchMock = vi.fn(
-      async (_input: RequestInfo | URL, init?: RequestInit) => {
-        const form = init?.body as FormData
-        expect(form.get('model')).toBe('whisper-1')
-        expect(form.get('language')).toBe('en')
-        expect(form.get('response_format')).toBe('verbose_json')
-        expect(form.getAll('timestamp_granularities[]')).toEqual(['segment'])
-
-        const file = form.get('file') as File
-        expect(file.type).toBe('audio/wav')
-        expect(
-          new TextDecoder().decode((await file.arrayBuffer()).slice(0, 4))
-        ).toBe('RIFF')
-        expect(new Headers(init?.headers).get('authorization')).toBe(
-          'Bearer tyco-secret:local-stt'
-        )
-
-        return new Response(
-          JSON.stringify({
-            text: ' recognized text ',
-            duration: 0.25,
-            segments: [],
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        )
-      }
-    )
+  it('streams the audio and yields partial and final text', async () => {
+    const deepgram = fakeDeepgram([
+      results('hello', false),
+      results('hello world', true),
+    ])
     const client = createSttClient({
-      transport: {
-        fetch: fetchMock,
-        openSocket: vi.fn(() => Promise.reject(new Error('Unexpected socket'))),
-      },
+      transport: { fetch: vi.fn(), openSocket: deepgram.openSocket },
     })
 
-    const text = await client.transcribe({
-      model,
-      recording: { sampleRate: 16_000, durationMs: 250, wav },
-      language: 'en',
-      hasApiKey: true,
-    })
-
-    expect(text).toBe('recognized text')
-    expect(fetchMock).toHaveBeenCalledOnce()
-    expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      'http://localhost:8000/v1/audio/transcriptions'
+    const parts = await collect(
+      client.transcribeLive({
+        model,
+        audio: audio([1, 0], [2, 0]),
+        sampleRate: 16_000,
+        hasApiKey: true,
+      })
     )
+
+    expect(parts.filter((part) => part.type === 'partial')).toMatchObject([
+      { text: 'hello' },
+    ])
+    expect(parts.filter((part) => part.type === 'final')).toMatchObject([
+      { segment: { text: 'hello world' } },
+    ])
+    expect(parts.at(-1)).toMatchObject({ type: 'finish' })
+
+    const [{ url, headers }] = deepgram.opened
+    expect(headers?.authorization).toBe('Token tyco-secret:deepgram')
+    expect(url).toContain('model=nova-3')
+    expect(url).toContain('sample_rate=16000')
+    expect(url).toContain('interim_results=true')
+    expect(deepgram.sent).toEqual([
+      new Uint8Array([1, 0]),
+      new Uint8Array([2, 0]),
+      JSON.stringify({ type: 'CloseStream' }),
+    ])
   })
 
-  it('rejects empty and malformed recordings before making a request', async () => {
-    const fetchMock = vi.fn()
+  it('follows any spoken language unless one is given', async () => {
+    const deepgram = fakeDeepgram([])
     const client = createSttClient({
-      transport: {
-        fetch: fetchMock,
-        openSocket: vi.fn(() => Promise.reject(new Error('Unexpected socket'))),
-      },
+      transport: { fetch: vi.fn(), openSocket: deepgram.openSocket },
     })
 
-    await expect(
-      client.transcribe({
+    await collect(
+      client.transcribeLive({
         model,
-        recording: { sampleRate: 16_000, durationMs: 0, wav },
+        audio: audio(),
+        sampleRate: 16_000,
+        hasApiKey: true,
       })
-    ).rejects.toThrow('empty or too short')
-    await expect(
-      client.transcribe({
+    )
+    await collect(
+      client.transcribeLive({
         model,
-        recording: {
-          sampleRate: 16_000,
-          durationMs: 250,
-          wav: new Uint8Array(44),
-        },
+        audio: audio(),
+        sampleRate: 16_000,
+        language: 'ru',
+        hasApiKey: true,
       })
-    ).rejects.toThrow('valid WAV')
-    await expect(
-      client.transcribe({
+    )
+
+    expect(deepgram.opened[0].url).toContain('language=multi')
+    expect(deepgram.opened[0].url).not.toContain('detect_language')
+    expect(deepgram.opened[1].url).toContain('language=ru')
+  })
+
+  it('reports a failed audio source as an error part', async () => {
+    const deepgram = fakeDeepgram([])
+    const client = createSttClient({
+      transport: { fetch: vi.fn(), openSocket: deepgram.openSocket },
+    })
+    async function* broken() {
+      yield { data: new Uint8Array([1, 0]) }
+      throw new Error('microphone unplugged')
+    }
+
+    const parts = await collect(
+      client.transcribeLive({
         model,
-        recording: { sampleRate: 8_000, durationMs: 250, wav },
+        audio: broken(),
+        sampleRate: 16_000,
+        hasApiKey: true,
       })
-    ).rejects.toThrow('sample rate does not match')
-    await expect(
-      client.transcribe({
-        model,
-        recording: { sampleRate: 16_000, durationMs: 5_000, wav },
-      })
-    ).rejects.toThrow('duration does not match')
-    expect(fetchMock).not.toHaveBeenCalled()
+    )
+
+    expect(parts.at(-1)).toMatchObject({
+      type: 'error',
+      message: expect.stringContaining('microphone unplugged'),
+    })
   })
 })

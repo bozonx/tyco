@@ -152,9 +152,11 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         let raw = fs::read_to_string(&path)?;
         let mut value = serde_yaml::from_str(&raw)?;
 
+        // the LLM migration runs first: it moves legacy STT keys to the store
         if normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
             | llm_config::migrate_user_config(app, &mut value)
+            | normalize_stt_config(&mut value)
         {
             save_user_config(app, &value)?;
         }
@@ -166,6 +168,57 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     save_user_config(app, &default_config)?;
 
     Ok(default_config)
+}
+
+/// Deepgram is the only speech provider; other entries are dropped, and the
+/// user's own Deepgram settings survive.
+fn normalize_stt_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let default_model = defaults
+        .get("sttModels")
+        .and_then(Value::as_array)
+        .and_then(|models| models.first())
+        .cloned()
+        .unwrap_or_default();
+    let default_id = default_model.get("id").cloned().unwrap_or(Value::Null);
+    let provider = default_model
+        .get("provider")
+        .cloned()
+        .unwrap_or(Value::Null);
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+
+    let mut model = default_model.as_object().cloned().unwrap_or_default();
+    if let Some(existing) = config
+        .get("sttModels")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_object)
+        .find(|model| model.get("provider") == Some(&provider))
+    {
+        model.extend(existing.clone());
+    }
+    model.insert(String::from("id"), default_id.clone());
+    model.remove("baseUrl");
+    let models = json!([model]);
+
+    let mut usage = config
+        .get("aiModelUsage")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    usage.insert(String::from("stt"), default_id);
+    usage.entry("tts").or_insert_with(|| json!(""));
+    let usage = Value::Object(usage);
+
+    if config.get("sttModels") == Some(&models) && config.get("aiModelUsage") == Some(&usage) {
+        return false;
+    }
+    config.insert(String::from("sttModels"), models);
+    config.insert(String::from("aiModelUsage"), usage);
+    true
 }
 
 fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
@@ -780,6 +833,49 @@ mod tests {
 
         assert!(normalize_window_insertion_config(&mut config));
         assert!(!normalize_window_insertion_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_stt_keeps_only_deepgram_and_its_settings() {
+        let mut config = json!({
+            "sttModels": [
+                { "id": "assemblyai-stt", "provider": "assemblyai", "model": "universal-3-pro" },
+                {
+                    "id": "deepgram-stt",
+                    "provider": "deepgram",
+                    "model": "nova-3-general",
+                    "formatWithLlm": false
+                }
+            ],
+            "aiModelUsage": { "stt": "assemblyai-stt", "tts": "voice" }
+        });
+
+        assert!(normalize_stt_config(&mut config));
+        assert_eq!(
+            config["sttModels"],
+            json!([{
+                "id": "deepgram-stt",
+                "provider": "deepgram",
+                "model": "nova-3-general",
+                "description": "Deepgram speech recognition",
+                "formatWithLlm": false
+            }])
+        );
+        assert_eq!(
+            config["aiModelUsage"],
+            json!({ "stt": "deepgram-stt", "tts": "voice" })
+        );
+        assert!(!normalize_stt_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_stt_fills_a_missing_section() {
+        let mut config = json!({});
+
+        assert!(normalize_stt_config(&mut config));
+        assert_eq!(config["sttModels"], default_user_config()["sttModels"]);
+        assert_eq!(config["aiModelUsage"]["stt"], json!("deepgram-stt"));
+        assert!(!normalize_stt_config(&mut config));
     }
 
     #[test]

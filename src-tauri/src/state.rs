@@ -3,21 +3,17 @@ use std::sync::{Arc, Mutex};
 
 use crate::models::InitParams;
 
-pub struct LocalVoiceRecordingSession {
+pub struct VoiceCaptureSession {
     pub stop_flag: Arc<AtomicBool>,
     pub thread: std::thread::JoinHandle<()>,
-    pub samples: Arc<Mutex<Vec<i16>>>,
-    pub stream_error: Arc<Mutex<Option<String>>>,
-    pub limit_reached: Arc<AtomicBool>,
-    pub sample_rate: u32,
 }
 
 pub struct AppState {
     params: Mutex<InitParams>,
     history_storage: Mutex<()>,
     quitting: AtomicBool,
-    local_voice_recording_session: Mutex<Option<LocalVoiceRecordingSession>>,
-    local_voice_recording_operation: tokio::sync::Mutex<()>,
+    voice_capture_session: Mutex<Option<VoiceCaptureSession>>,
+    voice_capture_operation: tokio::sync::Mutex<()>,
 }
 
 impl AppState {
@@ -26,8 +22,8 @@ impl AppState {
             params: Mutex::new(params),
             history_storage: Mutex::new(()),
             quitting: AtomicBool::new(false),
-            local_voice_recording_session: Mutex::new(None),
-            local_voice_recording_operation: tokio::sync::Mutex::new(()),
+            voice_capture_session: Mutex::new(None),
+            voice_capture_operation: tokio::sync::Mutex::new(()),
         }
     }
 
@@ -59,18 +55,18 @@ impl AppState {
         self.quitting.load(Ordering::SeqCst)
     }
 
-    pub fn replace_local_voice_recording_session(
+    pub fn replace_voice_capture_session(
         &self,
-        session: Option<LocalVoiceRecordingSession>,
-    ) -> Option<LocalVoiceRecordingSession> {
+        session: Option<VoiceCaptureSession>,
+    ) -> Option<VoiceCaptureSession> {
         let mut guard = self
-            .local_voice_recording_session
+            .voice_capture_session
             .lock()
-            .expect("local voice recording session lock poisoned");
+            .expect("voice capture session lock poisoned");
         std::mem::replace(&mut *guard, session)
     }
 
-    pub async fn lock_local_voice_recording(&self) -> tokio::sync::MutexGuard<'_, ()> {
-        self.local_voice_recording_operation.lock().await
+    pub async fn lock_voice_capture(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.voice_capture_operation.lock().await
     }
 }

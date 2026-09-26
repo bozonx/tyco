@@ -127,23 +127,17 @@ fn ensure_allowed_origin(
     }
 }
 
+/// Speech recognition has no configurable endpoint: Deepgram is reached
+/// through the origin its key is bound to.
 fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str> {
-    let llm = config
+    config
         .get("llm")
         .and_then(|value| value.get("providers"))
         .and_then(serde_json::Value::as_array)
         .into_iter()
         .flatten()
         .filter_map(|provider| provider.get("baseUrl"))
-        .filter_map(serde_json::Value::as_str);
-    let stt = config
-        .get("sttModels")
-        .and_then(serde_json::Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|model| model.get("baseUrl"))
-        .filter_map(serde_json::Value::as_str);
-    llm.chain(stt)
+        .filter_map(serde_json::Value::as_str)
 }
 
 #[tauri::command]
@@ -221,7 +215,7 @@ mod tests {
             &config,
             &secrets
         )
-        .is_ok());
+        .is_err());
         assert!(ensure_allowed_origin(
             Protocol::Http,
             "https://generativelanguage.googleapis.com/v1/models",

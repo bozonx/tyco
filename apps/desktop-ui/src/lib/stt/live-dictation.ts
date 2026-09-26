@@ -1,0 +1,101 @@
+import type { SttModel } from '@tyco/shared'
+
+import {
+  applyTranscriptPart,
+  createLiveTranscriptState,
+  type LiveTranscriptState,
+  liveTranscriptText,
+} from './live-transcript'
+import type { SttClient } from './stt-client'
+import type { VoiceCaptureControl } from './voice-capture'
+
+export interface LiveDictationDeps {
+  capture: VoiceCaptureControl
+  stt: SttClient
+}
+
+export interface LiveDictationStart {
+  model: SttModel
+  language?: string
+  hasApiKey: boolean
+  /** Every change of the text shown while dictating */
+  onText: (state: LiveTranscriptState) => void
+  /**
+   * The session broke before it was finished: the microphone or the provider
+   * failed. The microphone is already off; `finish` still returns what was
+   * recognized up to that point.
+   */
+  onError: (error: Error) => void
+}
+
+export interface LiveDictation {
+  /** Resolves once the microphone records; the provider connects meanwhile */
+  start: (request: LiveDictationStart) => Promise<void>
+  /** Stops the microphone and waits for the provider's last words */
+  finish: () => Promise<string>
+  cancel: () => Promise<void>
+}
+
+/** One dictation at a time: the microphone streamed to a live transcription. */
+export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
+  let controller: AbortController | undefined
+  let session: Promise<void> | undefined
+  let state = createLiveTranscriptState()
+  let failure: Error | undefined
+
+  const stopCapture = () => deps.capture.stop().catch(() => undefined)
+
+  return {
+    async start(request) {
+      controller?.abort()
+      await session
+      const current = new AbortController()
+      controller = current
+      state = createLiveTranscriptState()
+      failure = undefined
+
+      const { sampleRate, audio } = await deps.capture.start()
+      const parts = deps.stt.transcribeLive({
+        model: request.model,
+        audio,
+        sampleRate,
+        language: request.language,
+        hasApiKey: request.hasApiKey,
+        signal: current.signal,
+      })
+
+      session = (async () => {
+        try {
+          for await (const part of parts) {
+            if (part.type === 'error') {
+              throw new Error(part.message)
+            }
+            const next = applyTranscriptPart(state, part)
+            if (next !== state) {
+              state = next
+              request.onText(state)
+            }
+          }
+        } catch (error) {
+          if (current.signal.aborted) return
+          failure = error instanceof Error ? error : new Error(String(error))
+          await stopCapture()
+          request.onError(failure)
+        }
+      })()
+    },
+
+    async finish() {
+      await deps.capture.stop()
+      await session
+      if (failure && !liveTranscriptText(state)) throw failure
+      return liveTranscriptText(state)
+    },
+
+    async cancel() {
+      controller?.abort()
+      await stopCapture()
+      await session
+    },
+  }
+}
