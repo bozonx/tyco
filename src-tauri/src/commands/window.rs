@@ -34,8 +34,10 @@ pub fn open_in_browser_and_close(
     runtime::hide_main_window(&app, &state)
 }
 
+/// Async so it runs off the main thread: the GTK loop must be free to unmap
+/// the window and let the compositor refocus the source window before paste.
 #[tauri::command]
-pub fn type_into_window_and_close(
+pub async fn type_into_window_and_close(
     app: AppHandle,
     state: State<'_, AppState>,
     text: String,
@@ -44,6 +46,7 @@ pub fn type_into_window_and_close(
     copy_to_clipboard(&text)?;
     runtime::hide_main_window(&app, &state)?;
     crate::services::platform::inject_paste(&params.user_config, params.window_id.as_deref())
+        .inspect_err(|error| log::error!("Text insertion failed: {error}"))
 }
 
 #[tauri::command]
