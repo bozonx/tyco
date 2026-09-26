@@ -3,6 +3,7 @@
 mod foreground_context;
 mod panel_surface;
 mod text_injector;
+mod titlebar;
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -17,3 +18,4 @@ pub use panel_surface::{
     set_panel_input_region, InputRegion,
 };
 pub use text_injector::inject_paste;
+pub use titlebar::enable_titlebar_buttons;

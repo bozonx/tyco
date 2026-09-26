@@ -378,6 +378,10 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ContextCapture::default());
     app.manage(RuntimeWindows::default());
+    let main_window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+    super::platform::enable_titlebar_buttons(&main_window)?;
     #[cfg(target_os = "linux")]
     {
         let supported = super::platform::panel_surface_supported();
