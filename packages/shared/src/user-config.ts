@@ -225,12 +225,11 @@ export type EditorSyntax = 'none' | 'markdown'
 
 export type QuickInputSubmitMode = 'enter' | 'ctrlEnter'
 
-export const QUICK_CORRECTION_MODES = ['wait', 'background', 'manual'] as const
+export const QUICK_CORRECTION_MODES = ['manual', 'auto'] as const
 
 /**
- * How the quick input corrects its text on submit: `wait` shows the result only
- * once corrected, `background` shows the next step at once and swaps in the
- * correction when it arrives, `manual` leaves correcting to the user
+ * What the submit key of the quick input does: `manual` opens the actions for
+ * the text as typed, `auto` corrects it first. Alt+Enter does the other one
  */
 export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
 
@@ -238,6 +237,8 @@ export interface UserConfig {
   hotkeys: Record<string, string>
   quickInputSubmit?: QuickInputSubmitMode
   quickCorrection?: QuickCorrectionMode
+  /** Correct the quick input text in advance while the user pauses */
+  quickCorrectionPrefetch?: boolean
   /** Hide the quick window when the user clicks elsewhere */
   quickHideOnBlur?: boolean
   theme: ThemeMode
@@ -297,7 +298,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     config: 'Ctrl+Alt+Comma',
   },
   quickInputSubmit: 'enter',
-  quickCorrection: 'background',
+  quickCorrection: 'manual',
+  quickCorrectionPrefetch: false,
   quickHideOnBlur: true,
   theme: 'auto',
   contrast: 'auto',

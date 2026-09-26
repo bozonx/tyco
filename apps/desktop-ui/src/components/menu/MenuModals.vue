@@ -1,16 +1,14 @@
 <template>
   <Overlay v-if="menuModalsStore.currentModal !== MenuModals.NONE">
+    <!-- keyed by step: a correction step over an insert one is a new screen -->
     <InsertMenu
       v-if="menuModalsStore.currentModal === MenuModals.INSERT"
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentModalParams"
     />
     <AiTaskMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.AI_TASK"
       v-bind="menuModalsStore.currentModalParams"
-    />
-    <CorrectionMenu
-      v-else-if="menuModalsStore.currentModal === MenuModals.CORRECTION"
-      v-bind="menuModalsStore.currentModalParams as any"
     />
     <DiffMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.DIFF"

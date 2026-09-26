@@ -208,8 +208,6 @@ describe('ShortcutList', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'ai-task'
     mocks.breadcrumbs = ['insert', 'ai-task']
-    const cancelCorrection = vi.fn()
-    mocks.currentModalParams = { onCancelCorrection: cancelCorrection }
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'task text', escVisible: true },
@@ -219,11 +217,26 @@ describe('ShortcutList', () => {
     press('Escape')
 
     expect(mocks.back).not.toHaveBeenCalled()
-    expect(cancelCorrection).toHaveBeenCalledOnce()
     expect(mocks.cancelPending).toHaveBeenCalled()
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
     expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
+    wrapper.unmount()
+  })
+
+  it('goes back on Escape in the quick window when asked to', () => {
+    mocks.currentWindowLabel = 'quick'
+    mocks.currentModal = 'insert'
+    mocks.breadcrumbs = ['insert', 'insert']
+
+    const wrapper = mount(ShortcutList, {
+      props: { text: 'text', escVisible: true, escMode: 'back' },
+    })
+
+    expect(wrapper.text()).toContain('common.back')
+    press('Escape')
+    expect(mocks.back).toHaveBeenCalled()
+    expect(mocks.closeAll).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -328,6 +341,27 @@ describe('ShortcutList', () => {
     press('Space', { shiftKey: true })
 
     expect(spaceAction).toHaveBeenCalledWith('original')
+    wrapper.unmount()
+  })
+
+  it('runs its own action on Shift+Space, even on the same text', () => {
+    const spaceAction = vi.fn()
+    const altAction = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'typed',
+        altText: 'typed',
+        altAlwaysVisible: true,
+        spaceKey: { name: 'Queue', action: spaceAction },
+        altAction: { name: 'Insert', action: altAction },
+      },
+    })
+
+    expect(wrapper.text()).toContain('write.insertOriginal')
+    press('Space', { shiftKey: true })
+
+    expect(altAction).toHaveBeenCalledWith('typed')
+    expect(spaceAction).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

@@ -77,6 +77,26 @@ describe('resolveQuickInputKeyAction', () => {
     })
   })
 
+  it('submits the other way round on Alt+Enter in both modes', () => {
+    for (const mode of ['enter', 'ctrlEnter'] as const) {
+      expect(
+        resolveQuickInputKeyAction({ code: 'Enter', altKey: true }, mode)
+      ).toBe('submitAlt')
+      expect(
+        resolveQuickInputKeyAction(
+          { code: 'Enter', altKey: true, ctrlKey: true },
+          mode
+        )
+      ).toBe('submitAlt')
+      expect(
+        resolveQuickInputKeyAction(
+          { code: 'Enter', altKey: true, shiftKey: true },
+          mode
+        )
+      ).toBe('none')
+    }
+  })
+
   it('returns none for other keys', () => {
     expect(resolveQuickInputKeyAction({ code: 'KeyA' })).toBe('none')
     expect(resolveQuickInputKeyAction({ code: 'Space' })).toBe('none')

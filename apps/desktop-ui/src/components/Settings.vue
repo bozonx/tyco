@@ -529,6 +529,7 @@ function normalizeHotkeysConfig(config: Record<string, any>) {
   )
     ? config.quickCorrection
     : DEFAULT_USER_CONFIG.quickCorrection
+  config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
   config.quickHideOnBlur = config.quickHideOnBlur !== false
 }
 

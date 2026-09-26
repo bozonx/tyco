@@ -8,6 +8,8 @@ export interface ActionItem {
   labelKey?: string
   icon?: string
   disabled?: boolean
+  /** Why the action is disabled, shown on hover */
+  hint?: string
   useFullEditorText?: boolean
   preserveWhitespace?: boolean
   action: (text: string) => Promise<void>

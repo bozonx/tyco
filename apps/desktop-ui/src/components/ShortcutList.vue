@@ -20,8 +20,8 @@
         v-if="altVisible"
         :keys="['Shift', 'Space']"
         icon="mdi:undo-variant"
-        :disabled="props.spaceKey?.disabled"
-        @click="props.spaceKey?.action(props.altText || '')"
+        :disabled="altKey?.disabled"
+        @click="altKey?.action(props.altText || '')"
       >
         {{ t('write.insertOriginal') }}
       </ShortcutButton>
@@ -42,10 +42,10 @@
         @click="handleEsc"
       >
         {{
-          isQuickWindow
-            ? t('common.cancel')
-            : resolvedEscMode === 'back'
-              ? t('common.back')
+          resolvedEscMode === 'back'
+            ? t('common.back')
+            : isQuickWindow
+              ? t('common.cancel')
               : t('common.close')
         }}
       </ShortcutButton>
@@ -60,6 +60,7 @@
           :keys="[slot.key.toUpperCase()]"
           :icon="slot.action.icon"
           :disabled="slot.action.disabled"
+          :title="slot.action.hint"
           @click="slot.action.action(props.text || '')"
         >
           {{ slot.label }}
@@ -98,6 +99,10 @@ const props = withDefaults(
     spaceKey?: ActionItem
     /** Another version of the text, run through Shift+Space: the original */
     altText?: string
+    /** Offer `altText` even when it equals `text` */
+    altAlwaysVisible?: boolean
+    /** What Shift+Space runs on `altText`; `spaceKey` by default */
+    altAction?: ActionItem
     toEditorVisible?: boolean
     escVisible?: boolean
     escAction?: () => void
@@ -110,6 +115,8 @@ const props = withDefaults(
     sourceText: '',
     spaceKey: undefined,
     altText: undefined,
+    altAlwaysVisible: false,
+    altAction: undefined,
     toEditorVisible: false,
     escVisible: true,
     escAction: undefined,
@@ -142,11 +149,13 @@ const slots = computed<ShortcutSlotItem[]>(() =>
   })
 )
 
+const altKey = computed(() => props.altAction ?? props.spaceKey)
+
 const altVisible = computed(
   () =>
     Boolean(props.spaceKey) &&
     props.altText !== undefined &&
-    props.altText !== props.text
+    (props.altAlwaysVisible || props.altText !== props.text)
 )
 
 /**
@@ -166,10 +175,10 @@ const hasPresetActions = computed(() =>
 )
 
 const resolvedEscMode = computed<'close' | 'back'>(() => {
-  if (isQuickWindow) return 'close'
   if (props.escMode && props.escMode !== 'auto') {
     return props.escMode
   }
+  if (isQuickWindow) return 'close'
 
   const modal = menuModalsStore.currentModal
   if (modal === MenuModals.NONE) {
@@ -250,8 +259,8 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
     event.shiftKey &&
     altVisible.value
   ) {
-    if (!props.spaceKey?.disabled) {
-      props.spaceKey?.action(props.altText || '')
+    if (altKey.value && !altKey.value.disabled) {
+      void altKey.value.action(props.altText || '')
     }
   } else if (
     (event.code === 'Space' || event.code === 'Enter') &&
@@ -292,9 +301,6 @@ function goToEditor() {
 }
 
 function handleClose() {
-  const cancelCorrection =
-    menuModalsStore.currentModalParams?.onCancelCorrection
-  if (typeof cancelCorrection === 'function') cancelCorrection()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   try {

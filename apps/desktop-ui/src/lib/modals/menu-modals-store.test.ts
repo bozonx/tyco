@@ -27,11 +27,11 @@ describe('createMenuModalsStoreModel', () => {
     const store = createMenuModalsStoreModel()
 
     store.nextModal(MenuModals.AI_TASK, { text: 'first' })
-    store.nextModal(MenuModals.CORRECTION, { text: 'second' })
+    store.nextModal(MenuModals.INSERT, { text: 'second' })
 
     expect(store.menuBreadcrumbs.value).toEqual([
       MenuModals.AI_TASK,
-      MenuModals.CORRECTION,
+      MenuModals.INSERT,
     ])
 
     store.back()
@@ -72,23 +72,47 @@ describe('createMenuModalsStoreModel', () => {
     expect(() => store.cancelPending()).not.toThrow()
   })
 
-  it('updates the params only of the modal still on screen', () => {
+  it('restores the params of the step it goes back to', () => {
     const store = createMenuModalsStoreModel()
 
-    store.nextModal(MenuModals.INSERT, { text: 'a', correcting: true })
+    store.nextModal(MenuModals.INSERT, { text: 'typed' })
+    store.nextModal(MenuModals.INSERT, { text: 'corrected' })
+    store.back()
 
-    expect(
-      store.updateModalParams(MenuModals.INSERT, { correcting: false })
-    ).toBe(true)
-    expect(store.currentModalParams.value).toEqual({
-      text: 'a',
-      correcting: false,
-    })
+    expect(store.currentModalParams.value).toEqual({ text: 'typed' })
+  })
+
+  it('calls onLeave of the steps it removes', () => {
+    const store = createMenuModalsStoreModel()
+    const first = vi.fn()
+    const second = vi.fn()
+
+    store.nextModal(MenuModals.INSERT, { onLeave: first })
+    store.nextModal(MenuModals.INSERT, { onLeave: second })
+    store.back()
+
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(first).not.toHaveBeenCalled()
 
     store.closeAll()
-    expect(store.updateModalParams(MenuModals.INSERT, { text: 'b' })).toBe(
-      false
-    )
-    expect(store.currentModalParams.value).toEqual({})
+    expect(first).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+  })
+
+  it('updates the params only of a step still on the stack', () => {
+    const store = createMenuModalsStoreModel()
+
+    const lower = store.nextModal(MenuModals.INSERT, { text: 'a' })
+    const upper = store.nextModal(MenuModals.INSERT, { correcting: true })
+
+    expect(store.updateStep(lower, { text: 'b' })).toBe(true)
+    expect(store.updateStep(upper, { correcting: false })).toBe(true)
+    expect(store.currentModalParams.value).toEqual({ correcting: false })
+    expect(store.currentStepId.value).toBe(upper)
+
+    store.back()
+    expect(store.currentModalParams.value).toEqual({ text: 'b' })
+    expect(store.hasStep(upper)).toBe(false)
+    expect(store.updateStep(upper, { text: 'c' })).toBe(false)
   })
 })

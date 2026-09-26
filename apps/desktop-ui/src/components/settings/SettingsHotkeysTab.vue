@@ -81,10 +81,20 @@
           <Tabs
             variant="segmented"
             :tabs="quickCorrectionTabs"
-            :value="userConfig.quickCorrection || 'background'"
+            :value="userConfig.quickCorrection || 'manual'"
             @update:value="setQuickCorrection"
           />
         </div>
+      </FieldRow>
+      <FieldRow
+        v-if="userConfig.quickCorrection !== 'auto'"
+        :label="t('settings.quickCorrectionPrefetchLabel')"
+        :hint="t('settings.quickCorrectionPrefetchHint')"
+      >
+        <FieldCheckbox
+          :value="userConfig.quickCorrectionPrefetch === true"
+          @update:value="userConfig.quickCorrectionPrefetch = $event"
+        />
       </FieldRow>
       <FieldRow
         :label="t('settings.quickHideOnBlurLabel')"

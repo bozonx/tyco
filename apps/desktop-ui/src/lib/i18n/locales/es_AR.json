@@ -236,10 +236,11 @@
     "quickInputSubmitEnter": "Enter (Shift+Enter para nueva línea)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter para nueva línea)",
     "quickCorrectionLabel": "Corrección al enviar",
-    "quickCorrectionHint": "Esperar muestra el siguiente paso cuando el texto ya está corregido. En segundo plano lo muestra enseguida y reemplaza el texto cuando la corrección está lista. Manual deja la corrección a la acción de corregir.",
-    "quickCorrection_wait": "Esperar",
-    "quickCorrection_background": "En segundo plano",
+    "quickCorrectionHint": "Manual: Enter abre las acciones con el texto tal como está, Alt+Enter con el texto corregido. Enseguida: al revés, Enter corrige y Alt+Enter sigue sin corregir. Esc en el paso de corrección vuelve al texto tal como está.",
     "quickCorrection_manual": "Manual",
+    "quickCorrection_auto": "Enseguida",
+    "quickCorrectionPrefetchLabel": "Preparar la corrección de antemano",
+    "quickCorrectionPrefetchHint": "Mientras hacés pausas al escribir, el texto se envía a corregir de antemano, así Alt+Enter muestra el resultado sin esperar. El texto llega a la IA aunque no necesites la corrección.",
     "quickHideOnBlurLabel": "Ocultar al perder el foco",
     "quickHideOnBlurHint": "Oculta la ventana de entrada rápida al hacer clic en otro lugar. El texto escrito se conserva y se restaura al volver a abrirla.",
     "copyHotkeyCommand": "Copiar enlace",
@@ -338,7 +339,12 @@
     "textTooShortForCorrection": "El texto es demasiado corto para corregir",
     "correcting": "Corrigiendo…",
     "correctionFailed": "No se pudo corregir el texto",
-    "insertOriginal": "Original"
+    "insertOriginal": "Original",
+    "correct": "Corregir",
+    "nextWithoutCorrection": "Sin corregir",
+    "insertWhenCorrected": "Insertar al corregir",
+    "insertQueued": "Se insertará al corregir…",
+    "nothingToCorrect": "Nada que corregir"
   },
   "shortcuts": {
     "insertIntoEditor": "Insertar en el editor",

@@ -1,30 +1,32 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.insert')">
-    <template
-      v-if="props.correcting || props.correctionError || hasDiff"
-      #header-extra
-    >
+  <ActionOverlayLayout
+    :title="props.correction ? t('menu.correction') : t('menu.insert')"
+  >
+    <template v-if="statusVisible || hasDiff" #header-extra>
       <DiffModeToggle v-if="hasDiff" v-model="diffMode" />
       <span
+        v-if="statusVisible"
         class="correction-status"
-        :class="{ 'is-error': !props.correcting }"
-        v-if="props.correcting || props.correctionError"
+        :class="{ 'is-error': Boolean(props.correctionError) }"
         :title="props.correctionError"
       >
         <span
           v-if="props.correcting"
           class="loading loading-spinner loading-xs"
         ></span>
-        <Icon v-else icon="mdi:alert-circle-outline" height="14" />
-        {{
-          props.correcting ? t('write.correcting') : t('write.correctionFailed')
-        }}
+        <Icon
+          v-else-if="props.correctionError"
+          icon="mdi:alert-circle-outline"
+          height="14"
+        />
+        <Icon v-else icon="mdi:check" height="14" />
+        {{ statusText }}
       </span>
       <button
-        v-if="props.correcting && props.onCancelCorrection"
+        v-if="props.correcting"
         type="button"
         class="correction-cancel"
-        @click="props.onCancelCorrection"
+        @click="menuModalsStore.back()"
       >
         {{ t('common.cancel') }}
       </button>
@@ -37,7 +39,11 @@
         :newText="props.text"
         :mode="diffMode"
       />
-      <TextPreview v-else :text="props.text" />
+      <TextPreview
+        v-else
+        :class="{ 'is-waiting': props.correcting }"
+        :text="props.text"
+      />
     </template>
 
     <template #actions>
@@ -47,10 +53,14 @@
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
         :altText="props.originalText"
+        :altAlwaysVisible="props.correcting"
+        :altAction="primaryAction"
         :stopListening="props.stopListening"
         :toEditorVisible="
-          props.toEditorVisible ?? !routeParamsStore.isEditorPage()
+          !props.correcting &&
+          (props.toEditorVisible ?? !routeParamsStore.isEditorPage())
         "
+        :escMode="props.correction ? 'back' : 'auto'"
       />
     </template>
   </ActionOverlayLayout>
@@ -67,6 +77,7 @@ import {
 } from '../../lib/diff/diff-model'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
+import { useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -85,13 +96,16 @@ const props = withDefaults(
     allowInsertButton?: boolean
     stopListening?: boolean
     toEditorVisible?: boolean
+    /** A correction step: Esc goes back to the text before it */
+    correction?: boolean
     /** The text before correction, still insertable with Shift+Space */
     originalText?: string
     /** A correction of `text` is on its way and will replace it */
     correcting?: boolean
     /** Why the correction failed; `text` is then the uncorrected one */
     correctionError?: string
-    onCancelCorrection?: () => void
+    /** The correction came back without changes */
+    correctionUnchanged?: boolean
   }>(),
   {
     text: '',
@@ -100,15 +114,17 @@ const props = withDefaults(
     allowInsertButton: true,
     stopListening: false,
     toEditorVisible: undefined,
+    correction: false,
     originalText: undefined,
     correcting: false,
     correctionError: undefined,
-    onCancelCorrection: undefined,
+    correctionUnchanged: false,
   }
 )
 
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
+const menuModalsStore = useMenuModalsStore()
 const actionsMenu = computed(
   () => props.actions || actionMenuStore.getShortcutActions()
 )
@@ -116,7 +132,38 @@ const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const diffMode = ref<DiffViewMode>(readStoredDiffMode())
 
+/** Space was pressed while correcting: insert once the correction is in. */
+const insertQueued = ref(false)
+
+const statusVisible = computed(
+  () =>
+    props.correcting ||
+    Boolean(props.correctionError) ||
+    props.correctionUnchanged
+)
+
+const statusText = computed(() => {
+  if (props.correcting) {
+    return insertQueued.value ? t('write.insertQueued') : t('write.correcting')
+  }
+  if (props.correctionError) return t('write.correctionFailed')
+  return t('write.nothingToCorrect')
+})
+
 watch(diffMode, (mode) => writeStoredDiffMode(mode))
+
+watch(
+  () => props.correcting,
+  (correcting, wasCorrecting) => {
+    if (correcting || !wasCorrecting) return
+    const queued = insertQueued.value
+    insertQueued.value = false
+    // after a failure the user decides what to do with the text as typed
+    if (!queued || props.correctionError) return
+    const primary = primaryAction.value
+    if (primary && !primary.disabled) void primary.action(props.text)
+  }
+)
 
 function handleKeyDown(event: KeyboardEvent) {
   if (
@@ -134,13 +181,31 @@ function handleKeyDown(event: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', handleKeyDown))
 onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
-const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  actionsMenu.value.map((item: ActionItem | undefined, index: number) =>
-    item ? { ...item, disabled: shouldDisablePrimaryAction(index) } : undefined
-  )
+const minCorrectionLength = computed(
+  () => ipcStore.params?.appConfig?.minCorrectionLength ?? 0
 )
 
-const spaceKey = computed<ActionItem | undefined>(() => {
+/** Why the correction action is off for this text, if it is. */
+const correctionBlocker = computed(() => {
+  if (props.correction) return t('write.alreadyCorrected')
+  if (props.text.length < minCorrectionLength.value) {
+    return t('write.textTooShortForCorrection')
+  }
+  return undefined
+})
+
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
+  actionsMenu.value.map((item: ActionItem | undefined, index: number) => {
+    if (!item) return undefined
+    if (props.correcting) return { ...item, disabled: true }
+    if (item.id === 'correction' && correctionBlocker.value) {
+      return { ...item, disabled: true, hint: correctionBlocker.value }
+    }
+    return { ...item, disabled: shouldDisablePrimaryAction(index) }
+  })
+)
+
+const primaryAction = computed<ActionItem | undefined>(() => {
   const [firstItem] = actionsMenu.value
 
   if (!firstItem) {
@@ -148,6 +213,19 @@ const spaceKey = computed<ActionItem | undefined>(() => {
   }
 
   return { ...firstItem, disabled: shouldDisablePrimaryAction(0) }
+})
+
+const spaceKey = computed<ActionItem | undefined>(() => {
+  const primary = primaryAction.value
+  if (!primary || !props.correcting) return primary
+
+  return {
+    ...primary,
+    labelKey: 'write.insertWhenCorrected',
+    action: async () => {
+      insertQueued.value = true
+    },
+  }
 })
 
 function needShowInsertButton() {
@@ -193,5 +271,9 @@ function shouldDisablePrimaryAction(index: number) {
 
 .correction-cancel:hover {
   color: var(--color-base-content);
+}
+
+.is-waiting {
+  opacity: 0.6;
 }
 </style>

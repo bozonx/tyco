@@ -236,10 +236,11 @@
     "quickInputSubmitEnter": "Enter (Shift+Enter for newline)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter for newline)",
     "quickCorrectionLabel": "Correction on submit",
-    "quickCorrectionHint": "Wait shows the next step once the text is corrected. Background shows it at once and swaps in the correction when it is ready. Manual leaves correcting to the correction action.",
-    "quickCorrection_wait": "Wait",
-    "quickCorrection_background": "Background",
+    "quickCorrectionHint": "Manual: Enter opens the actions for the text as typed, Alt+Enter for the corrected one. Right away: the other way round, Enter corrects and Alt+Enter goes without correction. Esc on the correction step returns to the text as typed.",
     "quickCorrection_manual": "Manual",
+    "quickCorrection_auto": "Right away",
+    "quickCorrectionPrefetchLabel": "Prepare the correction in advance",
+    "quickCorrectionPrefetchHint": "While you pause typing, the text is sent for correction in advance, so Alt+Enter shows the result without waiting. The text reaches the AI even if you do not need the correction.",
     "quickHideOnBlurLabel": "Hide on focus loss",
     "quickHideOnBlurHint": "Hide the quick window when you click elsewhere. The typed text is kept and restored on the next opening.",
     "copyHotkeyCommand": "Copy binding",
@@ -338,7 +339,12 @@
     "textTooShortForCorrection": "Text is too short for correction",
     "correcting": "Correcting…",
     "correctionFailed": "Could not correct the text",
-    "insertOriginal": "Original"
+    "insertOriginal": "Original",
+    "correct": "Correct",
+    "nextWithoutCorrection": "Without correction",
+    "insertWhenCorrected": "Insert when corrected",
+    "insertQueued": "Will insert when corrected…",
+    "nothingToCorrect": "Nothing to correct"
   },
   "shortcuts": {
     "insertIntoEditor": "Insert into editor",

@@ -188,7 +188,10 @@ onUnmounted(() => {
 watch(
   () => ipcStore.params.isWindowShown,
   (isShown) => {
-    if (!isShown) menuModalsStore.cancelPending()
+    if (isShown) return
+    menuModalsStore.cancelPending()
+    // a correction must not finish into an insert nobody sees
+    menuModalsStore.closeAll()
   }
 )
 

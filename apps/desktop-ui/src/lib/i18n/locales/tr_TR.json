@@ -236,10 +236,11 @@
     "quickInputSubmitEnter": "Enter (Yeni satır için Shift+Enter)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Yeni satır için Enter)",
     "quickCorrectionLabel": "Gönderirken düzeltme",
-    "quickCorrectionHint": "Bekle: sonraki adım metin düzeltildikten sonra açılır. Arka planda: hemen açılır, düzeltme hazır olunca metin değiştirilir. Elle: düzeltme yalnızca düzeltme eylemiyle yapılır.",
-    "quickCorrection_wait": "Bekle",
-    "quickCorrection_background": "Arka planda",
+    "quickCorrectionHint": "Elle: Enter eylemleri metnin yazıldığı haliyle, Alt+Enter düzeltilmiş haliyle açar. Hemen: tersi, Enter düzeltir, Alt+Enter düzeltmeden devam eder. Düzeltme adımında Esc yazılan metne geri döner.",
     "quickCorrection_manual": "Elle",
+    "quickCorrection_auto": "Hemen",
+    "quickCorrectionPrefetchLabel": "Düzeltmeyi önceden hazırla",
+    "quickCorrectionPrefetchHint": "Yazarken duraksadığınızda metin önceden düzeltmeye gönderilir, böylece Alt+Enter sonucu beklemeden gösterir. Düzeltmeye ihtiyacınız olmasa bile metin yapay zekâya gider.",
     "quickHideOnBlurLabel": "Odak kaybında gizle",
     "quickHideOnBlurHint": "Başka bir yere tıklandığında hızlı giriş penceresini gizler. Yazılan metin korunur ve bir sonraki açılışta geri yüklenir.",
     "copyHotkeyCommand": "Bağlamayı kopyala",
@@ -338,7 +339,12 @@
     "textTooShortForCorrection": "Metin düzeltme için çok kısa",
     "correcting": "Düzeltiliyor…",
     "correctionFailed": "Metin düzeltilemedi",
-    "insertOriginal": "Orijinal"
+    "insertOriginal": "Orijinal",
+    "correct": "Düzelt",
+    "nextWithoutCorrection": "Düzeltmeden",
+    "insertWhenCorrected": "Düzeltince ekle",
+    "insertQueued": "Düzeltince eklenecek…",
+    "nothingToCorrect": "Düzeltilecek bir şey yok"
   },
   "shortcuts": {
     "insertIntoEditor": "Editöre ekle",

@@ -236,10 +236,11 @@
     "quickInputSubmitEnter": "Enter (Shift+Enter — новая строка)",
     "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter — новая строка)",
     "quickCorrectionLabel": "Коррекция при отправке",
-    "quickCorrectionHint": "«Ждать» — следующий шаг откроется после исправления текста. «В фоне» — откроется сразу, а исправление подставится, когда будет готово. «Вручную» — исправление только через действие коррекции.",
-    "quickCorrection_wait": "Ждать",
-    "quickCorrection_background": "В фоне",
+    "quickCorrectionHint": "«Вручную» — Enter открывает действия с текстом как есть, Alt+Enter — с исправленным. «Сразу» — наоборот: Enter исправляет, Alt+Enter — без исправления. Esc на шаге исправления возвращает к тексту как есть.",
     "quickCorrection_manual": "Вручную",
+    "quickCorrection_auto": "Сразу",
+    "quickCorrectionPrefetchLabel": "Готовить исправление заранее",
+    "quickCorrectionPrefetchHint": "Пока вы делаете паузы в наборе, текст заранее отправляется на исправление, и Alt+Enter показывает результат без ожидания. Текст уходит в AI, даже если исправление не понадобится.",
     "quickHideOnBlurLabel": "Скрывать при потере фокуса",
     "quickHideOnBlurHint": "Скрывать окно быстрого ввода при клике в другое место. Набранный текст сохраняется и восстанавливается при следующем открытии.",
     "copyHotkeyCommand": "Копировать бинд",
@@ -338,7 +339,12 @@
     "textTooShortForCorrection": "Слишком короткий текст для коррекции",
     "correcting": "Исправляю…",
     "correctionFailed": "Не удалось исправить текст",
-    "insertOriginal": "Оригинал"
+    "insertOriginal": "Оригинал",
+    "correct": "Исправить",
+    "nextWithoutCorrection": "Без исправления",
+    "insertWhenCorrected": "Вставить после исправления",
+    "insertQueued": "Вставлю после исправления…",
+    "nothingToCorrect": "Исправлять нечего"
   },
   "shortcuts": {
     "insertIntoEditor": "Вставить в редактор",
