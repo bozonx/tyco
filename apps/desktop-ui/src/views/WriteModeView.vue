@@ -348,11 +348,20 @@ async function submit() {
   box-sizing: border-box;
 }
 
+/* The window is transparent: the plate keeps the hint readable over whatever
+   lies below it */
 .write-hint {
   display: flex;
   align-items: center;
+  align-self: flex-start;
   gap: var(--space-sm);
   margin: 0;
+  padding: 0.25rem 0.625rem 0.25rem 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in oklab, var(--app-surface) 92%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--app-shadow-sm);
   font-size: 0.75rem;
   color: var(--app-text-muted);
   flex-shrink: 0;
