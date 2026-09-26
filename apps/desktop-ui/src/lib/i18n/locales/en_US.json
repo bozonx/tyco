@@ -315,7 +315,7 @@
     "appHotkeyConflict": "This shortcut is already assigned to: {action}",
     "quickInputActions": {
       "correctAndInsert": "Correct and insert into previous window",
-      "next": "Next step: text actions",
+      "next": "Open actions (all windows)",
       "insertWithoutCorrection": "Insert without correction",
       "newline": "New line",
       "cancel": "Cancel and close"

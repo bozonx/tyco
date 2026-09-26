@@ -7,8 +7,14 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+
 import Editor from '../components/Editor.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
+import {
+  resolveQuickInputHotkeys,
+  resolveQuickInputKeyAction,
+} from '../lib/quick-input/quick-input-keys'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
@@ -27,6 +33,18 @@ navPanelStore.resetNavParams({
   },
   escBtnLabelKey: 'menu.insert',
 })
+function handleKeyDown(event: KeyboardEvent) {
+  if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) return
+  const hotkeys = resolveQuickInputHotkeys(
+    ipcStore.params?.userConfig?.quickInputHotkeys
+  )
+  if (resolveQuickInputKeyAction(event, hotkeys) !== 'next') return
+  event.preventDefault()
+  if (!event.repeat) navPanelStore.params.escBtnAction?.()
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeyDown))
+onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 </script>
 
 <style scoped>

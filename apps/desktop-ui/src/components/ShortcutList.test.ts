@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
   mode: 'write',
+  nextShortcut: 'Ctrl+S',
 }))
 
 vi.mock('../composables/useI18n', () => ({
@@ -61,7 +62,10 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: mocks.closeWindow,
     get params() {
-      return { mode: mocks.mode }
+      return {
+        mode: mocks.mode,
+        userConfig: { quickInputHotkeys: { next: mocks.nextShortcut } },
+      }
     },
   }),
 }))
@@ -101,6 +105,7 @@ describe('ShortcutList', () => {
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert']
     mocks.mode = 'write'
+    mocks.nextShortcut = 'Ctrl+S'
     mocks.currentModalParams = {}
   })
 
@@ -114,7 +119,7 @@ describe('ShortcutList', () => {
       props: {
         text: '  context text  ',
         enterKey: { name: 'Chat', action: chat },
-        ctrlSKey: { name: 'Actions', action: actions },
+        actionsKey: { name: 'Actions', action: actions },
         leftLetterKeys: slots,
       },
     })
@@ -142,6 +147,23 @@ describe('ShortcutList', () => {
     await wrapper.findAll('button')[1].trigger('click')
     expect(chat).toHaveBeenCalledTimes(2)
     expect(actions).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  it('uses the shared actions binding and ignores the old shortcut', () => {
+    mocks.nextShortcut = 'Alt+S'
+    const action = vi.fn()
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'translated text',
+        actionsKey: { name: 'Actions', action },
+      },
+    })
+    press('KeyS', { ctrlKey: true })
+    expect(action).not.toHaveBeenCalled()
+    press('KeyS', { altKey: true })
+    expect(action).toHaveBeenCalledWith('translated text')
+    expect(wrapper.text()).toContain('Alt')
     wrapper.unmount()
   })
 
@@ -215,6 +237,7 @@ describe('ShortcutList', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'insert'
     mocks.mode = 'write'
+    mocks.nextShortcut = 'Ctrl+S'
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'result text', escVisible: true },

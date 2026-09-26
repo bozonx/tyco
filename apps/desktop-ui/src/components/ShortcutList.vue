@@ -4,7 +4,7 @@
     <div
       v-if="
         props.enterKey ||
-        props.ctrlSKey ||
+        props.actionsKey ||
         props.spaceKey ||
         props.toEditorVisible ||
         props.escVisible
@@ -92,6 +92,10 @@ import { computed, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import { appNavigation } from '../lib/navigation/navigation'
+import {
+  quickInputShortcut,
+  resolveQuickInputHotkeys,
+} from '../lib/quick-input/quick-input-keys'
 import { type ActionItem } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
@@ -113,7 +117,7 @@ const props = withDefaults(
     /** What `text` was transformed from, see `routeParams.toEditor`. */
     sourceText?: string
     enterKey?: ActionItem
-    ctrlSKey?: ActionItem
+    actionsKey?: ActionItem
     spaceKey?: ActionItem
     /** Another version of the text, run through Shift+Space: the original */
     altText?: string
@@ -132,7 +136,7 @@ const props = withDefaults(
     text: '',
     sourceText: '',
     enterKey: undefined,
-    ctrlSKey: undefined,
+    actionsKey: undefined,
     spaceKey: undefined,
     altText: undefined,
     altAlwaysVisible: false,
@@ -169,12 +173,22 @@ const slots = computed<ShortcutSlotItem[]>(() =>
   })
 )
 
+const actionsShortcut = computed(
+  () =>
+    resolveQuickInputHotkeys(ipcStore.params?.userConfig?.quickInputHotkeys)
+      .next
+)
+
 const extraActions = computed(() => [
   ...(props.enterKey ? [{ keys: ['Enter'], action: props.enterKey }] : []),
-  ...(props.ctrlSKey ? [{ keys: ['Ctrl', 'S'], action: props.ctrlSKey }] : []),
+  ...(props.actionsKey
+    ? [{ keys: actionsShortcut.value.split('+'), action: props.actionsKey }]
+    : []),
 ])
 
 function extraAction(event: KeyboardEvent) {
+  if (props.actionsKey && quickInputShortcut(event) === actionsShortcut.value)
+    return props.actionsKey
   if (
     event.code === 'Enter' &&
     !event.ctrlKey &&
@@ -183,14 +197,6 @@ function extraAction(event: KeyboardEvent) {
     !event.shiftKey
   )
     return props.enterKey
-  if (
-    event.code === 'KeyS' &&
-    event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey &&
-    !event.shiftKey
-  )
-    return props.ctrlSKey
   return undefined
 }
 

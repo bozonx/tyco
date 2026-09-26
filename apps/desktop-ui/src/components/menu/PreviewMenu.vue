@@ -36,6 +36,7 @@
 
     <template #actions>
       <ShortcutList
+        :actionsKey="actionsAction"
         :text="currentText"
         :sourceText="props.sourceText"
         :altText="props.sourceText"
@@ -53,6 +54,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
 import { useIpcStore } from '../../stores/ipc'
+import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import ParallelModeToggle, {
@@ -73,6 +75,14 @@ const props = defineProps<{
   }
 }>()
 
+const actionsAction = {
+  labelKey: 'menu.insert',
+  icon: 'mdi:lightning-bolt-outline',
+  action: async () => {
+    menuModalsStore.nextModal(MenuModals.INSERT, { text: currentText.value })
+  },
+}
+
 const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
 
 function readStoredTranslationMode(): ParallelViewMode {
@@ -84,6 +94,8 @@ function readStoredTranslationMode(): ParallelViewMode {
   }
   return 'split'
 }
+
+const menuModalsStore = useMenuModalsStore()
 
 const currentText = ref(props.text)
 watch(

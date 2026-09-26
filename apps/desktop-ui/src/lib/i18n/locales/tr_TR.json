@@ -318,7 +318,7 @@
     "appHotkeyConflict": "Bu kısayol zaten şu eyleme atanmış: {action}",
     "quickInputActions": {
       "correctAndInsert": "Düzelt ve önceki pencereye ekle",
-      "next": "Sonraki adım: metin eylemleri",
+      "next": "Eylemleri aç (tüm pencereler)",
       "insertWithoutCorrection": "Düzeltmeden ekle",
       "newline": "Yeni satır",
       "cancel": "İptal et ve kapat"

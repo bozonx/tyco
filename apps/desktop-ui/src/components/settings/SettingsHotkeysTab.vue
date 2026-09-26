@@ -3,7 +3,6 @@
     :title="t('settings.appHotkeysTitle')"
     :description="t('settings.appHotkeysHint')"
   >
-    <h3>{{ t('settings.quickInputSectionTitle') }}</h3>
     <FieldRow
       v-for="action in actions"
       :key="action"

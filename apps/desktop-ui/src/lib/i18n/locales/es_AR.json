@@ -318,7 +318,7 @@
     "appHotkeyConflict": "Este atajo ya está asignado a: {action}",
     "quickInputActions": {
       "correctAndInsert": "Corregir e insertar en la ventana anterior",
-      "next": "Siguiente paso: acciones de texto",
+      "next": "Abrir acciones (todas las ventanas)",
       "insertWithoutCorrection": "Insertar sin corregir",
       "newline": "Nueva línea",
       "cancel": "Cancelar y cerrar"

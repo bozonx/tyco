@@ -40,7 +40,12 @@
         icon="mdi:lightning-bolt-outline"
         class="mr-1"
         @click="navPanelStore.params.escBtnAction"
-        >{{ escBtnText }}</Button
+        >{{ escBtnText
+        }}<template
+          v-if="navPanelStore.params.escBtnLabelKey === 'menu.insert'"
+        >
+          ({{ actionsShortcut }})</template
+        ></Button
       >
       <Button
         sm
@@ -72,8 +77,10 @@ import { computed } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { resolveQuickInputHotkeys } from '../lib/quick-input/quick-input-keys'
 import { useChatStore } from '../stores/chat'
 import { useEditorInputStore } from '../stores/editorInput'
+import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
@@ -85,6 +92,13 @@ const editorInputStore = useEditorInputStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
+
+const ipcStore = useIpcStore()
+const actionsShortcut = computed(() =>
+  resolveQuickInputHotkeys(
+    ipcStore.params?.userConfig?.quickInputHotkeys
+  ).next.toUpperCase()
+)
 
 const escBtnText = computed(() => {
   return navPanelStore.params.escBtnLabelKey

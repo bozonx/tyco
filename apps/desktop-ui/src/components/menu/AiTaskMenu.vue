@@ -8,7 +8,7 @@
       <ShortcutList
         :text="props.text"
         :enterKey="chatAction"
-        :ctrlSKey="actionsAction"
+        :actionsKey="actionsAction"
         :leftLetterKeys="leftLetterKeys"
         :stopListening="props.stopListening"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
