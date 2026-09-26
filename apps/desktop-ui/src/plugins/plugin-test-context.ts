@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 
+import type { ActionItem } from '../lib/action-menu/action-menu-store'
 import type { PluginContext, ToolbarItem } from '../types/plugins'
 
 export interface PluginTestContextOptions {
@@ -16,7 +17,7 @@ export function createPluginTestContext(
   const toolbarItems: ToolbarItem[] = []
 
   const ctx = {
-    registerActionsItems: vi.fn(),
+    registerActionsItems: vi.fn<(items: ActionItem[]) => void>(),
     registerEditItems: vi.fn(),
     registerCaseItems: vi.fn(),
     registerFormatItems: vi.fn(),

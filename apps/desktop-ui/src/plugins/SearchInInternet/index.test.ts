@@ -13,7 +13,9 @@ describe('SearchInInternet plugin', () => {
   it('registers a single button in the right part of the editor toolbar', () => {
     const { mocks, toolbarItems } = setup({})
 
-    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
+    expect(mocks.registerActionsItems).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'searchInInternet', preferredKey: 'v' }),
+    ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'searchInInternet',
@@ -68,4 +70,16 @@ describe('SearchInInternet plugin', () => {
     expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'error')
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
+})
+
+it('uses the text supplied by the action menu', async () => {
+  const { mocks } = setup({
+    value: 'editor text',
+    selectedText: 'selection',
+    config: { pathToNotes: '/notes' },
+  })
+  await mocks.registerActionsItems.mock.calls[0][0][0].action(' menu text ')
+  expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndClose', [
+    DEFAULT_SEARCH_URL + 'menu%20text',
+  ])
 })

@@ -23,6 +23,10 @@ export interface ToolbarItem {
 }
 
 export interface PluginContext {
+  /**
+   * Stable local IDs are scoped to this plugin; preferredKey is used only for
+   * initial placement.
+   */
   registerActionsItems(actions: ActionItem[]): void
   registerEditItems(edit: EditItem[]): void
   registerCaseItems(items: EditItem[]): void

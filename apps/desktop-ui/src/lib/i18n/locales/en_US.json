@@ -237,8 +237,6 @@
     "quickInputSectionHint": "Configure keyboard actions in the quick input window.",
     "quickCorrectionPrefetchLabel": "Prepare the correction in advance",
     "quickCorrectionPrefetchHint": "While you pause typing, text is sent to AI for correction in advance. This reduces waiting, but sends text even if you do not submit it.",
-    "quickHideOnBlurLabel": "Hide on focus loss",
-    "quickHideOnBlurHint": "Hide the quick window when you click elsewhere. The typed text is kept and restored on the next opening.",
     "copyHotkeyCommand": "Copy binding",
     "configureGlobalHotkeys": "Configure global hotkeys",
     "configureHotkeysError": "Could not open the system hotkey settings",
@@ -315,7 +313,6 @@
     "hotkeyUnassigned": "Not assigned",
     "clearShortcut": "Clear",
     "appHotkeyConflict": "This shortcut is already assigned to: {action}",
-    "quickInputBehaviorHint": "Correct and insert sends the corrected text directly to the previous window. Next step opens actions for the original text. Configure shortcuts in Hotkeys.",
     "quickInputActions": {
       "correctAndInsert": "Correct and insert into previous window",
       "next": "Next step: text actions",

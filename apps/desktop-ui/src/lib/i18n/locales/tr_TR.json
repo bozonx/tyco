@@ -240,8 +240,6 @@
     "quickInputSectionHint": "Hızlı giriş penceresinde klavye eylemlerini yapılandırın.",
     "quickCorrectionPrefetchLabel": "Düzeltmeyi önceden hazırla",
     "quickCorrectionPrefetchHint": "Yazarken durakladığınızda metin önceden düzeltilmek üzere yapay zekâya gönderilir. Bu, beklemeyi azaltır ancak girişi tamamlamasanız bile metin gönderilir.",
-    "quickHideOnBlurLabel": "Odak kaybında gizle",
-    "quickHideOnBlurHint": "Başka bir yere tıklandığında hızlı giriş penceresini gizler. Yazılan metin korunur ve bir sonraki açılışta geri yüklenir.",
     "copyHotkeyCommand": "Bağlamayı kopyala",
     "configureGlobalHotkeys": "Genel kısayolları yapılandır",
     "configureHotkeysError": "Sistem kısayol ayarları açılamadı",
@@ -318,7 +316,6 @@
     "hotkeyUnassigned": "Atanmamış",
     "clearShortcut": "Kaldır",
     "appHotkeyConflict": "Bu kısayol zaten şu eyleme atanmış: {action}",
-    "quickInputBehaviorHint": "Düzelt ve ekle, düzeltilmiş metni doğrudan önceki pencereye gönderir. Sonraki adım özgün metin için eylemleri açar. Tuş birleşimlerini Kısayollar bölümünden ayarlayın.",
     "quickInputActions": {
       "correctAndInsert": "Düzelt ve önceki pencereye ekle",
       "next": "Sonraki adım: metin eylemleri",

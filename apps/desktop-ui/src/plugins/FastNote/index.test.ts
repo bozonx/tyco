@@ -24,7 +24,9 @@ describe('FastNote plugin', () => {
   it('registers a single button in the right part of the editor toolbar', () => {
     const { mocks, toolbarItems } = setup({})
 
-    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
+    expect(mocks.registerActionsItems).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'fastNote', preferredKey: 'c' }),
+    ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'fastNote',
@@ -87,4 +89,18 @@ describe('FastNote plugin', () => {
     expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'error')
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
+})
+
+it('uses the text supplied by the action menu', async () => {
+  const { mocks } = setup({
+    value: 'editor text',
+    selectedText: 'selection',
+    config: { pathToNotes: '/notes' },
+  })
+  await mocks.registerActionsItems.mock.calls[0][0][0].action(' menu text ')
+  expect(mocks.callApiFunction).toHaveBeenCalledWith('saveNote', [
+    '/notes',
+    expect.any(String),
+    'menu text\n',
+  ])
 })

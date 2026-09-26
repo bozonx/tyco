@@ -174,11 +174,6 @@
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
         />
-        <SettingsQuickInputTab
-          v-else-if="currentTab === 'quick-input'"
-          :user-config="userConfig"
-        />
-
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
           :user-config="userConfig"
@@ -285,7 +280,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
-import { normalizeMainActions } from '../lib/action-menu/main-actions'
 import { syncI18nLocale } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
@@ -305,6 +299,7 @@ import {
 import { secretId } from '../lib/stt/stt-client'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, usePlugins } from '../plugins'
+import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
@@ -313,7 +308,6 @@ import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
-import SettingsQuickInputTab from './settings/SettingsQuickInputTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
@@ -330,6 +324,7 @@ import {
   normalizeAppearance,
 } from '@tyco/shared'
 
+const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const themeStore = useThemeStore()
@@ -364,11 +359,6 @@ const primaryTabs = computed(() => [
     text: t('settings.globalActionsTab'),
     key: 'global-actions',
     icon: 'mdi:earth',
-  },
-  {
-    text: t('settings.quickInputSectionTitle'),
-    key: 'quick-input',
-    icon: 'mdi:pencil-outline',
   },
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
@@ -498,7 +488,18 @@ function createPreparedUserConfig(config: unknown) {
   ensurePluginDefaults(nextConfig)
   normalizeAppearanceConfig(nextConfig)
   normalizeLanguageConfig(nextConfig)
-  nextConfig.mainActions = normalizeMainActions(nextConfig.mainActions)
+  nextConfig.mainActions = actionMenuStore.resolveMainActions(
+    nextConfig.mainActions,
+    nextConfig.mainActionRegistrations ?? []
+  )
+  nextConfig.mainActionRegistrations = [
+    ...new Set([
+      ...(nextConfig.mainActionRegistrations ?? []),
+      ...actionMenuStore
+        .getRegisteredActions()
+        .flatMap((action) => (action.id ? [action.id] : [])),
+    ]),
+  ]
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
   normalizeHotkeysConfig(nextConfig)

@@ -23,9 +23,10 @@ export default function pluginIndex() {
       ],
     },
     init: (ctx: PluginContext) => {
-      const search = async () => {
+      const search = async (input?: string) => {
         const text = (
-          ctx.getEditorInputSelectedText() || ctx.getEditorInputValue()
+          input ??
+          (ctx.getEditorInputSelectedText() || ctx.getEditorInputValue())
         ).trim()
 
         if (!text) {
@@ -47,13 +48,23 @@ export default function pluginIndex() {
         ])
       }
 
+      ctx.registerActionsItems([
+        {
+          id: 'searchInInternet',
+          preferredKey: 'v',
+          labelKey: 'plugin.searchInInternet.label',
+          icon: 'mdi:web',
+          action: search,
+        },
+      ])
+
       ctx.registerToolbarItems([
         {
           id: 'searchInInternet',
           icon: 'mdi:web',
           tooltipKey: 'plugin.searchInInternet.label',
           position: 'right',
-          action: search,
+          action: () => search(),
         },
       ])
     },

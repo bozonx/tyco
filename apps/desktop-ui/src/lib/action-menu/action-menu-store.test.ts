@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { computed } from 'vue'
 
 import { createActionMenuStoreModel } from './action-menu-store'
 
@@ -131,6 +132,39 @@ describe('createActionMenuStoreModel', () => {
     expect(store.getActionsMenu()).toHaveLength(
       store.getDefaultActions().length
     )
+  })
+
+  it('updates reactive menus and replaces duplicate registrations', async () => {
+    const { store } = setup()
+    const slots = computed(() => store.getShortcutActions())
+    expect(slots.value).toHaveLength(6)
+    const original = { id: 'Search:search', preferredKey: 'v', action: vi.fn() }
+    const replacement = { ...original, action: vi.fn() }
+    store.registerActionsItems([original])
+    expect(slots.value[13]).toBe(original)
+    store.registerActionsItems([replacement])
+    await slots.value[13]?.action('menu text')
+    expect(replacement.action).toHaveBeenCalledWith('menu text')
+    expect(original.action).not.toHaveBeenCalled()
+    expect(store.getRegisteredActions()).toHaveLength(1)
+    store.clearRegisteredActions()
+    expect(slots.value).toHaveLength(6)
+  })
+
+  it('restores saved plugin positions after disabling and re-enabling', () => {
+    const { deps } = setup()
+    const store = createActionMenuStoreModel({
+      ...deps,
+      mainActions: () => [null, { type: 'plugin', actionId: 'Notes:create' }],
+      mainActionRegistrations: () => ['Notes:create'],
+    })
+    const action = { id: 'Notes:create', preferredKey: 'c', action: vi.fn() }
+    store.registerActionsItems([action])
+    expect(store.getShortcutActions()).toEqual([undefined, action])
+    store.clearRegisteredActions()
+    expect(store.getActionsMenu()).toEqual([])
+    store.registerActionsItems([action])
+    expect(store.getShortcutActions()).toEqual([undefined, action])
   })
 
   it('maps configured actions to their shortcut slots', () => {

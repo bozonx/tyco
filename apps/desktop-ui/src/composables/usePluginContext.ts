@@ -28,7 +28,12 @@ export default function usePluginContext() {
     constructor(private pluginName: string) {}
 
     registerActionsItems(actions: ActionItem[]) {
-      actionMenuStore.registerActionsItems(actions)
+      actionMenuStore.registerActionsItems(
+        actions.map((action) => ({
+          ...action,
+          id: action.id ? `${this.pluginName}:${action.id}` : undefined,
+        }))
+      )
     }
 
     registerEditItems(edit: EditItem[]) {

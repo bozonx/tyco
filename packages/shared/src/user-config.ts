@@ -212,7 +212,12 @@ export interface StandardMainAction {
   actionId: StandardActionId
 }
 
-export type MainActionConfig = StandardMainAction
+export interface PluginMainAction {
+  type: 'plugin'
+  actionId: string
+}
+
+export type MainActionConfig = StandardMainAction | PluginMainAction
 
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
@@ -256,6 +261,8 @@ export interface UserConfig {
   toTranslateLanguages: (string | null)[]
   translation: TranslationConfig
   mainActions: (MainActionConfig | null)[]
+  /** Plugin actions whose initial shortcut assignment has been reviewed. */
+  mainActionRegistrations?: string[]
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
   showBubbleMenu: boolean

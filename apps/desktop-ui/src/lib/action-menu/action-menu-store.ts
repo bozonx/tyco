@@ -1,9 +1,12 @@
 import { shallowRef } from 'vue'
 
-import type { MainActionConfig, StandardActionId } from '@tyco/shared'
+import type { MainActionConfig } from '@tyco/shared'
+
+import { assignPluginActions } from './main-actions'
 
 export interface ActionItem {
-  id?: StandardActionId
+  id?: string
+  preferredKey?: string
   name?: string
   labelKey?: string
   icon?: string
@@ -29,6 +32,7 @@ export interface ActionMenuDependencies {
     type?: 'info' | 'warn' | 'error' | 'success'
   ) => void
   minCorrectionLength?: () => number
+  mainActionRegistrations?: () => readonly string[] | undefined
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
 }
 
@@ -111,46 +115,45 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     },
   ]
 
-  const getActionsMenu = () => {
-    const defaultActions = getDefaultActions()
-    const actionsById = new Map(
-      defaultActions.map((action) => [action.id, action] as const)
-    )
-    const configuredActions = deps.mainActions?.()
-    const standardActions = configuredActions
-      ? configuredActions.flatMap((item) => {
-          if (!item || item.type !== 'standard') return []
-          const action = actionsById.get(item.actionId)
-          return action ? [action] : []
-        })
-      : defaultActions
+  const getRegisteredActions = () => registeredActionsMenu.value
 
-    return [...standardActions, ...registeredActionsMenu.value]
-  }
+  const resolveMainActions = (
+    config: unknown = deps.mainActions?.(),
+    registrations = deps.mainActionRegistrations?.()
+  ) => assignPluginActions(config, registeredActionsMenu.value, registrations)
 
   const getShortcutActions = (): (ActionItem | undefined)[] => {
-    const configuredActions = deps.mainActions?.()
-    if (!configuredActions) return getActionsMenu()
-
-    const actionsById = new Map(
-      getDefaultActions().map((action) => [action.id, action] as const)
+    const defaults = new Map(
+      getDefaultActions().map((action) => [action.id, action])
     )
-    const slots = configuredActions.map((item) =>
-      item?.type === 'standard' ? actionsById.get(item.actionId) : undefined
+    const plugins = new Map(
+      registeredActionsMenu.value.map((action) => [action.id, action])
     )
-    let lastConfiguredIndex = -1
-    slots.forEach((action, index) => {
-      if (action) lastConfiguredIndex = index
-    })
-
+    const slots = resolveMainActions().map((item) =>
+      item
+        ? (item.type === 'standard' ? defaults : plugins).get(item.actionId)
+        : undefined
+    )
+    while (slots.length && !slots.at(-1)) slots.pop()
     return [
-      ...slots.slice(0, lastConfiguredIndex + 1),
-      ...registeredActionsMenu.value,
+      ...slots,
+      ...registeredActionsMenu.value.filter((action) => !action.id),
     ]
   }
 
+  const getActionsMenu = () =>
+    getShortcutActions().filter((action): action is ActionItem => !!action)
+
   const registerActionsItems = (actions: ActionItem[]) => {
-    registeredActionsMenu.value.push(...actions)
+    const next = [...registeredActionsMenu.value]
+    for (const action of actions) {
+      const index = action.id
+        ? next.findIndex((item) => item.id === action.id)
+        : -1
+      if (index >= 0) next[index] = action
+      else next.push(action)
+    }
+    registeredActionsMenu.value = next
   }
 
   const clearRegisteredActions = () => {
@@ -158,6 +161,8 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   }
 
   return {
+    getRegisteredActions,
+    resolveMainActions,
     getDefaultActions,
     getActionsMenu,
     getShortcutActions,

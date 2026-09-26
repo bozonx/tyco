@@ -30,9 +30,10 @@ export default function pluginIndex() {
       ],
     },
     init: (ctx: PluginContext) => {
-      const saveNote = async () => {
+      const saveNote = async (input?: string) => {
         const text = (
-          ctx.getEditorInputSelectedText() || ctx.getEditorInputValue()
+          input ??
+          (ctx.getEditorInputSelectedText() || ctx.getEditorInputValue())
         ).trim()
 
         if (!text) {
@@ -61,13 +62,23 @@ export default function pluginIndex() {
         }
       }
 
+      ctx.registerActionsItems([
+        {
+          id: 'fastNote',
+          preferredKey: 'c',
+          labelKey: 'plugin.fastNote.label',
+          icon: 'mdi:note-plus-outline',
+          action: saveNote,
+        },
+      ])
+
       ctx.registerToolbarItems([
         {
           id: 'fastNote',
           icon: 'mdi:note-plus-outline',
           tooltipKey: 'plugin.fastNote.label',
           position: 'right',
-          action: saveNote,
+          action: () => saveNote(),
         },
       ])
     },
