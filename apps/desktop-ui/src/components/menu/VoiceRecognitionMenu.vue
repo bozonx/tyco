@@ -1,12 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.voiceRecognition')">
-    <template #header-extra>
-      <p v-if="statusText" class="voice-status">
-        <span class="voice-dot" :class="{ 'is-live': isStarted }" />
-        {{ statusText }}
-      </p>
-    </template>
-
+  <ActionOverlayLayout :title="t('menu.voiceInput')">
     <template #preview>
       <AudioWaveform
         v-if="!recognizedText"
@@ -32,14 +25,6 @@
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
         </ShortcutButton>
         <ShortcutButton
-          :keys="['Tab']"
-          icon="mdi:pencil-outline"
-          :disabled="isFinishing"
-          @click="goToEditor"
-        >
-          {{ t('shortcuts.insertIntoEditor') }}
-        </ShortcutButton>
-        <ShortcutButton
           :keys="['Esc']"
           icon="mdi:close"
           :disabled="isCancelling"
@@ -53,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
 import {
@@ -68,7 +53,6 @@ import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
-import { useRouteParams } from '../../stores/routeParams'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
@@ -105,7 +89,6 @@ const { t } = useI18n()
 const ipcStore = useIpcStore()
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
-const routeParamsStore = useRouteParams()
 // a click elsewhere must not cut a dictation short
 const releaseDismissHold = useQuickDismissStore().hold()
 
@@ -153,18 +136,6 @@ const voiceSession = createVoiceSession({
   },
 })
 
-const statusText = computed(() => {
-  if (isTranscribing.value) {
-    return t('menu.transcribing')
-  }
-
-  if (isStarted.value) {
-    return t('menu.listening')
-  }
-
-  return ''
-})
-
 function notifyCancelled() {
   props.onCancel?.()
   emit('cancelled')
@@ -192,7 +163,7 @@ const cancel = async () => {
   }
 }
 
-const finish = async (toEditor = false) => {
+const finish = async () => {
   if (isFinishing.value || isCancelling.value) {
     return
   }
@@ -221,11 +192,6 @@ const finish = async (toEditor = false) => {
     if (!recognizedText.value.trim()) {
       toast(t('toast.nothingRecognized'), 'warn')
       notifyCancelled()
-      return
-    }
-
-    if (toEditor) {
-      routeParamsStore.toEditor(recognizedText.value)
       return
     }
 
@@ -281,11 +247,6 @@ const finish = async (toEditor = false) => {
   }
 }
 
-function goToEditor() {
-  if (isFinishing.value) return
-  void finish(true)
-}
-
 function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
 
@@ -293,12 +254,6 @@ function handleKeyUp(event: KeyboardEvent) {
   if (event.code === 'Escape') {
     event.preventDefault()
     void cancel()
-    return
-  }
-
-  if (event.code === 'Tab') {
-    event.preventDefault()
-    goToEditor()
     return
   }
 
@@ -393,36 +348,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.voice-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--app-text-muted);
-}
-
-.voice-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background-color: var(--app-text-faint);
-}
-
-.voice-dot.is-live {
-  background-color: var(--color-error);
-  animation: voice-pulse 1.2s ease-in-out infinite;
-}
-
 .voice-shortcuts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-sm);
-}
-
-@keyframes voice-pulse {
-  50% {
-    opacity: 0.35;
-  }
 }
 </style>
