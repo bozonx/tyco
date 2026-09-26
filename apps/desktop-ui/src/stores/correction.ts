@@ -10,6 +10,8 @@ import {
   createQuickCorrection,
   isCorrectionAborted,
 } from '../lib/quick-input/quick-correction'
+import { createQuickInsert } from '../lib/quick-input/quick-insert'
+import { useIpcStore } from './ipc'
 import { useHistoryStore } from './history'
 import { MenuModals, useMenuModalsStore } from './menuModals'
 
@@ -58,7 +60,27 @@ export const useCorrectionStore = defineStore('correction', () => {
     isAborted: isCorrectionAborted,
   })
 
+  const ipcStore = useIpcStore()
+  const quickInsert = createQuickInsert({
+    correct: corrector.request,
+    cancelCorrection: corrector.cancel,
+    saveOutput: historyStore.saveOutput,
+    insert: async (text) => {
+      const result = await ipcStore.callFunction('typeIntoWindowAndClose', [
+        text,
+      ])
+      if (!result.success)
+        throw new Error(result.error || 'Text insertion failed')
+    },
+    setPending: (onCancel) =>
+      menuModalsStore.setPendingModal({ correction: true, onCancel }),
+    clearPending: menuModalsStore.clearPendingModal,
+    reportError: (error) => toastText(describeError(error), 'error'),
+  })
+
   return {
+    insert: quickInsert.start,
+    cancelInsert: quickInsert.cancel,
     /** Opens a step with the correction of `text` over the current one. */
     start: step.start,
     /** Corrects `text` in advance once the user pauses; null drops it. */

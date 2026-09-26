@@ -223,20 +223,20 @@ export type PasteMode = 'plain' | 'markdown' | 'ask'
 /** Режим подсветки документа в редакторе */
 export type EditorSyntax = 'none' | 'markdown'
 
-export type QuickInputSubmitMode = 'enter' | 'ctrlEnter'
+export const DEFAULT_QUICK_INPUT_HOTKEYS = {
+  correctAndInsert: 'Enter',
+  next: 'Ctrl+S',
+  insertWithoutCorrection: '',
+  newline: 'Shift+Enter',
+  cancel: 'Escape',
+}
 
-export const QUICK_CORRECTION_MODES = ['manual', 'auto'] as const
-
-/**
- * What the submit key of the quick input does: `manual` opens the actions for
- * the text as typed, `auto` corrects it first. Alt+Enter does the other one
- */
-export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
+export type QuickInputAction = keyof typeof DEFAULT_QUICK_INPUT_HOTKEYS
+export type QuickInputHotkeys = Record<QuickInputAction, string>
 
 export interface UserConfig {
   hotkeys: Record<string, string>
-  quickInputSubmit?: QuickInputSubmitMode
-  quickCorrection?: QuickCorrectionMode
+  quickInputHotkeys?: Partial<QuickInputHotkeys>
   /** Correct the quick input text in advance while the user pauses */
   quickCorrectionPrefetch?: boolean
   /** Hide the quick window when the user clicks elsewhere */
@@ -291,8 +291,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     history: 'Ctrl+Alt+H',
     config: 'Ctrl+Alt+Comma',
   },
-  quickInputSubmit: 'enter',
-  quickCorrection: 'manual',
+  quickInputHotkeys: DEFAULT_QUICK_INPUT_HOTKEYS,
   quickCorrectionPrefetch: false,
   quickHideOnBlur: true,
   theme: 'auto',

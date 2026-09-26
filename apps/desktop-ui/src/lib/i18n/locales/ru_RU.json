@@ -238,16 +238,8 @@
     "hotkeyRecording": "Нажмите комбинацию клавиш…",
     "quickInputSectionTitle": "Быстрый ввод",
     "quickInputSectionHint": "Настройка клавиатурных действий в окне быстрого ввода.",
-    "quickInputSubmitLabel": "Подтверждение ввода",
-    "quickInputSubmitHint": "Клавиша для перехода далее или отправки в ИИ.",
-    "quickInputSubmitEnter": "Enter (Shift+Enter — новая строка)",
-    "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter — новая строка)",
-    "quickCorrectionLabel": "Коррекция при отправке",
-    "quickCorrectionHint": "«Вручную» — Enter открывает действия с текстом как есть, Alt+Enter — с исправленным. «Сразу» — наоборот: Enter исправляет, Alt+Enter — без исправления. Esc на шаге исправления возвращает к тексту как есть.",
-    "quickCorrection_manual": "Вручную",
-    "quickCorrection_auto": "Сразу",
     "quickCorrectionPrefetchLabel": "Готовить исправление заранее",
-    "quickCorrectionPrefetchHint": "Пока вы делаете паузы в наборе, текст заранее отправляется на исправление, и Alt+Enter показывает результат без ожидания. Текст уходит в AI, даже если исправление не понадобится.",
+    "quickCorrectionPrefetchHint": "Во время пауз в наборе текст заранее отправляется в ИИ на исправление. Это сокращает ожидание, но текст отправляется, даже если вы не завершите ввод.",
     "quickHideOnBlurLabel": "Скрывать при потере фокуса",
     "quickHideOnBlurHint": "Скрывать окно быстрого ввода при клике в другое место. Набранный текст сохраняется и восстанавливается при следующем открытии.",
     "copyHotkeyCommand": "Копировать бинд",
@@ -315,7 +307,25 @@
     "fallbackModel": "Резервная {index}",
     "addFallback": "Добавить запасную",
     "addPrimaryModel": "Назначить модель",
-    "removeFallback": "Убрать"
+    "removeFallback": "Убрать",
+    "globalActionsTab": "Глобальные действия",
+    "globalActionsHint": "Вызов Tyco из другого приложения. Выберите поле и нажмите сочетание клавиш, чтобы изменить его.",
+    "externalMethods": "Другие способы вызова",
+    "externalMethodsHint": "Используйте команду в терминале, скрипте или системном сочетании клавиш. Клиент tyco-ctl должен быть установлен и доступен в PATH. В Linux также поддерживается D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
+    "copyActivationCommand": "Копировать команду",
+    "appHotkeysTitle": "Горячие клавиши приложения",
+    "appHotkeysHint": "Сочетания работают, когда соответствующий экран Tyco активен. Выберите поле и нажмите новое сочетание.",
+    "hotkeyUnassigned": "Не назначено",
+    "clearShortcut": "Убрать",
+    "appHotkeyConflict": "Это сочетание уже назначено действию: {action}",
+    "quickInputBehaviorHint": "«Исправить и вставить» отправляет исправленный текст сразу в предыдущее окно. «Далее» открывает действия с исходным текстом. Сочетания настраиваются в разделе «Горячие клавиши».",
+    "quickInputActions": {
+      "correctAndInsert": "Исправить и вставить в предыдущее окно",
+      "next": "Следующий этап: действия с текстом",
+      "insertWithoutCorrection": "Вставить без исправления",
+      "newline": "Новая строка",
+      "cancel": "Отменить и закрыть"
+    }
   },
   "editor": {
     "case": "Регистр",
@@ -351,7 +361,8 @@
     "nextWithoutCorrection": "Без исправления",
     "insertWhenCorrected": "Вставить после исправления",
     "insertQueued": "Вставлю после исправления…",
-    "nothingToCorrect": "Исправлять нечего"
+    "nothingToCorrect": "Исправлять нечего",
+    "correctAndInsert": "Исправить и вставить"
   },
   "shortcuts": {
     "insertIntoEditor": "Вставить в редактор",

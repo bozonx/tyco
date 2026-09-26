@@ -238,16 +238,8 @@
     "hotkeyRecording": "Bir tuş birleşimine basın…",
     "quickInputSectionTitle": "Hızlı giriş",
     "quickInputSectionHint": "Hızlı giriş penceresinde klavye eylemlerini yapılandırın.",
-    "quickInputSubmitLabel": "Girişi onayla",
-    "quickInputSubmitHint": "Devam etmek veya yapay zekaya göndermek için tuş.",
-    "quickInputSubmitEnter": "Enter (Yeni satır için Shift+Enter)",
-    "quickInputSubmitCtrlEnter": "Ctrl+Enter (Yeni satır için Enter)",
-    "quickCorrectionLabel": "Gönderirken düzeltme",
-    "quickCorrectionHint": "Elle: Enter eylemleri metnin yazıldığı haliyle, Alt+Enter düzeltilmiş haliyle açar. Hemen: tersi, Enter düzeltir, Alt+Enter düzeltmeden devam eder. Düzeltme adımında Esc yazılan metne geri döner.",
-    "quickCorrection_manual": "Elle",
-    "quickCorrection_auto": "Hemen",
     "quickCorrectionPrefetchLabel": "Düzeltmeyi önceden hazırla",
-    "quickCorrectionPrefetchHint": "Yazarken duraksadığınızda metin önceden düzeltmeye gönderilir, böylece Alt+Enter sonucu beklemeden gösterir. Düzeltmeye ihtiyacınız olmasa bile metin yapay zekâya gider.",
+    "quickCorrectionPrefetchHint": "Yazarken durakladığınızda metin önceden düzeltilmek üzere yapay zekâya gönderilir. Bu, beklemeyi azaltır ancak girişi tamamlamasanız bile metin gönderilir.",
     "quickHideOnBlurLabel": "Odak kaybında gizle",
     "quickHideOnBlurHint": "Başka bir yere tıklandığında hızlı giriş penceresini gizler. Yazılan metin korunur ve bir sonraki açılışta geri yüklenir.",
     "copyHotkeyCommand": "Bağlamayı kopyala",
@@ -315,7 +307,25 @@
     "fallbackModel": "Yedek {index}",
     "addFallback": "Yedek ekle",
     "addPrimaryModel": "Model ata",
-    "removeFallback": "Kaldır"
+    "removeFallback": "Kaldır",
+    "globalActionsTab": "Genel eylemler",
+    "globalActionsHint": "Tyco’yu başka bir uygulamadan açın. Değiştirmek için bir alanı seçip tuş birleşimine basın.",
+    "externalMethods": "Diğer etkinleştirme yöntemleri",
+    "externalMethodsHint": "Bu komutu terminalden, betikten veya sistem kısayolundan kullanın. tyco-ctl istemcisi kurulu ve PATH içinde erişilebilir olmalıdır. Linux ayrıca D-Bus destekler: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
+    "copyActivationCommand": "Komutu kopyala",
+    "appHotkeysTitle": "Uygulama kısayolları",
+    "appHotkeysHint": "Bu kısayollar ilgili Tyco ekranı etkinken çalışır. Bir alanı seçip yeni bir tuş birleşimine basın.",
+    "hotkeyUnassigned": "Atanmamış",
+    "clearShortcut": "Kaldır",
+    "appHotkeyConflict": "Bu kısayol zaten şu eyleme atanmış: {action}",
+    "quickInputBehaviorHint": "Düzelt ve ekle, düzeltilmiş metni doğrudan önceki pencereye gönderir. Sonraki adım özgün metin için eylemleri açar. Tuş birleşimlerini Kısayollar bölümünden ayarlayın.",
+    "quickInputActions": {
+      "correctAndInsert": "Düzelt ve önceki pencereye ekle",
+      "next": "Sonraki adım: metin eylemleri",
+      "insertWithoutCorrection": "Düzeltmeden ekle",
+      "newline": "Yeni satır",
+      "cancel": "İptal et ve kapat"
+    }
   },
   "editor": {
     "case": "Harf biçimi",
@@ -351,7 +361,8 @@
     "nextWithoutCorrection": "Düzeltmeden",
     "insertWhenCorrected": "Düzeltince ekle",
     "insertQueued": "Düzeltince eklenecek…",
-    "nothingToCorrect": "Düzeltilecek bir şey yok"
+    "nothingToCorrect": "Düzeltilecek bir şey yok",
+    "correctAndInsert": "Düzelt ve ekle"
   },
   "shortcuts": {
     "insertIntoEditor": "Editöre ekle",

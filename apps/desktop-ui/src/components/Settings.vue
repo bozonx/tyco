@@ -167,8 +167,16 @@
         <SettingsHotkeysTab
           v-else-if="currentTab === 'hotkeys'"
           :user-config="userConfig"
+        />
+
+        <SettingsGlobalActionsTab
+          v-else-if="currentTab === 'global-actions'"
+          :user-config="userConfig"
           @update:hotkey="updateHotkey"
-          @update:quick-input-submit="updateQuickInputSubmit"
+        />
+        <SettingsQuickInputTab
+          v-else-if="currentTab === 'quick-input'"
+          :user-config="userConfig"
         />
 
         <SettingsTranslationsTab
@@ -288,6 +296,7 @@ import {
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
+import { resolveQuickInputHotkeys } from '../lib/quick-input/quick-input-keys'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import {
   DICTATION_LANGUAGE_MULTI,
@@ -299,10 +308,12 @@ import { pluginIndexes, usePlugins } from '../plugins'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
+import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
 import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
+import SettingsQuickInputTab from './settings/SettingsQuickInputTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
@@ -312,8 +323,6 @@ import {
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
-  QUICK_CORRECTION_MODES,
-  type QuickInputSubmitMode,
   type StorageInfo,
   type ThemeMode,
   UI_SCALES,
@@ -350,6 +359,16 @@ const primaryTabs = computed(() => [
     text: t('settings.hotkeysTab'),
     key: 'hotkeys',
     icon: 'mdi:keyboard-outline',
+  },
+  {
+    text: t('settings.globalActionsTab'),
+    key: 'global-actions',
+    icon: 'mdi:earth',
+  },
+  {
+    text: t('settings.quickInputSectionTitle'),
+    key: 'quick-input',
+    icon: 'mdi:pencil-outline',
   },
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
@@ -498,13 +517,9 @@ function createPreparedUserConfig(config: unknown) {
 
 function normalizeHotkeysConfig(config: Record<string, any>) {
   config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
-  config.quickInputSubmit =
-    config.quickInputSubmit === 'ctrlEnter' ? 'ctrlEnter' : 'enter'
-  config.quickCorrection = QUICK_CORRECTION_MODES.includes(
-    config.quickCorrection
-  )
-    ? config.quickCorrection
-    : DEFAULT_USER_CONFIG.quickCorrection
+  config.quickInputHotkeys = resolveQuickInputHotkeys(config.quickInputHotkeys)
+  delete config.quickInputSubmit
+  delete config.quickCorrection
   config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
   config.quickHideOnBlur = config.quickHideOnBlur !== false
 }
@@ -759,10 +774,6 @@ const updateMainActions = (actions: (MainActionConfig | null)[]) => {
 
 const updateHotkey = (mode: string, shortcut: string) => {
   userConfig.value.hotkeys[mode] = shortcut
-}
-
-const updateQuickInputSubmit = (mode: QuickInputSubmitMode) => {
-  userConfig.value.quickInputSubmit = mode
 }
 
 const updateWindowInsertionMethod = (value: string | number) => {

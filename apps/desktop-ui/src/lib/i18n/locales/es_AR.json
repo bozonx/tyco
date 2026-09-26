@@ -238,16 +238,8 @@
     "hotkeyRecording": "Presioná una combinación…",
     "quickInputSectionTitle": "Entrada rápida",
     "quickInputSectionHint": "Configurar acciones del teclado en la ventana de entrada rápida.",
-    "quickInputSubmitLabel": "Confirmar entrada",
-    "quickInputSubmitHint": "Tecla para continuar o enviar a la IA.",
-    "quickInputSubmitEnter": "Enter (Shift+Enter para nueva línea)",
-    "quickInputSubmitCtrlEnter": "Ctrl+Enter (Enter para nueva línea)",
-    "quickCorrectionLabel": "Corrección al enviar",
-    "quickCorrectionHint": "Manual: Enter abre las acciones con el texto tal como está, Alt+Enter con el texto corregido. Enseguida: al revés, Enter corrige y Alt+Enter sigue sin corregir. Esc en el paso de corrección vuelve al texto tal como está.",
-    "quickCorrection_manual": "Manual",
-    "quickCorrection_auto": "Enseguida",
     "quickCorrectionPrefetchLabel": "Preparar la corrección de antemano",
-    "quickCorrectionPrefetchHint": "Mientras hacés pausas al escribir, el texto se envía a corregir de antemano, así Alt+Enter muestra el resultado sin esperar. El texto llega a la IA aunque no necesites la corrección.",
+    "quickCorrectionPrefetchHint": "Mientras hacés pausas al escribir, el texto se envía a la IA para corregirlo de antemano. Esto reduce la espera, pero envía el texto aunque no completes la entrada.",
     "quickHideOnBlurLabel": "Ocultar al perder el foco",
     "quickHideOnBlurHint": "Oculta la ventana de entrada rápida al hacer clic en otro lugar. El texto escrito se conserva y se restaura al volver a abrirla.",
     "copyHotkeyCommand": "Copiar enlace",
@@ -315,7 +307,25 @@
     "fallbackModel": "Alternativo {index}",
     "addFallback": "Agregar alternativa",
     "addPrimaryModel": "Asignar modelo",
-    "removeFallback": "Quitar"
+    "removeFallback": "Quitar",
+    "globalActionsTab": "Acciones globales",
+    "globalActionsHint": "Abrí Tyco desde otra aplicación. Seleccioná un campo y presioná una combinación para cambiarla.",
+    "externalMethods": "Otras formas de activación",
+    "externalMethodsHint": "Usá este comando desde una terminal, un script o un atajo del sistema. El cliente tyco-ctl debe estar instalado y disponible en PATH. Linux también admite D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
+    "copyActivationCommand": "Copiar comando",
+    "appHotkeysTitle": "Atajos de la aplicación",
+    "appHotkeysHint": "Estos atajos funcionan cuando la pantalla correspondiente de Tyco está activa. Seleccioná un campo y presioná una nueva combinación.",
+    "hotkeyUnassigned": "Sin asignar",
+    "clearShortcut": "Quitar",
+    "appHotkeyConflict": "Este atajo ya está asignado a: {action}",
+    "quickInputBehaviorHint": "Corregir e insertar envía el texto corregido directamente a la ventana anterior. El siguiente paso abre acciones para el texto original. Configurá las combinaciones en Atajos.",
+    "quickInputActions": {
+      "correctAndInsert": "Corregir e insertar en la ventana anterior",
+      "next": "Siguiente paso: acciones de texto",
+      "insertWithoutCorrection": "Insertar sin corregir",
+      "newline": "Nueva línea",
+      "cancel": "Cancelar y cerrar"
+    }
   },
   "editor": {
     "case": "Mayúsculas y minúsculas",
@@ -351,7 +361,8 @@
     "nextWithoutCorrection": "Sin corregir",
     "insertWhenCorrected": "Insertar al corregir",
     "insertQueued": "Se insertará al corregir…",
-    "nothingToCorrect": "Nada que corregir"
+    "nothingToCorrect": "Nada que corregir",
+    "correctAndInsert": "Corregir e insertar"
   },
   "shortcuts": {
     "insertIntoEditor": "Insertar en el editor",

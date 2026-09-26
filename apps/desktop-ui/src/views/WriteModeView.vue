@@ -12,19 +12,17 @@
         @click="submitFromHint"
       >
         <KeyButton>{{ submitShortcutLabel }}</KeyButton>
-        <span>{{ autoCorrect ? t('write.correct') : t('write.next') }}</span>
+        <span>{{ t('write.correctAndInsert') }}</span>
       </button>
       <span class="opacity-40">•</span>
       <button
         type="button"
         class="write-hint-action"
         @mousedown.prevent
-        @click="submitAltFromHint"
+        @click="nextFromHint"
       >
-        <KeyButton>Alt+Enter</KeyButton>
-        <span>{{
-          autoCorrect ? t('write.nextWithoutCorrection') : t('write.correct')
-        }}</span>
+        <KeyButton>{{ hotkeys.next }}</KeyButton>
+        <span>{{ t('write.next') }}</span>
       </button>
       <span class="opacity-40">•</span>
       <button
@@ -43,7 +41,7 @@
         @mousedown.prevent
         @click="cancelFromHint"
       >
-        <KeyButton>Esc</KeyButton>
+        <KeyButton>{{ hotkeys.cancel }}</KeyButton>
         <span>{{ t('write.cancel') }}</span>
       </button>
     </p>
@@ -54,7 +52,10 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
-import { resolveQuickInputKeyAction } from '../lib/quick-input/quick-input-keys'
+import {
+  resolveQuickInputHotkeys,
+  resolveQuickInputKeyAction,
+} from '../lib/quick-input/quick-input-keys'
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionStore } from '../stores/correction'
 import { useIpcStore } from '../stores/ipc'
@@ -67,28 +68,15 @@ const writerInputStore = useWriterInputStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionStore = useCorrectionStore()
-const appConfig = ipcStore.params!.appConfig
 const { t } = useI18n()
-
-const submitMode = computed(
-  () => ipcStore.params?.userConfig?.quickInputSubmit || 'enter'
+const hotkeys = computed(() =>
+  resolveQuickInputHotkeys(ipcStore.params?.userConfig?.quickInputHotkeys)
 )
-/** The submit key corrects the text; Alt+Enter then goes without it */
-const autoCorrect = computed(
-  () => ipcStore.params?.userConfig?.quickCorrection === 'auto'
-)
-/** Correct in advance while the user pauses, so the correction rarely waits */
 const prefetch = computed(
-  () =>
-    autoCorrect.value ||
-    ipcStore.params?.userConfig?.quickCorrectionPrefetch === true
+  () => ipcStore.params?.userConfig?.quickCorrectionPrefetch === true
 )
-const submitShortcutLabel = computed(() =>
-  submitMode.value === 'ctrlEnter' ? 'Ctrl+Enter' : 'Enter'
-)
-const newlineShortcutLabel = computed(() =>
-  submitMode.value === 'ctrlEnter' ? 'Enter' : 'Shift+Enter'
-)
+const submitShortcutLabel = computed(() => hotkeys.value.correctAndInsert)
+const newlineShortcutLabel = computed(() => hotkeys.value.newline)
 
 const containerRef = ref<HTMLElement | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
@@ -118,8 +106,7 @@ function measureInputMaxHeight() {
 
 let layoutObserver: ResizeObserver | undefined
 
-const canCorrect = (text: string) =>
-  text.trim().length > 0 && text.length >= appConfig.minCorrectionLength
+const canCorrect = (text: string) => text.trim().length > 0
 
 function resetNav() {
   navPanelStore.resetNavParams({ panelVisible: false })
@@ -130,11 +117,13 @@ resetNav()
 watch(
   () => ipcStore.params?.activationId,
   () => {
+    const hadPending = Boolean(menuModalsStore.pendingModal)
+    correctionStore.cancelInsert()
     const { isWindowShown, mode } = ipcStore.params
     if (isWindowShown && mode === 'write') {
       // the step after the input was left open, not closed with Esc: its text
       // comes back like after a focus loss
-      if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) {
+      if (menuModalsStore.anyModalOpen || hadPending) {
         writerInputStore.markDismissed()
       }
       menuModalsStore.cancelPending()
@@ -153,6 +142,7 @@ watch(
 watch(
   () => writerInputStore.value,
   (text) => {
+    if (menuModalsStore.pendingModal) correctionStore.cancelInsert()
     correctionStore.speculate(prefetch.value && canCorrect(text) ? text : null)
   }
 )
@@ -160,11 +150,15 @@ watch(
 watch(
   () => ipcStore.params?.isWindowShown,
   (isShown) => {
-    if (!isShown) correctionStore.cancelSpeculation()
+    if (!isShown) {
+      correctionStore.cancelInsert()
+      correctionStore.cancelSpeculation()
+    }
   }
 )
 
 function cancelAndClose() {
+  correctionStore.cancelInsert()
   correctionStore.cancelSpeculation()
   // Esc drops the text completely: it does not go to the history
   writerInputStore.discard()
@@ -182,12 +176,15 @@ const acceptsInput = () =>
 
 function submitFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
-  submit(autoCorrect.value)
+  submit(true)
 }
 
-function submitAltFromHint() {
+function nextFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
-  submit(!autoCorrect.value)
+  const text = writerInputStore.value
+  if (!text.trim()) return
+  writerInputStore.rememberSubmitted(text)
+  menuModalsStore.nextModal(MenuModals.INSERT, { text })
 }
 
 function cancelFromHint() {
@@ -211,10 +208,10 @@ async function insertNewline() {
 function handleKeyDown(event: KeyboardEvent) {
   if (!acceptsInput()) return
 
-  const action = resolveQuickInputKeyAction(event, submitMode.value)
+  const action = resolveQuickInputKeyAction(event, hotkeys.value)
 
-  // Esc always cancels: it drops the text and closes the window, also while
-  // waiting for the correction. Do not make it return to the previous step
+  // Cancellation drops the text and closes the window, including while
+  // waiting for correction.
   if (action === 'cancel') {
     event.preventDefault()
     cancelAndClose()
@@ -226,11 +223,16 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
-  if (action === 'submit' || action === 'submitAlt') {
+  if (action !== 'none') {
     event.preventDefault()
-    submit(action === 'submit' ? autoCorrect.value : !autoCorrect.value)
+    if (event.repeat) return
+    if (action === 'next') nextFromHint()
+    else if (action === 'newline') void insertNewline()
+    else submit(action === 'correctAndInsert')
     return
   }
+  // Enter has no implicit submission or newline behavior when reassigned.
+  if (event.code === 'Enter' && !event.isComposing) event.preventDefault()
 
   if (
     event.code === 'ArrowUp' &&
@@ -253,18 +255,14 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   layoutObserver?.disconnect()
+  correctionStore.cancelInsert()
   correctionStore.cancelSpeculation()
 })
 
-/**
- * Opens the actions for the text as typed; with `correct`, its correction is
- * stacked over them, so going back returns to the text as typed
- */
 function submit(correct: boolean) {
   const text = writerInputStore.value
   writerInputStore.rememberSubmitted(text)
-  menuModalsStore.nextModal(MenuModals.INSERT, { text })
-  if (correct && canCorrect(text)) void correctionStore.start(text)
+  void correctionStore.insert(text, correct)
 }
 </script>
 
@@ -317,6 +315,7 @@ function submit(correct: boolean) {
    lies below it */
 .write-hint {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   align-self: flex-start;
   gap: var(--space-sm);

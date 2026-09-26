@@ -1,280 +1,87 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <SettingsSection
-      :title="t('settings.hotkeysTitle')"
-      :description="t('settings.hotkeysHint')"
+  <SettingsSection
+    :title="t('settings.appHotkeysTitle')"
+    :description="t('settings.appHotkeysHint')"
+  >
+    <h3>{{ t('settings.quickInputSectionTitle') }}</h3>
+    <FieldRow
+      v-for="action in actions"
+      :key="action"
+      :label="t(`settings.quickInputActions.${action}`)"
     >
-      <div v-if="canConfigure" class="configure-hotkeys">
-        <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
-          {{ t('settings.configureGlobalHotkeys') }}
+      <div class="flex flex-wrap items-center gap-2 w-full">
+        <input
+          class="input flex-1 min-w-32"
+          :value="hotkeys[action]"
+          :placeholder="t('settings.hotkeyUnassigned')"
+          :aria-label="t(`settings.quickInputActions.${action}`)"
+          readonly
+          @keydown.stop.prevent="record($event, action)"
+        />
+        <Button
+          sm
+          neutral
+          :disabled="hotkeys[action] === defaults[action]"
+          @click="setShortcut(action, defaults[action])"
+        >
+          {{ t('settings.resetToDefault') }}
         </Button>
-        <p v-if="configureError" class="configure-error">
-          {{ configureError }}
-        </p>
+        <Button
+          v-if="action === 'insertWithoutCorrection' && hotkeys[action]"
+          sm
+          neutral
+          @click="setShortcut(action, '')"
+        >
+          {{ t('settings.clearShortcut') }}
+        </Button>
       </div>
-      <FieldRow
-        v-for="action in actions"
-        :key="action.mode"
-        :label="t(`settings.hotkeyActions.${action.mode}`)"
-      >
-        <div class="hotkey-control">
-          <input
-            class="input hotkey-input"
-            :value="userConfig.hotkeys[action.mode]"
-            :aria-label="t(`settings.hotkeyActions.${action.mode}`)"
-            readonly
-            @focus="recordingMode = action.mode"
-            @blur="recordingMode = null"
-            @keydown="record($event, action.mode)"
-          />
-          <Button
-            sm
-            neutral
-            :disabled="userConfig.hotkeys[action.mode] === action.defaultValue"
-            @click="setShortcut(action.mode, action.defaultValue)"
-          >
-            {{ t('settings.resetToDefault') }}
-          </Button>
-          <p class="hotkey-status" :data-status="statuses[action.mode]?.status">
-            {{ statusText(action.mode) }}
-          </p>
-          <div
-            v-if="statuses[action.mode]?.externalCommand"
-            class="external-command"
-          >
-            <code>{{ statuses[action.mode].externalCommand }}</code>
-            <Button
-              sm
-              ghost
-              icon="mdi:content-copy"
-              @click="copyCommand(action.mode)"
-            >
-              {{ t('settings.copyHotkeyCommand') }}
-            </Button>
-          </div>
-        </div>
-      </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection
-      :title="t('settings.quickInputSectionTitle')"
-      :description="t('settings.quickInputSectionHint')"
-    >
-      <FieldRow
-        :label="t('settings.quickInputSubmitLabel')"
-        :hint="t('settings.quickInputSubmitHint')"
-      >
-        <div class="flex flex-col gap-2 w-full">
-          <Tabs
-            variant="segmented"
-            :tabs="quickInputSubmitTabs"
-            :value="userConfig.quickInputSubmit || 'enter'"
-            @update:value="setQuickInputSubmit"
-          />
-        </div>
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.quickCorrectionLabel')"
-        :hint="t('settings.quickCorrectionHint')"
-      >
-        <div class="flex flex-col gap-2 w-full">
-          <Tabs
-            variant="segmented"
-            :tabs="quickCorrectionTabs"
-            :value="userConfig.quickCorrection || 'manual'"
-            @update:value="setQuickCorrection"
-          />
-        </div>
-      </FieldRow>
-      <FieldRow
-        v-if="userConfig.quickCorrection !== 'auto'"
-        :label="t('settings.quickCorrectionPrefetchLabel')"
-        :hint="t('settings.quickCorrectionPrefetchHint')"
-      >
-        <FieldCheckbox
-          :value="userConfig.quickCorrectionPrefetch === true"
-          @update:value="userConfig.quickCorrectionPrefetch = $event"
-        />
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.quickHideOnBlurLabel')"
-        :hint="t('settings.quickHideOnBlurHint')"
-      >
-        <FieldCheckbox
-          :value="userConfig.quickHideOnBlur !== false"
-          @update:value="userConfig.quickHideOnBlur = $event"
-        />
-      </FieldRow>
-    </SettingsSection>
-  </div>
+    </FieldRow>
+    <p v-if="error" role="alert" class="text-error">{{ error }}</p>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, toRef } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
-import { useIpcStore } from '../../stores/ipc'
+import {
+  quickInputShortcut,
+  resolveQuickInputHotkeys,
+} from '../../lib/quick-input/quick-input-keys'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {
-  DEFAULT_USER_CONFIG,
-  type HotkeyApplyResult,
-  type HotkeyProviderInfo,
-  QUICK_CORRECTION_MODES,
-  type QuickCorrectionMode,
-  type QuickInputSubmitMode,
+  DEFAULT_QUICK_INPUT_HOTKEYS,
+  type QuickInputAction,
   type UserConfig,
-  hotkeyFromKeyboardEvent,
 } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
-const emit = defineEmits<{
-  (event: 'update:hotkey', mode: string, shortcut: string): void
-  (event: 'update:quickInputSubmit', mode: QuickInputSubmitMode): void
-}>()
 const { t } = useI18n()
-
-const quickInputSubmitTabs = computed(() => [
-  { key: 'enter', text: t('settings.quickInputSubmitEnter') },
-  { key: 'ctrlEnter', text: t('settings.quickInputSubmitCtrlEnter') },
-])
-
-const quickCorrectionTabs = computed(() =>
-  QUICK_CORRECTION_MODES.map((mode) => ({
-    key: mode,
-    text: t(`settings.quickCorrection_${mode}`),
-  }))
+const defaults = DEFAULT_QUICK_INPUT_HOTKEYS
+const actions = Object.keys(defaults) as QuickInputAction[]
+const hotkeys = computed(() =>
+  resolveQuickInputHotkeys(props.userConfig.quickInputHotkeys)
 )
+const error = ref('')
 
-function setQuickCorrection(value: string | number) {
-  props.userConfig.quickCorrection = value as QuickCorrectionMode
-}
-
-function setQuickInputSubmit(value: string | number) {
-  const mode = value as QuickInputSubmitMode
-  props.userConfig.quickInputSubmit = mode
-  emit('update:quickInputSubmit', mode)
-}
-const ipcStore = useIpcStore()
-const recordingMode = ref<string | null>(null)
-const providerState = reactive({
-  canConfigure: false,
-  statuses: {} as Record<string, HotkeyApplyResult>,
-})
-const canConfigure = toRef(providerState, 'canConfigure')
-const statuses = toRef(providerState, 'statuses')
-const configureError = ref('')
-
-const actions = Object.entries(DEFAULT_USER_CONFIG.hotkeys).map(
-  ([mode, defaultValue]) => ({ mode, defaultValue })
-)
-
-async function record(event: KeyboardEvent, mode: string) {
-  event.preventDefault()
-  event.stopPropagation()
-  const shortcut = hotkeyFromKeyboardEvent(event)
-  if (shortcut) await setShortcut(mode, shortcut)
-}
-
-async function setShortcut(mode: string, shortcut: string) {
-  const result = await ipcStore.callFunction('applyHotkey', [
-    { mode, shortcut },
-  ])
-  const status: HotkeyApplyResult = result.success
-    ? (result.result as HotkeyApplyResult)
-    : { status: 'conflict', message: result.error }
-  statuses.value[mode] = status
-  if (status.status !== 'conflict') emit('update:hotkey', mode, shortcut)
-}
-
-function statusText(mode: string) {
-  if (recordingMode.value === mode) return t('settings.hotkeyRecording')
-  const result = statuses.value[mode]
-  return result ? t(`settings.hotkeyStatus.${result.status}`) : ''
-}
-
-async function copyCommand(mode: string) {
-  const command = statuses.value[mode]?.externalCommand
-  if (command) await navigator.clipboard.writeText(command)
-}
-
-async function configureHotkeys() {
-  configureError.value = ''
-  const result = await ipcStore.callFunction('configureHotkeys')
-  if (!result.success) {
-    configureError.value = result.error || t('settings.configureHotkeysError')
+function setShortcut(action: QuickInputAction, shortcut: string) {
+  const conflict = actions.find(
+    (other) => other !== action && shortcut && hotkeys.value[other] === shortcut
+  )
+  if (conflict) {
+    error.value = t('settings.appHotkeyConflict', {
+      action: t(`settings.quickInputActions.${conflict}`),
+    })
+    return
   }
+  error.value = ''
+  props.userConfig.quickInputHotkeys = { ...hotkeys.value, [action]: shortcut }
 }
 
-onMounted(async () => {
-  const result = await ipcStore.callFunction('getHotkeyProviderInfo')
-  if (result.success) {
-    applyProviderInfo(providerState, result.result as HotkeyProviderInfo)
-  }
-})
+function record(event: KeyboardEvent, action: QuickInputAction) {
+  const shortcut = quickInputShortcut(event)
+  if (shortcut) setShortcut(action, shortcut)
+}
 </script>
-
-<style scoped>
-.configure-hotkeys {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
-}
-
-.configure-error {
-  margin: 0;
-  color: var(--app-error);
-  font-size: 0.75rem;
-}
-
-.hotkey-control {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.hotkey-input {
-  flex: 1;
-  min-width: 12rem;
-  cursor: pointer;
-}
-
-.hotkey-input:focus {
-  outline: 2px solid var(--app-accent);
-  outline-offset: 1px;
-}
-
-.hotkey-status {
-  flex-basis: 100%;
-  min-height: 1.25rem;
-  margin: 0;
-  color: var(--app-text-muted);
-  font-size: 0.75rem;
-}
-
-.hotkey-status[data-status='conflict'] {
-  color: var(--app-error);
-}
-
-.external-command {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-basis: 100%;
-  min-width: 0;
-}
-
-.external-command code {
-  overflow-x: auto;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  background: var(--app-surface-raised);
-}
-</style>
