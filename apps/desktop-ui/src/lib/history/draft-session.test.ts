@@ -99,4 +99,26 @@ describe('draft-session', () => {
       ['two', undefined],
     ])
   })
+
+  it('removes the stored draft when discarded', async () => {
+    const saveDraft = vi.fn().mockResolvedValue('id-1')
+    const removeDraft = vi.fn(async () => {})
+    const session = createDraftSession(saveDraft, removeDraft)
+
+    await session.snapshot('one')
+    await session.discard()
+    await session.snapshot('two')
+
+    expect(removeDraft).toHaveBeenCalledWith('id-1')
+    expect(saveDraft.mock.calls[1]).toEqual(['two', undefined])
+  })
+
+  it('removes nothing when discarded before any save', async () => {
+    const removeDraft = vi.fn(async () => {})
+    const session = createDraftSession(vi.fn(), removeDraft)
+
+    await session.discard()
+
+    expect(removeDraft).not.toHaveBeenCalled()
+  })
 })

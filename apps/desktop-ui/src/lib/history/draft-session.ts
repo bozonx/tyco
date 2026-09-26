@@ -10,7 +10,13 @@ export type SaveDraft = (
  * again after small edits does not fill the history with near copies. The
  * session ends when its text leaves the input (cleared or replaced)
  */
-export function createDraftSession(saveDraft: SaveDraft) {
+/** Removes a stored draft by its id. */
+export type RemoveDraft = (id: string) => Promise<unknown>
+
+export function createDraftSession(
+  saveDraft: SaveDraft,
+  removeDraft?: RemoveDraft
+) {
   let draftId: string | null = null
   let savedText = ''
   let queue: Promise<void> = Promise.resolve()
@@ -40,5 +46,17 @@ export function createDraftSession(saveDraft: SaveDraft) {
       savedText = ''
     })
 
-  return { snapshot, end }
+  /**
+   * Drops the session without a trace: the draft it already stored is removed
+   * from the history. A new session starts
+   */
+  const discard = (): Promise<void> =>
+    enqueue(async () => {
+      const id = draftId
+      draftId = null
+      savedText = ''
+      if (id) await removeDraft?.(id)
+    })
+
+  return { snapshot, end, discard }
 }

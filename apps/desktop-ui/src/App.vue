@@ -94,7 +94,11 @@ const bootstrap = createAppBootstrap({
   initPlugins: () => {
     usePlugins().reloadPlugins()
   },
-  handleNavKeyUp: (event) => navPanelStore.handleKeyUp(event),
+  // The nav panel turns Esc into a step back. The quick window has no nav
+  // panel, and there Esc must cancel and close: its screens handle it
+  handleNavKeyUp: (event) => {
+    if (!isQuickWindow) navPanelStore.handleKeyUp(event)
+  },
   addWindowKeyupListener: (handler) => {
     window.addEventListener('keyup', handler)
 

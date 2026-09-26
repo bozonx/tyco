@@ -14,8 +14,9 @@ export const useWriterInputStore = defineStore('writerInput', () => {
   let dismissedAt: number | null = null
 
   const historyStore = useHistoryStore()
-  const drafts = createDraftSession((text, replaceId) =>
-    historyStore.saveDraft(text, replaceId)
+  const drafts = createDraftSession(
+    (text, replaceId) => historyStore.saveDraft(text, replaceId),
+    (id) => historyStore.removeFromEditorHistory(id)
   )
 
   // replace value
@@ -29,11 +30,14 @@ export const useWriterInputStore = defineStore('writerInput', () => {
     value.value = ''
   }
 
-  /** Drops a cancelled input without saving it as a draft. */
+  /**
+   * Drops a cancelled input (Esc) without a trace: nothing goes to the history
+   * and a draft already saved there on a hide is removed
+   */
   const discard = (): void => {
     value.value = ''
     lastSubmitted.value = ''
-    void drafts.end('')
+    void drafts.discard()
   }
 
   /** The window is hidden: the text survives that, but not a quit. */

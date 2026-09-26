@@ -166,7 +166,8 @@ watch(
 
 function cancelAndClose() {
   correctionStore.cancelSpeculation()
-  writerInputStore.clear()
+  // Esc drops the text completely: it does not go to the history
+  writerInputStore.discard()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   resetNav()
