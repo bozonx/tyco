@@ -40,6 +40,8 @@ export const useCorrectionStore = defineStore('correction', () => {
     peek: corrector.peek,
     openStep: (params) => menuModalsStore.nextModal(MenuModals.INSERT, params),
     updateStep: menuModalsStore.updateStep,
+    setPending: (params) => menuModalsStore.setPendingModal(params),
+    clearPending: () => menuModalsStore.clearPendingModal(),
     saveResult: async (text, result) => {
       try {
         const sourceId = await historyStore.saveSource(text, 'correction')

@@ -10,40 +10,29 @@
         :class="{ 'is-error': Boolean(props.correctionError) }"
         :title="props.correctionError"
       >
-        <span
-          v-if="props.correcting"
-          class="loading loading-spinner loading-xs"
-        ></span>
         <Icon
-          v-else-if="props.correctionError"
+          v-if="props.correctionError"
           icon="mdi:alert-circle-outline"
           height="14"
         />
         <Icon v-else icon="mdi:check" height="14" />
         {{ statusText }}
       </span>
-      <button
-        v-if="props.correcting"
-        type="button"
-        class="correction-cancel"
-        @click="menuModalsStore.back()"
-      >
-        {{ t('common.cancel') }}
-      </button>
     </template>
 
     <template #preview>
+      <InProgressMessage
+        v-if="props.correcting"
+        correction
+        :onCancel="menuModalsStore.back"
+      />
       <Diff
-        v-if="props.oldText"
+        v-else-if="props.oldText"
         :oldText="props.oldText"
         :newText="props.text"
         :mode="diffMode"
       />
-      <TextPreview
-        v-else
-        :class="{ 'is-waiting': props.correcting }"
-        :text="props.text"
-      />
+      <TextPreview v-else :text="props.text" />
     </template>
 
     <template #actions>
@@ -84,6 +73,7 @@ import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
 import DiffModeToggle from '../common/DiffModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
+import InProgressMessage from './InProgressMessage.vue'
 import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useRouteParams()
@@ -136,16 +126,10 @@ const diffMode = ref<DiffViewMode>(readStoredDiffMode())
 const insertQueued = ref(false)
 
 const statusVisible = computed(
-  () =>
-    props.correcting ||
-    Boolean(props.correctionError) ||
-    props.correctionUnchanged
+  () => Boolean(props.correctionError) || props.correctionUnchanged
 )
 
 const statusText = computed(() => {
-  if (props.correcting) {
-    return insertQueued.value ? t('write.insertQueued') : t('write.correcting')
-  }
   if (props.correctionError) return t('write.correctionFailed')
   return t('write.nothingToCorrect')
 })
@@ -187,7 +171,9 @@ const minCorrectionLength = computed(
 
 /** Why the correction action is off for this text, if it is. */
 const correctionBlocker = computed(() => {
-  if (props.correction) return t('write.alreadyCorrected')
+  if (props.correction && !props.correctionError) {
+    return t('write.alreadyCorrected')
+  }
   if (props.text.length < minCorrectionLength.value) {
     return t('write.textTooShortForCorrection')
   }
@@ -262,18 +248,5 @@ function shouldDisablePrimaryAction(index: number) {
 
 .correction-status.is-error {
   color: var(--color-warning);
-}
-
-.correction-cancel {
-  color: var(--app-text-muted);
-  cursor: pointer;
-}
-
-.correction-cancel:hover {
-  color: var(--color-base-content);
-}
-
-.is-waiting {
-  opacity: 0.6;
 }
 </style>

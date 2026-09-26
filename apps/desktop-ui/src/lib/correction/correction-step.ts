@@ -23,7 +23,11 @@ export interface CorrectionStepDeps {
   /** Opens the step on top of the others; returns its id */
   openStep: (params: CorrectionStepParams & Record<string, unknown>) => number
   /** Changes the params of the step; false when it is gone */
-  updateStep: (id: number, params: Partial<CorrectionStepParams>) => boolean
+  updateStep?: (id: number, params: Partial<CorrectionStepParams>) => boolean
+  /** Shows an in-progress overlay while waiting for correction */
+  setPending?: (params: Record<string, unknown>) => void
+  /** Clears the in-progress overlay */
+  clearPending?: () => void
   saveResult: (text: string, result: string) => Promise<void>
   /** Reports a failure; returns the message to show on the step */
   reportError: (error: unknown) => string
@@ -60,6 +64,29 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
     }
 
     const controller = new AbortController()
+
+    if (deps.setPending) {
+      deps.setPending({ correction: true, onCancel: () => controller.abort() })
+
+      let result: string
+      try {
+        result = await deps.correct(text, controller.signal)
+      } catch (error) {
+        deps.clearPending?.()
+        if (controller.signal.aborted) return
+        if (deps.isAborted?.(error)) return
+        deps.reportError(error)
+        return
+      } finally {
+        deps.clearPending?.()
+      }
+
+      if (controller.signal.aborted) return
+      deps.openStep({ ...base, ...resultParams(text, result) })
+      await deps.saveResult(text, result)
+      return
+    }
+
     const id = deps.openStep({
       ...base,
       text,
@@ -75,11 +102,11 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
       if (controller.signal.aborted) return
       if (deps.isAborted?.(error)) {
         // the text stays as it was, the actions work on it
-        deps.updateStep(id, { correcting: false, onLeave: undefined })
+        deps.updateStep?.(id, { correcting: false, onLeave: undefined })
         return
       }
       const message = deps.reportError(error)
-      deps.updateStep(id, {
+      deps.updateStep?.(id, {
         correcting: false,
         correctionError: message,
         onLeave: undefined,
@@ -88,7 +115,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
     }
     // a request layer may resolve with a partial text on abort
     if (controller.signal.aborted) return
-    if (!deps.updateStep(id, resultParams(text, result))) return
+    if (!deps.updateStep?.(id, resultParams(text, result))) return
     await deps.saveResult(text, result)
   }
 
