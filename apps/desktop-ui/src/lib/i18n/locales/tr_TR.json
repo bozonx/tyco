@@ -149,7 +149,6 @@
     "editorSyntax": "Editör vurgulaması",
     "editorSyntaxNone": "Vurgulama yok",
     "editorSyntaxMarkdown": "Markdown",
-    "showBubbleMenu": "Seçim üstü menü",
     "editorHistoryMaxItems": "Saklanacak metin sayısı",
     "chatHistoryMaxItems": "Saklanacak sohbet sayısı",
     "llmModels": "LLM Modelleri",
@@ -340,7 +339,6 @@
       "pasteFormatted": "Biçimlendirmeyle yapıştır",
       "selectAll": "Tümünü seç",
       "actions": "Eylemler",
-      "more": "Daha fazla",
       "clipboardUnavailable": "Panoya erişilemiyor",
       "addToDictionary": "Sözlüğe ekle",
       "ignoreWord": "Yoksay"

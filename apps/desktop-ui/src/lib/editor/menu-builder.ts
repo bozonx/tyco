@@ -31,19 +31,9 @@ export interface ContextMenuSources extends EditorMenuSources {
   suggestions?: EditorMenuItem[]
 }
 
-export interface BubbleToolbarSources extends EditorMenuSources {
-  /** Opens the full context menu from the "more" button */
-  openFullMenu: () => void
-  /** How many main actions get their own button */
-  maxActions?: number
-}
-
-export const DEFAULT_BUBBLE_ACTIONS = 3
-
 export const CASE_ICON = 'mdi:format-letter-case'
 export const FORMAT_ICON = 'mdi:code-braces'
 export const ACTIONS_ICON = 'mdi:lightning-bolt-outline'
-export const MORE_ICON = 'mdi:dots-horizontal'
 
 /** Icons of the standard actions, which do not carry their own */
 const ACTION_ICONS: Record<string, string> = {
@@ -145,53 +135,3 @@ export const buildContextMenu = ({
     ),
   ]),
 ]
-
-/**
- * Horizontal toolbar over a selection: icon buttons only. Transforms open as
- * dropdowns, the first main actions get their own buttons and everything else
- * is reachable through "more"
- */
-export const buildBubbleToolbar = ({
-  t,
-  commands,
-  groups,
-  openFullMenu,
-  maxActions = DEFAULT_BUBBLE_ACTIONS,
-}: BubbleToolbarSources): EditorMenuItem[] => {
-  const actions = groups.actionItems
-    .filter((item) => !item.disabled)
-    .slice(0, maxActions)
-    .map((item) => ({ ...item, icon: actionIcon(item.id, item.icon) }))
-
-  return [
-    {
-      id: 'copy',
-      label: t('editor.menu.copy'),
-      icon: 'mdi:content-copy',
-      action: commands.copy,
-    },
-    {
-      id: 'cut',
-      label: t('editor.menu.cut'),
-      icon: 'mdi:content-cut',
-      action: commands.cut,
-    },
-    ...startGroup([
-      ...submenu('case', t('editor.case'), CASE_ICON, groups.caseItems),
-      ...submenu(
-        'format',
-        t('editor.format'),
-        FORMAT_ICON,
-        formatChildren(groups)
-      ),
-    ]),
-    ...startGroup(actions),
-    {
-      id: 'more',
-      label: t('editor.menu.more'),
-      icon: MORE_ICON,
-      separatorBefore: true,
-      action: openFullMenu,
-    },
-  ]
-}

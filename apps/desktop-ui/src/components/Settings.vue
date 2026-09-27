@@ -68,9 +68,6 @@
                 :options="editorSyntaxOptions"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.showBubbleMenu')">
-              <FieldCheckbox v-model:value="userConfig.showBubbleMenu" />
-            </FieldRow>
           </SettingsSection>
 
           <SettingsSection :title="t('settings.sectionHistory')">
@@ -575,8 +572,6 @@ function normalizeLanguageConfig(config: Record<string, any>) {
 function normalizeEditorConfig(config: Record<string, any>) {
   config.pasteMode = config.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
   config.editorSyntax = config.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
-  config.showBubbleMenu =
-    config.showBubbleMenu ?? DEFAULT_USER_CONFIG.showBubbleMenu
 }
 
 function normalizeWindowInsertionConfig(config: Record<string, any>) {

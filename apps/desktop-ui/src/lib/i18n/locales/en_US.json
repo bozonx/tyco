@@ -146,7 +146,6 @@
     "editorSyntax": "Editor highlighting",
     "editorSyntaxNone": "No highlighting",
     "editorSyntaxMarkdown": "Markdown",
-    "showBubbleMenu": "Menu over selection",
     "editorHistoryMaxItems": "Texts to keep",
     "chatHistoryMaxItems": "Chats to keep",
     "llmModels": "LLM Models",
@@ -337,7 +336,6 @@
       "pasteFormatted": "Paste with formatting",
       "selectAll": "Select all",
       "actions": "Actions",
-      "more": "More",
       "clipboardUnavailable": "Clipboard is not available",
       "addToDictionary": "Add to dictionary",
       "ignoreWord": "Ignore"

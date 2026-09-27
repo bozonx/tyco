@@ -1,23 +1,13 @@
 <template>
   <div ref="hostRef" class="main-input" />
 
-  <EditorBubbleToolbar
-    v-if="menu?.kind === 'bubble'"
-    :x="menu.x"
-    :y="menu.y"
-    :bottom="menu.bottom"
-    :items="menu.items"
-    @close="closeMenu()"
-    @open-group="openGroupDropdown"
-  />
   <EditorContextMenu
-    v-else-if="menu"
+    v-if="menu"
     :x="menu.x"
     :y="menu.y"
     :bottom="menu.bottom"
     :items="menu.items"
     :placement="menu.placement"
-    :autofocus="menu.autofocus"
     @close="closeMenu"
   />
 </template>
@@ -34,10 +24,7 @@ import {
   pasteFromClipboard,
   pastePlainFromClipboard,
 } from '../lib/editor/clipboard'
-import type {
-  BubbleMenuRequest,
-  ContextMenuRequest,
-} from '../lib/editor/context-menu'
+import type { ContextMenuRequest } from '../lib/editor/context-menu'
 import {
   createEditorState,
   setEditorSyntax,
@@ -51,13 +38,8 @@ import type {
   EditorMenuCommands,
   EditorMenuGroups,
 } from '../lib/editor/menu-builder'
-import {
-  actionIcon,
-  buildBubbleToolbar,
-  buildContextMenu,
-} from '../lib/editor/menu-builder'
+import { actionIcon, buildContextMenu } from '../lib/editor/menu-builder'
 import type { EditorMenuItem, MenuPlacement } from '../lib/editor/menu-item'
-import type { Rect } from '../lib/editor/menu-placement'
 import type { PasteAskRequest } from '../lib/editor/paste'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
@@ -83,15 +65,12 @@ const { getLabel, doAction, doEdit } = useEditorActions()
 const hostRef = ref<HTMLElement | null>(null)
 
 interface OpenMenu {
-  /** Меню по ПКМ и меню выбора способа вставки перекрывают bubble-меню */
-  kind: 'context' | 'paste' | 'bubble'
+  kind: 'context' | 'paste'
   x: number
   y: number
   bottom: number
   placement: MenuPlacement
   items: EditorMenuItem[]
-  /** Focus the first item, for menus opened by a click rather than the mouse */
-  autofocus?: boolean
 }
 
 const menu = ref<OpenMenu | null>(null)
@@ -105,11 +84,6 @@ const pasteMode = computed(
 const editorSyntax = computed(
   () =>
     ipcStore.params.userConfig?.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
-)
-const showBubbleMenu = computed(
-  () =>
-    ipcStore.params.userConfig?.showBubbleMenu ??
-    DEFAULT_USER_CONFIG.showBubbleMenu
 )
 
 const closeMenu = (restoreFocus = false): void => {
@@ -190,70 +164,6 @@ const openContextMenu = (request: ContextMenuRequest): void => {
   }
 }
 
-/** The full context menu, opened from the "more" button of the toolbar */
-const openFullMenu = (): void => {
-  const current = menu.value
-
-  if (!view || !current) return
-
-  menu.value = {
-    kind: 'context',
-    x: current.x,
-    y: current.y,
-    bottom: current.bottom,
-    placement: 'below',
-    autofocus: true,
-    items: buildContextMenu({
-      t,
-      commands,
-      groups: menuGroups(),
-      selected: !view.state.selection.main.empty,
-    }),
-  }
-}
-
-/** A toolbar button with nested items opens them as a dropdown under itself */
-const openGroupDropdown = (item: EditorMenuItem, anchor: Rect): void => {
-  if (!item.children) return
-
-  menu.value = {
-    kind: 'context',
-    x: anchor.left,
-    y: anchor.top,
-    bottom: anchor.bottom,
-    placement: 'below',
-    autofocus: true,
-    items: item.children,
-  }
-}
-
-const updateBubbleMenu = (request: BubbleMenuRequest | null): void => {
-  if (!request) {
-    if (menu.value?.kind === 'bubble') closeMenu()
-
-    return
-  }
-
-  if (!showBubbleMenu.value) return
-  // меню по ПКМ и выбор способа вставки важнее
-  if (menu.value && menu.value.kind !== 'bubble') return
-
-  menu.value = {
-    kind: 'bubble',
-    x: request.x,
-    y: request.y,
-    bottom: request.bottom,
-    // never cover the selection the menu belongs to
-    placement: 'above',
-    items: buildBubbleToolbar({
-      t,
-      commands,
-      groups: menuGroups(),
-      openFullMenu,
-    }),
-  }
-}
-
 const askPasteMode = (request: PasteAskRequest): void => {
   menu.value = {
     kind: 'paste',
@@ -300,7 +210,6 @@ onMounted(() => {
       syntax: editorSyntax.value,
       paste: { getMode: () => pasteMode.value, onAsk: askPasteMode },
       onContextMenu: openContextMenu,
-      onSelectionMenu: updateBubbleMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
       onSelectionChange: (text, start, end) =>
         editorInputStore.setSelection(text, start, end),
@@ -349,14 +258,6 @@ watch(
   () => editorSyntax.value,
   (mode) => {
     if (view) setEditorSyntax(view, mode)
-  }
-)
-
-// bubble-меню отключили в настройках
-watch(
-  () => showBubbleMenu.value,
-  (enabled) => {
-    if (!enabled && menu.value?.kind === 'bubble') closeMenu()
   }
 )
 

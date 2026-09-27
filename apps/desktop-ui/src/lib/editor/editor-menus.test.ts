@@ -1,21 +1,19 @@
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import type { PasteMode } from '@tyco/shared'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import type { BubbleMenuRequest, ContextMenuRequest } from './context-menu'
+import type { ContextMenuRequest } from './context-menu'
 import { wordAt } from './context-menu'
 import { createEditorExtensions } from './create-editor-state'
 
 interface Harness {
   view: EditorView
   contextMenus: ContextMenuRequest[]
-  bubbleMenus: (BubbleMenuRequest | null)[]
 }
 
 const mount = (doc: string, mode: PasteMode = 'markdown'): Harness => {
   const contextMenus: ContextMenuRequest[] = []
-  const bubbleMenus: (BubbleMenuRequest | null)[] = []
   const parent = document.createElement('div')
 
   document.body.appendChild(parent)
@@ -27,12 +25,11 @@ const mount = (doc: string, mode: PasteMode = 'markdown'): Harness => {
       extensions: createEditorExtensions({
         paste: { getMode: () => mode },
         onContextMenu: (request) => contextMenus.push(request),
-        onSelectionMenu: (request) => bubbleMenus.push(request),
       }),
     }),
   })
 
-  return { view, contextMenus, bubbleMenus }
+  return { view, contextMenus }
 }
 
 /** Событие вставки: jsdom не умеет создавать ClipboardEvent с данными */
@@ -79,59 +76,6 @@ describe('context menu', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(contextMenus).toHaveLength(1)
     expect(contextMenus[0].selectedText).toBe('')
-
-    view.destroy()
-  })
-})
-
-describe('bubble menu', () => {
-  it('reports a non-empty selection and its removal', async () => {
-    const { view, bubbleMenus } = mount('hello world')
-
-    view.dispatch({ selection: { anchor: 0, head: 5 } })
-
-    // the menu is debounced and its geometry is read in a measure pass
-    await vi.waitFor(() =>
-      expect(bubbleMenus[bubbleMenus.length - 1]?.selectedText).toBe('hello')
-    )
-
-    view.dispatch({ selection: { anchor: 5, head: 5 } })
-
-    expect(bubbleMenus[bubbleMenus.length - 1]).toBeNull()
-
-    view.destroy()
-  })
-
-  it('stays quiet while the selection is still being dragged', async () => {
-    const { view, bubbleMenus } = mount('hello world')
-
-    view.dom.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-    view.dispatch({ selection: { anchor: 0, head: 3 } })
-    view.dispatch({ selection: { anchor: 0, head: 5 } })
-
-    await new Promise((resolve) => setTimeout(resolve, 200))
-
-    expect(bubbleMenus).toHaveLength(0)
-
-    window.dispatchEvent(new MouseEvent('mouseup'))
-
-    await vi.waitFor(() =>
-      expect(bubbleMenus[bubbleMenus.length - 1]?.selectedText).toBe('hello')
-    )
-
-    view.destroy()
-  })
-
-  it('anchors the menu to the selected line so it can be placed above it', async () => {
-    const { view, bubbleMenus } = mount('hello world')
-
-    view.dispatch({ selection: { anchor: 0, head: 5 } })
-
-    await vi.waitFor(() => expect(bubbleMenus.length).toBeGreaterThan(0))
-
-    const request = bubbleMenus[bubbleMenus.length - 1]
-
-    expect(request?.bottom).toBeGreaterThanOrEqual(request!.y)
 
     view.destroy()
   })

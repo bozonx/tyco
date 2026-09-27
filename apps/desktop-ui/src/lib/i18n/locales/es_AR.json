@@ -149,7 +149,6 @@
     "editorSyntax": "Resaltado del editor",
     "editorSyntaxNone": "Sin resaltado",
     "editorSyntaxMarkdown": "Markdown",
-    "showBubbleMenu": "Menú sobre la selección",
     "editorHistoryMaxItems": "Textos a guardar",
     "chatHistoryMaxItems": "Chats a guardar",
     "llmModels": "Modelos LLM",
@@ -340,7 +339,6 @@
       "pasteFormatted": "Pegar con formato",
       "selectAll": "Seleccionar todo",
       "actions": "Acciones",
-      "more": "Más",
       "clipboardUnavailable": "No hay acceso al portapapeles",
       "addToDictionary": "Agregar al diccionario",
       "ignoreWord": "Omitir"

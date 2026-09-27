@@ -265,7 +265,6 @@ export interface UserConfig {
   mainActionRegistrations?: string[]
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
-  showBubbleMenu: boolean
   editorHistoryMaxItems: number
   chatHistoryMaxItems: number
   llm: LlmConfig
@@ -318,7 +317,6 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   mainActions: DEFAULT_MAIN_ACTIONS,
   pasteMode: 'markdown',
   editorSyntax: 'markdown',
-  showBubbleMenu: true,
   editorHistoryMaxItems: 100,
   chatHistoryMaxItems: 50,
   llm: DEFAULT_LLM_CONFIG,

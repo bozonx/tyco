@@ -8,7 +8,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 /**
  * Действия редактора: пункты edit-меню, action-меню и голосовой ввод.
  *
- * Вынесено из `Editor.vue`, чтобы bubble-меню над выделением запускало ровно ту
+ * Вынесено из `Editor.vue`, чтобы контекстное меню редактора запускало ровно ту
  * же логику, а не её копию
  */
 export const useEditorActions = () => {

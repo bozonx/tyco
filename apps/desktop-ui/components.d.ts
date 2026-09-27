@@ -28,7 +28,6 @@ declare module 'vue' {
     DiffModeToggle: typeof import('./src/components/common/DiffModeToggle.vue')['default']
     DropdownMenu: typeof import('./src/components/common/DropdownMenu.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
-    EditorBubbleToolbar: typeof import('./src/components/editor/EditorBubbleToolbar.vue')['default']
     EditorContextMenu: typeof import('./src/components/editor/EditorContextMenu.vue')['default']
     EditorInput: typeof import('./src/components/EditorInput.vue')['default']
     FieldCheckbox: typeof import('./src/components/common/FieldCheckbox.vue')['default']

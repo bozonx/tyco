@@ -149,7 +149,6 @@ pub fn default_user_config() -> Value {
       ],
       "pasteMode": "markdown",
       "editorSyntax": "markdown",
-      "showBubbleMenu": true,
       "editorHistoryMaxItems": 100,
       "chatHistoryMaxItems": 50,
       "llm": crate::services::llm_config::default_llm_config(),

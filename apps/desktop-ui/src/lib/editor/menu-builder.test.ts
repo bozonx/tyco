@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { EditorMenuCommands, EditorMenuGroups } from './menu-builder'
-import {
-  actionIcon,
-  ACTIONS_ICON,
-  buildBubbleToolbar,
-  buildContextMenu,
-} from './menu-builder'
+import { actionIcon, ACTIONS_ICON, buildContextMenu } from './menu-builder'
 import type { EditorMenuItem } from './menu-item'
 
 const t = (key: string): string => key
@@ -122,68 +117,6 @@ describe('buildContextMenu', () => {
 
     expect(ids(format.children!)).toEqual(['md', 'code', 'plugin'])
     expect(format.children![2].separatorBefore).toBe(true)
-  })
-})
-
-describe('buildBubbleToolbar', () => {
-  it('shows clipboard, transform dropdowns, the first actions and more', () => {
-    const toolbar = buildBubbleToolbar({
-      t,
-      commands: commands(),
-      groups: groups(),
-      openFullMenu: vi.fn(),
-    })
-
-    expect(ids(toolbar)).toEqual([
-      'copy',
-      'cut',
-      'case',
-      'format',
-      'translation',
-      'correction',
-      'aiTask',
-      'more',
-    ])
-    expect(toolbar.every((entry) => entry.icon)).toBe(true)
-  })
-
-  it('skips disabled actions and respects the limit', () => {
-    const toolbar = buildBubbleToolbar({
-      t,
-      commands: commands(),
-      groups: groups({
-        actionItems: [
-          item('translation', { disabled: true }),
-          item('correction'),
-          item('aiTask'),
-        ],
-      }),
-      openFullMenu: vi.fn(),
-      maxActions: 1,
-    })
-
-    expect(ids(toolbar)).toEqual([
-      'copy',
-      'cut',
-      'case',
-      'format',
-      'correction',
-      'more',
-    ])
-  })
-
-  it('opens the full menu from the more button', async () => {
-    const openFullMenu = vi.fn()
-    const toolbar = buildBubbleToolbar({
-      t,
-      commands: commands(),
-      groups: groups(),
-      openFullMenu,
-    })
-
-    await toolbar.at(-1)!.action!()
-
-    expect(openFullMenu).toHaveBeenCalledOnce()
   })
 })
 

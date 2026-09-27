@@ -16,7 +16,7 @@ export interface Point {
 }
 
 export interface PlacementAnchor extends Point {
-  /** Bottom of the anchored text line; used by `above` / `below` */
+  /** Bottom of the anchored text line; used by `below` */
   bottom?: number
 }
 
@@ -37,16 +37,8 @@ export const placeMenu = (
   placement: MenuPlacement,
   viewport: Size
 ): Point => {
-  const bottom = anchor.bottom ?? anchor.y
-  const above = anchor.y - size.height - ANCHOR_GAP
-
-  let y = anchor.y
-
-  if (placement === 'above') {
-    y = above >= VIEWPORT_GAP ? above : bottom + ANCHOR_GAP
-  } else if (placement === 'below') {
-    y = bottom + ANCHOR_GAP
-  }
+  const y =
+    placement === 'below' ? (anchor.bottom ?? anchor.y) + ANCHOR_GAP : anchor.y
 
   return {
     x: clamp(

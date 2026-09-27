@@ -68,10 +68,7 @@ export const createEditorExtensions = (
   syntaxCompartment.of(syntaxExtension(options.syntax ?? 'markdown')),
   editorAppearance,
   ...(options.paste ? [pasteExtension(options.paste)] : []),
-  editorMenusExtension({
-    onContextMenu: options.onContextMenu,
-    onSelectionMenu: options.onSelectionMenu,
-  }),
+  editorMenusExtension({ onContextMenu: options.onContextMenu }),
   EditorView.updateListener.of((update) => {
     // правки, пришедшие из стора, наружу не отдаём
     if (update.transactions.some((tr) => tr.annotation(fromStore))) return

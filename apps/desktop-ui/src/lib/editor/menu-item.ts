@@ -1,4 +1,4 @@
-/** Пункт плавающего меню редактора (ПКМ, bubble-меню, выбор способа вставки) */
+/** Пункт плавающего меню редактора (ПКМ, выбор способа вставки) */
 export interface EditorMenuItem {
   id: string
   label: string
@@ -14,9 +14,7 @@ export interface EditorMenuItem {
 }
 
 /**
- * `point` — at the mouse position (context menu); `above` — over the anchored
- * text line, flipping below when there is no room (bubble menu, which must not
- * cover the selection it belongs to); `below` — under the anchored line (paste
- * mode picker at the caret)
+ * `point` — at the mouse position (context menu); `below` — under the anchored
+ * line (paste mode picker at the caret)
  */
-export type MenuPlacement = 'point' | 'above' | 'below'
+export type MenuPlacement = 'point' | 'below'

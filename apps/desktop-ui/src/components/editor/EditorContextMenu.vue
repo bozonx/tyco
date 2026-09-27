@@ -88,14 +88,12 @@ const props = withDefaults(
     /** Viewport coordinates, the way CodeMirror reports them */
     x: number
     y: number
-    /** Bottom of the anchored text line; used by `above` / `below` */
+    /** Bottom of the anchored text line; used by `below` */
     bottom?: number
     items: EditorMenuItem[]
     placement?: MenuPlacement
-    /** Focus the first item on open, e.g. for a dropdown opened by a click */
-    autofocus?: boolean
   }>(),
-  { placement: 'point', autofocus: false }
+  { placement: 'point' }
 )
 
 const emit = defineEmits<{ (e: 'close', restoreFocus: boolean): void }>()
@@ -310,8 +308,6 @@ watch(
 
 onMounted(() => {
   place()
-
-  if (props.autofocus) enabledButtons(menuRef.value)[0]?.focus()
 
   window.addEventListener('mousedown', onPointerDown, true)
   window.addEventListener('keydown', onKeyDown, true)

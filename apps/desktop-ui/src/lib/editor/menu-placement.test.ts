@@ -18,18 +18,6 @@ describe('placeMenu', () => {
     })
   })
 
-  it('puts an above menu over the anchored line', () => {
-    expect(
-      placeMenu({ x: 100, y: 300, bottom: 320 }, size, 'above', viewport)
-    ).toEqual({ x: 100, y: 300 - size.height - ANCHOR_GAP })
-  })
-
-  it('flips an above menu below the line when there is no room', () => {
-    expect(
-      placeMenu({ x: 100, y: 40, bottom: 60 }, size, 'above', viewport)
-    ).toEqual({ x: 100, y: 60 + ANCHOR_GAP })
-  })
-
   it('puts a below menu under the anchored line', () => {
     expect(
       placeMenu({ x: 100, y: 40, bottom: 60 }, size, 'below', viewport)

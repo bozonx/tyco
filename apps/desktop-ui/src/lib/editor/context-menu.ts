@@ -1,14 +1,7 @@
 import type { EditorState, Extension } from '@codemirror/state'
-import type { ViewUpdate } from '@codemirror/view'
-import { EditorView, ViewPlugin } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
 
 export { replaceRange } from './editor-sync'
-
-/**
- * How long the selection has to stay still before the bubble menu shows up.
- * Without it the menu would follow every Shift+Arrow keystroke
- */
-const BUBBLE_MENU_DELAY_MS = 120
 
 export interface WordRange {
   from: number
@@ -18,9 +11,9 @@ export interface WordRange {
 
 export interface MenuAnchor {
   x: number
-  /** Top of the anchored text line: the menu is placed above it */
+  /** Top of the anchored text line */
   y: number
-  /** Bottom of the same line: the fallback when there is no room above */
+  /** Bottom of the same line: menus placed `below` open under it */
   bottom: number
 }
 
@@ -31,12 +24,6 @@ export interface ContextMenuRequest extends MenuAnchor {
   word: WordRange | null
   /** Selected text at the moment the menu was invoked */
   selectedText: string
-}
-
-export interface BubbleMenuRequest extends MenuAnchor {
-  selectedText: string
-  from: number
-  to: number
 }
 
 /**
@@ -59,11 +46,6 @@ export const wordAt = (state: EditorState, pos: number): WordRange | null => {
 export interface EditorMenusOptions {
   /** Right click inside the editor */
   onContextMenu?: (request: ContextMenuRequest) => void
-  /**
-   * The selection became non-empty and the bubble menu may be shown. Called
-   * with `null` once the selection is dropped
-   */
-  onSelectionMenu?: (request: BubbleMenuRequest | null) => void
 }
 
 /**
@@ -96,110 +78,7 @@ const posAtPoint = (view: EditorView, x: number, y: number): number | null => {
 }
 
 /**
- * Bubble menu over a non-empty selection.
- *
- * The menu is deliberately not reported straight from the update: while the
- * pointer is down the user is still dragging the selection, and geometry must
- * not be read during an update cycle — hence `requestMeasure`
- */
-const bubbleMenuPlugin = (options: EditorMenusOptions): Extension =>
-  ViewPlugin.fromClass(
-    class {
-      timer: ReturnType<typeof setTimeout> | null = null
-      dragging = false
-      shown = false
-
-      constructor(readonly view: EditorView) {
-        this.view.dom.addEventListener('mousedown', this.onMouseDown)
-        // the button may be released outside the editor
-        window.addEventListener('mouseup', this.onMouseUp)
-      }
-
-      onMouseDown = (): void => {
-        this.dragging = true
-        this.cancel()
-      }
-
-      onMouseUp = (): void => {
-        if (!this.dragging) return
-
-        this.dragging = false
-
-        if (!this.view.state.selection.main.empty) this.schedule()
-      }
-
-      update(update: ViewUpdate): void {
-        if (!options.onSelectionMenu) return
-        if (!update.selectionSet && !update.docChanged) return
-
-        if (update.state.selection.main.empty) {
-          this.cancel()
-
-          if (this.shown) {
-            this.shown = false
-            options.onSelectionMenu(null)
-          }
-
-          return
-        }
-
-        this.schedule()
-      }
-
-      schedule(): void {
-        this.cancel()
-
-        if (this.dragging) return
-
-        this.timer = setTimeout(() => {
-          this.timer = null
-          this.emit()
-        }, BUBBLE_MENU_DELAY_MS)
-      }
-
-      emit(): void {
-        const { from, to } = this.view.state.selection.main
-
-        if (from === to) return
-
-        this.view.requestMeasure({
-          read: (view) => anchorAtPos(view, from),
-          write: (anchor) => {
-            const selection = this.view.state.selection.main
-
-            if (selection.empty) return
-
-            this.shown = true
-            options.onSelectionMenu?.({
-              ...anchor,
-              from: selection.from,
-              to: selection.to,
-              selectedText: this.view.state.sliceDoc(
-                selection.from,
-                selection.to
-              ),
-            })
-          },
-        })
-      }
-
-      cancel(): void {
-        if (this.timer === null) return
-
-        clearTimeout(this.timer)
-        this.timer = null
-      }
-
-      destroy(): void {
-        this.cancel()
-        this.view.dom.removeEventListener('mousedown', this.onMouseDown)
-        window.removeEventListener('mouseup', this.onMouseUp)
-      }
-    }
-  )
-
-/**
- * Context menu on right click plus the bubble menu over a selection.
+ * Context menu on right click.
  *
  * The native menu is always suppressed: inside the Tauri webview it is useless
  * anyway, and correction suggestions come from our own dictionary
@@ -230,5 +109,4 @@ export const editorMenusExtension = (
       return true
     },
   }),
-  bubbleMenuPlugin(options),
 ]
