@@ -4801,7 +4801,7 @@ name = "tyco"
 version = "0.1.0"
 dependencies = [
  "ashpd",
- "base64 0.22.1",
+ "base64 0.23.1",
  "cpal",
  "evdev",
  "futures-util",
