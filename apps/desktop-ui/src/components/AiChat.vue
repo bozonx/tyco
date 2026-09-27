@@ -1,9 +1,17 @@
 <template>
   <div class="ai-chat">
     <header class="chat-header">
-      <div class="min-w-0">
+      <div class="min-w-0 flex flex-col gap-0.5">
         <h1 class="chat-title">{{ chatTitle }}</h1>
-        <p v-if="activeModel" class="chat-model">{{ activeModel }}</p>
+        <div class="chat-model-selector flex items-center">
+          <DropdownMenu
+            xs
+            icon="mdi:creation-outline"
+            :label="currentModelLabel"
+            :title="t('chat.selectModel')"
+            :items="modelMenuItems"
+          />
+        </div>
       </div>
       <Button
         v-if="chatStore.messages.length"
@@ -24,18 +32,6 @@
           </div>
           <div class="font-medium">{{ t('chat.emptyTitle') }}</div>
           <div class="text-sm text-muted">{{ t('chat.emptyHint') }}</div>
-          <div class="starter-grid">
-            <button
-              v-for="starter in starters"
-              :key="starter.icon"
-              type="button"
-              class="starter-card"
-              @click="useStarter(starter.prompt, starter.attach)"
-            >
-              <Icon :icon="starter.icon" height="18" />
-              <span>{{ starter.label }}</span>
-            </button>
-          </div>
         </div>
 
         <ChatItem
@@ -101,6 +97,15 @@
 
         <div class="chat-composer-bar">
           <div class="composer-tools">
+            <DropdownMenu
+              v-if="aiTaskMenuItems.length"
+              icon="mdi:robot-outline"
+              square
+              hide-chevron
+              placement="top"
+              :title="t('action.aiTask')"
+              :items="aiTaskMenuItems"
+            />
             <Button
               sm
               ghost
@@ -150,12 +155,14 @@
 import { computed, nextTick, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
+import { usableModels } from '../lib/llm/llm-catalog'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { AI_TASKS } from '../types'
+import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
 
 const chatInputStore = useChatInputStore()
@@ -179,54 +186,97 @@ const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
   return last?.role === 'assistant' && Boolean(last.content)
 })
-const activeModel = computed(() => {
-  if (chatStore.activeModel) return chatStore.activeModel
+const selectedModel = computed(() => {
   const llm = userConfig.value?.llm
-  const modelId = llm?.tasks?.[AI_TASKS.CHAT]?.[0]
-  const model = llm?.models?.find((item) => item.id === modelId)
-  return model?.name || model?.model || ''
+  if (!llm) return null
+  const modelId = llm.tasks?.[AI_TASKS.CHAT]?.[0]
+  if (modelId) {
+    const found = llm.models?.find((m) => m.id === modelId)
+    if (found) {
+      const provider = llm.providers?.find((p) => p.id === found.provider)
+      return { model: found, provider }
+    }
+  }
+  const usable = usableModels(llm)
+  return usable[0] ?? null
 })
-const canAttachEditorText = computed(() => {
-  const text = editorInputStore.value?.trim()
-  return Boolean(text && !attachments.value.includes(text))
+
+const currentModelLabel = computed(() => {
+  if (chatStore.isGenerating && chatStore.activeModel) {
+    return chatStore.activeModel
+  }
+  if (!userConfig.value?.llm) return t('chat.noModels')
+  if (selectedModel.value) {
+    const { model, provider } = selectedModel.value
+    const providerName = provider?.name || provider?.type || provider?.id || ''
+    const modelName = model.name || model.model
+    return providerName ? `${modelName} (${providerName})` : modelName
+  }
+  return t('chat.selectModel')
 })
-const starters = computed(() => [
-  {
-    icon: 'mdi:help-circle-outline',
-    label: t('chat.starterExplain'),
-    prompt: t('chat.promptExplain'),
-    attach: true,
-  },
-  {
-    icon: 'mdi:auto-fix',
-    label: t('chat.starterImprove'),
-    prompt: t('chat.promptImprove'),
-    attach: true,
-  },
-  {
-    icon: 'mdi:text-box-search-outline',
-    label: t('chat.starterSummarize'),
-    prompt: t('chat.promptSummarize'),
-    attach: true,
-  },
-  {
-    icon: 'mdi:lightbulb-outline',
-    label: t('chat.starterIdeas'),
-    prompt: t('chat.promptIdeas'),
-    attach: false,
-  },
-])
+
+const modelMenuItems = computed<DropdownMenuItem[]>(() => {
+  const llm = userConfig.value?.llm
+  if (!llm) return []
+  const usable = usableModels(llm)
+  if (usable.length === 0) {
+    return [{ label: t('chat.noModels'), action: () => {} }]
+  }
+  const currentId = selectedModel.value?.model.id
+  return usable.map(({ model, provider }) => {
+    const providerName = provider.name || provider.type || provider.id
+    const modelName = model.name || model.model
+    const isSelected = model.id === currentId
+    return {
+      label: `${modelName} (${providerName})`,
+      icon: isSelected ? 'mdi:check' : undefined,
+      action: () => selectChatModel(model.id),
+    }
+  })
+})
+
+const aiTaskMenuItems = computed<DropdownMenuItem[]>(() => {
+  const tasks = userConfig.value?.aiTasks || []
+  return tasks
+    .filter((task): task is NonNullable<typeof task> & { rule: string } =>
+      Boolean(task?.rule?.trim())
+    )
+    .map((task) => ({
+      label: task.name?.trim() || task.rule.trim(),
+      action: () => {
+        const currentText = chatInputStore.value
+        const separator = currentText && !/\s$/.test(currentText) ? ' ' : ''
+        chatInputStore.setValue(`${currentText}${separator}${task.rule}`)
+        chatInputStore.focus()
+      },
+    }))
+})
+
+async function selectChatModel(modelId: string) {
+  if (!userConfig.value?.llm) return
+  chatStore.activeModel = ''
+  const currentTasks = userConfig.value.llm.tasks || {}
+  const currentChain = currentTasks[AI_TASKS.CHAT] || []
+  const newChain = [modelId, ...currentChain.filter((id) => id !== modelId)]
+  const updatedConfig = {
+    ...userConfig.value,
+    llm: {
+      ...userConfig.value.llm,
+      tasks: { ...currentTasks, [AI_TASKS.CHAT]: newChain },
+    },
+  }
+  await ipcStore.saveUserConfig(updatedConfig)
+}
 
 function attachEditorText() {
   const text = editorInputStore.value?.trim()
   if (text) chatStore.addAttachment(text)
 }
 
-function useStarter(prompt: string, attach: boolean) {
-  chatInputStore.setValue(prompt)
-  if (attach && canAttachEditorText.value) attachEditorText()
-  chatInputStore.focus()
-}
+const canAttachEditorText = computed(() => {
+  const text = editorInputStore.value?.trim()
+  return Boolean(text && !attachments.value.includes(text))
+})
 
 async function sendMessage() {
   const message = chatInputStore.value.trim()
@@ -369,30 +419,6 @@ watch(
   background: var(--app-accent-soft);
   color: var(--color-primary);
 }
-.starter-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-sm);
-  width: min(100%, 34rem);
-  margin-top: var(--space-xl);
-}
-.starter-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: 0.75rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  color: var(--app-text-muted);
-  font-size: 0.8125rem;
-  text-align: left;
-  cursor: pointer;
-}
-.starter-card:hover {
-  border-color: var(--app-border-strong);
-  background: var(--app-hover);
-  color: var(--color-base-content);
-}
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -530,9 +556,6 @@ watch(
   .composer-wrap {
     padding-right: var(--space-md);
     padding-left: var(--space-md);
-  }
-  .starter-grid {
-    grid-template-columns: 1fr;
   }
   .composer-hint {
     display: none;

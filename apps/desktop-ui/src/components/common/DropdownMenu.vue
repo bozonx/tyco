@@ -2,25 +2,37 @@
   <div ref="containerRef" class="relative inline-block text-left">
     <button
       type="button"
-      class="btn btn-sm btn-ghost dropdown-trigger flex items-center gap-1"
-      :class="{ 'btn-active': isOpen }"
+      class="btn btn-ghost dropdown-trigger flex items-center gap-1"
+      :class="{
+        'btn-xs': xs,
+        'btn-sm': !xs,
+        'btn-active': isOpen,
+        'btn-square': square,
+      }"
       :title="title"
       :aria-expanded="isOpen"
       @click="toggle"
     >
       <Icon v-if="icon" :icon="icon" height="16" />
-      <span>{{ label }}</span>
+      <span v-if="label" class="truncate max-w-44 sm:max-w-64">{{
+        label
+      }}</span>
       <Icon
+        v-if="!hideChevron"
         icon="mdi:chevron-down"
         height="16"
-        class="opacity-70 transition-transform duration-150"
+        class="opacity-70 transition-transform duration-150 shrink-0"
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
 
     <div
       v-if="isOpen"
-      class="dropdown-panel absolute left-0 top-full mt-1 min-w-44 max-w-64 z-50"
+      class="dropdown-panel absolute z-50 min-w-44 max-w-80 max-h-72 overflow-y-auto"
+      :class="[
+        placement === 'top' ? 'bottom-full top-auto mb-1' : 'top-full mt-1',
+        align === 'right' ? 'right-0 left-auto' : 'left-0',
+      ]"
     >
       <button
         v-for="(item, idx) in items"
@@ -53,9 +65,14 @@ export interface DropdownMenuItem {
 }
 
 defineProps<{
-  label: string
+  label?: string
   icon?: string
   title?: string
+  xs?: boolean
+  square?: boolean
+  hideChevron?: boolean
+  placement?: 'bottom' | 'top'
+  align?: 'left' | 'right'
   items: DropdownMenuItem[]
 }>()
 

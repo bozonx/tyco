@@ -386,6 +386,8 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     }
 
     state.update_params(|params| {
+        params.activation_id = params.activation_id.wrapping_add(1);
+        params.selected_text = None;
         params.mode = Some(StartMode::Editor.as_str().into());
         params.is_window_shown = true;
         params.window_profile = String::from("sheet");

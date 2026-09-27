@@ -420,6 +420,8 @@
     "attachEditorTextTitle": "Mevcut düzenleyici metnini bağlam olarak ekle",
     "removeAttachment": "Eki kaldır",
     "newChat": "Yeni sohbet",
+    "selectModel": "Model seç",
+    "noModels": "Yapılandırılmış model yok",
     "stop": "Durdur",
     "stopped": "Durduruldu",
     "emptyTitle": "Bir sohbet başlatın",

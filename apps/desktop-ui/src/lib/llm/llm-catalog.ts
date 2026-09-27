@@ -64,7 +64,7 @@ export function buildProviderFactories(
   )
 }
 
-function usableModels(config: LlmConfig) {
+export function usableModels(config: LlmConfig) {
   const providers = new Map(
     config.providers.map((provider) => [provider.id, provider])
   )

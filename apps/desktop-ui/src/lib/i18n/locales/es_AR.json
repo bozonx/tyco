@@ -420,6 +420,8 @@
     "attachEditorTextTitle": "Adjuntar el texto actual del editor como contexto",
     "removeAttachment": "Eliminar adjunto",
     "newChat": "Nuevo chat",
+    "selectModel": "Seleccionar modelo",
+    "noModels": "No hay modelos configurados",
     "stop": "Detener",
     "stopped": "Detenido",
     "emptyTitle": "Inicia una conversación",

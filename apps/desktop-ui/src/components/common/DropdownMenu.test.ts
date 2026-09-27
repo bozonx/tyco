@@ -35,4 +35,28 @@ describe('DropdownMenu', () => {
     // Menu closes after selection
     expect(wrapper.find('.absolute').exists()).toBe(false)
   })
+
+  it('supports square, xs, placement and align props', async () => {
+    const wrapper = mount(DropdownMenu, {
+      props: {
+        icon: 'mdi:robot-outline',
+        square: true,
+        xs: true,
+        hideChevron: true,
+        placement: 'top',
+        align: 'right',
+        items: [{ label: 'Item 1', action: vi.fn() }],
+      },
+      global: { stubs: { Icon: true } },
+    })
+
+    const trigger = wrapper.find('button')
+    expect(trigger.classes()).toContain('btn-xs')
+    expect(trigger.classes()).toContain('btn-square')
+
+    await trigger.trigger('click')
+    const panel = wrapper.find('.dropdown-panel')
+    expect(panel.classes()).toContain('bottom-full')
+    expect(panel.classes()).toContain('right-0')
+  })
 })

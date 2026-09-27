@@ -417,6 +417,8 @@
     "attachEditorTextTitle": "Attach current editor text as context",
     "removeAttachment": "Remove attachment",
     "newChat": "New chat",
+    "selectModel": "Select model",
+    "noModels": "No models configured",
     "stop": "Stop",
     "stopped": "Stopped",
     "emptyTitle": "Start a conversation",

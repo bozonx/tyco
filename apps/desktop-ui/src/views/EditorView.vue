@@ -25,22 +25,40 @@ const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
+async function closeEditor() {
+  if (editorInputStore.value.trim()) {
+    await editorInputStore.snapshotDraft()
+  }
+  await ipcStore.callFunction('closeWindow', [])
+}
+
 navPanelStore.resetNavParams({
   escBtnAction: () => {
-    menuModalsStore.nextModal(MenuModals.INSERT, {
-      text: editorInputStore.value,
-    })
+    void closeEditor()
   },
-  escBtnLabelKey: 'menu.insert',
+  escBtnLabelKey: 'common.close',
 })
+
 function handleKeyDown(event: KeyboardEvent) {
   if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) return
+  if (event.code === 'Escape') {
+    event.preventDefault()
+    if (!event.repeat) {
+      void closeEditor()
+    }
+    return
+  }
   const hotkeys = resolveQuickInputHotkeys(
     ipcStore.params?.userConfig?.quickInputHotkeys
   )
-  if (resolveQuickInputKeyAction(event, hotkeys) !== 'next') return
-  event.preventDefault()
-  if (!event.repeat) navPanelStore.params.escBtnAction?.()
+  if (resolveQuickInputKeyAction(event, hotkeys) === 'next') {
+    event.preventDefault()
+    if (!event.repeat) {
+      menuModalsStore.nextModal(MenuModals.INSERT, {
+        text: editorInputStore.value,
+      })
+    }
+  }
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeyDown))

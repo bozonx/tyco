@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../stores/editorInput'
@@ -61,6 +61,27 @@ describe('Editor actions shortcut', () => {
       new KeyboardEvent('keydown', { code: 'KeyS', altKey: true })
     )
     expect(open).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('closes editor on Escape and snapshots draft if text exists', async () => {
+    const editor = useEditorInputStore()
+    editor.setValue('Unsaved text', 'plain')
+    const snapshotSpy = vi.spyOn(editor, 'snapshotDraft')
+    const ipc = useIpcStore()
+    const callFunctionSpy = vi.spyOn(ipc, 'callFunction')
+
+    const wrapper = mount(EditorView, {
+      global: { stubs: { Editor: true, ContentPadding: true } },
+    })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Escape', cancelable: true })
+    )
+    await flushPromises()
+
+    expect(snapshotSpy).toHaveBeenCalled()
+    expect(callFunctionSpy).toHaveBeenCalledWith('closeWindow', [])
     wrapper.unmount()
   })
 })
