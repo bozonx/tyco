@@ -14,6 +14,7 @@ pub enum StartMode {
 }
 
 impl StartMode {
+    #[allow(dead_code)]
     pub const ALL: [Self; 9] = [
         Self::Editor,
         Self::Write,

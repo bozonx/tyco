@@ -233,6 +233,8 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         .cloned()
         .unwrap_or_default();
     let previous = hotkeys.clone();
+    hotkeys.remove("history");
+    hotkeys.remove("config");
     for (mode, shortcut) in defaults {
         hotkeys.entry(mode).or_insert(shortcut);
     }

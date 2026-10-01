@@ -303,8 +303,6 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     select: 'Ctrl+Alt+S',
     aiTasks: 'Ctrl+Alt+A',
     correction: 'Ctrl+Alt+R',
-    history: 'Ctrl+Alt+H',
-    config: 'Ctrl+Alt+Comma',
   },
   quickInputHotkeys: DEFAULT_QUICK_INPUT_HOTKEYS,
   quickCorrectionPrefetch: false,

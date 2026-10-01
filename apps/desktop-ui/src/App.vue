@@ -22,6 +22,7 @@ import { useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
+import { createCapturedChatSelection } from './lib/chat/captured-chat-selection'
 import { desktopClient } from './lib/desktop/client'
 import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
@@ -164,6 +165,12 @@ const capturedSelection = createCapturedSelection({
   replaceValue: (text) => editorInputStore.replaceValue(text),
   focus: () => editorInputStore.focus(),
 })
+// the text selected elsewhere when chat was called goes into chat attachments
+const capturedChatSelection = createCapturedChatSelection({
+  startChatWithAttachment: (text) =>
+    chatStore.startChat({ attachments: [text] }),
+  getSelectedText: () => editorInputStore.selectedText,
+})
 watch(
   () => [
     ipcStore.params.activationId,
@@ -172,7 +179,10 @@ watch(
     ipcStore.params.selectedText,
   ],
   () => {
-    if (!isQuickWindow) capturedSelection.apply(ipcStore.params)
+    if (!isQuickWindow) {
+      capturedSelection.apply(ipcStore.params)
+      capturedChatSelection.apply(ipcStore.params)
+    }
   }
 )
 

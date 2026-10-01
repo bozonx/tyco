@@ -7,7 +7,7 @@
     <template #actions>
       <ShortcutList
         :text="props.text"
-        :enterKey="chatAction"
+        :spaceKey="chatAction"
         :actionsKey="actionsAction"
         :leftLetterKeys="leftLetterKeys"
         :stopListening="props.stopListening"

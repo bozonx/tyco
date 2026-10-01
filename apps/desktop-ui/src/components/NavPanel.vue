@@ -113,7 +113,9 @@ function openSettings() {
 
 function openChat() {
   menuModalsStore.closeAll()
-  const selectedText = editorInputStore.selectedText?.trim()
+  const selectedText = (
+    editorInputStore.selectedText || ipcStore.params?.selectedText
+  )?.trim()
   if (selectedText) {
     void chatStore.startChat({ attachments: [selectedText] })
   } else {

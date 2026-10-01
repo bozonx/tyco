@@ -522,6 +522,8 @@ function createPreparedUserConfig(config: unknown) {
 
 function normalizeHotkeysConfig(config: Record<string, any>) {
   config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
+  delete config.hotkeys?.history
+  delete config.hotkeys?.config
   config.quickInputHotkeys = resolveQuickInputHotkeys(config.quickInputHotkeys)
   delete config.quickInputSubmit
   delete config.quickCorrection

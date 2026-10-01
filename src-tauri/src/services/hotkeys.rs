@@ -368,10 +368,20 @@ fn provider_kind(session_type: Option<&str>) -> ProviderKind {
     }
 }
 
+pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
+    StartMode::Editor,
+    StartMode::Write,
+    StartMode::Chat,
+    StartMode::Voice,
+    StartMode::Select,
+    StartMode::AiTasks,
+    StartMode::Correction,
+];
+
 fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
     let configured = config.get(HOTKEYS_CONFIG_KEY).and_then(Value::as_object);
 
-    StartMode::ALL
+    GLOBAL_HOTKEY_MODES
         .into_iter()
         .filter_map(|mode| {
             let shortcut = configured
@@ -397,8 +407,7 @@ fn default_shortcut(mode: StartMode) -> &'static str {
         StartMode::Select => "Ctrl+Alt+S",
         StartMode::AiTasks => "Ctrl+Alt+A",
         StartMode::Correction => "Ctrl+Alt+R",
-        StartMode::History => "Ctrl+Alt+H",
-        StartMode::Config => "Ctrl+Alt+Comma",
+        StartMode::History | StartMode::Config => "",
     }
 }
 
@@ -603,7 +612,7 @@ mod tests {
         let bindings = bindings_from_config(&json!({
             "hotkeys": { "editor": "Super+Space", "voice": "  " }
         }));
-        assert_eq!(bindings.len(), StartMode::ALL.len());
+        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len());
         assert_eq!(bindings[0].shortcut, "Super+Space");
         assert_eq!(bindings[3].shortcut, default_shortcut(StartMode::Voice));
     }
