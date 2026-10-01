@@ -16,8 +16,10 @@ export function createActivationMetricsClient(deps: ActivationMetricsDeps) {
   let firstCharacterMarked = false
   const stops: (() => void)[] = []
 
+  // the main window edits in CodeMirror, the quick window in a textarea
   const isEditorTarget = (target: EventTarget | null) =>
-    target instanceof Element && Boolean(target.closest('.cm-editor'))
+    target instanceof Element &&
+    Boolean(target.closest('.cm-editor, textarea, [contenteditable="true"]'))
 
   const onFocus = (event: Event) => {
     if (activeId !== null && isEditorTarget(event.target)) {

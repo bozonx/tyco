@@ -78,3 +78,21 @@ cargo build --release --manifest-path src-tauri/Cargo.toml -p tyco-ctl
 
 The app also keeps the Linux D-Bus compatibility interface
 (`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).
+
+### Replacing the selection
+
+Correction, a translation or an AI task can be applied to the text selected
+in any application without opening Tyco: the text is copied out with the copy
+keys, transformed, and pasted back over the selection. Correction is bound to
+`Ctrl+Alt+F` by default; translations and AI tasks get their shortcuts in
+Settings → Global actions. Pressing the shortcut again cancels a running
+action. The same actions are available as
+
+```bash
+tyco-ctl replace correction    # or translate.<slot>, aiTask.<slot>
+```
+
+and as the D-Bus method `ReplaceSelection` of `org.tyco.Interface`. On KDE
+Plasma under Wayland this needs `ydotoold` and the KWin window tracker; a
+status bubble appears only when the action takes longer than a moment, and
+failures also go to desktop notifications.

@@ -249,7 +249,7 @@
       "voice": "Voice input",
       "select": "Selection actions",
       "aiTasks": "AI tasks",
-      "correction": "Correct selected text",
+      "correction": "Correct selected text with review",
       "history": "History",
       "config": "Settings"
     },
@@ -321,6 +321,23 @@
       "insertWithoutCorrection": "Insert without correction",
       "newline": "New line",
       "cancel": "Cancel and close"
+    },
+    "selectionActions": {
+      "title": "Replace selection",
+      "hint": "Corrects, translates or applies an AI task to the text selected in any application and pastes the result in its place, without opening Tyco. Pressing the shortcut again cancels.",
+      "checking": "Checking text insertion…",
+      "ready": "Text insertion is ready",
+      "unavailable": "Text insertion is unavailable: {error}",
+      "recheck": "Check again",
+      "whenEmpty": "When nothing is selected",
+      "whenEmptyNothing": "Do nothing",
+      "whenEmptySelectAll": "Take the whole field (Ctrl+A)",
+      "notAssigned": "Not assigned",
+      "clear": "Clear",
+      "externalHint": "Run this command from a script or a system shortcut. D-Bus: method ReplaceSelection of org.tyco.Interface.",
+      "correction": "Correct selected text",
+      "translate": "Translate selected text: {language}",
+      "aiTask": "AI task on selected text: {name}"
     }
   },
   "editor": {
@@ -511,5 +528,31 @@
     "noModel": "No model is set up for this task. Check Settings → LLM",
     "invalidRequest": "The provider rejected the request; check the model settings",
     "unknown": "The AI request failed"
+  },
+  "selection": {
+    "working": {
+      "correction": "Correcting…",
+      "translate": "Translating…",
+      "aiTask": "Applying the AI task…"
+    },
+    "failed": {
+      "correction": "Correction failed",
+      "translate": "Translation failed",
+      "aiTask": "AI task failed"
+    },
+    "unchanged": {
+      "correction": "No mistakes found",
+      "translate": "The translation is the same as the text",
+      "aiTask": "The AI task left the text as it was"
+    },
+    "noSelection": "Nothing is selected",
+    "noTarget": "No application window has the focus",
+    "emptyResult": "The model returned an empty result",
+    "focusChanged": "The window changed meanwhile, so the result was copied to the clipboard",
+    "resultInClipboard": "The result is in the clipboard",
+    "done": "Done",
+    "cancelled": "Cancelled",
+    "missingLanguage": "No language is configured in this translation slot",
+    "missingAiTask": "No AI task is configured in this slot"
   }
 }

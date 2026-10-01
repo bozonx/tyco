@@ -20,10 +20,27 @@ pub fn is_start_mode(value: &str) -> bool {
     START_MODES.contains(&value)
 }
 
+/// Actions that replace the selection in the focused window with their
+/// result: `correction`, `translate.<slot>` and `aiTask.<slot>`, where the
+/// slot indexes the configured translation languages or AI tasks.
+pub fn is_selection_action(value: &str) -> bool {
+    if value == "correction" {
+        return true;
+    }
+    let Some((kind, slot)) = value.split_once('.') else {
+        return false;
+    };
+    matches!(kind, "translate" | "aiTask")
+        && !slot.is_empty()
+        && slot.len() <= 3
+        && slot.bytes().all(|byte| byte.is_ascii_digit())
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "command", rename_all = "camelCase")]
 pub enum Request {
     Activate { mode: String },
+    Replace { action: String },
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -83,5 +100,33 @@ mod tests {
         write_message(&mut output, &request).unwrap();
         let decoded: Request = read_message(&mut output.as_slice()).unwrap();
         assert_eq!(decoded, request);
+    }
+
+    #[test]
+    fn replace_request_round_trips() {
+        let request = Request::Replace {
+            action: "translate.1".into(),
+        };
+        let mut output = Vec::new();
+        write_message(&mut output, &request).unwrap();
+        let decoded: Request = read_message(&mut output.as_slice()).unwrap();
+        assert_eq!(decoded, request);
+    }
+
+    #[test]
+    fn validates_selection_actions() {
+        for valid in ["correction", "translate.0", "aiTask.12"] {
+            assert!(is_selection_action(valid), "{valid}");
+        }
+        for invalid in [
+            "",
+            "translate",
+            "translate.",
+            "aiTask.x",
+            "other.1",
+            "aiTask.1234",
+        ] {
+            assert!(!is_selection_action(invalid), "{invalid}");
+        }
     }
 }

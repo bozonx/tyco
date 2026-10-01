@@ -2,8 +2,9 @@
 
 #![cfg(target_os = "linux")]
 
+use std::ffi::{c_char, CString};
+
 use gtk::prelude::*;
-use gtk::ApplicationWindow;
 
 const LAYER_OVERLAY: u32 = 3;
 const EDGE_LEFT: u32 = 0;
@@ -34,9 +35,10 @@ unsafe extern "C" {
     fn gtk_layer_set_margin(window: *mut gtk_sys::GtkWindow, edge: u32, margin: i32);
     fn gtk_layer_set_exclusive_zone(window: *mut gtk_sys::GtkWindow, zone: i32);
     fn gtk_layer_set_keyboard_mode(window: *mut gtk_sys::GtkWindow, mode: u32);
+    fn gtk_layer_set_namespace(window: *mut gtk_sys::GtkWindow, name_space: *const c_char);
 }
 
-fn raw(window: &ApplicationWindow) -> *mut gtk_sys::GtkWindow {
+fn raw(window: &impl IsA<gtk::Window>) -> *mut gtk_sys::GtkWindow {
     let window: &gtk::Window = window.upcast_ref();
     window.as_ptr()
 }
@@ -46,7 +48,7 @@ pub fn is_supported() -> bool {
     unsafe { gtk_layer_is_supported() != 0 }
 }
 
-pub fn attach(window: &ApplicationWindow) {
+pub fn attach(window: &impl IsA<gtk::Window>) {
     let pointer = raw(window);
     // SAFETY: `pointer` belongs to a live GTK application window and setup calls
     // this before the first map, as required by gtk-layer-shell.
@@ -58,7 +60,7 @@ pub fn attach(window: &ApplicationWindow) {
     }
 }
 
-pub fn set_panel_profile(window: &ApplicationWindow, margin_bottom: i32) {
+pub fn set_panel_profile(window: &impl IsA<gtk::Window>, margin_bottom: i32) {
     let pointer = raw(window);
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
@@ -70,7 +72,7 @@ pub fn set_panel_profile(window: &ApplicationWindow, margin_bottom: i32) {
     }
 }
 
-pub fn set_sheet_profile(window: &ApplicationWindow, margin_top: i32) {
+pub fn set_sheet_profile(window: &impl IsA<gtk::Window>, margin_top: i32) {
     let pointer = raw(window);
     // Anchor to top with margin to center vertically; unanchored left/right centers horizontally.
     // SAFETY: the window was initialized by `attach` and remains alive.
@@ -86,7 +88,7 @@ pub fn set_sheet_profile(window: &ApplicationWindow, margin_top: i32) {
     }
 }
 
-pub fn set_keyboard(window: &ApplicationWindow, keyboard: Keyboard) {
+pub fn set_keyboard(window: &impl IsA<gtk::Window>, keyboard: Keyboard) {
     let mode = match keyboard {
         Keyboard::None => KEYBOARD_NONE,
         Keyboard::Exclusive => KEYBOARD_EXCLUSIVE,
@@ -96,4 +98,21 @@ pub fn set_keyboard(window: &ApplicationWindow, keyboard: Keyboard) {
     unsafe {
         gtk_layer_set_keyboard_mode(raw(window), mode);
     }
+}
+
+/// A floating status bubble: on the overlay layer, anchored to the bottom
+/// edge, and never taking the keyboard from the focused window.
+pub fn attach_status(window: &impl IsA<gtk::Window>, margin_bottom: i32) {
+    let pointer = raw(window);
+    let name_space = CString::new("tyco-status").expect("namespace has no NUL bytes");
+    // SAFETY: `pointer` belongs to a live GTK window that has not been mapped
+    // yet, and `name_space` outlives the call, which copies it.
+    unsafe {
+        gtk_layer_init_for_window(pointer);
+        gtk_layer_set_namespace(pointer, name_space.as_ptr());
+        gtk_layer_set_layer(pointer, LAYER_OVERLAY);
+        gtk_layer_set_exclusive_zone(pointer, 0);
+        gtk_layer_set_keyboard_mode(pointer, KEYBOARD_NONE);
+    }
+    set_panel_profile(window, margin_bottom);
 }

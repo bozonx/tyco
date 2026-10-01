@@ -55,20 +55,99 @@ impl PasteShortcut {
         }
     }
 
+    /// The copy combination of the same family: a terminal that pastes with
+    /// Ctrl+Shift+V copies with Ctrl+Shift+C.
+    fn copy_xdotool_keys(self) -> &'static str {
+        match self {
+            Self::CtrlV => "ctrl+c",
+            Self::CtrlShiftV => "ctrl+shift+c",
+            Self::ShiftInsert => "ctrl+Insert",
+        }
+    }
+
     /// Linux input event codes: presses in order, releases in reverse.
     fn ydotool_keys(self) -> Vec<String> {
-        const LEFT_CTRL: u16 = 29;
-        const LEFT_SHIFT: u16 = 42;
-        const V: u16 = 47;
-        const INSERT: u16 = 110;
         let keys: &[u16] = match self {
-            Self::CtrlV => &[LEFT_CTRL, V],
-            Self::CtrlShiftV => &[LEFT_CTRL, LEFT_SHIFT, V],
-            Self::ShiftInsert => &[LEFT_SHIFT, INSERT],
+            Self::CtrlV => &[KEY_LEFT_CTRL, KEY_V],
+            Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_V],
+            Self::ShiftInsert => &[KEY_LEFT_SHIFT, KEY_INSERT],
         };
-        let presses = keys.iter().map(|key| format!("{key}:1"));
-        let releases = keys.iter().rev().map(|key| format!("{key}:0"));
-        presses.chain(releases).collect()
+        press_and_release(keys)
+    }
+
+    fn copy_ydotool_keys(self) -> Vec<String> {
+        let keys: &[u16] = match self {
+            Self::CtrlV => &[KEY_LEFT_CTRL, KEY_C],
+            Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_C],
+            Self::ShiftInsert => &[KEY_LEFT_CTRL, KEY_INSERT],
+        };
+        press_and_release(keys)
+    }
+}
+
+// Linux input event codes
+const KEY_LEFT_CTRL: u16 = 29;
+const KEY_LEFT_SHIFT: u16 = 42;
+const KEY_LEFT_ALT: u16 = 56;
+const KEY_RIGHT_SHIFT: u16 = 54;
+const KEY_RIGHT_CTRL: u16 = 97;
+const KEY_RIGHT_ALT: u16 = 100;
+const KEY_LEFT_META: u16 = 125;
+const KEY_RIGHT_META: u16 = 126;
+const KEY_A: u16 = 30;
+const KEY_C: u16 = 46;
+const KEY_V: u16 = 47;
+const KEY_INSERT: u16 = 110;
+const MODIFIER_KEYS: [u16; 8] = [
+    KEY_LEFT_CTRL,
+    KEY_RIGHT_CTRL,
+    KEY_LEFT_ALT,
+    KEY_RIGHT_ALT,
+    KEY_LEFT_SHIFT,
+    KEY_RIGHT_SHIFT,
+    KEY_LEFT_META,
+    KEY_RIGHT_META,
+];
+
+/// Presses in order, releases in reverse.
+fn press_and_release(keys: &[u16]) -> Vec<String> {
+    let presses = keys.iter().map(|key| format!("{key}:1"));
+    let releases = keys.iter().rev().map(|key| format!("{key}:0"));
+    presses.chain(releases).collect()
+}
+
+/// A key combination pressed in the window that has the keyboard focus.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FocusedKeys {
+    Copy,
+    Paste,
+    SelectAll,
+}
+
+impl FocusedKeys {
+    fn xdotool_keys(self, shortcut: PasteShortcut) -> &'static str {
+        match self {
+            Self::Copy => shortcut.copy_xdotool_keys(),
+            Self::Paste => shortcut.xdotool_keys(),
+            Self::SelectAll => "ctrl+a",
+        }
+    }
+
+    /// The modifiers of the hotkey that started the action may still be held,
+    /// and would turn Ctrl+C into Ctrl+Alt+C. The compositor keeps a single
+    /// keyboard state for all devices, so releasing them from the virtual
+    /// keyboard clears them, like `xdotool --clearmodifiers` does on X11.
+    fn ydotool_keys(self, shortcut: PasteShortcut) -> Vec<String> {
+        let combo = match self {
+            Self::Copy => shortcut.copy_ydotool_keys(),
+            Self::Paste => shortcut.ydotool_keys(),
+            Self::SelectAll => press_and_release(&[KEY_LEFT_CTRL, KEY_A]),
+        };
+        MODIFIER_KEYS
+            .iter()
+            .map(|key| format!("{key}:0"))
+            .chain(combo)
+            .collect()
     }
 }
 
@@ -105,11 +184,7 @@ impl SystemTextInjector {
         source_window_id: Option<&str>,
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
-        let configured_method = insertion
-            .and_then(|value| value.get("method"))
-            .and_then(Value::as_str)
-            .unwrap_or("xdotool");
-        let method = select_method(self.session, configured_method)?;
+        let method = select_method(self.session, configured_method(insertion))?;
         let shortcut = PasteShortcut::from_config(insertion);
         let mut command = command_spec(method, insertion, user_config, source_window_id, shortcut)?;
 
@@ -128,6 +203,90 @@ impl SystemTextInjector {
             thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
         }
         run_spec(&command)
+    }
+
+    /// Presses `keys` in whatever window has the keyboard focus, without
+    /// activating any window first. A terminal gets the Ctrl+Shift family,
+    /// where Ctrl+C would interrupt the running program.
+    pub fn press_in_focused(
+        &self,
+        user_config: &Value,
+        keys: FocusedKeys,
+        terminal: bool,
+    ) -> Result<(), AppError> {
+        let insertion = user_config.get("windowInsertion");
+        let method = select_method(self.session, configured_method(insertion))?;
+        let mut shortcut = PasteShortcut::from_config(insertion);
+        if terminal && shortcut == PasteShortcut::CtrlV {
+            shortcut = PasteShortcut::CtrlShiftV;
+        }
+        let command = match method {
+            InjectionMethod::Ydotool => CommandSpec {
+                binary: configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool"),
+                args: std::iter::once(String::from("key"))
+                    .chain(keys.ydotool_keys(shortcut))
+                    .collect(),
+                env: vec![(String::from("YDOTOOL_SOCKET"), ydotool_socket()?)],
+            },
+            InjectionMethod::Xdotool => CommandSpec {
+                binary: xdotool_binary(insertion, user_config),
+                args: ["key", "--clearmodifiers", keys.xdotool_keys(shortcut)]
+                    .into_iter()
+                    .map(String::from)
+                    .collect(),
+                env: Vec::new(),
+            },
+        };
+        run_spec(&command)
+    }
+
+    /// Checks everything text insertion needs, so that settings can tell what
+    /// is missing before the first attempt fails.
+    pub fn check(&self, user_config: &Value) -> Result<(), AppError> {
+        let insertion = user_config.get("windowInsertion");
+        let method = select_method(self.session, configured_method(insertion))?;
+        match method {
+            InjectionMethod::Ydotool => {
+                let binary = configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool");
+                ensure_binary(&binary, "ydotool")?;
+                ydotool_socket()?;
+            }
+            InjectionMethod::Xdotool => {
+                ensure_binary(&xdotool_binary(insertion, user_config), "xdotool")?;
+            }
+        }
+        if self.session == Session::Wayland && !super::kwin_windows::tracker().is_running() {
+            return Err(AppError::Message(String::from(
+                "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running",
+            )));
+        }
+        Ok(())
+    }
+}
+
+fn configured_method(insertion: Option<&Value>) -> &str {
+    insertion
+        .and_then(|value| value.get("method"))
+        .and_then(Value::as_str)
+        .unwrap_or("xdotool")
+}
+
+fn xdotool_binary(insertion: Option<&Value>, user_config: &Value) -> String {
+    insertion
+        .and_then(|value| value.get("xdotoolBin"))
+        .and_then(Value::as_str)
+        .or_else(|| user_config.get("xdotoolBin").and_then(Value::as_str))
+        .unwrap_or("/usr/bin/xdotool")
+        .to_owned()
+}
+
+fn ensure_binary(binary: &str, name: &str) -> Result<(), AppError> {
+    if PathBuf::from(binary).is_file() {
+        Ok(())
+    } else {
+        Err(AppError::Message(format!(
+            "{name} is not installed: {binary} does not exist"
+        )))
     }
 }
 
@@ -171,14 +330,8 @@ fn command_spec(
                     "Target window is not available for text insertion",
                 ))
             })?;
-            let binary = insertion
-                .and_then(|value| value.get("xdotoolBin"))
-                .and_then(Value::as_str)
-                .or_else(|| user_config.get("xdotoolBin").and_then(Value::as_str))
-                .unwrap_or("/usr/bin/xdotool")
-                .to_owned();
             Ok(CommandSpec {
-                binary,
+                binary: xdotool_binary(insertion, user_config),
                 args: [
                     "windowactivate",
                     "--sync",
@@ -366,6 +519,39 @@ mod tests {
             ["42:1", "110:1", "110:0", "42:0"]
         );
         assert_eq!(PasteShortcut::ShiftInsert.xdotool_keys(), "shift+Insert");
+    }
+
+    #[test]
+    fn focused_keys_release_held_modifiers_first() {
+        let keys = FocusedKeys::Copy.ydotool_keys(PasteShortcut::CtrlV);
+        assert_eq!(keys.len(), MODIFIER_KEYS.len() + 4);
+        assert!(keys[..MODIFIER_KEYS.len()]
+            .iter()
+            .all(|key| key.ends_with(":0")));
+        assert_eq!(
+            keys[MODIFIER_KEYS.len()..],
+            ["29:1", "46:1", "46:0", "29:0"]
+        );
+        assert_eq!(
+            FocusedKeys::SelectAll.ydotool_keys(PasteShortcut::ShiftInsert)[MODIFIER_KEYS.len()..],
+            ["29:1", "30:1", "30:0", "29:0"]
+        );
+    }
+
+    #[test]
+    fn copy_follows_the_paste_shortcut_family() {
+        assert_eq!(
+            FocusedKeys::Copy.xdotool_keys(PasteShortcut::CtrlShiftV),
+            "ctrl+shift+c"
+        );
+        assert_eq!(
+            FocusedKeys::Copy.xdotool_keys(PasteShortcut::ShiftInsert),
+            "ctrl+Insert"
+        );
+        assert_eq!(
+            PasteShortcut::CtrlShiftV.copy_ydotool_keys(),
+            ["29:1", "42:1", "46:1", "46:0", "42:0", "29:0"]
+        );
     }
 
     #[test]

@@ -8,7 +8,7 @@ use tyco_activation_protocol::{
 };
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::runtime;
+use crate::services::{runtime, selection_replace};
 
 pub fn spawn_server(app: AppHandle) {
     thread::spawn(move || {
@@ -46,9 +46,13 @@ fn handle_stream(stream: TcpStream, handler: &impl Fn(Request) -> Response) {
 }
 
 fn dispatch(app: &AppHandle, request: Request) -> Response {
-    let Request::Activate { mode } = request;
-    let result = StartMode::parse(&mode)
-        .and_then(|mode| runtime::activate(app, Activation::new(mode, ActivationSource::Cli)));
+    let result = match request {
+        Request::Activate { mode } => StartMode::parse(&mode)
+            .and_then(|mode| runtime::activate(app, Activation::new(mode, ActivationSource::Cli))),
+        Request::Replace { action } => {
+            selection_replace::trigger(app, &action, selection_replace::TriggerWait::Now)
+        }
+    };
     match result {
         Ok(()) => Response::success(),
         Err(error) => Response::error(error.to_string()),
@@ -70,7 +74,9 @@ mod tests {
         thread::spawn(move || {
             for stream in listener.incoming().take(12) {
                 handle_stream(stream.unwrap(), &|request| {
-                    let Request::Activate { mode } = request;
+                    let Request::Activate { mode } = request else {
+                        return Response::error("Unexpected request");
+                    };
                     match StartMode::parse(&mode) {
                         Ok(mode) => {
                             server_received

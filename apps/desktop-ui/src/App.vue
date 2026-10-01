@@ -36,6 +36,7 @@ import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useRouteParams } from './stores/routeParams'
+import { useSelectionReplaceStore } from './stores/selectionReplace'
 import { useThemeStore } from './stores/theme'
 import { useWriterInputStore } from './stores/writerInput'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -86,6 +87,7 @@ const activationMetrics = createActivationMetricsClient({
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
 }
+const selectionListeners: (() => void)[] = []
 let removeMainChatListener: (() => void) | undefined
 let removeMainEditorListener: (() => void) | undefined
 const bootstrap = createAppBootstrap({
@@ -200,6 +202,21 @@ watch(
 onMounted(() => {
   void bootstrap.start()
   void activationMetrics.start()
+  // the quick window always exists, shown or not, so it takes the selection
+  // actions that run without a window
+  if (isQuickWindow) {
+    const selectionReplace = useSelectionReplaceStore()
+    void desktopClient
+      .listen(DESKTOP_EVENTS.SELECTION_RUN, (payload) => {
+        void selectionReplace.handleRun(payload)
+      })
+      .then((remove) => selectionListeners.push(remove))
+    void desktopClient
+      .listen(DESKTOP_EVENTS.SELECTION_CANCEL, (payload) => {
+        selectionReplace.handleCancel(payload.runId)
+      })
+      .then((remove) => selectionListeners.push(remove))
+  }
   void desktopClient
     .listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, (payload) => {
       if (isQuickWindow) return
@@ -228,6 +245,7 @@ onUnmounted(() => {
   activationMetrics.stop()
   removeMainEditorListener?.()
   removeMainChatListener?.()
+  selectionListeners.forEach((remove) => remove())
 })
 </script>
 

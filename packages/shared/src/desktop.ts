@@ -130,6 +130,8 @@ export const DESKTOP_EVENTS = {
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
+  SELECTION_RUN: 'app://selection-run',
+  SELECTION_CANCEL: 'app://selection-cancel',
 } as const
 
 export const DESKTOP_COMMANDS = {
@@ -174,6 +176,10 @@ export const DESKTOP_COMMANDS = {
   SECRETS_SET: 'secrets_set',
   SECRETS_REMOVE: 'secrets_remove',
   ACTIVATE_MODE: 'activate_mode',
+  FINISH_SELECTION_RUN: 'finish_selection_run',
+  SHOW_STATUS_OVERLAY: 'show_status_overlay',
+  NOTIFY_DESKTOP: 'notify_desktop',
+  CHECK_TEXT_INJECTION: 'check_text_injection',
 } as const
 
 export type DesktopCommandName =

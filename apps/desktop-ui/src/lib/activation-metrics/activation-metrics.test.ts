@@ -65,4 +65,33 @@ describe('activation metrics client', () => {
     client.stop()
     editor.remove()
   })
+
+  it('marks the focus and the first key of the quick window textarea', async () => {
+    const handlers = new Map<string, (payload: { id: number }) => void>()
+    const mark = vi.fn()
+    const textarea = document.createElement('textarea')
+    document.body.append(textarea)
+    const client = createActivationMetricsClient({
+      listen: async (event, handler) => {
+        handlers.set(event, handler)
+        return () => undefined
+      },
+      mark,
+      submitValue: vi.fn(),
+      prepareTrial: vi.fn(),
+      activeElement: () => textarea,
+      requestFrame: vi.fn(),
+      eventTarget: document,
+    })
+    await client.start()
+    handlers.get('start')?.({ id: 3 })
+    textarea.dispatchEvent(
+      new KeyboardEvent('keydown', { key: '1', bubbles: true })
+    )
+
+    expect(mark).toHaveBeenCalledWith(3, 'dom-focus')
+    expect(mark).toHaveBeenCalledWith(3, 'first-char')
+    client.stop()
+    textarea.remove()
+  })
 })

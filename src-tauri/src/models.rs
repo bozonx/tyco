@@ -124,6 +124,12 @@ pub fn default_user_config() -> Value {
         "aiTasks": "Ctrl+Alt+A",
         "correction": "Ctrl+Alt+R"
       },
+      "selectionHotkeys": {
+        "correction": "Ctrl+Alt+F"
+      },
+      "selectionReplace": {
+        "whenEmpty": "nothing"
+      },
       "theme": "auto",
       "contrast": "auto",
       "motion": "auto",

@@ -3,5 +3,6 @@ pub mod history;
 pub mod net;
 pub mod notes;
 pub mod secrets;
+pub mod selection;
 pub mod voice;
 pub mod window;

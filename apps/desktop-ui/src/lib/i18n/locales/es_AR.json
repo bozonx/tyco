@@ -252,7 +252,7 @@
       "voice": "Entrada de voz",
       "select": "Acciones de selección",
       "aiTasks": "Tareas de IA",
-      "correction": "Corregir texto seleccionado",
+      "correction": "Corregir el texto seleccionado con revisión",
       "history": "Historial",
       "config": "Configuración"
     },
@@ -324,6 +324,23 @@
       "insertWithoutCorrection": "Insertar sin corregir",
       "newline": "Nueva línea",
       "cancel": "Cancelar y cerrar"
+    },
+    "selectionActions": {
+      "title": "Reemplazar la selección",
+      "hint": "Corrige, traduce o aplica una tarea de IA al texto seleccionado en cualquier aplicación y pega el resultado en su lugar, sin abrir Tyco. Al presionar el atajo de nuevo se cancela.",
+      "checking": "Comprobando la inserción de texto…",
+      "ready": "La inserción de texto está lista",
+      "unavailable": "La inserción de texto no está disponible: {error}",
+      "recheck": "Comprobar de nuevo",
+      "whenEmpty": "Si no hay nada seleccionado",
+      "whenEmptyNothing": "No hacer nada",
+      "whenEmptySelectAll": "Tomar todo el campo (Ctrl+A)",
+      "notAssigned": "Sin asignar",
+      "clear": "Borrar",
+      "externalHint": "Ejecutá este comando desde un script o un atajo del sistema. D-Bus: método ReplaceSelection de org.tyco.Interface.",
+      "correction": "Corregir el texto seleccionado",
+      "translate": "Traducir el texto seleccionado: {language}",
+      "aiTask": "Tarea de IA sobre el texto seleccionado: {name}"
     }
   },
   "editor": {
@@ -517,5 +534,31 @@
     "noModel": "No hay un modelo configurado para esta tarea. Revisá Configuración → LLM",
     "invalidRequest": "El proveedor rechazó la solicitud; revisá la configuración del modelo",
     "unknown": "La solicitud a la IA falló"
+  },
+  "selection": {
+    "working": {
+      "correction": "Corrigiendo…",
+      "translate": "Traduciendo…",
+      "aiTask": "Aplicando la tarea de IA…"
+    },
+    "failed": {
+      "correction": "No se pudo corregir el texto",
+      "translate": "No se pudo traducir el texto",
+      "aiTask": "No se pudo aplicar la tarea de IA"
+    },
+    "unchanged": {
+      "correction": "No se encontraron errores",
+      "translate": "La traducción es igual al texto",
+      "aiTask": "La tarea de IA dejó el texto sin cambios"
+    },
+    "noSelection": "No hay nada seleccionado",
+    "noTarget": "Ninguna ventana de aplicación tiene el foco",
+    "emptyResult": "El modelo devolvió un resultado vacío",
+    "focusChanged": "La ventana cambió mientras tanto, así que el resultado se copió al portapapeles",
+    "resultInClipboard": "El resultado está en el portapapeles",
+    "done": "Listo",
+    "cancelled": "Cancelado",
+    "missingLanguage": "No hay un idioma configurado en esta posición de traducción",
+    "missingAiTask": "No hay una tarea de IA configurada en esta posición"
   }
 }

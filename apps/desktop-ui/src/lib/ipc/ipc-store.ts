@@ -122,6 +122,19 @@ export function createCommandMap(): Record<string, CommandEntry> {
       command: DESKTOP_COMMANDS.OPEN_IN_BROWSER_AND_CLOSE,
       buildArgs: ([url]) => ({ url: String(url) }),
     },
+    finishSelectionRun: {
+      command: DESKTOP_COMMANDS.FINISH_SELECTION_RUN,
+      buildArgs: ([runId, text]) => ({ runId, text }),
+    },
+    showStatusOverlay: {
+      command: DESKTOP_COMMANDS.SHOW_STATUS_OVERLAY,
+      buildArgs: ([request]) => ({ request }),
+    },
+    notifyDesktop: {
+      command: DESKTOP_COMMANDS.NOTIFY_DESKTOP,
+      buildArgs: ([summary, body]) => ({ summary, body }),
+    },
+    checkTextInjection: { command: DESKTOP_COMMANDS.CHECK_TEXT_INJECTION },
     saveNote: {
       command: DESKTOP_COMMANDS.SAVE_NOTE,
       buildArgs: ([dir, fileName, text]) => ({ dir, fileName, text }),

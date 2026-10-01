@@ -259,9 +259,13 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
                     Activation::new(StartMode::Write, ActivationSource::Cli),
                 ) {
                     Ok(()) => {
-                        if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {
-                            let _ = window.emit(START_EVENT, serde_json::json!({ "id": id }));
-                        }
+                        // `emit` would reach the main window too, and it would
+                        // answer with its own editor
+                        let _ = app.emit_to(
+                            runtime::QUICK_WINDOW_LABEL,
+                            START_EVENT,
+                            serde_json::json!({ "id": id }),
+                        );
                         String::from("ok")
                     }
                     Err(error) => format!("error: {error}"),
@@ -271,9 +275,11 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
         },
         ["result", id, chars_sent] => match (id.parse::<u64>(), chars_sent.parse::<usize>()) {
             (Ok(id), Ok(chars_sent)) => {
-                if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {
-                    let _ = window.emit(COLLECT_EVENT, serde_json::json!({ "id": id }));
-                }
+                let _ = app.emit_to(
+                    runtime::QUICK_WINDOW_LABEL,
+                    COLLECT_EVENT,
+                    serde_json::json!({ "id": id }),
+                );
                 let metrics = app.state::<ActivationMetrics>();
                 match metrics.wait_for_result(id) {
                     Some(trial) => {

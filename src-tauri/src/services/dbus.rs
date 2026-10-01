@@ -6,7 +6,7 @@ use zbus::names::BusName;
 use zbus::{interface, Connection};
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::{kwin_windows, runtime};
+use crate::services::{kwin_windows, runtime, selection_replace};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -73,6 +73,12 @@ impl TycoDbus {
         Ok(())
     }
 
+    /// Replaces the selection in the focused window, see `selection_replace`.
+    async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
+        selection_replace::trigger(&self.app, action, selection_replace::TriggerWait::Now)
+            .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))
+    }
+
     /// Reported by the KWin tracker script, see `kwin_windows`.
     #[zbus(name = "KwinWindowActivated")]
     async fn kwin_window_activated(
@@ -81,9 +87,14 @@ impl TycoDbus {
         #[zbus(connection)] connection: &Connection,
         id: String,
         kind: String,
+        class: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        kwin_windows::tracker().window_activated(&id, kwin_windows::WindowKind::parse(&kind));
+        kwin_windows::tracker().window_activated(
+            &id,
+            kwin_windows::WindowKind::parse(&kind),
+            &class,
+        );
         Ok(())
     }
 

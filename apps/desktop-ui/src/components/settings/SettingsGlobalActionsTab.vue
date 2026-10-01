@@ -70,29 +70,125 @@
         </div>
       </FieldRow>
     </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.selectionActions.title')"
+      :description="t('settings.selectionActions.hint')"
+    >
+      <div class="injection-status" :data-ok="injection.ok">
+        <span>
+          {{
+            injection.ok === null
+              ? t('settings.selectionActions.checking')
+              : injection.ok
+                ? t('settings.selectionActions.ready')
+                : t('settings.selectionActions.unavailable', {
+                    error: injection.error,
+                  })
+          }}
+        </span>
+        <Button sm ghost icon="mdi:refresh" @click="checkInjection">
+          {{ t('settings.selectionActions.recheck') }}
+        </Button>
+      </div>
+      <FieldRow :label="t('settings.selectionActions.whenEmpty')">
+        <FieldSelect
+          class="w-full"
+          :value="userConfig.selectionReplace?.whenEmpty ?? 'nothing'"
+          :options="whenEmptyOptions"
+          @update:value="emit('update:selectionWhenEmpty', String($event))"
+        />
+      </FieldRow>
+      <FieldRow
+        v-for="action in selectionActions"
+        :key="action.id"
+        :label="selectionActionLabel(action)"
+      >
+        <div class="hotkey-control">
+          <input
+            class="input hotkey-input"
+            :value="selectionShortcut(action.id)"
+            :placeholder="t('settings.selectionActions.notAssigned')"
+            :aria-label="selectionActionLabel(action)"
+            readonly
+            @focus="recordingMode = selectionTarget(action.id)"
+            @blur="recordingMode = null"
+            @keydown="record($event, selectionTarget(action.id))"
+          />
+          <Button
+            sm
+            neutral
+            :disabled="!selectionShortcut(action.id)"
+            @click="clearSelectionShortcut(action.id)"
+          >
+            {{ t('settings.selectionActions.clear') }}
+          </Button>
+          <Button
+            v-if="action.defaultShortcut"
+            sm
+            neutral
+            :disabled="selectionShortcut(action.id) === action.defaultShortcut"
+            @click="
+              setShortcut(selectionTarget(action.id), action.defaultShortcut)
+            "
+          >
+            {{ t('settings.resetToDefault') }}
+          </Button>
+          <p
+            class="hotkey-status"
+            :data-status="statuses[selectionTarget(action.id)]?.status"
+          >
+            {{ statusText(selectionTarget(action.id)) }}
+          </p>
+          <details class="external-methods">
+            <summary>{{ t('settings.externalMethods') }}</summary>
+            <p>{{ t('settings.selectionActions.externalHint') }}</p>
+            <div class="external-command">
+              <code>{{ replaceCommand(action.id) }}</code>
+              <Button
+                sm
+                ghost
+                icon="mdi:content-copy"
+                @click="copyText(replaceCommand(action.id))"
+              >
+                {{ t('settings.copyActivationCommand') }}
+              </Button>
+            </div>
+          </details>
+        </div>
+      </FieldRow>
+    </SettingsSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, toRef } from 'vue'
+import { computed, onMounted, reactive, ref, toRef } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
+import { getLanguageLabel } from '../../lib/locale/language'
+import {
+  type SelectionActionEntry,
+  listSelectionActions,
+} from '../../lib/selection-replace/selection-action-list'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_USER_CONFIG,
   type HotkeyApplyResult,
   type HotkeyProviderInfo,
+  SELECTION_HOTKEY_PREFIX,
   type UserConfig,
   hotkeyFromKeyboardEvent,
 } from '@tyco/shared'
 
-defineProps<{ userConfig: UserConfig }>()
+const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:hotkey', mode: string, shortcut: string): void
+  (event: 'update:selectionWhenEmpty', value: string): void
 }>()
 const { t } = useI18n()
 
@@ -144,6 +240,54 @@ async function copyCommand(mode: string) {
   if (command) await navigator.clipboard.writeText(command)
 }
 
+const selectionActions = computed(() =>
+  listSelectionActions(props.userConfig, DEFAULT_USER_CONFIG.selectionHotkeys)
+)
+const whenEmptyOptions = computed(() => [
+  { id: 'nothing', name: t('settings.selectionActions.whenEmptyNothing') },
+  { id: 'selectAll', name: t('settings.selectionActions.whenEmptySelectAll') },
+])
+const injection = reactive<{ ok: boolean | null; error: string }>({
+  ok: null,
+  error: '',
+})
+
+const selectionTarget = (id: string) => `${SELECTION_HOTKEY_PREFIX}${id}`
+const selectionShortcut = (id: string) =>
+  props.userConfig.selectionHotkeys?.[id] ?? ''
+const replaceCommand = (id: string) => `tyco-ctl replace ${id}`
+
+function selectionActionLabel(action: SelectionActionEntry) {
+  switch (action.kind) {
+    case 'translate':
+      return t('settings.selectionActions.translate', {
+        language: t(getLanguageLabel(action.language ?? '')),
+      })
+    case 'aiTask':
+      return t('settings.selectionActions.aiTask', {
+        name: action.taskName ?? '',
+      })
+    default:
+      return t('settings.selectionActions.correction')
+  }
+}
+
+function clearSelectionShortcut(id: string) {
+  delete statuses.value[selectionTarget(id)]
+  emit('update:hotkey', selectionTarget(id), '')
+}
+
+async function copyText(text: string) {
+  await navigator.clipboard.writeText(text)
+}
+
+async function checkInjection() {
+  injection.ok = null
+  const result = await ipcStore.callFunction('checkTextInjection')
+  injection.ok = result.success
+  injection.error = result.error ?? ''
+}
+
 async function configureHotkeys() {
   configureError.value = ''
   const result = await ipcStore.callFunction('configureHotkeys')
@@ -153,6 +297,7 @@ async function configureHotkeys() {
 }
 
 onMounted(async () => {
+  void checkInjection()
   const result = await ipcStore.callFunction('getHotkeyProviderInfo')
   if (result.success) {
     applyProviderInfo(providerState, result.result as HotkeyProviderInfo)
@@ -220,6 +365,20 @@ onMounted(async () => {
   gap: var(--space-sm);
   flex-basis: 100%;
   min-width: 0;
+}
+
+.injection-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  color: var(--app-text-muted);
+  font-size: 0.875rem;
+}
+
+.injection-status[data-ok='false'] {
+  color: var(--app-error);
 }
 
 .external-command code {

@@ -252,7 +252,7 @@
       "voice": "Sesli giriş",
       "select": "Seçim eylemleri",
       "aiTasks": "Yapay zekâ görevleri",
-      "correction": "Seçili metni düzelt",
+      "correction": "Seçili metni önizlemeyle düzelt",
       "history": "Geçmiş",
       "config": "Ayarlar"
     },
@@ -324,6 +324,23 @@
       "insertWithoutCorrection": "Düzeltmeden ekle",
       "newline": "Yeni satır",
       "cancel": "İptal et ve kapat"
+    },
+    "selectionActions": {
+      "title": "Seçimi değiştir",
+      "hint": "Herhangi bir uygulamada seçili metni düzeltir, çevirir veya ona bir yapay zekâ görevi uygular ve sonucu Tyco'yu açmadan yerine yapıştırır. Kısayola tekrar basmak işlemi iptal eder.",
+      "checking": "Metin ekleme denetleniyor…",
+      "ready": "Metin ekleme hazır",
+      "unavailable": "Metin ekleme kullanılamıyor: {error}",
+      "recheck": "Yeniden denetle",
+      "whenEmpty": "Hiçbir şey seçili değilse",
+      "whenEmptyNothing": "Hiçbir şey yapma",
+      "whenEmptySelectAll": "Tüm alanı al (Ctrl+A)",
+      "notAssigned": "Atanmadı",
+      "clear": "Temizle",
+      "externalHint": "Bu komutu bir betikten veya sistem kısayolundan çalıştırın. D-Bus: org.tyco.Interface arayüzünün ReplaceSelection yöntemi.",
+      "correction": "Seçili metni düzelt",
+      "translate": "Seçili metni çevir: {language}",
+      "aiTask": "Seçili metne yapay zekâ görevi: {name}"
     }
   },
   "editor": {
@@ -514,5 +531,31 @@
     "noModel": "Bu görev için model ayarlanmamış. Ayarlar → LLM bölümünü kontrol edin",
     "invalidRequest": "Sağlayıcı isteği reddetti; model ayarlarını kontrol edin",
     "unknown": "Yapay zekâ isteği başarısız oldu"
+  },
+  "selection": {
+    "working": {
+      "correction": "Düzeltiliyor…",
+      "translate": "Çevriliyor…",
+      "aiTask": "Yapay zekâ görevi uygulanıyor…"
+    },
+    "failed": {
+      "correction": "Metin düzeltilemedi",
+      "translate": "Metin çevrilemedi",
+      "aiTask": "Yapay zekâ görevi uygulanamadı"
+    },
+    "unchanged": {
+      "correction": "Hata bulunamadı",
+      "translate": "Çeviri metinle aynı",
+      "aiTask": "Yapay zekâ görevi metni değiştirmedi"
+    },
+    "noSelection": "Hiçbir şey seçili değil",
+    "noTarget": "Odakta bir uygulama penceresi yok",
+    "emptyResult": "Model boş bir sonuç döndürdü",
+    "focusChanged": "Bu sırada pencere değişti, bu yüzden sonuç panoya kopyalandı",
+    "resultInClipboard": "Sonuç panoda",
+    "done": "Tamam",
+    "cancelled": "İptal edildi",
+    "missingLanguage": "Bu çeviri yuvasında bir dil ayarlanmamış",
+    "missingAiTask": "Bu yuvada bir yapay zekâ görevi ayarlanmamış"
   }
 }

@@ -20,6 +20,9 @@ use commands::net::{
 };
 use commands::notes::save_note;
 use commands::secrets::{secrets_remove, secrets_set, secrets_status};
+use commands::selection::{
+    check_text_injection, finish_selection_run, notify_desktop, show_status_overlay,
+};
 use commands::voice::{start_voice_capture, stop_voice_capture};
 use commands::window::{
     close_window, dismiss_quick_window, open_in_browser_and_close, put_into_clipboard_and_close,
@@ -139,7 +142,11 @@ pub fn run() {
             net_socket_close,
             secrets_status,
             secrets_set,
-            secrets_remove
+            secrets_remove,
+            finish_selection_run,
+            show_status_overlay,
+            notify_desktop,
+            check_text_injection
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -6,6 +6,7 @@ import {
   type InitParams,
   type EditorTransfer,
   type IpcResult,
+  type SelectionRunEvent,
 } from '@tyco/shared'
 import { invoke as tauriInvoke } from '@tauri-apps/api/core'
 import { listen as tauriListen } from '@tauri-apps/api/event'
@@ -17,6 +18,8 @@ type AppEventPayloads = {
   [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
   [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
   [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
+  [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
+  [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
 }
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()

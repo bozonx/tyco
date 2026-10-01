@@ -176,6 +176,7 @@
           v-else-if="currentTab === 'global-actions'"
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
+          @update:selection-when-empty="updateSelectionWhenEmpty"
         />
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
@@ -321,6 +322,7 @@ import {
   type MainActionConfig,
   type MotionMode,
   PASTE_SHORTCUTS,
+  SELECTION_HOTKEY_PREFIX,
   type StorageInfo,
   type ThemeMode,
   UI_SCALES,
@@ -527,6 +529,16 @@ function normalizeHotkeysConfig(config: Record<string, any>) {
   config.quickInputHotkeys = resolveQuickInputHotkeys(config.quickInputHotkeys)
   delete config.quickInputSubmit
   delete config.quickCorrection
+  config.selectionHotkeys = {
+    ...DEFAULT_USER_CONFIG.selectionHotkeys,
+    ...(config.selectionHotkeys || {}),
+  }
+  config.selectionReplace = {
+    whenEmpty:
+      config.selectionReplace?.whenEmpty === 'selectAll'
+        ? 'selectAll'
+        : 'nothing',
+  }
   config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
   config.quickHideOnBlur = config.quickHideOnBlur !== false
 }
@@ -797,7 +809,21 @@ const updateMainActions = (actions: (MainActionConfig | null)[]) => {
 }
 
 const updateHotkey = (mode: string, shortcut: string) => {
+  if (mode.startsWith(SELECTION_HOTKEY_PREFIX)) {
+    const action = mode.slice(SELECTION_HOTKEY_PREFIX.length)
+    userConfig.value.selectionHotkeys = {
+      ...userConfig.value.selectionHotkeys,
+      [action]: shortcut,
+    }
+    return
+  }
   userConfig.value.hotkeys[mode] = shortcut
+}
+
+const updateSelectionWhenEmpty = (value: string) => {
+  userConfig.value.selectionReplace = {
+    whenEmpty: value === 'selectAll' ? 'selectAll' : 'nothing',
+  }
 }
 
 const updateWindowInsertionMethod = (value: string | number) => {

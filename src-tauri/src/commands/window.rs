@@ -77,7 +77,7 @@ pub fn put_into_clipboard_and_close(
     runtime::hide_main_window(&app, &state)
 }
 
-fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
+pub(crate) fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
     if cfg!(target_os = "macos") {
         return write_to_clipboard_command("pbcopy", &[], text);
     }

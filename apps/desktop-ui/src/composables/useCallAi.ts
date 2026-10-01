@@ -187,6 +187,7 @@ export const useCallAi = () => {
     options: {
       signal?: AbortSignal
       onStage?: (stage: 'translating' | 'checking' | 'repairing') => void
+      notifyError?: boolean
     } = {}
   ) => {
     if (!text?.trim()) {
@@ -209,12 +210,18 @@ export const useCallAi = () => {
       if (options.signal?.aborted) return ''
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error('Translation request failed', llmError)
-      toastText(formatLlmError(llmError, translate), 'error')
+      if (options.notifyError !== false) {
+        toastText(formatLlmError(llmError, translate), 'error')
+      }
       throw llmError
     }
   }
 
-  const aiTasks = async (presetNum: number, text?: string) => {
+  const aiTasks = async (
+    presetNum: number,
+    text?: string,
+    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
+  ) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
       return ''
@@ -225,6 +232,7 @@ export const useCallAi = () => {
     if (!task) return ''
 
     return await aiRequest(AI_TASKS.AI_TASKS, text, {
+      ...options,
       instructions: APP_CONFIG.aiInstructions[AI_TASKS.AI_TASKS],
       rules: buildTaskRules(task.rule),
     })

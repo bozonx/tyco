@@ -1,4 +1,5 @@
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
+import type { SelectionWhenEmpty } from './selection'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
@@ -249,6 +250,12 @@ export type QuickInputHotkeys = Record<QuickInputAction, string>
 
 export interface UserConfig {
   hotkeys: Record<string, string>
+  /**
+   * Hotkeys of the actions that replace the selection, keyed by action id
+   * (`correction`, `translate.0`, `aiTask.0`); an empty string unbinds
+   */
+  selectionHotkeys: Record<string, string>
+  selectionReplace: { whenEmpty: SelectionWhenEmpty }
   quickInputHotkeys?: Partial<QuickInputHotkeys>
   /** Correct the quick input text in advance while the user pauses */
   quickCorrectionPrefetch?: boolean
@@ -304,6 +311,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     aiTasks: 'Ctrl+Alt+A',
     correction: 'Ctrl+Alt+R',
   },
+  selectionHotkeys: { correction: 'Ctrl+Alt+F' },
+  selectionReplace: { whenEmpty: 'nothing' },
   quickInputHotkeys: DEFAULT_QUICK_INPUT_HOTKEYS,
   quickCorrectionPrefetch: false,
   quickHideOnBlur: true,

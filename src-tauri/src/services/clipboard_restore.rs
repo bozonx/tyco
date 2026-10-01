@@ -47,6 +47,43 @@ pub fn restore_later(snapshot: ClipboardSnapshot, inserted: String) {
     });
 }
 
+/// The plain text in the clipboard, if it holds any.
+pub fn read_text() -> Option<String> {
+    let output = if is_x11_session() {
+        command_output("xclip", &["-selection", "clipboard", "-o"])?
+    } else {
+        command_output("wl-paste", &["--no-newline", "--type", "text/plain"])?
+    };
+    String::from_utf8(output).ok()
+}
+
+/// Empties the clipboard; used when there is no snapshot to put back.
+pub fn clear() {
+    let result = if is_x11_session() {
+        crate::commands::window::copy_to_clipboard("")
+    } else {
+        Command::new("wl-copy")
+            .arg("--clear")
+            .status()
+            .map(drop)
+            .map_err(Into::into)
+    };
+    if let Err(error) = result {
+        log::warn!("Could not clear the clipboard: {error}");
+    }
+}
+
+/// Puts `snapshot` back right away.
+pub fn restore_now(snapshot: &ClipboardSnapshot) {
+    if let Err(error) = write(snapshot) {
+        log::warn!("Could not restore the clipboard: {error}");
+    }
+}
+
+fn is_x11_session() -> bool {
+    std::env::var("XDG_SESSION_TYPE").is_ok_and(|value| value.eq_ignore_ascii_case("x11"))
+}
+
 fn preferred_type<'a>(types: impl Iterator<Item = &'a str>) -> Option<String> {
     let types: Vec<&str> = types.map(str::trim).collect();
     TEXT_TYPES
