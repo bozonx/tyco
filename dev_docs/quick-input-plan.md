@@ -126,8 +126,8 @@
   с `opacity 0`; видно ли мигание на Wayland, нужно проверить глазами.
   Если пользователь вызвал окно посреди прогрева, прогрев его не трогает.
   Фокус после прогрева возвращается главному окну, если оно было показано.
-  Число циклов: `TYCO_QUICK_WARMUP` (`0` — выключить). Вопрос, хватит ли
-  одного цикла, остаётся открытым: ответит бенч с `TYCO_QUICK_WARMUP=1`.
+  Число циклов: `TYCO_QUICK_WARMUP` (`0` — выключить). Замер показал, что
+  одного цикла хватает (см. отчёт, раздел «Замер на настоящем UI»).
 - **Шаг 2.** Сделан: отдельное окно `quick`, поле ввода смонтировано всегда.
   Меню aiTasks и select/correction больше не перемонтируются на каждый
   показ, пока не сменился режим; пока окно скрыто, клавиши они не слушают.
@@ -135,26 +135,26 @@
   `on_demand`, а не `exclusive`, чтобы клик в другое окно забирал фокус.
   `TYCO_PANEL_KEYBOARD=exclusive-until-focused` показывает панель
   с `exclusive`, как в лаборатории, и переводит в `on_demand` после фокуса.
+  На KWin `on_demand` тоже даёт 20/20, гибрид не понадобился.
   Геометрия layer-поверхности применяется заново только при смене профиля.
-- **Шаг 4.** Инструменты есть (`TYCO_ACTIVATION_BENCH`,
-  `src-tauri/examples/activation-bench.rs`), замеров на настоящем UI нет.
-  Это последнее, что мешает закрыть задачу.
+- **Шаг 4.** Сделан: release-сборка, настоящий UI, 20/20 без потерь
+  в обоих режимах клавиатуры. Результаты — в отчёте.
 - **Шаг 5.** Ожидание фокуса вместо `sleep` сделано.
 
-### Замер для закрытия
+### Как повторить замер
 
-Release-сборка, по прогону на каждый режим клавиатуры. Бенч запускать через
-~3 с после старта приложения, чтобы первая попытка пришлась на первый вызов
-после прогрева:
+Release-сборка не читает `TYCO_DEV_HOME`, поэтому профиль изолируется через
+XDG-переменные; иначе зонд попадёт в историю настоящего профиля.
 
 ```sh
-pnpm tauri build --no-bundle   # or a release build of src-tauri
-TYCO_ACTIVATION_BENCH=1 TYCO_METRICS_CSV=/tmp/tyco-on-demand.csv \
+pnpm tauri build --no-bundle
+(cd src-tauri && cargo build --release --example activation-bench)
+home=$(mktemp -d)
+XDG_CONFIG_HOME=$home/config XDG_DATA_HOME=$home/data XDG_CACHE_HOME=$home/cache \
+  TYCO_ACTIVATION_BENCH=1 TYCO_METRICS_CSV=$home/metrics.csv \
   ./src-tauri/target/release/tyco &
 sleep 3
-(cd src-tauri && cargo run --release --example activation-bench 20)
+./src-tauri/target/release/examples/activation-bench 20
 ```
 
-Второй прогон — то же с `TYCO_PANEL_KEYBOARD=exclusive-until-focused`.
-Критерий: 20/20, ноль потерянных символов. Если `on-demand` теряет символы,
-а гибрид нет, гибрид становится режимом по умолчанию.
+Во время прогона не печатать: зонд печатает в окно, у которого фокус.

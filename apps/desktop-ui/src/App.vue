@@ -56,6 +56,8 @@ const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
 const route = useRoute()
 const isQuickWindow = getCurrentWindow().label === 'quick'
+// The benchmark activates the write mode only. Tauri delivers its events to
+// every window, and an answer from the main window would race the real one
 const activationMetrics = createActivationMetricsClient({
   listen: (event, handler) =>
     desktopClient.listen(
@@ -70,16 +72,10 @@ const activationMetrics = createActivationMetricsClient({
   submitValue: (id) => {
     void ipcStore.callFunction('submitActivationMetricValue', [
       id,
-      isQuickWindow ? writerInputStore.value : editorInputStore.value,
+      writerInputStore.value,
     ])
   },
-  prepareTrial: () => {
-    if (isQuickWindow) {
-      writerInputStore.clear()
-    } else {
-      editorInputStore.clear()
-    }
-  },
+  prepareTrial: () => writerInputStore.clear(),
   activeElement: () => document.activeElement,
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,
@@ -201,7 +197,7 @@ watch(
 
 onMounted(() => {
   void bootstrap.start()
-  void activationMetrics.start()
+  if (isQuickWindow) void activationMetrics.start()
   // the quick window always exists, shown or not, so it takes the selection
   // actions that run without a window
   if (isQuickWindow) {
