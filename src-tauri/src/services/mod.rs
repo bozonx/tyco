@@ -3,6 +3,8 @@ pub mod activation_metrics;
 pub mod activation_socket;
 pub mod app_paths;
 #[cfg(target_os = "linux")]
+pub mod clipboard_restore;
+#[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod foreground_context;
 pub mod hotkeys;

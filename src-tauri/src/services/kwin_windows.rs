@@ -16,6 +16,9 @@ const SCRIPT_INTERFACE: &str = "org.kde.kwin.Script";
 const TRACKER_SCRIPT_NAME: &str = "tyco-window-tracker";
 const ACTIVATOR_SCRIPT_NAME: &str = "tyco-window-activator";
 const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(2);
+/// The tracker reports the active window right away; silence means the
+/// script failed, e.g. on Plasma 5 whose scripting API differs.
+const TRACKER_START_TIMEOUT: Duration = Duration::from_secs(2);
 
 const TRACKER_SCRIPT: &str = r#"
 const TYCO_PID = __PID__;
@@ -26,14 +29,17 @@ function tycoSend(method, a, b) {
         callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", method, a, b);
     }
 }
-function tycoIsForeign(window) {
-    return window.pid !== TYCO_PID && (window.normalWindow || window.dialog);
+function tycoKind(window) {
+    if (window.pid === TYCO_PID) {
+        return "own";
+    }
+    return window.normalWindow || window.dialog ? "foreign" : "other";
 }
 function tycoReport(window) {
     if (window) {
-        tycoSend("KwinWindowActivated", window.internalId.toString(), tycoIsForeign(window));
+        tycoSend("KwinWindowActivated", window.internalId.toString(), tycoKind(window));
     } else {
-        tycoSend("KwinWindowActivated", "", false);
+        tycoSend("KwinWindowActivated", "", "other");
     }
 }
 workspace.windowActivated.connect(tycoReport);
@@ -57,25 +63,69 @@ const ACTIVATOR_SCRIPT: &str = r#"
 })();
 "#;
 
+/// What the tracker script tells about an activated window.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WindowKind {
+    /// An application window that text can be inserted into.
+    Foreign,
+    /// A window of Tyco itself.
+    Own,
+    /// The desktop, a panel, or no window at all.
+    #[default]
+    Other,
+}
+
+impl WindowKind {
+    pub fn parse(kind: &str) -> Self {
+        match kind {
+            "foreign" => Self::Foreign,
+            "own" => Self::Own,
+            _ => Self::Other,
+        }
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Eq)]
 struct TrackerState {
     running: bool,
+    /// Set by the first report of the script.
+    reported: bool,
     active: Option<String>,
+    active_kind: WindowKind,
     last_foreign: Option<String>,
     missing: Option<String>,
 }
 
 impl TrackerState {
-    fn window_activated(&mut self, id: &str, foreign: bool) {
+    fn window_activated(&mut self, id: &str, kind: WindowKind) {
+        self.reported = true;
         self.active = (!id.is_empty()).then(|| id.to_owned());
-        if foreign && !id.is_empty() {
+        self.active_kind = if id.is_empty() {
+            WindowKind::Other
+        } else {
+            kind
+        };
+        if self.active_kind == WindowKind::Foreign {
             self.last_foreign = Some(id.to_owned());
+        }
+    }
+
+    /// The window text goes to: the focused application window, or the one
+    /// focused before Tyco when a Tyco window has focus. Focus on the desktop
+    /// or a panel means there is no target, rather than some window the user
+    /// left long ago.
+    fn target(&self) -> Option<String> {
+        match self.active_kind {
+            WindowKind::Foreign => self.active.clone(),
+            WindowKind::Own => self.last_foreign.clone(),
+            WindowKind::Other => None,
         }
     }
 
     fn window_closed(&mut self, id: &str) {
         if self.active.as_deref() == Some(id) {
             self.active = None;
+            self.active_kind = WindowKind::Other;
         }
         if self.last_foreign.as_deref() == Some(id) {
             self.last_foreign = None;
@@ -102,8 +152,8 @@ impl WindowTracker {
         self.changed.notify_all();
     }
 
-    pub fn window_activated(&self, id: &str, foreign: bool) {
-        self.update(|state| state.window_activated(id, foreign));
+    pub fn window_activated(&self, id: &str, kind: WindowKind) {
+        self.update(|state| state.window_activated(id, kind));
     }
 
     pub fn window_closed(&self, id: &str) {
@@ -117,11 +167,18 @@ impl WindowTracker {
         });
     }
 
-    /// The last focused window that does not belong to Tyco, if the tracker
-    /// script runs and that window is still open.
-    pub fn last_foreign(&self) -> Option<String> {
+    /// The window to insert text into, see `TrackerState::target`, if the
+    /// tracker script runs.
+    pub fn target(&self) -> Option<String> {
         let state = self.state.lock().expect("kwin tracker lock poisoned");
-        state.running.then(|| state.last_foreign.clone()).flatten()
+        state.running.then(|| state.target()).flatten()
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.state
+            .lock()
+            .expect("kwin tracker lock poisoned")
+            .running
     }
 
     fn set_running(&self, running: bool) {
@@ -133,23 +190,22 @@ impl WindowTracker {
         });
     }
 
-    fn wait_until_active(&self, id: &str, timeout: Duration) -> Result<(), AppError> {
+    /// Waits until `done` returns a result, or fails with `timeout_message`.
+    fn wait_for<T>(
+        &self,
+        timeout: Duration,
+        timeout_message: &str,
+        mut done: impl FnMut(&TrackerState) -> Option<Result<T, AppError>>,
+    ) -> Result<T, AppError> {
         let deadline = Instant::now() + timeout;
         let mut state = self.state.lock().expect("kwin tracker lock poisoned");
         loop {
-            if state.active.as_deref() == Some(id) {
-                return Ok(());
-            }
-            if state.missing.as_deref() == Some(id) {
-                return Err(AppError::Message(String::from(
-                    "The target window has been closed",
-                )));
+            if let Some(result) = done(&state) {
+                return result;
             }
             let now = Instant::now();
             if now >= deadline {
-                return Err(AppError::Message(String::from(
-                    "Timed out waiting for the target window to receive focus",
-                )));
+                return Err(AppError::Message(timeout_message.to_owned()));
             }
             state = self
                 .changed
@@ -157,6 +213,31 @@ impl WindowTracker {
                 .expect("kwin tracker lock poisoned")
                 .0;
         }
+    }
+
+    fn wait_until_active(&self, id: &str, timeout: Duration) -> Result<(), AppError> {
+        self.wait_for(
+            timeout,
+            "Timed out waiting for the target window to receive focus",
+            |state| {
+                if state.active.as_deref() == Some(id) {
+                    return Some(Ok(()));
+                }
+                (state.missing.as_deref() == Some(id)).then(|| {
+                    Err(AppError::Message(String::from(
+                        "The target window has been closed",
+                    )))
+                })
+            },
+        )
+    }
+
+    fn wait_until_reported(&self, timeout: Duration) -> Result<(), AppError> {
+        self.wait_for(
+            timeout,
+            "The KWin window tracker script does not report; KDE Plasma 6 is required",
+            |state| state.reported.then_some(Ok(())),
+        )
     }
 }
 
@@ -175,13 +256,18 @@ pub fn is_kde_wayland_session() -> bool {
     is_wayland && is_kde
 }
 
-/// Loads the tracker script. Must run once Tyco owns its D-Bus name, otherwise
-/// the first reports of the script get lost.
+/// Loads the tracker script and waits for its first report. Must run once
+/// Tyco owns its D-Bus name, otherwise the reports of the script get lost.
 pub fn start_tracker() -> Result<(), AppError> {
     let source = TRACKER_SCRIPT.replace("__PID__", &std::process::id().to_string());
-    run_script(TRACKER_SCRIPT_NAME, &source)?;
+    // before the script runs: resetting the state later could drop its report
     tracker().set_running(true);
-    Ok(())
+    let started = run_script(TRACKER_SCRIPT_NAME, &source)
+        .and_then(|()| tracker().wait_until_reported(TRACKER_START_TIMEOUT));
+    if started.is_err() {
+        stop_tracker();
+    }
+    started
 }
 
 pub fn stop_tracker() {
@@ -312,37 +398,80 @@ mod tests {
     #[test]
     fn remembers_the_last_foreign_window_only() {
         let mut state = TrackerState::default();
-        state.window_activated("a", true);
-        state.window_activated("tyco", false);
-        state.window_activated("", false);
+        state.window_activated("a", WindowKind::Foreign);
+        state.window_activated("tyco", WindowKind::Own);
+        state.window_activated("", WindowKind::Foreign);
         assert_eq!(state.last_foreign.as_deref(), Some("a"));
         assert_eq!(state.active, None);
-        state.window_activated("b", true);
+        assert_eq!(state.active_kind, WindowKind::Other);
+        state.window_activated("b", WindowKind::Foreign);
         assert_eq!(state.last_foreign.as_deref(), Some("b"));
         assert_eq!(state.active.as_deref(), Some("b"));
     }
 
     #[test]
+    fn targets_the_focused_window_or_the_one_before_tyco() {
+        let mut state = TrackerState::default();
+        assert_eq!(state.target(), None);
+        state.window_activated("a", WindowKind::Foreign);
+        assert_eq!(state.target().as_deref(), Some("a"));
+        state.window_activated("tyco", WindowKind::Own);
+        assert_eq!(state.target().as_deref(), Some("a"));
+        state.window_activated("desktop", WindowKind::Other);
+        assert_eq!(state.target(), None);
+        state.window_activated("tyco", WindowKind::Own);
+        assert_eq!(state.target().as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn parses_window_kinds() {
+        assert_eq!(WindowKind::parse("foreign"), WindowKind::Foreign);
+        assert_eq!(WindowKind::parse("own"), WindowKind::Own);
+        assert_eq!(WindowKind::parse("other"), WindowKind::Other);
+        assert_eq!(WindowKind::parse("bogus"), WindowKind::Other);
+    }
+
+    #[test]
     fn forgets_a_closed_window() {
         let mut state = TrackerState::default();
-        state.window_activated("a", true);
+        state.window_activated("a", WindowKind::Foreign);
         state.window_closed("other");
         assert_eq!(state.last_foreign.as_deref(), Some("a"));
         state.window_closed("a");
         assert_eq!(state.last_foreign, None);
         assert_eq!(state.active, None);
+        assert_eq!(state.target(), None);
     }
 
     #[test]
     fn reports_windows_only_while_the_script_runs() {
         let tracker = new_tracker();
-        tracker.window_activated("a", true);
-        assert_eq!(tracker.last_foreign(), None);
+        tracker.window_activated("a", WindowKind::Foreign);
+        assert_eq!(tracker.target(), None);
         tracker.set_running(true);
-        tracker.window_activated("a", true);
-        assert_eq!(tracker.last_foreign().as_deref(), Some("a"));
+        assert!(tracker.is_running());
+        tracker.window_activated("a", WindowKind::Foreign);
+        assert_eq!(tracker.target().as_deref(), Some("a"));
         tracker.set_running(false);
-        assert_eq!(tracker.last_foreign(), None);
+        assert_eq!(tracker.target(), None);
+    }
+
+    #[test]
+    fn waits_for_the_first_report_of_the_script() {
+        let tracker = new_tracker();
+        tracker.set_running(true);
+        let error = tracker
+            .wait_until_reported(Duration::from_millis(10))
+            .unwrap_err();
+        assert!(error.to_string().contains("Plasma 6"));
+
+        let reporter = Arc::clone(&tracker);
+        let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(20));
+            reporter.window_activated("", WindowKind::Other);
+        });
+        tracker.wait_until_reported(Duration::from_secs(2)).unwrap();
+        handle.join().unwrap();
     }
 
     #[test]
@@ -351,8 +480,8 @@ mod tests {
         let reporter = Arc::clone(&tracker);
         let handle = thread::spawn(move || {
             thread::sleep(Duration::from_millis(20));
-            reporter.window_activated("other", true);
-            reporter.window_activated(WINDOW, true);
+            reporter.window_activated("other", WindowKind::Foreign);
+            reporter.window_activated(WINDOW, WindowKind::Foreign);
         });
         tracker
             .wait_until_active(WINDOW, Duration::from_secs(2))

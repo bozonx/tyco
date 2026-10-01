@@ -112,6 +112,12 @@
                 />
               </div>
             </FieldRow>
+            <FieldRow :label="t('settings.pasteShortcut')">
+              <FieldSelect
+                v-model:value="userConfig.windowInsertion.pasteShortcut"
+                :options="pasteShortcutOptions"
+              />
+            </FieldRow>
             <details class="storage-details">
               <summary>{{ t('settings.storageLocations') }}</summary>
               <div v-if="!storageInfo" class="text-sm text-muted">
@@ -314,6 +320,7 @@ import {
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
+  PASTE_SHORTCUTS,
   type StorageInfo,
   type ThemeMode,
   UI_SCALES,
@@ -590,6 +597,9 @@ function normalizeWindowInsertionConfig(config: Record<string, any>) {
         : defaultWindowInsertion.method,
     xdotoolBin,
     ydotoolBin: windowInsertion.ydotoolBin || defaultWindowInsertion.ydotoolBin,
+    pasteShortcut: PASTE_SHORTCUTS.includes(windowInsertion.pasteShortcut)
+      ? windowInsertion.pasteShortcut
+      : defaultWindowInsertion.pasteShortcut,
   }
   config.xdotoolBin = xdotoolBin
 }
@@ -718,6 +728,22 @@ const pasteModeOptions = computed(() => {
     { id: 'markdown', name: t('settings.pasteModeMarkdown') },
     { id: 'plain', name: t('settings.pasteModePlain') },
     { id: 'ask', name: t('settings.pasteModeAsk') },
+  ]
+})
+
+const pasteShortcutOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  locale.value
+  return [
+    { id: 'ctrl+v', name: 'Ctrl+V' },
+    {
+      id: 'ctrl+shift+v',
+      name: `Ctrl+Shift+V — ${t('settings.pasteShortcutTerminals')}`,
+    },
+    {
+      id: 'shift+insert',
+      name: `Shift+Insert — ${t('settings.pasteShortcutAnyLayout')}`,
+    },
   ]
 })
 

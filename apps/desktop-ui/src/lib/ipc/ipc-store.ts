@@ -20,12 +20,16 @@ export interface IpcStoreDeps {
   desktopClient: DesktopInvoker
   notifyError: (message: string, title: string) => void
   logError: (message: string, error: unknown) => void
+  /** Resolves once the user has released the keys held in this window. */
+  waitForKeysReleased?: () => Promise<void>
 }
 
 type CommandEntry = {
   command?: string
   invoke?: (args: unknown[]) => Promise<IpcResult>
   buildArgs?: (args: unknown[]) => Record<string, unknown>
+  /** The command presses keys in another window, see `held-keys`. */
+  waitForKeysReleased?: boolean
 }
 
 export function createCommandMap(): Record<string, CommandEntry> {
@@ -108,6 +112,7 @@ export function createCommandMap(): Record<string, CommandEntry> {
     typeIntoWindowAndClose: {
       command: DESKTOP_COMMANDS.TYPE_INTO_WINDOW_AND_CLOSE,
       buildArgs: ([text]) => ({ text }),
+      waitForKeysReleased: true,
     },
     putIntoClipboardAndClose: {
       command: DESKTOP_COMMANDS.PUT_INTO_CLIPBOARD_AND_CLOSE,
@@ -140,6 +145,10 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
           success: false,
           error: `Unknown desktop function: ${functionName}`,
         }
+      }
+
+      if (mappedCommand.waitForKeysReleased) {
+        await deps.waitForKeysReleased?.()
       }
 
       if (mappedCommand.invoke) {

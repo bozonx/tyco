@@ -134,7 +134,8 @@ pub fn default_user_config() -> Value {
       "windowInsertion": {
         "method": "xdotool",
         "xdotoolBin": xdotool_bin,
-        "ydotoolBin": ydotool_bin
+        "ydotoolBin": ydotool_bin,
+        "pasteShortcut": "ctrl+v"
       },
       "appLanguage": "auto",
       "userLanguage": "auto",

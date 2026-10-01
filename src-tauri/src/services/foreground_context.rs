@@ -58,7 +58,7 @@ impl ForegroundContext for SystemForegroundContext {
     fn capture_source(&self) -> Option<Self::Source> {
         match self.session {
             Session::X11 => Self::command_output("xdotool", &["getactivewindow"]),
-            Session::Wayland => super::kwin_windows::tracker().last_foreign(),
+            Session::Wayland => super::kwin_windows::tracker().target(),
             Session::Unsupported => None,
         }
     }

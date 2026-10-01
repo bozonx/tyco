@@ -1,7 +1,9 @@
 use std::thread;
 
 use tauri::AppHandle;
-use zbus::interface;
+use zbus::message::Header;
+use zbus::names::BusName;
+use zbus::{interface, Connection};
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
 use crate::services::{kwin_windows, runtime};
@@ -9,6 +11,7 @@ use crate::services::{kwin_windows, runtime};
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
 const MESSAGE_DEST: &str = "org.tyco.Service";
+const KWIN_SERVICE: &str = "org.kde.KWin";
 
 /// Serves the D-Bus interface on a dedicated thread. A failure here (no session
 /// bus, the name already taken by another instance) must not take the app down:
@@ -72,26 +75,66 @@ impl TycoDbus {
 
     /// Reported by the KWin tracker script, see `kwin_windows`.
     #[zbus(name = "KwinWindowActivated")]
-    async fn kwin_window_activated(&self, id: String, foreign: bool) {
-        kwin_windows::tracker().window_activated(&id, foreign);
+    async fn kwin_window_activated(
+        &self,
+        #[zbus(header)] header: Header<'_>,
+        #[zbus(connection)] connection: &Connection,
+        id: String,
+        kind: String,
+    ) -> zbus::fdo::Result<()> {
+        ensure_sent_by_kwin(&header, connection).await?;
+        kwin_windows::tracker().window_activated(&id, kwin_windows::WindowKind::parse(&kind));
+        Ok(())
     }
 
     #[zbus(name = "KwinWindowClosed")]
-    async fn kwin_window_closed(&self, id: String) {
+    async fn kwin_window_closed(
+        &self,
+        #[zbus(header)] header: Header<'_>,
+        #[zbus(connection)] connection: &Connection,
+        id: String,
+    ) -> zbus::fdo::Result<()> {
+        ensure_sent_by_kwin(&header, connection).await?;
         kwin_windows::tracker().window_closed(&id);
         if let Err(error) = runtime::forget_target_window(&self.app, &id) {
             log::warn!("Could not forget the closed target window: {error}");
         }
+        Ok(())
     }
 
     #[zbus(name = "KwinWindowMissing")]
-    async fn kwin_window_missing(&self, id: String) {
+    async fn kwin_window_missing(
+        &self,
+        #[zbus(header)] header: Header<'_>,
+        #[zbus(connection)] connection: &Connection,
+        id: String,
+    ) -> zbus::fdo::Result<()> {
+        ensure_sent_by_kwin(&header, connection).await?;
         kwin_windows::tracker().window_missing(&id);
+        Ok(())
     }
 
     #[zbus(name = "Ping")]
     async fn ping(&self) -> zbus::fdo::Result<&str> {
         Ok(MESSAGE_INTERFACE)
+    }
+}
+
+/// Window reports pick the insertion target, so only KWin may send them.
+async fn ensure_sent_by_kwin(
+    header: &Header<'_>,
+    connection: &Connection,
+) -> zbus::fdo::Result<()> {
+    let owner = zbus::fdo::DBusProxy::new(connection)
+        .await?
+        .get_name_owner(BusName::from_static_str(KWIN_SERVICE).map_err(zbus::Error::from)?)
+        .await?;
+    if header.sender() == Some(&*owner) {
+        Ok(())
+    } else {
+        Err(zbus::fdo::Error::AccessDenied(String::from(
+            "Only KWin may report windows",
+        )))
     }
 }
 

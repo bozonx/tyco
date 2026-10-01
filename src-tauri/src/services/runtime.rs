@@ -178,6 +178,16 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     Ok(())
 }
 
+/// Waits until no Tyco window has keyboard focus. Once the compositor takes
+/// it away, it has handed it to another window, so input can follow. Gives up
+/// silently after `timeout`: the caller still waits for its target window.
+pub fn wait_until_unfocused(app: &AppHandle, timeout: std::time::Duration) {
+    let deadline = std::time::Instant::now() + timeout;
+    while has_focused_window(app) && std::time::Instant::now() < deadline {
+        thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
+
 fn has_focused_window(app: &AppHandle) -> bool {
     app.webview_windows()
         .values()

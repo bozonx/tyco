@@ -92,6 +92,29 @@ describe('ipc-store', () => {
     )
   })
 
+  it('waits for released keys before inserting into a window', async () => {
+    const order: string[] = []
+    const deps = createDeps({
+      waitForKeysReleased: vi.fn(async () => {
+        order.push('released')
+      }),
+    })
+    vi.mocked(deps.desktopClient.invoke).mockImplementation(async () => {
+      order.push('invoked')
+      return { success: true }
+    })
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('typeIntoWindowAndClose', ['text'])
+    await store.callFunction('putIntoClipboardAndClose', ['text'])
+
+    expect(order).toEqual(['released', 'invoked', 'invoked'])
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.TYPE_INTO_WINDOW_AND_CLOSE,
+      { text: 'text' }
+    )
+  })
+
   it('maps the save note command', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

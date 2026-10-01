@@ -16,7 +16,11 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
 - Rust toolchain pinned by `src-tauri/rust-toolchain.toml`
 - Linux system packages for Tauri, including `gtk-layer-shell`: see the
   `bundle` job in `.github/workflows/ci.yml`
-- `xdotool` (X11) or `ydotool` (Wayland) for typing into other windows
+- `xdotool` (X11) or `ydotool` (Wayland) for typing into other windows.
+  On Wayland only KDE Plasma 6 is supported: a KWin script finds and focuses
+  the target window, and `wl-clipboard` handles the clipboard. `ydotoold`
+  must be running; it writes to `/dev/uinput`, so it can send any input to
+  any window, and access to it should be granted with that in mind
 
 Development is supported on Linux and macOS. Windows development is not
 supported, but production builds are expected to run on Windows.

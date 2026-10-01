@@ -225,6 +225,14 @@ export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
 /** Что делать при вставке HTML из буфера обмена */
 export type PasteMode = 'plain' | 'markdown' | 'ask'
 
+/** Keys pressed in the target window to paste the inserted text */
+export const PASTE_SHORTCUTS = [
+  'ctrl+v',
+  'ctrl+shift+v',
+  'shift+insert',
+] as const
+export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
+
 /** Режим подсветки документа в редакторе */
 export type EditorSyntax = 'none' | 'markdown'
 
@@ -255,6 +263,7 @@ export interface UserConfig {
     method: 'xdotool' | 'ydotool'
     xdotoolBin: string
     ydotoolBin: string
+    pasteShortcut: PasteShortcut
   }
   appLanguage: string
   userLanguage: string
@@ -309,6 +318,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     method: 'xdotool',
     xdotoolBin: '/usr/bin/xdotool',
     ydotoolBin: '/usr/bin/ydotool',
+    pasteShortcut: 'ctrl+v',
   },
   appLanguage: 'auto',
   userLanguage: 'auto',
