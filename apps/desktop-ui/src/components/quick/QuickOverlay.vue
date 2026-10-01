@@ -22,20 +22,18 @@
           v-if="currentMode === 'voice' && ipcStore.params.isWindowShown"
         />
       </div>
+      <!-- The menus outlive a hidden window, so calling the same mode again
+           does not wait for a remount; switching the mode drops them, as their
+           key listeners must not act in another mode -->
       <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
-        <AiTaskView
-          v-if="currentMode === 'aiTasks' && ipcStore.params.isWindowShown"
-        />
+        <AiTaskView v-if="currentMode === 'aiTasks'" />
       </div>
       <div
         v-show="currentMode === 'select' || currentMode === 'correction'"
         class="quick-mode-layer"
       >
         <SelectModeView
-          v-if="
-            (currentMode === 'select' || currentMode === 'correction') &&
-            ipcStore.params.isWindowShown
-          "
+          v-if="currentMode === 'select' || currentMode === 'correction'"
         />
       </div>
     </div>

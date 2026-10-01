@@ -34,6 +34,38 @@ impl InputRegion {
     }
 }
 
+const PANEL_KEYBOARD_ENV: &str = "TYCO_PANEL_KEYBOARD";
+
+/// How the layer-shell panel takes the keyboard when it is shown.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PanelKeyboard {
+    /// The compositor decides whether the mapped panel gets the focus.
+    #[default]
+    OnDemand,
+    /// The panel grabs the keyboard when mapped, as in the input-loss lab, and
+    /// returns to on-demand once the focus has arrived, so a click elsewhere
+    /// still takes the focus away.
+    ExclusiveUntilFocused,
+}
+
+impl PanelKeyboard {
+    pub fn from_env() -> Self {
+        let value = std::env::var(PANEL_KEYBOARD_ENV).ok();
+        Self::parse(value.as_deref())
+    }
+
+    fn parse(value: Option<&str>) -> Self {
+        match value.map(str::trim) {
+            None | Some("") | Some("on-demand") => Self::OnDemand,
+            Some("exclusive-until-focused") => Self::ExclusiveUntilFocused,
+            Some(other) => {
+                log::warn!("Unknown {PANEL_KEYBOARD_ENV} value `{other}`; using on-demand");
+                Self::OnDemand
+            }
+        }
+    }
+}
+
 pub(crate) trait PanelSurface {
     fn supported(&self) -> bool;
 }
@@ -73,12 +105,30 @@ pub fn attach_panel_surface(_window: &WebviewWindow) -> Result<(), AppError> {
 
 #[cfg(target_os = "linux")]
 pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
-    crate::services::layer_shell::set_keyboard(&window.gtk_window()?, false);
+    crate::services::layer_shell::set_keyboard(
+        &window.gtk_window()?,
+        crate::services::layer_shell::Keyboard::None,
+    );
     Ok(())
 }
 
 #[cfg(any(target_os = "windows", target_os = "macos"))]
 pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
+    Ok(())
+}
+
+/// The shown panel got the focus: an exclusive grab is not needed any more.
+#[cfg(target_os = "linux")]
+pub fn settle_panel_keyboard(
+    window: &WebviewWindow,
+    keyboard: PanelKeyboard,
+) -> Result<(), AppError> {
+    if keyboard == PanelKeyboard::ExclusiveUntilFocused {
+        crate::services::layer_shell::set_keyboard(
+            &window.gtk_window()?,
+            crate::services::layer_shell::Keyboard::OnDemand,
+        );
+    }
     Ok(())
 }
 
@@ -114,46 +164,80 @@ pub fn set_panel_input_region(
 }
 
 #[cfg(target_os = "linux")]
+thread_local! {
+    /// Geometry last applied to the layer surface. GTK windows live on the main
+    /// thread, and so does this value.
+    static APPLIED_GEOMETRY: std::cell::Cell<Option<(WindowProfile, i32)>> =
+        const { std::cell::Cell::new(None) };
+}
+
+#[cfg(target_os = "linux")]
+const PANEL_MARGIN_BOTTOM: i32 = 48;
+
+/// Places the quick window before it is shown. `layer` is the keyboard mode of
+/// the layer-shell surface, or `None` when the window is a regular one.
+#[cfg(target_os = "linux")]
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    enabled: bool,
+    layer: Option<PanelKeyboard>,
 ) -> Result<(), AppError> {
-    if !enabled {
+    use crate::services::layer_shell::{self, Keyboard};
+
+    let Some(keyboard) = layer else {
         return position_regular_panel(window, profile);
-    }
+    };
     let gtk_window = window.gtk_window()?;
-    let (width, height) = WINDOW_SIZE;
-    // Layer-shell remaps use the default size; resize alone can retain the
-    // previous allocation while the surface is hidden.
-    gtk_window.set_default_size(width as i32, height as i32);
-    gtk_window.resize(width as i32, height as i32);
-    match profile {
-        WindowProfile::Panel => crate::services::layer_shell::set_panel_profile(&gtk_window, 48),
-        WindowProfile::Sheet => {
-            let margin_top = window
-                .current_monitor()
-                .ok()
-                .flatten()
-                .map(|m| {
-                    let scale = m.scale_factor();
-                    let screen_h = m.size().height as f64 / scale;
-                    ((screen_h - height) / 2.0).max(40.0) as i32
-                })
-                .unwrap_or(200);
-            crate::services::layer_shell::set_sheet_profile(&gtk_window, margin_top);
+    let margin = match profile {
+        WindowProfile::Panel => PANEL_MARGIN_BOTTOM,
+        WindowProfile::Sheet => sheet_margin_top(window),
+    };
+    // Anchors and size only change with the profile; reapplying them on every
+    // show costs a relayout and a configure round trip before the first frame
+    if APPLIED_GEOMETRY.get() != Some((profile, margin)) {
+        let (width, height) = WINDOW_SIZE;
+        // Layer-shell remaps use the default size; resize alone can retain the
+        // previous allocation while the surface is hidden.
+        gtk_window.set_default_size(width as i32, height as i32);
+        gtk_window.resize(width as i32, height as i32);
+        match profile {
+            WindowProfile::Panel => layer_shell::set_panel_profile(&gtk_window, margin),
+            WindowProfile::Sheet => layer_shell::set_sheet_profile(&gtk_window, margin),
         }
+        gtk_window.queue_resize();
+        APPLIED_GEOMETRY.set(Some((profile, margin)));
     }
-    crate::services::layer_shell::set_keyboard(&gtk_window, true);
-    gtk_window.queue_resize();
+    layer_shell::set_keyboard(
+        &gtk_window,
+        match keyboard {
+            PanelKeyboard::OnDemand => Keyboard::OnDemand,
+            PanelKeyboard::ExclusiveUntilFocused => Keyboard::Exclusive,
+        },
+    );
     Ok(())
+}
+
+/// Top margin that centers the sheet vertically on the current monitor.
+#[cfg(target_os = "linux")]
+fn sheet_margin_top(window: &WebviewWindow) -> i32 {
+    let (_, height) = WINDOW_SIZE;
+    window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .map(|m| {
+            let scale = m.scale_factor();
+            let screen_h = m.size().height as f64 / scale;
+            ((screen_h - height) / 2.0).max(40.0) as i32
+        })
+        .unwrap_or(200)
 }
 
 #[cfg(target_os = "windows")]
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    _enabled: bool,
+    _layer: Option<PanelKeyboard>,
 ) -> Result<(), AppError> {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         GetWindowLongW, SetWindowLongW, GWL_EXSTYLE, WS_EX_NOACTIVATE, WS_EX_TOPMOST,
@@ -172,7 +256,7 @@ pub fn apply_panel_surface(
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    _enabled: bool,
+    _layer: Option<PanelKeyboard>,
 ) -> Result<(), AppError> {
     window.set_always_on_top(true)?;
     position_regular_panel(window, profile)?;
@@ -239,6 +323,21 @@ mod tests {
     fn clamps_to_the_window_origin_and_never_goes_negative() {
         assert_eq!(region(-4.0, -2.5, 10.0, 5.0).to_pixels(), (0, 0, 6, 3));
         assert_eq!(region(10.0, 10.0, -5.0, 0.0).to_pixels(), (10, 10, 0, 0));
+    }
+
+    #[test]
+    fn panel_keyboard_defaults_to_on_demand() {
+        assert_eq!(PanelKeyboard::parse(None), PanelKeyboard::OnDemand);
+        assert_eq!(PanelKeyboard::parse(Some("")), PanelKeyboard::OnDemand);
+        assert_eq!(
+            PanelKeyboard::parse(Some("on-demand")),
+            PanelKeyboard::OnDemand
+        );
+        assert_eq!(
+            PanelKeyboard::parse(Some(" exclusive-until-focused ")),
+            PanelKeyboard::ExclusiveUntilFocused
+        );
+        assert_eq!(PanelKeyboard::parse(Some("grab")), PanelKeyboard::OnDemand);
     }
 
     #[test]

@@ -1,6 +1,6 @@
 <template>
   <ContentPadding>
-    <AiTaskMenu :text="text" :stopListening="menuModalsStore.anyModalOpen" />
+    <AiTaskMenu :text="text" :stopListening="stopListening" />
   </ContentPadding>
 </template>
 
@@ -22,6 +22,12 @@ const text = computed(
     editorInputStore.selectedText ||
     editorInputStore.value ||
     ''
+)
+
+// The view outlives a hidden window. Until the next activation reaches it, the
+// keys belong to whatever mode that activation opens
+const stopListening = computed(
+  () => menuModalsStore.anyModalOpen || !ipcStore.params.isWindowShown
 )
 
 navPanelStore.resetNavParams({})

@@ -11,9 +11,19 @@ const EDGE_RIGHT: u32 = 1;
 const EDGE_TOP: u32 = 2;
 const EDGE_BOTTOM: u32 = 3;
 const KEYBOARD_NONE: u32 = 0;
-// Unlike exclusive mode, on-demand lets the compositor move the focus away when
-// the user clicks another window, so the panel learns it was left
+const KEYBOARD_EXCLUSIVE: u32 = 1;
 const KEYBOARD_ON_DEMAND: u32 = 2;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Keyboard {
+    None,
+    /// Takes the keyboard as soon as the surface is mapped, without asking the
+    /// compositor to activate it, and keeps it until the mode changes.
+    Exclusive,
+    /// Unlike exclusive mode, lets the compositor move the focus away when the
+    /// user clicks another window, so the panel learns it was left.
+    OnDemand,
+}
 
 #[link(name = "gtk-layer-shell")]
 unsafe extern "C" {
@@ -76,16 +86,14 @@ pub fn set_sheet_profile(window: &ApplicationWindow, margin_top: i32) {
     }
 }
 
-pub fn set_keyboard(window: &ApplicationWindow, enabled: bool) {
+pub fn set_keyboard(window: &ApplicationWindow, keyboard: Keyboard) {
+    let mode = match keyboard {
+        Keyboard::None => KEYBOARD_NONE,
+        Keyboard::Exclusive => KEYBOARD_EXCLUSIVE,
+        Keyboard::OnDemand => KEYBOARD_ON_DEMAND,
+    };
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {
-        gtk_layer_set_keyboard_mode(
-            raw(window),
-            if enabled {
-                KEYBOARD_ON_DEMAND
-            } else {
-                KEYBOARD_NONE
-            },
-        );
+        gtk_layer_set_keyboard_mode(raw(window), mode);
     }
 }

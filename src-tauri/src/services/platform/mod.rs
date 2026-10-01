@@ -13,9 +13,11 @@ mod macos;
 mod windows;
 
 pub use foreground_context::{capture_selection, capture_source};
+#[cfg(target_os = "linux")]
+pub use panel_surface::settle_panel_keyboard;
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, panel_surface_supported,
-    set_panel_input_region, InputRegion,
+    set_panel_input_region, InputRegion, PanelKeyboard,
 };
 pub use text_injector::inject_paste;
 pub use titlebar::enable_titlebar_buttons;

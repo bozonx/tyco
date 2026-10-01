@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   modals: { currentModal: 'none', pendingModal: null as string | null },
   windowFocused: true,
   focusHandlers: [] as ((event: { payload: boolean }) => void)[],
+  aiTaskMounts: 0,
+  aiTaskUnmounts: 0,
 }))
 
 vi.mock('../../composables/useI18n', () => ({
@@ -68,7 +70,11 @@ vi.mock('../../views/WriteModeView.vue', () => ({
   },
 }))
 vi.mock('../../views/AiTaskView.vue', () => ({
-  default: { template: '<div />' },
+  default: {
+    template: '<div />',
+    mounted: () => mocks.aiTaskMounts++,
+    unmounted: () => mocks.aiTaskUnmounts++,
+  },
 }))
 vi.mock('../../views/SelectModeView.vue', () => ({
   default: { template: '<div />' },
@@ -91,6 +97,8 @@ afterEach(() => {
   vi.clearAllMocks()
   mocks.windowFocused = true
   mocks.focusHandlers = []
+  mocks.aiTaskMounts = 0
+  mocks.aiTaskUnmounts = 0
 })
 
 describe('quick overlay keyboard ownership', () => {
@@ -302,6 +310,32 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
+      params.mode = 'write'
+    }
+  })
+
+  it('keeps a menu mounted while hidden and drops it with its mode', async () => {
+    stubResizeObserver()
+    const params = reactive(mocks.params)
+    params.mode = 'aiTasks'
+    params.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      expect(mocks.aiTaskMounts).toBe(1)
+
+      params.isWindowShown = false
+      await nextTick()
+      params.isWindowShown = true
+      params.activationId++
+      await nextTick()
+      expect(mocks.aiTaskMounts).toBe(1)
+      expect(mocks.aiTaskUnmounts).toBe(0)
+
+      params.mode = 'write'
+      await nextTick()
+      expect(mocks.aiTaskUnmounts).toBe(1)
+    } finally {
+      wrapper.unmount()
       params.mode = 'write'
     }
   })

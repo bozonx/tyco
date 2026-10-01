@@ -1,10 +1,11 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 pub use super::activation::Activation;
-use super::activation::{StartMode, WINDOW_SIZE};
-use super::platform::InputRegion;
+use super::activation::{StartMode, WindowProfile, WINDOW_SIZE};
+use super::platform::{InputRegion, PanelKeyboard};
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -22,6 +23,10 @@ pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_QUIT_ID: &str = "quit";
+const WARMUP_ENV: &str = "TYCO_QUICK_WARMUP";
+const DEFAULT_WARMUP_CYCLES: u32 = 3;
+const WARMUP_DELAY: Duration = Duration::from_millis(400);
+const WARMUP_STEP: Duration = Duration::from_millis(250);
 
 pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let params = state.params();
@@ -81,6 +86,22 @@ impl ContextCapture {
 #[derive(Default)]
 struct LayerShell {
     supported: bool,
+    keyboard: PanelKeyboard,
+}
+
+/// Keyboard mode of the quick window's layer surface, `None` when it is a
+/// regular window.
+fn panel_layer(app: &AppHandle) -> Option<PanelKeyboard> {
+    #[cfg(target_os = "linux")]
+    {
+        let layer = app.state::<LayerShell>();
+        layer.supported.then_some(layer.keyboard)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = app;
+        None
+    }
 }
 
 struct RuntimeWindows {
@@ -218,23 +239,23 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         .ok_or_else(|| AppError::Message(format!("Window {window_label} not found")))?;
     let state = app.state::<AppState>();
 
+    // the warmup may have left the window transparent
     #[cfg(target_os = "linux")]
     window.gtk_window()?.set_opacity(1.0);
 
     let (width, height) = WINDOW_SIZE;
-    window.set_size(tauri::LogicalSize::new(width, height))?;
-
-    #[cfg(target_os = "linux")]
-    let has_layer_shell = app.state::<LayerShell>().supported;
-    #[cfg(not(target_os = "linux"))]
-    let has_layer_shell = false;
-
     if is_quick_window {
-        window.set_decorations(false)?;
+        let layer = panel_layer(app);
+        // a layer surface takes its size from `apply_panel_surface`
+        if layer.is_none() {
+            window.set_size(tauri::LogicalSize::new(width, height))?;
+            window.set_decorations(false)?;
+        }
         // a region left by the previous session must not hide the new content
         super::platform::set_panel_input_region(&window, None)?;
-        super::platform::apply_panel_surface(&window, activation.mode.profile(), has_layer_shell)?;
+        super::platform::apply_panel_surface(&window, activation.mode.profile(), layer)?;
     } else {
+        window.set_size(tauri::LogicalSize::new(width, height))?;
         window.set_decorations(true)?;
         window.set_resizable(true)?;
         window.center()?;
@@ -256,8 +277,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.selected_text = activation.selected_text;
         params.is_window_shown = true;
         params.window_profile = match activation.mode.profile() {
-            super::activation::WindowProfile::Panel => String::from("panel"),
-            super::activation::WindowProfile::Sheet => String::from("sheet"),
+            WindowProfile::Panel => String::from("panel"),
+            WindowProfile::Sheet => String::from("sheet"),
         };
     });
     log::debug!(
@@ -443,6 +464,94 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     emit_params(app, &state)
 }
 
+/// Number of warmup cycles; `TYCO_QUICK_WARMUP=0` turns the warmup off.
+fn warmup_cycles(value: Option<&str>) -> u32 {
+    value
+        .and_then(|value| value.trim().parse().ok())
+        .unwrap_or(DEFAULT_WARMUP_CYCLES)
+}
+
+/// The first one or two shows of a window after process start take the slow
+/// path: the focus comes late or not at all, and the keys typed meanwhile go to
+/// the window below (see dev_docs/quick-input-report.md). The warmup goes
+/// through them before the user presses a hotkey. It leaves `AppState` and the
+/// webview alone and gives way to a real activation at any step.
+fn spawn_quick_warmup(app: AppHandle) {
+    let cycles = warmup_cycles(std::env::var(WARMUP_ENV).ok().as_deref());
+    if cycles == 0 {
+        return;
+    }
+    thread::spawn(move || {
+        thread::sleep(WARMUP_DELAY);
+        for _ in 0..cycles {
+            let shown = on_main_thread(&app, warmup_show);
+            thread::sleep(WARMUP_STEP);
+            let hidden = on_main_thread(&app, warmup_hide);
+            if let Err(error) = shown.and(hidden) {
+                log::warn!("Quick window warmup stopped: {error}");
+                return;
+            }
+            thread::sleep(WARMUP_STEP);
+        }
+        log::debug!("Quick window warmup finished after {cycles} cycles");
+    });
+}
+
+fn quick_window_in_use(app: &AppHandle) -> bool {
+    is_quick_window_shown(
+        app.state::<RuntimeWindows>().active_label(),
+        app.state::<AppState>().params().is_window_shown,
+    )
+}
+
+/// Shows the quick window the way an activation of the write mode does, but
+/// transparent and without touching the state.
+fn warmup_show(app: &AppHandle) -> Result<(), AppError> {
+    if quick_window_in_use(app) {
+        return Ok(());
+    }
+    let window = app
+        .get_webview_window(QUICK_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+    #[cfg(target_os = "linux")]
+    window.gtk_window()?.set_opacity(0.0);
+    let layer = panel_layer(app);
+    if layer.is_none() {
+        let (width, height) = WINDOW_SIZE;
+        window.set_size(tauri::LogicalSize::new(width, height))?;
+    }
+    super::platform::apply_panel_surface(&window, WindowProfile::Panel, layer)?;
+    window.set_focusable(true)?;
+    window.show()?;
+    if let Err(error) = window.set_focus() {
+        log::warn!("Could not focus window during warmup: {error}");
+    }
+    Ok(())
+}
+
+fn warmup_hide(app: &AppHandle) -> Result<(), AppError> {
+    // the user called the window in between: it is theirs now
+    if quick_window_in_use(app) {
+        return Ok(());
+    }
+    let window = app
+        .get_webview_window(QUICK_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+    if panel_layer(app).is_some() {
+        super::platform::disable_panel_keyboard(&window)?;
+    }
+    window.hide()?;
+    // the main window shown at startup gets back the focus the warmup took
+    if app.state::<AppState>().params().is_window_shown {
+        if let Some(main) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+            if let Err(error) = main.set_focus() {
+                log::warn!("Could not return focus after warmup: {error}");
+            }
+        }
+    }
+    Ok(())
+}
+
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ContextCapture::default());
     app.manage(RuntimeWindows::default());
@@ -467,9 +576,13 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         } else {
             log::info!("gtk-layer-shell is unavailable; using a regular window");
         }
-        app.manage(LayerShell { supported });
+        app.manage(LayerShell {
+            supported,
+            keyboard: PanelKeyboard::from_env(),
+        });
     }
     setup_tray(app)?;
+    spawn_quick_warmup(app.handle().clone());
     Ok(())
 }
 
@@ -549,9 +662,29 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                     let _ = hide_main_window(app, &state);
                 }
             }
-            WindowEvent::Focused(true) => super::activation_metrics::mark_os_focus(app),
+            WindowEvent::Focused(true) => {
+                super::activation_metrics::mark_os_focus(app);
+                #[cfg(target_os = "linux")]
+                if window_label == QUICK_WINDOW_LABEL {
+                    settle_quick_keyboard(app);
+                }
+            }
             WindowEvent::Focused(false) => {}
             _ => {}
+        }
+    }
+}
+
+/// Leaves the exclusive grab once the quick window has the focus. Runs on the
+/// main thread, as window events do.
+#[cfg(target_os = "linux")]
+fn settle_quick_keyboard(app: &AppHandle) {
+    let Some(keyboard) = panel_layer(app) else {
+        return;
+    };
+    if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
+        if let Err(error) = super::platform::settle_panel_keyboard(&window, keyboard) {
+            log::warn!("Could not release the keyboard grab: {error}");
         }
     }
 }
@@ -559,6 +692,14 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn warmup_runs_three_cycles_unless_configured() {
+        assert_eq!(warmup_cycles(None), 3);
+        assert_eq!(warmup_cycles(Some("0")), 0);
+        assert_eq!(warmup_cycles(Some(" 1 ")), 1);
+        assert_eq!(warmup_cycles(Some("many")), 3);
+    }
 
     #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
