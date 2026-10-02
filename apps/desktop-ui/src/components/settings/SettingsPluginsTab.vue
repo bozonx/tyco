@@ -62,11 +62,13 @@ import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldsByCfg from '../common/FieldsByCfg.vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{ userConfig: Record<string, any> }>()
+const props = defineProps<{
+  userConfig: { plugins?: Record<string, unknown> }
+}>()
 
 const emit = defineEmits<{
   'update:pluginEnabled': [pluginName: string, enabled: boolean]
-  'update:pluginConfig': [pluginName: string, values: Record<string, any>]
+  'update:pluginConfig': [pluginName: string, values: Record<string, unknown>]
 }>()
 
 const { t } = useI18n()
@@ -75,7 +77,8 @@ const installedPlugins = computed(() => {
   return pluginIndexes.map((pluginIndex) => {
     const plugin = pluginIndex()
     const pluginName = plugin.name
-    const pluginState = props.userConfig.plugins?.[pluginName] || {}
+    const pluginState =
+      (props.userConfig.plugins?.[pluginName] as Record<string, unknown>) || {}
     const isEnabled = pluginState.enabled !== false
     const rawFields = plugin.defaultConfig?.fields || []
 
@@ -83,10 +86,10 @@ const installedPlugins = computed(() => {
       name: pluginName,
       labelKey: plugin.labelKey,
       label: plugin.label,
-      descriptionKey: (plugin as any).descriptionKey,
-      description: (plugin as any).description,
+      descriptionKey: plugin.descriptionKey,
+      description: plugin.description,
       enabled: isEnabled,
-      fields: rawFields.map((field: any) => ({
+      fields: rawFields.map((field) => ({
         ...field,
         value: pluginState[field.name],
       })),
@@ -100,7 +103,7 @@ const setPluginEnabled = (pluginName: string, enabled: boolean) => {
 
 const updatePluginConfig = (
   pluginName: string,
-  values: Record<string, any>
+  values: Record<string, unknown>
 ) => {
   emit('update:pluginConfig', pluginName, values)
 }

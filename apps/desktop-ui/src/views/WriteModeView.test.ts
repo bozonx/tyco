@@ -44,6 +44,7 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     params: reactive(mocks.params),
     callFunction: mocks.callFunction,
+    callFunctionOrNotify: mocks.callFunction,
   }),
 }))
 vi.mock('../stores/writerInput', () => ({
@@ -116,7 +117,7 @@ describe('quick input screen', () => {
     press('Escape')
     expect(mocks.writer.discard).toHaveBeenCalledOnce()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
-    expect(mocks.callFunction).toHaveBeenCalledWith('closeWindow', [])
+    expect(mocks.callFunction).toHaveBeenCalledWith('closeWindow')
   })
 
   it('blocks duplicate submissions while pending but allows cancellation', async () => {

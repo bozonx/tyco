@@ -6,7 +6,7 @@ mod state;
 
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
-    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor, save_local_state,
+    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor, patch_local_state,
     save_user_config, submit_activation_metric_value,
 };
 use commands::history::{
@@ -61,21 +61,27 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .build()
 }
 
+/// Runs the activation the command line asks for. Arguments that cannot be
+/// parsed still show the application: a launch must never end up without a
+/// window and without a word to the user.
+fn activate_from_args(app: &tauri::AppHandle, args: &[String]) -> Result<(), errors::AppError> {
+    match runtime::Activation::from_args(args) {
+        Ok(Some(activation)) => runtime::activate(app, activation),
+        Ok(None) => runtime::show_application(app),
+        Err(error) => {
+            log::error!("Ignoring invalid command line arguments: {error}");
+            runtime::show_application(app)
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(logger_plugin())
         .plugin(single_instance(|app, args, _cwd| {
-            let result = runtime::Activation::from_args(&args).and_then(|activation| {
-                if let Some(activation) = activation {
-                    runtime::activate(app, activation)
-                } else {
-                    runtime::show_application(app)
-                }
-            });
-            match result {
-                Ok(()) => {}
-                Err(error) => log::error!("CLI activation failed: {error}"),
+            if let Err(error) = activate_from_args(app, &args) {
+                log::error!("CLI activation failed: {error}");
             }
         }))
         .setup(|app| {
@@ -88,11 +94,7 @@ pub fn run() {
             runtime::setup(app)?;
             services::activation_metrics::setup(app)?;
             let args = std::env::args().collect::<Vec<_>>();
-            match runtime::Activation::from_args(&args) {
-                Ok(Some(activation)) => runtime::activate(app.handle(), activation)?,
-                Ok(None) => runtime::show_application(app.handle())?,
-                Err(error) => log::error!("CLI activation failed: {error}"),
-            }
+            activate_from_args(app.handle(), &args)?;
             #[cfg(target_os = "linux")]
             dbus::spawn_dbus_server(app.handle().clone());
             services::activation_socket::spawn_server(app.handle().clone());
@@ -113,7 +115,7 @@ pub fn run() {
             mark_activation_metric,
             submit_activation_metric_value,
             save_user_config,
-            save_local_state,
+            patch_local_state,
             close_window,
             dismiss_quick_window,
             set_quick_input_region,

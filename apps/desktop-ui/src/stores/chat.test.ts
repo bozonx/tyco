@@ -21,7 +21,10 @@ vi.mock('../lib/chat/chat-store', () => ({
   createChatStoreModel: () => ({ startChat: mocks.startChat }),
 }))
 vi.mock('./ipc', () => ({
-  useIpcStore: () => ({ callFunction: mocks.callFunction }),
+  useIpcStore: () => ({
+    callFunction: mocks.callFunction,
+    callFunctionOrNotify: mocks.callFunction,
+  }),
 }))
 vi.mock('./history', () => ({ useHistoryStore: () => ({}) }))
 vi.mock('./chatInput', () => ({

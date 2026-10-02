@@ -2,6 +2,8 @@ pub mod activation;
 pub mod activation_metrics;
 pub mod activation_socket;
 pub mod app_paths;
+pub mod atomic_file;
+pub mod clipboard;
 #[cfg(target_os = "linux")]
 pub mod clipboard_restore;
 #[cfg(target_os = "linux")]

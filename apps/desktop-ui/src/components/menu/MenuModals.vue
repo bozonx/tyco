@@ -12,7 +12,7 @@
     />
     <DiffMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.DIFF"
-      v-bind="menuModalsStore.currentModalParams as any"
+      v-bind="diffParams"
     />
     <VoiceRecognitionMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION"
@@ -22,15 +22,15 @@
     />
     <TranslateMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.TRANSLATE"
-      v-bind="menuModalsStore.currentModalParams as any"
+      v-bind="menuModalsStore.currentModalParams"
     />
     <PreviewMenu
       v-else-if="menuModalsStore.currentModal === MenuModals.PREVIEW"
-      v-bind="menuModalsStore.currentModalParams as any"
+      v-bind="previewParams"
     />
     <ActionSelectModal
       v-else-if="menuModalsStore.currentModal === MenuModals.ACTION_SELECT"
-      v-bind="menuModalsStore.currentModalParams as any"
+      v-bind="actionSelectParams"
     />
   </Overlay>
 
@@ -40,10 +40,43 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
+import Overlay from '../common/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
+import AiTaskMenu from './AiTaskMenu.vue'
+import DiffMenu from './DiffMenu.vue'
+import InProgressMessage from './InProgressMessage.vue'
+import InsertMenu from './InsertMenu.vue'
+import PreviewMenu from './PreviewMenu.vue'
+import TranslateMenu from './TranslateMenu.vue'
+import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 
 const menuModalsStore = useMenuModalsStore()
+
+const diffParams = computed(
+  () =>
+    menuModalsStore.currentModalParams as unknown as {
+      oldText: string
+      newText: string
+    }
+)
+
+const previewParams = computed(
+  () =>
+    menuModalsStore.currentModalParams as unknown as {
+      text: string
+      sourceText?: string
+    }
+)
+
+const actionSelectParams = computed(
+  () =>
+    menuModalsStore.currentModalParams as unknown as {
+      onSelect: (actionId: string) => void
+    }
+)
 
 function handleVoiceCancelled() {
   menuModalsStore.closeAll()

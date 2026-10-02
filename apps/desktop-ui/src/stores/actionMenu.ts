@@ -28,7 +28,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   return createActionMenuStoreModel({
     typeIntoWindowAndClose,
     putIntoClipboardAndClose: async (text: string) => {
-      await ipcStore.callFunction('putIntoClipboardAndClose', [text])
+      await ipcStore.callFunctionOrNotify('putIntoClipboardAndClose', [text])
     },
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)

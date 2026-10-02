@@ -334,8 +334,8 @@ const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const themeStore = useThemeStore()
-const { t, locale } = useI18n()
-const { toast, toastText } = useToast()
+const { t } = useI18n()
+const { toastText } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -589,7 +589,7 @@ function normalizeLanguageConfig(config: Record<string, any>) {
   ).map((lang) => (typeof lang === 'string' ? lang : null))
 }
 
-// конфиги, созданные до появления настроек редактора, приходят без этих ключей
+// configs created before the editor settings come without these keys
 function normalizeEditorConfig(config: Record<string, any>) {
   config.pasteMode = config.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
   config.editorSyntax = config.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
@@ -690,7 +690,7 @@ async function persistUserConfig() {
     if (!result.success) {
       lastPersistedConfig.value = previousPersistedConfig
       if (isComponentActive) {
-        toast(result.error || t('toast.settingsSaveFailed'), 'error')
+        toastText(result.error || t('toast.settingsSaveFailed'), 'error')
       }
     }
   })
@@ -736,8 +736,6 @@ function flushPendingAutosave() {
 }
 
 const pasteModeOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return [
     { id: 'markdown', name: t('settings.pasteModeMarkdown') },
     { id: 'plain', name: t('settings.pasteModePlain') },
@@ -746,8 +744,6 @@ const pasteModeOptions = computed(() => {
 })
 
 const pasteShortcutOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return [
     { id: 'ctrl+v', name: 'Ctrl+V' },
     {
@@ -762,8 +758,6 @@ const pasteShortcutOptions = computed(() => {
 })
 
 const editorSyntaxOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return [
     { id: 'markdown', name: t('settings.editorSyntaxMarkdown') },
     { id: 'none', name: t('settings.editorSyntaxNone') },
@@ -771,8 +765,6 @@ const editorSyntaxOptions = computed(() => {
 })
 
 const appLanguageOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return buildLanguageOptions(
     [effectiveAppLanguage.value, userConfig.value.appLanguage],
     false,
@@ -782,8 +774,6 @@ const appLanguageOptions = computed(() => {
 })
 
 const userLanguageOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return buildLanguageOptions([userConfig.value.userLanguage], true, t)
 })
 
@@ -910,8 +900,6 @@ const setSttLanguage = (value: string | number | undefined) => {
 }
 
 const sttLanguageOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return [
     { id: DICTATION_LANGUAGE_USER, name: t('settings.sttLanguageUser') },
     { id: DICTATION_LANGUAGE_MULTI, name: t('settings.sttLanguageMulti') },

@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -11,6 +11,7 @@ use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
     LocalState, StorageInfo, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
+use crate::services::atomic_file::{quarantine, write_private};
 use crate::services::{app_paths::AppPaths, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
@@ -74,32 +75,8 @@ fn read_json<T: DeserializeOwned>(path: &PathBuf, fallback: T) -> Result<T, AppE
     Ok(parsed)
 }
 
-fn write_json<T: Serialize>(path: &PathBuf, value: &T) -> Result<(), AppError> {
-    write_atomic(path, &serde_json::to_string_pretty(value)?)
-}
-
-/// Writes a temporary file next to `path` and renames it over: a crash in the
-/// middle of the write leaves the previous content intact instead of a torn file
-fn write_atomic(path: &PathBuf, raw: &str) -> Result<(), AppError> {
-    let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
-    tmp_name.push(".tmp");
-    let tmp_path = path.with_file_name(tmp_name);
-
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create(true).truncate(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    {
-        use std::io::Write;
-        let mut file = options.open(&tmp_path)?;
-        file.write_all(raw.as_bytes())?;
-        file.sync_all()?;
-    }
-    fs::rename(&tmp_path, path)?;
-    Ok(())
+fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), AppError> {
+    write_private(path, &serde_json::to_string_pretty(value)?)
 }
 
 fn read_jsonl<T: DeserializeOwned>(path: &PathBuf) -> Result<Vec<T>, AppError> {
@@ -109,24 +86,30 @@ fn read_jsonl<T: DeserializeOwned>(path: &PathBuf) -> Result<Vec<T>, AppError> {
 
     let raw = fs::read_to_string(path)?;
     let mut items = Vec::new();
-    for line in raw.lines() {
+    for (index, line) in raw.lines().enumerate() {
         if line.trim().is_empty() {
             continue;
         }
-        if let Ok(parsed) = serde_json::from_str(line) {
-            items.push(parsed);
+        match serde_json::from_str(line) {
+            Ok(parsed) => items.push(parsed),
+            // the next write drops the line, so the log is all that is left of it
+            Err(error) => log::warn!(
+                "Skipping unreadable line {} of {}: {error}",
+                index + 1,
+                path.display()
+            ),
         }
     }
     Ok(items)
 }
 
-fn write_jsonl<T: Serialize>(path: &PathBuf, items: &[T]) -> Result<(), AppError> {
+fn write_jsonl<T: Serialize>(path: &Path, items: &[T]) -> Result<(), AppError> {
     let mut raw = String::new();
     for item in items {
         raw.push_str(&serde_json::to_string(item)?);
         raw.push('\n');
     }
-    write_atomic(path, &raw)
+    write_private(path, &raw)
 }
 
 /// How many entries to keep; 0 turns the history off. A missing or invalid
@@ -145,13 +128,22 @@ fn history_limit(user_config: &Value, key: &str, default: usize) -> usize {
         .unwrap_or(default)
 }
 
+/// Reads the user config. A config that cannot be parsed is set aside and
+/// replaced by the defaults: the app must start either way, and the user keeps
+/// the broken file to fix it.
 pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
 
-    if path.exists() {
-        let raw = fs::read_to_string(&path)?;
-        let mut value = serde_yaml::from_str(&raw)?;
-
+    if let Some(mut value) = read_or_quarantine(&path, |raw| {
+        let value: Value = serde_yaml::from_str(raw)?;
+        if value.is_object() {
+            Ok(value)
+        } else {
+            Err(AppError::Message(String::from(
+                "the config is not a mapping",
+            )))
+        }
+    })? {
         if normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
             | llm_config::migrate_user_config(app, &mut value)
@@ -167,6 +159,33 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     save_user_config(app, &default_config)?;
 
     Ok(default_config)
+}
+
+/// Parses the file at `path`; `None` when there is none or it was unreadable
+/// and has been moved aside.
+fn read_or_quarantine<T>(
+    path: &Path,
+    parse: impl FnOnce(&str) -> Result<T, AppError>,
+) -> Result<Option<T>, AppError> {
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let parsed = fs::read_to_string(path)
+        .map_err(AppError::from)
+        .and_then(|raw| parse(&raw));
+    match parsed {
+        Ok(value) => Ok(Some(value)),
+        Err(error) => {
+            let target = quarantine(path)?;
+            log::error!(
+                "{} is unreadable ({error}); moved it to {} and starting with defaults",
+                path.display(),
+                target.display()
+            );
+            Ok(None)
+        }
+    }
 }
 
 /// Deepgram is the only speech provider; other entries are dropped, and the
@@ -308,22 +327,32 @@ fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
 
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
-    let raw = serde_yaml::to_string(user_config)?;
-    fs::write(path, raw)?;
-    Ok(())
+    write_private(&path, &serde_yaml::to_string(user_config)?)
 }
 
 pub fn read_or_create_local_state(app: &AppHandle) -> Result<LocalState, AppError> {
     let path = app_config_dir(app)?.join(STATE_FILE_NAME);
 
-    if path.exists() {
-        return read_json(&path, LocalState::default());
+    if let Some(state) = read_or_quarantine(&path, |raw| Ok(serde_json::from_str(raw)?))? {
+        return Ok(state);
     }
 
     let default_state = LocalState::default();
     save_local_state(app, &default_state)?;
 
     Ok(default_state)
+}
+
+/// `current` with the fields of `patch` replaced; a `null` clears a field.
+pub fn merge_local_state(
+    current: &LocalState,
+    patch: serde_json::Map<String, Value>,
+) -> Result<LocalState, AppError> {
+    let mut merged = serde_json::to_value(current)?;
+    if let Some(fields) = merged.as_object_mut() {
+        fields.extend(patch);
+    }
+    Ok(serde_json::from_value(merged)?)
 }
 
 pub fn save_local_state(app: &AppHandle, local_state: &LocalState) -> Result<(), AppError> {
@@ -597,22 +626,21 @@ pub fn save_chat_history(
         chats_dir.join(format!("{}.json", sanitize_chat_id(&chat_history_item.id)?));
     write_json(&chat_file_path, &chat_history_item)?;
 
-    // Create index item (strip messages to keep index small)
-    let mut index_item = chat_history_item.clone();
-    index_item.messages = Vec::new();
-
-    if let Some(existing) = history.iter_mut().find(|item| item.id == index_item.id) {
-        existing.last_msg_date = index_item.last_msg_date;
-        existing.description = index_item.description;
-        existing.messages = Vec::new(); // ensure messages are empty in index
-    } else {
-        history.insert(0, index_item);
-    }
-
-    history.truncate(limit);
+    upsert_chat_index(&mut history, &chat_history_item, limit);
     remove_orphan_chat_files(&chats_dir, &history)?;
 
     write_json(&chats_dir.join("index.json"), &history)
+}
+
+/// Puts the chat on top of the index, without its messages to keep the index
+/// small. The chat just written is the most recent one, also when it existed
+/// before; otherwise the limit could drop the very chat in use.
+fn upsert_chat_index(history: &mut Vec<ChatHistoryItem>, chat: &ChatHistoryItem, limit: usize) {
+    let mut index_item = chat.clone();
+    index_item.messages = Vec::new();
+    history.retain(|item| item.id != index_item.id);
+    history.insert(0, index_item);
+    history.truncate(limit);
 }
 
 pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<ChatHistoryItem>, AppError> {
@@ -635,14 +663,17 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<ChatHistoryItem>, 
 }
 
 pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppError> {
+    let file_name = format!("{}.json", sanitize_chat_id(&id)?);
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = get_chat_history(app)?;
     history.retain(|item| item.id != id);
     write_json(&chats_dir.join("index.json"), &history)?;
 
-    let chat_file_path = chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?));
+    let chat_file_path = chats_dir.join(file_name);
     if chat_file_path.exists() {
-        let _ = fs::remove_file(chat_file_path);
+        if let Err(error) = fs::remove_file(&chat_file_path) {
+            log::warn!("Could not remove {}: {error}", chat_file_path.display());
+        }
     }
 
     Ok(())
@@ -660,7 +691,9 @@ pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() && path.file_name() != Some(std::ffi::OsStr::new("index.json")) {
-                let _ = fs::remove_file(path);
+                if let Err(error) = fs::remove_file(&path) {
+                    log::warn!("Could not remove {}: {error}", path.display());
+                }
             }
         }
     }
@@ -782,17 +815,46 @@ mod tests {
     }
 
     #[test]
-    fn write_atomic_replaces_the_file_and_leaves_no_temp_file() {
-        let dir = temp_dir("atomic");
-        let path = dir.join("state.json");
+    fn merge_local_state_replaces_only_the_patched_fields() {
+        let current = LocalState {
+            last_chat_id: Some(String::from("chat")),
+            last_mode: Some(String::from("editor")),
+        };
+        let patch = json!({ "lastMode": "write" });
 
-        write_atomic(&path, "old").unwrap();
-        write_atomic(&path, "new").unwrap();
+        let merged = merge_local_state(&current, patch.as_object().unwrap().clone()).unwrap();
 
-        assert_eq!(fs::read_to_string(&path).unwrap(), "new");
-        assert!(!dir.join("state.json.tmp").exists());
+        assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
+        assert_eq!(merged.last_mode.as_deref(), Some("write"));
 
-        fs::remove_dir_all(&dir).unwrap();
+        let cleared = merge_local_state(
+            &merged,
+            json!({ "lastChatId": null }).as_object().unwrap().clone(),
+        )
+        .unwrap();
+        assert_eq!(cleared.last_chat_id, None);
+    }
+
+    #[test]
+    fn merge_local_state_rejects_a_mistyped_field() {
+        let patch = json!({ "lastMode": 1 });
+        assert!(
+            merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
+        );
+    }
+
+    #[test]
+    fn upsert_chat_index_moves_an_updated_chat_to_the_top() {
+        let mut history = vec![chat_item("a"), chat_item("b"), chat_item("c")];
+        let mut updated = chat_item("c");
+        updated.description = String::from("updated");
+
+        upsert_chat_index(&mut history, &updated, 3);
+
+        let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
+        assert_eq!(ids, ["c", "a", "b"]);
+        assert_eq!(history[0].description, "updated");
+        assert!(history[0].messages.is_empty());
     }
 
     #[test]

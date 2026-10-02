@@ -29,7 +29,7 @@ async function closeEditor() {
   if (editorInputStore.value.trim()) {
     await editorInputStore.snapshotDraft()
   }
-  await ipcStore.callFunction('closeWindow', [])
+  await ipcStore.callFunctionOrNotify('closeWindow')
 }
 
 navPanelStore.resetNavParams({

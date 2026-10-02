@@ -43,13 +43,20 @@ pub fn open_main_editor(
     runtime::open_main_editor(&app, text, source_text)
 }
 
-#[tauri::command]
+/// Off the main thread, as are the other commands that write files: a write
+/// waits for the disk.
+#[tauri::command(async)]
 pub fn save_user_config(
     app: AppHandle,
     state: State<'_, AppState>,
-    user_config_json: String,
+    user_config: Value,
 ) -> Result<(), AppError> {
-    let user_config: Value = serde_json::from_str(&user_config_json)?;
+    if !user_config.is_object() {
+        return Err(AppError::Message(String::from(
+            "The user config must be an object",
+        )));
+    }
+    let _guard = state.lock_config_storage();
     storage::save_user_config(&app, &user_config)?;
     state.update_params(|params| {
         params.user_config = user_config;
@@ -59,7 +66,7 @@ pub fn save_user_config(
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_storage_info(app: AppHandle) -> Result<StorageInfo, AppError> {
     storage::get_storage_info(&app)
 }
@@ -73,19 +80,24 @@ pub fn mark_activation_metric(app: AppHandle, id: u64, mark: String) {
 pub fn submit_activation_metric_value(app: AppHandle, id: u64, value: String) {
     crate::services::activation_metrics::submit_value(&app, id, value);
 }
-#[tauri::command]
-pub fn save_local_state(
+/// Merges `patch` into the stored local state. Merging here rather than in
+/// a window keeps concurrent patches, also from both windows, from undoing
+/// each other.
+#[tauri::command(async)]
+pub fn patch_local_state(
     app: AppHandle,
     state: State<'_, AppState>,
-    local_state: LocalState,
-) -> Result<(), AppError> {
+    patch: serde_json::Map<String, Value>,
+) -> Result<LocalState, AppError> {
+    let _guard = state.lock_config_storage();
+    let local_state = storage::merge_local_state(&state.params().local_state, patch)?;
     storage::save_local_state(&app, &local_state)?;
     state.update_params(|params| {
-        params.local_state = local_state;
+        params.local_state = local_state.clone();
     });
     runtime::emit_params(&app, &state)?;
 
-    Ok(())
+    Ok(local_state)
 }
 
 #[tauri::command]

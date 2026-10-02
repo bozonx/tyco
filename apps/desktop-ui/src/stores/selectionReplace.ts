@@ -54,16 +54,23 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     }
   }
 
-  const invoke = async <T>(name: string, args: unknown[]): Promise<T> => {
-    const result = await ipcStore.callFunction(name, args)
-    if (!result.success) throw new Error(result.error || name)
-    return result.result as T
+  const finish = async (
+    runId: number,
+    text: string | null
+  ): Promise<SelectionFinishStatus> => {
+    const result = await ipcStore.callFunction('finishSelectionRun', [
+      runId,
+      text,
+    ])
+    if (!result.success || !result.result) {
+      throw new Error(result.error || 'finishSelectionRun')
+    }
+    return result.result
   }
 
   const model = createSelectionReplace({
     run,
-    finish: (runId, text) =>
-      invoke<SelectionFinishStatus>('finishSelectionRun', [runId, text]),
+    finish,
     showOverlay: (request) => {
       void ipcStore.callFunction('showStatusOverlay', [request])
     },

@@ -62,6 +62,20 @@ describe('SearchInInternet plugin', () => {
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
 
+  it('reports a browser that could not be opened', async () => {
+    const { mocks, toolbarItems } = setup({
+      value: 'text',
+      apiResult: { success: false, error: 'xdg-open failed' },
+    })
+
+    await toolbarItems[0].action()
+
+    expect(mocks.toast).toHaveBeenCalledWith(
+      'toast.openInBrowserFailed',
+      'error'
+    )
+  })
+
   it('reports missing text', async () => {
     const { mocks, toolbarItems } = setup({ value: '   ' })
 

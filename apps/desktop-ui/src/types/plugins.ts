@@ -3,12 +3,19 @@ import { type EditItem } from '../stores/editMenu'
 import { type MenuModals } from '../stores/menuModals'
 import { type DEFAULT_PARAMS } from '../stores/navPanel'
 import { type InputConfigItem, type IpcResult } from './index'
+import type {
+  DesktopFunctionArgs,
+  DesktopFunctionResult,
+  PluginDesktopFunctionName,
+} from '../lib/ipc/desktop-functions'
 import type { UserConfig } from '@tyco/shared'
 
 export type PluginIndex = () => {
   name: string
   label?: string
   labelKey?: string
+  description?: string
+  descriptionKey?: string
   defaultConfig?: PluginConfig
   init: (ctx: PluginContext) => void
 }
@@ -46,7 +53,11 @@ export interface PluginContext {
   updateNavParams(params: Partial<typeof DEFAULT_PARAMS>): void
   toEditor(text?: string): void
   toast(message: string, type: 'success' | 'error' | 'warn' | 'info'): void
-  callApiFunction(functionName: string, args: any[]): Promise<IpcResult>
+  /** Only the functions in `PLUGIN_DESKTOP_FUNCTIONS` are available */
+  callApiFunction<K extends PluginDesktopFunctionName>(
+    functionName: K,
+    args: DesktopFunctionArgs<K>
+  ): Promise<IpcResult<DesktopFunctionResult<K>>>
   getUserConfig(): UserConfig
   /** Returns the saved settings of the calling plugin, if any. */
   getMyConfig<T extends object>(): Partial<T> | undefined

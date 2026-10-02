@@ -60,7 +60,7 @@ pub fn read_text() -> Option<String> {
 /// Empties the clipboard; used when there is no snapshot to put back.
 pub fn clear() {
     let result = if is_x11_session() {
-        crate::commands::window::copy_to_clipboard("")
+        crate::services::clipboard::copy_to_clipboard("")
     } else {
         Command::new("wl-copy")
             .arg("--clear")

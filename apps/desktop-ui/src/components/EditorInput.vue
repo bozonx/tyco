@@ -77,7 +77,7 @@ const menu = ref<OpenMenu | null>(null)
 
 let view: EditorView | null = null
 
-// настройки редактора; у конфигов, созданных до появления ключей, берём дефолты
+// editor settings; fall back to defaults for configs created before keys were added
 const pasteMode = computed(
   () => ipcStore.params.userConfig?.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
 )
@@ -93,7 +93,7 @@ const closeMenu = (restoreFocus = false): void => {
   if (restoreFocus) view?.focus()
 }
 
-/** Обёртка над операциями с буфером обмена: без прав они бросают исключение */
+/** Wrapper around clipboard operations: throws exception if access is denied */
 const withClipboard = async (run: () => Promise<void>): Promise<void> => {
   try {
     await run()
@@ -140,8 +140,8 @@ const menuGroups = (): EditorMenuGroups => ({
 })
 
 /**
- * Варианты исправления слова. Спеллчекер появится этапом позже
- * (`dev_docs/plan-spellcheck.md`) — до тех пор этих пунктов в меню нет
+ * Word correction suggestions. Spellchecker will appear in a later stage
+ * (`dev_docs/plan-spellcheck.md`) — until then, these menu items are omitted.
  */
 const spellcheckItems = (_request: ContextMenuRequest): EditorMenuItem[] => []
 
@@ -224,9 +224,9 @@ onUnmounted(() => {
   view = null
 })
 
-// значение и выделение стора -> редактор одной транзакцией: иначе результат
-// AI-правки разъехался бы на два шага Ctrl+Z. Свои же правки отсекаются
-// сравнением с документом
+// Store value and selection -> editor in one transaction: otherwise AI
+// edits would split into two Ctrl+Z steps. Own edits are skipped
+// by comparing with the document.
 watch(
   () => [
     editorInputStore.value,
@@ -245,7 +245,7 @@ watch(
   }
 )
 
-// смена языка
+// Language change
 watch(
   () => t('input.textPlaceholder'),
   (text) => {
@@ -253,7 +253,7 @@ watch(
   }
 )
 
-// смена режима подсветки в настройках
+// Syntax highlighting mode change from settings
 watch(
   () => editorSyntax.value,
   (mode) => {
@@ -302,8 +302,8 @@ watch(
   background-color: transparent;
 }
 
-/* остальной вид редактора — в lib/editor/theme.ts, чтобы цвета брались из
-   переменных темы приложения */
+/* Remaining editor styling is in lib/editor/theme.ts, so colors are pulled
+   from app theme CSS variables */
 .main-input :deep(.cm-editor) {
   flex: 1;
   min-width: 0;

@@ -21,6 +21,7 @@ pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
 pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
+pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_CORRECT_ID: &str = "correct-selection";
 const TRAY_QUIT_ID: &str = "quit";
@@ -34,9 +35,7 @@ pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let label = app.state::<RuntimeWindows>().active_label();
 
     if let Some(window) = app.get_webview_window(label) {
-        window
-            .emit(PARAMS_CHANGED_EVENT, params)
-            .map_err(|error| AppError::Message(error.to_string()))?;
+        window.emit(PARAMS_CHANGED_EVENT, params)?;
     }
 
     Ok(())
@@ -45,12 +44,10 @@ pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
 fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Result<(), AppError> {
     let label = app.state::<RuntimeWindows>().active_label();
     if let Some(window) = app.get_webview_window(label) {
-        window
-            .emit(
-                CONTEXT_CAPTURED_EVENT,
-                serde_json::json!({ "selectedText": selected_text }),
-            )
-            .map_err(|error| AppError::Message(error.to_string()))?;
+        window.emit(
+            CONTEXT_CAPTURED_EVENT,
+            serde_json::json!({ "selectedText": selected_text }),
+        )?;
     }
     Ok(())
 }
@@ -277,10 +274,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.window_id = activation.window_id;
         params.selected_text = activation.selected_text;
         params.is_window_shown = true;
-        params.window_profile = match activation.mode.profile() {
-            WindowProfile::Panel => String::from("panel"),
-            WindowProfile::Sheet => String::from("sheet"),
-        };
+        params.window_profile = activation.mode.profile();
     });
     log::debug!(
         "Activated {:?} from {:?}",
@@ -345,29 +339,34 @@ pub fn open_main_editor(
     text: Option<String>,
     source_text: Option<String>,
 ) -> Result<(), AppError> {
-    on_main_thread(app, move |app| {
-        show_application_on_main_thread(app)?;
-        let window = app
-            .get_webview_window(MAIN_WINDOW_LABEL)
-            .ok_or_else(|| AppError::Message("Main window not found".into()))?;
-        window
-            .emit(
-                OPEN_MAIN_EDITOR_EVENT,
-                serde_json::json!({ "text": text, "sourceText": source_text }),
-            )
-            .map_err(|error| AppError::Message(error.to_string()))
-    })
+    show_main_with(
+        app,
+        OPEN_MAIN_EDITOR_EVENT,
+        serde_json::json!({ "text": text, "sourceText": source_text }),
+    )
 }
 
 pub fn open_main_chat(app: &AppHandle, text: Option<String>) -> Result<(), AppError> {
+    show_main_with(
+        app,
+        OPEN_MAIN_CHAT_EVENT,
+        serde_json::json!({ "text": text }),
+    )
+}
+
+/// Shows the main window and hands `payload` over to it.
+fn show_main_with(
+    app: &AppHandle,
+    event: &'static str,
+    payload: serde_json::Value,
+) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
         show_application_on_main_thread(app)?;
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
             .ok_or_else(|| AppError::Message("Main window not found".into()))?;
-        window
-            .emit("app://open-main-chat", serde_json::json!({ "text": text }))
-            .map_err(|error| AppError::Message(error.to_string()))
+        window.emit(event, payload)?;
+        Ok(())
     })
 }
 
@@ -422,7 +421,7 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         params.selected_text = None;
         params.mode = Some(StartMode::Editor.as_str().into());
         params.is_window_shown = true;
-        params.window_profile = String::from("sheet");
+        params.window_profile = WindowProfile::Sheet;
     });
     log::debug!("Showed main application from tray");
     emit_params(app, &state)
@@ -439,7 +438,8 @@ pub fn dismiss_quick_window(app: &AppHandle) -> Result<(), AppError> {
     })
 }
 
-pub fn hide_main_window(app: &AppHandle, _state: &AppState) -> Result<(), AppError> {
+/// Hides whichever Tyco window is active.
+pub fn hide_active_window(app: &AppHandle) -> Result<(), AppError> {
     on_main_thread(app, hide_on_main_thread)
 }
 
@@ -459,9 +459,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         params.is_window_shown = false;
     });
 
-    window
-        .hide()
-        .map_err(|error| AppError::Message(error.to_string()))?;
+    window.hide()?;
     emit_params(app, &state)
 }
 
@@ -599,7 +597,6 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
         .items(&[&quit_item])
         .build()?;
 
-    let app_handle = app.handle().clone();
     let tray_icon = app.default_window_icon().cloned();
 
     let mut builder = TrayIconBuilder::with_id("main-tray");
@@ -615,7 +612,9 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
             if let Some(state) = app.try_state::<AppState>() {
                 match event.id.as_ref() {
                     TRAY_SHOW_ID => {
-                        let _ = show_application(app);
+                        if let Err(error) = show_application(app) {
+                            log::error!("Could not show the application: {error}");
+                        }
                     }
                     TRAY_CORRECT_ID => {
                         if let Err(error) = super::selection_replace::trigger(
@@ -647,19 +646,16 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
                 if let Some(state) = app.try_state::<AppState>() {
                     let params = state.params();
                     let result = match tray_click_action(params.is_window_shown) {
-                        TrayClickAction::HideActiveWindow => hide_main_window(app, &state),
+                        TrayClickAction::HideActiveWindow => hide_active_window(app),
                         TrayClickAction::ShowApplication => show_application(app),
                     };
-
-                    let _ = result;
+                    if let Err(error) = result {
+                        log::error!("Tray click failed: {error}");
+                    }
                 }
             }
         })
-        .build(app)
-        .map_err(|error| AppError::Message(error.to_string()))?;
-
-    let _ = app_handle;
-
+        .build(app)?;
     Ok(())
 }
 
@@ -676,7 +672,9 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                         app.state::<RuntimeWindows>()
                             .set_active_label(QUICK_WINDOW_LABEL);
                     }
-                    let _ = hide_main_window(app, &state);
+                    if let Err(error) = hide_active_window(app) {
+                        log::error!("Could not hide the {window_label} window: {error}");
+                    }
                 }
             }
             WindowEvent::Focused(true) => {

@@ -8,28 +8,28 @@ import remarkNormalizeHeadings from 'remark-normalize-headings'
 
 import { MARKDOWN_STRINGIFY_OPTIONS } from '../lib/editor/markdown-options'
 
-// Функция для удаления точек и запятых в конце текста
+// Strips trailing periods and commas from text
 const removeEndingPunctuation = (text: string): string => {
   return text.replace(/[.,]$/, '')
 }
 
-// Типы для работы с AST
+// AST types for markdown manipulation
 type TextNode = { type: 'text'; value: string }
 
 type EmphasisNode = { type: 'emphasis'; children: TextNode[] }
 
 type ASTNode = TextNode | EmphasisNode
 
-// Функция для создания текстового узла
+// Helper to create a text node
 const createTextNode = (value: string): TextNode => ({ type: 'text', value })
 
-// Функция для создания узла курсива
+// Helper to create an emphasis node
 const createEmphasisNode = (value: string): EmphasisNode => ({
   type: 'emphasis',
   children: [createTextNode(value)],
 })
 
-// Функция для обработки текстового узла и преобразования текста в скобках в курсив
+// Processes a text node and turns bracketed text into italics
 const processTextNode = (text: string): ASTNode[] => {
   const parts = text.split(/(\([^)]+\))/g)
 
@@ -41,12 +41,14 @@ const processTextNode = (text: string): ASTNode[] => {
   })
 }
 
-// Функция для обработки массива дочерних узлов
-const processChildren = (children: any[]): ASTNode[] => {
-  const newChildren: ASTNode[] = []
+type AstChild = Node & { value?: string; children?: AstChild[] }
+
+// Processes child nodes of a parent element
+const processChildren = (children: AstChild[]): AstChild[] => {
+  const newChildren: AstChild[] = []
 
   children.forEach((child) => {
-    if (child.type === 'text') {
+    if (child.type === 'text' && typeof child.value === 'string') {
       newChildren.push(...processTextNode(child.value))
     } else {
       newChildren.push(child)
@@ -58,23 +60,26 @@ const processChildren = (children: any[]): ASTNode[] => {
 
 const removePunctuationRemarkPlugin = () => {
   return (tree: Node) => {
-    // Обрабатываем заголовки (heading)
-    visit(tree, 'heading', (node: any) => {
+    // Process heading nodes
+    visit(tree, 'heading', (node: AstChild) => {
       if (node.children && node.children.length > 0) {
         const lastChild = node.children[node.children.length - 1]
-        if (lastChild.type === 'text') {
+        if (lastChild.type === 'text' && typeof lastChild.value === 'string') {
           lastChild.value = removeEndingPunctuation(lastChild.value)
         }
       }
     })
 
-    // Обрабатываем элементы списка (listItem)
-    visit(tree, 'listItem', (node: any) => {
+    // Process list item nodes
+    visit(tree, 'listItem', (node: AstChild) => {
       if (node.children && node.children.length > 0) {
         const paragraph = node.children[0]
         if (paragraph.type === 'paragraph' && paragraph.children) {
           const lastChild = paragraph.children[paragraph.children.length - 1]
-          if (lastChild.type === 'text') {
+          if (
+            lastChild.type === 'text' &&
+            typeof lastChild.value === 'string'
+          ) {
             lastChild.value = removeEndingPunctuation(lastChild.value)
           }
         }
@@ -85,22 +90,22 @@ const removePunctuationRemarkPlugin = () => {
 
 const bracketsToItalicRemarkPlugin = () => {
   return (tree: Node) => {
-    // Обрабатываем параграфы
-    visit(tree, 'paragraph', (node: any) => {
+    // Process paragraphs
+    visit(tree, 'paragraph', (node: AstChild) => {
       if (node.children) {
         node.children = processChildren(node.children)
       }
     })
 
-    // Обрабатываем заголовки
-    visit(tree, 'heading', (node: any) => {
+    // Process headings
+    visit(tree, 'heading', (node: AstChild) => {
       if (node.children) {
         node.children = processChildren(node.children)
       }
     })
 
-    // Обрабатываем элементы списка
-    visit(tree, 'listItem', (node: any) => {
+    // Process list items
+    visit(tree, 'listItem', (node: AstChild) => {
       if (node.children && node.children.length > 0) {
         const paragraph = node.children[0]
         if (paragraph.type === 'paragraph' && paragraph.children) {

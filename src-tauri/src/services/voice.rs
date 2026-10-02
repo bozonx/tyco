@@ -114,9 +114,14 @@ fn create_capture_session<S: EventSink>(
             Err(AppError::Message(error))
         }
         Err(error) => {
+            // the thread is most likely stuck opening the device; joining it
+            // would hang this call and every later start behind the capture
+            // lock, so it is left to finish on its own
             stop_flag.store(true, Ordering::SeqCst);
-            let _ = thread.join();
-            Err(AppError::Message(error.to_string()))
+            drop(thread);
+            Err(AppError::Message(format!(
+                "The microphone did not start in time: {error}"
+            )))
         }
     }
 }

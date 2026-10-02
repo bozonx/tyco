@@ -67,7 +67,8 @@ impl StartMode {
 
 /// Where the window is placed. Its size never depends on it: every activation
 /// uses `WINDOW_SIZE`, so the window is never resized while it is shown.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum WindowProfile {
     /// Anchored to the bottom of the screen.
     Panel,

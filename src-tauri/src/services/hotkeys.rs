@@ -156,10 +156,20 @@ pub struct ApplyHotkeyRequest {
     pub shortcut: String,
 }
 
+/// Mirrors `HotkeyApplyStatus` in `@tyco/shared`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum HotkeyApplyStatus {
+    Ready,
+    Conflict,
+    ConfirmationRequired,
+    External,
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyHotkeyResult {
-    pub status: &'static str,
+    pub status: HotkeyApplyStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub external_command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -240,17 +250,17 @@ pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         .map(|binding| {
             let result = match kind {
                 ProviderKind::Portal => ApplyHotkeyResult {
-                    status: "confirmation-required",
+                    status: HotkeyApplyStatus::ConfirmationRequired,
                     external_command: None,
                     message: None,
                 },
                 ProviderKind::GlobalShortcut => ApplyHotkeyResult {
-                    status: "ready",
+                    status: HotkeyApplyStatus::Ready,
                     external_command: None,
                     message: None,
                 },
                 ProviderKind::External => ApplyHotkeyResult {
-                    status: "external",
+                    status: HotkeyApplyStatus::External,
                     external_command: Some(external_command(&binding.target, &binding.shortcut)),
                     message: None,
                 },
@@ -279,14 +289,14 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
     match app.state::<ProviderState>().get() {
         ProviderKind::GlobalShortcut => apply_global_shortcut(app, target, shortcut),
         ProviderKind::Portal => Ok(ApplyHotkeyResult {
-            status: "confirmation-required",
+            status: HotkeyApplyStatus::ConfirmationRequired,
             external_command: None,
             message: Some(String::from(
                 "The desktop portal applies changed shortcuts after Tyco restarts",
             )),
         }),
         ProviderKind::External => Ok(ApplyHotkeyResult {
-            status: "external",
+            status: HotkeyApplyStatus::External,
             external_command: Some(external_command(&target, &request.shortcut)),
             message: None,
         }),
@@ -308,7 +318,7 @@ fn apply_global_shortcut(
 
     if previous == Some(shortcut) {
         return Ok(ApplyHotkeyResult {
-            status: "ready",
+            status: HotkeyApplyStatus::Ready,
             external_command: None,
             message: None,
         });
@@ -325,15 +335,28 @@ fn apply_global_shortcut(
     }
     if let Err(error) = app.global_shortcut().register(shortcut) {
         if let Some(previous) = previous {
-            let _ = app.global_shortcut().register(previous);
-            registry
-                .targets
-                .write()
-                .expect("hotkey bindings lock poisoned")
-                .insert(previous.id(), target.clone());
+            match app.global_shortcut().register(previous) {
+                Ok(()) => {
+                    registry
+                        .targets
+                        .write()
+                        .expect("hotkey bindings lock poisoned")
+                        .insert(previous.id(), target.clone());
+                }
+                Err(restore_error) => {
+                    // the target has no shortcut at all now; the registry
+                    // must not claim the old one is still bound
+                    log::error!("Could not restore the previous shortcut: {restore_error}");
+                    registry
+                        .shortcuts
+                        .write()
+                        .expect("hotkey shortcuts lock poisoned")
+                        .remove(&target);
+                }
+            }
         }
         return Ok(ApplyHotkeyResult {
-            status: "conflict",
+            status: HotkeyApplyStatus::Conflict,
             external_command: None,
             message: Some(error.to_string()),
         });
@@ -350,7 +373,7 @@ fn apply_global_shortcut(
         .expect("hotkey shortcuts lock poisoned")
         .insert(target, shortcut);
     Ok(ApplyHotkeyResult {
-        status: "ready",
+        status: HotkeyApplyStatus::Ready,
         external_command: None,
         message: None,
     })

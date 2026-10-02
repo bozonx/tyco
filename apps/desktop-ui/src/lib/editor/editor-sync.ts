@@ -14,11 +14,11 @@ export interface DocChange {
 }
 
 /**
- * Минимальная правка, превращающая `oldText` в `newText`: отрезаем общий
- * префикс и общий суффикс. Нужна, чтобы программная замена текста не
- * переписывала документ целиком — иначе рушится история undo и прыгает каретка
+ * Minimal change transforming `oldText` into `newText` by stripping common
+ * prefix and suffix. Prevents programmatic text replacements from rewriting the
+ * entire document, which would break undo history and cursor position.
  *
- * @returns Null, если тексты совпадают
+ * @returns Null if texts match
  */
 export const computeMinimalChange = (
   oldText: string,
@@ -49,12 +49,12 @@ export const computeMinimalChange = (
 }
 
 export interface StoreEdit {
-  /** Новое содержимое документа */
+  /** New document content */
   value: string
-  /** Выделение после правки; не задано — оставляем как есть */
+  /** Selection after edit; left unchanged if undefined */
   selectionStart?: number
   selectionEnd?: number
-  /** Источник правки, по умолчанию обычная замена значения */
+  /** Edit source, defaults to plain value replacement */
   source?: EditSource
 }
 
@@ -62,13 +62,13 @@ const clamp = (value: number, length: number): number =>
   Math.max(0, Math.min(value, length))
 
 /**
- * Единственная точка, через которую правки стора попадают в редактор.
+ * The single entry point through which store edits reach the editor.
  *
- * Текст и выделение применяются одной транзакцией — иначе AI-преобразование
- * разъехалось бы на два шага Ctrl+Z. Правки от AI и распознавания речи
- * изолируются в истории, чтобы не склеиваться с ручным вводом
+ * Text and selection are applied in one transaction — otherwise an AI
+ * transformation would split into two Ctrl+Z steps. Edits from AI and speech
+ * recognition are isolated in history to avoid merging with manual typing.
  *
- * @returns True, если транзакция была отправлена
+ * @returns True if transaction was dispatched
  */
 export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
   const source = edit.source ?? 'plain'
@@ -84,8 +84,8 @@ export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
     wantsSelection &&
     (current.from !== Math.min(from, to) || current.to !== Math.max(from, to))
 
-  // при правке текста выделение всё равно пересчитывается, поэтому ставим его
-  // в ту же транзакцию, даже если по старым смещениям оно совпадает
+  // When text changes, selection is recalculated anyway, so include it
+  // in the same transaction even if old offsets match.
   const needSelection = wantsSelection && (selectionChanged || change !== null)
 
   if (!change && !needSelection) return false
@@ -110,9 +110,9 @@ export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
 }
 
 /**
- * Применить значение стора к редактору транзакцией
+ * Applies store value to editor via transaction.
  *
- * @returns True, если документ действительно изменился
+ * @returns True if document actually changed
  */
 export const applyStoreValue = (
   view: EditorView,
@@ -121,10 +121,10 @@ export const applyStoreValue = (
 ): boolean => applyStoreEdit(view, { value, source })
 
 /**
- * Применить выделение стора к редактору. Смещения подрезаются по длине
- * документа — стор может отстать от редактора на одну правку
+ * Applies store selection to editor. Offsets are clamped to document length in
+ * case the store is one edit behind the editor.
  *
- * @returns True, если выделение действительно изменилось
+ * @returns True if selection actually changed
  */
 export const applyStoreSelection = (
   view: EditorView,
@@ -137,7 +137,7 @@ export const applyStoreSelection = (
     selectionEnd: end,
   })
 
-/** Выделить весь документ */
+/** Select entire document */
 export const selectAll = (view: EditorView): void => {
   view.dispatch({
     selection: EditorSelection.single(0, view.state.doc.length),
@@ -145,7 +145,7 @@ export const selectAll = (view: EditorView): void => {
   })
 }
 
-/** Сменить текст плейсхолдера (например, при смене языка) */
+/** Change placeholder text (e.g. on language change) */
 export const setPlaceholder = (view: EditorView, text: string): void => {
   view.dispatch({
     effects: placeholderCompartment.reconfigure(placeholder(text)),
@@ -153,7 +153,7 @@ export const setPlaceholder = (view: EditorView, text: string): void => {
   })
 }
 
-/** Заменить диапазон в документе — точка входа для спеллчекера и вставок */
+/** Replace a range in document — entry point for spellcheck and insertions */
 export const replaceRange = (
   view: EditorView,
   from: number,

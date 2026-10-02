@@ -4,9 +4,9 @@ import { EditorView } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
 
 /**
- * Тема редактора. Все цвета — CSS-переменные приложения, поэтому светлая и
- * тёмная темы переключаются сменой `data-theme` на `<html>`, без пересоздания
- * редактора
+ * Editor theme. All colors are application CSS variables, so light and dark
+ * themes toggle by changing `data-theme` on `<html>`, without recreating the
+ * editor.
  */
 export const editorTheme: Extension = EditorView.theme({
   '&': {
@@ -19,8 +19,8 @@ export const editorTheme: Extension = EditorView.theme({
   },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': {
-    // «писательский» вид: пропорциональный шрифт и крупный интерлиньяж,
-    // а не моноширинный вид редактора кода
+    // writer look: proportional font and generous line-height
+    // rather than monospace code editor appearance
     fontFamily: 'var(--editor-font-family)',
     fontSize: 'var(--editor-font-size)',
     lineHeight: 'var(--editor-line-height)',
@@ -42,8 +42,8 @@ export const editorTheme: Extension = EditorView.theme({
 })
 
 /**
- * Подсветка Markdown и вложенных блоков кода. Цвета — те же CSS-переменные, так
- * что тема не дублируется для светлой и тёмной
+ * Markdown and embedded code highlighting. Colors come from CSS variables, so
+ * themes are not duplicated for light and dark modes.
  */
 export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.heading, color: 'var(--app-syntax-heading)', fontWeight: '600' },
@@ -81,7 +81,7 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.invalid, color: 'var(--color-error)' },
 ])
 
-/** Тема + подсветка одним расширением */
+/** Theme + syntax highlighting combined in one extension */
 export const editorAppearance: Extension = [
   editorTheme,
   syntaxHighlighting(editorHighlightStyle),

@@ -152,7 +152,8 @@ watch(
     const mode = Object.entries(MODE_ROUTE_MAP).find(
       ([_, p]) => p === path
     )?.[0] as START_MODES | undefined
-    if (mode) {
+    // every write goes to disk, and most navigation stays in one mode
+    if (mode && mode !== ipcStore.params.localState.lastMode) {
       void ipcStore.patchLocalState({ lastMode: mode })
     }
   }
@@ -196,7 +197,12 @@ watch(
 )
 
 onMounted(() => {
-  void bootstrap.start()
+  // a failure has been reported already; the window keeps the defaults, and
+  // the store refuses to save them over the user's files
+  bootstrap.start().catch((error: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('App bootstrap failed', error)
+  })
   if (isQuickWindow) void activationMetrics.start()
   // the quick window always exists, shown or not, so it takes the selection
   // actions that run without a window

@@ -11,6 +11,7 @@ pub struct VoiceCaptureSession {
 pub struct AppState {
     params: Mutex<InitParams>,
     history_storage: Mutex<()>,
+    config_storage: Mutex<()>,
     quitting: AtomicBool,
     voice_capture_session: Mutex<Option<VoiceCaptureSession>>,
     voice_capture_operation: tokio::sync::Mutex<()>,
@@ -21,6 +22,7 @@ impl AppState {
         Self {
             params: Mutex::new(params),
             history_storage: Mutex::new(()),
+            config_storage: Mutex::new(()),
             quitting: AtomicBool::new(false),
             voice_capture_session: Mutex::new(None),
             voice_capture_operation: tokio::sync::Mutex::new(()),
@@ -32,6 +34,14 @@ impl AppState {
         self.history_storage
             .lock()
             .expect("history storage lock poisoned")
+    }
+
+    /// Serializes writes of the user config and the local state, so that the
+    /// file and `params` always end up with the same, latest value.
+    pub fn lock_config_storage(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.config_storage
+            .lock()
+            .expect("config storage lock poisoned")
     }
 
     pub fn params(&self) -> InitParams {

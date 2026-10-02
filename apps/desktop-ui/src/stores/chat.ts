@@ -62,7 +62,9 @@ export const useChatStore = defineStore('chat', () => {
     ...model,
     async startChat(params: Parameters<typeof model.startChat>[0]) {
       if (getCurrentWindow().label === 'quick') {
-        await ipcStore.callFunction('openMainChat', [params.attachments?.[0]])
+        await ipcStore.callFunctionOrNotify('openMainChat', [
+          params.attachments?.[0],
+        ])
         return
       }
       await model.startChat(params)

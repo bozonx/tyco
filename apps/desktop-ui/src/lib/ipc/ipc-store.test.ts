@@ -1,4 +1,8 @@
-import { DEFAULT_INIT_PARAMS, DESKTOP_COMMANDS } from '@tyco/shared'
+import {
+  DEFAULT_INIT_PARAMS,
+  DESKTOP_COMMANDS,
+  START_MODES,
+} from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createIpcStoreModel, type IpcStoreDeps } from './ipc-store'
@@ -12,6 +16,7 @@ function createDeps(overrides: Partial<IpcStoreDeps> = {}): IpcStoreDeps {
     desktopClient: {
       invoke: invokeMock,
       getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+      isAvailable: () => true,
     },
     notifyError: vi.fn(),
     logError: vi.fn(),
@@ -131,7 +136,10 @@ describe('ipc-store', () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)
 
-    const result = await store.callFunction('unknownMethod')
+    // untyped callers, e.g. plugins, may pass any name
+    const result = await store.callFunction(
+      'unknownMethod' as 'getEditorHistory'
+    )
 
     expect(result).toEqual({
       success: false,
@@ -139,14 +147,15 @@ describe('ipc-store', () => {
     })
   })
 
-  it('falls back to local init params when desktop runtime returns failure', async () => {
+  it('falls back to local init params without the desktop runtime', async () => {
     const deps = createDeps({
       desktopClient: {
-        invoke: vi.fn(async () => ({ success: false, error: 'failed' })),
+        invoke: vi.fn(),
         getInitParams: vi.fn(() => ({
           ...DEFAULT_INIT_PARAMS,
           windowId: 'fallback-window',
         })),
+        isAvailable: () => false,
       },
     })
     const store = createIpcStoreModel(deps)
@@ -155,15 +164,36 @@ describe('ipc-store', () => {
 
     expect(result.windowId).toBe('fallback-window')
     expect(store.params.value.windowId).toBe('fallback-window')
+    expect(deps.desktopClient.invoke).not.toHaveBeenCalled()
   })
 
-  it('reports thrown invocation errors via notifier and logger', async () => {
+  it('fails loudly when the desktop runtime cannot give the params', async () => {
+    const deps = createDeps({
+      desktopClient: {
+        invoke: vi.fn(async () => ({ success: false, error: 'failed' })),
+        getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        isAvailable: () => true,
+      },
+    })
+    const store = createIpcStoreModel(deps)
+
+    await expect(store.loadInitialParams()).rejects.toThrow('failed')
+    expect(deps.notifyError).toHaveBeenCalled()
+    // the defaults must not overwrite the config of the user
+    await expect(
+      store.saveUserConfig(DEFAULT_INIT_PARAMS.userConfig)
+    ).resolves.toMatchObject({ success: false })
+    expect(deps.desktopClient.invoke).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs thrown invocation errors and returns a failure', async () => {
     const deps = createDeps({
       desktopClient: {
         invoke: vi.fn(async () => {
           throw new Error('boom')
         }),
         getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        isAvailable: () => true,
       },
     })
     const store = createIpcStoreModel(deps)
@@ -171,49 +201,97 @@ describe('ipc-store', () => {
     const result = await store.callFunction('getEditorHistory')
 
     expect(result).toEqual({ success: false, error: 'Error: boom' })
-    expect(deps.notifyError).toHaveBeenCalledWith(
-      'Error: boom',
-      'Api call error'
-    )
     expect(deps.logError).toHaveBeenCalled()
+    expect(deps.notifyError).not.toHaveBeenCalled()
   })
 
-  it('updates stored user config only after a successful save', async () => {
+  it('notifies about a failure when asked to', async () => {
     const deps = createDeps({
       desktopClient: {
-        invoke: vi.fn(async () => ({ success: true })),
+        invoke: vi.fn(async () => ({ success: false, error: 'no xdotool' })),
         getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        isAvailable: () => true,
       },
+      errorTitle: () => 'Action failed',
     })
     const store = createIpcStoreModel(deps)
-    const nextConfig = {
-      ...DEFAULT_INIT_PARAMS.userConfig,
-      xdotoolBin: '/custom/xdotool',
-    }
 
-    const result = await store.saveUserConfig(nextConfig)
+    const result = await store.callFunctionOrNotify('typeIntoWindowAndClose', [
+      'text',
+    ])
 
-    expect(result).toEqual({ success: true })
-    expect(store.params.value.userConfig).toEqual(nextConfig)
+    expect(result.success).toBe(false)
+    expect(deps.notifyError).toHaveBeenCalledWith('no xdotool', 'Action failed')
   })
 
-  it('does not replace stored user config when save fails', async () => {
-    const deps = createDeps({
-      desktopClient: {
-        invoke: vi.fn(async () => ({ success: false, error: 'save failed' })),
-        getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
-      },
-    })
-    const store = createIpcStoreModel(deps)
-    const initialConfig = store.params.value.userConfig
-    const nextConfig = {
-      ...DEFAULT_INIT_PARAMS.userConfig,
-      xdotoolBin: '/custom/xdotool',
+  describe('after the params are loaded', () => {
+    const loadedStore = async (
+      invoke: (command: string) => Promise<unknown>
+    ) => {
+      const deps = createDeps({
+        desktopClient: {
+          invoke: vi.fn(async (command: string) =>
+            command === DESKTOP_COMMANDS.GET_INIT_PARAMS
+              ? { success: true, result: structuredClone(DEFAULT_INIT_PARAMS) }
+              : invoke(command)
+          ) as IpcStoreDeps['desktopClient']['invoke'],
+          getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+          isAvailable: () => true,
+        },
+      })
+      const store = createIpcStoreModel(deps)
+      await store.loadInitialParams()
+      return { deps, store }
     }
 
-    const result = await store.saveUserConfig(nextConfig)
+    it('updates stored user config only after a successful save', async () => {
+      const { deps, store } = await loadedStore(async () => ({ success: true }))
+      const nextConfig = {
+        ...DEFAULT_INIT_PARAMS.userConfig,
+        xdotoolBin: '/custom/xdotool',
+      }
 
-    expect(result).toEqual({ success: false, error: 'save failed' })
-    expect(store.params.value.userConfig).toEqual(initialConfig)
+      const result = await store.saveUserConfig(nextConfig)
+
+      expect(result).toEqual({ success: true })
+      expect(store.params.value.userConfig).toEqual(nextConfig)
+      expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
+        DESKTOP_COMMANDS.SAVE_USER_CONFIG,
+        { userConfig: nextConfig }
+      )
+    })
+
+    it('does not replace stored user config when save fails', async () => {
+      const { store } = await loadedStore(async () => ({
+        success: false,
+        error: 'save failed',
+      }))
+      const initialConfig = store.params.value.userConfig
+      const nextConfig = {
+        ...DEFAULT_INIT_PARAMS.userConfig,
+        xdotoolBin: '/custom/xdotool',
+      }
+
+      const result = await store.saveUserConfig(nextConfig)
+
+      expect(result).toEqual({ success: false, error: 'save failed' })
+      expect(store.params.value.userConfig).toEqual(initialConfig)
+    })
+
+    it('takes the local state merged by the backend', async () => {
+      const merged = { lastChatId: 'chat-1', lastMode: START_MODES.WRITE }
+      const { deps, store } = await loadedStore(async () => ({
+        success: true,
+        result: merged,
+      }))
+
+      await store.patchLocalState({ lastMode: START_MODES.WRITE })
+
+      expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
+        DESKTOP_COMMANDS.PATCH_LOCAL_STATE,
+        { patch: { lastMode: START_MODES.WRITE } }
+      )
+      expect(store.params.value.localState).toEqual(merged)
+    })
   })
 })

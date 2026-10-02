@@ -9,32 +9,29 @@ import { EDIT_USER_EVENT } from './edit-source'
 import { htmlToMarkdown } from './html-to-markdown'
 
 /**
- * Сколько миллисекунд после Ctrl+Shift+V считаем следующую вставку «только
- * текст». Прочитать буфер обмена прямо в обработчике клавиши нельзя, поэтому
- * помечаем намерение и ждём нативное событие `paste`
+ * How many milliseconds after Ctrl+Shift+V the next paste is treated as plain
+ * text. The clipboard cannot be read directly in the key handler, so we record
+ * the intent and wait for the native `paste` event.
  */
 const PLAIN_PASTE_WINDOW_MS = 500
 
 export interface PasteAskRequest extends MenuAnchor {
-  /** Что вставится в режиме «как текст» */
+  /** What will be inserted in plain text mode */
   plain: string
-  /** Что вставится в режиме «с форматированием» */
+  /** What will be inserted in formatted markdown mode */
   markdown: string
-  /** Вставить выбранный вариант */
+  /** Insert the selected option */
   apply: (text: string) => void
 }
 
 export interface PasteOptions {
-  /** Режим вставки из пользовательских настроек */
+  /** Paste mode from user settings */
   getMode: () => PasteMode
-  /**
-   * Спросить у пользователя, как вставлять. Не задан — ведём себя как
-   * `markdown`
-   */
+  /** Prompt user how to paste. If omitted, behaves as `markdown`. */
   onAsk?: (request: PasteAskRequest) => void
 }
 
-/** Вставить текст в текущее выделение как обычную вставку */
+/** Insert text into current selection as a regular paste */
 export const insertPastedText = (view: EditorView, text: string): void => {
   view.dispatch({
     ...view.state.replaceSelection(text),
@@ -44,8 +41,8 @@ export const insertPastedText = (view: EditorView, text: string): void => {
 }
 
 /**
- * Обработка вставки: если в буфере есть `text/html`, превращаем его в Markdown,
- * иначе вставляем `text/plain` как есть. Ctrl+Shift+V всегда вставляет текстом
+ * Paste handling: if the clipboard has `text/html`, convert to Markdown;
+ * otherwise paste `text/plain` as is. Ctrl+Shift+V always pastes plain text.
  */
 export const pasteExtension = (options: PasteOptions): Extension => {
   let plainPasteRequested = false
@@ -83,8 +80,8 @@ export const pasteExtension = (options: PasteOptions): Extension => {
         run: () => {
           requestPlainPaste()
 
-          // не перехватываем: нативная вставка всё равно должна произойти,
-          // обработчик ниже увидит отметку и вставит plain text
+          // do not intercept: native paste should still occur,
+          // the handler below will notice the flag and paste plain text
           return false
         },
       },
@@ -99,8 +96,8 @@ export const pasteExtension = (options: PasteOptions): Extension => {
         const html = data.getData('text/html')
         const forcePlain = consumePlainRequest()
 
-        // без HTML конвертировать нечего — пусть CodeMirror отработает
-        // вставку сам
+        // without HTML there is nothing to convert — let CodeMirror
+        // handle the paste itself
         if (!html.trim()) return false
 
         const mode = options.getMode()

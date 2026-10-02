@@ -10,7 +10,6 @@ use tauri::{App, AppHandle, Emitter, Manager};
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationSource, StartMode};
 use crate::services::runtime;
-use crate::state::AppState;
 
 pub const START_EVENT: &str = "app://activation-metrics-start";
 pub const COLLECT_EVENT: &str = "app://activation-metrics-collect";
@@ -292,7 +291,7 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
             }
             _ => String::from("error: invalid result request"),
         },
-        ["hide"] => match runtime::hide_main_window(app, &app.state::<AppState>()) {
+        ["hide"] => match runtime::hide_active_window(app) {
             Ok(()) => String::from("ok"),
             Err(error) => format!("error: {error}"),
         },

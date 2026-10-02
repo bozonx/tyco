@@ -43,9 +43,12 @@ export default function pluginIndex() {
           return
         }
 
-        await ctx.callApiFunction('openInBrowserAndClose', [
+        const result = await ctx.callApiFunction('openInBrowserAndClose', [
           baseUrl.trim() + encodeURIComponent(text),
         ])
+        if (!result.success) {
+          ctx.toast('toast.openInBrowserFailed', 'error')
+        }
       }
 
       ctx.registerActionsItems([

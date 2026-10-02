@@ -158,12 +158,16 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         return Ok(());
     }
     if runs.capturing.swap(true, Ordering::SeqCst) {
+        log::debug!("Ignoring the {action} trigger: a selection is being captured");
         return Ok(());
     }
 
     let app = app.clone();
     let action = action.to_owned();
     thread::spawn(move || {
+        // released however the capture ends, a panic included, so that a
+        // failed capture never disables the selection hotkeys for good
+        let capturing = CapturingGuard(app.clone());
         match wait {
             TriggerWait::Now => {}
             TriggerWait::Delay(delay) => thread::sleep(delay),
@@ -194,7 +198,7 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
                 }
             }
         };
-        runs.capturing.store(false, Ordering::SeqCst);
+        drop(capturing);
         if let Err(error) = emit_to_webview(&app, SELECTION_RUN_EVENT, event) {
             log::error!("Could not hand the selection over to the webview: {error}");
             if let Some(run) = runs.take_if(run_id) {
@@ -203,6 +207,17 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         }
     });
     Ok(())
+}
+
+struct CapturingGuard(AppHandle);
+
+impl Drop for CapturingGuard {
+    fn drop(&mut self) {
+        self.0
+            .state::<SelectionRuns>()
+            .capturing
+            .store(false, Ordering::SeqCst);
+    }
 }
 
 /// Takes the result of run `run_id`: `None` when there is nothing to insert.
@@ -396,7 +411,7 @@ fn copy_selection(
             .map(|time| time.as_nanos())
             .unwrap_or_default()
     );
-    crate::commands::window::copy_to_clipboard(&probe)?;
+    crate::services::clipboard::copy_to_clipboard(&probe)?;
     if let Some(keys) = before {
         injector.press_in_focused(user_config, keys, target.terminal)?;
     }
@@ -452,7 +467,7 @@ fn restore_clipboard(_run: Run) {}
 fn paste_result(user_config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
     use super::text_injector::{FocusedKeys, SystemTextInjector};
 
-    crate::commands::window::copy_to_clipboard(&text)?;
+    crate::services::clipboard::copy_to_clipboard(&text)?;
     if active_target().map(|target| target.id) != Some(run.target.id.clone()) {
         return Ok(FinishStatus::Clipboard);
     }

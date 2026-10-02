@@ -8,7 +8,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
@@ -170,7 +170,7 @@ impl SecretStore {
         let raw = serde_json::to_string_pretty(&SecretsFile {
             secrets: entries.clone(),
         })?;
-        write_private(path, &raw)
+        crate::services::atomic_file::write_private(path, &raw)
     }
 }
 
@@ -238,29 +238,6 @@ fn dedup(origins: Vec<String>) -> Vec<String> {
 
 /// Writes through a temporary file readable by the owner only, then renames
 /// it over the target.
-fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
-    let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
-    tmp_name.push(".tmp");
-    let tmp_path = path.with_file_name(tmp_name);
-
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create(true).truncate(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-
-    {
-        use std::io::Write;
-        let mut file = options.open(&tmp_path)?;
-        file.write_all(raw.as_bytes())?;
-        file.sync_all()?;
-    }
-    fs::rename(&tmp_path, path)?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

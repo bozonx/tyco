@@ -42,7 +42,7 @@ export const useRouteParams = defineStore('routeParams', () => {
     menuModalsStore.closeAll()
 
     if (getCurrentWindow().label === 'quick') {
-      void ipcStore.callFunction('openMainEditor', [text, sourceText])
+      void ipcStore.callFunctionOrNotify('openMainEditor', [text, sourceText])
       return
     }
 

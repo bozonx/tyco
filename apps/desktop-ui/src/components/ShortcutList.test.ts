@@ -61,6 +61,7 @@ vi.mock('../stores/menuModals', () => ({
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: mocks.closeWindow,
+    callFunctionOrNotify: mocks.closeWindow,
     get params() {
       return {
         mode: mocks.mode,
@@ -248,7 +249,7 @@ describe('ShortcutList', () => {
 
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
     wrapper.unmount()
   })
 
@@ -284,7 +285,7 @@ describe('ShortcutList', () => {
     expect(mocks.cancelPending).toHaveBeenCalled()
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
     wrapper.unmount()
   })
 
@@ -302,7 +303,7 @@ describe('ShortcutList', () => {
     expect(mocks.back).not.toHaveBeenCalled()
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow', [])
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
     wrapper.unmount()
   })
 

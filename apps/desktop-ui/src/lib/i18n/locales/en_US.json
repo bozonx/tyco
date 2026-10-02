@@ -516,7 +516,10 @@
     "modelNotFound": "Model not found",
     "noNotesPath": "Notes folder is not configured in the Quick note plugin settings",
     "noteSaved": "Note saved",
-    "noteSaveFailed": "Failed to save the note"
+    "noteSaveFailed": "Failed to save the note",
+    "desktopCommandFailed": "Action failed",
+    "insertFailed": "Could not insert the text",
+    "openInBrowserFailed": "Could not open the browser"
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",

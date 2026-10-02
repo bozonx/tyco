@@ -124,7 +124,7 @@ const emit = defineEmits<{
   (e: 'update:toTranslateLanguages', value: string[]): void
 }>()
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const llmStore = useLlmStore()
 const keyDraft = ref('')
 const translation = computed(() => props.userConfig.translation)
@@ -158,8 +158,6 @@ const glossaryText = computed(() =>
 )
 
 const translateLanguageOptions = computed(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  locale.value
   return buildLanguageOptions(
     (props.userConfig.toTranslateLanguages || []).filter(Boolean),
     false,

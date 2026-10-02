@@ -86,7 +86,7 @@ describe('Editor actions shortcut', () => {
     editor.setValue('Unsaved text', 'plain')
     const snapshotSpy = vi.spyOn(editor, 'snapshotDraft')
     const ipc = useIpcStore()
-    const callFunctionSpy = vi.spyOn(ipc, 'callFunction')
+    const callFunctionSpy = vi.spyOn(ipc, 'callFunctionOrNotify')
 
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
@@ -98,7 +98,7 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
 
     expect(snapshotSpy).toHaveBeenCalled()
-    expect(callFunctionSpy).toHaveBeenCalledWith('closeWindow', [])
+    expect(callFunctionSpy).toHaveBeenCalledWith('closeWindow')
     wrapper.unmount()
   })
 })

@@ -1,6 +1,7 @@
 import {
   DEFAULT_INIT_PARAMS,
   DESKTOP_COMMANDS,
+  type DesktopCommandName,
   type InitParams,
   type IpcResult,
   type UserConfig,
@@ -8,39 +9,54 @@ import {
 } from '@tyco/shared'
 import { ref } from 'vue'
 
+import type {
+  DesktopCallArgs,
+  DesktopFunctionArgs,
+  DesktopFunctionName,
+  DesktopFunctionResult,
+  DesktopFunctions,
+} from './desktop-functions'
+
 export interface DesktopInvoker {
   invoke: <T>(
     command: string,
     args?: Record<string, unknown>
   ) => Promise<IpcResult<T>>
   getInitParams: () => InitParams
+  /** Whether the Tauri runtime is there, i.e. not a plain browser */
+  isAvailable: () => boolean
 }
 
 export interface IpcStoreDeps {
   desktopClient: DesktopInvoker
   notifyError: (message: string, title: string) => void
   logError: (message: string, error: unknown) => void
+  /** Title of the notification about a failed desktop function */
+  errorTitle?: () => string
   /** Resolves once the user has released the keys held in this window. */
   waitForKeysReleased?: () => Promise<void>
 }
 
-type CommandEntry = {
-  command?: string
-  invoke?: (args: unknown[]) => Promise<IpcResult>
-  buildArgs?: (args: unknown[]) => Record<string, unknown>
+type CommandEntry<Args extends unknown[]> = {
+  command: DesktopCommandName
+  buildArgs?: (args: Args) => Record<string, unknown>
   /** The command presses keys in another window, see `held-keys`. */
   waitForKeysReleased?: boolean
 }
 
-export function createCommandMap(): Record<string, CommandEntry> {
+type CommandMap = {
+  [K in DesktopFunctionName]: CommandEntry<DesktopFunctions[K]['args']>
+}
+
+export function createCommandMap(): CommandMap {
   return {
     saveUserConfig: {
       command: DESKTOP_COMMANDS.SAVE_USER_CONFIG,
-      buildArgs: ([userConfigJson]) => ({ userConfigJson }),
+      buildArgs: ([userConfig]) => ({ userConfig }),
     },
-    saveLocalState: {
-      command: DESKTOP_COMMANDS.SAVE_LOCAL_STATE,
-      buildArgs: ([localState]) => ({ localState }),
+    patchLocalState: {
+      command: DESKTOP_COMMANDS.PATCH_LOCAL_STATE,
+      buildArgs: ([patch]) => ({ patch }),
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
     closeWindow: { command: DESKTOP_COMMANDS.CLOSE_WINDOW },
@@ -144,14 +160,24 @@ export function createCommandMap(): Record<string, CommandEntry> {
 
 export function createIpcStoreModel(deps: IpcStoreDeps) {
   const params = ref<InitParams>(structuredClone(DEFAULT_INIT_PARAMS))
+  // writes are refused until the real params arrive: saving the defaults
+  // would overwrite what the user has
+  let paramsLoaded = !deps.desktopClient.isAvailable()
   const commandMap = createCommandMap()
 
-  const callFunction = async (
-    functionName: string,
-    args: unknown[] = []
-  ): Promise<IpcResult> => {
+  /**
+   * Calls a desktop function. It never throws: a failure comes back as
+   * `success: false`, and the caller decides how to tell the user
+   */
+  const callFunction = async <K extends DesktopFunctionName>(
+    functionName: K,
+    ...[args]: DesktopCallArgs<K>
+  ): Promise<IpcResult<DesktopFunctionResult<K>>> => {
     try {
-      const mappedCommand = commandMap[functionName]
+      // the name may come from untyped code, e.g. a plugin
+      const mappedCommand = Object.hasOwn(commandMap, functionName)
+        ? (commandMap[functionName] as CommandEntry<DesktopFunctionArgs<K>>)
+        : undefined
 
       if (!mappedCommand) {
         return {
@@ -164,46 +190,73 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
         await deps.waitForKeysReleased?.()
       }
 
-      if (mappedCommand.invoke) {
-        return await mappedCommand.invoke(args)
-      }
-
-      return await deps.desktopClient.invoke(
-        mappedCommand.command!,
-        mappedCommand.buildArgs?.(args)
+      return await deps.desktopClient.invoke<DesktopFunctionResult<K>>(
+        mappedCommand.command,
+        mappedCommand.buildArgs?.((args ?? []) as DesktopFunctionArgs<K>)
       )
     } catch (error) {
-      deps.notifyError(String(error), 'Api call error')
       deps.logError('Error calling function:', error)
 
       return { success: false, error: String(error) }
     }
   }
 
+  const reportFailure = (functionName: string, result: IpcResult) => {
+    const message = result.error || functionName
+    deps.notifyError(message, deps.errorTitle?.() ?? 'Desktop action failed')
+    deps.logError(`Desktop function "${functionName}" failed:`, message)
+  }
+
+  /**
+   * Calls a desktop function whose failure the user has to hear about while the
+   * caller has nothing else to do with it, e.g. an insertion
+   */
+  const callFunctionOrNotify = async <K extends DesktopFunctionName>(
+    functionName: K,
+    ...args: DesktopCallArgs<K>
+  ): Promise<IpcResult<DesktopFunctionResult<K>>> => {
+    const result = await callFunction(functionName, ...args)
+    if (!result.success) reportFailure(functionName, result)
+    return result
+  }
+
   const loadInitialParams = async (): Promise<InitParams> => {
+    if (!deps.desktopClient.isAvailable()) {
+      const fallback = deps.desktopClient.getInitParams()
+      params.value = fallback
+      return fallback
+    }
+
     const result = await deps.desktopClient.invoke<InitParams>(
       DESKTOP_COMMANDS.GET_INIT_PARAMS
     )
 
-    if (result.success && result.result) {
-      params.value = result.result
-      return result.result
+    if (!result.success || !result.result) {
+      const error = new Error(
+        `Could not load the app params: ${result.error ?? 'empty response'}`
+      )
+      reportFailure('getInitParams', { success: false, error: error.message })
+      throw error
     }
 
-    const fallback = deps.desktopClient.getInitParams()
-    params.value = fallback
-
-    return fallback
+    params.value = result.result
+    paramsLoaded = true
+    return result.result
   }
 
   const setParams = (incomingData: Partial<InitParams>) => {
     params.value = { ...params.value, ...incomingData }
   }
 
+  const notLoaded = (): IpcResult<never> => ({
+    success: false,
+    error: 'The app params are not loaded yet',
+  })
+
   const saveUserConfig = async (userConfig: UserConfig) => {
-    const result = await callFunction('saveUserConfig', [
-      JSON.stringify(userConfig),
-    ])
+    if (!paramsLoaded) return notLoaded()
+
+    const result = await callFunction('saveUserConfig', [userConfig])
 
     if (result.success) {
       params.value.userConfig = userConfig
@@ -212,27 +265,29 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     return result
   }
 
-  const saveLocalState = async (localState: LocalState) => {
-    const result = await callFunction('saveLocalState', [localState])
+  /** The backend merges the patch, so concurrent patches never undo each other */
+  const patchLocalState = async (patch: Partial<LocalState>) => {
+    if (!paramsLoaded) return notLoaded()
+
+    const result = await callFunction('patchLocalState', [patch])
 
     if (result.success) {
-      params.value.localState = localState
+      params.value.localState = result.result ?? {
+        ...params.value.localState,
+        ...patch,
+      }
     }
 
     return result
   }
 
-  const patchLocalState = async (patch: Partial<LocalState>) => {
-    return await saveLocalState({ ...params.value.localState, ...patch })
-  }
-
   return {
     params,
     callFunction,
+    callFunctionOrNotify,
     loadInitialParams,
     setParams,
     saveUserConfig,
-    saveLocalState,
     patchLocalState,
   }
 }

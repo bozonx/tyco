@@ -104,7 +104,8 @@ const dismiss = () => {
   if (currentMode.value === 'write') writerInputStore.markDismissed()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
-  void ipcStore.callFunction('dismissQuickWindow', []).catch(() => {})
+  // a failed dismissal leaves the window shown, which tells enough
+  void ipcStore.callFunction('dismissQuickWindow')
 }
 
 const handleRootPointerDown = (event: PointerEvent) => {

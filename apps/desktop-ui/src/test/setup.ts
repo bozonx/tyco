@@ -1,5 +1,15 @@
 import { afterEach, vi } from 'vitest'
 
+vi.mock('mini-toastr', () => ({
+  default: {
+    init: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    success: vi.fn(),
+  },
+}))
+
 afterEach(() => {
   vi.restoreAllMocks()
   document.body.innerHTML = ''

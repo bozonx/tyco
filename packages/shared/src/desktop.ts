@@ -97,7 +97,6 @@ export interface InitParams {
   userConfig: UserConfig
   localState: LocalState
   appConfig: AppConfig
-  NODE_ENV: string
   isWindowShown: boolean
   windowProfile: 'panel' | 'sheet'
 }
@@ -117,7 +116,6 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
   userConfig: DEFAULT_USER_CONFIG,
   localState: DEFAULT_LOCAL_STATE,
   appConfig: APP_CONFIG,
-  NODE_ENV: 'development',
   isWindowShown: false,
   windowProfile: 'sheet',
 }
@@ -145,7 +143,7 @@ export const DESKTOP_COMMANDS = {
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',
   SAVE_USER_CONFIG: 'save_user_config',
-  SAVE_LOCAL_STATE: 'save_local_state',
+  PATCH_LOCAL_STATE: 'patch_local_state',
   GET_EDITOR_HISTORY: 'get_editor_history',
   GET_CHAT_HISTORY: 'get_chat_history',
   GET_CHAT: 'get_chat',

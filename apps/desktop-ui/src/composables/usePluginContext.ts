@@ -1,3 +1,9 @@
+import {
+  type DesktopCallArgs,
+  type DesktopFunctionArgs,
+  PLUGIN_DESKTOP_FUNCTIONS,
+  type PluginDesktopFunctionName,
+} from '../lib/ipc/desktop-functions'
 import { type ActionItem, useActionMenuStore } from '../stores/actionMenu'
 import { type EditItem, useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
@@ -112,8 +118,18 @@ export default function usePluginContext() {
       toast(message, type, timeout)
     }
 
-    callApiFunction(method: string, params: any) {
-      return ipcStore.callFunction(method, params)
+    async callApiFunction<K extends PluginDesktopFunctionName>(
+      method: K,
+      params: DesktopFunctionArgs<K>
+    ) {
+      // plugins are plain JavaScript at run time, so the type is not enough
+      if (!(PLUGIN_DESKTOP_FUNCTIONS as readonly string[]).includes(method)) {
+        return {
+          success: false,
+          error: `Desktop function "${method}" is not available to plugins`,
+        }
+      }
+      return ipcStore.callFunction(method, ...([params] as DesktopCallArgs<K>))
     }
 
     getUserConfig() {

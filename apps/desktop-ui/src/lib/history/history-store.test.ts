@@ -1,7 +1,7 @@
 import type { EditorHistoryItem } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createHistoryStoreModel } from './history-store'
+import { createHistoryStoreModel, type HistoryApi } from './history-store'
 
 function editorItem(id: string, text: string): EditorHistoryItem {
   return { id, text, kind: 'draft', createdAt: 1 }
@@ -49,7 +49,7 @@ function createApi() {
 describe('history-store', () => {
   it('loads editor history into state', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.loadEditorHistory()
 
@@ -61,7 +61,7 @@ describe('history-store', () => {
 
   it('loads chat history into state', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.loadChatHistory()
 
@@ -71,7 +71,7 @@ describe('history-store', () => {
 
   it('saves texts with their kind and operation', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.saveOutput('sent')
     await store.saveDraft('left')
@@ -94,7 +94,7 @@ describe('history-store', () => {
 
   it('resolves to the id of the stored entry', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await expect(store.saveSource('before', 'correction')).resolves.toBe(
       'new-id'
@@ -104,14 +104,14 @@ describe('history-store', () => {
 
   it('resolves to null when the history is turned off', async () => {
     const api = { callFunction: vi.fn(async () => ({ result: null })) }
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await expect(store.saveOutput('sent')).resolves.toBeNull()
   })
 
   it('attaches the AI result to a stored source only', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.saveSourceResult('id-1', 'Result.')
     await store.saveSourceResult(null, 'Lost.')
@@ -136,7 +136,7 @@ describe('history-store', () => {
         return { result: [] }
       }),
     }
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     const save = store.saveDraft('text')
     const load = store.loadEditorHistory()
@@ -154,7 +154,7 @@ describe('history-store', () => {
 
   it('does not save blank texts', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.saveOutput('')
     await store.saveDraft('  \n')
@@ -164,7 +164,7 @@ describe('history-store', () => {
 
   it('removes items from local state after delete commands', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
     store.chatHistory.value = [
       { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
@@ -184,21 +184,21 @@ describe('history-store', () => {
 
   it('restores a removed item and reloads the list', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     const item = editorItem('1', 'one')
 
     await store.restoreEditorItem(item)
 
     expect(api.callFunction.mock.calls).toEqual([
       ['restoreEditorHistoryItem', [item]],
-      ['getEditorHistory', []],
+      ['getEditorHistory'],
     ])
     expect(store.editorHistory.value).toHaveLength(2)
   })
 
   it('returns and restores the full removed chat', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.chatHistory.value = [
       { id: 'chat-1', description: 'Hello', lastMsgDate: 'x', messages: [] },
     ]
@@ -213,7 +213,7 @@ describe('history-store', () => {
 
   it('clears in-memory state after clear commands', async () => {
     const api = createApi()
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
     store.chatHistory.value = [
       { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
@@ -233,7 +233,7 @@ describe('history-store', () => {
         error: 'disk is read-only',
       })),
     }
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
 
     await expect(store.removeFromEditorHistory('1')).rejects.toThrow(
@@ -250,7 +250,7 @@ describe('history-store', () => {
     const api = {
       callFunction: vi.fn(async () => ({ success: false, error: 'broken' })),
     }
-    const store = createHistoryStoreModel(api)
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
 
     await expect(store.loadEditorHistory()).rejects.toThrow('broken')

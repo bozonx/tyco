@@ -6,11 +6,15 @@ import type {
 } from '@tyco/shared'
 import { ref } from 'vue'
 
+import type {
+  DesktopCall,
+  DesktopCallArgs,
+  DesktopFunctionName,
+  DesktopFunctionResult,
+} from '../ipc/desktop-functions'
+
 export interface HistoryApi {
-  callFunction: (
-    functionName: string,
-    args?: unknown[]
-  ) => Promise<{ success?: boolean; error?: string; result?: unknown }>
+  callFunction: DesktopCall
 }
 
 export class HistoryOperationError extends Error {
@@ -34,8 +38,11 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     return write
   }
 
-  const call = async (functionName: string, args: unknown[] = []) => {
-    const response = await historyApi.callFunction(functionName, args)
+  const call = async <K extends DesktopFunctionName>(
+    functionName: K,
+    ...args: DesktopCallArgs<K>
+  ): Promise<DesktopFunctionResult<K> | undefined> => {
+    const response = await historyApi.callFunction(functionName, ...args)
 
     if (response.success === false) {
       throw new HistoryOperationError(functionName, response.error)
@@ -48,17 +55,17 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     await Promise.allSettled([...pendingWrites])
 
     const loadedHistory = await call('getEditorHistory')
-    editorHistory.value = (loadedHistory as EditorHistoryItem[]) || []
+    editorHistory.value = loadedHistory || []
   }
 
   const loadChatHistory = async (): Promise<void> => {
     const loadedHistory = await call('getChatHistory')
-    chatHistory.value = (loadedHistory as ChatHistoryItem[]) || []
+    chatHistory.value = loadedHistory || []
   }
 
   const loadChat = async (id: string): Promise<ChatHistoryItem | null> => {
     const loadedChat = await call('getChat', [id])
-    return (loadedChat as ChatHistoryItem | null) || null
+    return loadedChat || null
   }
 
   /** Resolves to the id of the stored entry, null when nothing was stored. */

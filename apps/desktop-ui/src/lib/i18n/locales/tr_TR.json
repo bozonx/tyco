@@ -519,7 +519,10 @@
     "modelNotFound": "Model bulunamadı",
     "noNotesPath": "Hızlı not eklentisinin ayarlarında not klasörü belirtilmemiş",
     "noteSaved": "Not kaydedildi",
-    "noteSaveFailed": "Not kaydedilemedi"
+    "noteSaveFailed": "Not kaydedilemedi",
+    "desktopCommandFailed": "İşlem başarısız oldu",
+    "insertFailed": "Metin eklenemedi",
+    "openInBrowserFailed": "Tarayıcı açılamadı"
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",

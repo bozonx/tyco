@@ -379,7 +379,7 @@ function handleClose() {
       if (ipcStore.params?.mode === 'write') {
         writerInputStore.discard()
       }
-      void ipcStore.callFunction('closeWindow', [])
+      void ipcStore.callFunctionOrNotify('closeWindow')
     } else {
       void appNavigation.goToEditor()
     }

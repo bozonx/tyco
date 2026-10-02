@@ -1,16 +1,16 @@
-use std::io::Write;
-use std::process::{Command, Stdio};
+use std::process::Command;
 use std::time::Duration;
 use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
+use crate::services::clipboard::{copy_to_clipboard, hide_console_window};
 use crate::services::platform::InputRegion;
 use crate::services::runtime;
 use crate::state::AppState;
 
 #[tauri::command]
-pub fn close_window(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
-    runtime::hide_main_window(&app, &state)
+pub fn close_window(app: AppHandle) -> Result<(), AppError> {
+    runtime::hide_active_window(&app)
 }
 
 /// Hides the quick window after it lost focus. Unlike `close_window`, it
@@ -25,14 +25,12 @@ pub fn set_quick_input_region(app: AppHandle, region: Option<InputRegion>) -> Re
     runtime::set_quick_input_region(&app, region)
 }
 
-#[tauri::command]
-pub fn open_in_browser_and_close(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    url: String,
-) -> Result<(), AppError> {
+/// Off the main thread: the opener and the clipboard tools are separate
+/// processes, which must not stall the UI.
+#[tauri::command(async)]
+pub fn open_in_browser_and_close(app: AppHandle, url: String) -> Result<(), AppError> {
     open_url(&url)?;
-    runtime::hide_main_window(&app, &state)
+    runtime::hide_active_window(&app)
 }
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
@@ -49,7 +47,7 @@ pub async fn type_into_window_and_close(
     #[cfg(target_os = "linux")]
     let previous_clipboard = crate::services::clipboard_restore::snapshot();
     copy_to_clipboard(&text)?;
-    runtime::hide_main_window(&app, &state)?;
+    runtime::hide_active_window(&app)?;
     let focus_app = app.clone();
     // waits for the focus change, which must not hold an async worker
     tauri::async_runtime::spawn_blocking(move || {
@@ -67,96 +65,46 @@ pub async fn type_into_window_and_close(
     Ok(())
 }
 
-#[tauri::command]
-pub fn put_into_clipboard_and_close(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    text: String,
-) -> Result<(), AppError> {
+#[tauri::command(async)]
+pub fn put_into_clipboard_and_close(app: AppHandle, text: String) -> Result<(), AppError> {
     copy_to_clipboard(&text)?;
-    runtime::hide_main_window(&app, &state)
+    runtime::hide_active_window(&app)
 }
 
-pub(crate) fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
-    if cfg!(target_os = "macos") {
-        return write_to_clipboard_command("pbcopy", &[], text);
+/// Only web pages are opened: the URL comes from the webview, and the system
+/// opener would just as well run a local file or another URL handler.
+fn web_url(value: &str) -> Result<url::Url, AppError> {
+    let url = url::Url::parse(value.trim())
+        .map_err(|error| AppError::Message(format!("Invalid URL \"{value}\": {error}")))?;
+    match url.scheme() {
+        "http" | "https" => Ok(url),
+        scheme => Err(AppError::Message(format!(
+            "Refusing to open a \"{scheme}:\" URL; only http and https are allowed"
+        ))),
     }
-
-    if cfg!(target_os = "windows") {
-        return write_to_clipboard_command(
-            "powershell",
-            &["-NoProfile", "-Command", "Set-Clipboard"],
-            text,
-        );
-    }
-
-    copy_to_clipboard_linux(text)
 }
 
-fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
-    let clipboard_commands: [(&str, &[&str]); 3] = [
-        ("wl-copy", &["--type", "text/plain"]),
-        ("xclip", &["-selection", "clipboard"]),
-        ("xsel", &["--clipboard", "--input", "--trim"]),
-    ];
+fn open_url(value: &str) -> Result<(), AppError> {
+    let url = web_url(value)?;
+    let url = url.as_str();
 
-    let mut last_error: Option<AppError> = None;
-
-    for (binary, args) in clipboard_commands {
-        match write_to_clipboard_command(binary, args, text) {
-            Ok(()) => return Ok(()),
-            Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => continue,
-            Err(error) => last_error = Some(error),
-        }
-    }
-
-    if let Some(error) = last_error {
-        return Err(error);
-    }
-
-    Err(AppError::Message(String::from(
-        "No clipboard utility found. Install wl-clipboard, xclip, or xsel.",
-    )))
-}
-
-fn write_to_clipboard_command(binary: &str, args: &[&str], text: &str) -> Result<(), AppError> {
-    let mut child = Command::new(binary)
-        .args(args)
-        .stdin(Stdio::piped())
-        .spawn()?;
-
-    let mut stdin = child.stdin.take().ok_or_else(|| {
-        AppError::Message(format!(
-            "Failed to open stdin for clipboard command `{binary}`"
-        ))
-    })?;
-    stdin.write_all(text.as_bytes())?;
-    drop(stdin);
-
-    let status = child.wait()?;
-    if !status.success() {
-        return Err(AppError::Message(format!(
-            "Clipboard command `{binary}` failed with status {status}",
-        )));
-    }
-
-    Ok(())
-}
-
-fn open_url(url: &str) -> Result<(), AppError> {
     if cfg!(target_os = "macos") {
         return run_command("open", &[url]);
     }
 
     if cfg!(target_os = "windows") {
-        return run_command("cmd", &["/C", "start", "", url]);
+        // unlike `cmd /C start`, this does not parse `&` and the like in the URL
+        return run_command("rundll32", &["url.dll,FileProtocolHandler", url]);
     }
 
     run_command("xdg-open", &[url])
 }
 
 fn run_command(binary: &str, args: &[&str]) -> Result<(), AppError> {
-    let status = Command::new(binary).args(args).status()?;
+    let mut command = Command::new(binary);
+    command.args(args);
+    hide_console_window(&mut command);
+    let status = command.status()?;
 
     if !status.success() {
         return Err(AppError::Message(format!(
@@ -165,4 +113,18 @@ fn run_command(binary: &str, args: &[&str]) -> Result<(), AppError> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::web_url;
+
+    #[test]
+    fn accepts_web_urls_only() {
+        assert!(web_url("https://duckduckgo.com/?q=a%20b&hl=en").is_ok());
+        assert!(web_url(" http://example.com ").is_ok());
+        assert!(web_url("file:///etc/passwd").is_err());
+        assert!(web_url("javascript:alert(1)").is_err());
+        assert!(web_url("not a url").is_err());
+    }
 }

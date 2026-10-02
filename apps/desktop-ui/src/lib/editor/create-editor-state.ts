@@ -18,21 +18,21 @@ import { syntaxCompartment, syntaxExtension } from './syntax'
 import { editorAppearance } from './theme'
 
 /**
- * Помечает транзакции, которые редактор получил из стора. Слушатель обновлений
- * их игнорирует — иначе изменение стора вернулось бы в стор же (эхо)
+ * Marks transactions received by the editor from the store. The update listener
+ * ignores them to prevent sending store changes back to the store (echo).
  */
 export const fromStore = Annotation.define<boolean>()
 
 /**
- * Компартмент плейсхолдера — чтобы менять его при смене языка без пересоздания
- * редактора
+ * Placeholder compartment allowing language change without recreating the
+ * editor instance.
  */
 export const placeholderCompartment = new Compartment()
 
 export interface EditorCallbacks {
-  /** Пользователь изменил текст */
+  /** User changed text */
   onDocChange?: (value: string) => void
-  /** Пользователь изменил выделение или каретку */
+  /** User changed selection or cursor position */
   onSelectionChange?: (text: string, start: number, end: number) => void
 }
 
@@ -40,15 +40,15 @@ export interface CreateEditorStateOptions
   extends EditorCallbacks, EditorMenusOptions {
   doc?: string
   placeholder?: string
-  /** Режим подсветки документа */
+  /** Syntax highlighting mode */
   syntax?: EditorSyntax
-  /** Обработка вставки из буфера обмена; не задана — вставка остаётся нативной */
+  /** Clipboard paste handling; if omitted, paste remains native */
   paste?: PasteOptions
   /** Accessible name of the input, announced by screen readers */
   ariaLabel?: string
 }
 
-/** Набор расширений редактора */
+/** Set of editor extensions */
 export const createEditorExtensions = (
   options: CreateEditorStateOptions = {}
 ): Extension[] => [
@@ -70,7 +70,7 @@ export const createEditorExtensions = (
   ...(options.paste ? [pasteExtension(options.paste)] : []),
   editorMenusExtension({ onContextMenu: options.onContextMenu }),
   EditorView.updateListener.of((update) => {
-    // правки, пришедшие из стора, наружу не отдаём
+    // do not emit updates originating from the store
     if (update.transactions.some((tr) => tr.annotation(fromStore))) return
 
     if (update.docChanged) {
@@ -97,7 +97,7 @@ export const createEditorState = (
     extensions: createEditorExtensions(options),
   })
 
-/** Сменить режим подсветки без пересоздания редактора */
+/** Switch syntax highlighting mode without recreating the editor */
 export const setEditorSyntax = (view: EditorView, mode: EditorSyntax): void => {
   view.dispatch({
     effects: syntaxCompartment.reconfigure(syntaxExtension(mode)),

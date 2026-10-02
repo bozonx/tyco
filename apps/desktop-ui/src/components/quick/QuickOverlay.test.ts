@@ -175,7 +175,7 @@ describe('quick overlay keyboard ownership', () => {
     const wrapper = mount(QuickOverlay)
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
+      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow')
       expect(mocks.markDismissed).toHaveBeenCalledOnce()
     } finally {
       wrapper.unmount()
@@ -315,16 +315,13 @@ describe('quick overlay menus', () => {
     'dismisses the %s menu when the focus goes elsewhere',
     async (mode) => {
       await loseFocus(mode)
-      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
+      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow')
     }
   )
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
     await loseFocus('select', 'translate')
-    expect(mocks.callFunction).not.toHaveBeenCalledWith(
-      'dismissQuickWindow',
-      []
-    )
+    expect(mocks.callFunction).not.toHaveBeenCalledWith('dismissQuickWindow')
   })
 
   it('keeps a correction when the focus goes elsewhere', async () => {

@@ -62,12 +62,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ${{ env.LINUX_TAURI_DEPS }}
 
-      # Pinned by src-tauri/rust-toolchain.toml so CI and local runs agree.
+      # Installs the toolchain and components pinned by
+      # src-tauri/rust-toolchain.toml, so CI and local runs agree.
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
+        run: rustup toolchain install
+        working-directory: src-tauri
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -75,15 +74,15 @@ jobs:
           workspaces: src-tauri -> target
 
       - name: Check formatting
-        run: cargo fmt --check
+        run: cargo fmt --all --check
         working-directory: src-tauri
 
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
         working-directory: src-tauri
 
       - name: Run Rust tests
-        run: cargo test
+        run: cargo test --workspace
         working-directory: src-tauri
 
   bundle:
@@ -108,10 +107,11 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
+      # Installs the toolchain and components pinned by
+      # src-tauri/rust-toolchain.toml, so CI and local runs agree.
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
+        run: rustup toolchain install
+        working-directory: src-tauri
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2

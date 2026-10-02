@@ -5,7 +5,7 @@ use crate::models::{ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem};
 use crate::services::storage;
 use crate::state::AppState;
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -14,7 +14,7 @@ pub fn get_editor_history(
     storage::get_editor_history(&app)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_chat_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -23,7 +23,7 @@ pub fn get_chat_history(
     storage::get_chat_history(&app)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn get_chat(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -33,7 +33,7 @@ pub fn get_chat(
     storage::get_chat(&app, id)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn save_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -44,7 +44,7 @@ pub fn save_editor_history(
     storage::save_editor_history(&app, &params.user_config, entry)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn set_editor_history_result(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -55,7 +55,7 @@ pub fn set_editor_history_result(
     storage::set_editor_history_result(&app, id, result)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn restore_editor_history_item(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -66,7 +66,7 @@ pub fn restore_editor_history_item(
     storage::restore_editor_history_item(&app, &params.user_config, item)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn save_chat_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -77,7 +77,7 @@ pub fn save_chat_history(
     storage::save_chat_history(&app, &params.user_config, chat_history_item)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn remove_from_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -87,7 +87,7 @@ pub fn remove_from_editor_history(
     storage::remove_from_editor_history(&app, id)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn remove_from_chat_history(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -97,13 +97,13 @@ pub fn remove_from_chat_history(
     storage::remove_from_chat_history(&app, id)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn clear_editor_history(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
     let _guard = state.lock_history_storage();
     storage::clear_editor_history(&app)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn clear_chat_history(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
     let _guard = state.lock_history_storage();
     storage::clear_chat_history(&app)
