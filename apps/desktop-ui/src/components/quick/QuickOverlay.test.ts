@@ -287,6 +287,51 @@ describe('quick overlay menus', () => {
     }
   })
 
+  const loseFocus = async (mode: string, modal = 'none') => {
+    stubResizeObserver()
+    vi.useFakeTimers()
+    const params = reactive(mocks.params)
+    params.mode = mode
+    params.isWindowShown = true
+    mocks.modals.currentModal = modal
+    const wrapper = mount(QuickOverlay)
+    try {
+      await vi.waitFor(() => expect(mocks.focusHandlers).toHaveLength(1))
+      mocks.windowFocused = false
+      mocks.focusHandlers[0]!({ payload: false })
+      await vi.advanceTimersByTimeAsync(200)
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+      params.mode = 'write'
+      mocks.modals.currentModal = 'none'
+    }
+  }
+
+  it.each(['select', 'aiTasks'])(
+    'dismisses the %s menu when the focus goes elsewhere',
+    async (mode) => {
+      await loseFocus(mode)
+      expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow', [])
+    }
+  )
+
+  it('keeps the step after the menu when the focus goes elsewhere', async () => {
+    await loseFocus('select', 'translate')
+    expect(mocks.callFunction).not.toHaveBeenCalledWith(
+      'dismissQuickWindow',
+      []
+    )
+  })
+
+  it('keeps a correction when the focus goes elsewhere', async () => {
+    await loseFocus('correction')
+    expect(mocks.callFunction).not.toHaveBeenCalledWith(
+      'dismissQuickWindow',
+      []
+    )
+  })
+
   it('tells when the window does not take the keys', async () => {
     stubResizeObserver()
     vi.useFakeTimers()

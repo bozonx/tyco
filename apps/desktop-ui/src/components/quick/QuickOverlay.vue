@@ -85,14 +85,17 @@ const isSheet = computed(() => {
 /** What stays clickable while only the input is shown. */
 const INPUT_PARTS = '.write-frame, .write-hint'
 
+/** Modes whose first step (the input, the action menu) has nothing to lose. */
+const DISMISSIBLE_MODES = new Set(['write', 'select', 'aiTasks'])
+
 /**
- * Only the input itself goes away on a click elsewhere. Everything past it (the
- * step after the input, the menus of the other modes, a correction on its way)
- * stays until the user closes it with Esc: a click must not lose it
+ * Only the first step goes away when the focus goes elsewhere. Everything past
+ * it (the step after the input or the menu, a correction on its way) stays
+ * until the user closes it with Esc: a click must not lose it
  */
 const keepsOnFocusLoss = computed(
   () =>
-    currentMode.value !== 'write' ||
+    !DISMISSIBLE_MODES.has(currentMode.value) ||
     hasModal.value ||
     Boolean(menuModalsStore.pendingModal)
 )
@@ -106,7 +109,8 @@ const dismiss = () => {
 }
 
 const handleRootPointerDown = (event: PointerEvent) => {
-  if (!cardRef.value || keepsOnFocusLoss.value) return
+  // a click around the input lands in this window; a menu takes them all
+  if (!cardRef.value || isSheet.value || keepsOnFocusLoss.value) return
   const target = event.target as Node | null
   if (!cardRef.value.querySelector('.write-frame')) return
   const isInputPart = Array.from(
