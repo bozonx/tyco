@@ -11,6 +11,7 @@ describe('Editor actions shortcut', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('opens actions with editor text and ignores repeats and open modals', () => {
+    useIpcStore().params.userConfig.quickInputHotkeys = { next: 'Ctrl+S' }
     const editor = useEditorInputStore()
     editor.setValue('Editor text', 'plain')
     const modals = useMenuModalsStore()
@@ -45,6 +46,22 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
     press()
     expect(open).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores bare Tab so editor indentation is not hijacked', () => {
+    const modals = useMenuModalsStore()
+    const open = vi.spyOn(modals, 'nextModal')
+    const wrapper = mount(EditorView, {
+      global: { stubs: { Editor: true, ContentPadding: true } },
+    })
+    const tabEvent = new KeyboardEvent('keydown', {
+      code: 'Tab',
+      cancelable: true,
+    })
+    window.dispatchEvent(tabEvent)
+    expect(open).not.toHaveBeenCalled()
+    expect(tabEvent.defaultPrevented).toBe(false)
+    wrapper.unmount()
   })
 
   it('follows the shared shortcut setting', () => {

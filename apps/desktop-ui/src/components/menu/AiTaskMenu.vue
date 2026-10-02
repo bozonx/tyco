@@ -8,7 +8,6 @@
       <ShortcutList
         :text="props.text"
         :spaceKey="chatAction"
-        :actionsKey="actionsAction"
         :leftLetterKeys="leftLetterKeys"
         :stopListening="props.stopListening"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
@@ -53,13 +52,6 @@ const chatAction: ActionItem = {
   action: async (text) => {
     menuModalsStore.closeAll()
     await chatStore.startChat({ attachments: [text] })
-  },
-}
-const actionsAction: ActionItem = {
-  labelKey: 'settings.actionsCategory',
-  icon: 'mdi:format-list-bulleted',
-  action: async (text) => {
-    menuModalsStore.nextModal(MenuModals.INSERT, { text })
   },
 }
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>

@@ -52,6 +52,7 @@ function handleKeyDown(event: KeyboardEvent) {
     ipcStore.params?.userConfig?.quickInputHotkeys
   )
   if (resolveQuickInputKeyAction(event, hotkeys) === 'next') {
+    if (event.code === 'Tab') return
     event.preventDefault()
     if (!event.repeat) {
       menuModalsStore.nextModal(MenuModals.INSERT, {

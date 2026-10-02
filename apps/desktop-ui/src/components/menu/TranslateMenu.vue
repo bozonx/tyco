@@ -6,7 +6,6 @@
 
     <template #actions>
       <ShortcutList
-        :actionsKey="actionsAction"
         :text="props.text"
         :leftLetterKeys="leftLetterKeys"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
@@ -41,13 +40,6 @@ const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
 const { toast } = useToast()
 const { t } = useI18n()
-const actionsAction = {
-  labelKey: 'menu.insert',
-  icon: 'mdi:lightning-bolt-outline',
-  action: async () => {
-    menuModalsStore.nextModal(MenuModals.INSERT, { text: props.text })
-  },
-}
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   ipcStore.params.userConfig.toTranslateLanguages.map(

@@ -239,7 +239,7 @@ export type EditorSyntax = 'none' | 'markdown'
 
 export const DEFAULT_QUICK_INPUT_HOTKEYS = {
   correctAndInsert: 'Enter',
-  next: 'Ctrl+S',
+  next: 'Tab',
   insertWithoutCorrection: '',
   newline: 'Shift+Enter',
   cancel: 'Escape',

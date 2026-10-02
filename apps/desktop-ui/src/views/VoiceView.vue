@@ -8,7 +8,7 @@
     <InsertMenu
       v-else
       :text="resText"
-      :allowInsertButton="false"
+      :allowInsertButton="true"
       :stopListening="menuModalsStore.anyModalOpen"
     />
   </ContentPadding>
