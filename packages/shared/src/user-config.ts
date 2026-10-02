@@ -10,25 +10,25 @@ const BASE_TASK = `
 `
 
 const TRANSLATION_TASK = `
-- Исходный текст может быть передан с ошибками и опечатками
-- Сохраняй общий стиль: разговорный, деловой, юридический, игривый, стиль статьи, стиль нехудожественной литературы, стиль современной художественной литературы и подобное
-- Но при этом не нужно переводить точь в точь и стараться детально соответствовать стилю включая опечатки и пропуски знаков пунктуации
-- Текст должен выглядеть естественным для того языка на который идет перевод
-- Используй лучшие практики по грамматике и пунктуации для того языка на который идет перевод
-- Грамматика и пунктуация должны соответствовать общему стилю, но даже если стиль разговорный то он должен быть грамотный и без ошибок
-- Восстанавливай пунктуацию и удаляй лишние пробелы
-- Предложения должны начинаться с большой буквы и заканчиваться точкой`
+- The source text may contain errors and typos.
+- Preserve the overall tone: conversational, formal, legal, playful, journalistic, non-fiction, contemporary fiction, etc.
+- Do not translate verbatim or attempt to preserve errors, typos, and missing punctuation marks.
+- The text must sound natural in the target language.
+- Follow the best grammar and punctuation practices of the target language.
+- Grammar and punctuation should match the overall style; even conversational style must be grammatical and error-free.
+- Restore punctuation and remove extra whitespace.
+- Sentences must start with a capital letter and end with a period.`
 
 const CORRECTION_TASK = `
-- Исправь этот текст и восстанови пунктуацию
-- Учитывай что пользователь мог забыть переключить раскладку и писать на одном языке в раскладке другого языка
+- Correct this text and restore punctuation.
+- Keep in mind that the user might have forgotten to switch keyboard layout and typed in one language using another layout.
  `
 
 const VOICE_CORRECTION_TASK = `
-- Убери повторения слов из-за запинок и заиканий
-- Убери запутанность речи и сделай текст более точным и понятным
-- Если какие-то слова не знаешь то не придумывай им синонимы, оставь их как есть
-- Если смысл не понял то не придумывай его, оставь как есть
+- Remove repeated words caused by hesitations or stuttering.
+- Eliminate rambling speech and make the text clear and concise.
+- If certain words are unrecognized or unclear, do not invent synonyms; keep them as they are.
+- If the meaning is completely unclear, do not invent facts; leave it as is.
  `
 
 export type ModelTag =
@@ -223,7 +223,7 @@ export type MainActionConfig = StandardMainAction | PluginMainAction
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
 
-/** Что делать при вставке HTML из буфера обмена */
+/** Action when pasting HTML from the clipboard */
 export type PasteMode = 'plain' | 'markdown' | 'ask'
 
 /** Keys pressed in the target window to paste the inserted text */
@@ -234,7 +234,7 @@ export const PASTE_SHORTCUTS = [
 ] as const
 export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
 
-/** Режим подсветки документа в редакторе */
+/** Document syntax highlighting mode in the editor */
 export type EditorSyntax = 'none' | 'markdown'
 
 export const DEFAULT_QUICK_INPUT_HOTKEYS = {
@@ -357,7 +357,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   aiTasks: [
     {
       name: 'deepEdit',
-      rule: 'убрать косноязычие , добавить местоимения где они нужны, исправление смысла и запутанности, убрать дублирование, подобрать уместные синонимы',
+      rule: 'Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.',
     },
   ],
   plugins: {},

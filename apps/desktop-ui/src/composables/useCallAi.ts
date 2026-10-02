@@ -43,6 +43,7 @@ export const useCallAi = () => {
   const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
   const currentUserConfig = () => ipcStore.params.userConfig
+  const currentAppConfig = () => ipcStore.params?.appConfig ?? APP_CONFIG
 
   const buildTaskRules = (taskRule?: string) => {
     const baseRule = String(currentUserConfig().aiRules?.base || '').trim()
@@ -96,7 +97,7 @@ export const useCallAi = () => {
     const prompt = buildLlmPrompt(messages, {
       instructions: options.instructions,
       rules: options.rules,
-      rulePrefix: APP_CONFIG.rulePrefix,
+      rulePrefix: currentAppConfig().rulePrefix,
     })
 
     try {
@@ -139,7 +140,8 @@ export const useCallAi = () => {
     const userConfig = currentUserConfig()
 
     return await aiRequest(AI_TASKS.VOICE_CORRECTION, text, {
-      instructions: APP_CONFIG.aiInstructions[AI_TASKS.VOICE_CORRECTION],
+      instructions:
+        currentAppConfig().aiInstructions[AI_TASKS.VOICE_CORRECTION],
       rules: buildTaskRules(userConfig.aiRules[AI_TASKS.VOICE_CORRECTION]),
       signal,
     })
@@ -157,7 +159,8 @@ export const useCallAi = () => {
       {
         ...options,
         notifyError: false,
-        instructions: devInstructions,
+        instructions:
+          devInstructions ?? currentAppConfig().aiInstructions[AI_TASKS.CHAT],
         rules: buildTaskRules(),
       }
     )
@@ -176,7 +179,7 @@ export const useCallAi = () => {
 
     return await aiRequest(AI_TASKS.CORRECTION, text, {
       ...options,
-      instructions: APP_CONFIG.aiInstructions[AI_TASKS.CORRECTION],
+      instructions: currentAppConfig().aiInstructions[AI_TASKS.CORRECTION],
       rules: buildTaskRules(userConfig.aiRules[AI_TASKS.CORRECTION]),
     })
   }
@@ -233,7 +236,7 @@ export const useCallAi = () => {
 
     return await aiRequest(AI_TASKS.AI_TASKS, text, {
       ...options,
-      instructions: APP_CONFIG.aiInstructions[AI_TASKS.AI_TASKS],
+      instructions: currentAppConfig().aiInstructions[AI_TASKS.AI_TASKS],
       rules: buildTaskRules(task.rule),
     })
   }

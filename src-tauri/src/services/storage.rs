@@ -136,6 +136,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
 
     if let Some(mut value) = read_or_quarantine(&path, |raw| {
         let value: Value = serde_yaml::from_str(raw)?;
+
         if value.is_object() {
             Ok(value)
         } else {
@@ -144,11 +145,18 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
             )))
         }
     })? {
-        if normalize_window_insertion_config(&mut value)
+        let changed = normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
+            | normalize_appearance_config(&mut value)
+            | normalize_language_config(&mut value)
+            | normalize_editor_config(&mut value)
+            | normalize_translation_config(&mut value)
+            | normalize_main_actions_config(&mut value)
             | llm_config::migrate_user_config(app, &mut value)
             | normalize_stt_config(&mut value)
-        {
+            | normalize_ai_rules_and_tasks(&mut value);
+
+        if changed {
             save_user_config(app, &value)?;
         }
 
@@ -238,30 +246,345 @@ fn normalize_stt_config(user_config: &mut Value) -> bool {
 }
 
 fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
-    let defaults = default_user_config()
+    let defaults = default_user_config();
+    let default_hotkeys = defaults
         .get("hotkeys")
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
+    let default_quick_input = defaults
+        .get("quickInputHotkeys")
+        .cloned()
+        .unwrap_or_default();
+    let default_selection_hotkeys = defaults
+        .get("selectionHotkeys")
+        .cloned()
+        .unwrap_or_default();
+    let default_selection_replace = defaults
+        .get("selectionReplace")
+        .cloned()
+        .unwrap_or_default();
+
     let Some(config) = user_config.as_object_mut() else {
         return false;
     };
+    let mut changed = false;
+
+    // Hotkeys mapping
     let mut hotkeys = config
         .get("hotkeys")
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
-    let previous = hotkeys.clone();
+    let previous_hotkeys = hotkeys.clone();
     hotkeys.remove("history");
     hotkeys.remove("config");
-    for (mode, shortcut) in defaults {
+    for (mode, shortcut) in default_hotkeys {
         hotkeys.entry(mode).or_insert(shortcut);
     }
-    if hotkeys == previous && config.get("hotkeys").and_then(Value::as_object).is_some() {
-        return false;
+    if hotkeys != previous_hotkeys || config.get("hotkeys").and_then(Value::as_object).is_none() {
+        config.insert(String::from("hotkeys"), Value::Object(hotkeys));
+        changed = true;
     }
-    config.insert(String::from("hotkeys"), Value::Object(hotkeys));
-    true
+
+    // Quick input hotkeys
+    if config.remove("quickInputSubmit").is_some() {
+        changed = true;
+    }
+    if config.remove("quickCorrection").is_some() {
+        changed = true;
+    }
+
+    if let Some(quick) = config
+        .get_mut("quickInputHotkeys")
+        .and_then(Value::as_object_mut)
+    {
+        if let Some(def_quick) = default_quick_input.as_object() {
+            for (action, default_key) in def_quick {
+                if !quick.contains_key(action) {
+                    quick.insert(action.clone(), default_key.clone());
+                    changed = true;
+                }
+            }
+        }
+    } else {
+        config.insert(String::from("quickInputHotkeys"), default_quick_input);
+        changed = true;
+    }
+
+    // Quick toggles
+    let prefetch = config
+        .get("quickCorrectionPrefetch")
+        .and_then(Value::as_bool);
+    if prefetch.is_none() {
+        config.insert(String::from("quickCorrectionPrefetch"), Value::Bool(false));
+        changed = true;
+    }
+
+    let hide_on_blur = config.get("quickHideOnBlur").and_then(Value::as_bool);
+    if hide_on_blur.is_none() {
+        config.insert(String::from("quickHideOnBlur"), Value::Bool(true));
+        changed = true;
+    }
+
+    // Selection hotkeys
+    if let Some(sel_hotkeys) = config
+        .get_mut("selectionHotkeys")
+        .and_then(Value::as_object_mut)
+    {
+        if let Some(def_sel) = default_selection_hotkeys.as_object() {
+            for (action, default_key) in def_sel {
+                if !sel_hotkeys.contains_key(action) {
+                    sel_hotkeys.insert(action.clone(), default_key.clone());
+                    changed = true;
+                }
+            }
+        }
+    } else {
+        config.insert(String::from("selectionHotkeys"), default_selection_hotkeys);
+        changed = true;
+    }
+
+    // Selection replace
+    let when_empty = config
+        .get("selectionReplace")
+        .and_then(|v| v.get("whenEmpty"))
+        .and_then(Value::as_str);
+    if !matches!(when_empty, Some("nothing" | "selectAll")) {
+        config.insert(String::from("selectionReplace"), default_selection_replace);
+        changed = true;
+    }
+
+    changed
+}
+
+fn normalize_appearance_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+
+    let theme = config.get("theme").and_then(Value::as_str);
+    if !matches!(theme, Some("auto" | "light" | "dark")) {
+        config.insert(String::from("theme"), defaults["theme"].clone());
+        changed = true;
+    }
+
+    let contrast = config.get("contrast").and_then(Value::as_str);
+    if !matches!(contrast, Some("auto" | "normal" | "more")) {
+        config.insert(String::from("contrast"), defaults["contrast"].clone());
+        changed = true;
+    }
+
+    let motion = config.get("motion").and_then(Value::as_str);
+    if !matches!(motion, Some("auto" | "normal" | "reduced")) {
+        config.insert(String::from("motion"), defaults["motion"].clone());
+        changed = true;
+    }
+
+    let ui_scale = config.get("uiScale").and_then(Value::as_u64);
+    if !matches!(ui_scale, Some(70..=200)) {
+        config.insert(String::from("uiScale"), defaults["uiScale"].clone());
+        changed = true;
+    }
+
+    changed
+}
+
+fn normalize_language_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+
+    if config.get("appLanguage").and_then(Value::as_str).is_none() {
+        config.insert(String::from("appLanguage"), defaults["appLanguage"].clone());
+        changed = true;
+    }
+
+    if config.get("userLanguage").and_then(Value::as_str).is_none() {
+        config.insert(
+            String::from("userLanguage"),
+            defaults["userLanguage"].clone(),
+        );
+        changed = true;
+    }
+
+    let valid_to_translate = config
+        .get("toTranslateLanguages")
+        .and_then(Value::as_array)
+        .map(|arr| arr.len() == 4)
+        .unwrap_or(false);
+
+    if !valid_to_translate {
+        config.insert(
+            String::from("toTranslateLanguages"),
+            defaults["toTranslateLanguages"].clone(),
+        );
+        changed = true;
+    }
+
+    changed
+}
+
+fn normalize_editor_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+
+    let paste_mode = config.get("pasteMode").and_then(Value::as_str);
+    if !matches!(paste_mode, Some("markdown" | "plain" | "ask")) {
+        config.insert(String::from("pasteMode"), defaults["pasteMode"].clone());
+        changed = true;
+    }
+
+    let editor_syntax = config.get("editorSyntax").and_then(Value::as_str);
+    if !matches!(editor_syntax, Some("markdown" | "none")) {
+        config.insert(
+            String::from("editorSyntax"),
+            defaults["editorSyntax"].clone(),
+        );
+        changed = true;
+    }
+
+    if config
+        .get("editorHistoryMaxItems")
+        .and_then(Value::as_u64)
+        .is_none()
+    {
+        config.insert(
+            String::from("editorHistoryMaxItems"),
+            defaults["editorHistoryMaxItems"].clone(),
+        );
+        changed = true;
+    }
+
+    if config
+        .get("chatHistoryMaxItems")
+        .and_then(Value::as_u64)
+        .is_none()
+    {
+        config.insert(
+            String::from("chatHistoryMaxItems"),
+            defaults["chatHistoryMaxItems"].clone(),
+        );
+        changed = true;
+    }
+
+    changed
+}
+
+fn normalize_translation_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let default_translation = &defaults["translation"];
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+
+    let Some(translation) = config.get_mut("translation").and_then(Value::as_object_mut) else {
+        config.insert(String::from("translation"), default_translation.clone());
+        return true;
+    };
+
+    let provider = translation.get("provider").and_then(Value::as_str);
+    if !matches!(provider, Some("deepl" | "google" | "llm")) {
+        translation.insert(
+            String::from("provider"),
+            default_translation["provider"].clone(),
+        );
+        changed = true;
+    }
+
+    let quality_gate = translation.get("qualityGate").and_then(Value::as_str);
+    if !matches!(quality_gate, Some("off" | "on_problems" | "always")) {
+        translation.insert(
+            String::from("qualityGate"),
+            default_translation["qualityGate"].clone(),
+        );
+        changed = true;
+    }
+
+    let deepl_endpoint = translation.get("deeplEndpoint").and_then(Value::as_str);
+    if !matches!(deepl_endpoint, Some("free" | "pro")) {
+        translation.insert(
+            String::from("deeplEndpoint"),
+            default_translation["deeplEndpoint"].clone(),
+        );
+        changed = true;
+    }
+
+    if translation
+        .get("glossary")
+        .and_then(Value::as_array)
+        .is_none()
+    {
+        translation.insert(String::from("glossary"), json!([]));
+        changed = true;
+    }
+
+    changed
+}
+
+fn normalize_main_actions_config(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+
+    if config
+        .get("mainActions")
+        .and_then(Value::as_array)
+        .is_none()
+    {
+        config.insert(String::from("mainActions"), defaults["mainActions"].clone());
+        return true;
+    }
+
+    false
+}
+
+fn normalize_ai_rules_and_tasks(user_config: &mut Value) -> bool {
+    let defaults = default_user_config();
+    let default_rules = &defaults["aiRules"];
+    let Some(config) = user_config.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+
+    if config.remove("chatRoles").is_some() {
+        changed = true;
+    }
+
+    if let Some(rules) = config.get_mut("aiRules").and_then(Value::as_object_mut) {
+        if let Some(def_rules) = default_rules.as_object() {
+            for (key, default_val) in def_rules {
+                if rules.get(key).and_then(Value::as_str).is_none() {
+                    rules.insert(key.clone(), default_val.clone());
+                    changed = true;
+                }
+            }
+        }
+    } else {
+        config.insert(String::from("aiRules"), default_rules.clone());
+        changed = true;
+    }
+
+    if config.get("aiTasks").and_then(Value::as_array).is_none() {
+        config.insert(String::from("aiTasks"), defaults["aiTasks"].clone());
+        changed = true;
+    }
+
+    if config.get("plugins").and_then(Value::as_object).is_none() {
+        config.insert(String::from("plugins"), json!({}));
+        changed = true;
+    }
+
+    changed
 }
 
 fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
@@ -283,6 +606,10 @@ fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
         .get("ydotoolBin")
         .and_then(Value::as_str)
         .unwrap_or("/usr/bin/ydotool");
+    let default_paste_shortcut = default_window_insertion
+        .get("pasteShortcut")
+        .and_then(Value::as_str)
+        .unwrap_or("ctrl+v");
 
     let Some(config) = user_config.as_object_mut() else {
         return false;
@@ -306,10 +633,16 @@ fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
         .and_then(|value| value.get("ydotoolBin"))
         .and_then(Value::as_str)
         .unwrap_or(default_ydotool_bin);
+    let paste_shortcut = window_insertion
+        .and_then(|value| value.get("pasteShortcut"))
+        .and_then(Value::as_str)
+        .filter(|value| *value == "ctrl+v" || *value == "ctrl+shift+v" || *value == "shift+insert")
+        .unwrap_or(default_paste_shortcut);
     let normalized = json!({
         "method": method,
         "xdotoolBin": xdotool_bin,
         "ydotoolBin": ydotool_bin,
+        "pasteShortcut": paste_shortcut,
     });
     let needs_update = config.get("windowInsertion") != Some(&normalized)
         || config.get("xdotoolBin").and_then(Value::as_str).is_none();
@@ -876,6 +1209,7 @@ mod tests {
                 "method": "xdotool",
                 "xdotoolBin": "/opt/bin/xdotool",
                 "ydotoolBin": "/usr/bin/ydotool",
+                "pasteShortcut": "ctrl+v",
             })
         );
     }
@@ -886,6 +1220,7 @@ mod tests {
 
         assert!(normalize_window_insertion_config(&mut config));
         assert_eq!(config["windowInsertion"]["method"], json!("xdotool"));
+        assert_eq!(config["windowInsertion"]["pasteShortcut"], json!("ctrl+v"));
     }
 
     #[test]
@@ -944,7 +1279,62 @@ mod tests {
         assert!(normalize_hotkeys_config(&mut config));
         assert_eq!(config["hotkeys"]["editor"], json!("Super+Space"));
         assert_eq!(config["hotkeys"]["voice"], json!("Ctrl+Alt+V"));
+        assert_eq!(
+            config["quickInputHotkeys"]["correctAndInsert"],
+            json!("Enter")
+        );
+        assert_eq!(config["quickCorrectionPrefetch"], json!(false));
+        assert_eq!(config["quickHideOnBlur"], json!(true));
         assert!(!normalize_hotkeys_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_appearance_and_language_fills_defaults() {
+        let mut config = json!({ "theme": "invalid-theme" });
+
+        assert!(normalize_appearance_config(&mut config));
+        assert_eq!(config["theme"], json!("auto"));
+        assert_eq!(config["uiScale"], json!(100));
+        assert!(!normalize_appearance_config(&mut config));
+
+        assert!(normalize_language_config(&mut config));
+        assert_eq!(config["appLanguage"], json!("auto"));
+        assert_eq!(
+            config["toTranslateLanguages"],
+            json!(["en_US", "ru_RU", "es_AR", "tr_TR"])
+        );
+        assert!(!normalize_language_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_editor_and_translation_fills_defaults() {
+        let mut config = json!({ "pasteMode": "invalid" });
+
+        assert!(normalize_editor_config(&mut config));
+        assert_eq!(config["pasteMode"], json!("markdown"));
+        assert_eq!(config["editorSyntax"], json!("markdown"));
+        assert_eq!(config["editorHistoryMaxItems"], json!(100));
+        assert!(!normalize_editor_config(&mut config));
+
+        assert!(normalize_translation_config(&mut config));
+        assert_eq!(config["translation"]["provider"], json!("llm"));
+        assert_eq!(config["translation"]["qualityGate"], json!("on_problems"));
+        assert!(!normalize_translation_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_ai_rules_and_tasks_cleans_legacy() {
+        let mut config = json!({
+            "chatRoles": ["assistant", "user"],
+            "aiRules": { "base": "custom base rule" }
+        });
+
+        assert!(normalize_ai_rules_and_tasks(&mut config));
+        assert!(config.get("chatRoles").is_none());
+        assert_eq!(config["aiRules"]["base"], json!("custom base rule"));
+        assert!(config["aiRules"]["translate"].as_str().is_some());
+        assert!(config["aiTasks"].as_array().is_some());
+        assert!(!normalize_ai_rules_and_tasks(&mut config));
     }
 
     #[test]

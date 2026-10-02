@@ -187,14 +187,14 @@ pub fn default_user_config() -> Value {
       },
       "aiRules": {
         "base": "\n- Do exactly what the user requested without adding unrelated material.\n- Produce a clear, accurate, and relevant result.\n- Preserve the user's intent and do not invent missing facts.\n",
-        "translate": "\n- Исходный текст может быть передан с ошибками и опечатками\n- Сохраняй общий стиль: разговорный, деловой, юридический, игривый, стиль статьи, стиль нехудожественной литературы, стиль современной художественной литературы и подобное\n- Но при этом не нужно переводить точь в точь и стараться детально соответствовать стилю включая опечатки и пропуски знаков пунктуации\n- Текст должен выглядеть естественным для того языка на который идет перевод\n- Используй лучшие практики по грамматике и пунктуации для того языка на который идет перевод\n- Грамматика и пунктуация должны соответствовать общему стилю, но даже если стиль разговорный то он должен быть грамотный и без ошибок\n- Восстанавливай пунктуацию и удаляй лишние пробелы\n- Предложения должны начинаться с большой буквы и заканчиваться точкой",
-        "voiceCorrection": "\n- Убери повторения слов из-за запинок и заиканий\n- Убери запутанность речи и сделай текст более точным и понятным\n- Если какие-то слова не знаешь то не придумывай им синонимы, оставь их как есть\n- Если смысл не понял то не придумывай его, оставь как есть\n ",
-        "correction": "\n- Исправь этот текст и восстанови пунктуацию\n- Учитывай что пользователь мог забыть переключить раскладку и писать на одном языке в раскладке другого языка\n "
+        "translate": "\n- The source text may contain errors and typos.\n- Preserve the overall tone: conversational, formal, legal, playful, journalistic, non-fiction, contemporary fiction, etc.\n- Do not translate verbatim or attempt to preserve errors, typos, and missing punctuation marks.\n- The text must sound natural in the target language.\n- Follow the best grammar and punctuation practices of the target language.\n- Grammar and punctuation should match the overall style; even conversational style must be grammatical and error-free.\n- Restore punctuation and remove extra whitespace.\n- Sentences must start with a capital letter and end with a period.",
+        "voiceCorrection": "\n- Remove repeated words caused by hesitations or stuttering.\n- Eliminate rambling speech and make the text clear and concise.\n- If certain words are unrecognized or unclear, do not invent synonyms; keep them as they are.\n- If the meaning is completely unclear, do not invent facts; leave it as is.\n ",
+        "correction": "\n- Correct this text and restore punctuation.\n- Keep in mind that the user might have forgotten to switch keyboard layout and typed in one language using another layout.\n "
       },
       "aiTasks": [
         {
           "name": "deepEdit",
-          "rule": "убрать косноязычие , добавить местоимения где они нужны, исправление смысла и запутанности, убрать дублирование, подобрать уместные синонимы"
+          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
       "plugins": {}
