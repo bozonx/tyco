@@ -28,13 +28,11 @@
       <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
         <AiTaskView v-if="currentMode === 'aiTasks'" />
       </div>
-      <div
-        v-show="currentMode === 'select' || currentMode === 'correction'"
-        class="quick-mode-layer"
-      >
-        <SelectModeView
-          v-if="currentMode === 'select' || currentMode === 'correction'"
-        />
+      <div v-show="currentMode === 'select'" class="quick-mode-layer">
+        <SelectModeView v-if="currentMode === 'select'" />
+      </div>
+      <div v-show="currentMode === 'correction'" class="quick-mode-layer">
+        <CorrectionModeView v-if="currentMode === 'correction'" />
       </div>
     </div>
   </div>
@@ -57,6 +55,7 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
 import { useWriterInputStore } from '../../stores/writerInput'
 import AiTaskView from '../../views/AiTaskView.vue'
+import CorrectionModeView from '../../views/CorrectionModeView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'

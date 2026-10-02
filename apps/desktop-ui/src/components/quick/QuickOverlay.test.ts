@@ -79,6 +79,9 @@ vi.mock('../../views/AiTaskView.vue', () => ({
 vi.mock('../../views/SelectModeView.vue', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('../../views/CorrectionModeView.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
     setup() {
