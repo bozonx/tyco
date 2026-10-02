@@ -21,7 +21,9 @@ export function quickInputShortcut(event: QuickInputKeyEvent): string | null {
   if (event.isComposing) return null
   const key = event.key || event.code.replace(/^Key/, '')
   if (!event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
-    return ['Enter', 'Escape', 'Tab'].includes(event.code) ? event.code : null
+    if (['Enter', 'Tab'].includes(event.code)) return event.code
+    if (['Escape', 'Esc'].includes(event.code)) return 'Esc'
+    return null
   }
   return hotkeyFromKeyboardEvent({
     key,
@@ -43,9 +45,13 @@ export function resolveQuickInputHotkeys(
     if (value === '' && action === 'insertWithoutCorrection')
       result[action] = ''
     else if (value) {
-      result[action] = ['Enter', 'Escape', 'Tab'].includes(value)
-        ? value
-        : (normalizeHotkey(value) ?? result[action])
+      if (['Escape', 'Esc'].includes(value)) {
+        result[action] = 'Esc'
+      } else if (['Enter', 'Tab'].includes(value)) {
+        result[action] = value
+      } else {
+        result[action] = normalizeHotkey(value) ?? result[action]
+      }
     }
   }
   const values = Object.values(result).filter(Boolean)

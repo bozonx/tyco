@@ -242,7 +242,7 @@ export const DEFAULT_QUICK_INPUT_HOTKEYS = {
   next: 'Tab',
   insertWithoutCorrection: '',
   newline: 'Shift+Enter',
-  cancel: 'Escape',
+  cancel: 'Esc',
 }
 
 export type QuickInputAction = keyof typeof DEFAULT_QUICK_INPUT_HOTKEYS

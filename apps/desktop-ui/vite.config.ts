@@ -36,6 +36,17 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: [
         { find: '@', replacement: srcDir },
+        {
+          find: /^@tyco\/shared$/,
+          replacement: resolve(rootDir, '../../packages/shared/src/index.ts'),
+        },
+        {
+          find: /^@tyco\/shared\/appearance$/,
+          replacement: resolve(
+            rootDir,
+            '../../packages/shared/src/appearance.ts'
+          ),
+        },
         ...(localAiKit?.aliases ?? []),
       ],
     },

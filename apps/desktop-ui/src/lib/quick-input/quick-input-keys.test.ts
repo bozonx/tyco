@@ -65,6 +65,8 @@ describe('quick input shortcuts', () => {
   it('normalizes saved keys and recovers from malformed or conflicting config', () => {
     expect(resolveQuickInputHotkeys({ next: 'control+s' }).next).toBe('Ctrl+S')
     expect(resolveQuickInputHotkeys({ next: 'Tab' }).next).toBe('Tab')
+    expect(resolveQuickInputHotkeys({ cancel: 'escape' }).cancel).toBe('Esc')
+    expect(resolveQuickInputHotkeys({ cancel: 'Esc' }).cancel).toBe('Esc')
     expect(resolveQuickInputHotkeys({ next: 'Enter' })).toEqual(
       DEFAULT_QUICK_INPUT_HOTKEYS
     )

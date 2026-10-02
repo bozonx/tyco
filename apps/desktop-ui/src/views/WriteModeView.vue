@@ -41,7 +41,7 @@
         @mousedown.prevent
         @click="cancelFromHint"
       >
-        <KeyButton>{{ hotkeys.cancel }}</KeyButton>
+        <KeyButton>{{ cancelShortcutLabel }}</KeyButton>
         <span>{{ t('write.cancel') }}</span>
       </button>
     </p>
@@ -77,6 +77,9 @@ const prefetch = computed(
 )
 const submitShortcutLabel = computed(() => hotkeys.value.correctAndInsert)
 const newlineShortcutLabel = computed(() => hotkeys.value.newline)
+const cancelShortcutLabel = computed(() =>
+  hotkeys.value.cancel === 'Escape' ? 'Esc' : hotkeys.value.cancel
+)
 
 const containerRef = ref<HTMLElement | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
