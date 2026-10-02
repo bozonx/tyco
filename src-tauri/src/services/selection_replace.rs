@@ -404,14 +404,22 @@ fn copy_selection(
 
     let deadline = Instant::now() + COPY_TIMEOUT;
     loop {
-        match super::clipboard_restore::read_text() {
-            Some(text) if text == probe => {}
-            Some(text) if text.trim().is_empty() => return Ok(None),
+        let read = super::clipboard_restore::read_text();
+        match read {
+            Some(ref text) if *text == probe => {}
+            Some(ref text) if text.trim().is_empty() => return Ok(None),
             Some(text) => return Ok(Some(text)),
             // not text, e.g. an image, or not answered yet
             None => {}
         }
         if Instant::now() >= deadline {
+            log::debug!(
+                "The copy keys changed nothing in the clipboard: {}",
+                match read {
+                    Some(_) => "the probe text is still there",
+                    None => "it holds no text",
+                }
+            );
             return Ok(None);
         }
         thread::sleep(POLL_INTERVAL);
@@ -505,9 +513,11 @@ impl HotkeyPress {
             .counts
             .lock()
             .expect("hotkey release lock poisoned");
+        let started = Instant::now();
         while counts.get(&self.id).copied().unwrap_or_default() == self.seen {
             let now = Instant::now();
             if now >= deadline {
+                log::debug!("Hotkey {} was not reported released in time", self.id);
                 return;
             }
             counts = releases
@@ -516,6 +526,11 @@ impl HotkeyPress {
                 .expect("hotkey release lock poisoned")
                 .0;
         }
+        log::debug!(
+            "Hotkey {} was released after {:?}",
+            self.id,
+            started.elapsed()
+        );
     }
 }
 

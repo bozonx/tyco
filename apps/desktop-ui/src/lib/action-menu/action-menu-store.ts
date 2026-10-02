@@ -25,7 +25,11 @@ export interface ActionMenuDependencies {
   saveOutput: (text: string) => Promise<void>
   openAiTaskModal: (text: string) => void
   openTranslateModal: (text: string) => void
-  startCorrection: (text: string) => Promise<void>
+  /** `extra` goes to the params of the correction step, see `InsertMenu` */
+  startCorrection: (
+    text: string,
+    extra?: Record<string, unknown>
+  ) => Promise<void>
   startChatWithAttachment: (text: string) => void
   showToast: (
     message: string,
@@ -38,6 +42,23 @@ export interface ActionMenuDependencies {
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   const registeredActionsMenu = shallowRef<ActionItem[]>([])
+
+  /** Corrects `text` on a step of its own, unless it is empty or too short. */
+  const correct = async (
+    text: string,
+    extra?: Record<string, unknown>
+  ): Promise<void> => {
+    if (!text?.trim()) {
+      deps.showToast('toast.textNotSelected', 'error')
+      return
+    }
+    const minLength = deps.minCorrectionLength?.() ?? 30
+    if (text.length < minLength) {
+      deps.showToast('toast.textTooShortForCorrection', 'warn')
+      return
+    }
+    await deps.startCorrection(text, extra)
+  }
 
   const getDefaultActions = (): ActionItem[] => [
     {
@@ -78,18 +99,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'correction',
       labelKey: 'action.correction',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        const minLength = deps.minCorrectionLength?.() ?? 30
-        if (text.length < minLength) {
-          deps.showToast('toast.textTooShortForCorrection', 'warn')
-          return
-        }
-        await deps.startCorrection(text)
-      },
+      action: (text: string) => correct(text),
     },
     {
       id: 'translation',
@@ -164,6 +174,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     getRegisteredActions,
     resolveMainActions,
     getDefaultActions,
+    correct,
     getActionsMenu,
     getShortcutActions,
     registerActionsItems,

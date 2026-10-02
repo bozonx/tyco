@@ -41,7 +41,7 @@
         :sourceText="props.oldText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
-        :altText="props.originalText"
+        :altText="props.insertOnly ? undefined : props.originalText"
         :altAlwaysVisible="props.correcting"
         :altAction="primaryAction"
         :stopListening="props.stopListening"
@@ -96,6 +96,8 @@ const props = withDefaults(
     correctionError?: string
     /** The correction came back without changes */
     correctionUnchanged?: boolean
+    /** Offer only inserting the text, the editor and cancelling */
+    insertOnly?: boolean
   }>(),
   {
     text: '',
@@ -109,15 +111,22 @@ const props = withDefaults(
     correcting: false,
     correctionError: undefined,
     correctionUnchanged: false,
+    insertOnly: false,
   }
 )
 
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
-const actionsMenu = computed(
-  () => props.actions || actionMenuStore.getShortcutActions()
-)
+const actionsMenu = computed(() => {
+  if (props.actions) return props.actions
+  if (props.insertOnly) {
+    return actionMenuStore
+      .getDefaultActions()
+      .filter((action) => action.id === 'insertIntoWindow')
+  }
+  return actionMenuStore.getShortcutActions()
+})
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const diffMode = ref<DiffViewMode>(readStoredDiffMode())
@@ -181,14 +190,16 @@ const correctionBlocker = computed(() => {
 })
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  actionsMenu.value.map((item: ActionItem | undefined, index: number) => {
-    if (!item) return undefined
-    if (props.correcting) return { ...item, disabled: true }
-    if (item.id === 'correction' && correctionBlocker.value) {
-      return { ...item, disabled: true, hint: correctionBlocker.value }
+  (props.insertOnly ? [] : actionsMenu.value).map(
+    (item: ActionItem | undefined, index: number) => {
+      if (!item) return undefined
+      if (props.correcting) return { ...item, disabled: true }
+      if (item.id === 'correction' && correctionBlocker.value) {
+        return { ...item, disabled: true, hint: correctionBlocker.value }
+      }
+      return { ...item, disabled: shouldDisablePrimaryAction(index) }
     }
-    return { ...item, disabled: shouldDisablePrimaryAction(index) }
-  })
+  )
 )
 
 const primaryAction = computed<ActionItem | undefined>(() => {

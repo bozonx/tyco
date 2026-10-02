@@ -39,9 +39,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openTranslateModal: (text: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text })
     },
-    startCorrection: (text: string) =>
+    startCorrection: (text: string, extra?: Record<string, unknown>) =>
       // the result replaces the text in the editor as well
-      correctionStore.start(text, { toEditorVisible: true }),
+      correctionStore.start(text, { toEditorVisible: true, ...extra }),
     startChatWithAttachment: (text: string) => {
       chatStore.startChat({ attachments: [text] })
     },

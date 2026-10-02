@@ -90,6 +90,19 @@ describe('createActionMenuStoreModel', () => {
     expect(deps.startCorrection).not.toHaveBeenCalled()
   })
 
+  it('passes step params to a correction of a long enough text', async () => {
+    const { store, deps } = setup()
+    const text = 'a text that is long enough to be corrected'
+
+    await store.correct('short', { insertOnly: true })
+    expect(deps.startCorrection).not.toHaveBeenCalled()
+
+    await store.correct(text, { insertOnly: true })
+    expect(deps.startCorrection).toHaveBeenCalledWith(text, {
+      insertOnly: true,
+    })
+  })
+
   it('triggers startChatWithAttachment for askInChat action', async () => {
     const { store, deps } = setup()
     const actions = store.getDefaultActions()

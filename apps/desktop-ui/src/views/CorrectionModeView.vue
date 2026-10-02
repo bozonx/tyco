@@ -21,12 +21,9 @@ const isStarting = ref(false)
 navPanelStore.resetNavParams({ panelVisible: false })
 
 const correctionMode = createCorrectionMode({
-  startCorrection: async (text) => {
-    const correction = actionMenuStore
-      .getDefaultActions()
-      .find((action) => action.id === 'correction')
-    await correction?.action(text)
-  },
+  // the selection was taken to be corrected and put back: nothing else to do
+  startCorrection: (text) =>
+    actionMenuStore.correct(text, { insertOnly: true }),
   setPending: (pending) => {
     isStarting.value = pending
   },
