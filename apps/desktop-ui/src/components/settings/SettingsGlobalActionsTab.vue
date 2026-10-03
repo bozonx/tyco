@@ -1,160 +1,93 @@
 <template>
   <div class="flex flex-col gap-6">
-    <SettingsSection
-      :title="t('settings.globalActionsTab')"
-      :description="t('settings.globalActionsHint')"
-    >
-      <div v-if="canConfigure" class="configure-hotkeys">
-        <Button icon="mdi:keyboard-settings" @click="configureHotkeys">
+    <SettingsSection>
+      <template v-if="canConfigure" #actions>
+        <Button sm icon="mdi:keyboard-settings" @click="configureHotkeys">
           {{ t('settings.configureGlobalHotkeys') }}
         </Button>
-        <p v-if="configureError" class="configure-error">
-          {{ configureError }}
-        </p>
-      </div>
-      <FieldRow
-        v-for="action in actions"
-        :key="action.mode"
-        :label="t(`settings.hotkeyActions.${action.mode}`)"
-      >
+      </template>
+      <p v-if="configureError" class="configure-error">
+        {{ configureError }}
+      </p>
+      <FieldRow v-for="row in rows" :key="row.id" :label="row.label">
+        <template #info>
+          <InfoTooltip
+            :aria-label="t('settings.externalMethods')"
+            align="start"
+          >
+            <div class="hotkey-info">
+              <p v-if="row.description">{{ row.description }}</p>
+              <p class="hotkey-info-title">
+                {{ t('settings.externalMethods') }}
+              </p>
+              <p>{{ row.externalHint }}</p>
+              <div class="external-command">
+                <code>{{ row.command }}</code>
+                <Button
+                  sm
+                  ghost
+                  square
+                  icon="mdi:content-copy"
+                  :title="t('settings.copyActivationCommand')"
+                  :aria-label="t('settings.copyActivationCommand')"
+                  @click="copyText(row.command)"
+                />
+              </div>
+            </div>
+          </InfoTooltip>
+        </template>
         <div class="hotkey-control">
-          <input
-            class="input hotkey-input"
-            :value="userConfig.hotkeys[action.mode]"
-            :aria-label="t(`settings.hotkeyActions.${action.mode}`)"
-            readonly
-            @focus="recordingMode = action.mode"
-            @blur="recordingMode = null"
-            @keydown="record($event, action.mode)"
+          <HotkeyInput
+            :value="row.value"
+            :aria-label="row.label"
+            :placeholder="t('settings.hotkeyNotAssigned')"
+            @record="setShortcut(row.id, $event)"
           />
           <Button
+            v-if="row.value !== row.defaultValue"
             sm
-            neutral
-            :disabled="userConfig.hotkeys[action.mode] === action.defaultValue"
-            @click="setShortcut(action.mode, action.defaultValue)"
-          >
-            {{ t('settings.resetToDefault') }}
-          </Button>
-          <p class="hotkey-status" :data-status="statuses[action.mode]?.status">
-            {{ statusText(action.mode) }}
-          </p>
-          <details class="external-methods">
-            <summary>{{ t('settings.externalMethods') }}</summary>
-            <p>{{ t('settings.externalMethodsHint') }}</p>
-            <div class="external-command">
-              <code>{{ activationCommand(action.mode) }}</code>
-              <Button
-                sm
-                ghost
-                icon="mdi:content-copy"
-                @click="copyActivationCommand(action.mode)"
-              >
-                {{ t('settings.copyActivationCommand') }}
-              </Button>
-            </div>
-            <div
-              v-if="statuses[action.mode]?.externalCommand"
-              class="external-command"
-            >
-              <code>{{ statuses[action.mode].externalCommand }}</code>
-              <Button
-                sm
-                ghost
-                icon="mdi:content-copy"
-                @click="copyCommand(action.mode)"
-              >
-                {{ t('settings.copyHotkeyCommand') }}
-              </Button>
-            </div>
-          </details>
-        </div>
-      </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection
-      :title="t('settings.selectionActions.title')"
-      :description="t('settings.selectionActions.hint')"
-    >
-      <div class="injection-status" :data-ok="injection.ok">
-        <span>
-          {{
-            injection.ok === null
-              ? t('settings.selectionActions.checking')
-              : injection.ok
-                ? t('settings.selectionActions.ready')
-                : t('settings.selectionActions.unavailable', {
-                    error: injection.error,
-                  })
-          }}
-        </span>
-        <Button sm ghost icon="mdi:refresh" @click="checkInjection">
-          {{ t('settings.selectionActions.recheck') }}
-        </Button>
-      </div>
-      <FieldRow :label="t('settings.selectionActions.whenEmpty')">
-        <FieldSelect
-          class="w-full"
-          :value="userConfig.selectionReplace?.whenEmpty ?? 'nothing'"
-          :options="whenEmptyOptions"
-          @update:value="emit('update:selectionWhenEmpty', String($event))"
-        />
-      </FieldRow>
-      <FieldRow
-        v-for="action in selectionActions"
-        :key="action.id"
-        :label="selectionActionLabel(action)"
-      >
-        <div class="hotkey-control">
-          <input
-            class="input hotkey-input"
-            :value="selectionShortcut(action.id)"
-            :placeholder="t('settings.selectionActions.notAssigned')"
-            :aria-label="selectionActionLabel(action)"
-            readonly
-            @focus="recordingMode = selectionTarget(action.id)"
-            @blur="recordingMode = null"
-            @keydown="record($event, selectionTarget(action.id))"
+            ghost
+            square
+            icon="mdi:restore"
+            :title="t('settings.resetToDefault')"
+            :aria-label="t('settings.resetToDefault')"
+            @click="setShortcut(row.id, row.defaultValue)"
           />
-          <Button
-            sm
-            neutral
-            :disabled="!selectionShortcut(action.id)"
-            @click="clearSelectionShortcut(action.id)"
-          >
-            {{ t('settings.selectionActions.clear') }}
-          </Button>
-          <Button
-            v-if="action.defaultShortcut"
-            sm
-            neutral
-            :disabled="selectionShortcut(action.id) === action.defaultShortcut"
-            @click="
-              setShortcut(selectionTarget(action.id), action.defaultShortcut)
-            "
-          >
-            {{ t('settings.resetToDefault') }}
-          </Button>
           <p
+            v-if="row.inline && injection.ok === false"
             class="hotkey-status"
-            :data-status="statuses[selectionTarget(action.id)]?.status"
+            data-status="conflict"
           >
-            {{ statusText(selectionTarget(action.id)) }}
+            {{
+              t('settings.textInjection.unavailable', {
+                error: injection.error,
+              })
+            }}
+            <Button sm ghost icon="mdi:refresh" @click="checkInjection">
+              {{ t('settings.textInjection.recheck') }}
+            </Button>
           </p>
-          <details class="external-methods">
-            <summary>{{ t('settings.externalMethods') }}</summary>
-            <p>{{ t('settings.selectionActions.externalHint') }}</p>
-            <div class="external-command">
-              <code>{{ replaceCommand(action.id) }}</code>
-              <Button
-                sm
-                ghost
-                icon="mdi:content-copy"
-                @click="copyText(replaceCommand(action.id))"
-              >
-                {{ t('settings.copyActivationCommand') }}
-              </Button>
-            </div>
-          </details>
+          <p
+            v-else-if="statuses[row.id]"
+            class="hotkey-status"
+            :data-status="statuses[row.id].status"
+          >
+            {{ t(`settings.hotkeyStatus.${statuses[row.id].status}`) }}
+          </p>
+          <div
+            v-if="statuses[row.id]?.externalCommand"
+            class="external-command"
+          >
+            <code>{{ statuses[row.id].externalCommand }}</code>
+            <Button
+              sm
+              ghost
+              icon="mdi:content-copy"
+              @click="copyText(statuses[row.id].externalCommand ?? '')"
+            >
+              {{ t('settings.copyHotkeyCommand') }}
+            </Button>
+          </div>
         </div>
       </FieldRow>
     </SettingsSection>
@@ -166,15 +99,11 @@ import { computed, onMounted, reactive, ref, toRef } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
-import { getLanguageLabel } from '../../lib/locale/language'
-import {
-  type SelectionActionEntry,
-  listSelectionActions,
-} from '../../lib/selection-replace/selection-action-list'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldSelect from '../common/FieldSelect.vue'
+import HotkeyInput from '../common/HotkeyInput.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_USER_CONFIG,
@@ -182,23 +111,41 @@ import {
   type HotkeyProviderInfo,
   SELECTION_HOTKEY_PREFIX,
   type UserConfig,
-  hotkeyFromKeyboardEvent,
 } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:hotkey', mode: string, shortcut: string): void
-  (event: 'update:selectionWhenEmpty', value: string): void
 }>()
 const { t } = useI18n()
 
-const activationCommand = (mode: string) => `tyco-ctl activate ${mode}`
-async function copyActivationCommand(mode: string) {
-  await navigator.clipboard.writeText(activationCommand(mode))
+/** Display order of the activation modes; unknown modes go last. */
+const MODE_ORDER = [
+  'write',
+  'voice',
+  'editor',
+  'chat',
+  'voiceChat',
+  'select',
+  'aiTasks',
+  'correction',
+]
+const INLINE_CORRECTION = 'correction'
+
+interface HotkeyRow {
+  /** The id `applyHotkey` takes: a mode or a `replace.` action */
+  id: string
+  label: string
+  value: string
+  defaultValue: string
+  command: string
+  externalHint: string
+  description?: string
+  /** Replaces the selection in place and needs text injection */
+  inline?: boolean
 }
 
 const ipcStore = useIpcStore()
-const recordingMode = ref<string | null>(null)
 const providerState = reactive({
   canConfigure: false,
   statuses: {} as Record<string, HotkeyApplyResult>,
@@ -206,17 +153,39 @@ const providerState = reactive({
 const canConfigure = toRef(providerState, 'canConfigure')
 const statuses = toRef(providerState, 'statuses')
 const configureError = ref('')
+const injection = reactive<{ ok: boolean | null; error: string }>({
+  ok: null,
+  error: '',
+})
 
-const actions = Object.entries(DEFAULT_USER_CONFIG.hotkeys).map(
-  ([mode, defaultValue]) => ({ mode, defaultValue })
+const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort(
+  (a, b) =>
+    (MODE_ORDER.indexOf(a) + 1 || Infinity) -
+    (MODE_ORDER.indexOf(b) + 1 || Infinity)
 )
 
-async function record(event: KeyboardEvent, mode: string) {
-  event.preventDefault()
-  event.stopPropagation()
-  const shortcut = hotkeyFromKeyboardEvent(event)
-  if (shortcut) await setShortcut(mode, shortcut)
-}
+const rows = computed<HotkeyRow[]>(() => [
+  ...modes.map((mode) => ({
+    id: mode,
+    label: t(`settings.hotkeyActions.${mode}`),
+    value: props.userConfig.hotkeys[mode] ?? '',
+    defaultValue: DEFAULT_USER_CONFIG.hotkeys[mode],
+    command: `tyco-ctl activate ${mode}`,
+    externalHint: t('settings.externalMethodsHint'),
+  })),
+  {
+    id: `${SELECTION_HOTKEY_PREFIX}${INLINE_CORRECTION}`,
+    label: t('settings.hotkeyActions.inlineCorrection'),
+    value:
+      props.userConfig.selectionHotkeys?.[INLINE_CORRECTION] ??
+      DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION],
+    defaultValue: DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION],
+    command: `tyco-ctl replace ${INLINE_CORRECTION}`,
+    externalHint: t('settings.inlineCorrectionExternalHint'),
+    description: t('settings.inlineCorrectionHint'),
+    inline: true,
+  },
+])
 
 async function setShortcut(mode: string, shortcut: string) {
   const result = await ipcStore.callFunction('applyHotkey', [
@@ -227,54 +196,6 @@ async function setShortcut(mode: string, shortcut: string) {
     : { status: 'conflict', message: result.error }
   statuses.value[mode] = status
   if (status.status !== 'conflict') emit('update:hotkey', mode, shortcut)
-}
-
-function statusText(mode: string) {
-  if (recordingMode.value === mode) return t('settings.hotkeyRecording')
-  const result = statuses.value[mode]
-  return result ? t(`settings.hotkeyStatus.${result.status}`) : ''
-}
-
-async function copyCommand(mode: string) {
-  const command = statuses.value[mode]?.externalCommand
-  if (command) await navigator.clipboard.writeText(command)
-}
-
-const selectionActions = computed(() =>
-  listSelectionActions(props.userConfig, DEFAULT_USER_CONFIG.selectionHotkeys)
-)
-const whenEmptyOptions = computed(() => [
-  { id: 'nothing', name: t('settings.selectionActions.whenEmptyNothing') },
-  { id: 'selectAll', name: t('settings.selectionActions.whenEmptySelectAll') },
-])
-const injection = reactive<{ ok: boolean | null; error: string }>({
-  ok: null,
-  error: '',
-})
-
-const selectionTarget = (id: string) => `${SELECTION_HOTKEY_PREFIX}${id}`
-const selectionShortcut = (id: string) =>
-  props.userConfig.selectionHotkeys?.[id] ?? ''
-const replaceCommand = (id: string) => `tyco-ctl replace ${id}`
-
-function selectionActionLabel(action: SelectionActionEntry) {
-  switch (action.kind) {
-    case 'translate':
-      return t('settings.selectionActions.translate', {
-        language: t(getLanguageLabel(action.language ?? '')),
-      })
-    case 'aiTask':
-      return t('settings.selectionActions.aiTask', {
-        name: action.taskName ?? '',
-      })
-    default:
-      return t('settings.selectionActions.correction')
-  }
-}
-
-function clearSelectionShortcut(id: string) {
-  delete statuses.value[selectionTarget(id)]
-  emit('update:hotkey', selectionTarget(id), '')
 }
 
 async function copyText(text: string) {
@@ -306,16 +227,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.configure-hotkeys {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
-}
-
 .configure-error {
   margin: 0;
+  padding: var(--space-sm) var(--space-lg) 0;
   color: var(--app-error);
   font-size: 0.75rem;
 }
@@ -328,20 +242,11 @@ onMounted(async () => {
   width: 100%;
 }
 
-.hotkey-input {
-  flex: 1;
-  min-width: 12rem;
-  cursor: pointer;
-}
-
-.hotkey-input:focus {
-  outline: 2px solid var(--app-accent);
-  outline-offset: 1px;
-}
-
 .hotkey-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   flex-basis: 100%;
-  min-height: 1.25rem;
   margin: 0;
   color: var(--app-text-muted);
   font-size: 0.75rem;
@@ -351,12 +256,19 @@ onMounted(async () => {
   color: var(--app-error);
 }
 
-.external-methods {
-  flex-basis: 100%;
+.hotkey-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  white-space: normal;
 }
 
-.external-methods summary {
-  cursor: pointer;
+.hotkey-info p {
+  margin: 0;
+}
+
+.hotkey-info-title {
+  font-weight: 600;
 }
 
 .external-command {
@@ -367,24 +279,10 @@ onMounted(async () => {
   min-width: 0;
 }
 
-.injection-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
-  color: var(--app-text-muted);
-  font-size: 0.875rem;
-}
-
-.injection-status[data-ok='false'] {
-  color: var(--app-error);
-}
-
 .external-command code {
   overflow-x: auto;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
-  background: var(--app-surface-raised);
+  background: var(--app-surface);
 }
 </style>

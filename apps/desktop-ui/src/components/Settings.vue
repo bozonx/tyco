@@ -45,7 +45,10 @@
 
     <div class="settings-content">
       <div class="settings-content-inner">
-        <h1 class="settings-page-title">{{ currentTabTitle }}</h1>
+        <h1 class="settings-page-title">
+          <span>{{ currentTabTitle }}</span>
+          <InfoTooltip v-if="currentTabInfo" :text="currentTabInfo" size="md" />
+        </h1>
 
         <template v-if="currentTab === 'general'">
           <SettingsSection :title="t('settings.sectionAppearance')">
@@ -262,7 +265,6 @@
           v-else-if="currentTab === 'global-actions'"
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
-          @update:selection-when-empty="updateSelectionWhenEmpty"
         />
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
@@ -526,6 +528,14 @@ const currentTabTitle = computed(() => {
       (tab) => tab.key === currentTab.value
     )?.text || ''
   )
+})
+
+const TAB_INFO_KEYS: Record<string, string> = {
+  'global-actions': 'settings.globalActionsHint',
+}
+const currentTabInfo = computed(() => {
+  const key = TAB_INFO_KEYS[currentTab.value]
+  return key ? t(key) : ''
 })
 
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
@@ -975,12 +985,6 @@ const updateHotkey = (mode: string, shortcut: string) => {
   userConfig.value.hotkeys[mode] = shortcut
 }
 
-const updateSelectionWhenEmpty = (value: string) => {
-  userConfig.value.selectionReplace = {
-    whenEmpty: value === 'selectAll' ? 'selectAll' : 'nothing',
-  }
-}
-
 const updateWindowInsertionMethod = (value: string | number) => {
   if (value !== 'xdotool' && value !== 'ydotool') {
     return
@@ -1174,6 +1178,9 @@ onUnmounted(() => {
 }
 
 .settings-page-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   margin: 0 0 var(--space-xl);
   font-size: 1.25rem;
   font-weight: 600;
