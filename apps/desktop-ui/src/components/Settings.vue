@@ -3,6 +3,36 @@
     <aside class="settings-nav">
       <div class="settings-nav-title">{{ t('nav.settings') }}</div>
       <Tabs :tabs="primaryTabs" v-model:value="currentTab" variant="vertical" />
+      <div v-if="installedPlugins.length > 0" class="settings-subnav">
+        <button
+          v-for="plugin in installedPlugins"
+          :key="plugin.name"
+          type="button"
+          class="settings-subnav-item"
+          :class="{ 'is-active': currentTab === `plugin:${plugin.name}` }"
+          :title="
+            plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+          "
+          @click="currentTab = `plugin:${plugin.name}`"
+        >
+          <Icon icon="mdi:puzzle-outline" height="14" class="shrink-0" />
+          <span class="truncate">
+            {{
+              plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+            }}
+          </span>
+          <span
+            class="settings-subnav-status"
+            :class="plugin.enabled ? 'is-enabled' : 'is-disabled'"
+          >
+            {{
+              plugin.enabled
+                ? t('settings.pluginStatusOn')
+                : t('settings.pluginStatusOff')
+            }}
+          </span>
+        </button>
+      </div>
       <div class="settings-nav-category">
         {{ t('settings.actionsCategory') }}
       </div>
@@ -170,9 +200,9 @@
               :label="t('settings.contrast')"
               :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
             >
-              <SegmentedControl
+              <FieldSelect
                 v-model:value="userConfig.contrast"
-                :label="t('settings.contrast')"
+                :disabled="isEInkTheme"
                 :options="contrastOptions"
               />
             </FieldRow>
@@ -180,9 +210,9 @@
               :label="t('settings.motion')"
               :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
             >
-              <SegmentedControl
+              <FieldSelect
                 v-model:value="userConfig.motion"
-                :label="t('settings.motion')"
+                :disabled="isEInkTheme"
                 :options="motionOptions"
               />
             </FieldRow>
@@ -300,6 +330,14 @@
         <SettingsPluginsTab
           v-else-if="currentTab === 'plugins'"
           :user-config="userConfig"
+          @select-plugin="currentTab = `plugin:${$event}`"
+          @update:plugin-enabled="updatePluginEnabled"
+        />
+
+        <SettingsPluginDetailTab
+          v-else-if="currentPlugin"
+          :plugin="currentPlugin"
+          @back="currentTab = 'plugins'"
           @update:plugin-config="updatePluginConfig"
           @update:plugin-enabled="updatePluginEnabled"
         />
@@ -323,6 +361,7 @@ import {
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
+import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { resolveQuickInputHotkeys } from '../lib/quick-input/quick-input-keys'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import {
@@ -340,6 +379,7 @@ import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
 import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
+import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
@@ -381,11 +421,6 @@ let saveQueue: Promise<void> = Promise.resolve()
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
   {
-    text: t('settings.sectionAccessibility'),
-    key: 'accessibility',
-    icon: 'mdi:human-handsup',
-  },
-  {
     text: t('settings.hotkeysTab'),
     key: 'hotkeys',
     icon: 'mdi:keyboard-outline',
@@ -403,11 +438,33 @@ const primaryTabs = computed(() => [
     icon: 'mdi:script-text-outline',
   },
   {
+    text: t('settings.sectionAccessibility'),
+    key: 'accessibility',
+    icon: 'mdi:human-handsup',
+  },
+  {
     text: t('settings.pluginsTab'),
     key: 'plugins',
     icon: 'mdi:puzzle-outline',
   },
 ])
+
+const installedPlugins = computed(() =>
+  resolveInstalledPlugins(pluginIndexes, userConfig.value)
+)
+
+const currentPluginName = computed(() =>
+  currentTab.value.startsWith('plugin:')
+    ? currentTab.value.slice('plugin:'.length)
+    : null
+)
+
+const currentPlugin = computed(() =>
+  currentPluginName.value
+    ? installedPlugins.value.find((p) => p.name === currentPluginName.value) ||
+      null
+    : null
+)
 
 const actionTabs = computed(() => [
   {
@@ -423,12 +480,20 @@ const actionTabs = computed(() => [
   { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
 ])
 
-const currentTabTitle = computed(
-  () =>
+const currentTabTitle = computed(() => {
+  if (currentPlugin.value) {
+    return (
+      (currentPlugin.value.labelKey
+        ? t(currentPlugin.value.labelKey)
+        : currentPlugin.value.label || currentPlugin.value.name) || ''
+    )
+  }
+  return (
     [...primaryTabs.value, ...actionTabs.value].find(
       (tab) => tab.key === currentTab.value
     )?.text || ''
-)
+  )
+})
 
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   () => [
@@ -1155,6 +1220,69 @@ onUnmounted(() => {
   box-shadow: var(--app-focus-ring);
 }
 
+.settings-subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: -2px;
+  margin-left: var(--space-md);
+  padding-left: var(--space-xs);
+  border-left: 1px solid var(--app-border-subtle);
+}
+
+.settings-subnav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  text-align: left;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.settings-subnav-item:hover {
+  background-color: var(--app-hover);
+  color: var(--color-base-content);
+}
+
+.settings-subnav-item.is-active {
+  background-color: var(--app-accent-soft);
+  color: var(--color-primary);
+}
+
+.settings-subnav-status {
+  margin-left: auto;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.settings-subnav-status.is-enabled {
+  background-color: var(--app-accent-soft);
+  color: var(--color-primary);
+}
+
+.settings-subnav-status.is-disabled {
+  background-color: var(--app-hover);
+  color: var(--app-text-faint);
+}
+
 @media (max-width: 720px) {
   .settings-nav {
     width: 64px;
@@ -1164,11 +1292,20 @@ onUnmounted(() => {
   .settings-nav-title,
   .settings-nav-category,
   .settings-nav-footer span,
-  .settings-nav :deep(.app-tab .truncate) {
+  .settings-nav :deep(.app-tab .truncate),
+  .settings-subnav-item .truncate,
+  .settings-subnav-status {
     display: none;
   }
 
-  .settings-nav :deep(.app-tab) {
+  .settings-subnav {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .settings-nav :deep(.app-tab),
+  .settings-subnav-item {
     justify-content: center;
   }
 }

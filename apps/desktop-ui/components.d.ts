@@ -60,6 +60,7 @@ declare module 'vue' {
     SettingsHotkeysTab: typeof import('./src/components/settings/SettingsHotkeysTab.vue')['default']
     SettingsLlmTab: typeof import('./src/components/settings/SettingsLlmTab.vue')['default']
     SettingsMainActionsTab: typeof import('./src/components/settings/SettingsMainActionsTab.vue')['default']
+    SettingsPluginDetailTab: typeof import('./src/components/settings/SettingsPluginDetailTab.vue')['default']
     SettingsPluginsTab: typeof import('./src/components/settings/SettingsPluginsTab.vue')['default']
     SettingsRulesTab: typeof import('./src/components/settings/SettingsRulesTab.vue')['default']
     SettingsSection: typeof import('./src/components/common/SettingsSection.vue')['default']

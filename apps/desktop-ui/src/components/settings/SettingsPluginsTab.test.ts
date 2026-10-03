@@ -33,7 +33,7 @@ vi.mock('../../plugins', () => ({
 }))
 
 describe('SettingsPluginsTab.vue', () => {
-  it('renders all installed plugins with toggle checkboxes', () => {
+  it('renders all installed plugins with toggle checkboxes without field config', () => {
     const userConfig = {
       plugins: {
         PluginWithConfig: { enabled: true, apiKey: 'my-key' },
@@ -50,10 +50,6 @@ describe('SettingsPluginsTab.vue', () => {
             template:
               '<button class="checkbox-stub" :data-enabled="value" @click="$emit(\'update:value\', !value)">{{ label }}</button>',
           },
-          FieldsByCfg: {
-            props: ['config'],
-            template: '<div class="fields-stub" />',
-          },
         },
       },
     })
@@ -63,13 +59,11 @@ describe('SettingsPluginsTab.vue', () => {
     expect(pluginCards[0].text()).toContain('plugin.withConfig.label')
     expect(pluginCards[1].text()).toContain('plugin.withoutConfig.label')
 
-    // Enabled plugin with fields displays fields stub
-    expect(pluginCards[0].find('.fields-stub').exists()).toBe(true)
-    // Disabled plugin hides fields stub
-    expect(pluginCards[1].find('.fields-stub').exists()).toBe(false)
+    // Fields are not rendered on the main plugins list tab
+    expect(wrapper.find('.fields-stub').exists()).toBe(false)
   })
 
-  it('emits update:pluginEnabled when toggle is clicked', async () => {
+  it('emits update:pluginEnabled when toggle is clicked without selecting plugin', async () => {
     const userConfig = { plugins: {} }
 
     const wrapper = mount(SettingsPluginsTab, {
@@ -79,9 +73,8 @@ describe('SettingsPluginsTab.vue', () => {
           FieldCheckbox: {
             props: ['value', 'label'],
             template:
-              '<button class="checkbox-stub" @click="$emit(\'update:value\', false)">toggle</button>',
+              '<button class="checkbox-stub" @click.stop="$emit(\'update:value\', false)">toggle</button>',
           },
-          FieldsByCfg: true,
         },
       },
     })
@@ -96,34 +89,21 @@ describe('SettingsPluginsTab.vue', () => {
       'PluginWithConfig',
       false,
     ])
+    expect(wrapper.emitted('selectPlugin')).toBeFalsy()
   })
 
-  it('emits update:pluginConfig when fields are updated', async () => {
-    const userConfig = {
-      plugins: { PluginWithConfig: { enabled: true, apiKey: 'initial' } },
-    }
+  it('emits selectPlugin when card is clicked', async () => {
+    const userConfig = { plugins: {} }
 
     const wrapper = mount(SettingsPluginsTab, {
       props: { userConfig },
-      global: {
-        stubs: {
-          FieldCheckbox: true,
-          FieldsByCfg: {
-            props: ['config'],
-            template:
-              '<button class="update-cfg-stub" @click="$emit(\'update:values\', { apiKey: \'updated\' })">update</button>',
-          },
-        },
-      },
+      global: { stubs: { FieldCheckbox: true } },
     })
 
-    const updateBtn = wrapper.find('.update-cfg-stub')
-    await updateBtn.trigger('click')
+    const card = wrapper.find('[data-plugin="PluginWithConfig"]')
+    await card.trigger('click')
 
-    expect(wrapper.emitted('update:pluginConfig')).toBeTruthy()
-    expect(wrapper.emitted('update:pluginConfig')![0]).toEqual([
-      'PluginWithConfig',
-      { apiKey: 'updated' },
-    ])
+    expect(wrapper.emitted('selectPlugin')).toBeTruthy()
+    expect(wrapper.emitted('selectPlugin')![0]).toEqual(['PluginWithConfig'])
   })
 })

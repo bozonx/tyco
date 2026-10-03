@@ -1,20 +1,16 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <div v-if="installedPlugins.length === 0" class="text-sm text-muted">
-      {{ t('settings.noInstalledPlugins') }}
+  <div class="flex flex-col gap-4">
+    <div>
+      <Button sm ghost class="gap-1.5" @click="emit('back')">
+        <Icon icon="mdi:arrow-left" height="16" />
+        {{ t('settings.backToPlugins') }}
+      </Button>
     </div>
 
     <div
-      v-for="plugin of installedPlugins"
-      :key="plugin.name"
       class="surface plugin-card"
       :class="{ 'is-disabled': !plugin.enabled }"
       :data-plugin="plugin.name"
-      role="button"
-      tabindex="0"
-      @click="openPluginSettings(plugin.name)"
-      @keydown.enter.prevent="openPluginSettings(plugin.name)"
-      @keydown.space.prevent="openPluginSettings(plugin.name)"
     >
       <div class="plugin-card-header">
         <div class="plugin-icon">
@@ -38,54 +34,58 @@
           </p>
         </div>
 
-        <div class="plugin-toggle" @click.stop>
-          <FieldCheckbox
-            :value="plugin.enabled"
-            :label="t('settings.pluginEnabled')"
-            @update:value="setPluginEnabled(plugin.name, $event)"
-          />
-        </div>
-
-        <Icon
-          icon="mdi:chevron-right"
-          height="20"
-          class="plugin-chevron text-muted"
+        <FieldCheckbox
+          :value="plugin.enabled"
+          :label="t('settings.pluginEnabled')"
+          @update:value="setPluginEnabled(plugin.name, $event)"
         />
+      </div>
+
+      <div v-if="plugin.enabled" class="plugin-card-body">
+        <FieldsByCfg
+          v-if="plugin.fields.length > 0"
+          :config="plugin.fields"
+          @update:values="updatePluginConfig(plugin.name, $event)"
+        />
+        <div v-else class="p-4 text-sm text-muted">
+          {{ t('settings.noPluginSettings') }}
+        </div>
+      </div>
+
+      <div v-else class="p-4 text-sm text-muted border-t border-subtle">
+        {{ t('settings.pluginDisabledHint') }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import { useI18n } from '../../composables/useI18n'
-import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import { pluginIndexes } from '../../plugins'
+import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
+import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldsByCfg from '../common/FieldsByCfg.vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  userConfig: { plugins?: Record<string, unknown> }
-}>()
+defineProps<{ plugin: InstalledPluginItem }>()
 
 const emit = defineEmits<{
   'update:pluginEnabled': [pluginName: string, enabled: boolean]
-  selectPlugin: [pluginName: string]
+  'update:pluginConfig': [pluginName: string, values: Record<string, unknown>]
+  back: []
 }>()
 
 const { t } = useI18n()
-
-const installedPlugins = computed(() => {
-  return resolveInstalledPlugins(pluginIndexes, props.userConfig)
-})
 
 const setPluginEnabled = (pluginName: string, enabled: boolean) => {
   emit('update:pluginEnabled', pluginName, enabled)
 }
 
-const openPluginSettings = (pluginName: string) => {
-  emit('selectPlugin', pluginName)
+const updatePluginConfig = (
+  pluginName: string,
+  values: Record<string, unknown>
+) => {
+  emit('update:pluginConfig', pluginName, values)
 }
 </script>
 
@@ -93,22 +93,6 @@ const openPluginSettings = (pluginName: string) => {
 .plugin-card {
   overflow: hidden;
   box-shadow: var(--app-shadow-sm);
-  cursor: pointer;
-  user-select: none;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.plugin-card:hover {
-  background-color: var(--app-surface-raised);
-  border-color: var(--app-border-strong);
-}
-
-.plugin-card:focus-visible {
-  outline: none;
-  box-shadow: var(--app-focus-ring);
 }
 
 .plugin-card-header {
@@ -135,18 +119,12 @@ const openPluginSettings = (pluginName: string) => {
   color: var(--app-text-faint);
 }
 
-.plugin-toggle {
-  display: flex;
-  align-items: center;
+.plugin-card-body {
+  border-top: 1px solid var(--app-border-subtle);
+  background-color: var(--app-surface-raised);
 }
 
-.plugin-chevron {
-  flex-shrink: 0;
-  transition: transform var(--transition-fast);
-}
-
-.plugin-card:hover .plugin-chevron {
-  transform: translateX(2px);
-  color: var(--color-base-content);
+.border-subtle {
+  border-color: var(--app-border-subtle);
 }
 </style>
