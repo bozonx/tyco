@@ -1,7 +1,15 @@
 import { shallowRef } from 'vue'
 
-import type { MainActionConfig } from '@tyco/shared'
+import type {
+  MainActionConfig,
+  ScriptExecutionResult,
+  WebhookMainAction,
+} from '@tyco/shared'
 
+import {
+  createScriptActionItem,
+  createWebhookActionItem,
+} from './custom-actions'
 import { assignPluginActions } from './main-actions'
 
 export interface ActionItem {
@@ -38,6 +46,17 @@ export interface ActionMenuDependencies {
   minCorrectionLength?: () => number
   mainActionRegistrations?: () => readonly string[] | undefined
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
+  closeWindow?: () => void
+  executeScriptAction?: (
+    name: string,
+    command: string,
+    text: string,
+    logOutput?: boolean
+  ) => Promise<ScriptExecutionResult>
+  executeWebhookAction?: (
+    action: WebhookMainAction,
+    text: string
+  ) => Promise<void>
 }
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
@@ -139,11 +158,14 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     const plugins = new Map(
       registeredActionsMenu.value.map((action) => [action.id, action])
     )
-    const slots = resolveMainActions().map((item) =>
-      item
-        ? (item.type === 'standard' ? defaults : plugins).get(item.actionId)
-        : undefined
-    )
+    const slots = resolveMainActions().map((item) => {
+      if (!item) return undefined
+      if (item.type === 'standard') return defaults.get(item.actionId)
+      if (item.type === 'plugin') return plugins.get(item.actionId)
+      if (item.type === 'script') return createScriptActionItem(item, deps)
+      if (item.type === 'webhook') return createWebhookActionItem(item, deps)
+      return undefined
+    })
     while (slots.length && !slots.at(-1)) slots.pop()
     return [
       ...slots,

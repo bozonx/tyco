@@ -7,12 +7,65 @@
       @remove="removeAction"
     >
       <template #item="{ item, index }">
-        <FieldSelect
-          class="w-full"
-          :value="optionId(item)"
-          :options="actionOptions"
-          @update:value="updateAction(index, $event)"
-        />
+        <div class="flex flex-col gap-2 w-full">
+          <FieldSelect
+            class="w-full"
+            :value="optionId(item)"
+            :options="actionOptions"
+            @update:value="updateAction(index, $event)"
+          />
+
+          <template v-if="item.type === 'script'">
+            <FieldInput
+              :value="item.name"
+              :placeholder="t('settings.actionName')"
+              class="font-medium"
+              @update:value="updateCustomField(index, 'name', $event)"
+            />
+            <div class="flex gap-2 items-center w-full">
+              <FieldInput
+                :value="item.command"
+                :placeholder="t('settings.actionCommand')"
+                class="flex-1"
+                @update:value="updateCustomField(index, 'command', $event)"
+              />
+              <Button
+                type="button"
+                ghost
+                square
+                sm
+                :title="t('settings.browseScriptFile')"
+                @click="browseScript(index)"
+              >
+                <Icon icon="mdi:folder-open-outline" width="18" height="18" />
+              </Button>
+            </div>
+            <FieldCheckbox
+              :value="Boolean(item.logOutput)"
+              :label="t('settings.actionLogOutput')"
+              @update:value="updateCustomField(index, 'logOutput', $event)"
+            />
+          </template>
+
+          <template v-else-if="item.type === 'webhook'">
+            <FieldInput
+              :value="item.name"
+              :placeholder="t('settings.actionName')"
+              class="font-medium"
+              @update:value="updateCustomField(index, 'name', $event)"
+            />
+            <FieldInput
+              :value="item.url"
+              :placeholder="t('settings.actionWebhookUrl')"
+              @update:value="updateCustomField(index, 'url', $event)"
+            />
+            <FieldCheckbox
+              :value="Boolean(item.logOutput)"
+              :label="t('settings.actionLogOutput')"
+              @update:value="updateCustomField(index, 'logOutput', $event)"
+            />
+          </template>
+        </div>
       </template>
     </ShortcutSlots>
   </SettingsSection>
@@ -25,8 +78,13 @@ import { useI18n } from '../../composables/useI18n'
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/actionMenu'
+import { useIpcStore } from '../../stores/ipc'
+import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldInput from '../common/FieldInput.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
+import { Icon } from '@iconify/vue'
 import {
   type MainActionConfig,
   STANDARD_ACTION_IDS,
@@ -41,12 +99,19 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const actionMenuStore = useActionMenuStore()
+const ipcStore = useIpcStore()
 
 const actionSlots = computed(() =>
   normalizeMainActions(props.userConfig.mainActions)
 )
 
-const optionId = (item: MainActionConfig) => `${item.type}:${item.actionId}`
+const optionId = (item: MainActionConfig | null | undefined): string => {
+  if (!item) return ''
+  if (item.type === 'standard' || item.type === 'plugin') {
+    return `${item.type}:${item.actionId}`
+  }
+  return `custom:${item.type}`
+}
 
 const availableActions = computed(() => [
   ...STANDARD_ACTION_IDS.map((actionId) => ({
@@ -70,13 +135,20 @@ const availableActions = computed(() => [
 ])
 
 const actionOptions = computed(() => {
-  const options = availableActions.value.map(({ config, name }) => ({
-    id: optionId(config),
-    name,
-  }))
+  const options = [
+    ...availableActions.value.map(({ config, name }) => ({
+      id: optionId(config),
+      name,
+    })),
+    { id: 'custom:script', name: t('action.script') },
+    { id: 'custom:webhook', name: t('action.webhook') },
+  ]
   for (const slot of actionSlots.value) {
     if (slot && !options.some((option) => option.id === optionId(slot))) {
-      options.push({ id: optionId(slot), name: slot.actionId })
+      options.push({
+        id: optionId(slot),
+        name: 'actionId' in slot ? slot.actionId : slot.name || slot.type,
+      })
     }
   }
   return options
@@ -99,6 +171,34 @@ function removeAction(index: number) {
 }
 
 function updateAction(index: number, value: string | number | undefined) {
+  if (value === 'custom:script') {
+    const slots = [...actionSlots.value]
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `script-${Date.now()}`
+    slots[index] = {
+      type: 'script',
+      id,
+      name: '',
+      command: '',
+      logOutput: false,
+    }
+    emit('update:mainActions', slots)
+    return
+  }
+
+  if (value === 'custom:webhook') {
+    const slots = [...actionSlots.value]
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `webhook-${Date.now()}`
+    slots[index] = { type: 'webhook', id, name: '', url: '', logOutput: false }
+    emit('update:mainActions', slots)
+    return
+  }
+
   const selected = availableActions.value.find(
     ({ config }) => optionId(config) === value
   )
@@ -106,5 +206,25 @@ function updateAction(index: number, value: string | number | undefined) {
   const slots = [...actionSlots.value]
   slots[index] = selected.config
   emit('update:mainActions', slots)
+}
+
+function updateCustomField(index: number, field: string, value: unknown) {
+  const current = actionSlots.value[index]
+  if (!current || (current.type !== 'script' && current.type !== 'webhook'))
+    return
+  const slots = [...actionSlots.value]
+  slots[index] = { ...current, [field]: value } as MainActionConfig
+  emit('update:mainActions', slots)
+}
+
+async function browseScript(index: number) {
+  try {
+    const path = await ipcStore.callFunctionOrNotify('pickScriptFile', [])
+    if (path && typeof path === 'string') {
+      updateCustomField(index, 'command', path)
+    }
+  } catch {
+    // ignore
+  }
 }
 </script>

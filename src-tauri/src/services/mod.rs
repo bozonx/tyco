@@ -6,6 +6,7 @@ pub mod atomic_file;
 pub mod clipboard;
 #[cfg(target_os = "linux")]
 pub mod clipboard_restore;
+pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod desktop_notifications;

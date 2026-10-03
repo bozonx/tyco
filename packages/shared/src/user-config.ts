@@ -218,7 +218,26 @@ export interface PluginMainAction {
   actionId: string
 }
 
-export type MainActionConfig = StandardMainAction | PluginMainAction
+export interface ScriptMainAction {
+  type: 'script'
+  id: string
+  name: string
+  command: string
+  logOutput?: boolean
+}
+
+export interface WebhookMainAction {
+  type: 'webhook'
+  id: string
+  name: string
+  url: string
+  headers?: Record<string, string>
+  payloadTemplate?: string
+  logOutput?: boolean
+}
+
+export type MainActionConfig =
+  StandardMainAction | PluginMainAction | ScriptMainAction | WebhookMainAction
 
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))

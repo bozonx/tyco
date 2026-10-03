@@ -236,6 +236,11 @@
     "translationGlossaryHint": "One term per line. Use source = translation, or !term to keep a term unchanged.",
     "translationGlossaryPlaceholder": "workspace = workspace\n!TyCo",
     "mainActionsHint": "Actions available from the main action menu. Drag cards to assign them to different hotkeys.",
+    "actionName": "Action name",
+    "actionCommand": "Command or script path",
+    "actionWebhookUrl": "Webhook URL",
+    "actionLogOutput": "Log execution output",
+    "browseScriptFile": "Browse file...",
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
     "hotkey": "Hotkey",
     "hotkeysTab": "Hotkeys",
@@ -487,7 +492,9 @@
     "correction": "Correction",
     "translation": "Translation",
     "askInChat": "Ask in chat",
-    "insertIntoEditor": "Insert into editor"
+    "insertIntoEditor": "Insert into editor",
+    "script": "Script / Command",
+    "webhook": "Webhook"
   },
   "plugin": {
     "searchInInternet": {
@@ -552,7 +559,13 @@
     "noteSaveFailed": "Failed to save the note",
     "desktopCommandFailed": "Action failed",
     "insertFailed": "Could not insert the text",
-    "openInBrowserFailed": "Could not open the browser"
+    "openInBrowserFailed": "Could not open the browser",
+    "scriptSuccess": "Script executed successfully",
+    "scriptFailed": "Script execution failed",
+    "scriptEmptyCommand": "Script command is empty",
+    "webhookSuccess": "Webhook sent successfully",
+    "webhookFailed": "Webhook request failed",
+    "webhookEmptyUrl": "Webhook URL is empty"
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",

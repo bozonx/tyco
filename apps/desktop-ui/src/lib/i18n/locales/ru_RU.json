@@ -239,6 +239,11 @@
     "translationGlossaryHint": "Один термин на строку. Формат: исходник = перевод или !термин, чтобы не переводить.",
     "translationGlossaryPlaceholder": "workspace = рабочее пространство\n!TyCo",
     "mainActionsHint": "Действия основного меню. Перетаскивайте карточки, чтобы назначать их на разные горячие клавиши.",
+    "actionName": "Название действия",
+    "actionCommand": "Команда или путь к скрипту",
+    "actionWebhookUrl": "URL вебхука",
+    "actionLogOutput": "Записывать вывод в лог",
+    "browseScriptFile": "Обзор файла...",
     "tasksHint": "Инструкции для AI. Каждому заданию назначается горячая клавиша в меню заданий.",
     "hotkey": "Горячая клавиша",
     "hotkeysTab": "Хоткеи",
@@ -490,7 +495,9 @@
     "correction": "Коррекция",
     "translation": "Перевод",
     "askInChat": "В чат",
-    "insertIntoEditor": "Вставить в редактор"
+    "insertIntoEditor": "Вставить в редактор",
+    "script": "Скрипт / Команда",
+    "webhook": "Вебхук"
   },
   "plugin": {
     "searchInInternet": {
@@ -555,7 +562,13 @@
     "noteSaveFailed": "Не удалось сохранить заметку",
     "desktopCommandFailed": "Не удалось выполнить действие",
     "insertFailed": "Не удалось вставить текст",
-    "openInBrowserFailed": "Не удалось открыть браузер"
+    "openInBrowserFailed": "Не удалось открыть браузер",
+    "scriptSuccess": "Скрипт успешно выполнен",
+    "scriptFailed": "Ошибка выполнения скрипта",
+    "scriptEmptyCommand": "Команда скрипта не указана",
+    "webhookSuccess": "Вебхук успешно отправлен",
+    "webhookFailed": "Ошибка отправки вебхука",
+    "webhookEmptyUrl": "URL вебхука не указан"
   },
   "llmErrors": {
     "auth": "Провайдер отклонил ключ, или ключ для него не сохранён",

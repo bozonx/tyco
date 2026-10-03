@@ -159,6 +159,16 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.APPEND_NOTE,
       buildArgs: ([dir, fileName, text]) => ({ dir, fileName, text }),
     },
+    executeScriptAction: {
+      command: DESKTOP_COMMANDS.EXECUTE_SCRIPT_ACTION,
+      buildArgs: ([name, command, text, logOutput]) => ({
+        name,
+        command,
+        text,
+        logOutput: Boolean(logOutput),
+      }),
+    },
+    pickScriptFile: { command: DESKTOP_COMMANDS.PICK_SCRIPT_FILE },
   }
 }
 

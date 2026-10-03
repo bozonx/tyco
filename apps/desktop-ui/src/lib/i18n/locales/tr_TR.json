@@ -239,6 +239,11 @@
     "translationGlossaryHint": "Her satıra bir terim yazın. kaynak = çeviri veya terimi korumak için !terim kullanın.",
     "translationGlossaryPlaceholder": "workspace = çalışma alanı\n!TyCo",
     "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",
+    "actionName": "Eylem adı",
+    "actionCommand": "Komut veya betik yolu",
+    "actionWebhookUrl": "Web kancası URL'si",
+    "actionLogOutput": "Yürütme çıktısını günlüğe kaydet",
+    "browseScriptFile": "Dosyaya göz at...",
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
     "hotkey": "Kısayol tuşu",
     "hotkeysTab": "Kısayollar",
@@ -490,7 +495,9 @@
     "correction": "Düzeltme",
     "translation": "Çeviri",
     "askInChat": "Sohbette sor",
-    "insertIntoEditor": "Editöre ekle"
+    "insertIntoEditor": "Editöre ekle",
+    "script": "Betik / Komut",
+    "webhook": "Web kancası"
   },
   "plugin": {
     "searchInInternet": {
@@ -555,7 +562,13 @@
     "noteSaveFailed": "Not kaydedilemedi",
     "desktopCommandFailed": "İşlem başarısız oldu",
     "insertFailed": "Metin eklenemedi",
-    "openInBrowserFailed": "Tarayıcı açılamadı"
+    "openInBrowserFailed": "Tarayıcı açılamadı",
+    "scriptSuccess": "Betik başarıyla çalıştırıldı",
+    "scriptFailed": "Betik çalıştırma başarısız oldu",
+    "scriptEmptyCommand": "Betik komutu boş",
+    "webhookSuccess": "Web kancası başarıyla gönderildi",
+    "webhookFailed": "Web kancası isteği başarısız oldu",
+    "webhookEmptyUrl": "Web kancası URL'si boş"
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",

@@ -7,6 +7,9 @@ import {
   type ActionItem,
   createActionMenuStoreModel,
 } from '../lib/action-menu/action-menu-store'
+import { executeWebhookAction } from '../lib/action-menu/custom-actions'
+import { createTauriFetch } from '../lib/net/tauri-fetch'
+import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useChatStore } from './chat'
 import { useCorrectionStore } from './correction'
 import { useHistoryStore } from './history'
@@ -52,5 +55,29 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     mainActionRegistrations: () =>
       ipcStore.params.userConfig.mainActionRegistrations,
     mainActions: () => ipcStore.params.userConfig.mainActions,
+    closeWindow: () => {
+      void ipcStore.callFunctionOrNotify('closeWindow', [])
+    },
+    executeScriptAction: async (name, command, text, logOutput) => {
+      const res = await ipcStore.callFunctionOrNotify('executeScriptAction', [
+        name,
+        command,
+        text,
+        Boolean(logOutput),
+      ])
+      if (res.success && res.result) {
+        return res.result
+      }
+      return {
+        success: false,
+        exitCode: null,
+        stdout: '',
+        stderr: res.error ?? '',
+      }
+    },
+    executeWebhookAction: async (action, text) => {
+      const fetchFn = createTauriFetch(tauriNetIpc)
+      await executeWebhookAction(action, text, fetchFn)
+    },
   })
 })

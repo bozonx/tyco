@@ -29,6 +29,40 @@ export function normalizeMainActions(
       return { type: 'plugin', actionId: item.actionId }
     }
     if (
+      item?.type === 'script' &&
+      typeof item.id === 'string' &&
+      item.id.trim()
+    ) {
+      return {
+        type: 'script',
+        id: item.id,
+        name: typeof item.name === 'string' ? item.name : '',
+        command: typeof item.command === 'string' ? item.command : '',
+        logOutput: Boolean(item.logOutput),
+      }
+    }
+    if (
+      item?.type === 'webhook' &&
+      typeof item.id === 'string' &&
+      item.id.trim()
+    ) {
+      return {
+        type: 'webhook',
+        id: item.id,
+        name: typeof item.name === 'string' ? item.name : '',
+        url: typeof item.url === 'string' ? item.url : '',
+        headers:
+          item.headers && typeof item.headers === 'object'
+            ? item.headers
+            : undefined,
+        payloadTemplate:
+          typeof item.payloadTemplate === 'string'
+            ? item.payloadTemplate
+            : undefined,
+        logOutput: Boolean(item.logOutput),
+      }
+    }
+    if (
       !item ||
       item.type !== 'standard' ||
       !isStandardActionId(item.actionId)

@@ -239,6 +239,11 @@
     "translationGlossaryHint": "Un término por línea. Usá origen = traducción o !término para conservarlo sin cambios.",
     "translationGlossaryPlaceholder": "workspace = espacio de trabajo\n!TyCo",
     "mainActionsHint": "Acciones disponibles en el menú principal. Arrastrá las tarjetas para asignarlas a distintas teclas rápidas.",
+    "actionName": "Nombre de la acción",
+    "actionCommand": "Comando o ruta del script",
+    "actionWebhookUrl": "URL del webhook",
+    "actionLogOutput": "Registrar salida de ejecución",
+    "browseScriptFile": "Examinar archivo...",
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
     "hotkey": "Tecla rápida",
     "hotkeysTab": "Atajos",
@@ -490,7 +495,9 @@
     "correction": "Corrección",
     "translation": "Traducción",
     "askInChat": "Preguntar en el chat",
-    "insertIntoEditor": "Insertar en el editor"
+    "insertIntoEditor": "Insertar en el editor",
+    "script": "Script / Comando",
+    "webhook": "Webhook"
   },
   "plugin": {
     "searchInInternet": {
@@ -555,7 +562,13 @@
     "noteSaveFailed": "No se pudo guardar la nota",
     "desktopCommandFailed": "No se pudo completar la acción",
     "insertFailed": "No se pudo insertar el texto",
-    "openInBrowserFailed": "No se pudo abrir el navegador"
+    "openInBrowserFailed": "No se pudo abrir el navegador",
+    "scriptSuccess": "Script ejecutado con éxito",
+    "scriptFailed": "Error al ejecutar el script",
+    "scriptEmptyCommand": "El comando del script está vacío",
+    "webhookSuccess": "Webhook enviado con éxito",
+    "webhookFailed": "Error en la solicitud de webhook",
+    "webhookEmptyUrl": "La URL del webhook está vacía"
   },
   "llmErrors": {
     "auth": "El proveedor rechazó la clave, o no hay una clave guardada",

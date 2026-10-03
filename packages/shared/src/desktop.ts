@@ -179,7 +179,16 @@ export const DESKTOP_COMMANDS = {
   SHOW_STATUS_OVERLAY: 'show_status_overlay',
   NOTIFY_DESKTOP: 'notify_desktop',
   CHECK_TEXT_INJECTION: 'check_text_injection',
+  EXECUTE_SCRIPT_ACTION: 'execute_script_action',
+  PICK_SCRIPT_FILE: 'pick_script_file',
 } as const
 
 export type DesktopCommandName =
   (typeof DESKTOP_COMMANDS)[keyof typeof DESKTOP_COMMANDS]
+
+export interface ScriptExecutionResult {
+  success: boolean
+  exitCode: number | null
+  stdout: string
+  stderr: string
+}

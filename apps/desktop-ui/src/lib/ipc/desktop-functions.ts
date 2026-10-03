@@ -10,6 +10,7 @@ import type {
   StatusOverlayRequest,
   StorageInfo,
   UserConfig,
+  ScriptExecutionResult,
 } from '@tyco/shared'
 
 import type { InputRect } from '../quick-panel/input-region'
@@ -75,6 +76,11 @@ export interface DesktopFunctions {
     args: [dir: string, fileName: string, text: string]
     result: string
   }
+  executeScriptAction: {
+    args: [name: string, command: string, text: string, logOutput?: boolean]
+    result: ScriptExecutionResult
+  }
+  pickScriptFile: { args: []; result: string | null }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions

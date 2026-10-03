@@ -1,4 +1,4 @@
-import { DEFAULT_MAIN_ACTIONS } from '@tyco/shared'
+import { DEFAULT_MAIN_ACTIONS, type PluginMainAction } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import { assignPluginActions, normalizeMainActions } from './main-actions'
@@ -20,6 +20,44 @@ describe('normalizeMainActions', () => {
       ]).slice(0, 4)
     ).toEqual([null, { type: 'standard', actionId: 'translation' }, null, null])
   })
+
+  it('normalizes script and webhook actions', () => {
+    const raw = [
+      {
+        type: 'script',
+        id: 'sc1',
+        name: 'My Script',
+        command: 'echo 1',
+        logOutput: true,
+      },
+      {
+        type: 'webhook',
+        id: 'wh1',
+        name: 'My Hook',
+        url: 'https://example.com',
+      },
+      { type: 'script', id: '', command: 'no-id' },
+    ]
+    expect(normalizeMainActions(raw).slice(0, 3)).toEqual([
+      {
+        type: 'script',
+        id: 'sc1',
+        name: 'My Script',
+        command: 'echo 1',
+        logOutput: true,
+      },
+      {
+        type: 'webhook',
+        id: 'wh1',
+        name: 'My Hook',
+        url: 'https://example.com',
+        headers: undefined,
+        payloadTemplate: undefined,
+        logOutput: false,
+      },
+      null,
+    ])
+  })
 })
 
 describe('assignPluginActions', () => {
@@ -38,8 +76,8 @@ describe('assignPluginActions', () => {
     config[13] = { type: 'standard', actionId: 'translation' }
     const slots = assignPluginActions(config, [search, note])
     expect(slots[13]).toEqual(config[13])
-    expect(slots[6]?.actionId).toBe(search.id)
-    expect(slots[12]?.actionId).toBe(note.id)
+    expect((slots[6] as PluginMainAction)?.actionId).toBe(search.id)
+    expect((slots[12] as PluginMainAction)?.actionId).toBe(note.id)
   })
 
   it('preserves user assignments through normalization and re-registration', () => {
@@ -50,7 +88,11 @@ describe('assignPluginActions', () => {
     ])
     expect(slots[9]).toEqual(config[9])
     expect(slots[13]).toBeNull()
-    expect(slots.filter((slot) => slot?.actionId === search.id)).toHaveLength(1)
+    expect(
+      slots.filter(
+        (slot) => slot?.type === 'plugin' && slot.actionId === search.id
+      )
+    ).toHaveLength(1)
   })
 
   it('does not restore an action removed by the user', () => {
@@ -65,8 +107,12 @@ describe('assignPluginActions', () => {
       search,
       { ...note, preferredKey: '?' },
     ])
-    expect(slots.filter((slot) => slot?.actionId === search.id)).toHaveLength(1)
-    expect(slots[6]?.actionId).toBe(note.id)
+    expect(
+      slots.filter(
+        (slot) => slot?.type === 'plugin' && slot.actionId === search.id
+      )
+    ).toHaveLength(1)
+    expect((slots[6] as PluginMainAction)?.actionId).toBe(note.id)
     const full = Array(15).fill({ type: 'standard', actionId: 'translation' })
     expect(assignPluginActions(full, [search])).toEqual(full)
   })
@@ -74,7 +120,9 @@ describe('assignPluginActions', () => {
   it('keeps assignments for unavailable plugins reserved', () => {
     const config = normalizeMainActions(undefined)
     config[13] = { type: 'plugin', actionId: 'Disabled:action' }
-    expect(assignPluginActions(config, [search])[6]?.actionId).toBe(search.id)
+    expect(
+      (assignPluginActions(config, [search])[6] as PluginMainAction)?.actionId
+    ).toBe(search.id)
     expect(normalizeMainActions(config)[13]).toEqual(config[13])
   })
 })
