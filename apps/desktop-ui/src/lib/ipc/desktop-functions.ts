@@ -71,6 +71,10 @@ export interface DesktopFunctions {
     args: [dir: string, fileName: string, text: string]
     result: string
   }
+  appendNote: {
+    args: [dir: string, fileName: string, text: string]
+    result: string
+  }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions
@@ -96,6 +100,7 @@ export type DesktopCall = <K extends DesktopFunctionName>(
 export const PLUGIN_DESKTOP_FUNCTIONS = [
   'openInBrowserAndClose',
   'saveNote',
+  'appendNote',
 ] as const satisfies readonly DesktopFunctionName[]
 
 export type PluginDesktopFunctionName =

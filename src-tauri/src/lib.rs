@@ -18,7 +18,7 @@ use commands::net::{
     net_cancel, net_fetch, net_socket_close, net_socket_open, net_socket_send_binary,
     net_socket_send_text,
 };
-use commands::notes::save_note;
+use commands::notes::{append_note, save_note};
 use commands::secrets::{secrets_remove, secrets_set, secrets_status};
 use commands::selection::{
     check_text_injection, finish_selection_run, notify_desktop, show_status_overlay,
@@ -136,6 +136,7 @@ pub fn run() {
             type_into_window_and_close,
             put_into_clipboard_and_close,
             save_note,
+            append_note,
             net_fetch,
             net_cancel,
             net_socket_open,

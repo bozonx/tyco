@@ -1,5 +1,5 @@
 use std::fs::{self, OpenOptions};
-use std::io::{ErrorKind, Write};
+use std::io::{ErrorKind, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 use crate::errors::AppError;
@@ -35,6 +35,43 @@ pub fn save_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppE
         "Failed to find a free file name for `{file_name}` in `{}`",
         dir.display()
     )))
+}
+
+/// Appends `text` to an existing file inside `dir`, or creates it if missing.
+///
+/// If the existing file is non-empty and does not end with a newline, a newline
+/// is inserted before appending `text`.
+pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError> {
+    let dir = resolve_notes_dir(dir, home_dir().as_deref())?;
+    validate_file_name(file_name)?;
+
+    fs::create_dir_all(&dir)?;
+
+    let path = dir.join(file_name);
+
+    let needs_newline = if path.exists() {
+        let meta = fs::metadata(&path)?;
+        if meta.len() > 0 {
+            let mut file = fs::File::open(&path)?;
+            file.seek(SeekFrom::End(-1))?;
+            let mut byte = [0u8; 1];
+            file.read_exact(&mut byte)?;
+            byte[0] != b'\n'
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    let mut file = OpenOptions::new().create(true).append(true).open(&path)?;
+
+    if needs_newline {
+        file.write_all(b"\n")?;
+    }
+    file.write_all(text.as_bytes())?;
+
+    Ok(path)
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -196,5 +233,35 @@ mod tests {
         assert_eq!(numbered_file_name("note.md", 3), "note-3.md");
         assert_eq!(numbered_file_name("note", 1), "note-1");
         assert_eq!(numbered_file_name(".hidden", 1), ".hidden-1");
+    }
+
+    #[test]
+    fn appends_text_to_new_and_existing_files() {
+        let dir = temp_path("append");
+        let dir_str = dir.to_str().unwrap();
+
+        // When file doesn't exist, it is created
+        let path1 = append_note(dir_str, "daily.md", "- first entry\n").unwrap();
+        assert_eq!(path1, dir.join("daily.md"));
+        assert_eq!(fs::read_to_string(&path1).unwrap(), "- first entry\n");
+
+        // When file exists and ends with \n, text is appended without extra newline
+        let path2 = append_note(dir_str, "daily.md", "- second entry\n").unwrap();
+        assert_eq!(path2, path1);
+        assert_eq!(
+            fs::read_to_string(&path1).unwrap(),
+            "- first entry\n- second entry\n"
+        );
+
+        // When file exists but does NOT end with newline, a newline is inserted
+        fs::write(&path1, "no newline at end").unwrap();
+        let path3 = append_note(dir_str, "daily.md", "appended line").unwrap();
+        assert_eq!(path3, path1);
+        assert_eq!(
+            fs::read_to_string(&path1).unwrap(),
+            "no newline at end\nappended line"
+        );
+
+        let _ = fs::remove_dir_all(&dir);
     }
 }

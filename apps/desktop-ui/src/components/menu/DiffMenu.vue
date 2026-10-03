@@ -1,5 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.compareResult')">
+  <ActionOverlayLayout :title="t('menu.compareResult')" escMode="back">
     <template #header-extra>
       <DiffModeToggle v-model="diffMode" />
     </template>
@@ -84,13 +84,21 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
   return actionMenuStore.getShortcutActions().map((action) => {
     if (!action) return undefined
     if (action.id === 'insertIntoWindow' && !hasTargetWindow.value) {
-      return { ...action, disabled: true }
+      return { ...action, disabled: true, hint: t('selectionReplace.noTarget') }
     }
     return action
   })
 })
 
-const spaceKey = computed(() =>
-  hasTargetWindow.value ? defaultActions.value[0] : undefined
-)
+const spaceKey = computed<ActionItem | undefined>(() => {
+  const primary = defaultActions.value[0]
+  if (!primary) return undefined
+  return {
+    ...primary,
+    disabled: !hasTargetWindow.value,
+    hint: !hasTargetWindow.value
+      ? t('selectionReplace.noTarget')
+      : primary.hint,
+  }
+})
 </script>

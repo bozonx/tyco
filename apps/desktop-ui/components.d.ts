@@ -38,6 +38,7 @@ declare module 'vue' {
     FieldSelect: typeof import('./src/components/common/FieldSelect.vue')['default']
     FieldTextArea: typeof import('./src/components/common/FieldTextArea.vue')['default']
     HistoryList: typeof import('./src/components/HistoryList.vue')['default']
+    InfoTooltip: typeof import('./src/components/common/InfoTooltip.vue')['default']
     InProgressMessage: typeof import('./src/components/menu/InProgressMessage.vue')['default']
     InsertMenu: typeof import('./src/components/menu/InsertMenu.vue')['default']
     KeyButton: typeof import('./src/components/common/KeyButton.vue')['default']

@@ -164,6 +164,7 @@ export const DESKTOP_COMMANDS = {
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
   PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
   SAVE_NOTE: 'save_note',
+  APPEND_NOTE: 'append_note',
   NET_FETCH: 'net_fetch',
   NET_CANCEL: 'net_cancel',
   NET_SOCKET_OPEN: 'net_socket_open',

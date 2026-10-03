@@ -1,9 +1,7 @@
 <template>
-  <div class="flex flex-col gap-4 w-full h-full">
-    <h1>{{ t('settings.selectAction') }}</h1>
-
-    <div class="flex-1 overflow-y-auto">
-      <div class="flex flex-col gap-2">
+  <ActionOverlayLayout :title="t('settings.selectAction')" escMode="back">
+    <template #preview>
+      <div class="flex flex-col gap-2 p-3 overflow-y-auto h-full">
         <Button
           v-for="action in actions"
           :key="action.id"
@@ -14,14 +12,8 @@
           {{ action.name }}
         </Button>
       </div>
-    </div>
-
-    <div class="flex flex-row justify-end gap-2">
-      <Button neutral @click="menuModalsStore.back()">{{
-        t('common.back')
-      }}</Button>
-    </div>
-  </div>
+    </template>
+  </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
@@ -30,6 +22,8 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { useActionMenuStore } from '../../stores/actionMenu'
 import { useMenuModalsStore } from '../../stores/menuModals'
+import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Button from '../common/Button.vue'
 
 const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()

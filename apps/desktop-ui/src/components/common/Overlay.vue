@@ -3,15 +3,6 @@
        of it. E-ink keeps its own flat palette instead. -->
   <div class="overlay" :data-theme="overlayTheme">
     <div class="overlay-panel" :class="{ 'is-compact': !navBarVisible }">
-      <button
-        v-if="navBarVisible && canGoBack"
-        type="button"
-        class="overlay-back"
-        @click="menuModalsStore.back"
-      >
-        <KeyButton>{{ backKeyBadge }}</KeyButton>
-        <span>{{ t('common.back') }}</span>
-      </button>
       <div class="overlay-body">
         <slot />
       </div>
@@ -22,23 +13,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { useMenuModalsStore } from '../../stores/menuModals'
 import { useThemeStore } from '../../stores/theme'
-import KeyButton from './KeyButton.vue'
 
-const menuModalsStore = useMenuModalsStore()
 const themeStore = useThemeStore()
 const overlayTheme = computed(() =>
   themeStore.resolved.theme === 'e-ink' ? 'e-ink' : 'dark'
 )
-const { t } = useI18n()
 withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   navBarVisible: true,
 })
-
-const canGoBack = computed(() => menuModalsStore.menuBreadcrumbs.length > 0)
-const backKeyBadge = 'Esc'
 </script>
 
 <style scoped>
@@ -89,42 +72,11 @@ const backKeyBadge = 'Esc'
   background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
 }
 
-.overlay-back {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  border-radius: var(--radius-md);
-  font-size: 0.8125rem;
-  color: var(--app-text-muted);
-  cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.overlay-back:hover {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
 .overlay-body {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-}
-
-/* keep menu titles clear of the back button */
-.overlay-body :deep(h1) {
-  padding-right: 7rem;
-}
-
-.overlay-body :deep(.action-overlay-header h1) {
-  padding-right: 0;
 }
 
 @keyframes overlay-in {

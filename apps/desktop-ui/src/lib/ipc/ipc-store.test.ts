@@ -132,6 +132,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the append note command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('appendNote', ['/notes', 'daily.md', 'entry'])
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.APPEND_NOTE,
+      { dir: '/notes', fileName: 'daily.md', text: 'entry' }
+    )
+  })
+
   it('returns an error for unknown function names', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)

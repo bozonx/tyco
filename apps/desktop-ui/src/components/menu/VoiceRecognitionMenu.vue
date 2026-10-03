@@ -1,5 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.voiceInput')">
+  <ActionOverlayLayout :title="t('menu.voiceInput')" :onEsc="cancel">
     <template #preview>
       <AudioWaveform
         :level="audioLevel"
@@ -23,14 +23,6 @@
           @click="() => finish()"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-        </ShortcutButton>
-        <ShortcutButton
-          :keys="['Esc']"
-          icon="mdi:close"
-          :disabled="isCancelling"
-          @click="cancel"
-        >
-          {{ t('common.cancel') }}
         </ShortcutButton>
       </div>
     </template>

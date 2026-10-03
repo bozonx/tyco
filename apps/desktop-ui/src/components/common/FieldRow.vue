@@ -1,7 +1,11 @@
 <template>
   <div class="field-row" :class="{ vertical: vertical }">
     <div class="field-row-label">
-      <div class="field-row-title">{{ label }}</div>
+      <div class="field-row-title">
+        <span>{{ label }}</span>
+        <InfoTooltip v-if="info" :text="info" />
+        <slot name="info" />
+      </div>
       <div v-if="hint" class="field-row-hint">{{ hint }}</div>
     </div>
     <div class="field-row-control">
@@ -11,7 +15,14 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ label: string; hint?: string; vertical?: boolean }>()
+import InfoTooltip from './InfoTooltip.vue'
+
+defineProps<{
+  label: string
+  hint?: string
+  info?: string
+  vertical?: boolean
+}>()
 </script>
 
 <style scoped>
@@ -36,6 +47,9 @@ defineProps<{ label: string; hint?: string; vertical?: boolean }>()
 }
 
 .field-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;

@@ -1,12 +1,27 @@
 <template>
   <div class="action-overlay-layout">
-    <!-- Top row: framed text preview / diff / meta -->
+    <!-- Top row: framed text preview / diff / meta and unified header with Esc button -->
     <div class="action-overlay-top">
-      <div v-if="title || $slots['header-extra']" class="action-overlay-header">
-        <h1 v-if="title" class="action-overlay-title">{{ title }}</h1>
-        <div v-if="$slots['header-extra']" class="action-overlay-extra">
-          <slot name="header-extra" />
+      <div
+        v-if="title || $slots['header-extra'] || escVisible"
+        class="action-overlay-header"
+      >
+        <div class="action-overlay-header-left">
+          <h1 v-if="title" class="action-overlay-title">{{ title }}</h1>
+          <div v-if="$slots['header-extra']" class="action-overlay-extra">
+            <slot name="header-extra" />
+          </div>
         </div>
+
+        <button
+          v-if="escVisible"
+          type="button"
+          class="action-overlay-esc"
+          @click="handleEsc"
+        >
+          <KeyButton>Esc</KeyButton>
+          <span>{{ escLabel }}</span>
+        </button>
       </div>
 
       <div class="action-overlay-preview-box">
@@ -17,14 +32,38 @@
     </div>
 
     <!-- Bottom row: fixed-height keyboard action block (5x3 grid + system keys) -->
-    <div class="action-overlay-bottom">
+    <div v-if="$slots['actions']" class="action-overlay-bottom">
       <slot name="actions" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ title?: string }>()
+import { useOverlayNav } from '../../composables/useOverlayNav'
+import KeyButton from './KeyButton.vue'
+
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    escVisible?: boolean
+    escMode?: 'close' | 'back' | 'auto'
+    escLabel?: string
+    onEsc?: () => void
+  }>(),
+  {
+    title: undefined,
+    escVisible: true,
+    escMode: 'auto',
+    escLabel: undefined,
+    onEsc: undefined,
+  }
+)
+
+const { escLabel, handleEsc } = useOverlayNav(() => ({
+  escMode: props.escMode,
+  escLabel: props.escLabel,
+  onEsc: props.onEsc,
+}))
 </script>
 
 <style scoped>
@@ -54,7 +93,13 @@ defineProps<{ title?: string }>()
   gap: var(--space-md);
   flex-shrink: 0;
   min-height: 1.75rem;
-  padding-right: 7.5rem;
+}
+
+.action-overlay-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
 }
 
 .action-overlay-title {
@@ -70,6 +115,28 @@ defineProps<{ title?: string }>()
   align-items: center;
   gap: var(--space-sm);
   font-size: 0.8125rem;
+}
+
+.action-overlay-esc {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.action-overlay-esc:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
 }
 
 .action-overlay-preview-box {

@@ -112,6 +112,8 @@ impl TrackerState {
         };
         if self.active_kind == WindowKind::Foreign {
             self.last_foreign = Some(id.to_owned());
+        } else if self.active_kind == WindowKind::Other {
+            self.last_foreign = None;
         }
     }
 
@@ -429,7 +431,7 @@ mod tests {
         state.window_activated("a", WindowKind::Foreign);
         state.window_activated("tyco", WindowKind::Own);
         state.window_activated("", WindowKind::Foreign);
-        assert_eq!(state.last_foreign.as_deref(), Some("a"));
+        assert_eq!(state.last_foreign, None);
         assert_eq!(state.active, None);
         assert_eq!(state.active_kind, WindowKind::Other);
         state.window_activated("b", WindowKind::Foreign);
@@ -448,7 +450,7 @@ mod tests {
         state.window_activated("desktop", WindowKind::Other);
         assert_eq!(state.target(), None);
         state.window_activated("tyco", WindowKind::Own);
-        assert_eq!(state.target().as_deref(), Some("a"));
+        assert_eq!(state.target(), None);
     }
 
     #[test]

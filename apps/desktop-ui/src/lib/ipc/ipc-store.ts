@@ -155,6 +155,10 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.SAVE_NOTE,
       buildArgs: ([dir, fileName, text]) => ({ dir, fileName, text }),
     },
+    appendNote: {
+      command: DESKTOP_COMMANDS.APPEND_NOTE,
+      buildArgs: ([dir, fileName, text]) => ({ dir, fileName, text }),
+    },
   }
 }
 

@@ -245,7 +245,6 @@ describe('ShortcutList', () => {
       props: { text: 'result text', escVisible: true },
     })
 
-    expect(wrapper.text()).toContain('common.cancel')
     press('Escape')
 
     expect(mocks.closeAll).toHaveBeenCalled()
@@ -262,7 +261,6 @@ describe('ShortcutList', () => {
       props: { text: 'task text', escVisible: true },
     })
 
-    expect(wrapper.text()).toContain('common.back')
     press('Escape')
 
     expect(mocks.back).toHaveBeenCalled()
@@ -279,7 +277,6 @@ describe('ShortcutList', () => {
       props: { text: 'task text', escVisible: true },
     })
 
-    expect(wrapper.text()).toContain('common.back')
     press('Escape')
 
     expect(mocks.back).toHaveBeenCalled()
@@ -294,7 +291,6 @@ describe('ShortcutList', () => {
       props: { text: 'text', escVisible: true, escMode: 'back' },
     })
 
-    expect(wrapper.text()).toContain('common.back')
     press('Escape')
     expect(mocks.back).toHaveBeenCalled()
     wrapper.unmount()

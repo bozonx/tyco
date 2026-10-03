@@ -6,8 +6,7 @@
         props.enterKey ||
         props.actionsKey ||
         props.spaceKey ||
-        props.toEditorVisible ||
-        props.escVisible
+        props.toEditorVisible
       "
       class="shortcuts-primary"
     >
@@ -50,21 +49,6 @@
       >
         {{ t('shortcuts.insertIntoEditor') }}
       </ShortcutButton>
-
-      <ShortcutButton
-        v-if="props.escVisible"
-        :keys="['Esc']"
-        :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
-        @click="handleEsc"
-      >
-        {{
-          resolvedEscMode === 'back'
-            ? t('common.back')
-            : isQuickWindow
-              ? t('common.cancel')
-              : t('common.close')
-        }}
-      </ShortcutButton>
     </div>
 
     <!-- 5 columns x 3 rows grid for physical keyboard layout: qwert / asdfg / zxcvb -->
@@ -91,19 +75,16 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
-import { appNavigation } from '../lib/navigation/navigation'
+import { useOverlayNav } from '../composables/useOverlayNav'
 import {
   quickInputShortcut,
   resolveQuickInputHotkeys,
 } from '../lib/quick-input/quick-input-keys'
 import { type ActionItem } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
-import { useWriterInputStore } from '../stores/writerInput'
 import { PRESETS_KEYS } from '../types'
 import ShortcutButton from './common/ShortcutButton.vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 
 interface ShortcutSlotItem {
   key: string
@@ -151,11 +132,12 @@ const props = withDefaults(
 )
 
 const routeParamsStore = useRouteParams()
-const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
-const writerInputStore = useWriterInputStore()
 const { t } = useI18n()
-const isQuickWindow = getCurrentWindow().label === 'quick'
+const { handleEsc } = useOverlayNav(() => ({
+  escMode: props.escMode,
+  onEsc: props.escAction,
+}))
 
 /**
  * Exactly 15 slots mapping 1:1 to physical keys: Row 1 (0..4): Q W E R T Row 2
@@ -226,38 +208,6 @@ const handleWindowBlur = () => {
 const hasPresetActions = computed(() =>
   slots.value.some((slot) => Boolean(slot.action))
 )
-
-const resolvedEscMode = computed<'close' | 'back'>(() => {
-  if (props.escMode && props.escMode !== 'auto') {
-    return props.escMode
-  }
-
-  if (canGoBack.value) {
-    return 'back'
-  }
-
-  const modal = menuModalsStore.currentModal
-  if (modal === MenuModals.NONE) {
-    return 'close'
-  }
-
-  if (
-    modal === MenuModals.AI_TASK ||
-    modal === MenuModals.TRANSLATE ||
-    modal === MenuModals.ACTION_SELECT
-  ) {
-    return 'back'
-  }
-
-  return 'close'
-})
-
-const canGoBack = computed(() => {
-  if (menuModalsStore.currentModal !== MenuModals.NONE) {
-    return menuModalsStore.menuBreadcrumbs.length > 0
-  }
-  return false
-})
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
@@ -345,42 +295,6 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
 
 function goToEditor() {
   routeParamsStore.toEditor(props.text, props.sourceText)
-}
-
-function handleClose() {
-  menuModalsStore.cancelPending()
-  menuModalsStore.closeAll()
-  try {
-    if (getCurrentWindow().label === 'quick') {
-      if (ipcStore.params?.mode === 'write') {
-        writerInputStore.discard()
-      }
-      void ipcStore.callFunctionOrNotify('closeWindow')
-    } else {
-      void appNavigation.goToEditor()
-    }
-  } catch {
-    // Dev mode fallback
-  }
-}
-
-function handleBack() {
-  if (menuModalsStore.currentModal !== MenuModals.NONE) {
-    menuModalsStore.back()
-  }
-}
-
-function handleEsc() {
-  if (props.escAction) {
-    props.escAction()
-    return
-  }
-
-  if (resolvedEscMode.value === 'back') {
-    handleBack()
-  } else {
-    handleClose()
-  }
 }
 
 function getActionLabel(item?: ActionItem) {

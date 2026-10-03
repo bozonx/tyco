@@ -35,6 +35,12 @@ export const PRESETS_KEYS = [
   'b',
 ]
 
+export interface InputConfigOption {
+  id: string | number
+  name?: string
+  labelKey?: string
+}
+
 export interface InputConfigItem {
   type: 'text' | 'textarea' | 'select' | 'checkbox'
   name: string
@@ -42,5 +48,5 @@ export interface InputConfigItem {
   labelKey?: string
   value?: any
   defaultValue?: any
-  options?: { id: string; name: string }[]
+  options?: InputConfigOption[]
 }

@@ -59,8 +59,18 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 }
 
 .shortcut:disabled {
-  cursor: default;
-  opacity: 0.4;
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.shortcut.is-primary:disabled {
+  border-color: var(--app-border-subtle);
+  background-color: color-mix(in oklab, var(--app-surface) 60%, transparent);
+}
+
+.shortcut.is-primary:disabled .shortcut-keys :deep(.kbd) {
+  border-color: var(--app-border);
+  color: var(--app-text-muted);
 }
 
 .shortcut-keys {

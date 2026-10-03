@@ -7,17 +7,24 @@
     >
       <FieldInput
         v-if="item.type === 'text'"
-        v-model:value="values[item.name]"
+        :value="values[item.name]"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldTextArea
         v-else-if="item.type === 'textarea'"
-        v-model:value="values[item.name]"
+        :value="values[item.name]"
+        @update:value="updateValue(item.name, $event)"
+      />
+      <FieldSelect
+        v-else-if="item.type === 'select'"
+        class="w-full"
+        :value="values[item.name]"
+        :options="mapOptions(item)"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldCheckbox
         v-else-if="item.type === 'checkbox'"
-        v-model:value="values[item.name]"
+        :value="values[item.name]"
         @update:value="updateValue(item.name, $event)"
       />
     </FieldRow>
@@ -25,9 +32,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import FieldCheckbox from './FieldCheckbox.vue'
+import FieldInput from './FieldInput.vue'
+import FieldRow from './FieldRow.vue'
+import FieldSelect from './FieldSelect.vue'
+import FieldTextArea from './FieldTextArea.vue'
 import type { InputConfigItem } from '@/types'
 
 const props = defineProps<{ config: InputConfigItem[] }>()
@@ -40,11 +52,29 @@ const { t } = useI18n()
 const config = computed(() => props.config)
 const values = ref<Record<string, any>>({})
 
-config.value.forEach((item: InputConfigItem) => {
-  values.value[item.name] = item.value || item.defaultValue
-})
+watch(
+  () => props.config,
+  (newConfig) => {
+    for (const item of newConfig) {
+      if (item.value !== undefined) {
+        values.value[item.name] = item.value
+      } else if (values.value[item.name] === undefined) {
+        values.value[item.name] = item.defaultValue
+      }
+    }
+  },
+  { immediate: true, deep: true }
+)
 
-function updateValue(_name: string, _value: any) {
-  emit('update:values', values.value)
+function mapOptions(item: InputConfigItem) {
+  return (item.options || []).map((opt) => ({
+    id: opt.id,
+    name: opt.labelKey ? t(opt.labelKey) : opt.name || String(opt.id),
+  }))
+}
+
+function updateValue(name: string, value: any) {
+  values.value[name] = value
+  emit('update:values', { ...values.value })
 }
 </script>

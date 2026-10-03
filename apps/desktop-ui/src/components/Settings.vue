@@ -73,7 +73,7 @@
           <SettingsSection :title="t('settings.sectionHistory')">
             <FieldRow
               :label="t('settings.editorHistoryMaxItems')"
-              :hint="t('settings.historyLimitHint')"
+              :info="t('settings.historyLimitHint')"
             >
               <FieldInput
                 type="number"
@@ -83,7 +83,7 @@
             </FieldRow>
             <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
-              :hint="t('settings.chatHistoryPrivacyHint')"
+              :info="t('settings.chatHistoryPrivacyHint')"
             >
               <FieldInput
                 type="number"
@@ -119,18 +119,47 @@
               />
             </FieldRow>
             <details class="storage-details">
-              <summary>{{ t('settings.storageLocations') }}</summary>
+              <summary class="storage-summary">
+                {{ t('settings.storageLocations') }}
+              </summary>
               <div v-if="!storageInfo" class="text-sm text-muted">
                 {{ t('settings.storageLocationsUnavailable') }}
               </div>
-              <dl v-else class="storage-list">
-                <template v-for="item in storageInfoItems" :key="item.label">
-                  <dt>{{ item.label }}</dt>
-                  <dd>
-                    <code>{{ item.value }}</code>
-                  </dd>
-                </template>
-              </dl>
+              <div v-else class="storage-list">
+                <div
+                  v-for="item in storageInfoItems"
+                  :key="item.key"
+                  class="storage-item"
+                >
+                  <span class="storage-item-label">{{ item.label }}</span>
+                  <div class="storage-path-box">
+                    <code class="storage-path" :title="item.value">{{
+                      item.value
+                    }}</code>
+                    <button
+                      type="button"
+                      class="storage-copy-btn"
+                      :title="
+                        copiedStorageKey === item.key
+                          ? t('settings.storagePathCopied')
+                          : t('settings.storageCopyPath')
+                      "
+                      :aria-label="t('settings.storageCopyPath')"
+                      @click="copyStoragePath(item.value, item.key)"
+                    >
+                      <Icon
+                        :icon="
+                          copiedStorageKey === item.key
+                            ? 'mdi:check'
+                            : 'mdi:content-copy'
+                        "
+                        height="14"
+                        class="shrink-0"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </details>
           </SettingsSection>
         </template>
@@ -464,6 +493,24 @@ watch(
   { deep: true }
 )
 
+const copiedStorageKey = ref<string | null>(null)
+let copyStorageTimeout: ReturnType<typeof setTimeout> | null = null
+
+async function copyStoragePath(path: string, key: string) {
+  try {
+    await navigator.clipboard.writeText(path)
+    copiedStorageKey.value = key
+    if (copyStorageTimeout) {
+      clearTimeout(copyStorageTimeout)
+    }
+    copyStorageTimeout = setTimeout(() => {
+      copiedStorageKey.value = null
+    }, 2000)
+  } catch {
+    // Clipboard access might be denied
+  }
+}
+
 const storageInfoItems = computed(() => {
   if (!storageInfo.value) {
     return []
@@ -471,16 +518,15 @@ const storageInfoItems = computed(() => {
 
   return [
     {
+      key: 'config',
       label: t('settings.storageUserConfig'),
       value: storageInfo.value.userConfigFile,
     },
-    { label: t('settings.storageData'), value: storageInfo.value.dataDir },
     {
-      label: t('settings.storageHistory'),
-      value: storageInfo.value.historyDir,
+      key: 'data',
+      label: t('settings.storageData'),
+      value: storageInfo.value.dataDir,
     },
-    { label: t('settings.storageChats'), value: storageInfo.value.chatsDir },
-    { label: t('settings.storageCache'), value: storageInfo.value.cacheDir },
   ]
 })
 
@@ -941,6 +987,9 @@ onMounted(() => {
   void llmStore.refreshSecrets()
 })
 onUnmounted(() => {
+  if (copyStorageTimeout) {
+    clearTimeout(copyStorageTimeout)
+  }
   isComponentActive = false
   flushPendingAutosave()
 })
@@ -1011,42 +1060,98 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.storage-list {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 0.375rem var(--space-lg);
-  width: 100%;
-  margin: 0;
-  font-size: 0.8125rem;
-}
-
 .storage-details {
   padding: var(--space-sm) 0;
 }
 
-.storage-details summary {
+.storage-summary {
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--app-text-muted);
   cursor: pointer;
   user-select: none;
+  transition: color var(--transition-fast);
+}
+
+.storage-summary:hover {
+  color: var(--color-base-content);
 }
 
 .storage-details > :not(summary) {
   margin-top: var(--space-md);
 }
 
-.storage-list dt {
+.storage-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.storage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.storage-item-label {
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--app-text-muted);
 }
 
-.storage-list dd {
-  margin: 0;
+.storage-path-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0.375rem 0.5rem 0.375rem 0.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface-sunken);
+  border: 1px solid var(--app-border-subtle);
   min-width: 0;
 }
 
-.storage-list code {
+.storage-path {
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  color: var(--color-base-content);
   word-break: break-all;
+  user-select: all;
+  min-width: 0;
+}
+
+.storage-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--app-text-muted);
+  opacity: 0.8;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition:
+    opacity var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.storage-copy-btn:hover,
+.storage-copy-btn:focus-visible {
+  opacity: 1;
+  background-color: var(--app-hover);
+  color: var(--color-base-content);
+}
+
+.storage-copy-btn:focus-visible {
+  box-shadow: var(--app-focus-ring);
 }
 
 @media (max-width: 720px) {
