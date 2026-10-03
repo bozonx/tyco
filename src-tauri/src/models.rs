@@ -84,6 +84,9 @@ pub struct EditorHistoryItem {
     /// What the AI turned a `Source` entry into.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<String>,
+    /// The `result` of a `Source` entry was inserted into a window or copied.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub sent: bool,
 }
 
 /// What the UI sends to add a text; id and time are assigned by the backend.

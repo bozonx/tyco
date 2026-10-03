@@ -72,6 +72,8 @@ export interface EditorHistoryItem {
   createdAt: number
   /** What the AI turned a `source` entry into. */
   result?: string
+  /** The `result` of a `source` entry was inserted into a window or copied. */
+  sent?: boolean
 }
 
 export interface StorageInfo {

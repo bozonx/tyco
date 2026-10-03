@@ -84,6 +84,8 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
           HISTORY_OPERATIONS[action.kind]
         )
         await historyStore.saveSourceResult(sourceId, result)
+        // pasted over the selection or left in the clipboard: sent either way
+        await historyStore.saveOutput(result)
       } catch {
         // the text is already in place; history is a convenience
       }

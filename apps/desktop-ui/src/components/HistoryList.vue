@@ -70,6 +70,10 @@
                   <template v-if="item.meta">
                     <Icon :icon="item.meta.icon" height="14" />
                     <span>{{ item.meta.label }}</span>
+                    <span v-if="item.meta.note" class="history-meta-note">
+                      <Icon icon="mdi:check" height="12" />
+                      {{ item.meta.note }}
+                    </span>
                   </template>
                   <span v-if="item.time" class="history-date">
                     <time
@@ -114,6 +118,46 @@
                     height="14"
                   />
                 </button>
+
+                <div v-if="item.original" class="history-original">
+                  <button
+                    type="button"
+                    class="history-original-toggle"
+                    :aria-expanded="originalShown.has(item.id)"
+                    @click="toggleOriginal(item)"
+                  >
+                    <Icon
+                      :icon="
+                        originalShown.has(item.id)
+                          ? 'mdi:chevron-down'
+                          : 'mdi:chevron-right'
+                      "
+                      height="14"
+                    />
+                    <span>{{ item.original.label }}</span>
+                  </button>
+                  <div
+                    v-if="originalShown.has(item.id)"
+                    class="history-original-body"
+                  >
+                    <div class="history-original-text">
+                      {{ item.original.text }}
+                    </div>
+                    <div class="history-original-actions">
+                      <Button
+                        v-for="action in originalActions"
+                        :key="action.id"
+                        xs
+                        ghost
+                        square
+                        :title="action.title"
+                        @click="emit('action', action.id, item)"
+                      >
+                        <Icon :icon="action.icon" height="16" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="history-item-actions">
@@ -156,7 +200,9 @@ export interface HistoryListItem {
   id: string
   value: string
   /** Why the entry is in the history, shown above the text. */
-  meta?: { icon: string; label: string }
+  meta?: { icon: string; label: string; note?: string }
+  /** The text `value` was made from, shown collapsed under it. */
+  original?: { label: string; text: string }
   /** Unix time in milliseconds; 0 or missing when unknown. */
   time?: number
   /** Additional localized terms included in search. */
@@ -183,6 +229,8 @@ const props = withDefaults(
     searchQuery?: string
     openTitle?: string
     actions?: HistoryListAction[]
+    /** Shown next to an expanded `original`. */
+    originalActions?: HistoryListAction[]
     emptyHint?: string
     /** Number affected by clearing; may be larger than a filtered list. */
     totalCount?: number
@@ -191,6 +239,7 @@ const props = withDefaults(
     searchQuery: '',
     openTitle: '',
     actions: () => [],
+    originalActions: () => [],
     emptyHint: '',
     totalCount: 0,
   }
@@ -199,6 +248,7 @@ const props = withDefaults(
 const scroller = ref<HTMLElement | null>(null)
 const confirmingClear = ref(false)
 const expanded = ref(new Set<string>())
+const originalShown = ref(new Set<string>())
 
 const filtered = computed(() => {
   const query = props.searchQuery?.trim().toLowerCase()
@@ -206,7 +256,8 @@ const filtered = computed(() => {
   if (!query) return props.items
 
   return props.items.filter((item) =>
-    `${item.value || ''}\n${item.searchText || ''}`
+    [item.value, item.original?.text, item.searchText]
+      .join('\n')
       .toLowerCase()
       .includes(query)
   )
@@ -232,13 +283,21 @@ function isLong(item: HistoryListItem) {
   return item.value.length > 200 || item.value.split('\n').length > 3
 }
 
+function toggled(set: Set<string>, id: string) {
+  const next = new Set(set)
+
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+
+  return next
+}
+
 function toggleExpanded(item: HistoryListItem) {
-  const next = new Set(expanded.value)
+  expanded.value = toggled(expanded.value, item.id)
+}
 
-  if (next.has(item.id)) next.delete(item.id)
-  else next.add(item.id)
-
-  expanded.value = next
+function toggleOriginal(item: HistoryListItem) {
+  originalShown.value = toggled(originalShown.value, item.id)
 }
 
 function confirmClear() {
@@ -347,6 +406,13 @@ function confirmClear() {
   user-select: none;
 }
 
+.history-meta-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-success);
+}
+
 .history-date {
   margin-left: auto;
   color: var(--app-text-faint);
@@ -396,6 +462,67 @@ function confirmClear() {
   text-decoration: underline;
 }
 
+.history-original {
+  margin-top: var(--space-xs);
+}
+
+.history-original-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 6px 2px 2px;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.history-original-toggle:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
+.history-original-body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--app-border);
+  background-color: var(--app-surface-sunken);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.history-original-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--app-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.history-original-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.history-original-actions :deep(.btn) {
+  color: var(--app-text-muted);
+}
+
+.history-original-actions :deep(.btn:hover) {
+  color: var(--color-base-content);
+}
+
 .history-item-actions {
   display: flex;
   align-items: center;
@@ -407,7 +534,68 @@ function confirmClear() {
 }
 
 .history-item:hover .history-item-actions,
-.history-item:focus-within .history-item-actions {
+.history-item:focus-within .history-original {
+  margin-top: var(--space-xs);
+}
+
+.history-original-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 6px 2px 2px;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.history-original-toggle:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-hover);
+}
+
+.history-original-body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--app-border);
+  background-color: var(--app-surface-sunken);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.history-original-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--app-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.history-original-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.history-original-actions :deep(.btn) {
+  color: var(--app-text-muted);
+}
+
+.history-original-actions :deep(.btn:hover) {
+  color: var(--color-base-content);
+}
+
+.history-item-actions {
   opacity: 1;
 }
 

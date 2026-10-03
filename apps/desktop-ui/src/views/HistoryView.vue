@@ -6,13 +6,6 @@
         :placeholder="t('input.historySearchPlaceholder')"
         ref="searchInput"
       />
-      <div class="history-filters">
-        <SegmentedControl
-          v-model:value="editorFilter"
-          :label="t('history.filterLabel')"
-          :options="editorFilterOptions"
-        />
-      </div>
     </div>
 
     <HistoryList
@@ -20,6 +13,7 @@
       :searchQuery="searchQuery"
       :openTitle="t('history.placeIntoEditor')"
       :actions="editorActions"
+      :originalActions="originalActions"
       :emptyHint="t('history.emptyHint')"
       :totalCount="historyStore.editorHistory.length"
       @open="toEditor"
@@ -59,18 +53,12 @@ import HistoryList, {
 } from '../components/HistoryList.vue'
 import Button from '../components/common/Button.vue'
 import SearchInput from '../components/common/SearchInput.vue'
-import SegmentedControl from '../components/common/SegmentedControl.vue'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
-import { getEditorHistoryMeta } from '../lib/history/editor-history-meta'
-import {
-  type EditorHistoryFilter,
-  filterEditorHistory,
-} from '../lib/history/history-list'
+import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { useActionMenuStore } from '../stores/actionMenu'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
 import { Icon } from '@iconify/vue'
@@ -83,21 +71,12 @@ const { t } = useI18n()
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
-const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const routeParams = useRouteParams()
 
-const editorFilter = ref<EditorHistoryFilter>('all')
 const removedItem = ref<EditorHistoryItem | null>(null)
 const editorLoadError = ref(false)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
-
-const editorFilterOptions = computed(() => [
-  { id: 'all' as const, name: t('history.filterAll') },
-  { id: 'output' as const, name: t('history.filterOutput') },
-  { id: 'draft' as const, name: t('history.filterDraft') },
-  { id: 'source' as const, name: t('history.filterSource') },
-])
 
 const isLimitZero = (value: unknown) => String(value ?? '').trim() === '0'
 const editorHistoryDisabled = computed(() =>
@@ -107,24 +86,27 @@ const editorHistoryDisabled = computed(() =>
 const searchQuery = ref<string>('')
 const searchInput = ref<HTMLInputElement | null>(null)
 
-const editorById = computed(
-  () => new Map(historyStore.editorHistory.map((item) => [item.id, item]))
-)
-
 const editorItems = computed<HistoryListItem[]>(() =>
-  filterEditorHistory(historyStore.editorHistory, editorFilter.value).map(
-    (item) => {
-      const meta = getEditorHistoryMeta(item)
+  historyStore.editorHistory.map((item) => {
+    const view = getEditorHistoryView(item)
+    const label = t(view.labelKey)
 
-      return {
-        id: item.id,
-        value: item.text,
-        meta: { icon: meta.icon, label: t(meta.labelKey) },
-        searchText: t(meta.labelKey),
-        time: item.createdAt,
-      }
+    return {
+      id: item.id,
+      value: view.text,
+      meta: {
+        icon: view.icon,
+        label,
+        note: view.sent ? t('history.sent') : undefined,
+      },
+      original: view.original && {
+        label: t(view.original.labelKey),
+        text: view.original.text,
+      },
+      searchText: label,
+      time: item.createdAt,
     }
-  )
+  })
 )
 
 const editorActions = computed<HistoryListAction[]>(() => [
@@ -133,27 +115,25 @@ const editorActions = computed<HistoryListAction[]>(() => [
     icon: 'mdi:pencil-outline',
     title: t('history.placeIntoEditor'),
   },
-  {
-    id: 'compare',
-    icon: 'mdi:compare-horizontal',
-    title: t('history.compare'),
-    isVisible: (item) => !!editorById.value.get(item.id)?.result,
-  },
-  ...(ipcStore.params.windowId
-    ? [
-        {
-          id: 'insert',
-          icon: 'mdi:keyboard-outline',
-          title: t('action.insertIntoWindow'),
-        },
-      ]
-    : []),
   { id: 'copy', icon: 'mdi:content-copy', title: t('action.copyToClipboard') },
   {
     id: 'remove',
     icon: 'mdi:trash-can-outline',
     title: t('history.removeItem'),
     danger: true,
+  },
+])
+
+const originalActions = computed<HistoryListAction[]>(() => [
+  {
+    id: 'originalToEditor',
+    icon: 'mdi:pencil-outline',
+    title: t('history.originalToEditor'),
+  },
+  {
+    id: 'copyOriginal',
+    icon: 'mdi:content-copy',
+    title: t('history.copyOriginal'),
   },
 ])
 
@@ -228,28 +208,20 @@ const undoRemove = async () => {
 }
 
 const onEditorAction = async (actionId: string, item: HistoryListItem) => {
-  const [insertAction, copyAction] = actionMenuStore.getDefaultActions()
+  const [, copyAction] = actionMenuStore.getDefaultActions()
 
   switch (actionId) {
     case 'toEditor':
       toEditor(item)
       break
-    case 'compare': {
-      const result = editorById.value.get(item.id)?.result
-
-      if (result) {
-        menuModalsStore.nextModal(MenuModals.DIFF, {
-          oldText: item.value,
-          newText: result,
-        })
-      }
-      break
-    }
-    case 'insert':
-      await insertAction?.action(item.value)
-      break
     case 'copy':
       await copyAction?.action(item.value)
+      break
+    case 'originalToEditor':
+      if (item.original) routeParams.toEditor(item.original.text)
+      break
+    case 'copyOriginal':
+      if (item.original) await copyAction?.action(item.original.text)
       break
     case 'remove':
       await removeEditorItem(item)
@@ -278,14 +250,6 @@ const toEditor = (item: HistoryListItem) => {
 .history-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.history-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
   gap: var(--space-sm);
 }
 

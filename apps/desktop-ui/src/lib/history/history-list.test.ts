@@ -2,7 +2,6 @@ import type { EditorHistoryItem } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
-  filterEditorHistory,
   formatHistoryDateTime,
   formatHistoryTime,
   groupByDay,
@@ -16,18 +15,6 @@ function item(
 ): EditorHistoryItem {
   return { id, text: id, kind, createdAt }
 }
-
-describe('filterEditorHistory', () => {
-  const items = [item('a', 'output'), item('b', 'draft'), item('c', 'source')]
-
-  it('keeps everything for "all"', () => {
-    expect(filterEditorHistory(items, 'all')).toBe(items)
-  })
-
-  it('keeps one kind', () => {
-    expect(filterEditorHistory(items, 'draft').map((i) => i.id)).toEqual(['b'])
-  })
-})
 
 describe('groupByDay', () => {
   const now = new Date(2026, 8, 21, 15, 0).getTime()

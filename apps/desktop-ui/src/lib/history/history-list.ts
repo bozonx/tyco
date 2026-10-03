@@ -1,16 +1,3 @@
-import type { EditorHistoryItem, EditorHistoryKind } from '@tyco/shared'
-
-export type EditorHistoryFilter = 'all' | EditorHistoryKind
-
-export function filterEditorHistory(
-  items: EditorHistoryItem[],
-  filter: EditorHistoryFilter
-): EditorHistoryItem[] {
-  if (filter === 'all') return items
-
-  return items.filter((item) => item.kind === filter)
-}
-
 export interface HistoryDayGroup<T> {
   key: string
   /** Either an i18n key (today, yesterday, unknown time) or a ready label. */

@@ -727,6 +727,7 @@ fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppErro
                 operation: None,
                 created_at: 0,
                 result: None,
+                sent: false,
             },
         })
         .collect())
@@ -755,10 +756,10 @@ pub fn save_editor_history(
         operation: entry.operation,
         created_at,
         result: None,
+        sent: false,
     };
-    let id = item.id.clone();
 
-    push_editor_history(&mut history, item, entry.replace_id.as_deref(), limit);
+    let id = push_editor_history(&mut history, item, entry.replace_id.as_deref(), limit);
     write_jsonl(&path, &history)?;
 
     Ok(Some(id))
@@ -793,15 +794,18 @@ fn collapses_duplicate(new_kind: EditorHistoryKind, existing_kind: EditorHistory
     }
 }
 
-/// Puts `item` on top. Draft snapshots are collapsed, and repeated outputs are
-/// moved to the top. Sources stay separate because the same text may be used by
-/// several AI operations and every result must remain attached to its source.
+/// Puts `item` on top and returns the id of the entry that now holds the text.
+/// Draft snapshots are collapsed, and repeated outputs are moved to the top.
+/// Sources stay separate because the same text may be used by several AI
+/// operations and every result must remain attached to its source. A draft or
+/// an output of an AI result is not a new entry: its source is moved to the top
+/// instead, marked as sent in the case of an output.
 fn push_editor_history(
     history: &mut Vec<EditorHistoryItem>,
     mut item: EditorHistoryItem,
     replace_id: Option<&str>,
     limit: usize,
-) {
+) -> String {
     if let Some(replace_id) = replace_id {
         history.retain(|existing| {
             existing.id != replace_id || existing.kind != EditorHistoryKind::Draft
@@ -809,6 +813,26 @@ fn push_editor_history(
     }
 
     let text = item.text.trim();
+
+    if item.kind != EditorHistoryKind::Source {
+        if let Some(index) = history.iter().position(|existing| {
+            existing.kind == EditorHistoryKind::Source
+                && existing.result.as_deref().map(str::trim) == Some(text)
+        }) {
+            let mut source = history.remove(index);
+            source.sent |= item.kind == EditorHistoryKind::Output;
+            source.created_at = item.created_at;
+            history.retain(|existing| {
+                existing.kind == EditorHistoryKind::Source || existing.text.trim() != text
+            });
+
+            let id = source.id.clone();
+            history.insert(0, source);
+            history.truncate(limit);
+            return id;
+        }
+    }
+
     let duplicates: Vec<EditorHistoryItem> = history
         .iter()
         .filter(|existing| {
@@ -835,8 +859,10 @@ fn push_editor_history(
         item.result = duplicates.into_iter().find_map(|existing| existing.result);
     }
 
+    let id = item.id.clone();
     history.insert(0, item);
     history.truncate(limit);
+    id
 }
 
 /// Attaches the AI result to the `Source` entry it was produced from.
@@ -1379,6 +1405,7 @@ mod tests {
             operation: None,
             created_at: 1,
             result: None,
+            sent: false,
         }
     }
 
@@ -1483,6 +1510,48 @@ mod tests {
         assert_eq!(history[0].result, None);
         assert_eq!(history[1].kind, EditorHistoryKind::Source);
         assert_eq!(history[1].result.as_deref(), Some("Text."));
+    }
+
+    #[test]
+    fn push_editor_history_marks_the_source_of_a_sent_ai_result() {
+        let mut source = history_item("a", "text", EditorHistoryKind::Source);
+        source.result = Some(String::from("Text."));
+        let mut history = vec![
+            history_item("d", "Text.", EditorHistoryKind::Draft),
+            history_item("o", "older", EditorHistoryKind::Output),
+            source,
+        ];
+        let mut output = history_item("b", "Text.\n", EditorHistoryKind::Output);
+        output.created_at = 5;
+
+        let id = push_editor_history(&mut history, output, None, 10);
+
+        assert_eq!(id, "a");
+        assert_eq!(history_texts(&history), vec!["text", "older"]);
+        assert!(history[0].sent);
+        assert_eq!(history[0].created_at, 5);
+        assert_eq!(history[0].kind, EditorHistoryKind::Source);
+    }
+
+    #[test]
+    fn push_editor_history_keeps_an_ai_result_draft_in_its_source() {
+        let mut source = history_item("a", "text", EditorHistoryKind::Source);
+        source.result = Some(String::from("Text."));
+        let mut history = vec![
+            history_item("o", "older", EditorHistoryKind::Output),
+            source,
+        ];
+
+        let id = push_editor_history(
+            &mut history,
+            history_item("d", "Text.", EditorHistoryKind::Draft),
+            None,
+            10,
+        );
+
+        assert_eq!(id, "a");
+        assert_eq!(history_texts(&history), vec!["text", "older"]);
+        assert!(!history[0].sent);
     }
 
     #[test]
@@ -1636,6 +1705,10 @@ mod tests {
                 "result": "Text.",
             })
         );
+
+        item.sent = true;
+
+        assert_eq!(serde_json::to_value(&item).unwrap()["sent"], json!(true));
     }
 
     #[test]
