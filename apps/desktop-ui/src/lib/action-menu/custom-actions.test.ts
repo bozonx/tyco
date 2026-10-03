@@ -41,6 +41,32 @@ describe('custom-actions', () => {
       expect(body.source).toBe('tyco')
     })
 
+    it('sends GET request with query parameter', async () => {
+      const fetchFn = vi
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve('ok'),
+        })
+
+      const action: WebhookMainAction = {
+        type: 'webhook',
+        id: 'wh-get',
+        name: 'Get Hook',
+        method: 'GET',
+        url: 'https://api.example.com/trigger',
+      }
+
+      await executeWebhookAction(action, 'hello world', fetchFn as any)
+
+      expect(fetchFn).toHaveBeenCalledTimes(1)
+      const [url, init] = fetchFn.mock.calls[0]
+      expect(url).toBe('https://api.example.com/trigger?text=hello+world')
+      expect(init.method).toBe('GET')
+      expect(init.body).toBeUndefined()
+    })
+
     it('interpolates {text} into custom payload template', async () => {
       const fetchFn = vi
         .fn()

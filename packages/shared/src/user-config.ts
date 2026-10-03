@@ -231,6 +231,7 @@ export interface WebhookMainAction {
   id: string
   name: string
   url: string
+  method?: 'GET' | 'POST'
   headers?: Record<string, string>
   payloadTemplate?: string
   logOutput?: boolean

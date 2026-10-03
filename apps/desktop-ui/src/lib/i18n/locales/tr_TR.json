@@ -242,6 +242,7 @@
     "actionName": "Eylem adı",
     "actionCommand": "Komut veya betik yolu",
     "actionWebhookUrl": "Web kancası URL'si",
+    "actionWebhookPayloadPlaceholder": "JSON parametreleri (varsayılan: {\"text\": \"...\"})",
     "actionLogOutput": "Yürütme çıktısını günlüğe kaydet",
     "browseScriptFile": "Dosyaya göz at...",
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",

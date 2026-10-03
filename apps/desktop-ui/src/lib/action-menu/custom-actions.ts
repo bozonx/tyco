@@ -12,29 +12,42 @@ export async function executeWebhookAction(
   text: string,
   fetchFn: FetchFunction
 ): Promise<void> {
-  let bodyStr: string
-  if (action.payloadTemplate?.trim()) {
-    bodyStr = action.payloadTemplate.replaceAll('{text}', text)
+  const method = action.method || 'POST'
+  let url = action.url
+  let bodyStr: string | undefined
+
+  if (method === 'GET') {
+    try {
+      const parsed = new URL(url)
+      parsed.searchParams.set('text', text)
+      url = parsed.toString()
+    } catch {
+      const sep = url.includes('?') ? '&' : '?'
+      url = `${url}${sep}text=${encodeURIComponent(text)}`
+    }
   } else {
-    bodyStr = JSON.stringify({
-      text,
-      action: action.name || action.id,
-      timestamp: Date.now(),
-      source: 'tyco',
-    })
+    if (action.payloadTemplate?.trim()) {
+      bodyStr = action.payloadTemplate.replaceAll('{text}', text)
+    } else {
+      bodyStr = JSON.stringify({
+        text,
+        action: action.name || action.id,
+        timestamp: Date.now(),
+        source: 'tyco',
+      })
+    }
   }
 
   const headers: Record<string, string> = {
-    'content-type': 'application/json; charset=utf-8',
     'user-agent': 'Tyco-Desktop',
     ...action.headers,
   }
 
-  const response = await fetchFn(action.url, {
-    method: 'POST',
-    headers,
-    body: bodyStr,
-  })
+  if (method === 'POST') {
+    headers['content-type'] = 'application/json; charset=utf-8'
+  }
+
+  const response = await fetchFn(url, { method, headers, body: bodyStr })
 
   if (!response.ok) {
     throw new Error(

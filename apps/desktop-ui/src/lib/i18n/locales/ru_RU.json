@@ -242,6 +242,7 @@
     "actionName": "Название действия",
     "actionCommand": "Команда или путь к скрипту",
     "actionWebhookUrl": "URL вебхука",
+    "actionWebhookPayloadPlaceholder": "JSON-параметры (по умолчанию: {\"text\": \"...\"})",
     "actionLogOutput": "Записывать вывод в лог",
     "browseScriptFile": "Обзор файла...",
     "tasksHint": "Инструкции для AI. Каждому заданию назначается горячая клавиша в меню заданий.",

@@ -51,6 +51,7 @@ export function normalizeMainActions(
         id: item.id,
         name: typeof item.name === 'string' ? item.name : '',
         url: typeof item.url === 'string' ? item.url : '',
+        method: item.method === 'GET' ? 'GET' : 'POST',
         headers:
           item.headers && typeof item.headers === 'object'
             ? item.headers

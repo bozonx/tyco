@@ -54,11 +54,33 @@
               class="font-medium"
               @update:value="updateCustomField(index, 'name', $event)"
             />
-            <FieldInput
-              :value="item.url"
-              :placeholder="t('settings.actionWebhookUrl')"
-              @update:value="updateCustomField(index, 'url', $event)"
-            />
+            <div class="flex gap-2 items-center w-full">
+              <SegmentedControl
+                :value="item.method || 'POST'"
+                label="HTTP Method"
+                :options="[
+                  { id: 'POST', name: 'POST' },
+                  { id: 'GET', name: 'GET' },
+                ]"
+                @update:value="updateCustomField(index, 'method', $event)"
+              />
+              <FieldInput
+                :value="item.url"
+                :placeholder="t('settings.actionWebhookUrl')"
+                class="flex-1"
+                @update:value="updateCustomField(index, 'url', $event)"
+              />
+            </div>
+            <template v-if="(item.method || 'POST') === 'POST'">
+              <FieldTextArea
+                :value="item.payloadTemplate"
+                :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
+                autoResize
+                @update:value="
+                  updateCustomField(index, 'payloadTemplate', $event)
+                "
+              />
+            </template>
             <FieldCheckbox
               :value="Boolean(item.logOutput)"
               :label="t('settings.actionLogOutput')"
@@ -83,6 +105,8 @@ import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import { Icon } from '@iconify/vue'
 import {
@@ -194,7 +218,14 @@ function updateAction(index: number, value: string | number | undefined) {
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
         : `webhook-${Date.now()}`
-    slots[index] = { type: 'webhook', id, name: '', url: '', logOutput: false }
+    slots[index] = {
+      type: 'webhook',
+      id,
+      name: '',
+      url: '',
+      method: 'POST',
+      logOutput: false,
+    }
     emit('update:mainActions', slots)
     return
   }

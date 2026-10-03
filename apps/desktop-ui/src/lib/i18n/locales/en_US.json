@@ -239,6 +239,7 @@
     "actionName": "Action name",
     "actionCommand": "Command or script path",
     "actionWebhookUrl": "Webhook URL",
+    "actionWebhookPayloadPlaceholder": "JSON parameters (default: {\"text\": \"...\"})",
     "actionLogOutput": "Log execution output",
     "browseScriptFile": "Browse file...",
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",

@@ -242,6 +242,7 @@
     "actionName": "Nombre de la acción",
     "actionCommand": "Comando o ruta del script",
     "actionWebhookUrl": "URL del webhook",
+    "actionWebhookPayloadPlaceholder": "Parámetros JSON (predeterminado: {\"text\": \"...\"})",
     "actionLogOutput": "Registrar salida de ejecución",
     "browseScriptFile": "Examinar archivo...",
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",

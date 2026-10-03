@@ -51,6 +51,7 @@ describe('normalizeMainActions', () => {
         id: 'wh1',
         name: 'My Hook',
         url: 'https://example.com',
+        method: 'POST',
         headers: undefined,
         payloadTemplate: undefined,
         logOutput: false,
