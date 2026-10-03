@@ -445,10 +445,11 @@ fn provider_kind(session_type: Option<&str>) -> ProviderKind {
     }
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
     StartMode::Editor,
     StartMode::Write,
     StartMode::Chat,
+    StartMode::VoiceChat,
     StartMode::Voice,
     StartMode::Select,
     StartMode::AiTasks,
@@ -540,6 +541,7 @@ fn default_shortcut(mode: StartMode) -> &'static str {
         StartMode::Editor => "Ctrl+Alt+E",
         StartMode::Write => "Ctrl+Alt+W",
         StartMode::Chat => "Ctrl+Alt+C",
+        StartMode::VoiceChat => "Ctrl+Alt+Q",
         StartMode::Voice => "Ctrl+Alt+V",
         StartMode::Select => "Ctrl+Alt+S",
         StartMode::AiTasks => "Ctrl+Alt+A",
@@ -709,6 +711,7 @@ fn mode_description(mode: StartMode) -> &'static str {
         StartMode::Editor => "Open quick editor",
         StartMode::Write => "Open writing mode",
         StartMode::Chat => "Open chat",
+        StartMode::VoiceChat => "Ask the chat by voice",
         StartMode::Voice => "Start voice input",
         StartMode::Select => "Open selection actions",
         StartMode::AiTasks => "Open AI tasks",
@@ -760,7 +763,7 @@ mod tests {
         }));
         assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1);
         assert_eq!(bindings[0].shortcut, "Super+Space");
-        assert_eq!(bindings[3].shortcut, default_shortcut(StartMode::Voice));
+        assert_eq!(bindings[4].shortcut, default_shortcut(StartMode::Voice));
     }
 
     #[test]

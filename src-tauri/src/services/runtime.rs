@@ -156,9 +156,11 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         activation.window_id.clone_from(&source);
     }
     let editor_mode = activation.mode == StartMode::Editor;
-    // the editor must not take over a selection made in Tyco itself
-    let capture_selection =
-        activation.selected_text.is_none() && !(editor_mode && has_focused_window(app));
+    // the editor must not take over a selection made in Tyco itself, and a
+    // voice question continues the open chat without attaching anything
+    let capture_selection = activation.selected_text.is_none()
+        && activation.mode != StartMode::VoiceChat
+        && !(editor_mode && has_focused_window(app));
     let generation = app
         .state::<ContextCapture>()
         .generation
@@ -252,7 +254,8 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         // a region left by the previous session must not hide the new content
         super::platform::set_panel_input_region(&window, None)?;
         super::platform::apply_panel_surface(&window, activation.mode.profile(), layer)?;
-    } else {
+    } else if !(activation.mode == StartMode::VoiceChat && window.is_visible()?) {
+        // a follow-up voice question must not move the chat the user placed
         window.set_size(tauri::LogicalSize::new(width, height))?;
         window.set_decorations(true)?;
         window.set_resizable(true)?;
@@ -291,9 +294,11 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
         | StartMode::Select
         | StartMode::AiTasks
         | StartMode::Correction => QUICK_WINDOW_LABEL,
-        StartMode::Editor | StartMode::Chat | StartMode::History | StartMode::Config => {
-            MAIN_WINDOW_LABEL
-        }
+        StartMode::Editor
+        | StartMode::Chat
+        | StartMode::VoiceChat
+        | StartMode::History
+        | StartMode::Config => MAIN_WINDOW_LABEL,
     }
 }
 
@@ -730,6 +735,7 @@ mod tests {
         for mode in [
             StartMode::Editor,
             StartMode::Chat,
+            StartMode::VoiceChat,
             StartMode::History,
             StartMode::Config,
         ] {

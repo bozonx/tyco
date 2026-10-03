@@ -326,6 +326,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     editor: 'Ctrl+Alt+E',
     write: 'Ctrl+Alt+W',
     chat: 'Ctrl+Alt+C',
+    voiceChat: 'Ctrl+Alt+Q',
     voice: 'Ctrl+Alt+V',
     select: 'Ctrl+Alt+S',
     aiTasks: 'Ctrl+Alt+A',

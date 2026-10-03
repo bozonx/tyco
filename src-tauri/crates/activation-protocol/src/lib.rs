@@ -8,6 +8,7 @@ pub const START_MODES: &[&str] = &[
     "editor",
     "write",
     "chat",
+    "voiceChat",
     "voice",
     "select",
     "aiTasks",

@@ -119,6 +119,7 @@ pub fn default_user_config() -> Value {
         "editor": "Ctrl+Alt+E",
         "write": "Ctrl+Alt+W",
         "chat": "Ctrl+Alt+C",
+        "voiceChat": "Ctrl+Alt+Q",
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "Ctrl+Alt+A",

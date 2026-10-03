@@ -7,6 +7,7 @@
     :value="chatInputStore.value"
     @input="handleInput"
     @keydown="handleKeydown"
+    @blur="handleBlur"
   />
 </template>
 
@@ -37,7 +38,15 @@ onMounted(async () => {
 watch(
   () => chatInputStore.focusCount,
   (newValue, oldValue) => {
-    if (newValue > oldValue) textareaRef.value?.focus()
+    if (newValue <= oldValue) return
+    const textarea = textareaRef.value
+    if (!textarea) return
+    textarea.focus()
+    const caret = chatInputStore.takePendingCaret()
+    if (caret !== null) {
+      // the value watcher has not updated the textarea yet
+      void nextTick(() => textarea.setSelectionRange(caret, caret))
+    }
   }
 )
 
@@ -52,6 +61,15 @@ watch(
 function handleInput(event: Event) {
   chatInputStore.setValue((event.target as HTMLTextAreaElement).value)
   resize()
+}
+
+// a click on the voice button takes the focus away; its text goes here
+function handleBlur(event: FocusEvent) {
+  const textarea = event.target as HTMLTextAreaElement
+  chatInputStore.rememberSelection({
+    start: textarea.selectionStart,
+    end: textarea.selectionEnd,
+  })
 }
 
 function handleKeydown(event: KeyboardEvent) {

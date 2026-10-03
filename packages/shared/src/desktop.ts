@@ -22,6 +22,7 @@ export enum START_MODES {
   EDITOR = 'editor',
   WRITE = 'write',
   CHAT = 'chat',
+  VOICE_CHAT = 'voiceChat',
   HISTORY = 'history',
   CONFIG = 'config',
 }

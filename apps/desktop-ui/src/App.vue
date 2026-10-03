@@ -18,11 +18,13 @@ import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import QuickOverlay from './components/quick/QuickOverlay.vue'
-import { useGlobalEvents } from './composables/useGlobalEvents'
+import { useChatVoiceInput } from './composables/useChatVoiceInput'
+import { GlobalEvents, useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
 import { createCapturedChatSelection } from './lib/chat/captured-chat-selection'
+import { createVoiceChatActivation } from './lib/chat/voice-chat-activation'
 import { desktopClient } from './lib/desktop/client'
 import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
@@ -33,7 +35,7 @@ import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
-import { useMenuModalsStore } from './stores/menuModals'
+import { MenuModals, useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useRouteParams } from './stores/routeParams'
 import { useSelectionReplaceStore } from './stores/selectionReplace'
@@ -170,6 +172,17 @@ const capturedChatSelection = createCapturedChatSelection({
     chatStore.startChat({ attachments: [text] }),
   getSelectedText: () => editorInputStore.selectedText,
 })
+// the voice chat hotkey opens a dictation into the chat, then submits it
+const { openChatVoiceInput } = useChatVoiceInput()
+const voiceChatActivation = createVoiceChatActivation({
+  isVoiceInputOpen: () =>
+    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION,
+  currentPath: () => appNavigation.currentPath(),
+  navigateTo: (path) => appNavigation.push(path),
+  closeAllModals: () => menuModalsStore.closeAll(),
+  openQuickVoiceInput: () => openChatVoiceInput({ quickSend: true }),
+  submitVoiceInput: () => globalEvents.emit(GlobalEvents.VOICE_SUBMIT),
+})
 watch(
   () => [
     ipcStore.params.activationId,
@@ -181,6 +194,7 @@ watch(
     if (!isQuickWindow) {
       capturedSelection.apply(ipcStore.params)
       capturedChatSelection.apply(ipcStore.params)
+      void voiceChatActivation.apply(ipcStore.params)
     }
   }
 )

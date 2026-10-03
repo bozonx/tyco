@@ -154,13 +154,13 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 
+import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
 import { usableModels } from '../lib/llm/llm-catalog'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { AI_TASKS } from '../types'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
@@ -169,7 +169,7 @@ const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
 const ipcStore = useIpcStore()
 const chatStore = useChatStore()
-const menuModalsStore = useMenuModalsStore()
+const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
@@ -279,13 +279,9 @@ const canAttachEditorText = computed(() => {
 })
 
 async function sendMessage() {
-  const message = chatInputStore.value.trim()
-  if (!message || chatStore.isGenerating) return
-  const pending = chatStore.sendMessage(message, attachments.value)
-  chatInputStore.clear()
+  if (!canSend.value) return
   pinnedToBottom.value = true
-  const result = await pending
-  if (!result) chatInputStore.setValue(message)
+  await chatStore.sendInput()
 }
 
 async function retry() {
@@ -305,14 +301,7 @@ async function regenerate(index: number) {
 }
 
 function voiceInput() {
-  menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
-    onCorrected: (text: string) => {
-      const separator =
-        chatInputStore.value && !/\s$/.test(chatInputStore.value) ? ' ' : ''
-      chatInputStore.setValue(`${chatInputStore.value}${separator}${text}`)
-      menuModalsStore.closeAll()
-    },
-  })
+  openChatVoiceInput({ quickSend: false })
 }
 
 function handleScroll() {

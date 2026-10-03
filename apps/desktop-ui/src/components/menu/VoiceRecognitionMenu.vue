@@ -1,5 +1,8 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.voiceInput')" :onEsc="cancel">
+  <ActionOverlayLayout
+    :title="quickSend ? t('menu.voiceChat') : t('menu.voiceInput')"
+    :onEsc="cancel"
+  >
     <template #preview>
       <AudioWaveform
         :level="audioLevel"
@@ -16,11 +19,31 @@
     <template #actions>
       <div class="voice-shortcuts">
         <ShortcutButton
+          v-if="quickSend"
+          :keys="submitKeys"
+          icon="mdi:send"
+          primary
+          :disabled="isFinishing"
+          @click="() => finish('submit')"
+        >
+          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
+        </ShortcutButton>
+        <ShortcutButton
+          v-if="quickSend"
+          :keys="['Tab']"
+          icon="mdi:form-textbox"
+          :disabled="isFinishing"
+          @click="() => finish('insert')"
+        >
+          {{ t('menu.voiceToInput') }}
+        </ShortcutButton>
+        <ShortcutButton
+          v-else
           :keys="['Space', 'Enter']"
           icon="mdi:check"
           primary
           :disabled="isFinishing"
-          @click="() => finish()"
+          @click="() => finish('insert')"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
         </ShortcutButton>
@@ -44,6 +67,7 @@ import {
   createLiveTranscriptState,
   liveTranscriptText,
 } from '../../lib/stt/live-transcript'
+import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -54,19 +78,21 @@ import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
+type CorrectedHandler = (
+  resultText: string,
+  recognizedText: string,
+  correctedText: string | undefined,
+  intent: VoiceFinishIntent
+) => void
+
 const props = defineProps<{
-  onCorrected?:
-    | ((
-        resultText: string,
-        recognizedText: string,
-        correctedText?: string
-      ) => void)
-    | ((
-        resultText: string,
-        recognizedText: string,
-        correctedText?: string
-      ) => void)[]
+  onCorrected?: CorrectedHandler | CorrectedHandler[]
   onCancel?: (() => void) | (() => void)[]
+  /**
+   * The result is sent right away: Enter, Space and the voice chat hotkey
+   * submit it, Tab only inserts it
+   */
+  quickSend?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -74,7 +100,8 @@ const emit = defineEmits<{
     e: 'corrected',
     resultText: string,
     recognizedText: string,
-    correctedText?: string
+    correctedText: string | undefined,
+    intent: VoiceFinishIntent
   ): void
   (e: 'cancelled'): void
 }>()
@@ -104,10 +131,15 @@ const isTranscribing = ref(false)
 const audioLevel = ref(0)
 const audioPeak = ref(0)
 const recordingDurationMs = ref(0)
+const submitKeys = computed(() => {
+  const hotkey = ipcStore.params?.userConfig?.hotkeys?.voiceChat
+  return hotkey ? ['Enter', 'Space', hotkey] : ['Enter', 'Space']
+})
 
 let recordingTimer: ReturnType<typeof setInterval> | undefined
 let unlistenAudioLevel: (() => void) | undefined
 let keyUpHandlerIndex = -1
+let submitHandlerIndex = -1
 let sessionGeneration = 0
 let starting: Promise<void> | undefined
 /** Set once a dictation started; it stays finishable after a failure */
@@ -186,7 +218,7 @@ const cancel = async () => {
   }
 }
 
-const finish = async () => {
+const finish = async (intent: VoiceFinishIntent = 'insert') => {
   if (isFinishing.value || isCancelling.value) {
     return
   }
@@ -247,7 +279,7 @@ const finish = async () => {
     }
 
     if (!voiceSession.signal?.aborted) {
-      emit('corrected', resultText, recognizedText, correctedText)
+      emit('corrected', resultText, recognizedText, correctedText, intent)
     }
   } catch (error) {
     if (!voiceSession.signal?.aborted) {
@@ -290,9 +322,20 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  if (event.code === 'Space' || event.code === 'Enter') {
-    void finish()
+  if (props.quickSend && event.code === 'Tab') {
+    event.preventDefault()
+    void finish('insert')
+    return
   }
+
+  if (event.code === 'Space' || event.code === 'Enter') {
+    void finish(props.quickSend ? 'submit' : 'insert')
+  }
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  // Tab finishes the quick dictation; it must not move the focus first
+  if (props.quickSend && event.code === 'Tab') event.preventDefault()
 }
 
 async function startSession() {
@@ -348,6 +391,13 @@ watch(
 
 onMounted(async () => {
   keyUpHandlerIndex = globalEvents.addListener(GlobalEvents.KEY_UP, handleKeyUp)
+  submitHandlerIndex = globalEvents.addListener(
+    GlobalEvents.VOICE_SUBMIT,
+    () => {
+      void finish('submit')
+    }
+  )
+  window.addEventListener('keydown', handleKeyDown)
 
   unlistenAudioLevel = await desktopClient.listen(
     DESKTOP_EVENTS.VOICE_AUDIO_LEVEL,
@@ -374,6 +424,11 @@ onUnmounted(() => {
     globalEvents.removeListener(keyUpHandlerIndex)
     keyUpHandlerIndex = -1
   }
+  if (submitHandlerIndex >= 0) {
+    globalEvents.removeListener(submitHandlerIndex)
+    submitHandlerIndex = -1
+  }
+  window.removeEventListener('keydown', handleKeyDown)
 
   void (async () => {
     await starting

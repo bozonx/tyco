@@ -71,5 +71,18 @@ export const useChatStore = defineStore('chat', () => {
       await nextTick()
       chatInputStore.focus()
     },
+    /** Sends the input; false when there is nothing to send or a reply runs */
+    async sendInput(): Promise<boolean> {
+      const message = chatInputStore.value.trim()
+      if (!message || model.isGenerating.value) return false
+      const pending = model.sendMessage(
+        message,
+        model.newChatParams.value?.attachments || []
+      )
+      chatInputStore.clear()
+      // a failed message goes back into the input
+      if (!(await pending)) chatInputStore.setValue(message)
+      return true
+    },
   }
 })

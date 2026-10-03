@@ -5,6 +5,7 @@ pub enum StartMode {
     Editor,
     Write,
     Chat,
+    VoiceChat,
     Voice,
     Select,
     AiTasks,
@@ -15,10 +16,11 @@ pub enum StartMode {
 
 impl StartMode {
     #[allow(dead_code)]
-    pub const ALL: [Self; 9] = [
+    pub const ALL: [Self; 10] = [
         Self::Editor,
         Self::Write,
         Self::Chat,
+        Self::VoiceChat,
         Self::Voice,
         Self::Select,
         Self::AiTasks,
@@ -32,6 +34,7 @@ impl StartMode {
             "editor" => Ok(Self::Editor),
             "write" => Ok(Self::Write),
             "chat" => Ok(Self::Chat),
+            "voiceChat" => Ok(Self::VoiceChat),
             "voice" => Ok(Self::Voice),
             "select" => Ok(Self::Select),
             "aiTasks" => Ok(Self::AiTasks),
@@ -49,6 +52,7 @@ impl StartMode {
             Self::Editor => "editor",
             Self::Write => "write",
             Self::Chat => "chat",
+            Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
             Self::Select => "select",
             Self::AiTasks => "aiTasks",
@@ -138,6 +142,7 @@ mod tests {
             "editor",
             "write",
             "chat",
+            "voiceChat",
             "voice",
             "select",
             "aiTasks",
@@ -169,6 +174,7 @@ mod tests {
             StartMode::AiTasks,
             StartMode::Correction,
             StartMode::Chat,
+            StartMode::VoiceChat,
             StartMode::History,
             StartMode::Config,
         ] {
