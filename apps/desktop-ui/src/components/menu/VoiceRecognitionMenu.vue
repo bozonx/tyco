@@ -384,8 +384,8 @@ onUnmounted(() => {
 
 <style scoped>
 .voice-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
+  align-items: center;
   gap: var(--space-sm);
 }
 </style>

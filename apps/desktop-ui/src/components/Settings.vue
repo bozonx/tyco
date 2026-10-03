@@ -1061,7 +1061,8 @@ onUnmounted(() => {
 }
 
 .storage-details {
-  padding: var(--space-sm) 0;
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--app-border-subtle);
 }
 
 .storage-summary {

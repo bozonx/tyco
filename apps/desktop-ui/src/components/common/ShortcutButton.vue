@@ -40,6 +40,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   align-items: center;
   gap: 0.625rem;
   width: 100%;
+  max-width: var(--shortcut-max-width, 20rem);
   min-width: 0;
   padding: 0.375rem 0.625rem 0.375rem 0.375rem;
   border: 1px solid transparent;
@@ -114,6 +115,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   gap: 0.375rem;
   padding: 0.2rem 0.375rem;
   font-size: 0.8125rem;
+  max-width: none;
 }
 
 .shortcut.is-sm .shortcut-keys :deep(.kbd) {
