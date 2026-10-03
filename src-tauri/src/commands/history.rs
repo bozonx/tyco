@@ -10,8 +10,9 @@ pub fn get_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<Vec<EditorHistoryItem>, AppError> {
-    let _guard = state.lock_history_storage();
-    storage::get_editor_history(&app)
+    let mut memory = state.lock_history_storage();
+    let params = state.params();
+    storage::get_editor_history(&app, &params.user_config, &mut memory)
 }
 
 #[tauri::command(async)]
@@ -39,9 +40,9 @@ pub fn save_editor_history(
     state: State<'_, AppState>,
     entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
-    let _guard = state.lock_history_storage();
+    let mut memory = state.lock_history_storage();
     let params = state.params();
-    storage::save_editor_history(&app, &params.user_config, entry)
+    storage::save_editor_history(&app, &params.user_config, &mut memory, entry)
 }
 
 #[tauri::command(async)]
@@ -51,9 +52,9 @@ pub fn set_editor_history_result(
     id: String,
     result: String,
 ) -> Result<(), AppError> {
-    let _guard = state.lock_history_storage();
+    let mut memory = state.lock_history_storage();
     let params = state.params();
-    storage::set_editor_history_result(&app, &params.user_config, id, result)
+    storage::set_editor_history_result(&app, &params.user_config, &mut memory, id, result)
 }
 
 #[tauri::command(async)]
@@ -62,9 +63,9 @@ pub fn restore_editor_history_item(
     state: State<'_, AppState>,
     item: EditorHistoryItem,
 ) -> Result<(), AppError> {
-    let _guard = state.lock_history_storage();
+    let mut memory = state.lock_history_storage();
     let params = state.params();
-    storage::restore_editor_history_item(&app, &params.user_config, item)
+    storage::restore_editor_history_item(&app, &params.user_config, &mut memory, item)
 }
 
 #[tauri::command(async)]
@@ -84,8 +85,9 @@ pub fn remove_from_editor_history(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
-    let _guard = state.lock_history_storage();
-    storage::remove_from_editor_history(&app, id)
+    let mut memory = state.lock_history_storage();
+    let params = state.params();
+    storage::remove_from_editor_history(&app, &params.user_config, &mut memory, id)
 }
 
 #[tauri::command(async)]
@@ -100,8 +102,8 @@ pub fn remove_from_chat_history(
 
 #[tauri::command(async)]
 pub fn clear_editor_history(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
-    let _guard = state.lock_history_storage();
-    storage::clear_editor_history(&app)
+    let mut memory = state.lock_history_storage();
+    storage::clear_editor_history(&app, &mut memory)
 }
 
 #[tauri::command(async)]

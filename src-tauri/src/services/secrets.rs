@@ -17,6 +17,7 @@ use url::Url;
 
 use crate::errors::AppError;
 use crate::services::app_paths::AppPaths;
+use crate::services::atomic_file::read_or_quarantine;
 
 pub const SECRETS_FILE_NAME: &str = "secrets.json";
 pub const SECRET_REF_PREFIX: &str = "tyco-secret:";
@@ -74,17 +75,16 @@ impl SecretStore {
         Self::load(dir.join(SECRETS_FILE_NAME))
     }
 
+    /// A file that cannot be parsed is moved aside: the app must start either
+    /// way, and the user re-enters the keys.
     pub fn load(path: PathBuf) -> Result<Self, AppError> {
-        let file = if path.exists() {
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
-            }
-            serde_json::from_str::<SecretsFile>(&fs::read_to_string(&path)?)?
-        } else {
-            SecretsFile::default()
-        };
+        #[cfg(unix)]
+        if path.exists() {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
+        }
+        let file = read_or_quarantine(&path, |raw| Ok(serde_json::from_str::<SecretsFile>(raw)?))?
+            .unwrap_or_default();
 
         Ok(Self {
             path: Some(path),
@@ -236,8 +236,6 @@ fn dedup(origins: Vec<String>) -> Vec<String> {
     result
 }
 
-/// Writes through a temporary file readable by the owner only, then renames
-/// it over the target.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -328,6 +326,22 @@ mod tests {
             assert_eq!(mode & 0o777, 0o600);
         }
 
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn an_unreadable_file_is_moved_aside() {
+        let dir = std::env::temp_dir().join(format!("tyco-secrets-broken-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(SECRETS_FILE_NAME);
+        fs::write(&path, "{ not json").unwrap();
+
+        let store = SecretStore::load(path.clone()).unwrap();
+
+        assert!(store.status().is_empty());
+        assert!(!path.exists());
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
         fs::remove_dir_all(&dir).unwrap();
     }
 }

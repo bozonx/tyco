@@ -58,9 +58,23 @@ pub fn save_user_config(
     }
     let _guard = state.lock_config_storage();
     storage::save_user_config(&app, &user_config)?;
-    state.update_params(|params| {
-        params.user_config = user_config;
-    });
+    let previous_config = state.params().user_config;
+    {
+        let mut memory = state.lock_history_storage();
+        // the config is saved already; history that could not follow the new
+        // settings yet does at the next start
+        if let Err(error) = storage::apply_history_settings_change(
+            &app,
+            &previous_config,
+            &user_config,
+            &mut memory,
+        ) {
+            log::error!("Could not apply the history settings: {error}");
+        }
+        state.update_params(|params| {
+            params.user_config = user_config;
+        });
+    }
     runtime::emit_params(&app, &state)?;
 
     Ok(())

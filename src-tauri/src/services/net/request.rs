@@ -33,7 +33,8 @@ pub enum Protocol {
     WebSocket,
 }
 
-pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, String> {
+/// The URL with its origin, when its scheme fits the protocol.
+fn parse_url(protocol: Protocol, value: &str) -> Result<(Url, String), String> {
     let url = Url::parse(value).map_err(|error| format!("Invalid URL \"{value}\": {error}"))?;
     let allowed_schemes: &[&str] = match protocol {
         Protocol::Http => &["http", "https"],
@@ -42,7 +43,12 @@ pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, String>
     if !allowed_schemes.contains(&url.scheme()) {
         return Err(format!("Unsupported URL scheme \"{}\"", url.scheme()));
     }
-    origin_of(&url).ok_or_else(|| format!("URL \"{url}\" has no host"))
+    let origin = origin_of(&url).ok_or_else(|| format!("URL \"{url}\" has no host"))?;
+    Ok((url, origin))
+}
+
+pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, String> {
+    parse_url(protocol, value).map(|(_, origin)| origin)
 }
 
 /// Validates the URL and fills secret references in the headers and the
@@ -54,15 +60,7 @@ pub fn prepare(
     headers: &[(String, String)],
     secrets: &Secrets,
 ) -> Result<PreparedRequest, String> {
-    let mut url = Url::parse(url).map_err(|error| format!("Invalid URL \"{url}\": {error}"))?;
-    let allowed_schemes: &[&str] = match protocol {
-        Protocol::Http => &["http", "https"],
-        Protocol::WebSocket => &["ws", "wss"],
-    };
-    if !allowed_schemes.contains(&url.scheme()) {
-        return Err(format!("Unsupported URL scheme \"{}\"", url.scheme()));
-    }
-    let origin = origin_of(&url).ok_or_else(|| format!("URL \"{url}\" has no host"))?;
+    let (mut url, origin) = parse_url(protocol, url)?;
 
     let resolve = |id: &str| -> Result<&str, String> {
         let entry = secrets

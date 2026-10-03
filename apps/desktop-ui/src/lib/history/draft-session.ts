@@ -4,15 +4,15 @@ export type SaveDraft = (
   replaceId?: string
 ) => Promise<string | null>
 
+/** Removes a stored draft by its id. */
+export type RemoveDraft = (id: string) => Promise<unknown>
+
 /**
  * Keeps one history entry per editing session of an input. Every snapshot of
  * the same session replaces the previous one, so hiding the window again and
  * again after small edits does not fill the history with near copies. The
  * session ends when its text leaves the input (cleared or replaced)
  */
-/** Removes a stored draft by its id. */
-export type RemoveDraft = (id: string) => Promise<unknown>
-
 export function createDraftSession(
   saveDraft: SaveDraft,
   removeDraft?: RemoveDraft

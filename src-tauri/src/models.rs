@@ -79,7 +79,8 @@ pub struct EditorHistoryItem {
     pub kind: EditorHistoryKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub operation: Option<EditorHistoryOperation>,
-    /// Unix time in milliseconds, 0 when unknown (entries of the legacy format).
+    /// Unix time in milliseconds. 0 only in old files: reading fills in the
+    /// time the file was written.
     pub created_at: u64,
     /// What the AI turned a `Source` entry into.
     #[serde(default, skip_serializing_if = "Option::is_none")]

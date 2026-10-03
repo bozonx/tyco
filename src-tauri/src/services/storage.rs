@@ -11,7 +11,8 @@ use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
     LocalState, StorageInfo, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
-use crate::services::atomic_file::{quarantine, write_private};
+use crate::services::atomic_file::{read_or_quarantine, write_private};
+use crate::services::secret_detector::redact_secrets;
 use crate::services::{app_paths::AppPaths, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
@@ -79,7 +80,7 @@ fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), AppError> {
     write_private(path, &serde_json::to_string_pretty(value)?)
 }
 
-fn read_jsonl<T: DeserializeOwned>(path: &PathBuf) -> Result<Vec<T>, AppError> {
+fn read_jsonl<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, AppError> {
     if !path.exists() {
         return Ok(Vec::new());
     }
@@ -167,33 +168,6 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     save_user_config(app, &default_config)?;
 
     Ok(default_config)
-}
-
-/// Parses the file at `path`; `None` when there is none or it was unreadable
-/// and has been moved aside.
-fn read_or_quarantine<T>(
-    path: &Path,
-    parse: impl FnOnce(&str) -> Result<T, AppError>,
-) -> Result<Option<T>, AppError> {
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let parsed = fs::read_to_string(path)
-        .map_err(AppError::from)
-        .and_then(|raw| parse(&raw));
-    match parsed {
-        Ok(value) => Ok(Some(value)),
-        Err(error) => {
-            let target = quarantine(path)?;
-            log::error!(
-                "{} is unreadable ({error}); moved it to {} and starting with defaults",
-                path.display(),
-                target.display()
-            );
-            Ok(None)
-        }
-    }
 }
 
 /// Deepgram is the only speech provider; other entries are dropped, and the
@@ -730,6 +704,8 @@ pub fn save_local_state(app: &AppHandle, local_state: &LocalState) -> Result<(),
 
 const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
 const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
+const DEFAULT_CHAT_HISTORY_LIMIT: usize = 50;
+const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
 /// A line of `editor-history.jsonl`: a plain string in the legacy format.
 #[derive(Deserialize)]
@@ -743,12 +719,19 @@ fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(app_data_sub_dir(app, "history")?.join(EDITOR_HISTORY_FILE))
 }
 
-pub fn get_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
-    read_editor_history(&editor_history_path(app)?)
-}
-
-fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppError> {
+/// Entries without a date (the legacy format) get the time the file was last
+/// written: the latest they can be from, so that the retention period applies
+/// to them too.
+fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryItem>, AppError> {
     let lines: Vec<StoredEditorHistoryLine> = read_jsonl(path)?;
+    let file_time = || {
+        fs::metadata(path)
+            .and_then(|metadata| metadata.modified())
+            .ok()
+            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+            .and_then(|duration| u64::try_from(duration.as_millis()).ok())
+            .unwrap_or_else(now_ms)
+    };
 
     Ok(lines
         .into_iter()
@@ -766,7 +749,154 @@ fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppErro
                 sent: false,
             },
         })
+        .map(|mut item| {
+            if item.created_at == 0 {
+                item.created_at = file_time();
+            }
+            item
+        })
         .collect())
+}
+
+fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+/// What the settings say about the editor history.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct EditorHistoryPolicy {
+    /// How many entries to keep; 0 keeps none.
+    pub limit: usize,
+    /// The entries live in the memory of the process only and never reach the
+    /// disk, so nothing of them outlives the app, whichever way it ends.
+    pub memory_only: bool,
+    /// Entries older than this many days are dropped; 0 keeps them forever.
+    pub retention_days: u64,
+    /// What looks like a password or a key is masked before it is stored.
+    pub sanitize: bool,
+}
+
+impl EditorHistoryPolicy {
+    pub fn from_config(user_config: &Value) -> Self {
+        let flag = |key: &str| {
+            user_config
+                .get(key)
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+        };
+
+        Self {
+            limit: history_limit(
+                user_config,
+                "editorHistoryMaxItems",
+                DEFAULT_EDITOR_HISTORY_LIMIT,
+            ),
+            memory_only: flag("clearEditorHistoryOnExit"),
+            retention_days: user_config
+                .get("editorHistoryRetentionDays")
+                .and_then(Value::as_u64)
+                .unwrap_or(0),
+            sanitize: flag("sanitizeSecretsInEditorHistory"),
+        }
+    }
+
+    fn redact(&self, text: String) -> String {
+        if self.sanitize {
+            redact_secrets(&text)
+        } else {
+            text
+        }
+    }
+
+    /// Brings stored entries in line with the settings: drops those past the
+    /// retention period or over the limit and masks secrets when asked, also
+    /// in entries stored before the setting was turned on.
+    fn enforce(&self, history: &mut Vec<EditorHistoryItem>, now_ms: u64) {
+        if self.retention_days > 0 {
+            let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
+            history.retain(|item| item.created_at >= cutoff);
+        }
+        history.truncate(self.limit);
+        if self.sanitize {
+            for item in history.iter_mut() {
+                item.text = redact_secrets(&item.text);
+                item.result = item.result.take().map(|result| redact_secrets(&result));
+            }
+        }
+    }
+}
+
+/// Where the editor history lives: its file, or the memory of the process.
+enum EditorHistoryStore<'a> {
+    File(PathBuf),
+    Memory(&'a mut Vec<EditorHistoryItem>),
+}
+
+impl EditorHistoryStore<'_> {
+    fn read(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
+        match self {
+            Self::File(path) => read_editor_history(path),
+            Self::Memory(items) => Ok(items.to_vec()),
+        }
+    }
+
+    /// An empty history leaves no file behind.
+    fn write(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
+        match self {
+            Self::File(path) if items.is_empty() => remove_file_if_exists(path),
+            Self::File(path) => write_jsonl(path, &items),
+            Self::Memory(memory) => {
+                **memory = items;
+                Ok(())
+            }
+        }
+    }
+}
+
+/// The editor history as the settings let it be seen and changed.
+struct EditorHistory<'a> {
+    store: EditorHistoryStore<'a>,
+    policy: EditorHistoryPolicy,
+}
+
+impl<'a> EditorHistory<'a> {
+    /// `memory` holds the entries while the history is kept in memory only.
+    fn open(
+        app: &AppHandle,
+        user_config: &Value,
+        memory: &'a mut Vec<EditorHistoryItem>,
+    ) -> Result<Self, AppError> {
+        let policy = EditorHistoryPolicy::from_config(user_config);
+        let store = if policy.memory_only {
+            EditorHistoryStore::Memory(memory)
+        } else {
+            EditorHistoryStore::File(editor_history_path(app)?)
+        };
+
+        Ok(Self { store, policy })
+    }
+
+    fn load(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
+        let mut items = self.store.read()?;
+        self.policy.enforce(&mut items, now_ms());
+        Ok(items)
+    }
+
+    fn save(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
+        self.store.write(items)
+    }
+}
+
+pub fn get_editor_history(
+    app: &AppHandle,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+) -> Result<Vec<EditorHistoryItem>, AppError> {
+    EditorHistory::open(app, user_config, memory)?.load()
 }
 
 /// Adds an entry and returns its id, or `None` when nothing was stored: the
@@ -774,24 +904,25 @@ fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppErro
 pub fn save_editor_history(
     app: &AppHandle,
     user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    entry: EditorHistoryEntry,
+) -> Result<Option<String>, AppError> {
+    save_editor_history_entry(&mut EditorHistory::open(app, user_config, memory)?, entry)
+}
+
+fn save_editor_history_entry(
+    history: &mut EditorHistory,
     mut entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
-    let limit = editor_history_limit(user_config);
+    let policy = history.policy;
 
-    if entry.text.trim().is_empty() || limit == 0 {
+    if entry.text.trim().is_empty() || policy.limit == 0 {
         return Ok(None);
     }
 
-    if user_config
-        .get("sanitizeSecretsInEditorHistory")
-        .and_then(Value::as_bool)
-        .unwrap_or(false)
-    {
-        entry.text = crate::services::secret_detector::redact_secrets(&entry.text);
-    }
+    entry.text = policy.redact(entry.text);
 
-    let path = editor_history_path(app)?;
-    let mut history = read_editor_history(&path)?;
+    let mut items = history.load()?;
     let created_at = now_ms();
     let item = EditorHistoryItem {
         id: new_history_id(created_at),
@@ -803,18 +934,10 @@ pub fn save_editor_history(
         sent: false,
     };
 
-    let id = push_editor_history(&mut history, item, entry.replace_id.as_deref(), limit);
-    write_jsonl(&path, &history)?;
+    let id = push_editor_history(&mut items, item, entry.replace_id.as_deref(), policy.limit);
+    history.save(items)?;
 
     Ok(Some(id))
-}
-
-fn editor_history_limit(user_config: &Value) -> usize {
-    history_limit(
-        user_config,
-        "editorHistoryMaxItems",
-        DEFAULT_EDITOR_HISTORY_LIMIT,
-    )
 }
 
 /// How much an entry says about the text: a text that was sent somewhere or
@@ -913,25 +1036,19 @@ fn push_editor_history(
 pub fn set_editor_history_result(
     app: &AppHandle,
     user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
     id: String,
-    mut result: String,
+    result: String,
 ) -> Result<(), AppError> {
-    if user_config
-        .get("sanitizeSecretsInEditorHistory")
-        .and_then(Value::as_bool)
-        .unwrap_or(false)
-    {
-        result = crate::services::secret_detector::redact_secrets(&result);
-    }
+    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let result = history.policy.redact(result);
+    let mut items = history.load()?;
 
-    let path = editor_history_path(app)?;
-    let mut history = read_editor_history(&path)?;
-
-    if !apply_editor_history_result(&mut history, &id, result) {
+    if !apply_editor_history_result(&mut items, &id, result) {
         return Ok(());
     }
 
-    write_jsonl(&path, &history)
+    history.save(items)
 }
 
 fn apply_editor_history_result(
@@ -951,19 +1068,23 @@ fn apply_editor_history_result(
 pub fn restore_editor_history_item(
     app: &AppHandle,
     user_config: &Value,
-    item: EditorHistoryItem,
+    memory: &mut Vec<EditorHistoryItem>,
+    mut item: EditorHistoryItem,
 ) -> Result<(), AppError> {
-    let limit = editor_history_limit(user_config);
+    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let policy = history.policy;
 
-    if limit == 0 {
+    if policy.limit == 0 {
         return Ok(());
     }
 
-    let path = editor_history_path(app)?;
-    let mut history = read_editor_history(&path)?;
+    item.text = policy.redact(item.text);
+    item.result = item.result.map(|result| policy.redact(result));
 
-    if insert_restored_item(&mut history, item, limit) {
-        write_jsonl(&path, &history)?;
+    let mut items = history.load()?;
+
+    if insert_restored_item(&mut items, item, policy.limit) {
+        history.save(items)?;
     }
 
     Ok(())
@@ -999,56 +1120,124 @@ fn insert_restored_item(
     true
 }
 
-pub fn remove_from_editor_history(app: &AppHandle, id: String) -> Result<(), AppError> {
-    let path = editor_history_path(app)?;
-    let mut history = read_editor_history(&path)?;
-    history.retain(|item| item.id != id);
-    write_jsonl(&path, &history)
-}
-
-pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
-    write_jsonl(&editor_history_path(app)?, &Vec::<EditorHistoryItem>::new())
-}
-
-pub fn prune_editor_history_by_retention(
+pub fn remove_from_editor_history(
     app: &AppHandle,
-    retention_days: u64,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    id: String,
 ) -> Result<(), AppError> {
-    if retention_days == 0 {
-        return Ok(());
+    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let mut items = history.load()?;
+    items.retain(|item| item.id != id);
+    history.save(items)
+}
+
+/// Removes every entry, from the memory and from the disk, whichever of them
+/// the settings use now.
+pub fn clear_editor_history(
+    app: &AppHandle,
+    memory: &mut Vec<EditorHistoryItem>,
+) -> Result<(), AppError> {
+    memory.clear();
+    remove_file_if_exists(&editor_history_path(app)?)
+}
+
+/// Applies the history settings to what is stored. At startup the
+/// memory-only mode means that the history of the previous run is gone, also
+/// when that run ended without a chance to clean up.
+pub fn apply_history_settings_on_startup(
+    app: &AppHandle,
+    user_config: &Value,
+) -> Result<(), AppError> {
+    let policy = EditorHistoryPolicy::from_config(user_config);
+    let path = editor_history_path(app)?;
+
+    if policy.memory_only {
+        remove_file_if_exists(&path)?;
+    } else {
+        enforce_editor_history_file(&path, &policy, now_ms())?;
     }
 
-    let path = editor_history_path(app)?;
-    let mut history = read_editor_history(&path)?;
-    let cutoff_ms = now_ms().saturating_sub(retention_days * 24 * 60 * 60 * 1000);
+    enforce_chat_history_limit(app, chat_history_limit(user_config))
+}
 
-    let original_len = history.len();
-    history.retain(|item| item.created_at == 0 || item.created_at >= cutoff_ms);
+fn enforce_editor_history_file(
+    path: &Path,
+    policy: &EditorHistoryPolicy,
+    now_ms: u64,
+) -> Result<(), AppError> {
+    let stored = read_editor_history(path)?;
+    let mut items = stored.clone();
+    policy.enforce(&mut items, now_ms);
 
-    if history.len() != original_len {
-        write_jsonl(&path, &history)?;
+    if items != stored {
+        EditorHistoryStore::File(path.to_path_buf()).write(items)?;
     }
 
     Ok(())
 }
 
-pub fn cleanup_editor_history(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
-    let clear_on_exit = user_config
-        .get("clearEditorHistoryOnExit")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
+/// Applies a change of the history settings right away, as far as it is safe
+/// to: the limit field passes through intermediate values while the user
+/// types, so a lower limit or a shorter retention period are applied on the
+/// next write or start instead. Turning the history off (limit 0) does delete
+/// what is stored, as the settings promise.
+pub fn apply_history_settings_change(
+    app: &AppHandle,
+    previous_config: &Value,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+) -> Result<(), AppError> {
+    let before = EditorHistoryPolicy::from_config(previous_config);
+    let after = EditorHistoryPolicy::from_config(user_config);
+    let path = editor_history_path(app)?;
 
-    if clear_on_exit {
-        return clear_editor_history(app);
+    switch_editor_history_store(&path, &before, &after, memory, now_ms())?;
+
+    if chat_history_limit(user_config) == 0 && chat_history_limit(previous_config) != 0 {
+        clear_chat_history(app)?;
     }
 
-    let retention_days = user_config
-        .get("editorHistoryRetentionDays")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
+    Ok(())
+}
 
-    if retention_days > 0 {
-        prune_editor_history_by_retention(app, retention_days)?;
+fn switch_editor_history_store(
+    path: &Path,
+    before: &EditorHistoryPolicy,
+    after: &EditorHistoryPolicy,
+    memory: &mut Vec<EditorHistoryItem>,
+    now_ms: u64,
+) -> Result<(), AppError> {
+    let mut file = EditorHistoryStore::File(path.to_path_buf());
+
+    if after.memory_only != before.memory_only {
+        // the entries move to where the history lives now
+        let mut items = if after.memory_only {
+            file.read()?
+        } else {
+            std::mem::take(memory)
+        };
+        after.enforce(&mut items, now_ms);
+
+        if after.memory_only {
+            *memory = items;
+            return remove_file_if_exists(path);
+        }
+        return file.write(items);
+    }
+
+    let turned_off = after.limit == 0 && before.limit != 0;
+    let sanitize_turned_on = after.sanitize && !before.sanitize;
+
+    if turned_off || sanitize_turned_on {
+        let mut store = if after.memory_only {
+            EditorHistoryStore::Memory(memory)
+        } else {
+            file
+        };
+        let mut items = store.read()?;
+        after.enforce(&mut items, now_ms);
+        store.write(items)?;
     }
 
     Ok(())
@@ -1066,7 +1255,7 @@ pub fn save_chat_history(
     user_config: &Value,
     chat_history_item: ChatHistoryItem,
 ) -> Result<(), AppError> {
-    let limit = history_limit(user_config, "chatHistoryMaxItems", 50);
+    let limit = chat_history_limit(user_config);
 
     if limit == 0 {
         return Ok(());
@@ -1133,22 +1322,39 @@ pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppEr
     Ok(())
 }
 
+fn chat_history_limit(user_config: &Value) -> usize {
+    history_limit(
+        user_config,
+        "chatHistoryMaxItems",
+        DEFAULT_CHAT_HISTORY_LIMIT,
+    )
+}
+
+/// Drops the oldest chats over `limit`, and all of them when it is 0.
+fn enforce_chat_history_limit(app: &AppHandle, limit: usize) -> Result<(), AppError> {
+    if limit == 0 {
+        return clear_chat_history(app);
+    }
+
+    let mut history = get_chat_history(app)?;
+    if history.len() <= limit {
+        return Ok(());
+    }
+
+    let chats_dir = app_data_sub_dir(app, "chats")?;
+    history.truncate(limit);
+    write_json(&chats_dir.join("index.json"), &history)?;
+    remove_orphan_chat_files(&chats_dir, &history)
+}
+
+/// Removes the index and every chat file.
 pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    write_json(
-        &chats_dir.join("index.json"),
-        &Vec::<ChatHistoryItem>::new(),
-    )?;
 
-    // Also clear all individual chat files
-    if let Ok(entries) = fs::read_dir(&chats_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file() && path.file_name() != Some(std::ffi::OsStr::new("index.json")) {
-                if let Err(error) = fs::remove_file(&path) {
-                    log::warn!("Could not remove {}: {error}", path.display());
-                }
-            }
+    for entry in fs::read_dir(&chats_dir)?.flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            remove_file_if_exists(&path)?;
         }
     }
 
@@ -1779,7 +1985,9 @@ mod tests {
         assert_eq!(history[0].id, "legacy-0");
         assert_eq!(history[0].text, "old");
         assert_eq!(history[0].kind, EditorHistoryKind::Draft);
-        assert_eq!(history[0].created_at, 0);
+        // the time the file was written, so that the retention period applies
+        assert!(history[0].created_at > 0);
+        assert!(history[0].created_at <= now_ms());
         assert_eq!(history[1], item);
 
         fs::remove_dir_all(&dir).unwrap();
@@ -1855,54 +2063,303 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
+    fn policy() -> EditorHistoryPolicy {
+        EditorHistoryPolicy {
+            limit: 100,
+            memory_only: false,
+            retention_days: 0,
+            sanitize: false,
+        }
+    }
+
+    fn entry(text: &str) -> EditorHistoryEntry {
+        serde_json::from_value(json!({ "text": text, "kind": "draft" })).unwrap()
+    }
+
     #[test]
-    fn prune_editor_history_by_retention_removes_old_items() {
-        let dir = temp_dir("prune-retention");
+    fn policy_reads_the_settings() {
+        let config = json!({
+            "editorHistoryMaxItems": "20",
+            "clearEditorHistoryOnExit": true,
+            "editorHistoryRetentionDays": 7,
+            "sanitizeSecretsInEditorHistory": true,
+        });
+
+        assert_eq!(
+            EditorHistoryPolicy::from_config(&config),
+            EditorHistoryPolicy {
+                limit: 20,
+                memory_only: true,
+                retention_days: 7,
+                sanitize: true,
+            }
+        );
+        assert_eq!(
+            EditorHistoryPolicy::from_config(&json!({})),
+            EditorHistoryPolicy {
+                limit: DEFAULT_EDITOR_HISTORY_LIMIT,
+                ..policy()
+            }
+        );
+    }
+
+    #[test]
+    fn enforce_drops_expired_entries_and_those_over_the_limit() {
+        let now = 100 * DAY_MS;
+        let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
+        fresh.created_at = now - DAY_MS;
+        let mut second = history_item("second", "second", EditorHistoryKind::Draft);
+        second.created_at = now - 2 * DAY_MS;
+        let mut old = history_item("old", "old", EditorHistoryKind::Draft);
+        old.created_at = now - 3 * DAY_MS;
+        let mut history = vec![fresh, second, old];
+
+        EditorHistoryPolicy {
+            retention_days: 2,
+            ..policy()
+        }
+        .enforce(&mut history, now);
+        assert_eq!(history_texts(&history), ["fresh", "second"]);
+
+        EditorHistoryPolicy {
+            limit: 1,
+            ..policy()
+        }
+        .enforce(&mut history, now);
+        assert_eq!(history_texts(&history), ["fresh"]);
+    }
+
+    #[test]
+    fn enforce_masks_secrets_in_entries_stored_before() {
+        let mut item = history_item("a", "password=hunter22", EditorHistoryKind::Source);
+        item.result = Some(String::from("token: abcdef123456"));
+        let mut history = vec![item];
+
+        EditorHistoryPolicy {
+            sanitize: true,
+            ..policy()
+        }
+        .enforce(&mut history, now_ms());
+
+        assert_eq!(history[0].text, "password=[REDACTED SECRET]");
+        assert_eq!(
+            history[0].result.as_deref(),
+            Some("token: [REDACTED SECRET]")
+        );
+    }
+
+    #[test]
+    fn save_editor_history_entry_masks_secrets_when_enabled() {
+        let dir = temp_dir("save-secrets");
         let path = dir.join(EDITOR_HISTORY_FILE);
+        let mut history = EditorHistory {
+            store: EditorHistoryStore::File(path.clone()),
+            policy: EditorHistoryPolicy {
+                sanitize: true,
+                ..policy()
+            },
+        };
 
-        let mut old_item = history_item("old", "old item", EditorHistoryKind::Draft);
-        old_item.created_at = now_ms().saturating_sub(3 * 24 * 60 * 60 * 1000);
+        save_editor_history_entry(
+            &mut history,
+            entry("Here is my key: sk-proj-1234567890abcdef1234567890"),
+        )
+        .unwrap();
 
-        let mut recent_item = history_item("new", "recent item", EditorHistoryKind::Draft);
-        recent_item.created_at = now_ms().saturating_sub(24 * 60 * 60 * 1000);
-
-        write_jsonl(&path, &[recent_item.clone(), old_item]).unwrap();
-
-        let mut history = read_editor_history(&path).unwrap();
-        let cutoff_ms = now_ms().saturating_sub(2 * 24 * 60 * 60 * 1000);
-        history.retain(|item| item.created_at == 0 || item.created_at >= cutoff_ms);
-        write_jsonl(&path, &history).unwrap();
-
-        let updated = read_editor_history(&path).unwrap();
-        assert_eq!(updated.len(), 1);
-        assert_eq!(updated[0].id, "new");
+        let raw = fs::read_to_string(&path).unwrap();
+        assert!(raw.contains("[REDACTED API KEY]"));
+        assert!(!raw.contains("sk-proj-"));
 
         fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
-    fn save_editor_history_redacts_secrets_when_enabled() {
-        let dir = temp_dir("save-secrets");
+    fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
+        let dir = temp_dir("save-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
-
-        let text = "Here is my key: sk-proj-1234567890abcdef1234567890";
-        let redacted = crate::services::secret_detector::redact_secrets(text);
-
-        let item = EditorHistoryItem {
-            id: String::from("secret-1"),
-            text: redacted,
-            kind: EditorHistoryKind::Draft,
-            operation: None,
-            created_at: 1000,
-            result: None,
-            sent: false,
+        let mut history = EditorHistory {
+            store: EditorHistoryStore::File(path.clone()),
+            policy: EditorHistoryPolicy {
+                limit: 0,
+                ..policy()
+            },
         };
-        write_jsonl(&path, &[item]).unwrap();
 
-        let loaded = read_editor_history(&path).unwrap();
-        assert_eq!(loaded.len(), 1);
-        assert!(loaded[0].text.contains("[REDACTED API KEY]"));
-        assert!(!loaded[0].text.contains("sk-proj-"));
+        assert_eq!(
+            save_editor_history_entry(&mut history, entry("text")).unwrap(),
+            None
+        );
+        assert!(!path.exists());
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn the_memory_store_never_touches_the_disk() {
+        let dir = temp_dir("memory-store");
+        let mut memory = Vec::new();
+        let mut history = EditorHistory {
+            store: EditorHistoryStore::Memory(&mut memory),
+            policy: EditorHistoryPolicy {
+                memory_only: true,
+                ..policy()
+            },
+        };
+
+        save_editor_history_entry(&mut history, entry("kept in memory")).unwrap();
+
+        assert_eq!(history_texts(&memory), ["kept in memory"]);
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn an_emptied_file_store_leaves_no_file() {
+        let dir = temp_dir("empty-store");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let mut store = EditorHistoryStore::File(path.clone());
+
+        store
+            .write(vec![history_item("a", "a", EditorHistoryKind::Draft)])
+            .unwrap();
+        assert!(path.exists());
+        store.write(Vec::new()).unwrap();
+        assert!(!path.exists());
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn switching_to_memory_only_moves_the_file_into_memory() {
+        let dir = temp_dir("switch-on");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let now = now_ms();
+        let mut item = history_item("a", "stored", EditorHistoryKind::Draft);
+        item.created_at = now;
+        write_jsonl(&path, &[item]).unwrap();
+        let mut memory = Vec::new();
+
+        switch_editor_history_store(
+            &path,
+            &policy(),
+            &EditorHistoryPolicy {
+                memory_only: true,
+                ..policy()
+            },
+            &mut memory,
+            now,
+        )
+        .unwrap();
+
+        assert!(!path.exists());
+        assert_eq!(history_texts(&memory), ["stored"]);
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn switching_memory_only_off_writes_the_memory_to_the_file() {
+        let dir = temp_dir("switch-off");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let now = now_ms();
+        let mut item = history_item("a", "in memory", EditorHistoryKind::Draft);
+        item.created_at = now;
+        let mut memory = vec![item];
+
+        switch_editor_history_store(
+            &path,
+            &EditorHistoryPolicy {
+                memory_only: true,
+                ..policy()
+            },
+            &policy(),
+            &mut memory,
+            now,
+        )
+        .unwrap();
+
+        assert!(memory.is_empty());
+        assert_eq!(
+            history_texts(&read_editor_history(&path).unwrap()),
+            ["in memory"]
+        );
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn turning_the_history_off_deletes_the_file() {
+        let dir = temp_dir("turn-off");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        write_jsonl(&path, &[history_item("a", "a", EditorHistoryKind::Draft)]).unwrap();
+
+        switch_editor_history_store(
+            &path,
+            &policy(),
+            &EditorHistoryPolicy {
+                limit: 0,
+                ..policy()
+            },
+            &mut Vec::new(),
+            now_ms(),
+        )
+        .unwrap();
+
+        assert!(!path.exists());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_lower_limit_waits_for_the_next_write() {
+        let dir = temp_dir("lower-limit");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let items = vec![
+            history_item("a", "a", EditorHistoryKind::Draft),
+            history_item("b", "b", EditorHistoryKind::Draft),
+        ];
+        write_jsonl(&path, &items).unwrap();
+
+        switch_editor_history_store(
+            &path,
+            &policy(),
+            &EditorHistoryPolicy {
+                limit: 1,
+                ..policy()
+            },
+            &mut Vec::new(),
+            now_ms(),
+        )
+        .unwrap();
+
+        assert_eq!(read_editor_history(&path).unwrap().len(), 2);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn startup_drops_expired_entries_and_legacy_lines_expire_too() {
+        let dir = temp_dir("startup");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let now = now_ms();
+        let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
+        fresh.created_at = now;
+        let raw = format!(
+            "{}\n{}\n",
+            serde_json::to_string(&fresh).unwrap(),
+            serde_json::to_string("legacy").unwrap()
+        );
+        fs::write(&path, raw).unwrap();
+        let retention = EditorHistoryPolicy {
+            retention_days: 1,
+            ..policy()
+        };
+
+        // the legacy line is as old as the file, which is new
+        enforce_editor_history_file(&path, &retention, now).unwrap();
+        assert_eq!(read_editor_history(&path).unwrap().len(), 2);
+
+        enforce_editor_history_file(&path, &retention, now + 2 * DAY_MS).unwrap();
+        assert!(!path.exists());
 
         fs::remove_dir_all(&dir).unwrap();
     }

@@ -16,8 +16,16 @@ pub fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
     tmp_name.push(".tmp");
     let tmp_path = path.with_file_name(tmp_name);
 
+    // a leftover of a crash may carry other permissions, and opening an
+    // existing file keeps them
+    match fs::remove_file(&tmp_path) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
+
     let mut options = fs::OpenOptions::new();
-    options.write(true).create(true).truncate(true);
+    options.write(true).create_new(true);
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt;
@@ -45,6 +53,34 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     let target = path.with_file_name(name);
     fs::rename(path, &target)?;
     Ok(target)
+}
+
+/// Parses the file at `path`; `None` when there is none or it was unreadable
+/// and has been moved aside.
+pub fn read_or_quarantine<T>(
+    path: &Path,
+    parse: impl FnOnce(&str) -> Result<T, AppError>,
+) -> Result<Option<T>, AppError> {
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let parsed = fs::read_to_string(path)
+        .map_err(AppError::from)
+        .and_then(|raw| parse(&raw));
+    match parsed {
+        Ok(value) => Ok(Some(value)),
+        Err(error) => {
+            let target = quarantine(path)?;
+            log::error!(
+                "{} is unreadable ({error}); moved it to {} and starting with defaults. \
+                 The copy may hold private data: delete it once recovered",
+                path.display(),
+                target.display()
+            );
+            Ok(None)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -77,6 +113,40 @@ mod tests {
             let mode = fs::metadata(&path).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o600);
         }
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_leftover_temp_file_does_not_pass_on_its_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = temp_dir("leftover");
+        let path = dir.join("file.json");
+        let tmp_path = dir.join("file.json.tmp");
+        fs::write(&tmp_path, "stale").unwrap();
+        fs::set_permissions(&tmp_path, fs::Permissions::from_mode(0o644)).unwrap();
+
+        write_private(&path, "new").unwrap();
+
+        let mode = fs::metadata(&path).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_or_quarantine_moves_an_unreadable_file_aside() {
+        let dir = temp_dir("read-or-quarantine");
+        let path = dir.join("secrets.json");
+        fs::write(&path, "{ broken").unwrap();
+
+        let parsed = read_or_quarantine(&path, |raw| {
+            Ok(serde_json::from_str::<serde_json::Value>(raw)?)
+        })
+        .unwrap();
+
+        assert!(parsed.is_none());
+        assert!(!path.exists());
         let _ = fs::remove_dir_all(&dir);
     }
 

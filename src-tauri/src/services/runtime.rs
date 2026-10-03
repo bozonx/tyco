@@ -671,8 +671,6 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
                     }
                     TRAY_QUIT_ID => {
                         state.set_quitting(true);
-                        let params = state.params();
-                        let _ = super::storage::cleanup_editor_history(app, &params.user_config);
                         app.exit(0);
                     }
                     _ => {}
