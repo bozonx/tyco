@@ -569,6 +569,10 @@ fn normalize_ai_rules_and_tasks(user_config: &mut Value) -> bool {
     }
 
     if let Some(rules) = config.get_mut("aiRules").and_then(Value::as_object_mut) {
+        // the common rule was replaced by per-task rules
+        if rules.remove("base").is_some() {
+            changed = true;
+        }
         if let Some(def_rules) = default_rules.as_object() {
             for (key, default_val) in def_rules {
                 if rules.get(key).and_then(Value::as_str).is_none() {
@@ -1677,8 +1681,8 @@ mod tests {
 
         assert!(normalize_ai_rules_and_tasks(&mut config));
         assert!(config.get("chatRoles").is_none());
-        assert_eq!(config["aiRules"]["base"], json!("custom base rule"));
-        assert!(config["aiRules"]["translate"].as_str().is_some());
+        assert!(config["aiRules"].get("base").is_none());
+        assert_eq!(config["aiRules"]["chat"], json!(""));
         assert!(config["aiTasks"].as_array().is_some());
         assert!(!normalize_ai_rules_and_tasks(&mut config));
     }

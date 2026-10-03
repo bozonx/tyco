@@ -327,7 +327,7 @@
             </FieldRow>
             <FieldRow
               v-if="Boolean(currentSttModel.formatWithLlm)"
-              :label="t('settings.voiceCorrectionRules')"
+              :label="t('settings.sttLlmRules')"
               vertical
             >
               <FieldTextArea
@@ -650,6 +650,8 @@ function createPreparedUserConfig(config: unknown) {
     ...DEFAULT_USER_CONFIG.aiRules,
     ...(nextConfig.aiRules || {}),
   }
+  // the common rule was replaced by per-task rules
+  delete nextConfig.aiRules.base
 
   return nextConfig
 }

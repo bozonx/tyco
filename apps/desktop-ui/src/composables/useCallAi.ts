@@ -45,13 +45,6 @@ export const useCallAi = () => {
   const currentUserConfig = () => ipcStore.params.userConfig
   const currentAppConfig = () => ipcStore.params?.appConfig ?? APP_CONFIG
 
-  const buildTaskRules = (taskRule?: string) => {
-    const baseRule = String(currentUserConfig().aiRules?.base || '').trim()
-    const specificRule = String(taskRule || '').trim()
-
-    return [baseRule, specificRule].filter(Boolean).join('\n\n')
-  }
-
   const currentSttModel = () => {
     const userConfig = currentUserConfig()
     const modelId = userConfig.aiModelUsage.stt
@@ -142,7 +135,7 @@ export const useCallAi = () => {
     return await aiRequest(AI_TASKS.VOICE_CORRECTION, text, {
       instructions:
         currentAppConfig().aiInstructions[AI_TASKS.VOICE_CORRECTION],
-      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.VOICE_CORRECTION]),
+      rules: userConfig.aiRules?.voiceCorrection,
       signal,
     })
   }
@@ -161,7 +154,7 @@ export const useCallAi = () => {
         notifyError: false,
         instructions:
           devInstructions ?? currentAppConfig().aiInstructions[AI_TASKS.CHAT],
-        rules: buildTaskRules(),
+        rules: currentUserConfig().aiRules?.chat,
       }
     )
   }
@@ -180,7 +173,7 @@ export const useCallAi = () => {
     return await aiRequest(AI_TASKS.CORRECTION, text, {
       ...options,
       instructions: currentAppConfig().aiInstructions[AI_TASKS.CORRECTION],
-      rules: buildTaskRules(userConfig.aiRules[AI_TASKS.CORRECTION]),
+      rules: userConfig.aiRules?.correction,
     })
   }
 
@@ -207,7 +200,7 @@ export const useCallAi = () => {
         targetLanguage: language,
         signal: options.signal,
         onStage: options.onStage,
-        rules: buildTaskRules(userConfig.aiRules[AI_TASKS.TRANSLATE]),
+        rules: userConfig.aiRules?.translate,
       })
     } catch (error) {
       if (options.signal?.aborted) return ''
@@ -237,7 +230,7 @@ export const useCallAi = () => {
     return await aiRequest(AI_TASKS.AI_TASKS, text, {
       ...options,
       instructions: currentAppConfig().aiInstructions[AI_TASKS.AI_TASKS],
-      rules: buildTaskRules(task.rule),
+      rules: task.rule,
     })
   }
 

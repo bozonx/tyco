@@ -3,34 +3,6 @@ import type { SelectionWhenEmpty } from './selection'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
-const BASE_TASK = `
-- Do exactly what the user requested without adding unrelated material.
-- Produce a clear, accurate, and relevant result.
-- Preserve the user's intent and do not invent missing facts.
-`
-
-const TRANSLATION_TASK = `
-- The source text may contain errors and typos.
-- Preserve the overall tone: conversational, formal, legal, playful, journalistic, non-fiction, contemporary fiction, etc.
-- Do not translate verbatim or attempt to preserve errors, typos, and missing punctuation marks.
-- The text must sound natural in the target language.
-- Follow the best grammar and punctuation practices of the target language.
-- Grammar and punctuation should match the overall style; even conversational style must be grammatical and error-free.
-- Restore punctuation and remove extra whitespace.
-- Sentences must start with a capital letter and end with a period.`
-
-const CORRECTION_TASK = `
-- Correct this text and restore punctuation.
-- Keep in mind that the user might have forgotten to switch keyboard layout and typed in one language using another layout.
- `
-
-const VOICE_CORRECTION_TASK = `
-- Remove repeated words caused by hesitations or stuttering.
-- Eliminate rambling speech and make the text clear and concise.
-- If certain words are unrecognized or unclear, do not invent synonyms; keep them as they are.
-- If the meaning is completely unclear, do not invent facts; leave it as is.
- `
-
 export type ModelTag =
   | 'voice'
   | 'text'
@@ -307,10 +279,10 @@ export interface UserConfig {
   sttModels: SttModel[]
   aiModelUsage: { stt: string }
   aiRules: {
-    base: string
+    chat: string
+    correction: string
     translate: string
     voiceCorrection: string
-    correction: string
   }
   aiTasks: ({
     name: string
@@ -372,12 +344,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     },
   ],
   aiModelUsage: { stt: 'deepgram-stt' },
-  aiRules: {
-    base: BASE_TASK,
-    translate: TRANSLATION_TASK,
-    voiceCorrection: VOICE_CORRECTION_TASK,
-    correction: CORRECTION_TASK,
-  },
+  aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
   aiTasks: [
     {
       name: 'deepEdit',

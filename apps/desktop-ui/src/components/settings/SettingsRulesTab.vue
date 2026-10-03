@@ -1,16 +1,17 @@
 <template>
   <SettingsSection bare>
-    <FieldRow :label="t('settings.baseRules')" vertical>
-      <FieldTextArea v-model:value="userConfig.aiRules.base" />
-    </FieldRow>
-    <FieldRow :label="t('settings.quickTranslation')" vertical>
-      <FieldTextArea v-model:value="userConfig.aiRules.translate" />
-    </FieldRow>
-    <FieldRow :label="t('settings.voiceCorrectionRules')" vertical>
-      <FieldTextArea v-model:value="userConfig.aiRules.voiceCorrection" />
+    <FieldRow :label="t('settings.chatRules')" vertical>
+      <FieldTextArea v-model:value="userConfig.aiRules.chat" />
     </FieldRow>
     <FieldRow :label="t('settings.textCorrection')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.correction" />
+    </FieldRow>
+    <FieldRow
+      :label="t('settings.llmTranslation')"
+      :hint="t('settings.llmTranslationHint')"
+      vertical
+    >
+      <FieldTextArea v-model:value="userConfig.aiRules.translate" />
     </FieldRow>
   </SettingsSection>
 </template>
