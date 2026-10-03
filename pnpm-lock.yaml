@@ -156,8 +156,8 @@ importers:
         specifier: ^3.0.53
         version: 3.0.53(zod@4.6.5)
       '@bozonx/ai-kit':
-        specifier: ^0.6.0
-        version: 0.6.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
+        specifier: ^0.6.2
+        version: 0.6.2(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)
       '@codemirror/commands':
         specifier: ^6.11.1
         version: 6.11.1
@@ -419,8 +419,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@bozonx/ai-kit@0.6.0':
-    resolution: {integrity: sha512-zCQK8ZcibFeDpkIwxaA8EPDy8F59uFoxzPX9hYigiTwlh4APQeQ87NIaW6VIf+/QO5GEruUNnjFXSvTOR5Z5WQ==}
+  '@bozonx/ai-kit@0.6.2':
+    resolution: {integrity: sha512-RV2lU8o6OO7VP3E7+BTRzQ7fhE6vmvKPy4WusbfoHLEHujugMfpqwjCET3De7pEQtn5BrjHqvTatTf0Uc7FQuw==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       '@ai-sdk/anthropic': ^4.0.46
@@ -3101,7 +3101,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bozonx/ai-kit@0.6.0(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
+  '@bozonx/ai-kit@0.6.2(@ai-sdk/deepseek@3.0.50(zod@4.6.5))(@ai-sdk/google@4.0.76(zod@4.6.5))(@ai-sdk/openai-compatible@3.0.53(zod@4.6.5))(@openrouter/ai-sdk-provider@3.1.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5))(zod@4.6.5)':
     dependencies:
       ai: 7.0.107(zod@4.6.5)
       js-yaml: 5.4.2
