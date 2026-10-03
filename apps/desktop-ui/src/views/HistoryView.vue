@@ -53,10 +53,10 @@ import HistoryList, {
 } from '../components/HistoryList.vue'
 import Button from '../components/common/Button.vue'
 import SearchInput from '../components/common/SearchInput.vue'
+import { useCopyText } from '../composables/useCopyText'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
-import { useActionMenuStore } from '../stores/actionMenu'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/navPanel'
@@ -71,7 +71,8 @@ const { t } = useI18n()
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
-const actionMenuStore = useActionMenuStore()
+// the text is already in the history and the window stays open
+const copyText = useCopyText({ saveOutput: false })
 const routeParams = useRouteParams()
 
 const removedItem = ref<EditorHistoryItem | null>(null)
@@ -115,7 +116,7 @@ const editorActions = computed<HistoryListAction[]>(() => [
     icon: 'mdi:pencil-outline',
     title: t('history.placeIntoEditor'),
   },
-  { id: 'copy', icon: 'mdi:content-copy', title: t('action.copyToClipboard') },
+  { id: 'copy', icon: 'mdi:content-copy', title: t('action.copy') },
   {
     id: 'remove',
     icon: 'mdi:trash-can-outline',
@@ -208,20 +209,18 @@ const undoRemove = async () => {
 }
 
 const onEditorAction = async (actionId: string, item: HistoryListItem) => {
-  const [, copyAction] = actionMenuStore.getDefaultActions()
-
   switch (actionId) {
     case 'toEditor':
       toEditor(item)
       break
     case 'copy':
-      await copyAction?.action(item.value)
+      await copyText(item.value)
       break
     case 'originalToEditor':
       if (item.original) routeParams.toEditor(item.original.text)
       break
     case 'copyOriginal':
-      if (item.original) await copyAction?.action(item.original.text)
+      if (item.original) await copyText(item.original.text)
       break
     case 'remove':
       await removeEditorItem(item)

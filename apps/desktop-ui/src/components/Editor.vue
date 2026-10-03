@@ -115,7 +115,7 @@
               square
               ghost
               @click="handleCopy"
-              :title="t('action.copyToClipboard')"
+              :title="t('action.copy')"
             >
               <Icon icon="mdi:content-copy" height="18" />
             </Button>
@@ -206,6 +206,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useCopyText } from '../composables/useCopyText'
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
 import { desktopClient } from '../lib/desktop/client'
@@ -234,6 +235,7 @@ const ipcStore = useIpcStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 const isDev = import.meta.env.DEV
+const copyText = useCopyText({ saveOutput: true })
 
 const openQuick = async (mode: 'write' | 'voice' | 'aiTasks' | 'select') => {
   const text =
@@ -319,12 +321,12 @@ const handleCorrection = async () => {
 }
 
 const handleCopy = async () => {
-  const copyAction = actionMenuStore
-    .getActionsMenu()
-    .find((item: ActionItem) => item.labelKey === 'action.copyToClipboard')
-  if (copyAction) {
-    await doAction(copyAction)
-  }
+  // a plain copy: "copy and close" stays in the action menu
+  await doAction({
+    action: async (text) => {
+      await copyText(text)
+    },
+  })
 }
 </script>
 

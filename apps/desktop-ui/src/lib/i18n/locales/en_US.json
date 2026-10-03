@@ -491,7 +491,8 @@
   },
   "action": {
     "insertIntoWindow": "Insert into window",
-    "copyToClipboard": "Copy to clipboard",
+    "copy": "Copy",
+    "copyToClipboard": "Copy and close",
     "aiTask": "AI task",
     "correction": "Correction",
     "translation": "Translation",
@@ -547,6 +548,7 @@
   "toast": {
     "settingsSaveFailed": "Failed to save settings",
     "textNotSelected": "No text selected",
+    "copied": "Copied",
     "textTooShortForCorrection": "Text is too short for correction",
     "noTextToTranslate": "No text to translate",
     "textTooShortToTranslate": "Text is too short to translate",

@@ -494,7 +494,8 @@
   },
   "action": {
     "insertIntoWindow": "Pencereye ekle",
-    "copyToClipboard": "Panoya kopyala",
+    "copy": "Kopyala",
+    "copyToClipboard": "Kopyala ve kapat",
     "aiTask": "AI görevi",
     "correction": "Düzeltme",
     "translation": "Çeviri",
@@ -550,6 +551,7 @@
   "toast": {
     "settingsSaveFailed": "Ayarlar kaydedilemedi",
     "textNotSelected": "Metin seçilmedi",
+    "copied": "Kopyalandı",
     "textTooShortForCorrection": "Metin düzeltme için çok kısa",
     "noTextToTranslate": "Çevrilecek metin yok",
     "textTooShortToTranslate": "Metin çevirmek için çok kısa",

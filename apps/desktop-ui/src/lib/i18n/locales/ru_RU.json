@@ -494,7 +494,8 @@
   },
   "action": {
     "insertIntoWindow": "В окно",
-    "copyToClipboard": "В буфер",
+    "copy": "Скопировать",
+    "copyToClipboard": "Скопировать и закрыть",
     "aiTask": "Задание для AI",
     "correction": "Коррекция",
     "translation": "Перевод",
@@ -550,6 +551,7 @@
   "toast": {
     "settingsSaveFailed": "Не удалось сохранить настройки",
     "textNotSelected": "Текст не выбран",
+    "copied": "Скопировано",
     "textTooShortForCorrection": "Слишком короткий текст для коррекции",
     "noTextToTranslate": "Нет текста для перевода",
     "textTooShortToTranslate": "Слишком короткий текст для перевода",
