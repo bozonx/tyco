@@ -167,6 +167,8 @@
     "clearEditorHistoryOnExitHint": "Eliminar automáticamente todos los elementos del historial del editor al cerrar la aplicación.",
     "editorHistoryRetentionDays": "Retención del historial del editor (días)",
     "editorHistoryRetentionDaysHint": "0 — conservar indefinidamente. Elimina automáticamente los elementos más antiguos que los días especificados.",
+    "sanitizeSecretsInEditorHistory": "Limpiar contraseñas y claves en el historial",
+    "sanitizeSecretsInEditorHistoryHint": "Ocultar automáticamente contraseñas, claves API, tokens y claves privadas (patrones Gitleaks) antes de guardar en el historial del editor.",
     "chatHistoryMaxItems": "Historial de chats con IA",
     "llmModels": "Modelos LLM",
     "sttModels": "Modelos STT",

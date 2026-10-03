@@ -136,6 +136,14 @@
               />
             </FieldRow>
             <FieldRow
+              :label="t('settings.sanitizeSecretsInEditorHistory')"
+              :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
+            >
+              <FieldCheckbox
+                v-model:value="userConfig.sanitizeSecretsInEditorHistory"
+              />
+            </FieldRow>
+            <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
               :info="t('settings.chatHistoryPrivacyHint')"
             >

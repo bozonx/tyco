@@ -164,6 +164,8 @@
     "clearEditorHistoryOnExitHint": "Automatically remove all editor history items when quitting the application.",
     "editorHistoryRetentionDays": "Editor history retention (days)",
     "editorHistoryRetentionDaysHint": "0 — retain indefinitely. Automatically removes items older than the specified number of days.",
+    "sanitizeSecretsInEditorHistory": "Sanitize secrets in editor history",
+    "sanitizeSecretsInEditorHistoryHint": "Automatically redact passwords, API keys, tokens, and private keys (Gitleaks patterns) before saving text to editor history.",
     "chatHistoryMaxItems": "AI chat history",
     "llmModels": "LLM Models",
     "sttModels": "STT Models",

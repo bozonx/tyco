@@ -170,6 +170,7 @@ pub fn default_user_config() -> Value {
       "editorHistoryMaxItems": 100,
       "clearEditorHistoryOnExit": false,
       "editorHistoryRetentionDays": 0,
+      "sanitizeSecretsInEditorHistory": false,
       "chatHistoryMaxItems": 50,
       "llm": crate::services::llm_config::default_llm_config(),
       "sttModels": [

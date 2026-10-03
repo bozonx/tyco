@@ -167,6 +167,8 @@
     "clearEditorHistoryOnExitHint": "Автоматически удалять все записи истории редактора при закрытии приложения.",
     "editorHistoryRetentionDays": "Срок хранения истории редактора (в днях)",
     "editorHistoryRetentionDaysHint": "0 — хранить бессрочно. Автоматически удаляет записи старше указанного количества дней.",
+    "sanitizeSecretsInEditorHistory": "Очищать пароли и ключи в истории",
+    "sanitizeSecretsInEditorHistoryHint": "Автоматически скрывать пароли, API-ключи, токены и приватные ключи (по шаблонам Gitleaks) перед сохранением в историю редактора.",
     "chatHistoryMaxItems": "История чатов с ИИ",
     "llmModels": "Языковые модели",
     "sttModels": "Модели распознавания речи",

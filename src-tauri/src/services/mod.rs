@@ -14,6 +14,7 @@ pub mod net;
 pub mod notes;
 pub mod platform;
 pub mod runtime;
+pub mod secret_detector;
 pub mod secrets;
 pub mod selection_replace;
 pub mod status_overlay;

@@ -167,6 +167,8 @@
     "clearEditorHistoryOnExitHint": "Uygulamadan çıkarken tüm düzenleyici geçmişi ögelerini otomatik olarak kaldırır.",
     "editorHistoryRetentionDays": "Düzenleyici geçmişi saklama süresi (gün)",
     "editorHistoryRetentionDaysHint": "0 — süresiz sakla. Belirtilen gün sayısından eski ögeleri otomatik olarak siler.",
+    "sanitizeSecretsInEditorHistory": "Geçmişteki şifreleri ve anahtarları temizle",
+    "sanitizeSecretsInEditorHistoryHint": "Metni düzenleyici geçmişine kaydetmeden önce şifreleri, API anahtarlarını, belirteçleri ve özel anahtarları (Gitleaks desenleri) otomatik olarak gizler.",
     "chatHistoryMaxItems": "YZ sohbet geçmişi",
     "llmModels": "LLM Modelleri",
     "sttModels": "STT Modelleri",

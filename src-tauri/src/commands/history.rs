@@ -52,7 +52,8 @@ pub fn set_editor_history_result(
     result: String,
 ) -> Result<(), AppError> {
     let _guard = state.lock_history_storage();
-    storage::set_editor_history_result(&app, id, result)
+    let params = state.params();
+    storage::set_editor_history_result(&app, &params.user_config, id, result)
 }
 
 #[tauri::command(async)]

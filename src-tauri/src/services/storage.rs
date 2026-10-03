@@ -486,6 +486,18 @@ fn normalize_editor_config(user_config: &mut Value) -> bool {
     }
 
     if config
+        .get("sanitizeSecretsInEditorHistory")
+        .and_then(Value::as_bool)
+        .is_none()
+    {
+        config.insert(
+            String::from("sanitizeSecretsInEditorHistory"),
+            defaults["sanitizeSecretsInEditorHistory"].clone(),
+        );
+        changed = true;
+    }
+
+    if config
         .get("chatHistoryMaxItems")
         .and_then(Value::as_u64)
         .is_none()
@@ -762,12 +774,20 @@ fn read_editor_history(path: &PathBuf) -> Result<Vec<EditorHistoryItem>, AppErro
 pub fn save_editor_history(
     app: &AppHandle,
     user_config: &Value,
-    entry: EditorHistoryEntry,
+    mut entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
     let limit = editor_history_limit(user_config);
 
     if entry.text.trim().is_empty() || limit == 0 {
         return Ok(None);
+    }
+
+    if user_config
+        .get("sanitizeSecretsInEditorHistory")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        entry.text = crate::services::secret_detector::redact_secrets(&entry.text);
     }
 
     let path = editor_history_path(app)?;
@@ -892,9 +912,18 @@ fn push_editor_history(
 /// Attaches the AI result to the `Source` entry it was produced from.
 pub fn set_editor_history_result(
     app: &AppHandle,
+    user_config: &Value,
     id: String,
-    result: String,
+    mut result: String,
 ) -> Result<(), AppError> {
+    if user_config
+        .get("sanitizeSecretsInEditorHistory")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        result = crate::services::secret_detector::redact_secrets(&result);
+    }
+
     let path = editor_history_path(app)?;
     let mut history = read_editor_history(&path)?;
 
@@ -1847,6 +1876,33 @@ mod tests {
         let updated = read_editor_history(&path).unwrap();
         assert_eq!(updated.len(), 1);
         assert_eq!(updated[0].id, "new");
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn save_editor_history_redacts_secrets_when_enabled() {
+        let dir = temp_dir("save-secrets");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+
+        let text = "Here is my key: sk-proj-1234567890abcdef1234567890";
+        let redacted = crate::services::secret_detector::redact_secrets(text);
+
+        let item = EditorHistoryItem {
+            id: String::from("secret-1"),
+            text: redacted,
+            kind: EditorHistoryKind::Draft,
+            operation: None,
+            created_at: 1000,
+            result: None,
+            sent: false,
+        };
+        write_jsonl(&path, &[item]).unwrap();
+
+        let loaded = read_editor_history(&path).unwrap();
+        assert_eq!(loaded.len(), 1);
+        assert!(loaded[0].text.contains("[REDACTED API KEY]"));
+        assert!(!loaded[0].text.contains("sk-proj-"));
 
         fs::remove_dir_all(&dir).unwrap();
     }
