@@ -170,45 +170,64 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     Ok(default_config)
 }
 
-/// Deepgram is the only speech provider; other entries are dropped, and the
-/// user's own Deepgram settings survive.
+/// One speech model per provider: the defaults with the user's own settings
+/// for that provider laid over them. Entries of unknown providers are dropped,
+/// and the active model falls back to the first default when it is not one of
+/// them.
 fn normalize_stt_config(user_config: &mut Value) -> bool {
     let defaults = default_user_config();
-    let default_model = defaults
+    let default_models: Vec<Value> = defaults
         .get("sttModels")
         .and_then(Value::as_array)
-        .and_then(|models| models.first())
         .cloned()
         .unwrap_or_default();
-    let default_id = default_model.get("id").cloned().unwrap_or(Value::Null);
-    let provider = default_model
-        .get("provider")
-        .cloned()
-        .unwrap_or(Value::Null);
     let Some(config) = user_config.as_object_mut() else {
         return false;
     };
-
-    let mut model = default_model.as_object().cloned().unwrap_or_default();
-    if let Some(existing) = config
+    let existing: Vec<&serde_json::Map<String, Value>> = config
         .get("sttModels")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
         .filter_map(Value::as_object)
-        .find(|model| model.get("provider") == Some(&provider))
-    {
-        model.extend(existing.clone());
-    }
-    model.insert(String::from("id"), default_id.clone());
-    let models = json!([model]);
+        .collect();
+
+    let models: Vec<Value> = default_models
+        .iter()
+        .filter_map(Value::as_object)
+        .map(|default_model| {
+            let mut model = default_model.clone();
+            let provider = default_model.get("provider");
+            if let Some(own) = existing
+                .iter()
+                .find(|model| provider.is_some() && model.get("provider") == provider)
+            {
+                model.extend((*own).clone());
+            }
+            if let Some(id) = default_model.get("id") {
+                model.insert(String::from("id"), id.clone());
+            }
+            Value::Object(model)
+        })
+        .collect();
 
     let mut usage = config
         .get("aiModelUsage")
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
-    usage.insert(String::from("stt"), default_id);
+    let active_is_known = usage
+        .get("stt")
+        .is_some_and(|active| models.iter().any(|model| model.get("id") == Some(active)));
+    if !active_is_known {
+        let first_id = models
+            .first()
+            .and_then(|model| model.get("id"))
+            .cloned()
+            .unwrap_or(Value::Null);
+        usage.insert(String::from("stt"), first_id);
+    }
+    let models = Value::Array(models);
     let usage = Value::Object(usage);
 
     if config.get("sttModels") == Some(&models) && config.get("aiModelUsage") == Some(&usage) {
@@ -1563,7 +1582,7 @@ mod tests {
     }
 
     #[test]
-    fn normalize_stt_keeps_only_deepgram_and_its_settings() {
+    fn normalize_stt_keeps_one_model_per_known_provider_with_its_settings() {
         let mut config = json!({
             "sttModels": [
                 { "id": "assemblyai-stt", "provider": "assemblyai", "model": "universal-3-pro" },
@@ -1572,6 +1591,12 @@ mod tests {
                     "provider": "deepgram",
                     "model": "nova-3-general",
                     "formatWithLlm": false
+                },
+                {
+                    "id": "custom",
+                    "provider": "sherpa-onnx",
+                    "baseUrl": "ws://speech.lan:6006",
+                    "formatWithLlm": true
                 }
             ],
             "aiModelUsage": { "stt": "assemblyai-stt" }
@@ -1580,17 +1605,35 @@ mod tests {
         assert!(normalize_stt_config(&mut config));
         assert_eq!(
             config["sttModels"],
-            json!([{
-                "id": "deepgram-stt",
-                "provider": "deepgram",
-                "model": "nova-3-general",
-                "description": "Deepgram speech recognition",
-                "formatWithLlm": false,
-                "language": "auto"
-            }])
+            json!([
+                {
+                    "id": "deepgram-stt",
+                    "provider": "deepgram",
+                    "model": "nova-3-general",
+                    "description": "Deepgram speech recognition",
+                    "formatWithLlm": false,
+                    "language": "auto"
+                },
+                {
+                    "id": "sherpa-onnx-stt",
+                    "provider": "sherpa-onnx",
+                    "model": "sherpa-onnx",
+                    "description": "Self-hosted sherpa-onnx streaming server",
+                    "formatWithLlm": true,
+                    "baseUrl": "ws://speech.lan:6006"
+                }
+            ])
         );
         assert_eq!(config["aiModelUsage"], json!({ "stt": "deepgram-stt" }));
         assert!(!normalize_stt_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_stt_keeps_the_chosen_provider() {
+        let mut config = json!({ "aiModelUsage": { "stt": "sherpa-onnx-stt" } });
+
+        assert!(normalize_stt_config(&mut config));
+        assert_eq!(config["aiModelUsage"]["stt"], json!("sherpa-onnx-stt"));
     }
 
     #[test]

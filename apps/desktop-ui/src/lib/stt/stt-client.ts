@@ -7,7 +7,7 @@ import {
   type TranscriptPart,
   type Transport,
 } from '@bozonx/ai-kit'
-import type { SttModel } from '@tyco/shared'
+import type { SttModel, SttProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
@@ -20,6 +20,13 @@ const CONNECT_TIMEOUT_MS = 20_000
  * there, leaving English.
  */
 const MULTILINGUAL_LANGUAGE = 'multi'
+/** Self-hosted servers: reached by the configured address, without a key */
+const KEYLESS_STT_PROVIDERS: readonly SttProvider[] = ['sherpa-onnx']
+
+/** Whether dictation with this provider needs an API key */
+export function sttProviderNeedsKey(provider: SttProvider): boolean {
+  return !KEYLESS_STT_PROVIDERS.includes(provider)
+}
 
 export interface SttClientDeps {
   transport: Transport
@@ -46,6 +53,10 @@ export function buildSttCatalog(model: SttModel): Catalog {
   if (!model.model.trim()) {
     throw new Error('The speech recognition model name is empty')
   }
+  const baseUrl = model.baseUrl?.trim()
+  if (!sttProviderNeedsKey(model.provider) && !baseUrl) {
+    throw new Error('The speech recognition server address is empty')
+  }
 
   return Catalog.fromObject({
     requirePricing: false,
@@ -55,6 +66,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
         kind: 'stt',
         provider: model.provider,
         model: model.model.trim(),
+        ...(baseUrl ? { baseUrl } : {}),
         tier: 'standard',
         modalities: { input: ['audio'], output: ['text'] },
         sttCapabilities: {
@@ -72,6 +84,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
   const kits = new Map<string, AiKit>()
   const defaultKeys: KeyProvider = {
     async get(provider) {
+      if (!sttProviderNeedsKey(provider as SttProvider)) return ''
       throw new Error(`No API key configured for provider "${provider}"`)
     },
   }
@@ -81,6 +94,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
       id: model.id,
       provider: model.provider,
       model: model.model,
+      baseUrl: model.baseUrl,
     })
     const cached = kits.get(key)
     if (cached) return cached

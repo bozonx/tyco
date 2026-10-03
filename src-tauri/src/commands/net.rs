@@ -127,16 +127,25 @@ fn ensure_allowed_origin(
     }
 }
 
-/// Speech recognition has no configurable endpoint: Deepgram is reached
-/// through the origin its key is bound to.
+/// Endpoints the user configured: language model providers and self-hosted
+/// speech servers. Deepgram has none and is reached through the origin its key
+/// is bound to.
 fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str> {
-    config
+    let llm_providers = config
         .get("llm")
         .and_then(|value| value.get("providers"))
         .and_then(serde_json::Value::as_array)
         .into_iter()
-        .flatten()
-        .filter_map(|provider| provider.get("baseUrl"))
+        .flatten();
+    let stt_models = config
+        .get("sttModels")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten();
+
+    llm_providers
+        .chain(stt_models)
+        .filter_map(|entry| entry.get("baseUrl"))
         .filter_map(serde_json::Value::as_str)
 }
 
@@ -212,6 +221,13 @@ mod tests {
         assert!(ensure_allowed_origin(
             Protocol::WebSocket,
             "wss://speech.example/v1",
+            &config,
+            &secrets
+        )
+        .is_ok());
+        assert!(ensure_allowed_origin(
+            Protocol::WebSocket,
+            "wss://other-speech.example/v1",
             &config,
             &secrets
         )

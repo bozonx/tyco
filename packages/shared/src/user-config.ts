@@ -162,10 +162,15 @@ export interface SttModel {
    * multilingual model guess; anything else is a locale such as `de_DE`
    */
   language?: string
+  /** The server of a self-hosted provider, e.g. `ws://localhost:6006` */
+  baseUrl?: string
 }
 
-/** Dictation is live only, and Deepgram is the provider that serves it */
-export const STT_PROVIDERS = ['deepgram'] as const
+/**
+ * Dictation is live only: Deepgram in the cloud, or a sherpa-onnx streaming
+ * server the user runs themselves
+ */
+export const STT_PROVIDERS = ['deepgram', 'sherpa-onnx'] as const
 
 export type SttProvider = (typeof STT_PROVIDERS)[number]
 
@@ -341,6 +346,14 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       description: 'Deepgram speech recognition',
       formatWithLlm: false,
       language: 'auto',
+    },
+    {
+      id: 'sherpa-onnx-stt',
+      model: 'sherpa-onnx',
+      provider: 'sherpa-onnx',
+      description: 'Self-hosted sherpa-onnx streaming server',
+      formatWithLlm: false,
+      baseUrl: 'ws://localhost:6006',
     },
   ],
   aiModelUsage: { stt: 'deepgram-stt' },

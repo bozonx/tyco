@@ -10,6 +10,13 @@ const model = {
   model: 'nova-3',
 }
 
+const sherpa = {
+  id: 'sherpa-onnx-stt',
+  provider: 'sherpa-onnx' as const,
+  model: 'sherpa-onnx',
+  baseUrl: 'ws://speech.lan:6006',
+}
+
 function results(text: string, isFinal: boolean, start = 0) {
   return JSON.stringify({
     type: 'Results',
@@ -61,6 +68,21 @@ describe('buildSttCatalog', () => {
       model: 'nova-3',
       sttCapabilities: { realtime: true },
     })
+  })
+
+  it('points a self-hosted model at its server', () => {
+    const catalog = buildSttCatalog(sherpa)
+
+    expect(catalog.require('sherpa-onnx-stt')).toMatchObject({
+      provider: 'sherpa-onnx',
+      baseUrl: 'ws://speech.lan:6006',
+    })
+  })
+
+  it('rejects a self-hosted model without a server', () => {
+    expect(() => buildSttCatalog({ ...sherpa, baseUrl: ' ' })).toThrow(
+      'server address is empty'
+    )
   })
 
   it('rejects an empty model name', () => {
@@ -161,5 +183,45 @@ describe('createSttClient', () => {
       type: 'error',
       message: expect.stringContaining('microphone unplugged'),
     })
+  })
+
+  it('reaches a self-hosted server without a key', async () => {
+    const opened: string[] = []
+    const sent: (string | Uint8Array)[] = []
+    const openSocket: SocketOpener = async (url) => {
+      opened.push(url)
+      const messages = createAsyncQueue<string>()
+      return {
+        messages: messages.values,
+        send: (data) => sent.push(data),
+        close: (payload) => {
+          if (!payload) return
+          sent.push(payload)
+          messages.push(
+            JSON.stringify({ text: 'HELLO', start_time: 0, is_final: true })
+          )
+          messages.push('Done!')
+        },
+      }
+    }
+    const client = createSttClient({
+      transport: { fetch: vi.fn(), openSocket },
+    })
+
+    const parts = await collect(
+      client.transcribeLive({
+        model: sherpa,
+        audio: audio([0, 64]),
+        sampleRate: 16_000,
+        hasApiKey: false,
+      })
+    )
+
+    expect(opened).toEqual(['ws://speech.lan:6006'])
+    expect(sent.at(-1)).toBe('Done')
+    expect(parts.filter((part) => part.type === 'final')).toMatchObject([
+      { segment: { text: 'HELLO' } },
+    ])
+    expect(parts.at(-1)).toMatchObject({ type: 'finish' })
   })
 })

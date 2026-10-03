@@ -182,6 +182,14 @@ pub fn default_user_config() -> Value {
           "description": "Deepgram speech recognition",
           "formatWithLlm": false,
           "language": "auto"
+        },
+        {
+          "id": "sherpa-onnx-stt",
+          "model": "sherpa-onnx",
+          "provider": "sherpa-onnx",
+          "description": "Self-hosted sherpa-onnx streaming server",
+          "formatWithLlm": false,
+          "baseUrl": "ws://localhost:6006"
         }
       ],
       "aiModelUsage": {

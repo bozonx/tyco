@@ -11,6 +11,7 @@ import {
   buildSttCatalog,
   createSttClient,
   secretId,
+  sttProviderNeedsKey,
 } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { useIpcStore } from '../stores/ipc'
@@ -112,15 +113,20 @@ export const useCallAi = () => {
   const startDictation = async (handlers: DictationHandlers) => {
     const model = currentVoiceModel()
     buildSttCatalog(model)
-    await llmStore.refreshSecrets()
-    if (!Object.hasOwn(llmStore.secrets, secretId(model))) {
-      throw new Error(`No API key configured for provider "${model.provider}"`)
+    const needsKey = sttProviderNeedsKey(model.provider)
+    if (needsKey) {
+      await llmStore.refreshSecrets()
+      if (!Object.hasOwn(llmStore.secrets, secretId(model))) {
+        throw new Error(
+          `No API key configured for provider "${model.provider}"`
+        )
+      }
     }
 
     await dictation.start({
       model,
       language: currentDictationLanguage(model),
-      hasApiKey: true,
+      hasApiKey: needsKey,
       ...handlers,
     })
   }

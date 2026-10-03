@@ -279,9 +279,24 @@
         <div v-else-if="currentTab === 'stt'">
           <SettingsSection>
             <FieldRow :label="t('settings.sttProvider')">
-              <span>Deepgram</span>
+              <FieldSelect
+                :value="currentSttModel.provider"
+                :options="sttProviderOptions"
+                @update:value="setSttProvider"
+              />
             </FieldRow>
-            <FieldRow :label="t('settings.model')">
+            <FieldRow
+              v-if="!sttNeedsKey"
+              :label="t('settings.sttServerUrl')"
+              :hint="t('settings.sttServerUrlHint')"
+            >
+              <FieldInput
+                :value="currentSttModel.baseUrl || ''"
+                placeholder="ws://localhost:6006"
+                @update:value="setSttServerUrl"
+              />
+            </FieldRow>
+            <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
               <FieldInput
                 :value="currentSttModel.model || ''"
                 placeholder="nova-3"
@@ -289,6 +304,7 @@
               />
             </FieldRow>
             <FieldRow
+              v-if="sttNeedsKey"
               :label="t('settings.sttLanguage')"
               :hint="t('settings.sttLanguageHint')"
             >
@@ -298,7 +314,7 @@
                 @update:value="setSttLanguage"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.apiKey')">
+            <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
               <div class="flex items-center gap-2 w-full">
                 <FieldInput
                   class="flex-1"
@@ -391,7 +407,12 @@ import {
   DICTATION_LANGUAGE_MULTI,
   DICTATION_LANGUAGE_USER,
 } from '../lib/stt/dictation-language'
-import { secretId } from '../lib/stt/stt-client'
+import { secretId, sttProviderNeedsKey } from '../lib/stt/stt-client'
+import {
+  activeSttModel,
+  normalizeSttConfig,
+  selectSttProvider,
+} from '../lib/stt/stt-config'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, usePlugins } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
@@ -414,6 +435,7 @@ import {
   PASTE_SHORTCUTS,
   SELECTION_HOTKEY_PREFIX,
   type StorageInfo,
+  type SttProvider,
   type ThemeMode,
   UI_SCALES,
   isUiScale,
@@ -631,7 +653,7 @@ function createPreparedUserConfig(config: unknown) {
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
   normalizeHotkeysConfig(nextConfig)
-  normalizeSttConfig(nextConfig)
+  Object.assign(nextConfig, normalizeSttConfig(nextConfig))
   normalizeLlmConfigSection(nextConfig)
   nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
   delete nextConfig.chatRoles
@@ -741,18 +763,6 @@ function normalizeWindowInsertionConfig(config: Record<string, any>) {
       : defaultWindowInsertion.pasteShortcut,
   }
   config.xdotoolBin = xdotoolBin
-}
-
-/** Deepgram is the only speech provider, with one model */
-function normalizeSttConfig(config: Record<string, any>) {
-  const defaults = DEFAULT_USER_CONFIG.sttModels[0]
-  const existing = Array.isArray(config.sttModels)
-    ? config.sttModels.find(
-        (model: Record<string, any>) => model?.provider === defaults.provider
-      )
-    : undefined
-  config.sttModels = [{ ...defaults, ...existing, id: defaults.id }]
-  config.aiModelUsage = { stt: defaults.id }
 }
 
 function normalizeLlmConfigSection(config: Record<string, any>) {
@@ -926,7 +936,24 @@ watch(
   }
 )
 
-const currentSttModel = computed(() => userConfig.value.sttModels[0])
+const currentSttModel = computed(() => activeSttModel(userConfig.value))
+
+const sttNeedsKey = computed(() =>
+  sttProviderNeedsKey(currentSttModel.value.provider)
+)
+
+const sttProviderOptions = computed(() => [
+  { id: 'deepgram', name: 'Deepgram' },
+  { id: 'sherpa-onnx', name: t('settings.sttProviderSherpaOnnx') },
+])
+
+const setSttProvider = (value: string | number | undefined) => {
+  selectSttProvider(userConfig.value, value as SttProvider)
+}
+
+const setSttServerUrl = (value: string) => {
+  currentSttModel.value.baseUrl = value.trim()
+}
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
