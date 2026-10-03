@@ -317,6 +317,22 @@
       </div>
     </FieldRow>
   </SettingsSection>
+
+  <SettingsSection v-if="aiRules" :title="t('settings.aiRules')">
+    <FieldRow :label="t('settings.chatRules')" vertical>
+      <FieldTextArea v-model:value="aiRules.chat" />
+    </FieldRow>
+    <FieldRow :label="t('settings.textCorrection')" vertical>
+      <FieldTextArea v-model:value="aiRules.correction" />
+    </FieldRow>
+    <FieldRow
+      :label="t('settings.llmTranslation')"
+      :info="t('settings.llmTranslationHint')"
+      vertical
+    >
+      <FieldTextArea v-model:value="aiRules.translate" />
+    </FieldRow>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">
@@ -340,6 +356,7 @@ import { useLlmStore } from '../../stores/llm'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import { Icon } from '@iconify/vue'
 import {
@@ -348,10 +365,11 @@ import {
   type LlmModel,
   type LlmProvider,
   type LlmTask,
+  type UserConfig,
 } from '@tyco/shared'
 
 type ConnectionState = 'checking' | 'success' | 'error'
-const props = defineProps<{ llm: LlmConfig }>()
+const props = defineProps<{ llm: LlmConfig; aiRules?: UserConfig['aiRules'] }>()
 const emit = defineEmits<{ (event: 'providerRemoved', id: string): void }>()
 const { t } = useI18n()
 const { toast, toastText } = useToast()

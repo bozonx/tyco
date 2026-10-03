@@ -340,12 +340,8 @@
         <SettingsLlmTab
           v-else-if="currentTab === 'llm'"
           :llm="userConfig.llm"
+          :ai-rules="userConfig.aiRules"
           @provider-removed="finishProviderRemoval"
-        />
-
-        <SettingsRulesTab
-          v-else-if="currentTab === 'rules'"
-          :user-config="userConfig"
         />
 
         <SettingsTasksTab
@@ -407,7 +403,6 @@ import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
-import SettingsRulesTab from './settings/SettingsRulesTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import { Icon } from '@iconify/vue'
@@ -453,11 +448,6 @@ const primaryTabs = computed(() => [
   },
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
-  {
-    text: t('settings.rulesTab'),
-    key: 'rules',
-    icon: 'mdi:script-text-outline',
-  },
   {
     text: t('settings.sectionAccessibility'),
     key: 'accessibility',
