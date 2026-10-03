@@ -1,13 +1,5 @@
 <template>
   <div class="history-page">
-    <div class="history-header">
-      <SearchInput
-        v-model="searchQuery"
-        :placeholder="t('input.historySearchPlaceholder')"
-        ref="searchInput"
-      />
-    </div>
-
     <HistoryList
       :items="editorItems"
       :searchQuery="searchQuery"
@@ -20,6 +12,14 @@
       @action="onEditorAction"
       @clear="clearEditorHistory"
     >
+      <template #search>
+        <SearchInput
+          ref="searchInput"
+          v-model="searchQuery"
+          :placeholder="t('input.historySearchPlaceholder')"
+        />
+      </template>
+
       <template #notice>
         <div v-if="editorLoadError" class="history-notice is-error">
           <Icon icon="mdi:alert-circle-outline" height="16" />
@@ -244,12 +244,6 @@ const toEditor = (item: HistoryListItem) => {
   min-height: 0;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-xl) 0;
-}
-
-.history-header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
 }
 
 .history-notice {

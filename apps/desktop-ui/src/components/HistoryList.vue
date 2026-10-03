@@ -2,23 +2,11 @@
   <div class="history-list">
     <slot name="notice" />
 
-    <div v-if="filtered.length === 0" class="history-empty">
-      <div class="history-empty-icon">
-        <Icon
-          :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
-          height="28"
-        />
+    <div v-if="$slots.search || items.length > 0" class="history-header-row">
+      <div class="history-search-col">
+        <slot name="search" />
       </div>
-      <div class="font-medium">
-        {{ searchQuery ? t('history.nothingFound') : t('history.empty') }}
-      </div>
-      <div v-if="!searchQuery && emptyHint" class="text-sm text-muted">
-        {{ emptyHint }}
-      </div>
-    </div>
-
-    <template v-else>
-      <div class="history-toolbar">
+      <div v-if="items.length > 0" class="history-toolbar-col">
         <template v-if="confirmingClear">
           <span class="text-sm">
             {{ t('history.clearConfirm', { count: totalCount }) }}
@@ -38,9 +26,6 @@
           </span>
         </template>
         <template v-else>
-          <span class="text-xs text-muted">
-            {{ filtered.length }} / {{ items.length }}
-          </span>
           <Button
             xs
             ghost
@@ -52,7 +37,24 @@
           </Button>
         </template>
       </div>
+    </div>
 
+    <div v-if="filtered.length === 0" class="history-empty">
+      <div class="history-empty-icon">
+        <Icon
+          :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
+          height="28"
+        />
+      </div>
+      <div class="font-medium">
+        {{ searchQuery ? t('history.nothingFound') : t('history.empty') }}
+      </div>
+      <div v-if="!searchQuery && emptyHint" class="text-sm text-muted">
+        {{ emptyHint }}
+      </div>
+    </div>
+
+    <template v-else>
       <div ref="scroller" class="history-items">
         <section v-for="group in groups" :key="group.key" class="history-group">
           <h3 class="history-group-title">
@@ -330,13 +332,27 @@ function confirmClear() {
   min-height: 0;
 }
 
-.history-toolbar {
+.history-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  min-height: 1.75rem;
-  padding: 0 var(--space-xs) var(--space-xs);
+  min-height: 2.25rem;
+  margin-bottom: var(--space-sm);
+  padding: 0 var(--space-xs);
+}
+
+.history-search-col {
+  flex: 0 1 50%;
+  min-width: 0;
+}
+
+.history-toolbar-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+  margin-left: auto;
 }
 
 .history-toolbar-buttons {
