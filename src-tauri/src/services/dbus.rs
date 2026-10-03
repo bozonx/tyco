@@ -1,8 +1,9 @@
+use std::sync::Mutex;
 use std::thread;
 
 use tauri::AppHandle;
 use zbus::message::Header;
-use zbus::names::BusName;
+use zbus::names::{BusName, OwnedUniqueName};
 use zbus::{interface, Connection};
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
@@ -33,6 +34,7 @@ pub fn spawn_dbus_server(app: AppHandle) {
             Ok(connection) => connection,
             Err(error) => {
                 log::error!("D-Bus server is unavailable: {error}");
+                kwin_windows::finish_startup();
                 return;
             }
         };
@@ -40,11 +42,11 @@ pub fn spawn_dbus_server(app: AppHandle) {
         log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
 
         if kwin_windows::is_kde_wayland_session() {
-            match kwin_windows::start_tracker() {
-                Ok(()) => log::info!("Tracking foreign windows with a KWin script"),
-                Err(error) => log::warn!("KWin window tracker is unavailable: {error}"),
-            }
+            // Wayland gives GTK windows the program name as their app id
+            let own_class = gtk::glib::prgname().unwrap_or_default();
+            kwin_windows::supervise_tracker(&own_class);
         }
+        kwin_windows::finish_startup();
 
         // Keep the connection alive for the lifetime of the process.
         loop {
@@ -85,16 +87,23 @@ impl TycoDbus {
         &self,
         #[zbus(header)] header: Header<'_>,
         #[zbus(connection)] connection: &Connection,
+        seq: String,
         id: String,
         kind: String,
         class: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        kwin_windows::tracker().window_activated(
+        let applied = kwin_windows::tracker().window_activated(
+            &seq,
             &id,
             kwin_windows::WindowKind::parse(&kind),
             &class,
         );
+        if applied {
+            if let Err(error) = runtime::follow_target_window(&self.app) {
+                log::warn!("Could not follow the target window: {error}");
+            }
+        }
         Ok(())
     }
 
@@ -103,12 +112,12 @@ impl TycoDbus {
         &self,
         #[zbus(header)] header: Header<'_>,
         #[zbus(connection)] connection: &Connection,
+        seq: String,
         id: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        kwin_windows::tracker().window_closed(&id);
-        if let Err(error) = runtime::forget_target_window(&self.app, &id) {
-            log::warn!("Could not forget the closed target window: {error}");
+        if kwin_windows::tracker().window_closed(&seq, &id) {
+            self.forget_target_window(&id);
         }
         Ok(())
     }
@@ -122,6 +131,8 @@ impl TycoDbus {
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
         kwin_windows::tracker().window_missing(&id);
+        // the closing of the window may have gone unreported
+        self.forget_target_window(&id);
         Ok(())
     }
 
@@ -131,22 +142,51 @@ impl TycoDbus {
     }
 }
 
-/// Window reports pick the insertion target, so only KWin may send them.
+impl TycoDbus {
+    fn forget_target_window(&self, id: &str) {
+        if let Err(error) = runtime::forget_target_window(&self.app, id) {
+            log::warn!("Could not forget the closed target window: {error}");
+        }
+    }
+}
+
+/// Window reports pick the insertion target, so only KWin may send them. The
+/// owner of the KWin name is looked up again only when a report comes from
+/// someone else, so a focus change costs no extra round trip.
 async fn ensure_sent_by_kwin(
     header: &Header<'_>,
     connection: &Connection,
 ) -> zbus::fdo::Result<()> {
+    static KWIN_OWNER: Mutex<Option<OwnedUniqueName>> = Mutex::new(None);
+
+    let Some(sender) = header.sender() else {
+        return Err(not_kwin());
+    };
+    let is_cached_owner = |owner: &Mutex<Option<OwnedUniqueName>>| {
+        owner
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .is_some_and(|owner| owner.as_ref() == *sender)
+    };
+    if is_cached_owner(&KWIN_OWNER) {
+        return Ok(());
+    }
     let owner = zbus::fdo::DBusProxy::new(connection)
         .await?
         .get_name_owner(BusName::from_static_str(KWIN_SERVICE).map_err(zbus::Error::from)?)
         .await?;
-    if header.sender() == Some(&*owner) {
+    let is_kwin = owner.as_ref() == *sender;
+    *KWIN_OWNER.lock().unwrap_or_else(|error| error.into_inner()) = Some(owner);
+    if is_kwin {
         Ok(())
     } else {
-        Err(zbus::fdo::Error::AccessDenied(String::from(
-            "Only KWin may report windows",
-        )))
+        Err(not_kwin())
     }
+}
+
+fn not_kwin() -> zbus::fdo::Error {
+    zbus::fdo::Error::AccessDenied(String::from("Only KWin may report windows"))
 }
 
 pub fn parse_switch_mode_message(message: &str) -> (&str, Option<&str>, Option<&str>) {

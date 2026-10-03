@@ -229,6 +229,35 @@ pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppE
     emit_params(app, &state)
 }
 
+/// While the main window is shown, text goes to the application window the
+/// user worked in last rather than the one Tyco was opened from: the main
+/// window stays open while the user switches between applications. Only a
+/// known window replaces the target; focusing the desktop or a panel keeps it.
+pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
+    let Some(target) = super::kwin_windows::tracker().target() else {
+        return Ok(());
+    };
+    let active_label = app.state::<RuntimeWindows>().active_label();
+    let state = app.state::<AppState>();
+    let mut changed = false;
+    state.update_params(|params| {
+        if is_main_window_shown(active_label, params.is_window_shown)
+            && params.window_id.as_ref() != Some(&target)
+        {
+            params.window_id = Some(target);
+            changed = true;
+        }
+    });
+    if changed {
+        emit_params(app, &state)?;
+    }
+    Ok(())
+}
+
+fn is_main_window_shown(active_label: &str, is_window_shown: bool) -> bool {
+    active_label == MAIN_WINDOW_LABEL && is_window_shown
+}
+
 fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
     let window_label = window_label_for_mode(activation.mode);
     let is_quick_window = window_label == QUICK_WINDOW_LABEL;
@@ -335,8 +364,16 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
     Ok(())
 }
 
+/// Shows the main window from the tray or a launch without a mode. The window
+/// Tyco was last activated from may be long gone from the user's mind, so the
+/// target is taken anew, the way an activation takes it.
 pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
-    on_main_thread(app, show_application_on_main_thread)
+    let window_id = super::platform::capture_source();
+    on_main_thread(app, move |app| {
+        app.state::<AppState>()
+            .update_params(|params| params.window_id = window_id);
+        show_application_on_main_thread(app)
+    })
 }
 
 pub fn open_main_editor(
@@ -781,6 +818,13 @@ mod tests {
     fn tray_click_hides_a_visible_window_and_shows_the_application_otherwise() {
         assert_eq!(tray_click_action(true), TrayClickAction::HideActiveWindow);
         assert_eq!(tray_click_action(false), TrayClickAction::ShowApplication);
+    }
+
+    #[test]
+    fn follows_the_target_only_while_the_main_window_is_shown() {
+        assert!(is_main_window_shown(MAIN_WINDOW_LABEL, true));
+        assert!(!is_main_window_shown(MAIN_WINDOW_LABEL, false));
+        assert!(!is_main_window_shown(QUICK_WINDOW_LABEL, true));
     }
 
     #[test]

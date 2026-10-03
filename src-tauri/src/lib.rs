@@ -62,6 +62,11 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .build()
 }
 
+/// How long the first activation waits for the KWin window tracker. It
+/// normally reports within a few dozen milliseconds.
+#[cfg(target_os = "linux")]
+const TRACKER_STARTUP_WAIT: std::time::Duration = std::time::Duration::from_millis(800);
+
 /// Runs the activation the command line asks for. Arguments that cannot be
 /// parsed still show the application: a launch must never end up without a
 /// window and without a word to the user.
@@ -94,10 +99,17 @@ pub fn run() {
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
             services::activation_metrics::setup(app)?;
+            // the activation below needs the KWin tracker to know the window
+            // Tyco was launched from
+            #[cfg(target_os = "linux")]
+            {
+                dbus::spawn_dbus_server(app.handle().clone());
+                if services::kwin_windows::is_kde_wayland_session() {
+                    services::kwin_windows::wait_for_startup(TRACKER_STARTUP_WAIT);
+                }
+            }
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
-            #[cfg(target_os = "linux")]
-            dbus::spawn_dbus_server(app.handle().clone());
             services::activation_socket::spawn_server(app.handle().clone());
             Ok(())
         })

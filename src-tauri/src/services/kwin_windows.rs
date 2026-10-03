@@ -19,35 +19,42 @@ const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(2);
 /// The tracker reports the active window right away; silence means the
 /// script failed, e.g. on Plasma 5 whose scripting API differs.
 const TRACKER_START_TIMEOUT: Duration = Duration::from_secs(2);
+/// How often the supervisor checks that KWin still runs the tracker script.
+const TRACKER_CHECK_INTERVAL: Duration = Duration::from_secs(30);
+/// The first retry after a failed start; each next one waits twice as long.
+const TRACKER_RETRY_DELAY: Duration = Duration::from_secs(5);
+const TRACKER_MAX_RETRY_DELAY: Duration = Duration::from_secs(120);
+/// Failed starts logged as warnings; later ones are logged at debug level.
+const TRACKER_LOGGED_FAILURES: u32 = 3;
 
 const TRACKER_SCRIPT: &str = r#"
 const TYCO_PID = __PID__;
-function tycoSend(method, a, b, c) {
-    if (b === undefined) {
-        callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", method, a);
-    } else if (c === undefined) {
-        callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", method, a, b);
-    } else {
-        callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", method, a, b, c);
-    }
+const TYCO_CLASS = "__CLASS__";
+const TYCO_SESSION = "__SESSION__";
+let tycoSeq = 0;
+// D-Bus calls may be handled out of order, so each report carries its number
+function tycoNextSeq() {
+    tycoSeq += 1;
+    return TYCO_SESSION + ":" + tycoSeq;
 }
 function tycoKind(window) {
-    if (window.pid === TYCO_PID) {
+    // the class covers a sandbox, where Tyco does not know its own pid
+    if (window.pid === TYCO_PID || (TYCO_CLASS !== "" && window.resourceClass === TYCO_CLASS)) {
         return "own";
     }
     return window.normalWindow || window.dialog ? "foreign" : "other";
 }
 function tycoReport(window) {
-    if (window) {
-        tycoSend("KwinWindowActivated", window.internalId.toString(), tycoKind(window),
-            String(window.resourceClass || ""));
-    } else {
-        tycoSend("KwinWindowActivated", "", "other", "");
-    }
+    const id = window ? window.internalId.toString() : "";
+    const kind = window ? tycoKind(window) : "other";
+    const resourceClass = window ? String(window.resourceClass || "") : "";
+    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", "KwinWindowActivated",
+        tycoNextSeq(), id, kind, resourceClass);
 }
 workspace.windowActivated.connect(tycoReport);
 workspace.windowRemoved.connect(function (window) {
-    tycoSend("KwinWindowClosed", window.internalId.toString());
+    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", "KwinWindowClosed",
+        tycoNextSeq(), window.internalId.toString());
 });
 tycoReport(workspace.activeWindow);
 "#;
@@ -91,6 +98,10 @@ impl WindowKind {
 #[derive(Debug, Default, PartialEq, Eq)]
 struct TrackerState {
     running: bool,
+    /// Tells the reports of the running script from late ones of an earlier.
+    session: String,
+    /// The number of the latest report applied, see `accept`.
+    last_seq: u64,
     /// Set by the first report of the script.
     reported: bool,
     active: Option<String>,
@@ -102,6 +113,24 @@ struct TrackerState {
 }
 
 impl TrackerState {
+    /// Whether a report numbered `seq` ("session:number") is newer than all
+    /// applied so far. D-Bus calls are handled concurrently, so a report can
+    /// arrive after a later one, and must not undo it.
+    fn accept(&mut self, seq: &str) -> bool {
+        let Some(number) = seq
+            .split_once(':')
+            .filter(|(session, _)| *session == self.session)
+            .and_then(|(_, number)| number.parse::<u64>().ok())
+        else {
+            return false;
+        };
+        if number <= self.last_seq {
+            return false;
+        }
+        self.last_seq = number;
+        true
+    }
+
     fn window_activated(&mut self, id: &str, kind: WindowKind) {
         self.reported = true;
         self.active = (!id.is_empty()).then(|| id.to_owned());
@@ -161,20 +190,33 @@ pub fn tracker() -> &'static WindowTracker {
 }
 
 impl WindowTracker {
-    fn update(&self, update: impl FnOnce(&mut TrackerState)) {
-        update(&mut self.state.lock().expect("kwin tracker lock poisoned"));
+    fn update<T>(&self, update: impl FnOnce(&mut TrackerState) -> T) -> T {
+        let result = update(&mut self.state.lock().expect("kwin tracker lock poisoned"));
         self.changed.notify_all();
+        result
     }
 
-    pub fn window_activated(&self, id: &str, kind: WindowKind, class: &str) {
+    /// Applies a report of the tracker script; `false` when it was outdated.
+    pub fn window_activated(&self, seq: &str, id: &str, kind: WindowKind, class: &str) -> bool {
         self.update(|state| {
+            if !state.accept(seq) {
+                return false;
+            }
             state.window_activated(id, kind);
             class.clone_into(&mut state.active_class);
-        });
+            true
+        })
     }
 
-    pub fn window_closed(&self, id: &str) {
-        self.update(|state| state.window_closed(id));
+    /// Applies a report of the tracker script; `false` when it was outdated.
+    pub fn window_closed(&self, seq: &str, id: &str) -> bool {
+        self.update(|state| {
+            if !state.accept(seq) {
+                return false;
+            }
+            state.window_closed(id);
+            true
+        })
     }
 
     pub fn window_missing(&self, id: &str) {
@@ -211,10 +253,12 @@ impl WindowTracker {
             .running
     }
 
-    fn set_running(&self, running: bool) {
+    /// Starts over for the script of `session`, or for none when stopped.
+    fn reset(&self, running: bool, session: String) {
         self.update(|state| {
             *state = TrackerState {
                 running,
+                session,
                 ..TrackerState::default()
             }
         });
@@ -286,12 +330,125 @@ pub fn is_kde_wayland_session() -> bool {
     is_wayland && is_kde
 }
 
-/// Loads the tracker script and waits for its first report. Must run once
-/// Tyco owns its D-Bus name, otherwise the reports of the script get lost.
-pub fn start_tracker() -> Result<(), AppError> {
-    let source = TRACKER_SCRIPT.replace("__PID__", &std::process::id().to_string());
+/// Whether the first attempt to start the tracker has finished, see
+/// `wait_for_startup`.
+struct Startup {
+    done: Mutex<bool>,
+    changed: Condvar,
+}
+
+fn startup() -> &'static Startup {
+    static STARTUP: Startup = Startup {
+        done: Mutex::new(false),
+        changed: Condvar::new(),
+    };
+    &STARTUP
+}
+
+/// Reports that the tracker started, or that it will not start soon.
+pub fn finish_startup() {
+    *startup()
+        .done
+        .lock()
+        .unwrap_or_else(|error| error.into_inner()) = true;
+    startup().changed.notify_all();
+}
+
+/// Waits up to `timeout` for the first attempt to start the tracker. An
+/// activation needs the tracker to know the window it was called from.
+pub fn wait_for_startup(timeout: Duration) {
+    let done = startup()
+        .done
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    let (_done, result) = startup()
+        .changed
+        .wait_timeout_while(done, timeout, |done| !*done)
+        .unwrap_or_else(|error| error.into_inner());
+    if result.timed_out() {
+        log::debug!("Activating before the KWin window tracker has started");
+    }
+}
+
+/// Keeps the tracker script running for the lifetime of the process: starts
+/// it, retries a failed start with a growing delay, and starts it again once
+/// KWin no longer runs it. `own_class` is the resource class of Tyco windows.
+/// Must run once Tyco owns its D-Bus name, otherwise the reports of the script
+/// get lost. Never returns.
+pub fn supervise_tracker(own_class: &str) -> ! {
+    let mut failures = 0u32;
+    loop {
+        if !tracker_alive() {
+            match start_tracker(own_class) {
+                Ok(()) => {
+                    if failures == 0 {
+                        log::info!("Tracking foreign windows with a KWin script");
+                    } else {
+                        log::info!("KWin window tracker started after {failures} failed attempts");
+                    }
+                    failures = 0;
+                }
+                Err(error) => {
+                    failures += 1;
+                    if failures <= TRACKER_LOGGED_FAILURES {
+                        log::warn!("KWin window tracker is unavailable: {error}");
+                    } else {
+                        log::debug!("KWin window tracker is still unavailable: {error}");
+                    }
+                }
+            }
+            finish_startup();
+        }
+        std::thread::sleep(if failures == 0 {
+            TRACKER_CHECK_INTERVAL
+        } else {
+            retry_delay(failures)
+        });
+    }
+}
+
+fn retry_delay(failures: u32) -> Duration {
+    TRACKER_RETRY_DELAY
+        .saturating_mul(2u32.saturating_pow(failures.saturating_sub(1)))
+        .min(TRACKER_MAX_RETRY_DELAY)
+}
+
+/// Whether the tracker runs as far as KWin can tell. A failed check counts
+/// as alive: restarting would drop what the tracker knows, for nothing.
+fn tracker_alive() -> bool {
+    if !tracker().is_running() {
+        return false;
+    }
+    match session().and_then(|connection| is_script_loaded(&connection, TRACKER_SCRIPT_NAME)) {
+        Ok(loaded) => {
+            if !loaded {
+                log::warn!("KWin no longer runs the window tracker script; starting it again");
+            }
+            loaded
+        }
+        Err(error) => {
+            log::debug!("Could not check the KWin window tracker: {error}");
+            true
+        }
+    }
+}
+
+/// Loads the tracker script and waits for its first report.
+fn start_tracker(own_class: &str) -> Result<(), AppError> {
+    let session = new_session();
+    let source = TRACKER_SCRIPT
+        .replace("__PID__", &std::process::id().to_string())
+        .replace(
+            "__CLASS__",
+            if is_class_name(own_class) {
+                own_class
+            } else {
+                ""
+            },
+        )
+        .replace("__SESSION__", &session);
     // before the script runs: resetting the state later could drop its report
-    tracker().set_running(true);
+    tracker().reset(true, session);
     let started = run_script(TRACKER_SCRIPT_NAME, &source)
         .and_then(|()| tracker().wait_until_reported(TRACKER_START_TIMEOUT));
     if started.is_err() {
@@ -300,11 +457,30 @@ pub fn start_tracker() -> Result<(), AppError> {
     started
 }
 
+/// A token no earlier script of this process has used.
+fn new_session() -> String {
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|time| time.subsec_nanos())
+        .unwrap_or_default();
+    format!("{count}x{nanos}")
+}
+
+/// Goes into a script string literal, so only an application id is allowed.
+fn is_class_name(class: &str) -> bool {
+    !class.is_empty()
+        && class
+            .chars()
+            .all(|char| char.is_ascii_alphanumeric() || matches!(char, '.' | '_' | '-'))
+}
+
 pub fn stop_tracker() {
     if !tracker().state.lock().is_ok_and(|state| state.running) {
         return;
     }
-    tracker().set_running(false);
+    tracker().reset(false, String::new());
     if let Err(error) =
         session().and_then(|connection| unload_script(&connection, TRACKER_SCRIPT_NAME))
     {
@@ -314,9 +490,14 @@ pub fn stop_tracker() {
 
 /// Activates the window and waits until KWin reports it focused.
 pub fn activate_window(id: &str) -> Result<(), AppError> {
+    // the activator script has a single name and file: a second activation
+    // running alongside would unload or overwrite the script of the first
+    static ACTIVATION: Mutex<()> = Mutex::new(());
+
     if !is_window_id(id) {
         return Err(AppError::Message(format!("Invalid KWin window id: {id}")));
     }
+    let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
     tracker().update(|state| state.missing = None);
     run_script(
         ACTIVATOR_SCRIPT_NAME,
@@ -352,6 +533,21 @@ fn scripts_dir() -> PathBuf {
         .map(PathBuf::from)
         .unwrap_or_else(std::env::temp_dir)
         .join("tyco")
+}
+
+fn is_script_loaded(connection: &zbus::blocking::Connection, name: &str) -> Result<bool, AppError> {
+    connection
+        .call_method(
+            Some(KWIN_SERVICE),
+            SCRIPTING_PATH,
+            Some(SCRIPTING_INTERFACE),
+            "isScriptLoaded",
+            &(name,),
+        )
+        .map_err(dbus_error)?
+        .body()
+        .deserialize()
+        .map_err(dbus_error)
 }
 
 fn unload_script(connection: &zbus::blocking::Connection, name: &str) -> Result<(), AppError> {
@@ -425,6 +621,17 @@ mod tests {
         })
     }
 
+    /// A tracker running the script of session `s`.
+    fn running_tracker() -> Arc<WindowTracker> {
+        let tracker = new_tracker();
+        tracker.reset(true, String::from("s"));
+        tracker
+    }
+
+    fn seq(number: u64) -> String {
+        format!("s:{number}")
+    }
+
     #[test]
     fn remembers_the_last_foreign_window_only() {
         let mut state = TrackerState::default();
@@ -455,9 +662,8 @@ mod tests {
 
     #[test]
     fn reports_the_active_application_window() {
-        let tracker = new_tracker();
-        tracker.set_running(true);
-        tracker.window_activated("a", WindowKind::Foreign, "org.kde.konsole");
+        let tracker = running_tracker();
+        tracker.window_activated(&seq(1), "a", WindowKind::Foreign, "org.kde.konsole");
         assert_eq!(
             tracker.active_window(),
             Some(ActiveWindow {
@@ -465,9 +671,9 @@ mod tests {
                 class: "org.kde.konsole".into()
             })
         );
-        tracker.window_activated("tyco", WindowKind::Own, "tyco");
+        tracker.window_activated(&seq(2), "tyco", WindowKind::Own, "tyco");
         assert_eq!(tracker.active_window().unwrap().id, "tyco");
-        tracker.window_activated("desktop", WindowKind::Other, "plasmashell");
+        tracker.window_activated(&seq(3), "desktop", WindowKind::Other, "plasmashell");
         assert_eq!(tracker.active_window(), None);
     }
 
@@ -494,20 +700,42 @@ mod tests {
     #[test]
     fn reports_windows_only_while_the_script_runs() {
         let tracker = new_tracker();
-        tracker.window_activated("a", WindowKind::Foreign, "");
+        assert!(!tracker.window_activated(&seq(1), "a", WindowKind::Foreign, ""));
         assert_eq!(tracker.target(), None);
-        tracker.set_running(true);
+        tracker.reset(true, String::from("s"));
         assert!(tracker.is_running());
-        tracker.window_activated("a", WindowKind::Foreign, "");
+        assert!(tracker.window_activated(&seq(1), "a", WindowKind::Foreign, ""));
         assert_eq!(tracker.target().as_deref(), Some("a"));
-        tracker.set_running(false);
+        tracker.reset(false, String::new());
         assert_eq!(tracker.target(), None);
     }
 
     #[test]
+    fn ignores_reports_that_arrive_out_of_order() {
+        let tracker = running_tracker();
+        assert!(tracker.window_activated(&seq(2), "b", WindowKind::Foreign, ""));
+        // the null activation KWin sends before "b" must not clear it
+        assert!(!tracker.window_activated(&seq(1), "", WindowKind::Other, ""));
+        assert_eq!(tracker.target().as_deref(), Some("b"));
+        assert!(!tracker.window_closed(&seq(2), "b"));
+        assert_eq!(tracker.target().as_deref(), Some("b"));
+        assert!(tracker.window_closed(&seq(3), "b"));
+        assert_eq!(tracker.target(), None);
+    }
+
+    #[test]
+    fn ignores_reports_of_an_earlier_script() {
+        let tracker = running_tracker();
+        assert!(!tracker.window_activated("old:7", "a", WindowKind::Foreign, ""));
+        assert!(!tracker.window_activated("7", "a", WindowKind::Foreign, ""));
+        assert!(!tracker.window_activated("s:x", "a", WindowKind::Foreign, ""));
+        assert_eq!(tracker.target(), None);
+        // a late report of the old script must not block the new one
+        assert!(tracker.window_activated(&seq(1), "a", WindowKind::Foreign, ""));
+    }
+    #[test]
     fn waits_for_the_first_report_of_the_script() {
-        let tracker = new_tracker();
-        tracker.set_running(true);
+        let tracker = running_tracker();
         let error = tracker
             .wait_until_reported(Duration::from_millis(10))
             .unwrap_err();
@@ -516,7 +744,7 @@ mod tests {
         let reporter = Arc::clone(&tracker);
         let handle = thread::spawn(move || {
             thread::sleep(Duration::from_millis(20));
-            reporter.window_activated("", WindowKind::Other, "");
+            reporter.window_activated(&seq(1), "", WindowKind::Other, "");
         });
         tracker.wait_until_reported(Duration::from_secs(2)).unwrap();
         handle.join().unwrap();
@@ -524,12 +752,12 @@ mod tests {
 
     #[test]
     fn waits_for_the_activation_report() {
-        let tracker = new_tracker();
+        let tracker = running_tracker();
         let reporter = Arc::clone(&tracker);
         let handle = thread::spawn(move || {
             thread::sleep(Duration::from_millis(20));
-            reporter.window_activated("other", WindowKind::Foreign, "");
-            reporter.window_activated(WINDOW, WindowKind::Foreign, "");
+            reporter.window_activated(&seq(1), "other", WindowKind::Foreign, "");
+            reporter.window_activated(&seq(2), WINDOW, WindowKind::Foreign, "");
         });
         tracker
             .wait_until_active(WINDOW, Duration::from_secs(2))
@@ -561,8 +789,33 @@ mod tests {
     }
 
     #[test]
+    fn accepts_only_application_ids_as_the_own_class() {
+        assert!(is_class_name("tyco"));
+        assert!(is_class_name("com.tyco.app"));
+        assert!(!is_class_name(""));
+        assert!(!is_class_name("a\"; workspace.activeWindow = null; \""));
+    }
+
+    #[test]
+    fn retries_with_a_growing_but_bounded_delay() {
+        assert_eq!(retry_delay(1), TRACKER_RETRY_DELAY);
+        assert_eq!(retry_delay(2), TRACKER_RETRY_DELAY * 2);
+        assert_eq!(retry_delay(3), TRACKER_RETRY_DELAY * 4);
+        assert_eq!(retry_delay(40), TRACKER_MAX_RETRY_DELAY);
+    }
+
+    #[test]
+    fn sessions_differ() {
+        assert_ne!(new_session(), new_session());
+    }
+
+    #[test]
     fn scripts_have_their_placeholders_filled() {
-        assert!(!TRACKER_SCRIPT.replace("__PID__", "1").contains("__"));
+        assert!(!TRACKER_SCRIPT
+            .replace("__PID__", "1")
+            .replace("__CLASS__", "tyco")
+            .replace("__SESSION__", "s")
+            .contains("__"));
         assert!(!ACTIVATOR_SCRIPT
             .replace("__ID__", WINDOW)
             .contains("__ID__"));
