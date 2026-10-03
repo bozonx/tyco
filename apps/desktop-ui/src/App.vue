@@ -35,7 +35,7 @@ import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useEditorInputStore } from './stores/editorInput'
 import { useIpcStore } from './stores/ipc'
-import { MenuModals, useMenuModalsStore } from './stores/menuModals'
+import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
 import { useRouteParams } from './stores/routeParams'
 import { useSelectionReplaceStore } from './stores/selectionReplace'
@@ -173,10 +173,9 @@ const capturedChatSelection = createCapturedChatSelection({
   getSelectedText: () => editorInputStore.selectedText,
 })
 // the voice chat hotkey opens a dictation into the chat, then submits it
-const { openChatVoiceInput } = useChatVoiceInput()
+const { isVoiceInputOpen, openChatVoiceInput } = useChatVoiceInput()
 const voiceChatActivation = createVoiceChatActivation({
-  isVoiceInputOpen: () =>
-    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION,
+  isVoiceInputOpen,
   currentPath: () => appNavigation.currentPath(),
   navigateTo: (path) => appNavigation.push(path),
   closeAllModals: () => menuModalsStore.closeAll(),
