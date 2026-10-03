@@ -1,23 +1,24 @@
-import miniToastr from 'mini-toastr'
-
 import { translate } from '../lib/i18n'
+import { type ToastType, useToastStore } from '../stores/toast'
 
 export default function useToast() {
+  const toastStore = useToastStore()
+
   const toast = (
     message: string,
-    type: 'success' | 'error' | 'warn' | 'info' = 'info',
-    timeout = 10000
+    type: ToastType = 'info',
+    timeout?: number
   ) => {
-    miniToastr[type](translate(message), '', timeout)
+    toastStore.addToast(translate(message), type, { duration: timeout })
   }
 
   /** For text that is already final, e.g. an error message from a provider */
   const toastText = (
     text: string,
-    type: 'success' | 'error' | 'warn' | 'info' = 'info',
-    timeout = 10000
+    type: ToastType = 'info',
+    timeout?: number
   ) => {
-    miniToastr[type](text, '', timeout)
+    toastStore.addToast(text, type, { duration: timeout })
   }
 
   return { toast, toastText }

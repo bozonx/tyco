@@ -31,7 +31,9 @@ const mountMenu = (props: Record<string, unknown>) =>
         Diff: true,
         TextPreview: true,
         ActionOverlayLayout: {
-          template: '<div><slot name="preview" /><slot name="actions" /></div>',
+          props: ['title'],
+          template:
+            '<div data-testid="layout" :data-title="title"><slot name="preview" /><slot name="actions" /></div>',
         },
       },
     },
@@ -78,5 +80,17 @@ describe('InsertMenu correction step', () => {
     expect(list.props('spaceKey')?.id).not.toBe('applyToEditor')
     expect(list.props('altText')).toBe('Original text')
     expect(list.props('toEditorVisible')).toBe(true)
+  })
+
+  it('uses menu.actions title by default and menu.correction when correcting', () => {
+    const defaultWrapper = mountMenu({ text: 'Some text' })
+    expect(
+      defaultWrapper.find('[data-testid="layout"]').attributes('data-title')
+    ).toBe('menu.actions')
+
+    const correctionWrapper = mountMenu(correctionStep)
+    expect(
+      correctionWrapper.find('[data-testid="layout"]').attributes('data-title')
+    ).toBe('menu.correction')
   })
 })

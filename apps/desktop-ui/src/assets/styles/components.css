@@ -130,48 +130,6 @@
   text-transform: uppercase;
 }
 
-/* ── toasts ────────────────────────────────────
-   mini-toastr injects its own styles; the id selector wins. */
-
-#mini-toastr {
-  z-index: var(--z-toast);
-  top: 12px;
-  right: 12px;
-}
-
-#mini-toastr .mini-toastr__notification {
-  width: 320px;
-  margin: 0 0 8px;
-  padding: 10px 14px 10px 16px;
-  border: 1px solid var(--app-border);
-  border-left: 3px solid var(--color-info);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
-  color: var(--color-base-content);
-  box-shadow: var(--app-shadow-lg);
-  font-size: 0.875rem;
-  line-height: 1.4;
-  opacity: 1;
-}
-
-#mini-toastr .mini-toastr__notification.-success {
-  border-left-color: var(--color-success);
-}
-
-#mini-toastr .mini-toastr__notification.-warn {
-  border-left-color: var(--color-warning);
-}
-
-#mini-toastr .mini-toastr__notification.-error {
-  border-left-color: var(--color-error);
-}
-
-#mini-toastr .mini-toastr-notification__message {
-  display: block;
-  width: auto;
-  padding: 0;
-}
-
 /* ── app utilities ───────────────────────────── */
 
 /* Bordered panel on the base surface */

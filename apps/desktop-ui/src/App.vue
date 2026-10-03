@@ -11,12 +11,14 @@
       </div>
     </div>
   </template>
+  <ToastContainer />
 </template>
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import ToastContainer from './components/common/ToastContainer.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useChatVoiceInput } from './composables/useChatVoiceInput'
 import { GlobalEvents, useGlobalEvents } from './composables/useGlobalEvents'

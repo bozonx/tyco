@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
+import { useNavPanelStore } from '../stores/navPanel'
 import EditorView from './EditorView.vue'
 
 describe('Editor actions shortcut', () => {
@@ -23,6 +24,7 @@ describe('Editor actions shortcut', () => {
         },
       },
     })
+    expect(useNavPanelStore().params.escBtnLabelKey).toBe('menu.actions')
     const press = (repeat = false) => {
       const event = new KeyboardEvent('keydown', {
         code: 'Enter',

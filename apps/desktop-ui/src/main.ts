@@ -1,4 +1,3 @@
-import miniToastr from 'mini-toastr'
 import { createApp } from 'vue'
 
 import App from './App.vue'
@@ -17,5 +16,3 @@ app.use(pinia)
 app.use(i18n)
 
 app.mount('#app')
-
-miniToastr.init({ timeout: 10000 })
