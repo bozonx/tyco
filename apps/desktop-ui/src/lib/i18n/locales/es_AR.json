@@ -399,7 +399,7 @@
     "hint": "Pulsa una tecla o elige una acción"
   },
   "menu": {
-    "insert": "Insertar",
+    "actions": "Acciones",
     "replaceInEditor": "Reemplazar en el editor",
     "translate": "Traducir",
     "aiTask": "Tarea de IA",

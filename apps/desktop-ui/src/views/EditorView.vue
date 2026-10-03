@@ -37,7 +37,7 @@ navPanelStore.resetNavParams({
   escBtnAction: () => {
     openInsertMenu()
   },
-  escBtnLabelKey: 'menu.insert',
+  escBtnLabelKey: 'menu.actions',
 })
 
 function handleKeyDown(event: KeyboardEvent) {

@@ -138,17 +138,18 @@
             >
               <Icon icon="mdi:eraser" height="18" />
             </Button>
+            <div class="rail-divider" />
+            <InfoTooltip
+              :text="t('editor.selectionHint')"
+              align="end"
+              placement="bottom"
+            />
           </template>
         </div>
       </div>
     </div>
 
     <div class="editor-footer">
-      <p v-show="!compact" class="editor-hint">
-        <Icon icon="mdi:information-outline" height="14" class="shrink-0" />
-        {{ t('editor.selectionHint') }}
-      </p>
-
       <div
         v-if="!compact && otherEditItems.length > 0"
         class="flex gap-1.5 w-full flex-wrap"
@@ -219,6 +220,7 @@ import { useIpcStore } from '../stores/ipc'
 import { useToolbarStore } from '../stores/toolbar'
 import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
+import InfoTooltip from './common/InfoTooltip.vue'
 import { Icon } from '@iconify/vue'
 import type { START_MODES } from '@tyco/shared'
 
@@ -437,14 +439,5 @@ const handleCopy = async () => {
   flex-direction: column;
   gap: var(--space-md);
   flex-shrink: 0;
-}
-
-.editor-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--app-text-faint);
 }
 </style>

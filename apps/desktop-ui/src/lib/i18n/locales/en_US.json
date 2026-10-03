@@ -396,7 +396,7 @@
     "hint": "Press a key or click an action"
   },
   "menu": {
-    "insert": "Insert",
+    "actions": "Actions",
     "replaceInEditor": "Replace in editor",
     "translate": "Translate",
     "aiTask": "AI task",

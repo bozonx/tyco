@@ -42,7 +42,7 @@
         @click="navPanelStore.params.escBtnAction"
         >{{ escBtnText
         }}<template
-          v-if="navPanelStore.params.escBtnLabelKey === 'menu.insert'"
+          v-if="navPanelStore.params.escBtnLabelKey === 'menu.actions'"
         >
           ({{ actionsShortcut }})</template
         ></Button

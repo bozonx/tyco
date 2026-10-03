@@ -399,7 +399,7 @@
     "hint": "Bir tuşa basın veya bir eylem seçin"
   },
   "menu": {
-    "insert": "Ekle",
+    "actions": "Eylemler",
     "replaceInEditor": "Düzenleyicide değiştir",
     "translate": "Çevir",
     "aiTask": "AI görevi",

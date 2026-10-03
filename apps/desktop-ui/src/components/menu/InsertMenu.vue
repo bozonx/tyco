@@ -1,6 +1,6 @@
 <template>
   <ActionOverlayLayout
-    :title="props.correction ? t('menu.correction') : t('menu.insert')"
+    :title="props.correction ? t('menu.correction') : t('menu.actions')"
   >
     <template
       v-if="statusVisible || (hasDiff && !props.correctionError)"

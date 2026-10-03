@@ -232,4 +232,33 @@ describe('Editor.vue toolbar', () => {
       'hello from editor test',
     ])
   })
+
+  it('renders info tooltip with selection hint in the right rail and not in footer', () => {
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: true,
+          InfoTooltip: {
+            props: ['text', 'align', 'placement'],
+            template:
+              '<div class="info-tooltip-stub" :data-text="text" :data-align="align" :data-placement="placement"></div>',
+          },
+        },
+      },
+    })
+
+    const rail = wrapper.find('.editor-rail')
+    expect(rail.exists()).toBe(true)
+
+    const tooltip = rail.find('.info-tooltip-stub')
+    expect(tooltip.exists()).toBe(true)
+    expect(tooltip.attributes('data-text')).toBe('editor.selectionHint')
+    expect(tooltip.attributes('data-align')).toBe('end')
+    expect(tooltip.attributes('data-placement')).toBe('bottom')
+
+    expect(wrapper.find('.editor-hint').exists()).toBe(false)
+  })
 })
