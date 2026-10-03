@@ -462,6 +462,30 @@ fn normalize_editor_config(user_config: &mut Value) -> bool {
     }
 
     if config
+        .get("clearEditorHistoryOnExit")
+        .and_then(Value::as_bool)
+        .is_none()
+    {
+        config.insert(
+            String::from("clearEditorHistoryOnExit"),
+            defaults["clearEditorHistoryOnExit"].clone(),
+        );
+        changed = true;
+    }
+
+    if config
+        .get("editorHistoryRetentionDays")
+        .and_then(Value::as_u64)
+        .is_none()
+    {
+        config.insert(
+            String::from("editorHistoryRetentionDays"),
+            defaults["editorHistoryRetentionDays"].clone(),
+        );
+        changed = true;
+    }
+
+    if config
         .get("chatHistoryMaxItems")
         .and_then(Value::as_u64)
         .is_none()
@@ -955,6 +979,50 @@ pub fn remove_from_editor_history(app: &AppHandle, id: String) -> Result<(), App
 
 pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
     write_jsonl(&editor_history_path(app)?, &Vec::<EditorHistoryItem>::new())
+}
+
+pub fn prune_editor_history_by_retention(
+    app: &AppHandle,
+    retention_days: u64,
+) -> Result<(), AppError> {
+    if retention_days == 0 {
+        return Ok(());
+    }
+
+    let path = editor_history_path(app)?;
+    let mut history = read_editor_history(&path)?;
+    let cutoff_ms = now_ms().saturating_sub(retention_days * 24 * 60 * 60 * 1000);
+
+    let original_len = history.len();
+    history.retain(|item| item.created_at == 0 || item.created_at >= cutoff_ms);
+
+    if history.len() != original_len {
+        write_jsonl(&path, &history)?;
+    }
+
+    Ok(())
+}
+
+pub fn cleanup_editor_history(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
+    let clear_on_exit = user_config
+        .get("clearEditorHistoryOnExit")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+
+    if clear_on_exit {
+        return clear_editor_history(app);
+    }
+
+    let retention_days = user_config
+        .get("editorHistoryRetentionDays")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+
+    if retention_days > 0 {
+        prune_editor_history_by_retention(app, retention_days)?;
+    }
+
+    Ok(())
 }
 
 pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
@@ -1754,6 +1822,31 @@ mod tests {
         assert!(dir.join("index.json").exists());
         assert!(dir.join("kept.json").exists());
         assert!(!dir.join("orphan.json").exists());
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn prune_editor_history_by_retention_removes_old_items() {
+        let dir = temp_dir("prune-retention");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+
+        let mut old_item = history_item("old", "old item", EditorHistoryKind::Draft);
+        old_item.created_at = now_ms().saturating_sub(3 * 24 * 60 * 60 * 1000);
+
+        let mut recent_item = history_item("new", "recent item", EditorHistoryKind::Draft);
+        recent_item.created_at = now_ms().saturating_sub(24 * 60 * 60 * 1000);
+
+        write_jsonl(&path, &[recent_item.clone(), old_item]).unwrap();
+
+        let mut history = read_editor_history(&path).unwrap();
+        let cutoff_ms = now_ms().saturating_sub(2 * 24 * 60 * 60 * 1000);
+        history.retain(|item| item.created_at == 0 || item.created_at >= cutoff_ms);
+        write_jsonl(&path, &history).unwrap();
+
+        let updated = read_editor_history(&path).unwrap();
+        assert_eq!(updated.len(), 1);
+        assert_eq!(updated[0].id, "new");
 
         fs::remove_dir_all(&dir).unwrap();
     }

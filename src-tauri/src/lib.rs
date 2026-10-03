@@ -92,6 +92,7 @@ pub fn run() {
         }))
         .setup(|app| {
             let user_config = storage::read_or_create_user_config(app.handle())?;
+            let _ = storage::cleanup_editor_history(app.handle(), &user_config);
             let local_state = storage::read_or_create_local_state(app.handle())?;
             app.manage(AppState::new(default_init_params(user_config, local_state)));
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
@@ -168,8 +169,12 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_app, event| {
+        .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
+                if let Some(state) = app.try_state::<AppState>() {
+                    let params = state.params();
+                    let _ = storage::cleanup_editor_history(app, &params.user_config);
+                }
                 services::kwin_windows::stop_tracker();
             }
         });

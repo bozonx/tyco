@@ -299,6 +299,8 @@ export interface UserConfig {
   pasteMode: PasteMode
   editorSyntax: EditorSyntax
   editorHistoryMaxItems: number
+  clearEditorHistoryOnExit?: boolean
+  editorHistoryRetentionDays?: number
   chatHistoryMaxItems: number
   llm: LlmConfig
   sttModels: SttModel[]
@@ -353,6 +355,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   pasteMode: 'markdown',
   editorSyntax: 'markdown',
   editorHistoryMaxItems: 100,
+  clearEditorHistoryOnExit: false,
+  editorHistoryRetentionDays: 0,
   chatHistoryMaxItems: 50,
   llm: DEFAULT_LLM_CONFIG,
   sttModels: [

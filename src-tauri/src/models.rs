@@ -168,6 +168,8 @@ pub fn default_user_config() -> Value {
       "pasteMode": "markdown",
       "editorSyntax": "markdown",
       "editorHistoryMaxItems": 100,
+      "clearEditorHistoryOnExit": false,
+      "editorHistoryRetentionDays": 0,
       "chatHistoryMaxItems": 50,
       "llm": crate::services::llm_config::default_llm_config(),
       "sttModels": [

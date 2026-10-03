@@ -118,6 +118,24 @@
               />
             </FieldRow>
             <FieldRow
+              :label="t('settings.clearEditorHistoryOnExit')"
+              :info="t('settings.clearEditorHistoryOnExitHint')"
+            >
+              <FieldCheckbox
+                v-model:value="userConfig.clearEditorHistoryOnExit"
+              />
+            </FieldRow>
+            <FieldRow
+              :label="t('settings.editorHistoryRetentionDays')"
+              :info="t('settings.editorHistoryRetentionDaysHint')"
+            >
+              <FieldInput
+                type="number"
+                :value="userConfig.editorHistoryRetentionDays ?? 0"
+                @update:value="setEditorHistoryRetentionDays"
+              />
+            </FieldRow>
+            <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
               :info="t('settings.chatHistoryPrivacyHint')"
             >
@@ -767,6 +785,14 @@ function setHistoryLimit(
   if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
 
   userConfig.value[key] = Math.round(parsed)
+}
+
+function setEditorHistoryRetentionDays(value: string) {
+  const parsed = Number(value)
+
+  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
+
+  userConfig.value.editorHistoryRetentionDays = Math.round(parsed)
 }
 
 const navigatorLanguages = computed(() => getNavigatorLanguages())
