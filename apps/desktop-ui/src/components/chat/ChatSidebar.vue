@@ -11,6 +11,16 @@
         {{ t('chat.newChat') }}
       </Button>
       <Button
+        v-if="historyStore.chatHistory.length"
+        sm
+        ghost
+        square
+        :title="t('history.clear')"
+        @click="confirmingClear = !confirmingClear"
+      >
+        <Icon icon="mdi:trash-can-outline" height="18" />
+      </Button>
+      <Button
         sm
         ghost
         square
@@ -19,6 +29,40 @@
       >
         <Icon icon="mdi:dock-left" height="18" />
       </Button>
+    </div>
+
+    <div v-if="confirmingClear" class="sidebar-clear-box">
+      <div class="sidebar-clear-msg">
+        {{
+          t('history.clearConfirm', { count: historyStore.chatHistory.length })
+        }}
+      </div>
+      <div class="sidebar-clear-actions">
+        <Button xs ghost @click="confirmingClear = false">
+          {{ t('common.cancel') }}
+        </Button>
+        <Button
+          xs
+          icon="mdi:trash-can-outline"
+          class="confirm-clear-btn"
+          @click="clearAllChats"
+        >
+          {{ t('history.clearConfirmButton') }}
+        </Button>
+      </div>
+    </div>
+
+    <div v-if="removedChat" class="sidebar-notice">
+      <Icon icon="mdi:trash-can-outline" height="15" class="shrink-0" />
+      <span class="truncate flex-1">{{ t('history.itemRemoved') }}</span>
+      <Button xs ghost icon="mdi:undo" @click="undoRemoveChat">
+        {{ t('history.undo') }}
+      </Button>
+    </div>
+
+    <div v-if="chatHistoryDisabled" class="sidebar-notice">
+      <Icon icon="mdi:information-outline" height="15" class="shrink-0" />
+      <span>{{ t('history.chatsDisabled') }}</span>
     </div>
 
     <SearchInput
@@ -89,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import {
@@ -98,6 +142,7 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
+import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import SearchInput from '../common/SearchInput.vue'
 import { Icon } from '@iconify/vue'
@@ -107,10 +152,21 @@ const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
+const ipcStore = useIpcStore()
+
 const query = ref('')
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
+const confirmingClear = ref(false)
+const removedChat = ref<ChatHistoryItem | null>(null)
+let undoTimer: ReturnType<typeof setTimeout> | undefined
+
+const isLimitZero = (value: unknown) => String(value ?? '').trim() === '0'
+const chatHistoryDisabled = computed(() =>
+  isLimitZero(ipcStore.params.userConfig?.chatHistoryMaxItems)
+)
+
 const groups = computed(() =>
   groupChatHistory(filterChatHistory(historyStore.chatHistory, query.value))
 )
@@ -148,9 +204,38 @@ async function finishRename(item: ChatHistoryItem) {
 }
 
 async function removeChat(id: string) {
-  await historyStore.removeFromChatHistory(id)
+  clearTimeout(undoTimer)
+  const item = historyStore.chatHistory.find((c) => c.id === id)
+  const removed = await historyStore.removeFromChatHistory(id)
+  if (removed || item) {
+    removedChat.value = removed || item || null
+    undoTimer = setTimeout(() => {
+      removedChat.value = null
+    }, 8000)
+  }
   if (chatStore.newChatParams.id === id) await chatStore.startChat({})
 }
+
+async function undoRemoveChat() {
+  clearTimeout(undoTimer)
+  const item = removedChat.value
+  removedChat.value = null
+  if (item) {
+    await historyStore.restoreChatItem(item)
+  }
+}
+
+async function clearAllChats() {
+  confirmingClear.value = false
+  await historyStore.clearChatHistory()
+  if (chatStore.messages.length) {
+    await chatStore.startChat({})
+  }
+}
+
+onUnmounted(() => {
+  clearTimeout(undoTimer)
+})
 </script>
 
 <style scoped>
@@ -168,6 +253,40 @@ async function removeChat(id: string) {
 .sidebar-header {
   display: flex;
   gap: var(--space-xs);
+}
+.sidebar-clear-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.8125rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-md);
+  background: var(--app-surface);
+}
+.sidebar-clear-msg {
+  color: var(--app-text-muted);
+}
+.sidebar-clear-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+.confirm-clear-btn {
+  color: var(--color-error-content);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+.sidebar-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface);
 }
 .sidebar-search :deep(.input) {
   height: 2.25rem;

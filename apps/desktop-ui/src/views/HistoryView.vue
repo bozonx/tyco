@@ -7,14 +7,7 @@
         ref="searchInput"
       />
       <div class="history-filters">
-        <Tabs
-          :tabs="tabs"
-          v-model:value="currentTab"
-          variant="segmented"
-          @update:value="onTabChange"
-        />
         <SegmentedControl
-          v-if="currentTab === TEXTS_TAB"
           v-model:value="editorFilter"
           :label="t('history.filterLabel')"
           :options="editorFilterOptions"
@@ -23,13 +16,11 @@
     </div>
 
     <HistoryList
-      v-show="currentTab === TEXTS_TAB"
       :items="editorItems"
       :searchQuery="searchQuery"
       :openTitle="t('history.placeIntoEditor')"
       :actions="editorActions"
       :emptyHint="t('history.emptyHint')"
-      :active="currentTab === TEXTS_TAB && !modalOpen"
       :totalCount="historyStore.editorHistory.length"
       @open="toEditor"
       @action="onEditorAction"
@@ -56,104 +47,50 @@
         </div>
       </template>
     </HistoryList>
-
-    <HistoryList
-      v-show="currentTab === CHATS_TAB"
-      :items="chatItems"
-      :searchQuery="searchQuery"
-      :openTitle="t('history.view')"
-      :actions="chatActions"
-      :active="currentTab === CHATS_TAB && !modalOpen"
-      :totalCount="historyStore.chatHistory.length"
-      @open="toChat"
-      @action="onChatAction"
-      @clear="clearChatHistory"
-    >
-      <template #notice>
-        <div v-if="chatLoadError" class="history-notice is-error">
-          <Icon icon="mdi:alert-circle-outline" height="16" />
-          <span>{{ t('history.loadFailed') }}</span>
-          <Button xs ghost icon="mdi:reload" @click="loadChatHistory">
-            {{ t('history.retry') }}
-          </Button>
-        </div>
-        <div v-if="removedChat" class="history-notice">
-          <Icon icon="mdi:trash-can-outline" height="16" />
-          <span>{{ t('history.itemRemoved') }}</span>
-          <Button xs ghost icon="mdi:undo" @click="undoRemoveChat">
-            {{ t('history.undo') }}
-          </Button>
-        </div>
-        <div v-if="chatHistoryDisabled" class="history-notice">
-          <Icon icon="mdi:information-outline" height="16" />
-          <span>{{ t('history.chatsDisabled') }}</span>
-        </div>
-      </template>
-    </HistoryList>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import type {
-  HistoryListAction,
-  HistoryListItem,
+import HistoryList, {
+  type HistoryListAction,
+  type HistoryListItem,
 } from '../components/HistoryList.vue'
+import Button from '../components/common/Button.vue'
+import SearchInput from '../components/common/SearchInput.vue'
+import SegmentedControl from '../components/common/SegmentedControl.vue'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { getEditorHistoryMeta } from '../lib/history/editor-history-meta'
 import {
   type EditorHistoryFilter,
   filterEditorHistory,
-  parseHistoryTime,
 } from '../lib/history/history-list'
 import { useActionMenuStore } from '../stores/actionMenu'
-import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
 import { Icon } from '@iconify/vue'
-import type { ChatHistoryItem, EditorHistoryItem } from '@tyco/shared'
+import type { EditorHistoryItem } from '@tyco/shared'
 
-const TEXTS_TAB = 0
-const CHATS_TAB = 1
 const UNDO_TIMEOUT_MS = 8000
 
 const toast = useToast()
 const { t } = useI18n()
 const navPanelStore = useNavPanelStore()
-const chatStore = useChatStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const routeParams = useRouteParams()
-const currentTab = ref(TEXTS_TAB)
+
 const editorFilter = ref<EditorHistoryFilter>('all')
 const removedItem = ref<EditorHistoryItem | null>(null)
-const removedChat = ref<ChatHistoryItem | null>(null)
 const editorLoadError = ref(false)
-const chatLoadError = ref(false)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
-let chatUndoTimer: ReturnType<typeof setTimeout> | undefined
-
-const tabs = computed(() => [
-  {
-    text: t('history.inputTab'),
-    key: TEXTS_TAB,
-    icon: 'mdi:text-box-outline',
-    badge: historyStore.editorHistory.length,
-  },
-  {
-    text: t('history.chatTab'),
-    key: CHATS_TAB,
-    icon: 'mdi:chat-outline',
-    badge: historyStore.chatHistory.length,
-  },
-])
 
 const editorFilterOptions = computed(() => [
   { id: 'all' as const, name: t('history.filterAll') },
@@ -162,18 +99,9 @@ const editorFilterOptions = computed(() => [
   { id: 'source' as const, name: t('history.filterSource') },
 ])
 
-const modalOpen = computed(
-  () =>
-    menuModalsStore.currentModal !== MenuModals.NONE ||
-    !!menuModalsStore.pendingModal
-)
-
 const isLimitZero = (value: unknown) => String(value ?? '').trim() === '0'
 const editorHistoryDisabled = computed(() =>
   isLimitZero(ipcStore.params.userConfig?.editorHistoryMaxItems)
-)
-const chatHistoryDisabled = computed(() =>
-  isLimitZero(ipcStore.params.userConfig?.chatHistoryMaxItems)
 )
 
 const searchQuery = ref<string>('')
@@ -199,16 +127,12 @@ const editorItems = computed<HistoryListItem[]>(() =>
   )
 )
 
-const chatItems = computed<HistoryListItem[]>(() =>
-  historyStore.chatHistory.map((item) => ({
-    id: item.id,
-    value: item.description,
-    searchText: t('history.chatTab'),
-    time: parseHistoryTime(item.lastMsgDate),
-  }))
-)
-
 const editorActions = computed<HistoryListAction[]>(() => [
+  {
+    id: 'toEditor',
+    icon: 'mdi:pencil-outline',
+    title: t('history.placeIntoEditor'),
+  },
   {
     id: 'compare',
     icon: 'mdi:compare-horizontal',
@@ -221,31 +145,14 @@ const editorActions = computed<HistoryListAction[]>(() => [
           id: 'insert',
           icon: 'mdi:keyboard-outline',
           title: t('action.insertIntoWindow'),
-          keys: 'Ctrl+Enter',
         },
       ]
     : []),
-  {
-    id: 'copy',
-    icon: 'mdi:content-copy',
-    title: t('action.copyToClipboard'),
-    keys: 'Shift+Enter',
-  },
+  { id: 'copy', icon: 'mdi:content-copy', title: t('action.copyToClipboard') },
   {
     id: 'remove',
     icon: 'mdi:trash-can-outline',
     title: t('history.removeItem'),
-    keys: 'Shift+Delete',
-    danger: true,
-  },
-])
-
-const chatActions = computed<HistoryListAction[]>(() => [
-  {
-    id: 'remove',
-    icon: 'mdi:trash-can-outline',
-    title: t('history.removeItem'),
-    keys: 'Shift+Delete',
     danger: true,
   },
 ])
@@ -253,19 +160,13 @@ const chatActions = computed<HistoryListAction[]>(() => [
 onMounted(() => {
   searchInput.value?.focus()
   void loadEditorHistory()
-  void loadChatHistory()
 })
 
 onUnmounted(() => {
   clearTimeout(undoTimer)
-  clearTimeout(chatUndoTimer)
 })
 
 navPanelStore.resetNavParams({})
-
-const onTabChange = () => {
-  searchInput.value?.focus()
-}
 
 const loadEditorHistory = async () => {
   try {
@@ -273,15 +174,6 @@ const loadEditorHistory = async () => {
     editorLoadError.value = false
   } catch {
     editorLoadError.value = true
-  }
-}
-
-const loadChatHistory = async () => {
-  try {
-    await historyStore.loadChatHistory()
-    chatLoadError.value = false
-  } catch {
-    chatLoadError.value = true
   }
 }
 
@@ -339,6 +231,9 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
   const [insertAction, copyAction] = actionMenuStore.getDefaultActions()
 
   switch (actionId) {
+    case 'toEditor':
+      toEditor(item)
+      break
     case 'compare': {
       const result = editorById.value.get(item.id)?.result
 
@@ -362,55 +257,8 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
   }
 }
 
-const clearChatHistory = async () => {
-  hideChatUndo()
-  try {
-    await historyStore.clearChatHistory()
-    toast.toast(t('history.chatsCleared'), 'success')
-  } catch {
-    reportOperationError()
-  }
-}
-
-const hideChatUndo = () => {
-  clearTimeout(chatUndoTimer)
-  removedChat.value = null
-}
-
-const undoRemoveChat = async () => {
-  const item = removedChat.value
-
-  hideChatUndo()
-  if (!item) return
-
-  try {
-    await historyStore.restoreChatItem(item)
-  } catch {
-    reportOperationError()
-  }
-}
-
-const onChatAction = async (actionId: string, item: HistoryListItem) => {
-  if (actionId !== 'remove') return
-
-  try {
-    const removed = await historyStore.removeFromChatHistory(item.id)
-
-    if (!removed) return
-    clearTimeout(chatUndoTimer)
-    removedChat.value = removed
-    chatUndoTimer = setTimeout(hideChatUndo, UNDO_TIMEOUT_MS)
-  } catch {
-    reportOperationError()
-  }
-}
-
 const toEditor = (item: HistoryListItem) => {
   routeParams.toEditor(item.value)
-}
-
-const toChat = async (item: HistoryListItem) => {
-  await chatStore.openChat(item.id)
 }
 </script>
 
@@ -418,7 +266,7 @@ const toChat = async (item: HistoryListItem) => {
 .history-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   width: 100%;
   max-width: 880px;
   height: 100%;
@@ -430,14 +278,14 @@ const toChat = async (item: HistoryListItem) => {
 .history-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .history-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-sm);
 }
 

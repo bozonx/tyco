@@ -1,5 +1,5 @@
 <template>
-  <SettingsSection>
+  <SettingsSection bare>
     <FieldRow :label="t('settings.baseRules')" vertical>
       <FieldTextArea v-model:value="userConfig.aiRules.base" />
     </FieldRow>

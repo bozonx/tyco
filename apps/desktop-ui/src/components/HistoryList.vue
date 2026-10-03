@@ -54,25 +54,19 @@
       </div>
 
       <div ref="scroller" class="history-items">
-        <section v-for="group in groups" :key="group.key">
+        <section v-for="group in groups" :key="group.key" class="history-group">
           <h3 class="history-group-title">
             {{ group.labelKey ? t(group.labelKey) : group.label }}
           </h3>
-          <ul class="history-group-items">
-            <li
+          <div class="history-group-items">
+            <div
               v-for="item in group.items"
               :key="item.id"
               class="history-item"
-              :class="{ 'is-current': item.id === currentId }"
               :data-history-id="item.id"
             >
-              <button
-                type="button"
-                class="history-text"
-                :title="openTitle"
-                @click="emit('open', item)"
-              >
-                <span v-if="item.meta || item.time" class="history-meta">
+              <div class="history-content">
+                <div v-if="item.meta || item.time" class="history-meta">
                   <template v-if="item.meta">
                     <Icon :icon="item.meta.icon" height="14" />
                     <span>{{ item.meta.label }}</span>
@@ -85,75 +79,67 @@
                       {{ formatHistoryTime(item.time, locale) }}
                     </time>
                   </span>
-                </span>
-                <span
+                </div>
+
+                <div
                   v-if="item.value"
                   class="history-text-value"
                   :class="{ expanded: expanded.has(item.id) }"
-                  >{{
-                    expanded.has(item.id)
-                      ? item.value
-                      : truncate(item.value, 400)
-                  }}</span
                 >
-                <span v-else class="text-faint italic">{{
-                  t('common.empty')
-                }}</span>
-              </button>
+                  {{ item.value }}
+                </div>
+                <div v-else class="text-faint italic">
+                  {{ t('common.empty') }}
+                </div>
 
-              <div class="history-item-actions">
-                <Button
+                <button
                   v-if="isLong(item)"
-                  xs
-                  ghost
-                  square
-                  :title="
-                    expanded.has(item.id)
-                      ? t('history.collapse')
-                      : t('history.expand')
-                  "
+                  type="button"
+                  class="history-expand-toggle"
                   @click="toggleExpanded(item)"
                 >
+                  <span>
+                    {{
+                      expanded.has(item.id)
+                        ? t('history.collapse')
+                        : t('history.expand')
+                    }}
+                  </span>
                   <Icon
                     :icon="
                       expanded.has(item.id)
                         ? 'mdi:chevron-up'
                         : 'mdi:chevron-down'
                     "
-                    height="16"
+                    height="14"
                   />
-                </Button>
+                </button>
+              </div>
+
+              <div class="history-item-actions">
                 <Button
                   v-for="action in visibleActions(item)"
                   :key="action.id"
                   xs
                   ghost
                   square
-                  :title="actionTitle(action)"
+                  :title="action.title"
                   :class="action.danger ? 'danger-action' : undefined"
                   @click="emit('action', action.id, item)"
                 >
                   <Icon :icon="action.icon" height="16" />
                 </Button>
               </div>
-            </li>
-          </ul>
+            </div>
+          </div>
         </section>
       </div>
-
-      <p v-if="active" class="history-hints">
-        <span><KeyButton>↑</KeyButton><KeyButton>↓</KeyButton></span>
-        <span><KeyButton>Enter</KeyButton> {{ openTitle }}</span>
-        <span v-for="action in keyedActions" :key="action.id">
-          <KeyButton>{{ action.keys }}</KeyButton> {{ action.title }}
-        </span>
-      </p>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import {
@@ -161,7 +147,7 @@ import {
   formatHistoryTime,
   groupByDay,
 } from '../lib/history/history-list'
-import { truncate } from '@/lib/squidlet-lib-local'
+import Button from './common/Button.vue'
 import { Icon } from '@iconify/vue'
 
 const { t, locale } = useI18n()
@@ -181,8 +167,6 @@ export interface HistoryListAction {
   id: string
   icon: string
   title: string
-  /** Shortcut for the highlighted entry, like `Ctrl+Enter`. */
-  keys?: string
   danger?: boolean
   isVisible?: (item: HistoryListItem) => boolean
 }
@@ -200,8 +184,6 @@ const props = withDefaults(
     openTitle?: string
     actions?: HistoryListAction[]
     emptyHint?: string
-    /** The list owns the keyboard: arrows, Enter and action shortcuts. */
-    active?: boolean
     /** Number affected by clearing; may be larger than a filtered list. */
     totalCount?: number
   }>(),
@@ -210,7 +192,6 @@ const props = withDefaults(
     openTitle: '',
     actions: () => [],
     emptyHint: '',
-    active: false,
     totalCount: 0,
   }
 )
@@ -218,7 +199,6 @@ const props = withDefaults(
 const scroller = ref<HTMLElement | null>(null)
 const confirmingClear = ref(false)
 const expanded = ref(new Set<string>())
-const currentId = ref<string | null>(null)
 
 const filtered = computed(() => {
   const query = props.searchQuery?.trim().toLowerCase()
@@ -236,30 +216,6 @@ const groups = computed(() =>
   groupByDay(filtered.value, (item) => item.time ?? 0, Date.now(), locale.value)
 )
 
-/** Entries in the order they are shown, for the arrow keys. */
-const ordered = computed(() => groups.value.flatMap((group) => group.items))
-
-const keyedActions = computed(() =>
-  props.actions.filter((action) => action.keys)
-)
-
-watch(
-  ordered,
-  (items) => {
-    if (!items.some((item) => item.id === currentId.value)) {
-      currentId.value = items[0]?.id ?? null
-    }
-  },
-  { immediate: true }
-)
-
-watch(
-  () => props.searchQuery,
-  () => {
-    currentId.value = ordered.value[0]?.id ?? null
-  }
-)
-
 watch(
   () => props.items.length,
   (length) => {
@@ -271,12 +227,9 @@ function visibleActions(item: HistoryListItem) {
   return props.actions.filter((action) => action.isVisible?.(item) ?? true)
 }
 
-function actionTitle(action: HistoryListAction) {
-  return action.keys ? `${action.title} (${action.keys})` : action.title
-}
-
 function isLong(item: HistoryListItem) {
-  return item.value.length > 280 || item.value.split('\n').length > 3
+  if (!item.value) return false
+  return item.value.length > 200 || item.value.split('\n').length > 3
 }
 
 function toggleExpanded(item: HistoryListItem) {
@@ -292,85 +245,6 @@ function confirmClear() {
   confirmingClear.value = false
   emit('clear')
 }
-
-function moveCurrent(step: number) {
-  const items = ordered.value
-
-  if (items.length === 0) return
-
-  const index = items.findIndex((item) => item.id === currentId.value)
-  const nextIndex = Math.min(Math.max(index + step, 0), items.length - 1)
-
-  currentId.value = items[nextIndex]!.id
-
-  void nextTick(() => {
-    scroller.value
-      ?.querySelector(`[data-history-id="${CSS.escape(currentId.value!)}"]`)
-      ?.scrollIntoView({ block: 'nearest' })
-  })
-}
-
-function shortcutOf(event: KeyboardEvent): string {
-  const key =
-    event.key === ' '
-      ? 'Space'
-      : event.key.length === 1
-        ? event.key.toUpperCase()
-        : event.key
-
-  return [
-    event.ctrlKey || event.metaKey ? 'Ctrl' : '',
-    event.altKey ? 'Alt' : '',
-    event.shiftKey ? 'Shift' : '',
-    key,
-  ]
-    .filter(Boolean)
-    .join('+')
-}
-
-/** Focused controls with keys of their own: buttons, radio groups and such. */
-const OWN_KEYS_SELECTOR =
-  'button, a, select, textarea, input, [contenteditable]'
-
-function handleKeyDown(event: KeyboardEvent) {
-  if (!props.active || event.isComposing) return
-  if ((event.target as Element | null)?.closest?.(OWN_KEYS_SELECTOR)) return
-
-  const shortcut = shortcutOf(event)
-
-  if (shortcut === 'ArrowDown' || shortcut === 'ArrowUp') {
-    event.preventDefault()
-    moveCurrent(shortcut === 'ArrowDown' ? 1 : -1)
-    return
-  }
-
-  const current = ordered.value.find((item) => item.id === currentId.value)
-
-  if (!current) return
-
-  if (shortcut === 'Enter') {
-    event.preventDefault()
-    emit('open', current)
-    return
-  }
-
-  const action = visibleActions(current).find(
-    (action) => action.keys === shortcut
-  )
-
-  if (action) {
-    event.preventDefault()
-    emit('action', action.id, current)
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-})
 </script>
 
 <style scoped>
@@ -387,7 +261,7 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: var(--space-md);
   min-height: 1.75rem;
-  padding: 0 var(--space-xs) var(--space-sm);
+  padding: 0 var(--space-xs) var(--space-xs);
 }
 
 .history-toolbar-buttons {
@@ -410,82 +284,67 @@ onUnmounted(() => {
 }
 
 .history-items {
-  flex: 0 1 auto;
+  flex: 1;
   min-height: 0;
-  margin: 0 0 var(--space-sm);
+  padding-right: var(--space-xs);
   overflow-y: auto;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
+}
+
+.history-group + .history-group {
+  margin-top: var(--space-md);
 }
 
 .history-group-title {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: var(--space-xs) var(--space-lg);
+  margin: 0 0 var(--space-xs);
+  padding: 0 var(--space-xs);
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--app-text-muted);
-  background-color: var(--app-surface-sunken);
-  border-bottom: 1px solid var(--app-border-subtle);
-}
-
-section + section .history-group-title {
-  border-top: 1px solid var(--app-border-subtle);
+  letter-spacing: 0.02em;
 }
 
 .history-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
   margin: 0;
   padding: 0;
-  list-style: none;
 }
 
 .history-item {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-sm) var(--space-xs) 0;
-  transition: background-color var(--transition-fast);
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
-.history-item + .history-item {
-  border-top: 1px solid var(--app-border-subtle);
-}
-
-.history-item:hover,
-.history-item.is-current {
+.history-item:hover {
   background-color: var(--app-hover);
+  border-color: var(--app-border);
 }
 
-.history-item.is-current {
-  box-shadow: inset 3px 0 0 var(--color-primary);
-}
-
-.history-text {
+.history-content {
   flex: 1;
   min-width: 0;
-  padding: 0.5rem var(--space-lg);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  text-align: left;
-  cursor: pointer;
-}
-
-.history-text:focus-visible {
-  outline-offset: -2px;
-  border-radius: var(--radius-sm);
+  cursor: default;
 }
 
 .history-meta {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  margin-bottom: 0.125rem;
+  margin-bottom: var(--space-2xs);
   font-size: 0.75rem;
   color: var(--app-text-muted);
+  user-select: none;
 }
 
 .history-date {
@@ -494,30 +353,60 @@ section + section .history-group-title {
 }
 
 .history-text-value {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-base-content);
+  white-space: pre-line;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.history-text-value:not(.expanded) {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-  white-space: pre-line;
-  word-break: break-word;
 }
 
 .history-text-value.expanded {
   display: block;
-  -webkit-line-clamp: unset;
   white-space: pre-wrap;
+}
+
+.history-expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: var(--space-xs);
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.history-expand-toggle:hover {
+  background-color: var(--app-hover);
+  text-decoration: underline;
 }
 
 .history-item-actions {
   display: flex;
+  align-items: center;
   gap: 2px;
-  padding-top: 0.375rem;
-  opacity: 0;
+  flex-shrink: 0;
+  padding-top: 0.125rem;
+  opacity: 0.7;
   transition: opacity var(--transition-fast);
 }
 
 .history-item:hover .history-item-actions,
-.history-item.is-current .history-item-actions,
 .history-item:focus-within .history-item-actions {
   opacity: 1;
 }
@@ -526,24 +415,12 @@ section + section .history-group-title {
   color: var(--app-text-muted);
 }
 
+.history-item-actions :deep(.btn:hover) {
+  color: var(--color-base-content);
+}
+
 .danger-action:hover {
   color: var(--color-error) !important;
-}
-
-.history-hints {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs) var(--space-lg);
-  margin: 0 0 var(--space-lg);
-  padding: 0 var(--space-xs);
-  font-size: 0.75rem;
-  color: var(--app-text-muted);
-}
-
-.history-hints > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
 }
 
 .history-empty {

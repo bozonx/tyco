@@ -57,7 +57,6 @@ declare module 'vue' {
     SegmentedControl: typeof import('./src/components/common/SegmentedControl.vue')['default']
     Settings: typeof import('./src/components/Settings.vue')['default']
     SettingsGlobalActionsTab: typeof import('./src/components/settings/SettingsGlobalActionsTab.vue')['default']
-    SettingsHotkeysTab: typeof import('./src/components/settings/SettingsHotkeysTab.vue')['default']
     SettingsLlmTab: typeof import('./src/components/settings/SettingsLlmTab.vue')['default']
     SettingsMainActionsTab: typeof import('./src/components/settings/SettingsMainActionsTab.vue')['default']
     SettingsPluginDetailTab: typeof import('./src/components/settings/SettingsPluginDetailTab.vue')['default']

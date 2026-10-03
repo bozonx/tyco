@@ -98,6 +98,12 @@
                 :options="editorSyntaxOptions"
               />
             </FieldRow>
+            <FieldRow :label="t('settings.submitKey.label')">
+              <FieldSelect
+                v-model:value="userConfig.submitKey"
+                :options="submitKeyOptions"
+              />
+            </FieldRow>
           </SettingsSection>
 
           <SettingsSection :title="t('settings.sectionHistory')">
@@ -225,11 +231,6 @@
             </FieldRow>
           </SettingsSection>
         </template>
-
-        <SettingsHotkeysTab
-          v-else-if="currentTab === 'hotkeys'"
-          :user-config="userConfig"
-        />
 
         <SettingsGlobalActionsTab
           v-else-if="currentTab === 'global-actions'"
@@ -376,7 +377,6 @@ import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
-import SettingsHotkeysTab from './settings/SettingsHotkeysTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
@@ -420,11 +420,6 @@ let saveQueue: Promise<void> = Promise.resolve()
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
-  {
-    text: t('settings.hotkeysTab'),
-    key: 'hotkeys',
-    icon: 'mdi:keyboard-outline',
-  },
   {
     text: t('settings.globalActionsTab'),
     key: 'global-actions',
@@ -875,6 +870,11 @@ const editorSyntaxOptions = computed(() => {
     { id: 'none', name: t('settings.editorSyntaxNone') },
   ]
 })
+
+const submitKeyOptions = computed(() => [
+  { id: 'enter', name: t('settings.submitKey.enter') },
+  { id: 'ctrlEnter', name: t('settings.submitKey.ctrlEnter') },
+])
 
 const appLanguageOptions = computed(() => {
   return buildLanguageOptions(
