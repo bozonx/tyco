@@ -4,17 +4,11 @@ pub mod activation_socket;
 pub mod app_paths;
 pub mod atomic_file;
 pub mod clipboard;
-#[cfg(target_os = "linux")]
-pub mod clipboard_restore;
 pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod desktop_notifications;
-pub mod foreground_context;
 pub mod hotkeys;
-pub mod kwin_windows;
-#[cfg(target_os = "linux")]
-pub mod layer_shell;
 pub mod llm_config;
 pub mod net;
 pub mod notes;
@@ -24,5 +18,4 @@ pub mod secrets;
 pub mod selection_replace;
 pub mod status_overlay;
 pub mod storage;
-pub mod text_injector;
 pub mod voice;

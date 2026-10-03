@@ -62,8 +62,8 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .build()
 }
 
-/// How long the first activation waits for the KWin window tracker. It
-/// normally reports within a few dozen milliseconds.
+/// How long the first activation waits for the window tracker. It normally
+/// reports within a few dozen milliseconds.
 #[cfg(target_os = "linux")]
 const TRACKER_STARTUP_WAIT: std::time::Duration = std::time::Duration::from_millis(800);
 
@@ -79,6 +79,24 @@ fn activate_from_args(app: &tauri::AppHandle, args: &[String]) -> Result<(), err
             runtime::show_application(app)
         }
     }
+}
+
+/// Follows window changes on X11 the way `dbus` follows the KWin tracker.
+#[cfg(target_os = "linux")]
+fn spawn_x11_tracker(app: tauri::AppHandle) {
+    use services::platform::window_tracker::TrackerChange;
+
+    // GTK puts the program name into WM_CLASS
+    let own_class = gtk::glib::prgname().unwrap_or_default().to_string();
+    services::platform::linux::x11::spawn_tracker(own_class, move |change| {
+        let result = match change {
+            TrackerChange::Activated => runtime::follow_target_window(&app),
+            TrackerChange::Closed(id) => runtime::forget_target_window(&app, &id),
+        };
+        if let Err(error) = result {
+            log::warn!("Could not follow the window change: {error}");
+        }
+    });
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -100,13 +118,17 @@ pub fn run() {
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
             services::activation_metrics::setup(app)?;
-            // the activation below needs the KWin tracker to know the window
-            // Tyco was launched from
+            // the activation below needs the window tracker to know the
+            // window Tyco was launched from
             #[cfg(target_os = "linux")]
             {
                 dbus::spawn_dbus_server(app.handle().clone());
-                if services::kwin_windows::is_kde_wayland_session() {
-                    services::kwin_windows::wait_for_startup(TRACKER_STARTUP_WAIT);
+                let session = services::platform::session::current();
+                if session.is_x11() {
+                    spawn_x11_tracker(app.handle().clone());
+                }
+                if session.is_x11() || session.is_kde_wayland() {
+                    services::platform::window_tracker::wait_for_startup(TRACKER_STARTUP_WAIT);
                 }
             }
             let args = std::env::args().collect::<Vec<_>>();
@@ -175,7 +197,8 @@ pub fn run() {
                     let params = state.params();
                     let _ = storage::cleanup_editor_history(app, &params.user_config);
                 }
-                services::kwin_windows::stop_tracker();
+                #[cfg(target_os = "linux")]
+                services::platform::linux::kwin::stop_tracker();
             }
         });
 }

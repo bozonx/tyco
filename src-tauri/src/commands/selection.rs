@@ -40,5 +40,5 @@ pub async fn notify_desktop(summary: String, body: String) -> Result<(), AppErro
 /// Fails with what is missing for pressing keys in other windows.
 #[tauri::command]
 pub fn check_text_injection(state: State<'_, AppState>) -> Result<(), AppError> {
-    crate::services::text_injector::SystemTextInjector::detect().check(&state.params().user_config)
+    crate::services::platform::check_text_injection(&state.params().user_config)
 }

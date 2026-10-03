@@ -85,6 +85,38 @@ jobs:
         run: cargo test --workspace
         working-directory: src-tauri
 
+  # Keeps the Windows and macOS backends compiling. Linux is covered by the
+  # `rust` job above. Allowed to fail until those backends are complete, see
+  # dev_docs/cross-platform.md.
+  rust-platforms:
+    name: Rust on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        run: rustup toolchain install
+        working-directory: src-tauri
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+        working-directory: src-tauri
+
+      - name: Run Rust tests
+        run: cargo test --workspace
+        working-directory: src-tauri
+
   bundle:
     name: Tauri Bundle
     runs-on: ubuntu-latest

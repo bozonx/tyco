@@ -7,7 +7,10 @@ use zbus::names::{BusName, OwnedUniqueName};
 use zbus::{interface, Connection};
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::{kwin_windows, runtime, selection_replace};
+use crate::services::platform::linux::kwin;
+use crate::services::platform::session;
+use crate::services::platform::window_tracker::{self, tracker, WindowKind};
+use crate::services::{runtime, selection_replace};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -34,19 +37,20 @@ pub fn spawn_dbus_server(app: AppHandle) {
             Ok(connection) => connection,
             Err(error) => {
                 log::error!("D-Bus server is unavailable: {error}");
-                kwin_windows::finish_startup();
+                if session::current().is_kde_wayland() {
+                    window_tracker::finish_startup();
+                }
                 return;
             }
         };
 
         log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
 
-        if kwin_windows::is_kde_wayland_session() {
+        if session::current().is_kde_wayland() {
             // Wayland gives GTK windows the program name as their app id
             let own_class = gtk::glib::prgname().unwrap_or_default();
-            kwin_windows::supervise_tracker(&own_class);
+            kwin::supervise_tracker(&own_class);
         }
-        kwin_windows::finish_startup();
 
         // Keep the connection alive for the lifetime of the process.
         loop {
@@ -81,7 +85,7 @@ impl TycoDbus {
             .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))
     }
 
-    /// Reported by the KWin tracker script, see `kwin_windows`.
+    /// Reported by the KWin tracker script, see `platform::linux::kwin`.
     #[zbus(name = "KwinWindowActivated")]
     async fn kwin_window_activated(
         &self,
@@ -93,12 +97,7 @@ impl TycoDbus {
         class: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        let applied = kwin_windows::tracker().window_activated(
-            &seq,
-            &id,
-            kwin_windows::WindowKind::parse(&kind),
-            &class,
-        );
+        let applied = tracker().window_activated(&seq, &id, WindowKind::parse(&kind), &class);
         if applied {
             if let Err(error) = runtime::follow_target_window(&self.app) {
                 log::warn!("Could not follow the target window: {error}");
@@ -116,7 +115,7 @@ impl TycoDbus {
         id: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        if kwin_windows::tracker().window_closed(&seq, &id) {
+        if tracker().window_closed(&seq, &id) {
             self.forget_target_window(&id);
         }
         Ok(())
@@ -130,7 +129,7 @@ impl TycoDbus {
         id: String,
     ) -> zbus::fdo::Result<()> {
         ensure_sent_by_kwin(&header, connection).await?;
-        kwin_windows::tracker().window_missing(&id);
+        tracker().window_missing(&id);
         // the closing of the window may have gone unreported
         self.forget_target_window(&id);
         Ok(())

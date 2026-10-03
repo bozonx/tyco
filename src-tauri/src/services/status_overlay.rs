@@ -89,9 +89,8 @@ mod imp {
     /// Without layer-shell a Wayland compositor would place and focus the
     /// bubble like any window, so it is left to desktop notifications there.
     fn can_show() -> bool {
-        crate::services::layer_shell::is_supported()
-            || std::env::var("XDG_SESSION_TYPE")
-                .is_ok_and(|value| value.eq_ignore_ascii_case("x11"))
+        crate::services::platform::linux::layer_shell::is_supported()
+            || crate::services::platform::session::current().is_x11()
     }
 
     pub fn update(request: Option<OverlayRequest>) {
@@ -174,9 +173,12 @@ mod imp {
                 );
             }
 
-            let layer_shell = crate::services::layer_shell::is_supported();
+            let layer_shell = crate::services::platform::linux::layer_shell::is_supported();
             if layer_shell {
-                crate::services::layer_shell::attach_status(&window, MARGIN_BOTTOM);
+                crate::services::platform::linux::layer_shell::attach_status(
+                    &window,
+                    MARGIN_BOTTOM,
+                );
             } else {
                 window.set_keep_above(true);
             }

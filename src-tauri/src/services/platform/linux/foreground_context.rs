@@ -1,5 +1,8 @@
 use std::process::{Command, Stdio};
 
+use crate::services::platform::session::{self, DisplayServer};
+use crate::services::platform::window_tracker::tracker;
+
 #[allow(async_fn_in_trait)]
 pub trait ForegroundContext {
     type Source: Send + 'static;
@@ -10,30 +13,14 @@ pub trait ForegroundContext {
 
 #[derive(Clone, Copy, Debug)]
 pub struct SystemForegroundContext {
-    session: Session,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Session {
-    X11,
-    Wayland,
-    Unsupported,
+    display: DisplayServer,
 }
 
 impl SystemForegroundContext {
     pub fn detect() -> Self {
-        let session = match std::env::var("XDG_SESSION_TYPE")
-            .unwrap_or_default()
-            .to_ascii_lowercase()
-            .as_str()
-        {
-            "x11" => Session::X11,
-            "wayland" => Session::Wayland,
-            _ if std::env::var_os("WAYLAND_DISPLAY").is_some() => Session::Wayland,
-            _ if std::env::var_os("DISPLAY").is_some() => Session::X11,
-            _ => Session::Unsupported,
-        };
-        Self { session }
+        Self {
+            display: session::current().display,
+        }
     }
 
     fn command_output(program: &str, args: &[&str]) -> Option<String> {
@@ -55,19 +42,25 @@ impl SystemForegroundContext {
 impl ForegroundContext for SystemForegroundContext {
     type Source = String;
 
+    /// The tracker knows the window focused before a Tyco one; without it
+    /// X11 can still tell the focused window.
     fn capture_source(&self) -> Option<Self::Source> {
-        match self.session {
-            Session::X11 => Self::command_output("xdotool", &["getactivewindow"]),
-            Session::Wayland => super::kwin_windows::tracker().target(),
-            Session::Unsupported => None,
+        if tracker().is_running() {
+            return tracker().target();
+        }
+        match self.display {
+            DisplayServer::X11 => Self::command_output("xdotool", &["getactivewindow"]),
+            _ => None,
         }
     }
 
     async fn capture_selection(&self, _source: Option<Self::Source>) -> Option<String> {
-        match self.session {
-            Session::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"]),
-            Session::Wayland => Self::command_output("wl-paste", &["--primary", "--no-newline"]),
-            Session::Unsupported => None,
+        match self.display {
+            DisplayServer::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"]),
+            DisplayServer::Wayland => {
+                Self::command_output("wl-paste", &["--primary", "--no-newline"])
+            }
+            DisplayServer::Native | DisplayServer::Unknown => None,
         }
     }
 }
@@ -79,7 +72,7 @@ mod tests {
     #[test]
     fn unsupported_session_has_no_source() {
         let context = SystemForegroundContext {
-            session: Session::Unsupported,
+            display: DisplayServer::Unknown,
         };
         assert_eq!(context.capture_source(), None);
     }

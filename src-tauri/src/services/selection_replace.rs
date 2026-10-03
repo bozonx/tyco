@@ -105,7 +105,7 @@ struct Run {
     target: Target,
     started: Instant,
     #[cfg(target_os = "linux")]
-    snapshot: Option<super::clipboard_restore::ClipboardSnapshot>,
+    snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
 }
 
 #[derive(Default)]
@@ -303,38 +303,40 @@ fn selects_all_when_empty(user_config: &Value) -> bool {
         == Some("selectAll")
 }
 
-/// The window that has the keyboard focus now.
+/// The window that has the keyboard focus now. The tracker knows its class,
+/// which tells a terminal; without it X11 can still tell the window.
 #[cfg(target_os = "linux")]
 fn active_target() -> Option<Target> {
-    let is_x11 =
-        std::env::var("XDG_SESSION_TYPE").is_ok_and(|value| value.eq_ignore_ascii_case("x11"));
-    if is_x11 {
-        let output = std::process::Command::new("xdotool")
-            .arg("getactivewindow")
-            .output()
-            .ok()?;
-        let id = String::from_utf8(output.stdout).ok()?.trim().to_owned();
-        return (output.status.success() && !id.is_empty()).then_some(Target {
-            id,
-            terminal: false,
-        });
-    }
-    super::kwin_windows::tracker()
-        .active_window()
-        .map(|window| Target {
+    use super::platform::{session, window_tracker::tracker};
+
+    if tracker().is_running() {
+        return tracker().active_window().map(|window| Target {
             terminal: is_terminal_class(&window.class),
             id: window.id,
-        })
+        });
+    }
+    if !session::current().is_x11() {
+        return None;
+    }
+    let output = std::process::Command::new("xdotool")
+        .arg("getactivewindow")
+        .output()
+        .ok()?;
+    let id = String::from_utf8(output.stdout).ok()?.trim().to_owned();
+    (output.status.success() && !id.is_empty()).then_some(Target {
+        id,
+        terminal: false,
+    })
 }
 
 #[cfg(target_os = "linux")]
 fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
-    use super::clipboard_restore;
-    use super::text_injector::{FocusedKeys, SystemTextInjector};
+    use super::platform::linux::clipboard_restore;
+    use super::platform::linux::text_injector::{FocusedKeys, SystemTextInjector};
 
     let target = active_target().ok_or_else(|| {
-        let message = if super::kwin_windows::is_kde_wayland_session()
-            && !super::kwin_windows::tracker().is_running()
+        let message = if super::platform::session::current().is_kde_wayland()
+            && !super::platform::window_tracker::tracker().is_running()
         {
             "The KWin window tracker is not running; KDE Plasma 6 is required"
         } else {
@@ -394,12 +396,12 @@ fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
 /// so `None` means nothing was selected.
 #[cfg(target_os = "linux")]
 fn copy_selection(
-    injector: &super::text_injector::SystemTextInjector,
+    injector: &super::platform::linux::text_injector::SystemTextInjector,
     user_config: &Value,
     target: &Target,
-    before: Option<super::text_injector::FocusedKeys>,
+    before: Option<super::platform::linux::text_injector::FocusedKeys>,
 ) -> Result<Option<String>, AppError> {
-    use super::text_injector::FocusedKeys;
+    use super::platform::linux::text_injector::FocusedKeys;
 
     const COPY_TIMEOUT: Duration = Duration::from_millis(700);
     const POLL_INTERVAL: Duration = Duration::from_millis(25);
@@ -419,7 +421,7 @@ fn copy_selection(
 
     let deadline = Instant::now() + COPY_TIMEOUT;
     loop {
-        let read = super::clipboard_restore::read_text();
+        let read = super::platform::linux::clipboard_restore::read_text();
         match read {
             Some(ref text) if *text == probe => {}
             Some(ref text) if text.trim().is_empty() => return Ok(None),
@@ -446,7 +448,7 @@ fn copy_selection(
 /// user had selected anyway.
 #[cfg(target_os = "linux")]
 fn restore_clipboard(run: Run) {
-    use super::clipboard_restore;
+    use super::platform::linux::clipboard_restore;
 
     match run.snapshot {
         Some(snapshot) => clipboard_restore::restore_now(&snapshot),
@@ -465,7 +467,7 @@ fn restore_clipboard(_run: Run) {}
 
 #[cfg(target_os = "linux")]
 fn paste_result(user_config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
-    use super::text_injector::{FocusedKeys, SystemTextInjector};
+    use super::platform::linux::text_injector::{FocusedKeys, SystemTextInjector};
 
     crate::services::clipboard::copy_to_clipboard(&text)?;
     if active_target().map(|target| target.id) != Some(run.target.id.clone()) {
@@ -475,7 +477,7 @@ fn paste_result(user_config: &Value, run: Run, text: String) -> Result<FinishSta
         .press_in_focused(user_config, FocusedKeys::Paste, run.target.terminal)
         .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))?;
     if let Some(snapshot) = run.snapshot {
-        super::clipboard_restore::restore_later(snapshot, text);
+        super::platform::linux::clipboard_restore::restore_later(snapshot, text);
     }
     Ok(FinishStatus::Pasted)
 }

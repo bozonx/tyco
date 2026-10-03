@@ -18,6 +18,19 @@ pub fn inject_paste(user_config: &Value, source_window_id: Option<&str>) -> Resu
     SystemTextInjector.inject(user_config, source_window_id)
 }
 
+/// Fails with what is missing for pressing keys in other windows.
+#[cfg(target_os = "linux")]
+pub fn check_text_injection(user_config: &Value) -> Result<(), AppError> {
+    super::linux::text_injector::SystemTextInjector::detect().check(user_config)
+}
+
+/// Nothing to install here; macOS asks for the Accessibility permission on
+/// the first attempt.
+#[cfg(not(target_os = "linux"))]
+pub fn check_text_injection(_user_config: &Value) -> Result<(), AppError> {
+    Ok(())
+}
+
 #[cfg(target_os = "linux")]
 fn inject_paste_impl(user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError> {
     super::linux::inject_paste(user_config, source_window_id)

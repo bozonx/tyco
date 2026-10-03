@@ -34,6 +34,9 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Strict zero-warning policy on `cargo clippy -- -D warnings`.
   - Code must be formatted via `cargo fmt --check`.
   - Accompany core commands with unit tests in `src-tauri`.
+  - Keep OS- and session-specific code in `src-tauri/src/services/platform/`; ask
+    `platform::session::current()` instead of reading `XDG_SESSION_TYPE` and the
+    like. Supported platforms and test setups: `dev_docs/cross-platform.md`.
 
 ## Verification Commands
 

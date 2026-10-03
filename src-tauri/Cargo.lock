@@ -4808,6 +4808,7 @@ dependencies = [
  "gtk",
  "gtk-sys",
  "log",
+ "regex",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -4823,6 +4824,7 @@ dependencies = [
  "tyco-activation-protocol",
  "url",
  "windows-sys 0.61.2",
+ "x11rb",
  "zbus 4.4.0",
 ]
 

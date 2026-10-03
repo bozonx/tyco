@@ -45,7 +45,7 @@ pub async fn type_into_window_and_close(
 ) -> Result<(), AppError> {
     let params = state.params();
     #[cfg(target_os = "linux")]
-    let previous_clipboard = crate::services::clipboard_restore::snapshot();
+    let previous_clipboard = crate::services::platform::linux::clipboard_restore::snapshot();
     copy_to_clipboard(&text)?;
     runtime::hide_active_window(&app)?;
     let focus_app = app.clone();
@@ -60,7 +60,7 @@ pub async fn type_into_window_and_close(
     // after a failure the text stays in the clipboard to be pasted by hand
     #[cfg(target_os = "linux")]
     if let Some(snapshot) = previous_clipboard {
-        crate::services::clipboard_restore::restore_later(snapshot, text);
+        crate::services::platform::linux::clipboard_restore::restore_later(snapshot, text);
     }
     Ok(())
 }

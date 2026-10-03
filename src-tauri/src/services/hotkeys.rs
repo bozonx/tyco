@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::sync::atomic::{AtomicU8, Ordering};
 #[cfg(target_os = "linux")]
 use std::sync::Arc;
@@ -24,6 +23,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationSource, StartMode};
+use crate::services::platform::session::{Desktop, DisplayServer};
 use crate::services::runtime;
 use crate::services::selection_replace::{self, HotkeyPress, TriggerWait};
 use crate::state::AppState;
@@ -196,7 +196,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let user_config = app.state::<AppState>().params().user_config;
     let bindings = bindings_from_config(&user_config);
 
-    let kind = provider_kind(env::var("XDG_SESSION_TYPE").ok().as_deref());
+    let kind = provider_kind(super::platform::session::current().display);
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
     #[cfg(target_os = "linux")]
@@ -380,16 +380,12 @@ fn apply_global_shortcut(
 }
 
 fn external_command(target: &HotkeyTarget, shortcut: &str) -> String {
-    match env::var("XDG_CURRENT_DESKTOP")
-        .unwrap_or_default()
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        desktop if desktop.contains("hyprland") => {
+    match super::platform::session::current().desktop {
+        Desktop::Hyprland => {
             let (modifiers, key) = hyprland_shortcut(shortcut);
             format!("bind = {modifiers}, {key}, exec, {}", target.cli_command())
         }
-        desktop if desktop.contains("sway") || desktop.contains("i3") => format!(
+        Desktop::Sway => format!(
             "bindsym {} exec {}",
             sway_shortcut(shortcut),
             target.cli_command()
@@ -434,14 +430,11 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
     (modifiers, key)
 }
 
-fn provider_kind(session_type: Option<&str>) -> ProviderKind {
-    if !cfg!(target_os = "linux") {
-        return ProviderKind::GlobalShortcut;
-    }
-    match session_type.map(str::to_ascii_lowercase).as_deref() {
-        Some("wayland") => ProviderKind::Portal,
-        Some("x11") => ProviderKind::GlobalShortcut,
-        _ => ProviderKind::External,
+fn provider_kind(display: DisplayServer) -> ProviderKind {
+    match display {
+        DisplayServer::Wayland => ProviderKind::Portal,
+        DisplayServer::X11 | DisplayServer::Native => ProviderKind::GlobalShortcut,
+        DisplayServer::Unknown => ProviderKind::External,
     }
 }
 
@@ -749,11 +742,19 @@ mod tests {
 
     #[test]
     fn selects_provider_from_runtime_session() {
-        assert_eq!(provider_kind(Some("wayland")), ProviderKind::Portal);
-        assert_eq!(provider_kind(Some("WAYLAND")), ProviderKind::Portal);
-        assert_eq!(provider_kind(Some("x11")), ProviderKind::GlobalShortcut);
-        assert_eq!(provider_kind(None), ProviderKind::External);
-        assert_eq!(provider_kind(Some("tty")), ProviderKind::External);
+        assert_eq!(provider_kind(DisplayServer::Wayland), ProviderKind::Portal);
+        assert_eq!(
+            provider_kind(DisplayServer::X11),
+            ProviderKind::GlobalShortcut
+        );
+        assert_eq!(
+            provider_kind(DisplayServer::Native),
+            ProviderKind::GlobalShortcut
+        );
+        assert_eq!(
+            provider_kind(DisplayServer::Unknown),
+            ProviderKind::External
+        );
     }
 
     #[test]

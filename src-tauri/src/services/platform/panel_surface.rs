@@ -84,7 +84,7 @@ pub fn panel_surface_supported() -> bool {
 
 #[cfg(target_os = "linux")]
 fn panel_surface_supported_impl() -> bool {
-    crate::services::layer_shell::is_supported()
+    crate::services::platform::linux::layer_shell::is_supported()
 }
 
 #[cfg(any(target_os = "windows", target_os = "macos"))]
@@ -94,7 +94,7 @@ fn panel_surface_supported_impl() -> bool {
 
 #[cfg(target_os = "linux")]
 pub fn attach_panel_surface(window: &WebviewWindow) -> Result<(), AppError> {
-    crate::services::layer_shell::attach(&window.gtk_window()?);
+    crate::services::platform::linux::layer_shell::attach(&window.gtk_window()?);
     Ok(())
 }
 
@@ -105,9 +105,9 @@ pub fn attach_panel_surface(_window: &WebviewWindow) -> Result<(), AppError> {
 
 #[cfg(target_os = "linux")]
 pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
-    crate::services::layer_shell::set_keyboard(
+    crate::services::platform::linux::layer_shell::set_keyboard(
         &window.gtk_window()?,
-        crate::services::layer_shell::Keyboard::None,
+        crate::services::platform::linux::layer_shell::Keyboard::None,
     );
     Ok(())
 }
@@ -124,9 +124,9 @@ pub fn settle_panel_keyboard(
     keyboard: PanelKeyboard,
 ) -> Result<(), AppError> {
     if keyboard == PanelKeyboard::ExclusiveUntilFocused {
-        crate::services::layer_shell::set_keyboard(
+        crate::services::platform::linux::layer_shell::set_keyboard(
             &window.gtk_window()?,
-            crate::services::layer_shell::Keyboard::OnDemand,
+            crate::services::platform::linux::layer_shell::Keyboard::OnDemand,
         );
     }
     Ok(())
@@ -182,7 +182,7 @@ pub fn apply_panel_surface(
     profile: WindowProfile,
     layer: Option<PanelKeyboard>,
 ) -> Result<(), AppError> {
-    use crate::services::layer_shell::{self, Keyboard};
+    use crate::services::platform::linux::layer_shell::{self, Keyboard};
 
     let Some(keyboard) = layer else {
         return position_regular_panel(window, profile);

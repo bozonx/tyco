@@ -6,6 +6,8 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 
 use crate::errors::AppError;
+use crate::services::platform::session::{self, DisplayServer};
+use crate::services::platform::window_tracker::tracker;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
@@ -164,16 +166,10 @@ pub struct SystemTextInjector {
 
 impl SystemTextInjector {
     pub fn detect() -> Self {
-        let session = match std::env::var("XDG_SESSION_TYPE")
-            .unwrap_or_default()
-            .to_ascii_lowercase()
-            .as_str()
-        {
-            "x11" => Session::X11,
-            "wayland" => Session::Wayland,
-            _ if std::env::var_os("WAYLAND_DISPLAY").is_some() => Session::Wayland,
-            _ if std::env::var_os("DISPLAY").is_some() => Session::X11,
-            _ => Session::Unsupported,
+        let session = match session::current().display {
+            DisplayServer::X11 => Session::X11,
+            DisplayServer::Wayland => Session::Wayland,
+            DisplayServer::Native | DisplayServer::Unknown => Session::Unsupported,
         };
         Self { session }
     }
@@ -199,7 +195,7 @@ impl SystemTextInjector {
             // Wayland has no generic way to activate a foreign window; only
             // KWin windows reported by the tracker script can be targeted
             let window_id = source_window_id.ok_or_else(missing_wayland_target)?;
-            super::kwin_windows::activate_window(window_id)?;
+            super::kwin::activate_window(window_id)?;
             thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
         }
         run_spec(&command)
@@ -255,7 +251,7 @@ impl SystemTextInjector {
                 ensure_binary(&xdotool_binary(insertion, user_config), "xdotool")?;
             }
         }
-        if self.session == Session::Wayland && !super::kwin_windows::tracker().is_running() {
+        if self.session == Session::Wayland && !tracker().is_running() {
             return Err(AppError::Message(String::from(
                 "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running",
             )));
@@ -291,7 +287,7 @@ fn ensure_binary(binary: &str, name: &str) -> Result<(), AppError> {
 }
 
 fn missing_wayland_target() -> AppError {
-    let message = if super::kwin_windows::tracker().is_running() {
+    let message = if tracker().is_running() {
         "No target window: Tyco was opened while no application window had focus"
     } else {
         "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running"

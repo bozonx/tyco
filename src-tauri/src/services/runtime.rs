@@ -234,7 +234,7 @@ pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppE
 /// window stays open while the user switches between applications. Only a
 /// known window replaces the target; focusing the desktop or a panel keeps it.
 pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
-    let Some(target) = super::kwin_windows::tracker().target() else {
+    let Some(target) = super::platform::window_tracker::tracker().target() else {
         return Ok(());
     };
     let active_label = app.state::<RuntimeWindows>().active_label();

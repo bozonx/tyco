@@ -1,7 +1,5 @@
 //! Minimal bindings for the system GTK3 layer-shell library.
 
-#![cfg(target_os = "linux")]
-
 use std::ffi::{c_char, CString};
 
 use gtk::prelude::*;
