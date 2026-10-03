@@ -65,17 +65,28 @@
               class="history-item"
               :data-history-id="item.id"
             >
-              <div class="history-content">
+              <div
+                v-if="item.meta || item.time || visibleActions(item).length"
+                class="history-item-header"
+              >
                 <div v-if="item.meta || item.time" class="history-meta">
                   <template v-if="item.meta">
-                    <Icon :icon="item.meta.icon" height="14" />
-                    <span>{{ item.meta.label }}</span>
+                    <span class="history-meta-badge">
+                      <Icon :icon="item.meta.icon" height="14" />
+                      <span>{{ item.meta.label }}</span>
+                    </span>
                     <span v-if="item.meta.note" class="history-meta-note">
                       <Icon icon="mdi:check" height="12" />
                       {{ item.meta.note }}
                     </span>
                   </template>
                   <span v-if="item.time" class="history-date">
+                    <span
+                      v-if="item.meta"
+                      class="history-meta-divider"
+                      aria-hidden="true"
+                      >•</span
+                    >
                     <time
                       :datetime="new Date(item.time).toISOString()"
                       :title="formatHistoryDateTime(item.time, locale)"
@@ -85,6 +96,26 @@
                   </span>
                 </div>
 
+                <div
+                  v-if="visibleActions(item).length"
+                  class="history-item-actions"
+                >
+                  <Button
+                    v-for="action in visibleActions(item)"
+                    :key="action.id"
+                    xs
+                    ghost
+                    square
+                    :title="action.title"
+                    :class="action.danger ? 'danger-action' : undefined"
+                    @click="emit('action', action.id, item)"
+                  >
+                    <Icon :icon="action.icon" height="16" />
+                  </Button>
+                </div>
+              </div>
+
+              <div class="history-content">
                 <div
                   v-if="item.value"
                   class="history-text-value"
@@ -158,21 +189,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="history-item-actions">
-                <Button
-                  v-for="action in visibleActions(item)"
-                  :key="action.id"
-                  xs
-                  ghost
-                  square
-                  :title="action.title"
-                  :class="action.danger ? 'danger-action' : undefined"
-                  @click="emit('action', action.id, item)"
-                >
-                  <Icon :icon="action.icon" height="16" />
-                </Button>
               </div>
             </div>
           </div>
@@ -373,9 +389,7 @@ function confirmClear() {
 .history-item {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-md);
+  flex-direction: column;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);
@@ -390,20 +404,30 @@ function confirmClear() {
   border-color: var(--app-border);
 }
 
-.history-content {
-  flex: 1;
-  min-width: 0;
-  cursor: default;
+.history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 1.5rem;
+  margin-bottom: var(--space-2xs);
 }
 
 .history-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-xs);
-  margin-bottom: var(--space-2xs);
   font-size: 0.75rem;
   color: var(--app-text-muted);
   user-select: none;
+}
+
+.history-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
 }
 
 .history-meta-note {
@@ -413,9 +437,22 @@ function confirmClear() {
   color: var(--color-success);
 }
 
-.history-date {
-  margin-left: auto;
+.history-meta-divider {
   color: var(--app-text-faint);
+  opacity: 0.6;
+}
+
+.history-date {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--app-text-faint);
+}
+
+.history-content {
+  flex: 1;
+  min-width: 0;
+  cursor: default;
 }
 
 .history-text-value {
@@ -527,76 +564,17 @@ function confirmClear() {
   display: flex;
   align-items: center;
   gap: 2px;
+  margin-left: auto;
   flex-shrink: 0;
-  padding-top: 0.125rem;
-  opacity: 0.7;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity var(--transition-fast);
 }
 
 .history-item:hover .history-item-actions,
-.history-item:focus-within .history-original {
-  margin-top: var(--space-xs);
-}
-
-.history-original-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 2px 6px 2px 2px;
-  font-size: 0.75rem;
-  color: var(--app-text-muted);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color var(--transition-fast);
-}
-
-.history-original-toggle:hover {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
-.history-original-body {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  margin-top: var(--space-2xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-left: 2px solid var(--app-border);
-  background-color: var(--app-surface-sunken);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
-
-.history-original-text {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--app-text-muted);
-  white-space: pre-wrap;
-  word-break: break-word;
-  user-select: text;
-  cursor: text;
-}
-
-.history-original-actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.history-original-actions :deep(.btn) {
-  color: var(--app-text-muted);
-}
-
-.history-original-actions :deep(.btn:hover) {
-  color: var(--color-base-content);
-}
-
-.history-item-actions {
+.history-item:focus-within .history-item-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .history-item-actions :deep(.btn) {
@@ -609,6 +587,13 @@ function confirmClear() {
 
 .danger-action:hover {
   color: var(--color-error) !important;
+}
+
+@media (hover: none) {
+  .history-item-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .history-empty {
