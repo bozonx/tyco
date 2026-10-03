@@ -23,10 +23,9 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
+import { useMenuModalsStore } from '../../stores/menuModals'
 import { useThemeStore } from '../../stores/theme'
 import KeyButton from './KeyButton.vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const menuModalsStore = useMenuModalsStore()
 const themeStore = useThemeStore()
@@ -38,21 +37,8 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   navBarVisible: true,
 })
 
-const isSelectionModal = computed(() => {
-  const modal = menuModalsStore.currentModal
-  return (
-    modal === MenuModals.AI_TASK ||
-    modal === MenuModals.TRANSLATE ||
-    modal === MenuModals.ACTION_SELECT
-  )
-})
-
 const canGoBack = computed(() => menuModalsStore.menuBreadcrumbs.length > 0)
-const backKeyBadge = computed(() =>
-  isSelectionModal.value && getCurrentWindow().label !== 'quick'
-    ? 'Esc'
-    : 'Backspace'
-)
+const backKeyBadge = 'Esc'
 </script>
 
 <style scoped>

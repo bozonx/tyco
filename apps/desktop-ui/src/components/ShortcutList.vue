@@ -228,12 +228,12 @@ const hasPresetActions = computed(() =>
 )
 
 const resolvedEscMode = computed<'close' | 'back'>(() => {
-  // In the quick window Esc always cancels: it drops the text and closes the
-  // window, on every step and whatever `escMode` asks. Do not make it go back
-  // to the previous step: that is what Backspace is for
-  if (isQuickWindow) return 'close'
   if (props.escMode && props.escMode !== 'auto') {
     return props.escMode
+  }
+
+  if (canGoBack.value) {
+    return 'back'
   }
 
   const modal = menuModalsStore.currentModal
@@ -258,17 +258,6 @@ const canGoBack = computed(() => {
   }
   return false
 })
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!target || !(target instanceof HTMLElement)) return false
-  const tagName = target.tagName.toLowerCase()
-  return (
-    tagName === 'input' ||
-    tagName === 'textarea' ||
-    target.isContentEditable ||
-    Boolean(target.closest('.cm-editor'))
-  )
-}
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
@@ -300,12 +289,6 @@ function handleKeyDown(event: KeyboardEvent) {
     (event.code === 'Space' || event.code === 'Enter') &&
     props.spaceKey &&
     !props.spaceKey.disabled
-  ) {
-    event.preventDefault()
-  } else if (
-    event.code === 'Backspace' &&
-    canGoBack.value &&
-    !isEditableTarget(event.target)
   ) {
     event.preventDefault()
   }
@@ -344,13 +327,6 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()
     handleEsc()
-  } else if (
-    event.code === 'Backspace' &&
-    canGoBack.value &&
-    !isEditableTarget(event.target)
-  ) {
-    event.preventDefault()
-    handleBack()
   } else {
     let codeLetter: string | undefined
     if (event.code.length === 4 && event.code.startsWith('Key')) {

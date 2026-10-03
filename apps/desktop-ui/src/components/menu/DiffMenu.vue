@@ -78,11 +78,19 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
 
+const hasTargetWindow = computed(() => Boolean(ipcStore.params?.windowId))
+
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
-  return actionMenuStore.getShortcutActions()
+  return actionMenuStore.getShortcutActions().map((action) => {
+    if (!action) return undefined
+    if (action.id === 'insertIntoWindow' && !hasTargetWindow.value) {
+      return { ...action, disabled: true }
+    }
+    return action
+  })
 })
 
 const spaceKey = computed(() =>
-  ipcStore.params?.windowId ? defaultActions.value[0] : undefined
+  hasTargetWindow.value ? defaultActions.value[0] : undefined
 )
 </script>

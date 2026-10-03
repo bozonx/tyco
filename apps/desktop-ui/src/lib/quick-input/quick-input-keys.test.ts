@@ -11,7 +11,9 @@ describe('quick input shortcuts', () => {
     expect(resolveQuickInputKeyAction({ code: 'Enter' })).toBe(
       'correctAndInsert'
     )
-    expect(resolveQuickInputKeyAction({ code: 'Tab' })).toBe('next')
+    expect(resolveQuickInputKeyAction({ code: 'Enter', ctrlKey: true })).toBe(
+      'next'
+    )
     expect(resolveQuickInputKeyAction({ code: 'Enter', shiftKey: true })).toBe(
       'newline'
     )
@@ -19,9 +21,7 @@ describe('quick input shortcuts', () => {
     expect(resolveQuickInputKeyAction({ code: 'Enter', altKey: true })).toBe(
       'none'
     )
-    expect(resolveQuickInputKeyAction({ code: 'Enter', ctrlKey: true })).toBe(
-      'none'
-    )
+    expect(resolveQuickInputKeyAction({ code: 'Tab' })).toBe('none')
     expect(resolveQuickInputKeyAction({ code: 'Tab', shiftKey: true })).toBe(
       'none'
     )

@@ -234,11 +234,12 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('resolves Esc to close mode on result screens and closes quick window', () => {
+  it('resolves Esc to close mode on root screen without breadcrumbs and closes quick window', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'insert'
+    mocks.breadcrumbs = []
     mocks.mode = 'write'
-    mocks.nextShortcut = 'Ctrl+S'
+    mocks.nextShortcut = 'Ctrl+Enter'
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'result text', escVisible: true },
@@ -269,7 +270,7 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('cancels the quick window from the second step on Escape', () => {
+  it('goes back on Escape when breadcrumbs exist in quick window', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'ai-task'
     mocks.breadcrumbs = ['insert', 'ai-task']
@@ -278,32 +279,11 @@ describe('ShortcutList', () => {
       props: { text: 'task text', escVisible: true },
     })
 
-    expect(wrapper.text()).toContain('common.cancel')
+    expect(wrapper.text()).toContain('common.back')
     press('Escape')
 
-    expect(mocks.back).not.toHaveBeenCalled()
-    expect(mocks.cancelPending).toHaveBeenCalled()
-    expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
-    wrapper.unmount()
-  })
-
-  it('cancels the quick window on Escape even when asked to go back', () => {
-    mocks.currentWindowLabel = 'quick'
-    mocks.currentModal = 'insert'
-    mocks.breadcrumbs = ['insert', 'insert']
-
-    const wrapper = mount(ShortcutList, {
-      props: { text: 'text', escVisible: true, escMode: 'back' },
-    })
-
-    expect(wrapper.text()).toContain('common.cancel')
-    press('Escape')
-    expect(mocks.back).not.toHaveBeenCalled()
-    expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.back).toHaveBeenCalled()
+    expect(mocks.closeAll).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -320,30 +300,14 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('handles Backspace keyup when canGoBack is true', () => {
+  it('does not trigger navigation on Backspace keyup', () => {
     mocks.currentModal = 'diff'
     mocks.breadcrumbs = ['ai-task', 'diff']
 
     const wrapper = mount(ShortcutList, { props: { text: 'diff text' } })
 
     press('Backspace')
-    expect(mocks.back).toHaveBeenCalled()
-    wrapper.unmount()
-  })
-
-  it('does not trigger Backspace navigation when focused in an editable input', () => {
-    mocks.currentModal = 'diff'
-    mocks.breadcrumbs = ['ai-task', 'diff']
-
-    const wrapper = mount(ShortcutList, { props: { text: 'diff text' } })
-
-    const input = document.createElement('input')
-    document.body.appendChild(input)
-
-    press('Backspace', {}, input)
     expect(mocks.back).not.toHaveBeenCalled()
-
-    document.body.removeChild(input)
     wrapper.unmount()
   })
 

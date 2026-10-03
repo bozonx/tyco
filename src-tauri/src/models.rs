@@ -132,7 +132,7 @@ pub fn default_user_config() -> Value {
       },
       "quickInputHotkeys": {
         "correctAndInsert": "Enter",
-        "next": "Tab",
+        "next": "Ctrl+Enter",
         "insertWithoutCorrection": "",
         "newline": "Shift+Enter",
         "cancel": "Esc"

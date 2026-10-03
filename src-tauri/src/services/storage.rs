@@ -307,6 +307,15 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
                 }
             }
         }
+        if quick.get("next").and_then(Value::as_str) == Some("Ctrl+S")
+            || quick.get("next").and_then(Value::as_str) == Some("Tab")
+        {
+            quick.insert(
+                String::from("next"),
+                Value::String(String::from("Ctrl+Enter")),
+            );
+            changed = true;
+        }
     } else {
         config.insert(String::from("quickInputHotkeys"), default_quick_input);
         changed = true;

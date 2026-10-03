@@ -91,6 +91,10 @@ async function makeDiff(index: number) {
   menuModalsStore.setPendingModal({ ai: true })
   try {
     const newText = await aiTasks(index, trimmedText)
+    if (!newText || !newText.trim()) {
+      toast(t('toast.desktopCommandFailed'), 'error')
+      return
+    }
     await historyStore.saveSourceResult(sourceId, newText).catch(() => {
       toast(t('history.operationFailed'), 'error')
     })

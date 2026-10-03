@@ -101,10 +101,10 @@ describe('quick input screen', () => {
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
   })
 
-  it('opens actions on Tab with original text and ignores Alt+Enter', () => {
+  it('opens actions on Ctrl+Enter with original text and ignores Alt+Enter', () => {
     press('Enter', { altKey: true })
     expect(mocks.correction.insert).not.toHaveBeenCalled()
-    press('Tab')
+    press('Enter', { ctrlKey: true })
     expect(mocks.modals.nextModal).toHaveBeenCalledWith('insert', {
       text: 'Original text',
     })
@@ -124,7 +124,7 @@ describe('quick input screen', () => {
     reactive(mocks.modals).pendingModal = {}
     await nextTick()
     press('Enter')
-    press('Tab')
+    press('Enter', { ctrlKey: true })
     expect(mocks.correction.insert).not.toHaveBeenCalled()
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
     press('Escape')

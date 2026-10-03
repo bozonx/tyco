@@ -32,11 +32,15 @@ async function closeEditor() {
   await ipcStore.callFunctionOrNotify('closeWindow')
 }
 
+function openInsertMenu() {
+  menuModalsStore.nextModal(MenuModals.INSERT, { text: editorInputStore.value })
+}
+
 navPanelStore.resetNavParams({
   escBtnAction: () => {
-    void closeEditor()
+    openInsertMenu()
   },
-  escBtnLabelKey: 'common.close',
+  escBtnLabelKey: 'menu.insert',
 })
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -55,9 +59,7 @@ function handleKeyDown(event: KeyboardEvent) {
     if (event.code === 'Tab') return
     event.preventDefault()
     if (!event.repeat) {
-      menuModalsStore.nextModal(MenuModals.INSERT, {
-        text: editorInputStore.value,
-      })
+      openInsertMenu()
     }
   }
 }

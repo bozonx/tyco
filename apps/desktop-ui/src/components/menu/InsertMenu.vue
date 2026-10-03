@@ -2,8 +2,14 @@
   <ActionOverlayLayout
     :title="props.correction ? t('menu.correction') : t('menu.insert')"
   >
-    <template v-if="statusVisible || hasDiff" #header-extra>
-      <DiffModeToggle v-if="hasDiff" v-model="diffMode" />
+    <template
+      v-if="statusVisible || (hasDiff && !props.correctionError)"
+      #header-extra
+    >
+      <DiffModeToggle
+        v-if="hasDiff && !props.correctionError"
+        v-model="diffMode"
+      />
       <span
         v-if="statusVisible"
         class="correction-status"
@@ -27,7 +33,7 @@
         :onCancel="menuModalsStore.back"
       />
       <Diff
-        v-else-if="props.oldText"
+        v-else-if="props.oldText && !props.correctionError"
         :oldText="props.oldText"
         :newText="props.text"
         :mode="diffMode"
@@ -125,7 +131,11 @@ const actionsMenu = computed(() => {
       .getDefaultActions()
       .filter((action) => action.id === 'insertIntoWindow')
   }
-  return actionMenuStore.getShortcutActions()
+  const actions = actionMenuStore.getShortcutActions()
+  if (!props.allowInsertButton) {
+    return actions.filter((action) => action?.id !== 'insertIntoWindow')
+  }
+  return actions
 })
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
@@ -189,30 +199,40 @@ const correctionBlocker = computed(() => {
   return undefined
 })
 
+function shouldDisableAction(item?: ActionItem) {
+  if (!item) return false
+  if (item.id === 'insertIntoWindow') {
+    return !(ipcStore.params?.windowId && props.text && props.allowInsertButton)
+  }
+  return false
+}
+
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   (props.insertOnly ? [] : actionsMenu.value).map(
-    (item: ActionItem | undefined, index: number) => {
+    (item: ActionItem | undefined) => {
       if (!item) return undefined
       if (props.correcting) return { ...item, disabled: true }
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
-      return { ...item, disabled: shouldDisablePrimaryAction(index) }
+      return { ...item, disabled: item.disabled || shouldDisableAction(item) }
     }
   )
 )
 
 const primaryAction = computed<ActionItem | undefined>(() => {
+  if (!props.allowInsertButton) return undefined
   const [firstItem] = actionsMenu.value
 
   if (!firstItem) {
     return undefined
   }
 
-  return { ...firstItem, disabled: shouldDisablePrimaryAction(0) }
+  return { ...firstItem, disabled: shouldDisableAction(firstItem) }
 })
 
 const spaceKey = computed<ActionItem | undefined>(() => {
+  if (!props.allowInsertButton) return undefined
   const primary = primaryAction.value
   if (!primary || !props.correcting) return primary
 
@@ -224,24 +244,6 @@ const spaceKey = computed<ActionItem | undefined>(() => {
     },
   }
 })
-
-function needShowInsertButton() {
-  return Boolean(
-    ipcStore.params?.windowId && props.text && props.allowInsertButton
-  )
-}
-
-function shouldDisablePrimaryAction(index: number) {
-  if (index !== 0) {
-    return false
-  }
-
-  if (props.actions) {
-    return false
-  }
-
-  return !needShowInsertButton()
-}
 </script>
 
 <style scoped>
