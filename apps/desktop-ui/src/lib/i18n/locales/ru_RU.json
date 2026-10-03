@@ -328,16 +328,11 @@
     "externalMethodsHint": "Используйте команду в терминале, скрипте или системном сочетании клавиш. Клиент tyco-ctl должен быть установлен и доступен в PATH. В Linux также поддерживается D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "copyActivationCommand": "Копировать команду",
     "appHotkeysTitle": "Горячие клавиши приложения",
-    "appHotkeysHint": "Сочетания работают, когда соответствующий экран Tyco активен. Выберите поле и нажмите новое сочетание.",
-    "hotkeyUnassigned": "Не назначено",
-    "clearShortcut": "Убрать",
-    "appHotkeyConflict": "Это сочетание уже назначено действию: {action}",
-    "quickInputActions": {
-      "correctAndInsert": "Исправить и вставить в предыдущее окно",
-      "next": "Открыть окно действий (во всех окнах)",
-      "insertWithoutCorrection": "Вставить без исправления",
-      "newline": "Новая строка",
-      "cancel": "Отменить и закрыть"
+    "appHotkeysHint": "Действует в быстром вводе и в чате. В быстром вводе Tab открывает действия, Esc отменяет ввод; в редакторе быстрые действия открываются по Ctrl+Enter.",
+    "submitKey": {
+      "label": "Отправка текста",
+      "enter": "Enter (Shift+Enter — новая строка)",
+      "ctrlEnter": "Ctrl+Enter (Enter — новая строка)"
     },
     "selectionActions": {
       "title": "Замена выделения",
@@ -402,6 +397,7 @@
   },
   "menu": {
     "insert": "Вставить",
+    "replaceInEditor": "Заменить в редакторе",
     "translate": "Перевести",
     "aiTask": "Задание для AI",
     "voiceRecognition": "Распознавание голоса",
@@ -471,7 +467,7 @@
     "retry": "Повторить",
     "generating": "Создаётся ответ",
     "editorContext": "Контекст редактора",
-    "inputHint": "Enter — отправить · Shift+Enter — новая строка",
+    "inputHint": "{send} — отправить · {newline} — новая строка",
     "scrollToBottom": "Прокрутить вниз",
     "searchChats": "Поиск чатов",
     "renameChat": "Переименовать чат",

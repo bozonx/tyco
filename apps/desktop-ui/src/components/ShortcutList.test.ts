@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
   mode: 'write',
-  nextShortcut: 'Ctrl+S',
 }))
 
 vi.mock('../composables/useI18n', () => ({
@@ -63,10 +62,7 @@ vi.mock('../stores/ipc', () => ({
     callFunction: mocks.closeWindow,
     callFunctionOrNotify: mocks.closeWindow,
     get params() {
-      return {
-        mode: mocks.mode,
-        userConfig: { quickInputHotkeys: { next: mocks.nextShortcut } },
-      }
+      return { mode: mocks.mode, userConfig: {} }
     },
   }),
 }))
@@ -106,66 +102,7 @@ describe('ShortcutList', () => {
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert']
     mocks.mode = 'write'
-    mocks.nextShortcut = 'Ctrl+S'
     mocks.currentModalParams = {}
-  })
-
-  it('runs Enter and Ctrl+S actions without triggering the S preset', async () => {
-    const chat = vi.fn()
-    const actions = vi.fn()
-    const preset = vi.fn()
-    const slots = new Array(7).fill(undefined)
-    slots[6] = { name: 'Preset', action: preset }
-    const wrapper = mount(ShortcutList, {
-      props: {
-        text: '  context text  ',
-        enterKey: { name: 'Chat', action: chat },
-        actionsKey: { name: 'Actions', action: actions },
-        leftLetterKeys: slots,
-      },
-    })
-    press('Enter')
-    expect(chat).toHaveBeenCalledWith('  context text  ')
-    const down = new KeyboardEvent('keydown', {
-      code: 'KeyS',
-      ctrlKey: true,
-      cancelable: true,
-    })
-    window.dispatchEvent(down)
-    expect(down.defaultPrevented).toBe(true)
-    window.dispatchEvent(
-      new KeyboardEvent('keyup', { code: 'KeyS', ctrlKey: true })
-    )
-    expect(actions).toHaveBeenCalledWith('  context text  ')
-    expect(preset).not.toHaveBeenCalled()
-    await wrapper.setProps({ stopListening: true })
-    press('Enter')
-    press('KeyS', { ctrlKey: true })
-    expect(chat).toHaveBeenCalledTimes(1)
-    expect(actions).toHaveBeenCalledTimes(1)
-    await wrapper.setProps({ stopListening: false })
-    await wrapper.findAll('button')[0].trigger('click')
-    await wrapper.findAll('button')[1].trigger('click')
-    expect(chat).toHaveBeenCalledTimes(2)
-    expect(actions).toHaveBeenCalledTimes(2)
-    wrapper.unmount()
-  })
-
-  it('uses the shared actions binding and ignores the old shortcut', () => {
-    mocks.nextShortcut = 'Alt+S'
-    const action = vi.fn()
-    const wrapper = mount(ShortcutList, {
-      props: {
-        text: 'translated text',
-        actionsKey: { name: 'Actions', action },
-      },
-    })
-    press('KeyS', { ctrlKey: true })
-    expect(action).not.toHaveBeenCalled()
-    press('KeyS', { altKey: true })
-    expect(action).toHaveBeenCalledWith('translated text')
-    expect(wrapper.text()).toContain('Alt')
-    wrapper.unmount()
   })
 
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
@@ -239,7 +176,6 @@ describe('ShortcutList', () => {
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = []
     mocks.mode = 'write'
-    mocks.nextShortcut = 'Ctrl+Enter'
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'result text', escVisible: true },

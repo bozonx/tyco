@@ -11,7 +11,6 @@ describe('Editor actions shortcut', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('opens actions with editor text and ignores repeats and open modals', () => {
-    useIpcStore().params.userConfig.quickInputHotkeys = { next: 'Ctrl+S' }
     const editor = useEditorInputStore()
     editor.setValue('Editor text', 'plain')
     const modals = useMenuModalsStore()
@@ -26,7 +25,7 @@ describe('Editor actions shortcut', () => {
     })
     const press = (repeat = false) => {
       const event = new KeyboardEvent('keydown', {
-        code: 'KeyS',
+        code: 'Enter',
         ctrlKey: true,
         repeat,
         cancelable: true,
@@ -64,18 +63,21 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
-  it('follows the shared shortcut setting', () => {
-    useIpcStore().params.userConfig.quickInputHotkeys = { next: 'Alt+S' }
+  it('keeps Ctrl+Enter for actions whatever sends the text', () => {
+    useIpcStore().params.userConfig.submitKey = 'ctrlEnter'
     const open = vi.spyOn(useMenuModalsStore(), 'nextModal')
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
     })
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'KeyS', ctrlKey: true })
-    )
+    const enter = new KeyboardEvent('keydown', {
+      code: 'Enter',
+      cancelable: true,
+    })
+    window.dispatchEvent(enter)
+    expect(enter.defaultPrevented).toBe(false)
     expect(open).not.toHaveBeenCalled()
     window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'KeyS', altKey: true })
+      new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
     )
     expect(open).toHaveBeenCalledTimes(1)
     wrapper.unmount()

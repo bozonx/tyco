@@ -252,10 +252,6 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
-    let default_quick_input = defaults
-        .get("quickInputHotkeys")
-        .cloned()
-        .unwrap_or_default();
     let default_selection_hotkeys = defaults
         .get("selectionHotkeys")
         .cloned()
@@ -295,29 +291,22 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         changed = true;
     }
 
-    if let Some(quick) = config
-        .get_mut("quickInputHotkeys")
-        .and_then(Value::as_object_mut)
-    {
-        if let Some(def_quick) = default_quick_input.as_object() {
-            for (action, default_key) in def_quick {
-                if !quick.contains_key(action) {
-                    quick.insert(action.clone(), default_key.clone());
-                    changed = true;
-                }
-            }
-        }
-        if quick.get("next").and_then(Value::as_str) == Some("Ctrl+S")
-            || quick.get("next").and_then(Value::as_str) == Some("Tab")
-        {
-            quick.insert(
-                String::from("next"),
-                Value::String(String::from("Ctrl+Enter")),
-            );
-            changed = true;
-        }
-    } else {
-        config.insert(String::from("quickInputHotkeys"), default_quick_input);
+    // The per-action quick input bindings gave way to a single submit key:
+    // whoever sent with Ctrl+Enter keeps doing so
+    let legacy_submit = config
+        .remove("quickInputHotkeys")
+        .map(|quick| quick.get("correctAndInsert").and_then(Value::as_str) == Some("Ctrl+Enter"));
+    if legacy_submit.is_some() {
+        changed = true;
+    }
+    let submit_key = config.get("submitKey").and_then(Value::as_str);
+    if !matches!(submit_key, Some("enter" | "ctrlEnter")) {
+        let migrated = if legacy_submit == Some(true) {
+            "ctrlEnter"
+        } else {
+            "enter"
+        };
+        config.insert(String::from("submitKey"), Value::String(migrated.into()));
         changed = true;
     }
 
@@ -1288,13 +1277,32 @@ mod tests {
         assert!(normalize_hotkeys_config(&mut config));
         assert_eq!(config["hotkeys"]["editor"], json!("Super+Space"));
         assert_eq!(config["hotkeys"]["voice"], json!("Ctrl+Alt+V"));
-        assert_eq!(
-            config["quickInputHotkeys"]["correctAndInsert"],
-            json!("Enter")
-        );
+        assert_eq!(config["submitKey"], json!("enter"));
         assert_eq!(config["quickCorrectionPrefetch"], json!(false));
         assert_eq!(config["quickHideOnBlur"], json!(true));
         assert!(!normalize_hotkeys_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_hotkeys_migrates_quick_input_bindings_to_submit_key() {
+        let mut ctrl = json!({
+            "quickInputHotkeys": { "correctAndInsert": "Ctrl+Enter", "next": "Tab" }
+        });
+        assert!(normalize_hotkeys_config(&mut ctrl));
+        assert_eq!(ctrl["submitKey"], json!("ctrlEnter"));
+        assert!(ctrl.get("quickInputHotkeys").is_none());
+
+        let mut enter = json!({ "quickInputHotkeys": { "correctAndInsert": "Ctrl+S" } });
+        assert!(normalize_hotkeys_config(&mut enter));
+        assert_eq!(enter["submitKey"], json!("enter"));
+
+        let mut kept = json!({ "submitKey": "ctrlEnter" });
+        normalize_hotkeys_config(&mut kept);
+        assert_eq!(kept["submitKey"], json!("ctrlEnter"));
+
+        let mut invalid = json!({ "submitKey": "Ctrl+Enter" });
+        assert!(normalize_hotkeys_config(&mut invalid));
+        assert_eq!(invalid["submitKey"], json!("enter"));
     }
 
     #[test]

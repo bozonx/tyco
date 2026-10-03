@@ -75,9 +75,9 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
+import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
-import { resolveQuickInputHotkeys } from '../lib/quick-input/quick-input-keys'
 import { useChatStore } from '../stores/chat'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
@@ -94,11 +94,7 @@ const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
 const ipcStore = useIpcStore()
-const actionsShortcut = computed(() =>
-  resolveQuickInputHotkeys(
-    ipcStore.params?.userConfig?.quickInputHotkeys
-  ).next.toUpperCase()
-)
+const actionsShortcut = EDITOR_ACTIONS_SHORTCUT.toUpperCase()
 
 const escBtnText = computed(() => {
   return navPanelStore.params.escBtnLabelKey

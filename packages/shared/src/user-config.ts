@@ -257,16 +257,13 @@ export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
 /** Document syntax highlighting mode in the editor */
 export type EditorSyntax = 'none' | 'markdown'
 
-export const DEFAULT_QUICK_INPUT_HOTKEYS = {
-  correctAndInsert: 'Enter',
-  next: 'Ctrl+Enter',
-  insertWithoutCorrection: '',
-  newline: 'Shift+Enter',
-  cancel: 'Esc',
-}
-
-export type QuickInputAction = keyof typeof DEFAULT_QUICK_INPUT_HOTKEYS
-export type QuickInputHotkeys = Record<QuickInputAction, string>
+/**
+ * Which key sends the text of a multi-line input (quick input, chat); the other
+ * Enter variant inserts a line break
+ */
+export const SUBMIT_KEYS = ['enter', 'ctrlEnter'] as const
+export type SubmitKey = (typeof SUBMIT_KEYS)[number]
+export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 
 export interface UserConfig {
   hotkeys: Record<string, string>
@@ -276,7 +273,7 @@ export interface UserConfig {
    */
   selectionHotkeys: Record<string, string>
   selectionReplace: { whenEmpty: SelectionWhenEmpty }
-  quickInputHotkeys?: Partial<QuickInputHotkeys>
+  submitKey?: SubmitKey
   /** Correct the quick input text in advance while the user pauses */
   quickCorrectionPrefetch?: boolean
   /** Hide the quick window when the user clicks elsewhere */
@@ -334,7 +331,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   },
   selectionHotkeys: { correction: 'Ctrl+Alt+F' },
   selectionReplace: { whenEmpty: 'nothing' },
-  quickInputHotkeys: DEFAULT_QUICK_INPUT_HOTKEYS,
+  submitKey: DEFAULT_SUBMIT_KEY,
   quickCorrectionPrefetch: false,
   quickHideOnBlur: true,
   theme: 'auto',

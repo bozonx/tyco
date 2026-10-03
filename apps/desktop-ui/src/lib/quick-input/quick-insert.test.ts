@@ -32,13 +32,11 @@ describe('quick correction and insertion', () => {
     expect(deps.clearPending).toHaveBeenCalledOnce()
   })
 
-  it('ignores empty input and supports explicit insertion without correction', async () => {
+  it('ignores empty input', async () => {
     const { deps, model } = setup()
     await model.start('  ')
     expect(deps.setPending).not.toHaveBeenCalled()
-    await model.start('Original', false)
     expect(deps.correct).not.toHaveBeenCalled()
-    expect(deps.insert).toHaveBeenCalledWith('Original')
   })
 
   it('blocks duplicate submissions and late results after cancellation', async () => {

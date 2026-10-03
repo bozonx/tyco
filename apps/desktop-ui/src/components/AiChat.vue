@@ -146,7 +146,7 @@
           </Button>
         </div>
       </div>
-      <p class="composer-hint">{{ t('chat.inputHint') }}</p>
+      <p class="composer-hint">{{ inputHint }}</p>
     </div>
   </div>
 </template>
@@ -156,6 +156,11 @@ import { computed, nextTick, ref, watch } from 'vue'
 
 import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
+import {
+  newlineShortcut,
+  resolveSubmitKey,
+  submitShortcut,
+} from '../lib/input-keys/input-keys'
 import { usableModels } from '../lib/llm/llm-catalog'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
@@ -171,6 +176,14 @@ const ipcStore = useIpcStore()
 const chatStore = useChatStore()
 const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
+
+const inputHint = computed(() => {
+  const submitKey = resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
+  return t('chat.inputHint', {
+    send: submitShortcut(submitKey),
+    newline: newlineShortcut(submitKey),
+  })
+})
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)

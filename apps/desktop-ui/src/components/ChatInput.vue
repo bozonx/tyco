@@ -15,10 +15,16 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
+import {
+  resolveInputKeyAction,
+  resolveSubmitKey,
+} from '../lib/input-keys/input-keys'
 import { useChatInputStore } from '../stores/chatInput'
+import { useIpcStore } from '../stores/ipc'
 
 const emit = defineEmits<{ (e: 'send'): void }>()
 const chatInputStore = useChatInputStore()
+const ipcStore = useIpcStore()
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const { t } = useI18n()
 
@@ -73,7 +79,9 @@ function handleBlur(event: FocusEvent) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+  const submitKey = resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
+  // a line break is left to the textarea itself
+  if (resolveInputKeyAction(event, submitKey) === 'submit') {
     event.preventDefault()
     emit('send')
   }

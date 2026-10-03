@@ -328,16 +328,11 @@
     "externalMethodsHint": "Bu komutu terminalden, betikten veya sistem kısayolundan kullanın. tyco-ctl istemcisi kurulu ve PATH içinde erişilebilir olmalıdır. Linux ayrıca D-Bus destekler: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "copyActivationCommand": "Komutu kopyala",
     "appHotkeysTitle": "Uygulama kısayolları",
-    "appHotkeysHint": "Bu kısayollar ilgili Tyco ekranı etkinken çalışır. Bir alanı seçip yeni bir tuş birleşimine basın.",
-    "hotkeyUnassigned": "Atanmamış",
-    "clearShortcut": "Kaldır",
-    "appHotkeyConflict": "Bu kısayol zaten şu eyleme atanmış: {action}",
-    "quickInputActions": {
-      "correctAndInsert": "Düzelt ve önceki pencereye ekle",
-      "next": "Eylemleri aç (tüm pencereler)",
-      "insertWithoutCorrection": "Düzeltmeden ekle",
-      "newline": "Yeni satır",
-      "cancel": "İptal et ve kapat"
+    "appHotkeysHint": "Hızlı girişte ve sohbette geçerlidir. Hızlı girişte Tab eylemleri açar, Esc iptal eder; düzenleyicide Ctrl+Enter hızlı eylemleri açar.",
+    "submitKey": {
+      "label": "Metni gönderme tuşu",
+      "enter": "Enter (yeni satır için Shift+Enter)",
+      "ctrlEnter": "Ctrl+Enter (yeni satır için Enter)"
     },
     "selectionActions": {
       "title": "Seçimi değiştir",
@@ -402,6 +397,7 @@
   },
   "menu": {
     "insert": "Ekle",
+    "replaceInEditor": "Düzenleyicide değiştir",
     "translate": "Çevir",
     "aiTask": "AI görevi",
     "voiceRecognition": "Ses tanıma",
@@ -471,7 +467,7 @@
     "retry": "Yeniden dene",
     "generating": "Yanıt oluşturuluyor",
     "editorContext": "Düzenleyici bağlamı",
-    "inputHint": "Göndermek için Enter · Yeni satır için Shift+Enter",
+    "inputHint": "Göndermek için {send} · yeni satır için {newline}",
     "scrollToBottom": "Aşağı kaydır",
     "searchChats": "Sohbetlerde ara",
     "renameChat": "Sohbeti yeniden adlandır",

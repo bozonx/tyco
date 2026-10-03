@@ -325,16 +325,11 @@
     "externalMethodsHint": "Use this command from a terminal, script, or system shortcut. The tyco-ctl client must be installed and available in PATH. Linux also supports D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "copyActivationCommand": "Copy command",
     "appHotkeysTitle": "Application hotkeys",
-    "appHotkeysHint": "These shortcuts work while the corresponding Tyco screen is active. Focus a field and press a new combination.",
-    "hotkeyUnassigned": "Not assigned",
-    "clearShortcut": "Clear",
-    "appHotkeyConflict": "This shortcut is already assigned to: {action}",
-    "quickInputActions": {
-      "correctAndInsert": "Correct and insert into previous window",
-      "next": "Open actions (all windows)",
-      "insertWithoutCorrection": "Insert without correction",
-      "newline": "New line",
-      "cancel": "Cancel and close"
+    "appHotkeysHint": "Applies to the quick input and the chat. In the quick input Tab opens the actions and Esc cancels; in the editor Ctrl+Enter opens the quick actions.",
+    "submitKey": {
+      "label": "Send text with",
+      "enter": "Enter (Shift+Enter for a new line)",
+      "ctrlEnter": "Ctrl+Enter (Enter for a new line)"
     },
     "selectionActions": {
       "title": "Replace selection",
@@ -399,6 +394,7 @@
   },
   "menu": {
     "insert": "Insert",
+    "replaceInEditor": "Replace in editor",
     "translate": "Translate",
     "aiTask": "AI task",
     "voiceRecognition": "Voice recognition",
@@ -468,7 +464,7 @@
     "retry": "Retry",
     "generating": "Generating a response",
     "editorContext": "Editor context",
-    "inputHint": "Enter to send · Shift+Enter for a new line",
+    "inputHint": "{send} to send · {newline} for a new line",
     "scrollToBottom": "Scroll to bottom",
     "searchChats": "Search chats",
     "renameChat": "Rename chat",

@@ -19,13 +19,13 @@ export function createQuickInsert(deps: QuickInsertDeps) {
     deps.clearPending()
   }
 
-  const start = async (text: string, correct = true): Promise<void> => {
+  const start = async (text: string): Promise<void> => {
     if (active || !text.trim()) return
     const run = {}
     active = run
     deps.setPending(cancel)
     try {
-      const result = correct ? await deps.correct(text) : text
+      const result = await deps.correct(text)
       if (active !== run) return
       if (!result.trim()) throw new Error('Correction returned empty text')
       await deps.saveOutput(result)

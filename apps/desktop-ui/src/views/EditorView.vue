@@ -11,10 +11,7 @@ import { onMounted, onUnmounted } from 'vue'
 
 import Editor from '../components/Editor.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
-import {
-  resolveQuickInputHotkeys,
-  resolveQuickInputKeyAction,
-} from '../lib/quick-input/quick-input-keys'
+import { isCtrlEnter } from '../lib/input-keys/input-keys'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
@@ -52,11 +49,8 @@ function handleKeyDown(event: KeyboardEvent) {
     }
     return
   }
-  const hotkeys = resolveQuickInputHotkeys(
-    ipcStore.params?.userConfig?.quickInputHotkeys
-  )
-  if (resolveQuickInputKeyAction(event, hotkeys) === 'next') {
-    if (event.code === 'Tab') return
+  // Enter breaks lines in the editor whatever the submit key is
+  if (isCtrlEnter(event)) {
     event.preventDefault()
     if (!event.repeat) {
       openInsertMenu()

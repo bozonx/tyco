@@ -47,12 +47,15 @@
         :sourceText="props.oldText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
-        :altText="props.insertOnly ? undefined : props.originalText"
+        :altText="
+          props.insertOnly || editorTarget ? undefined : props.originalText
+        "
         :altAlwaysVisible="props.correcting"
         :altAction="primaryAction"
         :stopListening="props.stopListening"
         :toEditorVisible="
           !props.correcting &&
+          !editorTarget &&
           (props.toEditorVisible ?? !routeParamsStore.isEditorPage())
         "
         :escMode="props.correction ? 'back' : 'auto'"
@@ -71,6 +74,7 @@ import {
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
 import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
+import { useEditorInputStore } from '../../stores/editorInput'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
@@ -124,6 +128,26 @@ const props = withDefaults(
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
+const editorInputStore = useEditorInputStore()
+
+/**
+ * A correction made over the editor goes back where its text came from: the
+ * step then only applies it or, with Esc, leaves the text as it was
+ */
+const editorTarget = computed(
+  () => props.correction && routeParamsStore.isEditorPage()
+)
+
+const applyToEditorAction: ActionItem = {
+  id: 'applyToEditor',
+  labelKey: 'menu.replaceInEditor',
+  icon: 'mdi:pencil-outline',
+  action: async (text: string) => {
+    routeParamsStore.applyEditorTransfer(text, props.originalText ?? '')
+    menuModalsStore.closeAll()
+    editorInputStore.focus()
+  },
+}
 const actionsMenu = computed(() => {
   if (props.actions) return props.actions
   if (props.insertOnly) {
@@ -208,7 +232,7 @@ function shouldDisableAction(item?: ActionItem) {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  (props.insertOnly ? [] : actionsMenu.value).map(
+  (props.insertOnly || editorTarget.value ? [] : actionsMenu.value).map(
     (item: ActionItem | undefined) => {
       if (!item) return undefined
       if (props.correcting) return { ...item, disabled: true }
@@ -224,6 +248,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 const primaryAction = computed<ActionItem | undefined>(() => {
+  if (editorTarget.value) return applyToEditorAction
   if (!props.allowInsertButton) return undefined
   const [firstItem] = actionsMenu.value
 
@@ -241,7 +266,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 })
 
 const spaceKey = computed<ActionItem | undefined>(() => {
-  if (!props.allowInsertButton) return undefined
+  if (!props.allowInsertButton && !editorTarget.value) return undefined
   const primary = primaryAction.value
   if (!primary || !props.correcting) return primary
 

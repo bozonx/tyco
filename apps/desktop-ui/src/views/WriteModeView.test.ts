@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { QuickInputHotkeys } from '@tyco/shared'
+import type { SubmitKey } from '@tyco/shared'
 import WriteModeView from './WriteModeView.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     isWindowShown: true,
     mode: 'write',
     activationId: 1,
-    userConfig: { quickInputHotkeys: {} as Partial<QuickInputHotkeys> },
+    userConfig: { submitKey: undefined as SubmitKey | undefined },
   },
   writer: {
     value: 'Original text',
@@ -83,7 +83,7 @@ beforeEach(() => {
     }
   )
   mocks.params.isWindowShown = true
-  mocks.params.userConfig.quickInputHotkeys = {}
+  mocks.params.userConfig.submitKey = undefined
   mocks.modals.pendingModal = null
   mocks.modals.anyModalOpen = false
   wrapper = mount(WriteModeView)
@@ -97,14 +97,16 @@ afterEach(() => {
 describe('quick input screen', () => {
   it('corrects and inserts on Enter without opening the next step', () => {
     press('Enter')
-    expect(mocks.correction.insert).toHaveBeenCalledWith('Original text', true)
+    expect(mocks.correction.insert).toHaveBeenCalledWith('Original text')
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
   })
 
-  it('opens actions on Ctrl+Enter with original text and ignores Alt+Enter', () => {
+  it('opens actions on Tab with original text and ignores other Enters', () => {
     press('Enter', { altKey: true })
-    expect(mocks.correction.insert).not.toHaveBeenCalled()
     press('Enter', { ctrlKey: true })
+    expect(mocks.correction.insert).not.toHaveBeenCalled()
+    expect(mocks.modals.nextModal).not.toHaveBeenCalled()
+    press('Tab')
     expect(mocks.modals.nextModal).toHaveBeenCalledWith('insert', {
       text: 'Original text',
     })
@@ -124,21 +126,22 @@ describe('quick input screen', () => {
     reactive(mocks.modals).pendingModal = {}
     await nextTick()
     press('Enter')
-    press('Enter', { ctrlKey: true })
+    press('Tab')
     expect(mocks.correction.insert).not.toHaveBeenCalled()
     expect(mocks.modals.nextModal).not.toHaveBeenCalled()
     press('Escape')
     expect(mocks.modals.cancelPending).toHaveBeenCalledOnce()
   })
 
-  it('honors reassignment and updates the hint', async () => {
-    reactive(mocks.params).userConfig.quickInputHotkeys = { next: 'Ctrl+D' }
+  it('sends with Ctrl+Enter in that mode and updates the hint', async () => {
+    reactive(mocks.params).userConfig.submitKey = 'ctrlEnter'
     await nextTick()
-    press('Tab')
-    expect(mocks.modals.nextModal).not.toHaveBeenCalled()
-    press('KeyD', { ctrlKey: true })
-    expect(mocks.modals.nextModal).toHaveBeenCalledOnce()
-    expect(wrapper.text()).toContain('Ctrl+D')
+    press('Enter')
+    expect(mocks.correction.insert).not.toHaveBeenCalled()
+    expect(mocks.writer.setValue).toHaveBeenCalledOnce()
+    press('Enter', { ctrlKey: true })
+    expect(mocks.correction.insert).toHaveBeenCalledWith('Original text')
+    expect(wrapper.text()).toContain('Ctrl+Enter')
   })
 
   it('ignores composition and repeated submission keys', () => {

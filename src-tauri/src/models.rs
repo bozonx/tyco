@@ -131,13 +131,7 @@ pub fn default_user_config() -> Value {
       "selectionReplace": {
         "whenEmpty": "nothing"
       },
-      "quickInputHotkeys": {
-        "correctAndInsert": "Enter",
-        "next": "Ctrl+Enter",
-        "insertWithoutCorrection": "",
-        "newline": "Shift+Enter",
-        "cancel": "Esc"
-      },
+      "submitKey": "enter",
       "quickCorrectionPrefetch": false,
       "quickHideOnBlur": true,
       "theme": "auto",

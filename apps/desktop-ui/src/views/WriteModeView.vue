@@ -21,7 +21,7 @@
         @mousedown.prevent
         @click="nextFromHint"
       >
-        <KeyButton>{{ hotkeys.next }}</KeyButton>
+        <KeyButton>Tab</KeyButton>
         <span>{{ t('write.next') }}</span>
       </button>
       <span class="opacity-40">•</span>
@@ -41,7 +41,7 @@
         @mousedown.prevent
         @click="cancelFromHint"
       >
-        <KeyButton>{{ cancelShortcutLabel }}</KeyButton>
+        <KeyButton>Esc</KeyButton>
         <span>{{ t('write.cancel') }}</span>
       </button>
     </p>
@@ -53,9 +53,11 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import {
-  resolveQuickInputHotkeys,
-  resolveQuickInputKeyAction,
-} from '../lib/quick-input/quick-input-keys'
+  newlineShortcut,
+  resolveInputKeyAction,
+  resolveSubmitKey,
+  submitShortcut,
+} from '../lib/input-keys/input-keys'
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionStore } from '../stores/correction'
 import { useIpcStore } from '../stores/ipc'
@@ -69,17 +71,14 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionStore = useCorrectionStore()
 const { t } = useI18n()
-const hotkeys = computed(() =>
-  resolveQuickInputHotkeys(ipcStore.params?.userConfig?.quickInputHotkeys)
+const submitKey = computed(() =>
+  resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
 )
 const prefetch = computed(
   () => ipcStore.params?.userConfig?.quickCorrectionPrefetch === true
 )
-const submitShortcutLabel = computed(() => hotkeys.value.correctAndInsert)
-const newlineShortcutLabel = computed(() => hotkeys.value.newline)
-const cancelShortcutLabel = computed(() =>
-  hotkeys.value.cancel === 'Escape' ? 'Esc' : hotkeys.value.cancel
-)
+const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
+const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
 
 const containerRef = ref<HTMLElement | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
@@ -179,7 +178,7 @@ const acceptsInput = () =>
 
 function submitFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
-  submit(true)
+  submit()
 }
 
 function nextFromHint() {
@@ -211,7 +210,7 @@ async function insertNewline() {
 function handleKeyDown(event: KeyboardEvent) {
   if (!acceptsInput()) return
 
-  const action = resolveQuickInputKeyAction(event, hotkeys.value)
+  const action = resolveInputKeyAction(event, submitKey.value)
 
   // Cancellation drops the text and closes the window, including while
   // waiting for correction.
@@ -229,12 +228,12 @@ function handleKeyDown(event: KeyboardEvent) {
   if (action !== 'none') {
     event.preventDefault()
     if (event.repeat) return
-    if (action === 'next') nextFromHint()
+    if (action === 'actions') nextFromHint()
     else if (action === 'newline') void insertNewline()
-    else submit(action === 'correctAndInsert')
+    else submit()
     return
   }
-  // Enter has no implicit submission or newline behavior when reassigned.
+  // the unused Enter variant neither sends nor breaks the line
   if (event.code === 'Enter' && !event.isComposing) event.preventDefault()
 
   if (
@@ -262,10 +261,10 @@ onUnmounted(() => {
   correctionStore.cancelSpeculation()
 })
 
-function submit(correct: boolean) {
+function submit() {
   const text = writerInputStore.value
   writerInputStore.rememberSubmitted(text)
-  void correctionStore.insert(text, correct)
+  void correctionStore.insert(text)
 }
 </script>
 

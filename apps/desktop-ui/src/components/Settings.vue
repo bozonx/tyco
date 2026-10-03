@@ -352,6 +352,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { syncI18nLocale } from '../lib/i18n'
+import { resolveSubmitKey } from '../lib/input-keys/input-keys'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
   AUTO_LANGUAGE_VALUE,
@@ -362,7 +363,6 @@ import {
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
-import { resolveQuickInputHotkeys } from '../lib/quick-input/quick-input-keys'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import {
   DICTATION_LANGUAGE_MULTI,
@@ -637,7 +637,8 @@ function normalizeHotkeysConfig(config: Record<string, any>) {
   config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
   delete config.hotkeys?.history
   delete config.hotkeys?.config
-  config.quickInputHotkeys = resolveQuickInputHotkeys(config.quickInputHotkeys)
+  config.submitKey = resolveSubmitKey(config.submitKey)
+  delete config.quickInputHotkeys
   delete config.quickInputSubmit
   delete config.quickCorrection
   config.selectionHotkeys = {

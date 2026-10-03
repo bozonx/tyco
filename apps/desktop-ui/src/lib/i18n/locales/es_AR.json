@@ -328,16 +328,11 @@
     "externalMethodsHint": "Usá este comando desde una terminal, un script o un atajo del sistema. El cliente tyco-ctl debe estar instalado y disponible en PATH. Linux también admite D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "copyActivationCommand": "Copiar comando",
     "appHotkeysTitle": "Atajos de la aplicación",
-    "appHotkeysHint": "Estos atajos funcionan cuando la pantalla correspondiente de Tyco está activa. Seleccioná un campo y presioná una nueva combinación.",
-    "hotkeyUnassigned": "Sin asignar",
-    "clearShortcut": "Quitar",
-    "appHotkeyConflict": "Este atajo ya está asignado a: {action}",
-    "quickInputActions": {
-      "correctAndInsert": "Corregir e insertar en la ventana anterior",
-      "next": "Abrir acciones (todas las ventanas)",
-      "insertWithoutCorrection": "Insertar sin corregir",
-      "newline": "Nueva línea",
-      "cancel": "Cancelar y cerrar"
+    "appHotkeysHint": "Se aplica a la entrada rápida y al chat. En la entrada rápida Tab abre las acciones y Esc cancela; en el editor Ctrl+Enter abre las acciones rápidas.",
+    "submitKey": {
+      "label": "Enviar texto con",
+      "enter": "Enter (Shift+Enter para nueva línea)",
+      "ctrlEnter": "Ctrl+Enter (Enter para nueva línea)"
     },
     "selectionActions": {
       "title": "Reemplazar la selección",
@@ -402,6 +397,7 @@
   },
   "menu": {
     "insert": "Insertar",
+    "replaceInEditor": "Reemplazar en el editor",
     "translate": "Traducir",
     "aiTask": "Tarea de IA",
     "voiceRecognition": "Reconocimiento de voz",
@@ -471,7 +467,7 @@
     "retry": "Reintentar",
     "generating": "Generando una respuesta",
     "editorContext": "Contexto del editor",
-    "inputHint": "Enter para enviar · Shift+Enter para una nueva línea",
+    "inputHint": "{send} para enviar · {newline} para nueva línea",
     "scrollToBottom": "Desplazarse al final",
     "searchChats": "Buscar chats",
     "renameChat": "Renombrar chat",
