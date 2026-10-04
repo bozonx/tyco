@@ -2,6 +2,7 @@ import { shallowRef } from 'vue'
 
 import type {
   MainActionConfig,
+  ScriptActionRequest,
   ScriptExecutionResult,
   WebhookMainAction,
 } from '@tyco/shared'
@@ -47,24 +48,18 @@ export interface ActionMenuDependencies {
   mainActionRegistrations?: () => readonly string[] | undefined
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
   closeWindow?: () => void
+  /** A toast with `messageKey` translated and `detail` after it */
+  showError?: (messageKey: string, detail?: string) => void
+  /** Opens the action menu on `text`, the result of an action on `sourceText` */
+  showResultMenu?: (text: string, sourceText: string) => void
   executeScriptAction?: (
-    name: string,
-    command: string,
-    text: string,
-    logOutput?: boolean,
-    executionType?: 'command' | 'script',
-    args?: string,
-    workingDir?: string
+    request: ScriptActionRequest
   ) => Promise<ScriptExecutionResult>
-  logCustomAction?: (
-    name: string,
-    actionType: string,
-    details: string
-  ) => Promise<void>
+  /** Resolves with the response body */
   executeWebhookAction?: (
     action: WebhookMainAction,
     text: string
-  ) => Promise<void>
+  ) => Promise<string>
 }
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {

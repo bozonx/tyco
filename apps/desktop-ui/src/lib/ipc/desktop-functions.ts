@@ -10,6 +10,7 @@ import type {
   StatusOverlayRequest,
   StorageInfo,
   UserConfig,
+  ScriptActionRequest,
   ScriptExecutionResult,
 } from '@tyco/shared'
 
@@ -81,15 +82,7 @@ export interface DesktopFunctions {
     result: string
   }
   executeScriptAction: {
-    args: [
-      name: string,
-      command: string,
-      text: string,
-      logOutput?: boolean,
-      executionType?: 'command' | 'script',
-      args?: string,
-      workingDir?: string,
-    ]
+    args: [request: ScriptActionRequest]
     result: ScriptExecutionResult
   }
   pickScriptFile: { args: []; result: string | null }

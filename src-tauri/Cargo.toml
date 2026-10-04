@@ -38,6 +38,7 @@ tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 tyco-activation-protocol = { path = "crates/activation-protocol" }
 url = "2"
 zbus = "4"
+tauri-plugin-dialog = "2.7.2"
 
 [dev-dependencies]
 evdev = "0.13"

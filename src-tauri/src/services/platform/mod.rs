@@ -5,6 +5,7 @@
 mod foreground_context;
 mod panel_surface;
 pub mod session;
+pub mod shell;
 mod shortcut_settings;
 mod text_injector;
 mod titlebar;

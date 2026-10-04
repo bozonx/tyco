@@ -105,6 +105,7 @@ fn spawn_x11_tracker(app: tauri::AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(logger_plugin())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(single_instance(|app, args, _cwd| {
             if let Err(error) = activate_from_args(app, &args) {
                 log::error!("CLI activation failed: {error}");

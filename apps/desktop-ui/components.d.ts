@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     ActionOverlayLayout: typeof import('./src/components/common/ActionOverlayLayout.vue')['default']
     ActionSelectModal: typeof import('./src/components/menu/ActionSelectModal.vue')['default']
+    ActionTemplateField: typeof import('./src/components/settings/ActionTemplateField.vue')['default']
     AiChat: typeof import('./src/components/AiChat.vue')['default']
     AiTaskMenu: typeof import('./src/components/menu/AiTaskMenu.vue')['default']
     AudioWaveform: typeof import('./src/components/voice/AudioWaveform.vue')['default']
@@ -23,6 +24,7 @@ declare module 'vue' {
     ChatItem: typeof import('./src/components/common/ChatItem.vue')['default']
     ChatSidebar: typeof import('./src/components/chat/ChatSidebar.vue')['default']
     ContentPadding: typeof import('./src/components/common/ContentPadding.vue')['default']
+    CustomActionFields: typeof import('./src/components/settings/CustomActionFields.vue')['default']
     Diff: typeof import('./src/components/common/Diff.vue')['default']
     DiffInput: typeof import('./src/components/common/DiffInput.vue')['default']
     DiffMenu: typeof import('./src/components/menu/DiffMenu.vue')['default']

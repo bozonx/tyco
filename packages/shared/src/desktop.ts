@@ -199,9 +199,22 @@ export const DESKTOP_COMMANDS = {
 export type DesktopCommandName =
   (typeof DESKTOP_COMMANDS)[keyof typeof DESKTOP_COMMANDS]
 
+/** A script action to run; see `execute_script_action` */
+export interface ScriptActionRequest {
+  name: string
+  command: string
+  workingDir?: string
+  text: string
+  /** The output is used: the command is waited for longer */
+  captureOutput: boolean
+  logOutput: boolean
+}
+
 export interface ScriptExecutionResult {
   success: boolean
   exitCode: number | null
   stdout: string
   stderr: string
+  /** The command did not finish while waited for and keeps running */
+  running: boolean
 }

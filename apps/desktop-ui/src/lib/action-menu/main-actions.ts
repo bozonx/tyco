@@ -1,4 +1,6 @@
 import {
+  CUSTOM_ACTION_AFTER_RUN,
+  type CustomActionAfterRun,
   DEFAULT_MAIN_ACTIONS,
   STANDARD_ACTION_IDS,
   type MainActionConfig,
@@ -13,6 +15,23 @@ const standardActionIds = new Set<string>(STANDARD_ACTION_IDS)
 
 export function isStandardActionId(value: unknown): value is StandardActionId {
   return typeof value === 'string' && standardActionIds.has(value)
+}
+
+const stringOr = (value: unknown): string =>
+  typeof value === 'string' ? value : ''
+
+const afterRunOf = (value: unknown): CustomActionAfterRun =>
+  CUSTOM_ACTION_AFTER_RUN.includes(value as CustomActionAfterRun)
+    ? (value as CustomActionAfterRun)
+    : 'none'
+
+function headersOf(value: unknown): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string'
+    )
+  )
 }
 
 export function normalizeMainActions(
@@ -36,8 +55,10 @@ export function normalizeMainActions(
       return {
         type: 'script',
         id: item.id,
-        name: typeof item.name === 'string' ? item.name : '',
-        command: typeof item.command === 'string' ? item.command : '',
+        name: stringOr(item.name),
+        command: stringOr(item.command),
+        workingDir: stringOr(item.workingDir),
+        afterRun: afterRunOf(item.afterRun),
         logOutput: Boolean(item.logOutput),
       }
     }
@@ -49,17 +70,13 @@ export function normalizeMainActions(
       return {
         type: 'webhook',
         id: item.id,
-        name: typeof item.name === 'string' ? item.name : '',
-        url: typeof item.url === 'string' ? item.url : '',
+        name: stringOr(item.name),
+        url: stringOr(item.url),
         method: item.method === 'GET' ? 'GET' : 'POST',
-        headers:
-          item.headers && typeof item.headers === 'object'
-            ? item.headers
-            : undefined,
-        payloadTemplate:
-          typeof item.payloadTemplate === 'string'
-            ? item.payloadTemplate
-            : undefined,
+        headers: headersOf(item.headers),
+        payloadTemplate: stringOr(item.payloadTemplate),
+        authSecret: Boolean(item.authSecret),
+        afterRun: afterRunOf(item.afterRun),
         logOutput: Boolean(item.logOutput),
       }
     }

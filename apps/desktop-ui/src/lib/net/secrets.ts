@@ -20,6 +20,18 @@ export function secretRef(id: string): string {
   return SECRET_REF_PREFIX + id
 }
 
+/** The origin a secret for `value` is bound to; null for a non-http(s) URL */
+export function httpOrigin(value: string | undefined): string | null {
+  try {
+    const url = new URL(value?.trim() ?? '')
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.origin
+      : null
+  } catch {
+    return null
+  }
+}
+
 export interface SecretsClient {
   status: () => Promise<SecretsStatus>
   /**

@@ -1,222 +1,343 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ScriptMainAction, WebhookMainAction } from '@tyco/shared'
+import type {
+  ScriptExecutionResult,
+  ScriptMainAction,
+  WebhookMainAction,
+} from '@tyco/shared'
 
 import type { ActionMenuDependencies } from './action-menu-store'
 import {
+  buildWebhookRequest,
   createScriptActionItem,
   createWebhookActionItem,
   executeWebhookAction,
+  fillJsonTemplate,
+  scriptFailureDetail,
+  webhookResultText,
 } from './custom-actions'
 
-describe('custom-actions', () => {
-  describe('executeWebhookAction', () => {
-    it('sends POST request with standard JSON payload', async () => {
-      const fetchFn = vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          status: 200,
-          text: () => Promise.resolve('ok'),
-        })
+const okResponse = (body = 'ok') => ({
+  ok: true,
+  status: 200,
+  statusText: 'OK',
+  text: () => Promise.resolve(body),
+})
 
-      const action: WebhookMainAction = {
-        type: 'webhook',
-        id: 'wh-1',
-        name: 'My Webhook',
-        url: 'https://api.example.com/endpoint',
-      }
+const webhook = (
+  extra: Partial<WebhookMainAction> = {}
+): WebhookMainAction => ({
+  type: 'webhook',
+  id: 'wh-1',
+  name: 'My Webhook',
+  url: 'https://api.example.com/endpoint',
+  ...extra,
+})
 
-      await executeWebhookAction(action, 'test text', fetchFn as any)
+const script = (extra: Partial<ScriptMainAction> = {}): ScriptMainAction => ({
+  type: 'script',
+  id: 's-1',
+  name: 'Echo',
+  command: 'echo 123',
+  ...extra,
+})
 
-      expect(fetchFn).toHaveBeenCalledTimes(1)
-      const [url, init] = fetchFn.mock.calls[0]
-      expect(url).toBe('https://api.example.com/endpoint')
-      expect(init.method).toBe('POST')
-      expect(init.headers['content-type']).toContain('application/json')
+const result = (
+  extra: Partial<ScriptExecutionResult> = {}
+): ScriptExecutionResult => ({
+  success: true,
+  exitCode: 0,
+  stdout: '',
+  stderr: '',
+  running: false,
+  ...extra,
+})
 
-      const body = JSON.parse(init.body)
-      expect(body.text).toBe('test text')
-      expect(body.action).toBe('My Webhook')
-      expect(body.source).toBe('tyco')
-    })
+function makeDeps(extra: Partial<ActionMenuDependencies> = {}) {
+  return {
+    showToast: vi.fn(),
+    showError: vi.fn(),
+    showResultMenu: vi.fn(),
+    saveOutput: vi.fn().mockResolvedValue(undefined),
+    closeWindow: vi.fn(),
+    ...extra,
+  } as unknown as ActionMenuDependencies & {
+    showToast: ReturnType<typeof vi.fn>
+    showError: ReturnType<typeof vi.fn>
+    showResultMenu: ReturnType<typeof vi.fn>
+    closeWindow: ReturnType<typeof vi.fn>
+  }
+}
 
-    it('sends GET request with query parameter', async () => {
-      const fetchFn = vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          status: 200,
-          text: () => Promise.resolve('ok'),
-        })
+describe('fillJsonTemplate', () => {
+  const text = 'say "hi"\nnow \\ {{TEXT}}'
 
-      const action: WebhookMainAction = {
-        type: 'webhook',
-        id: 'wh-get',
-        name: 'Get Hook',
-        method: 'GET',
-        url: 'https://api.example.com/trigger',
-      }
+  it('escapes the text inside a JSON string', () => {
+    const body = fillJsonTemplate('{"text":"{{TEXT}}","n":1}', text)
+    expect(JSON.parse(body)).toEqual({ text, n: 1 })
+  })
 
-      await executeWebhookAction(action, 'hello world', fetchFn as any)
+  it('escapes the text inside a longer JSON string', () => {
+    const body = fillJsonTemplate('{"text":"> {{TEXT}} <"}', text)
+    expect(JSON.parse(body)).toEqual({ text: `> ${text} <` })
+  })
 
-      expect(fetchFn).toHaveBeenCalledTimes(1)
-      const [url, init] = fetchFn.mock.calls[0]
-      expect(url).toBe('https://api.example.com/trigger?text=hello+world')
-      expect(init.method).toBe('GET')
-      expect(init.body).toBeUndefined()
-    })
+  it('makes a JSON string of a bare placeholder', () => {
+    const body = fillJsonTemplate('{"text": {{TEXT}}}', text)
+    expect(JSON.parse(body)).toEqual({ text })
+  })
+})
 
-    it('interpolates {text} into custom payload template', async () => {
-      const fetchFn = vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          status: 200,
-          text: () => Promise.resolve(''),
-        })
-
-      const action: WebhookMainAction = {
-        type: 'webhook',
-        id: 'wh-2',
-        name: 'Slack Hook',
-        url: 'https://hooks.slack.com/services/xyz',
-        payloadTemplate: '{"text":"{text}","channel":"#general"}',
-      }
-
-      await executeWebhookAction(action, 'hello slack', fetchFn as any)
-
-      const [, init] = fetchFn.mock.calls[0]
-      expect(init.body).toBe('{"text":"hello slack","channel":"#general"}')
-    })
-
-    it('throws error when response is not ok', async () => {
-      const fetchFn = vi
-        .fn()
-        .mockResolvedValue({
-          ok: false,
-          status: 500,
-          statusText: 'Internal Server Error',
-        })
-
-      const action: WebhookMainAction = {
-        type: 'webhook',
-        id: 'wh-3',
-        name: 'Failing Hook',
-        url: 'https://api.example.com/fail',
-      }
-
-      await expect(
-        executeWebhookAction(action, 'test', fetchFn as any)
-      ).rejects.toThrow('Webhook failed with status 500')
+describe('buildWebhookRequest', () => {
+  it('sends the default JSON payload with POST', () => {
+    const { url, init } = buildWebhookRequest(webhook(), 'test text')
+    expect(url).toBe('https://api.example.com/endpoint')
+    expect(init.method).toBe('POST')
+    expect(init.headers['content-type']).toContain('application/json')
+    const body = JSON.parse(init.body as string)
+    expect(body).toMatchObject({
+      text: 'test text',
+      action: 'My Webhook',
+      source: 'tyco',
     })
   })
 
-  describe('createScriptActionItem', () => {
-    it('warns when command is empty', async () => {
-      const showToast = vi.fn()
-      const saveOutput = vi.fn().mockResolvedValue(undefined)
-      const executeScriptAction = vi.fn()
+  it('sends a template that is not JSON as plain text', () => {
+    const { init } = buildWebhookRequest(
+      webhook({ payloadTemplate: 'Text: {{TEXT}}' }),
+      'a'
+    )
+    expect(init.body).toBe('Text: "a"')
+    expect(init.headers['content-type']).toContain('text/plain')
+  })
 
-      const deps: Partial<ActionMenuDependencies> = {
-        showToast,
-        saveOutput,
-        executeScriptAction,
-      }
+  it('adds the text as a query parameter with GET', () => {
+    const { url, init } = buildWebhookRequest(
+      webhook({ method: 'GET', url: 'https://api.example.com/trigger' }),
+      'hello world'
+    )
+    expect(url).toBe('https://api.example.com/trigger?text=hello+world')
+    expect(init.body).toBeUndefined()
+    expect(init.headers['content-type']).toBeUndefined()
+  })
 
-      const item: ScriptMainAction = {
-        type: 'script',
-        id: 's-1',
-        name: 'Empty Script',
-        command: '   ',
-      }
+  it('puts the text where the URL has a placeholder', () => {
+    const { url } = buildWebhookRequest(
+      webhook({ method: 'GET', url: 'https://x.test/?q={{TEXT}}&a=1' }),
+      'a&b'
+    )
+    expect(url).toBe('https://x.test/?q=a%26b&a=1')
+  })
 
-      const actionItem = createScriptActionItem(item, deps as any)
-      await actionItem.action('sample input')
+  it('adds the custom headers and the secret Authorization', () => {
+    const { init } = buildWebhookRequest(
+      webhook({
+        id: 'ABC',
+        headers: { 'X-Token': 't', ' ': 'skip' },
+        authSecret: true,
+      }),
+      'a'
+    )
+    expect(init.headers['x-token']).toBe('t')
+    expect(init.headers[' ']).toBeUndefined()
+    expect(init.headers.authorization).toBe('tyco-secret:webhook-abc')
+  })
+})
 
-      expect(saveOutput).toHaveBeenCalledWith('sample input')
-      expect(showToast).toHaveBeenCalledWith('toast.scriptEmptyCommand', 'warn')
-      expect(executeScriptAction).not.toHaveBeenCalled()
-    })
+describe('webhookResultText', () => {
+  it('takes the text field of a JSON answer', () => {
+    expect(webhookResultText('{"text":"done"}')).toBe('done')
+  })
 
-    it('executes command and reports success', async () => {
-      const showToast = vi.fn()
-      const saveOutput = vi.fn().mockResolvedValue(undefined)
-      const closeWindow = vi.fn()
-      const executeScriptAction = vi
-        .fn()
-        .mockResolvedValue({
-          success: true,
-          exitCode: 0,
-          stdout: 'done',
-          stderr: '',
-        })
+  it('takes any other body as it is', () => {
+    expect(webhookResultText('{"result":1}')).toBe('{"result":1}')
+    expect(webhookResultText('plain')).toBe('plain')
+  })
+})
 
-      const deps: Partial<ActionMenuDependencies> = {
-        showToast,
-        saveOutput,
-        closeWindow,
-        executeScriptAction,
-      }
+describe('executeWebhookAction', () => {
+  it('resolves with the response body', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(okResponse('answer'))
+    await expect(
+      executeWebhookAction(webhook(), 'test', fetchFn as never)
+    ).resolves.toBe('answer')
+    expect(fetchFn.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
+  })
 
-      const item: ScriptMainAction = {
-        type: 'script',
-        id: 's-2',
-        name: 'Echo Script',
-        command: 'echo 123',
-        executionType: 'command',
-        workingDir: '/tmp',
-        logOutput: true,
-      }
-
-      const actionItem = createScriptActionItem(item, deps as any)
-      await actionItem.action('sample input')
-
-      expect(executeScriptAction).toHaveBeenCalledWith(
-        'Echo Script',
-        'echo 123',
-        'sample input',
-        true,
-        'command',
-        undefined,
-        '/tmp'
+  it('fails on an error status and logs the template URL', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: () => Promise.resolve('boom'),
+      })
+    const log = vi.fn().mockResolvedValue(undefined)
+    await expect(
+      executeWebhookAction(
+        webhook({ url: 'https://x.test/{{TEXT}}', logOutput: true }),
+        'private',
+        fetchFn as never,
+        log
       )
-      expect(showToast).toHaveBeenCalledWith('toast.scriptSuccess', 'success')
-      expect(closeWindow).toHaveBeenCalled()
-    })
+    ).rejects.toThrow('HTTP 500 Internal Server Error')
+    expect(log).toHaveBeenCalledTimes(1)
+    expect(log.mock.calls[0][2]).toContain('URL: https://x.test/{{TEXT}}')
+    expect(log.mock.calls[0][2]).not.toContain('private')
+  })
+})
 
-    it('uses script icon and fallback name for script execution type', () => {
-      const item: ScriptMainAction = {
-        type: 'script',
-        id: 's-3',
-        name: '',
-        command: '/usr/local/bin/my-script',
-        executionType: 'script',
-      }
-      const actionItem = createScriptActionItem(item, {} as any)
-      expect(actionItem.icon).toBe('mdi:script-text-outline')
-      expect(actionItem.name).toBe('Script')
-    })
+describe('scriptFailureDetail', () => {
+  it('takes the first line of stderr', () => {
+    expect(
+      scriptFailureDetail(
+        result({ success: false, stderr: '\nsh: foo: not found\nmore' })
+      )
+    ).toBe('sh: foo: not found')
   })
 
-  describe('createWebhookActionItem', () => {
-    it('warns when url is empty', async () => {
-      const showToast = vi.fn()
-      const saveOutput = vi.fn().mockResolvedValue(undefined)
+  it('falls back to the exit code', () => {
+    expect(scriptFailureDetail(result({ success: false, exitCode: 2 }))).toBe(
+      'exit code 2'
+    )
+  })
+})
 
-      const deps: Partial<ActionMenuDependencies> = { showToast, saveOutput }
+describe('createScriptActionItem', () => {
+  it('warns when the command is empty', async () => {
+    const executeScriptAction = vi.fn()
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script({ command: '  ' }), deps).action('x')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.scriptEmptyCommand',
+      'warn'
+    )
+    expect(executeScriptAction).not.toHaveBeenCalled()
+  })
 
-      const item: WebhookMainAction = {
-        type: 'webhook',
-        id: 'w-1',
-        name: 'Empty Hook',
-        url: '',
-      }
+  it('runs the command and closes the window', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result())
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(
+      script({ workingDir: ' /tmp ', logOutput: true }),
+      deps
+    ).action('input')
 
-      const actionItem = createWebhookActionItem(item, deps as any)
-      await actionItem.action('sample input')
-
-      expect(showToast).toHaveBeenCalledWith('toast.webhookEmptyUrl', 'warn')
+    expect(executeScriptAction).toHaveBeenCalledWith({
+      name: 'Echo',
+      command: 'echo 123',
+      workingDir: '/tmp',
+      text: 'input',
+      captureOutput: false,
+      logOutput: true,
     })
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.scriptSuccess',
+      'success'
+    )
+    expect(deps.closeWindow).toHaveBeenCalled()
+  })
+
+  it('reports a command left running in the background', async () => {
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue(result({ success: false, running: true }))
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script(), deps).action('input')
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.scriptRunning',
+      'success'
+    )
+    expect(deps.closeWindow).toHaveBeenCalled()
+  })
+
+  it('shows why the command failed and keeps the window', async () => {
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue(result({ success: false, stderr: 'bad thing' }))
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script(), deps).action('input')
+    expect(deps.showError).toHaveBeenCalledWith(
+      'toast.scriptFailed',
+      'bad thing'
+    )
+    expect(deps.closeWindow).not.toHaveBeenCalled()
+  })
+
+  it('shows an error the backend returned', async () => {
+    const executeScriptAction = vi
+      .fn()
+      .mockRejectedValue(new Error('Working directory `x` does not exist'))
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script(), deps).action('input')
+    expect(deps.showError).toHaveBeenCalledWith(
+      'toast.scriptFailed',
+      'Working directory `x` does not exist'
+    )
+  })
+
+  it('opens the action menu on the output', async () => {
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue(result({ stdout: 'UPPER\n' }))
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script({ afterRun: 'showMenu' }), deps).action(
+      'upper'
+    )
+    expect(executeScriptAction.mock.calls[0][0].captureOutput).toBe(true)
+    expect(deps.showResultMenu).toHaveBeenCalledWith('UPPER', 'upper')
+    expect(deps.closeWindow).not.toHaveBeenCalled()
+  })
+
+  it('warns when there is no output to show', async () => {
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue(result({ stdout: '\n' }))
+    const deps = makeDeps({ executeScriptAction })
+    await createScriptActionItem(script({ afterRun: 'showMenu' }), deps).action(
+      'x'
+    )
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.actionEmptyOutput',
+      'warn'
+    )
+  })
+
+  it('falls back to the command as the name', () => {
+    const item = createScriptActionItem(script({ name: '' }), makeDeps())
+    expect(item.name).toBe('echo 123')
+  })
+})
+
+describe('createWebhookActionItem', () => {
+  it('warns when the url is empty', async () => {
+    const deps = makeDeps()
+    await createWebhookActionItem(webhook({ url: '' }), deps).action('x')
+    expect(deps.showToast).toHaveBeenCalledWith('toast.webhookEmptyUrl', 'warn')
+  })
+
+  it('opens the action menu on the answer', async () => {
+    const executeWebhookAction = vi.fn().mockResolvedValue('{"text":"done"}')
+    const deps = makeDeps({ executeWebhookAction })
+    await createWebhookActionItem(
+      webhook({ afterRun: 'showMenu' }),
+      deps
+    ).action('x')
+    expect(deps.showResultMenu).toHaveBeenCalledWith('done', 'x')
+  })
+
+  it('shows why the request failed', async () => {
+    const executeWebhookAction = vi
+      .fn()
+      .mockRejectedValue(new Error('HTTP 404'))
+    const deps = makeDeps({ executeWebhookAction })
+    await createWebhookActionItem(webhook(), deps).action('x')
+    expect(deps.showError).toHaveBeenCalledWith(
+      'toast.webhookFailed',
+      'HTTP 404'
+    )
+    expect(deps.closeWindow).not.toHaveBeenCalled()
   })
 })

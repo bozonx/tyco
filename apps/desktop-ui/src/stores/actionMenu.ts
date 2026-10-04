@@ -8,6 +8,7 @@ import {
   createActionMenuStoreModel,
 } from '../lib/action-menu/action-menu-store'
 import { executeWebhookAction } from '../lib/action-menu/custom-actions'
+import { translate } from '../lib/i18n'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useChatStore } from './chat'
@@ -25,7 +26,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const historyStore = useHistoryStore()
   const appConfig = computed(() => ipcStore.params.appConfig)
   const correctionStore = useCorrectionStore()
-  const { toast } = useToast()
+  const { toast, toastText } = useToast()
   const chatStore = useChatStore()
 
   return createActionMenuStoreModel({
@@ -58,51 +59,30 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
     },
-    executeScriptAction: async (
-      name,
-      command,
-      text,
-      logOutput,
-      executionType,
-      args,
-      workingDir
-    ) => {
-      const res = await ipcStore.callFunctionOrNotify('executeScriptAction', [
-        name,
-        command,
-        text,
-        Boolean(logOutput),
-        executionType,
-        args,
-        workingDir,
-      ])
-      if (res.success && res.result) {
-        return res.result
-      }
-      return {
-        success: false,
-        exitCode: null,
-        stdout: '',
-        stderr: res.error ?? '',
-      }
+    showError: (messageKey, detail) => {
+      toastText(
+        detail ? `${translate(messageKey)}: ${detail}` : translate(messageKey),
+        'error'
+      )
     },
-    logCustomAction: async (name, actionType, details) => {
-      await ipcStore.callFunction('logCustomAction', [
-        name,
-        actionType,
-        details,
-      ])
+    showResultMenu: (text, sourceText) => {
+      menuModalsStore.nextModal(MenuModals.PREVIEW, { text, sourceText })
     },
-    executeWebhookAction: async (action, text) => {
-      const fetchFn = createTauriFetch(tauriNetIpc)
-      await executeWebhookAction(
+    executeScriptAction: async (request) => {
+      const res = await ipcStore.callFunction('executeScriptAction', [request])
+      if (!res.success || !res.result) {
+        throw new Error(res.error ?? 'Empty response')
+      }
+      return res.result
+    },
+    executeWebhookAction: (action, text) =>
+      executeWebhookAction(
         action,
         text,
-        fetchFn,
+        createTauriFetch(tauriNetIpc),
         async (name, type, details) => {
           await ipcStore.callFunction('logCustomAction', [name, type, details])
         }
-      )
-    },
+      ),
   })
 })

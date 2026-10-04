@@ -1,12 +1,38 @@
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::time::Instant;
+use std::process::{Child, ChildStderr, ChildStdout, Stdio};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
+use tauri_plugin_dialog::DialogExt;
 
 use crate::errors::AppError;
+use crate::services::platform::shell;
+
+/// Stands in for the text in a command; see `shell::substitute`.
+pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
+/// The text also comes to the command in this variable and on stdin.
+pub const TEXT_ENV_VAR: &str = "TYCO_TEXT";
+
+/// How long a command whose output is needed may run before it is killed.
+const OUTPUT_TIMEOUT: Duration = Duration::from_secs(60);
+/// How long a command whose output is not needed is waited for. One still
+/// running by then, e.g. a GUI app it started, is left in the background.
+const STATUS_WAIT: Duration = Duration::from_secs(3);
+/// How long the output is read after the command exits. A process it started
+/// in the background may hold the pipes open for good.
+const PIPE_GRACE: Duration = Duration::from_millis(500);
+const POLL_INTERVAL: Duration = Duration::from_millis(20);
+
+const MAX_OUTPUT_BYTES: usize = 1 << 20;
+const MAX_LOGGED_OUTPUT_BYTES: usize = 4 << 10;
+const MAX_LOG_FILE_BYTES: u64 = 5 << 20;
+const LOG_FILE_NAME: &str = "actions.log";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -15,13 +41,25 @@ pub struct ScriptExecutionResult {
     pub exit_code: Option<i32>,
     pub stdout: String,
     pub stderr: String,
+    /// The command did not finish while waited for and keeps running.
+    pub running: bool,
+}
+
+pub struct ScriptRequest<'a> {
+    pub name: &'a str,
+    pub command: &'a str,
+    pub working_dir: Option<&'a str>,
+    pub text: &'a str,
+    /// The caller uses the output: the command is waited for longer and
+    /// killed if it does not finish in time.
+    pub capture_output: bool,
+    pub log_output: bool,
 }
 
 pub fn format_timestamp() -> String {
-    let secs = match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
-        Ok(duration) => duration.as_secs(),
-        Err(_) => 0,
-    };
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_secs());
 
     let days = secs / 86400;
     let rem = secs % 86400;
@@ -44,27 +82,47 @@ pub fn format_timestamp() -> String {
 }
 
 pub fn expand_home_dir(path: &str) -> PathBuf {
+    let home = || shell::home_dir();
     if path == "~" {
-        if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
-            return PathBuf::from(home);
+        if let Some(home) = home() {
+            return home;
         }
-    } else if let Some(stripped) = path.strip_prefix("~/") {
-        if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
-            return PathBuf::from(home).join(stripped);
+    } else if let Some(stripped) = path.strip_prefix("~/").or_else(|| path.strip_prefix("~\\")) {
+        if let Some(home) = home() {
+            return home.join(stripped);
         }
     }
     PathBuf::from(path)
 }
 
+/// The directory a command runs in: the given one, or the home directory.
+pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>, AppError> {
+    let trimmed = working_dir.map(str::trim).unwrap_or_default();
+    if trimmed.is_empty() {
+        return Ok(shell::home_dir());
+    }
+    let path = expand_home_dir(trimmed);
+    if path.is_dir() {
+        Ok(Some(path))
+    } else {
+        Err(AppError::Message(format!(
+            "Working directory `{trimmed}` does not exist"
+        )))
+    }
+}
+
+/// Appends to `actions.log`, moving a full one to `actions.log.1` first.
 pub fn append_action_log(log_dir: &Path, entry: &str) -> std::io::Result<()> {
     fs::create_dir_all(log_dir)?;
-    let log_path = log_dir.join("actions.log");
+    let log_path = log_dir.join(LOG_FILE_NAME);
+    if fs::metadata(&log_path).is_ok_and(|meta| meta.len() > MAX_LOG_FILE_BYTES) {
+        fs::rename(&log_path, log_dir.join(format!("{LOG_FILE_NAME}.1")))?;
+    }
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(log_path)?;
-    file.write_all(entry.as_bytes())?;
-    Ok(())
+    file.write_all(entry.as_bytes())
 }
 
 pub fn log_custom_action(
@@ -78,443 +136,445 @@ pub fn log_custom_action(
         format_timestamp(),
         name,
         action_type,
-        details.trim(),
+        truncate(details.trim(), MAX_LOGGED_OUTPUT_BYTES),
         "=".repeat(80),
     );
     append_action_log(log_dir, &entry)
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn execute_script(
-    name: &str,
-    execution_type: Option<&str>,
-    command: &str,
-    args: Option<&str>,
-    working_dir: Option<&str>,
-    text: &str,
+fn truncate(text: &str, max_bytes: usize) -> String {
+    if text.len() <= max_bytes {
+        return text.to_string();
+    }
+    let mut end = max_bytes;
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{}\n... ({} bytes more)", &text[..end], text.len() - end)
+}
+
+fn or_empty(text: &str) -> String {
+    let text = text.trim();
+    if text.is_empty() {
+        String::from("(empty)")
+    } else {
+        truncate(text, MAX_LOGGED_OUTPUT_BYTES)
+    }
+}
+
+type Buffer = Arc<Mutex<Vec<u8>>>;
+
+/// Reads a pipe into a buffer of bounded size; the receiver gets a message
+/// once the pipe is closed.
+fn spawn_reader(mut pipe: impl Read + Send + 'static, buffer: Buffer) -> Receiver<()> {
+    let (done, finished) = mpsc::channel();
+    thread::spawn(move || {
+        let mut chunk = [0u8; 8192];
+        while let Ok(read) = pipe.read(&mut chunk) {
+            if read == 0 {
+                break;
+            }
+            if let Ok(mut buffer) = buffer.lock() {
+                let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
+                buffer.extend_from_slice(&chunk[..read.min(room)]);
+            }
+        }
+        let _ = done.send(());
+    });
+    finished
+}
+
+fn read_buffer(buffer: &Buffer) -> String {
+    buffer
+        .lock()
+        .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+        .unwrap_or_default()
+}
+
+struct Running {
+    child: Child,
+    stdout: Buffer,
+    stderr: Buffer,
+    readers: Vec<Receiver<()>>,
+}
+
+impl Running {
+    fn start(
+        mut child: Child,
+        stdout: Option<ChildStdout>,
+        stderr: Option<ChildStderr>,
+        text: &str,
+    ) -> Self {
+        if let Some(mut stdin) = child.stdin.take() {
+            // a command that never reads stdin must not block the caller
+            let text = text.to_string();
+            thread::spawn(move || {
+                let _ = stdin.write_all(text.as_bytes());
+            });
+        }
+        let stdout_buffer = Buffer::default();
+        let stderr_buffer = Buffer::default();
+        let mut readers = Vec::new();
+        if let Some(pipe) = stdout {
+            readers.push(spawn_reader(pipe, stdout_buffer.clone()));
+        }
+        if let Some(pipe) = stderr {
+            readers.push(spawn_reader(pipe, stderr_buffer.clone()));
+        }
+        Self {
+            child,
+            stdout: stdout_buffer,
+            stderr: stderr_buffer,
+            readers,
+        }
+    }
+
+    /// Waits until the command exits or the deadline passes.
+    fn wait_until(
+        &mut self,
+        deadline: Instant,
+    ) -> std::io::Result<Option<std::process::ExitStatus>> {
+        loop {
+            if let Some(status) = self.child.try_wait()? {
+                return Ok(Some(status));
+            }
+            if Instant::now() >= deadline {
+                return Ok(None);
+            }
+            thread::sleep(POLL_INTERVAL);
+        }
+    }
+
+    fn finish(self, status: std::process::ExitStatus) -> ScriptExecutionResult {
+        let deadline = Instant::now() + PIPE_GRACE;
+        for reader in &self.readers {
+            let left = deadline.saturating_duration_since(Instant::now());
+            if let Err(RecvTimeoutError::Timeout) = reader.recv_timeout(left) {
+                break;
+            }
+        }
+        ScriptExecutionResult {
+            success: status.success(),
+            exit_code: status.code(),
+            stdout: read_buffer(&self.stdout),
+            stderr: read_buffer(&self.stderr),
+            running: false,
+        }
+    }
+}
+
+struct LogContext {
+    dir: Option<PathBuf>,
+    name: String,
+    command: String,
+    cwd: String,
     log_output: bool,
+    started: Instant,
+}
+
+impl LogContext {
+    fn write(&self, result: &ScriptExecutionResult, error: Option<&str>) {
+        let duration = self.started.elapsed();
+        if let Some(error) = error {
+            log::warn!("[Action: \"{}\"] {error}", self.name);
+        } else if result.success {
+            log::info!(
+                "[Action: \"{}\"] Finished in {duration:?} with exit code {:?}",
+                self.name,
+                result.exit_code
+            );
+        } else {
+            log::warn!(
+                "[Action: \"{}\"] Failed in {duration:?} with exit code {:?}",
+                self.name,
+                result.exit_code
+            );
+        }
+
+        let failed = error.is_some() || !result.success;
+        if !(self.log_output || failed) {
+            return;
+        }
+        let Some(dir) = &self.dir else { return };
+        let status = match (error, result.success) {
+            (Some(error), _) => format!("ERROR: {error}"),
+            (None, true) => String::from("SUCCESS"),
+            (None, false) => String::from("FAILED"),
+        };
+        // the command is logged as written: the text is the user's, not ours to keep
+        let entry = format!(
+            "[{}] [Action: \"{}\"] Status: {} (exit code: {:?}) Duration: {:?}\nCommand: {}\nCWD: {}\n--- stdout ---\n{}\n--- stderr ---\n{}\n{}\n",
+            format_timestamp(),
+            self.name,
+            status,
+            result.exit_code,
+            duration,
+            self.command,
+            self.cwd,
+            or_empty(&result.stdout),
+            or_empty(&result.stderr),
+            "=".repeat(80),
+        );
+        let _ = append_action_log(dir, &entry);
+    }
+}
+
+pub fn execute_script(
+    request: &ScriptRequest,
     log_dir: Option<&Path>,
 ) -> Result<ScriptExecutionResult, AppError> {
-    let start = Instant::now();
-
-    let substituted_command = command.replace("{text}", text);
-    let substituted_args = args.map(|a| a.replace("{text}", text));
-
-    let is_script_mode = matches!(execution_type, Some("script"));
-    let target_command = if is_script_mode {
-        let script_target = if substituted_command.contains(' ')
-            && !substituted_command.starts_with('"')
-            && !substituted_command.starts_with('\'')
-        {
-            format!("\"{substituted_command}\"")
-        } else {
-            substituted_command.clone()
-        };
-
-        match &substituted_args {
-            Some(a) if !a.trim().is_empty() => format!("{script_target} {a}"),
-            _ => script_target,
-        }
-    } else {
-        substituted_command.clone()
+    let mut log = LogContext {
+        dir: log_dir.map(Path::to_path_buf),
+        name: request.name.to_string(),
+        command: request.command.to_string(),
+        cwd: String::from("(default)"),
+        log_output: request.log_output,
+        started: Instant::now(),
+    };
+    let fail = |log: &LogContext, message: String| {
+        log.write(&empty_result(), Some(&message));
+        AppError::Message(message)
     };
 
-    #[cfg(target_os = "windows")]
-    let mut cmd = Command::new("powershell.exe");
-    #[cfg(target_os = "windows")]
-    cmd.args(["-NoProfile", "-Command", &target_command]);
+    let cwd =
+        resolve_working_dir(request.working_dir).map_err(|error| fail(&log, error.to_string()))?;
+    let script = shell::substitute(request.command, TEXT_PLACEHOLDER, request.text);
 
-    #[cfg(target_os = "macos")]
-    let mut cmd = Command::new("/bin/zsh");
-    #[cfg(target_os = "macos")]
-    cmd.args(["-c", &target_command]);
+    let mut command = shell::command(&script);
+    if let Some(cwd) = &cwd {
+        command.current_dir(cwd);
+        log.cwd = cwd.to_string_lossy().into_owned();
+    }
+    command
+        .env(TEXT_ENV_VAR, request.text)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
-    #[cfg(target_os = "linux")]
-    let mut cmd = Command::new("/bin/sh");
-    #[cfg(target_os = "linux")]
-    cmd.args(["-c", &target_command]);
+    let mut child = command
+        .spawn()
+        .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+    let mut running = Running::start(child, stdout, stderr, request.text);
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    let mut cmd = Command::new("sh");
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    cmd.args(["-c", &target_command]);
-
-    let resolved_cwd = if let Some(wd) = working_dir {
-        let trimmed = wd.trim();
-        if !trimmed.is_empty() {
-            let expanded = expand_home_dir(trimmed);
-            if expanded.is_dir() {
-                cmd.current_dir(&expanded);
-                Some(expanded.to_string_lossy().to_string())
-            } else {
-                log::warn!("[Action: \"{name}\"] Working directory `{trimmed}` not found, using process cwd");
-                None
-            }
-        } else {
-            None
-        }
+    let wait = if request.capture_output {
+        OUTPUT_TIMEOUT
     } else {
-        None
+        STATUS_WAIT
     };
+    let status = running
+        .wait_until(Instant::now() + wait)
+        .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
 
-    cmd.env("TYCO_TEXT", text);
-    cmd.env("TEXT", text);
-    cmd.stdin(Stdio::piped());
-    cmd.stdout(Stdio::piped());
-    cmd.stderr(Stdio::piped());
+    if let Some(status) = status {
+        let result = running.finish(status);
+        log.write(&result, None);
+        return Ok(result);
+    }
 
-    let mut child = cmd.spawn().map_err(|error| {
-        let msg = format!("Failed to spawn command `{target_command}`: {error}");
-        log::error!("[Action: \"{name}\"] {msg}");
-        if let Some(dir) = log_dir {
-            let entry = format!(
-                "[{}] [Action: \"{}\"] (Spawn Error)\nTarget: {}\nError: {}\n{}\n",
-                format_timestamp(),
-                name,
-                target_command,
-                error,
-                "=".repeat(80),
-            );
-            let _ = append_action_log(dir, &entry);
+    if request.capture_output {
+        let _ = running.child.kill();
+        let _ = running.child.wait();
+        return Err(fail(
+            &log,
+            format!(
+                "The command did not finish in {} s",
+                OUTPUT_TIMEOUT.as_secs()
+            ),
+        ));
+    }
+
+    // left running, e.g. a GUI app; the outcome only goes to the log
+    thread::spawn(move || {
+        let status = running.child.wait();
+        match status {
+            Ok(status) => log.write(&running.finish(status), None),
+            Err(error) => log.write(&empty_result(), Some(&error.to_string())),
         }
-        AppError::Message(msg)
-    })?;
-
-    if let Some(mut stdin) = child.stdin.take() {
-        let _ = stdin.write_all(text.as_bytes());
-    }
-
-    let output = child.wait_with_output().map_err(|error| {
-        let msg = format!("Command execution failed: {error}");
-        log::error!("[Action: \"{name}\"] {msg}");
-        AppError::Message(msg)
-    })?;
-
-    let duration = start.elapsed();
-    let exit_code = output.status.code();
-    let success = output.status.success();
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-    if !success {
-        log::warn!(
-            "[Action: \"{name}\"] Command `{target_command}` failed with exit code {exit_code:?} in {duration:?}. stderr: {stderr}"
-        );
-    } else if log_output {
-        log::info!(
-            "[Action: \"{name}\"] Command `{target_command}` succeeded with exit code {exit_code:?} in {duration:?}.\nstdout: {stdout}\nstderr: {stderr}"
-        );
-    } else {
-        log::info!(
-            "[Action: \"{name}\"] Command `{target_command}` finished in {duration:?} with exit code {exit_code:?}"
-        );
-    }
-
-    if log_output || !success {
-        if let Some(dir) = log_dir {
-            let status_str = if success { "SUCCESS" } else { "FAILED" };
-            let cwd_info = resolved_cwd.as_deref().unwrap_or("(default)");
-            let entry = format!(
-                "[{}] [Action: \"{}\"] Status: {} (exit code: {:?}) Duration: {:?}\nTarget: {}\nCWD: {}\n--- stdout ---\n{}\n--- stderr ---\n{}\n{}\n",
-                format_timestamp(),
-                name,
-                status_str,
-                exit_code,
-                duration,
-                target_command,
-                cwd_info,
-                if stdout.trim().is_empty() { "(empty)" } else { stdout.trim() },
-                if stderr.trim().is_empty() { "(empty)" } else { stderr.trim() },
-                "=".repeat(80),
-            );
-            let _ = append_action_log(dir, &entry);
-        }
-    }
-
+    });
     Ok(ScriptExecutionResult {
-        success,
-        exit_code,
-        stdout,
-        stderr,
+        running: true,
+        ..empty_result()
     })
 }
 
-pub fn pick_script_file() -> Result<Option<String>, AppError> {
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(output) = Command::new("zenity")
-            .args(["--file-selection", "--title=Select Script File"])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        if let Ok(output) = Command::new("kdialog")
-            .args(["--getopenfilename", "."])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let script = "POSIX path of (choose file with prompt \"Select Script File\")";
-        if let Ok(output) = Command::new("osascript").args(["-e", script]).output() {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let script = "[System.Reflection.Assembly]::LoadWithPartialName('System.windows.forms') | Out-Null; $dialog = New-Object System.Windows.Forms.OpenFileDialog; if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dialog.FileName }";
-        if let Ok(output) = Command::new("powershell")
-            .args(["-NoProfile", "-Command", script])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-    {
-        Ok(None)
+fn empty_result() -> ScriptExecutionResult {
+    ScriptExecutionResult {
+        success: false,
+        exit_code: None,
+        stdout: String::new(),
+        stderr: String::new(),
+        running: false,
     }
 }
 
-pub fn pick_directory() -> Result<Option<String>, AppError> {
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(output) = Command::new("zenity")
-            .args([
-                "--file-selection",
-                "--directory",
-                "--title=Select Directory",
-            ])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        if let Ok(output) = Command::new("kdialog")
-            .args(["--getexistingdirectory", "."])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
+/// A file picked by the user, as a command that runs it.
+pub fn pick_script_file(app: &AppHandle) -> Option<String> {
+    let path = app.dialog().file().blocking_pick_file()?.into_path().ok()?;
+    Some(shell::script_invocation(&path.to_string_lossy()))
+}
 
-    #[cfg(target_os = "macos")]
-    {
-        let script = "POSIX path of (choose folder with prompt \"Select Directory\")";
-        if let Ok(output) = Command::new("osascript").args(["-e", script]).output() {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let script = "[System.Reflection.Assembly]::LoadWithPartialName('System.windows.forms') | Out-Null; $dialog = New-Object System.Windows.Forms.FolderBrowserDialog; if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dialog.SelectedPath }";
-        if let Ok(output) = Command::new("powershell")
-            .args(["-NoProfile", "-Command", script])
-            .output()
-        {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Ok(Some(path));
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-    {
-        Ok(None)
-    }
+pub fn pick_directory(app: &AppHandle) -> Option<String> {
+    let path = app
+        .dialog()
+        .file()
+        .blocking_pick_folder()?
+        .into_path()
+        .ok()?;
+    Some(path.to_string_lossy().into_owned())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn executes_simple_echo_command() {
-        let result = execute_script(
-            "Test Echo",
-            None,
-            "echo hello_tyco",
-            None,
-            None,
-            "",
-            false,
-            None,
-        )
-        .unwrap();
-        assert!(result.success);
-        assert_eq!(result.exit_code, Some(0));
-        assert!(result.stdout.contains("hello_tyco"));
+    fn request<'a>(command: &'a str, text: &'a str) -> ScriptRequest<'a> {
+        ScriptRequest {
+            name: "Test",
+            command,
+            working_dir: None,
+            text,
+            capture_output: true,
+            log_output: false,
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    mod commands {
+        pub const ECHO_ENV: &str = "printf %s \"$TYCO_TEXT\"";
+        pub const CAT: &str = "cat";
+        pub const ECHO_PLACEHOLDER: &str = "printf %s {{TEXT}}";
+        pub const PWD: &str = "pwd";
+        pub const SLEEP: &str = "sleep 30";
+    }
+
+    #[cfg(target_os = "windows")]
+    mod commands {
+        pub const ECHO_ENV: &str = "[Console]::Out.Write($env:TYCO_TEXT)";
+        pub const CAT: &str = "[Console]::Out.Write([Console]::In.ReadToEnd())";
+        pub const ECHO_PLACEHOLDER: &str = "[Console]::Out.Write({{TEXT}})";
+        pub const PWD: &str = "(Get-Location).Path";
+        pub const SLEEP: &str = "Start-Sleep 30";
     }
 
     #[test]
-    fn receives_env_var() {
-        #[cfg(not(target_os = "windows"))]
-        let cmd = "echo \"$TYCO_TEXT\"";
-        #[cfg(target_os = "windows")]
-        let cmd = "Write-Output $env:TYCO_TEXT";
-
-        let result = execute_script(
-            "Test Env",
-            None,
-            cmd,
-            None,
-            None,
-            "secret_content_42",
-            false,
-            None,
-        )
-        .unwrap();
-        assert!(result.success);
-        assert!(result.stdout.contains("secret_content_42"));
+    fn passes_the_text_in_every_way() {
+        let text = "don't \"stop\" $HOME";
+        for command in [
+            commands::ECHO_ENV,
+            commands::CAT,
+            commands::ECHO_PLACEHOLDER,
+        ] {
+            let result = execute_script(&request(command, text), None).unwrap();
+            assert!(result.success, "{command}: {}", result.stderr);
+            assert_eq!(result.stdout, text, "{command}");
+        }
     }
 
     #[test]
-    fn substitutes_text_placeholder() {
-        #[cfg(not(target_os = "windows"))]
-        let cmd = "echo 'result: {text}'";
-        #[cfg(target_os = "windows")]
-        let cmd = "Write-Output 'result: {text}'";
-
-        let result = execute_script(
-            "Test Sub",
-            None,
-            cmd,
-            None,
-            None,
-            "substituted_val",
-            false,
-            None,
-        )
-        .unwrap();
-        assert!(result.success);
-        assert!(result.stdout.contains("result: substituted_val"));
+    fn runs_in_the_home_directory_by_default() {
+        let result = execute_script(&request(commands::PWD, ""), None).unwrap();
+        let home = shell::home_dir().unwrap();
+        assert_eq!(
+            PathBuf::from(result.stdout.trim()).canonicalize().unwrap(),
+            home.canonicalize().unwrap()
+        );
     }
 
     #[test]
-    fn substitutes_text_in_script_args() {
-        #[cfg(not(target_os = "windows"))]
-        let (cmd, args) = ("echo", Some("arg_{text}"));
-        #[cfg(target_os = "windows")]
-        let (cmd, args) = ("Write-Output", Some("arg_{text}"));
-
+    fn runs_in_the_given_directory() {
+        let dir = std::env::temp_dir().canonicalize().unwrap();
+        let dir_str = dir.to_string_lossy().into_owned();
         let result = execute_script(
-            "Test Script Args",
-            Some("script"),
-            cmd,
-            args,
-            None,
-            "hello",
-            false,
+            &ScriptRequest {
+                working_dir: Some(&dir_str),
+                ..request(commands::PWD, "")
+            },
             None,
         )
         .unwrap();
-        assert!(result.success);
-        assert!(result.stdout.contains("arg_hello"));
+        assert_eq!(
+            PathBuf::from(result.stdout.trim()).canonicalize().unwrap(),
+            dir
+        );
     }
 
     #[test]
-    fn respects_working_directory() {
-        let temp_dir = std::env::temp_dir();
-        let temp_path = temp_dir.to_string_lossy().to_string();
-
-        #[cfg(not(target_os = "windows"))]
-        let cmd = "pwd";
-        #[cfg(target_os = "windows")]
-        let cmd = "(Get-Location).Path";
-
+    fn refuses_a_missing_working_directory() {
         let result = execute_script(
-            "Test Pwd",
+            &ScriptRequest {
+                working_dir: Some("/no/such/tyco/dir"),
+                ..request(commands::PWD, "")
+            },
             None,
-            cmd,
-            None,
-            Some(&temp_path),
-            "",
-            false,
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn leaves_a_long_command_running_when_its_output_is_not_needed() {
+        let started = Instant::now();
+        let result = execute_script(
+            &ScriptRequest {
+                capture_output: false,
+                ..request(commands::SLEEP, "")
+            },
             None,
         )
         .unwrap();
-        assert!(result.success);
+        assert!(result.running);
+        assert!(started.elapsed() < Duration::from_secs(10));
     }
 
     #[test]
-    fn writes_to_dedicated_actions_log() {
-        let temp_dir = std::env::temp_dir().join(format!("tyco_test_log_{}", std::process::id()));
-        let result = execute_script(
-            "Logged Action",
-            None,
-            "echo logged_content",
-            None,
-            None,
-            "",
-            true,
-            Some(&temp_dir),
-        )
-        .unwrap();
-        assert!(result.success);
-
-        let log_file = temp_dir.join("actions.log");
-        assert!(log_file.exists());
-        let content = fs::read_to_string(&log_file).unwrap();
-        assert!(content.contains("[Action: \"Logged Action\"]"));
-        assert!(content.contains("logged_content"));
-
-        let _ = fs::remove_dir_all(&temp_dir);
-    }
-
-    #[test]
-    fn handles_command_failure() {
-        let result =
-            execute_script("Test Fail", None, "exit 1", None, None, "", false, None).unwrap();
+    fn reports_a_failure() {
+        let result = execute_script(&request("exit 3", ""), None).unwrap();
         assert!(!result.success);
-        assert_eq!(result.exit_code, Some(1));
+        assert_eq!(result.exit_code, Some(3));
+    }
+
+    #[test]
+    fn logs_the_command_without_the_text() {
+        let dir = std::env::temp_dir().join(format!("tyco_test_log_{}", std::process::id()));
+        let result = execute_script(
+            &ScriptRequest {
+                log_output: true,
+                ..request(commands::ECHO_PLACEHOLDER, "private_text")
+            },
+            Some(&dir),
+        )
+        .unwrap();
+        assert!(result.success);
+
+        let content = fs::read_to_string(dir.join(LOG_FILE_NAME)).unwrap();
+        assert!(content.contains("[Action: \"Test\"]"));
+        assert!(content.contains(&format!("Command: {}", commands::ECHO_PLACEHOLDER)));
+        assert!(!content.contains("Command: printf %s 'private_text'"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rotates_a_full_log() {
+        let dir = std::env::temp_dir().join(format!("tyco_test_rotate_{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let big = vec![b'x'; MAX_LOG_FILE_BYTES as usize + 1];
+        fs::write(dir.join(LOG_FILE_NAME), big).unwrap();
+
+        append_action_log(&dir, "fresh\n").unwrap();
+
+        assert_eq!(
+            fs::read_to_string(dir.join(LOG_FILE_NAME)).unwrap(),
+            "fresh\n"
+        );
+        assert!(dir.join(format!("{LOG_FILE_NAME}.1")).exists());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn truncates_on_a_char_boundary() {
+        let text = "яяя";
+        assert!(truncate(text, 3).starts_with("я\n"));
     }
 }

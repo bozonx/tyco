@@ -15,140 +15,12 @@
             @update:value="updateAction(index, $event)"
           />
 
-          <template v-if="item.type === 'script'">
-            <SegmentedControl
-              :value="item.executionType || 'command'"
-              :label="t('settings.actionExecutionType')"
-              :options="[
-                { id: 'command', name: t('settings.actionTypeCommand') },
-                { id: 'script', name: t('settings.actionTypeScript') },
-              ]"
-              @update:value="updateCustomField(index, 'executionType', $event)"
-            />
-
-            <FieldInput
-              :value="item.name"
-              :placeholder="t('settings.actionName')"
-              class="font-medium"
-              @update:value="updateCustomField(index, 'name', $event)"
-            />
-
-            <template v-if="(item.executionType || 'command') === 'command'">
-              <FieldInput
-                :value="item.command"
-                :placeholder="t('settings.actionCommandPlaceholder')"
-                @update:value="updateCustomField(index, 'command', $event)"
-              />
-              <p class="text-xs text-muted">
-                {{ t('settings.actionVariableHint') }}
-              </p>
-            </template>
-
-            <template v-else>
-              <div class="flex gap-2 items-center w-full">
-                <FieldInput
-                  :value="item.command"
-                  :placeholder="t('settings.actionScriptPathPlaceholder')"
-                  class="flex-1"
-                  @update:value="updateCustomField(index, 'command', $event)"
-                />
-                <Button
-                  type="button"
-                  ghost
-                  square
-                  sm
-                  :title="t('settings.browseScriptFile')"
-                  @click="browseScript(index)"
-                >
-                  <Icon icon="mdi:folder-open-outline" width="18" height="18" />
-                </Button>
-              </div>
-              <FieldInput
-                :value="item.args"
-                :placeholder="t('settings.actionScriptArgsPlaceholder')"
-                @update:value="updateCustomField(index, 'args', $event)"
-              />
-              <p class="text-xs text-muted">
-                {{ t('settings.actionVariableHint') }}
-              </p>
-            </template>
-
-            <div class="flex gap-2 items-center w-full">
-              <FieldInput
-                :value="item.workingDir"
-                :placeholder="t('settings.actionWorkingDirPlaceholder')"
-                class="flex-1"
-                @update:value="updateCustomField(index, 'workingDir', $event)"
-              />
-              <Button
-                type="button"
-                ghost
-                square
-                sm
-                :title="t('settings.browseWorkingDir')"
-                @click="browseWorkingDir(index)"
-              >
-                <Icon icon="mdi:folder-open-outline" width="18" height="18" />
-              </Button>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <FieldCheckbox
-                :value="Boolean(item.logOutput)"
-                :label="t('settings.actionLogOutput')"
-                @update:value="updateCustomField(index, 'logOutput', $event)"
-              />
-              <p v-if="item.logOutput" class="text-xs text-muted">
-                {{ t('settings.actionLogOutputHint') }}
-              </p>
-            </div>
-          </template>
-
-          <template v-else-if="item.type === 'webhook'">
-            <FieldInput
-              :value="item.name"
-              :placeholder="t('settings.actionName')"
-              class="font-medium"
-              @update:value="updateCustomField(index, 'name', $event)"
-            />
-            <div class="flex gap-2 items-center w-full">
-              <SegmentedControl
-                :value="item.method || 'POST'"
-                label="HTTP Method"
-                :options="[
-                  { id: 'POST', name: 'POST' },
-                  { id: 'GET', name: 'GET' },
-                ]"
-                @update:value="updateCustomField(index, 'method', $event)"
-              />
-              <FieldInput
-                :value="item.url"
-                :placeholder="t('settings.actionWebhookUrl')"
-                class="flex-1"
-                @update:value="updateCustomField(index, 'url', $event)"
-              />
-            </div>
-            <template v-if="(item.method || 'POST') === 'POST'">
-              <FieldTextArea
-                :value="item.payloadTemplate"
-                :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
-                autoResize
-                @update:value="
-                  updateCustomField(index, 'payloadTemplate', $event)
-                "
-              />
-            </template>
-            <div class="flex flex-col gap-1">
-              <FieldCheckbox
-                :value="Boolean(item.logOutput)"
-                :label="t('settings.actionLogOutput')"
-                @update:value="updateCustomField(index, 'logOutput', $event)"
-              />
-              <p v-if="item.logOutput" class="text-xs text-muted">
-                {{ t('settings.actionLogOutputHint') }}
-              </p>
-            </div>
-          </template>
+          <CustomActionFields
+            v-if="item.type === 'script' || item.type === 'webhook'"
+            :key="item.id"
+            :item="item"
+            @update="(field, value) => updateCustomField(index, field, value)"
+          />
         </div>
       </template>
     </ShortcutSlots>
@@ -162,19 +34,15 @@ import { useI18n } from '../../composables/useI18n'
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/actionMenu'
-import { useIpcStore } from '../../stores/ipc'
-import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldInput from '../common/FieldInput.vue'
+import { useLlmStore } from '../../stores/llm'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import { Icon } from '@iconify/vue'
+import CustomActionFields from './CustomActionFields.vue'
 import {
   type MainActionConfig,
   STANDARD_ACTION_IDS,
   type UserConfig,
+  webhookSecretId,
 } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
@@ -185,7 +53,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const actionMenuStore = useActionMenuStore()
-const ipcStore = useIpcStore()
+const llmStore = useLlmStore()
 
 const actionSlots = computed(() =>
   normalizeMainActions(props.userConfig.mainActions)
@@ -250,58 +118,69 @@ function addAction(index: number) {
   emit('update:mainActions', slots)
 }
 
-function removeAction(index: number) {
+function newActionId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `action-${Date.now()}`
+}
+
+/** The slot's webhook token goes with it */
+function forgetSlot(index: number) {
+  const current = actionSlots.value[index]
+  if (current?.type === 'webhook' && current.authSecret) {
+    llmStore.removeSecret(webhookSecretId(current.id)).catch(() => {
+      // a leftover token is bound to its origin and harmless
+    })
+  }
+}
+
+function setSlot(index: number, value: MainActionConfig | null) {
+  forgetSlot(index)
   const slots = [...actionSlots.value]
-  slots[index] = null
+  slots[index] = value
   emit('update:mainActions', slots)
 }
 
+function removeAction(index: number) {
+  setSlot(index, null)
+}
+
 function updateAction(index: number, value: string | number | undefined) {
+  if (value === optionId(actionSlots.value[index])) return
+
   if (value === 'custom:script') {
-    const slots = [...actionSlots.value]
-    const id =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `script-${Date.now()}`
-    slots[index] = {
+    setSlot(index, {
       type: 'script',
-      id,
+      id: newActionId(),
       name: '',
-      executionType: 'command',
       command: '',
-      args: '',
       workingDir: '',
+      afterRun: 'none',
       logOutput: false,
-    }
-    emit('update:mainActions', slots)
+    })
     return
   }
 
   if (value === 'custom:webhook') {
-    const slots = [...actionSlots.value]
-    const id =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `webhook-${Date.now()}`
-    slots[index] = {
+    setSlot(index, {
       type: 'webhook',
-      id,
+      id: newActionId(),
       name: '',
       url: '',
       method: 'POST',
+      headers: {},
+      payloadTemplate: '',
+      authSecret: false,
+      afterRun: 'none',
       logOutput: false,
-    }
-    emit('update:mainActions', slots)
+    })
     return
   }
 
   const selected = availableActions.value.find(
     ({ config }) => optionId(config) === value
   )
-  if (!selected) return
-  const slots = [...actionSlots.value]
-  slots[index] = selected.config
-  emit('update:mainActions', slots)
+  if (selected) setSlot(index, selected.config)
 }
 
 function updateCustomField(index: number, field: string, value: unknown) {
@@ -311,27 +190,5 @@ function updateCustomField(index: number, field: string, value: unknown) {
   const slots = [...actionSlots.value]
   slots[index] = { ...current, [field]: value } as MainActionConfig
   emit('update:mainActions', slots)
-}
-
-async function browseScript(index: number) {
-  try {
-    const path = await ipcStore.callFunctionOrNotify('pickScriptFile', [])
-    if (path && typeof path === 'string') {
-      updateCustomField(index, 'command', path)
-    }
-  } catch {
-    // ignore
-  }
-}
-
-async function browseWorkingDir(index: number) {
-  try {
-    const path = await ipcStore.callFunctionOrNotify('pickDirectory', [])
-    if (path && typeof path === 'string') {
-      updateCustomField(index, 'workingDir', path)
-    }
-  } catch {
-    // ignore
-  }
 }
 </script>

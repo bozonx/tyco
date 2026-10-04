@@ -351,6 +351,7 @@ import {
   InvalidLlmBaseUrlError,
   createLlmConnectionChecker,
 } from '../../lib/llm/llm-connection'
+import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useLlmStore } from '../../stores/llm'
 import FieldInput from '../common/FieldInput.vue'
@@ -405,7 +406,8 @@ const modelOptions = computed(() =>
         Boolean(model.model.trim()) &&
         Boolean(
           provider &&
-          (provider.type !== 'openai-compatible' || originOf(provider.baseUrl))
+          (provider.type !== 'openai-compatible' ||
+            httpOrigin(provider.baseUrl))
         )
       )
     })
@@ -456,20 +458,10 @@ function statusClass(provider: LlmProvider) {
     ? 'badge-success'
     : 'badge-ghost'
 }
-function originOf(value: string | undefined): string | null {
-  try {
-    const url = new URL(value?.trim() ?? '')
-    return url.protocol === 'http:' || url.protocol === 'https:'
-      ? url.origin
-      : null
-  } catch {
-    return null
-  }
-}
 function keyHint(provider: LlmProvider) {
   if (provider.type !== 'openai-compatible') return undefined
   const origins = llmStore.secrets[provider.id]?.origins
-  const origin = originOf(provider.baseUrl)
+  const origin = httpOrigin(provider.baseUrl)
   return origins && origin && !origins.includes(origin)
     ? t('settings.apiKeyBoundTo', { origin: origins.join(', ') })
     : t('settings.apiKeyOptional')
@@ -478,7 +470,7 @@ async function saveKey(provider: LlmProvider) {
   const value = keyDrafts[provider.id]?.trim()
   if (!value) return
   const origin =
-    provider.type === 'openai-compatible' ? originOf(provider.baseUrl) : null
+    provider.type === 'openai-compatible' ? httpOrigin(provider.baseUrl) : null
   if (provider.type === 'openai-compatible' && !origin) {
     toast('settings.invalidBaseUrl', 'error')
     return

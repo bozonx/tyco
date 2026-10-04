@@ -195,14 +195,22 @@ export interface PluginMainAction {
   actionId: string
 }
 
+/** Stands in for the text in a command, a webhook URL or its payload */
+export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
+
+/** What a script or webhook action does once it is done */
+export const CUSTOM_ACTION_AFTER_RUN = ['none', 'showMenu'] as const
+export type CustomActionAfterRun = (typeof CUSTOM_ACTION_AFTER_RUN)[number]
+
 export interface ScriptMainAction {
   type: 'script'
   id: string
   name: string
-  executionType?: 'command' | 'script'
+  /** A shell command; `{{TEXT}}` is replaced with the text, quoted */
   command: string
-  args?: string
+  /** Empty for the home directory */
   workingDir?: string
+  afterRun?: CustomActionAfterRun
   logOutput?: boolean
 }
 
@@ -214,7 +222,20 @@ export interface WebhookMainAction {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
   payloadTemplate?: string
+  /**
+   * The Authorization header is kept in the secret store under
+   * `webhookSecretId(id)`, bound to the origin of the URL
+   */
+  authSecret?: boolean
+  afterRun?: CustomActionAfterRun
   logOutput?: boolean
+}
+
+export function webhookSecretId(actionId: string): string {
+  return `webhook-${actionId.toLowerCase().replace(/[^a-z0-9._-]/g, '-')}`.slice(
+    0,
+    64
+  )
 }
 
 export type MainActionConfig =

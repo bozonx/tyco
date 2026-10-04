@@ -37,13 +37,35 @@ describe('normalizeMainActions', () => {
         url: 'https://example.com',
       },
       { type: 'script', id: '', command: 'no-id' },
+      {
+        type: 'script',
+        id: 'sc2',
+        name: 'Full',
+        command: 'cat',
+        workingDir: '~/work',
+        afterRun: 'showMenu',
+      },
+      {
+        type: 'webhook',
+        id: 'wh2',
+        name: 'Full Hook',
+        url: 'https://example.com',
+        method: 'GET',
+        headers: { 'x-a': '1', 'x-b': 2 },
+        payloadTemplate: '{}',
+        authSecret: true,
+        afterRun: 'bogus',
+        logOutput: true,
+      },
     ]
-    expect(normalizeMainActions(raw).slice(0, 3)).toEqual([
+    expect(normalizeMainActions(raw).slice(0, 5)).toEqual([
       {
         type: 'script',
         id: 'sc1',
         name: 'My Script',
         command: 'echo 1',
+        workingDir: '',
+        afterRun: 'none',
         logOutput: true,
       },
       {
@@ -52,11 +74,34 @@ describe('normalizeMainActions', () => {
         name: 'My Hook',
         url: 'https://example.com',
         method: 'POST',
-        headers: undefined,
-        payloadTemplate: undefined,
+        headers: {},
+        payloadTemplate: '',
+        authSecret: false,
+        afterRun: 'none',
         logOutput: false,
       },
       null,
+      {
+        type: 'script',
+        id: 'sc2',
+        name: 'Full',
+        command: 'cat',
+        workingDir: '~/work',
+        afterRun: 'showMenu',
+        logOutput: false,
+      },
+      {
+        type: 'webhook',
+        id: 'wh2',
+        name: 'Full Hook',
+        url: 'https://example.com',
+        method: 'GET',
+        headers: { 'x-a': '1' },
+        payloadTemplate: '{}',
+        authSecret: true,
+        afterRun: 'none',
+        logOutput: true,
+      },
     ])
   })
 })
