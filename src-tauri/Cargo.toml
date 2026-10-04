@@ -37,7 +37,7 @@ tokio = { version = "1", features = ["macros", "rt", "sync", "time"] }
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 tyco-activation-protocol = { path = "crates/activation-protocol" }
 url = "2"
-zbus = "4"
+zbus = "5"
 tauri-plugin-dialog = "2.7.2"
 
 [dev-dependencies]
