@@ -261,8 +261,6 @@
     "tasksHint": "Instrucciones para la IA. Cada tarea tiene una tecla rápida en el menú de tareas de IA.",
     "hotkey": "Tecla rápida",
     "hotkeysTab": "Atajos",
-    "hotkeysTitle": "Atajos de activación",
-    "hotkeysHint": "Enfocá un campo y presioná la nueva combinación.",
     "hotkeyInput": {
       "recording": "Presioná un atajo…",
       "cancelHint": "Esc para cancelar",

@@ -47,12 +47,13 @@
             :value="row.value"
             :aria-label="row.label"
             :placeholder="t('settings.hotkeyNotAssigned')"
-            :readonly="systemManaged"
+            :readonly="!editable"
+            :platform="providerState.platform"
             @record="setShortcut(row.id, $event)"
             @recording="suspendHotkeys"
           />
           <Button
-            v-if="!systemManaged && row.value !== row.defaultValue"
+            v-if="editable && row.value !== row.defaultValue"
             sm
             ghost
             square
@@ -105,9 +106,10 @@ import { desktopClient } from '../../lib/desktop/client'
 import {
   applyProviderInfo,
   createHotkeySettingsState,
+  defaultShortcut,
   displayedShortcut,
   hasConflict,
-  isSystemManaged,
+  isEditable,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
 import { useIpcStore } from '../../stores/ipc'
@@ -160,7 +162,7 @@ interface HotkeyRow {
 const ipcStore = useIpcStore()
 const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
-const systemManaged = computed(() => isSystemManaged(providerState))
+const editable = computed(() => isEditable(providerState))
 const providerNote = computed(() => providerNoteKey(providerState))
 const configureError = ref('')
 const injection = reactive<{ ok: boolean | null; error: string }>({
@@ -184,7 +186,11 @@ const rows = computed<HotkeyRow[]>(() => [
       mode,
       props.userConfig.hotkeys[mode] ?? ''
     ),
-    defaultValue: DEFAULT_USER_CONFIG.hotkeys[mode],
+    defaultValue: defaultShortcut(
+      providerState,
+      mode,
+      DEFAULT_USER_CONFIG.hotkeys[mode]
+    ),
     command: `tyco-ctl activate ${mode}`,
     externalHint: t('settings.externalMethodsHint'),
   })),
@@ -197,7 +203,11 @@ const rows = computed<HotkeyRow[]>(() => [
       props.userConfig.selectionHotkeys?.[INLINE_CORRECTION] ??
         DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
     ),
-    defaultValue: DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION],
+    defaultValue: defaultShortcut(
+      providerState,
+      inlineId,
+      DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
+    ),
     command: `tyco-ctl replace ${INLINE_CORRECTION}`,
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),

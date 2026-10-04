@@ -63,11 +63,13 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import {
   heldModifiers,
+  keyLabelFor,
   recordKeyDown,
   shortcutKeys,
 } from '../../lib/hotkeys/hotkey-recorder'
 import KeyButton from './KeyButton.vue'
 import { Icon } from '@iconify/vue'
+import type { HotkeyPlatform } from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
@@ -76,8 +78,10 @@ const props = withDefaults(
     placeholder?: string
     /** Shows a shortcut that is changed elsewhere, e.g. by the desktop */
     readonly?: boolean
+    /** Names the keys the way the platform does */
+    platform?: HotkeyPlatform
   }>(),
-  { ariaLabel: undefined, placeholder: '', readonly: false }
+  { ariaLabel: undefined, placeholder: '', readonly: false, platform: 'linux' }
 )
 const emit = defineEmits<{
   (event: 'record', shortcut: string): void
@@ -96,7 +100,9 @@ let recorded: string | null = null
 let savedTimer: ReturnType<typeof setTimeout> | null = null
 
 const displayKeys = computed(() =>
-  recording.value ? heldKeys.value : shortcutKeys(props.value)
+  (recording.value ? heldKeys.value : shortcutKeys(props.value)).map((key) =>
+    keyLabelFor(key, props.platform)
+  )
 )
 
 function start() {

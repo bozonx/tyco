@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   applyProviderInfo,
   createHotkeySettingsState,
+  defaultShortcut,
   displayedShortcut,
   hasConflict,
+  isEditable,
   isSystemManaged,
   providerNoteKey,
 } from './hotkey-settings'
@@ -23,6 +25,8 @@ describe('hotkey settings', () => {
         },
       },
       systemTriggers: {},
+      defaults: {},
+      platform: 'linux',
     })
 
     expect(state.canConfigure).toBe(false)
@@ -38,12 +42,16 @@ describe('hotkey settings', () => {
       provider: 'portal',
       canConfigure: true,
       actions: {},
-      systemTriggers: { editor: 'Meta+E' },
+      systemTriggers: { editor: 'Meta+E', voice: 'Meta+V, Ctrl+F12' },
+      defaults: {},
+      platform: 'linux',
     })
 
     expect(isSystemManaged(state)).toBe(true)
     expect(displayedShortcut(state, 'editor', 'Ctrl+Alt+E')).toBe('Meta+E')
-    expect(displayedShortcut(state, 'voice', 'Ctrl+Alt+V')).toBe('')
+    expect(displayedShortcut(state, 'voice', 'Ctrl+Alt+V')).toBe('Meta+V')
+    expect(displayedShortcut(state, 'chat', 'Ctrl+Alt+C')).toBe('')
+    expect(isEditable(state)).toBe(false)
     expect(providerNoteKey(state)).toBe('settings.hotkeyProvider.portal')
   })
 
@@ -54,11 +62,36 @@ describe('hotkey settings', () => {
       canConfigure: false,
       actions: {},
       systemTriggers: {},
+      defaults: {},
+      platform: 'linux',
     })
 
     expect(isSystemManaged(state)).toBe(false)
+    expect(isEditable(state)).toBe(true)
     expect(displayedShortcut(state, 'editor', 'Ctrl+Alt+E')).toBe('Ctrl+Alt+E')
     expect(providerNoteKey(state)).toBeNull()
+  })
+
+  it('records nothing until the provider is known', () => {
+    expect(isEditable(createHotkeySettingsState())).toBe(false)
+  })
+
+  it('takes the platform defaults from the backend', () => {
+    const state = createHotkeySettingsState()
+    applyProviderInfo(state, {
+      provider: 'global-shortcut',
+      canConfigure: false,
+      actions: {},
+      systemTriggers: {},
+      defaults: { editor: 'Ctrl+Shift+Alt+E' },
+      platform: 'windows',
+    })
+
+    expect(state.platform).toBe('windows')
+    expect(defaultShortcut(state, 'editor', 'Ctrl+Alt+E')).toBe(
+      'Ctrl+Shift+Alt+E'
+    )
+    expect(defaultShortcut(state, 'voice', 'Ctrl+Alt+V')).toBe('Ctrl+Alt+V')
   })
 
   it('reports only conflicts per action', () => {

@@ -24,6 +24,6 @@ pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, panel_surface_supported,
     set_panel_input_region, InputRegion, PanelKeyboard,
 };
-pub use shortcut_settings::open_shortcut_settings;
+pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::{check_text_injection, inject_paste};
 pub use titlebar::enable_titlebar_buttons;

@@ -298,6 +298,8 @@ export interface UserConfig {
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
+  // the Linux defaults: the backend owns the defaults of each platform and
+  // reports them in `HotkeyProviderInfo.defaults`
   hotkeys: {
     editor: 'Ctrl+Alt+E',
     write: 'Ctrl+Alt+W',

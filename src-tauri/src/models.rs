@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::services::activation::WindowProfile;
+use crate::services::hotkeys;
 
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
 pub const STATE_FILE_NAME: &str = "localState.json";
@@ -122,18 +123,8 @@ pub fn default_user_config() -> Value {
     let ydotool_bin = default_binary_path("ydotool");
 
     json!({
-      "hotkeys": {
-        "editor": "Ctrl+Alt+E",
-        "write": "Ctrl+Alt+W",
-        "chat": "Ctrl+Alt+C",
-        "voiceChat": "Ctrl+Alt+Q",
-        "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
-        "aiTasks": "Ctrl+Alt+A"
-      },
-      "selectionHotkeys": {
-        "correction": "Ctrl+Alt+F"
-      },
+      "hotkeys": hotkeys::default_hotkeys_config(),
+      "selectionHotkeys": hotkeys::default_selection_hotkeys_config(),
       "submitKey": "enter",
       "quickCorrectionPrefetch": false,
       "quickHideOnBlur": true,

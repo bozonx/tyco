@@ -107,8 +107,7 @@ export function hotkeyFromKeyboardEvent(event: {
   )
 }
 
-export type HotkeyApplyStatus =
-  'ready' | 'conflict' | 'confirmation-required' | 'external'
+export type HotkeyApplyStatus = 'ready' | 'conflict' | 'external'
 
 export interface HotkeyApplyResult {
   status: HotkeyApplyStatus
@@ -118,6 +117,8 @@ export interface HotkeyApplyResult {
 
 export type HotkeyProviderKind = 'portal' | 'global-shortcut' | 'external'
 
+export type HotkeyPlatform = 'linux' | 'windows' | 'macos'
+
 export interface HotkeyProviderInfo {
   provider: HotkeyProviderKind
   canConfigure: boolean
@@ -125,4 +126,7 @@ export interface HotkeyProviderInfo {
   actions: Record<string, HotkeyApplyResult>
   /** Shortcuts the desktop bound through the portal, in its own words */
   systemTriggers: Record<string, string>
+  /** The default shortcut of every hotkey id on this platform */
+  defaults: Record<string, string>
+  platform: HotkeyPlatform
 }

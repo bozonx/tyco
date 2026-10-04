@@ -258,8 +258,6 @@
     "tasksHint": "Instructions for the AI. Each task gets a hotkey in the AI task menu.",
     "hotkey": "Hotkey",
     "hotkeysTab": "Hotkeys",
-    "hotkeysTitle": "Activation hotkeys",
-    "hotkeysHint": "Focus a field and press the new key combination.",
     "hotkeyInput": {
       "recording": "Press a shortcut…",
       "cancelHint": "Esc to cancel",

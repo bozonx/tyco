@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { recordKeyDown, shortcutKeys } from './hotkey-recorder'
+import { keyLabelFor, recordKeyDown, shortcutKeys } from './hotkey-recorder'
 
 const event = (
   key: string,
@@ -48,5 +48,16 @@ describe('hotkey recorder', () => {
   it('splits a stored shortcut into keys', () => {
     expect(shortcutKeys('Ctrl+Alt+E')).toEqual(['Ctrl', 'Alt', 'E'])
     expect(shortcutKeys('')).toEqual([])
+    expect(shortcutKeys('Ctrl++')).toEqual(['Ctrl', '+'])
+  })
+
+  it('names the keys the way the platform does', () => {
+    const labels = (platform: 'linux' | 'windows' | 'macos') =>
+      shortcutKeys('Ctrl+Alt+Shift+Super+E').map((key) =>
+        keyLabelFor(key, platform)
+      )
+    expect(labels('linux')).toEqual(['Ctrl', 'Alt', 'Shift', 'Super', 'E'])
+    expect(labels('windows')).toEqual(['Ctrl', 'Alt', 'Shift', 'Win', 'E'])
+    expect(labels('macos')).toEqual(['⌃', '⌥', '⇧', '⌘', 'E'])
   })
 })

@@ -261,8 +261,6 @@
     "tasksHint": "Yapay zekâ için talimatlar. Her göreve yapay zekâ görev menüsünde bir kısayol tuşu atanır.",
     "hotkey": "Kısayol tuşu",
     "hotkeysTab": "Kısayollar",
-    "hotkeysTitle": "Etkinleştirme kısayolları",
-    "hotkeysHint": "Bir alana odaklanın ve yeni tuş birleşimine basın.",
     "hotkeyInput": {
       "recording": "Bir kısayola basın…",
       "cancelHint": "İptal için Esc",

@@ -17,7 +17,7 @@ use ashpd::{register_host_app, AppID};
 #[cfg(target_os = "linux")]
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 #[cfg(target_os = "linux")]
 use tauri::Emitter;
 use tauri::{App, AppHandle, Manager};
@@ -25,7 +25,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::platform::session::{Desktop, DisplayServer};
+use crate::services::platform::session::{self, Desktop, DisplayServer};
 use crate::services::runtime;
 use crate::services::selection_replace::{self, HotkeyPress, TriggerWait};
 use crate::state::AppState;
@@ -38,7 +38,15 @@ const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
 const SELECTION_HOTKEYS_CONFIG_KEY: &str = "selectionHotkeys";
 const SELECTION_TARGET_PREFIX: &str = "replace.";
 const CORRECTION_ACTION: &str = "correction";
-const DEFAULT_CORRECTION_SHORTCUT: &str = "Ctrl+Alt+F";
+const DEFAULT_CORRECTION_KEY: &str = "F";
+/// The modifiers of every default shortcut. Ctrl+Alt is AltGr on Windows,
+/// which types characters on many layouts (Ctrl+Alt+E is € in German), so
+/// Shift joins it there.
+const DEFAULT_MODIFIERS: &str = if cfg!(target_os = "windows") {
+    "Ctrl+Shift+Alt"
+} else {
+    "Ctrl+Alt"
+};
 const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 
 /// What a hotkey does: open a mode, or replace the selection in the focused
@@ -174,7 +182,6 @@ pub struct ApplyHotkeyRequest {
 pub enum HotkeyApplyStatus {
     Ready,
     Conflict,
-    ConfirmationRequired,
     External,
 }
 
@@ -195,6 +202,9 @@ pub struct HotkeyProviderInfo {
     can_configure: bool,
     actions: HashMap<String, ApplyHotkeyResult>,
     system_triggers: HashMap<String, String>,
+    /// The default shortcut of every hotkey id on this platform
+    defaults: HashMap<String, String>,
+    platform: &'static str,
 }
 
 pub(crate) trait HotkeyProvider {
@@ -209,7 +219,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let user_config = app.state::<AppState>().params().user_config;
     let bindings = bindings_from_config(&user_config);
 
-    let kind = provider_kind(super::platform::session::current().display);
+    let kind = provider_kind(session::current());
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
     app.manage(SystemTriggers::default());
@@ -331,9 +341,14 @@ pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             ProviderKind::GlobalShortcut => "global-shortcut",
             ProviderKind::External => "external",
         },
-        can_configure: kind == ProviderKind::Portal,
+        can_configure: kind == ProviderKind::Portal && can_configure_portal(app),
         actions,
         system_triggers,
+        defaults: default_bindings()
+            .into_iter()
+            .map(|binding| (binding.target.id(), binding.shortcut))
+            .collect(),
+        platform: platform_name(),
     }
 }
 
@@ -346,13 +361,11 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
 
     match app.state::<ProviderState>().get() {
         ProviderKind::GlobalShortcut => apply_global_shortcut(app, target, shortcut),
-        ProviderKind::Portal => Ok(ApplyHotkeyResult {
-            status: HotkeyApplyStatus::ConfirmationRequired,
-            external_command: None,
-            message: Some(String::from(
-                "The desktop portal applies changed shortcuts after Tyco restarts",
-            )),
-        }),
+        // the desktop keeps the shortcut the user chose and ignores a new
+        // preferred one, so only its settings change it
+        ProviderKind::Portal => Err(AppError::Message(String::from(
+            "Hotkeys are managed by the desktop; change them in its settings",
+        ))),
         ProviderKind::External => Ok(ApplyHotkeyResult {
             status: HotkeyApplyStatus::External,
             external_command: Some(external_command(&target, &request.shortcut)),
@@ -441,7 +454,7 @@ fn apply_global_shortcut(
 }
 
 fn external_command(target: &HotkeyTarget, shortcut: &str) -> String {
-    match super::platform::session::current().desktop {
+    match session::current().desktop {
         Desktop::Hyprland => {
             let (modifiers, key) = hyprland_shortcut(shortcut);
             format!("bind = {modifiers}, {key}, exec, {}", target.cli_command())
@@ -491,12 +504,45 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
     (modifiers, key)
 }
 
-fn provider_kind(display: DisplayServer) -> ProviderKind {
-    match display {
-        DisplayServer::Wayland => ProviderKind::Portal,
-        DisplayServer::X11 | DisplayServer::Native => ProviderKind::GlobalShortcut,
-        DisplayServer::Unknown => ProviderKind::External,
+/// wlroots compositors are configured in their own files: Sway has no
+/// GlobalShortcuts portal, and Hyprland's ignores the preferred triggers and
+/// needs a binding in `hyprland.conf` anyway, so both get the binding to copy.
+fn provider_kind(session: session::Session) -> ProviderKind {
+    match (session.display, session.desktop) {
+        (DisplayServer::Wayland, Desktop::Hyprland | Desktop::Sway) => ProviderKind::External,
+        (DisplayServer::Wayland, _) => ProviderKind::Portal,
+        (DisplayServer::X11 | DisplayServer::Native, _) => ProviderKind::GlobalShortcut,
+        (DisplayServer::Unknown, _) => ProviderKind::External,
     }
+}
+
+fn platform_name() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else {
+        "linux"
+    }
+}
+
+/// The portal shortcuts can be changed in the portal's own dialog (version
+/// 2) or in the settings of a desktop Tyco knows.
+#[cfg(target_os = "linux")]
+fn can_configure_portal(app: &AppHandle) -> bool {
+    let has_dialog = app
+        .state::<PortalState>()
+        .0
+        .read()
+        .expect("portal registration lock poisoned")
+        .as_ref()
+        .is_some_and(|registration| registration.portal.version() >= 2);
+    has_dialog || super::platform::has_shortcut_settings()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn can_configure_portal(_app: &AppHandle) -> bool {
+    false
 }
 
 pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
@@ -518,10 +564,11 @@ fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
             .and_then(Value::as_str)
             .map(str::trim)
             .filter(|value| !value.is_empty())
-            .unwrap_or_else(|| default_shortcut(mode));
-        (!shortcut.is_empty()).then(|| HotkeyBinding {
+            .map(str::to_owned)
+            .or_else(|| default_shortcut(mode))?;
+        Some(HotkeyBinding {
             target: HotkeyTarget::Mode(mode),
-            shortcut: shortcut.to_owned(),
+            shortcut,
             description: mode_description(mode).to_owned(),
         })
     });
@@ -535,8 +582,9 @@ fn selection_bindings(config: &Value) -> Vec<HotkeyBinding> {
         .get(SELECTION_HOTKEYS_CONFIG_KEY)
         .and_then(|values| values.get(CORRECTION_ACTION))
         .and_then(Value::as_str)
-        .unwrap_or(DEFAULT_CORRECTION_SHORTCUT)
-        .trim();
+        .map(str::to_owned)
+        .unwrap_or_else(default_correction_shortcut);
+    let shortcut = shortcut.trim();
     (!shortcut.is_empty())
         .then(|| HotkeyBinding {
             target: HotkeyTarget::Selection(CORRECTION_ACTION.to_owned()),
@@ -547,17 +595,53 @@ fn selection_bindings(config: &Value) -> Vec<HotkeyBinding> {
         .collect()
 }
 
-fn default_shortcut(mode: StartMode) -> &'static str {
+fn default_key(mode: StartMode) -> Option<&'static str> {
     match mode {
-        StartMode::Editor => "Ctrl+Alt+E",
-        StartMode::Write => "Ctrl+Alt+W",
-        StartMode::Chat => "Ctrl+Alt+C",
-        StartMode::VoiceChat => "Ctrl+Alt+Q",
-        StartMode::Voice => "Ctrl+Alt+V",
-        StartMode::Select => "Ctrl+Alt+S",
-        StartMode::AiTasks => "Ctrl+Alt+A",
-        StartMode::Correction | StartMode::History | StartMode::Config => "",
+        StartMode::Editor => Some("E"),
+        StartMode::Write => Some("W"),
+        StartMode::Chat => Some("C"),
+        StartMode::VoiceChat => Some("Q"),
+        StartMode::Voice => Some("V"),
+        StartMode::Select => Some("S"),
+        StartMode::AiTasks => Some("A"),
+        StartMode::Correction | StartMode::History | StartMode::Config => None,
     }
+}
+
+fn default_shortcut(mode: StartMode) -> Option<String> {
+    default_key(mode).map(|key| format!("{DEFAULT_MODIFIERS}+{key}"))
+}
+
+fn default_correction_shortcut() -> String {
+    format!("{DEFAULT_MODIFIERS}+{DEFAULT_CORRECTION_KEY}")
+}
+
+fn default_bindings() -> Vec<HotkeyBinding> {
+    bindings_from_config(&Value::Null)
+}
+
+/// The `hotkeys` of the default user config on this platform.
+pub fn default_hotkeys_config() -> Value {
+    let hotkeys = GLOBAL_HOTKEY_MODES
+        .into_iter()
+        .filter_map(|mode| {
+            Some((
+                mode.as_str().to_owned(),
+                Value::String(default_shortcut(mode)?),
+            ))
+        })
+        .collect::<Map<_, _>>();
+    Value::Object(hotkeys)
+}
+
+/// The `selectionHotkeys` of the default user config on this platform.
+pub fn default_selection_hotkeys_config() -> Value {
+    let mut hotkeys = Map::new();
+    hotkeys.insert(
+        CORRECTION_ACTION.to_owned(),
+        Value::String(default_correction_shortcut()),
+    );
+    Value::Object(hotkeys)
 }
 
 impl HotkeyProvider for ExternalProvider {
@@ -645,6 +729,7 @@ impl HotkeyProvider for PortalProvider {
                 // external binding workflow in settings instead of claiming
                 // that a system confirmation is pending.
                 app.state::<ProviderState>().set(ProviderKind::External);
+                notify_hotkeys_changed(&app);
             }
         });
         Ok(())
@@ -703,6 +788,8 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         .write()
         .expect("portal registration lock poisoned")
         .replace(Arc::new(PortalRegistration { portal, session }));
+    // the settings may already show the shortcuts the desktop had not bound
+    notify_hotkeys_changed(&app);
 
     // selection actions press keys of their own, and wait for the hotkey
     // to be released first
@@ -715,9 +802,7 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     tauri::async_runtime::spawn(async move {
         while let Some(event) = changed.next().await {
             store_system_triggers(&changed_app, event.shortcuts());
-            if let Err(error) = changed_app.emit(HOTKEYS_CHANGED_EVENT, ()) {
-                log::warn!("Could not report changed hotkeys: {error}");
-            }
+            notify_hotkeys_changed(&changed_app);
         }
     });
     while let Some(event) = activated.next().await {
@@ -728,6 +813,13 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         }
     }
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn notify_hotkeys_changed(app: &AppHandle) {
+    if let Err(error) = app.emit(HOTKEYS_CHANGED_EVENT, ()) {
+        log::warn!("Could not report changed hotkeys: {error}");
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -789,19 +881,73 @@ mod tests {
 
     #[test]
     fn selects_provider_from_runtime_session() {
-        assert_eq!(provider_kind(DisplayServer::Wayland), ProviderKind::Portal);
+        let kind = |display, desktop| provider_kind(session::Session { display, desktop });
         assert_eq!(
-            provider_kind(DisplayServer::X11),
-            ProviderKind::GlobalShortcut
+            kind(DisplayServer::Wayland, Desktop::Kde),
+            ProviderKind::Portal
         );
         assert_eq!(
-            provider_kind(DisplayServer::Native),
-            ProviderKind::GlobalShortcut
+            kind(DisplayServer::Wayland, Desktop::Gnome),
+            ProviderKind::Portal
         );
         assert_eq!(
-            provider_kind(DisplayServer::Unknown),
+            kind(DisplayServer::Wayland, Desktop::Other),
+            ProviderKind::Portal
+        );
+        assert_eq!(
+            kind(DisplayServer::Wayland, Desktop::Hyprland),
             ProviderKind::External
         );
+        assert_eq!(
+            kind(DisplayServer::Wayland, Desktop::Sway),
+            ProviderKind::External
+        );
+        assert_eq!(
+            kind(DisplayServer::X11, Desktop::Hyprland),
+            ProviderKind::GlobalShortcut
+        );
+        assert_eq!(
+            kind(DisplayServer::Native, Desktop::Other),
+            ProviderKind::GlobalShortcut
+        );
+        assert_eq!(
+            kind(DisplayServer::Unknown, Desktop::Other),
+            ProviderKind::External
+        );
+    }
+
+    #[test]
+    fn default_shortcuts_avoid_altgr_on_windows() {
+        let expected = if cfg!(target_os = "windows") {
+            "Ctrl+Shift+Alt+E"
+        } else {
+            "Ctrl+Alt+E"
+        };
+        assert_eq!(
+            default_shortcut(StartMode::Editor).as_deref(),
+            Some(expected)
+        );
+        assert_eq!(default_shortcut(StartMode::History), None);
+        assert_eq!(
+            default_hotkeys_config().get("editor"),
+            Some(&Value::String(expected.to_owned()))
+        );
+        assert_eq!(
+            default_selection_hotkeys_config()
+                .get(CORRECTION_ACTION)
+                .and_then(Value::as_str),
+            Some(default_correction_shortcut().as_str())
+        );
+    }
+
+    #[test]
+    fn reports_defaults_of_every_hotkey() {
+        let defaults = default_bindings()
+            .into_iter()
+            .map(|binding| binding.target.id())
+            .collect::<Vec<_>>();
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1);
+        assert!(defaults.contains(&String::from("replace.correction")));
     }
 
     #[test]
@@ -811,7 +957,10 @@ mod tests {
         }));
         assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1);
         assert_eq!(bindings[0].shortcut, "Super+Space");
-        assert_eq!(bindings[4].shortcut, default_shortcut(StartMode::Voice));
+        assert_eq!(
+            Some(bindings[4].shortcut.clone()),
+            default_shortcut(StartMode::Voice)
+        );
     }
 
     #[test]
@@ -826,7 +975,7 @@ mod tests {
             selection(json!({})),
             [(
                 String::from("replace.correction"),
-                String::from("Ctrl+Alt+F")
+                default_correction_shortcut()
             )]
         );
         assert_eq!(

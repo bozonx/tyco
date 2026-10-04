@@ -1,5 +1,6 @@
 import type {
   HotkeyApplyResult,
+  HotkeyPlatform,
   HotkeyProviderInfo,
   HotkeyProviderKind,
 } from '@tyco/shared'
@@ -9,6 +10,8 @@ export interface HotkeySettingsState {
   canConfigure: boolean
   statuses: Record<string, HotkeyApplyResult>
   systemTriggers: Record<string, string>
+  defaults: Record<string, string>
+  platform: HotkeyPlatform
 }
 
 export function createHotkeySettingsState(): HotkeySettingsState {
@@ -17,6 +20,8 @@ export function createHotkeySettingsState(): HotkeySettingsState {
     canConfigure: false,
     statuses: {},
     systemTriggers: {},
+    defaults: {},
+    platform: 'linux',
   }
 }
 
@@ -28,6 +33,25 @@ export function applyProviderInfo(
   state.canConfigure = info.canConfigure
   state.statuses = { ...info.actions }
   state.systemTriggers = { ...(info.systemTriggers ?? {}) }
+  state.defaults = { ...(info.defaults ?? {}) }
+  state.platform = info.platform ?? 'linux'
+}
+
+/**
+ * Whether the user records the shortcuts here. Until the provider is known
+ * nothing is recorded: the desktop may own them.
+ */
+export function isEditable(state: HotkeySettingsState): boolean {
+  return state.provider !== null && state.provider !== 'portal'
+}
+
+/** The platform's default shortcut of a hotkey id, else the given fallback. */
+export function defaultShortcut(
+  state: HotkeySettingsState,
+  id: string,
+  fallback: string
+): string {
+  return state.defaults[id] ?? fallback
 }
 
 /**
@@ -48,7 +72,9 @@ export function displayedShortcut(
   configured: string
 ): string {
   if (!isSystemManaged(state)) return configured
-  return state.systemTriggers[id] ?? ''
+  // KDE lists alternative shortcuts separated by commas; the first is the
+  // one to show
+  return (state.systemTriggers[id] ?? '').split(', ')[0].trim()
 }
 
 /** The i18n key of the note that applies to every hotkey of the provider. */

@@ -15,6 +15,11 @@ fn settings_command(desktop: Desktop) -> Option<(&'static str, &'static [&'stati
     }
 }
 
+/// Whether this desktop has shortcut settings Tyco can open.
+pub fn has_shortcut_settings() -> bool {
+    settings_command(session::current().desktop).is_some()
+}
+
 pub fn open_shortcut_settings() -> Result<(), AppError> {
     let (program, args) = settings_command(session::current().desktop).ok_or_else(|| {
         AppError::Message(String::from(

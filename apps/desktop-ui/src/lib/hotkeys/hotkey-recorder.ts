@@ -1,4 +1,4 @@
-import { hotkeyFromKeyboardEvent } from '@tyco/shared'
+import { type HotkeyPlatform, hotkeyFromKeyboardEvent } from '@tyco/shared'
 
 export interface HotkeyKeyEvent {
   key: string
@@ -48,10 +48,27 @@ export function recordKeyDown(event: HotkeyKeyEvent): HotkeyRecordStep {
     : { kind: 'invalid', keys: [...modifiers, keyLabel(event)] }
 }
 
-/** Splits a stored shortcut into the keys to display. */
+/**
+ * Splits a shortcut into its keys. A `+` at the end is the key itself, as in
+ * the `Ctrl++` a desktop may report.
+ */
 export function shortcutKeys(shortcut: string): string[] {
   return shortcut
-    .split('+')
+    .split(/\+(?!$)/)
     .map((key) => key.trim())
     .filter(Boolean)
+}
+
+const MAC_KEY_LABELS: Record<string, string> = {
+  Ctrl: '⌃',
+  Alt: '⌥',
+  Shift: '⇧',
+  Super: '⌘',
+}
+
+/** How the platform names a key: macOS shows modifier symbols. */
+export function keyLabelFor(key: string, platform: HotkeyPlatform): string {
+  if (platform === 'macos') return MAC_KEY_LABELS[key] ?? key
+  if (platform === 'windows' && key === 'Super') return 'Win'
+  return key
 }
