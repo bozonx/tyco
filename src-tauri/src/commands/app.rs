@@ -3,7 +3,7 @@ use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::models::{InitParams, LocalState, StorageInfo, StorageKind};
-use crate::services::{runtime, storage};
+use crate::services::{config_migration, runtime, storage};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -61,7 +61,7 @@ pub fn open_main_editor(
 pub fn save_user_config(
     app: AppHandle,
     state: State<'_, AppState>,
-    user_config: Value,
+    mut user_config: Value,
 ) -> Result<(), AppError> {
     if !user_config.is_object() {
         return Err(AppError::Message(String::from(
@@ -69,6 +69,16 @@ pub fn save_user_config(
         )));
     }
     let _guard = state.lock_config_storage();
+    // the stored config came from a newer build; whatever the webview sends,
+    // it is not written over
+    if config_migration::is_newer_than_supported(&state.params().user_config) {
+        return Err(storage::newer_config_error());
+    }
+    // a config sent without its version would be migrated again at the next
+    // start
+    if config_migration::config_version(&user_config) == 0 {
+        config_migration::stamp_current_version(&mut user_config);
+    }
     storage::save_user_config(&app, &user_config)?;
     let previous_config = state.params().user_config;
     {

@@ -49,6 +49,11 @@
           <span>{{ currentTabTitle }}</span>
         </h1>
 
+        <p v-if="configIsNewer" class="settings-config-warning" role="alert">
+          <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
+          <span>{{ t('settings.configNewerWarning') }}</span>
+        </p>
+
         <template v-if="currentTab === 'general'">
           <SettingsSection :title="t('settings.sectionAppearance')">
             <FieldRow :label="t('settings.theme')">
@@ -294,6 +299,17 @@
           v-else-if="currentTab === 'main-actions'"
           :user-config="userConfig"
           @update:main-actions="updateMainActions"
+          @create-command="createMenuCommand"
+          @edit-command="editCommand"
+        />
+
+        <SettingsCommandsTab
+          v-else-if="currentTab === 'commands'"
+          :key="focusCommandId"
+          :user-config="userConfig"
+          :focus-command-id="focusCommandId"
+          @update:commands="updateCommands"
+          @update:main-actions="updateMainActions"
         />
 
         <div v-else-if="currentTab === 'stt'">
@@ -411,6 +427,11 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { normalizeMainActions } from '../lib/action-menu/main-actions'
+import {
+  createCommand,
+  normalizeCommands,
+} from '../lib/commands/command-config'
 import {
   editorHistoryRetentionChoices,
   normalizeEditorConfig,
@@ -445,6 +466,7 @@ import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
+import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
 import SettingsLanguagesTab from './settings/SettingsLanguagesTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
@@ -455,6 +477,9 @@ import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import { Icon } from '@iconify/vue'
 import {
+  type BuiltinToolId,
+  CONFIG_VERSION,
+  type CommandConfig,
   type ContrastMode,
   DEFAULT_USER_CONFIG,
   type MainActionConfig,
@@ -542,6 +567,11 @@ const actionTabs = computed(() => [
     text: t('settings.mainActionsTab'),
     key: 'main-actions',
     icon: 'mdi:gesture-tap-button',
+  },
+  {
+    text: t('settings.commandsTab'),
+    key: 'commands',
+    icon: 'mdi:console-line',
   },
   { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
   { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
@@ -684,6 +714,7 @@ function createPreparedUserConfig(config: unknown) {
     nextConfig.mainActions,
     nextConfig.mainActionRegistrations ?? []
   )
+  nextConfig.commands = normalizeCommands(nextConfig.commands)
   nextConfig.mainActionRegistrations = [
     ...new Set([
       ...(nextConfig.mainActionRegistrations ?? []),
@@ -863,6 +894,7 @@ const effectiveAppLanguage = computed(() =>
 )
 
 async function persistUserConfig() {
+  if (configIsNewer.value) return
   const preparedConfig = createPreparedUserConfig(userConfig.value)
   const serializedConfig = serializeUserConfig(preparedConfig)
   saveQueue = saveQueue.then(async () => {
@@ -1009,6 +1041,37 @@ const updateTranslateLanguages = (languages: string[]) => {
 const updateMainActions = (actions: (MainActionConfig | null)[]) => {
   userConfig.value.mainActions = actions
 }
+
+const updateCommands = (commands: CommandConfig[]) => {
+  userConfig.value.commands = commands
+}
+
+/** The command the commands tab opens with */
+const focusCommandId = ref<string>()
+
+watch(currentTab, (tab) => {
+  if (tab !== 'commands') focusCommandId.value = undefined
+})
+
+const editCommand = (commandId: string) => {
+  focusCommandId.value = commandId
+  currentTab.value = 'commands'
+}
+
+/** A new command of the library, placed in the slot it was created from */
+const createMenuCommand = (index: number, toolId: BuiltinToolId) => {
+  const command = createCommand(toolId)
+  const slots = normalizeMainActions(userConfig.value.mainActions)
+  slots[index] = { type: 'command', commandId: command.id }
+  userConfig.value.commands = [...(userConfig.value.commands ?? []), command]
+  userConfig.value.mainActions = slots
+  editCommand(command.id)
+}
+
+/** A newer build wrote the config: it is shown but never written over */
+const configIsNewer = computed(
+  () => (userConfig.value.configVersion ?? 0) > CONFIG_VERSION
+)
 
 const updateHotkey = (mode: string, shortcut: string) => {
   if (mode.startsWith(SELECTION_HOTKEY_PREFIX)) {
@@ -1221,6 +1284,15 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xl);
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.settings-config-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-xl);
+  font-size: 0.875rem;
+  color: var(--color-warning);
 }
 
 .editor-history-nested {

@@ -1,6 +1,4 @@
 import {
-  CUSTOM_ACTION_AFTER_RUN,
-  type CustomActionAfterRun,
   DEFAULT_MAIN_ACTIONS,
   STANDARD_ACTION_IDS,
   type MainActionConfig,
@@ -17,23 +15,6 @@ export function isStandardActionId(value: unknown): value is StandardActionId {
   return typeof value === 'string' && standardActionIds.has(value)
 }
 
-const stringOr = (value: unknown): string =>
-  typeof value === 'string' ? value : ''
-
-const afterRunOf = (value: unknown): CustomActionAfterRun =>
-  CUSTOM_ACTION_AFTER_RUN.includes(value as CustomActionAfterRun)
-    ? (value as CustomActionAfterRun)
-    : 'none'
-
-function headersOf(value: unknown): Record<string, string> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  return Object.fromEntries(
-    Object.entries(value).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string'
-    )
-  )
-}
-
 export function normalizeMainActions(
   value: unknown
 ): (MainActionConfig | null)[] {
@@ -48,37 +29,11 @@ export function normalizeMainActions(
       return { type: 'plugin', actionId: item.actionId }
     }
     if (
-      item?.type === 'script' &&
-      typeof item.id === 'string' &&
-      item.id.trim()
+      item?.type === 'command' &&
+      typeof item.commandId === 'string' &&
+      item.commandId.trim()
     ) {
-      return {
-        type: 'script',
-        id: item.id,
-        name: stringOr(item.name),
-        command: stringOr(item.command),
-        workingDir: stringOr(item.workingDir),
-        afterRun: afterRunOf(item.afterRun),
-        logOutput: Boolean(item.logOutput),
-      }
-    }
-    if (
-      item?.type === 'webhook' &&
-      typeof item.id === 'string' &&
-      item.id.trim()
-    ) {
-      return {
-        type: 'webhook',
-        id: item.id,
-        name: stringOr(item.name),
-        url: stringOr(item.url),
-        method: item.method === 'GET' ? 'GET' : 'POST',
-        headers: headersOf(item.headers),
-        payloadTemplate: stringOr(item.payloadTemplate),
-        authSecret: Boolean(item.authSecret),
-        afterRun: afterRunOf(item.afterRun),
-        logOutput: Boolean(item.logOutput),
-      }
+      return { type: 'command', commandId: item.commandId }
     }
     if (
       !item ||

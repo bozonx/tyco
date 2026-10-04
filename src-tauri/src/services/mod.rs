@@ -4,6 +4,7 @@ pub mod activation_socket;
 pub mod app_paths;
 pub mod atomic_file;
 pub mod clipboard;
+pub mod config_migration;
 pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;

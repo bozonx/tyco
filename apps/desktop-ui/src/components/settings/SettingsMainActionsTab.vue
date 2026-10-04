@@ -7,20 +7,24 @@
       @remove="removeAction"
     >
       <template #item="{ item, index }">
-        <div class="flex flex-col gap-2 w-full">
+        <div class="flex items-center gap-2 w-full">
           <FieldSelect
-            class="w-full"
+            class="flex-1 min-w-0"
             :value="optionId(item)"
             :options="actionOptions"
             @update:value="updateAction(index, $event)"
           />
-
-          <CustomActionFields
-            v-if="item.type === 'script' || item.type === 'webhook'"
-            :key="item.id"
-            :item="item"
-            @update="(field, value) => updateCustomField(index, field, value)"
-          />
+          <Button
+            v-if="item.type === 'command'"
+            type="button"
+            ghost
+            square
+            sm
+            :title="t('commands.editCommand')"
+            @click="emit('editCommand', item.commandId)"
+          >
+            <Icon icon="mdi:pencil-outline" width="16" height="16" />
+          </Button>
         </div>
       </template>
     </ShortcutSlots>
@@ -32,39 +36,48 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
+import {
+  commandLabel,
+  isMenuCommand,
+  normalizeCommands,
+} from '../../lib/commands/command-config'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/actionMenu'
-import { useLlmStore } from '../../stores/llm'
+import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import CustomActionFields from './CustomActionFields.vue'
+import { Icon } from '@iconify/vue'
 import {
+  type BuiltinToolId,
   type MainActionConfig,
   STANDARD_ACTION_IDS,
   type UserConfig,
-  webhookSecretId,
 } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
 
 const emit = defineEmits<{
   (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
+  /** A new command of the library goes to the slot at `index` */
+  (event: 'createCommand', index: number, toolId: BuiltinToolId): void
+  (event: 'editCommand', commandId: string): void
 }>()
+
+const NEW_COMMAND_PREFIX = 'new:'
 
 const { t } = useI18n()
 const actionMenuStore = useActionMenuStore()
-const llmStore = useLlmStore()
 
 const actionSlots = computed(() =>
   normalizeMainActions(props.userConfig.mainActions)
 )
 
+const commands = computed(() => normalizeCommands(props.userConfig.commands))
+
 const optionId = (item: MainActionConfig | null | undefined): string => {
   if (!item) return ''
-  if (item.type === 'standard' || item.type === 'plugin') {
-    return `${item.type}:${item.actionId}`
-  }
-  return `custom:${item.type}`
+  if (item.type === 'command') return `command:${item.commandId}`
+  return `${item.type}:${item.actionId}`
 }
 
 const availableActions = computed(() => [
@@ -86,7 +99,23 @@ const availableActions = computed(() => [
           ]
         : []
     ),
+  // only commands that take the text of the editor fit the menu
+  ...commands.value
+    .filter(isMenuCommand)
+    .map((command) => ({
+      config: { type: 'command' as const, commandId: command.id },
+      name: commandLabel(command),
+    })),
 ])
+
+/** The name of a slot whose action is not on offer, e.g. a disabled command */
+function unavailableName(slot: MainActionConfig): string {
+  if (slot.type !== 'command') return slot.actionId
+  const command = commands.value.find((item) => item.id === slot.commandId)
+  return t('commands.unavailableInMenu', {
+    name: command ? commandLabel(command) : slot.commandId,
+  })
+}
 
 const actionOptions = computed(() => {
   const options = [
@@ -94,15 +123,12 @@ const actionOptions = computed(() => {
       id: optionId(config),
       name,
     })),
-    { id: 'custom:script', name: t('action.script') },
-    { id: 'custom:webhook', name: t('action.webhook') },
+    { id: `${NEW_COMMAND_PREFIX}script`, name: t('commands.newScript') },
+    { id: `${NEW_COMMAND_PREFIX}webhook`, name: t('commands.newWebhook') },
   ]
   for (const slot of actionSlots.value) {
     if (slot && !options.some((option) => option.id === optionId(slot))) {
-      options.push({
-        id: optionId(slot),
-        name: 'actionId' in slot ? slot.actionId : slot.name || slot.type,
-      })
+      options.push({ id: optionId(slot), name: unavailableName(slot) })
     }
   }
   return options
@@ -112,35 +138,17 @@ function moveAction(from: number, to: number) {
   emit('update:mainActions', moveShortcutSlot(actionSlots.value, from, to))
 }
 
-function addAction(index: number) {
-  const slots = [...actionSlots.value]
-  slots[index] = { type: 'standard', actionId: STANDARD_ACTION_IDS[0] }
-  emit('update:mainActions', slots)
-}
-
-function newActionId(): string {
-  return typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `action-${Date.now()}`
-}
-
-/** The slot's webhook token goes with it */
-function forgetSlot(index: number) {
-  const current = actionSlots.value[index]
-  if (current?.type === 'webhook' && current.authSecret) {
-    llmStore.removeSecret(webhookSecretId(current.id)).catch(() => {
-      // a leftover token is bound to its origin and harmless
-    })
-  }
-}
-
 function setSlot(index: number, value: MainActionConfig | null) {
-  forgetSlot(index)
   const slots = [...actionSlots.value]
   slots[index] = value
   emit('update:mainActions', slots)
 }
 
+function addAction(index: number) {
+  setSlot(index, { type: 'standard', actionId: STANDARD_ACTION_IDS[0] })
+}
+
+/** Removing a command from the menu keeps it in the library */
 function removeAction(index: number) {
   setSlot(index, null)
 }
@@ -148,32 +156,12 @@ function removeAction(index: number) {
 function updateAction(index: number, value: string | number | undefined) {
   if (value === optionId(actionSlots.value[index])) return
 
-  if (value === 'custom:script') {
-    setSlot(index, {
-      type: 'script',
-      id: newActionId(),
-      name: '',
-      command: '',
-      workingDir: '',
-      afterRun: 'none',
-      logOutput: false,
-    })
+  if (value === `${NEW_COMMAND_PREFIX}script`) {
+    emit('createCommand', index, 'script')
     return
   }
-
-  if (value === 'custom:webhook') {
-    setSlot(index, {
-      type: 'webhook',
-      id: newActionId(),
-      name: '',
-      url: '',
-      method: 'POST',
-      headers: {},
-      payloadTemplate: '',
-      authSecret: false,
-      afterRun: 'none',
-      logOutput: false,
-    })
+  if (value === `${NEW_COMMAND_PREFIX}webhook`) {
+    emit('createCommand', index, 'webhook')
     return
   }
 
@@ -181,14 +169,5 @@ function updateAction(index: number, value: string | number | undefined) {
     ({ config }) => optionId(config) === value
   )
   if (selected) setSlot(index, selected.config)
-}
-
-function updateCustomField(index: number, field: string, value: unknown) {
-  const current = actionSlots.value[index]
-  if (!current || (current.type !== 'script' && current.type !== 'webhook'))
-    return
-  const slots = [...actionSlots.value]
-  slots[index] = { ...current, [field]: value } as MainActionConfig
-  emit('update:mainActions', slots)
 }
 </script>

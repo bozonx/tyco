@@ -13,7 +13,7 @@ use crate::models::{
 };
 use crate::services::atomic_file::{read_or_quarantine, write_private};
 use crate::services::secret_detector::redact_secrets;
-use crate::services::{app_paths::AppPaths, llm_config};
+use crate::services::{app_paths::AppPaths, config_migration, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.config_dir;
@@ -193,7 +193,27 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
             )))
         }
     })? {
-        let changed = normalize_window_insertion_config(&mut value)
+        // a newer build wrote it: its settings are kept as they are, and the
+        // config is never written over (see `save_user_config`)
+        if config_migration::is_newer_than_supported(&value) {
+            log::warn!(
+                "{} is of config version {}, newer than {} this build supports; \
+                 it is used as it is and not saved",
+                path.display(),
+                config_migration::config_version(&value),
+                config_migration::CONFIG_VERSION
+            );
+            return Ok(value);
+        }
+
+        let previous_version = config_migration::config_version(&value);
+        let migrated = config_migration::migrate(&mut value);
+        if migrated {
+            back_up_config_before_migration(&path, previous_version);
+        }
+
+        let changed = migrated
+            | normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
             | normalize_appearance_config(&mut value)
             | normalize_language_config(&mut value)
@@ -215,6 +235,31 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     save_user_config(app, &default_config)?;
 
     Ok(default_config)
+}
+
+/// Keeps a copy of the config as it was before a migration, once per old
+/// version: an older build does not know the migrated config and would lose
+/// what it no longer understands.
+fn back_up_config_before_migration(path: &Path, version: u64) {
+    let backup = path.with_file_name(config_migration::backup_file_name(
+        CONFIG_FILE_NAME,
+        version,
+    ));
+    if backup.exists() {
+        return;
+    }
+    let copied = fs::read_to_string(path)
+        .map_err(AppError::from)
+        .and_then(|raw| write_private(&backup, &raw));
+    match copied {
+        Ok(()) => log::info!(
+            "Migrating the config from version {version}; the previous one is kept in {}",
+            backup.display()
+        ),
+        Err(error) => {
+            log::error!("Could not keep a copy of the config before migrating it: {error}")
+        }
+    }
 }
 
 /// One speech model per provider: the defaults with the user's own settings
@@ -611,16 +656,21 @@ fn normalize_main_actions_config(user_config: &mut Value) -> bool {
         return false;
     };
 
+    let mut changed = false;
     if config
         .get("mainActions")
         .and_then(Value::as_array)
         .is_none()
     {
         config.insert(String::from("mainActions"), defaults["mainActions"].clone());
-        return true;
+        changed = true;
+    }
+    if config.get("commands").and_then(Value::as_array).is_none() {
+        config.insert(String::from("commands"), json!([]));
+        changed = true;
     }
 
-    false
+    changed
 }
 
 fn normalize_ai_rules_and_tasks(user_config: &mut Value) -> bool {
@@ -738,8 +788,17 @@ fn normalize_window_insertion_config(user_config: &mut Value) -> bool {
 }
 
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
+    if config_migration::is_newer_than_supported(user_config) {
+        return Err(newer_config_error());
+    }
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
     write_private(&path, &serde_yaml::to_string(user_config)?)
+}
+
+pub fn newer_config_error() -> AppError {
+    AppError::Message(String::from(
+        "The config was written by a newer version of Tyco; update Tyco to change the settings",
+    ))
 }
 
 pub fn read_or_create_local_state(app: &AppHandle) -> Result<LocalState, AppError> {

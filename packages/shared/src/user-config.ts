@@ -2,6 +2,13 @@ import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
+/**
+ * The schema version of the user config; the backend migrates older configs and
+ * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
+ * `src-tauri/src/services/config_migration.rs`
+ */
+export const CONFIG_VERSION = 1
+
 export type ModelTag =
   | 'voice'
   | 'text'
@@ -202,44 +209,96 @@ export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 export const CUSTOM_ACTION_AFTER_RUN = ['none', 'showMenu'] as const
 export type CustomActionAfterRun = (typeof CUSTOM_ACTION_AFTER_RUN)[number]
 
-export interface ScriptMainAction {
-  type: 'script'
-  id: string
-  name: string
+/** Built-in tools a command can run; plugin and MCP tools come later */
+export const BUILTIN_TOOL_IDS = ['script', 'webhook'] as const
+export type BuiltinToolId = (typeof BUILTIN_TOOL_IDS)[number]
+
+/** `toolConfig` of a `script` command */
+export interface ScriptToolConfig {
   /** A shell command; `{{TEXT}}` is replaced with the text, quoted */
   command: string
   /** Empty for the home directory */
   workingDir?: string
-  afterRun?: CustomActionAfterRun
-  logOutput?: boolean
+  /** The command takes the text; without it `{{TEXT}}` is not allowed */
+  takesText: boolean
 }
 
-export interface WebhookMainAction {
-  type: 'webhook'
-  id: string
-  name: string
+/** `toolConfig` of a `webhook` command */
+export interface WebhookToolConfig {
   url: string
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
   payloadTemplate?: string
   /**
    * The Authorization header is kept in the secret store under
-   * `webhookSecretId(id)`, bound to the origin of the URL
+   * `webhookSecretId(commandId)`, bound to the origin of the URL
    */
   authSecret?: boolean
-  afterRun?: CustomActionAfterRun
-  logOutput?: boolean
+  /** The webhook takes the text; without it `{{TEXT}}` is not allowed */
+  takesText: boolean
 }
 
-export function webhookSecretId(actionId: string): string {
-  return `webhook-${actionId.toLowerCase().replace(/[^a-z0-9._-]/g, '-')}`.slice(
+export const COMMAND_CONFIRM_MODES = ['auto', 'always'] as const
+export type CommandConfirmMode = (typeof COMMAND_CONFIRM_MODES)[number]
+
+/** Where a command can be invoked, besides the action menu */
+export interface CommandAvailability {
+  launcher: boolean
+  external: boolean
+  chat: boolean
+}
+
+/**
+ * A user command of the command library: a tool with its settings, invoked from
+ * the action menu and, later, the command overlay, external calls and the chat.
+ * See `dev_docs/design-voice-commands.md`
+ */
+export interface CommandConfig {
+  /**
+   * Stable; kept from the migrated action so the webhook secret id stays the
+   * same
+   */
+  id: string
+  name: string
+  /** Tells the LLM what the command does; the agent and LLM parsing use it */
+  description?: string
+  /**
+   * Phrases that select this command by voice, with `(a|b)` alternatives and
+   * `[optional]` words; the name is matched as well
+   */
+  phrases: string[]
+  /** `script`, `webhook`, `<pluginName>.<toolId>` or `mcp:<server>.<tool>` */
+  toolId: string
+  /** Values for the tool's config fields */
+  toolConfig: Record<string, unknown>
+  /**
+   * Fill a structured input from text with the LLM; only for tools that take a
+   * structured input and do not parse text themselves
+   */
+  llmArgumentParsing: boolean
+  /** What to do with text the tool returns */
+  afterRun: CustomActionAfterRun
+  logOutput: boolean
+  confirm: CommandConfirmMode
+  availableIn: CommandAvailability
+  enabled: boolean
+}
+
+export function webhookSecretId(commandId: string): string {
+  return `webhook-${commandId.toLowerCase().replace(/[^a-z0-9._-]/g, '-')}`.slice(
     0,
     64
   )
 }
 
+/** A command of the library placed in the action menu */
+export interface CommandMainAction {
+  type: 'command'
+  commandId: string
+}
+
 export type MainActionConfig =
-  StandardMainAction | PluginMainAction | ScriptMainAction | WebhookMainAction
+  StandardMainAction | PluginMainAction | CommandMainAction
 
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
@@ -268,6 +327,8 @@ export type SubmitKey = (typeof SUBMIT_KEYS)[number]
 export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 
 export interface UserConfig {
+  /** See `CONFIG_VERSION`; absent in configs older than version 1 */
+  configVersion?: number
   hotkeys: Record<string, string>
   /**
    * Hotkeys of the actions that replace the selection, keyed by action id; only
@@ -295,6 +356,8 @@ export interface UserConfig {
   toTranslateLanguages: (string | null)[]
   translation: TranslationConfig
   mainActions: (MainActionConfig | null)[]
+  /** The command library; the action menu refers to commands by id */
+  commands: CommandConfig[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */
   mainActionRegistrations?: string[]
   editorHistoryStorage: EditorHistoryStorage
@@ -323,6 +386,7 @@ export interface UserConfig {
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
+  configVersion: CONFIG_VERSION,
   // the Linux defaults: the backend owns the defaults of each platform and
   // reports them in `HotkeyProviderInfo.defaults`; an empty one is unassigned
   hotkeys: {
@@ -354,6 +418,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
   translation: DEFAULT_TRANSLATION_CONFIG,
   mainActions: DEFAULT_MAIN_ACTIONS,
+  commands: [],
   editorHistoryStorage: 'disk',
   editorHistoryMaxItems: 1000,
   editorHistoryRetentionDays: 30,

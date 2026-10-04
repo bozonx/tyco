@@ -21,87 +21,20 @@ describe('normalizeMainActions', () => {
     ).toEqual([null, { type: 'standard', actionId: 'translation' }, null, null])
   })
 
-  it('normalizes script and webhook actions', () => {
+  it('keeps references to commands and drops the legacy custom actions', () => {
     const raw = [
-      {
-        type: 'script',
-        id: 'sc1',
-        name: 'My Script',
-        command: 'echo 1',
-        logOutput: true,
-      },
-      {
-        type: 'webhook',
-        id: 'wh1',
-        name: 'My Hook',
-        url: 'https://example.com',
-      },
-      { type: 'script', id: '', command: 'no-id' },
-      {
-        type: 'script',
-        id: 'sc2',
-        name: 'Full',
-        command: 'cat',
-        workingDir: '~/work',
-        afterRun: 'showMenu',
-      },
-      {
-        type: 'webhook',
-        id: 'wh2',
-        name: 'Full Hook',
-        url: 'https://example.com',
-        method: 'GET',
-        headers: { 'x-a': '1', 'x-b': 2 },
-        payloadTemplate: '{}',
-        authSecret: true,
-        afterRun: 'bogus',
-        logOutput: true,
-      },
+      { type: 'command', commandId: 'sc1' },
+      { type: 'command', commandId: ' ' },
+      { type: 'command' },
+      { type: 'script', id: 'sc2', command: 'echo 1' },
+      { type: 'webhook', id: 'wh1', url: 'https://example.com' },
     ]
     expect(normalizeMainActions(raw).slice(0, 5)).toEqual([
-      {
-        type: 'script',
-        id: 'sc1',
-        name: 'My Script',
-        command: 'echo 1',
-        workingDir: '',
-        afterRun: 'none',
-        logOutput: true,
-      },
-      {
-        type: 'webhook',
-        id: 'wh1',
-        name: 'My Hook',
-        url: 'https://example.com',
-        method: 'POST',
-        headers: {},
-        payloadTemplate: '',
-        authSecret: false,
-        afterRun: 'none',
-        logOutput: false,
-      },
+      { type: 'command', commandId: 'sc1' },
       null,
-      {
-        type: 'script',
-        id: 'sc2',
-        name: 'Full',
-        command: 'cat',
-        workingDir: '~/work',
-        afterRun: 'showMenu',
-        logOutput: false,
-      },
-      {
-        type: 'webhook',
-        id: 'wh2',
-        name: 'Full Hook',
-        url: 'https://example.com',
-        method: 'GET',
-        headers: { 'x-a': '1' },
-        payloadTemplate: '{}',
-        authSecret: true,
-        afterRun: 'none',
-        logOutput: true,
-      },
+      null,
+      null,
+      null,
     ])
   })
 })

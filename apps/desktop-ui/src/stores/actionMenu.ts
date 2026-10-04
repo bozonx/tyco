@@ -7,7 +7,7 @@ import {
   type ActionItem,
   createActionMenuStoreModel,
 } from '../lib/action-menu/action-menu-store'
-import { executeWebhookAction } from '../lib/action-menu/custom-actions'
+import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
@@ -56,6 +56,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     mainActionRegistrations: () =>
       ipcStore.params.userConfig.mainActionRegistrations,
     mainActions: () => ipcStore.params.userConfig.mainActions,
+    commands: () => ipcStore.params.userConfig.commands,
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
     },
@@ -75,9 +76,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       }
       return res.result
     },
-    executeWebhookAction: (action, text) =>
-      executeWebhookAction(
-        action,
+    executeWebhook: (target, text) =>
+      executeWebhook(
+        target,
         text,
         createTauriFetch(tauriNetIpc),
         async (name, type, details) => {

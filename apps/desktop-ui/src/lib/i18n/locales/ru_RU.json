@@ -255,8 +255,6 @@
     "translationGlossaryHint": "Один термин на строку. Формат: исходник = перевод или !термин, чтобы не переводить.",
     "translationGlossaryPlaceholder": "workspace = рабочее пространство\n!TyCo",
     "mainActionsHint": "Действия основного меню. Перетаскивайте карточки, чтобы назначать их на разные горячие клавиши.",
-    "actionNameLabel": "Название",
-    "actionNamePlaceholder": "Как действие называется в меню",
     "actionCommandLabel": "Команда",
     "actionCommandPlaceholder": "Например: notify-send Tyco {placeholder}",
     "actionCommandInfo": "Выполняется в системной оболочке (sh, zsh или PowerShell). {placeholder} заменяется текстом — уже в кавычках и экранированным, свои кавычки не нужны. Текст также приходит в stdin и в переменную окружения TYCO_TEXT.",
@@ -385,7 +383,12 @@
       "label": "Отправка текста",
       "enter": "Enter (Shift+Enter — новая строка)",
       "ctrlEnter": "Ctrl+Enter (Enter — новая строка)"
-    }
+    },
+    "commandsTab": "Команды",
+    "configNewerWarning": "Настройки сохранены более новой версией Tyco. Они действуют, но изменения здесь не сохраняются: обновите Tyco, чтобы их менять.",
+    "actionCommandNoTextPlaceholder": "Например: ~/bin/backup.sh",
+    "actionCommandNoTextInfo": "Выполняется в системной оболочке (sh, zsh или PowerShell). Команда не получает текст.",
+    "actionWebhookPayloadNoTextPlaceholder": "Пусто: JSON с названием команды"
   },
   "editor": {
     "case": "Регистр",
@@ -641,7 +644,9 @@
     "webhookSuccess": "Вебхук успешно отправлен",
     "webhookFailed": "Ошибка отправки вебхука",
     "webhookEmptyUrl": "URL вебхука не указан",
-    "textTooLongForSearch": "Текст слишком длинный для поиска: выделите фрагмент"
+    "textTooLongForSearch": "Текст слишком длинный для поиска: выделите фрагмент",
+    "commandDisabled": "Команда выключена",
+    "commandUnavailable": "Команда недоступна"
   },
   "llmErrors": {
     "auth": "Провайдер отклонил ключ, или ключ для него не сохранён",
@@ -679,5 +684,34 @@
     "cancelled": "Отменено",
     "missingLanguage": "В этом слоте перевода не задан язык",
     "missingAiTask": "В этом слоте не задана AI-задача"
+  },
+  "commands": {
+    "hint": "Ваши скрипты и вебхуки. Команду настраивают один раз и добавляют в меню основных действий; позже её можно будет вызывать голосом и из других приложений.",
+    "empty": "Команд пока нет.",
+    "unnamed": "Команда без названия",
+    "addScript": "Скрипт",
+    "addWebhook": "Вебхук",
+    "newScript": "Новый скрипт…",
+    "newWebhook": "Новый вебхук…",
+    "editCommand": "Настроить команду",
+    "unavailableInMenu": "{name} (недоступна в меню)",
+    "nameLabel": "Название",
+    "namePlaceholder": "Как команда называется в меню",
+    "idLabel": "ID",
+    "idInfo": "Постоянный идентификатор, чтобы вызывать команду из скриптов и других приложений.",
+    "copyId": "Скопировать ID",
+    "idCopied": "Скопировано",
+    "enabled": "Включена",
+    "takesText": "Принимает текст",
+    "takesTextInfo": "Команда получает текст, над которым её запускают. В меню основных действий можно добавить только команды, принимающие текст.",
+    "unknownTool": "Инструмент «{tool}» недоступен в этой версии Tyco.",
+    "badgeNoText": "без текста",
+    "badgeInMenu": "в меню",
+    "badgeDisabled": "выключена",
+    "badgeIssuesHint": "Команда настроена не полностью",
+    "errorNoCommand": "Укажите команду для запуска.",
+    "errorNoUrl": "Укажите URL.",
+    "errorTextPlaceholder": "Команда не принимает текст: уберите {placeholder} или включите «Принимает текст».",
+    "errorUnknownTool": "Неизвестный инструмент."
   }
 }

@@ -255,8 +255,6 @@
     "translationGlossaryHint": "Her satıra bir terim yazın. kaynak = çeviri veya terimi korumak için !terim kullanın.",
     "translationGlossaryPlaceholder": "workspace = çalışma alanı\n!TyCo",
     "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",
-    "actionNameLabel": "Ad",
-    "actionNamePlaceholder": "Eylemin menüdeki adı",
     "actionCommandLabel": "Komut",
     "actionCommandPlaceholder": "ör. notify-send Tyco {placeholder}",
     "actionCommandInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. {placeholder} metinle değiştirilir; metin zaten tırnak içinde ve kaçışlıdır, ek tırnak gerekmez. Metin ayrıca stdin'den ve TYCO_TEXT ortam değişkeninden gelir.",
@@ -385,7 +383,12 @@
       "label": "Metni gönderme tuşu",
       "enter": "Enter (yeni satır için Shift+Enter)",
       "ctrlEnter": "Ctrl+Enter (yeni satır için Enter)"
-    }
+    },
+    "commandsTab": "Komutlar",
+    "configNewerWarning": "Ayarlar Tyco'nun daha yeni bir sürümüyle kaydedildi. Olduğu gibi kullanılıyor, ancak burada yapılan değişiklikler kaydedilmiyor: değiştirmek için Tyco'yu güncelleyin.",
+    "actionCommandNoTextPlaceholder": "Örneğin: ~/bin/backup.sh",
+    "actionCommandNoTextInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. Komut metin almaz.",
+    "actionWebhookPayloadNoTextPlaceholder": "Boş: komut adını içeren bir JSON"
   },
   "editor": {
     "case": "Harf biçimi",
@@ -641,7 +644,9 @@
     "webhookSuccess": "Web kancası başarıyla gönderildi",
     "webhookFailed": "Web kancası isteği başarısız oldu",
     "webhookEmptyUrl": "Web kancası URL'si boş",
-    "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin"
+    "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin",
+    "commandDisabled": "Komut devre dışı",
+    "commandUnavailable": "Komut kullanılamıyor"
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",
@@ -679,5 +684,34 @@
     "cancelled": "İptal edildi",
     "missingLanguage": "Bu çeviri yuvasında bir dil ayarlanmamış",
     "missingAiTask": "Bu yuvada bir yapay zekâ görevi ayarlanmamış"
+  },
+  "commands": {
+    "hint": "Betikleriniz ve webhook'larınız. Bir komutu bir kez ayarlayın ve ana eylemler menüsüne ekleyin; ileride sesle ve diğer uygulamalardan da çalıştırılabilecek.",
+    "empty": "Henüz komut yok.",
+    "unnamed": "Adsız komut",
+    "addScript": "Betik",
+    "addWebhook": "Webhook",
+    "newScript": "Yeni betik…",
+    "newWebhook": "Yeni webhook…",
+    "editCommand": "Komutu düzenle",
+    "unavailableInMenu": "{name} (menüde kullanılamaz)",
+    "nameLabel": "Ad",
+    "namePlaceholder": "Komutun menüdeki adı",
+    "idLabel": "Kimlik",
+    "idInfo": "Komutu betiklerden ve diğer uygulamalardan çağırmak için sabit bir tanımlayıcı.",
+    "copyId": "Kimliği kopyala",
+    "idCopied": "Kopyalandı",
+    "enabled": "Etkin",
+    "takesText": "Metin alır",
+    "takesTextInfo": "Komut, üzerinde çalıştırıldığı metni alır. Ana eylemler menüsüne yalnızca metin alan komutlar eklenebilir.",
+    "unknownTool": "“{tool}” aracı Tyco'nun bu sürümünde kullanılamıyor.",
+    "badgeNoText": "metinsiz",
+    "badgeInMenu": "menüde",
+    "badgeDisabled": "devre dışı",
+    "badgeIssuesHint": "Komut tam olarak ayarlanmamış",
+    "errorNoCommand": "Çalıştırılacak komutu girin.",
+    "errorNoUrl": "URL'yi girin.",
+    "errorTextPlaceholder": "Komut metin almıyor: {placeholder} öğesini kaldırın veya “Metin alır” seçeneğini açın.",
+    "errorUnknownTool": "Bilinmeyen araç."
   }
 }

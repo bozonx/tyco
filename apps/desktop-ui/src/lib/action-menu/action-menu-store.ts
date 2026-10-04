@@ -1,16 +1,16 @@
 import { shallowRef } from 'vue'
 
-import type {
-  MainActionConfig,
-  ScriptActionRequest,
-  ScriptExecutionResult,
-  WebhookMainAction,
-} from '@tyco/shared'
+import type { CommandConfig, MainActionConfig } from '@tyco/shared'
 
 import {
-  createScriptActionItem,
-  createWebhookActionItem,
-} from './custom-actions'
+  commandIcon,
+  commandLabel,
+  isMenuCommand,
+} from '../commands/command-config'
+import {
+  type CommandRunnerDependencies,
+  createCommandRunner,
+} from '../commands/command-runner'
 import { assignPluginActions } from './main-actions'
 
 export interface ActionItem {
@@ -27,7 +27,7 @@ export interface ActionItem {
   action: (text: string) => Promise<void>
 }
 
-export interface ActionMenuDependencies {
+export interface ActionMenuDependencies extends CommandRunnerDependencies {
   typeIntoWindowAndClose: (text: string) => void
   putIntoClipboardAndClose: (text: string) => Promise<void>
   /** Records a text that leaves the app; runs before the window closes. */
@@ -40,30 +40,27 @@ export interface ActionMenuDependencies {
     extra?: Record<string, unknown>
   ) => Promise<void>
   startChatWithAttachment: (text: string) => void
-  showToast: (
-    message: string,
-    type?: 'info' | 'warn' | 'error' | 'success'
-  ) => void
   minCorrectionLength?: () => number
   mainActionRegistrations?: () => readonly string[] | undefined
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
-  closeWindow?: () => void
-  /** A toast with `messageKey` translated and `detail` after it */
-  showError?: (messageKey: string, detail?: string) => void
-  /** Opens the action menu on `text`, the result of an action on `sourceText` */
-  showResultMenu?: (text: string, sourceText: string) => void
-  executeScriptAction?: (
-    request: ScriptActionRequest
-  ) => Promise<ScriptExecutionResult>
-  /** Resolves with the response body */
-  executeWebhookAction?: (
-    action: WebhookMainAction,
-    text: string
-  ) => Promise<string>
+  /** The command library the menu items of the `command` type refer to */
+  commands?: () => readonly CommandConfig[] | undefined
 }
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   const registeredActionsMenu = shallowRef<ActionItem[]>([])
+  const commandRunner = createCommandRunner(deps)
+
+  /** The menu item of a command; the text leaves the app with it */
+  const createCommandActionItem = (command: CommandConfig): ActionItem => ({
+    id: `command:${command.id}`,
+    name: commandLabel(command),
+    icon: commandIcon(command),
+    action: async (text: string) => {
+      await deps.saveOutput(text)
+      await commandRunner.run(command, text)
+    },
+  })
 
   /** Corrects `text` on a step of its own, unless it is empty or too short. */
   const correct = async (
@@ -161,12 +158,20 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     const plugins = new Map(
       registeredActionsMenu.value.map((action) => [action.id, action])
     )
+    const commands = new Map(
+      (deps.commands?.() ?? []).map((command) => [command.id, command])
+    )
     const slots = resolveMainActions().map((item) => {
       if (!item) return undefined
       if (item.type === 'standard') return defaults.get(item.actionId)
       if (item.type === 'plugin') return plugins.get(item.actionId)
-      if (item.type === 'script') return createScriptActionItem(item, deps)
-      if (item.type === 'webhook') return createWebhookActionItem(item, deps)
+      if (item.type === 'command') {
+        // a disabled command, or one that takes no text, leaves its slot empty
+        const command = commands.get(item.commandId)
+        return command && isMenuCommand(command)
+          ? createCommandActionItem(command)
+          : undefined
+      }
       return undefined
     })
     while (slots.length && !slots.at(-1)) slots.pop()

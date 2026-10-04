@@ -252,8 +252,6 @@
     "translationGlossaryHint": "One term per line. Use source = translation, or !term to keep a term unchanged.",
     "translationGlossaryPlaceholder": "workspace = workspace\n!TyCo",
     "mainActionsHint": "Actions available from the main action menu. Drag cards to assign them to different hotkeys.",
-    "actionNameLabel": "Name",
-    "actionNamePlaceholder": "How the action is called in the menu",
     "actionCommandLabel": "Command",
     "actionCommandPlaceholder": "e.g. notify-send Tyco {placeholder}",
     "actionCommandInfo": "Runs in the system shell (sh, zsh or PowerShell). {placeholder} is replaced with the text, already quoted and escaped, so no quotes are needed around it. The text also comes on stdin and in the TYCO_TEXT environment variable.",
@@ -382,7 +380,12 @@
       "label": "Send text with",
       "enter": "Enter (Shift+Enter for a new line)",
       "ctrlEnter": "Ctrl+Enter (Enter for a new line)"
-    }
+    },
+    "commandsTab": "Commands",
+    "configNewerWarning": "The settings were saved by a newer version of Tyco. They are used as they are, but changes here are not saved: update Tyco to change them.",
+    "actionCommandNoTextPlaceholder": "For example: ~/bin/backup.sh",
+    "actionCommandNoTextInfo": "Runs in the system shell (sh, zsh or PowerShell). The command takes no text.",
+    "actionWebhookPayloadNoTextPlaceholder": "Empty: a JSON with the command name"
   },
   "editor": {
     "case": "Case",
@@ -638,7 +641,9 @@
     "webhookSuccess": "Webhook sent successfully",
     "webhookFailed": "Webhook request failed",
     "webhookEmptyUrl": "Webhook URL is empty",
-    "textTooLongForSearch": "The text is too long to search for: select a fragment"
+    "textTooLongForSearch": "The text is too long to search for: select a fragment",
+    "commandDisabled": "The command is disabled",
+    "commandUnavailable": "The command is unavailable"
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",
@@ -676,5 +681,34 @@
     "cancelled": "Cancelled",
     "missingLanguage": "No language is configured in this translation slot",
     "missingAiTask": "No AI task is configured in this slot"
+  },
+  "commands": {
+    "hint": "Your scripts and webhooks. Set a command up once, then add it to the main actions menu; later it can be run by voice and from other apps as well.",
+    "empty": "No commands yet.",
+    "unnamed": "Untitled command",
+    "addScript": "Script",
+    "addWebhook": "Webhook",
+    "newScript": "New script…",
+    "newWebhook": "New webhook…",
+    "editCommand": "Edit the command",
+    "unavailableInMenu": "{name} (unavailable in the menu)",
+    "nameLabel": "Name",
+    "namePlaceholder": "How the command is called in the menu",
+    "idLabel": "ID",
+    "idInfo": "A stable identifier to call the command from scripts and other apps.",
+    "copyId": "Copy the ID",
+    "idCopied": "Copied",
+    "enabled": "Enabled",
+    "takesText": "Takes text",
+    "takesTextInfo": "The command receives the text it is run on. Only commands that take text can be added to the main actions menu.",
+    "unknownTool": "The tool “{tool}” is not available in this version of Tyco.",
+    "badgeNoText": "no text",
+    "badgeInMenu": "in menu",
+    "badgeDisabled": "disabled",
+    "badgeIssuesHint": "The command is not set up completely",
+    "errorNoCommand": "Enter the command to run.",
+    "errorNoUrl": "Enter the URL.",
+    "errorTextPlaceholder": "The command takes no text: remove {placeholder} or turn on “Takes text”.",
+    "errorUnknownTool": "Unknown tool."
   }
 }

@@ -1,28 +1,24 @@
 <template>
   <div class="custom-action-fields">
-    <label class="action-field">
-      <span class="action-field-label">{{
-        t('settings.actionNameLabel')
-      }}</span>
-      <FieldInput
-        :value="item.name"
-        :placeholder="t('settings.actionNamePlaceholder')"
-        @update:value="update('name', $event)"
-      />
-    </label>
-
-    <template v-if="item.type === 'script'">
+    <template v-if="command.toolId === 'script'">
       <div class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionCommandLabel') }}
         </span>
         <ActionTemplateField
           ref="commandRef"
-          :value="item.command"
+          :value="script.command"
+          :no-text="!script.takesText"
           :placeholder="
-            t('settings.actionCommandPlaceholder', { placeholder: TEXT })
+            script.takesText
+              ? t('settings.actionCommandPlaceholder', { placeholder: TEXT })
+              : t('settings.actionCommandNoTextPlaceholder')
           "
-          :info="t('settings.actionCommandInfo', { placeholder: TEXT })"
+          :info="
+            script.takesText
+              ? t('settings.actionCommandInfo', { placeholder: TEXT })
+              : t('settings.actionCommandNoTextInfo')
+          "
           @update:value="update('command', $event)"
         >
           <Button
@@ -36,6 +32,7 @@
             <Icon icon="mdi:file-code-outline" width="18" height="18" />
           </Button>
         </ActionTemplateField>
+        <FieldIssues :issues="issuesOf('command')" />
       </div>
 
       <div class="action-field">
@@ -45,7 +42,7 @@
         <div class="action-field-row">
           <FieldInput
             class="flex-1"
-            :value="item.workingDir"
+            :value="script.workingDir"
             :placeholder="t('settings.actionWorkingDirPlaceholder')"
             @update:value="update('workingDir', $event)"
           />
@@ -63,14 +60,14 @@
       </div>
     </template>
 
-    <template v-else>
+    <template v-else-if="command.toolId === 'webhook'">
       <div class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionWebhookUrlLabel') }}
         </span>
         <div class="action-field-row">
           <SegmentedControl
-            :value="item.method || 'POST'"
+            :value="webhook.method || 'POST'"
             :label="t('settings.actionWebhookMethod')"
             :options="[
               { id: 'POST', name: 'POST' },
@@ -79,25 +76,41 @@
             @update:value="update('method', $event)"
           />
           <ActionTemplateField
-            :value="item.url"
+            :value="webhook.url"
+            :no-text="!webhook.takesText"
             placeholder="https://"
-            :info="t('settings.actionWebhookUrlInfo', { placeholder: TEXT })"
+            :info="
+              webhook.takesText
+                ? t('settings.actionWebhookUrlInfo', { placeholder: TEXT })
+                : undefined
+            "
             @update:value="update('url', $event)"
           />
         </div>
+        <FieldIssues :issues="issuesOf('url')" />
       </div>
 
-      <div v-if="(item.method || 'POST') === 'POST'" class="action-field">
+      <div v-if="(webhook.method || 'POST') === 'POST'" class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionWebhookBodyLabel') }}
         </span>
         <ActionTemplateField
           multiline
-          :value="item.payloadTemplate"
-          :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
-          :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
+          :value="webhook.payloadTemplate"
+          :no-text="!webhook.takesText"
+          :placeholder="
+            webhook.takesText
+              ? t('settings.actionWebhookPayloadPlaceholder')
+              : t('settings.actionWebhookPayloadNoTextPlaceholder')
+          "
+          :info="
+            webhook.takesText
+              ? t('settings.actionWebhookBodyInfo', { placeholder: TEXT })
+              : undefined
+          "
           @update:value="update('payloadTemplate', $event)"
         />
+        <FieldIssues :issues="issuesOf('payloadTemplate')" />
       </div>
 
       <div class="action-field">
@@ -174,31 +187,6 @@
         </p>
       </div>
     </template>
-
-    <div class="action-field">
-      <span class="action-field-label">
-        {{ t('settings.actionAfterRunLabel') }}
-        <InfoTooltip :text="t('settings.actionAfterRunInfo')" />
-      </span>
-      <SegmentedControl
-        :value="item.afterRun || 'none'"
-        :label="t('settings.actionAfterRunLabel')"
-        :options="[
-          { id: 'none', name: t('settings.actionAfterRunNone') },
-          { id: 'showMenu', name: t('settings.actionAfterRunShowMenu') },
-        ]"
-        @update:value="update('afterRun', $event)"
-      />
-    </div>
-
-    <div class="action-field-row">
-      <FieldCheckbox
-        :value="Boolean(item.logOutput)"
-        :label="t('settings.actionLogOutput')"
-        @update:value="update('logOutput', $event)"
-      />
-      <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-    </div>
   </div>
 </template>
 
@@ -207,26 +195,32 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import {
+  scriptToolConfig,
+  validateCommand,
+  webhookToolConfig,
+} from '../../lib/commands/command-config'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
+import FieldIssues from './FieldIssues.vue'
 import { Icon } from '@iconify/vue'
 import {
-  type ScriptMainAction,
+  type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
-  type WebhookMainAction,
   webhookSecretId,
 } from '@tyco/shared'
 
-const props = defineProps<{ item: ScriptMainAction | WebhookMainAction }>()
+/** The settings of the `script` or `webhook` tool of a command */
+const props = defineProps<{ command: CommandConfig }>()
 
 const emit = defineEmits<{
+  /** A field of the tool config changed */
   (event: 'update', field: string, value: unknown): void
 }>()
 
@@ -234,6 +228,13 @@ const { t } = useI18n()
 const { toast, toastText } = useToast()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
+
+const script = computed(() => scriptToolConfig(props.command))
+const webhook = computed(() => webhookToolConfig(props.command))
+const issues = computed(() => validateCommand(props.command))
+
+const issuesOf = (field: string) =>
+  issues.value.filter((issue) => issue.field === field)
 
 const commandRef = ref<InstanceType<typeof ActionTemplateField> | null>(null)
 const authDraft = ref('')
@@ -254,7 +255,9 @@ async function browseWorkingDir() {
 
 // headers are edited as rows: a row with an empty name is still shown
 const headerRows = computed<[string, string][]>(() =>
-  props.item.type === 'webhook' ? Object.entries(props.item.headers ?? {}) : []
+  props.command.toolId === 'webhook'
+    ? Object.entries(webhook.value.headers ?? {})
+    : []
 )
 
 function setHeaders(rows: [string, string][]) {
@@ -276,26 +279,26 @@ function removeHeader(index: number) {
   setHeaders(headerRows.value.filter((_, i) => i !== index))
 }
 
-const secretId = computed(() => webhookSecretId(props.item.id))
+const secretId = computed(() => webhookSecretId(props.command.id))
 const hasAuth = computed(
   () =>
-    props.item.type === 'webhook' &&
-    Boolean(props.item.authSecret) &&
+    props.command.toolId === 'webhook' &&
+    Boolean(webhook.value.authSecret) &&
     Object.hasOwn(llmStore.secrets, secretId.value)
 )
 const authOrigins = computed(
   () => llmStore.secrets[secretId.value]?.origins ?? []
 )
 const authBoundElsewhere = computed(() => {
-  if (!hasAuth.value || props.item.type !== 'webhook') return false
-  const origin = httpOrigin(props.item.url)
+  if (!hasAuth.value) return false
+  const origin = httpOrigin(webhook.value.url)
   return Boolean(origin) && !authOrigins.value.includes(origin!)
 })
 
 async function saveAuth() {
-  if (props.item.type !== 'webhook') return
+  if (props.command.toolId !== 'webhook') return
   const value = authDraft.value.trim()
-  const origin = httpOrigin(props.item.url)
+  const origin = httpOrigin(webhook.value.url)
   if (!value) return
   if (!origin) {
     toast('settings.invalidBaseUrl', 'error')
@@ -319,7 +322,7 @@ async function removeAuth() {
   }
 }
 
-if (props.item.type === 'webhook' && props.item.authSecret) {
+if (props.command.toolId === 'webhook' && webhook.value.authSecret) {
   llmStore.refreshSecrets().catch(() => {
     // the status only decides which placeholder is shown
   })

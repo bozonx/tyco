@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 
+import { createCommand } from '../commands/command-config'
 import { createActionMenuStoreModel } from './action-menu-store'
 
 describe('createActionMenuStoreModel', () => {
@@ -208,5 +209,57 @@ describe('createActionMenuStoreModel', () => {
       'translation',
       'copyToClipboard',
     ])
+  })
+
+  it('builds the items of commands that take text, in their slots', async () => {
+    const { deps } = setup()
+    const script = {
+      ...createCommand('script', 'sc1'),
+      name: 'Echo',
+      toolConfig: { command: 'echo', takesText: true },
+    }
+    const noText = {
+      ...createCommand('webhook', 'wh1'),
+      toolConfig: { url: 'https://x.test', takesText: false },
+    }
+    const disabled = { ...createCommand('script', 'sc2'), enabled: false }
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        exitCode: 0,
+        stdout: '',
+        stderr: '',
+        running: false,
+      })
+    const store = createActionMenuStoreModel({
+      ...deps,
+      executeScriptAction,
+      mainActions: () => [
+        { type: 'command', commandId: 'sc1' },
+        { type: 'command', commandId: 'wh1' },
+        { type: 'command', commandId: 'sc2' },
+        { type: 'command', commandId: 'missing' },
+        { type: 'standard', actionId: 'translation' },
+      ],
+      commands: () => [script, noText, disabled],
+    })
+
+    const slots = store.getShortcutActions()
+    expect(slots.map((action) => action?.id)).toEqual([
+      'command:sc1',
+      undefined,
+      undefined,
+      undefined,
+      'translation',
+    ])
+    expect(slots[0]).toMatchObject({ name: 'Echo', icon: 'mdi:console-line' })
+
+    await slots[0]?.action('menu text')
+    expect(deps.saveOutput).toHaveBeenCalledWith('menu text')
+    expect(executeScriptAction.mock.calls[0][0]).toMatchObject({
+      command: 'echo',
+      text: 'menu text',
+    })
   })
 })
