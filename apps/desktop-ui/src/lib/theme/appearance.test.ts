@@ -21,7 +21,7 @@ describe('normalizeAppearance', () => {
         contrast: 'normal',
         motion: 'reduce',
         uiScale: 150,
-        pasteMode: 'plain',
+        submitKey: 'enter',
       })
     ).toEqual({
       theme: 'e-ink',

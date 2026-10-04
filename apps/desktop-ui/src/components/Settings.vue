@@ -88,19 +88,7 @@
             </FieldRow>
           </SettingsSection>
 
-          <SettingsSection :title="t('settings.sectionEditor')">
-            <FieldRow :label="t('settings.pasteMode')">
-              <FieldSelect
-                v-model:value="userConfig.pasteMode"
-                :options="pasteModeOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.editorSyntax')">
-              <FieldSelect
-                v-model:value="userConfig.editorSyntax"
-                :options="editorSyntaxOptions"
-              />
-            </FieldRow>
+          <SettingsSection :title="t('settings.sectionInput')">
             <FieldRow :label="t('settings.submitKey.label')">
               <FieldSelect
                 v-model:value="userConfig.submitKey"
@@ -111,41 +99,44 @@
 
           <SettingsSection :title="t('settings.sectionHistory')">
             <FieldRow
+              :label="t('settings.editorHistoryStorage')"
+              :info="t('settings.editorHistoryStorageHint')"
+            >
+              <FieldSelect
+                v-model:value="userConfig.editorHistoryStorage"
+                :options="editorHistoryStorageOptions"
+              />
+            </FieldRow>
+            <FieldRow
+              v-if="userConfig.editorHistoryStorage !== 'off'"
               :label="t('settings.editorHistoryMaxItems')"
-              :info="t('settings.historyLimitHint')"
             >
               <FieldInput
                 type="number"
                 :value="userConfig.editorHistoryMaxItems"
-                @update:value="setHistoryLimit('editorHistoryMaxItems', $event)"
+                @update:value="setEditorHistoryLimit"
               />
             </FieldRow>
-            <FieldRow
-              :label="t('settings.clearEditorHistoryOnExit')"
-              :info="t('settings.clearEditorHistoryOnExitHint')"
-            >
-              <FieldCheckbox
-                v-model:value="userConfig.clearEditorHistoryOnExit"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.editorHistoryRetentionDays')"
-              :info="t('settings.editorHistoryRetentionDaysHint')"
-            >
-              <FieldInput
-                type="number"
-                :value="userConfig.editorHistoryRetentionDays ?? 0"
-                @update:value="setEditorHistoryRetentionDays"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.sanitizeSecretsInEditorHistory')"
-              :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
-            >
-              <FieldCheckbox
-                v-model:value="userConfig.sanitizeSecretsInEditorHistory"
-              />
-            </FieldRow>
+            <template v-if="userConfig.editorHistoryStorage === 'disk'">
+              <FieldRow
+                :label="t('settings.editorHistoryRetentionDays')"
+                :info="t('settings.editorHistoryRetentionDaysHint')"
+              >
+                <FieldSelect
+                  :value="userConfig.editorHistoryRetentionDays ?? 0"
+                  :options="editorHistoryRetentionOptions"
+                  @update:value="setEditorHistoryRetentionDays"
+                />
+              </FieldRow>
+              <FieldRow
+                :label="t('settings.sanitizeSecretsInEditorHistory')"
+                :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
+              >
+                <FieldCheckbox
+                  v-model:value="userConfig.sanitizeSecretsInEditorHistory"
+                />
+              </FieldRow>
+            </template>
             <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
               :info="t('settings.chatHistoryPrivacyHint')"
@@ -154,33 +145,6 @@
                 type="number"
                 :value="userConfig.chatHistoryMaxItems"
                 @update:value="setHistoryLimit('chatHistoryMaxItems', $event)"
-              />
-            </FieldRow>
-          </SettingsSection>
-
-          <SettingsSection :title="t('settings.sectionSystem')">
-            <FieldRow :label="t('settings.windowInsertion')">
-              <div class="flex flex-col gap-2 w-full">
-                <Tabs
-                  variant="segmented"
-                  :tabs="windowInsertionTabs"
-                  :value="userConfig.windowInsertion.method"
-                  @update:value="updateWindowInsertionMethod"
-                />
-                <FieldInput
-                  v-if="userConfig.windowInsertion.method === 'xdotool'"
-                  v-model:value="userConfig.windowInsertion.xdotoolBin"
-                />
-                <FieldInput
-                  v-if="userConfig.windowInsertion.method === 'ydotool'"
-                  v-model:value="userConfig.windowInsertion.ydotoolBin"
-                />
-              </div>
-            </FieldRow>
-            <FieldRow :label="t('settings.pasteShortcut')">
-              <FieldSelect
-                v-model:value="userConfig.windowInsertion.pasteShortcut"
-                :options="pasteShortcutOptions"
               />
             </FieldRow>
             <details class="storage-details">
@@ -226,6 +190,39 @@
                 </div>
               </div>
             </details>
+          </SettingsSection>
+
+          <SettingsSection :title="t('settings.sectionWindowInsertion')">
+            <FieldRow
+              :label="t('settings.windowInsertion')"
+              :info="t('settings.windowInsertionHint')"
+            >
+              <div class="flex flex-col gap-2 w-full">
+                <Tabs
+                  variant="segmented"
+                  :tabs="windowInsertionTabs"
+                  :value="userConfig.windowInsertion.method"
+                  @update:value="updateWindowInsertionMethod"
+                />
+                <FieldInput
+                  v-if="userConfig.windowInsertion.method === 'xdotool'"
+                  v-model:value="userConfig.windowInsertion.xdotoolBin"
+                />
+                <FieldInput
+                  v-if="userConfig.windowInsertion.method === 'ydotool'"
+                  v-model:value="userConfig.windowInsertion.ydotoolBin"
+                />
+              </div>
+            </FieldRow>
+            <FieldRow
+              :label="t('settings.pasteShortcut')"
+              :info="t('settings.pasteShortcutHint')"
+            >
+              <FieldSelect
+                v-model:value="userConfig.windowInsertion.pasteShortcut"
+                :options="pasteShortcutOptions"
+              />
+            </FieldRow>
           </SettingsSection>
         </template>
 
@@ -393,6 +390,10 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import {
+  editorHistoryRetentionChoices,
+  normalizeEditorConfig,
+} from '../lib/history/editor-history-storage'
 import { syncI18nLocale } from '../lib/i18n'
 import { resolveSubmitKey } from '../lib/input-keys/input-keys'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -403,6 +404,7 @@ import {
   getNavigatorLanguages,
   normalizeLocale,
   resolveUiLanguagePreference,
+  toHtmlLang,
 } from '../lib/locale/language'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
@@ -750,12 +752,6 @@ function normalizeLanguageConfig(config: Record<string, any>) {
   ).map((lang) => (typeof lang === 'string' ? lang : null))
 }
 
-// configs created before the editor settings come without these keys
-function normalizeEditorConfig(config: Record<string, any>) {
-  config.pasteMode = config.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
-  config.editorSyntax = config.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
-}
-
 function normalizeWindowInsertionConfig(config: Record<string, any>) {
   const defaultWindowInsertion = DEFAULT_USER_CONFIG.windowInsertion
   const windowInsertion = config.windowInsertion || {}
@@ -811,12 +807,21 @@ function setHistoryLimit(
   userConfig.value[key] = Math.round(parsed)
 }
 
-function setEditorHistoryRetentionDays(value: string) {
+/** Turning the history off is a storage of its own, so the limit stays above 0 */
+function setEditorHistoryLimit(value: string) {
   const parsed = Number(value)
 
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
+  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 1) return
 
-  userConfig.value.editorHistoryRetentionDays = Math.round(parsed)
+  userConfig.value.editorHistoryMaxItems = Math.round(parsed)
+}
+
+function setEditorHistoryRetentionDays(value: number | string | undefined) {
+  const parsed = Number(value)
+
+  if (!Number.isInteger(parsed) || parsed < 0) return
+
+  userConfig.value.editorHistoryRetentionDays = parsed
 }
 
 const navigatorLanguages = computed(() => getNavigatorLanguages())
@@ -892,17 +897,33 @@ function flushPendingAutosave() {
   void persistUserConfig()
 }
 
-const pasteModeOptions = computed(() => {
-  return [
-    { id: 'markdown', name: t('settings.pasteModeMarkdown') },
-    { id: 'plain', name: t('settings.pasteModePlain') },
-    { id: 'ask', name: t('settings.pasteModeAsk') },
-  ]
+const editorHistoryStorageOptions = computed(() => [
+  { id: 'disk', name: t('settings.editorHistoryStorageDisk') },
+  { id: 'session', name: t('settings.editorHistoryStorageSession') },
+  { id: 'off', name: t('settings.editorHistoryStorageOff') },
+])
+
+const editorHistoryRetentionOptions = computed(() => {
+  const format = new Intl.NumberFormat(toHtmlLang(effectiveAppLanguage.value), {
+    style: 'unit',
+    unit: 'day',
+    unitDisplay: 'long',
+  })
+
+  return editorHistoryRetentionChoices(
+    userConfig.value.editorHistoryRetentionDays
+  ).map((days) => ({
+    id: days,
+    name:
+      days === 0
+        ? t('settings.editorHistoryRetentionForever')
+        : format.format(days),
+  }))
 })
 
 const pasteShortcutOptions = computed(() => {
   return [
-    { id: 'ctrl+v', name: 'Ctrl+V' },
+    { id: 'ctrl+v', name: `Ctrl+V — ${t('settings.pasteShortcutRegular')}` },
     {
       id: 'ctrl+shift+v',
       name: `Ctrl+Shift+V — ${t('settings.pasteShortcutTerminals')}`,
@@ -911,13 +932,6 @@ const pasteShortcutOptions = computed(() => {
       id: 'shift+insert',
       name: `Shift+Insert — ${t('settings.pasteShortcutAnyLayout')}`,
     },
-  ]
-})
-
-const editorSyntaxOptions = computed(() => {
-  return [
-    { id: 'markdown', name: t('settings.editorSyntaxMarkdown') },
-    { id: 'none', name: t('settings.editorSyntaxNone') },
   ]
 })
 

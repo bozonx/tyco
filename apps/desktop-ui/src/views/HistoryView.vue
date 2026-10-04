@@ -57,6 +57,7 @@ import { useCopyText } from '../composables/useCopyText'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
+import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/navPanel'
@@ -79,9 +80,8 @@ const removedItem = ref<EditorHistoryItem | null>(null)
 const editorLoadError = ref(false)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
 
-const isLimitZero = (value: unknown) => String(value ?? '').trim() === '0'
 const editorHistoryDisabled = computed(() =>
-  isLimitZero(ipcStore.params.userConfig?.editorHistoryMaxItems)
+  isEditorHistoryOff({ ...ipcStore.params.userConfig })
 )
 
 const searchQuery = ref<string>('')

@@ -1,8 +1,7 @@
 import type { EditorView } from '@codemirror/view'
-import type { PasteMode } from '@tyco/shared'
 
 import { htmlToMarkdown } from './html-to-markdown'
-import { insertPastedText } from './paste'
+import { insertFormattedText, insertPastedText } from './paste'
 
 /** Есть ли в документе что копировать */
 const hasSelection = (view: EditorView): boolean => {
@@ -64,18 +63,19 @@ const readClipboard = async (): Promise<{ html: string; plain: string }> => {
   return { html: '', plain: await navigator.clipboard.readText() }
 }
 
-/** Вставка из пункта меню: тот же выбор plain/markdown, что и у Ctrl+V */
-export const pasteFromClipboard = async (
-  view: EditorView,
-  mode: PasteMode
-): Promise<void> => {
+/** Вставка из пункта меню: то же преобразование в Markdown, что и у Ctrl+V */
+export const pasteFromClipboard = async (view: EditorView): Promise<void> => {
   const { html, plain } = await readClipboard()
   const markdown = html.trim() ? htmlToMarkdown(html) : ''
-  const text = mode === 'plain' || !markdown ? plain : markdown
 
-  if (!text) return
+  if (markdown) {
+    insertFormattedText(view, plain, markdown)
+  } else if (plain) {
+    insertPastedText(view, plain)
+  } else {
+    return
+  }
 
-  insertPastedText(view, text)
   view.focus()
 }
 

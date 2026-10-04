@@ -1,4 +1,6 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { languages } from '@codemirror/language-data'
 import type { Extension } from '@codemirror/state'
 import { Annotation, Compartment, EditorState } from '@codemirror/state'
 import {
@@ -8,13 +10,10 @@ import {
   keymap,
   placeholder,
 } from '@codemirror/view'
-import type { EditorSyntax } from '@tyco/shared'
 
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
-import type { PasteOptions } from './paste'
 import { pasteExtension } from './paste'
-import { syntaxCompartment, syntaxExtension } from './syntax'
 import { editorAppearance } from './theme'
 
 /**
@@ -40,10 +39,8 @@ export interface CreateEditorStateOptions
   extends EditorCallbacks, EditorMenusOptions {
   doc?: string
   placeholder?: string
-  /** Syntax highlighting mode */
-  syntax?: EditorSyntax
-  /** Clipboard paste handling; if omitted, paste remains native */
-  paste?: PasteOptions
+  /** Convert pasted HTML into Markdown; if omitted, paste remains native */
+  paste?: boolean
   /** Accessible name of the input, announced by screen readers */
   ariaLabel?: string
 }
@@ -65,9 +62,10 @@ export const createEditorExtensions = (
     ...(options.ariaLabel ? { 'aria-label': options.ariaLabel } : {}),
   }),
   placeholderCompartment.of(placeholder(options.placeholder ?? '')),
-  syntaxCompartment.of(syntaxExtension(options.syntax ?? 'markdown')),
+  // fenced code blocks are highlighted by their language
+  markdown({ base: markdownLanguage, codeLanguages: languages }),
   editorAppearance,
-  ...(options.paste ? [pasteExtension(options.paste)] : []),
+  ...(options.paste ? [pasteExtension()] : []),
   editorMenusExtension({ onContextMenu: options.onContextMenu }),
   EditorView.updateListener.of((update) => {
     // do not emit updates originating from the store
@@ -96,11 +94,3 @@ export const createEditorState = (
     doc: options.doc ?? '',
     extensions: createEditorExtensions(options),
   })
-
-/** Switch syntax highlighting mode without recreating the editor */
-export const setEditorSyntax = (view: EditorView, mode: EditorSyntax): void => {
-  view.dispatch({
-    effects: syntaxCompartment.reconfigure(syntaxExtension(mode)),
-    annotations: fromStore.of(true),
-  })
-}

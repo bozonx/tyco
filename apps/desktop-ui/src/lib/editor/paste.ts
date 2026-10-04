@@ -1,10 +1,7 @@
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
-import type { PasteMode } from '@tyco/shared'
 
-import type { MenuAnchor } from './context-menu'
-import { anchorAtPos } from './context-menu'
 import { EDIT_USER_EVENT } from './edit-source'
 import { htmlToMarkdown } from './html-to-markdown'
 
@@ -14,22 +11,6 @@ import { htmlToMarkdown } from './html-to-markdown'
  * the intent and wait for the native `paste` event.
  */
 const PLAIN_PASTE_WINDOW_MS = 500
-
-export interface PasteAskRequest extends MenuAnchor {
-  /** What will be inserted in plain text mode */
-  plain: string
-  /** What will be inserted in formatted markdown mode */
-  markdown: string
-  /** Insert the selected option */
-  apply: (text: string) => void
-}
-
-export interface PasteOptions {
-  /** Paste mode from user settings */
-  getMode: () => PasteMode
-  /** Prompt user how to paste. If omitted, behaves as `markdown`. */
-  onAsk?: (request: PasteAskRequest) => void
-}
 
 /** Insert text into current selection as a regular paste */
 export const insertPastedText = (view: EditorView, text: string): void => {
@@ -41,10 +22,42 @@ export const insertPastedText = (view: EditorView, text: string): void => {
 }
 
 /**
- * Paste handling: if the clipboard has `text/html`, convert to Markdown;
+ * Paste formatted text in two undo steps: the plain text first, then its
+ * Markdown in place of it. A single Ctrl+Z drops only the formatting, so nobody
+ * has to choose how to paste in advance.
+ */
+export const insertFormattedText = (
+  view: EditorView,
+  plain: string,
+  markdown: string
+): void => {
+  if (!plain || plain === markdown) {
+    insertPastedText(view, markdown)
+
+    return
+  }
+
+  const from = view.state.selection.main.from
+
+  insertPastedText(view, plain)
+
+  // the cursor stands right after the inserted text; its length in the
+  // document may differ from `plain.length` because of line separators
+  const to = view.state.selection.main.head
+
+  view.dispatch({
+    changes: { from, to, insert: markdown },
+    selection: { anchor: from + markdown.length },
+    annotations: Transaction.userEvent.of(EDIT_USER_EVENT.paste),
+    scrollIntoView: true,
+  })
+}
+
+/**
+ * Paste handling: if the clipboard has `text/html`, convert it to Markdown;
  * otherwise paste `text/plain` as is. Ctrl+Shift+V always pastes plain text.
  */
-export const pasteExtension = (options: PasteOptions): Extension => {
+export const pasteExtension = (): Extension => {
   let plainPasteRequested = false
   let plainPasteTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -100,9 +113,7 @@ export const pasteExtension = (options: PasteOptions): Extension => {
         // handle the paste itself
         if (!html.trim()) return false
 
-        const mode = options.getMode()
-
-        if (forcePlain || mode === 'plain') {
+        if (forcePlain) {
           if (!plain) return false
 
           event.preventDefault()
@@ -116,21 +127,7 @@ export const pasteExtension = (options: PasteOptions): Extension => {
         if (!markdown) return false
 
         event.preventDefault()
-
-        if (mode === 'ask' && options.onAsk) {
-          const anchor = anchorAtPos(view, view.state.selection.main.head)
-
-          options.onAsk({
-            ...anchor,
-            plain,
-            markdown,
-            apply: (text: string) => insertPastedText(view, text),
-          })
-
-          return true
-        }
-
-        insertPastedText(view, markdown)
+        insertFormattedText(view, plain, markdown)
 
         return true
       },

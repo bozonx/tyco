@@ -156,10 +156,8 @@ pub fn default_user_config() -> Value {
         { "type": "standard", "actionId": "translation" },
         { "type": "standard", "actionId": "askInChat" }
       ],
-      "pasteMode": "markdown",
-      "editorSyntax": "markdown",
+      "editorHistoryStorage": "disk",
       "editorHistoryMaxItems": 100,
-      "clearEditorHistoryOnExit": false,
       "editorHistoryRetentionDays": 0,
       "sanitizeSecretsInEditorHistory": false,
       "chatHistoryMaxItems": 50,

@@ -419,22 +419,38 @@ fn normalize_language_config(user_config: &mut Value) -> bool {
 
 fn normalize_editor_config(user_config: &mut Value) -> bool {
     let defaults = default_user_config();
+    // the storage replaced the "memory only" flag and the zero limit that
+    // turned the history off; the limit then gets a usable value for when the
+    // history is turned on again
+    let storage = EditorHistoryStorage::from_config(user_config);
+    let zero_limit = history_limit(
+        user_config,
+        "editorHistoryMaxItems",
+        DEFAULT_EDITOR_HISTORY_LIMIT,
+    ) == 0;
     let Some(config) = user_config.as_object_mut() else {
         return false;
     };
     let mut changed = false;
 
-    let paste_mode = config.get("pasteMode").and_then(Value::as_str);
-    if !matches!(paste_mode, Some("markdown" | "plain" | "ask")) {
-        config.insert(String::from("pasteMode"), defaults["pasteMode"].clone());
+    // highlighting and HTML conversion on paste are no longer settings, and
+    // the "memory only" flag became the storage
+    for removed in ["pasteMode", "editorSyntax", "clearEditorHistoryOnExit"] {
+        changed |= config.remove(removed).is_some();
+    }
+
+    if config.get("editorHistoryStorage").and_then(Value::as_str) != Some(storage.as_str()) {
+        config.insert(
+            String::from("editorHistoryStorage"),
+            Value::String(storage.as_str().into()),
+        );
         changed = true;
     }
 
-    let editor_syntax = config.get("editorSyntax").and_then(Value::as_str);
-    if !matches!(editor_syntax, Some("markdown" | "none")) {
+    if storage == EditorHistoryStorage::Off && zero_limit {
         config.insert(
-            String::from("editorSyntax"),
-            defaults["editorSyntax"].clone(),
+            String::from("editorHistoryMaxItems"),
+            defaults["editorHistoryMaxItems"].clone(),
         );
         changed = true;
     }
@@ -447,18 +463,6 @@ fn normalize_editor_config(user_config: &mut Value) -> bool {
         config.insert(
             String::from("editorHistoryMaxItems"),
             defaults["editorHistoryMaxItems"].clone(),
-        );
-        changed = true;
-    }
-
-    if config
-        .get("clearEditorHistoryOnExit")
-        .and_then(Value::as_bool)
-        .is_none()
-    {
-        config.insert(
-            String::from("clearEditorHistoryOnExit"),
-            defaults["clearEditorHistoryOnExit"].clone(),
         );
         changed = true;
     }
@@ -786,6 +790,57 @@ fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
     }
 }
 
+/// Where the editor history lives.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EditorHistoryStorage {
+    /// Nothing is kept.
+    Off,
+    /// The memory of the process only: nothing outlives the app.
+    Session,
+    Disk,
+}
+
+impl EditorHistoryStorage {
+    /// Configs older than the setting said it with a zero limit (off) and the
+    /// `clearEditorHistoryOnExit` flag (session).
+    pub fn from_config(user_config: &Value) -> Self {
+        match user_config
+            .get("editorHistoryStorage")
+            .and_then(Value::as_str)
+        {
+            Some("off") => return Self::Off,
+            Some("session") => return Self::Session,
+            Some("disk") => return Self::Disk,
+            _ => {}
+        }
+
+        if history_limit(
+            user_config,
+            "editorHistoryMaxItems",
+            DEFAULT_EDITOR_HISTORY_LIMIT,
+        ) == 0
+        {
+            Self::Off
+        } else if user_config
+            .get("clearEditorHistoryOnExit")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            Self::Session
+        } else {
+            Self::Disk
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Off => "off",
+            Self::Session => "session",
+            Self::Disk => "disk",
+        }
+    }
+}
+
 /// What the settings say about the editor history.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EditorHistoryPolicy {
@@ -795,6 +850,7 @@ pub struct EditorHistoryPolicy {
     /// disk, so nothing of them outlives the app, whichever way it ends.
     pub memory_only: bool,
     /// Entries older than this many days are dropped; 0 keeps them forever.
+    /// Applies on the disk only, as does `sanitize`.
     pub retention_days: u64,
     /// What looks like a password or a key is masked before it is stored.
     pub sanitize: bool,
@@ -809,18 +865,29 @@ impl EditorHistoryPolicy {
                 .unwrap_or(false)
         };
 
+        let storage = EditorHistoryStorage::from_config(user_config);
+        let on_disk = storage == EditorHistoryStorage::Disk;
+
         Self {
-            limit: history_limit(
-                user_config,
-                "editorHistoryMaxItems",
-                DEFAULT_EDITOR_HISTORY_LIMIT,
-            ),
-            memory_only: flag("clearEditorHistoryOnExit"),
-            retention_days: user_config
-                .get("editorHistoryRetentionDays")
-                .and_then(Value::as_u64)
-                .unwrap_or(0),
-            sanitize: flag("sanitizeSecretsInEditorHistory"),
+            limit: if storage == EditorHistoryStorage::Off {
+                0
+            } else {
+                history_limit(
+                    user_config,
+                    "editorHistoryMaxItems",
+                    DEFAULT_EDITOR_HISTORY_LIMIT,
+                )
+            },
+            memory_only: storage == EditorHistoryStorage::Session,
+            retention_days: if on_disk {
+                user_config
+                    .get("editorHistoryRetentionDays")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0)
+            } else {
+                0
+            },
+            sanitize: on_disk && flag("sanitizeSecretsInEditorHistory"),
         }
     }
 
@@ -1800,11 +1867,12 @@ mod tests {
 
     #[test]
     fn normalize_editor_and_translation_fills_defaults() {
-        let mut config = json!({ "pasteMode": "invalid" });
+        let mut config = json!({ "pasteMode": "ask", "editorSyntax": "none" });
 
         assert!(normalize_editor_config(&mut config));
-        assert_eq!(config["pasteMode"], json!("markdown"));
-        assert_eq!(config["editorSyntax"], json!("markdown"));
+        assert!(config.get("pasteMode").is_none());
+        assert!(config.get("editorSyntax").is_none());
+        assert_eq!(config["editorHistoryStorage"], json!("disk"));
         assert_eq!(config["editorHistoryMaxItems"], json!(100));
         assert!(!normalize_editor_config(&mut config));
 
@@ -2223,10 +2291,31 @@ mod tests {
     }
 
     #[test]
+    fn normalize_editor_config_migrates_the_history_storage() {
+        let mut session = json!({
+            "editorHistoryMaxItems": 20,
+            "clearEditorHistoryOnExit": true,
+        });
+        assert!(normalize_editor_config(&mut session));
+        assert_eq!(session["editorHistoryStorage"], json!("session"));
+        assert_eq!(session["editorHistoryMaxItems"], json!(20));
+        assert!(session.get("clearEditorHistoryOnExit").is_none());
+
+        let mut off = json!({
+            "editorHistoryMaxItems": 0,
+            "clearEditorHistoryOnExit": false,
+        });
+        assert!(normalize_editor_config(&mut off));
+        assert_eq!(off["editorHistoryStorage"], json!("off"));
+        assert_eq!(off["editorHistoryMaxItems"], json!(100));
+        assert!(!normalize_editor_config(&mut off));
+    }
+
+    #[test]
     fn policy_reads_the_settings() {
         let config = json!({
+            "editorHistoryStorage": "disk",
             "editorHistoryMaxItems": "20",
-            "clearEditorHistoryOnExit": true,
             "editorHistoryRetentionDays": 7,
             "sanitizeSecretsInEditorHistory": true,
         });
@@ -2235,9 +2324,44 @@ mod tests {
             EditorHistoryPolicy::from_config(&config),
             EditorHistoryPolicy {
                 limit: 20,
-                memory_only: true,
+                memory_only: false,
                 retention_days: 7,
                 sanitize: true,
+            }
+        );
+        assert_eq!(
+            EditorHistoryPolicy::from_config(&json!({
+                "editorHistoryStorage": "session",
+                "editorHistoryMaxItems": 20,
+                "editorHistoryRetentionDays": 7,
+                "sanitizeSecretsInEditorHistory": true,
+            })),
+            EditorHistoryPolicy {
+                limit: 20,
+                memory_only: true,
+                ..policy()
+            }
+        );
+        assert_eq!(
+            EditorHistoryPolicy::from_config(&json!({
+                "editorHistoryStorage": "off",
+                "editorHistoryMaxItems": 20,
+            })),
+            EditorHistoryPolicy {
+                limit: 0,
+                ..policy()
+            }
+        );
+        // a config not migrated yet
+        assert_eq!(
+            EditorHistoryPolicy::from_config(&json!({
+                "editorHistoryMaxItems": 20,
+                "clearEditorHistoryOnExit": true,
+            })),
+            EditorHistoryPolicy {
+                limit: 20,
+                memory_only: true,
+                ..policy()
             }
         );
         assert_eq!(

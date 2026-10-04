@@ -1,6 +1,6 @@
+import { undo } from '@codemirror/commands'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import type { PasteMode } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import type { ContextMenuRequest } from './context-menu'
@@ -12,7 +12,7 @@ interface Harness {
   contextMenus: ContextMenuRequest[]
 }
 
-const mount = (doc: string, mode: PasteMode = 'markdown'): Harness => {
+const mount = (doc: string): Harness => {
   const contextMenus: ContextMenuRequest[] = []
   const parent = document.createElement('div')
 
@@ -23,7 +23,7 @@ const mount = (doc: string, mode: PasteMode = 'markdown'): Harness => {
     state: EditorState.create({
       doc,
       extensions: createEditorExtensions({
-        paste: { getMode: () => mode },
+        paste: true,
         onContextMenu: (request) => contextMenus.push(request),
       }),
     }),
@@ -97,9 +97,40 @@ describe('paste', () => {
     view.destroy()
   })
 
-  it('inserts plain text when the mode is plain', () => {
-    const { view } = mount('', 'plain')
+  it('drops only the formatting on the first undo', () => {
+    const { view } = mount('')
 
+    view.contentDOM.dispatchEvent(
+      pasteEvent({ 'text/html': '<h1>Title</h1>', 'text/plain': 'Title' })
+    )
+
+    expect(view.state.doc.toString()).toBe('# Title')
+
+    undo(view)
+
+    expect(view.state.doc.toString()).toBe('Title')
+
+    undo(view)
+
+    expect(view.state.doc.toString()).toBe('')
+
+    view.destroy()
+  })
+
+  it('pastes plain text after Ctrl+Shift+V', () => {
+    const { view } = mount('')
+
+    const keydown = new KeyboardEvent('keydown', {
+      key: 'V',
+      ctrlKey: true,
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+
+    // CodeMirror resolves a shifted letter by its key code, which jsdom omits
+    Object.defineProperty(keydown, 'keyCode', { value: 86 })
+    view.contentDOM.dispatchEvent(keydown)
     view.contentDOM.dispatchEvent(
       pasteEvent({ 'text/html': '<h1>Title</h1>', 'text/plain': 'Title' })
     )

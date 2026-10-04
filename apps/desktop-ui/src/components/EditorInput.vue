@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
@@ -25,10 +25,7 @@ import {
   pastePlainFromClipboard,
 } from '../lib/editor/clipboard'
 import type { ContextMenuRequest } from '../lib/editor/context-menu'
-import {
-  createEditorState,
-  setEditorSyntax,
-} from '../lib/editor/create-editor-state'
+import { createEditorState } from '../lib/editor/create-editor-state'
 import {
   applyStoreEdit,
   selectAll,
@@ -40,24 +37,20 @@ import type {
 } from '../lib/editor/menu-builder'
 import { actionIcon, buildContextMenu } from '../lib/editor/menu-builder'
 import type { EditorMenuItem, MenuPlacement } from '../lib/editor/menu-item'
-import type { PasteAskRequest } from '../lib/editor/paste'
 import type { ActionItem } from '../stores/actionMenu'
 import { useActionMenuStore } from '../stores/actionMenu'
 import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
-import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
 import { EditorView } from '@codemirror/view'
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 
 const editorInputStore = useEditorInputStore()
 const routeParamsStore = useRouteParams()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const editMenuStore = useEditMenuStore()
-const ipcStore = useIpcStore()
 const { toast } = useToast()
 const { t } = useI18n()
 const { getLabel, doAction, doEdit } = useEditorActions()
@@ -65,7 +58,6 @@ const { getLabel, doAction, doEdit } = useEditorActions()
 const hostRef = ref<HTMLElement | null>(null)
 
 interface OpenMenu {
-  kind: 'context' | 'paste'
   x: number
   y: number
   bottom: number
@@ -76,15 +68,6 @@ interface OpenMenu {
 const menu = ref<OpenMenu | null>(null)
 
 let view: EditorView | null = null
-
-// editor settings; fall back to defaults for configs created before keys were added
-const pasteMode = computed(
-  () => ipcStore.params.userConfig?.pasteMode ?? DEFAULT_USER_CONFIG.pasteMode
-)
-const editorSyntax = computed(
-  () =>
-    ipcStore.params.userConfig?.editorSyntax ?? DEFAULT_USER_CONFIG.editorSyntax
-)
 
 const closeMenu = (restoreFocus = false): void => {
   menu.value = null
@@ -105,7 +88,7 @@ const withClipboard = async (run: () => Promise<void>): Promise<void> => {
 const commands: EditorMenuCommands = {
   cut: () => withClipboard(() => cutSelection(view!)),
   copy: () => withClipboard(() => copySelection(view!)),
-  paste: () => withClipboard(() => pasteFromClipboard(view!, pasteMode.value)),
+  paste: () => withClipboard(() => pasteFromClipboard(view!)),
   pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
   selectAll: () => {
     if (!view) return
@@ -149,7 +132,6 @@ const openContextMenu = (request: ContextMenuRequest): void => {
   if (!view) return
 
   menu.value = {
-    kind: 'context',
     x: request.x,
     y: request.y,
     bottom: request.bottom,
@@ -161,36 +143,6 @@ const openContextMenu = (request: ContextMenuRequest): void => {
       selected: Boolean(request.selectedText),
       suggestions: spellcheckItems(request),
     }),
-  }
-}
-
-const askPasteMode = (request: PasteAskRequest): void => {
-  menu.value = {
-    kind: 'paste',
-    x: request.x,
-    y: request.y,
-    bottom: request.bottom,
-    placement: 'below',
-    items: [
-      {
-        id: 'paste-markdown',
-        label: t('editor.menu.pasteFormatted'),
-        icon: 'mdi:language-markdown',
-        accent: true,
-        action: () => {
-          request.apply(request.markdown)
-          view?.focus()
-        },
-      },
-      {
-        id: 'paste-plain',
-        label: t('editor.menu.pasteAsText'),
-        action: () => {
-          request.apply(request.plain)
-          view?.focus()
-        },
-      },
-    ],
   }
 }
 
@@ -207,8 +159,7 @@ onMounted(() => {
       doc: editorInputStore.value,
       placeholder: t('input.textPlaceholder'),
       ariaLabel: t('editor.inputLabel'),
-      syntax: editorSyntax.value,
-      paste: { getMode: () => pasteMode.value, onAsk: askPasteMode },
+      paste: true,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
       onSelectionChange: (text, start, end) =>
@@ -250,14 +201,6 @@ watch(
   () => t('input.textPlaceholder'),
   (text) => {
     if (view) setPlaceholder(view, text)
-  }
-)
-
-// Syntax highlighting mode change from settings
-watch(
-  () => editorSyntax.value,
-  (mode) => {
-    if (view) setEditorSyntax(view, mode)
   }
 )
 

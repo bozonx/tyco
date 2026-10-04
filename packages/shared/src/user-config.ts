@@ -220,9 +220,6 @@ export type MainActionConfig =
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
 
-/** Action when pasting HTML from the clipboard */
-export type PasteMode = 'plain' | 'markdown' | 'ask'
-
 /** Keys pressed in the target window to paste the inserted text */
 export const PASTE_SHORTCUTS = [
   'ctrl+v',
@@ -231,8 +228,12 @@ export const PASTE_SHORTCUTS = [
 ] as const
 export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
 
-/** Document syntax highlighting mode in the editor */
-export type EditorSyntax = 'none' | 'markdown'
+/**
+ * Where the editor history lives: nowhere, in the memory of the running app
+ * only, or on the disk
+ */
+export const EDITOR_HISTORY_STORAGES = ['off', 'session', 'disk'] as const
+export type EditorHistoryStorage = (typeof EDITOR_HISTORY_STORAGES)[number]
 
 /**
  * Which key sends the text of a multi-line input (quick input, chat); the other
@@ -272,11 +273,11 @@ export interface UserConfig {
   mainActions: (MainActionConfig | null)[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */
   mainActionRegistrations?: string[]
-  pasteMode: PasteMode
-  editorSyntax: EditorSyntax
+  editorHistoryStorage: EditorHistoryStorage
   editorHistoryMaxItems: number
-  clearEditorHistoryOnExit?: boolean
+  /** Kept on the disk only; 0 keeps the entries forever */
   editorHistoryRetentionDays?: number
+  /** Kept on the disk only */
   sanitizeSecretsInEditorHistory?: boolean
   chatHistoryMaxItems: number
   llm: LlmConfig
@@ -329,10 +330,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
   translation: DEFAULT_TRANSLATION_CONFIG,
   mainActions: DEFAULT_MAIN_ACTIONS,
-  pasteMode: 'markdown',
-  editorSyntax: 'markdown',
+  editorHistoryStorage: 'disk',
   editorHistoryMaxItems: 100,
-  clearEditorHistoryOnExit: false,
   editorHistoryRetentionDays: 0,
   sanitizeSecretsInEditorHistory: false,
   chatHistoryMaxItems: 50,
