@@ -58,12 +58,23 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
     },
-    executeScriptAction: async (name, command, text, logOutput) => {
+    executeScriptAction: async (
+      name,
+      command,
+      text,
+      logOutput,
+      executionType,
+      args,
+      workingDir
+    ) => {
       const res = await ipcStore.callFunctionOrNotify('executeScriptAction', [
         name,
         command,
         text,
         Boolean(logOutput),
+        executionType,
+        args,
+        workingDir,
       ])
       if (res.success && res.result) {
         return res.result
@@ -75,9 +86,23 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         stderr: res.error ?? '',
       }
     },
+    logCustomAction: async (name, actionType, details) => {
+      await ipcStore.callFunction('logCustomAction', [
+        name,
+        actionType,
+        details,
+      ])
+    },
     executeWebhookAction: async (action, text) => {
       const fetchFn = createTauriFetch(tauriNetIpc)
-      await executeWebhookAction(action, text, fetchFn)
+      await executeWebhookAction(
+        action,
+        text,
+        fetchFn,
+        async (name, type, details) => {
+          await ipcStore.callFunction('logCustomAction', [name, type, details])
+        }
+      )
     },
   })
 })

@@ -81,10 +81,23 @@ export interface DesktopFunctions {
     result: string
   }
   executeScriptAction: {
-    args: [name: string, command: string, text: string, logOutput?: boolean]
+    args: [
+      name: string,
+      command: string,
+      text: string,
+      logOutput?: boolean,
+      executionType?: 'command' | 'script',
+      args?: string,
+      workingDir?: string,
+    ]
     result: ScriptExecutionResult
   }
   pickScriptFile: { args: []; result: string | null }
+  pickDirectory: { args: []; result: string | null }
+  logCustomAction: {
+    args: [name: string, actionType: string, details: string]
+    result: void
+  }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions

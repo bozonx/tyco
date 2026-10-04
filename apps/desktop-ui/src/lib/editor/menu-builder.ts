@@ -1,7 +1,9 @@
 import type { EditorMenuItem } from './menu-item'
 
-/** Clipboard and selection commands available in every editor menu */
+/** Clipboard, history and selection commands available in every editor menu */
 export interface EditorMenuCommands {
+  undo: () => void | Promise<void>
+  redo: () => void | Promise<void>
   cut: () => void | Promise<void>
   copy: () => void | Promise<void>
   paste: () => void | Promise<void>
@@ -27,10 +29,16 @@ export interface EditorMenuSources {
 export interface ContextMenuSources extends EditorMenuSources {
   /** Whether the editor has a non-empty selection */
   selected: boolean
+  /** Whether an undo action is available */
+  canUndo?: boolean
+  /** Whether a redo action is available */
+  canRedo?: boolean
   /** Spelling suggestions for the word under the cursor, shown on top */
   suggestions?: EditorMenuItem[]
 }
 
+export const UNDO_ICON = 'mdi:undo'
+export const REDO_ICON = 'mdi:redo'
 export const CASE_ICON = 'mdi:format-letter-case'
 export const FORMAT_ICON = 'mdi:code-braces'
 export const ACTIONS_ICON = 'mdi:lightning-bolt-outline'
@@ -75,17 +83,35 @@ const formatChildren = (groups: EditorMenuGroups): EditorMenuItem[] => [
 ]
 
 /**
- * Right-click menu: spelling suggestions, then clipboard, then transforms and
- * actions folded into submenus so the menu stays short
+ * Right-click menu: spelling suggestions, then history, then clipboard, then
+ * transforms and actions folded into submenus so the menu stays short
  */
 export const buildContextMenu = ({
   t,
   commands,
   groups,
   selected,
+  canUndo = false,
+  canRedo = false,
   suggestions = [],
 }: ContextMenuSources): EditorMenuItem[] => [
   ...suggestions,
+  ...startGroup([
+    {
+      id: 'undo',
+      label: t('editor.menu.undo'),
+      icon: UNDO_ICON,
+      disabled: !canUndo,
+      action: commands.undo,
+    },
+    {
+      id: 'redo',
+      label: t('editor.menu.redo'),
+      icon: REDO_ICON,
+      disabled: !canRedo,
+      action: commands.redo,
+    },
+  ]),
   ...startGroup([
     {
       id: 'cut',

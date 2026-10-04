@@ -10,7 +10,8 @@ import type { ActionItem, ActionMenuDependencies } from './action-menu-store'
 export async function executeWebhookAction(
   action: WebhookMainAction,
   text: string,
-  fetchFn: FetchFunction
+  fetchFn: FetchFunction,
+  logFn?: (name: string, type: string, details: string) => Promise<void>
 ): Promise<void> {
   const method = action.method || 'POST'
   let url = action.url
@@ -47,16 +48,47 @@ export async function executeWebhookAction(
     headers['content-type'] = 'application/json; charset=utf-8'
   }
 
-  const response = await fetchFn(url, { method, headers, body: bodyStr })
+  try {
+    const response = await fetchFn(url, { method, headers, body: bodyStr })
+    const responseText =
+      typeof response.text === 'function' ? await response.text() : ''
 
-  if (!response.ok) {
-    throw new Error(
-      `Webhook failed with status ${response.status}: ${response.statusText}`
-    )
-  }
+    if (!response.ok) {
+      if (action.logOutput && logFn) {
+        await logFn(
+          action.name || 'Webhook',
+          'webhook',
+          `URL: ${url}\nMethod: ${method}\nStatus: ${response.status} ${response.statusText}\nResponse:\n${responseText}`
+        )
+      }
+      throw new Error(
+        `Webhook failed with status ${response.status}: ${response.statusText}`
+      )
+    }
 
-  if (action.logOutput) {
-    await response.text()
+    if (action.logOutput && logFn) {
+      await logFn(
+        action.name || 'Webhook',
+        'webhook',
+        `URL: ${url}\nMethod: ${method}\nStatus: ${response.status} OK\nResponse:\n${responseText}`
+      )
+    }
+  } catch (error) {
+    if (
+      action.logOutput &&
+      logFn &&
+      !(
+        error instanceof Error &&
+        error.message.startsWith('Webhook failed with status')
+      )
+    ) {
+      await logFn(
+        action.name || 'Webhook',
+        'webhook',
+        `URL: ${url}\nMethod: ${method}\nError: ${String(error)}`
+      )
+    }
+    throw error
   }
 }
 
@@ -64,10 +96,11 @@ export function createScriptActionItem(
   item: ScriptMainAction,
   deps: ActionMenuDependencies
 ): ActionItem {
+  const isScript = item.executionType === 'script'
   return {
     id: `script:${item.id}`,
-    name: item.name || 'Script',
-    icon: 'mdi:script-text-outline',
+    name: item.name || (isScript ? 'Script' : item.command || 'Command'),
+    icon: isScript ? 'mdi:script-text-outline' : 'mdi:console-line',
     action: async (text: string) => {
       await deps.saveOutput(text)
       if (!item.command.trim()) {
@@ -77,10 +110,13 @@ export function createScriptActionItem(
       try {
         const result: ScriptExecutionResult | undefined =
           await deps.executeScriptAction?.(
-            item.name || 'Script',
+            item.name || (isScript ? 'Script' : 'Command'),
             item.command,
             text,
-            item.logOutput
+            item.logOutput,
+            item.executionType,
+            item.args,
+            item.workingDir
           )
         if (result && !result.success) {
           deps.showToast('toast.scriptFailed', 'error')

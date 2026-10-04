@@ -88,7 +88,7 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
 
   const clear = (): void => {
     discardCurrent()
-    lastEditSource.value = 'plain'
+    lastEditSource.value = 'clear'
     value.value = ''
     // the editor does not echo store edits back, so the old selection would
     // survive an empty document and leak into the next AI action

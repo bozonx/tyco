@@ -192,6 +192,8 @@ export const DESKTOP_COMMANDS = {
   CHECK_TEXT_INJECTION: 'check_text_injection',
   EXECUTE_SCRIPT_ACTION: 'execute_script_action',
   PICK_SCRIPT_FILE: 'pick_script_file',
+  PICK_DIRECTORY: 'pick_directory',
+  LOG_CUSTOM_ACTION: 'log_custom_action',
 } as const
 
 export type DesktopCommandName =

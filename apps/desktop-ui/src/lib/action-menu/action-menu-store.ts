@@ -51,8 +51,16 @@ export interface ActionMenuDependencies {
     name: string,
     command: string,
     text: string,
-    logOutput?: boolean
+    logOutput?: boolean,
+    executionType?: 'command' | 'script',
+    args?: string,
+    workingDir?: string
   ) => Promise<ScriptExecutionResult>
+  logCustomAction?: (
+    name: string,
+    actionType: string,
+    details: string
+  ) => Promise<void>
   executeWebhookAction?: (
     action: WebhookMainAction,
     text: string

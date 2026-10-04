@@ -164,6 +164,9 @@ describe('custom-actions', () => {
         id: 's-2',
         name: 'Echo Script',
         command: 'echo 123',
+        executionType: 'command',
+        workingDir: '/tmp',
+        logOutput: true,
       }
 
       const actionItem = createScriptActionItem(item, deps as any)
@@ -173,10 +176,26 @@ describe('custom-actions', () => {
         'Echo Script',
         'echo 123',
         'sample input',
-        undefined
+        true,
+        'command',
+        undefined,
+        '/tmp'
       )
       expect(showToast).toHaveBeenCalledWith('toast.scriptSuccess', 'success')
       expect(closeWindow).toHaveBeenCalled()
+    })
+
+    it('uses script icon and fallback name for script execution type', () => {
+      const item: ScriptMainAction = {
+        type: 'script',
+        id: 's-3',
+        name: '',
+        command: '/usr/local/bin/my-script',
+        executionType: 'script',
+      }
+      const actionItem = createScriptActionItem(item, {} as any)
+      expect(actionItem.icon).toBe('mdi:script-text-outline')
+      expect(actionItem.name).toBe('Script')
     })
   })
 

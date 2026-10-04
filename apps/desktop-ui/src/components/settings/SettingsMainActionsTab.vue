@@ -16,35 +16,92 @@
           />
 
           <template v-if="item.type === 'script'">
+            <SegmentedControl
+              :value="item.executionType || 'command'"
+              :label="t('settings.actionExecutionType')"
+              :options="[
+                { id: 'command', name: t('settings.actionTypeCommand') },
+                { id: 'script', name: t('settings.actionTypeScript') },
+              ]"
+              @update:value="updateCustomField(index, 'executionType', $event)"
+            />
+
             <FieldInput
               :value="item.name"
               :placeholder="t('settings.actionName')"
               class="font-medium"
               @update:value="updateCustomField(index, 'name', $event)"
             />
-            <div class="flex gap-2 items-center w-full">
+
+            <template v-if="(item.executionType || 'command') === 'command'">
               <FieldInput
                 :value="item.command"
-                :placeholder="t('settings.actionCommand')"
-                class="flex-1"
+                :placeholder="t('settings.actionCommandPlaceholder')"
                 @update:value="updateCustomField(index, 'command', $event)"
+              />
+              <p class="text-xs text-muted">
+                {{ t('settings.actionVariableHint') }}
+              </p>
+            </template>
+
+            <template v-else>
+              <div class="flex gap-2 items-center w-full">
+                <FieldInput
+                  :value="item.command"
+                  :placeholder="t('settings.actionScriptPathPlaceholder')"
+                  class="flex-1"
+                  @update:value="updateCustomField(index, 'command', $event)"
+                />
+                <Button
+                  type="button"
+                  ghost
+                  square
+                  sm
+                  :title="t('settings.browseScriptFile')"
+                  @click="browseScript(index)"
+                >
+                  <Icon icon="mdi:folder-open-outline" width="18" height="18" />
+                </Button>
+              </div>
+              <FieldInput
+                :value="item.args"
+                :placeholder="t('settings.actionScriptArgsPlaceholder')"
+                @update:value="updateCustomField(index, 'args', $event)"
+              />
+              <p class="text-xs text-muted">
+                {{ t('settings.actionVariableHint') }}
+              </p>
+            </template>
+
+            <div class="flex gap-2 items-center w-full">
+              <FieldInput
+                :value="item.workingDir"
+                :placeholder="t('settings.actionWorkingDirPlaceholder')"
+                class="flex-1"
+                @update:value="updateCustomField(index, 'workingDir', $event)"
               />
               <Button
                 type="button"
                 ghost
                 square
                 sm
-                :title="t('settings.browseScriptFile')"
-                @click="browseScript(index)"
+                :title="t('settings.browseWorkingDir')"
+                @click="browseWorkingDir(index)"
               >
                 <Icon icon="mdi:folder-open-outline" width="18" height="18" />
               </Button>
             </div>
-            <FieldCheckbox
-              :value="Boolean(item.logOutput)"
-              :label="t('settings.actionLogOutput')"
-              @update:value="updateCustomField(index, 'logOutput', $event)"
-            />
+
+            <div class="flex flex-col gap-1">
+              <FieldCheckbox
+                :value="Boolean(item.logOutput)"
+                :label="t('settings.actionLogOutput')"
+                @update:value="updateCustomField(index, 'logOutput', $event)"
+              />
+              <p v-if="item.logOutput" class="text-xs text-muted">
+                {{ t('settings.actionLogOutputHint') }}
+              </p>
+            </div>
           </template>
 
           <template v-else-if="item.type === 'webhook'">
@@ -81,11 +138,16 @@
                 "
               />
             </template>
-            <FieldCheckbox
-              :value="Boolean(item.logOutput)"
-              :label="t('settings.actionLogOutput')"
-              @update:value="updateCustomField(index, 'logOutput', $event)"
-            />
+            <div class="flex flex-col gap-1">
+              <FieldCheckbox
+                :value="Boolean(item.logOutput)"
+                :label="t('settings.actionLogOutput')"
+                @update:value="updateCustomField(index, 'logOutput', $event)"
+              />
+              <p v-if="item.logOutput" class="text-xs text-muted">
+                {{ t('settings.actionLogOutputHint') }}
+              </p>
+            </div>
           </template>
         </div>
       </template>
@@ -205,7 +267,10 @@ function updateAction(index: number, value: string | number | undefined) {
       type: 'script',
       id,
       name: '',
+      executionType: 'command',
       command: '',
+      args: '',
+      workingDir: '',
       logOutput: false,
     }
     emit('update:mainActions', slots)
@@ -253,6 +318,17 @@ async function browseScript(index: number) {
     const path = await ipcStore.callFunctionOrNotify('pickScriptFile', [])
     if (path && typeof path === 'string') {
       updateCustomField(index, 'command', path)
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function browseWorkingDir(index: number) {
+  try {
+    const path = await ipcStore.callFunctionOrNotify('pickDirectory', [])
+    if (path && typeof path === 'string') {
+      updateCustomField(index, 'workingDir', path)
     }
   } catch {
     // ignore

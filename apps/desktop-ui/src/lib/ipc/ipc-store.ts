@@ -174,14 +174,34 @@ export function createCommandMap(): CommandMap {
     },
     executeScriptAction: {
       command: DESKTOP_COMMANDS.EXECUTE_SCRIPT_ACTION,
-      buildArgs: ([name, command, text, logOutput]) => ({
+      buildArgs: ([
+        name,
+        command,
+        text,
+        logOutput,
+        executionType,
+        args,
+        workingDir,
+      ]) => ({
         name,
         command,
         text,
         logOutput: Boolean(logOutput),
+        executionType: executionType ?? 'command',
+        args: args || undefined,
+        workingDir: workingDir || undefined,
       }),
     },
     pickScriptFile: { command: DESKTOP_COMMANDS.PICK_SCRIPT_FILE },
+    pickDirectory: { command: DESKTOP_COMMANDS.PICK_DIRECTORY },
+    logCustomAction: {
+      command: DESKTOP_COMMANDS.LOG_CUSTOM_ACTION,
+      buildArgs: ([name, actionType, details]) => ({
+        name,
+        actionType,
+        details,
+      }),
+    },
   }
 }
 

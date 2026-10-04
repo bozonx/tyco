@@ -3,7 +3,7 @@
  * CodeMirror transaction as a `userEvent` and decides whether the edit is
  * merged with its neighbours in the undo history
  */
-export type EditSource = 'plain' | 'ai' | 'voice' | 'paste'
+export type EditSource = 'plain' | 'ai' | 'voice' | 'paste' | 'clear'
 
 /**
  * `userEvent` values for transactions — they identify an edit in logs and in
@@ -19,12 +19,14 @@ export const EDIT_USER_EVENT: Record<EditSource, string> = {
   ai: 'input.tyco.ai',
   voice: 'input.tyco.voice',
   paste: 'input.paste',
+  clear: 'input.tyco.clear',
 }
 
 /**
  * Sources that must be their own Ctrl+Z step: the result of an AI
- * transformation or recognized speech is not merged with manual typing
+ * transformation, recognized speech, or clearing the input is not merged with
+ * manual typing
  */
 export const isolatedEditSources: ReadonlySet<EditSource> = new Set<EditSource>(
-  ['ai', 'voice', 'paste']
+  ['ai', 'voice', 'paste', 'clear']
 )

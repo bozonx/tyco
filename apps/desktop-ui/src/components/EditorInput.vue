@@ -44,6 +44,7 @@ import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
+import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
 
 const editorInputStore = useEditorInputStore()
@@ -86,6 +87,18 @@ const withClipboard = async (run: () => Promise<void>): Promise<void> => {
 }
 
 const commands: EditorMenuCommands = {
+  undo: () => {
+    if (!view) return
+
+    undo(view)
+    view.focus()
+  },
+  redo: () => {
+    if (!view) return
+
+    redo(view)
+    view.focus()
+  },
   cut: () => withClipboard(() => cutSelection(view!)),
   copy: () => withClipboard(() => copySelection(view!)),
   paste: () => withClipboard(() => pasteFromClipboard(view!)),
@@ -141,6 +154,8 @@ const openContextMenu = (request: ContextMenuRequest): void => {
       commands,
       groups: menuGroups(),
       selected: Boolean(request.selectedText),
+      canUndo: undoDepth(view.state) > 0,
+      canRedo: redoDepth(view.state) > 0,
       suggestions: spellcheckItems(request),
     }),
   }

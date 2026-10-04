@@ -13,6 +13,7 @@ import {
 
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
+import { historyKeysExtension } from './history-keys'
 import { pasteExtension } from './paste'
 import { editorAppearance } from './theme'
 
@@ -50,6 +51,7 @@ export const createEditorExtensions = (
   options: CreateEditorStateOptions = {}
 ): Extension[] => [
   history(),
+  historyKeysExtension(),
   keymap.of([...defaultKeymap, ...historyKeymap]),
   EditorView.lineWrapping,
   EditorState.allowMultipleSelections.of(false),

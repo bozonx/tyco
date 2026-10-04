@@ -4,7 +4,9 @@ mod models;
 mod services;
 mod state;
 
-use commands::actions::{execute_script_action, pick_script_file};
+use commands::actions::{
+    execute_script_action, log_custom_action, pick_directory, pick_script_file,
+};
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
     get_storage_info, mark_activation_metric, open_main_chat, open_main_editor, patch_local_state,
@@ -195,7 +197,9 @@ pub fn run() {
             notify_desktop,
             check_text_injection,
             execute_script_action,
-            pick_script_file
+            pick_script_file,
+            pick_directory,
+            log_custom_action,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

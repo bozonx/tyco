@@ -139,6 +139,7 @@ describe('createEditorInputStoreModel', () => {
     expect(store.selectedText.value).toBe('')
     expect(store.selectionStart.value).toBe(0)
     expect(store.selectionEnd.value).toBe(0)
+    expect(store.lastEditSource.value).toBe('clear')
   })
 
   it('increments focus and selectAll counters', () => {

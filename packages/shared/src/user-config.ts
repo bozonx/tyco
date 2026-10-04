@@ -199,7 +199,10 @@ export interface ScriptMainAction {
   type: 'script'
   id: string
   name: string
+  executionType?: 'command' | 'script'
   command: string
+  args?: string
+  workingDir?: string
   logOutput?: boolean
 }
 

@@ -7,6 +7,8 @@ import type { EditorMenuItem } from './menu-item'
 const t = (key: string): string => key
 
 const commands = (): EditorMenuCommands => ({
+  undo: vi.fn(),
+  redo: vi.fn(),
   cut: vi.fn(),
   copy: vi.fn(),
   paste: vi.fn(),
@@ -39,15 +41,19 @@ const groups = (
 const ids = (items: EditorMenuItem[]) => items.map((entry) => entry.id)
 
 describe('buildContextMenu', () => {
-  it('lists clipboard commands, then transforms folded into submenus', () => {
+  it('lists history and clipboard commands, then transforms folded into submenus', () => {
     const menu = buildContextMenu({
       t,
       commands: commands(),
       groups: groups(),
       selected: true,
+      canUndo: true,
+      canRedo: true,
     })
 
     expect(ids(menu)).toEqual([
+      'undo',
+      'redo',
       'cut',
       'copy',
       'paste',
@@ -57,14 +63,49 @@ describe('buildContextMenu', () => {
       'case',
       'format',
     ])
-    expect(ids(menu[5].children!)).toEqual([
+    expect(ids(menu[7].children!)).toEqual([
       'translation',
       'correction',
       'aiTask',
       'askInChat',
     ])
-    expect(ids(menu[6].children!)).toEqual(['upper', 'lower'])
-    expect(menu[5].separatorBefore).toBe(true)
+    expect(ids(menu[8].children!)).toEqual(['upper', 'lower'])
+    expect(menu[2].separatorBefore).toBe(true)
+    expect(menu[7].separatorBefore).toBe(true)
+  })
+
+  it('controls undo and redo disabled state based on canUndo and canRedo', () => {
+    const menuDisabled = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups(),
+      selected: false,
+      canUndo: false,
+      canRedo: false,
+    })
+
+    expect(menuDisabled.find((entry) => entry.id === 'undo')?.disabled).toBe(
+      true
+    )
+    expect(menuDisabled.find((entry) => entry.id === 'redo')?.disabled).toBe(
+      true
+    )
+
+    const menuEnabled = buildContextMenu({
+      t,
+      commands: commands(),
+      groups: groups(),
+      selected: false,
+      canUndo: true,
+      canRedo: true,
+    })
+
+    expect(menuEnabled.find((entry) => entry.id === 'undo')?.disabled).toBe(
+      false
+    )
+    expect(menuEnabled.find((entry) => entry.id === 'redo')?.disabled).toBe(
+      false
+    )
   })
 
   it('disables cut and copy without a selection', () => {
@@ -80,7 +121,7 @@ describe('buildContextMenu', () => {
     expect(menu.find((entry) => entry.id === 'paste')?.disabled).toBeFalsy()
   })
 
-  it('puts spelling suggestions on top, separated from the clipboard', () => {
+  it('puts spelling suggestions on top, separated from history', () => {
     const menu = buildContextMenu({
       t,
       commands: commands(),
@@ -90,7 +131,7 @@ describe('buildContextMenu', () => {
     })
 
     expect(menu[0].id).toBe('fix')
-    expect(menu[1]).toMatchObject({ id: 'cut', separatorBefore: true })
+    expect(menu[1]).toMatchObject({ id: 'undo', separatorBefore: true })
   })
 
   it('drops empty submenus', () => {

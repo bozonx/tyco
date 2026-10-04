@@ -332,6 +332,26 @@ describe('applyStoreEdit', () => {
     view.destroy()
   })
 
+  it('undoes clearing the document in a single step, restoring text', () => {
+    const { view } = mountView('')
+
+    view.dispatch(view.state.replaceSelection('important text'))
+    expect(view.state.doc.toString()).toBe('important text')
+
+    applyStoreEdit(view, {
+      value: '',
+      selectionStart: 0,
+      selectionEnd: 0,
+      source: 'clear',
+    })
+    expect(view.state.doc.toString()).toBe('')
+
+    undo(view)
+    expect(view.state.doc.toString()).toBe('important text')
+
+    view.destroy()
+  })
+
   it('does nothing when text and selection already match', () => {
     const { view } = mountView('same')
 
