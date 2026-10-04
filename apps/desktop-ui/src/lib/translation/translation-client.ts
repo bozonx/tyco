@@ -49,6 +49,7 @@ export interface TranslationRunOptions {
 export interface TranslationRunResult {
   text: string
   provider: string
+  kind: 'llm' | 'machine'
   model?: string
   detectedSourceLanguage?: string
   quality: TranslationQualityReport
@@ -105,6 +106,7 @@ export function createTranslationClient(deps: TranslationClientDeps): {
       return {
         text: pipeline.translation,
         provider: pipeline.repair?.provider ?? pipeline.first.provider,
+        kind: pipeline.repair || config.provider === 'llm' ? 'llm' : 'machine',
         ...(pipeline.repair?.model || pipeline.first.model
           ? { model: pipeline.repair?.model ?? pipeline.first.model }
           : {}),

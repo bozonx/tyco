@@ -67,6 +67,7 @@ const props = defineProps<{
   sourceText?: string
   translationMeta?: {
     provider: string
+    kind?: 'llm' | 'machine'
     model?: string
     quality: TranslationQualityReport
   }
@@ -133,6 +134,9 @@ const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const providerLabel = computed(() => {
+  if (props.translationMeta?.kind === 'llm') {
+    return t('settings.translationProviderLlm')
+  }
   const providerKeys: Record<string, string> = {
     deepl: 'settings.translationProviderDeepl',
     google: 'settings.translationProviderGoogle',

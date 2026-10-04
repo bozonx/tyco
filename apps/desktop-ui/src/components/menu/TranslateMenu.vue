@@ -97,6 +97,7 @@ const translate = async (toLangNum: number) => {
       sourceText,
       translationMeta: {
         provider: result.provider,
+        kind: result.kind,
         model: result.model,
         quality: result.quality,
       },
