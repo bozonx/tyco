@@ -7,6 +7,7 @@ import {
   prepareChatRequest,
   trimChatContext,
 } from './chat-helpers'
+import { draftChatTitle, needsGeneratedTitle } from './chat-title'
 import {
   APP_CONFIG,
   type ChatHistoryItem,
@@ -16,29 +17,45 @@ import {
 } from '@tyco/shared'
 import { APP_ROUTES, type AppRoutePath } from '../navigation/routes'
 
+/** The model a chat request runs on */
+export interface ChatRequestModel {
+  id: string
+  /** How many characters the request may carry */
+  budgetCharacters: number
+}
+
 export interface ChatStoreDeps {
   sendChatMessage: (
     message: string,
     prevMessages: ChatMessage[],
-    devInstructions?: string,
-    options?: {
+    devInstructions: string | undefined,
+    options: {
+      modelId: string
       onChunk?: (chunk: string) => void
       signal?: AbortSignal
-      onModel?: (model: { provider: string; model: string }) => void
     }
   ) => Promise<string>
+  /** A short title for the conversation; empty when none came out */
+  generateChatTitle: (
+    question: string,
+    answer: string,
+    modelId: string
+  ) => Promise<string>
   saveChatHistory: (item: ChatHistoryItem) => void | Promise<void>
+  renameChat: (id: string, title: string) => void | Promise<void>
   loadChatHistoryItem: (id: string) => Promise<ChatHistoryItem | null>
   navigateTo: (path: AppRoutePath) => void | Promise<void>
   notifyError: (message: string) => void
   emptyMessageError: () => string
   chatNotFoundError: () => string
   messageTooLongError: () => string
+  noModelError: () => string
   createId: () => string
   nowIso: () => string
   saveLocalState: (state: Partial<LocalState>) => void | Promise<void>
   getLastChatId: () => string | null | undefined
-  getContextBudgetCharacters: () => number
+  /** The model picked in the chat; null when none is available */
+  getChatModel: () => ChatRequestModel | null
 }
 
 export function createChatStoreModel(deps: ChatStoreDeps) {
@@ -46,7 +63,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const newChatParams = ref<ChatParams>({})
   const isGenerating = ref(false)
   const error = ref('')
-  const activeModel = ref('')
+  /** The editor text the user removed from the current chat */
+  const dismissedEditorContext = ref<string | null>(null)
   const lastFailedTurn = ref<{
     message: string
     attachments?: string[]
@@ -54,12 +72,41 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const abortController = ref<AbortController | null>(null)
   let generationId = 0
 
-  const stopGeneration = () => {
+  const currentTitle = () => newChatParams.value.title || ''
+
+  // writes go one after another, so that an older state never lands last
+  let lastWrite: Promise<unknown> = Promise.resolve()
+
+  /** Writes the chat as it is; a failure is reported by the dependency */
+  const persist = (chatMessages: ChatMessage[]): Promise<boolean> => {
+    const id = newChatParams.value.id
+    if (!id || chatMessages.length === 0) return Promise.resolve(false)
+    const entry = createChatHistoryEntry({
+      id,
+      description: currentTitle(),
+      lastMsgDate: deps.nowIso(),
+      messages: [...chatMessages],
+    })
+    const write = lastWrite.then(async () => {
+      try {
+        await deps.saveChatHistory(entry)
+        return true
+      } catch {
+        return false
+      }
+    })
+    lastWrite = write
+    return write
+  }
+
+  /** Stops the answer; `save` keeps what came of it in the history */
+  const halt = (save: boolean) => {
     generationId += 1
     if (abortController.value) {
       abortController.value.abort()
       abortController.value = null
     }
+    if (!isGenerating.value) return
     isGenerating.value = false
     const last = messages.value.at(-1)
     if (last?.role === 'assistant' && !last.content) {
@@ -73,23 +120,43 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       }
     } else if (last?.role === 'assistant') {
       last.status = 'stopped'
-      const id = newChatParams.value.id
-      if (id) {
-        void Promise.resolve(
-          deps.saveChatHistory(
-            createChatHistoryEntry({
-              id,
-              description: newChatParams.value.initialMessage || '',
-              lastMsgDate: deps.nowIso(),
-              messages: [...messages.value],
-            })
-          )
-        ).catch(() => undefined)
-      }
+      if (save) void persist(messages.value)
     }
   }
 
-  const sendMessage = async (message: string, attachments?: string[]) => {
+  const stopGeneration = () => halt(true)
+
+  const maybeGenerateTitle = async (modelId: string) => {
+    const id = newChatParams.value.id
+    const title = currentTitle()
+    if (!id || !needsGeneratedTitle(messages.value, title)) return
+
+    const [question, answer] = messages.value
+    let generated: string
+    try {
+      generated = await deps.generateChatTitle(
+        question.content,
+        answer.content,
+        modelId
+      )
+    } catch {
+      // the draft title stays
+      return
+    }
+    if (!generated) return
+
+    const isCurrent = newChatParams.value.id === id
+    // renamed meanwhile, by the user or in another way
+    if (isCurrent && currentTitle() !== title) return
+    if (isCurrent) newChatParams.value.title = generated
+    try {
+      await deps.renameChat(id, generated)
+    } catch {
+      // the dependency reports it; the chat keeps working
+    }
+  }
+
+  const sendMessage = async (message: string, attachments: string[] = []) => {
     if (!message?.trim()) {
       deps.notifyError(deps.emptyMessageError())
       return
@@ -99,17 +166,12 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       return
     }
 
-    const inputSize =
-      message.length +
-      (attachments || []).reduce((sum, item) => sum + item.length, 0)
-    const contextBudget = deps.getContextBudgetCharacters()
-    if (inputSize > contextBudget) {
-      deps.notifyError(deps.messageTooLongError())
-      return
+    const model = deps.getChatModel()
+    if (!model) {
+      deps.notifyError(deps.noModelError())
+      return ''
     }
 
-    error.value = ''
-    activeModel.value = ''
     const failed = lastFailedTurn.value
     if (
       failed?.message === message &&
@@ -117,13 +179,26 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       messages.value.at(-1)?.content === message
     ) {
       messages.value.pop()
+      // the context of the failed turn goes with it again
+      attachments = [
+        ...new Set([...(failed.attachments || []), ...attachments]),
+      ]
     }
+
+    const inputSize =
+      message.length + attachments.reduce((sum, item) => sum + item.length, 0)
+    if (inputSize > model.budgetCharacters) {
+      deps.notifyError(deps.messageTooLongError())
+      return ''
+    }
+
+    error.value = ''
     lastFailedTurn.value = null
 
     const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
     const prevMessages = trimChatContext(
       messages.value,
-      Math.max(0, contextBudget - inputSize)
+      Math.max(0, model.budgetCharacters - inputSize)
     )
 
     const { preparedMessage, userMessage } = prepareChatRequest(
@@ -137,9 +212,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     if (!newChatParams.value.id) {
       newChatParams.value.id = deps.createId()
     }
-    if (!newChatParams.value.initialMessage) {
-      newChatParams.value.initialMessage = message
+    if (!newChatParams.value.title) {
+      newChatParams.value.title = draftChatTitle(message)
     }
+    newChatParams.value.attachments = []
+    dismissedEditorContext.value = null
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)
@@ -147,6 +224,15 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     isGenerating.value = true
     abortController.value = new AbortController()
     const currentGenerationId = ++generationId
+
+    // the question is kept even when no answer comes
+    void persist(messages.value.slice(0, userMessageIndex + 1)).then(
+      (saved) => {
+        if (saved && newChatParams.value.id) {
+          void deps.saveLocalState({ lastChatId: newChatParams.value.id })
+        }
+      }
+    )
 
     let result: string
 
@@ -156,15 +242,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         prevMessages,
         devInstructions,
         {
+          modelId: model.id,
           signal: abortController.value.signal,
           onChunk: (chunk) => {
             if (currentGenerationId === generationId) {
               assistantMessage.content += chunk
-            }
-          },
-          onModel: ({ provider, model }) => {
-            if (currentGenerationId === generationId) {
-              activeModel.value = `${model} · ${provider}`
             }
           },
         }
@@ -196,38 +278,31 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       }
     }
 
+    if (currentGenerationId !== generationId) return ''
+
     if (!assistantMessage.content) {
       messages.value.splice(userMessageIndex, 2)
       return ''
     }
 
-    newChatParams.value.attachments = []
-
-    try {
-      await deps.saveChatHistory(
-        createChatHistoryEntry({
-          id: newChatParams.value.id,
-          description: newChatParams.value.initialMessage,
-          lastMsgDate: deps.nowIso(),
-          messages: [...messages.value],
-        })
-      )
-      await deps.saveLocalState({ lastChatId: newChatParams.value.id })
-    } catch {
-      // The response remains usable in memory; the dependency reports the
-      // persistence failure to the user.
+    if (await persist(messages.value)) {
+      void maybeGenerateTitle(model.id)
     }
 
     return assistantMessage.content
   }
 
+  const reset = (chatParams: ChatParams = {}) => {
+    messages.value = []
+    newChatParams.value = chatParams
+    error.value = ''
+    dismissedEditorContext.value = null
+    lastFailedTurn.value = null
+  }
+
   const clearChat = () => {
     stopGeneration()
-    messages.value = []
-    newChatParams.value = {}
-    error.value = ''
-    activeModel.value = ''
-    lastFailedTurn.value = null
+    reset()
   }
 
   const retryLastTurn = async () => {
@@ -277,23 +352,52 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 
-  const openChat = async (id: string) => {
-    stopGeneration()
+  const addAttachment = (attachment: string) => {
+    const trimmed = attachment?.trim()
+    if (!trimmed) return
+    const current = newChatParams.value.attachments || []
+    if (!current.includes(trimmed)) {
+      newChatParams.value.attachments = [...current, trimmed]
+    }
+  }
+
+  /**
+   * Gives the text to the chat: to the current one while it is still empty, to
+   * a new one otherwise
+   */
+  const attachToChat = async (text: string) => {
+    if (messages.value.length > 0 || isGenerating.value) {
+      await startChat({ attachments: [text] })
+      return
+    }
+    if (!newChatParams.value.id) newChatParams.value.id = deps.createId()
+    addAttachment(text)
+    await deps.navigateTo(APP_ROUTES.CHAT.path)
+  }
+
+  /**
+   * Leaves the current chat for a new empty one without writing it again: it is
+   * being removed from the history
+   */
+  const abandonChat = () => {
+    halt(false)
+    reset({ id: deps.createId() })
+  }
+
+  const openChat = async (id: string, options: { silent?: boolean } = {}) => {
     const chat = await deps.loadChatHistoryItem(id)
 
     if (!chat) {
-      deps.notifyError(deps.chatNotFoundError())
-      return
+      if (!options.silent) deps.notifyError(deps.chatNotFoundError())
+      return false
     }
 
+    stopGeneration()
+    reset({ id: chat.id, title: chat.description, attachments: [] })
     messages.value = [...chat.messages]
-    newChatParams.value = {
-      id: chat.id,
-      initialMessage: chat.description,
-      attachments: [],
-    }
     await deps.saveLocalState({ lastChatId: chat.id })
     await deps.navigateTo(APP_ROUTES.CHAT.path)
+    return true
   }
 
   return {
@@ -301,7 +405,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     newChatParams,
     isGenerating,
     error,
-    activeModel,
+    dismissedEditorContext,
     sendMessage,
     stopGeneration,
     retryLastTurn,
@@ -309,19 +413,23 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     startChat,
     openChat,
     clearChat,
-    addAttachment: (attachment: string) => {
-      const trimmed = attachment?.trim()
-      if (!trimmed) return
-      const current = newChatParams.value.attachments || []
-      if (!current.includes(trimmed)) {
-        newChatParams.value.attachments = [...current, trimmed]
-      }
-    },
+    abandonChat,
+    attachToChat,
+    addAttachment,
     removeAttachment: (index: number) => {
       const current = newChatParams.value.attachments || []
       if (index >= 0 && index < current.length) {
         newChatParams.value.attachments = current.filter((_, i) => i !== index)
       }
+    },
+    /** Resolves once the writes started so far are done */
+    whenSaved: () => lastWrite.then(() => undefined),
+    dismissEditorContext: (text: string) => {
+      dismissedEditorContext.value = text
+    },
+    /** Renames the current chat in memory, after it was renamed in storage */
+    setTitle: (id: string, title: string) => {
+      if (newChatParams.value.id === id) newChatParams.value.title = title
     },
     openLastOrNewChat: async () => {
       if (newChatParams.value.id) {
@@ -330,11 +438,9 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       }
 
       const lastId = deps.getLastChatId()
-      if (lastId) {
-        await openChat(lastId)
-      } else {
-        await startChat({})
-      }
+      // the last chat may be gone: removed, or the history is off
+      if (lastId && (await openChat(lastId, { silent: true }))) return
+      await startChat({})
     },
   }
 }

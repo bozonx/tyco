@@ -7,7 +7,8 @@ export interface NavigationApi {
   isCurrent: (path: AppRoutePath) => boolean
   goToEditor: () => Promise<void>
   goToHistory: () => Promise<void>
-  goToConfig: () => Promise<void>
+  /** Opens the settings, on `tab` when given */
+  goToConfig: (tab?: string) => Promise<void>
   goToChat: () => Promise<void>
 }
 
@@ -27,8 +28,12 @@ export const appNavigation: NavigationApi = {
   async goToHistory() {
     await router.push(APP_ROUTES.HISTORY.path)
   },
-  async goToConfig() {
-    await router.push(APP_ROUTES.CONFIG.path)
+  async goToConfig(tab?: string) {
+    await router.push(
+      tab
+        ? { path: APP_ROUTES.CONFIG.path, query: { tab } }
+        : APP_ROUTES.CONFIG.path
+    )
   },
   async goToChat() {
     await router.push(APP_ROUTES.CHAT.path)

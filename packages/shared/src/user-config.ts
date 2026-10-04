@@ -55,7 +55,6 @@ export const LLM_TASKS = [
   'voiceCorrection',
   'correction',
   'aiTasks',
-  'chat',
 ] as const
 
 export type LlmTask = (typeof LLM_TASKS)[number]
@@ -63,7 +62,10 @@ export type LlmTask = (typeof LLM_TASKS)[number]
 export interface LlmConfig {
   providers: LlmProvider[]
   models: LlmModel[]
-  /** Model ids per task: the first answers, the rest are its fallbacks */
+  /**
+   * Model ids per task: the first answers, the rest are its fallbacks. The chat
+   * has no chain: it runs on the model picked in it
+   */
   tasks: Record<LlmTask, string[]>
 }
 
@@ -146,7 +148,6 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
     voiceCorrection: [DEFAULT_LLM_MODEL_ID],
     correction: [DEFAULT_LLM_MODEL_ID],
     aiTasks: [DEFAULT_LLM_MODEL_ID],
-    chat: [DEFAULT_LLM_MODEL_ID],
   },
 }
 

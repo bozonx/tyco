@@ -2,34 +2,50 @@ import type { ChatHistoryItem } from '@tyco/shared'
 
 export type ChatHistoryGroup = 'today' | 'yesterday' | 'previousWeek' | 'older'
 
-export function filterChatHistory(items: ChatHistoryItem[], query: string) {
+/**
+ * The chats matching the query. The index holds no messages, so the chats whose
+ * messages match come as `matchedIds` from a search in storage; until it
+ * answers, only the titles are matched
+ */
+export function filterChatHistory(
+  items: ChatHistoryItem[],
+  query: string,
+  matchedIds?: ReadonlySet<string> | null
+) {
   const normalized = query.trim().toLocaleLowerCase()
   if (!normalized) return items
-  return items.filter((item) =>
-    `${item.description}\n${item.messages.map((message) => message.content).join('\n')}`
-      .toLocaleLowerCase()
-      .includes(normalized)
+  return items.filter(
+    (item) =>
+      matchedIds?.has(item.id) ||
+      item.description.toLocaleLowerCase().includes(normalized)
   )
 }
 
+/** Groups by calendar day of the last message, newest first */
 export function groupChatHistory(
   items: ChatHistoryItem[],
   now = Date.now()
 ): Array<{ key: ChatHistoryGroup; items: ChatHistoryItem[] }> {
   const startToday = new Date(now)
   startToday.setHours(0, 0, 0, 0)
-  const day = 86_400_000
-  const groups = new Map<ChatHistoryGroup, ChatHistoryItem[]>()
+  const startYesterday = new Date(startToday)
+  startYesterday.setDate(startYesterday.getDate() - 1)
+  const startWeek = new Date(startToday)
+  startWeek.setDate(startWeek.getDate() - 7)
 
-  for (const item of items) {
-    const time = Date.parse(item.lastMsgDate)
-    const age = startToday.getTime() - time
+  const groups = new Map<ChatHistoryGroup, ChatHistoryItem[]>()
+  const sorted = [...items].sort(
+    (a, b) => timeOf(b.lastMsgDate) - timeOf(a.lastMsgDate)
+  )
+
+  for (const item of sorted) {
+    const time = timeOf(item.lastMsgDate)
     const key: ChatHistoryGroup =
-      age < day
+      time >= startToday.getTime()
         ? 'today'
-        : age < day * 2
+        : time >= startYesterday.getTime()
           ? 'yesterday'
-          : age < day * 7
+          : time >= startWeek.getTime()
             ? 'previousWeek'
             : 'older'
     const group = groups.get(key) || []
@@ -40,4 +56,9 @@ export function groupChatHistory(
   return (['today', 'yesterday', 'previousWeek', 'older'] as const)
     .filter((key) => groups.has(key))
     .map((key) => ({ key, items: groups.get(key) || [] }))
+}
+
+function timeOf(date: string): number {
+  const time = Date.parse(date)
+  return Number.isNaN(time) ? 0 : time
 }

@@ -1325,6 +1325,62 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<ChatHistoryItem>, 
     )?))
 }
 
+/// Gives a stored chat another title. Neither its messages nor its place in
+/// the index change: a rename is not activity in the chat.
+pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(), AppError> {
+    let chats_dir = app_data_sub_dir(app, "chats")?;
+    let Some(mut chat) = get_chat(app, id.clone())? else {
+        return Err(AppError::Message(String::from("Chat not found")));
+    };
+    chat.description = description;
+    write_json(
+        &chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?)),
+        &chat,
+    )?;
+
+    let mut history = get_chat_history(app)?;
+    rename_in_chat_index(&mut history, &id, &chat.description);
+    write_json(&chats_dir.join("index.json"), &history)
+}
+
+fn rename_in_chat_index(history: &mut [ChatHistoryItem], id: &str, description: &str) {
+    if let Some(item) = history.iter_mut().find(|item| item.id == id) {
+        item.description = description.to_string();
+    }
+}
+
+/// Ids of the chats whose title or messages contain `query`, in index order.
+/// The index holds no messages, so each chat file is read.
+pub fn search_chat_history(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
+    let history = get_chat_history(app)?;
+    let mut found = Vec::new();
+
+    for item in history {
+        let matches = match get_chat(app, item.id.clone()) {
+            Ok(Some(chat)) => chat_matches(&chat, &query),
+            _ => chat_matches(&item, &query),
+        };
+        if matches {
+            found.push(item.id);
+        }
+    }
+
+    Ok(found)
+}
+
+fn chat_matches(chat: &ChatHistoryItem, query: &str) -> bool {
+    let query = query.trim().to_lowercase();
+    if query.is_empty() {
+        return true;
+    }
+
+    chat.description.to_lowercase().contains(&query)
+        || chat
+            .messages
+            .iter()
+            .any(|message| message.content.to_lowercase().contains(&query))
+}
+
 pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppError> {
     let file_name = format!("{}.json", sanitize_chat_id(&id)?);
     let chats_dir = app_data_sub_dir(app, "chats")?;
@@ -1499,6 +1555,7 @@ mod tests {
         let current = LocalState {
             last_chat_id: Some(String::from("chat")),
             last_mode: Some(String::from("editor")),
+            last_chat_model_id: None,
         };
         let patch = json!({ "lastMode": "write" });
 
@@ -1521,6 +1578,33 @@ mod tests {
         assert!(
             merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
         );
+    }
+
+    #[test]
+    fn rename_in_chat_index_keeps_the_order() {
+        let mut history = vec![chat_item("a"), chat_item("b")];
+
+        rename_in_chat_index(&mut history, "b", "renamed");
+
+        assert_eq!(history[0].id, "a");
+        assert_eq!(history[1].id, "b");
+        assert_eq!(history[1].description, "renamed");
+    }
+
+    #[test]
+    fn chat_matches_the_title_and_the_messages_ignoring_case() {
+        let mut chat = chat_item("a");
+        chat.description = String::from("Trip plan");
+        chat.messages = vec![crate::models::ChatMessage {
+            role: String::from("user"),
+            content: String::from("Где купить БИЛЕТЫ?"),
+            attachments: Vec::new(),
+            status: None,
+        }];
+
+        assert!(chat_matches(&chat, "trip"));
+        assert!(chat_matches(&chat, " билеты "));
+        assert!(!chat_matches(&chat, "hotel"));
     }
 
     #[test]

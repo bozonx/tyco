@@ -80,6 +80,27 @@ pub fn save_chat_history(
 }
 
 #[tauri::command(async)]
+pub fn rename_chat(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+    description: String,
+) -> Result<(), AppError> {
+    let _guard = state.lock_history_storage();
+    storage::rename_chat(&app, id, description)
+}
+
+#[tauri::command(async)]
+pub fn search_chat_history(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    query: String,
+) -> Result<Vec<String>, AppError> {
+    let _guard = state.lock_history_storage();
+    storage::search_chat_history(&app, query)
+}
+
+#[tauri::command(async)]
 pub fn remove_from_editor_history(
     app: AppHandle,
     state: State<'_, AppState>,

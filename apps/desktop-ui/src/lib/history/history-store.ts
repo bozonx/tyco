@@ -111,6 +111,19 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     await loadChatHistory()
   }
 
+  /** Gives a chat another title, keeping its messages and its place */
+  const renameChat = async (id: string, description: string) => {
+    await call('renameChat', [id, description])
+    chatHistory.value = chatHistory.value.map((item) =>
+      item.id === id ? { ...item, description } : item
+    )
+  }
+
+  /** Ids of the chats whose title or messages contain the query */
+  const searchChats = async (query: string): Promise<string[]> => {
+    return (await call('searchChatHistory', [query])) || []
+  }
+
   /** Resolves to the removed entry, so that the removal can be undone. */
   const removeFromEditorHistory = async (
     id: string
@@ -167,6 +180,8 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     saveSource,
     saveSourceResult,
     saveChatHistory,
+    renameChat,
+    searchChats,
     removeFromEditorHistory,
     restoreEditorItem,
     removeFromChatHistory,

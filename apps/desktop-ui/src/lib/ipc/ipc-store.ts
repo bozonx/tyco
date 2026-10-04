@@ -119,6 +119,14 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.SAVE_CHAT_HISTORY,
       buildArgs: ([chatHistoryItem]) => ({ chatHistoryItem }),
     },
+    renameChat: {
+      command: DESKTOP_COMMANDS.RENAME_CHAT,
+      buildArgs: ([id, description]) => ({ id, description }),
+    },
+    searchChatHistory: {
+      command: DESKTOP_COMMANDS.SEARCH_CHAT_HISTORY,
+      buildArgs: ([query]) => ({ query }),
+    },
     removeFromEditorHistory: {
       command: DESKTOP_COMMANDS.REMOVE_FROM_EDITOR_HISTORY,
       buildArgs: ([id]) => ({ id }),

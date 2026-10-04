@@ -35,12 +35,12 @@ describe('llm-catalog', () => {
       config({
         tasks: {
           ...DEFAULT_LLM_CONFIG.tasks,
-          chat: ['gemini-flash', 'deepseek-chat'],
+          aiTasks: ['gemini-flash', 'deepseek-chat'],
         },
       })
     )!
 
-    expect(names(catalog.candidatesFor('chat'))).toEqual([
+    expect(names(catalog.candidatesFor('aiTasks'))).toEqual([
       'gemini-flash',
       'deepseek-chat',
     ])
@@ -60,12 +60,12 @@ describe('llm-catalog', () => {
         ...base.models,
         { id: 'blank', provider: 'google', model: '  ' },
       ],
-      tasks: { ...base.tasks, chat: ['blank', 'gemini-flash'] },
+      tasks: { ...base.tasks, aiTasks: ['blank', 'gemini-flash'] },
     })!
 
     expect(catalog.find('local-qwen')).toBeUndefined()
     expect(catalog.find('blank')).toBeUndefined()
-    expect(names(catalog.candidatesFor('chat'))).toEqual(['gemini-flash'])
+    expect(names(catalog.candidatesFor('aiTasks'))).toEqual(['gemini-flash'])
     expect(catalog.taskClasses).not.toContain('translate')
   })
 
@@ -82,7 +82,7 @@ describe('llm-catalog', () => {
           maxOutputTokens: 10_000_000,
         },
       ],
-      tasks: { ...base.tasks, chat: ['a'] },
+      tasks: { ...base.tasks, aiTasks: ['a'] },
     })!
 
     expect(catalog.require('a').maxOutputTokens).toBe(1024)

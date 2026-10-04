@@ -2,15 +2,12 @@
   <article class="chat-item" :class="`is-${message.role}`">
     <div class="chat-item-content">
       <div v-if="message.attachments?.length" class="message-attachments">
-        <span
+        <ChatAttachment
           v-for="(attachment, index) in message.attachments"
           :key="index"
-          class="message-attachment"
-          :title="attachment"
-        >
-          <Icon icon="mdi:file-document-outline" height="14" />
-          <span>{{ t('chat.editorContext') }} · {{ attachment.length }}</span>
-        </span>
+          :label="t('chat.attachedText')"
+          :text="attachment"
+        />
       </div>
 
       <div
@@ -24,7 +21,11 @@
         {{ message.content }}
       </div>
 
-      <div v-if="message.content" class="message-actions">
+      <div
+        v-if="message.content"
+        class="message-actions"
+        :class="{ 'is-confirming': confirming }"
+      >
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
@@ -32,16 +33,37 @@
           <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
           {{ copied ? t('chat.copied') : t('chat.copy') }}
         </button>
-        <button
-          v-if="message.role === 'assistant'"
-          type="button"
-          class="message-action"
-          :disabled="generating"
-          @click="emit('regenerate')"
-        >
-          <Icon icon="mdi:reload" height="14" />
-          {{ t('chat.regenerate') }}
-        </button>
+        <template v-if="message.role === 'assistant'">
+          <span v-if="confirming" class="regenerate-confirm">
+            <span>{{ t('chat.regenerateConfirm') }}</span>
+            <button
+              type="button"
+              class="message-action"
+              @click="confirming = false"
+            >
+              {{ t('common.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="message-action is-danger"
+              :disabled="generating"
+              @click="regenerate"
+            >
+              <Icon icon="mdi:reload" height="14" />
+              {{ t('chat.regenerate') }}
+            </button>
+          </span>
+          <button
+            v-else
+            type="button"
+            class="message-action"
+            :disabled="generating"
+            @click="regenerate"
+          >
+            <Icon icon="mdi:reload" height="14" />
+            {{ t('chat.regenerate') }}
+          </button>
+        </template>
       </div>
     </div>
   </article>
@@ -59,14 +81,30 @@ import {
 
 import { useI18n } from '../../composables/useI18n'
 import { renderChatMarkdown } from '../../lib/chat/chat-markdown'
+import ChatAttachment from '../chat/ChatAttachment.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
 
-const props = defineProps<{ message: ChatMessage; generating?: boolean }>()
+const props = defineProps<{
+  message: ChatMessage
+  generating?: boolean
+  /** Regenerating drops the later messages, so it asks first */
+  confirmRegenerate?: boolean
+}>()
 const emit = defineEmits<{ (e: 'regenerate'): void }>()
 const { t } = useI18n()
 const markdownRoot = ref<HTMLElement | null>(null)
 const copied = ref(false)
+const confirming = ref(false)
+
+function regenerate() {
+  if (props.confirmRegenerate && !confirming.value) {
+    confirming.value = true
+    return
+  }
+  confirming.value = false
+  emit('regenerate')
+}
 let highlightTimer: number | undefined
 const renderedContent = computed(() =>
   renderChatMarkdown(props.message.content)
@@ -256,7 +294,8 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
 }
 .chat-item-content:hover .message-actions,
-.message-actions:focus-within {
+.message-actions:focus-within,
+.message-actions.is-confirming {
   opacity: 1;
 }
 .message-action {
@@ -283,16 +322,16 @@ onBeforeUnmount(() => {
   gap: var(--space-xs);
   margin-bottom: var(--space-xs);
 }
-.message-attachment {
+.regenerate-confirm {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background: var(--app-surface-raised);
+  gap: var(--space-xs);
   color: var(--app-text-muted);
   font-size: 0.72rem;
+}
+.message-action.is-danger {
+  color: var(--color-error);
 }
 @media (hover: none) {
   .message-actions {

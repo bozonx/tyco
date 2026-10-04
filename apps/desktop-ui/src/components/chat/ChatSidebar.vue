@@ -72,7 +72,24 @@
     />
 
     <div class="chat-list-scroll">
-      <div v-if="groups.length === 0" class="chat-list-empty">
+      <ul v-if="draftChat" class="chat-list draft-list">
+        <li class="chat-list-row">
+          <button
+            type="button"
+            class="chat-list-item is-active"
+            :title="draftChat"
+            @click="emit('navigate')"
+          >
+            <Icon
+              icon="mdi:message-plus-outline"
+              height="15"
+              class="shrink-0"
+            />
+            <span class="truncate">{{ draftChat }}</span>
+          </button>
+        </li>
+      </ul>
+      <div v-if="groups.length === 0 && !draftChat" class="chat-list-empty">
         {{ query ? t('history.nothingFound') : t('history.empty') }}
       </div>
       <section v-for="group in groups" :key="group.key" class="chat-group">
@@ -133,9 +150,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import useToast from '../../composables/useToast'
 import {
   filterChatHistory,
   groupChatHistory,
@@ -150,6 +168,7 @@ import type { ChatHistoryItem } from '@tyco/shared'
 
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
+const { toast } = useToast()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
@@ -167,9 +186,41 @@ const chatHistoryDisabled = computed(() =>
   isLimitZero(ipcStore.params.userConfig?.chatHistoryMaxItems)
 )
 
+/** Chats whose messages match the query, found in storage */
+const matchedIds = ref<Set<string> | null>(null)
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+let searchRun = 0
+
+watch(query, (value) => {
+  clearTimeout(searchTimer)
+  matchedIds.value = null
+  const run = ++searchRun
+  if (!value.trim()) return
+  searchTimer = setTimeout(async () => {
+    try {
+      const ids = await historyStore.searchChats(value)
+      if (run === searchRun) matchedIds.value = new Set(ids)
+    } catch {
+      // the titles are still matched
+    }
+  }, 200)
+})
+
 const groups = computed(() =>
-  groupChatHistory(filterChatHistory(historyStore.chatHistory, query.value))
+  groupChatHistory(
+    filterChatHistory(historyStore.chatHistory, query.value, matchedIds.value)
+  )
 )
+
+/** The current chat while it is not stored yet: it is shown on top anyway */
+const draftChat = computed(() => {
+  const id = chatStore.newChatParams.id
+  if (query.value.trim()) return null
+  if (id && historyStore.chatHistory.some((item) => item.id === id)) {
+    return null
+  }
+  return chatStore.newChatParams.title || t('chat.newChat')
+})
 
 async function startChat() {
   await chatStore.startChat({})
@@ -197,14 +248,21 @@ async function finishRename(item: ChatHistoryItem) {
   const description = renameValue.value.trim()
   renamingId.value = null
   if (!description || description === item.description) return
-  await historyStore.saveChatHistory({ ...item, description })
-  if (chatStore.newChatParams.id === item.id) {
-    chatStore.newChatParams.initialMessage = description
+  try {
+    await historyStore.renameChat(item.id, description)
+    chatStore.setTitle(item.id, description)
+  } catch {
+    toast(t('history.operationFailed'), 'error')
   }
 }
 
 async function removeChat(id: string) {
   clearTimeout(undoTimer)
+  // leave the chat first, or its pending write would bring it back
+  if (chatStore.newChatParams.id === id) {
+    chatStore.abandonChat()
+    await chatStore.whenSaved()
+  }
   const item = historyStore.chatHistory.find((c) => c.id === id)
   const removed = await historyStore.removeFromChatHistory(id)
   if (removed || item) {
@@ -213,7 +271,6 @@ async function removeChat(id: string) {
       removedChat.value = null
     }, 8000)
   }
-  if (chatStore.newChatParams.id === id) await chatStore.startChat({})
 }
 
 async function undoRemoveChat() {
@@ -227,14 +284,16 @@ async function undoRemoveChat() {
 
 async function clearAllChats() {
   confirmingClear.value = false
-  await historyStore.clearChatHistory()
   if (chatStore.messages.length) {
-    await chatStore.startChat({})
+    chatStore.abandonChat()
+    await chatStore.whenSaved()
   }
+  await historyStore.clearChatHistory()
 }
 
 onUnmounted(() => {
   clearTimeout(undoTimer)
+  clearTimeout(searchTimer)
 })
 </script>
 
@@ -298,6 +357,9 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+.draft-list + .chat-group {
+  margin-top: var(--space-lg);
 }
 .chat-group + .chat-group {
   margin-top: var(--space-lg);

@@ -1,14 +1,24 @@
 <template>
   <div class="chat-view">
-    <button
-      v-if="!sidebarOpen"
-      type="button"
-      class="sidebar-open"
-      :title="t('chat.openSidebar')"
-      @click="sidebarOpen = true"
-    >
-      <Icon icon="mdi:dock-left" height="19" />
-    </button>
+    <div v-if="!sidebarOpen" class="sidebar-closed-tools">
+      <button
+        type="button"
+        class="sidebar-tool"
+        :title="t('chat.openSidebar')"
+        @click="sidebarOpen = true"
+      >
+        <Icon icon="mdi:dock-left" height="19" />
+      </button>
+      <button
+        type="button"
+        class="sidebar-tool"
+        :title="t('chat.newChat')"
+        :disabled="chatStore.isGenerating"
+        @click="chatStore.startChat({})"
+      >
+        <Icon icon="mdi:plus" height="19" />
+      </button>
+    </div>
     <button
       v-if="sidebarOpen"
       type="button"
@@ -34,12 +44,14 @@ import { onMounted, ref } from 'vue'
 import AiChat from '../components/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
 import { useI18n } from '../composables/useI18n'
+import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
 import { useNavPanelStore } from '../stores/navPanel'
 import { Icon } from '@iconify/vue'
 
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
+const chatStore = useChatStore()
 const { t } = useI18n()
 const sidebarOpen = ref(true)
 
@@ -67,11 +79,15 @@ onMounted(async () => {
   height: 100%;
   overflow: hidden;
 }
-.sidebar-open {
+.sidebar-closed-tools {
   position: absolute;
   top: 0.7rem;
   left: 0.7rem;
   z-index: 5;
+  display: flex;
+  gap: 0.15rem;
+}
+.sidebar-tool {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +97,11 @@ onMounted(async () => {
   color: var(--app-text-muted);
   cursor: pointer;
 }
-.sidebar-open:hover {
+.sidebar-tool:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sidebar-tool:not(:disabled):hover {
   background: var(--app-hover);
   color: var(--color-base-content);
 }

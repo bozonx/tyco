@@ -389,6 +389,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
@@ -453,7 +454,12 @@ const { toastText } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
-const currentTab = ref('general')
+const route = useRoute()
+// another page may open the settings on a tab of its own
+const requestedTab = route?.query.tab
+const currentTab = ref(
+  typeof requestedTab === 'string' && requestedTab ? requestedTab : 'general'
+)
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
 const storageInfo = ref<StorageInfo | null>(null)

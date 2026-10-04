@@ -1,29 +1,5 @@
 <template>
   <div class="ai-chat">
-    <header class="chat-header">
-      <div class="min-w-0 flex flex-col gap-0.5">
-        <h1 class="chat-title">{{ chatTitle }}</h1>
-        <div class="chat-model-selector flex items-center">
-          <DropdownMenu
-            xs
-            icon="mdi:creation-outline"
-            :label="currentModelLabel"
-            :title="t('chat.selectModel')"
-            :items="modelMenuItems"
-          />
-        </div>
-      </div>
-      <Button
-        v-if="chatStore.messages.length"
-        xs
-        ghost
-        icon="mdi:plus"
-        @click="chatStore.startChat({})"
-      >
-        {{ t('chat.newChat') }}
-      </Button>
-    </header>
-
     <div ref="scroller" class="chat-messages" @scroll="handleScroll">
       <div class="chat-column">
         <div v-if="chatStore.messages.length === 0" class="chat-empty">
@@ -36,9 +12,10 @@
 
         <ChatItem
           v-for="(message, index) in chatStore.messages"
-          :key="`${message.role}-${index}`"
+          :key="messageKey(message)"
           :message="message"
           :generating="chatStore.isGenerating"
+          :confirm-regenerate="index < chatStore.messages.length - 1"
           @regenerate="regenerate(index)"
         />
 
@@ -72,49 +49,52 @@
     </button>
 
     <div class="composer-wrap">
-      <div class="chat-composer">
-        <div v-if="attachments.length" class="attachment-list">
-          <span
+      <div v-if="!chatStore.selectedModel" class="chat-no-models">
+        <Icon icon="mdi:key-alert-outline" height="18" class="shrink-0" />
+        <span>{{ t('chat.noModelsHint') }}</span>
+        <Button xs icon="mdi:cog-outline" @click="openModelSettings">
+          {{ t('chat.configureModels') }}
+        </Button>
+      </div>
+      <div v-else class="chat-composer">
+        <div
+          v-if="attachments.length || chatStore.editorContext"
+          class="attachment-list"
+        >
+          <ChatAttachment
             v-for="(attachment, index) in attachments"
-            :key="index"
-            class="chat-attachment"
-            :title="attachment"
-          >
-            <Icon icon="mdi:file-document-outline" height="14" />
-            <span>{{ t('chat.editorContext') }}</span>
-            <button
-              type="button"
-              class="chat-attachment-remove"
-              :title="t('chat.removeAttachment')"
-              @click="chatStore.removeAttachment(index)"
-            >
-              <Icon icon="mdi:close" height="14" />
-            </button>
-          </span>
+            :key="`attachment-${index}`"
+            :label="t('chat.selectedText')"
+            :text="attachment"
+            icon="mdi:selection-drag"
+            removable
+            @remove="chatStore.removeAttachment(index)"
+          />
+          <ChatAttachment
+            v-if="chatStore.editorContext"
+            :key="`editor-${chatStore.editorContext.source}`"
+            :label="editorContextLabel"
+            :text="chatStore.editorContext.text"
+            icon="mdi:file-document-edit-outline"
+            removable
+            @remove="dismissEditorContext"
+          />
         </div>
 
         <ChatInput @send="sendMessage" />
 
         <div class="chat-composer-bar">
-          <div class="composer-tools">
-            <DropdownMenu
-              v-if="aiTaskMenuItems.length"
-              icon="mdi:robot-outline"
-              square
-              hide-chevron
-              placement="top"
-              :title="t('action.aiTask')"
-              :items="aiTaskMenuItems"
-            />
-            <Button
-              sm
-              ghost
-              square
-              icon="mdi:paperclip"
-              :title="t('chat.attachEditorTextTitle')"
-              :disabled="!canAttachEditorText"
-              @click="attachEditorText"
-            />
+          <DropdownMenu
+            xs
+            class="model-picker"
+            icon="mdi:creation-outline"
+            placement="top"
+            :label="chatStore.selectedModel.name"
+            :title="t('chat.selectModel')"
+            :items="modelMenuItems"
+          />
+          <span class="composer-hint">{{ inputHint }}</span>
+          <div class="composer-actions">
             <Button
               sm
               ghost
@@ -124,35 +104,34 @@
             >
               <Icon icon="mdi:microphone-outline" height="18" />
             </Button>
+            <Button
+              v-if="!chatStore.isGenerating"
+              sm
+              square
+              :disabled="!canSend"
+              :title="t('chat.sendMessage')"
+              @click="sendMessage"
+            >
+              <Icon icon="mdi:arrow-up" height="19" />
+            </Button>
+            <Button
+              v-else
+              sm
+              square
+              :title="t('chat.stop')"
+              @click="chatStore.stopGeneration()"
+            >
+              <Icon icon="mdi:stop" height="18" />
+            </Button>
           </div>
-          <Button
-            v-if="!chatStore.isGenerating"
-            sm
-            square
-            :disabled="!canSend"
-            :title="t('chat.sendMessage')"
-            @click="sendMessage"
-          >
-            <Icon icon="mdi:arrow-up" height="19" />
-          </Button>
-          <Button
-            v-else
-            sm
-            square
-            :title="t('chat.stop')"
-            @click="chatStore.stopGeneration()"
-          >
-            <Icon icon="mdi:stop" height="18" />
-          </Button>
         </div>
       </div>
-      <p class="composer-hint">{{ inputHint }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
 
 import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
@@ -161,18 +140,19 @@ import {
   resolveSubmitKey,
   submitShortcut,
 } from '../lib/input-keys/input-keys'
-import { usableModels } from '../lib/llm/llm-catalog'
+import { appNavigation } from '../lib/navigation/navigation'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
-import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
-import { AI_TASKS } from '../types'
+import { useLlmStore } from '../stores/llm'
+import ChatAttachment from './chat/ChatAttachment.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
+import type { ChatMessage } from '@tyco/shared'
 
 const chatInputStore = useChatInputStore()
-const editorInputStore = useEditorInputStore()
 const ipcStore = useIpcStore()
+const llmStore = useLlmStore()
 const chatStore = useChatStore()
 const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
@@ -187,109 +167,59 @@ const inputHint = computed(() => {
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
-const userConfig = computed(() => ipcStore.params?.userConfig)
 const attachments = computed(() => chatStore.newChatParams?.attachments || [])
 const canSend = computed(
   () => Boolean(chatInputStore.value.trim()) && !chatStore.isGenerating
-)
-const chatTitle = computed(
-  () => chatStore.newChatParams.initialMessage || t('chat.newChat')
 )
 const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
   return last?.role === 'assistant' && Boolean(last.content)
 })
-const selectedModel = computed(() => {
-  const llm = userConfig.value?.llm
-  if (!llm) return null
-  const modelId = llm.tasks?.[AI_TASKS.CHAT]?.[0]
-  if (modelId) {
-    const found = llm.models?.find((m) => m.id === modelId)
-    if (found) {
-      const provider = llm.providers?.find((p) => p.id === found.provider)
-      return { model: found, provider }
-    }
-  }
-  const usable = usableModels(llm)
-  return usable[0] ?? null
+
+const editorContextLabel = computed(() => {
+  const context = chatStore.editorContext
+  if (!context) return ''
+  const label =
+    context.source === 'selection'
+      ? t('chat.editorSelection')
+      : t('chat.editorText')
+  return context.updated ? `${label} · ${t('chat.contextUpdated')}` : label
 })
 
-const currentModelLabel = computed(() => {
-  if (chatStore.isGenerating && chatStore.activeModel) {
-    return chatStore.activeModel
-  }
-  if (!userConfig.value?.llm) return t('chat.noModels')
-  if (selectedModel.value) {
-    const { model, provider } = selectedModel.value
-    const providerName = provider?.name || provider?.type || provider?.id || ''
-    const modelName = model.name || model.model
-    return providerName ? `${modelName} (${providerName})` : modelName
-  }
-  return t('chat.selectModel')
-})
+const modelMenuItems = computed<DropdownMenuItem[]>(() => [
+  ...chatStore.modelOptions.map((option) => ({
+    label: `${option.name} · ${option.provider}`,
+    icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
+    action: () => chatStore.selectModel(option.id),
+  })),
+  {
+    label: t('chat.configureModels'),
+    icon: 'mdi:cog-outline',
+    action: openModelSettings,
+  },
+])
 
-const modelMenuItems = computed<DropdownMenuItem[]>(() => {
-  const llm = userConfig.value?.llm
-  if (!llm) return []
-  const usable = usableModels(llm)
-  if (usable.length === 0) {
-    return [{ label: t('chat.noModels'), action: () => {} }]
+// messages have no ids of their own; the object is the identity
+const messageKeys = new WeakMap<ChatMessage, number>()
+let nextMessageKey = 0
+function messageKey(message: ChatMessage) {
+  const raw = toRaw(message)
+  let key = messageKeys.get(raw)
+  if (key === undefined) {
+    key = nextMessageKey++
+    messageKeys.set(raw, key)
   }
-  const currentId = selectedModel.value?.model.id
-  return usable.map(({ model, provider }) => {
-    const providerName = provider.name || provider.type || provider.id
-    const modelName = model.name || model.model
-    const isSelected = model.id === currentId
-    return {
-      label: `${modelName} (${providerName})`,
-      icon: isSelected ? 'mdi:check' : undefined,
-      action: () => selectChatModel(model.id),
-    }
-  })
-})
-
-const aiTaskMenuItems = computed<DropdownMenuItem[]>(() => {
-  const tasks = userConfig.value?.aiTasks || []
-  return tasks
-    .filter((task): task is NonNullable<typeof task> & { rule: string } =>
-      Boolean(task?.rule?.trim())
-    )
-    .map((task) => ({
-      label: task.name?.trim() || task.rule.trim(),
-      action: () => {
-        const currentText = chatInputStore.value
-        const separator = currentText && !/\s$/.test(currentText) ? ' ' : ''
-        chatInputStore.setValue(`${currentText}${separator}${task.rule}`)
-        chatInputStore.focus()
-      },
-    }))
-})
-
-async function selectChatModel(modelId: string) {
-  if (!userConfig.value?.llm) return
-  chatStore.activeModel = ''
-  const currentTasks = userConfig.value.llm.tasks || {}
-  const currentChain = currentTasks[AI_TASKS.CHAT] || []
-  const newChain = [modelId, ...currentChain.filter((id) => id !== modelId)]
-  const updatedConfig = {
-    ...userConfig.value,
-    llm: {
-      ...userConfig.value.llm,
-      tasks: { ...currentTasks, [AI_TASKS.CHAT]: newChain },
-    },
-  }
-  await ipcStore.saveUserConfig(updatedConfig)
+  return key
 }
 
-function attachEditorText() {
-  const text = editorInputStore.value?.trim()
-  if (text) chatStore.addAttachment(text)
+function openModelSettings() {
+  void appNavigation.goToConfig('llm')
 }
 
-const canAttachEditorText = computed(() => {
-  const text = editorInputStore.value?.trim()
-  return Boolean(text && !attachments.value.includes(text))
-})
+function dismissEditorContext() {
+  const context = chatStore.editorContext
+  if (context) chatStore.dismissEditorContext(context.text)
+}
 
 async function sendMessage() {
   if (!canSend.value) return
@@ -303,12 +233,6 @@ async function retry() {
 }
 
 async function regenerate(index: number) {
-  if (
-    index < chatStore.messages.length - 1 &&
-    !window.confirm(t('chat.regenerateConfirm'))
-  ) {
-    return
-  }
   pinnedToBottom.value = true
   await chatStore.regenerateMessage(index)
 }
@@ -331,6 +255,12 @@ async function scrollToBottom(behavior: 'auto' | 'smooth' = 'auto') {
   scroller.value?.scrollTo({ top: scroller.value.scrollHeight, behavior })
 }
 
+onMounted(() => {
+  // keys may have been added or removed while the chat was not shown
+  // on failure the list stays as it was with the keys known before
+  llmStore.refreshSecrets().catch(() => undefined)
+})
+
 watch(
   () => chatStore.messages.map((message) => message.content).join('\u0000'),
   () => {
@@ -341,14 +271,7 @@ watch(
 watch(
   () => chatStore.newChatParams?.id,
   () => {
-    if (
-      chatStore.messages.length === 0 &&
-      chatStore.newChatParams.initialMessage
-    ) {
-      chatInputStore.setValue(chatStore.newChatParams.initialMessage)
-    } else {
-      chatInputStore.clear()
-    }
+    chatInputStore.clear()
     pinnedToBottom.value = true
     void scrollToBottom()
   }
@@ -362,28 +285,6 @@ watch(
   flex-direction: column;
   height: 100%;
   min-height: 0;
-}
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  min-height: 3.5rem;
-  padding: 0 var(--space-lg);
-  border-bottom: 1px solid var(--app-border-subtle);
-}
-.chat-title {
-  max-width: 32rem;
-  overflow: hidden;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.chat-model {
-  margin-top: 0.1rem;
-  color: var(--app-text-faint);
-  font-size: 0.68rem;
 }
 .chat-messages {
   flex: 1;
@@ -481,7 +382,7 @@ watch(
   box-shadow: var(--app-focus-ring);
 }
 .chat-composer-bar,
-.composer-tools,
+.composer-actions,
 .attachment-list {
   display: flex;
   align-items: center;
@@ -490,40 +391,53 @@ watch(
 .chat-composer-bar {
   justify-content: space-between;
 }
+.model-picker {
+  min-width: 0;
+}
+.model-picker :deep(.dropdown-trigger) {
+  max-width: 16rem;
+  color: var(--app-text-muted);
+  font-weight: 500;
+}
 .attachment-list {
   flex-wrap: wrap;
 }
-.chat-attachment {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.25rem 0.2rem 0.5rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background: var(--app-surface-raised);
-  font-size: 0.72rem;
+.composer-actions {
+  flex-shrink: 0;
 }
-.chat-attachment-remove {
-  display: inline-flex;
-  padding: 0.15rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  cursor: pointer;
-}
-.chat-attachment-remove:hover {
-  background: var(--app-hover);
-  color: var(--color-error);
-}
+/* shown only while typing, in the space the bar has anyway */
 .composer-hint {
-  margin-top: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   color: var(--app-text-faint);
   font-size: 0.68rem;
-  text-align: center;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.chat-composer:focus-within .composer-hint {
+  opacity: 1;
+}
+.chat-no-models {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px dashed var(--app-border);
+  border-radius: 1rem;
+  color: var(--app-text-muted);
+  font-size: 0.8125rem;
+}
+.chat-no-models span {
+  flex: 1;
 }
 .scroll-to-bottom {
   position: absolute;
   right: max(var(--space-xl), calc((100% - 52rem) / 2));
-  bottom: 7.5rem;
+  bottom: 7rem;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -560,7 +474,7 @@ watch(
     padding-left: var(--space-md);
   }
   .composer-hint {
-    display: none;
+    visibility: hidden;
   }
 }
 @media (prefers-reduced-motion: reduce) {

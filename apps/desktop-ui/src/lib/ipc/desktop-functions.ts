@@ -52,6 +52,8 @@ export interface DesktopFunctions {
   setEditorHistoryResult: { args: [id: string, result: string]; result: void }
   restoreEditorHistoryItem: { args: [item: EditorHistoryItem]; result: void }
   saveChatHistory: { args: [chatHistoryItem: ChatHistoryItem]; result: void }
+  renameChat: { args: [id: string, description: string]; result: void }
+  searchChatHistory: { args: [query: string]; result: string[] }
   removeFromEditorHistory: { args: [id: string]; result: void }
   removeFromChatHistory: { args: [id: string]; result: void }
   clearEditorHistory: { args: []; result: void }

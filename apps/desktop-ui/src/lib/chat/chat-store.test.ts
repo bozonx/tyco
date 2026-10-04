@@ -6,18 +6,21 @@ import { type ChatStoreDeps, createChatStoreModel } from './chat-store'
 function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
   return {
     sendChatMessage: vi.fn(async () => 'Assistant reply'),
+    generateChatTitle: vi.fn(async () => ''),
     saveChatHistory: vi.fn(),
+    renameChat: vi.fn(),
     loadChatHistoryItem: vi.fn(async () => null),
     navigateTo: vi.fn(),
     notifyError: vi.fn(),
     emptyMessageError: () => 'No text selected',
     chatNotFoundError: () => 'Chat not found',
     messageTooLongError: () => 'Message too long',
+    noModelError: () => 'No model',
     createId: vi.fn(() => 'chat-id-1'),
     nowIso: vi.fn(() => '2026-04-22T00:00:00.000Z'),
     saveLocalState: vi.fn(),
     getLastChatId: vi.fn(() => null),
-    getContextBudgetCharacters: vi.fn(() => 100_000),
+    getChatModel: vi.fn(() => ({ id: 'model-1', budgetCharacters: 100_000 })),
     ...overrides,
   }
 }
@@ -39,7 +42,7 @@ describe('chat-store', () => {
     const store = createChatStoreModel(deps)
     store.newChatParams.value = {
       id: 'chat-id-1',
-      initialMessage: 'Hello',
+      title: 'Hello',
       attachments: ['file-a'],
     }
 
@@ -50,7 +53,17 @@ describe('chat-store', () => {
     expect(store.messages.value[0]?.role).toBe('user')
     expect(store.messages.value[1]?.role).toBe('assistant')
     expect(deps.sendChatMessage).toHaveBeenCalledOnce()
-    expect(deps.saveChatHistory).toHaveBeenCalledOnce()
+    // the question first, then the whole turn
+    expect(deps.saveChatHistory).toHaveBeenCalledTimes(2)
+    expect(deps.saveChatHistory).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        description: 'Hello',
+        messages: [
+          { role: 'user', content: 'Hello', attachments: ['file-a'] },
+          { role: 'assistant', content: 'Assistant reply' },
+        ],
+      })
+    )
     expect(store.newChatParams.value.attachments).toEqual([])
   })
 
@@ -65,6 +78,7 @@ describe('chat-store', () => {
       expect.any(Array),
       expect.any(String),
       expect.objectContaining({
+        modelId: 'model-1',
         signal: expect.any(AbortSignal),
         onChunk: expect.any(Function),
       })
@@ -74,10 +88,7 @@ describe('chat-store', () => {
   it('persists the complete chat state after follow-up messages', async () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
-    store.newChatParams.value = {
-      id: 'chat-id-1',
-      initialMessage: 'First question',
-    }
+    store.newChatParams.value = { id: 'chat-id-1', title: 'First question' }
     store.messages.value = [
       { role: 'user', content: 'First question' },
       { role: 'assistant', content: 'First answer' },
@@ -121,10 +132,10 @@ describe('chat-store', () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
 
-    await store.startChat({ initialMessage: 'Start here' })
+    await store.startChat({ attachments: ['context'] })
 
     expect(store.newChatParams.value).toEqual({
-      initialMessage: 'Start here',
+      attachments: ['context'],
       id: 'chat-id-1',
     })
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
@@ -218,7 +229,7 @@ describe('chat-store', () => {
 
     expect(store.newChatParams.value).toEqual({
       id: 'chat-7',
-      initialMessage: 'Saved prompt',
+      title: 'Saved prompt',
       attachments: [],
     })
     expect(store.messages.value).toEqual([
@@ -263,11 +274,19 @@ describe('chat-store', () => {
     await pending
 
     expect(store.messages.value).toEqual([])
-    expect(deps.saveChatHistory).not.toHaveBeenCalled()
+    // only the question was written, before the answer came
+    expect(deps.saveChatHistory).toHaveBeenCalledOnce()
+    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [{ role: 'user', content: 'Old chat' }],
+      })
+    )
   })
 
   it('reserves context space for the current message', async () => {
-    const deps = createDeps({ getContextBudgetCharacters: () => 20 })
+    const deps = createDeps({
+      getChatModel: () => ({ id: 'model-1', budgetCharacters: 20 }),
+    })
     const store = createChatStoreModel(deps)
     store.messages.value = [
       { role: 'user', content: '1234567890' },
@@ -293,5 +312,160 @@ describe('chat-store', () => {
     await expect(store.sendMessage('Hello')).resolves.toBe('Assistant reply')
     expect(store.messages.value.at(-1)?.content).toBe('Assistant reply')
     expect(deps.saveLocalState).not.toHaveBeenCalled()
+    expect(deps.generateChatTitle).not.toHaveBeenCalled()
+  })
+
+  it('refuses to send without a model', async () => {
+    const deps = createDeps({ getChatModel: () => null })
+    const store = createChatStoreModel(deps)
+
+    await expect(store.sendMessage('Hello')).resolves.toBe('')
+    expect(deps.notifyError).toHaveBeenCalledWith('No model')
+    expect(deps.sendChatMessage).not.toHaveBeenCalled()
+  })
+
+  it('gives a new chat a draft title, then a generated one', async () => {
+    const deps = createDeps({
+      generateChatTitle: vi.fn(async () => 'Greeting'),
+    })
+    const store = createChatStoreModel(deps)
+
+    await store.sendMessage('Hello there')
+    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+      expect.objectContaining({ description: 'Hello there' })
+    )
+    await vi.waitFor(() =>
+      expect(deps.renameChat).toHaveBeenCalledWith('chat-id-1', 'Greeting')
+    )
+    expect(deps.generateChatTitle).toHaveBeenCalledWith(
+      'Hello there',
+      'Assistant reply',
+      'model-1'
+    )
+    expect(store.newChatParams.value.title).toBe('Greeting')
+
+    await store.sendMessage('And more')
+    expect(deps.generateChatTitle).toHaveBeenCalledOnce()
+  })
+
+  it('keeps a title the user gave while it was being generated', async () => {
+    let resolveTitle!: (title: string) => void
+    const deps = createDeps({
+      generateChatTitle: vi.fn(
+        () => new Promise<string>((resolve) => (resolveTitle = resolve))
+      ),
+    })
+    const store = createChatStoreModel(deps)
+
+    await store.sendMessage('Hello there')
+    await vi.waitFor(() => expect(deps.generateChatTitle).toHaveBeenCalled())
+    store.setTitle('chat-id-1', 'Mine')
+    resolveTitle('Greeting')
+    await Promise.resolve()
+
+    expect(store.newChatParams.value.title).toBe('Mine')
+    expect(deps.renameChat).not.toHaveBeenCalled()
+  })
+
+  it('writes the question even when no answer comes', async () => {
+    const deps = createDeps({
+      sendChatMessage: vi.fn().mockRejectedValue(new Error('Offline')),
+    })
+    const store = createChatStoreModel(deps)
+
+    await store.sendMessage('Hello')
+    await store.whenSaved()
+
+    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: 'Hello',
+        messages: [{ role: 'user', content: 'Hello' }],
+      })
+    )
+  })
+
+  it('sends a failed turn again with its context', async () => {
+    const sendChatMessage = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Offline'))
+      .mockResolvedValueOnce('Answer')
+    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+
+    await store.sendMessage('Question', ['context'])
+    await store.sendMessage('Question')
+
+    expect(store.messages.value[0]).toEqual({
+      role: 'user',
+      content: 'Question',
+      attachments: ['context'],
+    })
+    expect(store.messages.value).toHaveLength(2)
+  })
+
+  it('does not touch the chat when a new one starts without an answer running', async () => {
+    const deps = createDeps()
+    const store = createChatStoreModel(deps)
+    await store.sendMessage('Hello')
+    await store.whenSaved()
+    vi.mocked(deps.saveChatHistory).mockClear()
+
+    await store.startChat({})
+
+    expect(deps.saveChatHistory).not.toHaveBeenCalled()
+  })
+
+  it('gives a text to the empty current chat, to a new one otherwise', async () => {
+    let id = 0
+    const deps = createDeps({ createId: () => `chat-${++id}` })
+    const store = createChatStoreModel(deps)
+    await store.startChat({})
+
+    await store.attachToChat('first')
+    expect(store.newChatParams.value).toMatchObject({
+      id: 'chat-1',
+      attachments: ['first'],
+    })
+
+    await store.sendMessage('Question', ['first'])
+    await store.attachToChat('second')
+    expect(store.messages.value).toEqual([])
+    expect(store.newChatParams.value).toMatchObject({
+      id: 'chat-2',
+      attachments: ['second'],
+    })
+  })
+
+  it('abandons a chat without writing it again', async () => {
+    let resolveRequest!: (value: string) => void
+    const deps = createDeps({
+      sendChatMessage: vi.fn(
+        async (_message, _previous, _instructions, options) => {
+          options?.onChunk?.('Part')
+          return new Promise<string>((resolve) => (resolveRequest = resolve))
+        }
+      ),
+    })
+    const store = createChatStoreModel(deps)
+    const pending = store.sendMessage('Hello')
+    await store.whenSaved()
+    vi.mocked(deps.saveChatHistory).mockClear()
+
+    store.abandonChat()
+    resolveRequest('Part and more')
+    await pending
+    await store.whenSaved()
+
+    expect(store.messages.value).toEqual([])
+    expect(deps.saveChatHistory).not.toHaveBeenCalled()
+  })
+
+  it('opens a new chat when the last one is gone', async () => {
+    const deps = createDeps({ getLastChatId: () => 'gone' })
+    const store = createChatStoreModel(deps)
+
+    await store.openLastOrNewChat()
+
+    expect(deps.notifyError).not.toHaveBeenCalled()
+    expect(store.newChatParams.value.id).toBe('chat-id-1')
   })
 })

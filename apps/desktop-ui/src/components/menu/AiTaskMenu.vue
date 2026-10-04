@@ -51,7 +51,7 @@ const chatAction: ActionItem = {
   icon: 'mdi:chat-outline',
   action: async (text) => {
     menuModalsStore.closeAll()
-    await chatStore.startChat({ attachments: [text] })
+    await chatStore.attachToChat(text)
   },
 }
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>

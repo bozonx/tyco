@@ -21,7 +21,7 @@ describe('AiTaskMenu', () => {
 
   it('binds chat action to spaceKey so both Space and Enter navigate to chat', async () => {
     const chatStore = useChatStore()
-    const startChatSpy = vi.spyOn(chatStore, 'startChat').mockResolvedValue()
+    const attachSpy = vi.spyOn(chatStore, 'attachToChat').mockResolvedValue()
     const menuModalsStore = useMenuModalsStore()
     const closeAllSpy = vi.spyOn(menuModalsStore, 'closeAll')
 
@@ -59,8 +59,6 @@ describe('AiTaskMenu', () => {
     await shortcutListProps.spaceKey.action('Some task text')
 
     expect(closeAllSpy).toHaveBeenCalled()
-    expect(startChatSpy).toHaveBeenCalledWith({
-      attachments: ['Some task text'],
-    })
+    expect(attachSpy).toHaveBeenCalledWith('Some task text')
   })
 })

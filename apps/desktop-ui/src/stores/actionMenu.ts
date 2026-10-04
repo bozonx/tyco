@@ -46,7 +46,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       // the result replaces the text in the editor as well
       correctionStore.start(text, { toEditorVisible: true, ...extra }),
     startChatWithAttachment: (text: string) => {
-      chatStore.startChat({ attachments: [text] })
+      void chatStore.attachToChat(text)
     },
     showToast: (message, type) => {
       toast(message, type)

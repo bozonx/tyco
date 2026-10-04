@@ -1,6 +1,11 @@
 import { translate } from '../lib/i18n'
-import { LlmError, toLlmError } from '../lib/llm/llm-client'
+import { LlmError, toLlmError, type LlmRunName } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
+import {
+  CHAT_TITLE_INSTRUCTIONS,
+  chatTitleSource,
+  cleanGeneratedTitle,
+} from '../lib/chat/chat-title'
 import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import { resolveLanguagePreference } from '../lib/locale/language'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
@@ -22,7 +27,6 @@ import useToast from './useToast'
 import {
   APP_CONFIG,
   type ChatMessage,
-  type LlmTask,
   type LocalState,
   type SttModel,
 } from '@tyco/shared'
@@ -80,11 +84,13 @@ export const useCallAi = () => {
     signal?: AbortSignal
     onModel?: (model: { provider: string; model: string }) => void
     notifyError?: boolean
+    /** Models to run on instead of the task's chain */
+    models?: string[]
   }
 
   /** Runs a task on the configured model chain and preserves typed failures. */
   async function aiRequest(
-    taskName: LlmTask,
+    taskName: LlmRunName,
     messages: string | ChatMessage[],
     options: AiRequestOptions & { instructions?: string; rules?: string } = {}
   ) {
@@ -96,6 +102,7 @@ export const useCallAi = () => {
 
     try {
       return await llmStore.client.run(taskName, prompt, {
+        models: options.models,
         onChunk: options.onChunk,
         signal: options.signal,
         onModel: options.onModel,
@@ -149,20 +156,40 @@ export const useCallAi = () => {
   const sendChatMessage = async (
     message: string,
     prevMessages: ChatMessage[],
-    devInstructions?: string,
-    options?: AiRequestOptions
+    devInstructions: string | undefined,
+    options: Omit<AiRequestOptions, 'models'> & { modelId: string }
   ) => {
+    const { modelId, ...rest } = options
     return await aiRequest(
       AI_TASKS.CHAT,
       [...prevMessages, { role: 'user', content: message }],
       {
-        ...options,
+        ...rest,
+        models: [modelId],
         notifyError: false,
         instructions:
           devInstructions ?? currentAppConfig().aiInstructions[AI_TASKS.CHAT],
         rules: currentUserConfig().aiRules?.chat,
       }
     )
+  }
+
+  /** A short title for a conversation; empty when none came out */
+  const generateChatTitle = async (
+    question: string,
+    answer: string,
+    modelId: string
+  ) => {
+    const raw = await aiRequest(
+      AI_TASKS.CHAT,
+      chatTitleSource(question, answer),
+      {
+        models: [modelId],
+        notifyError: false,
+        instructions: CHAT_TITLE_INSTRUCTIONS,
+      }
+    )
+    return cleanGeneratedTitle(raw)
   }
 
   const correctText = async (
@@ -252,6 +279,7 @@ export const useCallAi = () => {
     cancelDictation,
     voiceCorrection,
     sendChatMessage,
+    generateChatTitle,
     correctText,
     translateText,
     aiTasks,

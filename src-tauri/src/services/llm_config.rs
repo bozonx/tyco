@@ -10,7 +10,11 @@ use tauri::AppHandle;
 
 use crate::services::secrets::{normalize_origin, SecretStore};
 
-pub const LLM_TASKS: [&str; 5] = [
+pub const LLM_TASKS: [&str; 4] = ["translate", "voiceCorrection", "correction", "aiTasks"];
+
+/// The LLM entries of the legacy `aiModelUsage`. The chat has no task chain any
+/// more, it remembers the model it was last used with instead.
+const LEGACY_USAGE_KEYS: [&str; 5] = [
     "translate",
     "voiceCorrection",
     "correction",
@@ -69,8 +73,7 @@ pub fn default_llm_config() -> Value {
         "translate": [DEFAULT_MODEL_ID],
         "voiceCorrection": [DEFAULT_MODEL_ID],
         "correction": [DEFAULT_MODEL_ID],
-        "aiTasks": [DEFAULT_MODEL_ID],
-        "chat": [DEFAULT_MODEL_ID]
+        "aiTasks": [DEFAULT_MODEL_ID]
       }
     })
 }
@@ -134,7 +137,7 @@ fn take_legacy_usage(object: &mut Map<String, Value>) -> Map<String, Value> {
         .get_mut("aiModelUsage")
         .and_then(Value::as_object_mut)
     {
-        for task in LLM_TASKS {
+        for task in LEGACY_USAGE_KEYS {
             if let Some(value) = usage.remove(task) {
                 taken.insert(task.to_string(), value);
             }
@@ -382,7 +385,7 @@ mod tests {
         assert!(models.iter().any(|model| model["id"] == "gemini-flash"));
 
         assert_eq!(llm["tasks"]["translate"], json!(["router"]));
-        assert_eq!(llm["tasks"]["chat"], json!(["router"]));
+        assert!(llm["tasks"].get("chat").is_none());
         assert_eq!(
             llm["tasks"]["voiceCorrection"],
             json!(["openai-compatible-default"]),

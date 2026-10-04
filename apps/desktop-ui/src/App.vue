@@ -170,8 +170,7 @@ const capturedSelection = createCapturedSelection({
 })
 // the text selected elsewhere when chat was called goes into chat attachments
 const capturedChatSelection = createCapturedChatSelection({
-  startChatWithAttachment: (text) =>
-    chatStore.startChat({ attachments: [text] }),
+  startChatWithAttachment: (text) => chatStore.attachToChat(text),
   getSelectedText: () => editorInputStore.selectedText,
 })
 // the voice chat hotkey opens a dictation into the chat with the selection as
@@ -241,7 +240,7 @@ onMounted(() => {
       if (isQuickWindow) return
       menuModalsStore.closeAll()
       const { text } = payload as { text?: string }
-      void chatStore.startChat({ attachments: text ? [text] : [] })
+      void (text ? chatStore.attachToChat(text) : chatStore.openLastOrNewChat())
     })
     .then((remove) => {
       removeMainChatListener = remove

@@ -51,7 +51,15 @@ export function isKeylessProvider(config: LlmConfig, providerId: string) {
   )
 }
 
+/** A configured task, or the chat, which runs on the model picked in it */
+export type LlmRunName = LlmTask | 'chat'
+
 export interface LlmRunOptions {
+  /**
+   * Model ids to try in order instead of the task's chain; the chat passes the
+   * one model picked in it
+   */
+  models?: string[]
   /** Streams the answer; each piece of text as it arrives */
   onChunk?: (text: string) => void
   signal?: AbortSignal
@@ -60,13 +68,13 @@ export interface LlmRunOptions {
 
 export interface LlmClient {
   /**
-   * Runs a task on its model chain. Resolves with the text produced so far when
-   * aborted
+   * Runs a task on its model chain, or on `options.models`. Resolves with the
+   * text produced so far when aborted
    *
    * @throws LlmError
    */
   run: (
-    task: LlmTask,
+    task: LlmRunName,
     prompt: LlmPrompt,
     options?: LlmRunOptions
   ) => Promise<string>
@@ -100,7 +108,9 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
   return {
     async run(task, prompt, options = {}) {
       const config = deps.getConfig()
-      const candidates = (config.tasks[task] || [])
+      const chain =
+        options.models ?? (task === 'chat' ? [] : config.tasks[task]) ?? []
+      const candidates = chain
         .map((id) => config.models.find((model) => model.id === id))
         .filter((model) => model !== undefined)
       if (candidates.length === 0) {
@@ -114,10 +124,11 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
       for (const model of candidates) {
         let emittedText = false
         let streamedText = ''
-        const scopedConfig: LlmConfig = {
+        // the catalog's task classes come from `tasks`; the chat is one too
+        const scopedConfig = {
           ...config,
           tasks: { ...config.tasks, [task]: [model.id] },
-        }
+        } as LlmConfig
         try {
           const kit = kitFor(scopedConfig)
           const request: StreamRequest = {

@@ -59,6 +59,24 @@ describe('history-store', () => {
     ])
   })
 
+  it('renames a chat in storage without rewriting its messages', async () => {
+    const api = createApi()
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
+    await store.loadChatHistory()
+
+    await store.renameChat('chat-1', 'Renamed')
+
+    expect(api.callFunction).toHaveBeenCalledWith('renameChat', [
+      'chat-1',
+      'Renamed',
+    ])
+    expect(api.callFunction).not.toHaveBeenCalledWith(
+      'saveChatHistory',
+      expect.anything()
+    )
+    expect(store.chatHistory.value[0]?.description).toBe('Renamed')
+  })
+
   it('loads chat history into state', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)

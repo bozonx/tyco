@@ -80,7 +80,7 @@ describe('llm-client', () => {
     const { client } = setup(fetch)
     const chunks: string[] = []
 
-    const text = await client.run('chat', prompt, {
+    const text = await client.run('aiTasks', prompt, {
       onChunk: (chunk) => chunks.push(chunk),
     })
 
@@ -92,6 +92,32 @@ describe('llm-client', () => {
     expect(body.model).toBe('qwen2.5:7b')
     expect(body.temperature).toBe(0.2)
     expect(new Headers(init?.headers).get('authorization')).toBeNull()
+  })
+
+  it('runs the chat on the model it is given', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      streamResponse(sse(['from deepseek']))
+    )
+    const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
+      deepseek: { origins: ['https://api.deepseek.com'] },
+    })
+
+    const text = await client.run('chat', prompt, {
+      models: ['deepseek-chat'],
+      onChunk: () => undefined,
+    })
+
+    expect(text).toBe('from deepseek')
+    const [url] = fetch.mock.calls[0]
+    expect(String(url)).toBe('https://api.deepseek.com/chat/completions')
+  })
+
+  it('refuses the chat without a model', async () => {
+    const { client } = setup(vi.fn<FetchFunction>())
+
+    await expect(client.run('chat', prompt)).rejects.toMatchObject({
+      kind: 'no_model',
+    })
   })
 
   it('answers in one piece without onChunk', async () => {
@@ -120,10 +146,12 @@ describe('llm-client', () => {
       streamResponse(sse(['from local']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.tasks.chat = ['gemini-flash', 'local-qwen']
+    llm.tasks.aiTasks = ['gemini-flash', 'local-qwen']
     const { client } = setup(fetch, llm)
 
-    const text = await client.run('chat', prompt, { onChunk: () => undefined })
+    const text = await client.run('aiTasks', prompt, {
+      onChunk: () => undefined,
+    })
 
     expect(text).toBe('from local')
     expect(fetch).toHaveBeenCalledTimes(1)
@@ -153,11 +181,11 @@ describe('llm-client', () => {
         maxOutputTokens: 200,
       },
     ]
-    llm.tasks.chat = ['first', 'second']
+    llm.tasks.aiTasks = ['first', 'second']
     const { client } = setup(fetch, llm)
 
     await expect(
-      client.run('chat', prompt, { onChunk: () => undefined })
+      client.run('aiTasks', prompt, { onChunk: () => undefined })
     ).resolves.toBe('fallback')
 
     const bodies = fetch.mock.calls.map((call) =>
@@ -178,12 +206,12 @@ describe('llm-client', () => {
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.tasks.chat = ['deepseek-chat']
+    llm.tasks.aiTasks = ['deepseek-chat']
     const { client } = setup(fetch, llm, {
       deepseek: { origins: ['https://api.deepseek.com'] },
     })
 
-    await client.run('chat', prompt, { onChunk: () => undefined })
+    await client.run('aiTasks', prompt, { onChunk: () => undefined })
 
     const [url, init] = fetch.mock.calls[0]
     expect(String(url)).toBe('https://api.deepseek.com/chat/completions')
@@ -198,7 +226,7 @@ describe('llm-client', () => {
     )
     const { client } = setup(fetch)
 
-    const error = await client.run('chat', prompt).catch((e: unknown) => e)
+    const error = await client.run('aiTasks', prompt).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(LlmError)
     expect((error as LlmError).kind).toBe('auth')
@@ -210,7 +238,7 @@ describe('llm-client', () => {
     llm.models = llm.models.map((model) => ({ ...model, model: '' }))
     const { client } = setup(vi.fn<FetchFunction>(), llm)
 
-    await expect(client.run('chat', prompt)).rejects.toMatchObject({
+    await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
       kind: 'no_model',
     })
   })
@@ -233,7 +261,7 @@ describe('llm-client', () => {
     )
     const { client } = setup(fetch)
 
-    const text = await client.run('chat', prompt, {
+    const text = await client.run('aiTasks', prompt, {
       signal: controller.signal,
       onChunk: () => controller.abort(),
     })
@@ -244,12 +272,12 @@ describe('llm-client', () => {
   it('picks up a changed config', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const { client, config } = setup(fetch)
-    await client.run('chat', prompt, { onChunk: () => undefined })
+    await client.run('aiTasks', prompt, { onChunk: () => undefined })
 
     const next = structuredClone(DEFAULT_LLM_CONFIG)
     next.models[0].model = 'llama3'
     config.current = next
-    await client.run('chat', prompt, { onChunk: () => undefined })
+    await client.run('aiTasks', prompt, { onChunk: () => undefined })
 
     const body = JSON.parse(String(fetch.mock.calls[1][1]?.body))
     expect(body.model).toBe('llama3')

@@ -27,7 +27,7 @@ describe('llm-config', () => {
       'deepseek',
     ])
     expect(config.models).toEqual([])
-    expect(config.tasks.chat).toEqual([])
+    expect(config.tasks.aiTasks).toEqual([])
   })
 
   it('puts missing built-in providers back, first', () => {
@@ -102,10 +102,10 @@ describe('llm-config', () => {
         { id: 'a', provider: 'google', model: 'g' },
         { id: 'b', provider: 'deepseek', model: 'd' },
       ],
-      tasks: { chat: ['b', 'gone', 'b', 'a'], translate: [] },
+      tasks: { aiTasks: ['b', 'gone', 'b', 'a'], translate: [] },
     })
 
-    expect(config.tasks.chat).toEqual(['b', 'a'])
+    expect(config.tasks.aiTasks).toEqual(['b', 'a'])
     expect(config.tasks.translate).toEqual([])
     expect(config.tasks.correction).toEqual([])
   })
@@ -119,7 +119,7 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.tasks.chat = [model.id, 'local-qwen']
+    config.tasks.aiTasks = [model.id, 'local-qwen']
 
     expect(provider.id).toBe('local-2')
     expect(model.id).toBe('local-2-model')
@@ -127,7 +127,7 @@ describe('llm-config', () => {
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.tasks.chat).toEqual(['local-qwen'])
+    expect(config.tasks.aiTasks).toEqual(['local-qwen'])
   })
 
   it('never removes a built-in provider', () => {

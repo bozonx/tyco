@@ -13,6 +13,9 @@ pub const STATE_FILE_NAME: &str = "localState.json";
 pub struct LocalState {
     pub last_chat_id: Option<String>,
     pub last_mode: Option<String>,
+    /// The model the chat was last used with.
+    #[serde(default)]
+    pub last_chat_model_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

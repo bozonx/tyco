@@ -29,8 +29,8 @@ export enum START_MODES {
 
 export interface ChatParams {
   id?: string
-  initialMessage?: string
-  initialRule?: string
+  /** The title the chat has in the history */
+  title?: string
   attachments?: string[]
 }
 
@@ -88,6 +88,8 @@ export interface StorageInfo {
 export interface LocalState {
   lastChatId?: string | null
   lastMode?: START_MODES | null
+  /** The model the chat was last used with */
+  lastChatModelId?: string | null
 }
 
 export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }
@@ -156,6 +158,8 @@ export const DESKTOP_COMMANDS = {
   SET_EDITOR_HISTORY_RESULT: 'set_editor_history_result',
   RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',
   SAVE_CHAT_HISTORY: 'save_chat_history',
+  RENAME_CHAT: 'rename_chat',
+  SEARCH_CHAT_HISTORY: 'search_chat_history',
   REMOVE_FROM_EDITOR_HISTORY: 'remove_from_editor_history',
   REMOVE_FROM_CHAT_HISTORY: 'remove_from_chat_history',
   CLEAR_EDITOR_HISTORY: 'clear_editor_history',
