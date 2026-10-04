@@ -22,6 +22,7 @@ function setup(
     closeAllModals: vi.fn(() => calls.push('closeAll')),
     openQuickVoiceInput: vi.fn(() => calls.push('open')),
     submitVoiceInput: vi.fn(() => calls.push('submit')),
+    attachSelection: vi.fn((text: string) => calls.push(`attach:${text}`)),
   }
 
   return { activation: createVoiceChatActivation(deps), deps, calls }
@@ -97,5 +98,34 @@ describe('createVoiceChatActivation', () => {
     )
     expect(await activation.apply(params({ isWindowShown: false }))).toBe(false)
     expect(calls).toEqual([])
+  })
+
+  it('attaches the selection captured with the activation', async () => {
+    const { activation, calls } = setup()
+
+    await activation.apply(params({ selectedText: ' Selected ' }))
+
+    expect(calls).toEqual(['closeAll', 'attach:Selected', 'open'])
+  })
+
+  it('attaches a selection that arrives after the activation once', async () => {
+    const { activation, deps } = setup()
+
+    await activation.apply(params())
+    expect(await activation.apply(params({ selectedText: 'Late' }))).toBe(false)
+    await activation.apply(params({ selectedText: 'Late' }))
+
+    expect(deps.attachSelection).toHaveBeenCalledOnce()
+    expect(deps.attachSelection).toHaveBeenCalledWith('Late')
+  })
+
+  it('does not attach a selection to the press that submits', async () => {
+    const { activation, deps } = setup({ voiceInputOpen: true })
+
+    await activation.apply(params({ selectedText: 'Selected' }))
+    await activation.apply(params({ selectedText: 'Selected' }))
+
+    expect(deps.submitVoiceInput).toHaveBeenCalledOnce()
+    expect(deps.attachSelection).not.toHaveBeenCalled()
   })
 })

@@ -249,10 +249,6 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         .get("selectionHotkeys")
         .cloned()
         .unwrap_or_default();
-    let default_selection_replace = defaults
-        .get("selectionReplace")
-        .cloned()
-        .unwrap_or_default();
 
     let Some(config) = user_config.as_object_mut() else {
         return false;
@@ -268,6 +264,8 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
     let previous_hotkeys = hotkeys.clone();
     hotkeys.remove("history");
     hotkeys.remove("config");
+    // the correction with review is no longer a global hotkey
+    hotkeys.remove("correction");
     for (mode, shortcut) in default_hotkeys {
         hotkeys.entry(mode).or_insert(shortcut);
     }
@@ -318,11 +316,15 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         changed = true;
     }
 
-    // Selection hotkeys
+    // Selection hotkeys: only the correction replaces the selection from a
+    // hotkey, translations and AI tasks no longer do
     if let Some(sel_hotkeys) = config
         .get_mut("selectionHotkeys")
         .and_then(Value::as_object_mut)
     {
+        let before = sel_hotkeys.len();
+        sel_hotkeys.retain(|action, _| default_selection_hotkeys.get(action).is_some());
+        changed |= sel_hotkeys.len() != before;
         if let Some(def_sel) = default_selection_hotkeys.as_object() {
             for (action, default_key) in def_sel {
                 if !sel_hotkeys.contains_key(action) {
@@ -336,13 +338,8 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
         changed = true;
     }
 
-    // Selection replace
-    let when_empty = config
-        .get("selectionReplace")
-        .and_then(|v| v.get("whenEmpty"))
-        .and_then(Value::as_str);
-    if !matches!(when_empty, Some("nothing" | "selectAll")) {
-        config.insert(String::from("selectionReplace"), default_selection_replace);
+    // Replacing the selection always takes the selection, never the whole field
+    if config.remove("selectionReplace").is_some() {
         changed = true;
     }
 
@@ -1656,6 +1653,24 @@ mod tests {
         assert_eq!(config["submitKey"], json!("enter"));
         assert_eq!(config["quickCorrectionPrefetch"], json!(false));
         assert_eq!(config["quickHideOnBlur"], json!(true));
+        assert!(!normalize_hotkeys_config(&mut config));
+    }
+
+    #[test]
+    fn normalize_hotkeys_drops_removed_hotkeys() {
+        let mut config = json!({
+            "hotkeys": { "correction": "Ctrl+Alt+R" },
+            "selectionHotkeys": { "correction": "Ctrl+Alt+X", "translate.0": "Ctrl+Alt+1" },
+            "selectionReplace": { "whenEmpty": "selectAll" }
+        });
+
+        assert!(normalize_hotkeys_config(&mut config));
+        assert!(config["hotkeys"].get("correction").is_none());
+        assert_eq!(
+            config["selectionHotkeys"],
+            json!({ "correction": "Ctrl+Alt+X" })
+        );
+        assert!(config.get("selectionReplace").is_none());
         assert!(!normalize_hotkeys_config(&mut config));
     }
 

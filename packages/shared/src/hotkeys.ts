@@ -116,8 +116,13 @@ export interface HotkeyApplyResult {
   message?: string
 }
 
+export type HotkeyProviderKind = 'portal' | 'global-shortcut' | 'external'
+
 export interface HotkeyProviderInfo {
-  provider: 'portal' | 'global-shortcut' | 'external'
+  provider: HotkeyProviderKind
   canConfigure: boolean
+  /** Only external bindings report something per action: their command */
   actions: Record<string, HotkeyApplyResult>
+  /** Shortcuts the desktop bound through the portal, in its own words */
+  systemTriggers: Record<string, string>
 }

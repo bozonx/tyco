@@ -6,9 +6,15 @@
           {{ t('settings.configureGlobalHotkeys') }}
         </Button>
       </template>
-      <p v-if="configureError" class="configure-error">
-        {{ configureError }}
-      </p>
+      <div v-if="providerNote || configureError" class="provider-note">
+        <Icon icon="mdi:information-outline" height="16" class="shrink-0" />
+        <div>
+          <p v-if="providerNote">{{ t(providerNote) }}</p>
+          <p v-if="configureError" class="configure-error">
+            {{ configureError }}
+          </p>
+        </div>
+      </div>
       <FieldRow v-for="row in rows" :key="row.id" :label="row.label">
         <template #info>
           <InfoTooltip
@@ -41,10 +47,12 @@
             :value="row.value"
             :aria-label="row.label"
             :placeholder="t('settings.hotkeyNotAssigned')"
+            :readonly="systemManaged"
             @record="setShortcut(row.id, $event)"
+            @recording="suspendHotkeys"
           />
           <Button
-            v-if="row.value !== row.defaultValue"
+            v-if="!systemManaged && row.value !== row.defaultValue"
             sm
             ghost
             square
@@ -53,11 +61,10 @@
             :aria-label="t('settings.resetToDefault')"
             @click="setShortcut(row.id, row.defaultValue)"
           />
-          <p
-            v-if="row.inline && injection.ok === false"
-            class="hotkey-status"
-            data-status="conflict"
-          >
+          <p v-if="hasConflict(providerState, row.id)" class="hotkey-error">
+            {{ t('settings.hotkeyStatus.conflict') }}
+          </p>
+          <p v-if="row.inline && injection.ok === false" class="hotkey-error">
             {{
               t('settings.textInjection.unavailable', {
                 error: injection.error,
@@ -67,26 +74,22 @@
               {{ t('settings.textInjection.recheck') }}
             </Button>
           </p>
-          <p
-            v-else-if="statuses[row.id]"
-            class="hotkey-status"
-            :data-status="statuses[row.id].status"
-          >
-            {{ t(`settings.hotkeyStatus.${statuses[row.id].status}`) }}
-          </p>
           <div
-            v-if="statuses[row.id]?.externalCommand"
+            v-if="providerState.statuses[row.id]?.externalCommand"
             class="external-command"
           >
-            <code>{{ statuses[row.id].externalCommand }}</code>
+            <code>{{ providerState.statuses[row.id].externalCommand }}</code>
             <Button
               sm
               ghost
+              square
               icon="mdi:content-copy"
-              @click="copyText(statuses[row.id].externalCommand ?? '')"
-            >
-              {{ t('settings.copyHotkeyCommand') }}
-            </Button>
+              :title="t('settings.copyHotkeyCommand')"
+              :aria-label="t('settings.copyHotkeyCommand')"
+              @click="
+                copyText(providerState.statuses[row.id].externalCommand ?? '')
+              "
+            />
           </div>
         </div>
       </FieldRow>
@@ -95,18 +98,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, toRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import { applyProviderInfo } from '../../lib/hotkeys/hotkey-settings'
+import { desktopClient } from '../../lib/desktop/client'
+import {
+  applyProviderInfo,
+  createHotkeySettingsState,
+  displayedShortcut,
+  hasConflict,
+  isSystemManaged,
+  providerNoteKey,
+} from '../../lib/hotkeys/hotkey-settings'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import HotkeyInput from '../common/HotkeyInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import { Icon } from '@iconify/vue'
 import {
   DEFAULT_USER_CONFIG,
+  DESKTOP_EVENTS,
   type HotkeyApplyResult,
   type HotkeyProviderInfo,
   SELECTION_HOTKEY_PREFIX,
@@ -128,7 +141,6 @@ const MODE_ORDER = [
   'voiceChat',
   'select',
   'aiTasks',
-  'correction',
 ]
 const INLINE_CORRECTION = 'correction'
 
@@ -146,12 +158,10 @@ interface HotkeyRow {
 }
 
 const ipcStore = useIpcStore()
-const providerState = reactive({
-  canConfigure: false,
-  statuses: {} as Record<string, HotkeyApplyResult>,
-})
-const canConfigure = toRef(providerState, 'canConfigure')
-const statuses = toRef(providerState, 'statuses')
+const providerState = reactive(createHotkeySettingsState())
+const canConfigure = computed(() => providerState.canConfigure)
+const systemManaged = computed(() => isSystemManaged(providerState))
+const providerNote = computed(() => providerNoteKey(providerState))
 const configureError = ref('')
 const injection = reactive<{ ok: boolean | null; error: string }>({
   ok: null,
@@ -163,22 +173,30 @@ const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort(
     (MODE_ORDER.indexOf(a) + 1 || Infinity) -
     (MODE_ORDER.indexOf(b) + 1 || Infinity)
 )
+const inlineId = `${SELECTION_HOTKEY_PREFIX}${INLINE_CORRECTION}`
 
 const rows = computed<HotkeyRow[]>(() => [
   ...modes.map((mode) => ({
     id: mode,
     label: t(`settings.hotkeyActions.${mode}`),
-    value: props.userConfig.hotkeys[mode] ?? '',
+    value: displayedShortcut(
+      providerState,
+      mode,
+      props.userConfig.hotkeys[mode] ?? ''
+    ),
     defaultValue: DEFAULT_USER_CONFIG.hotkeys[mode],
     command: `tyco-ctl activate ${mode}`,
     externalHint: t('settings.externalMethodsHint'),
   })),
   {
-    id: `${SELECTION_HOTKEY_PREFIX}${INLINE_CORRECTION}`,
+    id: inlineId,
     label: t('settings.hotkeyActions.inlineCorrection'),
-    value:
+    value: displayedShortcut(
+      providerState,
+      inlineId,
       props.userConfig.selectionHotkeys?.[INLINE_CORRECTION] ??
-      DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION],
+        DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
+    ),
     defaultValue: DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION],
     command: `tyco-ctl replace ${INLINE_CORRECTION}`,
     externalHint: t('settings.inlineCorrectionExternalHint'),
@@ -194,8 +212,13 @@ async function setShortcut(mode: string, shortcut: string) {
   const status: HotkeyApplyResult = result.success
     ? (result.result as HotkeyApplyResult)
     : { status: 'conflict', message: result.error }
-  statuses.value[mode] = status
+  providerState.statuses[mode] = status
   if (status.status !== 'conflict') emit('update:hotkey', mode, shortcut)
+}
+
+// pressing a bound shortcut must reach the field, not run its action
+function suspendHotkeys(suspended: boolean) {
+  void ipcStore.callFunction('suspendHotkeys', [suspended])
 }
 
 async function copyText(text: string) {
@@ -217,21 +240,50 @@ async function configureHotkeys() {
   }
 }
 
-onMounted(async () => {
-  void checkInjection()
+async function loadProviderInfo() {
   const result = await ipcStore.callFunction('getHotkeyProviderInfo')
   if (result.success) {
     applyProviderInfo(providerState, result.result as HotkeyProviderInfo)
   }
+}
+
+let unlistenHotkeysChanged: (() => void) | undefined
+let unmounted = false
+
+onMounted(async () => {
+  void checkInjection()
+  const unlisten = await desktopClient.listen(
+    DESKTOP_EVENTS.HOTKEYS_CHANGED,
+    () => void loadProviderInfo()
+  )
+  if (unmounted) unlisten()
+  else unlistenHotkeysChanged = unlisten
+  await loadProviderInfo()
+})
+
+onBeforeUnmount(() => {
+  unmounted = true
+  unlistenHotkeysChanged?.()
 })
 </script>
 
 <style scoped>
-.configure-error {
+.provider-note {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--app-border-subtle);
+  color: var(--app-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.provider-note p {
   margin: 0;
-  padding: var(--space-sm) var(--space-lg) 0;
+}
+
+.configure-error {
   color: var(--app-error);
-  font-size: 0.75rem;
 }
 
 .hotkey-control {
@@ -242,18 +294,14 @@ onMounted(async () => {
   width: 100%;
 }
 
-.hotkey-status {
+.hotkey-error {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   flex-basis: 100%;
   margin: 0;
-  color: var(--app-text-muted);
-  font-size: 0.75rem;
-}
-
-.hotkey-status[data-status='conflict'] {
   color: var(--app-error);
+  font-size: 0.75rem;
 }
 
 .hotkey-info {
@@ -283,6 +331,11 @@ onMounted(async () => {
   overflow-x: auto;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
+  background: var(--app-surface-raised);
+  font-size: 0.75rem;
+}
+
+.hotkey-info .external-command code {
   background: var(--app-surface);
 }
 </style>

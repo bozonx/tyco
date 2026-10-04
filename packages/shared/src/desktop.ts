@@ -126,6 +126,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
 export const DESKTOP_EVENTS = {
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
+  HOTKEYS_CHANGED: 'app://hotkeys-changed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
@@ -140,6 +141,7 @@ export const DESKTOP_COMMANDS = {
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
+  SUSPEND_HOTKEYS: 'suspend_hotkeys',
   GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
   OPEN_MAIN_CHAT: 'open_main_chat',
   OPEN_MAIN_EDITOR: 'open_main_editor',

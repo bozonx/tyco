@@ -7,26 +7,33 @@
       'is-recording': recording,
       'is-invalid': recording && invalid,
       'is-saved': saved,
+      'is-readonly': readonly,
     }"
     :aria-label="ariaLabel"
-    :aria-pressed="recording"
+    :aria-pressed="readonly ? undefined : recording"
+    :aria-readonly="readonly || undefined"
     @click="start"
     @keydown="onKeyDown"
     @keyup="onKeyUp"
     @blur="stop"
   >
-    <span v-if="recording && heldKeys.length === 0" class="hotkey-prompt">
+    <span
+      v-if="recording && heldKeys.length === 0"
+      class="hotkey-main hotkey-prompt"
+    >
       <span class="hotkey-dot" aria-hidden="true" />
-      {{ t('settings.hotkeyInput.recording') }}
+      <span class="hotkey-text">{{ t('settings.hotkeyInput.recording') }}</span>
     </span>
-    <span v-else-if="displayKeys.length > 0" class="hotkey-keys">
+    <span v-else-if="displayKeys.length > 0" class="hotkey-main hotkey-keys">
       <template v-for="(key, index) in displayKeys" :key="index">
         <span v-if="index > 0" class="hotkey-plus">+</span>
         <KeyButton>{{ key }}</KeyButton>
       </template>
       <span v-if="recording && !invalid" class="hotkey-plus">+ …</span>
     </span>
-    <span v-else class="hotkey-placeholder">{{ placeholder }}</span>
+    <span v-else class="hotkey-main hotkey-placeholder">
+      <span class="hotkey-text">{{ placeholder }}</span>
+    </span>
 
     <span v-if="recording" class="hotkey-hint">
       {{
@@ -42,7 +49,7 @@
       class="hotkey-saved-icon"
     />
     <Icon
-      v-else
+      v-else-if="!readonly"
       icon="mdi:keyboard-outline"
       height="16"
       class="hotkey-edit-icon"
@@ -63,10 +70,19 @@ import KeyButton from './KeyButton.vue'
 import { Icon } from '@iconify/vue'
 
 const props = withDefaults(
-  defineProps<{ value: string; ariaLabel?: string; placeholder?: string }>(),
-  { ariaLabel: undefined, placeholder: '' }
+  defineProps<{
+    value: string
+    ariaLabel?: string
+    placeholder?: string
+    /** Shows a shortcut that is changed elsewhere, e.g. by the desktop */
+    readonly?: boolean
+  }>(),
+  { ariaLabel: undefined, placeholder: '', readonly: false }
 )
-const emit = defineEmits<{ (event: 'record', shortcut: string): void }>()
+const emit = defineEmits<{
+  (event: 'record', shortcut: string): void
+  (event: 'recording', active: boolean): void
+}>()
 const { t } = useI18n()
 
 const SAVED_FLASH_MS = 1500
@@ -84,17 +100,20 @@ const displayKeys = computed(() =>
 )
 
 function start() {
-  if (recording.value) return
+  if (recording.value || props.readonly) return
   recording.value = true
   heldKeys.value = []
   invalid.value = false
   saved.value = false
+  emit('recording', true)
 }
 
 function stop() {
+  if (!recording.value) return
   recording.value = false
   heldKeys.value = []
   invalid.value = false
+  emit('recording', false)
 }
 
 function flashSaved() {
@@ -144,23 +163,42 @@ watch(
 
 onBeforeUnmount(() => {
   if (savedTimer) clearTimeout(savedTimer)
+  stop()
 })
 </script>
 
 <style scoped>
 .hotkey-input {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-sm);
   flex: 1;
   min-width: 12rem;
+  overflow: hidden;
   cursor: pointer;
   text-align: left;
 }
 
-.hotkey-keys {
+.hotkey-input.is-readonly {
+  cursor: default;
+}
+
+.hotkey-main {
   display: inline-flex;
+  flex: 1;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hotkey-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hotkey-keys {
   gap: 0.25rem;
 }
 
@@ -174,13 +212,12 @@ onBeforeUnmount(() => {
 }
 
 .hotkey-prompt {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-sm);
   color: var(--color-primary);
 }
 
 .hotkey-dot {
+  flex-shrink: 0;
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
@@ -189,7 +226,7 @@ onBeforeUnmount(() => {
 }
 
 .hotkey-hint {
-  margin-left: auto;
+  flex-shrink: 0;
   color: var(--app-text-muted);
   font-size: 0.75rem;
   white-space: nowrap;
@@ -198,7 +235,6 @@ onBeforeUnmount(() => {
 .hotkey-edit-icon,
 .hotkey-saved-icon {
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .hotkey-edit-icon {

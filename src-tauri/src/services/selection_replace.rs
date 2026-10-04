@@ -295,14 +295,6 @@ fn is_terminal_class(class: &str) -> bool {
     TERMINALS.contains(&name) || class.contains("terminal")
 }
 
-/// What `selectionReplace.whenEmpty` says to do without a selection.
-fn selects_all_when_empty(user_config: &Value) -> bool {
-    user_config
-        .pointer("/selectionReplace/whenEmpty")
-        .and_then(Value::as_str)
-        == Some("selectAll")
-}
-
 /// The window that has the keyboard focus now. The tracker knows its class,
 /// which tells a terminal; without it X11 can still tell the window.
 #[cfg(target_os = "linux")]
@@ -332,7 +324,7 @@ fn active_target() -> Option<Target> {
 #[cfg(target_os = "linux")]
 fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
     use super::platform::linux::clipboard_restore;
-    use super::platform::linux::text_injector::{FocusedKeys, SystemTextInjector};
+    use super::platform::linux::text_injector::SystemTextInjector;
 
     let target = active_target().ok_or_else(|| {
         let message = if super::platform::session::current().is_kde_wayland()
@@ -355,16 +347,7 @@ fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
         snapshot,
     };
 
-    let mut copied = copy_selection(&injector, user_config, &run.target, None);
-    if matches!(copied, Ok(None)) && selects_all_when_empty(user_config) {
-        copied = copy_selection(
-            &injector,
-            user_config,
-            &run.target,
-            Some(FocusedKeys::SelectAll),
-        );
-    }
-    match copied {
+    match copy_selection(&injector, user_config, &run.target) {
         Ok(Some(text)) => {
             run.started = Instant::now();
             Ok((text, run))
@@ -399,7 +382,6 @@ fn copy_selection(
     injector: &super::platform::linux::text_injector::SystemTextInjector,
     user_config: &Value,
     target: &Target,
-    before: Option<super::platform::linux::text_injector::FocusedKeys>,
 ) -> Result<Option<String>, AppError> {
     use super::platform::linux::text_injector::FocusedKeys;
 
@@ -414,9 +396,6 @@ fn copy_selection(
             .unwrap_or_default()
     );
     crate::services::clipboard::copy_to_clipboard(&probe)?;
-    if let Some(keys) = before {
-        injector.press_in_focused(user_config, keys, target.terminal)?;
-    }
     injector.press_in_focused(user_config, FocusedKeys::Copy, target.terminal)?;
 
     let deadline = Instant::now() + COPY_TIMEOUT;
@@ -565,8 +544,6 @@ pub fn hotkey_released(id: &str) {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
-
     use super::*;
 
     fn run(id: u64, age: Duration) -> Run {
@@ -596,17 +573,6 @@ mod tests {
         for class in ["firefox", "org.kde.kate", "telegramdesktop", ""] {
             assert!(!is_terminal_class(class), "{class}");
         }
-    }
-
-    #[test]
-    fn selects_all_only_when_configured() {
-        assert!(!selects_all_when_empty(&json!({})));
-        assert!(!selects_all_when_empty(
-            &json!({ "selectionReplace": { "whenEmpty": "nothing" } })
-        ));
-        assert!(selects_all_when_empty(
-            &json!({ "selectionReplace": { "whenEmpty": "selectAll" } })
-        ));
     }
 
     #[test]

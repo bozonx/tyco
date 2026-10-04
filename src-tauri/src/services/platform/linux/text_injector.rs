@@ -96,7 +96,6 @@ const KEY_RIGHT_CTRL: u16 = 97;
 const KEY_RIGHT_ALT: u16 = 100;
 const KEY_LEFT_META: u16 = 125;
 const KEY_RIGHT_META: u16 = 126;
-const KEY_A: u16 = 30;
 const KEY_C: u16 = 46;
 const KEY_V: u16 = 47;
 const KEY_INSERT: u16 = 110;
@@ -123,7 +122,6 @@ fn press_and_release(keys: &[u16]) -> Vec<String> {
 pub enum FocusedKeys {
     Copy,
     Paste,
-    SelectAll,
 }
 
 impl FocusedKeys {
@@ -131,7 +129,6 @@ impl FocusedKeys {
         match self {
             Self::Copy => shortcut.copy_xdotool_keys(),
             Self::Paste => shortcut.xdotool_keys(),
-            Self::SelectAll => "ctrl+a",
         }
     }
 
@@ -143,7 +140,6 @@ impl FocusedKeys {
         let combo = match self {
             Self::Copy => shortcut.copy_ydotool_keys(),
             Self::Paste => shortcut.ydotool_keys(),
-            Self::SelectAll => press_and_release(&[KEY_LEFT_CTRL, KEY_A]),
         };
         MODIFIER_KEYS
             .iter()
@@ -527,10 +523,6 @@ mod tests {
         assert_eq!(
             keys[MODIFIER_KEYS.len()..],
             ["29:1", "46:1", "46:0", "29:0"]
-        );
-        assert_eq!(
-            FocusedKeys::SelectAll.ydotool_keys(PasteShortcut::ShiftInsert)[MODIFIER_KEYS.len()..],
-            ["29:1", "30:1", "30:0", "29:0"]
         );
     }
 

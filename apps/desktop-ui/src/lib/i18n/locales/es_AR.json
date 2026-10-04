@@ -264,9 +264,9 @@
     "hotkeysTitle": "Atajos de activación",
     "hotkeysHint": "Enfocá un campo y presioná la nueva combinación.",
     "hotkeyInput": {
-      "recording": "Presioná una combinación…",
+      "recording": "Presioná un atajo…",
       "cancelHint": "Esc para cancelar",
-      "needsModifier": "Agregá Ctrl, Alt, Shift o Super"
+      "needsModifier": "Falta un modificador"
     },
     "hotkeyNotAssigned": "Sin asignar",
     "quickInputSectionTitle": "Entrada rápida",
@@ -281,19 +281,17 @@
       "voice": "Entrada por voz",
       "editor": "Abrir el texto seleccionado en el editor",
       "chat": "Usar el texto seleccionado como contexto en el chat con IA",
-      "voiceChat": "Pregunta por voz en el chat con IA",
+      "voiceChat": "Pregunta por voz sobre el texto seleccionado en el chat con IA",
       "select": "Acciones con la selección",
       "aiTasks": "Tareas de IA",
-      "correction": "Corregir el texto seleccionado con vista previa",
       "inlineCorrection": "Corregir el texto seleccionado en su lugar",
       "history": "Historial",
       "config": "Configuración"
     },
-    "hotkeyStatus": {
-      "ready": "Listo",
-      "conflict": "Esta combinación no está disponible",
-      "confirmation-required": "Confirmá el atajo en el diálogo del sistema; los cambios se aplican al reiniciar",
-      "external": "Agregá este enlace a la configuración del compositor"
+    "hotkeyStatus": { "conflict": "Esta combinación no está disponible" },
+    "hotkeyProvider": {
+      "portal": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos con «Cambiar en el sistema».",
+      "external": "Esta sesión no permite que Tyco asigne atajos globales. Agregá los comandos de abajo a la configuración de tu compositor."
     },
     "dragToReorder": "Arrastra para reordenar",
     "historyLimitHint": "0 — no guardar y eliminar lo guardado. Las entradas que superan el límite se eliminan al siguiente guardado o inicio. Los datos se almacenan localmente en archivos legibles.",
@@ -342,7 +340,7 @@
     "addPrimaryModel": "Asignar modelo",
     "removeFallback": "Quitar",
     "globalActionsTab": "Atajos globales",
-    "globalActionsHint": "Atajos que abren Tyco desde cualquier aplicación. Hacé clic en un campo y presioná un nuevo atajo; Esc cancela.",
+    "globalActionsHint": "Atajos que abren Tyco desde cualquier aplicación. Para cambiar uno, hacé clic en su campo y presioná un nuevo atajo; Esc cancela.",
     "externalMethods": "Otras formas de activación",
     "externalMethodsHint": "Usá este comando desde una terminal, un script o un atajo del sistema. El cliente tyco-ctl debe estar instalado y disponible en PATH. Linux también admite D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "inlineCorrectionHint": "Corrige el texto seleccionado en cualquier aplicación y pega el resultado en su lugar, sin abrir Tyco. Al presionar el atajo de nuevo se cancela.",

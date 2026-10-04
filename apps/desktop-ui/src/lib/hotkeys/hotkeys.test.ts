@@ -10,7 +10,10 @@ import {
 describe('hotkeys', () => {
   it('defines a default binding for global activation modes', () => {
     const expectedModes = Object.values(START_MODES).filter(
-      (mode) => mode !== START_MODES.HISTORY && mode !== START_MODES.CONFIG
+      (mode) =>
+        mode !== START_MODES.HISTORY &&
+        mode !== START_MODES.CONFIG &&
+        mode !== START_MODES.CORRECTION
     )
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()

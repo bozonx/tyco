@@ -156,11 +156,12 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         activation.window_id.clone_from(&source);
     }
     let editor_mode = activation.mode == StartMode::Editor;
-    // the editor must not take over a selection made in Tyco itself, and a
-    // voice question continues the open chat without attaching anything
-    let capture_selection = activation.selected_text.is_none()
-        && activation.mode != StartMode::VoiceChat
-        && !(editor_mode && has_focused_window(app));
+    // a voice question continues the open chat, so only a selection made
+    // since the previous activation becomes its context
+    let fresh_only = editor_mode || activation.mode == StartMode::VoiceChat;
+    // the editor must not take over a selection made in Tyco itself
+    let capture_selection =
+        activation.selected_text.is_none() && !(editor_mode && has_focused_window(app));
     let generation = app
         .state::<ContextCapture>()
         .generation
@@ -178,7 +179,7 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
                 .state::<ContextCapture>()
                 .fresh_selection(captured.clone());
             // the editor takes the selection over, so only a fresh one may replace its text
-            let selected_text = if editor_mode { fresh } else { captured };
+            let selected_text = if fresh_only { fresh } else { captured };
             if let Err(error) = on_main_thread(&handle, move |app| {
                 if app
                     .state::<ContextCapture>()

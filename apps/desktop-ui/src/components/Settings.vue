@@ -686,16 +686,14 @@ function normalizeHotkeysConfig(config: Record<string, any>) {
   delete config.quickInputHotkeys
   delete config.quickInputSubmit
   delete config.quickCorrection
+  delete config.hotkeys?.correction
+  // only the correction replaces the selection from a hotkey
   config.selectionHotkeys = {
-    ...DEFAULT_USER_CONFIG.selectionHotkeys,
-    ...(config.selectionHotkeys || {}),
+    correction:
+      config.selectionHotkeys?.correction ??
+      DEFAULT_USER_CONFIG.selectionHotkeys.correction,
   }
-  config.selectionReplace = {
-    whenEmpty:
-      config.selectionReplace?.whenEmpty === 'selectAll'
-        ? 'selectAll'
-        : 'nothing',
-  }
+  delete config.selectionReplace
   config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
   config.quickHideOnBlur = config.quickHideOnBlur !== false
 }

@@ -26,9 +26,6 @@ export function selectionActionId(action: SelectionAction): string {
     : `${action.kind}.${action.slot}`
 }
 
-/** What to do when the copy keys bring no text */
-export type SelectionWhenEmpty = 'nothing' | 'selectAll'
-
 export type SelectionRunErrorCode =
   'noTarget' | 'noSelection' | 'capture' | 'unsupported'
 

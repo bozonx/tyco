@@ -46,13 +46,16 @@ defineProps<{
   justify-content: center;
 }
 
+/* Inline, so that the info icon follows the last word of a wrapped label
+   instead of being pushed to the end of the column */
 .field-row-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;
+}
+
+.field-row-title :deep(.info-tooltip-container) {
+  margin-left: var(--space-xs);
 }
 
 .field-row-hint {

@@ -174,7 +174,8 @@ const capturedChatSelection = createCapturedChatSelection({
     chatStore.startChat({ attachments: [text] }),
   getSelectedText: () => editorInputStore.selectedText,
 })
-// the voice chat hotkey opens a dictation into the chat, then submits it
+// the voice chat hotkey opens a dictation into the chat with the selection as
+// its context, then submits it
 const { isVoiceInputOpen, openChatVoiceInput } = useChatVoiceInput()
 const voiceChatActivation = createVoiceChatActivation({
   isVoiceInputOpen,
@@ -183,6 +184,7 @@ const voiceChatActivation = createVoiceChatActivation({
   closeAllModals: () => menuModalsStore.closeAll(),
   openQuickVoiceInput: () => openChatVoiceInput({ quickSend: true }),
   submitVoiceInput: () => globalEvents.emit(GlobalEvents.VOICE_SUBMIT),
+  attachSelection: (text) => chatStore.addAttachment(text),
 })
 watch(
   () => [

@@ -126,14 +126,10 @@ pub fn default_user_config() -> Value {
         "voiceChat": "Ctrl+Alt+Q",
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
-        "aiTasks": "Ctrl+Alt+A",
-        "correction": "Ctrl+Alt+R"
+        "aiTasks": "Ctrl+Alt+A"
       },
       "selectionHotkeys": {
         "correction": "Ctrl+Alt+F"
-      },
-      "selectionReplace": {
-        "whenEmpty": "nothing"
       },
       "submitKey": "enter",
       "quickCorrectionPrefetch": false,

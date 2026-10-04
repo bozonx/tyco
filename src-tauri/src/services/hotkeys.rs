@@ -18,6 +18,8 @@ use ashpd::{register_host_app, AppID};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+#[cfg(target_os = "linux")]
+use tauri::Emitter;
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -29,11 +31,15 @@ use crate::services::selection_replace::{self, HotkeyPress, TriggerWait};
 use crate::state::AppState;
 use tyco_activation_protocol::is_selection_action;
 
+/// Emitted when the desktop reports changed portal shortcuts.
+pub const HOTKEYS_CHANGED_EVENT: &str = "app://hotkeys-changed";
+
 const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
 const SELECTION_HOTKEYS_CONFIG_KEY: &str = "selectionHotkeys";
 const SELECTION_TARGET_PREFIX: &str = "replace.";
 const CORRECTION_ACTION: &str = "correction";
 const DEFAULT_CORRECTION_SHORTCUT: &str = "Ctrl+Alt+F";
+const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 
 /// What a hotkey does: open a mode, or replace the selection in the focused
 /// window with the result of an action, see `selection_replace`.
@@ -149,6 +155,12 @@ struct PortalRegistration {
 #[derive(Default)]
 struct PortalState(RwLock<Option<Arc<PortalRegistration>>>);
 
+/// The shortcuts the desktop actually bound through the portal, described in
+/// its own words and keyed by hotkey id. The user may change them in the
+/// desktop settings at any time, so Tyco's configuration does not know them.
+#[derive(Default)]
+struct SystemTriggers(RwLock<HashMap<String, String>>);
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyHotkeyRequest {
@@ -182,6 +194,7 @@ pub struct HotkeyProviderInfo {
     provider: &'static str,
     can_configure: bool,
     actions: HashMap<String, ApplyHotkeyResult>,
+    system_triggers: HashMap<String, String>,
 }
 
 pub(crate) trait HotkeyProvider {
@@ -199,6 +212,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     let kind = provider_kind(super::platform::session::current().display);
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
+    app.manage(SystemTriggers::default());
     #[cfg(target_os = "linux")]
     app.manage(PortalState::default());
 
@@ -209,6 +223,8 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     }
 }
 
+/// Lets the user change the portal shortcuts: in the portal's own dialog, or
+/// in the desktop settings where the portal has no dialog (version 1).
 pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
     if app.state::<ProviderState>().get() != ProviderKind::Portal {
         return Err(AppError::Message(String::from(
@@ -216,12 +232,18 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
         )));
     }
 
-    #[cfg(not(target_os = "linux"))]
-    return Err(AppError::Message(String::from(
-        "System hotkey configuration is unavailable",
-    )));
-
     #[cfg(target_os = "linux")]
+    if let Err(error) = configure_portal(app).await {
+        log::info!("Portal shortcut dialog is unavailable: {error}; opening the desktop settings");
+        return super::platform::open_shortcut_settings();
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = app;
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
     let registration = app
         .state::<PortalState>()
         .0
@@ -229,9 +251,7 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
         .expect("portal registration lock poisoned")
         .clone()
         .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
-
-    #[cfg(target_os = "linux")]
-    return registration
+    registration
         .portal
         .configure_shortcuts(
             &registration.session,
@@ -239,35 +259,72 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
             ConfigureShortcutsOptions::default(),
         )
         .await
-        .map_err(|error| AppError::Message(error.to_string()));
+        .map_err(|error| AppError::Message(error.to_string()))
+}
+
+/// Takes the global shortcuts away while the settings record a new one, so
+/// that pressing a bound shortcut reaches the settings instead of running it.
+/// Only Tyco's own registrations can be suspended: the desktop keeps portal
+/// shortcuts and compositor bindings.
+pub fn set_suspended(app: &AppHandle, suspended: bool) -> Result<(), AppError> {
+    if app.state::<ProviderState>().get() != ProviderKind::GlobalShortcut {
+        return Ok(());
+    }
+    let shortcuts = app
+        .state::<HotkeyRegistry>()
+        .shortcuts
+        .read()
+        .expect("hotkey shortcuts lock poisoned")
+        .values()
+        .copied()
+        .collect::<Vec<_>>();
+    let global_shortcut = app.global_shortcut();
+    for shortcut in shortcuts {
+        let registered = global_shortcut.is_registered(shortcut);
+        let result = if suspended && registered {
+            global_shortcut.unregister(shortcut)
+        } else if !suspended && !registered {
+            global_shortcut.register(shortcut)
+        } else {
+            Ok(())
+        };
+        if let Err(error) = result {
+            log::warn!(
+                "Could not {} a hotkey: {error}",
+                if suspended { "suspend" } else { "resume" }
+            );
+        }
+    }
+    Ok(())
 }
 
 pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     let kind = app.state::<ProviderState>().get();
     let config = app.state::<AppState>().params().user_config;
-    let actions = bindings_from_config(&config)
-        .into_iter()
-        .map(|binding| {
-            let result = match kind {
-                ProviderKind::Portal => ApplyHotkeyResult {
-                    status: HotkeyApplyStatus::ConfirmationRequired,
-                    external_command: None,
-                    message: None,
-                },
-                ProviderKind::GlobalShortcut => ApplyHotkeyResult {
-                    status: HotkeyApplyStatus::Ready,
-                    external_command: None,
-                    message: None,
-                },
-                ProviderKind::External => ApplyHotkeyResult {
+    // only an external binding needs something per action: its command
+    let actions = match kind {
+        ProviderKind::External => bindings_from_config(&config)
+            .into_iter()
+            .map(|binding| {
+                let result = ApplyHotkeyResult {
                     status: HotkeyApplyStatus::External,
                     external_command: Some(external_command(&binding.target, &binding.shortcut)),
                     message: None,
-                },
-            };
-            (binding.target.id(), result)
-        })
-        .collect();
+                };
+                (binding.target.id(), result)
+            })
+            .collect(),
+        ProviderKind::Portal | ProviderKind::GlobalShortcut => HashMap::new(),
+    };
+    let system_triggers = match kind {
+        ProviderKind::Portal => app
+            .state::<SystemTriggers>()
+            .0
+            .read()
+            .expect("system triggers lock poisoned")
+            .clone(),
+        ProviderKind::GlobalShortcut | ProviderKind::External => HashMap::new(),
+    };
     HotkeyProviderInfo {
         provider: match kind {
             ProviderKind::Portal => "portal",
@@ -276,6 +333,7 @@ pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         },
         can_configure: kind == ProviderKind::Portal,
         actions,
+        system_triggers,
     }
 }
 
@@ -324,9 +382,12 @@ fn apply_global_shortcut(
         });
     }
     if let Some(previous) = previous {
-        app.global_shortcut()
-            .unregister(previous)
-            .map_err(|error| AppError::Message(error.to_string()))?;
+        // a shortcut suspended while the settings record is not registered
+        if app.global_shortcut().is_registered(previous) {
+            app.global_shortcut()
+                .unregister(previous)
+                .map_err(|error| AppError::Message(error.to_string()))?;
+        }
         registry
             .targets
             .write()
@@ -438,7 +499,7 @@ fn provider_kind(display: DisplayServer) -> ProviderKind {
     }
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
     StartMode::Editor,
     StartMode::Write,
     StartMode::Chat,
@@ -446,7 +507,6 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
     StartMode::Voice,
     StartMode::Select,
     StartMode::AiTasks,
-    StartMode::Correction,
 ];
 
 fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
@@ -468,65 +528,23 @@ fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
     modes.chain(selection_bindings(config)).collect()
 }
 
-/// Selection actions are bound only when they have a shortcut: correction by
-/// default, the rest once the user assigns one. An empty string unbinds.
+/// Only the correction replaces the selection from a hotkey; an empty
+/// string unbinds it.
 fn selection_bindings(config: &Value) -> Vec<HotkeyBinding> {
-    let configured = config
+    let shortcut = config
         .get(SELECTION_HOTKEYS_CONFIG_KEY)
-        .and_then(Value::as_object);
-    let mut actions = configured
-        .into_iter()
-        .flatten()
-        .filter(|(action, _)| action.as_str() != CORRECTION_ACTION && is_selection_action(action))
-        .filter_map(|(action, shortcut)| {
-            Some((action.clone(), shortcut.as_str()?.trim().to_owned()))
-        })
-        .collect::<Vec<_>>();
-    actions.sort();
-    let correction = configured
         .and_then(|values| values.get(CORRECTION_ACTION))
         .and_then(Value::as_str)
         .unwrap_or(DEFAULT_CORRECTION_SHORTCUT)
-        .trim()
-        .to_owned();
-    std::iter::once((CORRECTION_ACTION.to_owned(), correction))
-        .chain(actions)
-        .filter(|(_, shortcut)| !shortcut.is_empty())
-        .map(|(action, shortcut)| HotkeyBinding {
-            description: selection_description(config, &action),
-            target: HotkeyTarget::Selection(action),
-            shortcut,
+        .trim();
+    (!shortcut.is_empty())
+        .then(|| HotkeyBinding {
+            target: HotkeyTarget::Selection(CORRECTION_ACTION.to_owned()),
+            shortcut: shortcut.to_owned(),
+            description: CORRECTION_DESCRIPTION.to_owned(),
         })
+        .into_iter()
         .collect()
-}
-
-/// Names the language or the AI task in the slot the action points to, so
-/// that system settings show something recognizable.
-fn selection_description(config: &Value, action: &str) -> String {
-    let slot = |key: &str| {
-        action
-            .split_once('.')
-            .and_then(|(_, slot)| slot.parse::<usize>().ok())
-            .and_then(|slot| config.get(key)?.get(slot).cloned())
-    };
-    match action.split_once('.').map(|(kind, _)| kind) {
-        None => String::from("Correct selected text in place"),
-        Some("translate") => match slot("toTranslateLanguages")
-            .as_ref()
-            .and_then(Value::as_str)
-        {
-            Some(language) => format!("Translate selected text to {language}"),
-            None => String::from("Translate selected text"),
-        },
-        _ => match slot("aiTasks")
-            .as_ref()
-            .and_then(|task| task.get("name"))
-            .and_then(Value::as_str)
-        {
-            Some(name) => format!("Apply AI task \"{name}\" to selected text"),
-            None => String::from("Apply an AI task to selected text"),
-        },
-    }
 }
 
 fn default_shortcut(mode: StartMode) -> &'static str {
@@ -538,8 +556,7 @@ fn default_shortcut(mode: StartMode) -> &'static str {
         StartMode::Voice => "Ctrl+Alt+V",
         StartMode::Select => "Ctrl+Alt+S",
         StartMode::AiTasks => "Ctrl+Alt+A",
-        StartMode::Correction => "Ctrl+Alt+R",
-        StartMode::History | StartMode::Config => "",
+        StartMode::Correction | StartMode::History | StartMode::Config => "",
     }
 }
 
@@ -657,6 +674,10 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         .receive_deactivated()
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;
+    let mut changed = portal
+        .receive_shortcuts_changed()
+        .await
+        .map_err(|error| AppError::Message(error.to_string()))?;
     let targets = bindings
         .iter()
         .map(|binding| (binding.target.id(), binding.target.clone()))
@@ -672,9 +693,10 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         .bind_shortcuts(&session, &shortcuts, None, BindShortcutsOptions::default())
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;
-    request
+    let bound = request
         .response()
         .map_err(|error| AppError::Message(error.to_string()))?;
+    store_system_triggers(&app, bound.shortcuts());
 
     app.state::<PortalState>()
         .0
@@ -689,6 +711,15 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
             selection_replace::hotkey_released(event.shortcut_id());
         }
     });
+    let changed_app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = changed.next().await {
+            store_system_triggers(&changed_app, event.shortcuts());
+            if let Err(error) = changed_app.emit(HOTKEYS_CHANGED_EVENT, ()) {
+                log::warn!("Could not report changed hotkeys: {error}");
+            }
+        }
+    });
     while let Some(event) = activated.next().await {
         if let Some(target) = targets.get(event.shortcut_id()) {
             if let Err(error) = target.trigger(&app, event.shortcut_id()) {
@@ -697,6 +728,22 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         }
     }
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn store_system_triggers(
+    app: &AppHandle,
+    shortcuts: &[ashpd::desktop::global_shortcuts::Shortcut],
+) {
+    let state = app.state::<SystemTriggers>();
+    let mut triggers = state.0.write().expect("system triggers lock poisoned");
+    triggers.clear();
+    triggers.extend(shortcuts.iter().map(|shortcut| {
+        (
+            shortcut.id().to_owned(),
+            shortcut.trigger_description().to_owned(),
+        )
+    }));
 }
 
 fn mode_description(mode: StartMode) -> &'static str {
@@ -768,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn binds_selection_actions_that_have_a_shortcut() {
+    fn binds_only_the_inline_correction() {
         let selection = |config: Value| {
             selection_bindings(&config)
                 .into_iter()
@@ -784,40 +831,25 @@ mod tests {
         );
         assert_eq!(
             selection(json!({ "selectionHotkeys": {
-                "correction": "",
-                "translate.0": "Ctrl+Alt+1",
-                "aiTask.0": " ",
-                "bogus": "Ctrl+Alt+2"
+                "correction": "Ctrl+Alt+X",
+                "translate.0": "Ctrl+Alt+1"
             } })),
             [(
-                String::from("replace.translate.0"),
-                String::from("Ctrl+Alt+1")
+                String::from("replace.correction"),
+                String::from("Ctrl+Alt+X")
             )]
         );
+        assert!(selection(json!({ "selectionHotkeys": { "correction": " " } })).is_empty());
     }
 
     #[test]
-    fn describes_selection_actions_by_their_slot() {
-        let config = json!({
-            "toTranslateLanguages": ["en_US", null],
-            "aiTasks": [{ "name": "deepEdit", "rule": "" }]
-        });
-        assert_eq!(
-            selection_description(&config, "translate.0"),
-            "Translate selected text to en_US"
-        );
-        assert_eq!(
-            selection_description(&config, "translate.1"),
-            "Translate selected text"
-        );
-        assert_eq!(
-            selection_description(&config, "aiTask.0"),
-            "Apply AI task \"deepEdit\" to selected text"
-        );
-        assert_eq!(
-            selection_description(&config, "correction"),
-            "Correct selected text in place"
-        );
+    fn does_not_bind_the_correction_mode() {
+        let bindings = bindings_from_config(&json!({
+            "hotkeys": { "correction": "Ctrl+Alt+R" }
+        }));
+        assert!(bindings
+            .iter()
+            .all(|binding| binding.target != HotkeyTarget::Mode(StartMode::Correction)));
     }
 
     #[test]

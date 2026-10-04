@@ -264,9 +264,9 @@
     "hotkeysTitle": "Etkinleştirme kısayolları",
     "hotkeysHint": "Bir alana odaklanın ve yeni tuş birleşimine basın.",
     "hotkeyInput": {
-      "recording": "Bir tuş birleşimine basın…",
+      "recording": "Bir kısayola basın…",
       "cancelHint": "İptal için Esc",
-      "needsModifier": "Ctrl, Alt, Shift veya Super ekleyin"
+      "needsModifier": "Değiştirici tuş gerekli"
     },
     "hotkeyNotAssigned": "Atanmadı",
     "quickInputSectionTitle": "Hızlı giriş",
@@ -281,19 +281,17 @@
       "voice": "Sesli giriş",
       "editor": "Seçili metni düzenleyicide aç",
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
-      "voiceChat": "Yapay zekâ sohbetinde sesli soru",
+      "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
       "select": "Seçim eylemleri",
       "aiTasks": "Yapay zekâ görevleri",
-      "correction": "Seçili metni önizlemeyle düzelt",
       "inlineCorrection": "Seçili metni yerinde düzelt",
       "history": "Geçmiş",
       "config": "Ayarlar"
     },
-    "hotkeyStatus": {
-      "ready": "Hazır",
-      "conflict": "Bu birleşim kullanılamıyor",
-      "confirmation-required": "Sistem iletişim kutusunda kısayolu onaylayın; değişiklikler yeniden başlatınca uygulanır",
-      "external": "Bu bağlamayı compositor yapılandırmasına ekleyin"
+    "hotkeyStatus": { "conflict": "Bu birleşim kullanılamıyor" },
+    "hotkeyProvider": {
+      "portal": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları «Sistemde değiştir» ile değiştirin.",
+      "external": "Bu oturum Tyco’nun genel kısayol atamasına izin vermiyor. Aşağıdaki komutları compositor yapılandırmanıza ekleyin."
     },
     "dragToReorder": "Sıralamak için sürükleyin",
     "historyLimitHint": "0 — kaydetme ve kayıtlı olanları sil. Sınırı aşan ögeler sonraki kayıtta ya da açılışta silinir. Veriler yerel olarak okunabilir dosyalarda saklanır.",
@@ -342,7 +340,7 @@
     "addPrimaryModel": "Model ata",
     "removeFallback": "Kaldır",
     "globalActionsTab": "Genel kısayollar",
-    "globalActionsHint": "Tyco’yu herhangi bir uygulamadan açan kısayollar. Bir alana tıklayıp yeni kısayola basın; Esc iptal eder.",
+    "globalActionsHint": "Tyco’yu herhangi bir uygulamadan açan kısayollar. Değiştirmek için alanına tıklayıp yeni kısayola basın; Esc iptal eder.",
     "externalMethods": "Diğer etkinleştirme yöntemleri",
     "externalMethodsHint": "Bu komutu terminalden, betikten veya sistem kısayolundan kullanın. tyco-ctl istemcisi kurulu ve PATH içinde erişilebilir olmalıdır. Linux ayrıca D-Bus destekler: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
     "inlineCorrectionHint": "Herhangi bir uygulamada seçili metni düzeltir ve sonucu Tyco'yu açmadan yerine yapıştırır. Kısayola tekrar basmak işlemi iptal eder.",

@@ -1,5 +1,4 @@
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
-import type { SelectionWhenEmpty } from './selection'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
@@ -245,11 +244,10 @@ export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 export interface UserConfig {
   hotkeys: Record<string, string>
   /**
-   * Hotkeys of the actions that replace the selection, keyed by action id
-   * (`correction`, `translate.0`, `aiTask.0`); an empty string unbinds
+   * Hotkeys of the actions that replace the selection, keyed by action id; only
+   * `correction` has one, an empty string unbinds it
    */
   selectionHotkeys: Record<string, string>
-  selectionReplace: { whenEmpty: SelectionWhenEmpty }
   submitKey?: SubmitKey
   /** Correct the quick input text in advance while the user pauses */
   quickCorrectionPrefetch?: boolean
@@ -307,10 +305,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     voice: 'Ctrl+Alt+V',
     select: 'Ctrl+Alt+S',
     aiTasks: 'Ctrl+Alt+A',
-    correction: 'Ctrl+Alt+R',
   },
   selectionHotkeys: { correction: 'Ctrl+Alt+F' },
-  selectionReplace: { whenEmpty: 'nothing' },
   submitKey: DEFAULT_SUBMIT_KEY,
   quickCorrectionPrefetch: false,
   quickHideOnBlur: true,

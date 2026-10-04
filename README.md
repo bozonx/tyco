@@ -81,12 +81,11 @@ The app also keeps the Linux D-Bus compatibility interface
 
 ### Replacing the selection
 
-Correction, a translation or an AI task can be applied to the text selected
-in any application without opening Tyco: the text is copied out with the copy
-keys, transformed, and pasted back over the selection. Correction is bound to
-`Ctrl+Alt+F` by default; translations and AI tasks get their shortcuts in
-Settings → Global actions. Pressing the shortcut again cancels a running
-action. The same actions are available as
+The text selected in any application can be corrected without opening Tyco:
+the text is copied out with the copy keys, corrected, and pasted back over the
+selection. The global hotkey is `Ctrl+Alt+F` by default and can be changed in
+Settings → Global hotkeys. Pressing it again cancels a running correction.
+Scripts can also apply a translation or an AI task this way:
 
 ```bash
 tyco-ctl replace correction    # or translate.<slot>, aiTask.<slot>

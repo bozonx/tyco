@@ -82,6 +82,10 @@ export function createCommandMap(): CommandMap {
       buildArgs: ([request]) => ({ request }),
     },
     configureHotkeys: { command: DESKTOP_COMMANDS.CONFIGURE_HOTKEYS },
+    suspendHotkeys: {
+      command: DESKTOP_COMMANDS.SUSPEND_HOTKEYS,
+      buildArgs: ([suspended]) => ({ suspended }),
+    },
     getHotkeyProviderInfo: {
       command: DESKTOP_COMMANDS.GET_HOTKEY_PROVIDER_INFO,
     },

@@ -20,6 +20,7 @@ type AppEventPayloads = {
   [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
   [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
   [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
+  [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
 }
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()
