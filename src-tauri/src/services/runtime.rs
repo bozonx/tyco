@@ -22,6 +22,9 @@ pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
 pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
+/// The user closed the main window, as opposed to hiding it with a hotkey or
+/// the tray: what was open in it is done with.
+pub const MAIN_WINDOW_CLOSED_EVENT: &str = "app://main-window-closed";
 const TRAY_SHOW_ID: &str = "show";
 const TRAY_CORRECT_ID: &str = "correct-selection";
 const TRAY_QUIT_ID: &str = "quit";
@@ -711,6 +714,11 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                     if window_label == MAIN_WINDOW_LABEL {
                         app.state::<RuntimeWindows>()
                             .set_active_label(MAIN_WINDOW_LABEL);
+                        if let Err(error) =
+                            app.emit_to(MAIN_WINDOW_LABEL, MAIN_WINDOW_CLOSED_EVENT, ())
+                        {
+                            log::warn!("Could not report the closed main window: {error}");
+                        }
                     } else if window_label == QUICK_WINDOW_LABEL {
                         app.state::<RuntimeWindows>()
                             .set_active_label(QUICK_WINDOW_LABEL);

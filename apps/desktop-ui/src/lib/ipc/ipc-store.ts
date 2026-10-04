@@ -59,6 +59,10 @@ export function createCommandMap(): CommandMap {
       buildArgs: ([patch]) => ({ patch }),
     },
     getStorageInfo: { command: DESKTOP_COMMANDS.GET_STORAGE_INFO },
+    openStorageLocation: {
+      command: DESKTOP_COMMANDS.OPEN_STORAGE_LOCATION,
+      buildArgs: ([kind]) => ({ kind }),
+    },
     closeWindow: { command: DESKTOP_COMMANDS.CLOSE_WINDOW },
     dismissQuickWindow: { command: DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW },
     setQuickInputRegion: {

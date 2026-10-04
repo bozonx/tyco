@@ -9,8 +9,9 @@ use commands::actions::{
 };
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
-    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor, patch_local_state,
-    rebind_hotkeys, save_user_config, submit_activation_metric_value, suspend_hotkeys,
+    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor,
+    open_storage_location, patch_local_state, rebind_hotkeys, save_user_config,
+    submit_activation_metric_value, suspend_hotkeys,
 };
 use commands::history::{
     clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
@@ -49,11 +50,11 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         log::LevelFilter::Info
     };
 
-    let file_target = services::app_paths::dev_paths_from_env("com.tyco.app")
+    let file_target = services::app_paths::early_log_dir("com.tyco.app")
         .expect("TYCO_DEV_HOME must contain a valid absolute path")
-        .map_or(TargetKind::LogDir { file_name: None }, |paths| {
+        .map_or(TargetKind::LogDir { file_name: None }, |path| {
             TargetKind::Folder {
-                path: paths.log_dir,
+                path,
                 file_name: None,
             }
         });
@@ -149,6 +150,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_init_params,
             get_storage_info,
+            open_storage_location,
             apply_hotkey,
             configure_hotkeys,
             rebind_hotkeys,

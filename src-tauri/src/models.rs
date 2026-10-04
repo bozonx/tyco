@@ -107,16 +107,29 @@ pub struct EditorHistoryEntry {
     pub replace_id: Option<String>,
 }
 
+/// What a storage location holds. Mirrors `StorageKind` in `@tyco/shared`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum StorageKind {
+    Config,
+    Data,
+    Cache,
+    Logs,
+}
+
+/// A directory the app keeps files in, with everything it holds: the
+/// platform may put several kinds into one directory.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageLocation {
+    pub kinds: Vec<StorageKind>,
+    pub path: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageInfo {
-    pub config_dir: String,
-    pub data_dir: String,
-    pub history_dir: String,
-    pub chats_dir: String,
-    pub cache_dir: String,
-    pub log_dir: String,
-    pub user_config_file: String,
+    pub locations: Vec<StorageLocation>,
 }
 
 pub fn default_user_config() -> Value {

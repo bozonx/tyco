@@ -2,6 +2,7 @@
 //! Code outside this module asks it rather than checking the OS or the session
 //! itself; backends for a single platform live in its submodule.
 
+mod file_manager;
 mod foreground_context;
 mod panel_surface;
 pub mod session;
@@ -18,6 +19,7 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
+pub use file_manager::open_dir;
 pub use foreground_context::{capture_selection, capture_source};
 #[cfg(target_os = "linux")]
 pub use panel_surface::settle_panel_keyboard;

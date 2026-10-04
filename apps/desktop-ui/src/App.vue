@@ -25,6 +25,7 @@ import { GlobalEvents, useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
+import { createMainWindowReset } from './lib/app/main-window-reset'
 import { createCapturedChatSelection } from './lib/chat/captured-chat-selection'
 import { createVoiceChatActivation } from './lib/chat/voice-chat-activation'
 import { desktopClient } from './lib/desktop/client'
@@ -90,6 +91,11 @@ if (typeof document !== 'undefined') {
 const selectionListeners: (() => void)[] = []
 let removeMainChatListener: (() => void) | undefined
 let removeMainEditorListener: (() => void) | undefined
+let removeMainClosedListener: (() => void) | undefined
+const mainWindowReset = createMainWindowReset({
+  closeAllModals: () => menuModalsStore.closeAll(),
+  goToEditor: () => appNavigation.goToEditor(),
+})
 const bootstrap = createAppBootstrap({
   loadInitialParams: () => ipcStore.loadInitialParams(),
   setParams: (params) => ipcStore.setParams(params),
@@ -256,12 +262,20 @@ onMounted(() => {
     .then((remove) => {
       removeMainEditorListener = remove
     })
+  void desktopClient
+    .listen(DESKTOP_EVENTS.MAIN_WINDOW_CLOSED, () => {
+      if (!isQuickWindow) void mainWindowReset.reset()
+    })
+    .then((remove) => {
+      removeMainClosedListener = remove
+    })
 })
 
 onUnmounted(() => {
   bootstrap.stop()
   activationMetrics.stop()
   removeMainEditorListener?.()
+  removeMainClosedListener?.()
   removeMainChatListener?.()
   selectionListeners.forEach((remove) => remove())
 })

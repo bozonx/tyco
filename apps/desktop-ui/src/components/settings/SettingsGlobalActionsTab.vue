@@ -74,7 +74,19 @@
             @recording="suspendHotkeys"
           />
           <Button
-            v-if="editable && row.value !== row.defaultValue"
+            v-if="editable && row.value"
+            sm
+            ghost
+            square
+            icon="mdi:close"
+            :title="t('settings.unassignHotkey')"
+            :aria-label="t('settings.unassignHotkey')"
+            @click="setShortcut(row.id, '')"
+          />
+          <Button
+            v-if="
+              editable && row.defaultValue && row.value !== row.defaultValue
+            "
             sm
             ghost
             square

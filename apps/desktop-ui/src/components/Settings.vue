@@ -189,11 +189,29 @@
                 :key="item.key"
                 class="storage-item"
               >
-                <span class="storage-item-label">{{ item.label }}</span>
+                <span class="storage-item-label">
+                  {{ item.label }}
+                  <span v-if="item.hint" class="storage-item-hint">{{
+                    item.hint
+                  }}</span>
+                </span>
                 <div class="storage-path-box">
                   <code class="storage-path" :title="item.value">{{
                     item.value
                   }}</code>
+                  <button
+                    type="button"
+                    class="storage-copy-btn"
+                    :title="t('settings.storageOpenFolder')"
+                    :aria-label="t('settings.storageOpenFolder')"
+                    @click="openStorageLocation(item.kind)"
+                  >
+                    <Icon
+                      icon="mdi:folder-open-outline"
+                      height="14"
+                      class="shrink-0"
+                    />
+                  </button>
                   <button
                     type="button"
                     class="storage-copy-btn"
@@ -262,7 +280,14 @@
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
           :user-config="userConfig"
+          @navigate="currentTab = $event"
+        />
+
+        <SettingsLanguagesTab
+          v-else-if="currentTab === 'languages'"
+          :user-config="userConfig"
           @update:to-translate-languages="updateTranslateLanguages"
+          @navigate="currentTab = $event"
         />
 
         <SettingsMainActionsTab
@@ -421,6 +446,7 @@ import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
+import SettingsLanguagesTab from './settings/SettingsLanguagesTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
@@ -436,6 +462,7 @@ import {
   PASTE_SHORTCUTS,
   SELECTION_HOTKEY_PREFIX,
   type StorageInfo,
+  type StorageKind,
   type SttProvider,
   type ThemeMode,
   UI_SCALES,
@@ -517,6 +544,7 @@ const actionTabs = computed(() => [
     icon: 'mdi:gesture-tap-button',
   },
   { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
+  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
 ])
 
 const currentTabTitle = computed(() => {
@@ -597,6 +625,13 @@ watch(
   { deep: true }
 )
 
+const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
+  config: 'settings.storageConfig',
+  data: 'settings.storageData',
+  cache: 'settings.storageCache',
+  logs: 'settings.storageLogs',
+}
+
 const copiedStorageKey = ref<string | null>(null)
 let copyStorageTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -615,44 +650,25 @@ async function copyStoragePath(path: string, key: string) {
   }
 }
 
-const storageInfoItems = computed(() => {
-  if (!storageInfo.value) {
-    return []
-  }
+/** One row per root directory, named after everything it holds. */
+const storageInfoItems = computed(() =>
+  (storageInfo.value?.locations ?? []).map((location) => ({
+    key: location.kinds.join('-'),
+    kind: location.kinds[0],
+    label: location.kinds
+      .map((kind) => t(STORAGE_KIND_LABELS[kind]))
+      .join(' · '),
+    hint: location.kinds.includes('data')
+      ? t('settings.storageDataHint')
+      : undefined,
+    value: location.path,
+  }))
+)
 
-  return [
-    {
-      key: 'config',
-      label: t('settings.storageUserConfig'),
-      value: storageInfo.value.userConfigFile,
-    },
-    {
-      key: 'data',
-      label: t('settings.storageData'),
-      value: storageInfo.value.dataDir,
-    },
-    {
-      key: 'history',
-      label: t('settings.storageHistory'),
-      value: storageInfo.value.historyDir,
-    },
-    {
-      key: 'chats',
-      label: t('settings.storageChats'),
-      value: storageInfo.value.chatsDir,
-    },
-    {
-      key: 'cache',
-      label: t('settings.storageCache'),
-      value: storageInfo.value.cacheDir,
-    },
-    {
-      key: 'logs',
-      label: t('settings.storageLogs'),
-      value: storageInfo.value.logDir,
-    },
-  ]
-})
+async function openStorageLocation(kind: StorageKind) {
+  // a failure leaves nothing open, which tells enough
+  await ipcStore.callFunction('openStorageLocation', [kind])
+}
 
 function cloneUserConfig(config: unknown) {
   return JSON.parse(JSON.stringify(config || DEFAULT_USER_CONFIG))
@@ -1254,6 +1270,12 @@ onUnmounted(() => {
 .storage-item-label {
   font-size: 0.75rem;
   font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.storage-item-hint {
+  display: block;
+  font-weight: 400;
   color: var(--app-text-muted);
 }
 

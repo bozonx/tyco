@@ -2,20 +2,26 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { createDraftSession } from '../lib/history/draft-session'
+import { createQuickInputSession } from '../lib/quick-input/quick-input-session'
 import { useHistoryStore } from './history'
 
 export const useWriterInputStore = defineStore('writerInput', () => {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
   const selectAllCount = ref<number>(0)
-  /** The last text sent to the next step, offered again on ArrowUp. */
-  const lastSubmitted = ref<string>('')
+  /** The last text sent on or cancelled, offered again on ArrowUp. */
+  const recallText = ref<string>('')
 
   const historyStore = useHistoryStore()
-  const drafts = createDraftSession(
-    (text, replaceId) => historyStore.saveDraft(text, replaceId),
-    (id) => historyStore.removeFromEditorHistory(id)
+  const session = createQuickInputSession(
+    createDraftSession(
+      (text, replaceId) => historyStore.saveDraft(text, replaceId),
+      (id) => historyStore.removeFromEditorHistory(id)
+    )
   )
+  const syncRecall = (): void => {
+    recallText.value = session.recallText
+  }
 
   // replace value
   const setValue = (newText: string): void => {
@@ -24,38 +30,41 @@ export const useWriterInputStore = defineStore('writerInput', () => {
 
   /** Empties the input; the text it held goes to the history. */
   const clear = (): void => {
-    void drafts.end(value.value)
+    session.end(value.value)
+    syncRecall()
     value.value = ''
   }
 
-  /**
-   * Drops a cancelled input (Esc) without a trace: nothing goes to the history
-   * and a draft already saved there on a hide is removed
-   */
+  /** Drops a cancelled input (Esc) from the history; ArrowUp brings it back. */
   const discard = (): void => {
+    session.discard(value.value)
+    syncRecall()
     value.value = ''
-    lastSubmitted.value = ''
-    void drafts.discard()
   }
 
-  /** Quick input does not keep drafts across sessions. */
-  const snapshotDraft = (): Promise<void> => Promise.resolve()
+  /** The window is hidden: the text survives that, but not a quit. */
+  const snapshotDraft = (): Promise<void> => session.snapshot(value.value)
 
-  /** The window lost focus: does not restore previous text. */
-  const markDismissed = (): void => {}
+  /** The window lost focus: its text is offered again on the next opening. */
+  const markDismissed = (): void => {
+    session.markDismissed()
+  }
 
   /**
-   * Prepares the input for a new opening: always starts with a fresh empty
-   * input.
+   * Prepares the input for a new opening: keeps the text of a recent dismissal,
+   * moves anything else to the history. Returns whether the text was kept
    */
   const startSession = (): boolean => {
-    clear()
+    const kept = session.start(value.value)
+    syncRecall()
+    if (!kept) value.value = ''
 
-    return false
+    return kept
   }
 
   const rememberSubmitted = (text: string): void => {
-    if (text.trim()) lastSubmitted.value = text
+    session.submitted(text)
+    syncRecall()
   }
 
   const focus = (): void => {
@@ -70,7 +79,7 @@ export const useWriterInputStore = defineStore('writerInput', () => {
     value,
     focusCount,
     selectAllCount,
-    lastSubmitted,
+    recallText,
     setValue,
     clear,
     discard,

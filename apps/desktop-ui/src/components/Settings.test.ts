@@ -34,13 +34,10 @@ vi.mock('../stores/ipc', () => ({
         return Promise.resolve({
           success: true,
           result: {
-            configDir: '/test/config',
-            dataDir: '/test/data',
-            historyDir: '/test/data/history',
-            chatsDir: '/test/data/chats',
-            cacheDir: '/test/cache',
-            logDir: '/test/data/logs',
-            userConfigFile: '/test/config/userConfig.yaml',
+            locations: [
+              { kinds: ['config', 'data'], path: '/test/roaming' },
+              { kinds: ['cache', 'logs'], path: '/test/local' },
+            ],
           },
         })
       }
@@ -236,25 +233,22 @@ describe('Settings.vue', () => {
     expect(wrapper.find('.plugin-detail-stub').text()).toBe('PluginA')
   })
 
-  it('renders all storage locations when storage info is loaded', async () => {
+  it('renders a row per storage root when storage info is loaded', async () => {
     const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 0))
     await wrapper.vm.$nextTick()
 
     const storageItems = wrapper.findAll('.storage-item')
-    expect(storageItems).toHaveLength(6)
+    expect(storageItems).toHaveLength(2)
 
     const labels = storageItems.map((item) =>
       item.find('.storage-item-label').text()
     )
     expect(labels).toEqual([
-      'settings.storageUserConfig',
-      'settings.storageData',
-      'settings.storageHistory',
-      'settings.storageChats',
-      'settings.storageCache',
-      'settings.storageLogs',
+      'settings.storageConfig · settings.storageData settings.storageDataHint',
+      'settings.storageCache · settings.storageLogs',
     ])
+    expect(storageItems[1].find('.storage-path').text()).toBe('/test/local')
   })
 })

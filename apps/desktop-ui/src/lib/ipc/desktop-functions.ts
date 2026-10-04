@@ -9,6 +9,7 @@ import type {
   SelectionFinishStatus,
   StatusOverlayRequest,
   StorageInfo,
+  StorageKind,
   UserConfig,
   ScriptActionRequest,
   ScriptExecutionResult,
@@ -25,6 +26,8 @@ export interface DesktopFunctions {
   saveUserConfig: { args: [userConfig: UserConfig]; result: void }
   patchLocalState: { args: [patch: Partial<LocalState>]; result: LocalState }
   getStorageInfo: { args: []; result: StorageInfo }
+  /** Shows the directory of a kind in the file manager */
+  openStorageLocation: { args: [kind: StorageKind]; result: void }
   closeWindow: { args: []; result: void }
   dismissQuickWindow: { args: []; result: void }
   setQuickInputRegion: { args: [region: InputRect | null]; result: void }

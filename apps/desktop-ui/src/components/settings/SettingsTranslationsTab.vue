@@ -4,6 +4,11 @@
       :title="t('settings.translationEngine')"
       :description="t('settings.translationEngineHint')"
     >
+      <template #actions>
+        <Button sm ghost icon="mdi:web" @click="emit('navigate', 'languages')">
+          {{ t('settings.translationLanguagesLink') }}
+        </Button>
+      </template>
       <FieldRow :label="t('settings.translationProvider')">
         <FieldSelect
           class="w-full"
@@ -68,24 +73,6 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsSection :description="t('settings.translationsHint')" bare>
-      <ShortcutSlots
-        :items="translateLanguageSlots"
-        @move="moveLanguage"
-        @add="addLanguage"
-        @remove="removeLanguage"
-      >
-        <template #item="{ item, index }">
-          <FieldSelect
-            class="w-full"
-            :value="item"
-            :options="translateLanguageOptions"
-            @update:value="updateLanguage(index, $event)"
-          />
-        </template>
-      </ShortcutSlots>
-    </SettingsSection>
-
     <SettingsSection
       :title="t('settings.translationGlossary')"
       :description="t('settings.translationGlossaryHint')"
@@ -103,26 +90,16 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
-import {
-  DEFAULT_LANGUAGE,
-  buildLanguageOptions,
-} from '../../lib/locale/language'
-import {
-  moveShortcutSlot,
-  normalizeShortcutSlots,
-} from '../../lib/shortcut-slots/shortcut-slots'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
+import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import ShortcutSlots from '../common/ShortcutSlots.vue'
 
 const props = defineProps<{ userConfig: Record<string, any> }>()
 
-const emit = defineEmits<{
-  (e: 'update:toTranslateLanguages', value: string[]): void
-}>()
+const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
 
 const { t } = useI18n()
 const llmStore = useLlmStore()
@@ -156,45 +133,6 @@ const glossaryText = computed(() =>
     )
     .join('\n')
 )
-
-const translateLanguageOptions = computed(() => {
-  return buildLanguageOptions(
-    (props.userConfig.toTranslateLanguages || []).filter(Boolean),
-    false,
-    t
-  )
-})
-
-const translateLanguageSlots = computed(() =>
-  normalizeShortcutSlots<string>(props.userConfig.toTranslateLanguages)
-)
-
-function emitSlots(slots: (string | null)[]) {
-  emit('update:toTranslateLanguages', slots as string[])
-}
-
-function moveLanguage(from: number, to: number) {
-  emitSlots(moveShortcutSlot(translateLanguageSlots.value, from, to))
-}
-
-function addLanguage(index: number) {
-  const slots = [...translateLanguageSlots.value]
-  slots[index] = DEFAULT_LANGUAGE
-  emitSlots(slots)
-}
-
-function removeLanguage(index: number) {
-  const slots = [...translateLanguageSlots.value]
-  slots[index] = null
-  emitSlots(slots)
-}
-
-function updateLanguage(index: number, value: string | number | undefined) {
-  if (typeof value !== 'string') return
-  const slots = [...translateLanguageSlots.value]
-  slots[index] = value
-  emitSlots(slots)
-}
 
 function updateProvider(value: string | number | undefined) {
   props.userConfig.translation = normalizeTranslationConfig({

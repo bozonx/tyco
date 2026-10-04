@@ -92,6 +92,8 @@ async function makeDiff(index: number) {
 
   const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
 
+  // the menu step, when the menu is one: closing it hides the result
+  const stepId = menuModalsStore.currentStepId
   const controller = new AbortController()
   menuModalsStore.setPendingModal({
     ai: true,
@@ -109,6 +111,8 @@ async function makeDiff(index: number) {
     await historyStore.saveSourceResult(sourceId, newText).catch(() => {
       toast('history.operationFailed', 'error')
     })
+    // closed meanwhile: the result is in the history, not on the screen
+    if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
     menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
   } catch (error) {
     if (controller.signal.aborted) return

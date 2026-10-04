@@ -71,6 +71,8 @@ const translate = async (toLangNum: number) => {
 
   const sourceId = await historyStore.saveSource(sourceText, 'translate')
 
+  // the menu step, when the menu is one: closing it hides the result
+  const stepId = menuModalsStore.currentStepId
   const controller = new AbortController()
   const stageLabels = {
     translating: 'translationProgressTranslating',
@@ -92,6 +94,8 @@ const translate = async (toLangNum: number) => {
     await historyStore.saveSourceResult(sourceId, result.text).catch(() => {
       toast('history.operationFailed', 'error')
     })
+    // closed meanwhile: the result is in the history, not on the screen
+    if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
       text: result.text,
       sourceText,

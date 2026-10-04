@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   },
   writer: {
     value: 'Original text',
-    lastSubmitted: '',
+    recallText: '',
     focus: vi.fn(),
     focusAndSelectAll: vi.fn(),
     startSession: vi.fn(),
@@ -158,5 +158,30 @@ describe('quick input screen', () => {
     reactive(mocks.params).activationId++
     await nextTick()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledTimes(2)
+  })
+
+  it('selects a kept text on reopening and focuses an empty one', async () => {
+    const params = reactive(mocks.params)
+    params.isWindowShown = true
+    mocks.writer.startSession.mockReturnValueOnce(true)
+    params.activationId++
+    await nextTick()
+    expect(mocks.writer.focusAndSelectAll).toHaveBeenCalledOnce()
+    expect(mocks.writer.focus).not.toHaveBeenCalled()
+
+    mocks.writer.startSession.mockReturnValueOnce(false)
+    params.activationId++
+    await nextTick()
+    expect(mocks.writer.focus).toHaveBeenCalledOnce()
+  })
+
+  it('brings back the recallable text on ArrowUp in an empty input', () => {
+    const writer = reactive(mocks.writer)
+    writer.value = ''
+    writer.recallText = 'cancelled text'
+    press('ArrowUp')
+    expect(mocks.writer.setValue).toHaveBeenCalledWith('cancelled text')
+    writer.value = 'Original text'
+    writer.recallText = ''
   })
 })

@@ -144,7 +144,9 @@ impl ProviderState {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct HotkeyBinding {
     target: HotkeyTarget,
-    shortcut: String,
+    /// `None` leaves the target unassigned: the portal still lists it, so
+    /// that the user can bind it in the desktop settings
+    shortcut: Option<String>,
     description: String,
 }
 
@@ -152,6 +154,22 @@ pub(crate) struct HotkeyBinding {
 pub struct HotkeyRegistry {
     targets: RwLock<HashMap<u32, HotkeyTarget>>,
     shortcuts: RwLock<HashMap<HotkeyTarget, Shortcut>>,
+    /// Why the configured shortcut of a hotkey id could not be registered
+    /// at startup, usually because another application holds it
+    failures: RwLock<HashMap<String, String>>,
+}
+
+impl HotkeyRegistry {
+    fn set_failure(&self, id: String, message: Option<String>) {
+        let mut failures = self
+            .failures
+            .write()
+            .expect("hotkey failures lock poisoned");
+        match message {
+            Some(message) => failures.insert(id, message),
+            None => failures.remove(&id),
+        };
+    }
 }
 
 /// The portal and Tyco's session with it. Its signals are not tied to a
@@ -403,13 +421,32 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             .map(|binding| {
                 let result = ApplyHotkeyResult {
                     status: HotkeyApplyStatus::External,
-                    external_command: Some(external_command(&binding.target, &binding.shortcut)),
+                    external_command: Some(external_command(
+                        &binding.target,
+                        binding.shortcut.as_deref(),
+                    )),
                     message: None,
                 };
                 (binding.target.id(), result)
             })
             .collect(),
-        ProviderKind::Portal | ProviderKind::GlobalShortcut => HashMap::new(),
+        // a shortcut another application holds is worth showing at once
+        ProviderKind::GlobalShortcut => app
+            .state::<HotkeyRegistry>()
+            .failures
+            .read()
+            .expect("hotkey failures lock poisoned")
+            .iter()
+            .map(|(id, message)| {
+                let result = ApplyHotkeyResult {
+                    status: HotkeyApplyStatus::Conflict,
+                    external_command: None,
+                    message: Some(message.clone()),
+                };
+                (id.clone(), result)
+            })
+            .collect(),
+        ProviderKind::Portal => HashMap::new(),
     };
     let system_triggers = match kind {
         ProviderKind::Portal => app
@@ -432,7 +469,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         system_triggers,
         defaults: default_bindings()
             .into_iter()
-            .map(|binding| (binding.target.id(), binding.shortcut))
+            .map(|binding| (binding.target.id(), binding.shortcut.unwrap_or_default()))
             .collect(),
         platform: platform_name(),
     }
@@ -440,13 +477,21 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
 
 pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
     let target = HotkeyTarget::parse(&request.mode)?;
-    let shortcut = request
-        .shortcut
-        .parse::<Shortcut>()
+    // an empty shortcut unassigns the hotkey
+    let requested = request.shortcut.trim();
+    let shortcut = (!requested.is_empty())
+        .then(|| requested.parse::<Shortcut>())
+        .transpose()
         .map_err(|error| AppError::Message(format!("Invalid hotkey: {error}")))?;
 
     match app.state::<ProviderState>().get() {
-        ProviderKind::GlobalShortcut => apply_global_shortcut(app, target, shortcut),
+        ProviderKind::GlobalShortcut => {
+            let result = apply_global_shortcut(app, &target, shortcut)?;
+            if result.status != HotkeyApplyStatus::Conflict {
+                app.state::<HotkeyRegistry>().set_failure(target.id(), None);
+            }
+            Ok(result)
+        }
         // the desktop keeps the shortcut the user chose and ignores a new
         // preferred one, so only its settings change it
         ProviderKind::Portal => Err(AppError::Message(String::from(
@@ -454,7 +499,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         ))),
         ProviderKind::External => Ok(ApplyHotkeyResult {
             status: HotkeyApplyStatus::External,
-            external_command: Some(external_command(&target, &request.shortcut)),
+            external_command: Some(external_command(&target, shortcut.map(|_| requested))),
             message: None,
         }),
     }
@@ -462,23 +507,24 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
 
 fn apply_global_shortcut(
     app: &AppHandle,
-    target: HotkeyTarget,
-    shortcut: Shortcut,
+    target: &HotkeyTarget,
+    shortcut: Option<Shortcut>,
 ) -> Result<ApplyHotkeyResult, AppError> {
+    let ready = ApplyHotkeyResult {
+        status: HotkeyApplyStatus::Ready,
+        external_command: None,
+        message: None,
+    };
     let registry = app.state::<HotkeyRegistry>();
     let previous = registry
         .shortcuts
         .read()
         .expect("hotkey shortcuts lock poisoned")
-        .get(&target)
+        .get(target)
         .copied();
 
-    if previous == Some(shortcut) {
-        return Ok(ApplyHotkeyResult {
-            status: HotkeyApplyStatus::Ready,
-            external_command: None,
-            message: None,
-        });
+    if previous == shortcut {
+        return Ok(ready);
     }
     if let Some(previous) = previous {
         // a shortcut suspended while the settings record is not registered
@@ -493,6 +539,14 @@ fn apply_global_shortcut(
             .expect("hotkey bindings lock poisoned")
             .remove(&previous.id());
     }
+    let Some(shortcut) = shortcut else {
+        registry
+            .shortcuts
+            .write()
+            .expect("hotkey shortcuts lock poisoned")
+            .remove(target);
+        return Ok(ready);
+    };
     if let Err(error) = app.global_shortcut().register(shortcut) {
         if let Some(previous) = previous {
             match app.global_shortcut().register(previous) {
@@ -511,7 +565,7 @@ fn apply_global_shortcut(
                         .shortcuts
                         .write()
                         .expect("hotkey shortcuts lock poisoned")
-                        .remove(&target);
+                        .remove(target);
                 }
             }
         }
@@ -531,15 +585,16 @@ fn apply_global_shortcut(
         .shortcuts
         .write()
         .expect("hotkey shortcuts lock poisoned")
-        .insert(target, shortcut);
-    Ok(ApplyHotkeyResult {
-        status: HotkeyApplyStatus::Ready,
-        external_command: None,
-        message: None,
-    })
+        .insert(target.clone(), shortcut);
+    Ok(ready)
 }
 
-fn external_command(target: &HotkeyTarget, shortcut: &str) -> String {
+/// The line that binds `target` in the desktop's own configuration; without
+/// a shortcut only the command to bind.
+fn external_command(target: &HotkeyTarget, shortcut: Option<&str>) -> String {
+    let Some(shortcut) = shortcut else {
+        return target.cli_command();
+    };
     match session::current().desktop {
         Desktop::Hyprland => {
             let (modifiers, key) = hyprland_shortcut(shortcut);
@@ -649,44 +704,46 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
     StartMode::AiTasks,
 ];
 
+/// Every global hotkey, assigned or not: a configured shortcut wins, an
+/// empty string unassigns it, and a missing one falls back to the default.
 fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
     let configured = config.get(HOTKEYS_CONFIG_KEY).and_then(Value::as_object);
 
-    let modes = GLOBAL_HOTKEY_MODES.into_iter().filter_map(|mode| {
-        let shortcut = configured
-            .and_then(|values| values.get(mode.as_str()))
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|value| !value.is_empty())
-            .map(str::to_owned)
-            .or_else(|| default_shortcut(mode))?;
-        Some(HotkeyBinding {
-            target: HotkeyTarget::Mode(mode),
-            shortcut,
-            description: mode_description(mode).to_owned(),
-        })
+    let modes = GLOBAL_HOTKEY_MODES.into_iter().map(|mode| HotkeyBinding {
+        target: HotkeyTarget::Mode(mode),
+        shortcut: configured_shortcut(
+            configured.and_then(|values| values.get(mode.as_str())),
+            || default_shortcut(mode),
+        ),
+        description: mode_description(mode).to_owned(),
     });
-    modes.chain(selection_bindings(config)).collect()
+    modes.chain([selection_binding(config)]).collect()
 }
 
-/// Only the correction replaces the selection from a hotkey; an empty
-/// string unbinds it.
-fn selection_bindings(config: &Value) -> Vec<HotkeyBinding> {
-    let shortcut = config
-        .get(SELECTION_HOTKEYS_CONFIG_KEY)
-        .and_then(|values| values.get(CORRECTION_ACTION))
-        .and_then(Value::as_str)
-        .map(str::to_owned)
-        .unwrap_or_else(default_correction_shortcut);
-    let shortcut = shortcut.trim();
-    (!shortcut.is_empty())
-        .then(|| HotkeyBinding {
-            target: HotkeyTarget::Selection(CORRECTION_ACTION.to_owned()),
-            shortcut: shortcut.to_owned(),
-            description: CORRECTION_DESCRIPTION.to_owned(),
-        })
-        .into_iter()
-        .collect()
+/// Only the correction replaces the selection from a hotkey.
+fn selection_binding(config: &Value) -> HotkeyBinding {
+    HotkeyBinding {
+        target: HotkeyTarget::Selection(CORRECTION_ACTION.to_owned()),
+        shortcut: configured_shortcut(
+            config
+                .get(SELECTION_HOTKEYS_CONFIG_KEY)
+                .and_then(|values| values.get(CORRECTION_ACTION)),
+            || Some(default_correction_shortcut()),
+        ),
+        description: CORRECTION_DESCRIPTION.to_owned(),
+    }
+}
+
+fn configured_shortcut(
+    value: Option<&Value>,
+    default: impl FnOnce() -> Option<String>,
+) -> Option<String> {
+    match value.and_then(Value::as_str) {
+        Some(shortcut) => Some(shortcut.trim())
+            .filter(|shortcut| !shortcut.is_empty())
+            .map(str::to_owned),
+        None => default(),
+    }
 }
 
 /// The target of a global hotkey id; other targets have no global hotkey.
@@ -699,16 +756,22 @@ fn global_target(id: &str) -> Option<HotkeyTarget> {
     global.then_some(target)
 }
 
+/// Only the hotkeys that act on what the user is doing in another window
+/// are assigned by default: every default may collide with a shortcut of the
+/// desktop or another application, and the rest open Tyco windows that the
+/// tray reaches as well.
 fn default_key(mode: StartMode) -> Option<&'static str> {
     match mode {
-        StartMode::Editor => Some("E"),
-        StartMode::Write => Some("W"),
-        StartMode::Chat => Some("C"),
-        StartMode::VoiceChat => Some("Q"),
         StartMode::Voice => Some("V"),
         StartMode::Select => Some("S"),
-        StartMode::AiTasks => Some("A"),
-        StartMode::Correction | StartMode::History | StartMode::Config => None,
+        StartMode::Editor
+        | StartMode::Write
+        | StartMode::Chat
+        | StartMode::VoiceChat
+        | StartMode::AiTasks
+        | StartMode::Correction
+        | StartMode::History
+        | StartMode::Config => None,
     }
 }
 
@@ -724,15 +787,16 @@ fn default_bindings() -> Vec<HotkeyBinding> {
     bindings_from_config(&Value::Null)
 }
 
-/// The `hotkeys` of the default user config on this platform.
+/// The `hotkeys` of the default user config on this platform; an unassigned
+/// hotkey is an empty string.
 pub fn default_hotkeys_config() -> Value {
     let hotkeys = GLOBAL_HOTKEY_MODES
         .into_iter()
-        .filter_map(|mode| {
-            Some((
+        .map(|mode| {
+            (
                 mode.as_str().to_owned(),
-                Value::String(default_shortcut(mode)?),
-            ))
+                Value::String(default_shortcut(mode).unwrap_or_default()),
+            )
         })
         .collect::<Map<_, _>>();
     Value::Object(hotkeys)
@@ -790,17 +854,21 @@ impl HotkeyProvider for GlobalShortcutProvider {
                 .build(),
         )?;
 
+        let registry = app.state::<HotkeyRegistry>();
         for binding in bindings {
-            let shortcut = match binding.shortcut.parse::<Shortcut>() {
+            let Some(shortcut) = binding.shortcut else {
+                continue;
+            };
+            let shortcut = match shortcut.parse::<Shortcut>() {
                 Ok(shortcut) => shortcut,
                 Err(error) => {
                     log::warn!("Invalid hotkey for {}: {error}", binding.target.id());
+                    registry.set_failure(binding.target.id(), Some(error.to_string()));
                     continue;
                 }
             };
             match app.global_shortcut().register(shortcut) {
                 Ok(()) => {
-                    let registry = app.state::<HotkeyRegistry>();
                     registry
                         .targets
                         .write()
@@ -812,10 +880,13 @@ impl HotkeyProvider for GlobalShortcutProvider {
                         .expect("hotkey shortcuts lock poisoned")
                         .insert(binding.target, shortcut);
                 }
-                Err(error) => log::warn!(
-                    "Could not register hotkey for {}: {error}",
-                    binding.target.id()
-                ),
+                Err(error) => {
+                    log::warn!(
+                        "Could not register hotkey for {}: {error}",
+                        binding.target.id()
+                    );
+                    registry.set_failure(binding.target.id(), Some(error.to_string()));
+                }
             }
         }
         Ok(())
@@ -915,8 +986,9 @@ async fn bind_session(
     let shortcuts = bindings
         .iter()
         .map(|binding| {
+            let trigger = binding.shortcut.as_deref().map(to_portal_trigger);
             NewShortcut::new(binding.target.id(), binding.description.as_str())
-                .preferred_trigger(Some(to_portal_trigger(&binding.shortcut).as_str()))
+                .preferred_trigger(trigger.as_deref())
         })
         .collect::<Vec<_>>();
     let bound = portal
@@ -1037,17 +1109,17 @@ mod tests {
     #[test]
     fn default_shortcuts_avoid_altgr_on_windows() {
         let expected = if cfg!(target_os = "windows") {
-            "Ctrl+Shift+Alt+E"
+            "Ctrl+Shift+Alt+V"
         } else {
-            "Ctrl+Alt+E"
+            "Ctrl+Alt+V"
         };
         assert_eq!(
-            default_shortcut(StartMode::Editor).as_deref(),
+            default_shortcut(StartMode::Voice).as_deref(),
             Some(expected)
         );
         assert_eq!(default_shortcut(StartMode::History), None);
         assert_eq!(
-            default_hotkeys_config().get("editor"),
+            default_hotkeys_config().get("voice"),
             Some(&Value::String(expected.to_owned()))
         );
         assert_eq!(
@@ -1059,7 +1131,21 @@ mod tests {
     }
 
     #[test]
-    fn reports_defaults_of_every_hotkey() {
+    fn assigns_only_selection_and_voice_hotkeys_by_default() {
+        let assigned = default_bindings()
+            .into_iter()
+            .filter(|binding| binding.shortcut.is_some())
+            .map(|binding| binding.target.id())
+            .collect::<Vec<_>>();
+        assert_eq!(assigned, ["voice", "select", "replace.correction"]);
+        assert_eq!(
+            default_hotkeys_config().get("editor"),
+            Some(&Value::String(String::new()))
+        );
+    }
+
+    #[test]
+    fn reports_every_hotkey_with_its_default() {
         let defaults = default_bindings()
             .into_iter()
             .map(|binding| binding.target.id())
@@ -1069,44 +1155,50 @@ mod tests {
     }
 
     #[test]
-    fn reads_overrides_and_ignores_empty_bindings() {
+    fn reads_overrides_and_unassigns_empty_bindings() {
         let bindings = bindings_from_config(&json!({
             "hotkeys": { "editor": "Super+Space", "voice": "  " }
         }));
+        let shortcut = |id: &str| {
+            bindings
+                .iter()
+                .find(|binding| binding.target.id() == id)
+                .and_then(|binding| binding.shortcut.clone())
+        };
         assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1);
-        assert_eq!(bindings[0].shortcut, "Super+Space");
-        assert_eq!(
-            Some(bindings[4].shortcut.clone()),
-            default_shortcut(StartMode::Voice)
-        );
+        assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
+        assert_eq!(shortcut("voice"), None);
+        assert_eq!(shortcut("select"), default_shortcut(StartMode::Select));
+        assert_eq!(shortcut("chat"), None);
     }
 
     #[test]
     fn binds_only_the_inline_correction() {
         let selection = |config: Value| {
-            selection_bindings(&config)
-                .into_iter()
-                .map(|binding| (binding.target.id(), binding.shortcut))
-                .collect::<Vec<_>>()
+            let binding = selection_binding(&config);
+            (binding.target.id(), binding.shortcut)
         };
         assert_eq!(
             selection(json!({})),
-            [(
+            (
                 String::from("replace.correction"),
-                default_correction_shortcut()
-            )]
+                Some(default_correction_shortcut())
+            )
         );
         assert_eq!(
             selection(json!({ "selectionHotkeys": {
                 "correction": "Ctrl+Alt+X",
                 "translate.0": "Ctrl+Alt+1"
             } })),
-            [(
+            (
                 String::from("replace.correction"),
-                String::from("Ctrl+Alt+X")
-            )]
+                Some(String::from("Ctrl+Alt+X"))
+            )
         );
-        assert!(selection(json!({ "selectionHotkeys": { "correction": " " } })).is_empty());
+        assert_eq!(
+            selection(json!({ "selectionHotkeys": { "correction": " " } })).1,
+            None
+        );
     }
 
     #[test]

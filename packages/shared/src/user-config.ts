@@ -324,15 +324,15 @@ export interface UserConfig {
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
   // the Linux defaults: the backend owns the defaults of each platform and
-  // reports them in `HotkeyProviderInfo.defaults`
+  // reports them in `HotkeyProviderInfo.defaults`; an empty one is unassigned
   hotkeys: {
-    editor: 'Ctrl+Alt+E',
-    write: 'Ctrl+Alt+W',
-    chat: 'Ctrl+Alt+C',
-    voiceChat: 'Ctrl+Alt+Q',
+    editor: '',
+    write: '',
+    chat: '',
+    voiceChat: '',
     voice: 'Ctrl+Alt+V',
     select: 'Ctrl+Alt+S',
-    aiTasks: 'Ctrl+Alt+A',
+    aiTasks: '',
   },
   selectionHotkeys: { correction: 'Ctrl+Alt+F' },
   submitKey: DEFAULT_SUBMIT_KEY,

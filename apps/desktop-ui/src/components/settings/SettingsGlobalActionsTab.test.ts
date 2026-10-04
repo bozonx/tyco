@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
@@ -12,11 +12,17 @@ vi.mock('../../lib/desktop/client', () => ({
   desktopClient: { listen: vi.fn().mockResolvedValue(() => {}) },
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    callFunction: vi.fn().mockResolvedValue({ success: true, result: {} }),
-  }),
+const { callFunction } = vi.hoisted(() => ({
+  callFunction: vi.fn(async (name: string) => ({
+    success: true,
+    result:
+      name === 'getHotkeyProviderInfo'
+        ? { provider: 'global-shortcut', canConfigure: false, actions: {} }
+        : { status: 'ready' },
+  })),
 }))
+
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
 
 describe('SettingsGlobalActionsTab.vue', () => {
   const defaultProps = {
@@ -109,5 +115,38 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
     expect(wrapper.emitted('update:submit-key')).toBeTruthy()
     expect(wrapper.emitted('update:submit-key')![0]).toEqual(['ctrlEnter'])
+  })
+
+  it('unassigns a hotkey', async () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      props: defaultProps,
+      global: {
+        stubs: {
+          ...globalStubs,
+          Button: {
+            props: ['title'],
+            // the click listener falls through to the button
+            template: '<button :title="title" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const voiceRow = wrapper.find('[data-label="settings.hotkeyActions.voice"]')
+    await voiceRow.find('[title="settings.unassignHotkey"]').trigger('click')
+    await flushPromises()
+
+    expect(callFunction).toHaveBeenCalledWith('applyHotkey', [
+      { mode: 'voice', shortcut: '' },
+    ])
+    expect(wrapper.emitted('update:hotkey')).toEqual([['voice', '']])
+    // an unassigned hotkey offers no removal
+    const editorRow = wrapper.find(
+      '[data-label="settings.hotkeyActions.editor"]'
+    )
+    expect(editorRow.find('[title="settings.unassignHotkey"]').exists()).toBe(
+      false
+    )
   })
 })

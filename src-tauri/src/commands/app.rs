@@ -2,7 +2,7 @@ use serde_json::Value;
 use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
-use crate::models::{InitParams, LocalState, StorageInfo};
+use crate::models::{InitParams, LocalState, StorageInfo, StorageKind};
 use crate::services::{runtime, storage};
 use crate::state::AppState;
 
@@ -95,6 +95,13 @@ pub fn save_user_config(
 #[tauri::command(async)]
 pub fn get_storage_info(app: AppHandle) -> Result<StorageInfo, AppError> {
     storage::get_storage_info(&app)
+}
+
+/// Takes the kind, not a path: the webview only opens the app's own
+/// directories.
+#[tauri::command(async)]
+pub fn open_storage_location(app: AppHandle, kind: StorageKind) -> Result<(), AppError> {
+    crate::services::platform::open_dir(&storage::storage_dir(&app, kind)?)
 }
 
 #[tauri::command]

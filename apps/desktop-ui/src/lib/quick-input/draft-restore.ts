@@ -1,5 +1,9 @@
-/** How long a text dismissed by a focus loss is offered again. */
-export const DRAFT_RESTORE_MS = 10 * 60 * 1000
+/**
+ * How long a text dismissed by a focus loss is offered again. It comes back
+ * selected, so typing replaces it, but after a while the user most likely
+ * starts something new.
+ */
+export const DRAFT_RESTORE_MS = 3 * 60 * 1000
 
 /**
  * Whether the quick input should open with the text it held when it was last

@@ -76,14 +76,20 @@ export interface EditorHistoryItem {
   sent?: boolean
 }
 
+/** What a storage location holds; history and chats are data. */
+export type StorageKind = 'config' | 'data' | 'cache' | 'logs'
+
+/**
+ * A root directory of the app's files. The platform may put several kinds into
+ * one directory, e.g. the config and the data into `%APPDATA%` on Windows.
+ */
+export interface StorageLocation {
+  kinds: StorageKind[]
+  path: string
+}
+
 export interface StorageInfo {
-  configDir: string
-  dataDir: string
-  historyDir: string
-  chatsDir: string
-  cacheDir: string
-  logDir: string
-  userConfigFile: string
+  locations: StorageLocation[]
 }
 
 export interface LocalState {
@@ -132,6 +138,8 @@ export const DESKTOP_EVENTS = {
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
+  /** The user closed the main window rather than hid it */
+  MAIN_WINDOW_CLOSED: 'app://main-window-closed',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
@@ -142,6 +150,7 @@ export const DESKTOP_EVENTS = {
 export const DESKTOP_COMMANDS = {
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
+  OPEN_STORAGE_LOCATION: 'open_storage_location',
   APPLY_HOTKEY: 'apply_hotkey',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
   REBIND_HOTKEYS: 'rebind_hotkeys',

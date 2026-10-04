@@ -125,8 +125,9 @@ watch(
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
-      writerInputStore.startSession()
-      writerInputStore.focus()
+      // a kept text comes back selected: typing replaces it
+      if (writerInputStore.startSession()) writerInputStore.focusAndSelectAll()
+      else writerInputStore.focus()
     }
   },
   { immediate: true }
@@ -153,7 +154,7 @@ watch(
 function cancelAndClose() {
   correctionStore.cancelInsert()
   correctionStore.cancelSpeculation()
-  // Esc drops the text completely: it does not go to the history
+  // Esc drops the text from the history; ArrowUp still brings it back
   writerInputStore.discard()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
@@ -230,10 +231,10 @@ function handleKeyDown(event: KeyboardEvent) {
   if (
     event.code === 'ArrowUp' &&
     !writerInputStore.value &&
-    writerInputStore.lastSubmitted
+    writerInputStore.recallText
   ) {
     event.preventDefault()
-    writerInputStore.setValue(writerInputStore.lastSubmitted)
+    writerInputStore.setValue(writerInputStore.recallText)
   }
 }
 

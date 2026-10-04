@@ -9,7 +9,7 @@ use tauri::AppHandle;
 use crate::errors::AppError;
 use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
-    LocalState, StorageInfo, CONFIG_FILE_NAME, STATE_FILE_NAME,
+    LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
 use crate::services::atomic_file::{read_or_quarantine, write_private};
 use crate::services::secret_detector::redact_secrets;
@@ -49,24 +49,63 @@ pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(dir)
 }
 
-pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
-    let config_dir = app_config_dir(app)?;
-    let data_dir = app_data_dir(app)?;
-    let history_dir = app_data_sub_dir(app, "history")?;
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let cache_dir = app_cache_dir(app)?;
-    let log_dir = app_log_dir(app)?;
-    let user_config_file = config_dir.join(CONFIG_FILE_NAME);
+fn app_state_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    let dir = AppPaths::resolve(app)?.state_dir;
+    fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
 
+pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
     Ok(StorageInfo {
-        config_dir: path_to_string(config_dir),
-        data_dir: path_to_string(data_dir),
-        history_dir: path_to_string(history_dir),
-        chats_dir: path_to_string(chats_dir),
-        cache_dir: path_to_string(cache_dir),
-        log_dir: path_to_string(log_dir),
-        user_config_file: path_to_string(user_config_file),
+        locations: group_storage_locations([
+            (StorageKind::Config, app_config_dir(app)?),
+            (StorageKind::Data, app_data_dir(app)?),
+            (StorageKind::Cache, app_cache_dir(app)?),
+            (StorageKind::Logs, app_log_dir(app)?),
+        ]),
     })
+}
+
+/// The directory of a storage kind, for the user to open.
+pub fn storage_dir(app: &AppHandle, kind: StorageKind) -> Result<PathBuf, AppError> {
+    match kind {
+        StorageKind::Config => app_config_dir(app),
+        StorageKind::Data => app_data_dir(app),
+        StorageKind::Cache => app_cache_dir(app),
+        StorageKind::Logs => app_log_dir(app),
+    }
+}
+
+/// Only the root directories: a kind in the same directory as another, or
+/// inside it, joins that one's location.
+fn group_storage_locations(
+    dirs: impl IntoIterator<Item = (StorageKind, PathBuf)>,
+) -> Vec<StorageLocation> {
+    let mut roots: Vec<(Vec<StorageKind>, PathBuf)> = Vec::new();
+    for (kind, dir) in dirs {
+        if let Some((kinds, _)) = roots.iter_mut().find(|(_, root)| dir.starts_with(root)) {
+            kinds.push(kind);
+            continue;
+        }
+        // a root inside the new directory joins it instead
+        let mut kinds = Vec::new();
+        roots.retain(|(nested_kinds, root)| {
+            let nested = root.starts_with(&dir);
+            if nested {
+                kinds.extend(nested_kinds);
+            }
+            !nested
+        });
+        kinds.push(kind);
+        roots.push((kinds, dir));
+    }
+    roots
+        .into_iter()
+        .map(|(kinds, dir)| StorageLocation {
+            kinds,
+            path: path_to_string(dir),
+        })
+        .collect()
 }
 
 fn path_to_string(path: PathBuf) -> String {
@@ -704,7 +743,8 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
 }
 
 pub fn read_or_create_local_state(app: &AppHandle) -> Result<LocalState, AppError> {
-    let path = app_config_dir(app)?.join(STATE_FILE_NAME);
+    let path = app_state_dir(app)?.join(STATE_FILE_NAME);
+    move_legacy_file(&app_config_dir(app)?.join(STATE_FILE_NAME), &path);
 
     if let Some(state) = read_or_quarantine(&path, |raw| Ok(serde_json::from_str(raw)?))? {
         return Ok(state);
@@ -728,8 +768,23 @@ pub fn merge_local_state(
     Ok(serde_json::from_value(merged)?)
 }
 
+/// Moves a file kept by an older version to its current place, unless that
+/// already has one. A failure only costs what the file remembered.
+fn move_legacy_file(legacy: &Path, path: &Path) {
+    if legacy == path || !legacy.exists() || path.exists() {
+        return;
+    }
+    if let Err(error) = fs::rename(legacy, path) {
+        log::warn!(
+            "Could not move {} to {}: {error}",
+            legacy.display(),
+            path.display()
+        );
+    }
+}
+
 pub fn save_local_state(app: &AppHandle, local_state: &LocalState) -> Result<(), AppError> {
-    let path = app_config_dir(app)?.join(STATE_FILE_NAME);
+    let path = app_state_dir(app)?.join(STATE_FILE_NAME);
     write_json(&path, local_state)?;
     Ok(())
 }
@@ -2655,24 +2710,88 @@ mod tests {
     }
 
     #[test]
-    fn storage_info_serializes_all_expected_fields() {
+    fn storage_info_serializes_locations() {
         let info = StorageInfo {
-            config_dir: "/config".into(),
-            data_dir: "/data".into(),
-            history_dir: "/data/history".into(),
-            chats_dir: "/data/chats".into(),
-            cache_dir: "/cache".into(),
-            log_dir: "/logs".into(),
-            user_config_file: "/config/userConfig.yaml".into(),
+            locations: vec![StorageLocation {
+                kinds: vec![StorageKind::Config, StorageKind::Logs],
+                path: "/config".into(),
+            }],
         };
 
         let json = serde_json::to_value(&info).unwrap();
-        assert_eq!(json["configDir"], "/config");
-        assert_eq!(json["dataDir"], "/data");
-        assert_eq!(json["historyDir"], "/data/history");
-        assert_eq!(json["chatsDir"], "/data/chats");
-        assert_eq!(json["cacheDir"], "/cache");
-        assert_eq!(json["logDir"], "/logs");
-        assert_eq!(json["userConfigFile"], "/config/userConfig.yaml");
+        assert_eq!(
+            json,
+            json!({ "locations": [{ "kinds": ["config", "logs"], "path": "/config" }] })
+        );
+    }
+
+    #[test]
+    fn groups_storage_locations_by_root() {
+        let group = |dirs: &[(StorageKind, &str)]| {
+            group_storage_locations(
+                dirs.iter()
+                    .map(|(kind, dir)| (*kind, PathBuf::from(dir)))
+                    .collect::<Vec<_>>(),
+            )
+            .into_iter()
+            .map(|location| (location.kinds, location.path))
+            .collect::<Vec<_>>()
+        };
+        use StorageKind::*;
+
+        // Linux: every kind in a directory of its own
+        assert_eq!(
+            group(&[
+                (Config, "/h/.config/id"),
+                (Data, "/h/.local/share/id"),
+                (Cache, "/h/.cache/id"),
+                (Logs, "/h/.local/state/id/logs"),
+            ]),
+            [
+                (vec![Config], String::from("/h/.config/id")),
+                (vec![Data], String::from("/h/.local/share/id")),
+                (vec![Cache], String::from("/h/.cache/id")),
+                (vec![Logs], String::from("/h/.local/state/id/logs")),
+            ]
+        );
+        // Windows: the same directory, and logs inside the cache
+        assert_eq!(
+            group(&[
+                (Config, "/r/id"),
+                (Data, "/r/id"),
+                (Cache, "/l/id"),
+                (Logs, "/l/id/logs"),
+            ]),
+            [
+                (vec![Config, Data], String::from("/r/id")),
+                (vec![Cache, Logs], String::from("/l/id")),
+            ]
+        );
+        // a root listed after the directory inside it
+        assert_eq!(
+            group(&[(Logs, "/l/id/logs"), (Cache, "/l/id")]),
+            [(vec![Logs, Cache], String::from("/l/id"))]
+        );
+        // a common prefix of the name is not a parent
+        assert_eq!(group(&[(Cache, "/l/id"), (Logs, "/l/id2")]).len(), 2);
+    }
+
+    #[test]
+    fn moves_a_legacy_file_once() {
+        let dir = temp_dir("legacy-file");
+        let legacy = dir.join("old.json");
+        let path = dir.join("new.json");
+
+        fs::write(&legacy, "old").unwrap();
+        move_legacy_file(&legacy, &path);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "old");
+        assert!(!legacy.exists());
+
+        // the current file wins over a legacy one
+        fs::write(&legacy, "older").unwrap();
+        move_legacy_file(&legacy, &path);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "old");
+
+        fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -21,6 +21,7 @@ type AppEventPayloads = {
   [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
   [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
   [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
+  [DESKTOP_EVENTS.MAIN_WINDOW_CLOSED]: null
 }
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()

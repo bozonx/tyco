@@ -47,7 +47,12 @@ const name = useId()
   background-color: var(--app-surface-sunken);
 }
 
+/*
+ * Holds the visually hidden radio: without it, the absolutely positioned
+ * input belongs to the page, and focusing it scrolls the whole page away
+ */
 .segmented-option {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
