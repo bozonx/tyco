@@ -30,8 +30,15 @@ pub fn suspend_hotkeys(app: AppHandle, suspended: bool) -> Result<(), AppError> 
 }
 
 #[tauri::command]
-pub fn get_hotkey_provider_info(app: AppHandle) -> crate::services::hotkeys::HotkeyProviderInfo {
-    crate::services::hotkeys::provider_info(&app)
+pub async fn rebind_hotkeys(app: AppHandle) -> Result<(), AppError> {
+    crate::services::hotkeys::rebind(&app).await
+}
+
+#[tauri::command]
+pub async fn get_hotkey_provider_info(
+    app: AppHandle,
+) -> crate::services::hotkeys::HotkeyProviderInfo {
+    crate::services::hotkeys::provider_info(&app).await
 }
 
 #[tauri::command]

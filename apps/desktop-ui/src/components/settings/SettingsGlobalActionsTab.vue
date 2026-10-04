@@ -1,17 +1,36 @@
 <template>
   <div class="flex flex-col gap-6">
     <SettingsSection>
-      <template v-if="canConfigure" #actions>
-        <Button sm icon="mdi:keyboard-settings" @click="configureHotkeys">
+      <template v-if="systemManaged" #actions>
+        <Button
+          sm
+          :ghost="missing.length === 0"
+          icon="mdi:keyboard-return"
+          :disabled="rebinding"
+          :title="t('settings.rebindHotkeysHint')"
+          @click="rebindHotkeys"
+        >
+          {{ t('settings.rebindHotkeys') }}
+        </Button>
+        <Button
+          v-if="canConfigure"
+          sm
+          icon="mdi:keyboard-settings"
+          @click="configureHotkeys"
+        >
           {{ t('settings.configureGlobalHotkeys') }}
         </Button>
       </template>
-      <div v-if="providerNote || configureError" class="provider-note">
+      <div v-if="missing.length > 0" class="provider-note missing-note">
+        <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
+        <p>{{ t('settings.hotkeysMissing') }}</p>
+      </div>
+      <div v-if="providerNote || portalError" class="provider-note">
         <Icon icon="mdi:information-outline" height="16" class="shrink-0" />
         <div>
           <p v-if="providerNote">{{ t(providerNote) }}</p>
-          <p v-if="configureError" class="configure-error">
-            {{ configureError }}
+          <p v-if="portalError" class="portal-error">
+            {{ portalError }}
           </p>
         </div>
       </div>
@@ -110,6 +129,8 @@ import {
   displayedShortcut,
   hasConflict,
   isEditable,
+  isSystemManaged,
+  missingHotkeys,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
 import { useIpcStore } from '../../stores/ipc'
@@ -163,8 +184,10 @@ const ipcStore = useIpcStore()
 const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
 const editable = computed(() => isEditable(providerState))
+const systemManaged = computed(() => isSystemManaged(providerState))
 const providerNote = computed(() => providerNoteKey(providerState))
-const configureError = ref('')
+const portalError = ref('')
+const rebinding = ref(false)
 const injection = reactive<{ ok: boolean | null; error: string }>({
   ok: null,
   error: '',
@@ -242,11 +265,29 @@ async function checkInjection() {
   injection.error = result.error ?? ''
 }
 
+const missing = computed(() =>
+  missingHotkeys(
+    providerState,
+    rows.value.map((row) => row.id)
+  )
+)
+
 async function configureHotkeys() {
-  configureError.value = ''
+  portalError.value = ''
   const result = await ipcStore.callFunction('configureHotkeys')
   if (!result.success) {
-    configureError.value = result.error || t('settings.configureHotkeysError')
+    portalError.value = result.error || t('settings.configureHotkeysError')
+  }
+}
+
+// the backend reports the new shortcuts with the hotkeys changed event
+async function rebindHotkeys() {
+  portalError.value = ''
+  rebinding.value = true
+  const result = await ipcStore.callFunction('rebindHotkeys')
+  rebinding.value = false
+  if (!result.success) {
+    portalError.value = result.error || t('settings.rebindHotkeysError')
   }
 }
 
@@ -292,8 +333,16 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-.configure-error {
+.portal-error {
   color: var(--app-error);
+}
+
+.missing-note {
+  color: var(--color-warning);
+}
+
+.missing-note p {
+  margin: 0;
 }
 
 .hotkey-control {

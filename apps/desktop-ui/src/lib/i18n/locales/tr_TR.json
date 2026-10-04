@@ -274,6 +274,10 @@
     "copyHotkeyCommand": "Bağlamayı kopyala",
     "configureGlobalHotkeys": "Sistemde değiştir",
     "configureHotkeysError": "Sistem kısayol ayarları açılamadı",
+    "rebindHotkeys": "Yeniden kaydet",
+    "rebindHotkeysHint": "Sistem ayarlarında silinen kısayolları geri getirir; değiştirdiğiniz kısayollar korunur. Eski kısayolları kaldırmak için önce sistem ayarlarında Tyco’yu silin.",
+    "rebindHotkeysError": "Kısayollar yeniden kaydedilemedi",
+    "hotkeysMissing": "Bazı kısayollar sistem ayarlarında silindi ve çalışmıyor. Geri getirmek için «Yeniden kaydet»i kullanın.",
     "hotkeyActions": {
       "write": "Hızlı metin girişi",
       "voice": "Sesli giriş",
@@ -289,7 +293,8 @@
     "hotkeyStatus": { "conflict": "Bu birleşim kullanılamıyor" },
     "hotkeyProvider": {
       "portal": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları «Sistemde değiştir» ile değiştirin.",
-      "external": "Bu oturum Tyco’nun genel kısayol atamasına izin vermiyor. Aşağıdaki komutları compositor yapılandırmanıza ekleyin."
+      "external": "Bu oturum Tyco’nun genel kısayol atamasına izin vermiyor. Aşağıdaki komutları compositor yapılandırmanıza ekleyin.",
+      "portalNoSettings": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları sistem ayarlarında değiştirin."
     },
     "dragToReorder": "Sıralamak için sürükleyin",
     "llmProviders": "Sağlayıcılar",

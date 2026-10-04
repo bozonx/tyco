@@ -10,6 +10,7 @@ export interface HotkeySettingsState {
   canConfigure: boolean
   statuses: Record<string, HotkeyApplyResult>
   systemTriggers: Record<string, string>
+  registered: boolean
   defaults: Record<string, string>
   platform: HotkeyPlatform
 }
@@ -20,6 +21,7 @@ export function createHotkeySettingsState(): HotkeySettingsState {
     canConfigure: false,
     statuses: {},
     systemTriggers: {},
+    registered: false,
     defaults: {},
     platform: 'linux',
   }
@@ -33,6 +35,7 @@ export function applyProviderInfo(
   state.canConfigure = info.canConfigure
   state.statuses = { ...info.actions }
   state.systemTriggers = { ...(info.systemTriggers ?? {}) }
+  state.registered = info.registered ?? false
   state.defaults = { ...(info.defaults ?? {}) }
   state.platform = info.platform ?? 'linux'
 }
@@ -72,16 +75,28 @@ export function displayedShortcut(
   configured: string
 ): string {
   if (!isSystemManaged(state)) return configured
-  // KDE lists alternative shortcuts separated by commas; the first is the
-  // one to show
-  return (state.systemTriggers[id] ?? '').split(', ')[0].trim()
+  return state.systemTriggers[id] ?? ''
+}
+
+/**
+ * The hotkeys the desktop no longer has: the user removed them in its settings.
+ * One the user only cleared is still there, without a shortcut.
+ */
+export function missingHotkeys(
+  state: HotkeySettingsState,
+  ids: string[]
+): string[] {
+  if (!isSystemManaged(state) || !state.registered) return []
+  return ids.filter((id) => !(id in state.systemTriggers))
 }
 
 /** The i18n key of the note that applies to every hotkey of the provider. */
 export function providerNoteKey(state: HotkeySettingsState): string | null {
   switch (state.provider) {
     case 'portal':
-      return 'settings.hotkeyProvider.portal'
+      return state.canConfigure
+        ? 'settings.hotkeyProvider.portal'
+        : 'settings.hotkeyProvider.portalNoSettings'
     case 'external':
       return 'settings.hotkeyProvider.external'
     default:

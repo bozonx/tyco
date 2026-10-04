@@ -143,6 +143,7 @@ export const DESKTOP_COMMANDS = {
   GET_STORAGE_INFO: 'get_storage_info',
   APPLY_HOTKEY: 'apply_hotkey',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
+  REBIND_HOTKEYS: 'rebind_hotkeys',
   SUSPEND_HOTKEYS: 'suspend_hotkeys',
   GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
   OPEN_MAIN_CHAT: 'open_main_chat',

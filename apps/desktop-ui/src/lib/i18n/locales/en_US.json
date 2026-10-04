@@ -271,6 +271,10 @@
     "copyHotkeyCommand": "Copy binding",
     "configureGlobalHotkeys": "Change in system",
     "configureHotkeysError": "Could not open the system hotkey settings",
+    "rebindHotkeys": "Register again",
+    "rebindHotkeysHint": "Brings back the hotkeys removed in the system settings; the shortcuts you changed are kept. To drop outdated hotkeys, first remove Tyco in the system settings.",
+    "rebindHotkeysError": "Could not register the hotkeys again",
+    "hotkeysMissing": "Some hotkeys were removed in the system settings and do not work. Use “Register again” to bring them back.",
     "hotkeyActions": {
       "write": "Quick text input",
       "voice": "Voice input",
@@ -286,7 +290,8 @@
     "hotkeyStatus": { "conflict": "This combination is unavailable" },
     "hotkeyProvider": {
       "portal": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them with “Change in system”.",
-      "external": "This session does not let Tyco bind global hotkeys. Add the commands below to your compositor configuration."
+      "external": "This session does not let Tyco bind global hotkeys. Add the commands below to your compositor configuration.",
+      "portalNoSettings": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them in the system settings."
     },
     "dragToReorder": "Drag to reorder",
     "llmProviders": "Providers",

@@ -8,6 +8,7 @@ import {
   hasConflict,
   isEditable,
   isSystemManaged,
+  missingHotkeys,
   providerNoteKey,
 } from './hotkey-settings'
 
@@ -25,6 +26,7 @@ describe('hotkey settings', () => {
         },
       },
       systemTriggers: {},
+      registered: false,
       defaults: {},
       platform: 'linux',
     })
@@ -43,13 +45,16 @@ describe('hotkey settings', () => {
       canConfigure: true,
       actions: {},
       systemTriggers: { editor: 'Meta+E', voice: 'Meta+V, Ctrl+F12' },
+      registered: true,
       defaults: {},
       platform: 'linux',
     })
 
     expect(isSystemManaged(state)).toBe(true)
     expect(displayedShortcut(state, 'editor', 'Ctrl+Alt+E')).toBe('Meta+E')
-    expect(displayedShortcut(state, 'voice', 'Ctrl+Alt+V')).toBe('Meta+V')
+    expect(displayedShortcut(state, 'voice', 'Ctrl+Alt+V')).toBe(
+      'Meta+V, Ctrl+F12'
+    )
     expect(displayedShortcut(state, 'chat', 'Ctrl+Alt+C')).toBe('')
     expect(isEditable(state)).toBe(false)
     expect(providerNoteKey(state)).toBe('settings.hotkeyProvider.portal')
@@ -62,6 +67,7 @@ describe('hotkey settings', () => {
       canConfigure: false,
       actions: {},
       systemTriggers: {},
+      registered: false,
       defaults: {},
       platform: 'linux',
     })
@@ -70,6 +76,39 @@ describe('hotkey settings', () => {
     expect(isEditable(state)).toBe(true)
     expect(displayedShortcut(state, 'editor', 'Ctrl+Alt+E')).toBe('Ctrl+Alt+E')
     expect(providerNoteKey(state)).toBeNull()
+  })
+
+  it('finds the hotkeys removed in the desktop settings', () => {
+    const state = createHotkeySettingsState()
+    const info = {
+      provider: 'portal' as const,
+      canConfigure: true,
+      actions: {},
+      // the voice hotkey is there without a shortcut: the user cleared it
+      systemTriggers: { editor: 'Ctrl+Alt+E', voice: '' },
+      registered: false,
+      defaults: {},
+      platform: 'linux' as const,
+    }
+    applyProviderInfo(state, info)
+    // the desktop has not answered yet
+    expect(missingHotkeys(state, ['editor', 'voice', 'chat'])).toEqual([])
+
+    applyProviderInfo(state, { ...info, registered: true })
+    expect(missingHotkeys(state, ['editor', 'voice', 'chat'])).toEqual(['chat'])
+
+    applyProviderInfo(state, { ...info, provider: 'global-shortcut' })
+    expect(missingHotkeys(state, ['chat'])).toEqual([])
+  })
+
+  it('points to the desktop settings when there is no button for them', () => {
+    const state = createHotkeySettingsState()
+    state.provider = 'portal'
+    expect(providerNoteKey(state)).toBe(
+      'settings.hotkeyProvider.portalNoSettings'
+    )
+    state.canConfigure = true
+    expect(providerNoteKey(state)).toBe('settings.hotkeyProvider.portal')
   })
 
   it('records nothing until the provider is known', () => {
@@ -83,6 +122,7 @@ describe('hotkey settings', () => {
       canConfigure: false,
       actions: {},
       systemTriggers: {},
+      registered: false,
       defaults: { editor: 'Ctrl+Shift+Alt+E' },
       platform: 'windows',
     })

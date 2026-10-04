@@ -126,6 +126,11 @@ export interface HotkeyProviderInfo {
   actions: Record<string, HotkeyApplyResult>
   /** Shortcuts the desktop bound through the portal, in its own words */
   systemTriggers: Record<string, string>
+  /**
+   * The portal session is bound, so `systemTriggers` is what the desktop has
+   * and a missing id was removed there
+   */
+  registered: boolean
   /** The default shortcut of every hotkey id on this platform */
   defaults: Record<string, string>
   platform: HotkeyPlatform

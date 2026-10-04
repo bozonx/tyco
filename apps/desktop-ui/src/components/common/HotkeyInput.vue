@@ -24,10 +24,13 @@
       <span class="hotkey-dot" aria-hidden="true" />
       <span class="hotkey-text">{{ t('settings.hotkeyInput.recording') }}</span>
     </span>
-    <span v-else-if="displayKeys.length > 0" class="hotkey-main hotkey-keys">
-      <template v-for="(key, index) in displayKeys" :key="index">
-        <span v-if="index > 0" class="hotkey-plus">+</span>
-        <KeyButton>{{ key }}</KeyButton>
+    <span v-else-if="displayGroups.length > 0" class="hotkey-main hotkey-keys">
+      <template v-for="(keys, group) in displayGroups" :key="group">
+        <span v-if="group > 0" class="hotkey-separator">,</span>
+        <template v-for="(key, index) in keys" :key="index">
+          <span v-if="index > 0" class="hotkey-plus">+</span>
+          <KeyButton>{{ key }}</KeyButton>
+        </template>
       </template>
       <span v-if="recording && !invalid" class="hotkey-plus">+ …</span>
     </span>
@@ -65,6 +68,7 @@ import {
   heldModifiers,
   keyLabelFor,
   recordKeyDown,
+  shortcutAlternatives,
   shortcutKeys,
 } from '../../lib/hotkeys/hotkey-recorder'
 import KeyButton from './KeyButton.vue'
@@ -99,10 +103,14 @@ const saved = ref(false)
 let recorded: string | null = null
 let savedTimer: ReturnType<typeof setTimeout> | null = null
 
-const displayKeys = computed(() =>
-  (recording.value ? heldKeys.value : shortcutKeys(props.value)).map((key) =>
-    keyLabelFor(key, props.platform)
+/** The keys to show, one group per alternative shortcut. */
+const displayGroups = computed(() =>
+  (recording.value
+    ? [heldKeys.value]
+    : shortcutAlternatives(props.value).map(shortcutKeys)
   )
+    .filter((keys) => keys.length > 0)
+    .map((keys) => keys.map((key) => keyLabelFor(key, props.platform)))
 )
 
 function start() {
@@ -211,6 +219,11 @@ onBeforeUnmount(() => {
 .hotkey-plus {
   color: var(--app-text-faint);
   font-size: 0.75rem;
+}
+
+.hotkey-separator {
+  margin-right: 0.25rem;
+  color: var(--app-text-faint);
 }
 
 .hotkey-placeholder {

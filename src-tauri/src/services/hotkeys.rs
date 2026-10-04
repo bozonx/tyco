@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, Ordering};
-#[cfg(target_os = "linux")]
-use std::sync::Arc;
 use std::sync::RwLock;
+#[cfg(target_os = "linux")]
+use std::sync::{Arc, OnceLock};
 
 #[cfg(target_os = "linux")]
 use ashpd::desktop::global_shortcuts::{
-    BindShortcutsOptions, ConfigureShortcutsOptions, GlobalShortcuts, NewShortcut,
+    BindShortcutsOptions, ConfigureShortcutsOptions, GlobalShortcuts, ListShortcutsOptions,
+    NewShortcut,
 };
 #[cfg(target_os = "linux")]
 use ashpd::desktop::CreateSessionOptions;
@@ -153,15 +154,29 @@ pub struct HotkeyRegistry {
     shortcuts: RwLock<HashMap<HotkeyTarget, Shortcut>>,
 }
 
+/// The portal and Tyco's session with it. Its signals are not tied to a
+/// session, so binding again only replaces the session.
 #[cfg(target_os = "linux")]
-struct PortalRegistration {
-    portal: GlobalShortcuts,
-    session: Session<GlobalShortcuts>,
+#[derive(Default)]
+struct PortalState {
+    portal: OnceLock<Arc<GlobalShortcuts>>,
+    session: RwLock<Option<Arc<Session<GlobalShortcuts>>>>,
+    /// Binding again closes the session that listing and binding use
+    binding: tokio::sync::Mutex<()>,
 }
 
 #[cfg(target_os = "linux")]
-#[derive(Default)]
-struct PortalState(RwLock<Option<Arc<PortalRegistration>>>);
+impl PortalState {
+    fn registration(&self) -> Option<(Arc<GlobalShortcuts>, Arc<Session<GlobalShortcuts>>)> {
+        let portal = self.portal.get()?.clone();
+        let session = self
+            .session
+            .read()
+            .expect("portal session lock poisoned")
+            .clone()?;
+        Some((portal, session))
+    }
+}
 
 /// The shortcuts the desktop actually bound through the portal, described in
 /// its own words and keyed by hotkey id. The user may change them in the
@@ -202,6 +217,9 @@ pub struct HotkeyProviderInfo {
     can_configure: bool,
     actions: HashMap<String, ApplyHotkeyResult>,
     system_triggers: HashMap<String, String>,
+    /// The portal session is bound, so `system_triggers` is what the desktop
+    /// has, not what it has not reported yet
+    registered: bool,
     /// The default shortcut of every hotkey id on this platform
     defaults: HashMap<String, String>,
     platform: &'static str,
@@ -254,22 +272,85 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
 
 #[cfg(target_os = "linux")]
 async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
-    let registration = app
+    let (portal, session) = app
         .state::<PortalState>()
-        .0
-        .read()
-        .expect("portal registration lock poisoned")
-        .clone()
+        .registration()
         .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
-    registration
-        .portal
-        .configure_shortcuts(
-            &registration.session,
-            None,
-            ConfigureShortcutsOptions::default(),
-        )
+    portal
+        .configure_shortcuts(&session, None, ConfigureShortcutsOptions::default())
         .await
         .map_err(|error| AppError::Message(error.to_string()))
+}
+
+/// Binds the hotkeys again in a new portal session. The desktop keeps the
+/// shortcuts the user chose, and brings back with their defaults the ones
+/// removed in its settings, which it does not do within a session.
+pub async fn rebind(app: &AppHandle) -> Result<(), AppError> {
+    if app.state::<ProviderState>().get() != ProviderKind::Portal {
+        return Err(AppError::Message(String::from(
+            "Only desktop portal hotkeys are bound again",
+        )));
+    }
+    #[cfg(target_os = "linux")]
+    return rebind_portal(app).await;
+    #[cfg(not(target_os = "linux"))]
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
+    let state = app.state::<PortalState>();
+    let _binding = state.binding.lock().await;
+    let portal = state
+        .portal
+        .get()
+        .cloned()
+        .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
+    let previous = state
+        .session
+        .write()
+        .expect("portal session lock poisoned")
+        .take();
+    // the shortcuts belong to the app, not to the session: the old session
+    // goes first, so that the new one binds the same ids
+    if let Some(previous) = previous {
+        if let Err(error) = previous.close().await {
+            log::warn!("Could not close the hotkey portal session: {error}");
+        }
+    }
+    let bindings = bindings_from_config(&app.state::<AppState>().params().user_config);
+    let result = bind_session(app, &portal, &bindings).await;
+    if result.is_err() {
+        app.state::<SystemTriggers>()
+            .0
+            .write()
+            .expect("system triggers lock poisoned")
+            .clear();
+    }
+    notify_hotkeys_changed(app);
+    result
+}
+
+/// Asks the desktop for the shortcuts it binds now: the user may have
+/// removed them in its settings, which the portal does not report.
+#[cfg(target_os = "linux")]
+async fn refresh_system_triggers(app: &AppHandle) {
+    let state = app.state::<PortalState>();
+    let _binding = state.binding.lock().await;
+    let Some((portal, session)) = state.registration() else {
+        return;
+    };
+    let listed = match portal
+        .list_shortcuts(&session, ListShortcutsOptions::default())
+        .await
+    {
+        Ok(request) => request.response(),
+        Err(error) => Err(error),
+    };
+    match listed {
+        Ok(listed) => store_system_triggers(app, listed.shortcuts()),
+        Err(error) => log::warn!("Could not list the portal hotkeys: {error}"),
+    }
 }
 
 /// Takes the global shortcuts away while the settings record a new one, so
@@ -308,8 +389,12 @@ pub fn set_suspended(app: &AppHandle, suspended: bool) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
+pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     let kind = app.state::<ProviderState>().get();
+    #[cfg(target_os = "linux")]
+    if kind == ProviderKind::Portal {
+        refresh_system_triggers(app).await;
+    }
     let config = app.state::<AppState>().params().user_config;
     // only an external binding needs something per action: its command
     let actions = match kind {
@@ -342,6 +427,7 @@ pub fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             ProviderKind::External => "external",
         },
         can_configure: kind == ProviderKind::Portal && can_configure_portal(app),
+        registered: kind == ProviderKind::Portal && portal_registered(app),
         actions,
         system_triggers,
         defaults: default_bindings()
@@ -532,16 +618,24 @@ fn platform_name() -> &'static str {
 fn can_configure_portal(app: &AppHandle) -> bool {
     let has_dialog = app
         .state::<PortalState>()
-        .0
-        .read()
-        .expect("portal registration lock poisoned")
-        .as_ref()
-        .is_some_and(|registration| registration.portal.version() >= 2);
+        .portal
+        .get()
+        .is_some_and(|portal| portal.version() >= 2);
     has_dialog || super::platform::has_shortcut_settings()
 }
 
 #[cfg(not(target_os = "linux"))]
 fn can_configure_portal(_app: &AppHandle) -> bool {
+    false
+}
+
+#[cfg(target_os = "linux")]
+fn portal_registered(app: &AppHandle) -> bool {
+    app.state::<PortalState>().registration().is_some()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn portal_registered(_app: &AppHandle) -> bool {
     false
 }
 
@@ -593,6 +687,16 @@ fn selection_bindings(config: &Value) -> Vec<HotkeyBinding> {
         })
         .into_iter()
         .collect()
+}
+
+/// The target of a global hotkey id; other targets have no global hotkey.
+fn global_target(id: &str) -> Option<HotkeyTarget> {
+    let target = HotkeyTarget::parse(id).ok()?;
+    let global = match &target {
+        HotkeyTarget::Mode(mode) => GLOBAL_HOTKEY_MODES.contains(mode),
+        HotkeyTarget::Selection(action) => action == CORRECTION_ACTION,
+    };
+    global.then_some(target)
 }
 
 fn default_key(mode: StartMode) -> Option<&'static str> {
@@ -747,10 +851,6 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     let portal = GlobalShortcuts::new()
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;
-    let session = portal
-        .create_session(CreateSessionOptions::default())
-        .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
     let mut activated = portal
         .receive_activated()
         .await
@@ -763,31 +863,13 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         .receive_shortcuts_changed()
         .await
         .map_err(|error| AppError::Message(error.to_string()))?;
-    let targets = bindings
-        .iter()
-        .map(|binding| (binding.target.id(), binding.target.clone()))
-        .collect::<HashMap<_, _>>();
-    let shortcuts = bindings
-        .iter()
-        .map(|binding| {
-            NewShortcut::new(binding.target.id(), binding.description.as_str())
-                .preferred_trigger(Some(to_portal_trigger(&binding.shortcut).as_str()))
-        })
-        .collect::<Vec<_>>();
-    let request = portal
-        .bind_shortcuts(&session, &shortcuts, None, BindShortcutsOptions::default())
-        .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
-    let bound = request
-        .response()
-        .map_err(|error| AppError::Message(error.to_string()))?;
-    store_system_triggers(&app, bound.shortcuts());
-
-    app.state::<PortalState>()
-        .0
-        .write()
-        .expect("portal registration lock poisoned")
-        .replace(Arc::new(PortalRegistration { portal, session }));
+    let portal = Arc::new(portal);
+    {
+        let state = app.state::<PortalState>();
+        let _binding = state.binding.lock().await;
+        bind_session(&app, &portal, &bindings).await?;
+        let _ = state.portal.set(portal);
+    }
     // the settings may already show the shortcuts the desktop had not bound
     notify_hotkeys_changed(&app);
 
@@ -806,12 +888,48 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         }
     });
     while let Some(event) = activated.next().await {
-        if let Some(target) = targets.get(event.shortcut_id()) {
-            if let Err(error) = target.trigger(&app, event.shortcut_id()) {
-                log::error!("Portal hotkey activation failed: {error}");
-            }
+        // the desktop may still keep hotkeys of older versions
+        let Some(target) = global_target(event.shortcut_id()) else {
+            log::warn!("Unknown portal hotkey: {}", event.shortcut_id());
+            continue;
+        };
+        if let Err(error) = target.trigger(&app, event.shortcut_id()) {
+            log::error!("Portal hotkey activation failed: {error}");
         }
     }
+    Ok(())
+}
+
+/// Opens a session, binds the hotkeys in it and keeps it. The caller holds
+/// `PortalState::binding`.
+#[cfg(target_os = "linux")]
+async fn bind_session(
+    app: &AppHandle,
+    portal: &GlobalShortcuts,
+    bindings: &[HotkeyBinding],
+) -> Result<(), AppError> {
+    let session = portal
+        .create_session(CreateSessionOptions::default())
+        .await
+        .map_err(|error| AppError::Message(error.to_string()))?;
+    let shortcuts = bindings
+        .iter()
+        .map(|binding| {
+            NewShortcut::new(binding.target.id(), binding.description.as_str())
+                .preferred_trigger(Some(to_portal_trigger(&binding.shortcut).as_str()))
+        })
+        .collect::<Vec<_>>();
+    let bound = portal
+        .bind_shortcuts(&session, &shortcuts, None, BindShortcutsOptions::default())
+        .await
+        .and_then(|request| request.response())
+        .map_err(|error| AppError::Message(error.to_string()))?;
+    store_system_triggers(app, bound.shortcuts());
+    app.state::<PortalState>()
+        .session
+        .write()
+        .expect("portal session lock poisoned")
+        .replace(Arc::new(session));
     Ok(())
 }
 
@@ -1013,6 +1131,22 @@ mod tests {
         assert_eq!(target.cli_command(), "tyco-ctl replace aiTask.2");
         assert!(HotkeyTarget::parse("replace.bogus").is_err());
         assert!(HotkeyTarget::parse("bogus").is_err());
+    }
+
+    #[test]
+    fn runs_only_current_global_hotkeys() {
+        assert_eq!(
+            global_target("editor"),
+            Some(HotkeyTarget::Mode(StartMode::Editor))
+        );
+        assert_eq!(
+            global_target("replace.correction"),
+            Some(HotkeyTarget::Selection(String::from("correction")))
+        );
+        assert_eq!(global_target("history"), None);
+        assert_eq!(global_target("correction"), None);
+        assert_eq!(global_target("replace.translate.0"), None);
+        assert_eq!(global_target("bogus"), None);
     }
 
     #[test]

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { keyLabelFor, recordKeyDown, shortcutKeys } from './hotkey-recorder'
+import {
+  keyLabelFor,
+  recordKeyDown,
+  shortcutAlternatives,
+  shortcutKeys,
+} from './hotkey-recorder'
 
 const event = (
   key: string,
@@ -49,6 +54,18 @@ describe('hotkey recorder', () => {
     expect(shortcutKeys('Ctrl+Alt+E')).toEqual(['Ctrl', 'Alt', 'E'])
     expect(shortcutKeys('')).toEqual([])
     expect(shortcutKeys('Ctrl++')).toEqual(['Ctrl', '+'])
+  })
+
+  it('splits the alternatives a desktop reports', () => {
+    expect(shortcutAlternatives('Ctrl+Alt+E, Ctrl+Alt+Z')).toEqual([
+      'Ctrl+Alt+E',
+      'Ctrl+Alt+Z',
+    ])
+    expect(shortcutAlternatives('Ctrl+Alt+,, Ctrl+X')).toEqual([
+      'Ctrl+Alt+,',
+      'Ctrl+X',
+    ])
+    expect(shortcutAlternatives('')).toEqual([])
   })
 
   it('names the keys the way the platform does', () => {

@@ -59,6 +59,17 @@ export function shortcutKeys(shortcut: string): string[] {
     .filter(Boolean)
 }
 
+/**
+ * Splits a shortcut the desktop reports into its alternatives: KDE lists them
+ * separated by commas, as in `Ctrl+Alt+E, Ctrl+Alt+Z`.
+ */
+export function shortcutAlternatives(shortcut: string): string[] {
+  return shortcut
+    .split(', ')
+    .map((alternative) => alternative.trim())
+    .filter(Boolean)
+}
+
 const MAC_KEY_LABELS: Record<string, string> = {
   Ctrl: '⌃',
   Alt: '⌥',

@@ -35,6 +35,7 @@ export interface DesktopFunctions {
     result: HotkeyApplyResult
   }
   configureHotkeys: { args: []; result: void }
+  rebindHotkeys: { args: []; result: void }
   suspendHotkeys: { args: [suspended: boolean]; result: void }
   getHotkeyProviderInfo: { args: []; result: HotkeyProviderInfo }
   markActivationMetric: { args: [id: number, mark: string]; result: void }

@@ -274,6 +274,10 @@
     "copyHotkeyCommand": "Copiar enlace",
     "configureGlobalHotkeys": "Cambiar en el sistema",
     "configureHotkeysError": "No se pudo abrir la configuración de atajos del sistema",
+    "rebindHotkeys": "Registrar de nuevo",
+    "rebindHotkeysHint": "Recupera los atajos borrados en la configuración del sistema; los que cambiaste se conservan. Para quitar atajos obsoletos, primero borrá Tyco en la configuración del sistema.",
+    "rebindHotkeysError": "No se pudieron registrar de nuevo los atajos",
+    "hotkeysMissing": "Algunos atajos se borraron en la configuración del sistema y no funcionan. Usá «Registrar de nuevo» para recuperarlos.",
     "hotkeyActions": {
       "write": "Entrada rápida de texto",
       "voice": "Entrada por voz",
@@ -289,7 +293,8 @@
     "hotkeyStatus": { "conflict": "Esta combinación no está disponible" },
     "hotkeyProvider": {
       "portal": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos con «Cambiar en el sistema».",
-      "external": "Esta sesión no permite que Tyco asigne atajos globales. Agregá los comandos de abajo a la configuración de tu compositor."
+      "external": "Esta sesión no permite que Tyco asigne atajos globales. Agregá los comandos de abajo a la configuración de tu compositor.",
+      "portalNoSettings": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos en la configuración del sistema."
     },
     "dragToReorder": "Arrastra para reordenar",
     "llmProviders": "Proveedores",

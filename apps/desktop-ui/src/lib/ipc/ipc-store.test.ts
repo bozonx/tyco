@@ -61,6 +61,18 @@ describe('ipc-store', () => {
     )
   })
 
+  it('maps the hotkey rebinding command', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+
+    await store.callFunction('rebindHotkeys')
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.REBIND_HOTKEYS,
+      undefined
+    )
+  })
+
   it('maps the hotkey provider info command', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)
