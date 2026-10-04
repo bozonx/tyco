@@ -87,7 +87,7 @@ describe('CommandLauncher', () => {
     keydown(input, { key: '2', code: 'Digit2' })
     await nextTick()
 
-    expect(mocks.run).toHaveBeenCalledWith(lights, '')
+    expect(mocks.run).toHaveBeenCalledWith(lights, '', expect.anything())
     wrapper.unmount()
   })
 
@@ -119,7 +119,7 @@ describe('CommandLauncher', () => {
 
     keydown(document.body, { key: 'Enter', code: 'Enter' })
     await nextTick()
-    expect(mocks.run).toHaveBeenCalledWith(backup, '')
+    expect(mocks.run).toHaveBeenCalledWith(backup, '', expect.anything())
     wrapper.unmount()
   })
 
@@ -135,7 +135,7 @@ describe('CommandLauncher', () => {
     await textarea.setValue('buy milk')
     keydown(textarea.element, { key: 'Enter', code: 'Enter' })
     await nextTick()
-    expect(mocks.run).toHaveBeenCalledWith(note, 'buy milk')
+    expect(mocks.run).toHaveBeenCalledWith(note, 'buy milk', expect.anything())
     wrapper.unmount()
   })
 

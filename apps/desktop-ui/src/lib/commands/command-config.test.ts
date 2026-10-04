@@ -5,9 +5,12 @@ import type { CommandConfig } from '@tyco/shared'
 import {
   commandLabel,
   commandTakesText,
+  commandTarget,
   createCommand,
+  externalNameTwins,
   isMenuCommand,
   normalizeCommand,
+  normalizeCommandName,
   normalizeCommands,
   removeCommandReferences,
   validateCommand,
@@ -189,5 +192,45 @@ describe('validateCommand', () => {
         })
       )
     ).toEqual([])
+  })
+})
+
+describe('commandTarget', () => {
+  it('shows the shell command of a script and the request of a webhook', () => {
+    expect(
+      commandTarget(withConfig(createCommand('script', 's'), { command: 'ls' }))
+    ).toBe('ls')
+    expect(
+      commandTarget(
+        withConfig(createCommand('webhook', 'w'), {
+          url: 'https://x.test',
+          method: 'GET',
+        })
+      )
+    ).toBe('GET https://x.test')
+  })
+})
+
+describe('external names', () => {
+  const named = (id: string, name: string, external = true): CommandConfig => ({
+    ...createCommand('webhook', id),
+    name,
+    availableIn: { launcher: true, external, chat: false },
+  })
+
+  it('compares names regardless of case, ё and spaces', () => {
+    expect(normalizeCommandName('  Ёлка   ЗАПИСЬ ')).toBe('елка запись')
+  })
+
+  it('finds the other callable commands of the same name', () => {
+    const a = named('a', 'Свёт')
+    const b = named('b', ' свет ')
+    const c = named('c', 'Свет', false)
+    const d = { ...named('d', 'свет'), enabled: false }
+    const commands = [a, b, c, d, named('e', 'Other')]
+    expect(externalNameTwins(commands, a)).toEqual([b])
+    // a command that may not be called has no twins to warn about
+    expect(externalNameTwins(commands, c)).toEqual([])
+    expect(externalNameTwins(commands, named('f', ''))).toEqual([])
   })
 })

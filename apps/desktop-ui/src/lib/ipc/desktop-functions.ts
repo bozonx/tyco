@@ -89,6 +89,7 @@ export interface DesktopFunctions {
     args: [request: ScriptActionRequest]
     result: ScriptExecutionResult
   }
+  cancelScriptAction: { args: [runId: string]; result: boolean }
   pickScriptFile: { args: []; result: string | null }
   pickDirectory: { args: []; result: string | null }
   logCustomAction: {

@@ -52,11 +52,17 @@
               <span v-if="command.availableIn.launcher" class="command-badge">
                 {{ t('commands.badgeInLauncher') }}
               </span>
+              <span v-if="command.availableIn.external" class="command-badge">
+                {{ t('commands.badgeExternal') }}
+              </span>
               <span v-if="!command.enabled" class="command-badge is-muted">
                 {{ t('commands.badgeDisabled') }}
               </span>
               <span
-                v-if="validateCommand(command).length"
+                v-if="
+                  validateCommand(command).length ||
+                  externalNameTwins(commands, command).length
+                "
                 class="command-badge is-warning"
                 :title="t('commands.badgeIssuesHint')"
               >
@@ -85,6 +91,8 @@
           <div v-if="isExpanded(command.id)" class="command-body">
             <CommandEditor
               :command="command"
+              :in-menu="inMenu.has(command.id)"
+              :name-twins="externalNameTwins(commands, command)"
               @update="updateCommand(index, $event)"
             />
           </div>
@@ -114,6 +122,7 @@ import {
   commandIcon,
   commandTakesText,
   createCommand,
+  externalNameTwins,
   normalizeCommands,
   removeCommandReferences,
   validateCommand,
@@ -218,6 +227,14 @@ function updateCommand(index: number, command: CommandConfig) {
 
 /** The command leaves the menu, and its webhook token goes with it */
 function removeCommand(command: CommandConfig) {
+  const name = command.name.trim() || t('commands.unnamed')
+  const hasSecret =
+    command.toolId === 'webhook' && webhookToolConfig(command).authSecret
+  const question = t(
+    hasSecret ? 'commands.removeConfirmSecret' : 'commands.removeConfirm',
+    { name }
+  )
+  if (!window.confirm(question)) return
   emit(
     'update:commands',
     commands.value.filter((item) => item.id !== command.id)

@@ -109,6 +109,13 @@
         <p v-if="stage.command.description" class="launcher-command-desc">
           {{ stage.command.description }}
         </p>
+        <code
+          v-if="target"
+          class="launcher-target"
+          :title="t('commandLauncher.targetHint')"
+        >
+          {{ target }}
+        </code>
         <textarea
           v-if="commandTakesText(stage.command)"
           ref="textRef"
@@ -131,7 +138,7 @@
         :label="
           t('commandLauncher.running', { name: commandLabel(stage.command) })
         "
-        :onCancel="closeWindow"
+        :onCancel="launcher.cancel"
       />
     </template>
 
@@ -188,6 +195,7 @@ import {
   commandIcon,
   commandLabel,
   commandTakesText,
+  commandTarget,
 } from '../../lib/commands/command-config'
 import { useCommandLauncherStore } from '../../stores/commandLauncher'
 import { useIpcStore } from '../../stores/ipc'
@@ -208,6 +216,13 @@ const stage = computed(() => launcher.stage)
 const selectedText = computed(() => ipcStore.params.selectedText ?? '')
 const hasSelection = computed(() => Boolean(selectedText.value.trim()))
 
+/** What the prepared command runs, so the user knows before confirming */
+const target = computed(() =>
+  stage.value.kind === 'prepare'
+    ? commandTarget(stage.value.command).trim()
+    : ''
+)
+
 const title = computed(() =>
   stage.value.kind === 'list'
     ? t('commandLauncher.title')
@@ -219,10 +234,6 @@ const { handleEsc } = useOverlayNav(() =>
     ? { escMode: 'back', onEsc: launcher.back }
     : {}
 )
-
-const closeWindow = () => {
-  void ipcStore.callFunctionOrNotify('closeWindow')
-}
 
 const searchRef = ref<HTMLInputElement | null>(null)
 const textRef = ref<HTMLTextAreaElement | null>(null)
@@ -346,6 +357,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.launcher-target {
+  flex-shrink: 0;
+  max-height: 4.5rem;
+  overflow: auto;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--app-surface-sunken);
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .launcher-list-stage,
 .launcher-prepare {
   display: flex;

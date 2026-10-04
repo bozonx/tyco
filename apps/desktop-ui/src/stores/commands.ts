@@ -39,14 +39,17 @@ export function useCommandRunnerDependencies(): CommandRunnerDependencies {
       }
       return res.result
     },
-    executeWebhook: (target, text) =>
+    cancelScriptAction: (runId) =>
+      ipcStore.callFunction('cancelScriptAction', [runId]),
+    executeWebhook: (target, text, signal) =>
       executeWebhook(
         target,
         text,
         createTauriFetch(tauriNetIpc),
         async (name, type, details) => {
           await ipcStore.callFunction('logCustomAction', [name, type, details])
-        }
+        },
+        signal
       ),
   }
 }

@@ -1,9 +1,11 @@
+use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdout, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -29,6 +31,8 @@ const STATUS_WAIT: Duration = Duration::from_secs(3);
 /// in the background may hold the pipes open for good.
 const PIPE_GRACE: Duration = Duration::from_millis(500);
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
+/// The error of a command stopped by `cancel_script`.
+pub const SCRIPT_CANCELLED: &str = "Cancelled";
 
 const MAX_OUTPUT_BYTES: usize = 1 << 20;
 const MAX_LOGGED_OUTPUT_BYTES: usize = 4 << 10;
@@ -55,6 +59,65 @@ pub struct ScriptRequest<'a> {
     /// killed if it does not finish in time.
     pub capture_output: bool,
     pub log_output: bool,
+    /// Lets `cancel_script` stop the command while it is waited for.
+    pub run_id: Option<&'a str>,
+}
+
+type CancelFlag = Arc<AtomicBool>;
+
+/// The commands being waited for that the caller may cancel, by run id.
+fn cancellable_runs() -> &'static Mutex<HashMap<String, CancelFlag>> {
+    static RUNS: OnceLock<Mutex<HashMap<String, CancelFlag>>> = OnceLock::new();
+    RUNS.get_or_init(Mutex::default)
+}
+
+/// Keeps the run cancellable while it is alive.
+struct CancelRegistration {
+    run_id: Option<String>,
+    flag: CancelFlag,
+}
+
+impl CancelRegistration {
+    fn new(run_id: Option<&str>) -> Self {
+        let flag = CancelFlag::default();
+        if let Some(run_id) = run_id {
+            cancellable_runs()
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .insert(run_id.to_owned(), flag.clone());
+        }
+        Self {
+            run_id: run_id.map(str::to_owned),
+            flag,
+        }
+    }
+}
+
+impl Drop for CancelRegistration {
+    fn drop(&mut self) {
+        if let Some(run_id) = &self.run_id {
+            cancellable_runs()
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .remove(run_id);
+        }
+    }
+}
+
+/// Kills the command of run `run_id` if it is still waited for; returns
+/// whether there was one. A command left running in the background is not
+/// waited for any more and keeps running.
+pub fn cancel_script(run_id: &str) -> bool {
+    let runs = cancellable_runs()
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    match runs.get(run_id) {
+        Some(flag) => {
+            flag.store(true, Ordering::SeqCst);
+            true
+        }
+        None => false,
+    }
 }
 
 pub fn format_timestamp() -> String {
@@ -274,17 +337,18 @@ impl Running {
         }
     }
 
-    /// Waits until the command exits or the deadline passes.
-    fn wait_until(
-        &mut self,
-        deadline: Instant,
-    ) -> std::io::Result<Option<std::process::ExitStatus>> {
+    /// Waits until the command exits, the deadline passes or the run is
+    /// cancelled.
+    fn wait_until(&mut self, deadline: Instant, cancelled: &AtomicBool) -> std::io::Result<Wait> {
         loop {
             if let Some(status) = self.child.try_wait()? {
-                return Ok(Some(status));
+                return Ok(Wait::Exited(status));
+            }
+            if cancelled.load(Ordering::SeqCst) {
+                return Ok(Wait::Cancelled);
             }
             if Instant::now() >= deadline {
-                return Ok(None);
+                return Ok(Wait::TimedOut);
             }
             thread::sleep(POLL_INTERVAL);
         }
@@ -306,6 +370,12 @@ impl Running {
             running: false,
         }
     }
+}
+
+enum Wait {
+    Exited(std::process::ExitStatus),
+    TimedOut,
+    Cancelled,
 }
 
 struct LogContext {
@@ -396,6 +466,7 @@ pub fn execute_script(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
+    let registration = CancelRegistration::new(request.run_id);
     let mut child = command
         .spawn()
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
@@ -409,13 +480,22 @@ pub fn execute_script(
         STATUS_WAIT
     };
     let status = running
-        .wait_until(Instant::now() + wait)
+        .wait_until(Instant::now() + wait, &registration.flag)
         .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
+    drop(registration);
 
-    if let Some(status) = status {
-        let result = running.finish(status);
-        log.write(&result, None);
-        return Ok(result);
+    match status {
+        Wait::Exited(status) => {
+            let result = running.finish(status);
+            log.write(&result, None);
+            return Ok(result);
+        }
+        Wait::Cancelled => {
+            let _ = running.child.kill();
+            let _ = running.child.wait();
+            return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
+        }
+        Wait::TimedOut => {}
     }
 
     if request.capture_output {
@@ -482,6 +562,7 @@ mod tests {
             text,
             capture_output: true,
             log_output: false,
+            run_id: None,
         }
     }
 
@@ -598,6 +679,32 @@ mod tests {
         .unwrap();
         assert!(result.running);
         assert!(started.elapsed() < Duration::from_secs(10));
+    }
+
+    #[test]
+    fn kills_a_cancelled_command() {
+        let run_id = format!("cancel-test-{}", std::process::id());
+        let canceller = {
+            let run_id = run_id.clone();
+            thread::spawn(move || {
+                let deadline = Instant::now() + Duration::from_secs(5);
+                while !cancel_script(&run_id) && Instant::now() < deadline {
+                    thread::sleep(Duration::from_millis(10));
+                }
+            })
+        };
+        let started = Instant::now();
+        let result = execute_script(
+            &ScriptRequest {
+                run_id: Some(&run_id),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        );
+        canceller.join().unwrap();
+        assert_eq!(result.unwrap_err().to_string(), SCRIPT_CANCELLED);
+        assert!(started.elapsed() < Duration::from_secs(10));
+        assert!(!cancel_script(&run_id), "the run is forgotten once done");
     }
 
     #[test]

@@ -1,7 +1,8 @@
-import type {
-  CommandConfig,
-  ScriptActionRequest,
-  ScriptExecutionResult,
+import {
+  type CommandConfig,
+  SCRIPT_CANCELLED_ERROR,
+  type ScriptActionRequest,
+  type ScriptExecutionResult,
 } from '@tyco/shared'
 
 import {
@@ -32,16 +33,28 @@ export interface CommandRunnerDependencies {
   executeScriptAction?: (
     request: ScriptActionRequest
   ) => Promise<ScriptExecutionResult>
-  /** Resolves with the response body */
+  /** Stops the script of the run, see `ScriptActionRequest.runId` */
+  cancelScriptAction?: (runId: string) => Promise<unknown>
+  /** Resolves with the response body; rejects once `signal` aborts */
   executeWebhook?: (
     target: WebhookTarget,
-    text: string | null
+    text: string | null,
+    signal?: AbortSignal
   ) => Promise<string>
+  /** A unique id of a script run */
+  newRunId?: () => string
+}
+
+export interface CommandRunOptions {
+  /** Cancels the run: the script is killed, the request is aborted */
+  signal?: AbortSignal
 }
 
 /** How a run ended; the user has been told already */
 export interface CommandRunOutcome {
   success: boolean
+  /** The user cancelled it; nothing was reported */
+  cancelled?: boolean
   /** Why it failed, for the log */
   message?: string
 }
@@ -51,6 +64,15 @@ const failed = (message: string): CommandRunOutcome => ({
   success: false,
   message,
 })
+
+const cancelled: CommandRunOutcome = {
+  success: false,
+  cancelled: true,
+  message: 'Cancelled',
+}
+
+let runCounter = 0
+const defaultRunId = () => `command-run-${Date.now()}-${++runCounter}`
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -74,7 +96,8 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
 
   const runScript = async (
     command: CommandConfig,
-    text: string | null
+    text: string | null,
+    signal?: AbortSignal
   ): Promise<CommandRunOutcome> => {
     const config = scriptToolConfig(command)
     if (!config.command.trim()) {
@@ -82,19 +105,31 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       return failed('Empty command')
     }
     const showMenu = command.afterRun === 'showMenu'
+    const runId = (deps.newRunId ?? defaultRunId)()
+    const cancel = () => {
+      void deps.cancelScriptAction?.(runId).catch(() => {})
+    }
+    signal?.addEventListener('abort', cancel, { once: true })
     let result: ScriptExecutionResult | undefined
     try {
-      result = await deps.executeScriptAction?.(
-        buildScriptRequest(commandLabel(command), config, text, {
+      result = await deps.executeScriptAction?.({
+        ...buildScriptRequest(commandLabel(command), config, text, {
           captureOutput: showMenu,
           logOutput: command.logOutput,
-        })
-      )
+        }),
+        runId,
+      })
     } catch (error) {
+      if (signal?.aborted) return cancelled
       const message = errorMessage(error)
+      if (message === SCRIPT_CANCELLED_ERROR) return cancelled
       deps.showError?.('toast.scriptFailed', message)
       return failed(message)
+    } finally {
+      signal?.removeEventListener('abort', cancel)
     }
+    // finished before the cancellation reached it
+    if (signal?.aborted) return cancelled
     if (!result) return failed('No result')
     if (!result.success && !result.running) {
       const message = scriptFailureDetail(result)
@@ -112,7 +147,8 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
 
   const runWebhook = async (
     command: CommandConfig,
-    text: string | null
+    text: string | null,
+    signal?: AbortSignal
   ): Promise<CommandRunOutcome> => {
     const config = webhookToolConfig(command)
     if (!config.url.trim()) {
@@ -128,13 +164,16 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
           name: commandLabel(command),
           logOutput: command.logOutput,
         },
-        text
+        text,
+        signal
       )
     } catch (error) {
+      if (signal?.aborted) return cancelled
       const message = errorMessage(error)
       deps.showError?.('toast.webhookFailed', message)
       return failed(message)
     }
+    if (signal?.aborted) return cancelled
     if (command.afterRun === 'showMenu') {
       return showOutput(webhookResultText(response ?? ''), text ?? '')
     }
@@ -146,15 +185,21 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
   /** Runs `command` on `text`; a command that takes no text gets none */
   const run = async (
     command: CommandConfig,
-    text: string
+    text: string,
+    options: CommandRunOptions = {}
   ): Promise<CommandRunOutcome> => {
     if (!command.enabled) {
       deps.showToast('toast.commandDisabled', 'warn')
       return failed('Disabled')
     }
     const input = commandTakesText(command) ? text : null
-    if (command.toolId === 'script') return runScript(command, input)
-    if (command.toolId === 'webhook') return runWebhook(command, input)
+    if (options.signal?.aborted) return cancelled
+    if (command.toolId === 'script') {
+      return runScript(command, input, options.signal)
+    }
+    if (command.toolId === 'webhook') {
+      return runWebhook(command, input, options.signal)
+    }
     deps.showError?.('toast.commandUnavailable', commandLabel(command))
     return failed('Unknown tool')
   }

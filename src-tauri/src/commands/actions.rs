@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use tauri::AppHandle;
 
 use crate::errors::AppError;
@@ -6,28 +7,45 @@ use crate::services::custom_actions::{
 };
 use crate::services::storage;
 
-#[tauri::command(async)]
-pub fn execute_script_action(
-    app: AppHandle,
+/// A command to run, as the webview sends it; see `ScriptActionRequest` in
+/// `packages/shared`.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScriptActionRequest {
     name: String,
     command: String,
     working_dir: Option<String>,
     text: String,
     capture_output: bool,
     log_output: bool,
+    /// Lets `cancel_script_action` stop the command.
+    run_id: Option<String>,
+}
+
+#[tauri::command(async)]
+pub fn execute_script_action(
+    app: AppHandle,
+    request: ScriptActionRequest,
 ) -> Result<ScriptExecutionResult, AppError> {
     let log_dir = storage::app_log_dir(&app).ok();
     custom_actions::execute_script(
         &ScriptRequest {
-            name: &name,
-            command: &command,
-            working_dir: working_dir.as_deref(),
-            text: &text,
-            capture_output,
-            log_output,
+            name: &request.name,
+            command: &request.command,
+            working_dir: request.working_dir.as_deref(),
+            text: &request.text,
+            capture_output: request.capture_output,
+            log_output: request.log_output,
+            run_id: request.run_id.as_deref(),
         },
         log_dir.as_deref(),
     )
+}
+
+/// Stops a command started with `run_id` that is still waited for.
+#[tauri::command]
+pub fn cancel_script_action(run_id: String) -> bool {
+    custom_actions::cancel_script(&run_id)
 }
 
 /// A script file picked by the user, as a shell command that runs it.

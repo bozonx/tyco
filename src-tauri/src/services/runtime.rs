@@ -309,6 +309,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.mode = Some(activation.mode.as_str().into());
         params.window_id = activation.window_id;
         params.selected_text = activation.selected_text;
+        params.launcher_request = activation.launcher_request;
         params.is_window_shown = true;
         params.window_profile = activation.mode.profile();
     });

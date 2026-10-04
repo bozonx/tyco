@@ -83,6 +83,7 @@ describe('script commands', () => {
       text: 'input',
       captureOutput: false,
       logOutput: true,
+      runId: expect.any(String),
     })
     expect(deps.showToast).toHaveBeenCalledWith(
       'toast.scriptSuccess',
@@ -189,7 +190,8 @@ describe('webhook commands', () => {
         method: 'GET',
         logOutput: true,
       }),
-      'x'
+      'x',
+      undefined
     )
     expect(deps.showToast).toHaveBeenCalledWith(
       'toast.webhookSuccess',
@@ -242,5 +244,70 @@ describe('commands that cannot run', () => {
       'toast.commandUnavailable',
       'Note'
     )
+  })
+})
+
+describe('cancellation', () => {
+  it('kills the script of a cancelled run and reports nothing', async () => {
+    let fail: (error: Error) => void = () => {}
+    const executeScriptAction = vi.fn(
+      () =>
+        new Promise<ScriptExecutionResult>((_, reject) => {
+          fail = reject
+        })
+    )
+    const cancelScriptAction = vi.fn(async () => {
+      fail(new Error('Cancelled'))
+      return true
+    })
+    const { deps, runner } = setup({
+      executeScriptAction,
+      cancelScriptAction,
+      newRunId: () => 'run-1',
+    })
+    const controller = new AbortController()
+    const running = runner.run(script(), 'x', { signal: controller.signal })
+    await Promise.resolve()
+    controller.abort()
+
+    expect(await running).toEqual({
+      success: false,
+      cancelled: true,
+      message: 'Cancelled',
+    })
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: 'run-1' })
+    )
+    expect(cancelScriptAction).toHaveBeenCalledWith('run-1')
+    expect(deps.showError).not.toHaveBeenCalled()
+    expect(deps.showToast).not.toHaveBeenCalled()
+  })
+
+  it('aborts the request of a cancelled webhook', async () => {
+    const executeWebhook = vi.fn(
+      (_target: unknown, _text: unknown, signal?: AbortSignal) =>
+        new Promise<string>((_, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')))
+        })
+    )
+    const { deps, runner } = setup({ executeWebhook })
+    const controller = new AbortController()
+    const running = runner.run(webhook(), 'x', { signal: controller.signal })
+    controller.abort()
+
+    expect(await running).toMatchObject({ success: false, cancelled: true })
+    expect(deps.showError).not.toHaveBeenCalled()
+  })
+
+  it('does not start a run cancelled already', async () => {
+    const executeScriptAction = vi.fn()
+    const { runner } = setup({ executeScriptAction })
+    const controller = new AbortController()
+    controller.abort()
+    const outcome = await runner.run(script(), 'x', {
+      signal: controller.signal,
+    })
+    expect(outcome.cancelled).toBe(true)
+    expect(executeScriptAction).not.toHaveBeenCalled()
   })
 })

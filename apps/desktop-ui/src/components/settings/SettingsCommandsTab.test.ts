@@ -65,9 +65,21 @@ describe('SettingsCommandsTab.vue', () => {
     ])
   })
 
-  it('removes a command with its menu items and its webhook token', async () => {
+  it('keeps a command whose removal is not confirmed', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const wrapper = mountTab()
     await wrapper.findAll('.delete-btn')[0].trigger('click')
+    expect(confirm).toHaveBeenCalledWith('commands.removeConfirmSecret')
+    expect(wrapper.emitted('update:commands')).toBeUndefined()
+    expect(removeSecret).not.toHaveBeenCalled()
+    confirm.mockRestore()
+  })
+
+  it('removes a command with its menu items and its webhook token', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const wrapper = mountTab()
+    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    confirm.mockRestore()
 
     const [commands] = wrapper.emitted('update:commands')![0] as [
       { id: string }[],

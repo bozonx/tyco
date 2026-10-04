@@ -3,7 +3,8 @@ use std::io::{self, BufRead, Read, Write};
 use serde::{Deserialize, Serialize};
 
 pub const ACTIVATION_ADDRESS: &str = "127.0.0.1:47829";
-pub const MAX_MESSAGE_BYTES: usize = 8 * 1024;
+/// Room for the text of a command and the list of commands.
+pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
     "editor",
     "write",
@@ -41,8 +42,21 @@ pub fn is_selection_action(value: &str) -> bool {
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "command", rename_all = "camelCase")]
 pub enum Request {
-    Activate { mode: String },
-    Replace { action: String },
+    Activate {
+        mode: String,
+    },
+    Replace {
+        action: String,
+    },
+    /// Runs a command of the library, found by its id or its name.
+    RunCommand {
+        target: String,
+        /// The text the command gets; absent when there is none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
+    },
+    /// The commands that may be run from outside, as JSON.
+    ListCommands,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -51,6 +65,9 @@ pub struct Response {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    /// What the request asked for, e.g. the JSON list of commands.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output: Option<String>,
 }
 
 impl Response {
@@ -58,6 +75,15 @@ impl Response {
         Self {
             success: true,
             error: None,
+            output: None,
+        }
+    }
+
+    pub fn output(output: impl Into<String>) -> Self {
+        Self {
+            success: true,
+            error: None,
+            output: Some(output.into()),
         }
     }
 
@@ -65,6 +91,7 @@ impl Response {
         Self {
             success: false,
             error: Some(error.into()),
+            output: None,
         }
     }
 }
@@ -113,6 +140,37 @@ mod tests {
         write_message(&mut output, &request).unwrap();
         let decoded: Request = read_message(&mut output.as_slice()).unwrap();
         assert_eq!(decoded, request);
+    }
+
+    #[test]
+    fn command_requests_round_trip() {
+        for request in [
+            Request::RunCommand {
+                target: "backup".into(),
+                text: None,
+            },
+            Request::RunCommand {
+                target: "Note".into(),
+                text: Some("buy milk\nand bread".into()),
+            },
+            Request::ListCommands,
+        ] {
+            let mut output = Vec::new();
+            write_message(&mut output, &request).unwrap();
+            let decoded: Request = read_message(&mut output.as_slice()).unwrap();
+            assert_eq!(decoded, request);
+        }
+    }
+
+    #[test]
+    fn a_response_carries_its_output() {
+        let mut output = Vec::new();
+        write_message(&mut output, &Response::output("[]")).unwrap();
+        let decoded: Response = read_message(&mut output.as_slice()).unwrap();
+        assert_eq!(decoded.output.as_deref(), Some("[]"));
+        // a response of an older build has no output
+        let old: Response = read_message(&mut &b"{\"success\":true}\n"[..]).unwrap();
+        assert_eq!(old, Response::success());
     }
 
     #[test]

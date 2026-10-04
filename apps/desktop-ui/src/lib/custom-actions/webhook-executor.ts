@@ -125,7 +125,8 @@ export async function executeWebhook(
   target: WebhookTarget,
   text: string | null,
   fetchFn: FetchFunction,
-  logFn?: CustomActionLog
+  logFn?: CustomActionLog,
+  signal?: AbortSignal
 ): Promise<string> {
   const { url, init } = buildWebhookRequest(target, text)
   // the URL is logged as written: the text is the user's, not ours to keep
@@ -138,6 +139,9 @@ export async function executeWebhook(
   }
 
   const controller = new AbortController()
+  const abort = () => controller.abort(signal?.reason)
+  if (signal?.aborted) abort()
+  signal?.addEventListener('abort', abort, { once: true })
   const timer = setTimeout(
     () =>
       controller.abort(
@@ -157,6 +161,7 @@ export async function executeWebhook(
     throw new Error(message, { cause: error })
   } finally {
     clearTimeout(timer)
+    signal?.removeEventListener('abort', abort)
   }
 
   await log(

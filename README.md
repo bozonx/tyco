@@ -88,6 +88,25 @@ commandLauncher`. Type to search, press `1`–`9` or pick a command with the
 arrows and Enter. A command that takes text gets the text selected in the
 active window, or asks for it in the overlay.
 
+Commands marked “Available from outside” can be run by other programs, e.g.
+window manager hotkeys or scripts, by their ID (shown in the command editor)
+or their name:
+
+```bash
+tyco-ctl run backup                  # a command without text
+tyco-ctl run "Work note" buy milk    # the words after the command are its text
+echo "secret text" | tyco-ctl run note -   # `-` reads the text from stdin
+tyco-ctl commands                    # JSON list of { id, name, input }
+```
+
+The same is available as the D-Bus methods `RunCommand(command, text)` and
+`ListCommands()` of `org.tyco.Interface`. The call returns once the command is
+found; an unknown, ambiguous or disabled command is an error. A command that
+needs nothing else runs in the background and reports its outcome in a status
+bubble, failures also in a desktop notification. A command that needs text
+when none is given takes the selection, or asks for it in the command overlay;
+the overlay also opens for a confirmation and for the result menu.
+
 ### Replacing the selection
 
 The text selected in any application can be corrected without opening Tyco:

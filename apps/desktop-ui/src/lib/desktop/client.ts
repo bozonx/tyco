@@ -1,5 +1,6 @@
 import {
   APP_CONFIG,
+  type CommandRunEvent,
   DEFAULT_INIT_PARAMS,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
@@ -20,6 +21,7 @@ type AppEventPayloads = {
   [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
   [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
   [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
+  [DESKTOP_EVENTS.COMMAND_RUN]: CommandRunEvent
   [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
   [DESKTOP_EVENTS.MAIN_WINDOW_CLOSED]: null
 }

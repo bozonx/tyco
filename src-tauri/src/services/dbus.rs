@@ -10,7 +10,9 @@ use crate::services::activation::{Activation, ActivationSource, StartMode};
 use crate::services::platform::linux::kwin;
 use crate::services::platform::session;
 use crate::services::platform::window_tracker::{self, tracker, WindowKind};
-use crate::services::{runtime, selection_replace};
+use crate::services::{external_commands, runtime, selection_replace};
+use crate::state::AppState;
+use tauri::Manager;
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -83,6 +85,21 @@ impl TycoDbus {
     async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
         selection_replace::trigger(&self.app, action, selection_replace::TriggerWait::Now)
             .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))
+    }
+
+    /// Runs a command of the library, found by its id or name; `text` is
+    /// empty when there is none. See `external_commands`.
+    async fn run_command(&self, command: &str, text: &str) -> zbus::fdo::Result<()> {
+        let text = (!text.is_empty()).then(|| text.to_owned());
+        external_commands::run(&self.app, command, text, ActivationSource::Dbus)
+            .map_err(|error| zbus::fdo::Error::Failed(error.to_string()))
+    }
+
+    /// The commands that may be run from outside: a JSON array of
+    /// `{ id, name, input }`.
+    async fn list_commands(&self) -> zbus::fdo::Result<String> {
+        let user_config = self.app.state::<AppState>().params().user_config;
+        Ok(external_commands::list(&user_config))
     }
 
     /// Reported by the KWin tracker script, see `platform::linux::kwin`.

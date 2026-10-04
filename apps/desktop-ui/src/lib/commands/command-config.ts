@@ -182,6 +182,55 @@ export function commandLabel(command: CommandConfig): string {
   return command.id
 }
 
+/**
+ * What the command runs, shown before it does: the shell command of a script,
+ * the method and URL of a webhook
+ */
+export function commandTarget(command: CommandConfig): string {
+  if (command.toolId === 'script') return scriptToolConfig(command).command
+  if (command.toolId === 'webhook') {
+    const config = webhookToolConfig(command)
+    return `${config.method ?? 'POST'} ${config.url}`
+  }
+  return ''
+}
+
+/**
+ * A name as external calls compare it: case, `ё` and spaces do not matter. Keep
+ * in sync with `normalize_name` in `services/external_commands.rs`
+ */
+export function normalizeCommandName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(' ')
+}
+
+/** Whether an external call may run the command */
+export function isExternalCommand(command: CommandConfig): boolean {
+  return command.enabled && command.availableIn.external && isKnownTool(command)
+}
+
+/**
+ * The other commands an external call by the name of `command` could mean as
+ * well: such a call is refused as ambiguous
+ */
+export function externalNameTwins(
+  commands: readonly CommandConfig[],
+  command: CommandConfig
+): CommandConfig[] {
+  const name = normalizeCommandName(command.name)
+  if (!name || !isExternalCommand(command)) return []
+  return commands.filter(
+    (other) =>
+      other.id !== command.id &&
+      isExternalCommand(other) &&
+      normalizeCommandName(other.name) === name
+  )
+}
+
 export interface CommandIssue {
   /** The tool config field the issue is about */
   field: string

@@ -687,7 +687,7 @@
     "missingAiTask": "No hay una tarea de IA configurada en esta posición"
   },
   "commands": {
-    "hint": "Tus scripts y webhooks. Configurá un comando una vez y agregalo al menú de acciones principales; más adelante también se podrá ejecutar por voz y desde otras apps.",
+    "hint": "Tus scripts y webhooks. Configurás un comando una vez y lo ejecutás desde el menú de acciones principales, el panel de comandos y otras aplicaciones (tyco-ctl, D-Bus).",
     "empty": "Todavía no hay comandos.",
     "unnamed": "Comando sin nombre",
     "addScript": "Script",
@@ -718,7 +718,17 @@
     "inLauncherInfo": "El comando aparece en el panel de comandos, que se abre con su propio atajo global. Los primeros nueve comandos se ejecutan con las teclas 1–9; el orden es el de esta lista.",
     "confirm": "Pedir confirmación",
     "confirmInfo": "Antes de ejecutarlo, el panel muestra el comando y su texto y espera Enter. En el menú de acciones principales no se pide: ahí el elemento ya se eligió explícitamente.",
-    "badgeInLauncher": "en el panel"
+    "badgeInLauncher": "en el panel",
+    "descriptionLabel": "Descripción",
+    "descriptionInfo": "Se muestra en el panel de comandos y se usa en su búsqueda.",
+    "descriptionPlaceholder": "Qué hace el comando",
+    "warningMenuNeedsText": "El comando está en el menú de acciones principales pero no recibe texto: su elemento del menú queda vacío.",
+    "external": "Disponible desde afuera",
+    "externalInfo": "Otras aplicaciones y scripts pueden ejecutar el comando: tyco-ctl run <ID o nombre>, o el método D-Bus RunCommand.",
+    "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usá el ID.",
+    "badgeExternal": "externo",
+    "removeConfirm": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales.",
+    "removeConfirmSecret": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales y se borra su token de autorización guardado."
   },
   "commandLauncher": {
     "title": "Comandos",
@@ -733,6 +743,14 @@
     "running": "Ejecutando «{name}»…",
     "hintRun": "Ejecutar",
     "hintSelect": "Elegir",
-    "hintNewLine": "Nueva línea"
+    "hintNewLine": "Nueva línea",
+    "commandMissing": "El comando {id} no está en la biblioteca.",
+    "targetHint": "Qué se va a ejecutar"
+  },
+  "externalCommand": {
+    "running": "Ejecutando «{name}»…",
+    "failed": "Falló el comando «{name}»",
+    "missing": "El comando no está en la biblioteca",
+    "unknown": "Error desconocido"
   }
 }

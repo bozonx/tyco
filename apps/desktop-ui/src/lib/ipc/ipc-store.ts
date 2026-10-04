@@ -178,7 +178,11 @@ export function createCommandMap(): CommandMap {
     },
     executeScriptAction: {
       command: DESKTOP_COMMANDS.EXECUTE_SCRIPT_ACTION,
-      buildArgs: ([request]) => ({ ...request }),
+      buildArgs: ([request]) => ({ request }),
+    },
+    cancelScriptAction: {
+      command: DESKTOP_COMMANDS.CANCEL_SCRIPT_ACTION,
+      buildArgs: ([runId]) => ({ runId }),
     },
     pickScriptFile: { command: DESKTOP_COMMANDS.PICK_SCRIPT_FILE },
     pickDirectory: { command: DESKTOP_COMMANDS.PICK_DIRECTORY },

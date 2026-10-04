@@ -118,6 +118,8 @@ export interface InitParams {
   appConfig: AppConfig
   isWindowShown: boolean
   windowProfile: 'panel' | 'sheet'
+  /** The command the command overlay opens with, for an external call */
+  launcherRequest?: LauncherRequest | null
 }
 
 export type CapturedContext = Pick<InitParams, 'selectedText'>
@@ -152,6 +154,8 @@ export const DESKTOP_EVENTS = {
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
   SELECTION_RUN: 'app://selection-run',
   SELECTION_CANCEL: 'app://selection-cancel',
+  /** An external call runs a command in the background */
+  COMMAND_RUN: 'app://command-run',
 } as const
 
 export const DESKTOP_COMMANDS = {
@@ -207,6 +211,7 @@ export const DESKTOP_COMMANDS = {
   NOTIFY_DESKTOP: 'notify_desktop',
   CHECK_TEXT_INJECTION: 'check_text_injection',
   EXECUTE_SCRIPT_ACTION: 'execute_script_action',
+  CANCEL_SCRIPT_ACTION: 'cancel_script_action',
   PICK_SCRIPT_FILE: 'pick_script_file',
   PICK_DIRECTORY: 'pick_directory',
   LOG_CUSTOM_ACTION: 'log_custom_action',
@@ -225,6 +230,31 @@ export interface ScriptActionRequest {
   /** The output is used: the command is waited for longer */
   captureOutput: boolean
   logOutput: boolean
+  /** Lets `cancel_script_action` stop the command while it is waited for */
+  runId?: string
+}
+
+/** The error of a script stopped with `cancel_script_action` */
+export const SCRIPT_CANCELLED_ERROR = 'Cancelled'
+
+/** Where a command of the library was invoked from, for the action log */
+export type CommandRunSource = 'launcher' | 'external'
+
+/**
+ * The command the command overlay opens with: an external call that needs a
+ * text, a confirmation or the result menu
+ */
+export interface LauncherRequest {
+  commandId: string
+  /** The text of the call; without it the selection or the field gives it */
+  text?: string
+}
+
+/** An external call that runs a command in the background */
+export interface CommandRunEvent {
+  commandId: string
+  text?: string
+  userConfig: UserConfig
 }
 
 /**
@@ -235,7 +265,7 @@ export interface CommandRunRecord {
   commandId: string
   name: string
   /** Where the command was invoked from */
-  source: 'launcher'
+  source: CommandRunSource
   /** Absent for a command that takes no text */
   text?: string
   success: boolean

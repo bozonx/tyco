@@ -1,4 +1,5 @@
 use crate::errors::AppError;
+use crate::services::external_commands::LauncherRequest;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum StartMode {
@@ -105,6 +106,8 @@ pub struct Activation {
     pub source: ActivationSource,
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
+    /// The command the command overlay opens with, for an external call.
+    pub launcher_request: Option<LauncherRequest>,
 }
 
 impl Activation {
@@ -114,6 +117,7 @@ impl Activation {
             source,
             window_id: None,
             selected_text: None,
+            launcher_request: None,
         }
     }
 

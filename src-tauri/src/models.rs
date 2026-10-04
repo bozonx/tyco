@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::services::activation::WindowProfile;
+use crate::services::external_commands::LauncherRequest;
 use crate::services::hotkeys;
 
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
@@ -40,6 +41,9 @@ pub struct InitParams {
     pub app_config: Value,
     pub is_window_shown: bool,
     pub window_profile: WindowProfile,
+    /// The command the command overlay opens with, for an external call.
+    #[serde(default)]
+    pub launcher_request: Option<LauncherRequest>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -280,5 +284,6 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
         app_config: app_config(),
         is_window_shown: false,
         window_profile: WindowProfile::Sheet,
+        launcher_request: None,
     }
 }

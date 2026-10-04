@@ -684,7 +684,7 @@
     "missingAiTask": "No AI task is configured in this slot"
   },
   "commands": {
-    "hint": "Your scripts and webhooks. Set a command up once, then add it to the main actions menu; later it can be run by voice and from other apps as well.",
+    "hint": "Your scripts and webhooks. Set a command up once and run it from the main action menu, the command overlay and other applications (tyco-ctl, D-Bus).",
     "empty": "No commands yet.",
     "unnamed": "Untitled command",
     "addScript": "Script",
@@ -715,7 +715,17 @@
     "inLauncherInfo": "The command is listed in the command overlay, opened with its own global hotkey. The first nine commands run with the keys 1–9; the order is the order of this list.",
     "confirm": "Ask for confirmation",
     "confirmInfo": "Before running, the overlay shows the command and its text and waits for Enter. Not asked in the main actions menu, where the item is already chosen explicitly.",
-    "badgeInLauncher": "in overlay"
+    "badgeInLauncher": "in overlay",
+    "descriptionLabel": "Description",
+    "descriptionInfo": "Shown in the command overlay and used by its search.",
+    "descriptionPlaceholder": "What the command does",
+    "warningMenuNeedsText": "The command is in the main action menu but takes no text: its menu item stays empty.",
+    "external": "Available from outside",
+    "externalInfo": "Other applications and scripts can run the command: tyco-ctl run <ID or name>, or the D-Bus method RunCommand.",
+    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
+    "badgeExternal": "external",
+    "removeConfirm": "Delete the command “{name}”? It also leaves the main action menu.",
+    "removeConfirmSecret": "Delete the command “{name}”? It also leaves the main action menu, and its saved authorization token is deleted."
   },
   "commandLauncher": {
     "title": "Commands",
@@ -730,6 +740,14 @@
     "running": "Running “{name}”…",
     "hintRun": "Run",
     "hintSelect": "Select",
-    "hintNewLine": "New line"
+    "hintNewLine": "New line",
+    "commandMissing": "The command {id} is not in the library.",
+    "targetHint": "What will run"
+  },
+  "externalCommand": {
+    "running": "Running “{name}”…",
+    "failed": "The command “{name}” failed",
+    "missing": "The command is not in the library",
+    "unknown": "Unknown error"
   }
 }

@@ -3,8 +3,10 @@ import { watch } from 'vue'
 
 import { START_MODES } from '@tyco/shared'
 
+import useToast from '../composables/useToast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
+import { translate } from '../lib/i18n'
 import { useCommandRunnerDependencies } from './commands'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
@@ -13,6 +15,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
   const runner = createCommandRunner(useCommandRunnerDependencies())
+  const { toastText } = useToast()
 
   const model = createCommandLauncherModel({
     commands: () => ipcStore.params.userConfig?.commands,
@@ -24,19 +27,31 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     logRun: async (record) => {
       await ipcStore.callFunction('logCommandRun', [record])
     },
+    commandMissing: (commandId) => {
+      toastText(
+        translate('commandLauncher.commandMissing', { id: commandId }),
+        'error'
+      )
+    },
   })
 
-  // every activation of the overlay starts at the full list
+  // every activation of the overlay starts at the full list, or at the
+  // command of an external call
   watch(
     () => ipcStore.params.activationId,
     () => {
-      if (ipcStore.params.mode === START_MODES.COMMAND_LAUNCHER) model.reset()
+      if (ipcStore.params.mode !== START_MODES.COMMAND_LAUNCHER) return
+      const request = ipcStore.params.launcherRequest
+      if (request) void model.request(request)
+      else model.reset()
     }
   )
 
   watch(
     () => ipcStore.params.selectedText,
-    (text) => model.selectionArrived(text)
+    (text) => {
+      void model.selectionArrived(text)
+    }
   )
 
   return model

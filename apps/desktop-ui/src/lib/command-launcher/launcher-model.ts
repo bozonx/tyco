@@ -1,13 +1,21 @@
 import { computed, ref, shallowRef } from 'vue'
 
-import type { CommandConfig, CommandRunRecord } from '@tyco/shared'
+import type {
+  CommandConfig,
+  CommandRunRecord,
+  CommandRunSource,
+  LauncherRequest,
+} from '@tyco/shared'
 
 import {
   commandLabel,
   commandTakesText,
   isKnownTool,
 } from '../commands/command-config'
-import type { CommandRunOutcome } from '../commands/command-runner'
+import type {
+  CommandRunOptions,
+  CommandRunOutcome,
+} from '../commands/command-runner'
 import { moveHighlight } from '../menu-query/menu-query'
 
 /** The first commands of the list are run with the keys `1`–`9` */
@@ -18,12 +26,14 @@ export const LAUNCHER_KEY_COUNT = 9
  *
  * - `list` — the commands, with the search;
  * - `prepare` — one command before it runs: the text it takes, typed or taken
- *   from the selection, or a confirmation for a command that asks for one;
+ *   from the selection, or a confirmation for a command that asks for one.
+ *   `autoRun`: no confirmation is needed, so the command runs as soon as the
+ *   selection comes;
  * - `running` — the command is on its way.
  */
 export type LauncherStage =
   | { kind: 'list' }
-  | { kind: 'prepare'; command: CommandConfig }
+  | { kind: 'prepare'; command: CommandConfig; autoRun: boolean }
   | { kind: 'running'; command: CommandConfig }
 
 /** Whether the overlay offers the command */
@@ -88,7 +98,13 @@ export interface CommandLauncherDependencies {
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
   /** Runs the command and tells the user how it went */
-  run: (command: CommandConfig, text: string) => Promise<CommandRunOutcome>
+  run: (
+    command: CommandConfig,
+    text: string,
+    options?: CommandRunOptions
+  ) => Promise<CommandRunOutcome>
+  /** Tells that a command of an external call is gone from the library */
+  commandMissing?: (commandId: string) => void
   /** Records a text that leaves the app with a command */
   saveOutput?: (text: string) => Promise<void>
   logRun?: (record: CommandRunRecord) => Promise<void> | void
@@ -103,6 +119,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const text = ref('')
   /** The user changed the text, so a selection arriving late keeps off it */
   let textEdited = false
+  /** Where the current command came from: the list or an external call */
+  let source: CommandRunSource = 'launcher'
+  let controller: AbortController | null = null
 
   const commands = computed(() =>
     (deps.commands() ?? []).filter(isLauncherCommand)
@@ -110,6 +129,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const visible = computed(() => searchCommands(commands.value, query.value))
 
   const reset = () => {
+    controller?.abort()
+    controller = null
+    source = 'launcher'
     query.value = ''
     highlighted.value = 0
     text.value = ''
@@ -138,7 +160,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const record: CommandRunRecord = {
       commandId: command.id,
       name: commandLabel(command),
-      source: 'launcher',
+      source,
       success: outcome.success,
     }
     if (input !== null) record.text = input
@@ -152,19 +174,26 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   ): Promise<CommandRunOutcome> => {
     const running: LauncherStage = { kind: 'running', command }
     stage.value = running
+    const runController = new AbortController()
+    controller = runController
     if (input !== null) {
       // the history keeps the text even when the command fails
       await deps.saveOutput?.(input).catch(() => {})
     }
     let outcome: CommandRunOutcome
     try {
-      outcome = await deps.run(command, input ?? '')
+      outcome = await deps.run(command, input ?? '', {
+        signal: runController.signal,
+      })
     } catch (error) {
-      outcome = {
-        success: false,
-        message: error instanceof Error ? error.message : String(error),
-      }
+      outcome = runController.signal.aborted
+        ? { success: false, cancelled: true, message: 'Cancelled' }
+        : {
+            success: false,
+            message: error instanceof Error ? error.message : String(error),
+          }
     }
+    if (controller === runController) controller = null
     log(command, input, outcome)
     // a new activation started over meanwhile
     if (stage.value !== running) return outcome
@@ -173,7 +202,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     } else if (input !== null) {
       // the text stays for another try
       text.value = input
-      stage.value = { kind: 'prepare', command }
+      stage.value = { kind: 'prepare', command, autoRun: false }
+    } else if (command.confirm === 'always') {
+      stage.value = { kind: 'prepare', command, autoRun: false }
     } else {
       stage.value = { kind: 'list' }
     }
@@ -181,20 +212,49 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
 
   /**
-   * Runs the command, or first asks for its text when there is no selection, or
-   * for a confirmation when the command wants one
+   * Runs the command on `given`, or first asks for its text when there is none,
+   * or for a confirmation when the command wants one
    */
-  const pick = async (command: CommandConfig): Promise<void> => {
-    if (stage.value.kind === 'running') return
+  const start = async (command: CommandConfig, given: string) => {
     const takesText = commandTakesText(command)
-    const selection = takesText ? (deps.selectedText() ?? '') : ''
-    if ((takesText && !selection.trim()) || command.confirm === 'always') {
-      text.value = selection
+    const input = takesText ? given : ''
+    const confirm = command.confirm === 'always'
+    if ((takesText && !input.trim()) || confirm) {
+      text.value = input
       textEdited = false
-      stage.value = { kind: 'prepare', command }
+      stage.value = { kind: 'prepare', command, autoRun: !confirm }
       return
     }
-    await execute(command, takesText ? selection : null)
+    await execute(command, takesText ? input : null)
+  }
+
+  /** Runs a command of the list on the selection */
+  const pick = async (command: CommandConfig): Promise<void> => {
+    if (stage.value.kind === 'running') return
+    source = 'launcher'
+    await start(command, deps.selectedText() ?? '')
+  }
+
+  /**
+   * An external call that needs the overlay: its text, otherwise the selection,
+   * then the field or a confirmation, as for a picked command
+   */
+  const request = async (call: LauncherRequest): Promise<void> => {
+    reset()
+    const command = (deps.commands() ?? []).find(
+      (item) => item.id === call.commandId
+    )
+    if (!command) {
+      deps.commandMissing?.(call.commandId)
+      return
+    }
+    source = 'external'
+    await start(command, call.text ?? deps.selectedText() ?? '')
+  }
+
+  /** Stops the running command; it is reported as cancelled */
+  const cancel = () => {
+    if (stage.value.kind === 'running') controller?.abort()
   }
 
   const pickHighlighted = () => {
@@ -233,15 +293,18 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** Esc: from a prepared command back to the list; `false` at the list */
   const back = (): boolean => {
     if (stage.value.kind !== 'prepare') return false
+    source = 'launcher'
     stage.value = { kind: 'list' }
     return true
   }
 
   /**
    * The selection is captured after the overlay opens: if it comes while the
-   * user is asked for the text and has typed nothing, it becomes the text
+   * user is asked for the text and has typed nothing, it becomes the text, and
+   * a command that asks for no confirmation runs on it, as if the selection had
+   * been there when it was picked
    */
-  const selectionArrived = (selection: string | null | undefined) => {
+  const selectionArrived = async (selection: string | null | undefined) => {
     const current = stage.value
     if (
       current.kind === 'prepare' &&
@@ -251,6 +314,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       selection?.trim()
     ) {
       text.value = selection
+      if (current.autoRun) await submit()
     }
   }
 
@@ -266,6 +330,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     setQuery,
     move,
     pick,
+    request,
+    cancel,
     pickHighlighted,
     pickByKey,
     setText,

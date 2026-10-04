@@ -37,6 +37,7 @@ import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useEditorInputStore } from './stores/editorInput'
+import { useExternalCommandsStore } from './stores/externalCommands'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menuModals'
 import { useNavPanelStore } from './stores/navPanel'
@@ -238,6 +239,12 @@ onMounted(() => {
     void desktopClient
       .listen(DESKTOP_EVENTS.SELECTION_CANCEL, (payload) => {
         selectionReplace.handleCancel(payload.runId)
+      })
+      .then((remove) => selectionListeners.push(remove))
+    const externalCommands = useExternalCommandsStore()
+    void desktopClient
+      .listen(DESKTOP_EVENTS.COMMAND_RUN, (payload) => {
+        void externalCommands.handleRun(payload)
       })
       .then((remove) => selectionListeners.push(remove))
   }

@@ -117,7 +117,7 @@ describe('createCommandLauncherModel', () => {
     const { deps, model } = setup()
     deps.selectedText.mockReturnValue('selected')
     await model.pickByKey(1)
-    expect(deps.run).toHaveBeenCalledWith(backup, '')
+    expect(deps.run).toHaveBeenCalledWith(backup, '', expect.anything())
     expect(deps.saveOutput).not.toHaveBeenCalled()
     expect(deps.logRun).toHaveBeenCalledWith({
       commandId: 'backup',
@@ -133,7 +133,7 @@ describe('createCommandLauncherModel', () => {
     deps.selectedText.mockReturnValue('buy milk')
     await model.pickByKey(2)
     expect(deps.saveOutput).toHaveBeenCalledWith('buy milk')
-    expect(deps.run).toHaveBeenCalledWith(note, 'buy milk')
+    expect(deps.run).toHaveBeenCalledWith(note, 'buy milk', expect.anything())
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ commandId: 'note', text: 'buy milk' })
     )
@@ -143,7 +143,11 @@ describe('createCommandLauncherModel', () => {
     const { deps, model } = setup()
     await model.pickByKey(2)
     expect(deps.run).not.toHaveBeenCalled()
-    expect(model.stage.value).toEqual({ kind: 'prepare', command: note })
+    expect(model.stage.value).toEqual({
+      kind: 'prepare',
+      command: note,
+      autoRun: true,
+    })
     expect(model.canSubmit.value).toBe(false)
 
     await model.submit()
@@ -152,22 +156,36 @@ describe('createCommandLauncherModel', () => {
     model.setText('call mom')
     expect(model.canSubmit.value).toBe(true)
     await model.submit()
-    expect(deps.run).toHaveBeenCalledWith(note, 'call mom')
+    expect(deps.run).toHaveBeenCalledWith(note, 'call mom', expect.anything())
     expect(model.stage.value.kind).toBe('list')
   })
 
-  it('takes a selection captured while asking for the text', async () => {
-    const { model } = setup()
+  it('runs on a selection captured while asking for the text', async () => {
+    const { deps, model } = setup()
     await model.pickByKey(2)
-    model.selectionArrived('late selection')
+    await model.selectionArrived('late selection')
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'late selection',
+      expect.anything()
+    )
+    expect(model.stage.value.kind).toBe('list')
+  })
+
+  it('only fills in a late selection for a command that confirms', async () => {
+    const confirmed = { ...note, confirm: 'always' as const }
+    const { deps, model } = setup([confirmed])
+    await model.pickByKey(1)
+    await model.selectionArrived('late selection')
     expect(model.text.value).toBe('late selection')
+    expect(deps.run).not.toHaveBeenCalled()
   })
 
   it('keeps the typed text from a selection captured late', async () => {
     const { model } = setup()
     await model.pickByKey(2)
     model.setText('typed')
-    model.selectionArrived('late selection')
+    await model.selectionArrived('late selection')
     expect(model.text.value).toBe('typed')
   })
 
@@ -176,10 +194,14 @@ describe('createCommandLauncherModel', () => {
     const { deps, model } = setup([confirmed])
     await model.pickHighlighted()
     expect(deps.run).not.toHaveBeenCalled()
-    expect(model.stage.value).toEqual({ kind: 'prepare', command: confirmed })
+    expect(model.stage.value).toEqual({
+      kind: 'prepare',
+      command: confirmed,
+      autoRun: false,
+    })
     expect(model.canSubmit.value).toBe(true)
     await model.submit()
-    expect(deps.run).toHaveBeenCalledWith(confirmed, '')
+    expect(deps.run).toHaveBeenCalledWith(confirmed, '', expect.anything())
   })
 
   it('shows the selection for confirmation', async () => {
@@ -197,7 +219,11 @@ describe('createCommandLauncherModel', () => {
     await model.pickByKey(2)
     model.setText('text')
     await model.submit()
-    expect(model.stage.value).toEqual({ kind: 'prepare', command: note })
+    expect(model.stage.value).toEqual({
+      kind: 'prepare',
+      command: note,
+      autoRun: false,
+    })
     expect(model.text.value).toBe('text')
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ success: false, message: 'HTTP 500' })
@@ -255,7 +281,7 @@ describe('createCommandLauncherModel', () => {
     model.setQuery('свет')
     expect(model.visible.value).toEqual([lights])
     await model.pickByKey(1)
-    expect(deps.run).toHaveBeenCalledWith(lights, '')
+    expect(deps.run).toHaveBeenCalledWith(lights, '', expect.anything())
     await model.pickByKey(2)
     expect(deps.run).toHaveBeenCalledTimes(1)
   })
@@ -269,7 +295,7 @@ describe('createCommandLauncherModel', () => {
     model.move(1)
     deps.selectedText.mockReturnValue('x')
     await model.pickHighlighted()
-    expect(deps.run).toHaveBeenCalledWith(note, 'x')
+    expect(deps.run).toHaveBeenCalledWith(note, 'x', expect.anything())
   })
 
   it('goes back from a prepared command to the list', async () => {
@@ -278,5 +304,113 @@ describe('createCommandLauncherModel', () => {
     await model.pickByKey(2)
     expect(model.back()).toBe(true)
     expect(model.stage.value.kind).toBe('list')
+  })
+})
+
+describe('external calls', () => {
+  const lamp = command(
+    'lamp',
+    'Lamp',
+    { availableIn: { launcher: false, external: true, chat: false } },
+    { takesText: false }
+  )
+
+  function setupExternal(commands: CommandConfig[]) {
+    const commandMissing = vi.fn()
+    const { deps } = setup(commands)
+    const model = createCommandLauncherModel({ ...deps, commandMissing })
+    return { deps, model, commandMissing }
+  }
+
+  it('runs a command missing from the overlay list on the given text', async () => {
+    const hidden = {
+      ...note,
+      availableIn: { launcher: false, external: true, chat: false },
+    }
+    const { deps, model } = setupExternal([hidden])
+    await model.request({ commandId: 'note', text: 'from LHC' })
+    expect(deps.run).toHaveBeenCalledWith(hidden, 'from LHC', expect.anything())
+    expect(deps.logRun).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'external', text: 'from LHC' })
+    )
+  })
+
+  it('takes the selection when the call brings no text', async () => {
+    const { deps, model } = setupExternal([note])
+    deps.selectedText.mockReturnValue('selected')
+    await model.request({ commandId: 'note' })
+    expect(deps.run).toHaveBeenCalledWith(note, 'selected', expect.anything())
+  })
+
+  it('asks for the text, then runs on a selection captured late', async () => {
+    const { deps, model } = setupExternal([note])
+    await model.request({ commandId: 'note' })
+    expect(model.stage.value.kind).toBe('prepare')
+    await model.selectionArrived('late')
+    expect(deps.run).toHaveBeenCalledWith(note, 'late', expect.anything())
+  })
+
+  it('asks to confirm a command that wants it', async () => {
+    const confirmed = { ...lamp, confirm: 'always' as const }
+    const { deps, model } = setupExternal([confirmed])
+    await model.request({ commandId: 'lamp' })
+    expect(model.stage.value).toEqual({
+      kind: 'prepare',
+      command: confirmed,
+      autoRun: false,
+    })
+    expect(deps.run).not.toHaveBeenCalled()
+    await model.submit()
+    expect(deps.logRun).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'external' })
+    )
+  })
+
+  it('reports a command gone from the library', async () => {
+    const { deps, model, commandMissing } = setupExternal([note])
+    await model.request({ commandId: 'gone' })
+    expect(commandMissing).toHaveBeenCalledWith('gone')
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).toBe('list')
+  })
+
+  it('logs a command picked from the list after a call as the overlay', async () => {
+    const { deps, model } = setupExternal([note, lamp])
+    await model.request({ commandId: 'note' })
+    model.back()
+    await model.pick(lamp)
+    expect(deps.logRun).toHaveBeenLastCalledWith(
+      expect.objectContaining({ commandId: 'lamp', source: 'launcher' })
+    )
+  })
+})
+
+describe('cancelling a running command', () => {
+  it('aborts the run and goes back to the text', async () => {
+    let signal: AbortSignal | undefined
+    const run = vi.fn(
+      (
+        _command: CommandConfig,
+        _text: string,
+        options?: { signal?: AbortSignal }
+      ) =>
+        new Promise<{ success: boolean; cancelled?: boolean }>((resolve) => {
+          signal = options?.signal
+          signal?.addEventListener('abort', () =>
+            resolve({ success: false, cancelled: true })
+          )
+        })
+    )
+    const { deps, model } = setup(undefined, { run })
+    deps.selectedText.mockReturnValue('text')
+    const running = model.pickByKey(2)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(model.stage.value.kind).toBe('running')
+    model.cancel()
+    await running
+    expect(signal?.aborted).toBe(true)
+    expect(model.stage.value.kind).toBe('prepare')
+    expect(model.text.value).toBe('text')
   })
 })

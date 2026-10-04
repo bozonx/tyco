@@ -687,7 +687,7 @@
     "missingAiTask": "Bu yuvada bir yapay zekâ görevi ayarlanmamış"
   },
   "commands": {
-    "hint": "Betikleriniz ve webhook'larınız. Bir komutu bir kez ayarlayın ve ana eylemler menüsüne ekleyin; ileride sesle ve diğer uygulamalardan da çalıştırılabilecek.",
+    "hint": "Betikleriniz ve webhook'larınız. Bir komutu bir kez ayarlayın; ana eylem menüsünden, komut panelinden ve diğer uygulamalardan (tyco-ctl, D-Bus) çalıştırın.",
     "empty": "Henüz komut yok.",
     "unnamed": "Adsız komut",
     "addScript": "Betik",
@@ -718,7 +718,17 @@
     "inLauncherInfo": "Komut, kendi genel kısayoluyla açılan komut panelinde listelenir. İlk dokuz komut 1–9 tuşlarıyla çalışır; sıra bu listedeki sıradır.",
     "confirm": "Onay iste",
     "confirmInfo": "Çalıştırmadan önce panel komutu ve metnini gösterir ve Enter bekler. Ana eylemler menüsünde sorulmaz: orada öğe zaten açıkça seçilmiştir.",
-    "badgeInLauncher": "panelde"
+    "badgeInLauncher": "panelde",
+    "descriptionLabel": "Açıklama",
+    "descriptionInfo": "Komut panelinde gösterilir ve aramada kullanılır.",
+    "descriptionPlaceholder": "Komutun ne yaptığı",
+    "warningMenuNeedsText": "Komut ana eylem menüsünde ama metin almıyor: menü öğesi boş kalır.",
+    "external": "Dışarıdan erişilebilir",
+    "externalInfo": "Diğer uygulamalar ve betikler komutu çalıştırabilir: tyco-ctl run <kimlik veya ad> ya da D-Bus yöntemi RunCommand.",
+    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
+    "badgeExternal": "dışarıdan",
+    "removeConfirm": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır.",
+    "removeConfirmSecret": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır ve kayıtlı yetkilendirme belirteci silinir."
   },
   "commandLauncher": {
     "title": "Komutlar",
@@ -733,6 +743,14 @@
     "running": "«{name}» çalıştırılıyor…",
     "hintRun": "Çalıştır",
     "hintSelect": "Seç",
-    "hintNewLine": "Yeni satır"
+    "hintNewLine": "Yeni satır",
+    "commandMissing": "{id} komutu kitaplıkta yok.",
+    "targetHint": "Çalıştırılacak olan"
+  },
+  "externalCommand": {
+    "running": "“{name}” çalıştırılıyor…",
+    "failed": "“{name}” komutu başarısız oldu",
+    "missing": "Komut kitaplıkta yok",
+    "unknown": "Bilinmeyen hata"
   }
 }

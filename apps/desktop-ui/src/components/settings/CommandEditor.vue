@@ -9,6 +9,18 @@
       />
     </label>
 
+    <label class="command-field">
+      <span class="command-field-label">
+        {{ t('commands.descriptionLabel') }}
+        <InfoTooltip :text="t('commands.descriptionInfo')" />
+      </span>
+      <FieldInput
+        :value="command.description ?? ''"
+        :placeholder="t('commands.descriptionPlaceholder')"
+        @update:value="updateDescription"
+      />
+    </label>
+
     <div class="command-field">
       <span class="command-field-label">
         {{ t('commands.idLabel') }}
@@ -49,6 +61,9 @@
       />
       <InfoTooltip :text="t('commands.takesTextInfo')" />
     </div>
+    <p v-if="inMenu && knownTool && !takesText" class="command-warning">
+      {{ t('commands.warningMenuNeedsText') }}
+    </p>
 
     <CustomActionFields
       v-if="knownTool"
@@ -89,6 +104,24 @@
 
     <div class="command-field-row">
       <FieldCheckbox
+        :value="command.availableIn.external"
+        :label="t('commands.external')"
+        @update:value="
+          update({ availableIn: { ...command.availableIn, external: $event } })
+        "
+      />
+      <InfoTooltip :text="t('commands.externalInfo')" />
+    </div>
+    <p v-if="nameTwins.length" class="command-warning">
+      {{
+        t('commands.warningExternalNameTwins', {
+          names: nameTwins.map(commandLabel).join(', '),
+        })
+      }}
+    </p>
+
+    <div class="command-field-row">
+      <FieldCheckbox
         :value="command.confirm === 'always'"
         :label="t('commands.confirm')"
         @update:value="update({ confirm: $event ? 'always' : 'auto' })"
@@ -112,6 +145,7 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import {
+  commandLabel,
   commandTakesText,
   isKnownTool,
 } from '../../lib/commands/command-config'
@@ -124,7 +158,16 @@ import CustomActionFields from './CustomActionFields.vue'
 import { Icon } from '@iconify/vue'
 import type { CommandConfig, CustomActionAfterRun } from '@tyco/shared'
 
-const props = defineProps<{ command: CommandConfig }>()
+const props = withDefaults(
+  defineProps<{
+    command: CommandConfig
+    /** The command is an item of the action menu */
+    inMenu?: boolean
+    /** Other commands an external call by this name could mean */
+    nameTwins?: CommandConfig[]
+  }>(),
+  { inMenu: false, nameTwins: () => [] }
+)
 
 const emit = defineEmits<{ (event: 'update', command: CommandConfig): void }>()
 
@@ -135,6 +178,11 @@ const takesText = computed(() => commandTakesText(props.command))
 
 function update(patch: Partial<CommandConfig>) {
   emit('update', { ...props.command, ...patch })
+}
+
+function updateDescription(value: string) {
+  const { description: _previous, ...rest } = props.command
+  emit('update', value.trim() ? { ...rest, description: value } : rest)
 }
 
 function updateToolConfig(field: string, value: unknown) {

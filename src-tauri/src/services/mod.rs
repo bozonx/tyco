@@ -9,6 +9,7 @@ pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;
 pub mod desktop_notifications;
+pub mod external_commands;
 pub mod hotkeys;
 pub mod llm_config;
 pub mod net;

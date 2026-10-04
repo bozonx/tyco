@@ -8,7 +8,9 @@ use tyco_activation_protocol::{
 };
 
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::{runtime, selection_replace};
+use crate::services::{external_commands, runtime, selection_replace};
+use crate::state::AppState;
+use tauri::Manager;
 
 pub fn spawn_server(app: AppHandle) {
     thread::spawn(move || {
@@ -47,6 +49,13 @@ fn handle_stream(stream: TcpStream, handler: &impl Fn(Request) -> Response) {
 
 fn dispatch(app: &AppHandle, request: Request) -> Response {
     let result = match request {
+        Request::RunCommand { target, text } => {
+            external_commands::run(app, &target, text, ActivationSource::Cli)
+        }
+        Request::ListCommands => {
+            let user_config = app.state::<AppState>().params().user_config;
+            return Response::output(external_commands::list(&user_config));
+        }
         Request::Activate { mode } => StartMode::parse(&mode)
             .and_then(|mode| runtime::activate(app, Activation::new(mode, ActivationSource::Cli))),
         Request::Replace { action } => {
