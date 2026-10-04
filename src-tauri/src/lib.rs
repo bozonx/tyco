@@ -113,6 +113,7 @@ pub fn run() {
             }
         }))
         .setup(|app| {
+            runtime::create_windows(app)?;
             let user_config = storage::read_or_create_user_config(app.handle())?;
             if let Err(error) =
                 storage::apply_history_settings_on_startup(app.handle(), &user_config)

@@ -8,6 +8,10 @@
 //! | cache   | `~/.cache/<id>`             | `~/Library/Caches/<id>`        | `%LOCALAPPDATA%\<id>`  |
 //! | logs    | `~/.local/state/<id>/logs`  | `~/Library/Logs/<id>`          | `%LOCALAPPDATA%\<id>\logs` |
 //!
+//! The webview keeps its own storage (local storage, its HTTP cache) in
+//! `data` on Linux and in `state` on Windows, where Tauri would put it
+//! anyway; WKWebView on macOS has no such setting.
+//!
 //! State is what the app remembers between runs but the user would not back
 //! up: the last mode, the last chat. Tauri has no state directory, and puts
 //! the logs into the data directory on Linux, while the XDG base directory
@@ -31,6 +35,17 @@ pub struct AppPaths {
 }
 
 impl AppPaths {
+    /// Where the webviews keep their storage; `None` where it cannot be set.
+    pub fn webview_dir(&self) -> Option<&Path> {
+        if cfg!(target_os = "windows") {
+            Some(&self.state_dir)
+        } else if cfg!(target_os = "macos") {
+            None
+        } else {
+            Some(&self.data_dir)
+        }
+    }
+
     pub fn resolve(app: &AppHandle) -> Result<Self, AppError> {
         let identifier = &app.config().identifier;
         if let Some(paths) = dev_paths_from_env(identifier)? {

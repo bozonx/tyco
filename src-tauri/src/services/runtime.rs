@@ -597,6 +597,21 @@ fn warmup_hide(app: &AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Creates the windows of `tauri.conf.json`, which does not create them
+/// itself: it cannot know where the webviews keep their storage, and would
+/// put a development build's into the user's data directory.
+pub fn create_windows(app: &App) -> Result<(), AppError> {
+    let paths = super::app_paths::AppPaths::resolve(app.handle())?;
+    for config in &app.config().app.windows {
+        let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
+        if let Some(dir) = paths.webview_dir() {
+            builder = builder.data_directory(dir.to_path_buf());
+        }
+        builder.build()?;
+    }
+    Ok(())
+}
+
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ContextCapture::default());
     app.manage(super::selection_replace::SelectionRuns::default());
