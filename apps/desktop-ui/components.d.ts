@@ -53,6 +53,7 @@ declare module 'vue' {
     ParallelModeToggle: typeof import('./src/components/common/ParallelModeToggle.vue')['default']
     ParallelTextPreview: typeof import('./src/components/common/ParallelTextPreview.vue')['default']
     PreviewMenu: typeof import('./src/components/menu/PreviewMenu.vue')['default']
+    QueryPanel: typeof import('./src/components/menu/QueryPanel.vue')['default']
     QuickOverlay: typeof import('./src/components/quick/QuickOverlay.vue')['default']
     QuickPanel: typeof import('./src/components/QuickPanel.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

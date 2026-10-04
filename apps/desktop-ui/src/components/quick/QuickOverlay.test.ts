@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import {
   defineComponent,
+  h,
   nextTick,
   onMounted,
   onUnmounted,
@@ -90,7 +91,7 @@ vi.mock('../../views/VoiceView.vue', () => ({
       }
       onMounted(() => window.addEventListener('keyup', onKey))
       onUnmounted(() => window.removeEventListener('keyup', onKey))
-      return () => null
+      return () => h('div', { class: 'voice-bar' })
     },
   }),
 }))
@@ -219,6 +220,7 @@ describe('quick overlay input region', () => {
   const rects: Record<string, DOMRect> = {
     'write-frame': new DOMRect(8, 420, 784, 40),
     'write-hint': new DOMRect(8, 468, 300, 24),
+    'voice-bar': new DOMRect(8, 372, 784, 120),
   }
 
   it('takes clicks only on the input while nothing else is shown', async () => {
@@ -247,8 +249,17 @@ describe('quick overlay input region', () => {
         ])
       )
 
+      // the dictation bar leaves the screen above it clickable too
       mocks.callFunction.mockClear()
       params.mode = 'voice'
+      await vi.waitFor(() =>
+        expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
+          { x: 0, y: 364, width: 800, height: 136 },
+        ])
+      )
+
+      mocks.callFunction.mockClear()
+      params.mode = 'aiTasks'
       await vi.waitFor(() =>
         expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
           null,

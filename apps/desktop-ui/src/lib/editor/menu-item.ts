@@ -8,6 +8,8 @@ export interface EditorMenuItem {
   separatorBefore?: boolean
   /** Подсветить как основной вариант (например, вариант исправления слова) */
   accent?: boolean
+  /** Keyboard shortcut shown on the right, e.g. `Ctrl+B` */
+  shortcut?: string
   /** Nested items: the item opens a submenu instead of running an action */
   children?: EditorMenuItem[]
   action?: () => void | Promise<void>

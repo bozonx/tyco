@@ -13,6 +13,7 @@ export interface EditMenuDependencies {
   doCaseTransform: (text: string, caseType: string) => string
   formatMdAndStyle: (text: string) => Promise<string>
   formatSomeCode: (text: string) => Promise<string>
+  stripMarkdown: (text: string) => string
 }
 
 export function createEditMenuStoreModel(deps: EditMenuDependencies) {
@@ -59,6 +60,12 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
   ]
 
   const getDefaultFormatItems = (): EditItem[] => [
+    {
+      id: 'format-stripMarkdown',
+      labelKey: 'edit.stripMarkdown',
+      icon: 'mdi:format-clear',
+      action: async (text: string) => deps.stripMarkdown(text),
+    },
     {
       id: 'format-beautifyMd',
       labelKey: 'edit.beautifyMd',

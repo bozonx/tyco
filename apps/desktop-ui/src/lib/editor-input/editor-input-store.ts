@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { EditSource } from '../editor/edit-source'
 import { createDraftSession, type SaveDraft } from '../history/draft-session'
@@ -17,6 +17,16 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
   const selectionEnd = ref<number>(0)
   const lastEditSource = ref<EditSource>('plain')
   const drafts = createDraftSession(deps.saveDraft)
+
+  /** A selection of whitespace only does not count: actions take the whole text */
+  const hasSelection = computed(() => selectedText.value.trim() !== '')
+
+  /**
+   * The text an editor action works on: the selection when there is one,
+   * otherwise the whole document
+   */
+  const actionText = (): string =>
+    hasSelection.value ? selectedText.value : value.value
 
   /**
    * The current text is about to leave the editor: it goes to the history
@@ -120,6 +130,8 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
     selectionStart,
     selectionEnd,
     lastEditSource,
+    hasSelection,
+    actionText,
     setValue,
     replaceValue,
     snapshotDraft,

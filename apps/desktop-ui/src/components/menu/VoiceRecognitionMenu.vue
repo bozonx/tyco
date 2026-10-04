@@ -1,5 +1,61 @@
 <template>
+  <!-- The bar leaves the rest of the screen, or the editor, in view while the
+       user speaks; the keys are the same as in the full layout -->
+  <div v-if="props.variant === 'bar'" class="voice-bar" role="region">
+    <div class="voice-bar-wave">
+      <AudioWaveform
+        :level="audioLevel"
+        :peak="audioPeak"
+        :duration-ms="recordingDurationMs"
+        :is-transcribing="isTranscribing"
+      />
+    </div>
+    <LiveTranscript
+      class="voice-bar-transcript"
+      :committed="transcript.committed"
+      :draft="transcript.draft"
+    />
+    <div class="voice-bar-actions">
+      <template v-if="quickSend">
+        <ShortcutButton
+          sm
+          :keys="submitKeys"
+          icon="mdi:send"
+          primary
+          :disabled="isFinishing"
+          @click="() => finish('submit')"
+        >
+          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
+        </ShortcutButton>
+        <ShortcutButton
+          sm
+          :keys="['Tab']"
+          icon="mdi:form-textbox"
+          :disabled="isFinishing"
+          @click="() => finish('insert')"
+        >
+          {{ t('menu.voiceToInput') }}
+        </ShortcutButton>
+      </template>
+      <ShortcutButton
+        v-else
+        sm
+        :keys="['Space', 'Enter']"
+        icon="mdi:check"
+        primary
+        :disabled="isFinishing"
+        @click="() => finish('insert')"
+      >
+        {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
+      </ShortcutButton>
+      <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
+        {{ t('common.cancel') }}
+      </ShortcutButton>
+    </div>
+  </div>
+
   <ActionOverlayLayout
+    v-else
     :title="quickSend ? t('menu.voiceChat') : t('menu.voiceInput')"
     :onEsc="cancel"
   >
@@ -93,6 +149,10 @@ const props = defineProps<{
    * submit it, Tab only inserts it
    */
   quickSend?: boolean
+  /** `bar`: a compact strip instead of the full screen layout */
+  variant?: 'sheet' | 'bar'
+  /** Where the bar is shown: the editor keeps its own params, see `inline` */
+  inline?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -441,6 +501,42 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.voice-bar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+  height: 7.5rem;
+  padding: var(--space-sm);
+  box-sizing: border-box;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-md);
+}
+
+.voice-bar-wave {
+  display: flex;
+  align-items: center;
+  flex: 0 0 11rem;
+  min-width: 0;
+}
+
+.voice-bar .voice-bar-transcript {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-md);
+  border-left: 1px solid var(--app-border-subtle);
+}
+
+.voice-bar-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
 .voice-shortcuts {
   display: flex;
   align-items: center;

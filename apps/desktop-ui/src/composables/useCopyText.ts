@@ -1,4 +1,5 @@
 import { createCopyText } from '../lib/clipboard/copy-text'
+import { writeMarkdown } from '../lib/clipboard/rich-clipboard'
 import { useHistoryStore } from '../stores/history'
 import useToast from './useToast'
 
@@ -8,7 +9,8 @@ export function useCopyText(options: { saveOutput: boolean }) {
   const historyStore = useHistoryStore()
 
   return createCopyText({
-    writeText: (text) => navigator.clipboard.writeText(text),
+    // the texts are Markdown: rich editors get them formatted
+    writeText: (text) => writeMarkdown(text),
     showToast: (messageKey, type) => toast(messageKey, type),
     saveOutput: options.saveOutput ? historyStore.saveOutput : undefined,
   })

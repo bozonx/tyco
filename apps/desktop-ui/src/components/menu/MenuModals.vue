@@ -1,5 +1,8 @@
 <template>
-  <Overlay v-if="menuModalsStore.currentModal !== MenuModals.NONE">
+  <!-- an inline voice input is drawn by the editor itself -->
+  <Overlay
+    v-if="menuModalsStore.currentModal !== MenuModals.NONE && !isInlineVoice"
+  >
     <!-- keyed by step: a correction step over an insert one is a new screen -->
     <InsertMenu
       v-if="menuModalsStore.currentModal === MenuModals.INSERT"
@@ -54,6 +57,12 @@ import TranslateMenu from './TranslateMenu.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 
 const menuModalsStore = useMenuModalsStore()
+
+const isInlineVoice = computed(
+  () =>
+    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION &&
+    Boolean(menuModalsStore.currentModalParams?.inline)
+)
 
 const diffParams = computed(
   () =>

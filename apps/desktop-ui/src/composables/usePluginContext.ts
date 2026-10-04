@@ -63,7 +63,8 @@ export default function usePluginContext() {
     }
 
     getEditorInputSelectedText() {
-      return editorInputStore.selectedText
+      // a selection of whitespace only counts as none, see `actionText`
+      return editorInputStore.hasSelection ? editorInputStore.selectedText : ''
     }
 
     setEditorInputValue(value: string) {

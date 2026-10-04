@@ -407,6 +407,23 @@
       "clipboardUnavailable": "Panoya erişilemiyor",
       "addToDictionary": "Sözlüğe ekle",
       "ignoreWord": "Yoksay"
+    },
+    "selectionScope": "Seçim: {count} karakter",
+    "appliesToSelection": "{action} (yalnızca seçim)",
+    "markup": {
+      "title": "Biçimlendirme",
+      "bold": "Kalın",
+      "italic": "İtalik",
+      "strikethrough": "Üstü çizili",
+      "code": "Kod",
+      "link": "Bağlantı",
+      "heading1": "Başlık 1",
+      "heading2": "Başlık 2",
+      "heading3": "Başlık 3",
+      "bulletList": "Madde işaretli liste",
+      "orderedList": "Numaralı liste",
+      "quote": "Alıntı",
+      "showSource": "Markdown işaretlerini göster"
     }
   },
   "write": {
@@ -460,7 +477,23 @@
     "translationQualityRepairFailed": "Düzeltme adımı başarısız oldu; ilk çeviri korundu.",
     "translationQualityRemaining": "Düzeltmeden sonra bazı kalite sorunları kaldı",
     "translationQualityProblems": "Olası kalite sorunları",
-    "translationQualityClean": "Kalite kontrolü başarılı."
+    "translationQualityClean": "Kalite kontrolü başarılı.",
+    "aiCustomPrompt": "Kendi isteğin",
+    "aiPromptPlaceholder": "Metinle ne yapılsın?",
+    "aiPromptRun": "Çalıştır",
+    "aiPromptSave": "Görev olarak kaydet",
+    "aiPromptSaved": "Görev olarak kaydedildi",
+    "aiPromptSlotsFull": "Tüm görev tuşları dolu: ayarlardan birini boşaltın",
+    "translateOtherLanguage": "Başka dil",
+    "translateTargetPlaceholder": "Şu dile çevir…",
+    "translateSourcePlaceholder": "Kaynak dil…",
+    "translateNoLanguage": "Böyle bir dil yok",
+    "translateSourceHint": "Kaynak dil (Tab)",
+    "translateFrom": "Kaynak:",
+    "translateAutoDetect": "Otomatik algıla",
+    "translatePickSource": "Seç",
+    "translateTargetLanguage": "Hedef dil",
+    "translateSourceLanguage": "Kaynak dil"
   },
   "diff": {
     "modeUnified": "Tek satır",
@@ -576,7 +609,8 @@
     "camelCase": "camelCase",
     "pascalCase": "PascalCase",
     "snakeCase": "snake_case",
-    "kebabCase": "kebab-case"
+    "kebabCase": "kebab-case",
+    "stripMarkdown": "Biçimlendirmeyi kaldır"
   },
   "toast": {
     "settingsSaveFailed": "Ayarlar kaydedilemedi",
@@ -606,7 +640,8 @@
     "actionEmptyOutput": "Eylem hiçbir şey döndürmedi",
     "webhookSuccess": "Web kancası başarıyla gönderildi",
     "webhookFailed": "Web kancası isteği başarısız oldu",
-    "webhookEmptyUrl": "Web kancası URL'si boş"
+    "webhookEmptyUrl": "Web kancası URL'si boş",
+    "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin"
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",

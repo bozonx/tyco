@@ -97,6 +97,12 @@ export interface LocalState {
   lastMode?: START_MODES | null
   /** The model the chat was last used with */
   lastChatModelId?: string | null
+  /** The editor shows the raw Markdown instead of the formatted look */
+  editorShowMarkup?: boolean
+  /** Own AI requests typed in the AI task menu, the newest first */
+  recentAiPrompts?: string[]
+  /** Languages picked from the full list in the translate menu, newest first */
+  recentTranslateLanguages?: string[]
 }
 
 export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }

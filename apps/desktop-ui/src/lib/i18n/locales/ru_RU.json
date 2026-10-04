@@ -407,6 +407,23 @@
       "clipboardUnavailable": "Нет доступа к буферу обмена",
       "addToDictionary": "Добавить в словарь",
       "ignoreWord": "Пропустить"
+    },
+    "selectionScope": "Выделено: {count} симв.",
+    "appliesToSelection": "{action} (только выделение)",
+    "markup": {
+      "title": "Разметка",
+      "bold": "Жирный",
+      "italic": "Курсив",
+      "strikethrough": "Зачёркнутый",
+      "code": "Код",
+      "link": "Ссылка",
+      "heading1": "Заголовок 1",
+      "heading2": "Заголовок 2",
+      "heading3": "Заголовок 3",
+      "bulletList": "Маркированный список",
+      "orderedList": "Нумерованный список",
+      "quote": "Цитата",
+      "showSource": "Показывать разметку Markdown"
     }
   },
   "write": {
@@ -460,7 +477,23 @@
     "translationQualityRepairFailed": "Исправляющий проход не выполнен; сохранён первый перевод.",
     "translationQualityRemaining": "После исправления остались проблемы качества",
     "translationQualityProblems": "Возможные проблемы качества",
-    "translationQualityClean": "Проверка качества пройдена."
+    "translationQualityClean": "Проверка качества пройдена.",
+    "aiCustomPrompt": "Свой запрос",
+    "aiPromptPlaceholder": "Что сделать с текстом?",
+    "aiPromptRun": "Выполнить",
+    "aiPromptSave": "Сохранить как задание",
+    "aiPromptSaved": "Сохранено как задание",
+    "aiPromptSlotsFull": "Все клавиши заданий заняты: освободите одну в настройках",
+    "translateOtherLanguage": "Другой язык",
+    "translateTargetPlaceholder": "Перевести на…",
+    "translateSourcePlaceholder": "Исходный язык…",
+    "translateNoLanguage": "Такого языка нет",
+    "translateSourceHint": "Исходный язык (Tab)",
+    "translateFrom": "С:",
+    "translateAutoDetect": "Автоопределение",
+    "translatePickSource": "Выбрать",
+    "translateTargetLanguage": "Язык перевода",
+    "translateSourceLanguage": "Исходный язык"
   },
   "diff": {
     "modeUnified": "В одну строку",
@@ -576,7 +609,8 @@
     "camelCase": "camelCase",
     "pascalCase": "PascalCase",
     "snakeCase": "snake_case",
-    "kebabCase": "kebab-case"
+    "kebabCase": "kebab-case",
+    "stripMarkdown": "Убрать разметку"
   },
   "toast": {
     "settingsSaveFailed": "Не удалось сохранить настройки",
@@ -606,7 +640,8 @@
     "actionEmptyOutput": "Действие ничего не вернуло",
     "webhookSuccess": "Вебхук успешно отправлен",
     "webhookFailed": "Ошибка отправки вебхука",
-    "webhookEmptyUrl": "URL вебхука не указан"
+    "webhookEmptyUrl": "URL вебхука не указан",
+    "textTooLongForSearch": "Текст слишком длинный для поиска: выделите фрагмент"
   },
   "llmErrors": {
     "auth": "Провайдер отклонил ключ, или ключ для него не сохранён",

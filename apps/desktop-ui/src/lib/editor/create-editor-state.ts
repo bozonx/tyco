@@ -14,6 +14,8 @@ import {
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
 import { historyKeysExtension } from './history-keys'
+import { markdownKeymap } from './markdown-commands'
+import { markdownPreview } from './markdown-preview'
 import { pasteExtension } from './paste'
 import { editorAppearance } from './theme'
 
@@ -44,6 +46,11 @@ export interface CreateEditorStateOptions
   paste?: boolean
   /** Accessible name of the input, announced by screen readers */
   ariaLabel?: string
+  /**
+   * Hide the markup outside the lines being edited; `setMarkdownPreview`
+   * switches it later
+   */
+  markdownPreview?: boolean
 }
 
 /** Set of editor extensions */
@@ -52,7 +59,8 @@ export const createEditorExtensions = (
 ): Extension[] => [
   history(),
   historyKeysExtension(),
-  keymap.of([...defaultKeymap, ...historyKeymap]),
+  // before the default keymap: Mod-i selects the parent syntax node there
+  keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
   EditorView.lineWrapping,
   EditorState.allowMultipleSelections.of(false),
   // shows an insertion point while text is dragged into the editor
@@ -66,6 +74,7 @@ export const createEditorExtensions = (
   placeholderCompartment.of(placeholder(options.placeholder ?? '')),
   // fenced code blocks are highlighted by their language
   markdown({ base: markdownLanguage, codeLanguages: languages }),
+  markdownPreview(options.markdownPreview ?? false),
   editorAppearance,
   ...(options.paste ? [pasteExtension()] : []),
   editorMenusExtension({ onContextMenu: options.onContextMenu }),

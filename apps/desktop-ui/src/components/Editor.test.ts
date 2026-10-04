@@ -261,4 +261,54 @@ describe('Editor.vue toolbar', () => {
 
     expect(wrapper.find('.editor-hint').exists()).toBe(false)
   })
+
+  const mountEditor = () =>
+    mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          VoiceRecognitionMenu: {
+            props: ['variant'],
+            template: '<div class="voice-stub" :data-variant="variant" />',
+          },
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+  it('tells that the buttons act on the selection while there is one', async () => {
+    const { useEditorInputStore } = await import('../stores/editorInput')
+    const editorInputStore = useEditorInputStore()
+    const wrapper = mountEditor()
+
+    expect(wrapper.find('.selection-chip').exists()).toBe(false)
+
+    editorInputStore.setValue('Hello foo world')
+    editorInputStore.setSelection('foo', 6, 9)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.selection-chip').exists()).toBe(true)
+    expect(
+      wrapper.find('button[title="editor.appliesToSelection"]').exists()
+    ).toBe(true)
+  })
+
+  it('runs the voice input in a bar under the editor, which stays inert', async () => {
+    const { MenuModals, useMenuModalsStore } =
+      await import('../stores/menuModals')
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mountEditor()
+
+    menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, { inline: true })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.voice-stub').attributes('data-variant')).toBe('bar')
+    expect(wrapper.find('.editor-input-area').attributes('inert')).toBeDefined()
+  })
 })

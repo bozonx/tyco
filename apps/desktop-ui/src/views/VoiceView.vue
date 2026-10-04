@@ -1,5 +1,13 @@
 <template>
-  <ContentPadding>
+  <!-- the bar sits at the bottom like the quick input, without padding -->
+  <div v-if="props.bar && !isInsertMenu" class="voice-bar-layer">
+    <VoiceRecognitionMenu
+      variant="bar"
+      @corrected="handleCorrected"
+      @cancelled="handleCancelled"
+    />
+  </div>
+  <ContentPadding v-else>
     <VoiceRecognitionMenu
       v-if="!isInsertMenu"
       @corrected="handleCorrected"
@@ -24,6 +32,19 @@ import { useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
+const props = withDefaults(
+  defineProps<{
+    /** Dictate in a bar at the bottom of the screen, as the quick window does */
+    bar?: boolean
+  }>(),
+  { bar: false }
+)
+
+const emit = defineEmits<{
+  /** The dictation is over and its result is shown in the insert menu */
+  (e: 'result-shown', shown: boolean): void
+}>()
+
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
@@ -31,6 +52,8 @@ const isInsertMenu = ref(false)
 const resText = ref('')
 
 navPanelStore.resetNavParams({ panelVisible: false })
+
+watch(isInsertMenu, (shown) => emit('result-shown', shown), { immediate: true })
 
 watch(
   () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
@@ -57,3 +80,13 @@ function handleCancelled() {
   }
 }
 </script>
+
+<style scoped>
+.voice-bar-layer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+}
+</style>

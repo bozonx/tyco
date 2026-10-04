@@ -4,6 +4,9 @@ import { type PluginContext } from '../../types/plugins'
 
 export const DEFAULT_SEARCH_URL = 'https://duckduckgo.com/?q='
 
+/** Longer texts are not a query: the whole document was sent by mistake */
+export const MAX_SEARCH_LENGTH = 500
+
 interface SearchInInternetConfig {
   url: string
 }
@@ -31,6 +34,11 @@ export default function pluginIndex() {
 
         if (!text) {
           ctx.toast('toast.textNotSelected', 'error')
+          return
+        }
+
+        if (text.length > MAX_SEARCH_LENGTH) {
+          ctx.toast('toast.textTooLongForSearch', 'warn')
           return
         }
 

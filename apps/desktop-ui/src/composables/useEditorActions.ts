@@ -26,6 +26,8 @@ export const useEditorActions = () => {
     const selectionEnd = editorInputStore.selectionEnd
 
     menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
+      // a bar under the editor instead of a screen over it, see `Editor`
+      inline: true,
       onCorrected: (resultText: string) => {
         if (!resultText?.trim()) {
           menuModalsStore.closeAll()
@@ -48,11 +50,9 @@ export const useEditorActions = () => {
   }
 
   const doAction = async (item: ActionItem): Promise<void> => {
-    let value = editorInputStore.value
-
-    if (!item.useFullEditorText && editorInputStore.selectedText) {
-      value = editorInputStore.selectedText
-    }
+    let value = item.useFullEditorText
+      ? editorInputStore.value
+      : editorInputStore.actionText()
 
     if (!item.preserveWhitespace) {
       value = value.trim()
@@ -61,16 +61,11 @@ export const useEditorActions = () => {
     return item.action(value)
   }
 
+  /** Transforms the selection, or the whole text, in place: one undo step */
   const doEdit = async (
     cb: (text: string) => Promise<string> | string
   ): Promise<void> => {
-    let value = editorInputStore.value
-
-    if (editorInputStore.selectedText) {
-      value = editorInputStore.selectedText
-    }
-
-    value = value.trim()
+    const value = editorInputStore.actionText().trim()
 
     if (!value) {
       toast(t('toast.textNotSelected'), 'error')
@@ -79,11 +74,7 @@ export const useEditorActions = () => {
 
     const result = await cb(value)
 
-    if (editorInputStore.selectedText) {
-      editorInputStore.replaceSelection(result, 'ai')
-    } else {
-      editorInputStore.setValue(result, 'ai')
-    }
+    editorInputStore.applyResult(result, value, 'ai')
   }
 
   return { getLabel, voiceRecognition, doAction, doEdit }

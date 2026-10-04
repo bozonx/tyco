@@ -19,7 +19,7 @@
             sm
             square
             ghost
-            :title="getToolbarTooltip(item)"
+            :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
             <Icon :icon="item.icon" height="18" />
@@ -34,7 +34,7 @@
             sm
             square
             ghost
-            :title="getToolbarTooltip(item)"
+            :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
             <Icon :icon="item.icon" height="18" />
@@ -44,7 +44,7 @@
             square
             ghost
             @click="handleAiTask"
-            :title="t('action.aiTask')"
+            :title="scoped(t('action.aiTask'))"
           >
             <Icon icon="mdi:robot-outline" height="18" />
           </Button>
@@ -53,7 +53,7 @@
             square
             ghost
             @click="handleTranslation"
-            :title="t('action.translation')"
+            :title="scoped(t('action.translation'))"
           >
             <Icon icon="mdi:translate" height="18" />
           </Button>
@@ -63,7 +63,7 @@
             ghost
             :disabled="!ipcStore.params.windowId"
             @click="handleInsertToWindow"
-            :title="t('action.insertIntoWindow')"
+            :title="scoped(t('action.insertIntoWindow'))"
           >
             <Icon icon="mdi:application-export" height="18" />
           </Button>
@@ -72,8 +72,22 @@
 
       <!-- Main editor area -->
       <div class="editor-body">
-        <div class="flex-1 min-w-0">
+        <!-- inert while dictating: keys and clicks belong to the voice bar -->
+        <div class="editor-input-area" :inert="isInlineVoice">
           <EditorInput />
+          <!-- the buttons act on the selection only: it must not go unnoticed -->
+          <div
+            v-if="!compact && editorInputStore.hasSelection"
+            class="selection-chip"
+            role="status"
+          >
+            <Icon icon="mdi:selection-drag" height="14" />
+            {{
+              t('editor.selectionScope', {
+                count: editorInputStore.selectedText.length,
+              })
+            }}
+          </div>
         </div>
         <div class="editor-rail">
           <template v-if="compact">
@@ -105,7 +119,7 @@
               ghost
               class="rail-accent"
               @click="handleCorrection"
-              :title="t('action.correction')"
+              :title="scoped(t('action.correction'))"
             >
               <Icon icon="mdi:auto-fix" height="20" />
             </Button>
@@ -115,7 +129,7 @@
               square
               ghost
               @click="handleCopy"
-              :title="t('action.copy')"
+              :title="scoped(t('action.copy'))"
             >
               <Icon icon="mdi:content-copy" height="18" />
             </Button>
@@ -148,6 +162,14 @@
         </div>
       </div>
     </div>
+
+    <VoiceRecognitionMenu
+      v-if="isInlineVoice"
+      variant="bar"
+      v-bind="menuModalsStore.currentModalParams"
+      @cancelled="menuModalsStore.closeAll()"
+      @corrected="menuModalsStore.closeAll()"
+    />
 
     <div class="editor-footer">
       <div
@@ -218,10 +240,12 @@ import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
 import { useIpcStore } from '../stores/ipc'
+import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { useToolbarStore } from '../stores/toolbar'
 import type { ToolbarItem } from '../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from './common/DropdownMenu.vue'
 import InfoTooltip from './common/InfoTooltip.vue'
+import VoiceRecognitionMenu from './menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
 import type { START_MODES } from '@tyco/shared'
 
@@ -232,9 +256,17 @@ const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const ipcStore = useIpcStore()
+const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 const isDev = import.meta.env.DEV
+
+/** The voice input runs in a bar under the editor, which stays in view */
+const isInlineVoice = computed(
+  () =>
+    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION &&
+    Boolean(menuModalsStore.currentModalParams?.inline)
+)
 const copyText = useCopyText({ saveOutput: true })
 
 const openQuick = async (mode: 'write' | 'voice' | 'aiTasks' | 'select') => {
@@ -276,6 +308,12 @@ const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
 
 const leftToolbarItems = computed(() => toolbarStore.getLeftToolbarItems())
 const rightToolbarItems = computed(() => toolbarStore.getRightToolbarItems())
+
+/** The label of a button that acts on the selection when there is one */
+const scoped = (label: string): string =>
+  editorInputStore.hasSelection
+    ? t('editor.appliesToSelection', { action: label })
+    : label
 
 const getToolbarTooltip = (item: ToolbarItem): string => {
   if (item.tooltipKey) {
@@ -397,6 +435,29 @@ const handleCopy = async () => {
   border-radius: 0;
   box-shadow: none;
   background-color: transparent;
+}
+
+.editor-input-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.selection-chip {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 35%, transparent);
+  border-radius: var(--radius-md);
+  background-color: var(--app-accent-soft);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  /* the text below stays clickable and selectable */
+  pointer-events: none;
 }
 
 .editor-rail {

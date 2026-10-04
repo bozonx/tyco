@@ -68,7 +68,11 @@
           @click="select(item)"
         >
           <Icon v-if="item.icon" :icon="item.icon" height="16" />
+          <span v-else-if="subHasIcons" class="editor-context-menu__icon-gap" />
           <span class="editor-context-menu__label">{{ item.label }}</span>
+          <span v-if="item.shortcut" class="editor-context-menu__shortcut">{{
+            item.shortcut
+          }}</span>
         </button>
       </template>
     </div>
@@ -107,6 +111,9 @@ const subPosition = ref({ x: 0, y: 0 })
 const subPlaced = ref(false)
 
 const hasIcons = computed(() => props.items.some((item) => item.icon))
+const subHasIcons = computed(() =>
+  Boolean(subItems.value?.some((item) => item.icon))
+)
 
 const subItems = computed(() =>
   subIndex.value === null ? null : props.items[subIndex.value]?.children
@@ -387,6 +394,13 @@ onUnmounted(() => {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.editor-context-menu__shortcut {
+  flex-shrink: 0;
+  padding-left: 1rem;
+  font-size: 0.75rem;
+  color: var(--app-text-faint);
 }
 
 .editor-context-menu__chevron {

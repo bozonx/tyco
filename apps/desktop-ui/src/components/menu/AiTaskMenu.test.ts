@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useChatStore } from '../../stores/chat'
@@ -13,8 +14,9 @@ vi.mock('../../composables/useI18n', () => ({
 }))
 
 const aiTasks = vi.hoisted(() => vi.fn())
+const aiCustomPrompt = vi.hoisted(() => vi.fn())
 vi.mock('../../composables/useCallAi', () => ({
-  useCallAi: () => ({ aiTasks }),
+  useCallAi: () => ({ aiTasks, aiCustomPrompt }),
 }))
 
 vi.mock('@tauri-apps/api/window', () => ({
@@ -26,7 +28,32 @@ describe('AiTaskMenu', () => {
     setActivePinia(createPinia())
   })
 
-  it('binds chat action to spaceKey so both Space and Enter navigate to chat', async () => {
+  const stubs = (onProps: (props: Record<string, any>) => void) => ({
+    TextPreview: true,
+    ActionOverlayLayout: {
+      template: `<div><slot name="preview" /><slot name="actions" /></div>`,
+    },
+    ShortcutList: {
+      props: [
+        'text',
+        'spaceKey',
+        'altText',
+        'altAlwaysVisible',
+        'altAction',
+        'altLabel',
+        'altIcon',
+        'leftLetterKeys',
+        'stopListening',
+        'toEditorVisible',
+      ],
+      setup(props: any) {
+        onProps(props)
+        return () => null
+      },
+    },
+  })
+
+  it('binds the chat to Shift+Space and the own request to Space/Enter', async () => {
     const chatStore = useChatStore()
     const attachSpy = vi.spyOn(chatStore, 'attachToChat').mockResolvedValue()
     const menuModalsStore = useMenuModalsStore()
@@ -34,39 +61,83 @@ describe('AiTaskMenu', () => {
 
     let shortcutListProps: Record<string, any> = {}
 
-    mount(AiTaskMenu, {
+    const wrapper = mount(AiTaskMenu, {
       props: { text: 'Some task text' },
-      global: {
-        stubs: {
-          TextPreview: true,
-          ActionOverlayLayout: {
-            template: `<div><slot name="preview" /><slot name="actions" /></div>`,
-          },
-          ShortcutList: {
-            props: [
-              'text',
-              'spaceKey',
-              'actionsKey',
-              'leftLetterKeys',
-              'stopListening',
-              'toEditorVisible',
-            ],
-            setup(props: any) {
-              shortcutListProps = props
-              return () => null
-            },
-          },
-        },
-      },
+      global: { stubs: stubs((props) => (shortcutListProps = props)) },
     })
 
-    expect(shortcutListProps.spaceKey).toBeDefined()
-    expect(shortcutListProps.spaceKey.labelKey).toBe('action.askInChat')
-
-    await shortcutListProps.spaceKey.action('Some task text')
-
+    expect(shortcutListProps.altAction.labelKey).toBe('action.askInChat')
+    expect(shortcutListProps.altText).toBe('Some task text')
+    await shortcutListProps.altAction.action('Some task text')
     expect(closeAllSpy).toHaveBeenCalled()
     expect(attachSpy).toHaveBeenCalledWith('Some task text')
+
+    expect(shortcutListProps.spaceKey.labelKey).toBe('menu.aiCustomPrompt')
+    await shortcutListProps.spaceKey.action('Some task text')
+    await nextTick()
+    expect(wrapper.find('input').exists()).toBe(true)
+  })
+
+  it('runs an own request on the text and remembers it', async () => {
+    const ipcStore = useIpcStore()
+    const patchLocalState = vi
+      .spyOn(ipcStore, 'patchLocalState')
+      .mockResolvedValue({ success: true, result: undefined })
+    const historyStore = useHistoryStore()
+    vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
+    vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
+    const menuModalsStore = useMenuModalsStore()
+    menuModalsStore.nextModal(MenuModals.AI_TASK)
+    aiCustomPrompt.mockResolvedValue('Shorter text')
+    let shortcutListProps: Record<string, any> = {}
+    const text = 'Some task text that is long enough to process'
+
+    const wrapper = mount(AiTaskMenu, {
+      props: { text },
+      global: { stubs: stubs((props) => (shortcutListProps = props)) },
+    })
+    await shortcutListProps.spaceKey.action(text)
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.setValue('Make it shorter')
+    await input.trigger('keydown', { key: 'Enter' })
+
+    await vi.waitFor(() =>
+      expect(menuModalsStore.currentModal).toBe(MenuModals.DIFF)
+    )
+    expect(aiCustomPrompt).toHaveBeenCalledWith(
+      'Make it shorter',
+      text,
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    )
+    expect(patchLocalState).toHaveBeenCalledWith({
+      recentAiPrompts: ['Make it shorter'],
+    })
+  })
+
+  it('saves an own request as a task in a free key', async () => {
+    const ipcStore = useIpcStore()
+    ipcStore.params.userConfig.aiTasks = [{ name: 'edit', rule: 'Edit it' }]
+    const saveUserConfig = vi
+      .spyOn(ipcStore, 'saveUserConfig')
+      .mockResolvedValue({ success: true, result: undefined })
+    let shortcutListProps: Record<string, any> = {}
+
+    const wrapper = mount(AiTaskMenu, {
+      props: { text: 'Some task text' },
+      global: { stubs: stubs((props) => (shortcutListProps = props)) },
+    })
+    await shortcutListProps.spaceKey.action('Some task text')
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.setValue('Make it formal')
+    await input.trigger('keydown', { key: 's', code: 'KeyS', ctrlKey: true })
+
+    await vi.waitFor(() => expect(saveUserConfig).toHaveBeenCalled())
+    expect(saveUserConfig.mock.calls[0]![0].aiTasks).toEqual([
+      { name: 'edit', rule: 'Edit it' },
+      { name: 'Make it formal', rule: 'Make it formal' },
+    ])
   })
 
   it('binds configured aiTasks to leftLetterKeys using item name', () => {

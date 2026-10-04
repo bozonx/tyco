@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
@@ -31,6 +31,9 @@ import {
   selectAll,
   setPlaceholder,
 } from '../lib/editor/editor-sync'
+import { markdownCommands } from '../lib/editor/markdown-commands'
+import { setMarkdownPreview } from '../lib/editor/markdown-preview'
+import { buildMarkupItems } from '../lib/editor/markup-menu'
 import type {
   EditorMenuCommands,
   EditorMenuGroups,
@@ -42,6 +45,7 @@ import { useActionMenuStore } from '../stores/actionMenu'
 import type { EditItem } from '../stores/editMenu'
 import { useEditMenuStore } from '../stores/editMenu'
 import { useEditorInputStore } from '../stores/editorInput'
+import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useRouteParams } from '../stores/routeParams'
 import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
@@ -52,6 +56,7 @@ const routeParamsStore = useRouteParams()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const editMenuStore = useEditMenuStore()
+const ipcStore = useIpcStore()
 const { toast } = useToast()
 const { t } = useI18n()
 const { getLabel, doAction, doEdit } = useEditorActions()
@@ -67,6 +72,11 @@ interface OpenMenu {
 }
 
 const menu = ref<OpenMenu | null>(null)
+
+/** The raw Markdown everywhere instead of the formatted look */
+const showMarkup = computed(
+  () => ipcStore.params.localState?.editorShowMarkup === true
+)
 
 let view: EditorView | null = null
 
@@ -133,6 +143,20 @@ const menuGroups = (): EditorMenuGroups => ({
       disabled: item.disabled,
       action: () => doAction(item),
     })),
+  markupItems: buildMarkupItems({
+    t,
+    run: (command) => {
+      if (!view) return
+
+      markdownCommands[command](view)
+      view.focus()
+    },
+    showMarkup: showMarkup.value,
+    toggleShowMarkup: () => {
+      void ipcStore.patchLocalState({ editorShowMarkup: !showMarkup.value })
+      view?.focus()
+    },
+  }),
 })
 
 /**
@@ -175,6 +199,7 @@ onMounted(() => {
       placeholder: t('input.textPlaceholder'),
       ariaLabel: t('editor.inputLabel'),
       paste: true,
+      markdownPreview: !showMarkup.value,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
       onSelectionChange: (text, start, end) =>
@@ -210,6 +235,10 @@ watch(
     })
   }
 )
+
+watch(showMarkup, (show) => {
+  if (view) setMarkdownPreview(view, !show)
+})
 
 // Language change
 watch(

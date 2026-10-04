@@ -17,6 +17,15 @@ pub struct LocalState {
     /// The model the chat was last used with.
     #[serde(default)]
     pub last_chat_model_id: Option<String>,
+    /// The editor shows the raw Markdown instead of the formatted look.
+    #[serde(default)]
+    pub editor_show_markup: bool,
+    /// Own AI requests typed in the AI task menu, the newest first.
+    #[serde(default)]
+    pub recent_ai_prompts: Vec<String>,
+    /// Languages picked from the full list in the translate menu, newest first.
+    #[serde(default)]
+    pub recent_translate_languages: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

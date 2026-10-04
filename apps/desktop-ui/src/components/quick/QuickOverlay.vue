@@ -20,6 +20,8 @@
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
         <VoiceView
           v-if="currentMode === 'voice' && ipcStore.params.isWindowShown"
+          bar
+          @result-shown="voiceResultShown = $event"
         />
       </div>
       <!-- The menus outlive a hidden window, so calling the same mode again
@@ -73,16 +75,26 @@ const hasModal = computed(
   () => menuModalsStore.currentModal !== MenuModals.NONE
 )
 
+/** The dictation is over: its result takes the whole window */
+const voiceResultShown = ref(false)
+
+/** Modes shown as a panel at the bottom while nothing else is open */
+const isPanelMode = computed(
+  () =>
+    currentMode.value === 'write' ||
+    (currentMode.value === 'voice' && !voiceResultShown.value)
+)
+
 const isSheet = computed(() => {
   return (
-    currentMode.value !== 'write' ||
+    !isPanelMode.value ||
     menuModalsStore.currentModal !== MenuModals.NONE ||
     Boolean(menuModalsStore.pendingModal)
   )
 })
 
-/** What stays clickable while only the input is shown. */
-const INPUT_PARTS = '.write-frame, .write-hint'
+/** What stays clickable while only the input or the voice bar is shown. */
+const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
 
 /** Modes whose first step (the input, the action menu) has nothing to lose. */
 const DISMISSIBLE_MODES = new Set(['write', 'select', 'aiTasks'])
@@ -248,6 +260,8 @@ watch(
 watch(
   [
     isSheet,
+    // the input and the voice bar are both panels, of different sizes
+    currentMode,
     () => ipcStore.params.isWindowShown,
     () => ipcStore.params.activationId,
   ],
@@ -352,7 +366,8 @@ watch(hasModal, (open) => {
   [data-window-focused='false'] .quick-overlay-root.is-sheet .quick-overlay-card
 ),
 :global([data-window-focused='false'] .write-frame),
-:global([data-window-focused='false'] .write-hint) {
+:global([data-window-focused='false'] .write-hint),
+:global([data-window-focused='false'] .voice-bar) {
   opacity: 0.72;
 }
 

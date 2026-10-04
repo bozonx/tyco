@@ -6,6 +6,7 @@ import {
   type EditItem,
   createEditMenuStoreModel,
 } from '../lib/edit-menu/edit-menu-store'
+import { stripMarkdown } from '../lib/editor/strip-markdown'
 
 export type { EditItem }
 
@@ -17,5 +18,6 @@ export const useEditMenuStore = defineStore('editMenu', () => {
     doCaseTransform,
     formatMdAndStyle,
     formatSomeCode,
+    stripMarkdown,
   })
 })

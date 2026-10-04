@@ -18,6 +18,8 @@ export interface EditorMenuGroups {
   /** Edit items registered by plugins outside the case/format groups */
   otherEditItems: EditorMenuItem[]
   actionItems: EditorMenuItem[]
+  /** Markdown formatting commands and the raw markup switch */
+  markupItems?: EditorMenuItem[]
 }
 
 export interface EditorMenuSources {
@@ -41,6 +43,7 @@ export const UNDO_ICON = 'mdi:undo'
 export const REDO_ICON = 'mdi:redo'
 export const CASE_ICON = 'mdi:format-letter-case'
 export const FORMAT_ICON = 'mdi:code-braces'
+export const MARKUP_ICON = 'mdi:language-markdown-outline'
 export const ACTIONS_ICON = 'mdi:lightning-bolt-outline'
 
 /** Icons of the standard actions, which do not carry their own */
@@ -158,6 +161,12 @@ export const buildContextMenu = ({
       t('editor.format'),
       FORMAT_ICON,
       formatChildren(groups)
+    ),
+    ...submenu(
+      'markup',
+      t('editor.markup.title'),
+      MARKUP_ICON,
+      groups.markupItems ?? []
     ),
   ]),
 ]

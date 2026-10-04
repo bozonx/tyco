@@ -153,4 +153,21 @@ describe('createEditorInputStoreModel', () => {
     store.selectAll()
     expect(store.selectAllCount.value).toBe(1)
   })
+
+  it('acts on the selection, or on the whole text without one', () => {
+    const { store } = createStore()
+
+    store.setValue('Hello foo world')
+    expect(store.hasSelection.value).toBe(false)
+    expect(store.actionText()).toBe('Hello foo world')
+
+    store.setSelection('foo', 6, 9)
+    expect(store.hasSelection.value).toBe(true)
+    expect(store.actionText()).toBe('foo')
+
+    // whitespace only is not a selection worth acting on
+    store.setSelection('  ', 5, 7)
+    expect(store.hasSelection.value).toBe(false)
+    expect(store.actionText()).toBe('Hello foo world')
+  })
 })

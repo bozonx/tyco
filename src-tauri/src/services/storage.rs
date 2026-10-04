@@ -1681,11 +1681,33 @@ mod tests {
     }
 
     #[test]
+    fn local_state_without_the_menu_history_reads_with_defaults() {
+        let state: LocalState = serde_json::from_value(json!({ "lastChatId": "chat" })).unwrap();
+
+        assert!(!state.editor_show_markup);
+        assert!(state.recent_ai_prompts.is_empty());
+        assert!(state.recent_translate_languages.is_empty());
+
+        let merged = merge_local_state(
+            &state,
+            json!({ "recentAiPrompts": ["shorter"], "editorShowMarkup": true })
+                .as_object()
+                .unwrap()
+                .clone(),
+        )
+        .unwrap();
+
+        assert_eq!(merged.recent_ai_prompts, vec![String::from("shorter")]);
+        assert!(merged.editor_show_markup);
+        assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
+    }
+
+    #[test]
     fn merge_local_state_replaces_only_the_patched_fields() {
         let current = LocalState {
             last_chat_id: Some(String::from("chat")),
             last_mode: Some(String::from("editor")),
-            last_chat_model_id: None,
+            ..LocalState::default()
         };
         let patch = json!({ "lastMode": "write" });
 

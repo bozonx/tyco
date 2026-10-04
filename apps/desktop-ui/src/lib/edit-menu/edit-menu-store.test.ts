@@ -10,6 +10,7 @@ describe('createEditMenuStoreModel', () => {
       ),
       formatMdAndStyle: vi.fn(async (text: string) => `md:${text}`),
       formatSomeCode: vi.fn(async (text: string) => `code:${text}`),
+      stripMarkdown: vi.fn((text: string) => `plain:${text}`),
     }
     const store = createEditMenuStoreModel(deps)
     return { store, deps }
@@ -24,7 +25,8 @@ describe('createEditMenuStoreModel', () => {
     expect(caseItems.map((c) => c.labelKey)).toContain('edit.snakeCase')
 
     const formatItems = store.getFormatItems()
-    expect(formatItems).toHaveLength(2)
+    expect(formatItems).toHaveLength(3)
+    expect(formatItems[0]?.labelKey).toBe('edit.stripMarkdown')
     expect(formatItems.map((f) => f.labelKey)).toContain('edit.beautifyMd')
     expect(formatItems.map((f) => f.labelKey)).toContain('edit.formatCode')
   })
@@ -45,6 +47,11 @@ describe('createEditMenuStoreModel', () => {
     const mdResult = await mdItem?.action('# Hello')
     expect(deps.formatMdAndStyle).toHaveBeenCalledWith('# Hello')
     expect(mdResult).toBe('md:# Hello')
+
+    const plainItem = store
+      .getFormatItems()
+      .find((i) => i.labelKey === 'edit.stripMarkdown')
+    expect(await plainItem?.action('**Hi**')).toBe('plain:**Hi**')
   })
 
   it('allows registering case, format, and other edit items', () => {

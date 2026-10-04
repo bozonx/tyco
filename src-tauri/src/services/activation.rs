@@ -63,7 +63,8 @@ impl StartMode {
     }
     pub fn profile(self) -> WindowProfile {
         match self {
-            Self::Write => WindowProfile::Panel,
+            // the dictation bar leaves the screen above it in view
+            Self::Write | Self::Voice => WindowProfile::Panel,
             _ => WindowProfile::Sheet,
         }
     }
@@ -167,9 +168,9 @@ mod tests {
     #[test]
     fn selects_geometry_profile() {
         assert_eq!(StartMode::Write.profile(), WindowProfile::Panel);
+        assert_eq!(StartMode::Voice.profile(), WindowProfile::Panel);
         for mode in [
             StartMode::Editor,
-            StartMode::Voice,
             StartMode::Select,
             StartMode::AiTasks,
             StartMode::Correction,

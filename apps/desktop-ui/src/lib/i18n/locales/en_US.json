@@ -404,6 +404,23 @@
       "clipboardUnavailable": "Clipboard is not available",
       "addToDictionary": "Add to dictionary",
       "ignoreWord": "Ignore"
+    },
+    "selectionScope": "Selection: {count} chars",
+    "appliesToSelection": "{action} (selection only)",
+    "markup": {
+      "title": "Markup",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "code": "Code",
+      "link": "Link",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "quote": "Quote",
+      "showSource": "Show Markdown markup"
     }
   },
   "write": {
@@ -457,7 +474,23 @@
     "translationQualityRepairFailed": "The quality pass failed; the first translation was kept.",
     "translationQualityRemaining": "Some quality issues remain after the repair",
     "translationQualityProblems": "Possible quality issues",
-    "translationQualityClean": "Quality check passed."
+    "translationQualityClean": "Quality check passed.",
+    "aiCustomPrompt": "Own request",
+    "aiPromptPlaceholder": "What to do with the text?",
+    "aiPromptRun": "Run",
+    "aiPromptSave": "Save as task",
+    "aiPromptSaved": "Saved as a task",
+    "aiPromptSlotsFull": "All task keys are taken: free one in the settings",
+    "translateOtherLanguage": "Other language",
+    "translateTargetPlaceholder": "Translate into…",
+    "translateSourcePlaceholder": "Source language…",
+    "translateNoLanguage": "No such language",
+    "translateSourceHint": "Source language (Tab)",
+    "translateFrom": "From:",
+    "translateAutoDetect": "Auto-detect",
+    "translatePickSource": "Choose",
+    "translateTargetLanguage": "Target language",
+    "translateSourceLanguage": "Source language"
   },
   "diff": {
     "modeUnified": "Inline",
@@ -573,7 +606,8 @@
     "camelCase": "camelCase",
     "pascalCase": "PascalCase",
     "snakeCase": "snake_case",
-    "kebabCase": "kebab-case"
+    "kebabCase": "kebab-case",
+    "stripMarkdown": "Remove markup"
   },
   "toast": {
     "settingsSaveFailed": "Failed to save settings",
@@ -603,7 +637,8 @@
     "actionEmptyOutput": "The action returned nothing",
     "webhookSuccess": "Webhook sent successfully",
     "webhookFailed": "Webhook request failed",
-    "webhookEmptyUrl": "Webhook URL is empty"
+    "webhookEmptyUrl": "Webhook URL is empty",
+    "textTooLongForSearch": "The text is too long to search for: select a fragment"
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createPluginTestContext } from '../plugin-test-context'
-import pluginIndex, { DEFAULT_SEARCH_URL } from './index'
+import pluginIndex, { DEFAULT_SEARCH_URL, MAX_SEARCH_LENGTH } from './index'
 
 const setup = (options: Parameters<typeof createPluginTestContext>[0]) => {
   const context = createPluginTestContext(options)
@@ -96,4 +96,15 @@ it('uses the text supplied by the action menu', async () => {
   expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndClose', [
     DEFAULT_SEARCH_URL + 'menu%20text',
   ])
+})
+
+it('does not search a whole document sent by mistake', async () => {
+  const { mocks, toolbarItems } = setup({
+    value: 'a'.repeat(MAX_SEARCH_LENGTH + 1),
+  })
+
+  await toolbarItems[0].action()
+
+  expect(mocks.callApiFunction).not.toHaveBeenCalled()
+  expect(mocks.toast).toHaveBeenCalledWith('toast.textTooLongForSearch', 'warn')
 })

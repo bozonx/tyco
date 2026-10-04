@@ -25,10 +25,7 @@ export const useCallApi = () => {
     if (text) {
       return text
     }
-    if (editorInputStore.selectedText) {
-      return editorInputStore.selectedText
-    }
-    return editorInputStore.value || ''
+    return editorInputStore.actionText()
   }
 
   return { resolveText, typeIntoWindowAndClose }

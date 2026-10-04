@@ -19,11 +19,11 @@
       <ShortcutButton
         v-if="altVisible"
         :keys="['Shift', 'Space']"
-        icon="mdi:undo-variant"
+        :icon="props.altIcon"
         :disabled="altKey?.disabled"
         @click="altKey?.action(props.altText || '')"
       >
-        {{ t('write.insertOriginal') }}
+        {{ props.altLabel ?? t('write.insertOriginal') }}
       </ShortcutButton>
 
       <ShortcutButton
@@ -84,6 +84,9 @@ const props = withDefaults(
     altAlwaysVisible?: boolean
     /** What Shift+Space runs on `altText`; `spaceKey` by default */
     altAction?: ActionItem
+    /** Label of the Shift+Space button; "insert the original" by default */
+    altLabel?: string
+    altIcon?: string
     toEditorVisible?: boolean
     escVisible?: boolean
     escAction?: () => void
@@ -98,6 +101,8 @@ const props = withDefaults(
     altText: undefined,
     altAlwaysVisible: false,
     altAction: undefined,
+    altLabel: undefined,
+    altIcon: 'mdi:undo-variant',
     toEditorVisible: false,
     escVisible: true,
     escAction: undefined,

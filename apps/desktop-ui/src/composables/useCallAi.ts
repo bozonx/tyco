@@ -210,30 +210,32 @@ export const useCallAi = () => {
     })
   }
 
-  const translateText = async (
-    toLangNum: number,
+  interface TranslateOptions {
+    signal?: AbortSignal
+    onStage?: (stage: 'translating' | 'checking' | 'repairing') => void
+    notifyError?: boolean
+    /** Detected by the translator when omitted */
+    sourceLanguage?: string
+  }
+
+  /** Translates into any language, not only the configured ones */
+  const translateTo = async (
+    targetLanguage: string,
     text?: string,
-    options: {
-      signal?: AbortSignal
-      onStage?: (stage: 'translating' | 'checking' | 'repairing') => void
-      notifyError?: boolean
-    } = {}
+    options: TranslateOptions = {}
   ) => {
     if (!text?.trim()) {
       toast('toast.textNotSelected', 'error')
       return ''
     }
 
-    const userConfig = currentUserConfig()
-    const language = userConfig.toTranslateLanguages[toLangNum]
-    if (!language) return ''
-
     try {
       return await translationStore.client.translate(text, {
-        targetLanguage: language,
+        targetLanguage,
+        sourceLanguage: options.sourceLanguage,
         signal: options.signal,
         onStage: options.onStage,
-        rules: userConfig.aiRules?.translate,
+        rules: currentUserConfig().aiRules?.translate,
       })
     } catch (error) {
       if (options.signal?.aborted) return ''
@@ -244,6 +246,22 @@ export const useCallAi = () => {
       }
       throw llmError
     }
+  }
+
+  const translateText = async (
+    toLangNum: number,
+    text?: string,
+    options: TranslateOptions = {}
+  ) => {
+    if (!text?.trim()) {
+      toast('toast.textNotSelected', 'error')
+      return ''
+    }
+
+    const language = currentUserConfig().toTranslateLanguages[toLangNum]
+    if (!language) return ''
+
+    return translateTo(language, text, options)
   }
 
   const aiTasks = async (
@@ -267,6 +285,25 @@ export const useCallAi = () => {
     })
   }
 
+  /** Applies an own request typed in the AI task menu, like a task's rule */
+  const aiCustomPrompt = async (
+    prompt: string,
+    text?: string,
+    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
+  ) => {
+    if (!text?.trim()) {
+      toast('toast.textNotSelected', 'error')
+      return ''
+    }
+    if (!prompt.trim()) return ''
+
+    return await aiRequest(AI_TASKS.AI_TASKS, text, {
+      ...options,
+      instructions: currentAppConfig().aiInstructions[AI_TASKS.AI_TASKS],
+      rules: prompt.trim(),
+    })
+  }
+
   const saveLocalState = (patch: Partial<LocalState>) => {
     return ipcStore.patchLocalState(patch)
   }
@@ -282,7 +319,9 @@ export const useCallAi = () => {
     generateChatTitle,
     correctText,
     translateText,
+    translateTo,
     aiTasks,
+    aiCustomPrompt,
     saveLocalState,
   }
 }
