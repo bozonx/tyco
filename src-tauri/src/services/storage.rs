@@ -1701,10 +1701,15 @@ mod tests {
         let mut config = json!({ "xdotoolBin": "/opt/bin/xdotool" });
 
         assert!(normalize_window_insertion_config(&mut config));
+        let expected_method = if crate::services::platform::session::current().is_wayland() {
+            "ydotool"
+        } else {
+            "xdotool"
+        };
         assert_eq!(
             config["windowInsertion"],
             json!({
-                "method": "xdotool",
+                "method": expected_method,
                 "xdotoolBin": "/opt/bin/xdotool",
                 "ydotoolBin": "/usr/bin/ydotool",
                 "pasteShortcut": "ctrl+v",
@@ -1717,7 +1722,12 @@ mod tests {
         let mut config = json!({ "windowInsertion": { "method": "wtype" } });
 
         assert!(normalize_window_insertion_config(&mut config));
-        assert_eq!(config["windowInsertion"]["method"], json!("xdotool"));
+        let expected_method = if crate::services::platform::session::current().is_wayland() {
+            "ydotool"
+        } else {
+            "xdotool"
+        };
+        assert_eq!(config["windowInsertion"]["method"], json!(expected_method));
         assert_eq!(config["windowInsertion"]["pasteShortcut"], json!("ctrl+v"));
     }
 
@@ -1873,7 +1883,9 @@ mod tests {
         assert!(config.get("pasteMode").is_none());
         assert!(config.get("editorSyntax").is_none());
         assert_eq!(config["editorHistoryStorage"], json!("disk"));
-        assert_eq!(config["editorHistoryMaxItems"], json!(100));
+        assert_eq!(config["editorHistoryMaxItems"], json!(1000));
+        assert_eq!(config["editorHistoryRetentionDays"], json!(30));
+        assert_eq!(config["sanitizeSecretsInEditorHistory"], json!(true));
         assert!(!normalize_editor_config(&mut config));
 
         assert!(normalize_translation_config(&mut config));
@@ -2307,7 +2319,7 @@ mod tests {
         });
         assert!(normalize_editor_config(&mut off));
         assert_eq!(off["editorHistoryStorage"], json!("off"));
-        assert_eq!(off["editorHistoryMaxItems"], json!(100));
+        assert_eq!(off["editorHistoryMaxItems"], json!(1000));
         assert!(!normalize_editor_config(&mut off));
     }
 

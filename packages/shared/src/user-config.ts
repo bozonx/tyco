@@ -331,9 +331,9 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   translation: DEFAULT_TRANSLATION_CONFIG,
   mainActions: DEFAULT_MAIN_ACTIONS,
   editorHistoryStorage: 'disk',
-  editorHistoryMaxItems: 100,
-  editorHistoryRetentionDays: 0,
-  sanitizeSecretsInEditorHistory: false,
+  editorHistoryMaxItems: 1000,
+  editorHistoryRetentionDays: 30,
+  sanitizeSecretsInEditorHistory: true,
   chatHistoryMaxItems: 50,
   llm: DEFAULT_LLM_CONFIG,
   sttModels: [

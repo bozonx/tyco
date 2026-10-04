@@ -121,6 +121,11 @@ pub struct StorageInfo {
 pub fn default_user_config() -> Value {
     let xdotool_bin = default_binary_path("xdotool");
     let ydotool_bin = default_binary_path("ydotool");
+    let insertion_method = if crate::services::platform::session::current().is_wayland() {
+        "ydotool"
+    } else {
+        "xdotool"
+    };
 
     json!({
       "hotkeys": hotkeys::default_hotkeys_config(),
@@ -134,7 +139,7 @@ pub fn default_user_config() -> Value {
       "uiScale": 100,
       "xdotoolBin": xdotool_bin,
       "windowInsertion": {
-        "method": "xdotool",
+        "method": insertion_method,
         "xdotoolBin": xdotool_bin,
         "ydotoolBin": ydotool_bin,
         "pasteShortcut": "ctrl+v"
@@ -157,9 +162,9 @@ pub fn default_user_config() -> Value {
         { "type": "standard", "actionId": "askInChat" }
       ],
       "editorHistoryStorage": "disk",
-      "editorHistoryMaxItems": 100,
-      "editorHistoryRetentionDays": 0,
-      "sanitizeSecretsInEditorHistory": false,
+      "editorHistoryMaxItems": 1000,
+      "editorHistoryRetentionDays": 30,
+      "sanitizeSecretsInEditorHistory": true,
       "chatHistoryMaxItems": 50,
       "llm": crate::services::llm_config::default_llm_config(),
       "sttModels": [

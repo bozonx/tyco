@@ -78,7 +78,7 @@ describe('normalizeEditorConfig', () => {
     normalizeEditorConfig(config)
 
     expect(config).toEqual({
-      editorHistoryMaxItems: 100,
+      editorHistoryMaxItems: 1000,
       editorHistoryStorage: 'off',
     })
   })

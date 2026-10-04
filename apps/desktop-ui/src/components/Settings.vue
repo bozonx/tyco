@@ -88,55 +88,50 @@
             </FieldRow>
           </SettingsSection>
 
-          <SettingsSection :title="t('settings.sectionInput')">
-            <FieldRow :label="t('settings.submitKey.label')">
-              <FieldSelect
-                v-model:value="userConfig.submitKey"
-                :options="submitKeyOptions"
-              />
-            </FieldRow>
-          </SettingsSection>
-
           <SettingsSection :title="t('settings.sectionHistory')">
-            <FieldRow
-              :label="t('settings.editorHistoryStorage')"
-              :info="t('settings.editorHistoryStorageHint')"
-            >
-              <FieldSelect
-                v-model:value="userConfig.editorHistoryStorage"
-                :options="editorHistoryStorageOptions"
-              />
-            </FieldRow>
-            <FieldRow
-              v-if="userConfig.editorHistoryStorage !== 'off'"
-              :label="t('settings.editorHistoryMaxItems')"
-            >
-              <FieldInput
-                type="number"
-                :value="userConfig.editorHistoryMaxItems"
-                @update:value="setEditorHistoryLimit"
-              />
-            </FieldRow>
-            <template v-if="userConfig.editorHistoryStorage === 'disk'">
+            <div class="editor-history-group">
               <FieldRow
-                :label="t('settings.editorHistoryRetentionDays')"
-                :info="t('settings.editorHistoryRetentionDaysHint')"
+                :label="t('settings.editorHistoryStorage')"
+                :info="t('settings.editorHistoryStorageHint')"
               >
                 <FieldSelect
-                  :value="userConfig.editorHistoryRetentionDays ?? 0"
-                  :options="editorHistoryRetentionOptions"
-                  @update:value="setEditorHistoryRetentionDays"
+                  v-model:value="userConfig.editorHistoryStorage"
+                  :options="editorHistoryStorageOptions"
                 />
               </FieldRow>
-              <FieldRow
-                :label="t('settings.sanitizeSecretsInEditorHistory')"
-                :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
+              <div
+                v-if="userConfig.editorHistoryStorage !== 'off'"
+                class="editor-history-nested"
               >
-                <FieldCheckbox
-                  v-model:value="userConfig.sanitizeSecretsInEditorHistory"
-                />
-              </FieldRow>
-            </template>
+                <FieldRow :label="t('settings.editorHistoryMaxItems')">
+                  <FieldInput
+                    type="number"
+                    :value="userConfig.editorHistoryMaxItems"
+                    @update:value="setEditorHistoryLimit"
+                  />
+                </FieldRow>
+                <template v-if="userConfig.editorHistoryStorage === 'disk'">
+                  <FieldRow
+                    :label="t('settings.editorHistoryRetentionDays')"
+                    :info="t('settings.editorHistoryRetentionDaysHint')"
+                  >
+                    <FieldSelect
+                      :value="userConfig.editorHistoryRetentionDays ?? 0"
+                      :options="editorHistoryRetentionOptions"
+                      @update:value="setEditorHistoryRetentionDays"
+                    />
+                  </FieldRow>
+                  <FieldRow
+                    :label="t('settings.sanitizeSecretsInEditorHistory')"
+                    :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
+                  >
+                    <FieldCheckbox
+                      v-model:value="userConfig.sanitizeSecretsInEditorHistory"
+                    />
+                  </FieldRow>
+                </template>
+              </div>
+            </div>
             <FieldRow
               :label="t('settings.chatHistoryMaxItems')"
               :info="t('settings.chatHistoryPrivacyHint')"
@@ -147,49 +142,6 @@
                 @update:value="setHistoryLimit('chatHistoryMaxItems', $event)"
               />
             </FieldRow>
-            <details class="storage-details">
-              <summary class="storage-summary">
-                {{ t('settings.storageLocations') }}
-              </summary>
-              <div v-if="!storageInfo" class="text-sm text-muted">
-                {{ t('settings.storageLocationsUnavailable') }}
-              </div>
-              <div v-else class="storage-list">
-                <div
-                  v-for="item in storageInfoItems"
-                  :key="item.key"
-                  class="storage-item"
-                >
-                  <span class="storage-item-label">{{ item.label }}</span>
-                  <div class="storage-path-box">
-                    <code class="storage-path" :title="item.value">{{
-                      item.value
-                    }}</code>
-                    <button
-                      type="button"
-                      class="storage-copy-btn"
-                      :title="
-                        copiedStorageKey === item.key
-                          ? t('settings.storagePathCopied')
-                          : t('settings.storageCopyPath')
-                      "
-                      :aria-label="t('settings.storageCopyPath')"
-                      @click="copyStoragePath(item.value, item.key)"
-                    >
-                      <Icon
-                        :icon="
-                          copiedStorageKey === item.key
-                            ? 'mdi:check'
-                            : 'mdi:content-copy'
-                        "
-                        height="14"
-                        class="shrink-0"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </details>
           </SettingsSection>
 
           <SettingsSection :title="t('settings.sectionWindowInsertion')">
@@ -224,6 +176,50 @@
               />
             </FieldRow>
           </SettingsSection>
+
+          <details class="storage-details">
+            <summary class="storage-summary">
+              {{ t('settings.storageLocations') }}
+            </summary>
+            <div v-if="!storageInfo" class="text-sm text-muted">
+              {{ t('settings.storageLocationsUnavailable') }}
+            </div>
+            <div v-else class="storage-list">
+              <div
+                v-for="item in storageInfoItems"
+                :key="item.key"
+                class="storage-item"
+              >
+                <span class="storage-item-label">{{ item.label }}</span>
+                <div class="storage-path-box">
+                  <code class="storage-path" :title="item.value">{{
+                    item.value
+                  }}</code>
+                  <button
+                    type="button"
+                    class="storage-copy-btn"
+                    :title="
+                      copiedStorageKey === item.key
+                        ? t('settings.storagePathCopied')
+                        : t('settings.storageCopyPath')
+                    "
+                    :aria-label="t('settings.storageCopyPath')"
+                    @click="copyStoragePath(item.value, item.key)"
+                  >
+                    <Icon
+                      :icon="
+                        copiedStorageKey === item.key
+                          ? 'mdi:check'
+                          : 'mdi:content-copy'
+                      "
+                      height="14"
+                      class="shrink-0"
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
         </template>
 
         <template v-else-if="currentTab === 'accessibility'">
@@ -262,6 +258,8 @@
           v-else-if="currentTab === 'global-actions'"
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
+          @update:submit-key="userConfig.submitKey = $event"
+          @update:provider-note="globalActionsNote = $event"
         />
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
@@ -474,9 +472,9 @@ let saveQueue: Promise<void> = Promise.resolve()
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
   {
-    text: t('settings.globalActionsTab'),
+    text: t('settings.hotkeysTab'),
     key: 'global-actions',
-    icon: 'mdi:earth',
+    icon: 'mdi:keyboard-outline',
   },
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
@@ -538,10 +536,17 @@ const currentTabTitle = computed(() => {
   )
 })
 
+const globalActionsNote = ref<string | null>(null)
+
 const TAB_INFO_KEYS: Record<string, string> = {
   'global-actions': 'settings.globalActionsHint',
 }
 const currentTabInfo = computed(() => {
+  if (currentTab.value === 'global-actions') {
+    return globalActionsNote.value
+      ? t(globalActionsNote.value)
+      : t('settings.globalActionsHint')
+  }
   const key = TAB_INFO_KEYS[currentTab.value]
   return key ? t(key) : ''
 })
@@ -935,11 +940,6 @@ const pasteShortcutOptions = computed(() => {
   ]
 })
 
-const submitKeyOptions = computed(() => [
-  { id: 'enter', name: t('settings.submitKey.enter') },
-  { id: 'ctrlEnter', name: t('settings.submitKey.ctrlEnter') },
-])
-
 const appLanguageOptions = computed(() => {
   return buildLanguageOptions(
     [effectiveAppLanguage.value, userConfig.value.appLanguage],
@@ -1204,9 +1204,18 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.storage-details {
-  padding: var(--space-md) var(--space-lg);
+.editor-history-nested {
+  background-color: var(--app-surface-sunken);
   border-top: 1px solid var(--app-border-subtle);
+}
+
+.editor-history-group + .field-row {
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+.storage-details {
+  margin-top: var(--space-2xl);
+  padding: 0 var(--space-xs);
 }
 
 .storage-summary {

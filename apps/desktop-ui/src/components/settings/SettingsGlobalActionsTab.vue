@@ -1,11 +1,11 @@
 <template>
   <div class="flex flex-col gap-6">
-    <SettingsSection>
+    <SettingsSection :title="t('settings.globalHotkeysTitle')">
       <template v-if="systemManaged" #actions>
         <Button
           sm
           :ghost="missing.length === 0"
-          icon="mdi:keyboard-return"
+          icon="mdi:refresh"
           :disabled="rebinding"
           :title="t('settings.rebindHotkeysHint')"
           @click="rebindHotkeys"
@@ -25,11 +25,10 @@
         <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
         <p>{{ t('settings.hotkeysMissing') }}</p>
       </div>
-      <div v-if="providerNote || portalError" class="provider-note">
+      <div v-if="portalError" class="provider-note">
         <Icon icon="mdi:information-outline" height="16" class="shrink-0" />
         <div>
-          <p v-if="providerNote">{{ t(providerNote) }}</p>
-          <p v-if="portalError" class="portal-error">
+          <p class="portal-error">
             {{ portalError }}
           </p>
         </div>
@@ -114,11 +113,24 @@
         </div>
       </FieldRow>
     </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.appHotkeysTitle')"
+      :description="t('settings.appHotkeysHint')"
+    >
+      <FieldRow :label="t('settings.submitKey.label')">
+        <FieldSelect
+          :value="userConfig.submitKey ?? DEFAULT_SUBMIT_KEY"
+          :options="submitKeyOptions"
+          @update:value="emit('update:submit-key', resolveSubmitKey($event))"
+        />
+      </FieldRow>
+    </SettingsSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { desktopClient } from '../../lib/desktop/client'
@@ -133,27 +145,38 @@ import {
   missingHotkeys,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
+import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import HotkeyInput from '../common/HotkeyInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import { Icon } from '@iconify/vue'
 import {
+  DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
   type HotkeyApplyResult,
   type HotkeyProviderInfo,
   SELECTION_HOTKEY_PREFIX,
+  type SubmitKey,
   type UserConfig,
 } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:hotkey', mode: string, shortcut: string): void
+  (event: 'update:submit-key', value: SubmitKey): void
+  (event: 'update:provider-note', noteKey: string | null): void
 }>()
 const { t } = useI18n()
+
+const submitKeyOptions = computed(() => [
+  { id: 'enter', name: t('settings.submitKey.enter') },
+  { id: 'ctrlEnter', name: t('settings.submitKey.ctrlEnter') },
+])
 
 /** Display order of the activation modes; unknown modes go last. */
 const MODE_ORDER = [
@@ -186,6 +209,13 @@ const canConfigure = computed(() => providerState.canConfigure)
 const editable = computed(() => isEditable(providerState))
 const systemManaged = computed(() => isSystemManaged(providerState))
 const providerNote = computed(() => providerNoteKey(providerState))
+watch(
+  providerNote,
+  (note) => {
+    emit('update:provider-note', note)
+  },
+  { immediate: true }
+)
 const portalError = ref('')
 const rebinding = ref(false)
 const injection = reactive<{ ok: boolean | null; error: string }>({
