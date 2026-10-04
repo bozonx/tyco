@@ -34,12 +34,13 @@ const props = withDefaults(defineProps<{ text?: string }>(), { text: '' })
 
 const ipcStore = useIpcStore()
 const routeParamsStore = useRouteParams()
-const appConfig = computed(() => ipcStore.params.appConfig)
 const { translateText } = useCallAi()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
-const { toast } = useToast()
+const { toast, toastText } = useToast()
 const { t } = useI18n()
+
+const MIN_TRANSLATE_LENGTH = 2
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   ipcStore.params.userConfig.toTranslateLanguages.map(
@@ -59,14 +60,12 @@ const translate = async (toLangNum: number) => {
   const sourceText = props.text
 
   if (!sourceText.trim()) {
-    toast(t('toast.noTextToTranslate'), 'warn')
-
+    toast('toast.noTextToTranslate', 'warn')
     return
   }
 
-  if (sourceText.trim().length < appConfig.value.minCorrectionLength) {
-    toast(t('toast.textTooShortToTranslate'), 'warn')
-
+  if (sourceText.trim().length < MIN_TRANSLATE_LENGTH) {
+    toast('toast.textTooShortToTranslate', 'warn')
     return
   }
 
@@ -91,7 +90,7 @@ const translate = async (toLangNum: number) => {
     })
     if (!result) return
     await historyStore.saveSourceResult(sourceId, result.text).catch(() => {
-      toast(t('history.operationFailed'), 'error')
+      toast('history.operationFailed', 'error')
     })
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
       text: result.text,
@@ -102,8 +101,10 @@ const translate = async (toLangNum: number) => {
         quality: result.quality,
       },
     })
-  } catch {
-    // The request layer already reported the actionable error.
+  } catch (error) {
+    if (controller.signal.aborted) return
+    const message = error instanceof Error ? error.message : String(error)
+    toastText(message, 'error')
   } finally {
     menuModalsStore.clearPendingModal()
   }

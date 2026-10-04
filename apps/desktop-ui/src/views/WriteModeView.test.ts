@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
     rememberSubmitted: vi.fn(),
     markDismissed: vi.fn(),
     discard: vi.fn(),
+    clear: vi.fn(),
     setValue: vi.fn(),
   },
   modals: {

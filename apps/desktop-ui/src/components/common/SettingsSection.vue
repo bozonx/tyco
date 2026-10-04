@@ -5,7 +5,10 @@
       class="settings-section-header"
     >
       <div class="min-w-0">
-        <h3 v-if="title" class="settings-section-title">{{ title }}</h3>
+        <h3 v-if="title" class="settings-section-title">
+          <span>{{ title }}</span>
+          <InfoTooltip v-if="info" :text="info" />
+        </h3>
         <p v-if="description" class="settings-section-description">
           {{ description }}
         </p>
@@ -21,9 +24,16 @@
 </template>
 
 <script setup lang="ts">
+import InfoTooltip from './InfoTooltip.vue'
+
 withDefaults(
-  defineProps<{ title?: string; description?: string; bare?: boolean }>(),
-  { title: '', description: '', bare: false }
+  defineProps<{
+    title?: string
+    description?: string
+    info?: string
+    bare?: boolean
+  }>(),
+  { title: '', description: '', info: '', bare: false }
 )
 </script>
 
@@ -42,6 +52,9 @@ withDefaults(
 }
 
 .settings-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.4;

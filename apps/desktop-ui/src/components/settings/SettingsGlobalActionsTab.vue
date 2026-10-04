@@ -1,6 +1,9 @@
 <template>
   <div class="flex flex-col gap-6">
-    <SettingsSection :title="t('settings.globalHotkeysTitle')">
+    <SettingsSection
+      :title="t('settings.globalHotkeysTitle')"
+      :info="globalInfo"
+    >
       <template v-if="systemManaged" #actions>
         <Button
           sm
@@ -116,7 +119,7 @@
 
     <SettingsSection
       :title="t('settings.appHotkeysTitle')"
-      :description="t('settings.appHotkeysHint')"
+      :info="t('settings.appHotkeysHint')"
     >
       <FieldRow :label="t('settings.submitKey.label')">
         <FieldSelect
@@ -130,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { desktopClient } from '../../lib/desktop/client'
@@ -169,7 +172,6 @@ const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:hotkey', mode: string, shortcut: string): void
   (event: 'update:submit-key', value: SubmitKey): void
-  (event: 'update:provider-note', noteKey: string | null): void
 }>()
 const { t } = useI18n()
 
@@ -209,12 +211,10 @@ const canConfigure = computed(() => providerState.canConfigure)
 const editable = computed(() => isEditable(providerState))
 const systemManaged = computed(() => isSystemManaged(providerState))
 const providerNote = computed(() => providerNoteKey(providerState))
-watch(
-  providerNote,
-  (note) => {
-    emit('update:provider-note', note)
-  },
-  { immediate: true }
+const globalInfo = computed(() =>
+  [t('settings.globalActionsHint'), providerNote.value && t(providerNote.value)]
+    .filter(Boolean)
+    .join('\n\n')
 )
 const portalError = ref('')
 const rebinding = ref(false)

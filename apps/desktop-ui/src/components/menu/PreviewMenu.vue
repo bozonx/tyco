@@ -38,7 +38,6 @@
       <ShortcutList
         :text="currentText"
         :sourceText="props.sourceText"
-        :altText="props.sourceText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
         :toEditorVisible="true"

@@ -7,14 +7,17 @@
       <span v-else-if="props.correction">{{ t('menu.correction') }}</span>
       <span v-else>{{ t('common.inProgress') }}</span>
     </div>
-    <button v-if="props.onCancel" class="btn btn-ghost" @click="props.onCancel">
+    <button type="button" class="btn btn-ghost btn-sm" @click="handleCancel">
       {{ t('common.cancel') }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+
 import { useI18n } from '../../composables/useI18n'
+import { useMenuModalsStore } from '../../stores/menuModals'
 
 const props = withDefaults(
   defineProps<{
@@ -26,7 +29,31 @@ const props = withDefaults(
   { ai: false, correction: false }
 )
 
+const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
+
+function handleCancel() {
+  if (props.onCancel) {
+    props.onCancel()
+  } else {
+    menuModalsStore.cancelPending()
+  }
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    handleCancel()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>

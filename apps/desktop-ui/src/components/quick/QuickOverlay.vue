@@ -321,7 +321,7 @@ watch(hasModal, (open) => {
   max-height: 100%;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--app-shadow-lg);
+  box-shadow: none;
   background: var(--app-surface);
   backdrop-filter: none;
 }
@@ -335,14 +335,16 @@ watch(hasModal, (open) => {
 }
 
 /* The window has no title bar: its frame tells whether it takes the keys */
-:global([data-window='quick'][data-window-focused='true'] .overlay),
+:global(
+  [data-window='quick'][data-window-focused='true']
+    .overlay:not(:has(.overlay-panel.is-compact))
+),
 :global(
   [data-window-focused='true'] .quick-overlay-root.is-sheet .quick-overlay-card
 ) {
   border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  box-shadow:
-    var(--app-shadow-lg),
-    0 0 0 3px color-mix(in oklab, var(--color-primary) 16%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in oklab, var(--color-primary) 16%, transparent);
 }
 
 :global([data-window='quick'][data-window-focused='false'] .overlay),

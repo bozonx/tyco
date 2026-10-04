@@ -43,12 +43,19 @@ pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(dir)
 }
 
+pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    let dir = AppPaths::resolve(app)?.log_dir;
+    fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
+
 pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
     let config_dir = app_config_dir(app)?;
     let data_dir = app_data_dir(app)?;
     let history_dir = app_data_sub_dir(app, "history")?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let cache_dir = app_cache_dir(app)?;
+    let log_dir = app_log_dir(app)?;
     let user_config_file = config_dir.join(CONFIG_FILE_NAME);
 
     Ok(StorageInfo {
@@ -57,6 +64,7 @@ pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
         history_dir: path_to_string(history_dir),
         chats_dir: path_to_string(chats_dir),
         cache_dir: path_to_string(cache_dir),
+        log_dir: path_to_string(log_dir),
         user_config_file: path_to_string(user_config_file),
     })
 }
@@ -2644,5 +2652,27 @@ mod tests {
         assert!(!path.exists());
 
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn storage_info_serializes_all_expected_fields() {
+        let info = StorageInfo {
+            config_dir: "/config".into(),
+            data_dir: "/data".into(),
+            history_dir: "/data/history".into(),
+            chats_dir: "/data/chats".into(),
+            cache_dir: "/cache".into(),
+            log_dir: "/logs".into(),
+            user_config_file: "/config/userConfig.yaml".into(),
+        };
+
+        let json = serde_json::to_value(&info).unwrap();
+        assert_eq!(json["configDir"], "/config");
+        assert_eq!(json["dataDir"], "/data");
+        assert_eq!(json["historyDir"], "/data/history");
+        assert_eq!(json["chatsDir"], "/data/chats");
+        assert_eq!(json["cacheDir"], "/cache");
+        assert_eq!(json["logDir"], "/logs");
+        assert_eq!(json["userConfigFile"], "/config/userConfig.yaml");
     }
 }

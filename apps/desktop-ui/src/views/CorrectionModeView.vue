@@ -1,6 +1,6 @@
 <template>
   <ContentPadding>
-    <InProgressMessage v-if="isStarting" correction />
+    <InProgressMessage v-if="isStarting" correction :onCancel="handleCancel" />
   </ContentPadding>
 </template>
 
@@ -19,6 +19,11 @@ const navPanelStore = useNavPanelStore()
 const isStarting = ref(false)
 
 navPanelStore.resetNavParams({ panelVisible: false })
+
+function handleCancel() {
+  isStarting.value = false
+  void ipcStore.callFunctionOrNotify('closeWindow')
+}
 
 const correctionMode = createCorrectionMode({
   // the selection was taken to be corrected and put back: nothing else to do

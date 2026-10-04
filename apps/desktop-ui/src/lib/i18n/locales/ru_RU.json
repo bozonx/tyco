@@ -156,6 +156,7 @@
     "storageHistory": "История",
     "storageChats": "Чаты",
     "storageCache": "Кэш",
+    "storageLogs": "Логи",
     "storageCopyPath": "Копировать путь",
     "storagePathCopied": "Путь скопирован",
     "editorHistoryStorage": "Хранить историю редактора",

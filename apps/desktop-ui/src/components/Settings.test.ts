@@ -29,7 +29,23 @@ vi.mock('../stores/ipc', () => ({
         plugins: { PluginA: { enabled: true }, PluginB: { enabled: false } },
       },
     },
-    callFunction: vi.fn().mockResolvedValue({ status: 'ok', result: null }),
+    callFunction: vi.fn().mockImplementation((fn: string) => {
+      if (fn === 'getStorageInfo') {
+        return Promise.resolve({
+          success: true,
+          result: {
+            configDir: '/test/config',
+            dataDir: '/test/data',
+            historyDir: '/test/data/history',
+            chatsDir: '/test/data/chats',
+            cacheDir: '/test/cache',
+            logDir: '/test/data/logs',
+            userConfigFile: '/test/config/userConfig.yaml',
+          },
+        })
+      }
+      return Promise.resolve({ status: 'ok', success: true, result: null })
+    }),
     updateConfig: vi.fn(),
   }),
 }))
@@ -87,6 +103,36 @@ describe('Settings.vue', () => {
     expect(accessibilityIdx).toBeGreaterThan(-1)
     expect(pluginsIdx).toBeGreaterThan(-1)
     expect(accessibilityIdx).toBe(pluginsIdx - 1)
+  })
+
+  it('places translations tab in primary tabs right after llm tab', () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: {
+            props: ['tabs'],
+            template: `
+              <div class="tabs-stub">
+                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                  {{ tab.text }}
+                </button>
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    const tabKeys = wrapper
+      .findAll('.tabs-stub button')
+      .map((btn) => btn.attributes('data-key'))
+
+    const llmIdx = tabKeys.indexOf('llm')
+    const translationsIdx = tabKeys.indexOf('translations')
+
+    expect(llmIdx).toBeGreaterThan(-1)
+    expect(translationsIdx).toBeGreaterThan(-1)
+    expect(translationsIdx).toBe(llmIdx + 1)
   })
 
   it('includes hotkeys tab in primary tabs with settings.hotkeysTab text', () => {
@@ -188,5 +234,27 @@ describe('Settings.vue', () => {
     expect(vm.currentTab).toBe('plugin:PluginA')
     expect(wrapper.find('.plugin-detail-stub').exists()).toBe(true)
     expect(wrapper.find('.plugin-detail-stub').text()).toBe('PluginA')
+  })
+
+  it('renders all storage locations when storage info is loaded', async () => {
+    const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    const storageItems = wrapper.findAll('.storage-item')
+    expect(storageItems).toHaveLength(6)
+
+    const labels = storageItems.map((item) =>
+      item.find('.storage-item-label').text()
+    )
+    expect(labels).toEqual([
+      'settings.storageUserConfig',
+      'settings.storageData',
+      'settings.storageHistory',
+      'settings.storageChats',
+      'settings.storageCache',
+      'settings.storageLogs',
+    ])
   })
 })

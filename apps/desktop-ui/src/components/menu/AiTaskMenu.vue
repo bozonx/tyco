@@ -42,7 +42,7 @@ const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const { aiTasks } = useCallAi()
 const appConfig = computed(() => ipcStore.params.appConfig)
-const { toast } = useToast()
+const { toast, toastText } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
 const chatStore = useChatStore()
@@ -55,12 +55,12 @@ const chatAction: ActionItem = {
   },
 }
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  ipcStore.params.userConfig.aiTasks.map(
+  (ipcStore.params.userConfig?.aiTasks ?? []).map(
     (
       item: (typeof ipcStore.params.userConfig.aiTasks)[number],
       index: number
     ) =>
-      item
+      item && item.name
         ? {
             name: item.name,
             action: async () => {
@@ -75,32 +75,45 @@ async function makeDiff(index: number) {
   const trimmedText = props.text.trim()
 
   if (!trimmedText) {
-    toast(t('toast.noTextToProcess'), 'warn')
-
+    toast('toast.noTextToProcess', 'warn')
     return
   }
 
   if (trimmedText.length < appConfig.value.minCorrectionLength) {
-    toast(t('toast.textTooShortToProcess'), 'warn')
+    toast('toast.textTooShortToProcess', 'warn')
+    return
+  }
 
+  const task = ipcStore.params.userConfig?.aiTasks?.[index]
+  if (!task || !task.rule?.trim()) {
+    toast('toast.desktopCommandFailed', 'error')
     return
   }
 
   const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
 
-  menuModalsStore.setPendingModal({ ai: true })
+  const controller = new AbortController()
+  menuModalsStore.setPendingModal({
+    ai: true,
+    onCancel: () => controller.abort(),
+  })
   try {
-    const newText = await aiTasks(index, trimmedText)
+    const newText = await aiTasks(index, trimmedText, {
+      signal: controller.signal,
+    })
+    if (controller.signal.aborted) return
     if (!newText || !newText.trim()) {
-      toast(t('toast.desktopCommandFailed'), 'error')
+      toast('toast.desktopCommandFailed', 'error')
       return
     }
     await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-      toast(t('history.operationFailed'), 'error')
+      toast('history.operationFailed', 'error')
     })
     menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
-  } catch {
-    // The request layer already reported the actionable error.
+  } catch (error) {
+    if (controller.signal.aborted) return
+    const message = error instanceof Error ? error.message : String(error)
+    toastText(message, 'error')
   } finally {
     menuModalsStore.clearPendingModal()
   }

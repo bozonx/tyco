@@ -119,23 +119,14 @@ resetNav()
 watch(
   () => ipcStore.params?.activationId,
   () => {
-    const hadPending = Boolean(menuModalsStore.pendingModal)
     correctionStore.cancelInsert()
     const { isWindowShown, mode } = ipcStore.params
     if (isWindowShown && mode === 'write') {
-      // the step after the input was left open, not closed with Esc: its text
-      // comes back like after a focus loss
-      if (menuModalsStore.anyModalOpen || hadPending) {
-        writerInputStore.markDismissed()
-      }
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
-      if (writerInputStore.startSession()) {
-        writerInputStore.focusAndSelectAll()
-      } else {
-        writerInputStore.focus()
-      }
+      writerInputStore.startSession()
+      writerInputStore.focus()
     }
   },
   { immediate: true }

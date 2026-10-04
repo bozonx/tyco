@@ -45,9 +45,8 @@
 
     <div class="settings-content">
       <div class="settings-content-inner">
-        <h1 class="settings-page-title">
+        <h1 v-if="currentTab !== 'global-actions'" class="settings-page-title">
           <span>{{ currentTabTitle }}</span>
-          <InfoTooltip v-if="currentTabInfo" :text="currentTabInfo" size="md" />
         </h1>
 
         <template v-if="currentTab === 'general'">
@@ -259,7 +258,6 @@
           :user-config="userConfig"
           @update:hotkey="updateHotkey"
           @update:submit-key="userConfig.submitKey = $event"
-          @update:provider-note="globalActionsNote = $event"
         />
         <SettingsTranslationsTab
           v-else-if="currentTab === 'translations'"
@@ -479,6 +477,11 @@ const primaryTabs = computed(() => [
   { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
   { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
   {
+    text: t('settings.translationsTab'),
+    key: 'translations',
+    icon: 'mdi:translate',
+  },
+  {
     text: t('settings.sectionAccessibility'),
     key: 'accessibility',
     icon: 'mdi:human-handsup',
@@ -513,11 +516,6 @@ const actionTabs = computed(() => [
     key: 'main-actions',
     icon: 'mdi:gesture-tap-button',
   },
-  {
-    text: t('settings.translationsTab'),
-    key: 'translations',
-    icon: 'mdi:translate',
-  },
   { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
 ])
 
@@ -534,21 +532,6 @@ const currentTabTitle = computed(() => {
       (tab) => tab.key === currentTab.value
     )?.text || ''
   )
-})
-
-const globalActionsNote = ref<string | null>(null)
-
-const TAB_INFO_KEYS: Record<string, string> = {
-  'global-actions': 'settings.globalActionsHint',
-}
-const currentTabInfo = computed(() => {
-  if (currentTab.value === 'global-actions') {
-    return globalActionsNote.value
-      ? t(globalActionsNote.value)
-      : t('settings.globalActionsHint')
-  }
-  const key = TAB_INFO_KEYS[currentTab.value]
-  return key ? t(key) : ''
 })
 
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
@@ -647,6 +630,26 @@ const storageInfoItems = computed(() => {
       key: 'data',
       label: t('settings.storageData'),
       value: storageInfo.value.dataDir,
+    },
+    {
+      key: 'history',
+      label: t('settings.storageHistory'),
+      value: storageInfo.value.historyDir,
+    },
+    {
+      key: 'chats',
+      label: t('settings.storageChats'),
+      value: storageInfo.value.chatsDir,
+    },
+    {
+      key: 'cache',
+      label: t('settings.storageCache'),
+      value: storageInfo.value.cacheDir,
+    },
+    {
+      key: 'logs',
+      label: t('settings.storageLogs'),
+      value: storageInfo.value.logDir,
     },
   ]
 })

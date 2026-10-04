@@ -61,4 +61,39 @@ describe('AiTaskMenu', () => {
     expect(closeAllSpy).toHaveBeenCalled()
     expect(attachSpy).toHaveBeenCalledWith('Some task text')
   })
+
+  it('binds configured aiTasks to leftLetterKeys using item name', () => {
+    let shortcutListProps: Record<string, any> = {}
+
+    mount(AiTaskMenu, {
+      props: { text: 'Some task text' },
+      global: {
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template: `<div><slot name="preview" /><slot name="actions" /></div>`,
+          },
+          ShortcutList: {
+            props: [
+              'text',
+              'spaceKey',
+              'actionsKey',
+              'leftLetterKeys',
+              'stopListening',
+              'toEditorVisible',
+            ],
+            setup(props: any) {
+              shortcutListProps = props
+              return () => null
+            },
+          },
+        },
+      },
+    })
+
+    expect(shortcutListProps.leftLetterKeys).toBeDefined()
+    expect(shortcutListProps.leftLetterKeys[0]).toMatchObject({
+      name: 'deepEdit',
+    })
+  })
 })

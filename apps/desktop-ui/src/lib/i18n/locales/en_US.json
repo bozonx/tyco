@@ -153,6 +153,7 @@
     "storageHistory": "History",
     "storageChats": "Chats",
     "storageCache": "Cache",
+    "storageLogs": "Logs",
     "storageCopyPath": "Copy path",
     "storagePathCopied": "Path copied",
     "editorHistoryStorage": "Keep editor history",

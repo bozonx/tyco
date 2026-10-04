@@ -25,9 +25,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
   const globalStubs = {
     SettingsSection: {
-      props: ['title', 'description'],
+      props: ['title', 'info'],
       template: `
-        <section class="section-stub" :data-title="title" :data-description="description">
+        <section class="section-stub" :data-title="title" :data-info="info">
           <slot name="actions" />
           <slot />
         </section>
@@ -82,9 +82,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
       (s) => s.attributes('data-title') === 'settings.appHotkeysTitle'
     )
     expect(appSection).toBeDefined()
-    expect(appSection?.attributes('data-description')).toBe(
-      'settings.appHotkeysHint'
-    )
+    expect(appSection?.attributes('data-info')).toBe('settings.appHotkeysHint')
   })
 
   it('renders submitKey row inside application hotkeys section and emits update:submit-key', async () => {

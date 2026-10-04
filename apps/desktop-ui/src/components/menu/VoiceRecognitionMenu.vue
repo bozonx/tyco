@@ -253,7 +253,10 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
         recognizedText,
         'voice-correction'
       )
-      menuModalsStore.setPendingModal({ correction: true })
+      menuModalsStore.setPendingModal({
+        correction: true,
+        onCancel: () => voiceSession.abort(),
+      })
 
       try {
         const formattedText = await voiceCorrection(

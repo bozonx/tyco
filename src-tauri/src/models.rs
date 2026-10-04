@@ -115,6 +115,7 @@ pub struct StorageInfo {
     pub history_dir: String,
     pub chats_dir: String,
     pub cache_dir: String,
+    pub log_dir: String,
     pub user_config_file: String,
 }
 

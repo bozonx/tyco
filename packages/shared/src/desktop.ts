@@ -82,6 +82,7 @@ export interface StorageInfo {
   historyDir: string
   chatsDir: string
   cacheDir: string
+  logDir: string
   userConfigFile: string
 }
 

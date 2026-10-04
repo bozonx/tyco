@@ -26,8 +26,10 @@
     color: var(--color-base-content);
   }
 
-  html[data-window='quick'] {
-    background: transparent;
+  html[data-window='quick'],
+  html[data-window='quick'] body {
+    background: transparent !important;
+    background-color: transparent !important;
     --root-bg: transparent;
   }
 

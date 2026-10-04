@@ -43,9 +43,19 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   backdrop-filter: none;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--app-shadow-lg);
+  box-shadow: none;
   padding: var(--space-sm);
   overflow: hidden;
+}
+
+:global([data-window='quick'] .overlay:has(.overlay-panel.is-compact)) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  inset: 0;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
 }
 
 .overlay-panel {

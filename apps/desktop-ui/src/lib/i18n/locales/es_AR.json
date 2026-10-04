@@ -156,6 +156,7 @@
     "storageHistory": "Historial",
     "storageChats": "Chats",
     "storageCache": "Caché",
+    "storageLogs": "Registros",
     "storageCopyPath": "Copiar ruta",
     "storagePathCopied": "Ruta copiada",
     "editorHistoryStorage": "Guardar el historial del editor",
