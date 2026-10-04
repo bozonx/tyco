@@ -10,6 +10,7 @@ export const APP_ROUTE_NAMES = {
   VOICE: 'voice',
   AI_TASKS: 'aiTasks',
   SELECT: 'select',
+  COMMAND_LAUNCHER: 'commandLauncher',
   CORRECTION: 'correction',
 } as const
 
@@ -23,6 +24,10 @@ export const APP_ROUTES = {
   VOICE: { name: APP_ROUTE_NAMES.VOICE, path: '/voice' },
   AI_TASKS: { name: APP_ROUTE_NAMES.AI_TASKS, path: '/aiTasks' },
   SELECT: { name: APP_ROUTE_NAMES.SELECT, path: '/select' },
+  COMMAND_LAUNCHER: {
+    name: APP_ROUTE_NAMES.COMMAND_LAUNCHER,
+    path: '/commandLauncher',
+  },
   CORRECTION: { name: APP_ROUTE_NAMES.CORRECTION, path: '/correction' },
 } as const
 
@@ -34,6 +39,7 @@ export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
   [START_MODES.SELECT]: APP_ROUTES.SELECT.path,
   [START_MODES.VOICE]: APP_ROUTES.VOICE.path,
   [START_MODES.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
+  [START_MODES.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [START_MODES.CORRECTION]: APP_ROUTES.CORRECTION.path,
   [START_MODES.EDITOR]: APP_ROUTES.EDITOR.path,
   [START_MODES.WRITE]: APP_ROUTES.WRITE.path,

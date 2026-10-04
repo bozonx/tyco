@@ -33,6 +33,9 @@
       <div v-show="currentMode === 'select'" class="quick-mode-layer">
         <SelectModeView v-if="currentMode === 'select'" />
       </div>
+      <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
+        <CommandLauncherView v-if="currentMode === 'commandLauncher'" />
+      </div>
       <div v-show="currentMode === 'correction'" class="quick-mode-layer">
         <CorrectionModeView v-if="currentMode === 'correction'" />
       </div>
@@ -52,11 +55,13 @@ import {
   unionRect,
 } from '../../lib/quick-panel/input-region'
 import { createWindowFocus } from '../../lib/quick-panel/window-focus'
+import { useCommandLauncherStore } from '../../stores/commandLauncher'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
 import { useWriterInputStore } from '../../stores/writerInput'
 import AiTaskView from '../../views/AiTaskView.vue'
+import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import VoiceView from '../../views/VoiceView.vue'
@@ -67,6 +72,7 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const writerInputStore = useWriterInputStore()
 const quickDismissStore = useQuickDismissStore()
+const commandLauncherStore = useCommandLauncherStore()
 const cardRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
@@ -97,7 +103,12 @@ const isSheet = computed(() => {
 const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
 
 /** Modes whose first step (the input, the action menu) has nothing to lose. */
-const DISMISSIBLE_MODES = new Set(['write', 'select', 'aiTasks'])
+const DISMISSIBLE_MODES = new Set([
+  'write',
+  'select',
+  'aiTasks',
+  'commandLauncher',
+])
 
 /**
  * Only the first step goes away when the focus goes elsewhere. Everything past
@@ -107,6 +118,9 @@ const DISMISSIBLE_MODES = new Set(['write', 'select', 'aiTasks'])
 const keepsOnFocusLoss = computed(
   () =>
     !DISMISSIBLE_MODES.has(currentMode.value) ||
+    // past the list: a typed text or a running command
+    (currentMode.value === 'commandLauncher' &&
+      commandLauncherStore.stage.kind !== 'list') ||
     hasModal.value ||
     Boolean(menuModalsStore.pendingModal)
 )

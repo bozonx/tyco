@@ -311,6 +311,7 @@
       "voiceChat": "Pregunta por voz sobre el texto seleccionado en el chat con IA",
       "select": "Acciones con la selección",
       "aiTasks": "Tareas de IA",
+      "commandLauncher": "Panel de comandos",
       "inlineCorrection": "Corregir el texto seleccionado en su lugar",
       "history": "Historial",
       "config": "Configuración"
@@ -712,6 +713,26 @@
     "errorNoCommand": "Ingresá el comando a ejecutar.",
     "errorNoUrl": "Ingresá la URL.",
     "errorTextPlaceholder": "El comando no recibe texto: quitá {placeholder} o activá «Recibe texto».",
-    "errorUnknownTool": "Herramienta desconocida."
+    "errorUnknownTool": "Herramienta desconocida.",
+    "inLauncher": "En el panel de comandos",
+    "inLauncherInfo": "El comando aparece en el panel de comandos, que se abre con su propio atajo global. Los primeros nueve comandos se ejecutan con las teclas 1–9; el orden es el de esta lista.",
+    "confirm": "Pedir confirmación",
+    "confirmInfo": "Antes de ejecutarlo, el panel muestra el comando y su texto y espera Enter. En el menú de acciones principales no se pide: ahí el elemento ya se eligió explícitamente.",
+    "badgeInLauncher": "en el panel"
+  },
+  "commandLauncher": {
+    "title": "Comandos",
+    "searchPlaceholder": "Buscar comandos…",
+    "selection": "Texto seleccionado: {count} caracteres",
+    "takesText": "Recibe texto",
+    "asksConfirm": "Pide confirmación",
+    "nothingFound": "No se encontraron comandos",
+    "noCommands": "Todavía no hay comandos en el panel. Creálos en Ajustes → Comandos y activá «En el panel de comandos».",
+    "textPlaceholder": "Texto para el comando",
+    "confirmRun": "Presioná Enter para ejecutar el comando.",
+    "running": "Ejecutando «{name}»…",
+    "hintRun": "Ejecutar",
+    "hintSelect": "Elegir",
+    "hintNewLine": "Nueva línea"
   }
 }

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   focusHandlers: [] as ((event: { payload: boolean }) => void)[],
   aiTaskMounts: 0,
   aiTaskUnmounts: 0,
+  launcher: { stage: { kind: 'list' } },
 }))
 
 vi.mock('../../composables/useI18n', () => ({
@@ -47,6 +48,9 @@ vi.mock('../../stores/menuModals', () => ({
       cancelPending: vi.fn(),
       closeAll: vi.fn(),
     }),
+}))
+vi.mock('../../stores/commandLauncher', () => ({
+  useCommandLauncherStore: () => reactive(mocks.launcher),
 }))
 vi.mock('../../stores/quickDismiss', () => ({
   useQuickDismissStore: () => ({ isHeld: false }),
@@ -80,6 +84,9 @@ vi.mock('../../views/AiTaskView.vue', () => ({
 vi.mock('../../views/SelectModeView.vue', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('../../views/CommandLauncherView.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('../../views/CorrectionModeView.vue', () => ({
   default: { template: '<div />' },
 }))
@@ -103,6 +110,7 @@ afterEach(() => {
   mocks.focusHandlers = []
   mocks.aiTaskMounts = 0
   mocks.aiTaskUnmounts = 0
+  mocks.launcher.stage = { kind: 'list' }
 })
 
 describe('quick overlay keyboard ownership', () => {
@@ -322,7 +330,7 @@ describe('quick overlay menus', () => {
     }
   }
 
-  it.each(['select', 'aiTasks'])(
+  it.each(['select', 'aiTasks', 'commandLauncher'])(
     'dismisses the %s menu when the focus goes elsewhere',
     async (mode) => {
       await loseFocus(mode)
@@ -332,6 +340,12 @@ describe('quick overlay menus', () => {
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
     await loseFocus('select', 'translate')
+    expect(mocks.callFunction).not.toHaveBeenCalledWith('dismissQuickWindow')
+  })
+
+  it('keeps a command past the list when the focus goes elsewhere', async () => {
+    mocks.launcher.stage = { kind: 'prepare' }
+    await loseFocus('commandLauncher')
     expect(mocks.callFunction).not.toHaveBeenCalledWith('dismissQuickWindow')
   })
 

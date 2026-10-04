@@ -5,7 +5,7 @@ mod services;
 mod state;
 
 use commands::actions::{
-    execute_script_action, log_custom_action, pick_directory, pick_script_file,
+    execute_script_action, log_command_run, log_custom_action, pick_directory, pick_script_file,
 };
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
@@ -204,6 +204,7 @@ pub fn run() {
             pick_script_file,
             pick_directory,
             log_custom_action,
+            log_command_run,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -39,6 +39,19 @@ export interface CommandRunnerDependencies {
   ) => Promise<string>
 }
 
+/** How a run ended; the user has been told already */
+export interface CommandRunOutcome {
+  success: boolean
+  /** Why it failed, for the log */
+  message?: string
+}
+
+const succeeded: CommandRunOutcome = { success: true }
+const failed = (message: string): CommandRunOutcome => ({
+  success: false,
+  message,
+})
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -49,23 +62,24 @@ function errorMessage(error: unknown): string {
  */
 export function createCommandRunner(deps: CommandRunnerDependencies) {
   /** Opens the action menu on the output, or warns that there is none. */
-  const showOutput = (output: string, source: string): void => {
+  const showOutput = (output: string, source: string): CommandRunOutcome => {
     const text = output.replace(/[\r\n]+$/, '')
     if (!text.trim()) {
       deps.showToast('toast.actionEmptyOutput', 'warn')
-      return
+      return failed('Empty output')
     }
     deps.showResultMenu?.(text, source)
+    return succeeded
   }
 
   const runScript = async (
     command: CommandConfig,
     text: string | null
-  ): Promise<void> => {
+  ): Promise<CommandRunOutcome> => {
     const config = scriptToolConfig(command)
     if (!config.command.trim()) {
       deps.showToast('toast.scriptEmptyCommand', 'warn')
-      return
+      return failed('Empty command')
     }
     const showMenu = command.afterRun === 'showMenu'
     let result: ScriptExecutionResult | undefined
@@ -77,33 +91,33 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         })
       )
     } catch (error) {
-      deps.showError?.('toast.scriptFailed', errorMessage(error))
-      return
+      const message = errorMessage(error)
+      deps.showError?.('toast.scriptFailed', message)
+      return failed(message)
     }
-    if (!result) return
+    if (!result) return failed('No result')
     if (!result.success && !result.running) {
-      deps.showError?.('toast.scriptFailed', scriptFailureDetail(result))
-      return
+      const message = scriptFailureDetail(result)
+      deps.showError?.('toast.scriptFailed', message)
+      return failed(message)
     }
-    if (showMenu) {
-      showOutput(result.stdout, text ?? '')
-      return
-    }
+    if (showMenu) return showOutput(result.stdout, text ?? '')
     deps.showToast(
       result.running ? 'toast.scriptRunning' : 'toast.scriptSuccess',
       'success'
     )
     deps.closeWindow?.()
+    return succeeded
   }
 
   const runWebhook = async (
     command: CommandConfig,
     text: string | null
-  ): Promise<void> => {
+  ): Promise<CommandRunOutcome> => {
     const config = webhookToolConfig(command)
     if (!config.url.trim()) {
       deps.showToast('toast.webhookEmptyUrl', 'warn')
-      return
+      return failed('Empty URL')
     }
     let response: string | undefined
     try {
@@ -117,27 +131,32 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         text
       )
     } catch (error) {
-      deps.showError?.('toast.webhookFailed', errorMessage(error))
-      return
+      const message = errorMessage(error)
+      deps.showError?.('toast.webhookFailed', message)
+      return failed(message)
     }
     if (command.afterRun === 'showMenu') {
-      showOutput(webhookResultText(response ?? ''), text ?? '')
-      return
+      return showOutput(webhookResultText(response ?? ''), text ?? '')
     }
     deps.showToast('toast.webhookSuccess', 'success')
     deps.closeWindow?.()
+    return succeeded
   }
 
   /** Runs `command` on `text`; a command that takes no text gets none */
-  const run = async (command: CommandConfig, text: string): Promise<void> => {
+  const run = async (
+    command: CommandConfig,
+    text: string
+  ): Promise<CommandRunOutcome> => {
     if (!command.enabled) {
       deps.showToast('toast.commandDisabled', 'warn')
-      return
+      return failed('Disabled')
     }
     const input = commandTakesText(command) ? text : null
     if (command.toolId === 'script') return runScript(command, input)
     if (command.toolId === 'webhook') return runWebhook(command, input)
     deps.showError?.('toast.commandUnavailable', commandLabel(command))
+    return failed('Unknown tool')
   }
 
   return { run }

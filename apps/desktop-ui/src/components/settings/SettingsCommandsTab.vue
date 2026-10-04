@@ -49,6 +49,9 @@
               <span v-if="inMenu.has(command.id)" class="command-badge">
                 {{ t('commands.badgeInMenu') }}
               </span>
+              <span v-if="command.availableIn.launcher" class="command-badge">
+                {{ t('commands.badgeInLauncher') }}
+              </span>
               <span v-if="!command.enabled" class="command-badge is-muted">
                 {{ t('commands.badgeDisabled') }}
               </span>

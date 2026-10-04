@@ -326,6 +326,7 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
         | StartMode::Voice
         | StartMode::Select
         | StartMode::AiTasks
+        | StartMode::CommandLauncher
         | StartMode::Correction => QUICK_WINDOW_LABEL,
         StartMode::Editor
         | StartMode::Chat
@@ -789,6 +790,7 @@ mod tests {
             StartMode::Voice,
             StartMode::Select,
             StartMode::AiTasks,
+            StartMode::CommandLauncher,
             StartMode::Correction,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);

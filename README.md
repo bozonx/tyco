@@ -79,6 +79,15 @@ cargo build --release --manifest-path src-tauri/Cargo.toml -p tyco-ctl
 The app also keeps the Linux D-Bus compatibility interface
 (`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).
 
+### Command overlay
+
+Commands of the library (Settings → Commands) marked “In the command overlay”
+can be run from an overlay opened with its own global hotkey (unassigned by
+default; Settings → Global hotkeys) or with `tyco-ctl activate
+commandLauncher`. Type to search, press `1`–`9` or pick a command with the
+arrows and Enter. A command that takes text gets the text selected in the
+active window, or asks for it in the overlay.
+
 ### Replacing the selection
 
 The text selected in any application can be corrected without opening Tyco:

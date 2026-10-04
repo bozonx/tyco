@@ -694,7 +694,7 @@ fn portal_registered(_app: &AppHandle) -> bool {
     false
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
     StartMode::Editor,
     StartMode::Write,
     StartMode::Chat,
@@ -702,6 +702,7 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 7] = [
     StartMode::Voice,
     StartMode::Select,
     StartMode::AiTasks,
+    StartMode::CommandLauncher,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -769,6 +770,7 @@ fn default_key(mode: StartMode) -> Option<&'static str> {
         | StartMode::Chat
         | StartMode::VoiceChat
         | StartMode::AiTasks
+        | StartMode::CommandLauncher
         | StartMode::Correction
         | StartMode::History
         | StartMode::Config => None,
@@ -1037,6 +1039,7 @@ fn mode_description(mode: StartMode) -> &'static str {
         StartMode::Voice => "Start voice input",
         StartMode::Select => "Open selection actions",
         StartMode::AiTasks => "Open AI tasks",
+        StartMode::CommandLauncher => "Run a command",
         StartMode::Correction => "Correct selected text with review",
         StartMode::History => "Open history",
         StartMode::Config => "Open settings",

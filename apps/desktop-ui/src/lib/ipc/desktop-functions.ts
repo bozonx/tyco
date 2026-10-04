@@ -1,5 +1,6 @@
 import type {
   ChatHistoryItem,
+  CommandRunRecord,
   EditorHistoryEntry,
   EditorHistoryItem,
   HotkeyApplyResult,
@@ -94,6 +95,7 @@ export interface DesktopFunctions {
     args: [name: string, actionType: string, details: string]
     result: void
   }
+  logCommandRun: { args: [record: CommandRunRecord]; result: void }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions

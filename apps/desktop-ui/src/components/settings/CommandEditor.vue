@@ -78,6 +78,26 @@
 
     <div class="command-field-row">
       <FieldCheckbox
+        :value="command.availableIn.launcher"
+        :label="t('commands.inLauncher')"
+        @update:value="
+          update({ availableIn: { ...command.availableIn, launcher: $event } })
+        "
+      />
+      <InfoTooltip :text="t('commands.inLauncherInfo')" />
+    </div>
+
+    <div class="command-field-row">
+      <FieldCheckbox
+        :value="command.confirm === 'always'"
+        :label="t('commands.confirm')"
+        @update:value="update({ confirm: $event ? 'always' : 'auto' })"
+      />
+      <InfoTooltip :text="t('commands.confirmInfo')" />
+    </div>
+
+    <div class="command-field-row">
+      <FieldCheckbox
         :value="command.logOutput"
         :label="t('settings.actionLogOutput')"
         @update:value="update({ logOutput: $event })"

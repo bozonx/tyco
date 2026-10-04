@@ -2,16 +2,12 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
 import { useCallApi } from '../composables/useCallApi'
-import useToast from '../composables/useToast'
 import {
   type ActionItem,
   createActionMenuStoreModel,
 } from '../lib/action-menu/action-menu-store'
-import { executeWebhook } from '../lib/custom-actions/webhook-executor'
-import { translate } from '../lib/i18n'
-import { createTauriFetch } from '../lib/net/tauri-fetch'
-import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useChatStore } from './chat'
+import { useCommandRunnerDependencies } from './commands'
 import { useCorrectionStore } from './correction'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
@@ -26,7 +22,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const historyStore = useHistoryStore()
   const appConfig = computed(() => ipcStore.params.appConfig)
   const correctionStore = useCorrectionStore()
-  const { toast, toastText } = useToast()
   const chatStore = useChatStore()
 
   return createActionMenuStoreModel({
@@ -49,41 +44,11 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     startChatWithAttachment: (text: string) => {
       void chatStore.attachToChat(text)
     },
-    showToast: (message, type) => {
-      toast(message, type)
-    },
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
     mainActionRegistrations: () =>
       ipcStore.params.userConfig.mainActionRegistrations,
     mainActions: () => ipcStore.params.userConfig.mainActions,
     commands: () => ipcStore.params.userConfig.commands,
-    closeWindow: () => {
-      void ipcStore.callFunctionOrNotify('closeWindow', [])
-    },
-    showError: (messageKey, detail) => {
-      toastText(
-        detail ? `${translate(messageKey)}: ${detail}` : translate(messageKey),
-        'error'
-      )
-    },
-    showResultMenu: (text, sourceText) => {
-      menuModalsStore.nextModal(MenuModals.PREVIEW, { text, sourceText })
-    },
-    executeScriptAction: async (request) => {
-      const res = await ipcStore.callFunction('executeScriptAction', [request])
-      if (!res.success || !res.result) {
-        throw new Error(res.error ?? 'Empty response')
-      }
-      return res.result
-    },
-    executeWebhook: (target, text) =>
-      executeWebhook(
-        target,
-        text,
-        createTauriFetch(tauriNetIpc),
-        async (name, type, details) => {
-          await ipcStore.callFunction('logCustomAction', [name, type, details])
-        }
-      ),
+    ...useCommandRunnerDependencies(),
   })
 })

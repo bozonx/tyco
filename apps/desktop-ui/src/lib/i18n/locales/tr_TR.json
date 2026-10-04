@@ -311,6 +311,7 @@
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
       "select": "Seçim eylemleri",
       "aiTasks": "Yapay zekâ görevleri",
+      "commandLauncher": "Komut paneli",
       "inlineCorrection": "Seçili metni yerinde düzelt",
       "history": "Geçmiş",
       "config": "Ayarlar"
@@ -712,6 +713,26 @@
     "errorNoCommand": "Çalıştırılacak komutu girin.",
     "errorNoUrl": "URL'yi girin.",
     "errorTextPlaceholder": "Komut metin almıyor: {placeholder} öğesini kaldırın veya “Metin alır” seçeneğini açın.",
-    "errorUnknownTool": "Bilinmeyen araç."
+    "errorUnknownTool": "Bilinmeyen araç.",
+    "inLauncher": "Komut panelinde",
+    "inLauncherInfo": "Komut, kendi genel kısayoluyla açılan komut panelinde listelenir. İlk dokuz komut 1–9 tuşlarıyla çalışır; sıra bu listedeki sıradır.",
+    "confirm": "Onay iste",
+    "confirmInfo": "Çalıştırmadan önce panel komutu ve metnini gösterir ve Enter bekler. Ana eylemler menüsünde sorulmaz: orada öğe zaten açıkça seçilmiştir.",
+    "badgeInLauncher": "panelde"
+  },
+  "commandLauncher": {
+    "title": "Komutlar",
+    "searchPlaceholder": "Komut ara…",
+    "selection": "Seçili metin: {count} karakter",
+    "takesText": "Metin alır",
+    "asksConfirm": "Onay ister",
+    "nothingFound": "Komut bulunamadı",
+    "noCommands": "Panelde henüz komut yok. Ayarlar → Komutlar bölümünde oluşturun ve «Komut panelinde» seçeneğini açın.",
+    "textPlaceholder": "Komut için metin",
+    "confirmRun": "Komutu çalıştırmak için Enter’a basın.",
+    "running": "«{name}» çalıştırılıyor…",
+    "hintRun": "Çalıştır",
+    "hintSelect": "Seç",
+    "hintNewLine": "Yeni satır"
   }
 }

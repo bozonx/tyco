@@ -13,6 +13,7 @@ use tauri_plugin_dialog::DialogExt;
 
 use crate::errors::AppError;
 use crate::services::platform::shell;
+use crate::services::secret_detector::redact_secrets;
 
 /// Stands in for the text in a command; see `shell::substitute`.
 pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
@@ -140,6 +141,50 @@ pub fn log_custom_action(
         "=".repeat(80),
     );
     append_action_log(log_dir, &entry)
+}
+
+/// One run of a library command, as the command overlay reports it.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandRunRecord {
+    pub command_id: String,
+    pub name: String,
+    /// Where the command was invoked from, e.g. `launcher`.
+    pub source: String,
+    /// The text the command got; absent for a command that takes none.
+    pub text: Option<String>,
+    pub success: bool,
+    /// Why it failed, or what it reported.
+    pub message: Option<String>,
+}
+
+/// Appends the run to `actions.log`, so the user can see what ran and why.
+/// The text and the message may hold secrets: they are masked first.
+pub fn log_command_run(log_dir: &Path, record: &CommandRunRecord) -> std::io::Result<()> {
+    append_action_log(log_dir, &format_command_run(record))
+}
+
+fn format_command_run(record: &CommandRunRecord) -> String {
+    let mut entry = format!(
+        "[{}] [Command: \"{}\"] Id: {}, Source: {}, Result: {}\n",
+        format_timestamp(),
+        record.name,
+        record.command_id,
+        record.source,
+        if record.success { "success" } else { "failed" },
+    );
+    if let Some(text) = &record.text {
+        entry.push_str(&format!("Text:\n{}\n", or_empty(&redact_secrets(text))));
+    }
+    if let Some(message) = record.message.as_deref().filter(|m| !m.trim().is_empty()) {
+        entry.push_str(&format!(
+            "Message: {}\n",
+            or_empty(&redact_secrets(message))
+        ));
+    }
+    entry.push_str(&"=".repeat(80));
+    entry.push('\n');
+    entry
 }
 
 fn truncate(text: &str, max_bytes: usize) -> String {
@@ -438,6 +483,34 @@ mod tests {
             capture_output: true,
             log_output: false,
         }
+    }
+
+    #[test]
+    fn logs_a_command_run_with_secrets_masked() {
+        let record = CommandRunRecord {
+            command_id: String::from("backup"),
+            name: String::from("Backup"),
+            source: String::from("launcher"),
+            text: Some(String::from("key sk-proj-1234567890abcdef1234567890")),
+            success: false,
+            message: Some(String::from("exit code 1")),
+        };
+        let entry = format_command_run(&record);
+        assert!(
+            entry.contains("[Command: \"Backup\"] Id: backup, Source: launcher, Result: failed")
+        );
+        assert!(entry.contains("Message: exit code 1"));
+        assert!(!entry.contains("sk-proj-"));
+
+        let without_text = format_command_run(&CommandRunRecord {
+            text: None,
+            message: None,
+            success: true,
+            ..record
+        });
+        assert!(without_text.contains("Result: success"));
+        assert!(!without_text.contains("Text:"));
+        assert!(!without_text.contains("Message:"));
     }
 
     #[cfg(not(target_os = "windows"))]

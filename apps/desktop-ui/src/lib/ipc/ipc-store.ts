@@ -190,6 +190,10 @@ export function createCommandMap(): CommandMap {
         details,
       }),
     },
+    logCommandRun: {
+      command: DESKTOP_COMMANDS.LOG_COMMAND_RUN,
+      buildArgs: ([record]) => ({ record }),
+    },
   }
 }
 

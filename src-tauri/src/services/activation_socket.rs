@@ -72,7 +72,7 @@ mod tests {
         let received = Arc::new(Mutex::new(Vec::new()));
         let server_received = Arc::clone(&received);
         thread::spawn(move || {
-            for stream in listener.incoming().take(13) {
+            for stream in listener.incoming().take(14) {
                 handle_stream(stream.unwrap(), &|request| {
                     let Request::Activate { mode } = request else {
                         return Response::error("Unexpected request");
@@ -99,6 +99,7 @@ mod tests {
             "voice",
             "select",
             "aiTasks",
+            "commandLauncher",
             "correction",
             "history",
             "config",
@@ -115,7 +116,7 @@ mod tests {
             let response: Response = read_message(&mut BufReader::new(stream)).unwrap();
             assert_eq!(response.success, mode != "unknown");
         }
-        assert_eq!(received.lock().unwrap().len(), 10);
+        assert_eq!(received.lock().unwrap().len(), 11);
 
         for invalid in ["not-json\n", "{\"command\":\"unknown\"}\n"] {
             use std::io::Write;

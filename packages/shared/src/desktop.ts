@@ -18,6 +18,7 @@ export enum START_MODES {
   SELECT = 'select',
   VOICE = 'voice',
   AI_TASKS = 'aiTasks',
+  COMMAND_LAUNCHER = 'commandLauncher',
   CORRECTION = 'correction',
   EDITOR = 'editor',
   WRITE = 'write',
@@ -209,6 +210,7 @@ export const DESKTOP_COMMANDS = {
   PICK_SCRIPT_FILE: 'pick_script_file',
   PICK_DIRECTORY: 'pick_directory',
   LOG_CUSTOM_ACTION: 'log_custom_action',
+  LOG_COMMAND_RUN: 'log_command_run',
 } as const
 
 export type DesktopCommandName =
@@ -223,6 +225,22 @@ export interface ScriptActionRequest {
   /** The output is used: the command is waited for longer */
   captureOutput: boolean
   logOutput: boolean
+}
+
+/**
+ * One run of a library command, written to the action log; see
+ * `log_command_run`
+ */
+export interface CommandRunRecord {
+  commandId: string
+  name: string
+  /** Where the command was invoked from */
+  source: 'launcher'
+  /** Absent for a command that takes no text */
+  text?: string
+  success: boolean
+  /** Why it failed */
+  message?: string
 }
 
 export interface ScriptExecutionResult {

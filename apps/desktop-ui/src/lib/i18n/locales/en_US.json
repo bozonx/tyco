@@ -308,6 +308,7 @@
       "voiceChat": "Voice question about selected text in AI chat",
       "select": "Selection actions",
       "aiTasks": "AI tasks",
+      "commandLauncher": "Command overlay",
       "inlineCorrection": "Correct selected text in place",
       "history": "History",
       "config": "Settings"
@@ -709,6 +710,26 @@
     "errorNoCommand": "Enter the command to run.",
     "errorNoUrl": "Enter the URL.",
     "errorTextPlaceholder": "The command takes no text: remove {placeholder} or turn on “Takes text”.",
-    "errorUnknownTool": "Unknown tool."
+    "errorUnknownTool": "Unknown tool.",
+    "inLauncher": "In the command overlay",
+    "inLauncherInfo": "The command is listed in the command overlay, opened with its own global hotkey. The first nine commands run with the keys 1–9; the order is the order of this list.",
+    "confirm": "Ask for confirmation",
+    "confirmInfo": "Before running, the overlay shows the command and its text and waits for Enter. Not asked in the main actions menu, where the item is already chosen explicitly.",
+    "badgeInLauncher": "in overlay"
+  },
+  "commandLauncher": {
+    "title": "Commands",
+    "searchPlaceholder": "Search commands…",
+    "selection": "Selected text: {count} chars",
+    "takesText": "Takes text",
+    "asksConfirm": "Asks for confirmation",
+    "nothingFound": "No commands found",
+    "noCommands": "No commands in the overlay yet. Create them in Settings → Commands and turn on “In the command overlay”.",
+    "textPlaceholder": "Text for the command",
+    "confirmRun": "Press Enter to run the command.",
+    "running": "Running “{name}”…",
+    "hintRun": "Run",
+    "hintSelect": "Select",
+    "hintNewLine": "New line"
   }
 }

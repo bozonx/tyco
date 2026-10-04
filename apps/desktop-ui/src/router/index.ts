@@ -7,6 +7,7 @@ import WriteModeView from '../views/WriteModeView.vue'
 import VoiceView from '../views/VoiceView.vue'
 import SelectModeView from '../views/SelectModeView.vue'
 import AiTaskView from '../views/AiTaskView.vue'
+import CommandLauncherView from '../views/CommandLauncherView.vue'
 import CorrectionModeView from '../views/CorrectionModeView.vue'
 import EditorView from '../views/EditorView.vue'
 import { APP_ROUTES } from '../lib/navigation/routes'
@@ -66,6 +67,11 @@ const router = createRouter({
       path: APP_ROUTES.SELECT.path,
       name: APP_ROUTES.SELECT.name,
       component: SelectModeView,
+    },
+    {
+      path: APP_ROUTES.COMMAND_LAUNCHER.path,
+      name: APP_ROUTES.COMMAND_LAUNCHER.name,
+      component: CommandLauncherView,
     },
   ],
 })

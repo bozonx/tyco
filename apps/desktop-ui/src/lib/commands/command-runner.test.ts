@@ -69,10 +69,12 @@ describe('script commands', () => {
   it('runs the command and closes the window', async () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(
+    const outcome = await runner.run(
       script({ workingDir: ' /tmp ' }, { logOutput: true }),
       'input'
     )
+
+    expect(outcome).toEqual({ success: true })
 
     expect(executeScriptAction).toHaveBeenCalledWith({
       name: 'Echo',
@@ -114,7 +116,8 @@ describe('script commands', () => {
       .fn()
       .mockResolvedValue(result({ success: false, stderr: 'bad thing' }))
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(script(), 'input')
+    const outcome = await runner.run(script(), 'input')
+    expect(outcome).toEqual({ success: false, message: 'bad thing' })
     expect(deps.showError).toHaveBeenCalledWith(
       'toast.scriptFailed',
       'bad thing'
@@ -150,7 +153,8 @@ describe('script commands', () => {
       .fn()
       .mockResolvedValue(result({ stdout: '\n' }))
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(script({}, { afterRun: 'showMenu' }), 'x')
+    const outcome = await runner.run(script({}, { afterRun: 'showMenu' }), 'x')
+    expect(outcome.success).toBe(false)
     expect(deps.showResultMenu).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith(
       'toast.actionEmptyOutput',
@@ -211,7 +215,8 @@ describe('webhook commands', () => {
   it('shows why the request failed', async () => {
     const executeWebhook = vi.fn().mockRejectedValue(new Error('HTTP 404'))
     const { deps, runner } = setup({ executeWebhook })
-    await runner.run(webhook(), 'x')
+    const outcome = await runner.run(webhook(), 'x')
+    expect(outcome).toEqual({ success: false, message: 'HTTP 404' })
     expect(deps.showError).toHaveBeenCalledWith(
       'toast.webhookFailed',
       'HTTP 404'
@@ -224,7 +229,8 @@ describe('commands that cannot run', () => {
   it('does not run a disabled command', async () => {
     const executeScriptAction = vi.fn()
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(script({}, { enabled: false }), 'x')
+    const outcome = await runner.run(script({}, { enabled: false }), 'x')
+    expect(outcome.success).toBe(false)
     expect(executeScriptAction).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith('toast.commandDisabled', 'warn')
   })

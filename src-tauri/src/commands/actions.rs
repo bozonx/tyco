@@ -1,7 +1,9 @@
 use tauri::AppHandle;
 
 use crate::errors::AppError;
-use crate::services::custom_actions::{self, ScriptExecutionResult, ScriptRequest};
+use crate::services::custom_actions::{
+    self, CommandRunRecord, ScriptExecutionResult, ScriptRequest,
+};
 use crate::services::storage;
 
 #[tauri::command(async)]
@@ -43,5 +45,14 @@ pub fn pick_directory(app: AppHandle) -> Option<String> {
 pub fn log_custom_action(app: AppHandle, name: String, action_type: String, details: String) {
     if let Ok(log_dir) = storage::app_log_dir(&app) {
         let _ = custom_actions::log_custom_action(&log_dir, &name, &action_type, &details);
+    }
+}
+
+#[tauri::command(async)]
+pub fn log_command_run(app: AppHandle, record: CommandRunRecord) {
+    if let Ok(log_dir) = storage::app_log_dir(&app) {
+        if let Err(error) = custom_actions::log_command_run(&log_dir, &record) {
+            log::warn!("Could not log the command run: {error}");
+        }
     }
 }
