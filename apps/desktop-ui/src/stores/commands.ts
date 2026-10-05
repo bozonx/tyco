@@ -1,11 +1,9 @@
 import useToast from '../composables/useToast'
 import type { CommandRunnerDependencies } from '../lib/commands/command-runner'
-import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
-import { createTauriFetch } from '../lib/net/tauri-fetch'
-import { tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menuModals'
+import { useToolsStore } from './tools'
 
 /**
  * What the commands of the library run with, wherever they are invoked from:
@@ -14,11 +12,16 @@ import { MenuModals, useMenuModalsStore } from './menuModals'
 export function useCommandRunnerDependencies(): CommandRunnerDependencies {
   const ipcStore = useIpcStore()
   const menuModalsStore = useMenuModalsStore()
+  const toolsStore = useToolsStore()
   const { toast, toastText } = useToast()
 
   return {
+    tools: toolsStore,
     showToast: (message, type) => {
       toast(message, type)
+    },
+    showText: (text, type) => {
+      toastText(text, type)
     },
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
@@ -32,24 +35,5 @@ export function useCommandRunnerDependencies(): CommandRunnerDependencies {
     showResultMenu: (text, sourceText) => {
       menuModalsStore.nextModal(MenuModals.PREVIEW, { text, sourceText })
     },
-    executeScriptAction: async (request) => {
-      const res = await ipcStore.callFunction('executeScriptAction', [request])
-      if (!res.success || !res.result) {
-        throw new Error(res.error ?? 'Empty response')
-      }
-      return res.result
-    },
-    cancelScriptAction: (runId) =>
-      ipcStore.callFunction('cancelScriptAction', [runId]),
-    executeWebhook: (target, text, signal) =>
-      executeWebhook(
-        target,
-        text,
-        createTauriFetch(tauriNetIpc),
-        async (name, type, details) => {
-          await ipcStore.callFunction('logCustomAction', [name, type, details])
-        },
-        signal
-      ),
   }
 }

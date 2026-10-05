@@ -8,7 +8,20 @@ import type {
   DesktopFunctionResult,
   PluginDesktopFunctionName,
 } from '../lib/ipc/desktop-functions'
+import type { ToolDefinition } from '../lib/tools/tool-types'
 import type { UserConfig } from '@tyco/shared'
+
+export { NO_INPUT_SCHEMA, TEXT_INPUT_SCHEMA } from '../lib/tools/tool-types'
+export type {
+  DefaultCommand,
+  DefaultCommandsContext,
+  JsonSchema,
+  ParseResult,
+  ToolCall,
+  ToolDefinition,
+  ToolParseContext,
+  ToolResult,
+} from '../lib/tools/tool-types'
 
 export type PluginIndex = () => {
   name: string
@@ -39,6 +52,11 @@ export interface PluginContext {
   registerCaseItems(items: EditItem[]): void
   registerFormatItems(items: EditItem[]): void
   registerToolbarItems(items: ToolbarItem[]): void
+  /**
+   * Tools commands can run, under `<pluginName>.<id>`; a command falls back to
+   * the plugin settings for the fields it leaves empty
+   */
+  registerTools(tools: ToolDefinition[]): void
   getEditorInputValue(): string
   getEditorInputSelectedText(): string
   setEditorInputValue(value: string): void

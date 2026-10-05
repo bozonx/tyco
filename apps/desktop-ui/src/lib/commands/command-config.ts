@@ -11,6 +11,13 @@ import {
   type WebhookToolConfig,
 } from '@tyco/shared'
 
+import { toolInputKind } from '../tools/tool-input'
+import type {
+  RegisteredTool,
+  ToolInputKind,
+  ToolLookup,
+} from '../tools/tool-types'
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
@@ -36,8 +43,9 @@ function headersOf(value: unknown): Record<string, string> {
   )
 }
 
-export function scriptToolConfig(command: CommandConfig): ScriptToolConfig {
-  const config = command.toolConfig
+export function scriptToolConfigOf(
+  config: Record<string, unknown>
+): ScriptToolConfig {
   return {
     command: stringOr(config.command),
     workingDir: stringOr(config.workingDir),
@@ -45,8 +53,9 @@ export function scriptToolConfig(command: CommandConfig): ScriptToolConfig {
   }
 }
 
-export function webhookToolConfig(command: CommandConfig): WebhookToolConfig {
-  const config = command.toolConfig
+export function webhookToolConfigOf(
+  config: Record<string, unknown>
+): WebhookToolConfig {
   return {
     url: stringOr(config.url),
     method: config.method === 'GET' ? 'GET' : 'POST',
@@ -56,6 +65,12 @@ export function webhookToolConfig(command: CommandConfig): WebhookToolConfig {
     takesText: config.takesText !== false,
   }
 }
+
+export const scriptToolConfig = (command: CommandConfig): ScriptToolConfig =>
+  scriptToolConfigOf(command.toolConfig)
+
+export const webhookToolConfig = (command: CommandConfig): WebhookToolConfig =>
+  webhookToolConfigOf(command.toolConfig)
 
 const normalizeToolConfig = (
   toolId: string,
@@ -151,25 +166,73 @@ export function createCommand(
   }
 }
 
-/** Whether the command is one this build can run */
-export function isKnownTool(command: CommandConfig): boolean {
-  return command.toolId === 'script' || command.toolId === 'webhook'
+/** The tool the command runs, if the registry has it */
+export const commandTool = (
+  command: CommandConfig,
+  tools: ToolLookup
+): RegisteredTool | undefined => tools.get(command.toolId)
+
+/**
+ * How the command gets its input from a text, or `null` when its tool is
+ * missing or it cannot get one outside the chat
+ */
+export function commandInputKind(
+  command: CommandConfig,
+  tools: ToolLookup
+): ToolInputKind | null {
+  const tool = commandTool(command, tools)
+  return tool
+    ? toolInputKind(tool, command.toolConfig, command.llmArgumentParsing)
+    : null
 }
 
+/**
+ * Why the command cannot run now, as an i18n key: no such tool, the tool is not
+ * available, or the command cannot get its input from a text
+ */
+export function commandUnavailableReason(
+  command: CommandConfig,
+  tools: ToolLookup
+): string | undefined {
+  const tool = commandTool(command, tools)
+  if (!tool) return 'commands.toolMissing'
+  const reason = tool.unavailableReason?.()
+  if (reason) return reason
+  if (commandInputKind(command, tools) === null) {
+    return 'commands.inputUnsupported'
+  }
+  return undefined
+}
+
+/** Whether the tool of the command can run it now */
+export const isCommandAvailable = (
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean => !commandUnavailableReason(command, tools)
+
 /** Whether the command gets the text it is invoked on */
-export function commandTakesText(command: CommandConfig): boolean {
-  return isKnownTool(command) && command.toolConfig.takesText !== false
+export function commandTakesText(
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean {
+  const kind = commandInputKind(command, tools)
+  return kind === 'text' || kind === 'parsed'
 }
 
 /** Whether the command can be an item of the action menu */
-export function isMenuCommand(command: CommandConfig): boolean {
-  return command.enabled && commandTakesText(command)
+export function isMenuCommand(
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean {
+  return (
+    command.enabled &&
+    isCommandAvailable(command, tools) &&
+    commandTakesText(command, tools)
+  )
 }
 
-export function commandIcon(command: CommandConfig): string {
-  if (command.toolId === 'script') return 'mdi:console-line'
-  if (command.toolId === 'webhook') return 'mdi:webhook'
-  return 'mdi:puzzle-outline'
+export function commandIcon(command: CommandConfig, tools: ToolLookup): string {
+  return commandTool(command, tools)?.icon ?? 'mdi:puzzle-outline'
 }
 
 /** The name shown for the command, never empty */
@@ -209,8 +272,15 @@ export function normalizeCommandName(name: string): string {
 }
 
 /** Whether an external call may run the command */
-export function isExternalCommand(command: CommandConfig): boolean {
-  return command.enabled && command.availableIn.external && isKnownTool(command)
+export function isExternalCommand(
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean {
+  return (
+    command.enabled &&
+    command.availableIn.external &&
+    isCommandAvailable(command, tools)
+  )
 }
 
 /**
@@ -219,14 +289,15 @@ export function isExternalCommand(command: CommandConfig): boolean {
  */
 export function externalNameTwins(
   commands: readonly CommandConfig[],
-  command: CommandConfig
+  command: CommandConfig,
+  tools: ToolLookup
 ): CommandConfig[] {
   const name = normalizeCommandName(command.name)
-  if (!name || !isExternalCommand(command)) return []
+  if (!name || !isExternalCommand(command, tools)) return []
   return commands.filter(
     (other) =>
       other.id !== command.id &&
-      isExternalCommand(other) &&
+      isExternalCommand(other, tools) &&
       normalizeCommandName(other.name) === name
   )
 }
@@ -241,7 +312,10 @@ const hasPlaceholder = (value: string | undefined): boolean =>
   Boolean(value?.includes(ACTION_TEXT_PLACEHOLDER))
 
 /** What keeps the command from running as the user expects */
-export function validateCommand(command: CommandConfig): CommandIssue[] {
+export function validateCommand(
+  command: CommandConfig,
+  tools: ToolLookup
+): CommandIssue[] {
   const issues: CommandIssue[] = []
   if (command.toolId === 'script') {
     const config = scriptToolConfig(command)
@@ -273,7 +347,7 @@ export function validateCommand(command: CommandConfig): CommandIssue[] {
         })
       }
     }
-  } else {
+  } else if (!commandTool(command, tools)) {
     issues.push({ field: 'toolId', messageKey: 'commands.errorUnknownTool' })
   }
   return issues

@@ -1,53 +1,31 @@
-import {
-  type CommandConfig,
-  SCRIPT_CANCELLED_ERROR,
-  type ScriptActionRequest,
-  type ScriptExecutionResult,
-} from '@tyco/shared'
+import type { CommandConfig, CommandRunSource } from '@tyco/shared'
 
-import {
-  buildScriptRequest,
-  scriptFailureDetail,
-} from '../custom-actions/script-executor'
-import {
-  type WebhookTarget,
-  webhookResultText,
-} from '../custom-actions/webhook-executor'
-import {
-  commandLabel,
-  commandTakesText,
-  scriptToolConfig,
-  webhookToolConfig,
-} from './command-config'
+import { resolveToolInput, toolCallConfig } from '../tools/tool-input'
+import type { ToolLookup, ToolResult } from '../tools/tool-types'
+import { commandLabel, commandUnavailableReason } from './command-config'
+
+export type ToastKind = 'info' | 'warn' | 'error' | 'success'
 
 export interface CommandRunnerDependencies {
-  showToast: (
-    message: string,
-    type?: 'info' | 'warn' | 'error' | 'success'
-  ) => void
+  /** The tools the commands run */
+  tools: ToolLookup
+  showToast: (messageKey: string, type?: ToastKind) => void
   /** A toast with `messageKey` translated and `detail` after it */
   showError?: (messageKey: string, detail?: string) => void
+  /** A toast with a text that needs no translation */
+  showText?: (text: string, type?: ToastKind) => void
   /** Opens the action menu on `text`, the result of a command on `sourceText` */
   showResultMenu?: (text: string, sourceText: string) => void
   closeWindow?: () => void
-  executeScriptAction?: (
-    request: ScriptActionRequest
-  ) => Promise<ScriptExecutionResult>
-  /** Stops the script of the run, see `ScriptActionRequest.runId` */
-  cancelScriptAction?: (runId: string) => Promise<unknown>
-  /** Resolves with the response body; rejects once `signal` aborts */
-  executeWebhook?: (
-    target: WebhookTarget,
-    text: string | null,
-    signal?: AbortSignal
-  ) => Promise<string>
-  /** A unique id of a script run */
-  newRunId?: () => string
+  /** The dictation language, for tools that parse the text */
+  language?: () => string | undefined
 }
 
 export interface CommandRunOptions {
   /** Cancels the run: the script is killed, the request is aborted */
   signal?: AbortSignal
+  /** Where the command is invoked from; the action menu by default */
+  source?: CommandRunSource
 }
 
 /** How a run ended; the user has been told already */
@@ -71,18 +49,29 @@ const cancelled: CommandRunOutcome = {
   message: 'Cancelled',
 }
 
-let runCounter = 0
-const defaultRunId = () => `command-run-${Date.now()}-${++runCounter}`
-
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
 /**
- * Runs the commands of the library and does what each one says with the output:
- * a toast, or the action menu on it
+ * Runs the commands of the library through the tool registry and does what each
+ * one says with the output: a toast, or the action menu on it
  */
 export function createCommandRunner(deps: CommandRunnerDependencies) {
+  /** Tells the user what the tool reported */
+  const report = (result: ToolResult) => {
+    const level = result.level ?? (result.ok ? 'success' : 'error')
+    if (result.messageKey) {
+      if (level === 'error') {
+        deps.showError?.(result.messageKey, result.message)
+      } else {
+        deps.showToast(result.messageKey, level)
+      }
+    } else if (result.message) {
+      deps.showText?.(result.message, level)
+    }
+  }
+
   /** Opens the action menu on the output, or warns that there is none. */
   const showOutput = (output: string, source: string): CommandRunOutcome => {
     const text = output.replace(/[\r\n]+$/, '')
@@ -91,94 +80,6 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       return failed('Empty output')
     }
     deps.showResultMenu?.(text, source)
-    return succeeded
-  }
-
-  const runScript = async (
-    command: CommandConfig,
-    text: string | null,
-    signal?: AbortSignal
-  ): Promise<CommandRunOutcome> => {
-    const config = scriptToolConfig(command)
-    if (!config.command.trim()) {
-      deps.showToast('toast.scriptEmptyCommand', 'warn')
-      return failed('Empty command')
-    }
-    const showMenu = command.afterRun === 'showMenu'
-    const runId = (deps.newRunId ?? defaultRunId)()
-    const cancel = () => {
-      void deps.cancelScriptAction?.(runId).catch(() => {})
-    }
-    signal?.addEventListener('abort', cancel, { once: true })
-    let result: ScriptExecutionResult | undefined
-    try {
-      result = await deps.executeScriptAction?.({
-        ...buildScriptRequest(commandLabel(command), config, text, {
-          captureOutput: showMenu,
-          logOutput: command.logOutput,
-        }),
-        runId,
-      })
-    } catch (error) {
-      if (signal?.aborted) return cancelled
-      const message = errorMessage(error)
-      if (message === SCRIPT_CANCELLED_ERROR) return cancelled
-      deps.showError?.('toast.scriptFailed', message)
-      return failed(message)
-    } finally {
-      signal?.removeEventListener('abort', cancel)
-    }
-    // finished before the cancellation reached it
-    if (signal?.aborted) return cancelled
-    if (!result) return failed('No result')
-    if (!result.success && !result.running) {
-      const message = scriptFailureDetail(result)
-      deps.showError?.('toast.scriptFailed', message)
-      return failed(message)
-    }
-    if (showMenu) return showOutput(result.stdout, text ?? '')
-    deps.showToast(
-      result.running ? 'toast.scriptRunning' : 'toast.scriptSuccess',
-      'success'
-    )
-    deps.closeWindow?.()
-    return succeeded
-  }
-
-  const runWebhook = async (
-    command: CommandConfig,
-    text: string | null,
-    signal?: AbortSignal
-  ): Promise<CommandRunOutcome> => {
-    const config = webhookToolConfig(command)
-    if (!config.url.trim()) {
-      deps.showToast('toast.webhookEmptyUrl', 'warn')
-      return failed('Empty URL')
-    }
-    let response: string | undefined
-    try {
-      response = await deps.executeWebhook?.(
-        {
-          ...config,
-          id: command.id,
-          name: commandLabel(command),
-          logOutput: command.logOutput,
-        },
-        text,
-        signal
-      )
-    } catch (error) {
-      if (signal?.aborted) return cancelled
-      const message = errorMessage(error)
-      deps.showError?.('toast.webhookFailed', message)
-      return failed(message)
-    }
-    if (signal?.aborted) return cancelled
-    if (command.afterRun === 'showMenu') {
-      return showOutput(webhookResultText(response ?? ''), text ?? '')
-    }
-    deps.showToast('toast.webhookSuccess', 'success')
-    deps.closeWindow?.()
     return succeeded
   }
 
@@ -192,16 +93,63 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       deps.showToast('toast.commandDisabled', 'warn')
       return failed('Disabled')
     }
-    const input = commandTakesText(command) ? text : null
-    if (options.signal?.aborted) return cancelled
-    if (command.toolId === 'script') {
-      return runScript(command, input, options.signal)
+    const tool = deps.tools.get(command.toolId)
+    const reason = commandUnavailableReason(command, deps.tools)
+    if (!tool || reason) {
+      deps.showError?.('toast.commandUnavailable', commandLabel(command))
+      return failed(reason ?? 'Unknown tool')
     }
-    if (command.toolId === 'webhook') {
-      return runWebhook(command, input, options.signal)
+    const signal = options.signal ?? new AbortController().signal
+    if (signal.aborted) return cancelled
+
+    const config = toolCallConfig(tool, command.toolConfig)
+    let result: ToolResult
+    /** The text the command got, the source of its output */
+    let sourceText = ''
+    try {
+      const parsed = await resolveToolInput({
+        tool,
+        config,
+        text,
+        llmArgumentParsing: command.llmArgumentParsing,
+        context: { now: new Date(), signal, language: deps.language?.() },
+      })
+      if (signal.aborted) return cancelled
+      if (!parsed.ok) {
+        report({ ...parsed, ok: false })
+        return failed(parsed.message ?? parsed.messageKey ?? 'Invalid input')
+      }
+      if (Object.keys(parsed.input).length) sourceText = text
+      result = await tool.run({
+        input: parsed.input,
+        config,
+        source: options.source ?? 'menu',
+        signal,
+        command: {
+          id: command.id,
+          name: commandLabel(command),
+          logOutput: command.logOutput,
+        },
+        wantsOutput: command.afterRun === 'showMenu',
+      })
+    } catch (error) {
+      if (signal.aborted) return cancelled
+      const message = errorMessage(error)
+      deps.showError?.('toast.commandFailed', message)
+      return failed(message)
     }
-    deps.showError?.('toast.commandUnavailable', commandLabel(command))
-    return failed('Unknown tool')
+
+    if (result.cancelled || signal.aborted) return cancelled
+    if (!result.ok) {
+      report(result)
+      return failed(result.message ?? result.messageKey ?? 'Failed')
+    }
+    if (command.afterRun === 'showMenu') {
+      return showOutput(result.content ?? '', sourceText)
+    }
+    report(result)
+    if (!result.keepWindow) deps.closeWindow?.()
+    return succeeded
   }
 
   return { run }

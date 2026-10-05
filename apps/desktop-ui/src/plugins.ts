@@ -7,6 +7,7 @@ import { useActionMenuStore } from './stores/actionMenu'
 import { useEditMenuStore } from './stores/editMenu'
 import { useIpcStore } from './stores/ipc'
 import { useToolbarStore } from './stores/toolbar'
+import { useToolsStore } from './stores/tools'
 import type { PluginIndex } from './types/plugins'
 
 export const pluginIndexes: PluginIndex[] = [
@@ -22,6 +23,7 @@ export const usePlugins = () => {
   const actionMenuStore = useActionMenuStore()
   const editMenuStore = useEditMenuStore()
   const toolbarStore = useToolbarStore()
+  const toolsStore = useToolsStore()
   const ipcStore = useIpcStore()
 
   if (!globalPluginManager) {
@@ -31,6 +33,7 @@ export const usePlugins = () => {
       clearActionItems: () => actionMenuStore.clearRegisteredActions(),
       clearEditItems: () => editMenuStore.clearRegisteredItems(),
       clearToolbarItems: () => toolbarStore.clearToolbarItems(),
+      clearTools: () => toolsStore.clearPluginTools(),
     })
   }
 

@@ -644,7 +644,10 @@
     "webhookEmptyUrl": "Webhook URL is empty",
     "textTooLongForSearch": "The text is too long to search for: select a fragment",
     "commandDisabled": "The command is disabled",
-    "commandUnavailable": "The command is unavailable"
+    "commandUnavailable": "The command is unavailable",
+    "commandFailed": "The command failed",
+    "commandInputUnsupported": "This command cannot take a text: its tool needs a structured input",
+    "commandInputInvalid": "The input of the command is not valid"
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",
@@ -725,7 +728,9 @@
     "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
     "badgeExternal": "external",
     "removeConfirm": "Delete the command “{name}”? It also leaves the main action menu.",
-    "removeConfirmSecret": "Delete the command “{name}”? It also leaves the main action menu, and its saved authorization token is deleted."
+    "removeConfirmSecret": "Delete the command “{name}”? It also leaves the main action menu, and its saved authorization token is deleted.",
+    "toolMissing": "Its tool is not available: the plugin is disabled or missing",
+    "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text"
   },
   "commandLauncher": {
     "title": "Commands",

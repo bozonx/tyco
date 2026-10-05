@@ -647,7 +647,10 @@
     "webhookEmptyUrl": "Web kancası URL'si boş",
     "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin",
     "commandDisabled": "Komut devre dışı",
-    "commandUnavailable": "Komut kullanılamıyor"
+    "commandUnavailable": "Komut kullanılamıyor",
+    "commandFailed": "Komut başarısız oldu",
+    "commandInputUnsupported": "Bu komut metin alamaz: aracı yapılandırılmış bir girdi bekliyor",
+    "commandInputInvalid": "Komutun girdisi geçersiz"
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",
@@ -728,7 +731,9 @@
     "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
     "badgeExternal": "dışarıdan",
     "removeConfirm": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır.",
-    "removeConfirmSecret": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır ve kayıtlı yetkilendirme belirteci silinir."
+    "removeConfirmSecret": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır ve kayıtlı yetkilendirme belirteci silinir.",
+    "toolMissing": "Aracı kullanılamıyor: eklenti kapalı veya yok",
+    "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor"
   },
   "commandLauncher": {
     "title": "Komutlar",

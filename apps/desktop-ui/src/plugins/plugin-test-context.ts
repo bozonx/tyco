@@ -1,7 +1,11 @@
 import { vi } from 'vitest'
 
 import type { ActionItem } from '../lib/action-menu/action-menu-store'
-import type { PluginContext, ToolbarItem } from '../types/plugins'
+import type {
+  PluginContext,
+  ToolbarItem,
+  ToolDefinition,
+} from '../types/plugins'
 
 export interface PluginTestContextOptions {
   value?: string
@@ -15,6 +19,7 @@ export function createPluginTestContext(
   options: PluginTestContextOptions = {}
 ) {
   const toolbarItems: ToolbarItem[] = []
+  const tools: ToolDefinition[] = []
 
   const ctx = {
     registerActionsItems: vi.fn<(items: ActionItem[]) => void>(),
@@ -24,6 +29,9 @@ export function createPluginTestContext(
     registerToolbarItems: vi.fn((items: ToolbarItem[]) => {
       toolbarItems.push(...items)
     }),
+    registerTools: vi.fn((items: ToolDefinition[]) => {
+      tools.push(...items)
+    }),
     getEditorInputValue: vi.fn(() => options.value ?? ''),
     getEditorInputSelectedText: vi.fn(() => options.selectedText ?? ''),
     setEditorInputValue: vi.fn(),
@@ -32,5 +40,10 @@ export function createPluginTestContext(
     getMyConfig: vi.fn(() => options.config),
   }
 
-  return { ctx: ctx as unknown as PluginContext, mocks: ctx, toolbarItems }
+  return {
+    ctx: ctx as unknown as PluginContext,
+    mocks: ctx,
+    toolbarItems,
+    tools,
+  }
 }

@@ -237,8 +237,9 @@ export interface ScriptActionRequest {
 /** The error of a script stopped with `cancel_script_action` */
 export const SCRIPT_CANCELLED_ERROR = 'Cancelled'
 
-/** Where a command of the library was invoked from, for the action log */
-export type CommandRunSource = 'launcher' | 'external'
+/** Where a command or a tool is invoked from, also for the action log */
+export type CommandRunSource =
+  'menu' | 'toolbar' | 'launcher' | 'external' | 'chat'
 
 /**
  * The command the command overlay opens with: an external call that needs a

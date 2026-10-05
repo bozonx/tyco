@@ -63,7 +63,7 @@
             </KeyButton>
             <span v-else class="launcher-key" />
             <Icon
-              :icon="commandIcon(command)"
+              :icon="commandIcon(command, toolsStore)"
               height="18"
               class="launcher-command-icon"
             />
@@ -76,7 +76,7 @@
               </span>
             </span>
             <Icon
-              v-if="commandTakesText(command)"
+              v-if="commandTakesText(command, toolsStore)"
               icon="mdi:text"
               height="16"
               class="launcher-command-flag"
@@ -101,7 +101,7 @@
 
       <div v-else-if="stage.kind === 'prepare'" class="launcher-prepare">
         <div class="launcher-prepare-head">
-          <Icon :icon="commandIcon(stage.command)" height="20" />
+          <Icon :icon="commandIcon(stage.command, toolsStore)" height="20" />
           <span class="launcher-prepare-name">
             {{ commandLabel(stage.command) }}
           </span>
@@ -117,7 +117,7 @@
           {{ target }}
         </code>
         <textarea
-          v-if="commandTakesText(stage.command)"
+          v-if="commandTakesText(stage.command, toolsStore)"
           ref="textRef"
           class="launcher-text"
           :value="launcher.text"
@@ -175,7 +175,10 @@
             <KeyButton>Enter</KeyButton>
             {{ t('commandLauncher.hintRun') }}
           </button>
-          <span v-if="commandTakesText(stage.command)" class="launcher-hint">
+          <span
+            v-if="commandTakesText(stage.command, toolsStore)"
+            class="launcher-hint"
+          >
             <KeyButton>Shift</KeyButton><KeyButton>Enter</KeyButton>
             {{ t('commandLauncher.hintNewLine') }}
           </span>
@@ -199,6 +202,7 @@ import {
 } from '../../lib/commands/command-config'
 import { useCommandLauncherStore } from '../../stores/commandLauncher'
 import { useIpcStore } from '../../stores/ipc'
+import { useToolsStore } from '../../stores/tools'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import KeyButton from '../common/KeyButton.vue'
 import InProgressMessage from './InProgressMessage.vue'
@@ -211,6 +215,7 @@ const props = withDefaults(defineProps<{ stopListening?: boolean }>(), {
 const { t } = useI18n()
 const ipcStore = useIpcStore()
 const launcher = useCommandLauncherStore()
+const toolsStore = useToolsStore()
 
 const stage = computed(() => launcher.stage)
 const selectedText = computed(() => ipcStore.params.selectedText ?? '')
@@ -315,7 +320,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
   // Enter confirms a command that takes no text; there is no field for it
   if (
     stage.value.kind === 'prepare' &&
-    !commandTakesText(stage.value.command) &&
+    !commandTakesText(stage.value.command, toolsStore) &&
     event.key === 'Enter'
   ) {
     event.preventDefault()

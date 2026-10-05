@@ -3,12 +3,15 @@ import { describe, expect, it, vi } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
+import { testTools } from '../tools/testing'
 import {
   type CommandLauncherDependencies,
   createCommandLauncherModel,
   isLauncherCommand,
   searchCommands,
 } from './launcher-model'
+
+const tools = testTools()
 
 const command = (
   id: string,
@@ -42,6 +45,7 @@ function setup(
   extra: Partial<Pick<CommandLauncherDependencies, 'run'>> = {}
 ) {
   const deps = {
+    tools,
     commands: () => commands,
     selectedText: vi.fn<() => string | null>(() => null),
     run: vi.fn(async () => ({ success: true })),
@@ -54,15 +58,17 @@ function setup(
 
 describe('isLauncherCommand', () => {
   it('offers enabled commands available in the overlay', () => {
-    expect(isLauncherCommand(backup)).toBe(true)
-    expect(isLauncherCommand({ ...backup, enabled: false })).toBe(false)
+    expect(isLauncherCommand(backup, tools)).toBe(true)
+    expect(isLauncherCommand({ ...backup, enabled: false }, tools)).toBe(false)
     expect(
-      isLauncherCommand({
-        ...backup,
-        availableIn: { ...backup.availableIn, launcher: false },
-      })
+      isLauncherCommand(
+        { ...backup, availableIn: { ...backup.availableIn, launcher: false } },
+        tools
+      )
     ).toBe(false)
-    expect(isLauncherCommand({ ...backup, toolId: 'notes.write' })).toBe(false)
+    expect(isLauncherCommand({ ...backup, toolId: 'notes.write' }, tools)).toBe(
+      false
+    )
   })
 })
 

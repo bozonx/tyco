@@ -23,6 +23,9 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
         showToast: (messageKey, type = 'info') => {
           report(type, translate(messageKey))
         },
+        showText: (text, type = 'info') => {
+          report(type, text)
+        },
         showError: (messageKey, detail) => {
           report(
             'error',
@@ -34,7 +37,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
         // no window is shown, so there is nothing to close or show a menu in
         closeWindow: undefined,
         showResultMenu: undefined,
-      }).run(command, text),
+      }).run(command, text, { source: 'external' }),
     showOverlay: (request) => {
       void ipcStore.callFunction('showStatusOverlay', [request])
     },

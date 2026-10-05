@@ -43,6 +43,7 @@ import {
 } from '../../lib/commands/command-config'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/actionMenu'
+import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
@@ -67,6 +68,7 @@ const NEW_COMMAND_PREFIX = 'new:'
 
 const { t } = useI18n()
 const actionMenuStore = useActionMenuStore()
+const toolsStore = useToolsStore()
 
 const actionSlots = computed(() =>
   normalizeMainActions(props.userConfig.mainActions)
@@ -101,7 +103,7 @@ const availableActions = computed(() => [
     ),
   // only commands that take the text of the editor fit the menu
   ...commands.value
-    .filter(isMenuCommand)
+    .filter((command) => isMenuCommand(command, toolsStore))
     .map((command) => ({
       config: { type: 'command' as const, commandId: command.id },
       name: commandLabel(command),

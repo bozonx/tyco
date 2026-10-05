@@ -12,10 +12,12 @@ import { type MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import { type DEFAULT_PARAMS, useNavPanelStore } from '../stores/navPanel'
 import { useRouteParams } from '../stores/routeParams'
 import { useToolbarStore } from '../stores/toolbar'
+import { useToolsStore } from '../stores/tools'
 import {
   type PluginContext as IPluginContext,
   type PluginIndex,
   type ToolbarItem,
+  type ToolDefinition,
 } from '../types/plugins'
 import useToast from './useToast'
 
@@ -23,6 +25,7 @@ export default function usePluginContext() {
   const actionMenuStore = useActionMenuStore()
   const editMenuStore = useEditMenuStore()
   const toolbarStore = useToolbarStore()
+  const toolsStore = useToolsStore()
   const editorInputStore = useEditorInputStore()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
@@ -56,6 +59,14 @@ export default function usePluginContext() {
 
     registerToolbarItems(items: ToolbarItem[]) {
       toolbarStore.registerToolbarItems(items)
+    }
+
+    registerTools(tools: ToolDefinition[]) {
+      toolsStore.registerPluginTools(
+        this.pluginName,
+        tools,
+        () => this.getMyConfig<Record<string, unknown>>() ?? {}
+      )
     }
 
     getEditorInputValue() {

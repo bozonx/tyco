@@ -6,6 +6,7 @@ import type { CommandConfig } from '@tyco/shared'
 
 import { createCommandLauncherModel } from '../../lib/command-launcher/launcher-model'
 import { createCommand } from '../../lib/commands/command-config'
+import { testTools } from '../../lib/tools/testing'
 import CommandLauncher from './CommandLauncher.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -34,6 +35,11 @@ vi.mock('../../stores/ipc', () => ({
     callFunctionOrNotify: vi.fn(),
   }),
 }))
+vi.mock('../../stores/tools', async () => {
+  const { testTools } = await import('../../lib/tools/testing')
+  const tools = testTools()
+  return { useToolsStore: () => tools }
+})
 vi.mock('../../stores/commandLauncher', () => ({
   useCommandLauncherStore: () => mocks.store,
 }))
@@ -56,6 +62,7 @@ const webhook = (
 function mountLauncher(commands: CommandConfig[]) {
   mocks.store = reactive(
     createCommandLauncherModel({
+      tools: testTools(),
       commands: () => commands,
       selectedText: () => mocks.params.selectedText,
       run: mocks.run,

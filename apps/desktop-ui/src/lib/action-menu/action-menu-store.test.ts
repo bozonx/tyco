@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 
 import { createCommand } from '../commands/command-config'
+import { testTools } from '../tools/testing'
 import { createActionMenuStoreModel } from './action-menu-store'
 
 describe('createActionMenuStoreModel', () => {
@@ -16,6 +17,7 @@ describe('createActionMenuStoreModel', () => {
       startChatWithAttachment: vi.fn(),
       showToast: vi.fn(),
       minCorrectionLength: () => 10,
+      tools: testTools(),
     }
     const store = createActionMenuStoreModel(deps)
     return { store, deps }
@@ -197,6 +199,7 @@ describe('createActionMenuStoreModel', () => {
       startChatWithAttachment: vi.fn(),
       showToast: vi.fn(),
       mainActions: () => mainActions,
+      tools: testTools(),
     }
     const store = createActionMenuStoreModel(deps)
 
@@ -234,7 +237,7 @@ describe('createActionMenuStoreModel', () => {
       })
     const store = createActionMenuStoreModel({
       ...deps,
-      executeScriptAction,
+      tools: testTools({ executeScriptAction }),
       mainActions: () => [
         { type: 'command', commandId: 'sc1' },
         { type: 'command', commandId: 'wh1' },

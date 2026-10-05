@@ -55,10 +55,10 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   const createCommandActionItem = (command: CommandConfig): ActionItem => ({
     id: `command:${command.id}`,
     name: commandLabel(command),
-    icon: commandIcon(command),
+    icon: commandIcon(command, deps.tools),
     action: async (text: string) => {
       await deps.saveOutput(text)
-      await commandRunner.run(command, text)
+      await commandRunner.run(command, text, { source: 'menu' })
     },
   })
 
@@ -168,7 +168,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       if (item.type === 'command') {
         // a disabled command, or one that takes no text, leaves its slot empty
         const command = commands.get(item.commandId)
-        return command && isMenuCommand(command)
+        return command && isMenuCommand(command, deps.tools)
           ? createCommandActionItem(command)
           : undefined
       }

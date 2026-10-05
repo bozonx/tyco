@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import type { CommandConfig } from '@tyco/shared'
 
+import { testTools } from '../tools/testing'
+
 import {
   commandLabel,
   commandTakesText,
@@ -15,6 +17,8 @@ import {
   removeCommandReferences,
   validateCommand,
 } from './command-config'
+
+const tools = testTools()
 
 const withConfig = (
   command: CommandConfig,
@@ -118,10 +122,14 @@ describe('createCommand', () => {
 describe('menu commands', () => {
   it('admits only enabled commands that take text', () => {
     const script = createCommand('script', 'a')
-    expect(isMenuCommand(script)).toBe(true)
-    expect(isMenuCommand({ ...script, enabled: false })).toBe(false)
-    expect(isMenuCommand(withConfig(script, { takesText: false }))).toBe(false)
-    expect(commandTakesText({ ...script, toolId: 'notes.write' })).toBe(false)
+    expect(isMenuCommand(script, tools)).toBe(true)
+    expect(isMenuCommand({ ...script, enabled: false }, tools)).toBe(false)
+    expect(isMenuCommand(withConfig(script, { takesText: false }), tools)).toBe(
+      false
+    )
+    expect(commandTakesText({ ...script, toolId: 'notes.write' }, tools)).toBe(
+      false
+    )
   })
 
   it('names a command after its shell command when it has no name', () => {
@@ -154,10 +162,10 @@ describe('menu commands', () => {
 
 describe('validateCommand', () => {
   it('requires the command of a script and the URL of a webhook', () => {
-    expect(validateCommand(createCommand('script', 'a'))).toEqual([
+    expect(validateCommand(createCommand('script', 'a'), tools)).toEqual([
       { field: 'command', messageKey: 'commands.errorNoCommand' },
     ])
-    expect(validateCommand(createCommand('webhook', 'a'))).toEqual([
+    expect(validateCommand(createCommand('webhook', 'a'), tools)).toEqual([
       { field: 'url', messageKey: 'commands.errorNoUrl' },
     ])
   })
@@ -168,7 +176,8 @@ describe('validateCommand', () => {
         withConfig(createCommand('script', 'a'), {
           command: 'notify-send {{TEXT}}',
           takesText: false,
-        })
+        }),
+        tools
       )
     ).toEqual([
       { field: 'command', messageKey: 'commands.errorTextPlaceholder' },
@@ -179,7 +188,8 @@ describe('validateCommand', () => {
           url: 'https://x.test/{{TEXT}}',
           payloadTemplate: '{"t":"{{TEXT}}"}',
           takesText: false,
-        })
+        }),
+        tools
       ).map((issue) => issue.field)
     ).toEqual(['url', 'payloadTemplate'])
   })
@@ -189,7 +199,8 @@ describe('validateCommand', () => {
       validateCommand(
         withConfig(createCommand('script', 'a'), {
           command: 'notify-send {{TEXT}}',
-        })
+        }),
+        tools
       )
     ).toEqual([])
   })
@@ -228,9 +239,9 @@ describe('external names', () => {
     const c = named('c', 'Свет', false)
     const d = { ...named('d', 'свет'), enabled: false }
     const commands = [a, b, c, d, named('e', 'Other')]
-    expect(externalNameTwins(commands, a)).toEqual([b])
+    expect(externalNameTwins(commands, a, tools)).toEqual([b])
     // a command that may not be called has no twins to warn about
-    expect(externalNameTwins(commands, c)).toEqual([])
-    expect(externalNameTwins(commands, named('f', ''))).toEqual([])
+    expect(externalNameTwins(commands, c, tools)).toEqual([])
+    expect(externalNameTwins(commands, named('f', ''), tools)).toEqual([])
   })
 })

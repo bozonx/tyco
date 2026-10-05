@@ -8,6 +8,7 @@ export interface PluginManagerDependencies {
   clearActionItems: () => void
   clearEditItems: () => void
   clearToolbarItems: () => void
+  clearTools?: () => void
 }
 
 export function createPluginManager(deps: PluginManagerDependencies) {
@@ -27,6 +28,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     deps.clearActionItems()
     deps.clearEditItems()
     deps.clearToolbarItems()
+    deps.clearTools?.()
     activePluginNames = []
 
     for (const pluginFactory of deps.pluginIndexes) {

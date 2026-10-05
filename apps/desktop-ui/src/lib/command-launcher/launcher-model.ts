@@ -10,13 +10,14 @@ import type {
 import {
   commandLabel,
   commandTakesText,
-  isKnownTool,
+  isCommandAvailable,
 } from '../commands/command-config'
 import type {
   CommandRunOptions,
   CommandRunOutcome,
 } from '../commands/command-runner'
 import { moveHighlight } from '../menu-query/menu-query'
+import type { ToolLookup } from '../tools/tool-types'
 
 /** The first commands of the list are run with the keys `1`–`9` */
 export const LAUNCHER_KEY_COUNT = 9
@@ -37,8 +38,15 @@ export type LauncherStage =
   | { kind: 'running'; command: CommandConfig }
 
 /** Whether the overlay offers the command */
-export function isLauncherCommand(command: CommandConfig): boolean {
-  return command.enabled && command.availableIn.launcher && isKnownTool(command)
+export function isLauncherCommand(
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean {
+  return (
+    command.enabled &&
+    command.availableIn.launcher &&
+    isCommandAvailable(command, tools)
+  )
 }
 
 const normalize = (text: string): string =>
@@ -93,6 +101,8 @@ export function searchCommands(
 }
 
 export interface CommandLauncherDependencies {
+  /** The tools the commands run */
+  tools: ToolLookup
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
   /** The text selected in the window the overlay was opened over */
@@ -124,7 +134,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   let controller: AbortController | null = null
 
   const commands = computed(() =>
-    (deps.commands() ?? []).filter(isLauncherCommand)
+    (deps.commands() ?? []).filter((command) =>
+      isLauncherCommand(command, deps.tools)
+    )
   )
   const visible = computed(() => searchCommands(commands.value, query.value))
 
@@ -184,6 +196,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     try {
       outcome = await deps.run(command, input ?? '', {
         signal: runController.signal,
+        source,
       })
     } catch (error) {
       outcome = runController.signal.aborted
@@ -216,7 +229,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
    * or for a confirmation when the command wants one
    */
   const start = async (command: CommandConfig, given: string) => {
-    const takesText = commandTakesText(command)
+    const takesText = commandTakesText(command, deps.tools)
     const input = takesText ? given : ''
     const confirm = command.confirm === 'always'
     if ((takesText && !input.trim()) || confirm) {
@@ -278,7 +291,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const canSubmit = computed(() => {
     const current = stage.value
     if (current.kind !== 'prepare') return false
-    return !commandTakesText(current.command) || Boolean(text.value.trim())
+    return (
+      !commandTakesText(current.command, deps.tools) ||
+      Boolean(text.value.trim())
+    )
   })
 
   const submit = async (): Promise<void> => {
@@ -286,7 +302,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     if (current.kind !== 'prepare' || !canSubmit.value) return
     await execute(
       current.command,
-      commandTakesText(current.command) ? text.value : null
+      commandTakesText(current.command, deps.tools) ? text.value : null
     )
   }
 
@@ -308,7 +324,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const current = stage.value
     if (
       current.kind === 'prepare' &&
-      commandTakesText(current.command) &&
+      commandTakesText(current.command, deps.tools) &&
       !textEdited &&
       !text.value.trim() &&
       selection?.trim()

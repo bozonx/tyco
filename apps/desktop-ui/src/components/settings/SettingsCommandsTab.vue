@@ -34,7 +34,7 @@
               @click="toggle(command.id)"
             >
               <Icon
-                :icon="commandIcon(command)"
+                :icon="commandIcon(command, toolsStore)"
                 width="18"
                 height="18"
                 class="shrink-0"
@@ -43,7 +43,10 @@
                 {{ command.name || t('commands.unnamed') }}
               </span>
               <span class="command-badge">{{ toolName(command) }}</span>
-              <span v-if="!commandTakesText(command)" class="command-badge">
+              <span
+                v-if="!commandTakesText(command, toolsStore)"
+                class="command-badge"
+              >
                 {{ t('commands.badgeNoText') }}
               </span>
               <span v-if="inMenu.has(command.id)" class="command-badge">
@@ -60,8 +63,8 @@
               </span>
               <span
                 v-if="
-                  validateCommand(command).length ||
-                  externalNameTwins(commands, command).length
+                  validateCommand(command, toolsStore).length ||
+                  externalNameTwins(commands, command, toolsStore).length
                 "
                 class="command-badge is-warning"
                 :title="t('commands.badgeIssuesHint')"
@@ -92,7 +95,7 @@
             <CommandEditor
               :command="command"
               :in-menu="inMenu.has(command.id)"
-              :name-twins="externalNameTwins(commands, command)"
+              :name-twins="externalNameTwins(commands, command, toolsStore)"
               @update="updateCommand(index, $event)"
             />
           </div>
@@ -130,6 +133,7 @@ import {
 } from '../../lib/commands/command-config'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { useLlmStore } from '../../stores/llm'
+import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import CommandEditor from './CommandEditor.vue'
@@ -155,6 +159,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const llmStore = useLlmStore()
+const toolsStore = useToolsStore()
 
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 

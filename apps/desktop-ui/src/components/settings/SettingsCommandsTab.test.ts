@@ -12,6 +12,11 @@ vi.mock('../../composables/useI18n', () => ({
 const removeSecret = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../stores/llm', () => ({ useLlmStore: () => ({ removeSecret }) }))
+vi.mock('../../stores/tools', async () => {
+  const { testTools } = await import('../../lib/tools/testing')
+  const tools = testTools()
+  return { useToolsStore: () => tools }
+})
 
 const webhook = {
   ...createCommand('webhook', 'wh1'),

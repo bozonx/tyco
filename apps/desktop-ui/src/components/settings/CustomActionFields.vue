@@ -203,6 +203,7 @@ import {
 import { httpOrigin } from '../../lib/net/secrets'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
+import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
@@ -228,10 +229,11 @@ const { t } = useI18n()
 const { toast, toastText } = useToast()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
+const toolsStore = useToolsStore()
 
 const script = computed(() => scriptToolConfig(props.command))
 const webhook = computed(() => webhookToolConfig(props.command))
-const issues = computed(() => validateCommand(props.command))
+const issues = computed(() => validateCommand(props.command, toolsStore))
 
 const issuesOf = (field: string) =>
   issues.value.filter((issue) => issue.field === field)

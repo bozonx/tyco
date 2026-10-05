@@ -647,7 +647,10 @@
     "webhookEmptyUrl": "La URL del webhook está vacía",
     "textTooLongForSearch": "El texto es demasiado largo para buscarlo: selecciona un fragmento",
     "commandDisabled": "El comando está desactivado",
-    "commandUnavailable": "El comando no está disponible"
+    "commandUnavailable": "El comando no está disponible",
+    "commandFailed": "El comando falló",
+    "commandInputUnsupported": "Este comando no acepta texto: su herramienta necesita una entrada estructurada",
+    "commandInputInvalid": "La entrada del comando no es válida"
   },
   "llmErrors": {
     "auth": "El proveedor rechazó la clave, o no hay una clave guardada",
@@ -728,7 +731,9 @@
     "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usá el ID.",
     "badgeExternal": "externo",
     "removeConfirm": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales.",
-    "removeConfirmSecret": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales y se borra su token de autorización guardado."
+    "removeConfirmSecret": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales y se borra su token de autorización guardado.",
+    "toolMissing": "Su herramienta no está disponible: el plugin está desactivado o no existe",
+    "inputUnsupported": "Su herramienta necesita una entrada estructurada que no se obtiene de un texto"
   },
   "commandLauncher": {
     "title": "Comandos",

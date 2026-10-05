@@ -53,7 +53,7 @@
       />
     </div>
 
-    <div v-if="knownTool" class="command-field-row">
+    <div v-if="customActionTool" class="command-field-row">
       <FieldCheckbox
         :value="takesText"
         :label="t('commands.takesText')"
@@ -61,17 +61,17 @@
       />
       <InfoTooltip :text="t('commands.takesTextInfo')" />
     </div>
-    <p v-if="inMenu && knownTool && !takesText" class="command-warning">
+    <p v-if="inMenu && tool && !takesText" class="command-warning">
       {{ t('commands.warningMenuNeedsText') }}
     </p>
 
     <CustomActionFields
-      v-if="knownTool"
+      v-if="customActionTool"
       :key="command.id"
       :command="command"
       @update="updateToolConfig"
     />
-    <p v-else class="command-warning">
+    <p v-else-if="!tool" class="command-warning">
       {{ t('commands.unknownTool', { tool: command.toolId }) }}
     </p>
 
@@ -147,8 +147,9 @@ import { useI18n } from '../../composables/useI18n'
 import {
   commandLabel,
   commandTakesText,
-  isKnownTool,
+  commandTool,
 } from '../../lib/commands/command-config'
+import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -173,8 +174,13 @@ const emit = defineEmits<{ (event: 'update', command: CommandConfig): void }>()
 
 const { t } = useI18n()
 
-const knownTool = computed(() => isKnownTool(props.command))
-const takesText = computed(() => commandTakesText(props.command))
+const toolsStore = useToolsStore()
+const tool = computed(() => commandTool(props.command, toolsStore))
+/** A script or a webhook: its settings have an editor of their own */
+const customActionTool = computed(
+  () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
+)
+const takesText = computed(() => commandTakesText(props.command, toolsStore))
 
 function update(patch: Partial<CommandConfig>) {
   emit('update', { ...props.command, ...patch })

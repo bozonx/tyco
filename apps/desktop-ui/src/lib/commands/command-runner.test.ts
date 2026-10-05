@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { CommandConfig, ScriptExecutionResult } from '@tyco/shared'
 
+import type { BuiltinToolDependencies } from '../tools/builtin-tools'
+import { testTools } from '../tools/testing'
+import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand } from './command-config'
 import {
   type CommandRunnerDependencies,
@@ -43,13 +46,28 @@ const result = (
   ...extra,
 })
 
-function setup(extra: Partial<CommandRunnerDependencies> = {}) {
+function setup(
+  extra: Partial<CommandRunnerDependencies> & BuiltinToolDependencies = {},
+  tools: readonly ToolDefinition[] = []
+) {
+  const {
+    executeScriptAction,
+    cancelScriptAction,
+    executeWebhook,
+    newRunId,
+    ...rest
+  } = extra
   const deps = {
+    tools: testTools(
+      { executeScriptAction, cancelScriptAction, executeWebhook, newRunId },
+      tools
+    ),
     showToast: vi.fn(),
     showError: vi.fn(),
+    showText: vi.fn(),
     showResultMenu: vi.fn(),
     closeWindow: vi.fn(),
-    ...extra,
+    ...rest,
   }
   return { deps, runner: createCommandRunner(deps) }
 }
@@ -191,7 +209,7 @@ describe('webhook commands', () => {
         logOutput: true,
       }),
       'x',
-      undefined
+      expect.any(AbortSignal)
     )
     expect(deps.showToast).toHaveBeenCalledWith(
       'toast.webhookSuccess',
@@ -309,5 +327,107 @@ describe('cancellation', () => {
     })
     expect(outcome.cancelled).toBe(true)
     expect(executeScriptAction).not.toHaveBeenCalled()
+  })
+})
+
+describe('plugin tools', () => {
+  const noteTool = (extra: Partial<ToolDefinition> = {}): ToolDefinition => ({
+    id: 'Notes.write',
+    description: 'Writes a note',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    run: vi.fn(async () => ({ ok: true, messageKey: 'toast.noteSaved' })),
+    ...extra,
+  })
+  const note = (extra: Partial<CommandConfig> = {}): CommandConfig => ({
+    ...createCommand('script', 'n-1'),
+    name: 'Note',
+    toolId: 'Notes.write',
+    toolConfig: { dir: '~/work' },
+    ...extra,
+  })
+
+  it('calls the tool with the text, the settings and the source', async () => {
+    const tool = noteTool()
+    const { deps, runner } = setup({}, [tool])
+    const outcome = await runner.run(note(), 'buy milk', { source: 'launcher' })
+    expect(outcome).toEqual({ success: true })
+    expect(tool.run).toHaveBeenCalledWith({
+      input: { text: 'buy milk' },
+      config: { dir: '~/work' },
+      source: 'launcher',
+      signal: expect.any(AbortSignal),
+      command: { id: 'n-1', name: 'Note', logOutput: false },
+      wantsOutput: false,
+    })
+    expect(deps.showToast).toHaveBeenCalledWith('toast.noteSaved', 'success')
+    expect(deps.closeWindow).toHaveBeenCalled()
+  })
+
+  it('keeps the window when the tool asks for it', async () => {
+    const tool = noteTool({ run: async () => ({ ok: true, keepWindow: true }) })
+    const { deps, runner } = setup({}, [tool])
+    await runner.run(note(), 'x')
+    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.showToast).not.toHaveBeenCalled()
+  })
+
+  it('shows a plain message of the tool as it is', async () => {
+    const tool = noteTool({
+      run: async () => ({ ok: false, message: 'Folder is read-only' }),
+    })
+    const { deps, runner } = setup({}, [tool])
+    const outcome = await runner.run(note(), 'x')
+    expect(outcome).toEqual({ success: false, message: 'Folder is read-only' })
+    expect(deps.showText).toHaveBeenCalledWith('Folder is read-only', 'error')
+  })
+
+  it('parses the text before the run and stops on a parse error', async () => {
+    const run = vi.fn(async () => ({ ok: true }))
+    const tool = noteTool({
+      inputSchema: {
+        type: 'object',
+        properties: { at: { type: 'string' } },
+        required: ['at'],
+      },
+      parseText: async (text) =>
+        text === 'later'
+          ? { ok: false, messageKey: 'toast.noTime' }
+          : { ok: true, input: { at: text } },
+      run,
+    })
+    const { deps, runner } = setup({}, [tool])
+    await runner.run(note(), '15:40')
+    expect(run.mock.calls[0]).toEqual([
+      expect.objectContaining({ input: { at: '15:40' } }),
+    ])
+
+    const outcome = await runner.run(note(), 'later')
+    expect(outcome.success).toBe(false)
+    expect(run).toHaveBeenCalledTimes(1)
+    expect(deps.showError).toHaveBeenCalledWith('toast.noTime', undefined)
+  })
+
+  it('does not run a command of an unavailable tool', async () => {
+    const tool = noteTool({ unavailableReason: () => 'commands.noLlm' })
+    const { deps, runner } = setup({}, [tool])
+    const outcome = await runner.run(note(), 'x')
+    expect(outcome).toEqual({ success: false, message: 'commands.noLlm' })
+    expect(tool.run).not.toHaveBeenCalled()
+    expect(deps.showError).toHaveBeenCalledWith(
+      'toast.commandUnavailable',
+      'Note'
+    )
+  })
+
+  it('reports a tool that throws', async () => {
+    const tool = noteTool({
+      run: async () => {
+        throw new Error('boom')
+      },
+    })
+    const { deps, runner } = setup({}, [tool])
+    const outcome = await runner.run(note(), 'x')
+    expect(outcome).toEqual({ success: false, message: 'boom' })
+    expect(deps.showError).toHaveBeenCalledWith('toast.commandFailed', 'boom')
   })
 })

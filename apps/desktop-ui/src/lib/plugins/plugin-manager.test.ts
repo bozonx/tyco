@@ -40,6 +40,7 @@ describe('createPluginManager', () => {
     const clearActionItems = vi.fn()
     const clearEditItems = vi.fn()
     const clearToolbarItems = vi.fn()
+    const clearTools = vi.fn()
 
     const manager = createPluginManager({
       pluginIndexes: [plugin1, plugin2],
@@ -47,12 +48,14 @@ describe('createPluginManager', () => {
       clearActionItems,
       clearEditItems,
       clearToolbarItems,
+      clearTools,
     })
 
     manager.loadPlugins({})
 
     expect(clearActionItems).toHaveBeenCalledTimes(1)
     expect(clearEditItems).toHaveBeenCalledTimes(1)
+    expect(clearTools).toHaveBeenCalledTimes(1)
     expect(clearToolbarItems).toHaveBeenCalledTimes(1)
     expect(init1).toHaveBeenCalledTimes(1)
     expect(init2).toHaveBeenCalledTimes(1)

@@ -10,6 +10,7 @@ import { translate } from '../lib/i18n'
 import { useCommandRunnerDependencies } from './commands'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
+import { useToolsStore } from './tools'
 
 export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const ipcStore = useIpcStore()
@@ -18,6 +19,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const { toastText } = useToast()
 
   const model = createCommandLauncherModel({
+    tools: useToolsStore(),
     commands: () => ipcStore.params.userConfig?.commands,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
