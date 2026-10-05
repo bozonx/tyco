@@ -573,7 +573,9 @@
   "plugin": {
     "searchInInternet": {
       "label": "İnternette ara",
-      "url": "İnternet arama URL'si"
+      "url": "İnternet arama URL'si",
+      "description": "Metin için tarayıcıda web araması açar",
+      "phrases": "(ara|bul)"
     },
     "fastNote": {
       "label": "Hızlı not",
@@ -599,7 +601,11 @@
       "fileNameTemplate": "Dosya adı şablonu",
       "contentTemplate": "İçerik şablonu",
       "clearInputAfterSave": "Kaydettikten sonra giriş alanını temizle",
-      "actionAppendDaily": "Günlük nota ekle"
+      "actionAppendDaily": "Günlük nota ekle",
+      "toolLabel": "Not yaz",
+      "toolDescription": "Metni not klasörünüzde yeni bir not olarak kaydeder veya bir nota ekler",
+      "notePhrases": "not (al|yaz)\nnot",
+      "dailyPhrases": "günlüğe (yaz|ekle)"
     },
     "russianStress": { "label": "Rusça vurgu" }
   },

@@ -21,12 +21,24 @@ describe('FastNote plugin', () => {
     )
   })
 
-  it('registers action menu items and a toolbar button', () => {
-    const { mocks, toolbarItems } = setup({})
+  it('registers the note tool with its default commands and a toolbar button', () => {
+    const { mocks, toolbarItems, tools } = setup({})
 
-    expect(mocks.registerActionsItems).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'fastNote', preferredKey: 'c' }),
-      expect.objectContaining({ id: 'fastNoteAppendDaily', preferredKey: 'd' }),
+    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
+    expect(tools.map((tool) => tool.id)).toEqual(['write'])
+    expect(tools[0].configFields?.map((field) => field.name)).not.toContain(
+      'clearInputAfterSave'
+    )
+    const defaults = tools[0].defaultCommands?.({
+      userConfig: {} as never,
+      t: (key) => key,
+    })
+    expect(defaults?.map((preset) => [preset.id, preset.menu])).toEqual([
+      ['note', { replaces: 'FastNote:fastNote', preferredKey: 'c' }],
+      [
+        'daily',
+        { replaces: 'FastNote:fastNoteAppendDaily', preferredKey: 'd' },
+      ],
     ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
@@ -99,29 +111,33 @@ describe('FastNote plugin', () => {
     expect(mocks.toast).toHaveBeenCalledWith('toast.noteAppended', 'success')
   })
 
-  it('executes append daily note from the second action menu item', async () => {
+  it('appends to the daily note with the settings of its default command', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 9, 3, 12, 0, 0))
 
-    const { mocks } = setup({
-      value: 'Quick thought',
-      config: { pathToNotes: '/vault' },
+    const { mocks, tools } = setup({ config: { pathToNotes: '/vault' } })
+    const daily = tools[0]
+      .defaultCommands?.({ userConfig: {} as never, t: (key) => key })
+      .find((preset) => preset.id === 'daily')
+
+    const result = await tools[0].run({
+      input: { text: 'Quick thought' },
+      config: { pathToNotes: '/vault', ...daily?.toolConfig },
+      source: 'launcher',
+      signal: new AbortController().signal,
+      wantsOutput: false,
     })
-
-    const actions = mocks.registerActionsItems.mock.calls[0][0]!
-    const appendDailyAction = actions.find(
-      (a) => a.id === 'fastNoteAppendDaily'
-    )
-    expect(appendDailyAction).toBeDefined()
-
-    await appendDailyAction?.action('Quick thought')
 
     expect(mocks.callApiFunction).toHaveBeenCalledWith('appendNote', [
       '/vault',
       '2026-10-03.md',
       '- **12:00**: Quick thought\n',
     ])
-    expect(mocks.toast).toHaveBeenCalledWith('toast.noteAppended', 'success')
+    expect(result).toEqual({
+      ok: true,
+      messageKey: 'toast.noteAppended',
+      keepWindow: false,
+    })
   })
 
   it('reports a failed save', async () => {
@@ -159,13 +175,23 @@ describe('FastNote plugin', () => {
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
 
-  it('uses the text supplied by the action menu', async () => {
-    const { mocks } = setup({
-      value: 'editor text',
-      selectedText: 'selection',
-      config: { pathToNotes: '/notes' },
+  it('clears the editor only for a call from the editor', async () => {
+    const { mocks, tools } = setup({
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
     })
-    await mocks.registerActionsItems.mock.calls[0][0][0].action(' menu text ')
+    const call = (source: 'menu' | 'launcher') =>
+      tools[0].run({
+        input: { text: ' menu text ' },
+        config: { pathToNotes: '/notes' },
+        source,
+        signal: new AbortController().signal,
+        wantsOutput: false,
+      })
+
+    expect(await call('launcher')).toMatchObject({ keepWindow: false })
+    expect(mocks.setEditorInputValue).not.toHaveBeenCalled()
+    expect(await call('menu')).toMatchObject({ keepWindow: true })
+    expect(mocks.setEditorInputValue).toHaveBeenCalledWith('')
     expect(mocks.callApiFunction).toHaveBeenCalledWith('saveNote', [
       '/notes',
       expect.any(String),

@@ -573,7 +573,9 @@
   "plugin": {
     "searchInInternet": {
       "label": "Buscar en internet",
-      "url": "URL de búsqueda en internet"
+      "url": "URL de búsqueda en internet",
+      "description": "Abre una búsqueda del texto en el navegador",
+      "phrases": "(buscá|googleá)"
     },
     "fastNote": {
       "label": "Nota rápida",
@@ -599,7 +601,11 @@
       "fileNameTemplate": "Plantilla del nombre de archivo",
       "contentTemplate": "Plantilla de contenido",
       "clearInputAfterSave": "Limpiar el campo de entrada después de guardar",
-      "actionAppendDaily": "Agregar a la nota diaria"
+      "actionAppendDaily": "Agregar a la nota diaria",
+      "toolLabel": "Escribir una nota",
+      "toolDescription": "Guarda el texto como una nota nueva o lo agrega a una, en tu carpeta de notas",
+      "notePhrases": "(anotá|guardá) [una] nota\nnota",
+      "dailyPhrases": "(anotá|agregá) al diario"
     },
     "russianStress": { "label": "Acento ruso" }
   },

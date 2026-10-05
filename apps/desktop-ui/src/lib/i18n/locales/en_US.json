@@ -570,7 +570,9 @@
   "plugin": {
     "searchInInternet": {
       "label": "Search the internet",
-      "url": "Internet search URL"
+      "url": "Internet search URL",
+      "description": "Opens a web search for the text in the browser",
+      "phrases": "(search|find|google) [for]"
     },
     "fastNote": {
       "label": "Quick note",
@@ -596,7 +598,11 @@
       "fileNameTemplate": "File name template",
       "contentTemplate": "Content template",
       "clearInputAfterSave": "Clear input field after saving",
-      "actionAppendDaily": "Append to daily note"
+      "actionAppendDaily": "Append to daily note",
+      "toolLabel": "Write a note",
+      "toolDescription": "Saves the text as a new note or appends it to one, in your notes folder",
+      "notePhrases": "(write|add) [a] note\nnote",
+      "dailyPhrases": "(write|add) to [the] (diary|journal)"
     },
     "russianStress": { "label": "Russian stress" }
   },

@@ -10,11 +10,21 @@ const setup = (options: Parameters<typeof createPluginTestContext>[0]) => {
 }
 
 describe('SearchInInternet plugin', () => {
-  it('registers a single button in the right part of the editor toolbar', () => {
-    const { mocks, toolbarItems } = setup({})
+  it('registers the search tool and a button in the editor toolbar', () => {
+    const { mocks, toolbarItems, tools } = setup({})
 
-    expect(mocks.registerActionsItems).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'searchInInternet', preferredKey: 'v' }),
+    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
+    expect(tools.map((tool) => tool.id)).toEqual(['search'])
+    expect(
+      tools[0].defaultCommands?.({ userConfig: {} as never, t: (key) => key })
+    ).toEqual([
+      expect.objectContaining({
+        id: 'search',
+        menu: {
+          replaces: 'SearchInInternet:searchInInternet',
+          preferredKey: 'v',
+        },
+      }),
     ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
@@ -86,16 +96,20 @@ describe('SearchInInternet plugin', () => {
   })
 })
 
-it('uses the text supplied by the action menu', async () => {
-  const { mocks } = setup({
-    value: 'editor text',
-    selectedText: 'selection',
-    config: { pathToNotes: '/notes' },
+it('searches the text of a command with the URL of the command', async () => {
+  const { mocks, tools } = setup({ value: 'editor text' })
+  const result = await tools[0].run({
+    input: { text: ' menu text ' },
+    config: { url: 'https://example.com/?q=' },
+    source: 'launcher',
+    signal: new AbortController().signal,
+    wantsOutput: false,
   })
-  await mocks.registerActionsItems.mock.calls[0][0][0].action(' menu text ')
+  expect(result).toEqual({ ok: true, keepWindow: true })
   expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndClose', [
-    DEFAULT_SEARCH_URL + 'menu%20text',
+    'https://example.com/?q=menu%20text',
   ])
+  expect(mocks.toast).not.toHaveBeenCalled()
 })
 
 it('does not search a whole document sent by mistake', async () => {

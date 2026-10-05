@@ -1,73 +1,82 @@
 import type { InputConfigItem } from '@/types'
 
-import { type PluginContext } from '../../types/plugins'
+import { runToolFromToolbar } from '../../lib/plugins/toolbar-tool'
+import {
+  type PluginContext,
+  TEXT_INPUT_SCHEMA,
+  type ToolDefinition,
+} from '../../types/plugins'
 
 export const DEFAULT_SEARCH_URL = 'https://duckduckgo.com/?q='
 
 /** Longer texts are not a query: the whole document was sent by mistake */
 export const MAX_SEARCH_LENGTH = 500
 
-interface SearchInInternetConfig {
-  url: string
+const urlField: InputConfigItem = {
+  type: 'text',
+  name: 'url',
+  labelKey: 'plugin.searchInInternet.url',
+  defaultValue: DEFAULT_SEARCH_URL,
 }
 
 export default function pluginIndex() {
   return {
     name: 'SearchInInternet',
     labelKey: 'plugin.searchInInternet.label',
-    defaultConfig: {
-      fields: [
-        {
-          type: 'text',
-          name: 'url',
-          labelKey: 'plugin.searchInInternet.url',
-          defaultValue: DEFAULT_SEARCH_URL,
-        } as InputConfigItem,
-      ],
-    },
+    defaultConfig: { fields: [urlField] },
     init: (ctx: PluginContext) => {
-      const search = async (input?: string) => {
-        const text = (
-          input ??
-          (ctx.getEditorInputSelectedText() || ctx.getEditorInputValue())
-        ).trim()
-
-        if (!text) {
-          ctx.toast('toast.textNotSelected', 'error')
-          return
-        }
-
-        if (text.length > MAX_SEARCH_LENGTH) {
-          ctx.toast('toast.textTooLongForSearch', 'warn')
-          return
-        }
-
-        // Settings are stored only after the user saves them once
-        const baseUrl =
-          ctx.getMyConfig<SearchInInternetConfig>()?.url ?? DEFAULT_SEARCH_URL
-
-        if (!baseUrl.trim()) {
-          ctx.toast('toast.noSearchBaseUrl', 'warn')
-          return
-        }
-
-        const result = await ctx.callApiFunction('openInBrowserAndClose', [
-          baseUrl.trim() + encodeURIComponent(text),
-        ])
-        if (!result.success) {
-          ctx.toast('toast.openInBrowserFailed', 'error')
-        }
+      const search: ToolDefinition = {
+        id: 'search',
+        labelKey: 'plugin.searchInInternet.label',
+        descriptionKey: 'plugin.searchInInternet.description',
+        icon: 'mdi:web',
+        description: 'Opens a web search for the text in the browser',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        configFields: [urlField],
+        defaultCommands: ({ t }) => [
+          {
+            id: 'search',
+            name: t('plugin.searchInInternet.label'),
+            phrases: t('plugin.searchInInternet.phrases').split('\n'),
+            menu: {
+              replaces: 'SearchInInternet:searchInInternet',
+              preferredKey: 'v',
+            },
+          },
+        ],
+        run: async ({ input, config }) => {
+          const text = String(input.text ?? '').trim()
+          if (!text) {
+            return { ok: false, messageKey: 'toast.textNotSelected' }
+          }
+          if (text.length > MAX_SEARCH_LENGTH) {
+            return {
+              ok: false,
+              level: 'warn',
+              messageKey: 'toast.textTooLongForSearch',
+            }
+          }
+          // the settings are stored only after the user saves them once
+          const baseUrl =
+            typeof config.url === 'string' ? config.url : DEFAULT_SEARCH_URL
+          if (!baseUrl.trim()) {
+            return {
+              ok: false,
+              level: 'warn',
+              messageKey: 'toast.noSearchBaseUrl',
+            }
+          }
+          const result = await ctx.callApiFunction('openInBrowserAndClose', [
+            baseUrl.trim() + encodeURIComponent(text),
+          ])
+          return result.success
+            ? // the browser has the focus, and the window is hidden already
+              { ok: true, keepWindow: true }
+            : { ok: false, messageKey: 'toast.openInBrowserFailed' }
+        },
       }
 
-      ctx.registerActionsItems([
-        {
-          id: 'searchInInternet',
-          preferredKey: 'v',
-          labelKey: 'plugin.searchInInternet.label',
-          icon: 'mdi:web',
-          action: search,
-        },
-      ])
+      ctx.registerTools([search])
 
       ctx.registerToolbarItems([
         {
@@ -75,7 +84,7 @@ export default function pluginIndex() {
           icon: 'mdi:web',
           tooltipKey: 'plugin.searchInInternet.label',
           position: 'right',
-          action: () => search(),
+          action: () => runToolFromToolbar(ctx, search),
         },
       ])
     },
