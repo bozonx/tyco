@@ -1746,24 +1746,18 @@ mod tests {
         assert!(!state.editor_show_markup);
         assert!(state.recent_ai_prompts.is_empty());
         assert!(state.recent_translate_languages.is_empty());
-        assert_eq!(state.translate_source_language, None);
 
         let merged = merge_local_state(
             &state,
-            json!({
-                "recentAiPrompts": ["shorter"],
-                "editorShowMarkup": true,
-                "translateSourceLanguage": "pl_PL"
-            })
-            .as_object()
-            .unwrap()
-            .clone(),
+            json!({ "recentAiPrompts": ["shorter"], "editorShowMarkup": true })
+                .as_object()
+                .unwrap()
+                .clone(),
         )
         .unwrap();
 
         assert_eq!(merged.recent_ai_prompts, vec![String::from("shorter")]);
         assert!(merged.editor_show_markup);
-        assert_eq!(merged.translate_source_language.as_deref(), Some("pl_PL"));
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
     }
 
