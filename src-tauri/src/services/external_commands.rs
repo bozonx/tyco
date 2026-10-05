@@ -2,10 +2,13 @@
 //! `tyco-ctl run`. The command is found here, from the config the backend
 //! holds, so a wrong id or name is an error of the call itself. The run is
 //! handed to the webview of the quick window: in the background when nothing
-//! has to be asked or shown, otherwise in the command overlay.
+//! has to be asked or shown, otherwise in the command overlay. Plugin tools
+//! are known from the tool catalog the quick window sends.
 //! See `dev_docs/design-voice-commands.md`, §3.4.
 
-use serde::Serialize;
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -16,8 +19,45 @@ use crate::state::AppState;
 
 pub const COMMAND_RUN_EVENT: &str = "app://command-run";
 
-/// Tools this build runs; a command of another tool is unavailable.
-const KNOWN_TOOLS: [&str; 2] = ["script", "webhook"];
+/// Tools the backend knows itself; the others come with the tool catalog.
+const BUILTIN_TOOLS: [&str; 2] = ["script", "webhook"];
+
+/// How a command of a tool gets its input from a text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ToolInput {
+    None,
+    Text,
+    /// The tool parses the text itself.
+    Parsed,
+    /// A structured input: only a command that parses it with the LLM takes
+    /// a text.
+    Structured,
+}
+
+/// A tool as the webview registry describes it, see `set_tool_catalog`.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolCatalogEntry {
+    pub id: String,
+    pub input: ToolInput,
+    pub available: bool,
+    /// Why it is not available, already translated.
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// The tools of the webview registry by id. Plugin tools and whether a tool
+/// can run (it may need the LLM) are known to the webview only: the quick
+/// window sends the catalog whenever the plugins load.
+pub type ToolCatalog = HashMap<String, ToolCatalogEntry>;
+
+pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
+    entries
+        .into_iter()
+        .map(|entry| (entry.id.clone(), entry))
+        .collect()
+}
 
 /// A command found for a call, with what decides how it runs.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,8 +75,10 @@ pub enum LookupError {
     Ambiguous(String, Vec<String>),
     Disabled(String),
     NotExternal(String),
-    /// Its tool is not available in this build.
-    Unavailable(String),
+    /// Its tool is missing or cannot run now, with the reason if known.
+    Unavailable(String, Option<String>),
+    /// The webview has not sent the tool catalog yet.
+    ToolsLoading(String),
 }
 
 impl std::fmt::Display for LookupError {
@@ -53,7 +95,19 @@ impl std::fmt::Display for LookupError {
                 f,
                 "The command `{id}` may not be run from outside; allow it in its settings"
             ),
-            Self::Unavailable(id) => write!(f, "The tool of the command `{id}` is not available"),
+            Self::Unavailable(id, None) => {
+                write!(f, "The tool of the command `{id}` is not available")
+            }
+            Self::Unavailable(id, Some(reason)) => {
+                write!(
+                    f,
+                    "The tool of the command `{id}` is not available: {reason}"
+                )
+            }
+            Self::ToolsLoading(id) => write!(
+                f,
+                "The tools are still loading; try the command `{id}` again in a moment"
+            ),
         }
     }
 }
@@ -89,10 +143,6 @@ fn id_of(command: &Value) -> &str {
     str_field(command, "id").trim()
 }
 
-fn is_known_tool(command: &Value) -> bool {
-    KNOWN_TOOLS.contains(&str_field(command, "toolId").trim())
-}
-
 fn is_enabled(command: &Value) -> bool {
     command.get("enabled").and_then(Value::as_bool) != Some(false)
 }
@@ -104,40 +154,70 @@ fn is_external(command: &Value) -> bool {
         == Some(true)
 }
 
-fn takes_text(command: &Value) -> bool {
-    is_known_tool(command)
-        && command
+/// Whether the tool of the command can run it, and if so whether it takes
+/// a text.
+fn tool_status(command: &Value, catalog: Option<&ToolCatalog>) -> Result<bool, LookupError> {
+    let id = id_of(command).to_owned();
+    let tool_id = str_field(command, "toolId").trim();
+    if BUILTIN_TOOLS.contains(&tool_id) {
+        return Ok(command
             .pointer("/toolConfig/takesText")
             .and_then(Value::as_bool)
-            != Some(false)
+            != Some(false));
+    }
+    let catalog = catalog.ok_or_else(|| LookupError::ToolsLoading(id.clone()))?;
+    let tool = catalog
+        .get(tool_id)
+        .ok_or_else(|| LookupError::Unavailable(id.clone(), None))?;
+    if !tool.available {
+        return Err(LookupError::Unavailable(id, tool.reason.clone()));
+    }
+    match tool.input {
+        ToolInput::None => Ok(false),
+        ToolInput::Text | ToolInput::Parsed => Ok(true),
+        ToolInput::Structured
+            if command.get("llmArgumentParsing").and_then(Value::as_bool) == Some(true) =>
+        {
+            Ok(true)
+        }
+        ToolInput::Structured => Err(LookupError::Unavailable(
+            id,
+            Some(String::from("its tool needs a structured input")),
+        )),
+    }
 }
 
-/// Why the command cannot be called from outside, if it cannot.
-fn unavailability(command: &Value) -> Option<LookupError> {
+/// The command as a call runs it, or why it cannot be called from outside.
+fn callable(
+    command: &Value,
+    catalog: Option<&ToolCatalog>,
+) -> Result<ExternalCommand, LookupError> {
     let id = id_of(command).to_owned();
-    if !is_known_tool(command) {
-        Some(LookupError::Unavailable(id))
-    } else if !is_enabled(command) {
-        Some(LookupError::Disabled(id))
-    } else if !is_external(command) {
-        Some(LookupError::NotExternal(id))
-    } else {
-        None
+    if !is_enabled(command) {
+        return Err(LookupError::Disabled(id));
     }
-}
-
-fn external_command(command: &Value) -> ExternalCommand {
-    ExternalCommand {
-        id: id_of(command).to_owned(),
-        takes_text: takes_text(command),
+    if !is_external(command) {
+        return Err(LookupError::NotExternal(id));
+    }
+    let takes_text = tool_status(command, catalog)?;
+    let after_run = str_field(command, "afterRun");
+    Ok(ExternalCommand {
+        id,
+        takes_text,
         confirm: str_field(command, "confirm") == "always",
-        shows_menu: str_field(command, "afterRun") == "showMenu",
-    }
+        // a text of a call is not a selection to replace: the result menu
+        // shows the output instead
+        shows_menu: after_run == "showMenu" || after_run == "replaceSelection",
+    })
 }
 
 /// The command `target` names: the one with this id, otherwise the only one
 /// of the callable commands with this name.
-pub fn find(user_config: &Value, target: &str) -> Result<ExternalCommand, LookupError> {
+pub fn find(
+    user_config: &Value,
+    catalog: Option<&ToolCatalog>,
+    target: &str,
+) -> Result<ExternalCommand, LookupError> {
     let commands = commands_of(user_config);
     let target = target.trim();
     let by_id = commands
@@ -156,7 +236,7 @@ pub fn find(user_config: &Value, target: &str) -> Result<ExternalCommand, Lookup
             let callable: Vec<&Value> = named
                 .iter()
                 .copied()
-                .filter(|command| unavailability(command).is_none())
+                .filter(|command| callable(command, catalog).is_ok())
                 .collect();
             match (callable.as_slice(), named.first()) {
                 ([command], _) => *command,
@@ -174,10 +254,7 @@ pub fn find(user_config: &Value, target: &str) -> Result<ExternalCommand, Lookup
             }
         }
     };
-    match unavailability(command) {
-        Some(error) => Err(error),
-        None => Ok(external_command(command)),
-    }
+    callable(command, catalog)
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -191,11 +268,12 @@ struct ListedCommand {
 
 /// The commands that may be called from outside, as a JSON array of
 /// `{ id, name, input }`, in the order of the library.
-pub fn list(user_config: &Value) -> String {
+pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
-        .filter(|command| !id_of(command).is_empty() && unavailability(command).is_none())
-        .map(|command| {
+        .filter(|command| !id_of(command).is_empty())
+        .filter_map(|command| Some((command, callable(command, catalog).ok()?)))
+        .map(|(command, found)| {
             let name = str_field(command, "name").trim();
             ListedCommand {
                 id: id_of(command).to_owned(),
@@ -205,7 +283,7 @@ pub fn list(user_config: &Value) -> String {
                     name
                 }
                 .to_owned(),
-                input: if takes_text(command) { "text" } else { "none" },
+                input: if found.takes_text { "text" } else { "none" },
             }
         })
         .collect();
@@ -259,8 +337,9 @@ pub fn run(
     text: Option<String>,
     source: ActivationSource,
 ) -> Result<(), AppError> {
-    let user_config = app.state::<AppState>().params().user_config;
-    let command = find(&user_config, target)?;
+    let state = app.state::<AppState>();
+    let user_config = state.params().user_config;
+    let command = find(&user_config, state.tool_catalog().as_ref(), target)?;
     // a command without input has nothing to do with a text
     let text = text
         .filter(|text| !text.trim().is_empty())
@@ -336,7 +415,39 @@ mod tests {
                 {
                     "id": "plugin",
                     "name": "Plugin",
-                    "toolId": "fastNote.write",
+                    "toolId": "FastNote.write",
+                    "availableIn": { "external": true }
+                },
+                {
+                    "id": "missing-tool",
+                    "name": "Missing",
+                    "toolId": "Gone.tool",
+                    "availableIn": { "external": true }
+                },
+                {
+                    "id": "translate",
+                    "name": "Translate",
+                    "toolId": "core.translate",
+                    "afterRun": "replaceSelection",
+                    "availableIn": { "external": true }
+                },
+                {
+                    "id": "lights",
+                    "name": "Lights",
+                    "toolId": "Home.lights",
+                    "availableIn": { "external": true }
+                },
+                {
+                    "id": "remind",
+                    "name": "Remind",
+                    "toolId": "Home.remind",
+                    "llmArgumentParsing": true,
+                    "availableIn": { "external": true }
+                },
+                {
+                    "id": "remind-raw",
+                    "name": "Remind raw",
+                    "toolId": "Home.remind",
                     "availableIn": { "external": true }
                 },
                 {
@@ -378,6 +489,31 @@ mod tests {
         })
     }
 
+    fn catalog() -> ToolCatalog {
+        let entry = |id: &str, input, available, reason: Option<&str>| ToolCatalogEntry {
+            id: id.to_owned(),
+            input,
+            available,
+            reason: reason.map(str::to_owned),
+        };
+        catalog_from(vec![
+            entry("script", ToolInput::Text, true, None),
+            entry("FastNote.write", ToolInput::Text, true, None),
+            entry(
+                "core.translate",
+                ToolInput::Text,
+                false,
+                Some("No LLM is configured"),
+            ),
+            entry("Home.lights", ToolInput::None, true, None),
+            entry("Home.remind", ToolInput::Structured, true, None),
+        ])
+    }
+
+    fn find_in(target: &str) -> Result<ExternalCommand, LookupError> {
+        find(&config(), Some(&catalog()), target)
+    }
+
     #[test]
     fn normalizes_names() {
         assert_eq!(normalize_name("  Ёлка   ЗАПИСЬ "), "елка запись");
@@ -386,7 +522,7 @@ mod tests {
 
     #[test]
     fn finds_a_command_by_id_first() {
-        let found = find(&config(), " backup ").unwrap();
+        let found = find_in(" backup ").unwrap();
         assert_eq!(
             found,
             ExternalCommand {
@@ -397,13 +533,13 @@ mod tests {
             }
         );
         // the id wins over the name of another command
-        assert_eq!(find(&config(), "Lamp").unwrap().id, "Lamp");
+        assert_eq!(find_in("Lamp").unwrap().id, "Lamp");
     }
 
     #[test]
     fn finds_a_command_by_its_normalized_name() {
-        assert_eq!(find(&config(), "бэкап").unwrap().id, "backup");
-        let note = find(&config(), "work note").unwrap();
+        assert_eq!(find_in("бэкап").unwrap().id, "backup");
+        let note = find_in("work note").unwrap();
         assert_eq!(note.id, "note");
         assert!(note.takes_text);
         assert!(note.shows_menu);
@@ -412,32 +548,63 @@ mod tests {
     #[test]
     fn reports_why_a_command_cannot_be_called() {
         assert_eq!(
-            find(&config(), "nothing"),
+            find_in("nothing"),
             Err(LookupError::NotFound(String::from("nothing")))
         );
+        assert_eq!(find_in(""), Err(LookupError::NotFound(String::new())));
         assert_eq!(
-            find(&config(), ""),
-            Err(LookupError::NotFound(String::new()))
-        );
-        assert_eq!(
-            find(&config(), "hidden"),
+            find_in("hidden"),
             Err(LookupError::NotExternal(String::from("hidden")))
         );
         assert_eq!(
-            find(&config(), "Off"),
+            find_in("Off"),
             Err(LookupError::Disabled(String::from("off")))
         );
         assert_eq!(
-            find(&config(), "plugin"),
-            Err(LookupError::Unavailable(String::from("plugin")))
+            find_in("missing-tool"),
+            Err(LookupError::Unavailable(String::from("missing-tool"), None))
         );
+        assert_eq!(
+            find_in("translate"),
+            Err(LookupError::Unavailable(
+                String::from("translate"),
+                Some(String::from("No LLM is configured"))
+            ))
+        );
+        assert!(matches!(
+            find_in("remind-raw"),
+            Err(LookupError::Unavailable(_, Some(_)))
+        ));
+    }
+
+    #[test]
+    fn learns_plugin_tools_from_the_catalog() {
+        assert_eq!(
+            find(&config(), None, "plugin"),
+            Err(LookupError::ToolsLoading(String::from("plugin")))
+        );
+        // the backend knows its own tools without the catalog
+        assert_eq!(find(&config(), None, "backup").unwrap().id, "backup");
+        let note = find_in("plugin").unwrap();
+        assert!(note.takes_text);
+        assert!(!find_in("lights").unwrap().takes_text);
+        // the LLM fills the structured input from the text
+        assert!(find_in("remind").unwrap().takes_text);
+    }
+
+    #[test]
+    fn shows_the_output_of_a_replacing_command_in_the_menu() {
+        let mut catalog = catalog();
+        catalog.get_mut("core.translate").unwrap().available = true;
+        let found = find(&config(), Some(&catalog), "translate").unwrap();
+        assert!(found.shows_menu);
     }
 
     #[test]
     fn refuses_a_name_shared_by_callable_commands() {
         // twin-c may not be called from outside, so it does not count
         assert_eq!(
-            find(&config(), "TWIN"),
+            find_in("TWIN"),
             Err(LookupError::Ambiguous(
                 String::from("TWIN"),
                 vec![String::from("twin-a"), String::from("twin-b")]
@@ -447,19 +614,22 @@ mod tests {
 
     #[test]
     fn lists_the_callable_commands() {
-        let listed: Value = serde_json::from_str(&list(&config())).unwrap();
+        let listed: Value = serde_json::from_str(&list(&config(), Some(&catalog()))).unwrap();
         assert_eq!(
             listed,
             json!([
                 { "id": "backup", "name": "Бэкап", "input": "none" },
                 { "id": "note", "name": "Work  Note", "input": "text" },
+                { "id": "plugin", "name": "Plugin", "input": "text" },
+                { "id": "lights", "name": "Lights", "input": "none" },
+                { "id": "remind", "name": "Remind", "input": "text" },
                 { "id": "twin-a", "name": "Twin", "input": "text" },
                 { "id": "twin-b", "name": "twin", "input": "text" },
                 { "id": "Lamp", "name": "Свет", "input": "none" },
                 { "id": "lamp-2", "name": "Lamp", "input": "text" }
             ])
         );
-        assert_eq!(list(&json!({})), "[]");
+        assert_eq!(list(&json!({}), None), "[]");
     }
 
     #[test]

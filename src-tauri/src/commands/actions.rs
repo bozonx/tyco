@@ -1,11 +1,13 @@
 use serde::Deserialize;
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::services::custom_actions::{
     self, CommandRunRecord, ScriptExecutionResult, ScriptRequest,
 };
+use crate::services::external_commands::{self, ToolCatalogEntry};
 use crate::services::storage;
+use crate::state::AppState;
 
 /// A command to run, as the webview sends it; see `ScriptActionRequest` in
 /// `packages/shared`.
@@ -73,4 +75,11 @@ pub fn log_command_run(app: AppHandle, record: CommandRunRecord) {
             log::warn!("Could not log the command run: {error}");
         }
     }
+}
+
+/// The tools of the webview registry, sent by the quick window whenever the
+/// plugins load; external calls check the commands against it.
+#[tauri::command]
+pub fn set_tool_catalog(state: State<'_, AppState>, tools: Vec<ToolCatalogEntry>) {
+    state.set_tool_catalog(external_commands::catalog_from(tools));
 }

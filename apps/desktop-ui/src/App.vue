@@ -44,6 +44,7 @@ import { useNavPanelStore } from './stores/navPanel'
 import { useRouteParams } from './stores/routeParams'
 import { useSelectionReplaceStore } from './stores/selectionReplace'
 import { useThemeStore } from './stores/theme'
+import { useToolCatalogStore } from './stores/tools'
 import { useWriterInputStore } from './stores/writerInput'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { type START_MODES } from '@tyco/shared'
@@ -107,6 +108,8 @@ const bootstrap = createAppBootstrap({
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
   initPlugins: () => {
     usePlugins().reloadPlugins()
+    // external calls find the commands of plugin tools by this catalog
+    if (isQuickWindow) useToolCatalogStore().start()
   },
   // The nav panel turns Esc into a step back. The quick window has no nav
   // panel, and there Esc must cancel and close: its screens handle it

@@ -11,6 +11,7 @@ import type {
   StatusOverlayRequest,
   StorageInfo,
   StorageKind,
+  ToolCatalogEntry,
   UserConfig,
   ScriptActionRequest,
   ScriptExecutionResult,
@@ -97,6 +98,7 @@ export interface DesktopFunctions {
     result: void
   }
   logCommandRun: { args: [record: CommandRunRecord]; result: void }
+  setToolCatalog: { args: [tools: ToolCatalogEntry[]]; result: void }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions

@@ -198,6 +198,10 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.LOG_COMMAND_RUN,
       buildArgs: ([record]) => ({ record }),
     },
+    setToolCatalog: {
+      command: DESKTOP_COMMANDS.SET_TOOL_CATALOG,
+      buildArgs: ([tools]) => ({ tools }),
+    },
   }
 }
 

@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use crate::models::{EditorHistoryItem, InitParams};
+use crate::services::external_commands::ToolCatalog;
 
 pub struct VoiceCaptureSession {
     pub stop_flag: Arc<AtomicBool>,
@@ -15,6 +16,8 @@ pub struct AppState {
     quitting: AtomicBool,
     voice_capture_session: Mutex<Option<VoiceCaptureSession>>,
     voice_capture_operation: tokio::sync::Mutex<()>,
+    /// `None` until the quick window sends it, see `set_tool_catalog`.
+    tool_catalog: Mutex<Option<ToolCatalog>>,
 }
 
 impl AppState {
@@ -26,6 +29,7 @@ impl AppState {
             quitting: AtomicBool::new(false),
             voice_capture_session: Mutex::new(None),
             voice_capture_operation: tokio::sync::Mutex::new(()),
+            tool_catalog: Mutex::new(None),
         }
     }
 
@@ -56,6 +60,20 @@ impl AppState {
         let mut params = self.params.lock().expect("params lock poisoned");
         update(&mut params);
         params.clone()
+    }
+
+    pub fn tool_catalog(&self) -> Option<ToolCatalog> {
+        self.tool_catalog
+            .lock()
+            .expect("tool catalog lock poisoned")
+            .clone()
+    }
+
+    pub fn set_tool_catalog(&self, catalog: ToolCatalog) {
+        *self
+            .tool_catalog
+            .lock()
+            .expect("tool catalog lock poisoned") = Some(catalog);
     }
 
     pub fn set_quitting(&self, quitting: bool) {

@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
+import { translate } from '../lib/i18n'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createBuiltinTools } from '../lib/tools/builtin-tools'
+import { createToolCatalogSync } from '../lib/tools/tool-catalog'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import { useIpcStore } from './ipc'
 
@@ -43,4 +45,19 @@ export const useToolsStore = defineStore('tools', () => {
         ),
     })
   )
+})
+
+/**
+ * Sends the tools to the backend for external calls; started in the quick
+ * window, which always exists, once the plugins have loaded
+ */
+export const useToolCatalogStore = defineStore('toolCatalog', () => {
+  const ipcStore = useIpcStore()
+  const toolsStore = useToolsStore()
+
+  return createToolCatalogSync({
+    tools: () => toolsStore.list(),
+    t: (key) => translate(key),
+    send: (catalog) => ipcStore.callFunction('setToolCatalog', [catalog]),
+  })
 })

@@ -216,6 +216,7 @@ export const DESKTOP_COMMANDS = {
   PICK_DIRECTORY: 'pick_directory',
   LOG_CUSTOM_ACTION: 'log_custom_action',
   LOG_COMMAND_RUN: 'log_command_run',
+  SET_TOOL_CATALOG: 'set_tool_catalog',
 } as const
 
 export type DesktopCommandName =
@@ -249,6 +250,24 @@ export interface LauncherRequest {
   commandId: string
   /** The text of the call; without it the selection or the field gives it */
   text?: string
+}
+
+/**
+ * How a command of a tool gets its input from a text: none, the text as it is,
+ * parsed by the tool, or a structured input only the LLM can fill
+ */
+export type ToolCatalogInput = 'none' | 'text' | 'parsed' | 'structured'
+
+/**
+ * A tool of the webview registry as the backend knows it; see
+ * `set_tool_catalog`
+ */
+export interface ToolCatalogEntry {
+  id: string
+  input: ToolCatalogInput
+  available: boolean
+  /** Why the tool cannot run now, translated */
+  reason?: string
 }
 
 /** An external call that runs a command in the background */

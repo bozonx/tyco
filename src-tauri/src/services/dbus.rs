@@ -98,8 +98,11 @@ impl TycoDbus {
     /// The commands that may be run from outside: a JSON array of
     /// `{ id, name, input }`.
     async fn list_commands(&self) -> zbus::fdo::Result<String> {
-        let user_config = self.app.state::<AppState>().params().user_config;
-        Ok(external_commands::list(&user_config))
+        let state = self.app.state::<AppState>();
+        Ok(external_commands::list(
+            &state.params().user_config,
+            state.tool_catalog().as_ref(),
+        ))
     }
 
     /// Reported by the KWin tracker script, see `platform::linux::kwin`.

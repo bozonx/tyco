@@ -53,8 +53,11 @@ fn dispatch(app: &AppHandle, request: Request) -> Response {
             external_commands::run(app, &target, text, ActivationSource::Cli)
         }
         Request::ListCommands => {
-            let user_config = app.state::<AppState>().params().user_config;
-            return Response::output(external_commands::list(&user_config));
+            let state = app.state::<AppState>();
+            return Response::output(external_commands::list(
+                &state.params().user_config,
+                state.tool_catalog().as_ref(),
+            ));
         }
         Request::Activate { mode } => StartMode::parse(&mode)
             .and_then(|mode| runtime::activate(app, Activation::new(mode, ActivationSource::Cli))),
