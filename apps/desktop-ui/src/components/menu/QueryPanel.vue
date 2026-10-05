@@ -118,7 +118,7 @@ export interface QueryPanelOption extends QueryOption {
   icon?: string
   /** A heading is shown above the first option of each run of the same group */
   group?: string
-  /** The current value: marked, and highlighted first with `autoHighlight` */
+  /** The current value: marked, and highlighted as the list changes */
   selected?: boolean
 }
 
@@ -146,7 +146,7 @@ const props = withDefaults(
     hints?: QueryPanelHint[]
     /**
      * The first option is highlighted as the list changes, so Enter picks it.
-     * Otherwise nothing is, and Enter submits the typed text.
+     * Otherwise only a selected one is, and Enter submits the typed text.
      */
     autoHighlight?: boolean
     emptyText?: string
@@ -173,15 +173,14 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const highlighted = ref(-1)
 
 const resetHighlight = () => {
-  if (!props.autoHighlight || props.options.length === 0) {
-    highlighted.value = -1
-    return
-  }
-  highlighted.value = Math.max(
-    0,
-    props.options.findIndex((option) => option.selected)
-  )
-  scrollToHighlighted()
+  const selected = props.options.findIndex((option) => option.selected)
+  highlighted.value =
+    selected >= 0
+      ? selected
+      : props.autoHighlight && props.options.length
+        ? 0
+        : -1
+  if (highlighted.value >= 0) scrollToHighlighted()
 }
 
 watch(() => props.options, resetHighlight, { immediate: true })

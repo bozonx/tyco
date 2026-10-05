@@ -111,27 +111,39 @@ describe('TranslateMenu', () => {
     )
   })
 
-  it('remembers the source language and swaps it with the target', async () => {
+  it('translates nothing on Enter until a language is typed or chosen', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
-    ipcStore.params.userConfig.toTranslateLanguages = ['de_DE']
+    ipcStore.params.localState = { recentTranslateLanguages: ['it_IT'] }
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
     const input = wrapper.find('input')
-    await input.trigger('keydown', { key: 's', code: 'KeyS', altKey: true })
-    expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
-      translateSourceLanguage: 'de_DE',
-    })
+    await input.trigger('keydown', { key: 'Enter' })
+    expect(translateTo).not.toHaveBeenCalled()
 
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.trigger('keydown', { key: 'Enter' })
+    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
+    expect(translateTo.mock.calls[0]![0]).toBe('it_IT')
+  })
+
+  it('starts from the remembered source language', async () => {
+    const ipcStore = useIpcStore()
+    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
+    const wrapper = mountMenu()
+
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.setValue('german')
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
     expect(translateTo).toHaveBeenCalledWith(
-      'pl_PL',
+      'de_DE',
       'Hello world',
-      expect.objectContaining({ sourceLanguage: 'de_DE' })
+      expect.objectContaining({ sourceLanguage: 'pl_PL' })
     )
   })
 

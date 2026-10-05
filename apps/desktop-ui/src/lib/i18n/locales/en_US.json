@@ -492,10 +492,8 @@
     "translatePickSource": "Choose",
     "translateTargetLanguage": "Target language",
     "translateSourceLanguage": "Source language",
-    "translateSwap": "Swap",
     "translateSwitchField": "Other field",
     "translateGroupRecent": "Recent",
-    "translateGroupMine": "My languages",
     "translateGroupAll": "All languages",
     "translateNotChosen": "Not chosen"
   },

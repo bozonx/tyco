@@ -495,10 +495,8 @@
     "translatePickSource": "Seç",
     "translateTargetLanguage": "Hedef dil",
     "translateSourceLanguage": "Kaynak dil",
-    "translateSwap": "Yer değiştir",
     "translateSwitchField": "Diğer alan",
     "translateGroupRecent": "Son kullanılanlar",
-    "translateGroupMine": "Dillerim",
     "translateGroupAll": "Tüm diller",
     "translateNotChosen": "Seçilmedi"
   },

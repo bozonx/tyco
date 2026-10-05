@@ -1,66 +1,38 @@
 import { describe, expect, it } from 'vitest'
 
-import { AUTO_LANGUAGE_VALUE } from '../locale/language'
-import {
-  canSwapLanguages,
-  defaultTargetLanguage,
-  groupLanguages,
-} from './translate-picker'
+import { groupLanguages, languageSearchNames } from './translate-picker'
 
-const sources = {
-  recent: ['it_IT', 'de_DE'],
-  configured: ['de_DE', null, 'pl_PL'],
-  all: ['de_DE', 'en_US', 'it_IT', 'pl_PL', 'ru_RU'],
+const LABELS: Record<string, string> = {
+  de_DE: 'Немецкий',
+  en_US: 'Английский',
+  it_IT: 'Итальянский',
+  pl_PL: 'Польский',
 }
+const label = (id: string) => LABELS[id] ?? id
+const all = ['de_DE', 'en_US', 'it_IT', 'pl_PL']
 
 describe('groupLanguages', () => {
-  it('lists each language once, in the first group that has it', () => {
-    expect(groupLanguages(sources)).toEqual([
-      { id: 'it_IT', group: 'recent' },
-      { id: 'de_DE', group: 'recent' },
-      { id: 'pl_PL', group: 'mine' },
+  it('puts the recent picks first, then the others by their labels', () => {
+    expect(groupLanguages(['pl_PL'], all, label)).toEqual([
+      { id: 'pl_PL', group: 'recent' },
       { id: 'en_US', group: 'all' },
-      { id: 'ru_RU', group: 'all' },
+      { id: 'it_IT', group: 'all' },
+      { id: 'de_DE', group: 'all' },
     ])
   })
 
-  it('leaves out the language of the other field', () => {
-    expect(groupLanguages(sources, 'de_DE').map(({ id }) => id)).toEqual([
-      'it_IT',
-      'pl_PL',
-      'en_US',
-      'ru_RU',
-    ])
-  })
-})
-
-describe('defaultTargetLanguage', () => {
-  it('takes the last pick, else the first configured language', () => {
-    expect(defaultTargetLanguage(sources, AUTO_LANGUAGE_VALUE)).toBe('it_IT')
+  it('leaves out the language of the other field and unknown recent ones', () => {
     expect(
-      defaultTargetLanguage(
-        { recent: [], configured: [null, 'pl_PL'] },
-        'en_US'
+      groupLanguages(['pl_PL', 'xx_XX'], all, label, 'pl_PL').map(
+        ({ id }) => id
       )
-    ).toBe('pl_PL')
-  })
-
-  it('skips the source language', () => {
-    expect(defaultTargetLanguage(sources, 'it_IT')).toBe('de_DE')
-  })
-
-  it('is none without recent and configured languages', () => {
-    expect(
-      defaultTargetLanguage({ recent: [], configured: [null] }, 'en_US')
-    ).toBeUndefined()
+    ).toEqual(['en_US', 'it_IT', 'de_DE'])
   })
 })
 
-describe('canSwapLanguages', () => {
-  it('needs both languages, auto-detect being none of them', () => {
-    expect(canSwapLanguages('pl_PL', 'en_US')).toBe(true)
-    expect(canSwapLanguages(AUTO_LANGUAGE_VALUE, 'en_US')).toBe(false)
-    expect(canSwapLanguages('pl_PL', undefined)).toBe(false)
-    expect(canSwapLanguages('pl_PL', 'pl_PL')).toBe(false)
+describe('languageSearchNames', () => {
+  it('has the native and the English names, each once', () => {
+    expect(languageSearchNames('pl_PL')).toEqual(['Polski', 'Polish'])
+    expect(languageSearchNames('en_US')).toEqual(['English (US)'])
   })
 })
