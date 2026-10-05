@@ -128,9 +128,7 @@ describe('TranslateMenu', () => {
     expect(translateTo.mock.calls[0]![0]).toBe('it_IT')
   })
 
-  it('starts from the remembered source language', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
+  it('finds a language by its English name', async () => {
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -140,27 +138,6 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo).toHaveBeenCalledWith(
-      'de_DE',
-      'Hello world',
-      expect.objectContaining({ sourceLanguage: 'pl_PL' })
-    )
-  })
-
-  it('stores auto-detect as no source language', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
-    const wrapper = mountMenu()
-
-    await shortcutListProps.spaceKey.action()
-    await nextTick()
-    const input = wrapper.find('input')
-    await input.trigger('keydown', { key: 'Tab' })
-    await input.setValue('auto')
-    await input.trigger('keydown', { key: 'Enter' })
-
-    expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
-      translateSourceLanguage: null,
-    })
+    expect(translateTo.mock.calls[0]![0]).toBe('de_DE')
   })
 })

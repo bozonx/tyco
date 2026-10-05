@@ -109,9 +109,8 @@ const pickerMode = ref(false)
 /** Which language the input picks */
 const field = ref<'target' | 'source'>('target')
 const query = ref('')
-const sourceLanguage = ref(
-  ipcStore.params.localState?.translateSourceLanguage ?? AUTO_LANGUAGE_VALUE
-)
+/** Picked anew each time the menu opens: an old pick is easily forgotten */
+const sourceLanguage = ref(AUTO_LANGUAGE_VALUE)
 
 const languageLabel = (id: string): string => {
   const key = getLanguageLabel(id)
@@ -252,10 +251,6 @@ async function submitLanguage({ option }: QueryPanelSubmit) {
 
   if (field.value === 'source') {
     sourceLanguage.value = option.id
-    void ipcStore.patchLocalState({
-      translateSourceLanguage:
-        option.id === AUTO_LANGUAGE_VALUE ? null : option.id,
-    })
     field.value = 'target'
     query.value = ''
     return
