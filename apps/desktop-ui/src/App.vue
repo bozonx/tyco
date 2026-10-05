@@ -36,6 +36,7 @@ import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
+import { useDefaultCommandsStore } from './stores/commands'
 import { useEditorInputStore } from './stores/editorInput'
 import { useExternalCommandsStore } from './stores/externalCommands'
 import { useIpcStore } from './stores/ipc'
@@ -225,10 +226,16 @@ watch(
 onMounted(() => {
   // a failure has been reported already; the window keeps the defaults, and
   // the store refuses to save them over the user's files
-  bootstrap.start().catch((error: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('App bootstrap failed', error)
-  })
+  bootstrap
+    .start()
+    .then(() => {
+      // the quick window knows the plugin tools and always exists
+      if (isQuickWindow) useDefaultCommandsStore().start()
+    })
+    .catch((error: unknown) => {
+      // eslint-disable-next-line no-console
+      console.error('App bootstrap failed', error)
+    })
   if (isQuickWindow) void activationMetrics.start()
   // the quick window always exists, shown or not, so it takes the selection
   // actions that run without a window

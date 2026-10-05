@@ -10,7 +10,7 @@ use commands::actions::{
 };
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
-    get_storage_info, mark_activation_metric, open_main_chat, open_main_editor,
+    get_storage_info, get_user_config, mark_activation_metric, open_main_chat, open_main_editor,
     open_storage_location, patch_local_state, rebind_hotkeys, save_user_config,
     submit_activation_metric_value, suspend_hotkeys,
 };
@@ -152,6 +152,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_init_params,
+            get_user_config,
             get_storage_info,
             open_storage_location,
             apply_hotkey,

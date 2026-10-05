@@ -15,7 +15,8 @@
           :class="{
             'is-sorting': isSorting,
             'is-dragged': draggedIndex === index,
-            'is-disabled': !command.enabled,
+            'is-disabled':
+              !command.enabled || Boolean(unavailableReason(command)),
           }"
           :style="itemStyle(index)"
         >
@@ -60,6 +61,20 @@
               </span>
               <span v-if="!command.enabled" class="command-badge is-muted">
                 {{ t('commands.badgeDisabled') }}
+              </span>
+              <span
+                v-else-if="unavailableReason(command)"
+                class="command-badge is-muted"
+                :title="t(unavailableReason(command)!)"
+              >
+                {{ t('commands.badgeUnavailable') }}
+              </span>
+              <span
+                v-if="addedBy(command)"
+                class="command-badge is-muted"
+                :title="addedBy(command)"
+              >
+                <Icon icon="mdi:star-outline" width="14" height="14" />
               </span>
               <span
                 v-if="
@@ -154,6 +169,7 @@ import { useSortableList } from '../../composables/useSortableList'
 import {
   commandIcon,
   commandTakesText,
+  commandUnavailableReason,
   createCommand,
   externalNameTwins,
   normalizeCommands,
@@ -231,6 +247,18 @@ if (props.focusCommandId) void reveal(props.focusCommandId)
 const toolName = (command: CommandConfig) => {
   const tool = toolsStore.get(command.toolId)
   return tool ? toolLabel(tool, t) : command.toolId
+}
+
+const unavailableReason = (command: CommandConfig) =>
+  commandUnavailableReason(command, toolsStore)
+
+/** Who added a default command: the app or a plugin */
+function addedBy(command: CommandConfig): string {
+  if (!command.id.startsWith('default:')) return ''
+  const owner = toolsStore.get(command.toolId)?.owner
+  return owner?.kind === 'plugin'
+    ? t('commands.addedByPlugin', { name: owner.name })
+    : t('commands.addedByApp')
 }
 
 /** The tool picker of a new command is open */

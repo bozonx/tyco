@@ -753,7 +753,10 @@
     "fieldOn": "Evet",
     "fieldOff": "Hayır",
     "errorNoLanguage": "Çevrilecek dili seçin.",
-    "errorNoPrompt": "LLM için talimatı yazın."
+    "errorNoPrompt": "LLM için talimatı yazın.",
+    "badgeUnavailable": "Kullanılamıyor",
+    "addedByApp": "Uygulama tarafından eklendi",
+    "addedByPlugin": "{name} eklentisi tarafından eklendi"
   },
   "commandLauncher": {
     "title": "Komutlar",
@@ -793,6 +796,11 @@
     "askInChatDescription": "Sohbeti metin ekli olarak açar",
     "scriptDescription": "Bir kabuk komutunuzu veya betiğinizi çalıştırır",
     "webhookDescription": "Bir HTTP isteği gönderir, ör. n8n veya Home Assistant'a",
-    "noLlm": "Yapay zekâ ayarlarında bu göreve bir LLM modeli atanmamış"
+    "noLlm": "Yapay zekâ ayarlarında bu göreve bir LLM modeli atanmamış",
+    "defaultCorrect": "Metni düzelt",
+    "defaultCorrectPhrases": "metni düzelt\ndüzelt",
+    "defaultTranslate": "Çevir: {language}",
+    "defaultAskInChat": "Sohbette sor",
+    "defaultAskInChatPhrases": "sohbette sor\nsor"
   }
 }

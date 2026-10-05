@@ -202,6 +202,7 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.SET_TOOL_CATALOG,
       buildArgs: ([tools]) => ({ tools }),
     },
+    getUserConfig: { command: DESKTOP_COMMANDS.GET_USER_CONFIG },
     copyText: {
       command: DESKTOP_COMMANDS.COPY_TEXT,
       buildArgs: ([text]) => ({ text }),

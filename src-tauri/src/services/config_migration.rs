@@ -6,7 +6,7 @@ use serde_json::{json, Map, Value};
 
 /// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
 /// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 1;
+pub const CONFIG_VERSION: u64 = 2;
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -33,6 +33,11 @@ pub fn migrate(user_config: &mut Value) -> bool {
     if from < 1 {
         move_custom_actions_to_commands(user_config);
     }
+    // version 2 changes nothing here: the default commands and the menu items
+    // of plugin tools are added by the webview, the only one that knows the
+    // plugin tools. The version still goes up: a build of version 1 knows
+    // neither the core and plugin tools nor the `replaceSelection` and `copy`
+    // outputs, and would drop the plugin items of the menu on save
     stamp_current_version(user_config);
     true
 }
@@ -314,6 +319,20 @@ mod tests {
         assert!(is_newer_than_supported(&config));
         assert!(!migrate(&mut config));
         assert_eq!(config, original);
+    }
+
+    #[test]
+    fn version_two_only_raises_the_version() {
+        let mut config = json!({
+            "configVersion": 1,
+            "commands": [{ "id": "a", "toolId": "script" }],
+            "mainActions": [{ "type": "plugin", "actionId": "FastNote:fastNote" }]
+        });
+        let before = config.clone();
+        assert!(migrate(&mut config));
+        assert_eq!(config["configVersion"], json!(2));
+        config["configVersion"] = json!(1);
+        assert_eq!(config, before);
     }
 
     #[test]

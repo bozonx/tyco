@@ -753,7 +753,10 @@
     "fieldOn": "Sí",
     "fieldOff": "No",
     "errorNoLanguage": "Elegí el idioma de traducción.",
-    "errorNoPrompt": "Escribí la instrucción para el LLM."
+    "errorNoPrompt": "Escribí la instrucción para el LLM.",
+    "badgeUnavailable": "No disponible",
+    "addedByApp": "Agregado por la aplicación",
+    "addedByPlugin": "Agregado por el plugin {name}"
   },
   "commandLauncher": {
     "title": "Comandos",
@@ -793,6 +796,11 @@
     "askInChatDescription": "Abre el chat con el texto adjunto",
     "scriptDescription": "Ejecuta un comando de shell o un script tuyo",
     "webhookDescription": "Envía una solicitud HTTP, por ejemplo a n8n o Home Assistant",
-    "noLlm": "No hay un modelo LLM asignado a esta tarea en los ajustes de IA"
+    "noLlm": "No hay un modelo LLM asignado a esta tarea en los ajustes de IA",
+    "defaultCorrect": "Corregir el texto",
+    "defaultCorrectPhrases": "corregí [el] texto\ncorregir",
+    "defaultTranslate": "Traducir al {language}",
+    "defaultAskInChat": "Preguntar en el chat",
+    "defaultAskInChatPhrases": "preguntá [en el] chat\npreguntá"
   }
 }

@@ -100,6 +100,7 @@ export interface DesktopFunctions {
   logCommandRun: { args: [record: CommandRunRecord]; result: void }
   setToolCatalog: { args: [tools: ToolCatalogEntry[]]; result: void }
   copyText: { args: [text: string]; result: void }
+  getUserConfig: { args: []; result: UserConfig }
   replaceSelectionWithCommand: { args: [commandId: string]; result: void }
 }
 

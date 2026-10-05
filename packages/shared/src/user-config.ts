@@ -7,7 +7,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 1
+export const CONFIG_VERSION = 2
 
 export type ModelTag =
   | 'voice'
@@ -395,6 +395,12 @@ export interface UserConfig {
   commands: CommandConfig[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */
   mainActionRegistrations?: string[]
+  /**
+   * Default commands of the tools added to the library once, and the tools
+   * whose defaults were added (`default:<toolId>`); a deleted one is not added
+   * again
+   */
+  seededCommands?: string[]
   editorHistoryStorage: EditorHistoryStorage
   editorHistoryMaxItems: number
   /** Kept on the disk only; 0 keeps the entries forever */

@@ -1,5 +1,6 @@
 import type { CoreToolId, LlmTask } from '@tyco/shared'
 
+import { getLanguageLabel } from '../locale/language'
 import {
   TEXT_INPUT_SCHEMA,
   type ToolCall,
@@ -38,6 +39,13 @@ const textOf = (call: ToolCall): string =>
 
 const stringOf = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
+
+/** Phrases of a default command, one per line of the translated text */
+const phrasesOf = (text: string): string[] =>
+  text
+    .split('\n')
+    .map((phrase) => phrase.trim())
+    .filter(Boolean)
 
 const noText: ToolResult = {
   ok: false,
@@ -122,6 +130,13 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     icon: 'mdi:chat-processing-outline',
     description: 'Opens the chat of the app with the text attached',
     inputSchema: TEXT_INPUT_SCHEMA,
+    defaultCommands: ({ t }) => [
+      {
+        id: 'ask',
+        name: t('tools.defaultAskInChat'),
+        phrases: phrasesOf(t('tools.defaultAskInChatPhrases')),
+      },
+    ],
     run: async (call) => {
       const text = textOf(call)
       if (!text.trim()) return noText
@@ -141,6 +156,13 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       description:
         'Corrects spelling, grammar and punctuation of the text with the LLM',
       unavailableReason: () => deps.llmUnavailable('correction'),
+      defaultCommands: ({ t }) => [
+        {
+          id: 'fix',
+          name: t('tools.defaultCorrect'),
+          phrases: phrasesOf(t('tools.defaultCorrectPhrases')),
+        },
+      ],
     },
     (call, text) => deps.correctText(text, call.signal)
   )
@@ -154,6 +176,22 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       icon: 'mdi:translate',
       description: 'Translates the text into the language of the command',
       unavailableReason: () => deps.translatorUnavailable(),
+      // one per translation language set at the time; a language added
+      // later gets a command only when the user makes one
+      defaultCommands: ({ userConfig, t }) =>
+        [...new Set(userConfig.toTranslateLanguages)].flatMap((language) =>
+          language
+            ? [
+                {
+                  id: language,
+                  name: t('tools.defaultTranslate', {
+                    language: t(getLanguageLabel(language)),
+                  }),
+                  toolConfig: { language },
+                },
+              ]
+            : []
+        ),
     },
     (call, text) => {
       const language = stringOf(call.config.language)

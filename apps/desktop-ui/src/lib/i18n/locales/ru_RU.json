@@ -753,7 +753,10 @@
     "fieldOn": "Да",
     "fieldOff": "Нет",
     "errorNoLanguage": "Выберите язык перевода.",
-    "errorNoPrompt": "Напишите инструкцию для LLM."
+    "errorNoPrompt": "Напишите инструкцию для LLM.",
+    "badgeUnavailable": "Недоступна",
+    "addedByApp": "Добавлена приложением",
+    "addedByPlugin": "Добавлена плагином {name}"
   },
   "commandLauncher": {
     "title": "Команды",
@@ -793,6 +796,11 @@
     "askInChatDescription": "Открывает чат с текстом",
     "scriptDescription": "Запускает вашу shell-команду или скрипт",
     "webhookDescription": "Отправляет HTTP-запрос, например в n8n или Home Assistant",
-    "noLlm": "В настройках AI для этой задачи не выбрана модель LLM"
+    "noLlm": "В настройках AI для этой задачи не выбрана модель LLM",
+    "defaultCorrect": "Исправить текст",
+    "defaultCorrectPhrases": "(исправь|поправь) [текст]\nисправить текст",
+    "defaultTranslate": "Перевести: {language}",
+    "defaultAskInChat": "Спросить в чате",
+    "defaultAskInChatPhrases": "спроси [в] чате\nспроси"
   }
 }

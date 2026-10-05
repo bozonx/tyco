@@ -217,6 +217,7 @@ export const DESKTOP_COMMANDS = {
   LOG_CUSTOM_ACTION: 'log_custom_action',
   LOG_COMMAND_RUN: 'log_command_run',
   SET_TOOL_CATALOG: 'set_tool_catalog',
+  GET_USER_CONFIG: 'get_user_config',
   COPY_TEXT: 'copy_text',
   REPLACE_SELECTION_WITH_COMMAND: 'replace_selection_with_command',
 } as const

@@ -11,6 +11,13 @@ pub fn get_init_params(state: State<'_, AppState>) -> Result<InitParams, AppErro
     Ok(state.params())
 }
 
+/// The user config as saved now: the quick window does not receive the
+/// changes made in the main window, and reads it before writing it back.
+#[tauri::command]
+pub fn get_user_config(state: State<'_, AppState>) -> serde_json::Value {
+    state.params().user_config
+}
+
 #[tauri::command]
 pub fn apply_hotkey(
     app: AppHandle,
