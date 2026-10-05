@@ -90,13 +90,15 @@ export const useChatStore = defineStore('chat', () => {
 
   /** What the editor offers to the next message */
   const editorContext = computed(() =>
-    resolveEditorContext({
-      editorText: editorInputStore.value,
-      selectedText: editorInputStore.selectedText,
-      messages: model.messages.value,
-      pendingAttachments: model.newChatParams.value.attachments || [],
-      dismissed: model.dismissedEditorContext.value,
-    })
+    model.newChatParams.value.withoutEditorContext
+      ? null
+      : resolveEditorContext({
+          editorText: editorInputStore.value,
+          selectedText: editorInputStore.selectedText,
+          messages: model.messages.value,
+          pendingAttachments: model.newChatParams.value.attachments || [],
+          dismissed: model.dismissedEditorContext.value,
+        })
   )
 
   /** Runs in the main window; the quick window hands the text over to it */

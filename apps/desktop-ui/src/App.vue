@@ -190,7 +190,7 @@ const { isVoiceInputOpen, openChatVoiceInput } = useChatVoiceInput()
 const voiceChatActivation = createVoiceChatActivation({
   isVoiceInputOpen,
   currentPath: () => appNavigation.currentPath(),
-  navigateTo: (path) => appNavigation.push(path),
+  startCleanChat: () => chatStore.startChat({ withoutEditorContext: true }),
   closeAllModals: () => menuModalsStore.closeAll(),
   openQuickVoiceInput: () => openChatVoiceInput({ quickSend: true }),
   submitVoiceInput: () => globalEvents.emit(GlobalEvents.VOICE_SUBMIT),

@@ -33,6 +33,11 @@ export interface ChatParams {
   /** The title the chat has in the history */
   title?: string
   attachments?: string[]
+  /**
+   * The chat takes nothing from the editor: it was started for a question about
+   * a text selected in another application
+   */
+  withoutEditorContext?: boolean
 }
 
 export interface ChatHistoryItem {

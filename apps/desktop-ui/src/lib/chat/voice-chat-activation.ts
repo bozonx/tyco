@@ -11,7 +11,8 @@ export type VoiceChatActivationParams = Pick<
 export interface VoiceChatActivationDeps {
   isVoiceInputOpen: () => boolean
   currentPath: () => AppRoutePath
-  navigateTo: (path: AppRoutePath) => Promise<void>
+  /** Opens a new empty chat that takes nothing from the editor */
+  startCleanChat: () => Promise<void>
   closeAllModals: () => void
   /** Opens the voice input whose result is sent to the chat right away */
   openQuickVoiceInput: () => void
@@ -22,30 +23,45 @@ export interface VoiceChatActivationDeps {
 }
 
 /**
- * The voice chat hotkey: the first press opens the current chat with a voice
- * input, a press during the dictation finishes it and sends the result. Each
- * activation is handled once. The text selected elsewhere becomes the context
- * of the question; it is captured asynchronously and may arrive after the
- * activation, so it is attached at most once, and only to a dictation that the
- * activation opened.
+ * The voice chat hotkey: the first press opens a voice input into the chat, a
+ * press during the dictation finishes it and sends the result. Each activation
+ * is handled once.
+ *
+ * A question asked from another application goes to a new empty chat, with only
+ * the text selected there as its context; one asked while the chat is in view
+ * follows up on it. The selection is captured asynchronously and may arrive
+ * after the activation, so it is attached at most once, and only to a dictation
+ * that the activation opened.
  */
 export function createVoiceChatActivation(deps: VoiceChatActivationDeps) {
   let lastAppliedActivation: number | undefined
   let dictationActivation: number | undefined
+  let currentActivation: number | undefined
+  let windowWasShown = false
+  let shownBeforeActivation = false
+  /** The latest selection captured for the current activation */
+  let latestSelection: string | null | undefined
 
-  const attachSelection = (params: VoiceChatActivationParams) => {
-    const text = params.selectedText?.trim()
-    if (!text || params.activationId !== dictationActivation) return
+  const attachSelection = (activationId: number) => {
+    const text = latestSelection?.trim()
+    if (!text || activationId !== dictationActivation) return
     dictationActivation = undefined
     deps.attachSelection(text)
   }
 
   const apply = async (params: VoiceChatActivationParams): Promise<boolean> => {
+    if (params.activationId !== currentActivation) {
+      currentActivation = params.activationId
+      shownBeforeActivation = windowWasShown
+    }
+    windowWasShown = params.isWindowShown
+    latestSelection = params.selectedText
+
     if (params.mode !== START_MODES.VOICE_CHAT || !params.isWindowShown) {
       return false
     }
     if (params.activationId === lastAppliedActivation) {
-      attachSelection(params)
+      attachSelection(params.activationId)
       return false
     }
 
@@ -58,11 +74,12 @@ export function createVoiceChatActivation(deps: VoiceChatActivationDeps) {
       return true
     }
 
-    dictationActivation = params.activationId
     // a dictation or a menu left on another screen must not outlive the switch
     deps.closeAllModals()
-    if (!isInChat) await deps.navigateTo(APP_ROUTES.CHAT.path)
-    attachSelection(params)
+    if (!(isInChat && shownBeforeActivation)) await deps.startCleanChat()
+    // a selection arriving before the new chat is there would go to the old one
+    dictationActivation = params.activationId
+    attachSelection(params.activationId)
     deps.openQuickVoiceInput()
 
     return true

@@ -15,9 +15,9 @@ function setup(
   const deps = {
     isVoiceInputOpen: vi.fn(() => options.voiceInputOpen ?? false),
     currentPath: () => path,
-    navigateTo: vi.fn(async (next: AppRoutePath) => {
-      calls.push(`navigate:${next}`)
-      path = next
+    startCleanChat: vi.fn(async () => {
+      calls.push('newChat')
+      path = APP_ROUTES.CHAT.path
     }),
     closeAllModals: vi.fn(() => calls.push('closeAll')),
     openQuickVoiceInput: vi.fn(() => calls.push('open')),
@@ -38,23 +38,39 @@ const params = (
 })
 
 describe('createVoiceChatActivation', () => {
-  it('opens the quick voice input in the open chat', async () => {
+  it('asks a question from another application in a new chat', async () => {
     const { activation, calls } = setup()
 
     expect(await activation.apply(params())).toBe(true)
+    expect(calls).toEqual(['closeAll', 'newChat', 'open'])
+  })
+
+  it('starts a new chat from another screen', async () => {
+    const { activation, calls } = setup({ path: APP_ROUTES.EDITOR.path })
+
+    await activation.apply(params({ mode: START_MODES.EDITOR }))
+    await activation.apply(params({ activationId: 2 }))
+
+    expect(calls).toEqual(['closeAll', 'newChat', 'open'])
+  })
+
+  it('follows up on the chat in view', async () => {
+    const { activation, calls } = setup()
+
+    await activation.apply(params({ mode: START_MODES.CHAT }))
+    await activation.apply(params({ activationId: 2 }))
+
     expect(calls).toEqual(['closeAll', 'open'])
   })
 
-  it('switches to the chat before opening the voice input', async () => {
-    const { activation, calls } = setup({ path: APP_ROUTES.EDITOR.path })
+  it('starts a new chat when the window was hidden', async () => {
+    const { activation, calls } = setup()
 
-    await activation.apply(params())
+    await activation.apply(params({ mode: START_MODES.CHAT }))
+    await activation.apply(params({ isWindowShown: false }))
+    await activation.apply(params({ activationId: 2 }))
 
-    expect(calls).toEqual([
-      'closeAll',
-      `navigate:${APP_ROUTES.CHAT.path}`,
-      'open',
-    ])
+    expect(calls).toEqual(['closeAll', 'newChat', 'open'])
   })
 
   it('submits the dictation when the voice input is already open', async () => {
@@ -73,11 +89,7 @@ describe('createVoiceChatActivation', () => {
 
     await activation.apply(params())
 
-    expect(calls).toEqual([
-      'closeAll',
-      `navigate:${APP_ROUTES.CHAT.path}`,
-      'open',
-    ])
+    expect(calls).toEqual(['closeAll', 'newChat', 'open'])
   })
 
   it('handles each activation once', async () => {
@@ -105,7 +117,26 @@ describe('createVoiceChatActivation', () => {
 
     await activation.apply(params({ selectedText: ' Selected ' }))
 
-    expect(calls).toEqual(['closeAll', 'attach:Selected', 'open'])
+    expect(calls).toEqual(['closeAll', 'newChat', 'attach:Selected', 'open'])
+  })
+
+  it('gives a selection arriving meanwhile to the new chat', async () => {
+    const { activation, deps, calls } = setup()
+    let chatReady: () => void = () => {}
+    deps.startCleanChat.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          calls.push('newChat')
+          chatReady = resolve
+        })
+    )
+
+    const opening = activation.apply(params())
+    await activation.apply(params({ selectedText: 'Late' }))
+    chatReady()
+    await opening
+
+    expect(calls).toEqual(['closeAll', 'newChat', 'attach:Late', 'open'])
   })
 
   it('attaches a selection that arrives after the activation once', async () => {
