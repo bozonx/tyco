@@ -6,6 +6,7 @@ pub mod clipboard_restore;
 mod foreground_context;
 pub mod kwin;
 pub mod layer_shell;
+pub mod primary_selection;
 pub mod text_injector;
 pub mod x11;
 

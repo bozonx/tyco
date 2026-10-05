@@ -60,6 +60,9 @@
     :onEsc="cancel"
   >
     <template #preview>
+      <!-- the question goes to the chat with these texts; the user sees what
+           the answer will be about and can remove a wrong one -->
+      <ChatContextList v-if="quickSend" class="voice-context" expanded />
       <AudioWaveform
         :level="audioLevel"
         :peak="audioPeak"
@@ -129,6 +132,7 @@ import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
+import ChatContextList from '../chat/ChatContextList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
@@ -535,6 +539,11 @@ onUnmounted(() => {
   justify-content: center;
   gap: var(--space-xs);
   flex-shrink: 0;
+}
+
+.voice-context {
+  width: 100%;
+  margin-bottom: var(--space-sm);
 }
 
 .voice-shortcuts {

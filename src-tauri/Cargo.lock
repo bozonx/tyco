@@ -4874,6 +4874,7 @@ dependencies = [
  "futures-util",
  "gtk",
  "gtk-sys",
+ "libc",
  "log",
  "regex",
  "reqwest 0.12.28",

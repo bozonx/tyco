@@ -57,11 +57,30 @@ describe('createCapturedChatSelection', () => {
     ])
   })
 
-  it('falls back to getSelectedText when params has no selection', () => {
+  it('takes the editor selection of a window that was shown already', () => {
     const { selection, startChatWithAttachment } = setup(() => 'Fallback text')
 
-    expect(selection.apply(activation({ selectedText: null }))).toBe(true)
+    selection.apply(
+      activation({ mode: START_MODES.EDITOR, selectedText: null })
+    )
+    expect(
+      selection.apply(activation({ activationId: 2, selectedText: null }))
+    ).toBe(true)
     expect(startChatWithAttachment).toHaveBeenCalledWith('Fallback text')
+  })
+
+  it('leaves the editor selection of a hidden window alone', () => {
+    const { selection, startChatWithAttachment } = setup(() => 'Stale text')
+
+    selection.apply(
+      activation({ mode: START_MODES.EDITOR, isWindowShown: false })
+    )
+    expect(
+      selection.apply(activation({ activationId: 2, selectedText: null }))
+    ).toBe(false)
+    // the selection captured elsewhere arrives later and is taken
+    expect(selection.apply(activation({ activationId: 2 }))).toBe(true)
+    expect(startChatWithAttachment.mock.calls).toEqual([['Selected for chat']])
   })
 
   it('ignores other modes, a hidden window and a blank selection', () => {

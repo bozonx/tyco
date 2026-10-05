@@ -138,6 +138,9 @@ pub fn run() {
                 if session.is_x11() {
                     spawn_x11_tracker(app.handle().clone());
                 }
+                if session.is_wayland() {
+                    services::platform::linux::primary_selection::spawn_watcher();
+                }
                 if session.is_x11() || session.is_kde_wayland() {
                     services::platform::window_tracker::wait_for_startup(TRACKER_STARTUP_WAIT);
                 }

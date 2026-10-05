@@ -225,7 +225,7 @@ async function makeDiff(
     return
   }
 
-  if (trimmedText.length < appConfig.value.minCorrectionLength) {
+  if (trimmedText.length < appConfig.value.minAiTaskLength) {
     toast('toast.textTooShortToProcess', 'warn')
     return
   }

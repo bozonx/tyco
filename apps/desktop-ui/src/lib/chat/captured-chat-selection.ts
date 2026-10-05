@@ -7,6 +7,7 @@ export type SelectionActivation = Pick<
 
 export interface CapturedChatSelectionDeps {
   startChatWithAttachment: (attachment: string) => Promise<void> | void
+  /** The selection in the editor of this window */
   getSelectedText?: () => string | undefined
 }
 
@@ -14,12 +15,28 @@ export interface CapturedChatSelectionDeps {
  * Takes the text selected elsewhere into the chat attachments when the chat is
  * activated. The selection is captured asynchronously and arrives after the
  * activation itself, so it is taken at most once per activation.
+ *
+ * Without a selection elsewhere, the one in the editor is taken, but only when
+ * the window was already shown: the editor of a hidden window keeps the
+ * selection of its last use, which has nothing to do with the question.
  */
 export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
   let lastAppliedActivation: number | undefined
+  let currentActivation: number | undefined
+  let windowWasShown = false
+  let shownBeforeActivation = false
 
   const apply = (params: SelectionActivation): boolean => {
-    const text = (params.selectedText ?? deps.getSelectedText?.() ?? '').trim()
+    if (params.activationId !== currentActivation) {
+      currentActivation = params.activationId
+      shownBeforeActivation = windowWasShown
+    }
+    windowWasShown = params.isWindowShown
+
+    const editorText = shownBeforeActivation
+      ? deps.getSelectedText?.()
+      : undefined
+    const text = (params.selectedText ?? editorText ?? '').trim()
 
     if (
       params.mode !== START_MODES.CHAT ||

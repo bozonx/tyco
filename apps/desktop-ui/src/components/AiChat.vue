@@ -57,29 +57,7 @@
         </Button>
       </div>
       <div v-else class="chat-composer">
-        <div
-          v-if="attachments.length || chatStore.editorContext"
-          class="attachment-list"
-        >
-          <ChatAttachment
-            v-for="(attachment, index) in attachments"
-            :key="`attachment-${index}`"
-            :label="t('chat.selectedText')"
-            :text="attachment"
-            icon="mdi:selection-drag"
-            removable
-            @remove="chatStore.removeAttachment(index)"
-          />
-          <ChatAttachment
-            v-if="chatStore.editorContext"
-            :key="`editor-${chatStore.editorContext.source}`"
-            :label="editorContextLabel"
-            :text="chatStore.editorContext.text"
-            icon="mdi:file-document-edit-outline"
-            removable
-            @remove="dismissEditorContext"
-          />
-        </div>
+        <ChatContextList />
 
         <ChatInput @send="sendMessage" />
 
@@ -145,7 +123,7 @@ import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
-import ChatAttachment from './chat/ChatAttachment.vue'
+import ChatContextList from './chat/ChatContextList.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
@@ -167,23 +145,12 @@ const inputHint = computed(() => {
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
-const attachments = computed(() => chatStore.newChatParams?.attachments || [])
 const canSend = computed(
   () => Boolean(chatInputStore.value.trim()) && !chatStore.isGenerating
 )
 const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
   return last?.role === 'assistant' && Boolean(last.content)
-})
-
-const editorContextLabel = computed(() => {
-  const context = chatStore.editorContext
-  if (!context) return ''
-  const label =
-    context.source === 'selection'
-      ? t('chat.editorSelection')
-      : t('chat.editorText')
-  return context.updated ? `${label} · ${t('chat.contextUpdated')}` : label
 })
 
 const modelMenuItems = computed<DropdownMenuItem[]>(() => [
@@ -214,11 +181,6 @@ function messageKey(message: ChatMessage) {
 
 function openModelSettings() {
   void appNavigation.goToConfig('llm')
-}
-
-function dismissEditorContext() {
-  const context = chatStore.editorContext
-  if (context) chatStore.dismissEditorContext(context.text)
 }
 
 async function sendMessage() {
@@ -382,8 +344,7 @@ watch(
   box-shadow: var(--app-focus-ring);
 }
 .chat-composer-bar,
-.composer-actions,
-.attachment-list {
+.composer-actions {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -398,9 +359,6 @@ watch(
   max-width: 16rem;
   color: var(--app-text-muted);
   font-weight: 500;
-}
-.attachment-list {
-  flex-wrap: wrap;
 }
 .composer-actions {
   flex-shrink: 0;

@@ -1,6 +1,10 @@
 import { shallowRef } from 'vue'
 
-import type { CommandConfig, MainActionConfig } from '@tyco/shared'
+import {
+  APP_CONFIG,
+  type CommandConfig,
+  type MainActionConfig,
+} from '@tyco/shared'
 
 import {
   commandIcon,
@@ -71,7 +75,8 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       deps.showToast('toast.textNotSelected', 'error')
       return
     }
-    const minLength = deps.minCorrectionLength?.() ?? 30
+    const minLength =
+      deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength
     if (text.length < minLength) {
       deps.showToast('toast.textTooShortForCorrection', 'warn')
       return
