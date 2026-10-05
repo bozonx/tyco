@@ -9,21 +9,32 @@ export type SelectionAction =
   | { kind: 'correction' }
   | { kind: 'translate'; slot: number }
   | { kind: 'aiTask'; slot: number }
+  /** A command of the library whose output replaces the selection */
+  | { kind: 'command'; commandId: string }
 
 /** Hotkey ids of selection actions carry this prefix, e.g. `replace.aiTask.0` */
 export const SELECTION_HOTKEY_PREFIX = 'replace.'
 
+/** Prefix of the selection action of a command, e.g. `command:<id>` */
+export const COMMAND_SELECTION_PREFIX = 'command:'
+
 export function parseSelectionAction(id: string): SelectionAction | null {
   if (id === 'correction') return { kind: 'correction' }
+  if (id.startsWith(COMMAND_SELECTION_PREFIX)) {
+    const commandId = id.slice(COMMAND_SELECTION_PREFIX.length)
+    return commandId.trim() ? { kind: 'command', commandId } : null
+  }
   const match = /^(translate|aiTask)\.(\d{1,3})$/.exec(id)
   if (!match) return null
   return { kind: match[1] as 'translate' | 'aiTask', slot: Number(match[2]) }
 }
 
 export function selectionActionId(action: SelectionAction): string {
-  return action.kind === 'correction'
-    ? 'correction'
-    : `${action.kind}.${action.slot}`
+  if (action.kind === 'correction') return 'correction'
+  if (action.kind === 'command') {
+    return `${COMMAND_SELECTION_PREFIX}${action.commandId}`
+  }
+  return `${action.kind}.${action.slot}`
 }
 
 export type SelectionRunErrorCode =

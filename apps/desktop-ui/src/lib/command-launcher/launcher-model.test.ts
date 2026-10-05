@@ -420,3 +420,73 @@ describe('cancelling a running command', () => {
     expect(model.text.value).toBe('text')
   })
 })
+
+describe('commands that replace the selection', () => {
+  const replacing = command(
+    'translate',
+    'Translate',
+    { afterRun: 'replaceSelection' },
+    {}
+  )
+
+  function setupReplacing(commands: CommandConfig[] = [replacing]) {
+    const replaceSelection = vi.fn(async () => {})
+    const { deps } = setup(commands)
+    const model = createCommandLauncherModel({ ...deps, replaceSelection })
+    return { deps, model, replaceSelection }
+  }
+
+  it('hands the selection over to a selection run', async () => {
+    const { deps, model, replaceSelection } = setupReplacing()
+    deps.selectedText.mockReturnValue('hola')
+    await model.pickByKey(1)
+    expect(replaceSelection).toHaveBeenCalledWith(replacing)
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).toBe('list')
+  })
+
+  it('hands over a selection captured while asking for the text', async () => {
+    const { model, replaceSelection } = setupReplacing()
+    await model.pickByKey(1)
+    await model.selectionArrived('hola')
+    expect(replaceSelection).toHaveBeenCalledWith(replacing)
+  })
+
+  it('runs on a typed or edited text, for the result menu', async () => {
+    const { deps, model, replaceSelection } = setupReplacing([
+      { ...replacing, confirm: 'always' },
+    ])
+    deps.selectedText.mockReturnValue('hola')
+    await model.pickByKey(1)
+    model.setText('hola amigo')
+    await model.submit()
+    expect(replaceSelection).not.toHaveBeenCalled()
+    expect(deps.run).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'translate' }),
+      'hola amigo',
+      expect.anything()
+    )
+  })
+
+  it('confirms first, then hands the untouched selection over', async () => {
+    const { deps, model, replaceSelection } = setupReplacing([
+      { ...replacing, confirm: 'always' },
+    ])
+    deps.selectedText.mockReturnValue('hola')
+    await model.pickByKey(1)
+    expect(replaceSelection).not.toHaveBeenCalled()
+    await model.submit()
+    expect(replaceSelection).toHaveBeenCalled()
+  })
+
+  it('treats the text of an external call as no selection', async () => {
+    const { deps, model, replaceSelection } = setupReplacing()
+    await model.request({ commandId: 'translate', text: 'hola' })
+    expect(replaceSelection).not.toHaveBeenCalled()
+    expect(deps.run).toHaveBeenCalledWith(
+      replacing,
+      'hola',
+      expect.objectContaining({ source: 'external' })
+    )
+  })
+})

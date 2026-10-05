@@ -119,6 +119,8 @@ export interface ToolDefinition {
   labelKey?: string
   label?: string
   icon?: string
+  /** Shown in the tool picker of a new command */
+  descriptionKey?: string
   /** Shown to the LLM, in English, like an MCP tool description */
   description: string
   /** JSON Schema of the per-call input, as in MCP */
@@ -135,6 +137,11 @@ export interface ToolDefinition {
   parseText?(text: string, context: ToolParseContext): Promise<ParseResult>
   /** Rendered in the command editor, same format as plugin settings */
   configFields?: InputConfigItem[]
+  /**
+   * What a new command of the tool does with its output; a tool that turns a
+   * text into another one replaces the selection
+   */
+  defaultAfterRun?: CustomActionAfterRun
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
   /** Presets added to the library once */

@@ -113,6 +113,11 @@ export interface CommandLauncherDependencies {
     text: string,
     options?: CommandRunOptions
   ) => Promise<CommandRunOutcome>
+  /**
+   * Hands a command whose output replaces the selection over to a selection
+   * run: the overlay hides, and the selection is replaced where it is
+   */
+  replaceSelection?: (command: CommandConfig) => Promise<void>
   /** Tells that a command of an external call is gone from the library */
   commandMissing?: (commandId: string) => void
   /** Records a text that leaves the app with a command */
@@ -129,6 +134,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const text = ref('')
   /** The user changed the text, so a selection arriving late keeps off it */
   let textEdited = false
+  /** The text is the selection of the window under the overlay */
+  let fromSelection = false
   /** Where the current command came from: the list or an external call */
   let source: CommandRunSource = 'launcher'
   let controller: AbortController | null = null
@@ -148,6 +155,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     highlighted.value = 0
     text.value = ''
     textEdited = false
+    fromSelection = false
     stage.value = { kind: 'list' }
   }
 
@@ -184,6 +192,17 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     command: CommandConfig,
     input: string | null
   ): Promise<CommandRunOutcome> => {
+    if (
+      command.afterRun === 'replaceSelection' &&
+      input !== null &&
+      fromSelection &&
+      deps.replaceSelection
+    ) {
+      // the selection run reports and logs the outcome itself
+      reset()
+      await deps.replaceSelection(command)
+      return { success: true }
+    }
     const running: LauncherStage = { kind: 'running', command }
     stage.value = running
     const runController = new AbortController()
@@ -228,10 +247,15 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
    * Runs the command on `given`, or first asks for its text when there is none,
    * or for a confirmation when the command wants one
    */
-  const start = async (command: CommandConfig, given: string) => {
+  const start = async (
+    command: CommandConfig,
+    given: string,
+    selection: boolean
+  ) => {
     const takesText = commandTakesText(command, deps.tools)
     const input = takesText ? given : ''
     const confirm = command.confirm === 'always'
+    fromSelection = selection && Boolean(input.trim())
     if ((takesText && !input.trim()) || confirm) {
       text.value = input
       textEdited = false
@@ -245,7 +269,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const pick = async (command: CommandConfig): Promise<void> => {
     if (stage.value.kind === 'running') return
     source = 'launcher'
-    await start(command, deps.selectedText() ?? '')
+    await start(command, deps.selectedText() ?? '', true)
   }
 
   /**
@@ -262,7 +286,11 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       return
     }
     source = 'external'
-    await start(command, call.text ?? deps.selectedText() ?? '')
+    await start(
+      command,
+      call.text ?? deps.selectedText() ?? '',
+      call.text === undefined
+    )
   }
 
   /** Stops the running command; it is reported as cancelled */
@@ -285,6 +313,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const setText = (value: string) => {
     text.value = value
     textEdited = true
+    fromSelection = false
   }
 
   /** The prepared command can run: it has the text it needs */
@@ -330,6 +359,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       selection?.trim()
     ) {
       text.value = selection
+      fromSelection = true
       if (current.autoRun) await submit()
     }
   }

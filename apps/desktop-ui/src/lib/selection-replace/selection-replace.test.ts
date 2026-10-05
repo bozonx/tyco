@@ -70,6 +70,18 @@ describe('selection actions', () => {
       'translate.1'
     )
   })
+
+  it('carries the id of a command, whatever it holds', () => {
+    const id = 'default:core.translate:en_US'
+    expect(parseSelectionAction(`command:${id}`)).toEqual({
+      kind: 'command',
+      commandId: id,
+    })
+    expect(parseSelectionAction('command: ')).toBeNull()
+    expect(selectionActionId({ kind: 'command', commandId: id })).toBe(
+      `command:${id}`
+    )
+  })
 })
 
 describe('keepSurroundingWhitespace', () => {
@@ -80,6 +92,32 @@ describe('keepSurroundingWhitespace', () => {
 })
 
 describe('createSelectionReplace', () => {
+  it('runs a command and pastes its output', async () => {
+    const { request, deps, model } = setup()
+    const running = model.handleRun(event({ action: 'command:fix' }))
+    expect(deps.run).toHaveBeenCalledWith(
+      { kind: 'command', commandId: 'fix' },
+      'helo world',
+      expect.any(AbortSignal)
+    )
+    expect(deps.showOverlay).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'selection.working.command' })
+    )
+    request.resolve('hello world')
+    await running
+    expect(deps.finish).toHaveBeenCalledWith(1, 'hello world')
+  })
+
+  it('stays quiet about a run cancelled from within', async () => {
+    const { request, deps, model } = setup({
+      isAborted: (error: unknown) => error === 'cancelled',
+    })
+    const running = model.handleRun(event({ action: 'command:fix' }))
+    request.reject('cancelled')
+    await running
+    expect(deps.notify).not.toHaveBeenCalled()
+  })
+
   it('shows the pending bubble with a delay and pastes the result', async () => {
     const { request, deps, model } = setup()
     const done = model.handleRun(event())

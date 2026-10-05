@@ -29,6 +29,15 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     logRun: async (record) => {
       await ipcStore.callFunction('logCommandRun', [record])
     },
+    replaceSelection: async (command) => {
+      const result = await ipcStore.callFunction(
+        'replaceSelectionWithCommand',
+        [command.id]
+      )
+      if (!result.success) {
+        toastText(result.error ?? translate('toast.commandFailed'), 'error')
+      }
+    },
     commandMissing: (commandId) => {
       toastText(
         translate('commandLauncher.commandMissing', { id: commandId }),

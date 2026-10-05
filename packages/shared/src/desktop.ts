@@ -217,6 +217,8 @@ export const DESKTOP_COMMANDS = {
   LOG_CUSTOM_ACTION: 'log_custom_action',
   LOG_COMMAND_RUN: 'log_command_run',
   SET_TOOL_CATALOG: 'set_tool_catalog',
+  COPY_TEXT: 'copy_text',
+  REPLACE_SELECTION_WITH_COMMAND: 'replace_selection_with_command',
 } as const
 
 export type DesktopCommandName =
@@ -240,7 +242,13 @@ export const SCRIPT_CANCELLED_ERROR = 'Cancelled'
 
 /** Where a command or a tool is invoked from, also for the action log */
 export type CommandRunSource =
-  'menu' | 'toolbar' | 'launcher' | 'external' | 'chat'
+  | 'menu'
+  | 'toolbar'
+  | 'launcher'
+  | 'external'
+  | 'chat'
+  /** A selection run: the output replaces the selection it got */
+  | 'selection'
 
 /**
  * The command the command overlay opens with: an external call that needs a

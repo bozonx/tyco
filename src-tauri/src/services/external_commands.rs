@@ -11,10 +11,11 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
+use tyco_activation_protocol::COMMAND_ACTION_PREFIX;
 
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::runtime;
+use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
 
 pub const COMMAND_RUN_EVENT: &str = "app://command-run";
@@ -66,6 +67,8 @@ pub struct ExternalCommand {
     pub takes_text: bool,
     pub confirm: bool,
     pub shows_menu: bool,
+    /// Its output replaces the selection, see `afterRun`.
+    pub replaces_selection: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -205,9 +208,8 @@ fn callable(
         id,
         takes_text,
         confirm: str_field(command, "confirm") == "always",
-        // a text of a call is not a selection to replace: the result menu
-        // shows the output instead
-        shows_menu: after_run == "showMenu" || after_run == "replaceSelection",
+        shows_menu: after_run == "showMenu",
+        replaces_selection: after_run == "replaceSelection",
     })
 }
 
@@ -319,10 +321,24 @@ enum Route {
     /// The command overlay: it asks for the text or a confirmation, or shows
     /// the output in the result menu.
     Overlay,
+    /// A selection run: the selection of the focused window is the text, and
+    /// the output replaces it, as with the selection hotkeys.
+    Selection,
 }
 
 fn route(command: &ExternalCommand, text: Option<&str>) -> Route {
-    if command.confirm || command.shows_menu || (command.takes_text && text.is_none()) {
+    if command.confirm {
+        return Route::Overlay;
+    }
+    if command.replaces_selection {
+        // a text of the call is not a selection: the result menu shows the
+        // output instead
+        return match (command.takes_text, text) {
+            (true, None) => Route::Selection,
+            _ => Route::Overlay,
+        };
+    }
+    if command.shows_menu || (command.takes_text && text.is_none()) {
         Route::Overlay
     } else {
         Route::Background
@@ -346,6 +362,11 @@ pub fn run(
         .filter(|_| command.takes_text);
 
     match route(&command, text.as_deref()) {
+        Route::Selection => selection_replace::trigger(
+            app,
+            &format!("{COMMAND_ACTION_PREFIX}{}", command.id),
+            selection_replace::TriggerWait::Now,
+        ),
         Route::Overlay => {
             let mut activation = Activation::new(StartMode::CommandLauncher, source);
             activation.launcher_request = Some(LauncherRequest {
@@ -530,6 +551,7 @@ mod tests {
                 takes_text: false,
                 confirm: true,
                 shows_menu: false,
+                replaces_selection: false,
             }
         );
         // the id wins over the name of another command
@@ -593,11 +615,12 @@ mod tests {
     }
 
     #[test]
-    fn shows_the_output_of_a_replacing_command_in_the_menu() {
+    fn knows_a_command_that_replaces_the_selection() {
         let mut catalog = catalog();
         catalog.get_mut("core.translate").unwrap().available = true;
         let found = find(&config(), Some(&catalog), "translate").unwrap();
-        assert!(found.shows_menu);
+        assert!(found.replaces_selection);
+        assert!(!found.shows_menu);
     }
 
     #[test]
@@ -639,6 +662,7 @@ mod tests {
             takes_text,
             confirm,
             shows_menu,
+            replaces_selection: false,
         };
         assert_eq!(
             route(&command(false, false, false), None),
@@ -656,5 +680,20 @@ mod tests {
             route(&command(true, false, true), Some("t")),
             Route::Overlay
         );
+    }
+
+    #[test]
+    fn replaces_the_selection_when_no_text_is_given() {
+        let replacing = |confirm| ExternalCommand {
+            id: String::from("x"),
+            takes_text: true,
+            confirm,
+            shows_menu: false,
+            replaces_selection: true,
+        };
+        assert_eq!(route(&replacing(false), None), Route::Selection);
+        // a given text is no selection: its output goes to the result menu
+        assert_eq!(route(&replacing(false), Some("t")), Route::Overlay);
+        assert_eq!(route(&replacing(true), None), Route::Overlay);
     }
 }

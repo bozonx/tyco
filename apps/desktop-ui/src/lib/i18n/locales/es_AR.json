@@ -266,7 +266,6 @@
     "actionAfterRunLabel": "Al terminar",
     "actionAfterRunNone": "Nada",
     "actionAfterRunShowMenu": "Mostrar menú de acciones",
-    "actionAfterRunInfo": "«Mostrar menú de acciones» abre el menú con el resultado, para insertarlo, copiarlo o seguir procesándolo. Para un comando es su salida (stdout), con una espera de hasta 60 s. Para un webhook es la respuesta: el campo «text» de un JSON o el cuerpo entero.\nCon «Nada», un comando que sigue corriendo después de 3 s queda en segundo plano.",
     "actionLogOutput": "Registrar la salida",
     "actionLogOutputInfo": "Escribe la salida en actions.log, en la carpeta de logs de la app (Configuración → Almacenamiento → Logs). Los errores se registran siempre. El texto en sí no se registra.",
     "actionWebhookMethod": "Método HTTP",
@@ -667,17 +666,20 @@
     "working": {
       "correction": "Corrigiendo…",
       "translate": "Traduciendo…",
-      "aiTask": "Aplicando la tarea de IA…"
+      "aiTask": "Aplicando la tarea de IA…",
+      "command": "Ejecutando el comando…"
     },
     "failed": {
       "correction": "No se pudo corregir el texto",
       "translate": "No se pudo traducir el texto",
-      "aiTask": "No se pudo aplicar la tarea de IA"
+      "aiTask": "No se pudo aplicar la tarea de IA",
+      "command": "El comando falló"
     },
     "unchanged": {
       "correction": "No se encontraron errores",
       "translate": "La traducción es igual al texto",
-      "aiTask": "La tarea de IA dejó el texto sin cambios"
+      "aiTask": "La tarea de IA dejó el texto sin cambios",
+      "command": "El comando dejó el texto como estaba"
     },
     "noSelection": "No hay nada seleccionado",
     "noTarget": "Ninguna ventana de aplicación tiene el foco",
@@ -693,8 +695,6 @@
     "hint": "Tus scripts y webhooks. Configurás un comando una vez y lo ejecutás desde el menú de acciones principales, el panel de comandos y otras aplicaciones (tyco-ctl, D-Bus).",
     "empty": "Todavía no hay comandos.",
     "unnamed": "Comando sin nombre",
-    "addScript": "Script",
-    "addWebhook": "Webhook",
     "newScript": "Nuevo script…",
     "newWebhook": "Nuevo webhook…",
     "editCommand": "Editar el comando",
@@ -733,7 +733,27 @@
     "removeConfirm": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales.",
     "removeConfirmSecret": "¿Eliminar el comando «{name}»? También sale del menú de acciones principales y se borra su token de autorización guardado.",
     "toolMissing": "Su herramienta no está disponible: el plugin está desactivado o no existe",
-    "inputUnsupported": "Su herramienta necesita una entrada estructurada que no se obtiene de un texto"
+    "inputUnsupported": "Su herramienta necesita una entrada estructurada que no se obtiene de un texto",
+    "toolLabel": "Herramienta",
+    "create": "Crear un comando",
+    "pickTool": "¿Qué debe hacer el comando?",
+    "afterRunReplaceSelection": "Reemplazar la selección",
+    "afterRunCopy": "Copiar",
+    "afterRunInfo": "Qué hacer con el texto que devuelve el comando. «Mostrar menú de acciones» abre el menú con él. «Reemplazar la selección» lo pone en lugar del texto seleccionado que recibió el comando; si el texto vino de otro lado, se abre el menú. «Copiar» lo pone en el portapapeles. En un script es la salida estándar, esperada hasta 60 s; con «Nada», un script que sigue tras 3 s queda en segundo plano. En un webhook es el campo «text» de una respuesta JSON o todo el cuerpo.",
+    "languageLabel": "Traducir al",
+    "languageInfo": "El idioma se guarda en el comando: reordenar los idiomas de traducción en los ajustes no lo cambia.",
+    "languagePlaceholder": "Elegí un idioma",
+    "promptLabel": "Instrucción para el LLM",
+    "promptInfo": "Se aplica al texto como la regla de una tarea de IA. El comando guarda una copia: editar las tareas de IA no la cambia.",
+    "promptPlaceholder": "Por ej.: Hacé el texto más corto y amable",
+    "promptFromTask": "Tomar la instrucción de una tarea de IA",
+    "promptFromTaskPlaceholder": "Elegí una tarea de IA…",
+    "fromPluginSettings": "De los ajustes del plugin: {value}",
+    "pluginFieldsHint": "Los campos vacíos toman su valor de los ajustes del plugin.",
+    "fieldOn": "Sí",
+    "fieldOff": "No",
+    "errorNoLanguage": "Elegí el idioma de traducción.",
+    "errorNoPrompt": "Escribí la instrucción para el LLM."
   },
   "commandLauncher": {
     "title": "Comandos",
@@ -757,5 +777,22 @@
     "failed": "Falló el comando «{name}»",
     "missing": "El comando no está en la biblioteca",
     "unknown": "Error desconocido"
+  },
+  "tools": {
+    "insert": "Insertar en la ventana",
+    "insertDescription": "Escribe el texto en la ventana en la que estabas trabajando",
+    "copy": "Copiar",
+    "copyDescription": "Pone el texto en el portapapeles",
+    "correct": "Corregir",
+    "correctDescription": "Corrige ortografía, gramática y puntuación con el LLM, sin el modo de corrección",
+    "translate": "Traducir",
+    "translateDescription": "Traduce el texto al idioma elegido en el comando",
+    "aiTask": "Tarea de IA",
+    "aiTaskDescription": "Aplica la instrucción del comando al texto con el LLM",
+    "askInChat": "Preguntar en el chat",
+    "askInChatDescription": "Abre el chat con el texto adjunto",
+    "scriptDescription": "Ejecuta un comando de shell o un script tuyo",
+    "webhookDescription": "Envía una solicitud HTTP, por ejemplo a n8n o Home Assistant",
+    "noLlm": "No hay un modelo LLM asignado a esta tarea en los ajustes de IA"
   }
 }

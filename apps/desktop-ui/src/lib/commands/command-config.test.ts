@@ -245,3 +245,38 @@ describe('external names', () => {
     expect(externalNameTwins(commands, named('f', ''), tools)).toEqual([])
   })
 })
+
+describe('commands of the core tools', () => {
+  it('start with the settings and the output handling of their tool', () => {
+    const translate = createCommand('core.translate', 't', {
+      defaultAfterRun: 'replaceSelection',
+    })
+    expect(translate.toolConfig).toEqual({ language: '' })
+    expect(translate.afterRun).toBe('replaceSelection')
+    expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
+    expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
+  })
+
+  it('need a language or an instruction', () => {
+    const coreTools = testTools({}, [
+      {
+        id: 'core.translate',
+        description: '',
+        inputSchema: { type: 'object', properties: {} },
+        run: async () => ({ ok: true }),
+      },
+    ])
+    expect(
+      validateCommand(createCommand('core.translate', 't'), coreTools)
+    ).toEqual([{ field: 'language', messageKey: 'commands.errorNoLanguage' }])
+    expect(
+      validateCommand(
+        withConfig(createCommand('core.aiTask', 'a'), { prompt: 'Shorter' }),
+        coreTools
+      )
+    ).toEqual([])
+    expect(validateCommand(createCommand('Gone.tool', 'g'), coreTools)).toEqual(
+      [{ field: 'toolId', messageKey: 'commands.errorUnknownTool' }]
+    )
+  })
+})

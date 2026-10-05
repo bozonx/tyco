@@ -81,6 +81,7 @@ declare module 'vue' {
     Tabs: typeof import('./src/components/common/Tabs.vue')['default']
     TextPreview: typeof import('./src/components/common/TextPreview.vue')['default']
     ToastContainer: typeof import('./src/components/common/ToastContainer.vue')['default']
+    ToolConfigFields: typeof import('./src/components/settings/ToolConfigFields.vue')['default']
     TranslateMenu: typeof import('./src/components/menu/TranslateMenu.vue')['default']
     VoiceRecognitionMenu: typeof import('./src/components/menu/VoiceRecognitionMenu.vue')['default']
     WriteModeInput: typeof import('./src/components/WriteModeInput.vue')['default']

@@ -26,6 +26,10 @@ export function useCommandRunnerDependencies(): CommandRunnerDependencies {
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
     },
+    copyText: async (text) => {
+      const result = await ipcStore.callFunction('copyText', [text])
+      if (!result.success) throw new Error(result.error ?? 'copyText')
+    },
     showError: (messageKey, detail) => {
       toastText(
         detail ? `${translate(messageKey)}: ${detail}` : translate(messageKey),

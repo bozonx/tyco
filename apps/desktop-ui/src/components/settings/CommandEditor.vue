@@ -53,6 +53,21 @@
       />
     </div>
 
+    <div class="command-field">
+      <span class="command-field-label">{{ t('commands.toolLabel') }}</span>
+      <div class="command-tool">
+        <Icon
+          :icon="tool?.icon ?? 'mdi:puzzle-outline'"
+          width="16"
+          height="16"
+        />
+        <span>{{ tool ? toolLabel(tool, t) : command.toolId }}</span>
+      </div>
+      <p v-if="unavailable" class="command-warning">
+        {{ t(unavailable) }}
+      </p>
+    </div>
+
     <div v-if="customActionTool" class="command-field-row">
       <FieldCheckbox
         :value="takesText"
@@ -71,14 +86,22 @@
       :command="command"
       @update="updateToolConfig"
     />
-    <p v-else-if="!tool" class="command-warning">
+    <ToolConfigFields
+      v-else-if="tool"
+      :key="`${command.id}:tools`"
+      :command="command"
+      :tool="tool"
+      :user-config="userConfig"
+      @update="updateToolConfig"
+    />
+    <p v-else class="command-warning">
       {{ t('commands.unknownTool', { tool: command.toolId }) }}
     </p>
 
     <div class="command-field">
       <span class="command-field-label">
         {{ t('settings.actionAfterRunLabel') }}
-        <InfoTooltip :text="t('settings.actionAfterRunInfo')" />
+        <InfoTooltip :text="t('commands.afterRunInfo')" />
       </span>
       <SegmentedControl
         :value="command.afterRun"
@@ -86,6 +109,11 @@
         :options="[
           { id: 'none', name: t('settings.actionAfterRunNone') },
           { id: 'showMenu', name: t('settings.actionAfterRunShowMenu') },
+          {
+            id: 'replaceSelection',
+            name: t('commands.afterRunReplaceSelection'),
+          },
+          { id: 'copy', name: t('commands.afterRunCopy') },
         ]"
         @update:value="update({ afterRun: $event as CustomActionAfterRun })"
       />
@@ -148,7 +176,9 @@ import {
   commandLabel,
   commandTakesText,
   commandTool,
+  commandUnavailableReason,
 } from '../../lib/commands/command-config'
+import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
@@ -156,8 +186,13 @@ import FieldInput from '../common/FieldInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import CustomActionFields from './CustomActionFields.vue'
+import ToolConfigFields from './ToolConfigFields.vue'
 import { Icon } from '@iconify/vue'
-import type { CommandConfig, CustomActionAfterRun } from '@tyco/shared'
+import type {
+  CommandConfig,
+  CustomActionAfterRun,
+  UserConfig,
+} from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
@@ -166,6 +201,8 @@ const props = withDefaults(
     inMenu?: boolean
     /** Other commands an external call by this name could mean */
     nameTwins?: CommandConfig[]
+    /** For the settings of the tool: translation languages, AI tasks */
+    userConfig?: UserConfig
   }>(),
   { inMenu: false, nameTwins: () => [] }
 )
@@ -181,6 +218,10 @@ const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
 const takesText = computed(() => commandTakesText(props.command, toolsStore))
+/** Why the command cannot run, unless its tool is missing altogether */
+const unavailable = computed(() =>
+  tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
+)
 
 function update(patch: Partial<CommandConfig>) {
   emit('update', { ...props.command, ...patch })
@@ -192,7 +233,10 @@ function updateDescription(value: string) {
 }
 
 function updateToolConfig(field: string, value: unknown) {
-  update({ toolConfig: { ...props.command.toolConfig, [field]: value } })
+  const { [field]: _previous, ...rest } = props.command.toolConfig
+  update({
+    toolConfig: value === undefined ? rest : { ...rest, [field]: value },
+  })
 }
 
 const copied = ref(false)
@@ -237,6 +281,13 @@ onUnmounted(() => {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--app-text-muted);
+}
+
+.command-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
+  font-size: 0.875rem;
 }
 
 .command-field-row {

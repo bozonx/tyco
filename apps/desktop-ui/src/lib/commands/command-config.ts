@@ -1,6 +1,5 @@
 import {
   ACTION_TEXT_PLACEHOLDER,
-  type BuiltinToolId,
   COMMAND_CONFIRM_MODES,
   CUSTOM_ACTION_AFTER_RUN,
   type CommandConfig,
@@ -134,30 +133,47 @@ export function newCommandId(): string {
     : `command-${Date.now()}`
 }
 
-/** A new command of the library with the defaults for its tool */
+/** The settings a new command of the tool starts with */
+function defaultToolConfig(toolId: string): Record<string, unknown> {
+  switch (toolId) {
+    case 'script':
+      return { command: '', workingDir: '', takesText: true }
+    case 'webhook':
+      return {
+        url: '',
+        method: 'POST',
+        headers: {},
+        payloadTemplate: '',
+        authSecret: false,
+        takesText: true,
+      }
+    case 'core.translate':
+      return { language: '' }
+    case 'core.aiTask':
+      return { prompt: '' }
+    default:
+      // a plugin tool falls back to the plugin settings for empty fields
+      return {}
+  }
+}
+
+/**
+ * A new command of the library with the defaults for its tool; `tool` gives
+ * what to do with the output of a tool that returns a text
+ */
 export function createCommand(
-  toolId: BuiltinToolId,
-  id: string = newCommandId()
+  toolId: string,
+  id: string = newCommandId(),
+  tool?: Pick<RegisteredTool, 'defaultAfterRun'>
 ): CommandConfig {
-  const toolConfig: ScriptToolConfig | WebhookToolConfig =
-    toolId === 'script'
-      ? { command: '', workingDir: '', takesText: true }
-      : {
-          url: '',
-          method: 'POST',
-          headers: {},
-          payloadTemplate: '',
-          authSecret: false,
-          takesText: true,
-        }
   return {
     id,
     name: '',
     phrases: [],
     toolId,
-    toolConfig: { ...toolConfig },
+    toolConfig: defaultToolConfig(toolId),
     llmArgumentParsing: false,
-    afterRun: 'none',
+    afterRun: tool?.defaultAfterRun ?? 'none',
     logOutput: false,
     // a script runs with the rights of the user and cannot be undone
     confirm: toolId === 'script' ? 'always' : 'auto',
@@ -346,6 +362,14 @@ export function validateCommand(
           messageKey: 'commands.errorTextPlaceholder',
         })
       }
+    }
+  } else if (command.toolId === 'core.translate') {
+    if (!stringOr(command.toolConfig.language).trim()) {
+      issues.push({ field: 'language', messageKey: 'commands.errorNoLanguage' })
+    }
+  } else if (command.toolId === 'core.aiTask') {
+    if (!stringOr(command.toolConfig.prompt).trim()) {
+      issues.push({ field: 'prompt', messageKey: 'commands.errorNoPrompt' })
     }
   } else if (!commandTool(command, tools)) {
     issues.push({ field: 'toolId', messageKey: 'commands.errorUnknownTool' })

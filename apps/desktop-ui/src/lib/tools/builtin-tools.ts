@@ -60,6 +60,7 @@ export function createScriptTool(
   return {
     id: 'script',
     labelKey: 'action.script',
+    descriptionKey: 'tools.scriptDescription',
     icon: 'mdi:console-line',
     description: 'Runs a shell command of the user',
     inputSchema: TEXT_INPUT_SCHEMA,
@@ -127,6 +128,7 @@ export function createWebhookTool(
   return {
     id: 'webhook',
     labelKey: 'action.webhook',
+    descriptionKey: 'tools.webhookDescription',
     icon: 'mdi:webhook',
     description: 'Sends an HTTP request configured by the user',
     inputSchema: TEXT_INPUT_SCHEMA,

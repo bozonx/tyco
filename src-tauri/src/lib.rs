@@ -26,12 +26,13 @@ use commands::net::{
 use commands::notes::{append_note, save_note};
 use commands::secrets::{secrets_remove, secrets_set, secrets_status};
 use commands::selection::{
-    check_text_injection, finish_selection_run, notify_desktop, show_status_overlay,
+    check_text_injection, finish_selection_run, notify_desktop, replace_selection_with_command,
+    show_status_overlay,
 };
 use commands::voice::{start_voice_capture, stop_voice_capture};
 use commands::window::{
-    close_window, dismiss_quick_window, open_in_browser_and_close, put_into_clipboard_and_close,
-    set_quick_input_region, type_into_window_and_close,
+    close_window, copy_text, dismiss_quick_window, open_in_browser_and_close,
+    put_into_clipboard_and_close, set_quick_input_region, type_into_window_and_close,
 };
 use models::default_init_params;
 #[cfg(target_os = "linux")]
@@ -186,6 +187,7 @@ pub fn run() {
             open_in_browser_and_close,
             type_into_window_and_close,
             put_into_clipboard_and_close,
+            copy_text,
             save_note,
             append_note,
             net_fetch,
@@ -198,6 +200,7 @@ pub fn run() {
             secrets_set,
             secrets_remove,
             finish_selection_run,
+            replace_selection_with_command,
             show_status_overlay,
             notify_desktop,
             check_text_injection,

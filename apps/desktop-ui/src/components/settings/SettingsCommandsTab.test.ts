@@ -57,9 +57,16 @@ describe('SettingsCommandsTab.vue', () => {
     expect(cards[1].find('.command-body').exists()).toBe(true)
   })
 
-  it('adds a new command of the chosen tool', async () => {
+  it('adds a new command of the tool picked from the registry', async () => {
     const wrapper = mountTab()
-    await wrapper.findAll('.add-btn')[1].trigger('click')
+    expect(wrapper.find('.tool-picker').exists()).toBe(false)
+    await wrapper.find('.add-btn').trigger('click')
+    const options = wrapper.findAll('.tool-option')
+    expect(options.map((option) => option.text())).toEqual([
+      expect.stringContaining('action.script'),
+      expect.stringContaining('action.webhook'),
+    ])
+    await options[1].trigger('click')
     const [commands] = wrapper.emitted('update:commands')![0] as [
       { toolId: string }[],
     ]
@@ -68,6 +75,7 @@ describe('SettingsCommandsTab.vue', () => {
       'script',
       'webhook',
     ])
+    expect(wrapper.find('.tool-picker').exists()).toBe(false)
   })
 
   it('keeps a command whose removal is not confirmed', async () => {

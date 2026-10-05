@@ -266,7 +266,6 @@
     "actionAfterRunLabel": "Bitince",
     "actionAfterRunNone": "Hiçbir şey",
     "actionAfterRunShowMenu": "Eylem menüsünü göster",
-    "actionAfterRunInfo": "“Eylem menüsünü göster” sonucu menüde açar; eklenebilir, kopyalanabilir veya işlenebilir. Komut için çıktısıdır (stdout), en fazla 60 sn beklenir. Webhook için yanıttır: JSON yanıttaki “text” alanı veya gövdenin tamamı.\n“Hiçbir şey” seçiliyken 3 sn sonra hâlâ çalışan komut arka planda bırakılır.",
     "actionLogOutput": "Çıktıyı günlüğe yaz",
     "actionLogOutputInfo": "Çıktıyı uygulamanın günlük klasöründeki actions.log dosyasına yazar (Ayarlar → Depolama → Günlükler). Hatalar her zaman yazılır. Metnin kendisi yazılmaz.",
     "actionWebhookMethod": "HTTP yöntemi",
@@ -667,17 +666,20 @@
     "working": {
       "correction": "Düzeltiliyor…",
       "translate": "Çevriliyor…",
-      "aiTask": "Yapay zekâ görevi uygulanıyor…"
+      "aiTask": "Yapay zekâ görevi uygulanıyor…",
+      "command": "Komut çalışıyor…"
     },
     "failed": {
       "correction": "Metin düzeltilemedi",
       "translate": "Metin çevrilemedi",
-      "aiTask": "Yapay zekâ görevi uygulanamadı"
+      "aiTask": "Yapay zekâ görevi uygulanamadı",
+      "command": "Komut başarısız oldu"
     },
     "unchanged": {
       "correction": "Hata bulunamadı",
       "translate": "Çeviri metinle aynı",
-      "aiTask": "Yapay zekâ görevi metni değiştirmedi"
+      "aiTask": "Yapay zekâ görevi metni değiştirmedi",
+      "command": "Komut metni olduğu gibi bıraktı"
     },
     "noSelection": "Hiçbir şey seçili değil",
     "noTarget": "Odakta bir uygulama penceresi yok",
@@ -693,8 +695,6 @@
     "hint": "Betikleriniz ve webhook'larınız. Bir komutu bir kez ayarlayın; ana eylem menüsünden, komut panelinden ve diğer uygulamalardan (tyco-ctl, D-Bus) çalıştırın.",
     "empty": "Henüz komut yok.",
     "unnamed": "Adsız komut",
-    "addScript": "Betik",
-    "addWebhook": "Webhook",
     "newScript": "Yeni betik…",
     "newWebhook": "Yeni webhook…",
     "editCommand": "Komutu düzenle",
@@ -733,7 +733,27 @@
     "removeConfirm": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır.",
     "removeConfirmSecret": "“{name}” komutu silinsin mi? Ana eylem menüsünden de kaldırılır ve kayıtlı yetkilendirme belirteci silinir.",
     "toolMissing": "Aracı kullanılamıyor: eklenti kapalı veya yok",
-    "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor"
+    "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor",
+    "toolLabel": "Araç",
+    "create": "Komut oluştur",
+    "pickTool": "Komut ne yapsın?",
+    "afterRunReplaceSelection": "Seçimi değiştir",
+    "afterRunCopy": "Kopyala",
+    "afterRunInfo": "Komutun döndürdüğü metinle ne yapılacağı. “Eylem menüsünü göster” menüyü onunla açar. “Seçimi değiştir” onu komutun aldığı seçili metnin yerine koyar; metin başka yerden geldiyse menü açılır. “Kopyala” onu panoya koyar. Betikte çıktı stdout'tur, 60 sn'ye kadar beklenir; “Hiçbir şey” ile 3 sn'den uzun süren betik arka planda bırakılır. Webhook'ta JSON yanıtın “text” alanı veya gövdenin tamamıdır.",
+    "languageLabel": "Şu dile çevir",
+    "languageInfo": "Dil komutta saklanır: ayarlardaki çeviri dillerinin sırasını değiştirmek onu etkilemez.",
+    "languagePlaceholder": "Bir dil seçin",
+    "promptLabel": "LLM için talimat",
+    "promptInfo": "Metne bir yapay zekâ görevinin kuralı gibi uygulanır. Komutta bir kopyası tutulur: yapay zekâ görevlerini düzenlemek onu değiştirmez.",
+    "promptPlaceholder": "Ör. Metni daha kısa ve samimi yap",
+    "promptFromTask": "Talimatı bir yapay zekâ görevinden al",
+    "promptFromTaskPlaceholder": "Bir yapay zekâ görevi seçin…",
+    "fromPluginSettings": "Eklenti ayarlarından: {value}",
+    "pluginFieldsHint": "Boş alanlar değerini eklenti ayarlarından alır.",
+    "fieldOn": "Evet",
+    "fieldOff": "Hayır",
+    "errorNoLanguage": "Çevrilecek dili seçin.",
+    "errorNoPrompt": "LLM için talimatı yazın."
   },
   "commandLauncher": {
     "title": "Komutlar",
@@ -757,5 +777,22 @@
     "failed": "“{name}” komutu başarısız oldu",
     "missing": "Komut kitaplıkta yok",
     "unknown": "Bilinmeyen hata"
+  },
+  "tools": {
+    "insert": "Pencereye ekle",
+    "insertDescription": "Metni çalıştığınız pencereye yazar",
+    "copy": "Kopyala",
+    "copyDescription": "Metni panoya koyar",
+    "correct": "Düzelt",
+    "correctDescription": "Yazım, dil bilgisi ve noktalamayı LLM ile düzeltir, düzeltme modu olmadan",
+    "translate": "Çevir",
+    "translateDescription": "Metni komutta seçilen dile çevirir",
+    "aiTask": "Yapay zekâ görevi",
+    "aiTaskDescription": "Komutun talimatını LLM ile metne uygular",
+    "askInChat": "Sohbette sor",
+    "askInChatDescription": "Sohbeti metin ekli olarak açar",
+    "scriptDescription": "Bir kabuk komutunuzu veya betiğinizi çalıştırır",
+    "webhookDescription": "Bir HTTP isteği gönderir, ör. n8n veya Home Assistant'a",
+    "noLlm": "Yapay zekâ ayarlarında bu göreve bir LLM modeli atanmamış"
   }
 }

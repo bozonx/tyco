@@ -263,7 +263,6 @@
     "actionAfterRunLabel": "When done",
     "actionAfterRunNone": "Nothing",
     "actionAfterRunShowMenu": "Show action menu",
-    "actionAfterRunInfo": "“Show action menu” opens the menu on the result, to insert, copy or process it further. For a command it is the output (stdout), waited for up to 60 s. For a webhook it is the response: the “text” field of a JSON answer or the whole body.\nWith “Nothing”, a command still running after 3 s is left in the background.",
     "actionLogOutput": "Log the output",
     "actionLogOutputInfo": "Writes the output to actions.log in the app log folder (Settings → Storage → Logs). Failures are always logged. The text itself is not logged.",
     "actionWebhookMethod": "HTTP method",
@@ -664,17 +663,20 @@
     "working": {
       "correction": "Correcting…",
       "translate": "Translating…",
-      "aiTask": "Applying the AI task…"
+      "aiTask": "Applying the AI task…",
+      "command": "Running the command…"
     },
     "failed": {
       "correction": "Correction failed",
       "translate": "Translation failed",
-      "aiTask": "AI task failed"
+      "aiTask": "AI task failed",
+      "command": "Command failed"
     },
     "unchanged": {
       "correction": "No mistakes found",
       "translate": "The translation is the same as the text",
-      "aiTask": "The AI task left the text as it was"
+      "aiTask": "The AI task left the text as it was",
+      "command": "The command left the text as it was"
     },
     "noSelection": "Nothing is selected",
     "noTarget": "No application window has the focus",
@@ -690,8 +692,6 @@
     "hint": "Your scripts and webhooks. Set a command up once and run it from the main action menu, the command overlay and other applications (tyco-ctl, D-Bus).",
     "empty": "No commands yet.",
     "unnamed": "Untitled command",
-    "addScript": "Script",
-    "addWebhook": "Webhook",
     "newScript": "New script…",
     "newWebhook": "New webhook…",
     "editCommand": "Edit the command",
@@ -730,7 +730,27 @@
     "removeConfirm": "Delete the command “{name}”? It also leaves the main action menu.",
     "removeConfirmSecret": "Delete the command “{name}”? It also leaves the main action menu, and its saved authorization token is deleted.",
     "toolMissing": "Its tool is not available: the plugin is disabled or missing",
-    "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text"
+    "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text",
+    "toolLabel": "Tool",
+    "create": "Create a command",
+    "pickTool": "What should the command do?",
+    "afterRunReplaceSelection": "Replace the selection",
+    "afterRunCopy": "Copy",
+    "afterRunInfo": "What to do with the text the command returns. “Show action menu” opens the menu on it. “Replace the selection” puts it over the selected text the command got; when the text came from elsewhere, the menu opens instead. “Copy” puts it into the clipboard. For a script the output is stdout, waited for up to 60 s; with “Nothing”, a script still running after 3 s is left in the background. For a webhook it is the “text” field of a JSON answer or the whole body.",
+    "languageLabel": "Translate into",
+    "languageInfo": "The language is kept in the command: reordering the translation languages in the settings does not change it.",
+    "languagePlaceholder": "Choose a language",
+    "promptLabel": "Instruction for the LLM",
+    "promptInfo": "Applied to the text like the rule of an AI task. A copy is kept in the command: editing the AI tasks does not change it.",
+    "promptPlaceholder": "E.g. Make the text shorter and friendlier",
+    "promptFromTask": "Take the instruction from an AI task",
+    "promptFromTaskPlaceholder": "Choose an AI task…",
+    "fromPluginSettings": "From the plugin settings: {value}",
+    "pluginFieldsHint": "Empty fields take their value from the plugin settings.",
+    "fieldOn": "Yes",
+    "fieldOff": "No",
+    "errorNoLanguage": "Choose the language to translate into.",
+    "errorNoPrompt": "Write the instruction for the LLM."
   },
   "commandLauncher": {
     "title": "Commands",
@@ -754,5 +774,22 @@
     "failed": "The command “{name}” failed",
     "missing": "The command is not in the library",
     "unknown": "Unknown error"
+  },
+  "tools": {
+    "insert": "Insert into the window",
+    "insertDescription": "Types the text into the window you were working in",
+    "copy": "Copy",
+    "copyDescription": "Puts the text into the clipboard",
+    "correct": "Correct",
+    "correctDescription": "Fixes spelling, grammar and punctuation with the LLM, without the correction mode",
+    "translate": "Translate",
+    "translateDescription": "Translates the text into the language chosen in the command",
+    "aiTask": "AI task",
+    "aiTaskDescription": "Applies the instruction of the command to the text with the LLM",
+    "askInChat": "Ask in chat",
+    "askInChatDescription": "Opens the chat with the text attached",
+    "scriptDescription": "Runs a shell command or a script of yours",
+    "webhookDescription": "Sends an HTTP request, e.g. to n8n or Home Assistant",
+    "noLlm": "No LLM model is assigned to this task in the AI settings"
   }
 }

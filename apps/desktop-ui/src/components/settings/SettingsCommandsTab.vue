@@ -94,6 +94,7 @@
           <div v-if="isExpanded(command.id)" class="command-body">
             <CommandEditor
               :command="command"
+              :user-config="userConfig"
               :in-menu="inMenu.has(command.id)"
               :name-twins="externalNameTwins(commands, command, toolsStore)"
               @update="updateCommand(index, $event)"
@@ -103,14 +104,43 @@
       </div>
 
       <div class="commands-add">
-        <Button class="add-btn" sm ghost @click="addCommand('script')">
+        <Button
+          class="add-btn"
+          sm
+          ghost
+          :aria-expanded="pickingTool"
+          @click="pickingTool = !pickingTool"
+        >
           <Icon icon="mdi:plus" width="16" height="16" />
-          {{ t('commands.addScript') }}
+          {{ t('commands.create') }}
         </Button>
-        <Button class="add-btn" sm ghost @click="addCommand('webhook')">
-          <Icon icon="mdi:plus" width="16" height="16" />
-          {{ t('commands.addWebhook') }}
-        </Button>
+      </div>
+      <div v-if="pickingTool" class="tool-picker">
+        <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
+        <button
+          v-for="tool in tools"
+          :key="tool.id"
+          type="button"
+          class="tool-option"
+          :class="{ 'is-unavailable': tool.reason }"
+          @click="addCommand(tool.id)"
+        >
+          <Icon
+            :icon="tool.icon ?? 'mdi:puzzle-outline'"
+            width="18"
+            height="18"
+            class="shrink-0"
+          />
+          <span class="tool-option-text">
+            <span class="tool-option-name">{{ tool.name }}</span>
+            <span v-if="tool.description" class="tool-option-description">
+              {{ tool.description }}
+            </span>
+            <span v-if="tool.reason" class="tool-option-reason">
+              {{ tool.reason }}
+            </span>
+          </span>
+        </button>
       </div>
     </div>
   </SettingsSection>
@@ -132,6 +162,7 @@ import {
   webhookToolConfig,
 } from '../../lib/commands/command-config'
 import { moveItem } from '../../lib/sortable/sortable-list'
+import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
@@ -139,7 +170,6 @@ import SettingsSection from '../common/SettingsSection.vue'
 import CommandEditor from './CommandEditor.vue'
 import { Icon } from '@iconify/vue'
 import {
-  type BuiltinToolId,
   type CommandConfig,
   type MainActionConfig,
   type UserConfig,
@@ -199,10 +229,26 @@ async function reveal(id: string) {
 if (props.focusCommandId) void reveal(props.focusCommandId)
 
 const toolName = (command: CommandConfig) => {
-  if (command.toolId === 'script') return t('action.script')
-  if (command.toolId === 'webhook') return t('action.webhook')
-  return command.toolId
+  const tool = toolsStore.get(command.toolId)
+  return tool ? toolLabel(tool, t) : command.toolId
 }
+
+/** The tool picker of a new command is open */
+const pickingTool = ref(false)
+
+/** The tools a command can be made of, the unavailable ones with the reason */
+const tools = computed(() =>
+  toolsStore.list().map((tool) => {
+    const reason = tool.unavailableReason?.()
+    return {
+      id: tool.id,
+      icon: tool.icon,
+      name: toolLabel(tool, t),
+      description: tool.descriptionKey ? t(tool.descriptionKey) : '',
+      reason: reason ? t(reason) : '',
+    }
+  })
+)
 
 const listRef = ref<HTMLElement | null>(null)
 const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
@@ -217,8 +263,9 @@ const itemStyle = (index: number) => {
   return offset ? { transform: `translateY(${offset}px)` } : undefined
 }
 
-function addCommand(toolId: BuiltinToolId) {
-  const command = createCommand(toolId)
+function addCommand(toolId: string) {
+  pickingTool.value = false
+  const command = createCommand(toolId, undefined, toolsStore.get(toolId))
   emit('update:commands', [...commands.value, command])
   expanded.value = new Set([...expanded.value, command.id])
   void reveal(command.id)
@@ -259,6 +306,55 @@ function removeCommand(command: CommandConfig) {
 </script>
 
 <style scoped>
+.tool-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs, 0.25rem);
+}
+
+.tool-picker-hint {
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+.tool-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm, 0.5rem);
+  padding: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.tool-option:hover,
+.tool-option:focus-visible {
+  background: var(--app-hover);
+}
+
+.tool-option.is-unavailable {
+  opacity: 0.6;
+}
+
+.tool-option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tool-option-name {
+  font-size: 0.875rem;
+}
+
+.tool-option-description,
+.tool-option-reason {
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+.tool-option-reason {
+  color: var(--color-warning);
+}
+
 .commands-tab {
   display: flex;
   flex-direction: column;

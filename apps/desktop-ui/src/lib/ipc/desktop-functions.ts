@@ -99,6 +99,8 @@ export interface DesktopFunctions {
   }
   logCommandRun: { args: [record: CommandRunRecord]; result: void }
   setToolCatalog: { args: [tools: ToolCatalogEntry[]]; result: void }
+  copyText: { args: [text: string]; result: void }
+  replaceSelectionWithCommand: { args: [commandId: string]; result: void }
 }
 
 export type DesktopFunctionName = keyof DesktopFunctions

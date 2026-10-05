@@ -205,13 +205,45 @@ export interface PluginMainAction {
 /** Stands in for the text in a command, a webhook URL or its payload */
 export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 
-/** What a script or webhook action does once it is done */
-export const CUSTOM_ACTION_AFTER_RUN = ['none', 'showMenu'] as const
+/**
+ * What a command does with the text its tool returns: nothing, the result menu,
+ * replacing the selection it got the text from (the result menu when the text
+ * came from elsewhere), or the clipboard
+ */
+export const CUSTOM_ACTION_AFTER_RUN = [
+  'none',
+  'showMenu',
+  'replaceSelection',
+  'copy',
+] as const
 export type CustomActionAfterRun = (typeof CUSTOM_ACTION_AFTER_RUN)[number]
 
-/** Built-in tools a command can run; plugin and MCP tools come later */
+/** Tools that run what the user configured; the way out for anything else */
 export const BUILTIN_TOOL_IDS = ['script', 'webhook'] as const
 export type BuiltinToolId = (typeof BUILTIN_TOOL_IDS)[number]
+
+/** Tools over what the app already does, see `lib/tools/core-tools.ts` */
+export const CORE_TOOL_IDS = [
+  'core.insert',
+  'core.copy',
+  'core.correct',
+  'core.translate',
+  'core.aiTask',
+  'core.askInChat',
+] as const
+export type CoreToolId = (typeof CORE_TOOL_IDS)[number]
+
+/** `toolConfig` of a `core.translate` command */
+export interface TranslateToolConfig {
+  /** Target language code, copied from a slot when the command is made */
+  language: string
+}
+
+/** `toolConfig` of a `core.aiTask` command */
+export interface AiTaskToolConfig {
+  /** Instruction for the LLM, as the rule of an AI task */
+  prompt: string
+}
 
 /** `toolConfig` of a `script` command */
 export interface ScriptToolConfig {
@@ -267,7 +299,10 @@ export interface CommandConfig {
    * `[optional]` words; the name is matched as well
    */
   phrases: string[]
-  /** `script`, `webhook`, `<pluginName>.<toolId>` or `mcp:<server>.<tool>` */
+  /**
+   * `script`, `webhook`, `core.<tool>`, `<pluginName>.<toolId>` or
+   * `mcp:<server>.<tool>`
+   */
   toolId: string
   /** Values for the tool's config fields */
   toolConfig: Record<string, unknown>

@@ -23,12 +23,19 @@ pub fn is_start_mode(value: &str) -> bool {
     START_MODES.contains(&value)
 }
 
+/// Prefix of the selection action that runs a command of the library.
+pub const COMMAND_ACTION_PREFIX: &str = "command:";
+
 /// Actions that replace the selection in the focused window with their
 /// result: `correction`, `translate.<slot>` and `aiTask.<slot>`, where the
-/// slot indexes the configured translation languages or AI tasks.
+/// slot indexes the configured translation languages or AI tasks, and
+/// `command:<id>`, a command of the library that returns a text.
 pub fn is_selection_action(value: &str) -> bool {
     if value == "correction" {
         return true;
+    }
+    if let Some(id) = value.strip_prefix(COMMAND_ACTION_PREFIX) {
+        return !id.trim().is_empty();
     }
     let Some((kind, slot)) = value.split_once('.') else {
         return false;
@@ -175,7 +182,12 @@ mod tests {
 
     #[test]
     fn validates_selection_actions() {
-        for valid in ["correction", "translate.0", "aiTask.12"] {
+        for valid in [
+            "correction",
+            "translate.0",
+            "aiTask.12",
+            "command:default:core.correct:fix",
+        ] {
             assert!(is_selection_action(valid), "{valid}");
         }
         for invalid in [
@@ -185,6 +197,8 @@ mod tests {
             "aiTask.x",
             "other.1",
             "aiTask.1234",
+            "command:",
+            "command: ",
         ] {
             assert!(!is_selection_action(invalid), "{invalid}");
         }

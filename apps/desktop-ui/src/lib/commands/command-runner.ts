@@ -17,6 +17,8 @@ export interface CommandRunnerDependencies {
   /** Opens the action menu on `text`, the result of a command on `sourceText` */
   showResultMenu?: (text: string, sourceText: string) => void
   closeWindow?: () => void
+  /** Puts the output of a command into the clipboard */
+  copyText?: (text: string) => Promise<void>
   /** The dictation language, for tools that parse the text */
   language?: () => string | undefined
 }
@@ -35,6 +37,14 @@ export interface CommandRunOutcome {
   cancelled?: boolean
   /** Why it failed, for the log */
   message?: string
+}
+
+/** A tool result, or why the tool was not called */
+type InvokeResult = ToolResult & {
+  /** Why the call failed, for the log */
+  failure?: string
+  /** The text the tool got, the source of its output */
+  sourceText?: string
 }
 
 const succeeded: CommandRunOutcome = { success: true }
@@ -83,29 +93,38 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
     return succeeded
   }
 
-  /** Runs `command` on `text`; a command that takes no text gets none */
-  const run = async (
+  /**
+   * Calls the tool of `command` on `text`: checks that it can run, turns the
+   * text into its input and runs it. Reports nothing; `failure` tells the log
+   * why a call failed
+   */
+  const invoke = async (
     command: CommandConfig,
     text: string,
-    options: CommandRunOptions = {}
-  ): Promise<CommandRunOutcome> => {
+    options: CommandRunOptions
+  ): Promise<InvokeResult> => {
     if (!command.enabled) {
-      deps.showToast('toast.commandDisabled', 'warn')
-      return failed('Disabled')
+      return {
+        ok: false,
+        level: 'warn',
+        messageKey: 'toast.commandDisabled',
+        failure: 'Disabled',
+      }
     }
     const tool = deps.tools.get(command.toolId)
     const reason = commandUnavailableReason(command, deps.tools)
     if (!tool || reason) {
-      deps.showError?.('toast.commandUnavailable', commandLabel(command))
-      return failed(reason ?? 'Unknown tool')
+      return {
+        ok: false,
+        messageKey: 'toast.commandUnavailable',
+        message: commandLabel(command),
+        failure: reason ?? 'Unknown tool',
+      }
     }
     const signal = options.signal ?? new AbortController().signal
-    if (signal.aborted) return cancelled
+    if (signal.aborted) return { ok: false, cancelled: true }
 
     const config = toolCallConfig(tool, command.toolConfig)
-    let result: ToolResult
-    /** The text the command got, the source of its output */
-    let sourceText = ''
     try {
       const parsed = await resolveToolInput({
         tool,
@@ -114,13 +133,14 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         llmArgumentParsing: command.llmArgumentParsing,
         context: { now: new Date(), signal, language: deps.language?.() },
       })
-      if (signal.aborted) return cancelled
+      if (signal.aborted) return { ok: false, cancelled: true }
       if (!parsed.ok) {
-        report({ ...parsed, ok: false })
-        return failed(parsed.message ?? parsed.messageKey ?? 'Invalid input')
+        return {
+          ...parsed,
+          failure: parsed.message ?? parsed.messageKey ?? 'Invalid input',
+        }
       }
-      if (Object.keys(parsed.input).length) sourceText = text
-      result = await tool.run({
+      const result = await tool.run({
         input: parsed.input,
         config,
         source: options.source ?? 'menu',
@@ -130,29 +150,94 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
           name: commandLabel(command),
           logOutput: command.logOutput,
         },
-        wantsOutput: command.afterRun === 'showMenu',
+        wantsOutput: command.afterRun !== 'none',
       })
+      if (signal.aborted) return { ok: false, cancelled: true }
+      return {
+        ...result,
+        sourceText: Object.keys(parsed.input).length ? text : '',
+      }
     } catch (error) {
-      if (signal.aborted) return cancelled
+      if (signal.aborted) return { ok: false, cancelled: true }
+      const message = errorMessage(error)
+      return {
+        ok: false,
+        messageKey: 'toast.commandFailed',
+        message,
+        failure: message,
+      }
+    }
+  }
+
+  /** Puts the output into the clipboard, or warns that there is none */
+  const copyOutput = async (
+    output: string,
+    keepWindow?: boolean
+  ): Promise<CommandRunOutcome> => {
+    const text = output.replace(/[\r\n]+$/, '')
+    if (!text.trim()) {
+      deps.showToast('toast.actionEmptyOutput', 'warn')
+      return failed('Empty output')
+    }
+    try {
+      await deps.copyText?.(text)
+    } catch (error) {
       const message = errorMessage(error)
       deps.showError?.('toast.commandFailed', message)
       return failed(message)
     }
-
-    if (result.cancelled || signal.aborted) return cancelled
-    if (!result.ok) {
-      report(result)
-      return failed(result.message ?? result.messageKey ?? 'Failed')
-    }
-    if (command.afterRun === 'showMenu') {
-      return showOutput(result.content ?? '', sourceText)
-    }
-    report(result)
-    if (!result.keepWindow) deps.closeWindow?.()
+    deps.showToast('toast.copied', 'success')
+    if (!keepWindow) deps.closeWindow?.()
     return succeeded
   }
 
-  return { run }
+  /** Runs `command` on `text`; a command that takes no text gets none */
+  const run = async (
+    command: CommandConfig,
+    text: string,
+    options: CommandRunOptions = {}
+  ): Promise<CommandRunOutcome> => {
+    const result = await invoke(command, text, options)
+    if (result.cancelled) return cancelled
+    if (!result.ok) {
+      report(result)
+      return failed(
+        result.failure ?? result.message ?? result.messageKey ?? 'Failed'
+      )
+    }
+    switch (command.afterRun) {
+      // the text did not come from a selection here: the overlay hands a
+      // selection over to a selection run, see `transform`
+      case 'replaceSelection':
+      case 'showMenu':
+        return showOutput(result.content ?? '', result.sourceText ?? '')
+      case 'copy':
+        return copyOutput(result.content ?? '', result.keepWindow)
+      default:
+        report(result)
+        if (!result.keepWindow) deps.closeWindow?.()
+        return succeeded
+    }
+  }
+
+  /**
+   * Runs `command` on `text` for its output, which replaces the selection; the
+   * caller reports how it went
+   */
+  const transform = async (
+    command: CommandConfig,
+    text: string,
+    options: CommandRunOptions = {}
+  ): Promise<ToolResult> => {
+    const {
+      failure: _failure,
+      sourceText: _source,
+      ...result
+    } = await invoke(command, text, options)
+    return result
+  }
+
+  return { run, transform }
 }
 
 export type CommandRunner = ReturnType<typeof createCommandRunner>

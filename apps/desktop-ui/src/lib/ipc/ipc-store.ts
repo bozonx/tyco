@@ -202,6 +202,14 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.SET_TOOL_CATALOG,
       buildArgs: ([tools]) => ({ tools }),
     },
+    copyText: {
+      command: DESKTOP_COMMANDS.COPY_TEXT,
+      buildArgs: ([text]) => ({ text }),
+    },
+    replaceSelectionWithCommand: {
+      command: DESKTOP_COMMANDS.REPLACE_SELECTION_WITH_COMMAND,
+      buildArgs: ([commandId]) => ({ commandId }),
+    },
   }
 }
 

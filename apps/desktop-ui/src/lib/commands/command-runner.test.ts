@@ -431,3 +431,64 @@ describe('plugin tools', () => {
     expect(deps.showError).toHaveBeenCalledWith('toast.commandFailed', 'boom')
   })
 })
+
+describe('the output of a command', () => {
+  const echo = (output: string): ToolDefinition => ({
+    id: 'Test.echo',
+    description: 'Echo',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    run: vi.fn(async () => ({ ok: true, content: output })),
+  })
+  const command = (afterRun: CommandConfig['afterRun']): CommandConfig => ({
+    ...createCommand('Test.echo', 'e-1'),
+    name: 'Echo',
+    afterRun,
+  })
+
+  it('copies the output and closes the window', async () => {
+    const copyText = vi.fn(async () => {})
+    const { deps, runner } = setup({ copyText }, [echo('result\n')])
+    expect(await runner.run(command('copy'), 'x')).toEqual({ success: true })
+    expect(copyText).toHaveBeenCalledWith('result')
+    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.closeWindow).toHaveBeenCalled()
+  })
+
+  it('warns when there is no output to copy', async () => {
+    const copyText = vi.fn(async () => {})
+    const { deps, runner } = setup({ copyText }, [echo(' ')])
+    const outcome = await runner.run(command('copy'), 'x')
+    expect(outcome.success).toBe(false)
+    expect(copyText).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.actionEmptyOutput',
+      'warn'
+    )
+  })
+
+  it('shows the output in the menu when there is no selection to replace', async () => {
+    const tool = echo('Hello')
+    const { deps, runner } = setup({}, [tool])
+    await runner.run(command('replaceSelection'), 'hola')
+    expect(deps.showResultMenu).toHaveBeenCalledWith('Hello', 'hola')
+    expect(vi.mocked(tool.run).mock.calls[0][0].wantsOutput).toBe(true)
+  })
+
+  it('returns the output for a selection run and reports nothing', async () => {
+    const { deps, runner } = setup({}, [echo('Hello')])
+    expect(
+      await runner.transform(command('replaceSelection'), 'hola', {
+        source: 'selection',
+      })
+    ).toEqual({ ok: true, content: 'Hello' })
+    expect(
+      await runner.transform(
+        { ...command('replaceSelection'), enabled: false },
+        'hola'
+      )
+    ).toMatchObject({ ok: false, messageKey: 'toast.commandDisabled' })
+    expect(deps.showToast).not.toHaveBeenCalled()
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
+    expect(deps.closeWindow).not.toHaveBeenCalled()
+  })
+})

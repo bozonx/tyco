@@ -65,6 +65,13 @@ pub async fn type_into_window_and_close(
     Ok(())
 }
 
+/// Leaves the windows as they are: a command run in the background copies
+/// its output while another Tyco window may be in use.
+#[tauri::command(async)]
+pub fn copy_text(text: String) -> Result<(), AppError> {
+    copy_to_clipboard(&text)
+}
+
 #[tauri::command(async)]
 pub fn put_into_clipboard_and_close(app: AppHandle, text: String) -> Result<(), AppError> {
     copy_to_clipboard(&text)?;
