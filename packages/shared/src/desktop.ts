@@ -104,6 +104,8 @@ export interface LocalState {
   recentAiPrompts?: string[]
   /** Languages picked from the full list in the translate menu, newest first */
   recentTranslateLanguages?: string[]
+  /** The source language last picked in the translate menu; none is auto-detect */
+  translateSourceLanguage?: string | null
 }
 
 export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }

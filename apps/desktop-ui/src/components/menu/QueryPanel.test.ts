@@ -47,4 +47,25 @@ describe('QueryPanel', () => {
     expect(wrapper.emitted('save')).toHaveLength(1)
     expect(wrapper.emitted('back')).toHaveLength(1)
   })
+
+  it('heads each group and highlights the selected option first', async () => {
+    const grouped = [
+      { id: 'en', label: 'English', group: 'Recent' },
+      { id: 'de', label: 'German', group: 'All', selected: true },
+      { id: 'fr', label: 'French', group: 'All' },
+    ]
+    const wrapper = mount(QueryPanel, {
+      props: { modelValue: '', options: grouped, autoHighlight: true },
+    })
+
+    expect(
+      wrapper.findAll('.query-panel-group').map((group) => group.text())
+    ).toEqual(['Recent', 'All'])
+
+    await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+
+    expect(wrapper.emitted('submit')).toEqual([
+      [{ option: grouped[1], ctrl: false }],
+    ])
+  })
 })

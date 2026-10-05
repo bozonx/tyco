@@ -27,6 +27,9 @@ pub struct LocalState {
     /// Languages picked from the full list in the translate menu, newest first.
     #[serde(default)]
     pub recent_translate_languages: Vec<String>,
+    /// The source language last picked in the translate menu; none is auto-detect.
+    #[serde(default)]
+    pub translate_source_language: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

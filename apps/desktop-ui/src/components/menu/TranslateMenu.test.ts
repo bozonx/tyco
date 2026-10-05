@@ -110,4 +110,45 @@ describe('TranslateMenu', () => {
       expect.objectContaining({ sourceLanguage: 'pl_PL' })
     )
   })
+
+  it('remembers the source language and swaps it with the target', async () => {
+    const ipcStore = useIpcStore()
+    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
+    ipcStore.params.userConfig.toTranslateLanguages = ['de_DE']
+    const wrapper = mountMenu()
+
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.trigger('keydown', { key: 's', code: 'KeyS', altKey: true })
+    expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
+      translateSourceLanguage: 'de_DE',
+    })
+
+    await input.trigger('keydown', { key: 'Enter' })
+
+    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
+    expect(translateTo).toHaveBeenCalledWith(
+      'pl_PL',
+      'Hello world',
+      expect.objectContaining({ sourceLanguage: 'de_DE' })
+    )
+  })
+
+  it('stores auto-detect as no source language', async () => {
+    const ipcStore = useIpcStore()
+    ipcStore.params.localState = { translateSourceLanguage: 'pl_PL' }
+    const wrapper = mountMenu()
+
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.trigger('keydown', { key: 'Tab' })
+    await input.setValue('auto')
+    await input.trigger('keydown', { key: 'Enter' })
+
+    expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
+      translateSourceLanguage: null,
+    })
+  })
 })

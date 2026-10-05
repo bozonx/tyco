@@ -3,24 +3,30 @@
   <div class="query-panel" @keyup.esc.prevent.stop="emit('back')">
     <div class="query-panel-head">
       <slot name="before-input" />
-      <input
-        ref="inputRef"
-        class="query-panel-input"
-        type="text"
-        :value="props.modelValue"
-        :placeholder="props.placeholder"
-        :aria-label="props.placeholder"
-        role="combobox"
-        aria-autocomplete="list"
-        :aria-expanded="props.options.length > 0"
-        :aria-activedescendant="
-          highlighted >= 0 ? `query-option-${highlighted}` : undefined
-        "
-        spellcheck="false"
-        autocomplete="off"
-        @input="onInput"
-        @keydown="onKeyDown"
-      />
+      <label class="query-panel-field">
+        <span v-if="props.label" class="query-panel-label">{{
+          props.label
+        }}</span>
+        <input
+          ref="inputRef"
+          class="query-panel-input"
+          type="text"
+          :value="props.modelValue"
+          :placeholder="props.placeholder"
+          :aria-label="props.placeholder"
+          role="combobox"
+          aria-autocomplete="list"
+          :aria-expanded="props.options.length > 0"
+          :aria-activedescendant="
+            highlighted >= 0 ? `query-option-${highlighted}` : undefined
+          "
+          spellcheck="false"
+          autocomplete="off"
+          @input="onInput"
+          @keydown="onKeyDown"
+        />
+      </label>
+      <slot name="after-input" />
     </div>
 
     <ul
@@ -28,23 +34,51 @@
       class="query-panel-options"
       role="listbox"
     >
-      <li
-        v-for="(option, index) in props.options"
-        :id="`query-option-${index}`"
-        :key="option.id"
-        role="option"
-        class="query-panel-option"
-        :class="{ 'is-highlighted': index === highlighted }"
-        :aria-selected="index === highlighted"
-        @mouseenter="highlighted = index"
-        @mousedown.prevent
-        @click="emit('submit', { option, ctrl: false })"
-      >
-        <span class="query-panel-option-label">{{ option.label }}</span>
-        <span v-if="option.hint" class="query-panel-option-hint">{{
-          option.hint
-        }}</span>
-      </li>
+      <template v-for="(option, index) in props.options" :key="option.id">
+        <li
+          v-if="
+            option.group && option.group !== props.options[index - 1]?.group
+          "
+          class="query-panel-group"
+          role="presentation"
+        >
+          {{ option.group }}
+        </li>
+        <li
+          :id="`query-option-${index}`"
+          role="option"
+          class="query-panel-option"
+          :class="{
+            'is-highlighted': index === highlighted,
+            'is-selected': option.selected,
+          }"
+          :aria-selected="index === highlighted"
+          @mouseenter="highlighted = index"
+          @mousedown.prevent
+          @click="emit('submit', { option, ctrl: false })"
+        >
+          <span class="query-panel-option-label">
+            <Icon
+              v-if="option.icon"
+              :icon="option.icon"
+              height="16"
+              class="query-panel-option-icon"
+            />
+            <span class="query-panel-option-text">{{ option.label }}</span>
+          </span>
+          <span class="query-panel-option-end">
+            <span v-if="option.hint" class="query-panel-option-hint">{{
+              option.hint
+            }}</span>
+            <Icon
+              v-if="option.selected"
+              icon="mdi:check"
+              height="16"
+              class="query-panel-option-check"
+            />
+          </span>
+        </li>
+      </template>
     </ul>
     <p v-else-if="props.emptyText" class="query-panel-empty">
       {{ props.emptyText }}
@@ -75,10 +109,17 @@ import {
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
 import KeyButton from '../common/KeyButton.vue'
+import { Icon } from '@iconify/vue'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */
   hint?: string
+  /** Shown before the label */
+  icon?: string
+  /** A heading is shown above the first option of each run of the same group */
+  group?: string
+  /** The current value: marked, and highlighted first with `autoHighlight` */
+  selected?: boolean
 }
 
 export interface QueryPanelHint {
@@ -99,6 +140,8 @@ const props = withDefaults(
   defineProps<{
     modelValue: string
     placeholder?: string
+    /** A caption above the input */
+    label?: string
     options?: QueryPanelOption[]
     hints?: QueryPanelHint[]
     /**
@@ -110,6 +153,7 @@ const props = withDefaults(
   }>(),
   {
     placeholder: '',
+    label: '',
     options: () => [],
     hints: () => [],
     autoHighlight: false,
@@ -129,7 +173,15 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const highlighted = ref(-1)
 
 const resetHighlight = () => {
-  highlighted.value = props.autoHighlight && props.options.length > 0 ? 0 : -1
+  if (!props.autoHighlight || props.options.length === 0) {
+    highlighted.value = -1
+    return
+  }
+  highlighted.value = Math.max(
+    0,
+    props.options.findIndex((option) => option.selected)
+  )
+  scrollToHighlighted()
 }
 
 watch(() => props.options, resetHighlight, { immediate: true })
@@ -140,11 +192,11 @@ const onInput = (event: Event) => {
   emit('update:modelValue', (event.target as HTMLInputElement).value)
 }
 
-const scrollToHighlighted = () => {
+function scrollToHighlighted() {
   void nextTick(() =>
     document
       .getElementById(`query-option-${highlighted.value}`)
-      ?.scrollIntoView({ block: 'nearest' })
+      ?.scrollIntoView?.({ block: 'nearest' })
   )
 }
 
@@ -206,12 +258,29 @@ defineExpose({ focus })
 
 .query-panel-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-xs);
 }
 
+.query-panel-field {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.query-panel-label {
+  padding-left: 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
 .query-panel-input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   height: 2.25rem;
   padding: 0 0.75rem;
@@ -257,10 +326,49 @@ defineExpose({ focus })
   color: var(--color-primary);
 }
 
+.query-panel-group {
+  padding: 0.375rem 0.5rem 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+
+.query-panel-group:first-child {
+  padding-top: 0.125rem;
+}
+
+.query-panel-option.is-selected {
+  font-weight: 600;
+}
+
 .query-panel-option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.query-panel-option-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.query-panel-option-icon {
+  flex-shrink: 0;
+}
+
+.query-panel-option-end {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.query-panel-option-check {
+  color: var(--color-primary);
 }
 
 .query-panel-option-hint {

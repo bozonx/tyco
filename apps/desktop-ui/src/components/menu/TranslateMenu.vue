@@ -11,6 +11,11 @@
       <QueryPanel
         v-if="pickerMode"
         v-model="query"
+        :label="
+          field === 'source'
+            ? t('menu.translateSourceLanguage')
+            : t('menu.translateTargetLanguage')
+        "
         :placeholder="
           field === 'source'
             ? t('menu.translateSourcePlaceholder')
@@ -23,20 +28,43 @@
         @submit="submitLanguage"
         @tab="switchField"
         @back="closePicker"
+        @keydown="onPickerKeyDown"
       >
-        <template #before-input>
+        <template v-if="field === 'target'" #before-input>
+          <LanguageField
+            :label="t('menu.translateSourceLanguage')"
+            :value="sourceLabel"
+            :icon="sourceIcon"
+            @activate="switchField"
+          />
           <button
             type="button"
-            class="translate-source"
-            :class="{ 'is-active': field === 'source' }"
-            :title="t('menu.translateSourceHint')"
+            class="translate-swap"
+            :title="`${t('menu.translateSwap')} (Alt+S)`"
+            :disabled="!swappable"
             @mousedown.prevent
-            @click="switchField"
+            @click="swapLanguages"
           >
-            {{ t('menu.translateFrom') }}
-            <strong>{{ sourceLabel }}</strong>
+            <Icon icon="mdi:swap-horizontal" height="18" />
           </button>
-          <Icon icon="mdi:arrow-right" height="16" class="translate-arrow" />
+        </template>
+        <template v-else #after-input>
+          <button
+            type="button"
+            class="translate-swap"
+            :title="`${t('menu.translateSwap')} (Alt+S)`"
+            :disabled="!swappable"
+            @mousedown.prevent
+            @click="swapLanguages"
+          >
+            <Icon icon="mdi:swap-horizontal" height="18" />
+          </button>
+          <LanguageField
+            :label="t('menu.translateTargetLanguage')"
+            :value="targetLanguage ? languageLabel(targetLanguage) : ''"
+            :emptyText="t('menu.translateNotChosen')"
+            @activate="switchField"
+          />
         </template>
       </QueryPanel>
       <ShortcutList
@@ -62,11 +90,13 @@ import {
   buildLanguageOptions,
   getLanguageLabel,
 } from '../../lib/locale/language'
+import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import {
-  filterOptions,
-  pushRecent,
-  uniqueIds,
-} from '../../lib/menu-query/menu-query'
+  type LanguageGroup,
+  canSwapLanguages,
+  defaultTargetLanguage,
+  groupLanguages,
+} from '../../lib/translate-picker/translate-picker'
 import { type ActionItem } from '../../stores/actionMenu'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -75,6 +105,7 @@ import { useRouteParams } from '../../stores/routeParams'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import TextPreview from '../common/TextPreview.vue'
+import LanguageField from './LanguageField.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,
@@ -99,7 +130,11 @@ const pickerMode = ref(false)
 /** Which language the input picks */
 const field = ref<'target' | 'source'>('target')
 const query = ref('')
-const sourceLanguage = ref(AUTO_LANGUAGE_VALUE)
+const sourceLanguage = ref(
+  ipcStore.params.localState?.translateSourceLanguage ?? AUTO_LANGUAGE_VALUE
+)
+/** The language Enter translates into while nothing else is typed */
+const targetLanguage = ref<string>()
 
 const NATIVE_NAMES = new Map<string, string>(
   SUPPORTED_USER_LANGUAGE_OPTIONS.map((option) => [option.id, option.name])
@@ -124,12 +159,26 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   )
 )
 
+const recentLanguages = computed(
+  () => ipcStore.params.localState?.recentTranslateLanguages ?? []
+)
+
+const languageSources = computed(() => ({
+  recent: recentLanguages.value,
+  configured: ipcStore.params.userConfig.toTranslateLanguages,
+  all: buildLanguageOptions([], false).map((option) => option.id),
+}))
+
 const otherLanguageAction: ActionItem = {
   labelKey: 'menu.translateOtherLanguage',
   icon: 'mdi:translate-variant',
   action: async () => {
     field.value = 'target'
     query.value = ''
+    targetLanguage.value ??= defaultTargetLanguage(
+      languageSources.value,
+      sourceLanguage.value
+    )
     pickerMode.value = true
   },
 }
@@ -138,11 +187,19 @@ const closePicker = () => {
   pickerMode.value = false
 }
 
-const recentLanguages = computed(
-  () => ipcStore.params.localState?.recentTranslateLanguages ?? []
-)
+const AUTO_ICON = 'mdi:auto-fix'
 
-const toOption = (id: string): QueryPanelOption => {
+const GROUP_LABELS: Record<LanguageGroup, string> = {
+  recent: 'menu.translateGroupRecent',
+  mine: 'menu.translateGroupMine',
+  all: 'menu.translateGroupAll',
+}
+
+const toOption = (
+  id: string,
+  group: LanguageGroup,
+  selected: boolean
+): QueryPanelOption => {
   const label = languageLabel(id)
   const native = NATIVE_NAMES.get(id)
   return {
@@ -150,42 +207,60 @@ const toOption = (id: string): QueryPanelOption => {
     label,
     hint: native && native !== label ? native : undefined,
     keywords: native ? [native] : [],
+    group: t(GROUP_LABELS[group]),
+    selected,
   }
 }
 
-/** Recent picks first, then the configured languages, then all the others */
-const targetOptions = computed<QueryPanelOption[]>(() =>
-  uniqueIds(
-    [
-      ...recentLanguages.value,
-      ...ipcStore.params.userConfig.toTranslateLanguages.filter(
-        (lang: string | null): lang is string => Boolean(lang)
-      ),
-      ...buildLanguageOptions([], false).map((option) => option.id),
-    ].map(toOption)
-  )
+/**
+ * The list of the searched field without the language of the other one;
+ * auto-detect leads the source list
+ */
+const fieldOptions = computed<QueryPanelOption[]>(() => {
+  if (field.value === 'target') {
+    return groupLanguages(languageSources.value, sourceLanguage.value).map(
+      ({ id, group }) => toOption(id, group, id === targetLanguage.value)
+    )
+  }
+
+  return [
+    {
+      id: AUTO_LANGUAGE_VALUE,
+      label: t('menu.translateAutoDetect'),
+      icon: AUTO_ICON,
+      keywords: ['auto'],
+      selected: sourceLanguage.value === AUTO_LANGUAGE_VALUE,
+    },
+    ...groupLanguages(languageSources.value, targetLanguage.value).map(
+      ({ id, group }) => toOption(id, group, id === sourceLanguage.value)
+    ),
+  ]
+})
+
+/** While searching, the matches are ordered by relevance, so not grouped */
+const pickerOptions = computed(() =>
+  query.value.trim()
+    ? filterOptions(fieldOptions.value, query.value).map((option) => ({
+        ...option,
+        group: undefined,
+      }))
+    : fieldOptions.value
 )
 
-const sourceOptions = computed<QueryPanelOption[]>(() => [
-  {
-    id: AUTO_LANGUAGE_VALUE,
-    label: t('menu.translateAutoDetect'),
-    keywords: ['auto'],
-  },
-  ...targetOptions.value,
-])
-
-const pickerOptions = computed(() =>
-  filterOptions(
-    field.value === 'source' ? sourceOptions.value : targetOptions.value,
-    query.value
-  )
+const isAutoSource = computed(
+  () => sourceLanguage.value === AUTO_LANGUAGE_VALUE
 )
 
 const sourceLabel = computed(() =>
-  sourceLanguage.value === AUTO_LANGUAGE_VALUE
+  isAutoSource.value
     ? t('menu.translateAutoDetect')
     : languageLabel(sourceLanguage.value)
+)
+
+const sourceIcon = computed(() => (isAutoSource.value ? AUTO_ICON : ''))
+
+const swappable = computed(() =>
+  canSwapLanguages(sourceLanguage.value, targetLanguage.value)
 )
 
 const pickerHints = computed<QueryPanelHint[]>(() => [
@@ -197,13 +272,12 @@ const pickerHints = computed<QueryPanelHint[]>(() => [
         : t('menu.translate'),
     disabled: pickerOptions.value.length === 0,
   },
+  { keys: ['Tab'], label: t('menu.translateSwitchField'), action: switchField },
   {
-    keys: ['Tab'],
-    label:
-      field.value === 'source'
-        ? t('menu.translateTargetLanguage')
-        : t('menu.translateSourceLanguage'),
-    action: switchField,
+    keys: ['Alt', 'S'],
+    label: t('menu.translateSwap'),
+    disabled: !swappable.value,
+    action: swapLanguages,
   },
   { keys: ['Esc'], label: t('common.back'), action: closePicker },
 ])
@@ -213,15 +287,47 @@ function switchField() {
   query.value = ''
 }
 
+function setSourceLanguage(id: string) {
+  sourceLanguage.value = id
+  void ipcStore.patchLocalState({
+    translateSourceLanguage: id === AUTO_LANGUAGE_VALUE ? null : id,
+  })
+}
+
+function swapLanguages() {
+  const target = targetLanguage.value
+  if (!canSwapLanguages(sourceLanguage.value, target)) return
+
+  targetLanguage.value = sourceLanguage.value
+  setSourceLanguage(target)
+  query.value = ''
+}
+
+function onPickerKeyDown(event: KeyboardEvent) {
+  if (
+    event.altKey &&
+    event.code === 'KeyS' &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  ) {
+    event.preventDefault()
+    swapLanguages()
+  }
+}
+
 async function submitLanguage({ option }: QueryPanelSubmit) {
   if (!option) return
 
   if (field.value === 'source') {
-    sourceLanguage.value = option.id
+    setSourceLanguage(option.id)
+    if (targetLanguage.value === option.id) targetLanguage.value = undefined
     field.value = 'target'
     query.value = ''
     return
   }
+
+  targetLanguage.value = option.id
 
   void ipcStore.patchLocalState({
     recentTranslateLanguages: pushRecent(recentLanguages.value, option.id),
@@ -296,33 +402,28 @@ const translate = async (targetLanguage: string, source?: string) => {
 </script>
 
 <style scoped>
-.translate-source {
+.translate-swap {
   display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
   height: 2.25rem;
-  padding: 0 0.625rem;
-  border: 1px solid var(--app-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
   cursor: pointer;
 }
 
-.translate-source strong {
-  font-weight: 600;
+.translate-swap:hover:not(:disabled) {
+  border-color: var(--app-border);
+  background-color: var(--app-hover);
   color: var(--color-base-content);
 }
 
-.translate-source.is-active {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  background-color: var(--app-accent-soft);
-}
-
-.translate-arrow {
-  flex-shrink: 0;
-  color: var(--app-text-faint);
+.translate-swap:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 </style>
