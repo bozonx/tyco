@@ -9,7 +9,6 @@
       :label="t('chat.selectedText')"
       :text="attachment"
       icon="mdi:selection-drag"
-      :initially-open="expanded"
       removable
       @remove="chatStore.removeAttachment(index)"
     />
@@ -19,7 +18,6 @@
       :label="editorContextLabel"
       :text="chatStore.editorContext.text"
       icon="mdi:file-document-edit-outline"
-      :initially-open="expanded"
       removable
       @remove="dismissEditorContext"
     />
@@ -34,11 +32,6 @@ import { useChatStore } from '../../stores/chat'
 import ChatAttachment from './ChatAttachment.vue'
 
 /** What goes to the next chat message along with it */
-defineProps<{
-  /** Shows the texts themselves, not only their labels */
-  expanded?: boolean
-}>()
-
 const chatStore = useChatStore()
 const { t } = useI18n()
 

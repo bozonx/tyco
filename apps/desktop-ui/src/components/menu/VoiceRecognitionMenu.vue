@@ -60,9 +60,11 @@
     :onEsc="cancel"
   >
     <template #preview>
-      <!-- the question goes to the chat with these texts; the user sees what
-           the answer will be about and can remove a wrong one -->
-      <ChatContextList v-if="quickSend" class="voice-context" expanded />
+      <!-- the question goes to the chat with this text: the user sees what
+           the answer will be about -->
+      <div v-if="chatContext" class="voice-context">
+        <TextPreview :text="chatContext" />
+      </div>
       <AudioWaveform
         :level="audioLevel"
         :peak="audioPeak"
@@ -128,12 +130,13 @@ import {
 } from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceSession } from '../../lib/stt/voice-session'
+import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
-import ChatContextList from '../chat/ChatContextList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import TextPreview from '../common/TextPreview.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
@@ -195,6 +198,17 @@ const isTranscribing = ref(false)
 const audioLevel = ref(0)
 const audioPeak = ref(0)
 const recordingDurationMs = ref(0)
+const chatStore = useChatStore()
+/** What goes to the chat along with the question, see `ChatContextList` */
+const chatContext = computed(() => {
+  if (!props.quickSend) return ''
+  return [
+    ...(chatStore.newChatParams?.attachments || []),
+    chatStore.editorContext?.text,
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+})
 const submitKeys = computed(() => {
   const hotkey = ipcStore.params?.userConfig?.hotkeys?.voiceChat
   return hotkey ? ['Enter', 'Space', hotkey] : ['Enter', 'Space']
@@ -542,8 +556,11 @@ onUnmounted(() => {
 }
 
 .voice-context {
-  width: 100%;
-  margin-bottom: var(--space-sm);
+  flex: 0 1 auto;
+  max-height: 40%;
+  min-height: 0;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--app-border-subtle);
 }
 
 .voice-shortcuts {

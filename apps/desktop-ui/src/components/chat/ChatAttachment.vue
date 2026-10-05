@@ -35,12 +35,10 @@ const props = defineProps<{
   text: string
   icon?: string
   removable?: boolean
-  /** Shows the text from the start */
-  initiallyOpen?: boolean
 }>()
 const emit = defineEmits<{ (e: 'remove'): void }>()
 const { t } = useI18n()
-const open = ref(props.initiallyOpen)
+const open = ref(false)
 
 const icon = computed(() => props.icon || 'mdi:text-box-outline')
 const size = computed(() =>
