@@ -159,6 +159,18 @@ impl TycoDbus {
     async fn ping(&self) -> zbus::fdo::Result<&str> {
         Ok(MESSAGE_INTERFACE)
     }
+
+    #[zbus(name = "Quit")]
+    async fn quit(&self) -> zbus::fdo::Result<()> {
+        let state = self.app.state::<AppState>();
+        state.set_quitting(true);
+        let app = self.app.clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            app.exit(0);
+        });
+        Ok(())
+    }
 }
 
 impl TycoDbus {

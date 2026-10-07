@@ -64,6 +64,16 @@ fn dispatch(app: &AppHandle, request: Request) -> Response {
         Request::Replace { action } => {
             selection_replace::trigger(app, &action, selection_replace::TriggerWait::Now)
         }
+        Request::Quit => {
+            let state = app.state::<AppState>();
+            state.set_quitting(true);
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                app.exit(0);
+            });
+            return Response::success();
+        }
     };
     match result {
         Ok(()) => Response::success(),

@@ -120,6 +120,16 @@ pub fn cancel_script(run_id: &str) -> bool {
     }
 }
 
+/// Cancels all script runs that are currently waited for.
+pub fn cancel_all_scripts() {
+    let runs = cancellable_runs()
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    for flag in runs.values() {
+        flag.store(true, Ordering::SeqCst);
+    }
+}
+
 pub fn format_timestamp() -> String {
     let secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -756,5 +766,18 @@ mod tests {
     fn truncates_on_a_char_boundary() {
         let text = "яяя";
         assert!(truncate(text, 3).starts_with("я\n"));
+    }
+
+    #[test]
+    fn cancels_all_running_scripts() {
+        let reg1 = CancelRegistration::new(Some("run-1"));
+        let reg2 = CancelRegistration::new(Some("run-2"));
+        assert!(!reg1.flag.load(Ordering::SeqCst));
+        assert!(!reg2.flag.load(Ordering::SeqCst));
+
+        cancel_all_scripts();
+
+        assert!(reg1.flag.load(Ordering::SeqCst));
+        assert!(reg2.flag.load(Ordering::SeqCst));
     }
 }

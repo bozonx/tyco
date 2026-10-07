@@ -107,4 +107,16 @@ impl NetState {
             .send(command)
             .map_err(|_| AppError::Message(format!("Socket {id} is closed")))
     }
+
+    /// Closes all active sockets and aborts in-flight fetches on shutdown.
+    pub fn close_all(&self) {
+        let sockets = std::mem::take(&mut *self.sockets.lock().expect("sockets lock"));
+        for sender in sockets.into_values() {
+            let _ = sender.send(SocketCommand::Close(None));
+        }
+        let fetches = std::mem::take(&mut *self.fetches.lock().expect("fetches lock"));
+        for handle in fetches.into_values() {
+            handle.abort();
+        }
+    }
 }

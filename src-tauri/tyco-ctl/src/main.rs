@@ -11,6 +11,7 @@ const USAGE: &str = "Usage: tyco-ctl activate <mode>
        tyco-ctl replace <correction|translate.N|aiTask.N>
        tyco-ctl run <command id or name> [text... | -]
        tyco-ctl commands
+       tyco-ctl quit
 
 `run` takes the text from the arguments, or from stdin when it is `-`;
 stdin keeps the text away from the process list.";
@@ -53,6 +54,7 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Command, String>
 fn parse_request(args: &[String]) -> Result<Request, String> {
     match args {
         [command] if command == "commands" => Ok(Request::ListCommands),
+        [command] if command == "quit" => Ok(Request::Quit),
         [command, mode] if command == "activate" && is_start_mode(mode) => {
             Ok(Request::Activate { mode: mode.clone() })
         }
@@ -195,6 +197,15 @@ mod tests {
             Command::Send(Request::ListCommands)
         );
         assert!(parse_args(args(&["commands", "extra"])).is_err());
+    }
+
+    #[test]
+    fn parses_quit_command() {
+        assert_eq!(
+            parse_args(args(&["quit"])).unwrap(),
+            Command::Send(Request::Quit)
+        );
+        assert!(parse_args(args(&["quit", "extra"])).is_err());
     }
 
     #[test]

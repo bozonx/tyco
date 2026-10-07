@@ -92,6 +92,14 @@ async fn stop_capture_unlocked(state: &AppState) -> Result<(), AppError> {
     .map_err(|error| AppError::Message(format!("capture stop task failed: {error}")))?
 }
 
+/// Signals the active voice capture thread to stop on shutdown.
+pub fn stop_capture_on_shutdown(state: &AppState) {
+    if let Some(session) = state.replace_voice_capture_session(None) {
+        session.stop_flag.store(true, Ordering::SeqCst);
+        let _ = session.thread.join();
+    }
+}
+
 fn create_capture_session<S: EventSink>(
     app: AppHandle,
     sink: S,

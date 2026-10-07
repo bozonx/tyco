@@ -64,6 +64,8 @@ pub enum Request {
     },
     /// The commands that may be run from outside, as JSON.
     ListCommands,
+    /// Quits the application gracefully.
+    Quit,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -161,6 +163,7 @@ mod tests {
                 text: Some("buy milk\nand bread".into()),
             },
             Request::ListCommands,
+            Request::Quit,
         ] {
             let mut output = Vec::new();
             write_message(&mut output, &request).unwrap();
