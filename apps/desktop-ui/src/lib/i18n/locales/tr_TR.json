@@ -388,7 +388,14 @@
     "configNewerWarning": "Ayarlar Tyco'nun daha yeni bir sürümüyle kaydedildi. Olduğu gibi kullanılıyor, ancak burada yapılan değişiklikler kaydedilmiyor: değiştirmek için Tyco'yu güncelleyin.",
     "actionCommandNoTextPlaceholder": "Örneğin: ~/bin/backup.sh",
     "actionCommandNoTextInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. Komut metin almaz.",
-    "actionWebhookPayloadNoTextPlaceholder": "Boş: komut adını içeren bir JSON"
+    "actionWebhookPayloadNoTextPlaceholder": "Boş: komut adını içeren bir JSON",
+    "sectionMarkdown": "Markdown",
+    "markdownHint": "Biçimlendirilmiş metin yapıştırma ve Markdown biçimlendirme için ortak stil.",
+    "markdownBullet": "Liste işareti",
+    "markdownEmphasis": "İtalik işareti",
+    "markdownStrong": "Kalın yazı işareti",
+    "markdownHeadingStyle": "Başlık stili",
+    "markdownIncrementListMarker": "Sıralı liste numaralarını artır"
   },
   "editor": {
     "case": "Harf biçimi",
@@ -609,12 +616,44 @@
       "notePhrases": "not (al|yaz)\nnot",
       "dailyPhrases": "günlüğe (yaz|ekle)"
     },
-    "russianStress": { "label": "Rusça vurgu" }
+    "diacritics": {
+      "label": "Aksan işaretleri",
+      "description": "Yalnızca seçili metne uygulanır. Tümünü temizleme ё → е, й → и ve ñ → n dönüşümlerini de yapar.",
+      "profile": "Karakter profili",
+      "general": "Tüm işaretler",
+      "russian": "Rusça",
+      "spanish": "İspanyolca",
+      "acute": "Akut ◌́",
+      "grave": "Grav ◌̀",
+      "circumflex": "Sirkumfleks ◌̂",
+      "diaeresis": "İki nokta ◌̈",
+      "tilde": "Tilde ◌̃",
+      "caron": "Karon ◌̌",
+      "macron": "Makron ◌̄",
+      "clearAcute": "Akutu kaldır",
+      "clear": "Tüm aksan işaretlerini kaldır"
+    },
+    "webFormatter": {
+      "label": "Web kodu biçimlendirme",
+      "language": "Dil",
+      "auto": "Otomatik algıla",
+      "chooseLanguage": "Desteklenen dil güvenilir biçimde algılanamadı. Eklenti ayarlarından dili seçin.",
+      "invalidCode": "Kod seçilen dilde ayrıştırılamadı. Metin değiştirilmedi.",
+      "tabWidth": "Girinti boyutu",
+      "useTabs": "Sekme kullan",
+      "printWidth": "Hedef satır genişliği",
+      "singleQuote": "JS / TS için tek tırnak",
+      "semi": "JS / TS için noktalı virgül",
+      "xmlWhitespace": "XML boşluk yönetimi",
+      "xmlStrict": "Katı: anlamlı boşlukları koru",
+      "xmlPreserve": "Metni koru, öğe düzenini biçimlendir",
+      "xmlIgnore": "Yoksay: boşluklar değişebilir"
+    },
+    "textCase": { "label": "Metin harf düzeni" }
   },
   "edit": {
-    "beautifyMd": "MD düzenle",
-    "formatCode": "JS/JSON/CSS/HTML/XML biçimlendir",
-    "normalize": "Normalize et",
+    "beautifyMd": "Markdown biçimlendir",
+    "formatCode": "Web kodunu / XML biçimlendir",
     "uppercase": "BÜYÜK HARF",
     "lowercase": "küçük harf",
     "camelCase": "camelCase",
@@ -622,7 +661,10 @@
     "snakeCase": "snake_case",
     "constantCase": "CONSTANT_CASE",
     "kebabCase": "kebab-case",
-    "stripMarkdown": "Biçimlendirmeyi kaldır"
+    "stripMarkdown": "Markdown metnini düz metne dönüştür",
+    "capitalizeFirst": "İlk harfi büyüt",
+    "sentenceCase": "Cümle düzeni",
+    "identifierToText": "Tanımlayıcıyı metne dönüştür"
   },
   "toast": {
     "settingsSaveFailed": "Ayarlar kaydedilemedi",
@@ -658,7 +700,9 @@
     "commandUnavailable": "Komut kullanılamıyor",
     "commandFailed": "Komut başarısız oldu",
     "commandInputUnsupported": "Bu komut metin alamaz: aracı yapılandırılmış bir girdi bekliyor",
-    "commandInputInvalid": "Komutun girdisi geçersiz"
+    "commandInputInvalid": "Komutun girdisi geçersiz",
+    "textTransformFailed": "Metin dönüştürülemedi: {detail}",
+    "textTransformStale": "Biçimlendirme sırasında metin veya seçim değişti. Komutu yeniden çalıştırın."
   },
   "llmErrors": {
     "auth": "Sağlayıcı anahtarı reddetti veya bunun için kayıtlı anahtar yok",

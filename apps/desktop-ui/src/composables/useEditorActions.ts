@@ -1,3 +1,5 @@
+import { createTextEditModel } from '../lib/edit-menu/text-edit'
+import { WebFormatError } from '../lib/editor/web-formatter'
 import { useI18n } from './useI18n'
 import useToast from './useToast'
 import type { ActionItem } from '../stores/actionMenu'
@@ -61,20 +63,32 @@ export const useEditorActions = () => {
     return item.action(value)
   }
 
-  /** Transforms the selection, or the whole text, in place: one undo step */
-  const doEdit = async (
-    cb: (text: string) => Promise<string> | string
-  ): Promise<void> => {
-    const value = editorInputStore.actionText().trim()
+  const textEdit = createTextEditModel({
+    snapshot: () => ({
+      text: editorInputStore.value,
+      selectedText: editorInputStore.selectedText,
+      from: editorInputStore.selectionStart,
+      to: editorInputStore.selectionEnd,
+    }),
+    replaceSelection: (text) => editorInputStore.replaceSelection(text, 'ai'),
+    replaceText: (text) => editorInputStore.setValue(text, 'ai'),
+  })
 
-    if (!value) {
-      toast(t('toast.textNotSelected'), 'error')
-      return
+  /** Transforms the selection, or the whole text, in place: one undo step. */
+  const doEdit = async (item: EditItem): Promise<void> => {
+    try {
+      const result = await textEdit.run(item)
+      if (result === 'empty') toast(t('toast.textNotSelected'), 'error')
+      if (result === 'stale') toast(t('toast.textTransformStale'), 'warn')
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      toast(
+        error instanceof WebFormatError
+          ? t(error.messageKey)
+          : t('toast.textTransformFailed', { detail }),
+        'error'
+      )
     }
-
-    const result = await cb(value)
-
-    editorInputStore.applyResult(result, value, 'ai')
   }
 
   return { getLabel, voiceRecognition, doAction, doEdit }

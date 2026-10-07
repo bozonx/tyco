@@ -42,7 +42,7 @@ export {
   toSnakeCase,
   toKebabCase,
   toConstantCase,
-  normalizeText,
+  identifierToText,
 } from './text-case'
 
 export type DefaultHandler = (...args: any[]) => void

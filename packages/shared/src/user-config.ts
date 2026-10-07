@@ -1,3 +1,4 @@
+import type { MarkdownSettings } from './markdown'
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
@@ -423,6 +424,7 @@ export interface UserConfig {
     tapAction?: string
     holdAction?: string
   } | null)[]
+  markdown?: MarkdownSettings
   plugins: Record<string, unknown>
 }
 

@@ -6,14 +6,8 @@ describe('useTextTransform', () => {
   const { doCaseTransform } = useTextTransform()
 
   it.each([
-    ['normalize', 'Hello world'],
     ['uppercase', 'HELLO WORLD'],
     ['lowercase', 'hello world'],
-    ['camelCase', 'helloWorld'],
-    ['pascalCase', 'HelloWorld'],
-    ['snakeCase', 'hello_world'],
-    ['kebabCase', 'hello-world'],
-    ['constantCase', 'HELLO_WORLD'],
   ])('dispatches %s to the real implementation', (type, expected) => {
     expect(doCaseTransform('hello world', type)).toBe(expected)
   })

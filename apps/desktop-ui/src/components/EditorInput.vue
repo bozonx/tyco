@@ -111,7 +111,10 @@ const commands: EditorMenuCommands = {
   },
   cut: () => withClipboard(() => cutSelection(view!)),
   copy: () => withClipboard(() => copySelection(view!)),
-  paste: () => withClipboard(() => pasteFromClipboard(view!)),
+  paste: () =>
+    withClipboard(() =>
+      pasteFromClipboard(view!, ipcStore.params?.userConfig.markdown)
+    ),
   pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
   selectAll: () => {
     if (!view) return
@@ -126,7 +129,8 @@ const editItems = (items: EditItem[], group: string): EditorMenuItem[] =>
     id: `${group}-${item.id || item.labelKey || item.name || index}`,
     label: getLabel(item),
     icon: item.icon,
-    action: () => doEdit(item.action),
+    disabled: item.selectionOnly && !editorInputStore.hasSelection,
+    action: () => doEdit(item),
   }))
 
 /** Transforms and actions — the same ones as the buttons around the editor */
@@ -199,6 +203,7 @@ onMounted(() => {
       placeholder: t('input.textPlaceholder'),
       ariaLabel: t('editor.inputLabel'),
       paste: true,
+      getMarkdownSettings: () => ipcStore.params?.userConfig.markdown,
       markdownPreview: !showMarkup.value,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),

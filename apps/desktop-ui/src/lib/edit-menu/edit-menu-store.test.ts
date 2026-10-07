@@ -9,7 +9,6 @@ describe('createEditMenuStoreModel', () => {
         (text: string, caseType: string) => `${caseType}:${text}`
       ),
       formatMdAndStyle: vi.fn(async (text: string) => `md:${text}`),
-      formatSomeCode: vi.fn(async (text: string) => `code:${text}`),
       stripMarkdown: vi.fn((text: string) => `plain:${text}`),
     }
     const store = createEditMenuStoreModel(deps)
@@ -20,15 +19,15 @@ describe('createEditMenuStoreModel', () => {
     const { store } = setup()
 
     const caseItems = store.getCaseItems()
-    expect(caseItems).toHaveLength(8)
+    expect(caseItems).toHaveLength(2)
     expect(caseItems.map((c) => c.labelKey)).toContain('edit.uppercase')
-    expect(caseItems.map((c) => c.labelKey)).toContain('edit.snakeCase')
+    expect(caseItems.map((c) => c.labelKey)).not.toContain('edit.snakeCase')
 
     const formatItems = store.getFormatItems()
-    expect(formatItems).toHaveLength(3)
+    expect(formatItems).toHaveLength(2)
     expect(formatItems[0]?.labelKey).toBe('edit.stripMarkdown')
     expect(formatItems.map((f) => f.labelKey)).toContain('edit.beautifyMd')
-    expect(formatItems.map((f) => f.labelKey)).toContain('edit.formatCode')
+    expect(formatItems.map((f) => f.labelKey)).not.toContain('edit.formatCode')
   })
 
   it('executes case and format transforms via dependencies', async () => {
@@ -40,17 +39,6 @@ describe('createEditMenuStoreModel', () => {
     const result = await upperCaseItem?.action('hello')
     expect(deps.doCaseTransform).toHaveBeenCalledWith('hello', 'uppercase')
     expect(result).toBe('uppercase:hello')
-
-    const constantCaseItem = store
-      .getCaseItems()
-      .find((i) => i.labelKey === 'edit.constantCase')
-    expect(await constantCaseItem?.action('hello world')).toBe(
-      'constantCase:hello world'
-    )
-    expect(deps.doCaseTransform).toHaveBeenCalledWith(
-      'hello world',
-      'constantCase'
-    )
 
     const mdItem = store
       .getFormatItems()
@@ -86,7 +74,7 @@ describe('createEditMenuStoreModel', () => {
 
     const customEdit = {
       id: 'edit-stress',
-      labelKey: 'plugin.russianStress.label',
+      labelKey: 'plugin.diacritics.acute',
       action: vi.fn(),
     }
     store.registerEditItems([customEdit])
@@ -113,7 +101,7 @@ describe('createEditMenuStoreModel', () => {
     }
     const customEdit = {
       id: 'edit-stress',
-      labelKey: 'plugin.russianStress.label',
+      labelKey: 'plugin.diacritics.acute',
       action: vi.fn(),
     }
 

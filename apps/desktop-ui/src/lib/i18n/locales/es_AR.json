@@ -388,7 +388,14 @@
     "configNewerWarning": "La configuración fue guardada por una versión más nueva de Tyco. Se usa tal como está, pero los cambios acá no se guardan: actualizá Tyco para modificarla.",
     "actionCommandNoTextPlaceholder": "Por ejemplo: ~/bin/backup.sh",
     "actionCommandNoTextInfo": "Se ejecuta en la shell del sistema (sh, zsh o PowerShell). El comando no recibe texto.",
-    "actionWebhookPayloadNoTextPlaceholder": "Vacío: un JSON con el nombre del comando"
+    "actionWebhookPayloadNoTextPlaceholder": "Vacío: un JSON con el nombre del comando",
+    "sectionMarkdown": "Markdown",
+    "markdownHint": "Estilo compartido para pegar texto con formato y formatear Markdown.",
+    "markdownBullet": "Marcador de lista",
+    "markdownEmphasis": "Marcador de cursiva",
+    "markdownStrong": "Marcador de negrita",
+    "markdownHeadingStyle": "Estilo de títulos",
+    "markdownIncrementListMarker": "Numeración consecutiva de listas"
   },
   "editor": {
     "case": "Mayúsculas y minúsculas",
@@ -609,12 +616,44 @@
       "notePhrases": "(anotá|guardá) [una] nota\nnota",
       "dailyPhrases": "(anotá|agregá) al diario"
     },
-    "russianStress": { "label": "Acento ruso" }
+    "diacritics": {
+      "label": "Diacríticos",
+      "description": "Solo modifica la selección. Quitar todos también convierte ё → е, й → и y ñ → n.",
+      "profile": "Perfil de caracteres",
+      "general": "Todos los signos",
+      "russian": "Ruso",
+      "spanish": "Español",
+      "acute": "Acento agudo ◌́",
+      "grave": "Acento grave ◌̀",
+      "circumflex": "Circunflejo ◌̂",
+      "diaeresis": "Diéresis ◌̈",
+      "tilde": "Virgulilla ◌̃",
+      "caron": "Carón ◌̌",
+      "macron": "Macrón ◌̄",
+      "clearAcute": "Quitar acento agudo",
+      "clear": "Quitar todos los diacríticos"
+    },
+    "webFormatter": {
+      "label": "Formato de código web",
+      "language": "Lenguaje",
+      "auto": "Detectar automáticamente",
+      "chooseLanguage": "No se pudo detectar un lenguaje compatible con certeza. Elegí el lenguaje en los ajustes del plugin.",
+      "invalidCode": "No se pudo analizar el código en el lenguaje elegido. El texto no cambió.",
+      "tabWidth": "Tamaño de sangría",
+      "useTabs": "Usar tabulaciones",
+      "printWidth": "Ancho de línea deseado",
+      "singleQuote": "Preferir comillas simples en JS / TS",
+      "semi": "Punto y coma en JS / TS",
+      "xmlWhitespace": "Tratamiento de espacios XML",
+      "xmlStrict": "Estricto: conservar espacios significativos",
+      "xmlPreserve": "Conservar texto y formatear elementos",
+      "xmlIgnore": "Ignorar: los espacios pueden cambiar"
+    },
+    "textCase": { "label": "Mayúsculas y minúsculas" }
   },
   "edit": {
-    "beautifyMd": "Embellecer MD",
-    "formatCode": "Formatear JS/JSON/CSS/HTML/XML",
-    "normalize": "Normalizar",
+    "beautifyMd": "Formatear Markdown",
+    "formatCode": "Formatear código web / XML",
     "uppercase": "MAYÚSCULAS",
     "lowercase": "minúsculas",
     "camelCase": "camelCase",
@@ -622,7 +661,10 @@
     "snakeCase": "snake_case",
     "constantCase": "CONSTANT_CASE",
     "kebabCase": "kebab-case",
-    "stripMarkdown": "Quitar formato"
+    "stripMarkdown": "Markdown a texto sin formato",
+    "capitalizeFirst": "Primera letra en mayúscula",
+    "sentenceCase": "Mayúsculas de oración",
+    "identifierToText": "Identificador a texto"
   },
   "toast": {
     "settingsSaveFailed": "No se pudo guardar la configuración",
@@ -658,7 +700,9 @@
     "commandUnavailable": "El comando no está disponible",
     "commandFailed": "El comando falló",
     "commandInputUnsupported": "Este comando no acepta texto: su herramienta necesita una entrada estructurada",
-    "commandInputInvalid": "La entrada del comando no es válida"
+    "commandInputInvalid": "La entrada del comando no es válida",
+    "textTransformFailed": "No se pudo transformar el texto: {detail}",
+    "textTransformStale": "El texto o la selección cambió durante el formato. Ejecutá el comando de nuevo."
   },
   "llmErrors": {
     "auth": "El proveedor rechazó la clave, o no hay una clave guardada",

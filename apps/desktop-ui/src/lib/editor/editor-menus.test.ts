@@ -164,3 +164,32 @@ describe('paste', () => {
     view.destroy()
   })
 })
+
+describe('live Markdown paste settings', () => {
+  it('reads current shared settings for each paste', () => {
+    const parent = document.createElement('div')
+    document.body.appendChild(parent)
+    let bullet = '*' as '*' | '+'
+    const view = new EditorView({
+      parent,
+      state: EditorState.create({
+        extensions: createEditorExtensions({
+          paste: true,
+          getMarkdownSettings: () => ({ bullet }),
+        }),
+      }),
+    })
+    try {
+      const data = { 'text/html': '<ul><li>one</li></ul>', 'text/plain': 'one' }
+      view.contentDOM.dispatchEvent(pasteEvent(data))
+      expect(view.state.doc.toString()).toBe('* one')
+      bullet = '+'
+      view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } })
+      view.contentDOM.dispatchEvent(pasteEvent(data))
+      expect(view.state.doc.toString()).toBe('+ one')
+    } finally {
+      view.destroy()
+      parent.remove()
+    }
+  })
+})

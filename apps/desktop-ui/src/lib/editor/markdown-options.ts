@@ -1,4 +1,5 @@
 import type { Options as RemarkStringifyOptions } from 'remark-stringify'
+import { normalizeMarkdownSettings } from '@tyco/shared'
 
 /**
  * Intra-word underscores do not start emphasis in CommonMark, but
@@ -7,17 +8,20 @@ import type { Options as RemarkStringifyOptions } from 'remark-stringify'
  */
 const INTRAWORD_UNDERSCORE = /(?<=[\p{L}\p{N}])\\_(?=[\p{L}\p{N}])/gu
 
-/**
- * Single markdown serialization setup for the whole application: both for the
- * "tidy up markdown" button (`useCodeFormatter.formatMdAndStyle`) and for
- * converting clipboard HTML. Otherwise one document would end up with `-` and
- * `*` bullets at the same time
- */
-export const MARKDOWN_STRINGIFY_OPTIONS: RemarkStringifyOptions = {
-  bullet: '-',
-  handlers: {
-    // keep the standard escaping, only drop the intra-word underscore case
-    text: (node, _parent, state, info) =>
-      state.safe(node.value, info).replace(INTRAWORD_UNDERSCORE, '_'),
-  },
+/** Shared serialization settings for clipboard HTML and the format command. */
+export function markdownStringifyOptions(
+  value?: unknown
+): RemarkStringifyOptions {
+  const settings = normalizeMarkdownSettings(value)
+  return {
+    bullet: settings.bullet,
+    emphasis: settings.emphasis,
+    strong: settings.strong,
+    setext: settings.headingStyle === 'setext',
+    incrementListMarker: settings.incrementListMarker,
+    handlers: {
+      text: (node, _parent, state, info) =>
+        state.safe(node.value, info).replace(INTRAWORD_UNDERSCORE, '_'),
+    },
+  }
 }

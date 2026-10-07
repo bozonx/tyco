@@ -64,9 +64,12 @@ const readClipboard = async (): Promise<{ html: string; plain: string }> => {
 }
 
 /** Вставка из пункта меню: то же преобразование в Markdown, что и у Ctrl+V */
-export const pasteFromClipboard = async (view: EditorView): Promise<void> => {
+export const pasteFromClipboard = async (
+  view: EditorView,
+  settings?: unknown
+): Promise<void> => {
   const { html, plain } = await readClipboard()
-  const markdown = html.trim() ? htmlToMarkdown(html) : ''
+  const markdown = html.trim() ? htmlToMarkdown(html, settings) : ''
 
   if (markdown) {
     insertFormattedText(view, plain, markdown)

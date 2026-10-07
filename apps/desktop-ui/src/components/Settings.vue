@@ -92,6 +92,28 @@
             </FieldRow>
           </SettingsSection>
 
+          <SettingsSection
+            :title="t('settings.sectionMarkdown')"
+            :description="t('settings.markdownHint')"
+          >
+            <FieldRow
+              v-for="field in markdownFields"
+              :key="field.name"
+              :label="t(field.labelKey)"
+            >
+              <FieldSelect
+                :value="userConfig.markdown[field.name]"
+                :options="field.options"
+                @update:value="userConfig.markdown[field.name] = $event"
+              />
+            </FieldRow>
+            <FieldRow :label="t('settings.markdownIncrementListMarker')">
+              <FieldCheckbox
+                v-model:value="userConfig.markdown.incrementListMarker"
+              />
+            </FieldRow>
+          </SettingsSection>
+
           <SettingsSection :title="t('settings.sectionHistory')">
             <div class="editor-history-group">
               <FieldRow
@@ -476,6 +498,7 @@ import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import { Icon } from '@iconify/vue'
+import { normalizeMarkdownSettings } from '@tyco/shared'
 import {
   type BuiltinToolId,
   CONFIG_VERSION,
@@ -510,6 +533,32 @@ const requestedTab = route?.query.tab
 const currentTab = ref(
   typeof requestedTab === 'string' && requestedTab ? requestedTab : 'general'
 )
+const markdownFields = computed(() => [
+  {
+    name: 'bullet',
+    labelKey: 'settings.markdownBullet',
+    options: ['-', '*', '+'].map((id) => ({ id, name: id })),
+  },
+  {
+    name: 'emphasis',
+    labelKey: 'settings.markdownEmphasis',
+    options: ['*', '_'].map((id) => ({ id, name: id })),
+  },
+  {
+    name: 'strong',
+    labelKey: 'settings.markdownStrong',
+    options: ['*', '_'].map((id) => ({ id, name: id.repeat(2) })),
+  },
+  {
+    name: 'headingStyle',
+    labelKey: 'settings.markdownHeadingStyle',
+    options: [
+      { id: 'atx', name: '# / ##' },
+      { id: 'setext', name: '=== / ---' },
+    ],
+  },
+])
+
 const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
 const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
 const storageInfo = ref<StorageInfo | null>(null)
@@ -725,6 +774,7 @@ function createPreparedUserConfig(config: unknown) {
   ]
   normalizeWindowInsertionConfig(nextConfig)
   normalizeEditorConfig(nextConfig)
+  nextConfig.markdown = normalizeMarkdownSettings(nextConfig.markdown)
   normalizeHotkeysConfig(nextConfig)
   Object.assign(nextConfig, normalizeSttConfig(nextConfig))
   normalizeLlmConfigSection(nextConfig)

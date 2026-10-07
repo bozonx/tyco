@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
-import { useCodeFormatter } from '../composables/useCodeFormatter'
+import { formatMarkdown } from '../lib/editor/format-markdown'
+import { useIpcStore } from './ipc'
 import { useTextTransform } from '../composables/useTextTransform'
 import {
   type EditItem,
@@ -12,12 +13,12 @@ export type { EditItem }
 
 export const useEditMenuStore = defineStore('editMenu', () => {
   const { doCaseTransform } = useTextTransform()
-  const { formatMdAndStyle, formatSomeCode } = useCodeFormatter()
+  const ipcStore = useIpcStore()
 
   return createEditMenuStoreModel({
     doCaseTransform,
-    formatMdAndStyle,
-    formatSomeCode,
+    formatMdAndStyle: async (text) =>
+      formatMarkdown(text, ipcStore.params?.userConfig.markdown),
     stripMarkdown,
   })
 })

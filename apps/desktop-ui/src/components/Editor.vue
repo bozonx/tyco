@@ -182,7 +182,8 @@
           sm
           neutral
           :icon="item.icon"
-          @click="doEdit(item.action)"
+          :disabled="item.selectionOnly && !editorInputStore.hasSelection"
+          @click="doEdit(item)"
           >{{ getLabel(item) }}</Button
         >
       </div>
@@ -290,7 +291,7 @@ const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
     .map((item: EditItem) => ({
       label: getLabel(item),
       icon: item.icon,
-      action: () => doEdit(item.action),
+      action: () => doEdit(item),
     }))
 )
 
@@ -300,7 +301,7 @@ const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
     .map((item: EditItem) => ({
       label: getLabel(item),
       icon: item.icon,
-      action: () => doEdit(item.action),
+      action: () => doEdit(item),
     }))
 )
 

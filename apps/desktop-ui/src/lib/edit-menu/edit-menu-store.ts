@@ -6,13 +6,13 @@ export interface EditItem {
   labelKey?: string
   label?: string
   icon?: string
+  selectionOnly?: boolean
   action: (text: string) => Promise<string> | string
 }
 
 export interface EditMenuDependencies {
   doCaseTransform: (text: string, caseType: string) => string
   formatMdAndStyle: (text: string) => Promise<string>
-  formatSomeCode: (text: string) => Promise<string>
   stripMarkdown: (text: string) => string
 }
 
@@ -23,11 +23,6 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
 
   const getDefaultCaseItems = (): EditItem[] => [
     {
-      id: 'case-normalize',
-      labelKey: 'edit.normalize',
-      action: async (text: string) => deps.doCaseTransform(text, 'normalize'),
-    },
-    {
       id: 'case-uppercase',
       labelKey: 'edit.uppercase',
       action: async (text: string) => deps.doCaseTransform(text, 'uppercase'),
@@ -36,32 +31,6 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
       id: 'case-lowercase',
       labelKey: 'edit.lowercase',
       action: async (text: string) => deps.doCaseTransform(text, 'lowercase'),
-    },
-    {
-      id: 'case-camelCase',
-      labelKey: 'edit.camelCase',
-      action: async (text: string) => deps.doCaseTransform(text, 'camelCase'),
-    },
-    {
-      id: 'case-pascalCase',
-      labelKey: 'edit.pascalCase',
-      action: async (text: string) => deps.doCaseTransform(text, 'pascalCase'),
-    },
-    {
-      id: 'case-snakeCase',
-      labelKey: 'edit.snakeCase',
-      action: async (text: string) => deps.doCaseTransform(text, 'snakeCase'),
-    },
-    {
-      id: 'case-constantCase',
-      labelKey: 'edit.constantCase',
-      action: async (text: string) =>
-        deps.doCaseTransform(text, 'constantCase'),
-    },
-    {
-      id: 'case-kebabCase',
-      labelKey: 'edit.kebabCase',
-      action: async (text: string) => deps.doCaseTransform(text, 'kebabCase'),
     },
   ]
 
@@ -76,11 +45,6 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
       id: 'format-beautifyMd',
       labelKey: 'edit.beautifyMd',
       action: async (text: string) => deps.formatMdAndStyle(text),
-    },
-    {
-      id: 'format-formatCode',
-      labelKey: 'edit.formatCode',
-      action: async (text: string) => deps.formatSomeCode(text),
     },
   ]
 

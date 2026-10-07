@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkStringify from 'remark-stringify'
 import { unified } from 'unified'
 
-import { MARKDOWN_STRINGIFY_OPTIONS } from './markdown-options'
+import { markdownStringifyOptions } from './markdown-options'
 
 /**
  * Wrappers that office editors and browsers put around a `text/html` fragment.
@@ -101,13 +101,14 @@ const rehypeNormalizeClipboard = () => (tree: HastNode) => {
   tree.children = normalizeNodes(tree.children ?? [])
 }
 
-const processor = unified()
-  .use(rehypeParse, { fragment: true })
-  .use(rehypeNormalizeClipboard)
-  .use(rehypeRemark)
-  // tables, strikethrough and task lists from the clipboard are GFM
-  .use(remarkGfm)
-  .use(remarkStringify, MARKDOWN_STRINGIFY_OPTIONS)
+const processor = (settings?: unknown) =>
+  unified()
+    .use(rehypeParse, { fragment: true })
+    .use(rehypeNormalizeClipboard)
+    .use(rehypeRemark)
+    // tables, strikethrough and task lists from the clipboard are GFM
+    .use(remarkGfm)
+    .use(remarkStringify, markdownStringifyOptions(settings))
 
 /**
  * Clipboard HTML -> markdown.
@@ -115,11 +116,11 @@ const processor = unified()
  * Synchronous: every plugin in the chain is synchronous, and a `paste` handler
  * cannot await a promise without losing the caret position
  */
-export const htmlToMarkdown = (html: string): string => {
+export const htmlToMarkdown = (html: string, settings?: unknown): string => {
   const cleaned = CLIPBOARD_NOISE.reduce(
     (acc, pattern) => acc.replace(pattern, ''),
     html
   )
 
-  return String(processor.processSync(cleaned)).trim()
+  return String(processor(settings).processSync(cleaned)).trim()
 }

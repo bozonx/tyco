@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  normalizeText,
+  identifierToText,
+  capitalizeFirst,
+  sentenceCase,
   toCamelCase,
   toConstantCase,
   toKebabCase,
@@ -15,7 +17,7 @@ const transforms = [
   toSnakeCase,
   toKebabCase,
   toConstantCase,
-  normalizeText,
+  identifierToText,
 ]
 
 describe('text case transforms', () => {
@@ -46,7 +48,7 @@ describe('text case transforms', () => {
   })
 
   it('keeps acronyms together and splits their trailing words', () => {
-    expect(normalizeText('HELLO')).toBe('Hello')
+    expect(identifierToText('HELLO')).toBe('Hello')
     expect(toSnakeCase('XMLHttpRequest')).toBe('xml_http_request')
     expect(toConstantCase('getHTTPResponse')).toBe('GET_HTTP_RESPONSE')
     expect(toCamelCase('HTTPServer')).toBe('httpServer')
@@ -54,14 +56,14 @@ describe('text case transforms', () => {
   })
 
   it('normalizes mixed separators together', () => {
-    expect(normalizeText('hello_world-test\tvalue')).toBe(
+    expect(identifierToText('hello_world-test\tvalue')).toBe(
       'Hello world test value'
     )
   })
 
   it('handles Unicode letters and combining marks', () => {
     expect(toPascalCase('\u{10428} test')).toBe('\u{10400}Test')
-    expect(normalizeText('\u{10428} test')).toBe('\u{10400} test')
+    expect(identifierToText('\u{10428} test')).toBe('\u{10400} test')
     expect(toSnakeCase('\u{10428}Test')).toBe('\u{10428}_test')
     expect(toSnakeCase('cafe\u0301World')).toBe('cafe\u0301_world')
     expect(toPascalCase('cafe\u0301 world')).toBe('Cafe\u0301World')
@@ -75,5 +77,18 @@ describe('text case transforms', () => {
       const result = transform('XMLHttpRequest hello-world')
       expect(transform(result)).toBe(result)
     }
+  })
+})
+
+describe('prose case transforms', () => {
+  it('capitalizes only the first letter while preserving existing case', () => {
+    expect(capitalizeFirst('  hello NASA. next\nline')).toBe(
+      '  Hello NASA. next\nline'
+    )
+  })
+  it('capitalizes sentences without removing separators or paragraphs', () => {
+    expect(
+      sentenceCase('HELLO. HOW ARE YOU? FINE!\n\nSNAKE_CASE AND WELL-KNOWN.')
+    ).toBe('Hello. How are you? Fine!\n\nSnake_case and well-known.')
   })
 })

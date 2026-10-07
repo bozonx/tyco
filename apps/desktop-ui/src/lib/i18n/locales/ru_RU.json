@@ -388,7 +388,14 @@
     "configNewerWarning": "Настройки сохранены более новой версией Tyco. Они действуют, но изменения здесь не сохраняются: обновите Tyco, чтобы их менять.",
     "actionCommandNoTextPlaceholder": "Например: ~/bin/backup.sh",
     "actionCommandNoTextInfo": "Выполняется в системной оболочке (sh, zsh или PowerShell). Команда не получает текст.",
-    "actionWebhookPayloadNoTextPlaceholder": "Пусто: JSON с названием команды"
+    "actionWebhookPayloadNoTextPlaceholder": "Пусто: JSON с названием команды",
+    "sectionMarkdown": "Markdown",
+    "markdownHint": "Общий стиль для вставки форматированного текста и команды форматирования Markdown.",
+    "markdownBullet": "Маркер списка",
+    "markdownEmphasis": "Маркер курсива",
+    "markdownStrong": "Маркер жирного текста",
+    "markdownHeadingStyle": "Стиль заголовков",
+    "markdownIncrementListMarker": "Последовательная нумерация списков"
   },
   "editor": {
     "case": "Регистр",
@@ -609,12 +616,44 @@
       "notePhrases": "(запиши|сохрани) [в] (заметку|блокнот)\nзаметка",
       "dailyPhrases": "(запиши|допиши) в дневник"
     },
-    "russianStress": { "label": "Русское ударение" }
+    "diacritics": {
+      "label": "Диакритика",
+      "description": "Работает только с выделением. Полная очистка также превращает ё → е, й → и и ñ → n.",
+      "profile": "Набор символов",
+      "general": "Все знаки",
+      "russian": "Русский",
+      "spanish": "Испанский",
+      "acute": "Акут / ударение ◌́",
+      "grave": "Гравис ◌̀",
+      "circumflex": "Циркумфлекс ◌̂",
+      "diaeresis": "Диерезис ◌̈",
+      "tilde": "Тильда ◌̃",
+      "caron": "Карон ◌̌",
+      "macron": "Макрон ◌̄",
+      "clearAcute": "Убрать акут / ударение",
+      "clear": "Убрать всю диакритику"
+    },
+    "webFormatter": {
+      "label": "Форматирование веб-кода",
+      "language": "Язык",
+      "auto": "Определять автоматически",
+      "chooseLanguage": "Не удалось надёжно определить поддерживаемый язык. Выберите язык в настройках плагина форматирования веб-кода.",
+      "invalidCode": "Не удалось разобрать код на выбранном языке. Текст сохранён без изменений.",
+      "tabWidth": "Размер отступа",
+      "useTabs": "Использовать табуляцию",
+      "printWidth": "Желаемая длина строки",
+      "singleQuote": "Одинарные кавычки в JS / TS",
+      "semi": "Точки с запятой в JS / TS",
+      "xmlWhitespace": "Обработка пробелов XML",
+      "xmlStrict": "Строго: сохранять значимые пробелы",
+      "xmlPreserve": "Сохранять текст, форматировать расположение элементов",
+      "xmlIgnore": "Игнорировать: пробелы могут измениться"
+    },
+    "textCase": { "label": "Регистр текста" }
   },
   "edit": {
-    "beautifyMd": "Оформить Markdown",
-    "formatCode": "Формат JS/JSON/CSS/HTML/XML",
-    "normalize": "Нормализовать",
+    "beautifyMd": "Форматировать Markdown",
+    "formatCode": "Форматировать веб-код / XML",
     "uppercase": "UPPERCASE",
     "lowercase": "lowercase",
     "camelCase": "camelCase",
@@ -622,7 +661,10 @@
     "snakeCase": "snake_case",
     "constantCase": "CONSTANT_CASE",
     "kebabCase": "kebab-case",
-    "stripMarkdown": "Убрать разметку"
+    "stripMarkdown": "Markdown в обычный текст",
+    "capitalizeFirst": "Первая буква заглавная",
+    "sentenceCase": "Регистр предложений",
+    "identifierToText": "Идентификатор в текст"
   },
   "toast": {
     "settingsSaveFailed": "Не удалось сохранить настройки",
@@ -658,7 +700,9 @@
     "commandUnavailable": "Команда недоступна",
     "commandFailed": "Команда завершилась с ошибкой",
     "commandInputUnsupported": "Эта команда не принимает текст: её инструменту нужен структурированный вход",
-    "commandInputInvalid": "Неверный вход команды"
+    "commandInputInvalid": "Неверный вход команды",
+    "textTransformFailed": "Не удалось преобразовать текст: {detail}",
+    "textTransformStale": "Текст или выделение изменились во время форматирования. Запустите команду снова."
   },
   "llmErrors": {
     "auth": "Провайдер отклонил ключ, или ключ для него не сохранён",

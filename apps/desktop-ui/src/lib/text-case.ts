@@ -45,8 +45,22 @@ export function toConstantCase(text?: string): string {
     .join('_')
 }
 
-export function normalizeText(text?: string): string {
+export function identifierToText(text?: string): string {
   return splitWords(text)
     .map((word, index) => (index === 0 ? capitalize(word) : word.toLowerCase()))
     .join(' ')
+}
+
+/** Capitalize the first letter without changing the rest of the selection. */
+export function capitalizeFirst(text: string): string {
+  return text.replace(/\p{L}/u, (letter) => letter.toUpperCase())
+}
+
+/** Best-effort sentence casing; preserves whitespace and identifier separators. */
+export function sentenceCase(text: string): string {
+  return capitalizeFirst(text.toLowerCase()).replace(
+    /([.!?]["'\u00bb\u201d)\]]*\s+|[\r\n]+\s*)(\p{L})/gu,
+    (_match, boundary: string, letter: string) =>
+      boundary + letter.toUpperCase()
+  )
 }

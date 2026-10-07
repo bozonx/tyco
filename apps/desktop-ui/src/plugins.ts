@@ -1,7 +1,9 @@
 import usePluginContext from './composables/usePluginContext'
 import { createPluginManager } from './lib/plugins/plugin-manager'
 import FastNote from './plugins/FastNote'
-import RussianStress from './plugins/RussianStress'
+import Diacritics from './plugins/Diacritics'
+import TextCase from './plugins/TextCase'
+import WebFormatter from './plugins/WebFormatter'
 import SearchInInternet from './plugins/SearchInInternet'
 import { useActionMenuStore } from './stores/actionMenu'
 import { useEditMenuStore } from './stores/editMenu'
@@ -12,7 +14,9 @@ import type { PluginIndex } from './types/plugins'
 
 export const pluginIndexes: PluginIndex[] = [
   SearchInInternet,
-  RussianStress,
+  Diacritics,
+  TextCase,
+  WebFormatter,
   FastNote,
 ]
 

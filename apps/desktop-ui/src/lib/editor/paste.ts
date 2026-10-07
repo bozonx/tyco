@@ -57,7 +57,9 @@ export const insertFormattedText = (
  * Paste handling: if the clipboard has `text/html`, convert it to Markdown;
  * otherwise paste `text/plain` as is. Ctrl+Shift+V always pastes plain text.
  */
-export const pasteExtension = (): Extension => {
+export const pasteExtension = (
+  getSettings: () => unknown = () => undefined
+): Extension => {
   let plainPasteRequested = false
   let plainPasteTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -122,7 +124,7 @@ export const pasteExtension = (): Extension => {
           return true
         }
 
-        const markdown = htmlToMarkdown(html)
+        const markdown = htmlToMarkdown(html, getSettings())
 
         if (!markdown) return false
 

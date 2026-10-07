@@ -385,7 +385,14 @@
     "configNewerWarning": "The settings were saved by a newer version of Tyco. They are used as they are, but changes here are not saved: update Tyco to change them.",
     "actionCommandNoTextPlaceholder": "For example: ~/bin/backup.sh",
     "actionCommandNoTextInfo": "Runs in the system shell (sh, zsh or PowerShell). The command takes no text.",
-    "actionWebhookPayloadNoTextPlaceholder": "Empty: a JSON with the command name"
+    "actionWebhookPayloadNoTextPlaceholder": "Empty: a JSON with the command name",
+    "sectionMarkdown": "Markdown",
+    "markdownHint": "Shared style for pasted rich text and the Markdown format command.",
+    "markdownBullet": "List marker",
+    "markdownEmphasis": "Italic marker",
+    "markdownStrong": "Bold marker",
+    "markdownHeadingStyle": "Heading style",
+    "markdownIncrementListMarker": "Increment ordered list numbers"
   },
   "editor": {
     "case": "Case",
@@ -606,12 +613,44 @@
       "notePhrases": "(write|add) [a] note\nnote",
       "dailyPhrases": "(write|add) to [the] (diary|journal)"
     },
-    "russianStress": { "label": "Russian stress" }
+    "diacritics": {
+      "label": "Diacritics",
+      "description": "Applies only to selected letters. Clear all also turns ё → е, й → и and ñ → n.",
+      "profile": "Character profile",
+      "general": "All marks",
+      "russian": "Russian",
+      "spanish": "Spanish",
+      "acute": "Acute / stress ◌́",
+      "grave": "Grave ◌̀",
+      "circumflex": "Circumflex ◌̂",
+      "diaeresis": "Diaeresis ◌̈",
+      "tilde": "Tilde ◌̃",
+      "caron": "Caron ◌̌",
+      "macron": "Macron ◌̄",
+      "clearAcute": "Remove acute / stress",
+      "clear": "Remove all diacritics"
+    },
+    "webFormatter": {
+      "label": "Web code formatting",
+      "language": "Language",
+      "auto": "Detect automatically",
+      "chooseLanguage": "Cannot reliably detect a supported language. Select the language in the web formatting plugin settings.",
+      "invalidCode": "Cannot parse this code in the selected language. The text was kept unchanged.",
+      "tabWidth": "Indent size",
+      "useTabs": "Use tabs",
+      "printWidth": "Target line width",
+      "singleQuote": "Prefer single quotes in JS / TS",
+      "semi": "Semicolons in JS / TS",
+      "xmlWhitespace": "XML whitespace handling",
+      "xmlStrict": "Strict: preserve meaningful whitespace",
+      "xmlPreserve": "Preserve text, format element layout",
+      "xmlIgnore": "Ignore: whitespace may change"
+    },
+    "textCase": { "label": "Text case" }
   },
   "edit": {
-    "beautifyMd": "Beautify Markdown",
-    "formatCode": "Format JS/JSON/CSS/HTML/XML",
-    "normalize": "Normalize",
+    "beautifyMd": "Format Markdown",
+    "formatCode": "Format web code / XML",
     "uppercase": "UPPERCASE",
     "lowercase": "lowercase",
     "camelCase": "camelCase",
@@ -619,7 +658,10 @@
     "snakeCase": "snake_case",
     "constantCase": "CONSTANT_CASE",
     "kebabCase": "kebab-case",
-    "stripMarkdown": "Remove markup"
+    "stripMarkdown": "Markdown to plain text",
+    "capitalizeFirst": "Capitalize first letter",
+    "sentenceCase": "Sentence case",
+    "identifierToText": "Identifier to text"
   },
   "toast": {
     "settingsSaveFailed": "Failed to save settings",
@@ -655,7 +697,9 @@
     "commandUnavailable": "The command is unavailable",
     "commandFailed": "The command failed",
     "commandInputUnsupported": "This command cannot take a text: its tool needs a structured input",
-    "commandInputInvalid": "The input of the command is not valid"
+    "commandInputInvalid": "The input of the command is not valid",
+    "textTransformFailed": "Text transformation failed: {detail}",
+    "textTransformStale": "Text or selection changed while formatting. Run the command again."
   },
   "llmErrors": {
     "auth": "The provider rejected the key, or no key is saved for it",
