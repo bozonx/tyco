@@ -3,8 +3,9 @@ import {
   toPascalCase,
   toSnakeCase,
   toKebabCase,
+  toConstantCase,
   normalizeText,
-} from '@/lib/squidlet-lib-local'
+} from '@/lib/text-case'
 
 export function useTextTransform() {
   const toUppercase = (text?: string): string => {
@@ -33,6 +34,8 @@ export function useTextTransform() {
         return toPascalCase(text)
       case 'snakeCase':
         return toSnakeCase(text)
+      case 'constantCase':
+        return toConstantCase(text)
       case 'kebabCase':
         return toKebabCase(text)
     }

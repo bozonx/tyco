@@ -20,7 +20,7 @@ describe('createEditMenuStoreModel', () => {
     const { store } = setup()
 
     const caseItems = store.getCaseItems()
-    expect(caseItems).toHaveLength(7)
+    expect(caseItems).toHaveLength(8)
     expect(caseItems.map((c) => c.labelKey)).toContain('edit.uppercase')
     expect(caseItems.map((c) => c.labelKey)).toContain('edit.snakeCase')
 
@@ -40,6 +40,17 @@ describe('createEditMenuStoreModel', () => {
     const result = await upperCaseItem?.action('hello')
     expect(deps.doCaseTransform).toHaveBeenCalledWith('hello', 'uppercase')
     expect(result).toBe('uppercase:hello')
+
+    const constantCaseItem = store
+      .getCaseItems()
+      .find((i) => i.labelKey === 'edit.constantCase')
+    expect(await constantCaseItem?.action('hello world')).toBe(
+      'constantCase:hello world'
+    )
+    expect(deps.doCaseTransform).toHaveBeenCalledWith(
+      'hello world',
+      'constantCase'
+    )
 
     const mdItem = store
       .getFormatItems()

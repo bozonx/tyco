@@ -53,6 +53,12 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
       action: async (text: string) => deps.doCaseTransform(text, 'snakeCase'),
     },
     {
+      id: 'case-constantCase',
+      labelKey: 'edit.constantCase',
+      action: async (text: string) =>
+        deps.doCaseTransform(text, 'constantCase'),
+    },
+    {
       id: 'case-kebabCase',
       labelKey: 'edit.kebabCase',
       action: async (text: string) => deps.doCaseTransform(text, 'kebabCase'),

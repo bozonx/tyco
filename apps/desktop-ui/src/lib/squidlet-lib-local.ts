@@ -36,60 +36,14 @@ export function truncate(
   return src.slice(0, maxLength) + suffix
 }
 
-export function toCamelCase(text?: string): string {
-  if (!text) return ''
-  return text
-    .split(/[\s-_]+/)
-    .map((word, index) =>
-      index === 0
-        ? word.toLowerCase()
-        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    )
-    .join('')
-}
-
-export function toPascalCase(text?: string): string {
-  if (!text) return ''
-  return text
-    .split(/[\s-_]+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('')
-}
-
-export function toSnakeCase(text?: string): string {
-  if (!text) return ''
-  return text
-    .split(/[\s-_]+/)
-    .map((word) => word.toLowerCase())
-    .join('_')
-}
-
-export function toKebabCase(text?: string): string {
-  if (!text) return ''
-  return text
-    .split(/[\s-_]+/)
-    .map((word) => word.toLowerCase())
-    .join('-')
-}
-
-export function normalizeText(text?: string): string {
-  if (!text) return ''
-  let words: string[]
-  if (text.includes(' ')) words = text.split(' ')
-  else if (text.includes('_')) words = text.split('_')
-  else if (text.includes('-')) words = text.split('-')
-  else if (/[\p{Lu}]/u.test(text)) words = text.split(/(?=[\p{Lu}])/u)
-  else words = [text]
-
-  const normalizedWords = words
-    .filter((word) => word.length > 0)
-    .map((word, index) => {
-      if (index === 0)
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      else return word.toLowerCase()
-    })
-  return normalizedWords.join(' ')
-}
+export {
+  toCamelCase,
+  toPascalCase,
+  toSnakeCase,
+  toKebabCase,
+  toConstantCase,
+  normalizeText,
+} from './text-case'
 
 export type DefaultHandler = (...args: any[]) => void
 

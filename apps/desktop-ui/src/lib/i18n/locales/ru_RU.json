@@ -620,6 +620,7 @@
     "camelCase": "camelCase",
     "pascalCase": "PascalCase",
     "snakeCase": "snake_case",
+    "constantCase": "CONSTANT_CASE",
     "kebabCase": "kebab-case",
     "stripMarkdown": "Убрать разметку"
   },
