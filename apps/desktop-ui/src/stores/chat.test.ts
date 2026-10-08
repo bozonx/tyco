@@ -46,9 +46,7 @@ vi.mock('./ipc', () => ({
 vi.mock('./llm', () => ({ useLlmStore: () => ({ secrets: {} }) }))
 vi.mock('./history', () => ({ useHistoryStore: () => ({}) }))
 vi.mock('./menuModals', () => ({
-  useMenuModalsStore: () => ({
-    closeAll: mocks.closeAll,
-  }),
+  useMenuModalsStore: () => ({ closeAll: mocks.closeAll }),
 }))
 vi.mock('./editorInput', () => ({ useEditorInputStore: () => mocks.editor }))
 vi.mock('./chatInput', () => ({
