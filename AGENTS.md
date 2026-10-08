@@ -27,7 +27,9 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
 - **I18n & Locales**:
   - Core locale messages live in `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin messages live in their own `packages/plugin-*/src/locales/*.json`.
-  - All keys across locales within each package must stay synchronized. Run `pnpm check:i18n` to validate.
+  - **No Fallbacks**: Translation fallbacks are prohibited (`fallbackLocale: false`). Every supported locale (`ru_RU`, `en_US`, `es_AR`, `tr_TR`) must provide 100% of all keys. A missing key is an error, never a silent fallback to English.
+  - **Completeness & Hygiene**: Every key referenced in application code (templates, scripts, `*Key` properties) must exist across all supported locales. Conversely, dead/unused localization keys must not remain in locale dictionaries.
+  - All keys, placeholders (`{param}`), types, and structure across locales within each package must stay synchronized. Run `pnpm check:i18n` to validate.
 - **IPC & System Contracts**:
   - Linux D-Bus contract uses `org.tyco.Service`, `/org/tyco/Object`, and `org.tyco.Interface`.
 - **Rust Layer**:

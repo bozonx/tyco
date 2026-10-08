@@ -146,6 +146,13 @@ export const useChatStore = defineStore('chat', () => {
       chatInputStore.focus()
       return result
     },
+    async branchChat(index: number) {
+      menuModalsStore.closeAll()
+      const result = await model.branchChat(index)
+      await nextTick()
+      chatInputStore.focus()
+      return result
+    },
     /** Sends the input; false when there is nothing to send or a reply runs */
     async sendInput(): Promise<boolean> {
       const message = chatInputStore.value.trim()

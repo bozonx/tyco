@@ -51,6 +51,10 @@ vi.mock('../stores/llm', () => ({
   useLlmStore: () => ({ refreshSecrets: vi.fn(), secrets: {} }),
 }))
 
+vi.mock('../stores/history', () => ({
+  useHistoryStore: () => ({ clearChatHistory: vi.fn() }),
+}))
+
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
 
 vi.mock('../plugins', () => ({

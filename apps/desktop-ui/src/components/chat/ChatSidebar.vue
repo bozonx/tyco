@@ -11,16 +11,6 @@
         {{ t('chat.newChat') }}
       </Button>
       <Button
-        v-if="historyStore.chatHistory.length"
-        sm
-        ghost
-        square
-        :title="t('history.clear')"
-        @click="confirmingClear = !confirmingClear"
-      >
-        <Icon icon="mdi:trash-can-outline" height="18" />
-      </Button>
-      <Button
         sm
         ghost
         square
@@ -29,27 +19,6 @@
       >
         <Icon icon="mdi:dock-left" height="18" />
       </Button>
-    </div>
-
-    <div v-if="confirmingClear" class="sidebar-clear-box">
-      <div class="sidebar-clear-msg">
-        {{
-          t('history.clearConfirm', { count: historyStore.chatHistory.length })
-        }}
-      </div>
-      <div class="sidebar-clear-actions">
-        <Button xs ghost @click="confirmingClear = false">
-          {{ t('common.cancel') }}
-        </Button>
-        <Button
-          xs
-          icon="mdi:trash-can-outline"
-          class="confirm-clear-btn"
-          @click="clearAllChats"
-        >
-          {{ t('history.clearConfirmButton') }}
-        </Button>
-      </div>
     </div>
 
     <div v-if="removedChat" class="sidebar-notice">
@@ -125,27 +94,57 @@
                   item.description || t('common.empty')
                 }}</span>
               </button>
-              <button
-                type="button"
-                class="row-action"
-                :title="t('chat.renameChat')"
-                @click="beginRename(item)"
-              >
-                <Icon icon="mdi:pencil-outline" height="15" />
-              </button>
-              <button
-                type="button"
-                class="row-action danger"
-                :title="t('chat.deleteChat')"
-                @click="removeChat(item.id)"
-              >
-                <Icon icon="mdi:trash-can-outline" height="15" />
-              </button>
+              <DropdownMenu
+                xs
+                square
+                hide-chevron
+                icon="mdi:dots-horizontal"
+                class="row-menu"
+                :title="t('common.more')"
+                align="right"
+                :items="getRowMenuItems(item)"
+              />
             </template>
           </li>
         </ul>
       </section>
     </div>
+
+    <div v-if="historyStore.chatHistory.length" class="sidebar-footer">
+      <Button
+        xs
+        ghost
+        icon="mdi:trash-can-outline"
+        class="sidebar-clear-btn"
+        @click="showClearAllModal = true"
+      >
+        {{ t('history.clear') }}
+      </Button>
+    </div>
+
+    <ConfirmModal
+      :open="showClearAllModal"
+      :title="t('history.clearConfirmTitle')"
+      :message="
+        t('history.clearConfirmDialog', {
+          count: historyStore.chatHistory.length,
+        })
+      "
+      :confirm-text="t('history.clearConfirmButton')"
+      danger
+      @confirm="confirmClearAll"
+      @cancel="showClearAllModal = false"
+    />
+
+    <ConfirmModal
+      :open="Boolean(chatToDelete)"
+      :title="t('chat.deleteConfirmTitle')"
+      :message="t('chat.deleteConfirmMessage')"
+      :confirm-text="t('common.delete')"
+      danger
+      @confirm="confirmDeleteChat"
+      @cancel="chatToDelete = null"
+    />
   </aside>
 </template>
 
@@ -154,6 +153,7 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import {
   filterChatHistory,
   groupChatHistory,
@@ -162,6 +162,8 @@ import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import SearchInput from '../common/SearchInput.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatHistoryItem } from '@tyco/shared'
@@ -177,7 +179,8 @@ const query = ref('')
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
-const confirmingClear = ref(false)
+const showClearAllModal = ref(false)
+const chatToDelete = ref<string | null>(null)
 const removedChat = ref<ChatHistoryItem | null>(null)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -222,6 +225,48 @@ const draftChat = computed(() => {
   return chatStore.newChatParams.title || t('chat.newChat')
 })
 
+function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
+  return [
+    {
+      label: t('chat.renameChat'),
+      icon: 'mdi:pencil-outline',
+      action: () => beginRename(item),
+    },
+    {
+      label: t('chat.copyMarkdown'),
+      icon: 'mdi:content-copy',
+      action: () => copyChatMarkdown(item.id),
+    },
+    {
+      label: t('chat.deleteChat'),
+      icon: 'mdi:trash-can-outline',
+      danger: true,
+      action: () => {
+        chatToDelete.value = item.id
+      },
+    },
+  ]
+}
+
+async function copyChatMarkdown(id: string) {
+  let targetChat = await historyStore.loadChat(id)
+  if (!targetChat && chatStore.newChatParams?.id === id) {
+    targetChat = {
+      id,
+      description: chatStore.newChatParams.title || '',
+      lastMsgDate: '',
+      messages: chatStore.messages,
+    }
+  }
+  if (targetChat) {
+    const md = formatChatToMarkdown(targetChat.messages, {
+      title: targetChat.description,
+    })
+    await navigator.clipboard.writeText(md)
+    toast(t('chat.markdownCopied'), 'info')
+  }
+}
+
 async function startChat() {
   await chatStore.startChat({})
   emit('navigate')
@@ -256,6 +301,13 @@ async function finishRename(item: ChatHistoryItem) {
   }
 }
 
+async function confirmDeleteChat() {
+  const id = chatToDelete.value
+  chatToDelete.value = null
+  if (!id) return
+  await removeChat(id)
+}
+
 async function removeChat(id: string) {
   clearTimeout(undoTimer)
   // leave the chat first, or its pending write would bring it back
@@ -282,8 +334,12 @@ async function undoRemoveChat() {
   }
 }
 
+async function confirmClearAll() {
+  showClearAllModal.value = false
+  await clearAllChats()
+}
+
 async function clearAllChats() {
-  confirmingClear.value = false
   if (chatStore.messages.length) {
     chatStore.abandonChat()
     await chatStore.whenSaved()
@@ -313,28 +369,19 @@ onUnmounted(() => {
   display: flex;
   gap: var(--space-xs);
 }
-.sidebar-clear-box {
+.sidebar-footer {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  font-size: 0.8125rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background: var(--app-surface);
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--app-border-subtle);
 }
-.sidebar-clear-msg {
-  color: var(--app-text-muted);
+.sidebar-clear-btn {
+  color: var(--app-text-faint);
+  font-size: 0.75rem;
 }
-.sidebar-clear-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-xs);
-}
-.confirm-clear-btn {
-  color: var(--color-error-content);
-  background-color: var(--color-error);
-  border-color: var(--color-error);
+.sidebar-clear-btn:hover {
+  color: var(--color-error);
 }
 .sidebar-notice {
   display: flex;
@@ -392,7 +439,7 @@ onUnmounted(() => {
   gap: var(--space-sm);
   width: 100%;
   min-width: 0;
-  padding: 0.5rem 3.7rem 0.5rem 0.625rem;
+  padding: 0.5rem 2rem 0.5rem 0.625rem;
   border-radius: var(--radius-md);
   color: var(--app-text-muted);
   font-size: 0.8125rem;
@@ -408,31 +455,14 @@ onUnmounted(() => {
   background: var(--app-active);
   font-weight: 500;
 }
-.row-action {
+.row-menu {
   position: absolute;
-  right: 1.85rem;
+  right: 0.25rem;
   display: none;
-  align-items: center;
-  justify-content: center;
-  width: 1.65rem;
-  height: 1.65rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  cursor: pointer;
 }
-.row-action:last-child {
-  right: 0.2rem;
-}
-.chat-list-row:hover .row-action,
-.row-action:focus-visible {
-  display: flex;
-}
-.row-action:hover {
-  background: var(--app-surface);
-  color: var(--color-base-content);
-}
-.row-action.danger:hover {
-  color: var(--color-error);
+.chat-list-row:hover .row-menu,
+.row-menu:focus-within {
+  display: inline-block;
 }
 .rename-form {
   width: 100%;

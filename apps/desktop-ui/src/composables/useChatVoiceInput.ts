@@ -14,6 +14,7 @@ export function useChatVoiceInput() {
 
   const openChatVoiceInput = (options: { quickSend: boolean }) => {
     menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
+      inline: true,
       quickSend: options.quickSend,
       onCorrected: (
         text: string,

@@ -26,6 +26,7 @@ declare module 'vue' {
     ChatSidebar: typeof import('./src/components/chat/ChatSidebar.vue')['default']
     CommandEditor: typeof import('./src/components/settings/CommandEditor.vue')['default']
     CommandLauncher: typeof import('./src/components/menu/CommandLauncher.vue')['default']
+    ConfirmModal: typeof import('./src/components/common/ConfirmModal.vue')['default']
     ContentPadding: typeof import('./src/components/common/ContentPadding.vue')['default']
     CustomActionFields: typeof import('./src/components/settings/CustomActionFields.vue')['default']
     Diff: typeof import('./src/components/common/Diff.vue')['default']

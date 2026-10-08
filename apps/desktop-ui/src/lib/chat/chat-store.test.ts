@@ -468,4 +468,44 @@ describe('chat-store', () => {
     expect(deps.notifyError).not.toHaveBeenCalled()
     expect(store.newChatParams.value.id).toBe('chat-id-1')
   })
+
+  it('branches a dialogue from a selected message index', async () => {
+    let idCounter = 1
+    const deps = createDeps({ createId: () => `branch-id-${idCounter++}` })
+    const store = createChatStoreModel(deps)
+    store.newChatParams.value = {
+      id: 'original-id',
+      title: 'Original Title',
+      attachments: [],
+    }
+    store.messages.value = [
+      { role: 'user', content: 'Turn 1' },
+      { role: 'assistant', content: 'Reply 1' },
+      { role: 'user', content: 'Turn 2' },
+      { role: 'assistant', content: 'Reply 2' },
+    ]
+
+    const branched = await store.branchChat(1)
+
+    expect(branched).toBe(true)
+    expect(store.newChatParams.value.id).toBe('branch-id-1')
+    expect(store.newChatParams.value.title).toBe('Original Title (branch)')
+    expect(store.messages.value).toHaveLength(2)
+    expect(store.messages.value[0]?.content).toBe('Turn 1')
+    expect(store.messages.value[1]?.content).toBe('Reply 1')
+    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'branch-id-1',
+        description: 'Original Title (branch)',
+        messages: expect.arrayContaining([
+          expect.objectContaining({ content: 'Turn 1' }),
+          expect.objectContaining({ content: 'Reply 1' }),
+        ]),
+      })
+    )
+    expect(deps.saveLocalState).toHaveBeenCalledWith({
+      lastChatId: 'branch-id-1',
+    })
+    expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
+  })
 })

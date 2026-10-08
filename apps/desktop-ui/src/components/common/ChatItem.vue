@@ -10,6 +10,19 @@
         />
       </div>
 
+      <div v-if="message.role === 'assistant'" class="assistant-header">
+        <div class="assistant-badge">
+          <Icon
+            icon="mdi:creation-outline"
+            height="14"
+            class="assistant-icon"
+          />
+          <span class="assistant-name">{{
+            assistantName || t('chat.assistant')
+          }}</span>
+        </div>
+      </div>
+
       <div
         v-if="message.role === 'assistant'"
         ref="markdownRoot"
@@ -21,49 +34,40 @@
         {{ message.content }}
       </div>
 
-      <div
-        v-if="message.content"
-        class="message-actions"
-        :class="{ 'is-confirming': confirming }"
-      >
+      <div v-if="message.content" class="message-actions">
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
-        <button type="button" class="message-action" @click="copyMessage">
+        <button
+          type="button"
+          class="message-action"
+          :title="t('chat.copy')"
+          @click="copyMessage"
+        >
           <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
           {{ copied ? t('chat.copied') : t('chat.copy') }}
         </button>
-        <template v-if="message.role === 'assistant'">
-          <span v-if="confirming" class="regenerate-confirm">
-            <span>{{ t('chat.regenerateConfirm') }}</span>
-            <button
-              type="button"
-              class="message-action"
-              @click="confirming = false"
-            >
-              {{ t('common.cancel') }}
-            </button>
-            <button
-              type="button"
-              class="message-action is-danger"
-              :disabled="generating"
-              @click="regenerate"
-            >
-              <Icon icon="mdi:reload" height="14" />
-              {{ t('chat.regenerate') }}
-            </button>
-          </span>
-          <button
-            v-else
-            type="button"
-            class="message-action"
-            :disabled="generating"
-            @click="regenerate"
-          >
-            <Icon icon="mdi:reload" height="14" />
-            {{ t('chat.regenerate') }}
-          </button>
-        </template>
+        <button
+          type="button"
+          class="message-action"
+          :title="t('chat.copyMarkdown')"
+          @click="copyMarkdown"
+        >
+          <Icon
+            :icon="copiedMarkdown ? 'mdi:check' : 'mdi:language-markdown'"
+            height="14"
+          />
+          {{ copiedMarkdown ? t('chat.copied') : t('chat.copyMarkdown') }}
+        </button>
+        <button
+          type="button"
+          class="message-action"
+          :title="t('chat.branchChat')"
+          @click="branch"
+        >
+          <Icon icon="mdi:source-branch" height="14" />
+          {{ t('chat.branchChat') }}
+        </button>
       </div>
     </div>
   </article>
@@ -85,25 +89,15 @@ import ChatAttachment from '../chat/ChatAttachment.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
 
-const props = defineProps<{
-  message: ChatMessage
-  generating?: boolean
-  /** Regenerating drops the later messages, so it asks first */
-  confirmRegenerate?: boolean
-}>()
-const emit = defineEmits<{ (e: 'regenerate'): void }>()
+const props = defineProps<{ message: ChatMessage; assistantName?: string }>()
+const emit = defineEmits<{ (e: 'branch'): void }>()
 const { t } = useI18n()
 const markdownRoot = ref<HTMLElement | null>(null)
 const copied = ref(false)
-const confirming = ref(false)
+const copiedMarkdown = ref(false)
 
-function regenerate() {
-  if (props.confirmRegenerate && !confirming.value) {
-    confirming.value = true
-    return
-  }
-  confirming.value = false
-  emit('regenerate')
+function branch() {
+  emit('branch')
 }
 let highlightTimer: number | undefined
 const renderedContent = computed(() =>
@@ -145,6 +139,25 @@ function copyMessage() {
   void copyText(props.message.content)
 }
 
+async function copyMarkdown() {
+  let md = props.message.content
+  if (props.message.attachments?.length) {
+    const quotes = props.message.attachments
+      .map((a) =>
+        a
+          .trim()
+          .split('\n')
+          .map((l) => `> ${l}`)
+          .join('\n')
+      )
+      .join('\n\n')
+    md = `${quotes}\n\n${md}`
+  }
+  await navigator.clipboard.writeText(md)
+  copiedMarkdown.value = true
+  window.setTimeout(() => (copiedMarkdown.value = false), 1500)
+}
+
 function handleMarkdownClick(event: MouseEvent) {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
     '[data-code-copy]'
@@ -171,6 +184,31 @@ onBeforeUnmount(() => {
 }
 .chat-item.is-user {
   justify-content: flex-end;
+}
+.chat-item.is-assistant .chat-item-content {
+  width: 100%;
+}
+.assistant-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+.assistant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
+  color: var(--app-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  user-select: none;
+}
+.assistant-icon {
+  color: var(--color-primary);
 }
 .chat-item.is-assistant .chat-item-content {
   width: 100%;
@@ -294,8 +332,7 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
 }
 .chat-item-content:hover .message-actions,
-.message-actions:focus-within,
-.message-actions.is-confirming {
+.message-actions:focus-within {
   opacity: 1;
 }
 .message-action {
@@ -321,17 +358,6 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: var(--space-xs);
   margin-bottom: var(--space-xs);
-}
-.regenerate-confirm {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--app-text-muted);
-  font-size: 0.72rem;
-}
-.message-action.is-danger {
-  color: var(--color-error);
 }
 @media (hover: none) {
   .message-actions {

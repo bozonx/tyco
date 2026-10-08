@@ -39,6 +39,7 @@
         :key="idx"
         type="button"
         class="dropdown-item"
+        :class="{ 'is-danger': item.danger }"
         @click="selectItem(item)"
       >
         <Icon
@@ -61,6 +62,7 @@ import { Icon } from '@iconify/vue'
 export interface DropdownMenuItem {
   label: string
   icon?: string
+  danger?: boolean
   action: () => void | Promise<void>
 }
 
@@ -153,5 +155,15 @@ onUnmounted(() => {
 .dropdown-item:focus-visible {
   background-color: var(--app-hover);
   outline: none;
+}
+
+.dropdown-item.is-danger {
+  color: var(--color-error);
+}
+
+.dropdown-item.is-danger:hover,
+.dropdown-item.is-danger:focus-visible {
+  background-color: var(--color-error);
+  color: var(--color-error-content, #fff);
 }
 </style>

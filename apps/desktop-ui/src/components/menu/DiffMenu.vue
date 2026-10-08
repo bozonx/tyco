@@ -87,7 +87,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
   return actionMenuStore.getShortcutActions().map((action) => {
     if (!action) return undefined
     if (action.id === 'insertIntoWindow' && !hasTargetWindow.value) {
-      return { ...action, disabled: true, hint: t('selectionReplace.noTarget') }
+      return { ...action, disabled: true, hint: t('selection.noTarget') }
     }
     return action
   })
@@ -99,9 +99,7 @@ const spaceKey = computed<ActionItem | undefined>(() => {
   return {
     ...primary,
     disabled: !hasTargetWindow.value,
-    hint: !hasTargetWindow.value
-      ? t('selectionReplace.noTarget')
-      : primary.hint,
+    hint: !hasTargetWindow.value ? t('selection.noTarget') : primary.hint,
   }
 })
 </script>

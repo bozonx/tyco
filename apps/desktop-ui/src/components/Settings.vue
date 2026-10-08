@@ -148,6 +148,20 @@
                 @update:value="setHistoryLimit('chatHistoryMaxItems', $event)"
               />
             </FieldRow>
+            <FieldRow
+              :label="t('settings.clearChatHistory')"
+              :info="t('settings.clearChatHistoryHint')"
+            >
+              <Button
+                xs
+                ghost
+                class="text-error"
+                icon="mdi:trash-can-outline"
+                @click="showClearChatHistoryModal = true"
+              >
+                {{ t('history.clear') }}
+              </Button>
+            </FieldRow>
           </SettingsSection>
 
           <SettingsSection :title="t('settings.sectionWindowInsertion')">
@@ -438,6 +452,16 @@
         />
       </div>
     </div>
+
+    <ConfirmModal
+      :open="showClearChatHistoryModal"
+      :title="t('history.clearConfirmTitle')"
+      :message="t('settings.clearChatHistoryConfirmDialog')"
+      :confirm-text="t('history.clearConfirmButton')"
+      danger
+      @confirm="onClearChatHistory"
+      @cancel="showClearChatHistoryModal = false"
+    />
   </div>
 </template>
 
@@ -488,9 +512,11 @@ import {
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
+import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
+import ConfirmModal from './common/ConfirmModal.vue'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
@@ -527,11 +553,20 @@ import {
 } from '@tyco/shared'
 
 const actionMenuStore = useActionMenuStore()
+const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const themeStore = useThemeStore()
 const { t } = useI18n()
-const { toastText } = useToast()
+const { toast, toastText } = useToast()
+
+const showClearChatHistoryModal = ref(false)
+
+async function onClearChatHistory() {
+  showClearChatHistoryModal.value = false
+  await historyStore.clearChatHistory()
+  toast(t('history.cleared'), 'info')
+}
 
 const SAVE_DEBOUNCE_MS = 500
 

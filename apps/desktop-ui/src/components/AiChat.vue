@@ -14,9 +14,8 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
-          :generating="chatStore.isGenerating"
-          :confirm-regenerate="index < chatStore.messages.length - 1"
-          @regenerate="regenerate(index)"
+          :assistant-name="chatStore.selectedModel?.name"
+          @branch="branch(index)"
         />
 
         <div
@@ -49,7 +48,14 @@
     </button>
 
     <div class="composer-wrap">
-      <div v-if="!chatStore.selectedModel" class="chat-no-models">
+      <VoiceRecognitionMenu
+        v-if="isInlineVoice"
+        variant="bar"
+        v-bind="menuModalsStore.currentModalParams"
+        @cancelled="menuModalsStore.closeAll()"
+        @corrected="menuModalsStore.closeAll()"
+      />
+      <div v-else-if="!chatStore.selectedModel" class="chat-no-models">
         <Icon icon="mdi:key-alert-outline" height="18" class="shrink-0" />
         <span>{{ t('chat.noModelsHint') }}</span>
         <Button xs icon="mdi:cog-outline" @click="openModelSettings">
@@ -113,6 +119,7 @@ import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
 
 import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
+import useToast from '../composables/useToast'
 import {
   newlineShortcut,
   resolveSubmitKey,
@@ -123,8 +130,10 @@ import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
+import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import ChatContextList from './chat/ChatContextList.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
+import VoiceRecognitionMenu from './menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
 
@@ -132,8 +141,16 @@ const chatInputStore = useChatInputStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const chatStore = useChatStore()
+const menuModalsStore = useMenuModalsStore()
+const { toast } = useToast()
 const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
+
+const isInlineVoice = computed(
+  () =>
+    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION &&
+    Boolean(menuModalsStore.currentModalParams?.inline)
+)
 
 const inputHint = computed(() => {
   const submitKey = resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
@@ -194,9 +211,10 @@ async function retry() {
   if (result) chatInputStore.clear()
 }
 
-async function regenerate(index: number) {
+async function branch(index: number) {
   pinnedToBottom.value = true
-  await chatStore.regenerateMessage(index)
+  await chatStore.branchChat(index)
+  toast(t('chat.branchCreated'), 'info')
 }
 
 function voiceInput() {

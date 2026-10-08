@@ -290,13 +290,13 @@ const translate = async (targetLanguage: string, source?: string) => {
   const stepId = menuModalsStore.currentStepId
   const controller = new AbortController()
   const stageLabels = {
-    translating: 'translationProgressTranslating',
-    checking: 'translationProgressChecking',
-    repairing: 'translationProgressRepairing',
+    translating: 'menu.translationProgressTranslating',
+    checking: 'menu.translationProgressChecking',
+    repairing: 'menu.translationProgressRepairing',
   } as const
   const setStage = (stage: keyof typeof stageLabels) =>
     menuModalsStore.setPendingModal({
-      label: t(`menu.${stageLabels[stage]}`),
+      label: t(stageLabels[stage]),
       onCancel: () => controller.abort(),
     })
   setStage('translating')

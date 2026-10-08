@@ -6,7 +6,7 @@ import { DEFAULT_UI_LOCALE, type UiLocale, messages } from './messages'
 export const i18n = createI18n({
   legacy: false,
   locale: DEFAULT_UI_LOCALE,
-  fallbackLocale: DEFAULT_UI_LOCALE,
+  fallbackLocale: false,
   messages,
   missingWarn: false,
   fallbackWarn: false,

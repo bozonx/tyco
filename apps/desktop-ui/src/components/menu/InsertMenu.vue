@@ -245,7 +245,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
       if (item.id === 'insertIntoWindow' && !ipcStore.params?.windowId) {
-        return { ...item, disabled: true, hint: t('selectionReplace.noTarget') }
+        return { ...item, disabled: true, hint: t('selection.noTarget') }
       }
       return { ...item, disabled: item.disabled || shouldDisableAction(item) }
     }
@@ -264,7 +264,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   const disabled = firstItem.disabled || shouldDisableAction(firstItem)
   const hint =
     firstItem.id === 'insertIntoWindow' && !ipcStore.params?.windowId
-      ? t('selectionReplace.noTarget')
+      ? t('selection.noTarget')
       : firstItem.hint
 
   return { ...firstItem, disabled, hint }

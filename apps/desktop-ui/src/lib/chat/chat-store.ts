@@ -346,6 +346,24 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     return result
   }
 
+  const branchChat = async (messageIndex: number): Promise<boolean> => {
+    if (messageIndex < 0 || messageIndex >= messages.value.length) return false
+    const slice = messages.value
+      .slice(0, messageIndex + 1)
+      .map((m) => ({ ...m }))
+    const originalTitle = newChatParams.value.title || ''
+    const title = originalTitle ? `${originalTitle} (branch)` : ''
+    const id = deps.createId()
+
+    stopGeneration()
+    reset({ id, title, attachments: [] })
+    messages.value = slice
+    await persist(slice)
+    await deps.saveLocalState({ lastChatId: id })
+    await deps.navigateTo(APP_ROUTES.CHAT.path)
+    return true
+  }
+
   const startChat = async (chatParams: ChatParams) => {
     clearChat()
     newChatParams.value = { ...chatParams, id: deps.createId() }
@@ -412,6 +430,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     stopGeneration,
     retryLastTurn,
     regenerateMessage,
+    branchChat,
     startChat,
     openChat,
     clearChat,

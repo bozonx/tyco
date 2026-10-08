@@ -21,6 +21,17 @@
       removable
       @remove="dismissEditorContext"
     />
+    <Button
+      v-if="chatStore.editorContext && chatStore.messages.length > 0"
+      xs
+      ghost
+      icon="mdi:message-plus-outline"
+      class="new-chat-context-btn"
+      :title="t('chat.startNewChatWithContext')"
+      @click="startNewChatWithContext"
+    >
+      {{ t('chat.startNewChatWithContext') }}
+    </Button>
   </div>
 </template>
 
@@ -29,6 +40,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { useChatStore } from '../../stores/chat'
+import Button from '../common/Button.vue'
 import ChatAttachment from './ChatAttachment.vue'
 
 /** What goes to the next chat message along with it */
@@ -51,6 +63,12 @@ function dismissEditorContext() {
   const context = chatStore.editorContext
   if (context) chatStore.dismissEditorContext(context.text)
 }
+
+function startNewChatWithContext() {
+  const context = chatStore.editorContext
+  if (!context) return
+  void chatStore.startChat({ attachments: [context.text] })
+}
 </script>
 
 <style scoped>
@@ -59,5 +77,9 @@ function dismissEditorContext() {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
+}
+.new-chat-context-btn {
+  font-size: 0.72rem;
+  color: var(--color-primary);
 }
 </style>

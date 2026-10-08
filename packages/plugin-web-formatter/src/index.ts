@@ -75,10 +75,11 @@ export default function pluginIndex(): PluginDefinition {
           name: 'xmlWhitespaceSensitivity',
           labelKey: 'local.xmlWhitespace',
           defaultValue: 'preserve',
-          options: ['strict', 'preserve', 'ignore'].map((id) => ({
-            id,
-            labelKey: `local.xml${id[0]!.toUpperCase()}${id.slice(1)}`,
-          })),
+          options: [
+            { id: 'strict', labelKey: 'local.xmlStrict' },
+            { id: 'preserve', labelKey: 'local.xmlPreserve' },
+            { id: 'ignore', labelKey: 'local.xmlIgnore' },
+          ],
         },
       ] satisfies InputConfigItem[],
     },
