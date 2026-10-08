@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-6">
     <SettingsSection
       :title="t('settings.sectionMarkdown')"
-      :description="t('settings.markdownHint')"
+      :info="t('settings.markdownHint')"
     >
       <FieldRow
         v-for="field in markdownFields"
@@ -24,7 +24,7 @@
 
     <SettingsSection
       :title="t('settings.sectionMarkdownClean')"
-      :description="t('settings.markdownCleanHint')"
+      :info="t('settings.markdownCleanHint')"
     >
       <FieldRow :label="t('settings.markdownCleanBullet')">
         <FieldSelect

@@ -33,9 +33,9 @@ describe('SettingsEditorTab.vue', () => {
       global: {
         stubs: {
           SettingsSection: {
-            props: ['title', 'description'],
+            props: ['title', 'description', 'info'],
             template:
-              '<section class="section-stub" :data-title="title"><slot /></section>',
+              '<section class="section-stub" :data-title="title" :data-info="info"><slot /></section>',
           },
           FieldRow: {
             props: ['label'],
@@ -59,8 +59,12 @@ describe('SettingsEditorTab.vue', () => {
     expect(sections[0].attributes('data-title')).toBe(
       'settings.sectionMarkdown'
     )
+    expect(sections[0].attributes('data-info')).toBe('settings.markdownHint')
     expect(sections[1].attributes('data-title')).toBe(
       'settings.sectionMarkdownClean'
+    )
+    expect(sections[1].attributes('data-info')).toBe(
+      'settings.markdownCleanHint'
     )
 
     // Markdown formatting rows
