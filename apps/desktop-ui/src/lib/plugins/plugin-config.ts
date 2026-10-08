@@ -98,7 +98,7 @@ export function applyPluginDefaults(
       if (plugin._loadError) continue
       const state = getPluginState(plugin, states)
       const config = resolvePluginConfig(plugin, state)
-      result[pluginId(plugin)] = { ...config, enabled: state.enabled !== false }
+      result[pluginId(plugin)] = { ...config, enabled: state.enabled === true }
     } catch {
       // Preserve settings for a broken package; the runtime reports the error.
     }

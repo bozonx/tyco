@@ -46,7 +46,7 @@ describe('plugin-settings', () => {
       version: '1.0.0',
       canRestore: false,
       labelKey: 'plugin.alpha.label',
-      enabled: true,
+      enabled: false,
       fields: [
         {
           type: 'text',
@@ -56,7 +56,7 @@ describe('plugin-settings', () => {
         },
       ],
     })
-    expect(plugins[1].enabled).toBe(true)
+    expect(plugins[1].enabled).toBe(false)
     expect(plugins[1].fields).toHaveLength(0)
   })
 

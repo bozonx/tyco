@@ -73,11 +73,11 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     userConfig?: { plugins?: Record<string, unknown> }
   ) => {
     const state = userConfig?.plugins?.[id]
-    return !(
+    return Boolean(
       state &&
       typeof state === 'object' &&
       'enabled' in state &&
-      state.enabled === false
+      state.enabled === true
     )
   }
   async function deactivate(id: string) {
@@ -140,7 +140,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
           if (
             !plugin ||
             plugin._loadError ||
-            getPluginState(plugin, states).enabled === false
+            getPluginState(plugin, states).enabled !== true
           )
             await deactivate(id)
         }
@@ -149,7 +149,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
             if (requested !== revision || disposed) return
             try {
               const state = getPluginState(plugin, states)
-              if (state.enabled === false || plugin._loadError) {
+              if (state.enabled !== true || plugin._loadError) {
                 setState(
                   id,
                   plugin._loadError

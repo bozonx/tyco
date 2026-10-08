@@ -34,7 +34,7 @@ export function resolveInstalledPlugins(
     } catch (reason) {
       error = reason instanceof Error ? reason.message : String(reason)
     }
-    const isEnabled = pluginState.enabled !== false
+    const isEnabled = pluginState.enabled === true
     const rawFields = plugin.defaultConfig?.fields || []
 
     return {
