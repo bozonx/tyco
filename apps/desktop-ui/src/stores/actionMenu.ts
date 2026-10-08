@@ -42,6 +42,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       // the result replaces the text in the editor as well
       correctionStore.start(text, { toEditorVisible: true, ...extra }),
     startChatWithAttachment: (text: string) => {
+      menuModalsStore.closeAll()
       void chatStore.attachToChat(text)
     },
     minCorrectionLength: () => appConfig.value.minCorrectionLength,

@@ -694,7 +694,7 @@ fn portal_registered(_app: &AppHandle) -> bool {
     false
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 10] = [
     StartMode::Editor,
     StartMode::Write,
     StartMode::Chat,
@@ -703,6 +703,8 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 8] = [
     StartMode::Select,
     StartMode::AiTasks,
     StartMode::CommandLauncher,
+    StartMode::Correction,
+    StartMode::Translate,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -772,6 +774,7 @@ fn default_key(mode: StartMode) -> Option<&'static str> {
         | StartMode::AiTasks
         | StartMode::CommandLauncher
         | StartMode::Correction
+        | StartMode::Translate
         | StartMode::History
         | StartMode::Config => None,
     }
@@ -1041,6 +1044,7 @@ fn mode_description(mode: StartMode) -> &'static str {
         StartMode::AiTasks => "Open AI tasks",
         StartMode::CommandLauncher => "Run a command",
         StartMode::Correction => "Correct selected text with review",
+        StartMode::Translate => "Translate selected text",
         StartMode::History => "Open history",
         StartMode::Config => "Open settings",
     }
@@ -1205,13 +1209,13 @@ mod tests {
     }
 
     #[test]
-    fn does_not_bind_the_correction_mode() {
+    fn does_not_bind_history_or_config_modes() {
         let bindings = bindings_from_config(&json!({
-            "hotkeys": { "correction": "Ctrl+Alt+R" }
+            "hotkeys": { "history": "Ctrl+Alt+H", "config": "Ctrl+Alt+Comma" }
         }));
-        assert!(bindings
-            .iter()
-            .all(|binding| binding.target != HotkeyTarget::Mode(StartMode::Correction)));
+        assert!(bindings.iter().all(|binding| binding.target
+            != HotkeyTarget::Mode(StartMode::History)
+            && binding.target != HotkeyTarget::Mode(StartMode::Config)));
     }
 
     #[test]
@@ -1235,11 +1239,19 @@ mod tests {
             Some(HotkeyTarget::Mode(StartMode::Editor))
         );
         assert_eq!(
+            global_target("correction"),
+            Some(HotkeyTarget::Mode(StartMode::Correction))
+        );
+        assert_eq!(
+            global_target("translate"),
+            Some(HotkeyTarget::Mode(StartMode::Translate))
+        );
+        assert_eq!(
             global_target("replace.correction"),
             Some(HotkeyTarget::Selection(String::from("correction")))
         );
         assert_eq!(global_target("history"), None);
-        assert_eq!(global_target("correction"), None);
+        assert_eq!(global_target("config"), None);
         assert_eq!(global_target("replace.translate.0"), None);
         assert_eq!(global_target("bogus"), None);
     }

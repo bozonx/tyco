@@ -90,6 +90,9 @@ vi.mock('../../views/CommandLauncherView.vue', () => ({
 vi.mock('../../views/CorrectionModeView.vue', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('../../views/TranslateModeView.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
     setup() {
@@ -330,7 +333,7 @@ describe('quick overlay menus', () => {
     }
   }
 
-  it.each(['select', 'aiTasks', 'commandLauncher'])(
+  it.each(['select', 'aiTasks', 'commandLauncher', 'translate'])(
     'dismisses the %s menu when the focus goes elsewhere',
     async (mode) => {
       await loseFocus(mode)

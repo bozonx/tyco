@@ -366,12 +366,14 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
    * a new one otherwise
    */
   const attachToChat = async (text: string) => {
+    const trimmed = text?.trim()
+    if (!trimmed) return
     if (messages.value.length > 0 || isGenerating.value) {
-      await startChat({ attachments: [text] })
+      await startChat({ attachments: [trimmed] })
       return
     }
     if (!newChatParams.value.id) newChatParams.value.id = deps.createId()
-    addAttachment(text)
+    addAttachment(trimmed)
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 

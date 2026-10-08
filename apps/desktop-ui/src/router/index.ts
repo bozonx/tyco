@@ -9,6 +9,7 @@ import SelectModeView from '../views/SelectModeView.vue'
 import AiTaskView from '../views/AiTaskView.vue'
 import CommandLauncherView from '../views/CommandLauncherView.vue'
 import CorrectionModeView from '../views/CorrectionModeView.vue'
+import TranslateModeView from '../views/TranslateModeView.vue'
 import EditorView from '../views/EditorView.vue'
 import { APP_ROUTES } from '../lib/navigation/routes'
 
@@ -62,6 +63,11 @@ const router = createRouter({
       path: APP_ROUTES.CORRECTION.path,
       name: APP_ROUTES.CORRECTION.name,
       component: CorrectionModeView,
+    },
+    {
+      path: APP_ROUTES.TRANSLATE.path,
+      name: APP_ROUTES.TRANSLATE.name,
+      component: TranslateModeView,
     },
     {
       path: APP_ROUTES.SELECT.path,

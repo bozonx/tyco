@@ -356,8 +356,6 @@ fn normalize_hotkeys_config(user_config: &mut Value) -> bool {
     let previous_hotkeys = hotkeys.clone();
     hotkeys.remove("history");
     hotkeys.remove("config");
-    // the correction with review is no longer a global hotkey
-    hotkeys.remove("correction");
     for (mode, shortcut) in default_hotkeys {
         hotkeys.entry(mode).or_insert(shortcut);
     }
@@ -1990,13 +1988,13 @@ mod tests {
     #[test]
     fn normalize_hotkeys_drops_removed_hotkeys() {
         let mut config = json!({
-            "hotkeys": { "correction": "Ctrl+Alt+R" },
+            "hotkeys": { "history": "Ctrl+Alt+H" },
             "selectionHotkeys": { "correction": "Ctrl+Alt+X", "translate.0": "Ctrl+Alt+1" },
             "selectionReplace": { "whenEmpty": "selectAll" }
         });
 
         assert!(normalize_hotkeys_config(&mut config));
-        assert!(config["hotkeys"].get("correction").is_none());
+        assert!(config["hotkeys"].get("history").is_none());
         assert_eq!(
             config["selectionHotkeys"],
             json!({ "correction": "Ctrl+Alt+X" })

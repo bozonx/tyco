@@ -39,6 +39,9 @@
       <div v-show="currentMode === 'correction'" class="quick-mode-layer">
         <CorrectionModeView v-if="currentMode === 'correction'" />
       </div>
+      <div v-show="currentMode === 'translate'" class="quick-mode-layer">
+        <TranslateModeView v-if="currentMode === 'translate'" />
+      </div>
     </div>
   </div>
 </template>
@@ -64,6 +67,7 @@ import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
+import TranslateModeView from '../../views/TranslateModeView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -108,6 +112,7 @@ const DISMISSIBLE_MODES = new Set([
   'select',
   'aiTasks',
   'commandLauncher',
+  'translate',
 ])
 
 /**

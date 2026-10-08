@@ -12,13 +12,14 @@ pub enum StartMode {
     AiTasks,
     CommandLauncher,
     Correction,
+    Translate,
     History,
     Config,
 }
 
 impl StartMode {
     #[allow(dead_code)]
-    pub const ALL: [Self; 11] = [
+    pub const ALL: [Self; 12] = [
         Self::Editor,
         Self::Write,
         Self::Chat,
@@ -28,6 +29,7 @@ impl StartMode {
         Self::AiTasks,
         Self::CommandLauncher,
         Self::Correction,
+        Self::Translate,
         Self::History,
         Self::Config,
     ];
@@ -43,6 +45,7 @@ impl StartMode {
             "aiTasks" => Ok(Self::AiTasks),
             "commandLauncher" => Ok(Self::CommandLauncher),
             "correction" => Ok(Self::Correction),
+            "translate" => Ok(Self::Translate),
             "history" => Ok(Self::History),
             "config" => Ok(Self::Config),
             _ => Err(AppError::Message(format!(
@@ -62,6 +65,7 @@ impl StartMode {
             Self::AiTasks => "aiTasks",
             Self::CommandLauncher => "commandLauncher",
             Self::Correction => "correction",
+            Self::Translate => "translate",
             Self::History => "history",
             Self::Config => "config",
         }
@@ -158,6 +162,7 @@ mod tests {
             "aiTasks",
             "commandLauncher",
             "correction",
+            "translate",
             "history",
             "config",
         ] {
@@ -185,6 +190,7 @@ mod tests {
             StartMode::AiTasks,
             StartMode::CommandLauncher,
             StartMode::Correction,
+            StartMode::Translate,
             StartMode::Chat,
             StartMode::VoiceChat,
             StartMode::History,

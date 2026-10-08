@@ -15,6 +15,7 @@ pub const START_MODES: &[&str] = &[
     "aiTasks",
     "commandLauncher",
     "correction",
+    "translate",
     "history",
     "config",
 ];

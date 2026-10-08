@@ -88,6 +88,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'insertIntoWindow',
       labelKey: 'action.insertIntoWindow',
+      icon: 'mdi:application-export',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')
@@ -100,6 +101,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'copyToClipboard',
       labelKey: 'action.copyToClipboard',
+      icon: 'mdi:clipboard-arrow-right-outline',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')
@@ -112,6 +114,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'aiTask',
       labelKey: 'action.aiTask',
+      icon: 'mdi:robot-outline',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')
@@ -123,11 +126,13 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'correction',
       labelKey: 'action.correction',
+      icon: 'mdi:auto-fix',
       action: (text: string) => correct(text),
     },
     {
       id: 'translation',
       labelKey: 'action.translation',
+      icon: 'mdi:translate',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')
@@ -139,6 +144,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     {
       id: 'askInChat',
       labelKey: 'action.askInChat',
+      icon: 'mdi:chat-outline',
       action: async (text: string) => {
         if (!text?.trim()) {
           deps.showToast('toast.textNotSelected', 'error')

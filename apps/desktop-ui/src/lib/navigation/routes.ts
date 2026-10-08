@@ -12,6 +12,7 @@ export const APP_ROUTE_NAMES = {
   SELECT: 'select',
   COMMAND_LAUNCHER: 'commandLauncher',
   CORRECTION: 'correction',
+  TRANSLATE: 'translate',
 } as const
 
 export const APP_ROUTES = {
@@ -29,6 +30,7 @@ export const APP_ROUTES = {
     path: '/commandLauncher',
   },
   CORRECTION: { name: APP_ROUTE_NAMES.CORRECTION, path: '/correction' },
+  TRANSLATE: { name: APP_ROUTE_NAMES.TRANSLATE, path: '/translate' },
 } as const
 
 export type AppRouteName =
@@ -41,6 +43,7 @@ export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
   [START_MODES.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
   [START_MODES.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [START_MODES.CORRECTION]: APP_ROUTES.CORRECTION.path,
+  [START_MODES.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
   [START_MODES.EDITOR]: APP_ROUTES.EDITOR.path,
   [START_MODES.WRITE]: APP_ROUTES.WRITE.path,
   [START_MODES.CHAT]: APP_ROUTES.CHAT.path,

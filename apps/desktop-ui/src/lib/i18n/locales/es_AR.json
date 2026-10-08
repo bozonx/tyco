@@ -313,6 +313,8 @@
       "aiTasks": "Tareas de IA",
       "commandLauncher": "Panel de comandos",
       "inlineCorrection": "Corregir el texto seleccionado en su lugar",
+      "correction": "Corrección con vista previa",
+      "translate": "Traducir el texto seleccionado",
       "history": "Historial",
       "config": "Configuración"
     },

@@ -310,6 +310,8 @@
       "aiTasks": "AI tasks",
       "commandLauncher": "Command overlay",
       "inlineCorrection": "Correct selected text in place",
+      "correction": "Correction with preview",
+      "translate": "Translate selected text",
       "history": "History",
       "config": "Settings"
     },

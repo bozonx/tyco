@@ -20,6 +20,7 @@ export enum START_MODES {
   AI_TASKS = 'aiTasks',
   COMMAND_LAUNCHER = 'commandLauncher',
   CORRECTION = 'correction',
+  TRANSLATE = 'translate',
   EDITOR = 'editor',
   WRITE = 'write',
   CHAT = 'chat',

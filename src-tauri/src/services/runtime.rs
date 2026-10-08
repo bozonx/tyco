@@ -324,7 +324,8 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
         | StartMode::Select
         | StartMode::AiTasks
         | StartMode::CommandLauncher
-        | StartMode::Correction => QUICK_WINDOW_LABEL,
+        | StartMode::Correction
+        | StartMode::Translate => QUICK_WINDOW_LABEL,
         StartMode::Editor
         | StartMode::Chat
         | StartMode::VoiceChat
@@ -385,6 +386,7 @@ pub fn open_main_editor(
 ) -> Result<(), AppError> {
     show_main_with(
         app,
+        StartMode::Editor,
         OPEN_MAIN_EDITOR_EVENT,
         serde_json::json!({ "text": text, "sourceText": source_text }),
     )
@@ -393,6 +395,7 @@ pub fn open_main_editor(
 pub fn open_main_chat(app: &AppHandle, text: Option<String>) -> Result<(), AppError> {
     show_main_with(
         app,
+        StartMode::Chat,
         OPEN_MAIN_CHAT_EVENT,
         serde_json::json!({ "text": text }),
     )
@@ -401,11 +404,12 @@ pub fn open_main_chat(app: &AppHandle, text: Option<String>) -> Result<(), AppEr
 /// Shows the main window and hands `payload` over to it.
 fn show_main_with(
     app: &AppHandle,
+    mode: StartMode,
     event: &'static str,
     payload: serde_json::Value,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        show_application_on_main_thread(app)?;
+        show_application_mode_on_main_thread(app, mode)?;
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
             .ok_or_else(|| AppError::Message("Main window not found".into()))?;
@@ -440,6 +444,10 @@ fn is_quick_window_shown(active_label: &str, is_window_shown: bool) -> bool {
 }
 
 fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
+    show_application_mode_on_main_thread(app, StartMode::Editor)
+}
+
+fn show_application_mode_on_main_thread(app: &AppHandle, mode: StartMode) -> Result<(), AppError> {
     app.state::<RuntimeWindows>()
         .set_active_label(MAIN_WINDOW_LABEL);
     hide_inactive_window(app, MAIN_WINDOW_LABEL)?;
@@ -463,11 +471,11 @@ fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     state.update_params(|params| {
         params.activation_id = params.activation_id.wrapping_add(1);
         params.selected_text = None;
-        params.mode = Some(StartMode::Editor.as_str().into());
+        params.mode = Some(mode.as_str().into());
         params.is_window_shown = true;
         params.window_profile = WindowProfile::Sheet;
     });
-    log::debug!("Showed main application from tray");
+    log::debug!("Showed main application with mode {}", mode.as_str());
     emit_params(app, &state)
 }
 
@@ -804,6 +812,7 @@ mod tests {
             StartMode::AiTasks,
             StartMode::CommandLauncher,
             StartMode::Correction,
+            StartMode::Translate,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
         }

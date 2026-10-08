@@ -19,6 +19,7 @@ import { useEditorInputStore } from './editorInput'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
+import { useMenuModalsStore } from './menuModals'
 import { makeUniqId } from '@/lib/squidlet-lib-local'
 
 export const useChatStore = defineStore('chat', () => {
@@ -29,6 +30,7 @@ export const useChatStore = defineStore('chat', () => {
   const historyStore = useHistoryStore()
   const editorInputStore = useEditorInputStore()
   const chatInputStore = useChatInputStore()
+  const menuModalsStore = useMenuModalsStore()
 
   const modelOptions = computed(() =>
     chatModelOptions(
@@ -117,6 +119,7 @@ export const useChatStore = defineStore('chat', () => {
       await saveLocalState({ lastChatModelId: id })
     },
     async startChat(params: Parameters<typeof model.startChat>[0]) {
+      menuModalsStore.closeAll()
       if (!(await inMainWindow(params.attachments?.[0]))) return
       await model.startChat(params)
       await nextTick()
@@ -124,10 +127,24 @@ export const useChatStore = defineStore('chat', () => {
     },
     /** Gives a text selected elsewhere to the chat */
     async attachToChat(text: string) {
+      menuModalsStore.closeAll()
       if (!(await inMainWindow(text))) return
       await model.attachToChat(text)
       await nextTick()
       chatInputStore.focus()
+    },
+    async openLastOrNewChat() {
+      menuModalsStore.closeAll()
+      await model.openLastOrNewChat()
+      await nextTick()
+      chatInputStore.focus()
+    },
+    async openChat(id: string, options?: { silent?: boolean }) {
+      menuModalsStore.closeAll()
+      const result = await model.openChat(id, options)
+      await nextTick()
+      chatInputStore.focus()
+      return result
     },
     /** Sends the input; false when there is nothing to send or a reply runs */
     async sendInput(): Promise<boolean> {

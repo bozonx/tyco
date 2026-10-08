@@ -201,6 +201,9 @@ const MODE_ORDER = [
   'voiceChat',
   'select',
   'aiTasks',
+  'correction',
+  'translate',
+  'commandLauncher',
 ]
 const INLINE_CORRECTION = 'correction'
 

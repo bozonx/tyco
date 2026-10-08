@@ -30,7 +30,9 @@ async function closeEditor() {
 }
 
 function openInsertMenu() {
-  menuModalsStore.nextModal(MenuModals.INSERT, { text: editorInputStore.value })
+  menuModalsStore.nextModal(MenuModals.INSERT, {
+    text: editorInputStore.actionText(),
+  })
 }
 
 navPanelStore.resetNavParams({

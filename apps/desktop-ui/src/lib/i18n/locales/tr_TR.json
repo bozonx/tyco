@@ -313,6 +313,8 @@
       "aiTasks": "Yapay zekâ görevleri",
       "commandLauncher": "Komut paneli",
       "inlineCorrection": "Seçili metni yerinde düzelt",
+      "correction": "Önizlemeli düzeltme",
+      "translate": "Seçili metni çevir",
       "history": "Geçmiş",
       "config": "Ayarlar"
     },

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   focus: vi.fn(),
   clear: vi.fn(),
   setValue: vi.fn(),
+  closeAll: vi.fn(),
   input: { value: '' },
   editor: { value: '', selectedText: '' },
 }))
@@ -44,6 +45,11 @@ vi.mock('./ipc', () => ({
 }))
 vi.mock('./llm', () => ({ useLlmStore: () => ({ secrets: {} }) }))
 vi.mock('./history', () => ({ useHistoryStore: () => ({}) }))
+vi.mock('./menuModals', () => ({
+  useMenuModalsStore: () => ({
+    closeAll: mocks.closeAll,
+  }),
+}))
 vi.mock('./editorInput', () => ({ useEditorInputStore: () => mocks.editor }))
 vi.mock('./chatInput', () => ({
   useChatInputStore: () => ({
@@ -68,6 +74,7 @@ describe('chat window navigation', () => {
 
   it('opens the chat with context and focuses its input', async () => {
     await useChatStore().startChat({ attachments: ['  context  '] })
+    expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.startChat).toHaveBeenCalledWith({
       attachments: ['  context  '],
     })
@@ -78,6 +85,7 @@ describe('chat window navigation', () => {
   it('transfers context from the quick window to the main window', async () => {
     mocks.label = 'quick'
     await useChatStore().startChat({ attachments: ['  context  '] })
+    expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
       '  context  ',
     ])
@@ -88,6 +96,7 @@ describe('chat window navigation', () => {
   it('hands a selection over from the quick window as well', async () => {
     mocks.label = 'quick'
     await useChatStore().attachToChat('selection')
+    expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
       'selection',
     ])

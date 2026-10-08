@@ -105,4 +105,27 @@ describe('Editor actions shortcut', () => {
     expect(callFunctionSpy).toHaveBeenCalledWith('closeWindow')
     wrapper.unmount()
   })
+
+  it('opens actions with selected editor text when selection exists', () => {
+    const editor = useEditorInputStore()
+    editor.setValue('Full text', 'plain')
+    editor.setSelection('Selected snippet', 0, 16)
+    const modals = useMenuModalsStore()
+    const open = vi.spyOn(modals, 'nextModal')
+    const wrapper = mount(EditorView, {
+      global: {
+        stubs: {
+          Editor: true,
+          ContentPadding: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', ctrlKey: true })
+    )
+    expect(open).toHaveBeenCalledWith(MenuModals.INSERT, {
+      text: 'Selected snippet',
+    })
+    wrapper.unmount()
+  })
 })

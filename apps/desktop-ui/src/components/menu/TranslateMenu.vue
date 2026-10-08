@@ -52,6 +52,7 @@
         :text="props.text"
         :spaceKey="otherLanguageAction"
         :leftLetterKeys="leftLetterKeys"
+        :stopListening="props.stopListening"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
       />
     </template>
@@ -92,7 +93,10 @@ import QueryPanel, {
 } from './QueryPanel.vue'
 import { Icon } from '@iconify/vue'
 
-const props = withDefaults(defineProps<{ text?: string }>(), { text: '' })
+const props = withDefaults(
+  defineProps<{ text?: string; stopListening?: boolean }>(),
+  { text: '', stopListening: false }
+)
 
 const ipcStore = useIpcStore()
 const routeParamsStore = useRouteParams()

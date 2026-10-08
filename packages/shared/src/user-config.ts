@@ -447,6 +447,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     select: 'Ctrl+Alt+S',
     aiTasks: '',
     commandLauncher: '',
+    correction: '',
+    translate: '',
   },
   selectionHotkeys: { correction: 'Ctrl+Alt+F' },
   submitKey: DEFAULT_SUBMIT_KEY,
