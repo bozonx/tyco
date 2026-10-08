@@ -51,13 +51,22 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     deps.onStateChange?.(id, state)
   }
   const report = (id: string, error: unknown) => deps.reportError?.(id, error)
-  async function bounded<T>(work: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  async function bounded<T>(
+    work: Promise<T>,
+    timeoutMs: number,
+    message: string
+  ): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined
     try {
-      return await Promise.race([work, new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(message)), timeoutMs)
-      })])
-    } finally { clearTimeout(timer) }
+      return await Promise.race([
+        work,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(message)), timeoutMs)
+        }),
+      ])
+    } finally {
+      clearTimeout(timer)
+    }
   }
   const isPluginEnabled = (
     id: string,
@@ -78,13 +87,22 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     instance.controller.abort()
     deps.unregisterPlugin(id)
     try {
-      await bounded((async () => {
-        for (const cleanup of instance.cleanups.reverse()) {
-          try { await cleanup() } catch (error) { report(id, error) }
-        }
-      })(), deps.cleanupTimeoutMs ?? 2000, 'Plugin cleanup timed out')
-    } catch (error) { report(id, error) }
-
+      await bounded(
+        (async () => {
+          for (const cleanup of instance.cleanups.reverse()) {
+            try {
+              await cleanup()
+            } catch (error) {
+              report(id, error)
+            }
+          }
+        })(),
+        deps.cleanupTimeoutMs ?? 2000,
+        'Plugin cleanup timed out'
+      )
+    } catch (error) {
+      report(id, error)
+    }
   }
   function loadPlugins(userConfig?: { plugins?: Record<string, unknown> }) {
     if (disposed) return Promise.resolve()
@@ -109,7 +127,8 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               throw new Error(`Duplicate plugin ID: ${id}`)
             }
             pluginManifest(plugin)
-            if (typeof plugin.init !== 'function') throw new Error('Invalid plugin activation')
+            if (typeof plugin.init !== 'function')
+              throw new Error('Invalid plugin activation')
             definitions.set(id, plugin)
             deps.registerResources?.(plugin)
           } catch (error) {
@@ -125,86 +144,111 @@ export function createPluginManager(deps: PluginManagerDependencies) {
           )
             await deactivate(id)
         }
-        await Promise.all([...definitions].map(async ([id, plugin]) => {
-          if (requested !== revision || disposed) return
-          try {
-            const state = getPluginState(plugin, states)
-            if (state.enabled === false || plugin._loadError) {
-              setState(id, plugin._loadError ? { status: plugin._incompatible ? 'incompatible' : 'error', error: plugin._loadError } : { status: 'disabled' })
-              return
-            }
-            const config = resolvePluginConfig(plugin, state)
-            const signature = JSON.stringify([
-              plugin.version,
-              plugin._revision,
-              config,
-            ])
-            if (active.get(id)?.signature === signature) return
-            await deactivate(id)
-            const instance: ActivePlugin = {
-              signature,
-              initializing: true,
-              controller: new AbortController(),
-              cleanups: [],
-            }
-            active.set(id, instance)
-            setState(id, { status: 'activating' })
-            const lifecycle: PluginLifecycle = {
-              signal: instance.controller.signal,
-              capabilities: plugin.capabilities ?? [],
-              iconPrefix: plugin.icons?.prefix,
-              onDispose: (cleanup) => {
-                if (instance.controller.signal.aborted)
-                  throw new Error('Plugin is disposed')
-                if (instance.cleanups.length >= 64) throw new Error('Too many plugin cleanup handlers')
-                instance.cleanups.push(cleanup)
-              },
-            }
-            const ctx = deps.createPluginContext(
-              id,
-              () => clonePluginValue(config),
-              lifecycle
-            )
-            const activation = Promise.resolve(plugin.init(ctx))
-            // Late completion cannot resurrect a cancelled activation.
-            void activation
-              .then(async (cleanup) => {
-                if (instance.controller.signal.aborted && cleanup) {
-                  try {
-                    await bounded(Promise.resolve().then(cleanup), deps.cleanupTimeoutMs ?? 2000, 'Plugin cleanup timed out')
-                  } catch (error) {
-                    report(id, error)
+        await Promise.all(
+          [...definitions].map(async ([id, plugin]) => {
+            if (requested !== revision || disposed) return
+            try {
+              const state = getPluginState(plugin, states)
+              if (state.enabled === false || plugin._loadError) {
+                setState(
+                  id,
+                  plugin._loadError
+                    ? {
+                        status: plugin._incompatible ? 'incompatible' : 'error',
+                        error: plugin._loadError,
+                      }
+                    : { status: 'disabled' }
+                )
+                return
+              }
+              const config = resolvePluginConfig(plugin, state)
+              const signature = JSON.stringify([
+                plugin.version,
+                plugin._revision,
+                config,
+              ])
+              if (active.get(id)?.signature === signature) return
+              await deactivate(id)
+              const instance: ActivePlugin = {
+                signature,
+                initializing: true,
+                controller: new AbortController(),
+                cleanups: [],
+              }
+              active.set(id, instance)
+              setState(id, { status: 'activating' })
+              const lifecycle: PluginLifecycle = {
+                signal: instance.controller.signal,
+                capabilities: plugin.capabilities ?? [],
+                iconPrefix: plugin.icons?.prefix,
+                onDispose: (cleanup) => {
+                  if (instance.controller.signal.aborted)
+                    throw new Error('Plugin is disposed')
+                  if (instance.cleanups.length >= 64)
+                    throw new Error('Too many plugin cleanup handlers')
+                  instance.cleanups.push(cleanup)
+                },
+              }
+              const ctx = deps.createPluginContext(
+                id,
+                () => clonePluginValue(config),
+                lifecycle
+              )
+              const activation = Promise.resolve(plugin.init(ctx))
+              // Late completion cannot resurrect a cancelled activation.
+              void activation
+                .then(async (cleanup) => {
+                  if (instance.controller.signal.aborted && cleanup) {
+                    try {
+                      await bounded(
+                        Promise.resolve().then(cleanup),
+                        deps.cleanupTimeoutMs ?? 2000,
+                        'Plugin cleanup timed out'
+                      )
+                    } catch (error) {
+                      report(id, error)
+                    }
                   }
-                }
-              })
-              .catch(() => {})
-            const cleanup = await bounded(Promise.race([
-              activation,
-              new Promise<never>((_, reject) => {
-                const abort = () =>
-                  reject(new Error('Plugin activation cancelled'))
-                if (instance.controller.signal.aborted) abort()
-                else
-                  instance.controller.signal.addEventListener('abort', abort, {
-                    once: true,
-                  })
-              }),
-            ]), deps.activationTimeoutMs ?? 10000, 'Plugin activation timed out')
-            instance.initializing = false
-            if (cleanup && !instance.controller.signal.aborted)
-              instance.cleanups.push(cleanup)
-            if (requested !== revision || disposed) await deactivate(id)
-            else setState(id, { status: 'active' })
-          } catch (error) {
-            const cancelled = active.get(id)?.controller.signal.aborted
-            await deactivate(id)
-            if (!cancelled) {
-              report(id, error)
-              setState(id, { status: 'error', error: error instanceof Error ? error.message : String(error) })
+                })
+                .catch(() => {})
+              const cleanup = await bounded(
+                Promise.race([
+                  activation,
+                  new Promise<never>((_, reject) => {
+                    const abort = () =>
+                      reject(new Error('Plugin activation cancelled'))
+                    if (instance.controller.signal.aborted) abort()
+                    else
+                      instance.controller.signal.addEventListener(
+                        'abort',
+                        abort,
+                        { once: true }
+                      )
+                  }),
+                ]),
+                deps.activationTimeoutMs ?? 10000,
+                'Plugin activation timed out'
+              )
+              instance.initializing = false
+              if (cleanup && !instance.controller.signal.aborted)
+                instance.cleanups.push(cleanup)
+              if (requested !== revision || disposed) await deactivate(id)
+              else setState(id, { status: 'active' })
+            } catch (error) {
+              const cancelled = active.get(id)?.controller.signal.aborted
+              await deactivate(id)
+              if (!cancelled) {
+                report(id, error)
+                setState(id, {
+                  status: 'error',
+                  error: error instanceof Error ? error.message : String(error),
+                })
+              }
             }
-          }
-        }))
-        for (const id of runtimeStates.keys()) if (!definitions.has(id)) runtimeStates.delete(id)
+          })
+        )
+        for (const id of runtimeStates.keys())
+          if (!definitions.has(id)) runtimeStates.delete(id)
       })
       .catch((error) => report('manager', error))
     return pending

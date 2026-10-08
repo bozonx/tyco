@@ -48,9 +48,7 @@
     "id_ID": "Indonesian",
     "ms_MY": "Malay"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "nav": {
     "editor": "Editor",
     "aiChat": "AI Chat",
@@ -60,10 +58,7 @@
     "actions": "Actions (Esc)",
     "escSuffix": " (Esc)"
   },
-  "window": {
-    "close": "Close window",
-    "clickToFocus": "Click to continue"
-  },
+  "window": { "close": "Close window", "clickToFocus": "Click to continue" },
   "mode": {
     "write": "Writing mode",
     "voice": "Voice mode",
@@ -327,9 +322,7 @@
       "history": "History",
       "config": "Settings"
     },
-    "hotkeyStatus": {
-      "conflict": "This combination is unavailable"
-    },
+    "hotkeyStatus": { "conflict": "This combination is unavailable" },
     "hotkeyProvider": {
       "portal": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them with “Change in system”.",
       "external": "This session does not let Tyco bind global hotkeys. Add the commands below to your compositor configuration.",

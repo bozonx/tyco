@@ -73,12 +73,21 @@ export function createPluginContext(
     items: T[]
   ): T[] {
     check()
-    if (!Array.isArray(items) || items.length > 256 || ids.size + items.length > 1024) throw new Error('Too many plugin contributions')
+    if (
+      !Array.isArray(items) ||
+      items.length > 256 ||
+      ids.size + items.length > 1024
+    )
+      throw new Error('Too many plugin contributions')
     const next = new Set(ids)
     const result = items.map((item) => {
       if (!item.id || !/^[A-Za-z0-9_-]+$/.test(item.id))
         throw new Error(`Invalid ${kind} ID: ${item.id}`)
-      if (['action', 'edit', 'toolbar'].includes(kind) && typeof (item as { action?: unknown }).action !== 'function') throw new Error('Missing plugin callback')
+      if (
+        ['action', 'edit', 'toolbar'].includes(kind) &&
+        typeof (item as { action?: unknown }).action !== 'function'
+      )
+        throw new Error('Missing plugin callback')
       const local = `${kind}:${item.id}`
       if (next.has(local)) throw new Error(`Duplicate ${kind} ID: ${item.id}`)
       next.add(local)
@@ -129,13 +138,19 @@ export function createPluginContext(
         : undefined,
       configFields: scopeConfigFields(id, definition.configFields),
       defaultCommands: definition.defaultCommands
-        ? ({ t }) => definition.defaultCommands!.map((preset) => ({
-            ...preset,
-            name: preset.nameKey ? t(key(preset.nameKey)) : preset.name ?? preset.id,
-            phrases: preset.phrasesKey ? t(key(preset.phrasesKey)).split('\n') : preset.phrases,
-          }))
+        ? ({ t }) =>
+            definition.defaultCommands!.map((preset) => ({
+              ...preset,
+              name: preset.nameKey
+                ? t(key(preset.nameKey))
+                : (preset.name ?? preset.id),
+              phrases: preset.phrasesKey
+                ? t(key(preset.phrasesKey)).split('\n')
+                : preset.phrases,
+            }))
         : undefined,
-      unavailableReason: () => lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
+      unavailableReason: () =>
+        lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
       parseText: definition.parseText
         ? async (text, context) => {
             check()
@@ -203,16 +218,29 @@ export function createPluginContext(
       ),
     registerTools: (items) => {
       for (const definition of items) {
-        if (typeof definition.run !== 'function' || typeof definition.description !== 'string' || !definition.inputSchema || typeof definition.inputSchema !== 'object') throw new Error('Invalid plugin tool')
-        if (definition.configFields) validatePluginFields(definition.configFields)
-        if (definition.defaultCommands && !Array.isArray(definition.defaultCommands)) throw new Error('Invalid plugin default commands')
+        if (
+          typeof definition.run !== 'function' ||
+          typeof definition.description !== 'string' ||
+          !definition.inputSchema ||
+          typeof definition.inputSchema !== 'object'
+        )
+          throw new Error('Invalid plugin tool')
+        if (definition.configFields)
+          validatePluginFields(definition.configFields)
+        if (
+          definition.defaultCommands &&
+          !Array.isArray(definition.defaultCommands)
+        )
+          throw new Error('Invalid plugin default commands')
       }
       // Tools use dot-separated IDs; reserve them in the same owned registry.
       scope('tool', items)
       deps.registerTools(items.map(tool), config)
     },
-    getEditorInputValue: async () => guard(deps.getEditorInputValue, 'editor')(),
-    getEditorInputSelectedText: async () => guard(deps.getEditorInputSelectedText, 'editor')(),
+    getEditorInputValue: async () =>
+      guard(deps.getEditorInputValue, 'editor')(),
+    getEditorInputSelectedText: async () =>
+      guard(deps.getEditorInputSelectedText, 'editor')(),
     setEditorInputValue: guard(deps.setEditorInputValue, 'editor'),
     replaceEditorInputSelection: guard(
       deps.replaceEditorInputSelection,
@@ -240,7 +268,12 @@ export function createPluginContext(
           error: `Desktop function "${name}" is not available to plugins`,
         }
       check(capability)
-      if (!Array.isArray(args) || args.length !== (capability === 'browser' ? 1 : 3) || args.some((arg) => typeof arg !== 'string')) throw new Error('Invalid desktop function arguments')
+      if (
+        !Array.isArray(args) ||
+        args.length !== (capability === 'browser' ? 1 : 3) ||
+        args.some((arg) => typeof arg !== 'string')
+      )
+        throw new Error('Invalid desktop function arguments')
       const result = await deps.callApiFunction(name, args)
       check()
       return result

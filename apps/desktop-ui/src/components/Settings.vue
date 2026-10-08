@@ -469,7 +469,10 @@ import {
   resolveUiLanguagePreference,
   toHtmlLang,
 } from '../lib/locale/language'
-import { applyPluginDefaults } from '../lib/plugins/plugin-config'
+import {
+  applyPluginDefaults,
+  applyPluginPreset,
+} from '../lib/plugins/plugin-config'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import {
@@ -483,7 +486,7 @@ import {
   selectSttProvider,
 } from '../lib/stt/stt-config'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
-import { pluginRuntimeStates, pluginIndexes } from '../plugins'
+import { pluginIndexes, pluginRuntimeStates } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
@@ -1237,10 +1240,13 @@ const updatePluginConfig = (
   pluginName: string,
   values: Record<string, any>
 ) => {
-  userConfig.value.plugins[pluginName] = {
-    ...userConfig.value.plugins[pluginName],
-    ...values,
-  }
+  const previous = userConfig.value.plugins[pluginName] ?? {}
+  const definition = pluginIndexes.find(
+    (factory) => factory().id === pluginName
+  )?.()
+  userConfig.value.plugins[pluginName] = definition
+    ? applyPluginPreset(definition, previous, values)
+    : { ...previous, ...values }
 }
 onMounted(() => {
   void loadStorageInfo()

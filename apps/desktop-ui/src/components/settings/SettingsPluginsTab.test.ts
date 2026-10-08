@@ -20,13 +20,25 @@ vi.mock('../../plugins', () => ({
   pluginRuntimeStates: {},
   pluginIndexes: [
     () => ({
-      id: 'PluginWithConfig', name: 'PluginWithConfig', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
+      id: 'PluginWithConfig',
+      name: 'PluginWithConfig',
+      version: '1.0.0',
+      apiVersion: 2,
+      capabilities: [],
+      defaultLocale: 'en_US',
+      locales: { en_US: {} },
       labelKey: 'plugin.withConfig.label',
       defaultConfig: {
         fields: [
           {
             type: 'text',
-            id: 'apiKey', name: 'apiKey', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
+            id: 'apiKey',
+            name: 'apiKey',
+            version: '1.0.0',
+            apiVersion: 2,
+            capabilities: [],
+            defaultLocale: 'en_US',
+            locales: { en_US: {} },
             labelKey: 'key',
             defaultValue: 'default-key',
           },
@@ -35,7 +47,13 @@ vi.mock('../../plugins', () => ({
       init: vi.fn(),
     }),
     () => ({
-      id: 'PluginWithoutConfig', name: 'PluginWithoutConfig', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
+      id: 'PluginWithoutConfig',
+      name: 'PluginWithoutConfig',
+      version: '1.0.0',
+      apiVersion: 2,
+      capabilities: [],
+      defaultLocale: 'en_US',
+      locales: { en_US: {} },
       labelKey: 'plugin.withoutConfig.label',
       init: vi.fn(),
     }),

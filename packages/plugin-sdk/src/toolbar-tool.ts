@@ -11,7 +11,9 @@ export async function runToolFromToolbar(
   tool: ToolDefinition
 ): Promise<void> {
   const text =
-    (await ctx.getEditorInputSelectedText()) || (await ctx.getEditorInputValue()) || ''
+    (await ctx.getEditorInputSelectedText()) ||
+    (await ctx.getEditorInputValue()) ||
+    ''
   try {
     const result = await tool.run({
       input: { text },

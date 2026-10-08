@@ -77,7 +77,9 @@ describe('plugin context boundary', () => {
   })
   it('limits services by declared capabilities and rejects unknown IPC methods', async () => {
     const { context, deps } = setup([])
-    await expect(context.getEditorInputValue()).rejects.toThrow('requires editor')
+    await expect(context.getEditorInputValue()).rejects.toThrow(
+      'requires editor'
+    )
     await expect(
       context.callApiFunction('saveNote', ['/notes', 'file', 'text'])
     ).rejects.toThrow('requires notes')

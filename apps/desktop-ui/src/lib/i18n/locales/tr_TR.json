@@ -48,9 +48,7 @@
     "id_ID": "Endonezce",
     "ms_MY": "Malayca"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "nav": {
     "editor": "Editör",
     "aiChat": "AI Sohbet",
@@ -327,9 +325,7 @@
       "history": "Geçmiş",
       "config": "Ayarlar"
     },
-    "hotkeyStatus": {
-      "conflict": "Bu birleşim kullanılamıyor"
-    },
+    "hotkeyStatus": { "conflict": "Bu birleşim kullanılamıyor" },
     "hotkeyProvider": {
       "portal": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları «Sistemde değiştir» ile değiştirin.",
       "external": "Bu oturum Tyco’nun genel kısayol atamasına izin vermiyor. Aşağıdaki komutları compositor yapılandırmanıza ekleyin.",

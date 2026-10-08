@@ -15,6 +15,7 @@ import {
   resolveNoteContent,
   resolveNoteDir,
   resolveNoteFileName,
+  FAST_NOTE_PRESETS,
 } from './fast-note-template.js'
 
 /** Builds a sortable, filesystem-safe file name from the local time. */
@@ -118,7 +119,7 @@ export default function pluginIndex(): PluginDefinition {
     locales,
     labelKey: 'local.label',
     descriptionKey: 'local.description',
-    defaultConfig: { fields: FIELDS },
+    defaultConfig: { fields: FIELDS, presets: { preset: FAST_NOTE_PRESETS } },
     init: (ctx: PluginContext) => {
       const write: ToolDefinition = {
         id: 'write',
@@ -141,9 +142,7 @@ export default function pluginIndex(): PluginDefinition {
             nameKey: 'local.actionAppendDaily',
             phrasesKey: 'local.dailyPhrases',
             toolConfig: { ...APPEND_DAILY },
-            menu: {
-              preferredKey: 'd',
-            },
+            menu: { preferredKey: 'd' },
           },
         ],
         run: async ({ input, config, source }): Promise<ToolResult> => {

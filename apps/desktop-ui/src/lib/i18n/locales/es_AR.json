@@ -48,9 +48,7 @@
     "id_ID": "Indonesio",
     "ms_MY": "Malayo"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "nav": {
     "editor": "Editor",
     "aiChat": "Chat con IA",
@@ -327,9 +325,7 @@
       "history": "Historial",
       "config": "Configuración"
     },
-    "hotkeyStatus": {
-      "conflict": "Esta combinación no está disponible"
-    },
+    "hotkeyStatus": { "conflict": "Esta combinación no está disponible" },
     "hotkeyProvider": {
       "portal": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos con «Cambiar en el sistema».",
       "external": "Esta sesión no permite que Tyco asigne atajos globales. Agregá los comandos de abajo a la configuración de tu compositor.",

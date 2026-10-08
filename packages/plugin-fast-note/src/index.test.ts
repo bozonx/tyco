@@ -32,10 +32,7 @@ describe('FastNote plugin', () => {
     const defaults = tools[0].defaultCommands
     expect(defaults?.map((preset) => [preset.id, preset.menu])).toEqual([
       ['note', { preferredKey: 'c' }],
-      [
-        'daily',
-        { preferredKey: 'd' },
-      ],
+      ['daily', { preferredKey: 'd' }],
     ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
@@ -113,9 +110,9 @@ describe('FastNote plugin', () => {
     vi.setSystemTime(new Date(2026, 9, 3, 12, 0, 0))
 
     const { mocks, tools } = setup({ config: { pathToNotes: '/vault' } })
-    const daily = tools[0]
-      .defaultCommands
-      .find((preset) => preset.id === 'daily')
+    const daily = tools[0].defaultCommands.find(
+      (preset) => preset.id === 'daily'
+    )
 
     const result = await tools[0].run({
       input: { text: 'Quick thought' },

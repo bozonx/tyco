@@ -37,6 +37,14 @@ export function resolvePluginConfig(
   plugin: ReturnType<PluginIndex>,
   state: Record<string, unknown> = {}
 ): Record<string, unknown> {
+  const presetDefaults: Record<string, unknown> = {}
+  for (const [selector, presets] of Object.entries(
+    plugin.defaultConfig?.presets ?? {}
+  )) {
+    const selected = state[selector]
+    if (typeof selected === 'string' && Object.hasOwn(presets, selected))
+      Object.assign(presetDefaults, presets[selected])
+  }
   const config: Record<string, unknown> = {}
   for (const field of plugin.defaultConfig?.fields ?? []) {
     const value = state[field.name]
@@ -44,15 +52,39 @@ export function resolvePluginConfig(
       config[field.name] = resolveSortableChecklist(
         value,
         field.options,
-        field.defaultValue
+        field.defaultValue ?? presetDefaults[field.name]
       )
     } else {
       config[field.name] = clonePluginValue(
-        validField(field, value) ? value : field.defaultValue
+        validField(field, value)
+          ? value
+          : (presetDefaults[field.name] ?? field.defaultValue)
       )
     }
   }
   return clonePluginValue(config)
+}
+
+/** Applies declarative preset values when a user changes a preset selector. */
+export function applyPluginPreset(
+  plugin: ReturnType<PluginIndex>,
+  state: Record<string, unknown>,
+  updates: Record<string, unknown>
+): Record<string, unknown> {
+  const next = { ...state, ...updates }
+  for (const [selector, presets] of Object.entries(
+    plugin.defaultConfig?.presets ?? {}
+  )) {
+    if (
+      !Object.hasOwn(updates, selector) ||
+      updates[selector] === state[selector]
+    )
+      continue
+    const selected = updates[selector]
+    if (typeof selected === 'string' && Object.hasOwn(presets, selected))
+      Object.assign(next, clonePluginValue(presets[selected]))
+  }
+  return clonePluginValue(next)
 }
 
 export function applyPluginDefaults(
@@ -66,10 +98,7 @@ export function applyPluginDefaults(
       if (plugin._loadError) continue
       const state = getPluginState(plugin, states)
       const config = resolvePluginConfig(plugin, state)
-      result[pluginId(plugin)] = {
-        ...config,
-        enabled: state.enabled !== false,
-      }
+      result[pluginId(plugin)] = { ...config, enabled: state.enabled !== false }
     } catch {
       // Preserve settings for a broken package; the runtime reports the error.
     }

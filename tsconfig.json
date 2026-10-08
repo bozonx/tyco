@@ -7,5 +7,6 @@
     "checkJs": true,
     "types": ["node"]
   },
-  "include": ["scripts/**/*"]
+  "include": ["scripts/**/*"],
+  "exclude": ["scripts/plugin-runtime-browser.js"]
 }

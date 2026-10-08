@@ -46,9 +46,7 @@ export default function pluginIndex(): PluginDefinition {
             id: 'search',
             nameKey: 'local.label',
             phrasesKey: 'local.phrases',
-            menu: {
-              preferredKey: 'v',
-            },
+            menu: { preferredKey: 'v' },
           },
         ],
         run: async ({ input, config }) => {

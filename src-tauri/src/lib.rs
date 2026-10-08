@@ -124,15 +124,27 @@ pub fn run() {
     tauri::Builder::default()
         .register_uri_scheme_protocol("tyco-plugin", |context, request| {
             let path = request.uri().path();
-            let static_asset = match path {
+            let host = request.uri().host().unwrap_or_default();
+            let plugin_key = host.strip_suffix(".localhost").unwrap_or_default();
+            let valid_key = !plugin_key.is_empty()
+                && plugin_key.len() <= 256
+                && plugin_key.len() % 2 == 0
+                && plugin_key.bytes().all(|byte| byte.is_ascii_hexdigit());
+            let static_asset = if !valid_key {
+                None
+            } else { match path {
                 "/runtime/index.html" => Some(("text/html; charset=utf-8", include_str!("../plugin-runtime/index.html"))),
                 "/runtime/frame.js" => Some(("application/javascript; charset=utf-8", include_str!("../plugin-runtime/frame.js"))),
                 "/runtime/worker.js" => Some(("application/javascript; charset=utf-8", include_str!("../plugin-runtime/worker.js"))),
                 _ => None,
-            };
-            let (status, content_type, body) = if let Some((content_type, asset)) = static_asset {
+            }};
+            let (status, content_type, body) = if !valid_key {
+                (404, "text/plain", b"Plugin origin is unavailable".to_vec())
+            } else if let Some((content_type, asset)) = static_asset {
                 (200, content_type, asset.as_bytes().to_vec())
             } else {
+                let module_key = path.trim_start_matches('/').split('/').next().unwrap_or_default();
+                if module_key != plugin_key { return tauri::http::Response::builder().status(404).body(b"Plugin origin does not match package".to_vec()).expect("Valid plugin protocol response"); }
                 match context.app_handle().state::<services::plugins::PluginStore>().module(path) {
                     Ok(module) => (200, "application/javascript; charset=utf-8", module.into_bytes()),
                     Err(_) => (404, "text/plain", b"Plugin module is unavailable".to_vec()),

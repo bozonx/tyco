@@ -59,6 +59,7 @@ export interface ToolbarItem {
 }
 export interface PluginConfig {
   fields: InputConfigItem[]
+  presets?: Record<string, Record<string, object>>
 }
 export interface PluginDesktopFunctions {
   openInBrowserAndClose: { args: [url: string]; result: void }

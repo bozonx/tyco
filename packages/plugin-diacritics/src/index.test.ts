@@ -35,7 +35,6 @@ describe('diacritics plugin', () => {
     expect(toolbarItems[1].label).toBe('−◌́')
   })
 
-
   it('transforms selected text and focuses editor on action execution', async () => {
     const { ctx, mocks, toolbarItems } = createPluginTestContext({
       selectedText: 'e',

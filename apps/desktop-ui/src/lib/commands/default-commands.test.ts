@@ -126,12 +126,27 @@ describe('seedDefaultCommands', () => {
   })
 
   it('uses preferred free slots without replacing existing menu items', () => {
-    const seeded = seedDefaultCommands(config({ seededCommands: ['default:core.correct'], mainActions: [{ type: 'standard', actionId: 'insertIntoWindow' }] }), registry(noteTool), t)!
-    expect(seeded.mainActions[0]).toEqual({ type: 'standard', actionId: 'insertIntoWindow' })
-    expect(seeded.mainActions[PRESETS_KEYS.indexOf('c')]).toEqual({ type: 'command', commandId: defaultCommandId('Notes.write', 'note') })
-    expect(seeded.mainActions[PRESETS_KEYS.indexOf('d')]).toEqual({ type: 'command', commandId: defaultCommandId('Notes.write', 'daily') })
+    const seeded = seedDefaultCommands(
+      config({
+        seededCommands: ['default:core.correct'],
+        mainActions: [{ type: 'standard', actionId: 'insertIntoWindow' }],
+      }),
+      registry(noteTool),
+      t
+    )!
+    expect(seeded.mainActions[0]).toEqual({
+      type: 'standard',
+      actionId: 'insertIntoWindow',
+    })
+    expect(seeded.mainActions[PRESETS_KEYS.indexOf('c')]).toEqual({
+      type: 'command',
+      commandId: defaultCommandId('Notes.write', 'note'),
+    })
+    expect(seeded.mainActions[PRESETS_KEYS.indexOf('d')]).toEqual({
+      type: 'command',
+      commandId: defaultCommandId('Notes.write', 'daily'),
+    })
   })
-
 })
 
 describe('createDefaultCommandsSync', () => {

@@ -42,11 +42,13 @@ export function createPluginInstallation(deps: PluginInstallationDependencies) {
       preview.value = null
       await deps.refresh()
     })
-  const restore = (id: string) => perform(async () => {
-    if (deps.reservedIds.includes(id)) throw new Error('A bundled plugin cannot be restored')
-    await deps.restore(id)
-    await deps.refresh()
-  })
+  const restore = (id: string) =>
+    perform(async () => {
+      if (deps.reservedIds.includes(id))
+        throw new Error('A bundled plugin cannot be restored')
+      await deps.restore(id)
+      await deps.refresh()
+    })
   const remove = (id: string) =>
     perform(async () => {
       if (deps.reservedIds.includes(id))

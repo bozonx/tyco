@@ -1,10 +1,12 @@
 # Plugin packages
 
 TyCo's bundled plugins use the same framework-independent SDK and package format
-as locally installed extensions. The runtime currently supports **trusted
-JavaScript plugins**. They execute in the application's webview and are not a
-sandbox for untrusted code. Capability checks protect the SDK boundary; they do
-not isolate arbitrary JavaScript or direct Tauri calls.
+as locally installed extensions. External packages run in a dedicated Worker on
+a per-plugin origin. The worker has no app IPC, DOM, network, `eval`, or child
+workers. A message port exposes only the declared host services. The browser can
+terminate a worker that times out. This limits damage within the webview; users
+still need to trust code they install because code can misuse the capabilities
+they grant and the host operating system may have runtime vulnerabilities.
 
 ## Ownership and boundaries
 
@@ -35,7 +37,7 @@ export default function plugin(): PluginDefinition {
   return {
     id: 'Example',
     version: '1.0.0',
-    apiVersion: 1,
+    apiVersion: 2,
     capabilities: ['editor'],
     defaultLocale: 'en_US',
     locales: { en_US: { label: 'Example', transform: 'Transform text' } },
@@ -53,10 +55,11 @@ export default function plugin(): PluginDefinition {
 }
 ```
 
-IDs are immutable and distinct from translated labels. Existing tool IDs such as
-`FastNote.write` remain stable. `Diacritics` declares `Russian Stress` as a legacy
-settings ID. `legacyIds` migrates config identity; changing existing tool IDs
-requires an explicit command migration rather than silently orphaning commands.
+Plugin IDs and tool IDs are immutable and distinct from translated labels.
+Existing IDs such as `Diacritics` and `FastNote.write` are current contract
+identities. Plugin settings are keyed only by the current plugin ID; the plugin
+SDK does not support identity aliases, migrations, or schema-version callbacks.
+Changing an ID starts a new plugin identity.
 
 Use `local.*` for plugin-owned messages. The host namespaces these keys in metadata,
 settings, contributions, tool results and portable `PluginError` instances. Common
@@ -79,7 +82,8 @@ Compiler configs are standalone. The package build runs TypeScript and
 - `dist/host.js`: ordinary ESM plus the plugin's offline icons; used by bundled
   plugins so the application's bundler can retain lazy parser chunks.
 - `dist/plugin.js`: a standalone ESM bundle with no external dependencies.
-- `dist/plugin.tyco-plugin`: JSON containing the manifest and standalone module.
+- `dist/plugin.tyco-plugin`: format-versioned JSON containing a strictly
+  validated declarative manifest and standalone module.
 
 The initial format supports code, JSON data, dictionaries, icons and assets that
 the bundler can inline. Builds reject additional chunks, external imports and
@@ -91,17 +95,16 @@ regenerated. `pnpm dev:ui`, `pnpm build:ui` and `pnpm test:ui` build plugin
 dependencies automatically.
 
 `pnpm check:plugins` imports every packaged artifact from a fresh temporary
-directory without `node_modules`; it also executes the XML formatter to verify
-that its parser dependencies are included.
+directory without `node_modules`; it also executes the XML formatter. The
+Chromium integration check `pnpm test:plugin-runtime` runs all packaged plugins
+in their isolated workers and checks network/eval blocking and worker termination.
 
 ## Settings and lifetime
 
-The host reads saved settings, resolves legacy IDs, runs `migrateConfig`, validates
-field types/options, applies defaults, then runs optional `normalizeConfig`.
-`getMyConfig` returns detached effective settings; no plugin receives the global
-user config. `enabled` and `_configVersion` are host metadata. The settings UI
-uses the same resolver. Draft edits take effect when saved, not by rebuilding the
-runtime with settings from a different source.
+The host reads saved settings only under the current plugin ID, validates declared
+field types and options, and applies defaults. Unknown fields are not passed to
+the plugin. `getMyConfig` returns a detached copy; plugins never receive global
+user config. `enabled` is host metadata. Draft edits take effect when saved.
 
 Activation may be async and can return a cleanup function. Use `ctx.onDispose` for
 subscriptions and timers, and observe `ctx.signal` for ongoing work. Disabling,
@@ -130,16 +133,16 @@ unloads contributions in both windows, but retains saved settings and user comma
 so reinstalling can restore them. Their tools are unavailable while the package is
 absent. Changes propagate through the `plugins-changed` desktop event.
 
-A dedicated `tyco-plugin` protocol serves only installed entry points at their
-current revision. It does not expose arbitrary files. The production CSP permits
-this local script origin; dev uses the same policy plus the dev-server origin.
-No inline scripts, network asset loading or `eval` are needed.
+The `tyco-plugin` protocol serves only a package's current JavaScript entry
+point and the fixed runtime assets. Each package runs from its own local origin.
+The Worker response policy blocks connections, inline code, evaluation, and child
+workers. The webview CSP permits frames from this local scheme; the development
+override adds only the dev-server origins needed by the app. Runtime calls pass
+through a typed, capability-checked RPC adapter.
 
-Native inspection accepts API version 1, numeric `major.minor.patch` versions,
-known capabilities and bounded UTF-8 JSON packages (32 MiB maximum). Plugin IDs
-cannot contain path separators or contribution separators. A corrupt installed
-package is logged and skipped without preventing application startup.
-
-For an untrusted plugin ecosystem, introduce an isolated runtime and RPC protocol
-before claiming sandboxing. That is a separate runtime model, not something a
-TypeScript interface or capability allowlist can guarantee.
+Native inspection accepts package format 1 and plugin API 2, numeric semantic
+versions, known unique capabilities, safe icons and bounded UTF-8 JSON packages
+(32 MiB maximum). User settings have no plugin schema migration path. Revisions
+retain one prior package so a failed update can be restored. Runtime status is
+visible in plugin settings. A corrupt installed package is logged and skipped
+without preventing startup.

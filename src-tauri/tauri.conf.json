@@ -53,16 +53,13 @@
         "font-src": "'self' data:",
         "object-src": "'none'",
         "base-uri": "'self'",
-        "frame-src": "tyco-plugin: http://tyco-plugin.localhost https://tyco-plugin.localhost"
+        "frame-src": "tyco-plugin: http://*.localhost https://*.localhost http://*.tyco-plugin.localhost https://*.tyco-plugin.localhost"
       }
     }
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "appimage",
-      "deb"
-    ],
+    "targets": ["appimage", "deb"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

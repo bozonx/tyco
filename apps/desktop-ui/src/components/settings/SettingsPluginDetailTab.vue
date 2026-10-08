@@ -45,8 +45,12 @@
         />
       </div>
 
-      <p v-if="plugin.status" class="px-4 text-sm text-muted">{{ t(`settings.pluginStatus.${plugin.status}`) }}</p>
-      <p v-if="plugin.error" class="px-4 text-sm text-error">{{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}</p>
+      <p v-if="plugin.status" class="px-4 text-sm text-muted">
+        {{ t(`settings.pluginStatus.${plugin.status}`) }}
+      </p>
+      <p v-if="plugin.error" class="px-4 text-sm text-error">
+        {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
+      </p>
       <div v-if="plugin.enabled" class="plugin-card-body">
         <FieldsByCfg
           v-if="plugin.fields.length > 0"

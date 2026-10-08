@@ -19,7 +19,14 @@
         · {{ installation.preview.value.manifest.version }}
       </p>
       <p class="text-sm text-muted">{{ t('settings.pluginTrustNotice') }}</p>
-      <p class="text-sm text-muted">{{ t('settings.pluginCapabilities') }}: {{ installation.preview.value.manifest.capabilities.map((capability) => t(`settings.pluginCapability.${capability}`)).join(', ') || t('settings.pluginCapability.none') }}</p>
+      <p class="text-sm text-muted">
+        {{ t('settings.pluginCapabilities') }}:
+        {{
+          installation.preview.value.manifest.capabilities
+            .map((capability) => t(`settings.pluginCapability.${capability}`))
+            .join(', ') || t('settings.pluginCapability.none')
+        }}
+      </p>
       <div class="flex gap-2">
         <button
           class="btn btn-sm btn-primary"
@@ -63,7 +70,12 @@
               plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
             }}
           </h3>
-          <p class="text-xs text-muted">{{ plugin.version }}<span v-if="plugin.status"> · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span></p>
+          <p class="text-xs text-muted">
+            {{ plugin.version
+            }}<span v-if="plugin.status">
+              · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span
+            >
+          </p>
           <p v-if="plugin.error" class="text-xs text-error mt-0.5">
             {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
           </p>
@@ -79,7 +91,14 @@
           </p>
         </div>
 
-        <button v-if="plugin.canRestore" class="btn btn-sm" :disabled="installation.busy.value" @click.stop="installation.restore(plugin.name)">{{ t('settings.restorePluginPackage') }}</button>
+        <button
+          v-if="plugin.canRestore"
+          class="btn btn-sm"
+          :disabled="installation.busy.value"
+          @click.stop="installation.restore(plugin.name)"
+        >
+          {{ t('settings.restorePluginPackage') }}
+        </button>
         <button
           v-if="!builtinPluginIds?.includes(plugin.name)"
           class="btn btn-sm"
@@ -117,7 +136,12 @@ import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import { builtinPluginIds, pluginIndexes, pluginRuntimeStates, usePlugins } from '../../plugins'
+import {
+  builtinPluginIds,
+  pluginIndexes,
+  pluginRuntimeStates,
+  usePlugins,
+} from '../../plugins'
 import { useIpcStore } from '../../stores/ipc'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
@@ -149,7 +173,9 @@ const installation = createPluginInstallation({
   install: async (preview) => {
     requireResult(await ipc.callFunction('installPluginPackage', [preview]))
   },
-  restore: async (id) => { requireResult(await ipc.callFunction('restorePluginPackage', [id])) },
+  restore: async (id) => {
+    requireResult(await ipc.callFunction('restorePluginPackage', [id]))
+  },
   remove: async (id) => {
     requireResult(await ipc.callFunction('removePluginPackage', [id]))
   },
@@ -162,7 +188,11 @@ const installation = createPluginInstallation({
 })
 
 const installedPlugins = computed(() => {
-  return resolveInstalledPlugins(pluginIndexes, props.userConfig, pluginRuntimeStates ?? {})
+  return resolveInstalledPlugins(
+    pluginIndexes,
+    props.userConfig,
+    pluginRuntimeStates ?? {}
+  )
 })
 
 const setPluginEnabled = (pluginName: string, enabled: boolean) => {

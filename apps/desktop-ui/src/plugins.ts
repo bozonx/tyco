@@ -31,14 +31,19 @@ const builtinPlugins: PluginIndex[] = [
   ),
 ]
 
-export const pluginRuntimeStates = shallowReactive<Record<string, PluginRuntimeState>>({})
+export const pluginRuntimeStates = shallowReactive<
+  Record<string, PluginRuntimeState>
+>({})
 
 export const pluginIndexes = shallowReactive<PluginIndex[]>([...builtinPlugins])
 export const builtinPluginIds = builtinPlugins.map((factory) =>
   pluginId(factory())
 )
 const packageLoader = createPluginPackageLoader({
-  activate: (manifest, path, ctx) => activatePluginSandbox(manifest, path, ctx, (error) => { void globalPluginManager?.failPlugin(manifest.id, error) }),
+  activate: (manifest, path, ctx) =>
+    activatePluginSandbox(manifest, path, ctx, (error) => {
+      void globalPluginManager?.failPlugin(manifest.id, error)
+    }),
   reportError: (id, error) =>
     clientLogger.error('Plugin package loading failed', error, id),
 })
@@ -58,7 +63,9 @@ export const usePlugins = () => {
   if (!globalPluginManager) {
     globalPluginManager = createPluginManager({
       pluginIndexes,
-      onStateChange: (id, state) => { pluginRuntimeStates[id] = state },
+      onStateChange: (id, state) => {
+        pluginRuntimeStates[id] = state
+      },
       createPluginContext: createContext,
       unregisterPlugin: (id) => {
         actionMenuStore.unregisterPlugin(id)
@@ -104,7 +111,10 @@ export const usePlugins = () => {
         for (const factory of pluginIndexes)
           previous.delete(pluginId(factory()))
         await reloadPlugins()
-        for (const id of previous) { removePluginResources(id); delete pluginRuntimeStates[id] }
+        for (const id of previous) {
+          removePluginResources(id)
+          delete pluginRuntimeStates[id]
+        }
       } while (refreshQueued)
     })().finally(() => {
       refreshing = undefined

@@ -37,7 +37,19 @@ const plugin =
     name: string,
     init: ReturnType<PluginIndex>['init'] = vi.fn()
   ): PluginIndex =>
-  () => ({ id: name, name, version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} }, defaultConfig: { fields: [{ name: 'value', type: 'text', defaultValue: 0 }] }, init })
+  () => ({
+    id: name,
+    name,
+    version: '1.0.0',
+    apiVersion: 2,
+    capabilities: [],
+    defaultLocale: 'en_US',
+    locales: { en_US: {} },
+    defaultConfig: {
+      fields: [{ name: 'value', type: 'text', defaultValue: 0 }],
+    },
+    init,
+  })
 
 describe('plugin manager', () => {
   it('loads enabled plugins and keeps resources available for disabled ones', async () => {

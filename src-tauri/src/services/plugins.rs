@@ -161,6 +161,8 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
         if map.len() > 4096 {
             return Err(error("Too many plugin icons"));
         }
+        let event_attribute = regex::Regex::new(r"\bon[a-z][a-z0-9_-]*\s*=")
+            .map_err(|_| error("Invalid plugin icon validator"))?;
         for (name, icon) in map {
             let body = icon
                 .get("body")
@@ -179,8 +181,6 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
                     "<image",
                     "<style",
                     "<a ",
-                    "onload=",
-                    "onclick=",
                     "href=",
                     "url(",
                     "javascript:",
@@ -190,6 +190,7 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
                 ]
                 .iter()
                 .any(|token| lowered.contains(token))
+                || event_attribute.is_match(&lowered)
             {
                 return Err(error("Unsafe plugin icon"));
             }
@@ -258,6 +259,84 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
                     options.iter().any(|option| option.get("id") == Some(value))
                 }) {
                     return Err(error("Invalid select default"));
+                }
+            }
+        }
+        if let Some(presets) = config.get("presets") {
+            let presets = presets
+                .as_object()
+                .ok_or_else(|| error("Invalid plugin presets"))?;
+            for (selector, choices) in presets {
+                let selector_field = fields
+                    .iter()
+                    .find(|field| {
+                        field.get("name").and_then(serde_json::Value::as_str)
+                            == Some(selector.as_str())
+                    })
+                    .ok_or_else(|| error("Invalid preset selector"))?;
+                if selector_field
+                    .get("type")
+                    .and_then(serde_json::Value::as_str)
+                    != Some("select")
+                {
+                    return Err(error("Preset selector must be a select field"));
+                }
+                let options = selector_field
+                    .get("options")
+                    .and_then(serde_json::Value::as_array)
+                    .ok_or_else(|| error("Preset selector has no options"))?;
+                let choices = choices
+                    .as_object()
+                    .ok_or_else(|| error("Invalid preset choices"))?;
+                for (choice, values) in choices {
+                    if !options.iter().any(|option| {
+                        option.get("id").and_then(serde_json::Value::as_str) == Some(choice)
+                    }) {
+                        return Err(error("Unknown plugin preset"));
+                    }
+                    let values = values
+                        .as_object()
+                        .ok_or_else(|| error("Invalid plugin preset values"))?;
+                    for (name, value) in values {
+                        if matches!(
+                            name.as_str(),
+                            "enabled" | "__proto__" | "constructor" | "prototype"
+                        ) {
+                            return Err(error("Unsafe plugin preset field"));
+                        }
+                        let field = fields
+                            .iter()
+                            .find(|field| {
+                                field.get("name").and_then(serde_json::Value::as_str)
+                                    == Some(name.as_str())
+                            })
+                            .ok_or_else(|| error("Unknown plugin preset field"))?;
+                        let field_type = field
+                            .get("type")
+                            .and_then(serde_json::Value::as_str)
+                            .unwrap_or_default();
+                        let valid = match field_type {
+                            "checkbox" => value.is_boolean(),
+                            "select" => field
+                                .get("options")
+                                .and_then(serde_json::Value::as_array)
+                                .is_some_and(|options| {
+                                    options.iter().any(|option| option.get("id") == Some(value))
+                                }),
+                            "sortable-checklist" => value.is_array(),
+                            _ => {
+                                value.is_string()
+                                    || (field
+                                        .get("defaultValue")
+                                        .and_then(serde_json::Value::as_f64)
+                                        .is_some()
+                                        && value.as_f64().is_some())
+                            }
+                        };
+                        if !valid {
+                            return Err(error("Invalid plugin preset value"));
+                        }
+                    }
                 }
             }
         }
@@ -534,7 +613,7 @@ mod tests {
         };
         write("export default () => ({ version: 'one' })");
         let first_digest = package_digest(&file).unwrap();
-        let first = store.install(&file, &manifest(), &first_digest).unwrap();
+        store.install(&file, &manifest(), &first_digest).unwrap();
         write("export default () => ({ version: 'two' })");
         assert!(store.install(&file, &manifest(), &first_digest).is_err());
         let second_digest = package_digest(&file).unwrap();
@@ -557,6 +636,11 @@ mod tests {
         value.icons = Some(
             serde_json::json!({"prefix":"mdi", "icons":{"bad":{"body":"<path onload=\"alert(1)\"/>"}}}),
         );
+        assert!(validate_manifest(&value).is_err());
+        value.icons = Some(serde_json::json!({
+            "prefix": "mdi",
+            "icons": {"bad": {"body": "<path onmouseover = \"alert(1)\"/>"}}
+        }));
         assert!(validate_manifest(&value).is_err());
         let dir = std::env::temp_dir().join(format!("tyco-plugin-id-{}", std::process::id()));
         let store = PluginStore::new(dir.clone()).unwrap();

@@ -122,9 +122,7 @@ export default function pluginIndex(): PluginDefinition {
       ] satisfies InputConfigItem[],
     },
     init(ctx: PluginContext) {
-      const config = ctx.getMyConfig<{
-        actions?: SortableChecklistItem[]
-      }>()
+      const config = ctx.getMyConfig<{ actions?: SortableChecklistItem[] }>()
 
       const actions = resolveSortableChecklist(
         config?.actions,

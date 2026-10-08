@@ -80,7 +80,8 @@ for (const output of builds.flatMap((value) =>
 const definition = (
   await import(pathToFileURL(resolve(root, 'dist/plugin.js')).href)
 ).default()
-const { pluginManifest, PLUGIN_PACKAGE_FORMAT_VERSION } = await import('@tyco/plugin-sdk')
+const { pluginManifest, PLUGIN_PACKAGE_FORMAT_VERSION } =
+  await import('@tyco/plugin-sdk')
 await writeFile(
   resolve(root, 'dist/plugin.tyco-plugin'),
   JSON.stringify({

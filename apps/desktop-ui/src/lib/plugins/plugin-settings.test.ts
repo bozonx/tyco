@@ -10,7 +10,13 @@ import {
 describe('plugin-settings', () => {
   const samplePlugins: PluginIndex[] = [
     () => ({
-      id: 'AlphaPlugin', name: 'AlphaPlugin', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
+      id: 'AlphaPlugin',
+      name: 'AlphaPlugin',
+      version: '1.0.0',
+      apiVersion: 2,
+      capabilities: [],
+      defaultLocale: 'en_US',
+      locales: { en_US: {} },
       labelKey: 'plugin.alpha.label',
       defaultConfig: {
         fields: [{ type: 'text', name: 'apiKey', defaultValue: 'default-key' }],
@@ -18,7 +24,13 @@ describe('plugin-settings', () => {
       init: () => {},
     }),
     () => ({
-      id: 'BetaPlugin', name: 'BetaPlugin', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
+      id: 'BetaPlugin',
+      name: 'BetaPlugin',
+      version: '1.0.0',
+      apiVersion: 2,
+      capabilities: [],
+      defaultLocale: 'en_US',
+      locales: { en_US: {} },
       label: 'Beta Plugin',
       description: 'Beta description',
       init: () => {},
@@ -30,9 +42,19 @@ describe('plugin-settings', () => {
 
     expect(plugins).toHaveLength(2)
     expect(plugins[0]).toMatchObject({
-      name: 'AlphaPlugin', version: '1.0.0', canRestore: false,
-      labelKey: 'plugin.alpha.label', enabled: true,
-      fields: [{ type: 'text', name: 'apiKey', defaultValue: 'default-key', value: 'default-key' }],
+      name: 'AlphaPlugin',
+      version: '1.0.0',
+      canRestore: false,
+      labelKey: 'plugin.alpha.label',
+      enabled: true,
+      fields: [
+        {
+          type: 'text',
+          name: 'apiKey',
+          defaultValue: 'default-key',
+          value: 'default-key',
+        },
+      ],
     })
     expect(plugins[1].enabled).toBe(true)
     expect(plugins[1].fields).toHaveLength(0)

@@ -35,7 +35,8 @@
     "tauri:dev": "dotenv -e .env -- ./scripts/tauri-dev.sh",
     "tauri:build": "cross-env NO_STRIP=true tauri build",
     "check:plugins": "pnpm build:plugins && node scripts/check-plugin-packages.mjs",
-    "build:plugins": "turbo run build --filter=\"./packages/plugin-*\""
+    "build:plugins": "turbo run build --filter=\"./packages/plugin-*\"",
+    "test:plugin-runtime": "node scripts/check-plugin-runtime.mjs"
   },
   "author": "Ivan K",
   "license": "MIT",

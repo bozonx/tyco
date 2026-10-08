@@ -24,7 +24,9 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
   let sequence = 0
   let closed = false
   const pending = new Map<number, Request>()
-  function close(error: Error = new PluginCancellation('Plugin runtime closed')) {
+  function close(
+    error: Error = new PluginCancellation('Plugin runtime closed')
+  ) {
     if (closed) return
     closed = true
     removeListener()
@@ -43,7 +45,10 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
   const removeListener = deps.transport.listen((raw) => {
     if (closed || !raw || typeof raw !== 'object') return
     const message = raw as Record<string, unknown>
-    if (message.type === 'fatal') { fail(new Error('Plugin worker failed')); return }
+    if (message.type === 'fatal') {
+      fail(new Error('Plugin worker failed'))
+      return
+    }
     if (!Number.isSafeInteger(message.id)) return
     const id = message.id as number
     if (message.type === 'result') {
@@ -54,19 +59,47 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
       task.removeAbort()
       if (message.error && typeof message.error === 'object') {
         const error = message.error as Record<string, unknown>
-        task.reject(Object.assign(new Error(String(error.message)), { code: error.code, messageKey: error.messageKey }))
+        task.reject(
+          Object.assign(new Error(String(error.message)), {
+            code: error.code,
+            messageKey: error.messageKey,
+          })
+        )
       } else task.resolve(message.result)
     } else if (message.type === 'host') {
       const request = pending.get(message.requestId as number)
-      if (!request || !['init', 'invoke', 'dispose'].includes(request.method) || typeof message.method !== 'string' || !Array.isArray(message.args)) return
+      if (
+        !request ||
+        !['init', 'invoke', 'dispose'].includes(request.method) ||
+        typeof message.method !== 'string' ||
+        !Array.isArray(message.args)
+      )
+        return
       void deps.callHost(message.method, message.args).then(
-        (result) => { if (!closed) deps.transport.send({ type: 'host-result', id, result }) },
-        (error: unknown) => { if (!closed) deps.transport.send({ type: 'host-result', id, error: { message: error instanceof Error ? error.message : String(error) } }) }
+        (result) => {
+          if (!closed) deps.transport.send({ type: 'host-result', id, result })
+        },
+        (error: unknown) => {
+          if (!closed)
+            deps.transport.send({
+              type: 'host-result',
+              id,
+              error: {
+                message: error instanceof Error ? error.message : String(error),
+              },
+            })
+        }
       )
     }
   })
-  function request(method: string, args: unknown, signal?: AbortSignal, timeoutMs = deps.timeoutMs ?? 10000): Promise<unknown> {
-    if (closed || signal?.aborted) return Promise.reject(new PluginCancellation('Plugin request cancelled'))
+  function request(
+    method: string,
+    args: unknown,
+    signal?: AbortSignal,
+    timeoutMs = deps.timeoutMs ?? 10000
+  ): Promise<unknown> {
+    if (closed || signal?.aborted)
+      return Promise.reject(new PluginCancellation('Plugin request cancelled'))
     return new Promise((resolve, reject) => {
       const id = ++sequence
       const abort = () => {
@@ -79,13 +112,21 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
         reject(new PluginCancellation('Plugin request cancelled'))
       }
       pending.set(id, {
-        resolve, reject, method,
-        timer: setTimeout(() => fail(new Error(`Plugin ${method} timed out`)), timeoutMs),
+        resolve,
+        reject,
+        method,
+        timer: setTimeout(
+          () => fail(new Error(`Plugin ${method} timed out`)),
+          timeoutMs
+        ),
         removeAbort: () => signal?.removeEventListener('abort', abort),
       })
       signal?.addEventListener('abort', abort, { once: true })
-      try { deps.transport.send({ type: 'request', id, method, args }) }
-      catch (error) { fail(error instanceof Error ? error : new Error(String(error))) }
+      try {
+        deps.transport.send({ type: 'request', id, method, args })
+      } catch (error) {
+        fail(error instanceof Error ? error : new Error(String(error)))
+      }
     })
   }
   function abortPending() {
