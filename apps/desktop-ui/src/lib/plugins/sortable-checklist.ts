@@ -3,12 +3,15 @@ import type { InputConfigOption, SortableChecklistItem } from '../../types'
 export type { SortableChecklistItem }
 
 /**
- * Normalizes and resolves a sortable checklist configuration against defined options.
+ * Normalizes and resolves a sortable checklist configuration against defined
+ * options.
  *
  * Ensures:
+ *
  * 1. Saved order and enabled states are preserved.
  * 2. If no saved value is present, falls back to `defaultValue`.
- * 3. Any options defined in `options` that are missing from the saved/default list are appended (disabled by default).
+ * 3. Any options defined in `options` that are missing from the saved/default list
+ *    are appended (disabled by default).
  * 4. Stale items not in `options` are discarded.
  */
 export function resolveSortableChecklist(
@@ -52,25 +55,17 @@ function parseRawList(raw: unknown): SortableChecklistItem[] | null {
     if (typeof el === 'object' && el !== null) {
       const obj = el as Record<string, unknown>
       if ('id' in obj) {
-        items.push({
-          id: String(obj.id),
-          enabled: obj.enabled !== false,
-        })
+        items.push({ id: String(obj.id), enabled: obj.enabled !== false })
       }
     } else if (typeof el === 'string' || typeof el === 'number') {
-      items.push({
-        id: String(el),
-        enabled: true,
-      })
+      items.push({ id: String(el), enabled: true })
     }
   }
 
   return items.length > 0 ? items : null
 }
 
-/**
- * Returns IDs of enabled checklist items in their current order.
- */
+/** Returns IDs of enabled checklist items in their current order. */
 export function getActiveChecklistIds(
   items: SortableChecklistItem[] = []
 ): string[] {

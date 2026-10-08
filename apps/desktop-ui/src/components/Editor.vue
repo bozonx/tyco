@@ -17,7 +17,9 @@
             v-for="item in leftToolbarItems"
             :key="item.id"
             sm
-            :square="!getToolbarLabel(item) || getToolbarLabel(item).length <= 2"
+            :square="
+              !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
+            "
             ghost
             :disabled="
               item.disabled ||
@@ -41,7 +43,9 @@
             v-for="item in rightToolbarItems"
             :key="item.id"
             sm
-            :square="!getToolbarLabel(item) || getToolbarLabel(item).length <= 2"
+            :square="
+              !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
+            "
             ghost
             :disabled="
               item.disabled ||

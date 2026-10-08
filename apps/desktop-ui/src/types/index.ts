@@ -41,12 +41,18 @@ export interface InputConfigOption {
   labelKey?: string
 }
 
+export interface SortableChecklistItem {
+  id: string
+  enabled: boolean
+}
+
 export interface InputConfigItem {
-  type: 'text' | 'textarea' | 'select' | 'checkbox'
+  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'sortable-checklist'
   name: string
   label?: string
   labelKey?: string
   value?: any
   defaultValue?: any
   options?: InputConfigOption[]
+  vertical?: boolean
 }

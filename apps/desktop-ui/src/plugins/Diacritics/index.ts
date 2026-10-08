@@ -59,10 +59,7 @@ function executeTransform(
   ctx.setEditorInputFocus()
 }
 
-function createToolbarItem(
-  ctx: PluginContext,
-  id: string
-): ToolbarItem | null {
+function createToolbarItem(ctx: PluginContext, id: string): ToolbarItem | null {
   if (id === 'clearAcute') {
     return {
       id: 'diacritics-clear-acute',

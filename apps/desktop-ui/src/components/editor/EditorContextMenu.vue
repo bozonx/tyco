@@ -313,6 +313,19 @@ watch(
   }
 )
 
+const onScroll = (event: Event): void => {
+  const target = event.target as Node | null
+
+  if (
+    target &&
+    (menuRef.value?.contains(target) || subRef.value?.contains(target))
+  ) {
+    return
+  }
+
+  close()
+}
+
 onMounted(() => {
   place()
 
@@ -320,14 +333,14 @@ onMounted(() => {
   window.addEventListener('keydown', onKeyDown, true)
   window.addEventListener('resize', close)
   // scrolling the editor moves the menu away from its anchor — simpler to close
-  window.addEventListener('scroll', close, true)
+  window.addEventListener('scroll', onScroll, true)
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousedown', onPointerDown, true)
   window.removeEventListener('keydown', onKeyDown, true)
   window.removeEventListener('resize', close)
-  window.removeEventListener('scroll', close, true)
+  window.removeEventListener('scroll', onScroll, true)
 })
 </script>
 
@@ -339,9 +352,10 @@ onUnmounted(() => {
   flex-direction: column;
   min-width: 11rem;
   max-width: 20rem;
-  max-height: 60vh;
+  max-height: calc(100vh - 1rem);
   padding: var(--space-xs);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background-color: var(--app-surface);
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);

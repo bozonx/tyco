@@ -41,7 +41,7 @@ const groups = (
 const ids = (items: EditorMenuItem[]) => items.map((entry) => entry.id)
 
 describe('buildContextMenu', () => {
-  it('lists history and clipboard commands, then transforms folded into submenus', () => {
+  it('lists transforms folded into submenus, then clipboard and history commands', () => {
     const menu = buildContextMenu({
       t,
       commands: commands(),
@@ -52,26 +52,30 @@ describe('buildContextMenu', () => {
     })
 
     expect(ids(menu)).toEqual([
-      'undo',
-      'redo',
+      'actions',
+      'case',
+      'format',
       'cut',
       'copy',
       'paste',
       'paste-plain',
       'select-all',
-      'actions',
-      'case',
-      'format',
+      'undo',
+      'redo',
     ])
-    expect(ids(menu[7].children!)).toEqual([
+    expect(menu.find((entry) => entry.id === 'paste-plain')?.icon).toBe(
+      'mdi:clipboard-text-outline'
+    )
+    expect(ids(menu[0].children!)).toEqual([
       'translation',
       'correction',
       'aiTask',
       'askInChat',
     ])
-    expect(ids(menu[8].children!)).toEqual(['upper', 'lower'])
-    expect(menu[2].separatorBefore).toBe(true)
-    expect(menu[7].separatorBefore).toBe(true)
+    expect(ids(menu[1].children!)).toEqual(['upper', 'lower'])
+    expect(menu[0].separatorBefore).toBe(true)
+    expect(menu[3].separatorBefore).toBe(true)
+    expect(menu[8].separatorBefore).toBe(true)
   })
 
   it('controls undo and redo disabled state based on canUndo and canRedo', () => {
@@ -121,7 +125,7 @@ describe('buildContextMenu', () => {
     expect(menu.find((entry) => entry.id === 'paste')?.disabled).toBeFalsy()
   })
 
-  it('puts spelling suggestions on top, separated from history', () => {
+  it('puts spelling suggestions on top, separated from actions', () => {
     const menu = buildContextMenu({
       t,
       commands: commands(),
@@ -131,7 +135,7 @@ describe('buildContextMenu', () => {
     })
 
     expect(menu[0].id).toBe('fix')
-    expect(menu[1]).toMatchObject({ id: 'undo', separatorBefore: true })
+    expect(menu[1]).toMatchObject({ id: 'actions', separatorBefore: true })
   })
 
   it('drops empty submenus', () => {

@@ -100,20 +100,25 @@ export const buildContextMenu = ({
 }: ContextMenuSources): EditorMenuItem[] => [
   ...suggestions,
   ...startGroup([
-    {
-      id: 'undo',
-      label: t('editor.menu.undo'),
-      icon: UNDO_ICON,
-      disabled: !canUndo,
-      action: commands.undo,
-    },
-    {
-      id: 'redo',
-      label: t('editor.menu.redo'),
-      icon: REDO_ICON,
-      disabled: !canRedo,
-      action: commands.redo,
-    },
+    ...submenu(
+      'actions',
+      t('editor.menu.actions'),
+      ACTIONS_ICON,
+      groups.actionItems
+    ),
+    ...submenu('case', t('editor.case'), CASE_ICON, groups.caseItems),
+    ...submenu(
+      'format',
+      t('editor.format'),
+      FORMAT_ICON,
+      formatChildren(groups)
+    ),
+    ...submenu(
+      'markup',
+      t('editor.markup.title'),
+      MARKUP_ICON,
+      groups.markupItems ?? []
+    ),
   ]),
   ...startGroup([
     {
@@ -139,6 +144,7 @@ export const buildContextMenu = ({
     {
       id: 'paste-plain',
       label: t('editor.menu.pasteAsText'),
+      icon: 'mdi:clipboard-text-outline',
       action: commands.pastePlain,
     },
     {
@@ -149,24 +155,19 @@ export const buildContextMenu = ({
     },
   ]),
   ...startGroup([
-    ...submenu(
-      'actions',
-      t('editor.menu.actions'),
-      ACTIONS_ICON,
-      groups.actionItems
-    ),
-    ...submenu('case', t('editor.case'), CASE_ICON, groups.caseItems),
-    ...submenu(
-      'format',
-      t('editor.format'),
-      FORMAT_ICON,
-      formatChildren(groups)
-    ),
-    ...submenu(
-      'markup',
-      t('editor.markup.title'),
-      MARKUP_ICON,
-      groups.markupItems ?? []
-    ),
+    {
+      id: 'undo',
+      label: t('editor.menu.undo'),
+      icon: UNDO_ICON,
+      disabled: !canUndo,
+      action: commands.undo,
+    },
+    {
+      id: 'redo',
+      label: t('editor.menu.redo'),
+      icon: REDO_ICON,
+      disabled: !canRedo,
+      action: commands.redo,
+    },
   ]),
 ]

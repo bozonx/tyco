@@ -35,10 +35,14 @@ export type PluginIndex = () => {
 
 export interface ToolbarItem {
   id: string
-  icon: string
+  icon?: string
+  label?: string
+  labelKey?: string
   tooltip?: string
   tooltipKey?: string
   position?: 'left' | 'right'
+  selectionOnly?: boolean
+  disabled?: boolean
   action: () => void | Promise<void>
 }
 

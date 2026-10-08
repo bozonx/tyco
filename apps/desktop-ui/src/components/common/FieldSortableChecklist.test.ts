@@ -15,10 +15,7 @@ describe('FieldSortableChecklist.vue', () => {
 
   it('renders options with default values and labels', () => {
     const wrapper = mount(FieldSortableChecklist, {
-      props: {
-        options,
-        defaultValue: [{ id: 'acute', enabled: true }],
-      },
+      props: { options, defaultValue: [{ id: 'acute', enabled: true }] },
       global: { stubs: { Icon: true } },
     })
 
@@ -32,10 +29,7 @@ describe('FieldSortableChecklist.vue', () => {
 
   it('toggles checkbox and emits update:value', async () => {
     const wrapper = mount(FieldSortableChecklist, {
-      props: {
-        options,
-        defaultValue: [{ id: 'acute', enabled: true }],
-      },
+      props: { options, defaultValue: [{ id: 'acute', enabled: true }] },
       global: { stubs: { Icon: true } },
     })
 
