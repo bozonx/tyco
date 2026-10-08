@@ -501,3 +501,54 @@ describe('commands that replace the selection', () => {
     )
   })
 })
+
+describe('external job requests', () => {
+  it('requires explicit input and ignores selections arriving after activation', async () => {
+    const { deps } = setup([note])
+    const claimJob = vi.fn(async () => true)
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({
+      ...deps,
+      selectedText: () => 'private selection',
+      claimJob,
+      finishJob,
+    })
+    await model.request({
+      commandId: note.id,
+      jobId: 'job-input',
+      output: 'return',
+    })
+    await model.selectionArrived('another private selection')
+    expect(model.stage.value.kind).toBe('prepare')
+    expect(deps.run).not.toHaveBeenCalled()
+    model.setText('explicit text')
+    await model.submit()
+    expect(claimJob).toHaveBeenCalledWith('job-input')
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'explicit text',
+      expect.objectContaining({ source: 'external', output: 'return' })
+    )
+    expect(finishJob).toHaveBeenCalledWith('job-input', { success: true })
+  })
+
+  it('does not claim a job until confirmation and cancels an abandoned prompt', async () => {
+    const confirmed = { ...backup, confirm: 'always' as const }
+    const { deps } = setup([confirmed])
+    const claimJob = vi.fn(async () => true)
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({ ...deps, claimJob, finishJob })
+    await model.request({
+      commandId: confirmed.id,
+      jobId: 'job-confirm',
+      output: 'return',
+    })
+    expect(claimJob).not.toHaveBeenCalled()
+    expect(deps.run).not.toHaveBeenCalled()
+    model.cancelExternal('job-confirm')
+    expect(finishJob).toHaveBeenCalledWith(
+      'job-confirm',
+      expect.objectContaining({ success: false, cancelled: true })
+    )
+  })
+})

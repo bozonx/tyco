@@ -1,6 +1,45 @@
 <template>
   <SettingsSection :description="t('commands.hint')" bare>
     <div class="commands-tab">
+      <div class="external-access">
+        <FieldCheckbox
+          :value="externalAccess.commands"
+          :label="t('commands.externalMaster')"
+          @update:value="setExternalAccess('commands', $event)"
+        />
+        <FieldCheckbox
+          :value="externalAccess.selection"
+          :label="t('commands.externalSelection')"
+          @update:value="setExternalAccess('selection', $event)"
+        />
+        <FieldCheckbox
+          :value="externalAccess.recording"
+          :label="t('commands.externalRecording')"
+          @update:value="setExternalAccess('recording', $event)"
+        />
+        <p class="commands-empty">{{ t('commands.externalAccessHint') }}</p>
+      </div>
+      <div v-if="commands.length" class="commands-add">
+        <FieldCheckbox
+          :value="allSelected"
+          :label="t('commands.selectAll')"
+          @update:value="selectAll($event)"
+        />
+        <Button
+          v-if="selectedCount"
+          sm
+          ghost
+          @click="setSelectedExternal(true)"
+          >{{ t('commands.grantSelected') }}</Button
+        >
+        <Button
+          v-if="selectedCount"
+          sm
+          ghost
+          @click="setSelectedExternal(false)"
+          >{{ t('commands.revokeSelected') }}</Button
+        >
+      </div>
       <p v-if="!commands.length" class="commands-empty">
         {{ t('commands.empty') }}
       </p>
@@ -21,6 +60,21 @@
           :style="itemStyle(index)"
         >
           <div class="command-header">
+            <input
+              type="checkbox"
+              :checked="selectedCommandIds.has(command.id)"
+              :aria-label="
+                t('commands.selectCommand', {
+                  name: command.name || command.id,
+                })
+              "
+              @change="
+                selectCommand(
+                  command.id,
+                  ($event.target as HTMLInputElement).checked
+                )
+              "
+            />
             <div
               class="drag-handle"
               :title="t('settings.dragToReorder')"
@@ -179,11 +233,14 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import CommandEditor from './CommandEditor.vue'
 import { Icon } from '@iconify/vue'
 import {
   type CommandConfig,
+  DEFAULT_EXTERNAL_ACCESS,
+  type ExternalAccess,
   type MainActionConfig,
   type UserConfig,
   webhookSecretId,
@@ -196,6 +253,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  (event: 'update:externalAccess', value: ExternalAccess): void
   (event: 'update:commands', value: CommandConfig[]): void
   (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
 }>()
@@ -204,7 +262,46 @@ const { t } = useI18n()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 
+const externalAccess = computed(() => ({
+  ...DEFAULT_EXTERNAL_ACCESS,
+  ...props.userConfig.externalAccess,
+}))
+const setExternalAccess = (key: keyof ExternalAccess, value: boolean) =>
+  emit('update:externalAccess', { ...externalAccess.value, [key]: value })
+
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
+
+const selectedCommandIds = ref(new Set<string>())
+const selectedCount = computed(
+  () =>
+    commands.value.filter((command) => selectedCommandIds.value.has(command.id))
+      .length
+)
+const allSelected = computed(
+  () =>
+    commands.value.length > 0 && selectedCount.value === commands.value.length
+)
+const selectCommand = (id: string, selected: boolean) => {
+  const next = new Set(selectedCommandIds.value)
+  if (selected) next.add(id)
+  else next.delete(id)
+  selectedCommandIds.value = next
+}
+const selectAll = (selected: boolean) => {
+  selectedCommandIds.value = new Set(
+    selected ? commands.value.map((command) => command.id) : []
+  )
+}
+const setSelectedExternal = (external: boolean) => {
+  emit(
+    'update:commands',
+    commands.value.map((command) =>
+      selectedCommandIds.value.has(command.id)
+        ? { ...command, availableIn: { ...command.availableIn, external } }
+        : command
+    )
+  )
+}
 
 const inMenu = computed(
   () =>

@@ -59,7 +59,8 @@ describe('createExternalRun', () => {
     expect(deps.run).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'lamp' }),
       '',
-      expect.any(Function)
+      expect.any(Function),
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
     )
     expect(deps.showOverlay).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: 'success', text: 'Lamp: done' })
@@ -80,7 +81,8 @@ describe('createExternalRun', () => {
     expect(deps.run).toHaveBeenCalledWith(
       expect.anything(),
       'buy milk',
-      expect.any(Function)
+      expect.any(Function),
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
     )
     expect(deps.saveOutput).toHaveBeenCalledWith('buy milk')
     expect(deps.logRun).toHaveBeenCalledWith(
@@ -125,4 +127,75 @@ describe('createExternalRun', () => {
       'externalCommand.missing'
     )
   })
+})
+
+describe('external jobs', () => {
+  it('does not execute a cancelled or denied job', async () => {
+    const { deps } = setup(async () => ({ success: true }))
+    const finishJob = vi.fn(async () => {})
+    const external = createExternalRun({
+      ...deps,
+      claimJob: async () => false,
+      finishJob,
+    })
+    const outcome = await external.handleRun(event({ jobId: 'denied' }))
+    expect(outcome.cancelled).toBe(true)
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(finishJob).not.toHaveBeenCalled()
+  })
+
+  it('aborts a running job and cannot publish its late success', async () => {
+    const { deps } = setup(async () => ({ success: true }))
+    let finishRun!: () => void
+    const finishJob = vi.fn(async () => {})
+    const run = vi.fn<ExternalRunDependencies['run']>(
+      async (_command, _text, _report, options) => {
+        await new Promise<void>((resolve) => {
+          finishRun = resolve
+        })
+        expect(options?.signal?.aborted).toBe(true)
+        return { success: true, output: 'late' }
+      }
+    )
+    const external = createExternalRun({
+      ...deps,
+      run,
+      claimJob: async () => true,
+      finishJob,
+    })
+    const pending = external.handleRun(
+      event({ jobId: 'running', output: 'return' })
+    )
+    await Promise.resolve()
+    external.handleCancel('running')
+    finishRun()
+    expect((await pending).cancelled).toBe(true)
+    expect(finishJob).toHaveBeenCalledWith(
+      'running',
+      expect.objectContaining({ success: false, cancelled: true })
+    )
+  })
+})
+
+it('reports a failed replacement instead of publishing the tool success', async () => {
+  const { deps } = setup(async () => ({ success: true, output: 'result' }))
+  const external = createExternalRun({
+    ...deps,
+    claimJob: async () => true,
+    finishJob: async () => ({
+      success: false,
+      message: 'Focus changed',
+      code: 'SelectionFailed',
+      output: 'result',
+    }),
+  })
+  const outcome = await external.handleRun(
+    event({ jobId: 'selection', output: 'return' })
+  )
+  expect(outcome.success).toBe(false)
+  expect(outcome.output).toBe('result')
+  expect(deps.notify).toHaveBeenCalledWith(expect.any(String), 'Focus changed')
+  expect(deps.logRun).toHaveBeenCalledWith(
+    expect.objectContaining({ success: false, message: 'Focus changed' })
+  )
 })

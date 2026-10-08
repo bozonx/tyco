@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "The command takes no text: remove {placeholder} or turn on “Takes text”.",
     "errorUnknownTool": "Unknown tool.",
     "external": "Available from outside",
-    "externalInfo": "Other applications and scripts can run the command: tyco-ctl run <ID or name>, or the D-Bus method RunCommand.",
+    "externalInfo": "Other applications and scripts can run an allowed command with tyco-ctl run <ID>, tyco-ctl run <name> --name, or D-Bus Run. Use --interactive when confirmation or input is required.",
     "fieldOff": "No",
     "fieldOn": "Yes",
     "fromPluginSettings": "From the plugin settings: {value}",
@@ -134,7 +134,15 @@
     "unknownTool": "The tool “{tool}” is not available in this version of Tyco.",
     "unnamed": "Untitled command",
     "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
-    "warningMenuNeedsText": "The command is in the main action menu but takes no text: its menu item stays empty."
+    "warningMenuNeedsText": "The command is in the main action menu but takes no text: its menu item stays empty.",
+    "externalMaster": "Allow external command execution",
+    "externalSelection": "Allow external selection capture and replacement",
+    "externalRecording": "Allow external recording activation",
+    "externalAccessHint": "Each command also requires its own external permission. Selection capture and recording are disabled by default. These permissions apply to local applications in your user session.",
+    "selectAll": "Select all commands",
+    "grantSelected": "Allow selected externally",
+    "revokeSelected": "Revoke external access for selected",
+    "selectCommand": "Select {name}"
   },
   "common": {
     "add": "Add",

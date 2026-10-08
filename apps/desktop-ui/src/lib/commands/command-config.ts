@@ -203,7 +203,7 @@ export function createCommand(
     logOutput: false,
     // a script runs with the rights of the user and cannot be undone
     confirm: toolId === 'script' ? 'always' : 'auto',
-    availableIn: { external: true, chat: false },
+    availableIn: { external: false, chat: false },
     enabled: true,
   }
 }

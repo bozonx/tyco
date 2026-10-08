@@ -2,7 +2,9 @@ use std::io::{self, BufRead, Read, Write};
 
 use serde::{Deserialize, Serialize};
 
-pub const ACTIVATION_ADDRESS: &str = "127.0.0.1:47829";
+pub mod transport;
+
+pub const API_VERSION: u32 = 1;
 /// Room for the text of a command and the list of commands.
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
@@ -20,8 +22,18 @@ pub const START_MODES: &[&str] = &[
     "config",
 ];
 
+pub fn canonical_mode(value: &str) -> &str {
+    match value {
+        "voice-chat" => "voiceChat",
+        "ai-tasks" => "aiTasks",
+        "command-launcher" => "commandLauncher",
+        "settings" => "config",
+        _ => value,
+    }
+}
+
 pub fn is_start_mode(value: &str) -> bool {
-    START_MODES.contains(&value)
+    START_MODES.contains(&canonical_mode(value))
 }
 
 /// Prefix of the selection action that runs a command of the library.
@@ -48,7 +60,7 @@ pub fn is_selection_action(value: &str) -> bool {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(tag = "command", rename_all = "camelCase")]
+#[serde(tag = "command", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Request {
     Activate {
         mode: String,
@@ -65,6 +77,28 @@ pub enum Request {
     },
     /// The commands that may be run from outside, as JSON.
     ListCommands,
+    Status,
+    Open {
+        mode: String,
+        #[serde(default)]
+        text: Option<String>,
+        #[serde(default)]
+        selection: bool,
+    },
+    DescribeCommand {
+        target: String,
+        #[serde(default)]
+        by_name: bool,
+    },
+    Run {
+        request: RunRequest,
+    },
+    JobStatus {
+        id: String,
+    },
+    JobCancel {
+        id: String,
+    },
     /// Quits the application gracefully.
     Quit,
 }
@@ -75,16 +109,92 @@ pub struct Response {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
     /// What the request asked for, e.g. the JSON list of commands.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RunRequest {
+    pub target: String,
+    #[serde(default)]
+    pub by_name: bool,
+    #[serde(default)]
+    pub text: Option<String>,
+    #[serde(default)]
+    pub input: Option<serde_json::Map<String, serde_json::Value>>,
+    #[serde(default)]
+    pub interactive: bool,
+    #[serde(default)]
+    pub selection: bool,
+    #[serde(default)]
+    pub replace: bool,
+    #[serde(default)]
+    pub output: OutputMode,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum OutputMode {
+    #[default]
+    Return,
+    Configured,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum JobState {
+    Accepted,
+    Running,
+    Succeeded,
+    Failed,
+    Cancelled,
+}
+
+impl JobState {
+    pub fn is_terminal(&self) -> bool {
+        matches!(self, Self::Succeeded | Self::Failed | Self::Cancelled)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Job {
+    pub id: String,
+    pub command_id: String,
+    pub state: JobState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+}
+
 impl Response {
+    pub fn coded_error(code: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            success: false,
+            error: Some(message.into()),
+            code: Some(code.into()),
+            output: None,
+        }
+    }
+    pub fn json(value: &impl Serialize) -> Self {
+        match serde_json::to_string(value) {
+            Ok(json) => Self::output(json),
+            Err(error) => Self::error(error.to_string()),
+        }
+    }
+
     pub fn success() -> Self {
         Self {
             success: true,
             error: None,
+            code: None,
             output: None,
         }
     }
@@ -93,6 +203,7 @@ impl Response {
         Self {
             success: true,
             error: None,
+            code: None,
             output: Some(output.into()),
         }
     }
@@ -101,6 +212,7 @@ impl Response {
         Self {
             success: false,
             error: Some(error.into()),
+            code: Some("Failed".into()),
             output: None,
         }
     }

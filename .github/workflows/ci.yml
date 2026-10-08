@@ -117,6 +117,30 @@ jobs:
         run: cargo test --workspace
         working-directory: src-tauri
 
+  external-control:
+    name: Local control on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Rust toolchain
+        run: rustup toolchain install
+        working-directory: src-tauri
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Check local control clients and transports
+        run: cargo clippy -p tyco-activation-protocol -p tyco-ctl --all-targets -- -D warnings
+        working-directory: src-tauri
+      - name: Test local control end to end
+        run: cargo test -p tyco-activation-protocol -p tyco-ctl
+        working-directory: src-tauri
+
   bundle:
     name: Tauri Bundle
     runs-on: ubuntu-latest

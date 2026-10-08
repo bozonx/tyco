@@ -492,3 +492,56 @@ describe('the output of a command', () => {
     expect(deps.closeWindow).not.toHaveBeenCalled()
   })
 })
+
+describe('external returned output', () => {
+  it('waits for script output even when afterRun is none', async () => {
+    const executeScriptAction = vi.fn(async () => result({ stdout: 'raw\n\n' }))
+    const { deps, runner } = setup({ executeScriptAction })
+    const outcome = await runner.run(script({ command: 'echo test' }), '', {
+      source: 'external',
+      output: 'return',
+    })
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({ captureOutput: true })
+    )
+    expect(outcome).toEqual({ success: true, output: 'raw\n\n' })
+    expect(deps.closeWindow).not.toHaveBeenCalled()
+  })
+  it('validates explicit JSON and bypasses text parsing', async () => {
+    const run = vi.fn(async () => ({ ok: true, content: 'done' }))
+    const parseText = vi.fn(async () => ({
+      ok: true as const,
+      input: { count: 1 },
+    }))
+    const { runner } = setup({}, [
+      {
+        id: 'structured',
+        description: 'Structured test',
+        inputSchema: {
+          type: 'object',
+          properties: { count: { type: 'integer' } },
+          required: ['count'],
+        },
+        parseText,
+        run,
+      },
+    ])
+    const config = script({}, { toolId: 'structured' })
+    expect(
+      (
+        await runner.run(config, '', {
+          input: { count: 'invalid' },
+          output: 'return',
+        })
+      ).success
+    ).toBe(false)
+    expect(run).not.toHaveBeenCalled()
+    expect(
+      await runner.run(config, '', { input: { count: 2 }, output: 'return' })
+    ).toEqual({ success: true, output: 'done' })
+    expect(parseText).not.toHaveBeenCalled()
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ input: { count: 2 } })
+    )
+  })
+})

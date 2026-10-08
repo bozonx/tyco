@@ -24,6 +24,28 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     launcherCommands: () => ipcStore.params.userConfig?.launcherCommands,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
+    claimJob: async (id) => {
+      const result = await ipcStore.callFunction('claimExternalJob', [id])
+      return result.success && result.result === true
+    },
+    finishJob: async (id, completion) => {
+      const result = await ipcStore.callFunction('finishExternalJob', [
+        id,
+        completion,
+      ])
+      if (!result.success) return { success: false, message: result.error }
+      const job = result.result
+      if (!job) return completion
+      if (job.state === 'failed' && job.code === 'SelectionFailed')
+        toastText(job.error ?? translate('toast.commandFailed'), 'error')
+      return {
+        success: job.state === 'succeeded',
+        cancelled: job.state === 'cancelled',
+        output: job.output,
+        message: job.error,
+        code: job.code,
+      }
+    },
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)
     },
@@ -63,6 +85,14 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     () => ipcStore.params.selectedText,
     (text) => {
       void model.selectionArrived(text)
+    }
+  )
+
+  watch(
+    () => ipcStore.params.isWindowShown,
+    (shown) => {
+      if (!shown && model.stage.value.kind === 'prepare')
+        model.dismissExternal()
     }
   )
 

@@ -37,6 +37,7 @@ import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
+import { useCommandLauncherStore } from './stores/commandLauncher'
 import { useDefaultCommandsStore } from './stores/commands'
 import { useEditorInputStore } from './stores/editorInput'
 import { useExternalCommandsStore } from './stores/externalCommands'
@@ -263,6 +264,12 @@ onMounted(() => {
       })
       .then((remove) => selectionListeners.push(remove))
     const externalCommands = useExternalCommandsStore()
+    void desktopClient
+      .listen(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, (id) => {
+        externalCommands.handleCancel(id)
+        useCommandLauncherStore().cancelExternal(id)
+      })
+      .then((remove) => selectionListeners.push(remove))
     void desktopClient
       .listen(DESKTOP_EVENTS.COMMAND_RUN, (payload) => {
         void externalCommands.handleRun(payload)

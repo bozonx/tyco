@@ -167,6 +167,7 @@ export const DESKTOP_EVENTS = {
   SELECTION_CANCEL: 'app://selection-cancel',
   /** An external call runs a command in the background */
   COMMAND_RUN: 'app://command-run',
+  EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
 } as const
 
 export const DESKTOP_COMMANDS = {
@@ -234,6 +235,8 @@ export const DESKTOP_COMMANDS = {
   LOG_COMMAND_RUN: 'log_command_run',
   LOG_CLIENT_MESSAGE: 'log_client_message',
   SET_TOOL_CATALOG: 'set_tool_catalog',
+  CLAIM_EXTERNAL_JOB: 'claim_external_job',
+  FINISH_EXTERNAL_JOB: 'finish_external_job',
   GET_USER_CONFIG: 'get_user_config',
   COPY_TEXT: 'copy_text',
   REPLACE_SELECTION_WITH_COMMAND: 'replace_selection_with_command',
@@ -274,6 +277,9 @@ export type CommandRunSource =
  */
 export interface LauncherRequest {
   commandId: string
+  jobId?: string
+  output?: 'return' | 'configured'
+  input?: Record<string, unknown>
   /** The text of the call; without it the selection or the field gives it */
   text?: string
 }
@@ -294,11 +300,15 @@ export interface ToolCatalogEntry {
   available: boolean
   /** Why the tool cannot run now, translated */
   reason?: string
+  inputSchema?: Record<string, unknown>
 }
 
 /** An external call that runs a command in the background */
 export interface CommandRunEvent {
   commandId: string
+  jobId?: string
+  output?: 'return' | 'configured'
+  input?: Record<string, unknown>
   text?: string
   userConfig: UserConfig
 }

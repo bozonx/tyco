@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "Komut metin almıyor: {placeholder} öğesini kaldırın veya “Metin alır” seçeneğini açın.",
     "errorUnknownTool": "Bilinmeyen araç.",
     "external": "Dışarıdan erişilebilir",
-    "externalInfo": "Diğer uygulamalar ve betikler komutu çalıştırabilir: tyco-ctl run <kimlik veya ad> ya da D-Bus yöntemi RunCommand.",
+    "externalInfo": "Diğer uygulamalar ve betikler izin verilen bir komutu tyco-ctl run <kimlik>, tyco-ctl run <ad> --name veya D-Bus Run ile çalıştırabilir. Onay veya giriş gerektiğinde --interactive kullanın.",
     "fieldOff": "Hayır",
     "fieldOn": "Evet",
     "fromPluginSettings": "Eklenti ayarlarından: {value}",
@@ -134,7 +134,15 @@
     "unknownTool": "“{tool}” aracı Tyco'nun bu sürümünde kullanılamıyor.",
     "unnamed": "Adsız komut",
     "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
-    "warningMenuNeedsText": "Komut ana eylem menüsünde ama metin almıyor: menü öğesi boş kalır."
+    "warningMenuNeedsText": "Komut ana eylem menüsünde ama metin almıyor: menü öğesi boş kalır.",
+    "externalMaster": "Harici komut çalıştırmaya izin ver",
+    "externalSelection": "Harici seçim yakalama ve değiştirmeye izin ver",
+    "externalRecording": "Harici kayıt başlatmaya izin ver",
+    "externalAccessHint": "Her komut için ayrıca harici çalıştırma izni gerekir. Seçim yakalama ve kayıt varsayılan olarak kapalıdır. İzinler kullanıcı oturumunuzdaki yerel uygulamalar için geçerlidir.",
+    "selectAll": "Tüm komutları seç",
+    "grantSelected": "Seçilenlere harici izin ver",
+    "revokeSelected": "Seçilenlerin harici iznini kaldır",
+    "selectCommand": "{name} seç"
   },
   "common": {
     "add": "Ekle",

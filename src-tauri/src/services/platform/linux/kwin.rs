@@ -49,12 +49,12 @@ function tycoReport(window) {
     const id = window ? window.internalId.toString() : "";
     const kind = window ? tycoKind(window) : "other";
     const resourceClass = window ? String(window.resourceClass || "") : "";
-    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", "KwinWindowActivated",
+    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.KwinTracker", "KwinWindowActivated",
         tycoNextSeq(), id, kind, resourceClass);
 }
 workspace.windowActivated.connect(tycoReport);
 workspace.windowRemoved.connect(function (window) {
-    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", "KwinWindowClosed",
+    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.KwinTracker", "KwinWindowClosed",
         tycoNextSeq(), window.internalId.toString());
 });
 tycoReport(workspace.activeWindow);
@@ -70,7 +70,7 @@ const ACTIVATOR_SCRIPT: &str = r#"
             return;
         }
     }
-    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.Interface", "KwinWindowMissing", target);
+    callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.KwinTracker", "KwinWindowMissing", target);
 })();
 "#;
 

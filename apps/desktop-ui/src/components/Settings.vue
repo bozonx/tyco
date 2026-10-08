@@ -339,6 +339,7 @@
           :key="focusCommandId"
           :user-config="userConfig"
           :focus-command-id="focusCommandId"
+          @update:external-access="userConfig.externalAccess = $event"
           @update:commands="updateCommands"
           @update:main-actions="updateMainActions"
         />

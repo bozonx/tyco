@@ -66,60 +66,34 @@ dev server URL and the CSP entries that allow talking to it. Running
   fails when they drift apart.
 - Locale files must stay key-synchronized; `pnpm check:i18n` verifies that.
 
-## Linux integration
+## External control
 
-Build the lightweight activation client and use it from a desktop environment
-or window-manager hotkey:
+Build the client for Linux, Windows, or macOS:
 
-```bash
+```sh
 cargo build --release --manifest-path src-tauri/Cargo.toml -p tyco-ctl
-./src-tauri/target/release/tyco-ctl activate editor
+tyco-ctl open editor
+tyco-ctl commands list --json
+tyco-ctl run my-command --stdin --wait < input.txt > output.txt
 ```
 
-The app also keeps the Linux D-Bus compatibility interface
-(`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).
+Tyco must already be running. Linux/macOS use a protected Unix socket; Windows
+uses a named pipe restricted to the current logon session. Linux additionally
+supports D-Bus (`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).
 
-### Command overlay
+Settings → Commands controls external execution, selection capture/replacement,
+and recording activation. Every executable command needs an individual external
+grant. New core/plugin commands are not automatically exposed. Non-interactive
+calls require explicit input; `--interactive` permits input/confirmation UI.
+Use `--wait` to obtain actual command completion, or manage the returned job ID
+through `tyco-ctl jobs`. Selection replacement is explicit:
 
-Commands of the library (Settings → Commands) marked “In the command overlay”
-can be run from an overlay opened with its own global hotkey (unassigned by
-default; Settings → Global hotkeys) or with `tyco-ctl activate
-commandLauncher`. Type to search, press `1`–`9` or pick a command with the
-arrows and Enter. A command that takes text gets the text selected in the
-active window, or asks for it in the overlay.
-
-Commands marked “Available from outside” can be run by other programs, e.g.
-window manager hotkeys or scripts, by their ID (shown in the command editor)
-or their name:
-
-```bash
-tyco-ctl run backup                  # a command without text
-tyco-ctl run "Work note" buy milk    # the words after the command are its text
-echo "secret text" | tyco-ctl run note -   # `-` reads the text from stdin
-tyco-ctl commands                    # JSON list of { id, name, input }
+```sh
+tyco-ctl run default:core.correct:fix --selection --replace --interactive --wait
 ```
 
-The same is available as the D-Bus methods `RunCommand(command, text)` and
-`ListCommands()` of `org.tyco.Interface`. The call returns once the command is
-found; an unknown, ambiguous or disabled command is an error. A command that
-needs nothing else runs in the background and reports its outcome in a status
-bubble, failures also in a desktop notification. A command that needs text
-when none is given takes the selection, or asks for it in the command overlay;
-the overlay also opens for a confirmation and for the result menu.
+The command and selection grants must both be enabled. Internal selection
+hotkeys retain their own behavior; they are independent of external access.
 
-### Replacing the selection
-
-The text selected in any application can be corrected without opening Tyco:
-the text is copied out with the copy keys, corrected, and pasted back over the
-selection. The global hotkey is `Ctrl+Alt+F` by default and can be changed in
-Settings → Global hotkeys. Pressing it again cancels a running correction.
-Scripts can also apply a translation or an AI task this way:
-
-```bash
-tyco-ctl replace correction    # or translate.<slot>, aiTask.<slot>
-```
-
-and as the D-Bus method `ReplaceSelection` of `org.tyco.Interface`. On KDE
-Plasma under Wayland this needs `ydotoold` and the KWin window tracker; a
-status bubble appears only when the action takes longer than a moment, and
-failures also go to desktop notifications.
+See [External control API](dev_docs/external-control.md) for the complete CLI,
+D-Bus contract, permissions, exit codes, platform behavior, and migration guide.

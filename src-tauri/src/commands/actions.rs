@@ -95,3 +95,27 @@ pub fn log_client_message(level: String, message: String, context: Option<String
 pub fn set_tool_catalog(state: State<'_, AppState>, tools: Vec<ToolCatalogEntry>) {
     state.set_tool_catalog(external_commands::catalog_from(tools));
 }
+
+/// Only the always-present quick window executes external jobs.
+#[tauri::command]
+pub fn claim_external_job(app: AppHandle, window: tauri::WebviewWindow, id: String) -> bool {
+    window.label() == crate::services::runtime::QUICK_WINDOW_LABEL
+        && crate::services::external_api::claim(&app, &id)
+}
+
+#[tauri::command(async)]
+pub fn finish_external_job(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    id: String,
+    completion: crate::services::external_api::JobCompletion,
+) -> Option<tyco_activation_protocol::Job> {
+    if window.label() == crate::services::runtime::QUICK_WINDOW_LABEL {
+        crate::services::external_api::complete(&app, &id, completion);
+        use tauri::Manager;
+        return app
+            .state::<crate::services::external_jobs::ExternalJobs>()
+            .get(&id);
+    }
+    None
+}

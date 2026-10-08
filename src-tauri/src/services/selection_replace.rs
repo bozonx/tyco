@@ -46,7 +46,7 @@ pub enum RunErrorCode {
     NoSelection,
     /// The keys could not be pressed or the clipboard could not be used.
     Capture,
-    #[cfg_attr(target_os = "linux", allow(dead_code))]
+    #[cfg_attr(any(target_os = "linux", target_os = "windows"), allow(dead_code))]
     Unsupported,
 }
 
@@ -102,10 +102,14 @@ struct Target {
 
 struct Run {
     id: u64,
+    external: bool,
+    captured_text: Option<String>,
     target: Target,
     started: Instant,
     #[cfg(target_os = "linux")]
     snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
+    #[cfg(target_os = "windows")]
+    snapshot: Option<super::platform::windows_clipboard::Snapshot>,
 }
 
 #[derive(Default)]
@@ -153,12 +157,20 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         )));
     }
     let runs = app.state::<SelectionRuns>();
-    if let Some(run) = runs.take_active() {
-        cancel(app, run);
-        return Ok(());
-    }
+    // Reserve capture before inspecting active runs so a concurrent external
+    // capture cannot be mistaken for a hotkey run to cancel.
     if runs.capturing.swap(true, Ordering::SeqCst) {
         log::debug!("Ignoring the {action} trigger: a selection is being captured");
+        return Ok(());
+    }
+    let capturing = CapturingGuard(app.clone());
+    if runs.lock().as_ref().is_some_and(|run| run.external) {
+        return Err(AppError::Message(
+            "An external selection job is running".into(),
+        ));
+    }
+    if let Some(run) = runs.take_active() {
+        cancel(app, run);
         return Ok(());
     }
 
@@ -167,7 +179,6 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
     thread::spawn(move || {
         // released however the capture ends, a panic included, so that a
         // failed capture never disables the selection hotkeys for good
-        let capturing = CapturingGuard(app.clone());
         match wait {
             TriggerWait::Now => {}
             TriggerWait::Delay(delay) => thread::sleep(delay),
@@ -178,7 +189,11 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         let user_config = app.state::<AppState>().params().user_config;
         let event = match capture(&user_config) {
             Ok((text, run)) => {
-                runs.lock().replace(Run { id: run_id, ..run });
+                runs.lock().replace(Run {
+                    id: run_id,
+                    captured_text: Some(text.clone()),
+                    ..run
+                });
                 RunEvent {
                     run_id,
                     action,
@@ -207,6 +222,28 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         }
     });
     Ok(())
+}
+
+/// Captures an explicit external selection without toggling an existing run.
+pub fn prepare_external(app: &AppHandle) -> Result<(u64, String), AppError> {
+    let runs = app.state::<SelectionRuns>();
+    if runs.capturing.swap(true, Ordering::SeqCst) {
+        return Err(AppError::Message("A selection is being captured".into()));
+    }
+    let _guard = CapturingGuard(app.clone());
+    if runs.lock().is_some() {
+        return Err(AppError::Message(
+            "A selection run is already active".into(),
+        ));
+    }
+    let (text, mut run) = capture(&app.state::<AppState>().params().user_config)
+        .map_err(|error| AppError::Message(error.message))?;
+    let id = runs.next_id.fetch_add(1, Ordering::SeqCst) + 1;
+    run.id = id;
+    run.external = true;
+    run.captured_text = Some(text.clone());
+    runs.lock().replace(run);
+    Ok((id, text))
 }
 
 struct CapturingGuard(AppHandle);
@@ -264,6 +301,7 @@ fn emit_to_webview(
 
 /// Application ids of terminals, where Ctrl+C interrupts the running
 /// program, so copying and pasting take Ctrl+Shift+C and Ctrl+Shift+V.
+#[cfg(any(target_os = "linux", test))]
 const TERMINALS: [&str; 22] = [
     "konsole",
     "yakuake",
@@ -289,6 +327,7 @@ const TERMINALS: [&str; 22] = [
     "blackbox",
 ];
 
+#[cfg(any(target_os = "linux", test))]
 fn is_terminal_class(class: &str) -> bool {
     let class = class.to_ascii_lowercase();
     let name = class.rsplit('.').next().unwrap_or_default();
@@ -342,6 +381,8 @@ fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
     let snapshot = clipboard_restore::snapshot();
     let mut run = Run {
         id: 0,
+        external: false,
+        captured_text: None,
         target,
         started: Instant::now(),
         snapshot,
@@ -366,12 +407,95 @@ fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
 fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
     Err(RunError::new(
         RunErrorCode::Unsupported,
-        "Replacing the selection is only available on Linux",
+        "Replacing the selection is only available on Linux and Windows",
     ))
+}
+
+#[cfg(target_os = "windows")]
+fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
+    use super::platform::{windows, windows_clipboard};
+    let id = windows::capture_source()
+        .ok_or_else(|| RunError::new(RunErrorCode::NoTarget, "No foreground window"))?;
+    let snapshot = windows_clipboard::snapshot()
+        .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+    let run = Run {
+        id: 0,
+        external: false,
+        captured_text: None,
+        target: Target {
+            id,
+            terminal: windows::foreground_is_terminal(),
+        },
+        started: Instant::now(),
+        snapshot: Some(snapshot),
+    };
+    let probe = format!("tyco-selection-probe-{}", std::process::id());
+    let result = (|| {
+        windows_clipboard::write_text(&probe)
+            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+        if windows::capture_source().as_deref() != Some(run.target.id.as_str()) {
+            return Err(RunError::new(
+                RunErrorCode::NoTarget,
+                "Focus changed before capture",
+            ));
+        }
+        windows::press_copy_or_paste(true, run.target.terminal)
+            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+        let deadline = Instant::now() + Duration::from_millis(700);
+        loop {
+            if let Some(text) = windows_clipboard::read_text() {
+                if text != probe && !text.trim().is_empty() {
+                    return Ok(text);
+                }
+            }
+            if Instant::now() >= deadline {
+                return Err(RunError::new(
+                    RunErrorCode::NoSelection,
+                    "Nothing is selected in the foreground window",
+                ));
+            }
+            thread::sleep(Duration::from_millis(25));
+        }
+    })();
+    match result {
+        Ok(text) => Ok((text, run)),
+        Err(error) => {
+            restore_clipboard(run);
+            Err(error)
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn restore_clipboard(run: Run) {
+    if run
+        .captured_text
+        .as_ref()
+        .is_some_and(|text| super::platform::windows_clipboard::read_text().as_ref() != Some(text))
+    {
+        return;
+    }
+    if let Some(snapshot) = run.snapshot {
+        let _ = super::platform::windows_clipboard::restore(&snapshot);
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn paste_result(_user_config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
+    use super::platform::{windows, windows_clipboard};
+    windows_clipboard::write_text(&text)?;
+    if windows::capture_source().as_deref() != Some(run.target.id.as_str()) {
+        return Ok(FinishStatus::Clipboard);
+    }
+    windows::press_copy_or_paste(false, run.target.terminal)?;
+    if let Some(snapshot) = run.snapshot {
+        windows_clipboard::restore_later(snapshot);
+    }
+    Ok(FinishStatus::Pasted)
 }
 
 /// Presses the copy keys and waits for the clipboard to change. A probe
@@ -428,6 +552,13 @@ fn copy_selection(
 #[cfg(target_os = "linux")]
 fn restore_clipboard(run: Run) {
     use super::platform::linux::clipboard_restore;
+    if run
+        .captured_text
+        .as_ref()
+        .is_some_and(|text| clipboard_restore::read_text().as_ref() != Some(text))
+    {
+        return;
+    }
 
     match run.snapshot {
         Some(snapshot) => clipboard_restore::restore_now(&snapshot),
@@ -441,7 +572,7 @@ fn restore_clipboard(run: Run) {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
 fn restore_clipboard(_run: Run) {}
 
 #[cfg(target_os = "linux")]
@@ -461,10 +592,10 @@ fn paste_result(user_config: &Value, run: Run, text: String) -> Result<FinishSta
     Ok(FinishStatus::Pasted)
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
 fn paste_result(_user_config: &Value, _run: Run, _text: String) -> Result<FinishStatus, AppError> {
     Err(AppError::Message(String::from(
-        "Replacing the selection is only available on Linux",
+        "Replacing the selection is only available on Linux and Windows",
     )))
 }
 
@@ -549,12 +680,14 @@ mod tests {
     fn run(id: u64, age: Duration) -> Run {
         Run {
             id,
+            external: false,
+            captured_text: None,
             target: Target {
                 id: String::from("window"),
                 terminal: false,
             },
             started: Instant::now() - age,
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             snapshot: None,
         }
     }

@@ -108,10 +108,10 @@ describe('normalizeCommands', () => {
 })
 
 describe('createCommand', () => {
-  it('asks to confirm a new script and offers it everywhere but the chat', () => {
+  it('asks to confirm a new script and keeps external access opt-in', () => {
     const command = createCommand('script', 'id1')
     expect(command.confirm).toBe('always')
-    expect(command.availableIn).toEqual({ external: true, chat: false })
+    expect(command.availableIn).toEqual({ external: false, chat: false })
     expect(createCommand('webhook').confirm).toBe('auto')
   })
 })

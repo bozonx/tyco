@@ -366,7 +366,20 @@ export const SUBMIT_KEYS = ['enter', 'ctrlEnter'] as const
 export type SubmitKey = (typeof SUBMIT_KEYS)[number]
 export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 
+export interface ExternalAccess {
+  commands: boolean
+  selection: boolean
+  recording: boolean
+}
+
+export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
+  commands: true,
+  selection: false,
+  recording: false,
+}
+
 export interface UserConfig {
+  externalAccess?: ExternalAccess
   /** See `CONFIG_VERSION`; absent in configs older than version 1 */
   configVersion?: number
   hotkeys: Record<string, string>
@@ -436,6 +449,7 @@ export interface UserConfig {
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
+  externalAccess: { ...DEFAULT_EXTERNAL_ACCESS },
   configVersion: CONFIG_VERSION,
   // the Linux defaults: the backend owns the defaults of each platform and
   // reports them in `HotkeyProviderInfo.defaults`; an empty one is unassigned

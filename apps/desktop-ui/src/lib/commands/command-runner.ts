@@ -1,6 +1,11 @@
 import type { CommandConfig, CommandRunSource } from '@tyco/shared'
 
-import { resolveToolInput, toolCallConfig } from '../tools/tool-input'
+import {
+  resolveToolInput,
+  toolCallConfig,
+  toolInputSchema,
+  validateToolInput,
+} from '../tools/tool-input'
 import type { ToolLookup, ToolResult } from '../tools/tool-types'
 import { commandLabel, commandUnavailableReason } from './command-config'
 
@@ -24,6 +29,9 @@ export interface CommandRunnerDependencies {
 }
 
 export interface CommandRunOptions {
+  input?: Record<string, unknown>
+  output?: 'return' | 'configured'
+
   /** Cancels the run: the script is killed, the request is aborted */
   signal?: AbortSignal
   /** Where the command is invoked from; the action menu by default */
@@ -33,6 +41,8 @@ export interface CommandRunOptions {
 /** How a run ended; the user has been told already */
 export interface CommandRunOutcome {
   success: boolean
+  output?: string
+  code?: string
   /** The user cancelled it; nothing was reported */
   cancelled?: boolean
   /** Why it failed, for the log */
@@ -43,14 +53,16 @@ export interface CommandRunOutcome {
 type InvokeResult = ToolResult & {
   /** Why the call failed, for the log */
   failure?: string
+  code?: string
   /** The text the tool got, the source of its output */
   sourceText?: string
 }
 
 const succeeded: CommandRunOutcome = { success: true }
-const failed = (message: string): CommandRunOutcome => ({
+const failed = (message: string, code?: string): CommandRunOutcome => ({
   success: false,
   message,
+  ...(code ? { code } : {}),
 })
 
 const cancelled: CommandRunOutcome = {
@@ -112,7 +124,10 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       }
     }
     const tool = deps.tools.get(command.toolId)
-    const reason = commandUnavailableReason(command, deps.tools)
+    const reason =
+      options.input !== undefined
+        ? tool?.unavailableReason?.()
+        : commandUnavailableReason(command, deps.tools)
     if (!tool || reason) {
       return {
         ok: false,
@@ -126,17 +141,32 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
 
     const config = toolCallConfig(tool, command.toolConfig)
     try {
-      const parsed = await resolveToolInput({
-        tool,
-        config,
-        text,
-        llmArgumentParsing: command.llmArgumentParsing,
-        context: { now: new Date(), signal, language: deps.language?.() },
-      })
+      const inputErrors =
+        options.input === undefined
+          ? []
+          : validateToolInput(toolInputSchema(tool, config), options.input)
+      if (inputErrors.length)
+        return {
+          ok: false,
+          code: 'InvalidInput',
+          failure: inputErrors.join('; '),
+          message: inputErrors.join('; '),
+        }
+      const parsed =
+        options.input !== undefined
+          ? { ok: true as const, input: options.input }
+          : await resolveToolInput({
+              tool,
+              config,
+              text,
+              llmArgumentParsing: command.llmArgumentParsing,
+              context: { now: new Date(), signal, language: deps.language?.() },
+            })
       if (signal.aborted) return { ok: false, cancelled: true }
       if (!parsed.ok) {
         return {
           ...parsed,
+          code: 'InvalidInput',
           failure: parsed.message ?? parsed.messageKey ?? 'Invalid input',
         }
       }
@@ -150,7 +180,10 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
           name: commandLabel(command),
           logOutput: command.logOutput,
         },
-        wantsOutput: command.afterRun !== 'none',
+        wantsOutput:
+          options.source === 'external' ||
+          options.output === 'return' ||
+          command.afterRun !== 'none',
       })
       if (signal.aborted) return { ok: false, cancelled: true }
       return {
@@ -202,22 +235,31 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
     if (!result.ok) {
       report(result)
       return failed(
-        result.failure ?? result.message ?? result.messageKey ?? 'Failed'
+        result.failure ?? result.message ?? result.messageKey ?? 'Failed',
+        result.code
       )
     }
+    if (options.output === 'return')
+      return { success: true, output: result.content }
+    let outcome: CommandRunOutcome
     switch (command.afterRun) {
       // the text did not come from a selection here: the overlay hands a
       // selection over to a selection run, see `transform`
       case 'replaceSelection':
       case 'showMenu':
-        return showOutput(result.content ?? '', result.sourceText ?? '')
+        outcome = showOutput(result.content ?? '', result.sourceText ?? '')
+        break
       case 'copy':
-        return copyOutput(result.content ?? '', result.keepWindow)
+        outcome = await copyOutput(result.content ?? '', result.keepWindow)
+        break
       default:
         report(result)
         if (!result.keepWindow) deps.closeWindow?.()
-        return succeeded
+        outcome = succeeded
     }
+    return options.source === 'external'
+      ? { ...outcome, output: result.content }
+      : outcome
   }
 
   /**

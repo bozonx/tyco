@@ -6,13 +6,11 @@ use zbus::message::Header;
 use zbus::names::{BusName, OwnedUniqueName};
 use zbus::{interface, Connection};
 
-use crate::services::activation::{Activation, ActivationSource, StartMode};
+use crate::services::activation::ActivationSource;
 use crate::services::platform::linux::kwin;
 use crate::services::platform::session;
 use crate::services::platform::window_tracker::{self, tracker, WindowKind};
-use crate::services::{external_commands, runtime, selection_replace};
-use crate::state::AppState;
-use tauri::Manager;
+use crate::services::{external_api, runtime};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
@@ -31,6 +29,7 @@ pub fn spawn_dbus_server(app: AppHandle) {
             zbus::ConnectionBuilder::session()?
                 .name(MESSAGE_DEST)?
                 .serve_at(MESSAGE_PATH, interface)?
+                .serve_at(MESSAGE_PATH, TycoKwin { app: app.clone() })?
                 .build()
                 .await
         });
@@ -67,44 +66,174 @@ struct TycoDbus {
 
 #[interface(name = "org.tyco.Interface")]
 impl TycoDbus {
-    async fn switch_mode(&self, message: &str) -> zbus::fdo::Result<()> {
-        let (mode, window_id, selected_text) = parse_switch_mode_message(message);
-
-        let mode = StartMode::parse(mode)
-            .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))?;
-        let mut activation = Activation::new(mode, ActivationSource::Dbus);
-        activation.window_id = window_id.map(str::to_string);
-        activation.selected_text = selected_text.map(str::to_string);
-        runtime::activate(&self.app, activation)
-            .map_err(|error| zbus::fdo::Error::Failed(error.to_string()))?;
-
-        Ok(())
+    /// Versioned request/response envelope, identical to local IPC.
+    async fn request(&self, request: &str) -> zbus::fdo::Result<String> {
+        if request.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES {
+            return Err(zbus::fdo::Error::InvalidArgs(
+                "Protocol message is too large".into(),
+            ));
+        }
+        let request = serde_json::from_str(request)
+            .map_err(|error| zbus::fdo::Error::InvalidArgs(format!("Invalid request: {error}")))?;
+        Ok(serde_json::to_string(&external_api::dispatch(
+            &self.app,
+            request,
+            ActivationSource::Dbus,
+        ))
+        .expect("response serialization"))
     }
 
-    /// Replaces the selection in the focused window, see `selection_replace`.
-    async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
-        selection_replace::trigger(&self.app, action, selection_replace::TriggerWait::Now)
-            .map_err(|error| zbus::fdo::Error::InvalidArgs(error.to_string()))
+    async fn open(&self, mode: &str, text: &str, selection: bool) -> zbus::fdo::Result<()> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Open {
+                mode: mode.into(),
+                text: (!selection).then(|| text.to_owned()),
+                selection,
+            },
+            ActivationSource::Dbus,
+        ))
+        .map(|_| ())
     }
 
-    /// Runs a command of the library, found by its id or name; `text` is
-    /// empty when there is none. See `external_commands`.
-    async fn run_command(&self, command: &str, text: &str) -> zbus::fdo::Result<()> {
-        let text = (!text.is_empty()).then(|| text.to_owned());
-        external_commands::run(&self.app, command, text, ActivationSource::Dbus)
-            .map_err(|error| zbus::fdo::Error::Failed(error.to_string()))
-    }
-
-    /// The commands that may be run from outside: a JSON array of
-    /// `{ id, name, input }`.
-    async fn list_commands(&self) -> zbus::fdo::Result<String> {
-        let state = self.app.state::<AppState>();
-        Ok(external_commands::list(
-            &state.params().user_config,
-            state.tool_catalog().as_ref(),
+    async fn run(&self, request: &str) -> zbus::fdo::Result<String> {
+        if request.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES {
+            return Err(zbus::fdo::Error::InvalidArgs(
+                "Protocol message is too large".into(),
+            ));
+        }
+        let request = serde_json::from_str(request).map_err(|error| {
+            zbus::fdo::Error::InvalidArgs(format!("Invalid run request: {error}"))
+        })?;
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Run { request },
+            ActivationSource::Dbus,
         ))
     }
 
+    async fn status(&self) -> zbus::fdo::Result<String> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Status,
+            ActivationSource::Dbus,
+        ))
+    }
+
+    async fn describe_command(&self, target: &str, by_name: bool) -> zbus::fdo::Result<String> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::DescribeCommand {
+                target: target.into(),
+                by_name,
+            },
+            ActivationSource::Dbus,
+        ))
+    }
+
+    async fn job_status(&self, id: &str) -> zbus::fdo::Result<String> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::JobStatus { id: id.into() },
+            ActivationSource::Dbus,
+        ))
+    }
+
+    async fn cancel_job(&self, id: &str) -> zbus::fdo::Result<String> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::JobCancel { id: id.into() },
+            ActivationSource::Dbus,
+        ))
+    }
+
+    /// Legacy adapter; fields are no longer passed straight to runtime activation.
+    async fn switch_mode(&self, message: &str) -> zbus::fdo::Result<()> {
+        let (mode, _window_id, text) = parse_switch_mode_message(message);
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Open {
+                mode: mode.into(),
+                text: text.map(str::to_owned),
+                selection: false,
+            },
+            ActivationSource::Dbus,
+        ))
+        .map(|_| ())
+    }
+
+    async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Replace {
+                action: action.into(),
+            },
+            ActivationSource::Dbus,
+        ))
+        .map(|_| ())
+    }
+
+    /// Legacy interactive adapter. Use Run for observable completion.
+    async fn run_command(&self, command: &str, text: &str) -> zbus::fdo::Result<()> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::RunCommand {
+                target: command.into(),
+                text: (!text.is_empty()).then(|| text.into()),
+            },
+            ActivationSource::Dbus,
+        ))
+        .map(|_| ())
+    }
+
+    async fn list_commands(&self) -> zbus::fdo::Result<String> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::ListCommands,
+            ActivationSource::Dbus,
+        ))
+    }
+
+    #[zbus(name = "Ping")]
+    async fn ping(&self) -> zbus::fdo::Result<&str> {
+        Ok(MESSAGE_INTERFACE)
+    }
+
+    #[zbus(name = "Quit")]
+    async fn quit(&self) -> zbus::fdo::Result<()> {
+        dbus_result(external_api::dispatch(
+            &self.app,
+            tyco_activation_protocol::Request::Quit,
+            ActivationSource::Dbus,
+        ))
+        .map(|_| ())
+    }
+}
+
+fn dbus_result(response: tyco_activation_protocol::Response) -> zbus::fdo::Result<String> {
+    if response.success {
+        return Ok(response.output.unwrap_or_default());
+    }
+    let message = format!(
+        "{}: {}",
+        response.code.as_deref().unwrap_or("Failed"),
+        response.error.unwrap_or_default()
+    );
+    Err(match response.code.as_deref() {
+        Some("AccessDenied" | "ConfirmationRequired") => zbus::fdo::Error::AccessDenied(message),
+        Some("InvalidArgs" | "InvalidInput" | "InputRequired") => {
+            zbus::fdo::Error::InvalidArgs(message)
+        }
+        _ => zbus::fdo::Error::Failed(message),
+    })
+}
+
+struct TycoKwin {
+    app: AppHandle,
+}
+
+#[interface(name = "org.tyco.KwinTracker")]
+impl TycoKwin {
     /// Reported by the KWin tracker script, see `platform::linux::kwin`.
     #[zbus(name = "KwinWindowActivated")]
     async fn kwin_window_activated(
@@ -154,26 +283,9 @@ impl TycoDbus {
         self.forget_target_window(&id);
         Ok(())
     }
-
-    #[zbus(name = "Ping")]
-    async fn ping(&self) -> zbus::fdo::Result<&str> {
-        Ok(MESSAGE_INTERFACE)
-    }
-
-    #[zbus(name = "Quit")]
-    async fn quit(&self) -> zbus::fdo::Result<()> {
-        let state = self.app.state::<AppState>();
-        state.set_quitting(true);
-        let app = self.app.clone();
-        tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            app.exit(0);
-        });
-        Ok(())
-    }
 }
 
-impl TycoDbus {
+impl TycoKwin {
     fn forget_target_window(&self, id: &str) {
         if let Err(error) = runtime::forget_target_window(&self.app, id) {
             log::warn!("Could not forget the closed target window: {error}");

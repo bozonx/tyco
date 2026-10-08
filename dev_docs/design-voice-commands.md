@@ -191,6 +191,10 @@ Quick menu в LHC, которое вызывает команды tyco чере�
 
 ### 3.4. Внешний вызов: D-Bus и `tyco-ctl`
 
+> This section records the original design. The implemented contract, permission
+> model, local transports, and migration rules are documented in
+> [External control API](external-control.md).
+
 Связь односторонняя: LHC, скрипты и хоткеи оконного менеджера вызывают
 команды tyco, а tyco о LHC ничего не знает.
 

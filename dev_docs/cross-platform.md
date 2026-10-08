@@ -1,5 +1,9 @@
 # Кроссплатформенность: поддержка, особенности систем, тестирование
 
+> External CLI/D-Bus invocation rules and transport details are maintained in
+> [External control API](external-control.md). External selection tests below
+> require the master selection permission and an individual command grant.
+
 Статус: платформенный слой перестроен, X11 доведён до уровня KDE Wayland;
 бэкенды Windows и macOS — заглушки, план ниже.
 Дата: 2026-10-03

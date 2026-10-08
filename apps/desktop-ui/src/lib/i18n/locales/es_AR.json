@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "El comando no recibe texto: quitá {placeholder} o activá «Recibe texto».",
     "errorUnknownTool": "Herramienta desconocida.",
     "external": "Disponible desde afuera",
-    "externalInfo": "Otras aplicaciones y scripts pueden ejecutar el comando: tyco-ctl run <ID o nombre>, o el método D-Bus RunCommand.",
+    "externalInfo": "Otras aplicaciones y scripts pueden ejecutar un comando permitido con tyco-ctl run <ID>, tyco-ctl run <nombre> --name o D-Bus Run. Usá --interactive si se necesita confirmación o entrada.",
     "fieldOff": "No",
     "fieldOn": "Sí",
     "fromPluginSettings": "De los ajustes del plugin: {value}",
@@ -134,7 +134,15 @@
     "unknownTool": "La herramienta «{tool}» no está disponible en esta versión de Tyco.",
     "unnamed": "Comando sin nombre",
     "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usá el ID.",
-    "warningMenuNeedsText": "El comando está en el menú de acciones principales pero no recibe texto: su elemento del menú queda vacío."
+    "warningMenuNeedsText": "El comando está en el menú de acciones principales pero no recibe texto: su elemento del menú queda vacío.",
+    "externalMaster": "Permitir la ejecución externa de comandos",
+    "externalSelection": "Permitir capturar y reemplazar la selección desde otras aplicaciones",
+    "externalRecording": "Permitir iniciar la grabación desde otras aplicaciones",
+    "externalAccessHint": "Cada comando también necesita su propio permiso externo. La captura de selección y la grabación están desactivadas de forma predeterminada. Los permisos se aplican a las aplicaciones locales de tu sesión.",
+    "selectAll": "Seleccionar todos los comandos",
+    "grantSelected": "Permitir los seleccionados desde afuera",
+    "revokeSelected": "Revocar el acceso externo de los seleccionados",
+    "selectCommand": "Seleccionar {name}"
   },
   "common": {
     "add": "Agregar",

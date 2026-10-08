@@ -206,6 +206,7 @@ pub fn run() {
             }
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
+            services::external_api::spawn_reaper(app.handle().clone());
             services::activation_socket::spawn_server(app.handle().clone());
             services::signals::spawn_signal_watcher(app.handle().clone());
             Ok(())
@@ -213,7 +214,10 @@ pub fn run() {
         .on_window_event(|window, event| {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
+        .manage(services::external_jobs::ExternalJobs::default())
         .invoke_handler(tauri::generate_handler![
+            commands::actions::claim_external_job,
+            commands::actions::finish_external_job,
             get_init_params,
             get_user_config,
             get_storage_info,

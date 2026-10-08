@@ -112,6 +112,25 @@ export interface DesktopFunctions {
     args: [level: string, message: string, context?: string]
     result: void
   }
+  claimExternalJob: { args: [id: string]; result: boolean }
+  finishExternalJob: {
+    args: [
+      id: string,
+      completion: {
+        success: boolean
+        cancelled?: boolean
+        output?: string
+        message?: string
+        code?: string
+      },
+    ]
+    result: {
+      state: 'accepted' | 'running' | 'succeeded' | 'failed' | 'cancelled'
+      output?: string
+      error?: string
+      code?: string
+    } | null
+  }
   setToolCatalog: { args: [tools: ToolCatalogEntry[]]; result: void }
   copyText: { args: [text: string]; result: void }
   getUserConfig: { args: []; result: UserConfig }

@@ -7,7 +7,7 @@ import type {
 } from '@tyco/shared'
 
 import { commandLabel, normalizeCommands } from './command-config'
-import type { CommandRunOutcome } from './command-runner'
+import type { CommandRunOptions, CommandRunOutcome } from './command-runner'
 
 /** Quick commands finish before the bubble would show up */
 export const PENDING_OVERLAY_DELAY_MS = 400
@@ -24,8 +24,14 @@ export interface ExternalRunDependencies {
   run: (
     command: CommandConfig,
     text: string,
-    report: RunReport
+    report: RunReport,
+    options?: CommandRunOptions
   ) => Promise<CommandRunOutcome>
+  claimJob?: (id: string) => Promise<boolean>
+  finishJob?: (
+    id: string,
+    outcome: CommandRunOutcome
+  ) => Promise<CommandRunOutcome | void>
   showOverlay: (request: StatusOverlayRequest | null) => void
   /** A desktop notification: it stays in the notification history */
   notify: (summary: string, body: string) => void
@@ -44,6 +50,9 @@ export interface ExternalRunDependencies {
  * notifications, since nothing else may be in view
  */
 export function createExternalRun(deps: ExternalRunDependencies) {
+  const controllers = new Map<string, AbortController>()
+  const handleCancel = (id: string) => controllers.get(id)?.abort()
+
   const failed = (name: string, message: string) => {
     deps.showOverlay({
       kind: 'error',
@@ -56,6 +65,14 @@ export function createExternalRun(deps: ExternalRunDependencies) {
   const handleRun = async (
     event: CommandRunEvent
   ): Promise<CommandRunOutcome> => {
+    const controller = new AbortController()
+    if (event.jobId) {
+      controllers.set(event.jobId, controller)
+      if (deps.claimJob && !(await deps.claimJob(event.jobId))) {
+        controllers.delete(event.jobId)
+        return { success: false, cancelled: true }
+      }
+    }
     deps.applyUserConfig?.(event.userConfig)
     const command = normalizeCommands(event.userConfig.commands).find(
       (item) => item.id === event.commandId
@@ -63,7 +80,12 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     if (!command) {
       const message = deps.t('externalCommand.missing')
       failed(event.commandId, message)
-      return { success: false, message }
+      const outcome = { success: false, message }
+      if (event.jobId) {
+        controllers.delete(event.jobId)
+        await deps.finishJob?.(event.jobId, outcome)
+      }
+      return outcome
     }
 
     const name = commandLabel(command)
@@ -91,15 +113,25 @@ export function createExternalRun(deps: ExternalRunDependencies) {
 
     let outcome: CommandRunOutcome
     try {
-      outcome = await deps.run(command, input ?? '', report)
+      outcome = await deps.run(command, input ?? '', report, {
+        signal: controller.signal,
+        input: event.input,
+        output: event.output,
+      })
     } catch (error) {
       outcome = {
         success: false,
         message: error instanceof Error ? error.message : String(error),
       }
     }
+    if (controller.signal.aborted)
+      outcome = { success: false, cancelled: true, message: 'Cancelled' }
+    if (event.jobId) {
+      controllers.delete(event.jobId)
+      outcome = (await deps.finishJob?.(event.jobId, outcome)) ?? outcome
+    }
     if (!reported) {
-      if (outcome.success) deps.showOverlay(null)
+      if (outcome.success || outcome.cancelled) deps.showOverlay(null)
       else failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
     }
 
@@ -115,7 +147,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     return outcome
   }
 
-  return { handleRun }
+  return { handleRun, handleCancel }
 }
 
 export type ExternalRun = ReturnType<typeof createExternalRun>

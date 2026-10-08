@@ -22,6 +22,7 @@ export function buildToolCatalog(
             ? 'parsed'
             : 'structured',
       available: !reason,
+      inputSchema: tool.inputSchema,
     }
     if (reason) entry.reason = t(reason)
     return entry

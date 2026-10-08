@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
-import type { UserConfig } from '@tyco/shared'
+import type { CommandConfig, UserConfig } from '@tyco/shared'
 
 vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -102,5 +102,33 @@ describe('SettingsCommandsTab.vue', () => {
       [null, { type: 'standard', actionId: 'translation' }],
     ])
     expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
+  })
+  it('changes the master switch without exposing commands', async () => {
+    const wrapper = mountTab()
+    await wrapper
+      .find('.external-access input[type="checkbox"]')
+      .setValue(false)
+    expect(wrapper.emitted('update:externalAccess')?.[0]).toEqual([
+      { commands: false, selection: false, recording: false },
+    ])
+    expect(wrapper.emitted('update:commands')).toBeUndefined()
+  })
+
+  it('grants external access only to the selected commands', async () => {
+    const wrapper = mountTab()
+    await wrapper
+      .findAll('.command-header input[type="checkbox"]')[0]
+      .setValue(true)
+    const grant = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'commands.grantSelected')!
+    await grant.trigger('click')
+    const [commands] = wrapper.emitted('update:commands')![0] as [
+      CommandConfig[],
+    ]
+    expect(commands[0].availableIn.external).toBe(true)
+    expect(commands[1].availableIn.external).toBe(false)
+    expect(commands[0].enabled).toBe(webhook.enabled)
+    expect(commands[1]).toEqual(script)
   })
 })

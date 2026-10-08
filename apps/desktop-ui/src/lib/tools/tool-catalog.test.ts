@@ -40,16 +40,37 @@ describe('buildToolCatalog', () => {
       tool('todo', { inputSchema: structured }),
     ])
     expect(buildToolCatalog(registry.list(), (key) => `t:${key}`)).toEqual([
-      { id: 'script', input: 'text', available: true },
+      {
+        id: 'script',
+        input: 'text',
+        available: true,
+        inputSchema: TEXT_INPUT_SCHEMA,
+      },
       {
         id: 'core.translate',
         input: 'text',
         available: false,
         reason: 't:reason.noLlm',
+        inputSchema: TEXT_INPUT_SCHEMA,
       },
-      { id: 'Home.lights', input: 'none', available: true },
-      { id: 'Home.remind', input: 'parsed', available: true },
-      { id: 'Home.todo', input: 'structured', available: true },
+      {
+        id: 'Home.lights',
+        input: 'none',
+        available: true,
+        inputSchema: NO_INPUT_SCHEMA,
+      },
+      {
+        id: 'Home.remind',
+        input: 'parsed',
+        available: true,
+        inputSchema: structured,
+      },
+      {
+        id: 'Home.todo',
+        input: 'structured',
+        available: true,
+        inputSchema: structured,
+      },
     ])
   })
 })
@@ -91,6 +112,7 @@ describe('createToolCatalogSync', () => {
     expect(send).toHaveBeenCalledTimes(3)
     expect(send.mock.calls[2][0][1]).toEqual({
       id: 'core.correct',
+      inputSchema: TEXT_INPUT_SCHEMA,
       input: 'text',
       available: true,
     })

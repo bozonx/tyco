@@ -17,7 +17,27 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const runnerDeps = useCommandRunnerDependencies()
 
   return createExternalRun({
-    run: (command, text, report) =>
+    claimJob: async (id) => {
+      const result = await ipcStore.callFunction('claimExternalJob', [id])
+      return result.success && result.result === true
+    },
+    finishJob: async (id, completion) => {
+      const result = await ipcStore.callFunction('finishExternalJob', [
+        id,
+        completion,
+      ])
+      if (!result.success) return { success: false, message: result.error }
+      const job = result.result
+      if (!job) return completion
+      return {
+        success: job.state === 'succeeded',
+        cancelled: job.state === 'cancelled',
+        output: job.output,
+        message: job.error,
+        code: job.code,
+      }
+    },
+    run: (command, text, report, options) =>
       createCommandRunner({
         ...runnerDeps,
         showToast: (messageKey, type = 'info') => {
@@ -37,7 +57,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
         // no window is shown, so there is nothing to close or show a menu in
         closeWindow: undefined,
         showResultMenu: undefined,
-      }).run(command, text, { source: 'external' }),
+      }).run(command, text, { ...options, source: 'external' }),
     showOverlay: (request) => {
       void ipcStore.callFunction('showStatusOverlay', [request])
     },

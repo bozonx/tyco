@@ -10,13 +10,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::{AppHandle, Emitter, Manager};
-use tyco_activation_protocol::COMMAND_ACTION_PREFIX;
 
 use crate::errors::AppError;
-use crate::services::activation::{Activation, ActivationSource, StartMode};
-use crate::services::{runtime, selection_replace};
-use crate::state::AppState;
 
 pub const COMMAND_RUN_EVENT: &str = "app://command-run";
 
@@ -46,6 +41,8 @@ pub struct ToolCatalogEntry {
     /// Why it is not available, already translated.
     #[serde(default)]
     pub reason: Option<String>,
+    #[serde(default)]
+    pub input_schema: Option<Value>,
 }
 
 /// The tools of the webview registry by id. Plugin tools and whether a tool
@@ -65,6 +62,7 @@ pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
 pub struct ExternalCommand {
     pub id: String,
     pub takes_text: bool,
+    pub structured: bool,
     pub confirm: bool,
     pub shows_menu: bool,
     /// Its output replaces the selection, see `afterRun`.
@@ -183,10 +181,7 @@ fn tool_status(command: &Value, catalog: Option<&ToolCatalog>) -> Result<bool, L
         {
             Ok(true)
         }
-        ToolInput::Structured => Err(LookupError::Unavailable(
-            id,
-            Some(String::from("its tool needs a structured input")),
-        )),
+        ToolInput::Structured => Ok(false),
     }
 }
 
@@ -207,6 +202,9 @@ fn callable(
     Ok(ExternalCommand {
         id,
         takes_text,
+        structured: catalog
+            .and_then(|catalog| catalog.get(str_field(command, "toolId")))
+            .is_some_and(|tool| tool.input == ToolInput::Structured),
         confirm: str_field(command, "confirm") == "always",
         shows_menu: after_run == "showMenu",
         replaces_selection: after_run == "replaceSelection",
@@ -259,6 +257,35 @@ pub fn find(
     callable(command, catalog)
 }
 
+pub fn find_by_name(
+    user_config: &Value,
+    catalog: Option<&ToolCatalog>,
+    name: &str,
+) -> Result<ExternalCommand, LookupError> {
+    let normalized = normalize_name(name);
+    let matches: Vec<&Value> = commands_of(user_config)
+        .iter()
+        .filter(|command| {
+            !normalized.is_empty() && normalize_name(str_field(command, "name")) == normalized
+        })
+        .collect();
+    let callable_matches: Vec<ExternalCommand> = matches
+        .iter()
+        .filter_map(|command| callable(command, catalog).ok())
+        .collect();
+    match callable_matches.as_slice() {
+        [command] => Ok(command.clone()),
+        [] => match matches.first() {
+            Some(command) => callable(command, catalog),
+            None => Err(LookupError::NotFound(name.into())),
+        },
+        several => Err(LookupError::Ambiguous(
+            name.into(),
+            several.iter().map(|command| command.id.clone()).collect(),
+        )),
+    }
+}
+
 #[derive(Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct ListedCommand {
@@ -266,11 +293,21 @@ struct ListedCommand {
     name: String,
     /// `text` or `none`
     input: &'static str,
+    confirmation_required: bool,
+    can_replace_selection: bool,
+    after_run: String,
 }
 
 /// The commands that may be called from outside, as a JSON array of
 /// `{ id, name, input }`, in the order of the library.
 pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
+    if user_config
+        .pointer("/externalAccess/commands")
+        .and_then(Value::as_bool)
+        == Some(false)
+    {
+        return "[]".into();
+    }
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())
@@ -285,7 +322,16 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
                     name
                 }
                 .to_owned(),
-                input: if found.takes_text { "text" } else { "none" },
+                input: if found.structured {
+                    "structured"
+                } else if found.takes_text {
+                    "text"
+                } else {
+                    "none"
+                },
+                confirmation_required: found.confirm,
+                can_replace_selection: found.takes_text && !found.structured,
+                after_run: str_field(command, "afterRun").to_owned(),
             }
         })
         .collect();
@@ -300,17 +346,12 @@ pub struct LauncherRequest {
     /// The text of the call; without it the selection or the field gives it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-}
-
-/// A run in the background, sent to the webview of the quick window.
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CommandRunEvent {
-    command_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    text: Option<String>,
-    /// The quick window does not receive config changes made elsewhere.
-    user_config: Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub job_id: Option<String>,
+    #[serde(default)]
+    pub output: tyco_activation_protocol::OutputMode,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input: Option<serde_json::Map<String, Value>>,
 }
 
 /// How a found command runs.
@@ -345,52 +386,24 @@ fn route(command: &ExternalCommand, text: Option<&str>) -> Route {
     }
 }
 
-/// Runs the command `target` names on `text`. Returns once the command is
-/// found and handed over; how it went is reported by the webview.
-pub fn run(
-    app: &AppHandle,
+/// Legacy name/ID resolution and routing. Authorization remains in the dispatcher.
+pub fn legacy_request(
+    user_config: &Value,
+    catalog: Option<&ToolCatalog>,
     target: &str,
     text: Option<String>,
-    source: ActivationSource,
-) -> Result<(), AppError> {
-    let state = app.state::<AppState>();
-    let user_config = state.params().user_config;
-    let command = find(&user_config, state.tool_catalog().as_ref(), target)?;
-    // a command without input has nothing to do with a text
-    let text = text
-        .filter(|text| !text.trim().is_empty())
-        .filter(|_| command.takes_text);
-
-    match route(&command, text.as_deref()) {
-        Route::Selection => selection_replace::trigger(
-            app,
-            &format!("{COMMAND_ACTION_PREFIX}{}", command.id),
-            selection_replace::TriggerWait::Now,
-        ),
-        Route::Overlay => {
-            let mut activation = Activation::new(StartMode::CommandLauncher, source);
-            activation.launcher_request = Some(LauncherRequest {
-                command_id: command.id,
-                text,
-            });
-            runtime::activate(app, activation)
-        }
-        Route::Background => {
-            let window = app
-                .get_webview_window(runtime::QUICK_WINDOW_LABEL)
-                .ok_or_else(|| AppError::Message(String::from("Quick window not found")))?;
-            window
-                .emit(
-                    COMMAND_RUN_EVENT,
-                    CommandRunEvent {
-                        command_id: command.id,
-                        text,
-                        user_config,
-                    },
-                )
-                .map_err(|error| AppError::Message(error.to_string()))
-        }
-    }
+) -> Result<tyco_activation_protocol::RunRequest, LookupError> {
+    let found = find(user_config, catalog, target)?;
+    let selection = route(&found, text.as_deref()) == Route::Selection;
+    Ok(tyco_activation_protocol::RunRequest {
+        target: found.id,
+        text,
+        interactive: true,
+        selection,
+        replace: selection,
+        output: tyco_activation_protocol::OutputMode::Configured,
+        ..Default::default()
+    })
 }
 
 #[cfg(test)]
@@ -516,6 +529,7 @@ mod tests {
             input,
             available,
             reason: reason.map(str::to_owned),
+            input_schema: None,
         };
         catalog_from(vec![
             entry("script", ToolInput::Text, true, None),
@@ -536,6 +550,17 @@ mod tests {
     }
 
     #[test]
+    fn explicit_name_lookup_does_not_resolve_an_id_collision() {
+        assert_eq!(
+            find_by_name(&config(), Some(&catalog()), "Lamp")
+                .unwrap()
+                .id,
+            "lamp-2"
+        );
+        assert_eq!(find_in("Lamp").unwrap().id, "Lamp");
+    }
+
+    #[test]
     fn normalizes_names() {
         assert_eq!(normalize_name("  Ёлка   ЗАПИСЬ "), "елка запись");
         assert_eq!(normalize_name("\tWork\nNote"), "work note");
@@ -549,6 +574,7 @@ mod tests {
             ExternalCommand {
                 id: String::from("backup"),
                 takes_text: false,
+                structured: false,
                 confirm: true,
                 shows_menu: false,
                 replaces_selection: false,
@@ -593,10 +619,7 @@ mod tests {
                 Some(String::from("No LLM is configured"))
             ))
         );
-        assert!(matches!(
-            find_in("remind-raw"),
-            Err(LookupError::Unavailable(_, Some(_)))
-        ));
+        assert!(find_in("remind-raw").unwrap().structured);
     }
 
     #[test]
@@ -638,14 +661,27 @@ mod tests {
     #[test]
     fn lists_the_callable_commands() {
         let listed: Value = serde_json::from_str(&list(&config(), Some(&catalog()))).unwrap();
+        assert!(listed
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|item| item["confirmationRequired"].is_boolean()
+                && item["canReplaceSelection"].is_boolean()));
+        let essential: Vec<Value> = listed
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| json!({"id":item["id"],"name":item["name"],"input":item["input"]}))
+            .collect();
         assert_eq!(
-            listed,
+            json!(essential),
             json!([
                 { "id": "backup", "name": "Бэкап", "input": "none" },
                 { "id": "note", "name": "Work  Note", "input": "text" },
                 { "id": "plugin", "name": "Plugin", "input": "text" },
                 { "id": "lights", "name": "Lights", "input": "none" },
-                { "id": "remind", "name": "Remind", "input": "text" },
+                { "id": "remind", "name": "Remind", "input": "structured" },
+                { "id": "remind-raw", "name": "Remind raw", "input": "structured" },
                 { "id": "twin-a", "name": "Twin", "input": "text" },
                 { "id": "twin-b", "name": "twin", "input": "text" },
                 { "id": "Lamp", "name": "Свет", "input": "none" },
@@ -660,6 +696,7 @@ mod tests {
         let command = |takes_text, confirm, shows_menu| ExternalCommand {
             id: String::from("x"),
             takes_text,
+            structured: false,
             confirm,
             shows_menu,
             replaces_selection: false,
@@ -687,6 +724,7 @@ mod tests {
         let replacing = |confirm| ExternalCommand {
             id: String::from("x"),
             takes_text: true,
+            structured: false,
             confirm,
             shows_menu: false,
             replaces_selection: true,

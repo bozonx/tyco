@@ -220,6 +220,14 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.LOG_CLIENT_MESSAGE,
       buildArgs: ([level, message, context]) => ({ level, message, context }),
     },
+    claimExternalJob: {
+      command: DESKTOP_COMMANDS.CLAIM_EXTERNAL_JOB,
+      buildArgs: ([id]) => ({ id }),
+    },
+    finishExternalJob: {
+      command: DESKTOP_COMMANDS.FINISH_EXTERNAL_JOB,
+      buildArgs: ([id, completion]) => ({ id, completion }),
+    },
     setToolCatalog: {
       command: DESKTOP_COMMANDS.SET_TOOL_CATALOG,
       buildArgs: ([tools]) => ({ tools }),

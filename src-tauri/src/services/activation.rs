@@ -35,7 +35,7 @@ impl StartMode {
     ];
 
     pub fn parse(value: &str) -> Result<Self, AppError> {
-        match value {
+        match tyco_activation_protocol::canonical_mode(value) {
             "editor" => Ok(Self::Editor),
             "write" => Ok(Self::Write),
             "chat" => Ok(Self::Chat),
