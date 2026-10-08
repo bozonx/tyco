@@ -1,7 +1,7 @@
 import type { InputConfigItem } from './config.js'
 import type { ToolDefinition } from './tools.js'
 
-export const PLUGIN_API_VERSION = 1
+export const PLUGIN_API_VERSION = 2
 export type PluginCapability = 'editor' | 'browser' | 'notes'
 export type PluginMessages = Record<string, string | Record<string, unknown>>
 export interface PluginIcons {
@@ -15,11 +15,14 @@ export interface PluginManifest {
   version: string
   apiVersion: number
   capabilities: PluginCapability[]
-  legacyIds?: string[]
   label?: string
   labelKey?: string
   description?: string
   descriptionKey?: string
+  defaultLocale: string
+  locales: Record<string, PluginMessages>
+  icons?: PluginIcons
+  defaultConfig?: PluginConfig
 }
 export interface ActionItem {
   id?: string
@@ -77,8 +80,8 @@ export interface PluginContext {
   registerFormatItems(items: EditItem[]): void
   registerToolbarItems(items: ToolbarItem[]): void
   registerTools(tools: ToolDefinition[]): void
-  getEditorInputValue(): string
-  getEditorInputSelectedText(): string
+  getEditorInputValue(): Promise<string>
+  getEditorInputSelectedText(): Promise<string>
   setEditorInputValue(value: string): void
   replaceEditorInputSelection(value: string): void
   setEditorInputFocus(): void
@@ -102,16 +105,6 @@ export interface PluginContext {
   getMyConfig<T extends object = Record<string, unknown>>(): Partial<T>
 }
 export interface PluginDefinition extends PluginManifest {
-  defaultLocale: string
-  locales: Record<string, PluginMessages>
-  icons?: PluginIcons
-  defaultConfig?: PluginConfig
-  configVersion?: number
-  migrateConfig?(
-    config: Record<string, unknown>,
-    fromVersion: number
-  ): Record<string, unknown>
-  normalizeConfig?(config: Record<string, unknown>): Record<string, unknown>
   init(
     ctx: PluginContext
   ):

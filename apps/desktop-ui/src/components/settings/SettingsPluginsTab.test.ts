@@ -17,15 +17,16 @@ vi.mock('../../composables/useToast', () => ({
 vi.mock('../../plugins', () => ({
   builtinPluginIds: ['PluginWithConfig'],
   usePlugins: () => ({ refreshInstalledPlugins: vi.fn(async () => {}) }),
+  pluginRuntimeStates: {},
   pluginIndexes: [
     () => ({
-      name: 'PluginWithConfig',
+      id: 'PluginWithConfig', name: 'PluginWithConfig', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
       labelKey: 'plugin.withConfig.label',
       defaultConfig: {
         fields: [
           {
             type: 'text',
-            name: 'apiKey',
+            id: 'apiKey', name: 'apiKey', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
             labelKey: 'key',
             defaultValue: 'default-key',
           },
@@ -34,7 +35,7 @@ vi.mock('../../plugins', () => ({
       init: vi.fn(),
     }),
     () => ({
-      name: 'PluginWithoutConfig',
+      id: 'PluginWithoutConfig', name: 'PluginWithoutConfig', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
       labelKey: 'plugin.withoutConfig.label',
       init: vi.fn(),
     }),

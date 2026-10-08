@@ -1,9 +1,11 @@
 import type { PluginDefinition } from '@tyco/plugin-sdk'
 export * from '@tyco/plugin-sdk'
-/** Compatibility for bundled definitions predating the package manifest. */
-export type PluginIndex = () => Pick<PluginDefinition, 'init'> &
-  Partial<PluginDefinition> & {
-    name: string
-    _revision?: string
-    _loadError?: string
-  }
+
+export type PluginIndex = () => PluginDefinition & {
+  name: string
+  _revision?: string
+  _loadError?: string
+  _incompatible?: boolean
+  _external?: boolean
+  _canRestore?: boolean
+}

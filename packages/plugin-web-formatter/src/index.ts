@@ -12,7 +12,7 @@ export default function pluginIndex(): PluginDefinition {
   return {
     id: 'WebFormatter',
     version: '0.1.0',
-    apiVersion: 1,
+    apiVersion: 2,
     capabilities: ['editor'],
     defaultLocale: 'en_US',
     locales,

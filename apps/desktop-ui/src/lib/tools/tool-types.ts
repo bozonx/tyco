@@ -2,6 +2,7 @@ import type {
   ToolDefinition as SdkToolDefinition,
   DefaultCommandsContext as SdkDefaultCommandsContext,
   DefaultCommand,
+  JsonSchema,
 } from '@tyco/plugin-sdk'
 import type { UserConfig } from '@tyco/shared'
 export * from '@tyco/plugin-sdk'
@@ -13,6 +14,8 @@ export interface ToolDefinition extends Omit<
   SdkToolDefinition,
   'defaultCommands'
 > {
+  inputSchemaFor?(config: Record<string, unknown>): JsonSchema
+  unavailableReason?(): string | undefined
   defaultCommands?(context: DefaultCommandsContext): DefaultCommand[]
 }
 

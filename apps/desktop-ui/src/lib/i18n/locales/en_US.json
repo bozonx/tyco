@@ -48,7 +48,9 @@
     "id_ID": "Indonesian",
     "ms_MY": "Malay"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "nav": {
     "editor": "Editor",
     "aiChat": "AI Chat",
@@ -58,7 +60,10 @@
     "actions": "Actions (Esc)",
     "escSuffix": " (Esc)"
   },
-  "window": { "close": "Close window", "clickToFocus": "Click to continue" },
+  "window": {
+    "close": "Close window",
+    "clickToFocus": "Click to continue"
+  },
   "mode": {
     "write": "Writing mode",
     "voice": "Voice mode",
@@ -322,7 +327,9 @@
       "history": "History",
       "config": "Settings"
     },
-    "hotkeyStatus": { "conflict": "This combination is unavailable" },
+    "hotkeyStatus": {
+      "conflict": "This combination is unavailable"
+    },
     "hotkeyProvider": {
       "portal": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them with “Change in system”.",
       "external": "This session does not let Tyco bind global hotkeys. Add the commands below to your compositor configuration.",
@@ -427,10 +434,25 @@
     "markdownCleanKeepHorizontalRules": "Keep horizontal rules (---)",
     "markdownCleanKeepTaskCheckboxes": "Keep task checkboxes ([ ] / [x])",
     "installPluginPackage": "Install plugin package",
-    "pluginTrustNotice": "Plugins run with access to the application. Install only packages from authors you trust.",
-    "installTrustedPlugin": "Trust and install",
+    "pluginTrustNotice": "Plugin code runs in an isolated worker. Install packages only from sources you trust; declared services can read or modify your data.",
+    "installTrustedPlugin": "Install plugin",
     "removePluginPackage": "Remove package",
-    "pluginPackageFailed": "Plugin operation failed: {detail}"
+    "pluginPackageFailed": "Plugin operation failed: {detail}",
+    "restorePluginPackage": "Restore previous version",
+    "pluginCapabilities": "Capabilities",
+    "pluginCapability": {
+      "editor": "Editor",
+      "browser": "External browser",
+      "notes": "Notes",
+      "none": "None"
+    },
+    "pluginStatus": {
+      "disabled": "Disabled",
+      "activating": "Activating",
+      "active": "Active",
+      "error": "Failed",
+      "incompatible": "Incompatible"
+    }
   },
   "editor": {
     "case": "Case",

@@ -84,6 +84,8 @@ export default defineConfig(
     rules: { 'no-console': 'off' },
   },
 
+  { files: ['src-tauri/plugin-runtime/*.js', 'scripts/plugin-runtime-browser.js'], languageOptions: { globals: globals.browser } },
+
   // Plain Node scripts and config files: no TS parser, Node globals only.
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],

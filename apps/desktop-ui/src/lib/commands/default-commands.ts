@@ -51,14 +51,9 @@ function toCommand(
   return command
 }
 
-/**
- * Gives the command a menu item: in place of the former plugin item it
- * replaces, which keeps the key of the user, otherwise at its preferred key or
- * the first free slot, unless the user already removed that plugin item
- */
+/** Places a new command in its preferred free menu slot. */
 function placeInMenu(
   slots: (MainActionConfig | null)[],
-  registrations: string[],
   commandId: string,
   menu: NonNullable<DefaultCommand['menu']>
 ) {
@@ -69,18 +64,6 @@ function placeInMenu(
     )
   ) {
     return
-  }
-  if (menu.replaces) {
-    const index = slots.findIndex(
-      (slot) => slot?.type === 'plugin' && slot.actionId === menu.replaces
-    )
-    if (index >= 0) {
-      slots[index] = item
-      return
-    }
-    // the plugin item was placed once and the user took it out of the menu
-    if (registrations.includes(menu.replaces)) return
-    registrations.push(menu.replaces)
   }
   const preferred = PRESETS_KEYS.indexOf(menu.preferredKey?.toLowerCase() ?? '')
   const index =
@@ -117,7 +100,7 @@ export function seedDefaultCommands(
       seeded.add(id)
       if (commands.some((command) => command.id === id)) continue
       commands.push(toCommand(tool, id, preset))
-      if (preset.menu) placeInMenu(slots, registrations, id, preset.menu)
+      if (preset.menu) placeInMenu(slots, id, preset.menu)
     }
     seeded.add(marker)
     changed = true

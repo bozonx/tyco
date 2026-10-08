@@ -48,7 +48,9 @@
     "id_ID": "Indonesio",
     "ms_MY": "Malayo"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "nav": {
     "editor": "Editor",
     "aiChat": "Chat con IA",
@@ -325,7 +327,9 @@
       "history": "Historial",
       "config": "Configuración"
     },
-    "hotkeyStatus": { "conflict": "Esta combinación no está disponible" },
+    "hotkeyStatus": {
+      "conflict": "Esta combinación no está disponible"
+    },
     "hotkeyProvider": {
       "portal": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos con «Cambiar en el sistema».",
       "external": "Esta sesión no permite que Tyco asigne atajos globales. Agregá los comandos de abajo a la configuración de tu compositor.",
@@ -430,10 +434,25 @@
     "markdownCleanKeepHorizontalRules": "Conservar líneas horizontales (---)",
     "markdownCleanKeepTaskCheckboxes": "Conservar casillas de verificación ([ ] / [x])",
     "installPluginPackage": "Instalar paquete de plugin",
-    "pluginTrustNotice": "Los plugins se ejecutan con acceso a la aplicación. Instalá únicamente paquetes de autores en los que confiás.",
-    "installTrustedPlugin": "Confiar e instalar",
+    "pluginTrustNotice": "El código del plugin se ejecuta en un worker aislado. Instalá paquetes de fuentes confiables: los servicios declarados pueden leer o modificar tus datos.",
+    "installTrustedPlugin": "Instalar plugin",
     "removePluginPackage": "Eliminar paquete",
-    "pluginPackageFailed": "La operación del plugin falló: {detail}"
+    "pluginPackageFailed": "La operación del plugin falló: {detail}",
+    "restorePluginPackage": "Restaurar la versión anterior",
+    "pluginCapabilities": "Capacidades",
+    "pluginCapability": {
+      "editor": "Editor",
+      "browser": "Navegador externo",
+      "notes": "Notas",
+      "none": "Ninguna"
+    },
+    "pluginStatus": {
+      "disabled": "Desactivado",
+      "activating": "Activando",
+      "active": "Activo",
+      "error": "Error",
+      "incompatible": "Incompatible"
+    }
   },
   "editor": {
     "case": "Mayúsculas y minúsculas",

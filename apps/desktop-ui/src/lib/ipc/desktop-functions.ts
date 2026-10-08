@@ -33,6 +33,7 @@ export interface DesktopFunctions {
     args: [preview: PluginPackagePreview]
     result: InstalledPluginPackage
   }
+  restorePluginPackage: { args: [id: string]; result: void }
   removePluginPackage: { args: [id: string]; result: void }
   saveUserConfig: { args: [userConfig: UserConfig]; result: void }
   patchLocalState: { args: [patch: Partial<LocalState>]; result: LocalState }

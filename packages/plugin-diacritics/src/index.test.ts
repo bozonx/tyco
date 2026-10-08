@@ -35,18 +35,6 @@ describe('diacritics plugin', () => {
     expect(toolbarItems[1].label).toBe('−◌́')
   })
 
-  it('migrates legacy profile config when actions is not set', () => {
-    const { ctx, toolbarItems } = createPluginTestContext({
-      config: { profile: 'spanish' },
-    })
-    diacritics().init(ctx)
-
-    expect(toolbarItems.map((i) => i.id)).toEqual([
-      'diacritics-acute',
-      'diacritics-diaeresis',
-      'diacritics-tilde',
-    ])
-  })
 
   it('transforms selected text and focuses editor on action execution', async () => {
     const { ctx, mocks, toolbarItems } = createPluginTestContext({

@@ -37,7 +37,7 @@ const plugin =
     name: string,
     init: ReturnType<PluginIndex>['init'] = vi.fn()
   ): PluginIndex =>
-  () => ({ name, init })
+  () => ({ id: name, name, version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} }, defaultConfig: { fields: [{ name: 'value', type: 'text', defaultValue: 0 }] }, init })
 
 describe('plugin manager', () => {
   it('loads enabled plugins and keeps resources available for disabled ones', async () => {
@@ -70,7 +70,7 @@ describe('plugin manager', () => {
   })
   it('reads reactive saved settings with defaults and returns detached copies', async () => {
     const index: PluginIndex = () => ({
-      name: 'Example',
+      ...plugin('Example')(),
       defaultConfig: {
         fields: [{ name: 'value', type: 'text', defaultValue: 'default' }],
       },
@@ -134,7 +134,7 @@ describe('plugin manager', () => {
     const { manager, deps } = setup([
       plugin('Duplicate', init),
       plugin('Duplicate', init),
-      () => ({ name: 'Future', apiVersion: 99, init }),
+      () => ({ ...plugin('Future', init)(), apiVersion: 99 }),
       plugin('Good'),
     ])
     await manager.loadPlugins()
@@ -146,7 +146,7 @@ describe('plugin manager', () => {
     const init = vi.fn()
     let revision = 'first'
     const { manager } = setup([
-      () => ({ name: 'Example', _revision: revision, init }),
+      () => ({ ...plugin('Example', init)(), _revision: revision }),
     ])
     await manager.loadPlugins()
     revision = 'second'

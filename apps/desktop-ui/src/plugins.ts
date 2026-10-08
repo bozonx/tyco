@@ -1,6 +1,7 @@
 import { desktopClient } from './lib/desktop/client'
 import { shallowReactive } from 'vue'
-import { convertFileSrc } from '@tauri-apps/api/core'
+import { activatePluginSandbox } from './lib/plugins/plugin-sandbox'
+import type { PluginRuntimeState } from './lib/plugins/plugin-manager'
 import usePluginContext from './composables/usePluginContext'
 import { pluginId } from './lib/plugins/plugin-config'
 import { registerPluginResources } from './lib/plugins/plugin-i18n'
@@ -30,13 +31,14 @@ const builtinPlugins: PluginIndex[] = [
   ),
 ]
 
+export const pluginRuntimeStates = shallowReactive<Record<string, PluginRuntimeState>>({})
+
 export const pluginIndexes = shallowReactive<PluginIndex[]>([...builtinPlugins])
 export const builtinPluginIds = builtinPlugins.map((factory) =>
   pluginId(factory())
 )
 const packageLoader = createPluginPackageLoader({
-  importModule: (path) =>
-    import(/* @vite-ignore */ convertFileSrc(path, 'tyco-plugin')),
+  activate: (manifest, path, ctx) => activatePluginSandbox(manifest, path, ctx, (error) => { void globalPluginManager?.failPlugin(manifest.id, error) }),
   reportError: (id, error) =>
     clientLogger.error('Plugin package loading failed', error, id),
 })
@@ -56,6 +58,7 @@ export const usePlugins = () => {
   if (!globalPluginManager) {
     globalPluginManager = createPluginManager({
       pluginIndexes,
+      onStateChange: (id, state) => { pluginRuntimeStates[id] = state },
       createPluginContext: createContext,
       unregisterPlugin: (id) => {
         actionMenuStore.unregisterPlugin(id)
@@ -101,7 +104,7 @@ export const usePlugins = () => {
         for (const factory of pluginIndexes)
           previous.delete(pluginId(factory()))
         await reloadPlugins()
-        for (const id of previous) removePluginResources(id)
+        for (const id of previous) { removePluginResources(id); delete pluginRuntimeStates[id] }
       } while (refreshQueued)
     })().finally(() => {
       refreshing = undefined

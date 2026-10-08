@@ -1,6 +1,7 @@
 import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
 import { pluginMessageKey, scopeConfigFields } from './plugin-resources'
 import type { InputConfigItem } from '../../types'
+import type { PluginRuntimeState } from './plugin-manager'
 import type { PluginIndex } from '../../types/plugins'
 
 export interface InstalledPluginItem {
@@ -10,20 +11,24 @@ export interface InstalledPluginItem {
   descriptionKey?: string
   description?: string
   enabled: boolean
+  version?: string
+  status?: PluginRuntimeState['status']
+  canRestore?: boolean
   error?: string
   fields: Array<InputConfigItem & { value: unknown }>
 }
 
 export function resolveInstalledPlugins(
   indexes: PluginIndex[],
-  userConfig?: { plugins?: Record<string, unknown> }
+  userConfig?: { plugins?: Record<string, unknown> },
+  runtime: Record<string, PluginRuntimeState> = {}
 ): InstalledPluginItem[] {
   return indexes.map((pluginIndex) => {
     const plugin = pluginIndex()
     const pluginName = pluginId(plugin)
     const pluginState = getPluginState(plugin, userConfig?.plugins)
     let config: Record<string, unknown> = {}
-    let error = plugin._loadError
+    let error = plugin._loadError ?? runtime[pluginName]?.error
     try {
       config = resolvePluginConfig(plugin, pluginState)
     } catch (reason) {
@@ -39,6 +44,9 @@ export function resolveInstalledPlugins(
       descriptionKey: pluginMessageKey(pluginName, plugin.descriptionKey),
       description: plugin.description,
       enabled: isEnabled,
+      version: plugin.version,
+      status: isEnabled ? runtime[pluginName]?.status : 'disabled',
+      canRestore: plugin._canRestore ?? false,
       ...(error ? { error } : {}),
       fields: scopeConfigFields(pluginName, error ? [] : rawFields).map(
         (field) => ({ ...field, value: config[field.name] })

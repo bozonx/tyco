@@ -483,7 +483,7 @@ import {
   selectSttProvider,
 } from '../lib/stt/stt-config'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
-import { pluginIndexes } from '../plugins'
+import { pluginRuntimeStates, pluginIndexes } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
@@ -577,7 +577,7 @@ const primaryTabs = computed(() => [
 ])
 
 const installedPlugins = computed(() =>
-  resolveInstalledPlugins(pluginIndexes, userConfig.value)
+  resolveInstalledPlugins(pluginIndexes, userConfig.value, pluginRuntimeStates)
 )
 
 const currentPluginName = computed(() =>

@@ -173,6 +173,7 @@ export const DESKTOP_COMMANDS = {
   INSPECT_PLUGIN_PACKAGE: 'inspect_plugin_package',
   LIST_INSTALLED_PLUGINS: 'list_installed_plugins',
   INSTALL_PLUGIN_PACKAGE: 'install_plugin_package',
+  RESTORE_PLUGIN_PACKAGE: 'restore_plugin_package',
   REMOVE_PLUGIN_PACKAGE: 'remove_plugin_package',
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',

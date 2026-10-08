@@ -48,7 +48,9 @@
     "id_ID": "Endonezce",
     "ms_MY": "Malayca"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "nav": {
     "editor": "Editör",
     "aiChat": "AI Sohbet",
@@ -325,7 +327,9 @@
       "history": "Geçmiş",
       "config": "Ayarlar"
     },
-    "hotkeyStatus": { "conflict": "Bu birleşim kullanılamıyor" },
+    "hotkeyStatus": {
+      "conflict": "Bu birleşim kullanılamıyor"
+    },
     "hotkeyProvider": {
       "portal": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları «Sistemde değiştir» ile değiştirin.",
       "external": "Bu oturum Tyco’nun genel kısayol atamasına izin vermiyor. Aşağıdaki komutları compositor yapılandırmanıza ekleyin.",
@@ -430,10 +434,25 @@
     "markdownCleanKeepHorizontalRules": "Yatay ayırıcıları koru (---)",
     "markdownCleanKeepTaskCheckboxes": "Görev onay kutularını koru ([ ] / [x])",
     "installPluginPackage": "Eklenti paketi yükle",
-    "pluginTrustNotice": "Eklentiler uygulamaya erişimle çalışır. Yalnızca güvendiğiniz yazarlardan gelen paketleri yükleyin.",
-    "installTrustedPlugin": "Güven ve yükle",
+    "pluginTrustNotice": "Eklenti kodu yalıtılmış bir worker içinde çalışır. Güvendiğiniz kaynaklardan paket yükleyin; belirtilen hizmetler verilerinizi okuyabilir veya değiştirebilir.",
+    "installTrustedPlugin": "Eklentiyi yükle",
     "removePluginPackage": "Paketi kaldır",
-    "pluginPackageFailed": "Eklenti işlemi başarısız: {detail}"
+    "pluginPackageFailed": "Eklenti işlemi başarısız: {detail}",
+    "restorePluginPackage": "Önceki sürümü geri yükle",
+    "pluginCapabilities": "Yetenekler",
+    "pluginCapability": {
+      "editor": "Düzenleyici",
+      "browser": "Harici tarayıcı",
+      "notes": "Notlar",
+      "none": "Yok"
+    },
+    "pluginStatus": {
+      "disabled": "Devre dışı",
+      "activating": "Etkinleştiriliyor",
+      "active": "Etkin",
+      "error": "Hata",
+      "incompatible": "Uyumsuz"
+    }
   },
   "editor": {
     "case": "Harf biçimi",

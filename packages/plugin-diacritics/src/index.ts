@@ -47,11 +47,11 @@ const DIACRITIC_SYMBOLS: Record<Diacritic, string> = {
   macron: '◌̄',
 }
 
-function executeTransform(
+async function executeTransform(
   ctx: PluginContext,
   transform: (text: string) => string
-): void {
-  const selected = ctx.getEditorInputSelectedText()
+): Promise<void> {
+  const selected = await ctx.getEditorInputSelectedText()
   if (!selected) {
     ctx.toast('toast.textNotSelected', 'warn')
     return
@@ -103,26 +103,11 @@ function createToolbarItem(ctx: PluginContext, id: string): ToolbarItem | null {
 export default function pluginIndex(): PluginDefinition {
   return {
     id: 'Diacritics',
-    legacyIds: ['Russian Stress'],
     version: '0.1.0',
-    apiVersion: 1,
+    apiVersion: 2,
     capabilities: ['editor'],
     defaultLocale: 'en_US',
     locales,
-    configVersion: 1,
-    migrateConfig: (config) => {
-      if (config.actions) return config
-      const enabled =
-        config.profile === 'spanish'
-          ? ['acute', 'diaeresis', 'tilde']
-          : config.profile === 'general'
-            ? DIACRITIC_OPTIONS.map((option) => String(option.id))
-            : ['acute']
-      return {
-        ...config,
-        actions: enabled.map((id) => ({ id, enabled: true })),
-      }
-    },
     labelKey: 'local.label',
     descriptionKey: 'local.description',
     defaultConfig: {
@@ -139,31 +124,12 @@ export default function pluginIndex(): PluginDefinition {
     init(ctx: PluginContext) {
       const config = ctx.getMyConfig<{
         actions?: SortableChecklistItem[]
-        profile?: string
       }>()
-
-      let defaultActions = DEFAULT_DIACRITIC_ACTIONS
-      if (!config?.actions && config?.profile) {
-        if (config.profile === 'russian') {
-          defaultActions = [{ id: 'acute', enabled: true }]
-        } else if (config.profile === 'spanish') {
-          defaultActions = [
-            { id: 'acute', enabled: true },
-            { id: 'diaeresis', enabled: true },
-            { id: 'tilde', enabled: true },
-          ]
-        } else if (config.profile === 'general') {
-          defaultActions = DIACRITIC_OPTIONS.map((opt) => ({
-            id: String(opt.id),
-            enabled: true,
-          }))
-        }
-      }
 
       const actions = resolveSortableChecklist(
         config?.actions,
         DIACRITIC_OPTIONS,
-        defaultActions
+        DEFAULT_DIACRITIC_ACTIONS
       )
 
       const toolbarItems = actions

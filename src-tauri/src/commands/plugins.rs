@@ -10,6 +10,7 @@ use crate::services::plugins::{self, InstalledPlugin, PluginManifest, PluginStor
 #[derive(Serialize)]
 pub struct PluginPreview {
     path: String,
+    digest: String,
     manifest: PluginManifest,
 }
 
@@ -26,10 +27,11 @@ pub fn inspect_plugin_package(app: AppHandle) -> Result<Option<PluginPreview>, A
     let path = file
         .into_path()
         .map_err(|reason| AppError::Message(reason.to_string()))?;
-    let package = plugins::inspect(&path)?;
+    let (package, digest) = plugins::inspect(&path)?;
     Ok(Some(PluginPreview {
         path: path.to_string_lossy().into_owned(),
         manifest: package.manifest,
+        digest,
     }))
 }
 #[tauri::command(async)]
@@ -44,8 +46,9 @@ pub fn install_plugin_package(
     store: State<'_, PluginStore>,
     path: String,
     manifest: PluginManifest,
+    digest: String,
 ) -> Result<InstalledPlugin, AppError> {
-    let result = store.install(Path::new(&path), &manifest)?;
+    let result = store.install(Path::new(&path), &manifest, &digest)?;
     app.emit("plugins-changed", ())?;
     Ok(result)
 }
@@ -56,6 +59,17 @@ pub fn remove_plugin_package(
     id: String,
 ) -> Result<(), AppError> {
     store.remove(&id)?;
+    app.emit("plugins-changed", ())?;
+    Ok(())
+}
+
+#[tauri::command(async)]
+pub fn restore_plugin_package(
+    app: AppHandle,
+    store: State<'_, PluginStore>,
+    id: String,
+) -> Result<(), AppError> {
+    store.restore(&id)?;
     app.emit("plugins-changed", ())?;
     Ok(())
 }

@@ -15,11 +15,10 @@ describe('SearchInInternet plugin', () => {
 
     expect(mocks.registerActionsItems).not.toHaveBeenCalled()
     expect(tools.map((tool) => tool.id)).toEqual(['search'])
-    expect(tools[0].defaultCommands?.({ t: (key) => key })).toEqual([
+    expect(tools[0].defaultCommands).toEqual([
       expect.objectContaining({
         id: 'search',
         menu: {
-          replaces: 'SearchInInternet:searchInInternet',
           preferredKey: 'v',
         },
       }),

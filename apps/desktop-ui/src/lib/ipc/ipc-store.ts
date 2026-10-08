@@ -57,7 +57,12 @@ export function createCommandMap(): CommandMap {
       buildArgs: ([preview]) => ({
         path: preview.path,
         manifest: preview.manifest,
+        digest: preview.digest,
       }),
+    },
+    restorePluginPackage: {
+      command: DESKTOP_COMMANDS.RESTORE_PLUGIN_PACKAGE,
+      buildArgs: ([id]) => ({ id }),
     },
     removePluginPackage: {
       command: DESKTOP_COMMANDS.REMOVE_PLUGIN_PACKAGE,

@@ -54,15 +54,16 @@ vi.mock('../stores/llm', () => ({
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
 
 vi.mock('../plugins', () => ({
+  pluginRuntimeStates: {},
   pluginIndexes: [
     () => ({
-      name: 'PluginA',
+      id: 'PluginA', name: 'PluginA', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
       labelKey: 'plugin.a.label',
       defaultConfig: { fields: [] },
       init: vi.fn(),
     }),
     () => ({
-      name: 'PluginB',
+      id: 'PluginB', name: 'PluginB', version: '1.0.0', apiVersion: 2, capabilities: [], defaultLocale: 'en_US', locales: { en_US: {} },
       label: 'Plugin B',
       defaultConfig: { fields: [] },
       init: vi.fn(),

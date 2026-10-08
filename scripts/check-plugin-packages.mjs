@@ -28,7 +28,7 @@ try {
     assert.equal(typeof plugin.id, 'string')
     assert.equal(typeof plugin.init, 'function')
     assert.equal(plugin.id, artifact.manifest.id)
-    assert.equal(plugin.apiVersion, 1)
+    assert.equal(plugin.apiVersion, 2)
     assert.equal(plugin.version, artifact.manifest.version)
     assert.deepEqual(plugin.capabilities, artifact.manifest.capabilities)
     assert.ok(plugin.locales[plugin.defaultLocale])

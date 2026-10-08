@@ -25,7 +25,7 @@ export default function pluginIndex(): PluginDefinition {
   return {
     id: 'SearchInInternet',
     version: '0.1.0',
-    apiVersion: 1,
+    apiVersion: 2,
     capabilities: ['editor', 'browser'],
     defaultLocale: 'en_US',
     locales,
@@ -41,13 +41,12 @@ export default function pluginIndex(): PluginDefinition {
         description: 'Opens a web search for the text in the browser',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: [urlField],
-        defaultCommands: ({ t }) => [
+        defaultCommands: [
           {
             id: 'search',
-            name: t('local.label'),
-            phrases: t('local.phrases').split('\n'),
+            nameKey: 'local.label',
+            phrasesKey: 'local.phrases',
             menu: {
-              replaces: 'SearchInInternet:searchInInternet',
               preferredKey: 'v',
             },
           },

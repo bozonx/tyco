@@ -123,17 +123,28 @@ fn spawn_x11_tracker(app: tauri::AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .register_uri_scheme_protocol("tyco-plugin", |context, request| {
-            let result = context
-                .app_handle()
-                .state::<services::plugins::PluginStore>()
-                .module(request.uri().path());
-            let (status, body) = match result {
-                Ok(module) => (200, module.into_bytes()),
-                Err(_) => (404, b"Plugin module is unavailable".to_vec()),
+            let path = request.uri().path();
+            let static_asset = match path {
+                "/runtime/index.html" => Some(("text/html; charset=utf-8", include_str!("../plugin-runtime/index.html"))),
+                "/runtime/frame.js" => Some(("application/javascript; charset=utf-8", include_str!("../plugin-runtime/frame.js"))),
+                "/runtime/worker.js" => Some(("application/javascript; charset=utf-8", include_str!("../plugin-runtime/worker.js"))),
+                _ => None,
             };
+            let (status, content_type, body) = if let Some((content_type, asset)) = static_asset {
+                (200, content_type, asset.as_bytes().to_vec())
+            } else {
+                match context.app_handle().state::<services::plugins::PluginStore>().module(path) {
+                    Ok(module) => (200, "application/javascript; charset=utf-8", module.into_bytes()),
+                    Err(_) => (404, "text/plain", b"Plugin module is unavailable".to_vec()),
+                }
+            };
+            // Workers receive their own policy and cannot reach the app's IPC origin.
+            let worker_src = if path == "/runtime/index.html" { "'self'" } else { "'none'" };
+            let policy = format!("default-src 'none'; script-src 'self'; connect-src 'none'; worker-src {worker_src}; object-src 'none'; base-uri 'none'; frame-src 'none'");
             tauri::http::Response::builder()
                 .status(status)
-                .header("Content-Type", "application/javascript; charset=utf-8")
+                .header("Content-Type", content_type)
+                .header("Content-Security-Policy", policy)
                 .header("Access-Control-Allow-Origin", "*")
                 .header("Cache-Control", "no-store")
                 .header("X-Content-Type-Options", "nosniff")
@@ -233,6 +244,7 @@ pub fn run() {
             commands::plugins::list_installed_plugins,
             commands::plugins::install_plugin_package,
             commands::plugins::remove_plugin_package,
+            commands::plugins::restore_plugin_package,
             save_note,
             append_note,
             net_fetch,

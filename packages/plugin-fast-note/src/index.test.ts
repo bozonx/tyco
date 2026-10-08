@@ -29,12 +29,12 @@ describe('FastNote plugin', () => {
     expect(tools[0].configFields?.map((field) => field.name)).not.toContain(
       'clearInputAfterSave'
     )
-    const defaults = tools[0].defaultCommands?.({ t: (key) => key })
+    const defaults = tools[0].defaultCommands
     expect(defaults?.map((preset) => [preset.id, preset.menu])).toEqual([
-      ['note', { replaces: 'FastNote:fastNote', preferredKey: 'c' }],
+      ['note', { preferredKey: 'c' }],
       [
         'daily',
-        { replaces: 'FastNote:fastNoteAppendDaily', preferredKey: 'd' },
+        { preferredKey: 'd' },
       ],
     ])
     expect(toolbarItems).toHaveLength(1)
@@ -114,7 +114,7 @@ describe('FastNote plugin', () => {
 
     const { mocks, tools } = setup({ config: { pathToNotes: '/vault' } })
     const daily = tools[0]
-      .defaultCommands?.({ t: (key) => key })
+      .defaultCommands
       .find((preset) => preset.id === 'daily')
 
     const result = await tools[0].run({

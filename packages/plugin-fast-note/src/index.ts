@@ -112,18 +112,13 @@ export default function pluginIndex(): PluginDefinition {
   return {
     id: 'FastNote',
     version: '0.1.0',
-    apiVersion: 1,
+    apiVersion: 2,
     capabilities: ['editor', 'notes'],
     defaultLocale: 'en_US',
     locales,
     labelKey: 'local.label',
     descriptionKey: 'local.description',
     defaultConfig: { fields: FIELDS },
-    configVersion: 1,
-    migrateConfig: (config: Record<string, unknown>) => ({
-      ...getEffectiveConfig(config as Partial<FastNoteConfig>),
-      ...config,
-    }),
     init: (ctx: PluginContext) => {
       const write: ToolDefinition = {
         id: 'write',
@@ -134,20 +129,19 @@ export default function pluginIndex(): PluginDefinition {
           'Saves the text as a new note, or appends it to a note, in the notes folder of the user',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: COMMAND_FIELDS,
-        defaultCommands: ({ t }) => [
+        defaultCommands: [
           {
             id: 'note',
-            name: t('local.label'),
-            phrases: t('local.notePhrases').split('\n'),
-            menu: { replaces: 'FastNote:fastNote', preferredKey: 'c' },
+            nameKey: 'local.label',
+            phrasesKey: 'local.notePhrases',
+            menu: { preferredKey: 'c' },
           },
           {
             id: 'daily',
-            name: t('local.actionAppendDaily'),
-            phrases: t('local.dailyPhrases').split('\n'),
+            nameKey: 'local.actionAppendDaily',
+            phrasesKey: 'local.dailyPhrases',
             toolConfig: { ...APPEND_DAILY },
             menu: {
-              replaces: 'FastNote:fastNoteAppendDaily',
               preferredKey: 'd',
             },
           },

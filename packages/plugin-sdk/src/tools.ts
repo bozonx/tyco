@@ -107,7 +107,13 @@ export interface DefaultCommand {
   afterRun?: CustomActionAfterRun
   confirm?: 'auto' | 'always'
   /** Adds a menu item, taking the place of a former plugin action item */
-  menu?: { replaces?: string; preferredKey?: string }
+  menu?: { preferredKey?: string }
+}
+
+export interface PluginDefaultCommand extends Omit<DefaultCommand, 'name'> {
+  name?: string
+  nameKey?: string
+  phrasesKey?: string
 }
 
 export interface ToolDefinition {
@@ -123,11 +129,6 @@ export interface ToolDefinition {
   /** JSON Schema of the per-call input, as in MCP */
   inputSchema: JsonSchema
   /**
-   * The input schema of a command with these settings, when it depends on them
-   * (`takesText` of a script or a webhook)
-   */
-  inputSchemaFor?(config: Record<string, unknown>): JsonSchema
-  /**
    * Turns the text from voice, the editor or an external call into an input
    * that matches `inputSchema`; needed only for a structured schema
    */
@@ -141,12 +142,7 @@ export interface ToolDefinition {
   defaultAfterRun?: CustomActionAfterRun
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
-  /** Presets added to the library once */
-  defaultCommands?(context: DefaultCommandsContext): DefaultCommand[]
-  /**
-   * Why the tool cannot run now (no LLM configured and so on); its commands are
-   * then marked unavailable. Absent means always available
-   */
-  unavailableReason?(): string | undefined
+  /** Declarative presets; the host translates keys before persisting commands. */
+  defaultCommands?: PluginDefaultCommand[]
   run(call: ToolCall): Promise<ToolResult>
 }

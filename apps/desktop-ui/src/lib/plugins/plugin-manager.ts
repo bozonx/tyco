@@ -1,6 +1,6 @@
 import { clonePluginValue } from '@tyco/plugin-sdk'
 import {
-  PLUGIN_API_VERSION,
+  pluginManifest,
   type PluginCapability,
   type PluginContext,
 } from '@tyco/plugin-sdk'
@@ -14,7 +14,15 @@ export interface PluginLifecycle {
   iconPrefix?: string
   onDispose(cleanup: () => void | Promise<void>): void
 }
+export interface PluginRuntimeState {
+  status: 'disabled' | 'activating' | 'active' | 'error' | 'incompatible'
+  error?: string
+}
 export interface PluginManagerDependencies {
+  activationTimeoutMs?: number
+  cleanupTimeoutMs?: number
+  onStateChange?(id: string, state: PluginRuntimeState): void
+
   pluginIndexes: PluginIndex[]
   createPluginContext(
     id: string,
@@ -37,7 +45,20 @@ export function createPluginManager(deps: PluginManagerDependencies) {
   let revision = 0
   let pending = Promise.resolve()
   let disposed = false
+  const runtimeStates = new Map<string, PluginRuntimeState>()
+  const setState = (id: string, state: PluginRuntimeState) => {
+    runtimeStates.set(id, state)
+    deps.onStateChange?.(id, state)
+  }
   const report = (id: string, error: unknown) => deps.reportError?.(id, error)
+  async function bounded<T>(work: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([work, new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs)
+      })])
+    } finally { clearTimeout(timer) }
+  }
   const isPluginEnabled = (
     id: string,
     userConfig?: { plugins?: Record<string, unknown> }
@@ -56,13 +77,14 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     active.delete(id)
     instance.controller.abort()
     deps.unregisterPlugin(id)
-    for (const cleanup of instance.cleanups.reverse()) {
-      try {
-        await cleanup()
-      } catch (error) {
-        report(id, error)
-      }
-    }
+    try {
+      await bounded((async () => {
+        for (const cleanup of instance.cleanups.reverse()) {
+          try { await cleanup() } catch (error) { report(id, error) }
+        }
+      })(), deps.cleanupTimeoutMs ?? 2000, 'Plugin cleanup timed out')
+    } catch (error) { report(id, error) }
+
   }
   function loadPlugins(userConfig?: { plugins?: Record<string, unknown> }) {
     if (disposed) return Promise.resolve()
@@ -86,11 +108,8 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               duplicates.add(id)
               throw new Error(`Duplicate plugin ID: ${id}`)
             }
-            if (
-              plugin.apiVersion !== undefined &&
-              plugin.apiVersion !== PLUGIN_API_VERSION
-            )
-              throw new Error(`Unsupported plugin API: ${plugin.apiVersion}`)
+            pluginManifest(plugin)
+            if (typeof plugin.init !== 'function') throw new Error('Invalid plugin activation')
             definitions.set(id, plugin)
             deps.registerResources?.(plugin)
           } catch (error) {
@@ -106,18 +125,21 @@ export function createPluginManager(deps: PluginManagerDependencies) {
           )
             await deactivate(id)
         }
-        for (const [id, plugin] of definitions) {
+        await Promise.all([...definitions].map(async ([id, plugin]) => {
           if (requested !== revision || disposed) return
           try {
             const state = getPluginState(plugin, states)
-            if (state.enabled === false || plugin._loadError) continue
+            if (state.enabled === false || plugin._loadError) {
+              setState(id, plugin._loadError ? { status: plugin._incompatible ? 'incompatible' : 'error', error: plugin._loadError } : { status: 'disabled' })
+              return
+            }
             const config = resolvePluginConfig(plugin, state)
             const signature = JSON.stringify([
               plugin.version,
               plugin._revision,
               config,
             ])
-            if (active.get(id)?.signature === signature) continue
+            if (active.get(id)?.signature === signature) return
             await deactivate(id)
             const instance: ActivePlugin = {
               signature,
@@ -126,6 +148,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               cleanups: [],
             }
             active.set(id, instance)
+            setState(id, { status: 'activating' })
             const lifecycle: PluginLifecycle = {
               signal: instance.controller.signal,
               capabilities: plugin.capabilities ?? [],
@@ -133,6 +156,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               onDispose: (cleanup) => {
                 if (instance.controller.signal.aborted)
                   throw new Error('Plugin is disposed')
+                if (instance.cleanups.length >= 64) throw new Error('Too many plugin cleanup handlers')
                 instance.cleanups.push(cleanup)
               },
             }
@@ -147,14 +171,14 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               .then(async (cleanup) => {
                 if (instance.controller.signal.aborted && cleanup) {
                   try {
-                    await cleanup()
+                    await bounded(Promise.resolve().then(cleanup), deps.cleanupTimeoutMs ?? 2000, 'Plugin cleanup timed out')
                   } catch (error) {
                     report(id, error)
                   }
                 }
               })
               .catch(() => {})
-            const cleanup = await Promise.race([
+            const cleanup = await bounded(Promise.race([
               activation,
               new Promise<never>((_, reject) => {
                 const abort = () =>
@@ -165,17 +189,22 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                     once: true,
                   })
               }),
-            ])
+            ]), deps.activationTimeoutMs ?? 10000, 'Plugin activation timed out')
             instance.initializing = false
             if (cleanup && !instance.controller.signal.aborted)
               instance.cleanups.push(cleanup)
             if (requested !== revision || disposed) await deactivate(id)
+            else setState(id, { status: 'active' })
           } catch (error) {
             const cancelled = active.get(id)?.controller.signal.aborted
             await deactivate(id)
-            if (!cancelled) report(id, error)
+            if (!cancelled) {
+              report(id, error)
+              setState(id, { status: 'error', error: error instanceof Error ? error.message : String(error) })
+            }
           }
-        }
+        }))
+        for (const id of runtimeStates.keys()) if (!definitions.has(id)) runtimeStates.delete(id)
       })
       .catch((error) => report('manager', error))
     return pending
@@ -191,6 +220,12 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     return pending
   }
   return {
+    failPlugin: async (id: string, error: Error) => {
+      await deactivate(id)
+      report(id, error)
+      setState(id, { status: 'error', error: error.message })
+    },
+    getState: (id: string) => runtimeStates.get(id),
     isPluginEnabled,
     loadPlugins,
     dispose,

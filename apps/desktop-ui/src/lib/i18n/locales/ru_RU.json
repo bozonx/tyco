@@ -48,7 +48,9 @@
     "id_ID": "Индонезийский",
     "ms_MY": "Малайский"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "nav": {
     "editor": "Редактор",
     "aiChat": "Чат с ИИ",
@@ -325,7 +327,9 @@
       "history": "История",
       "config": "Настройки"
     },
-    "hotkeyStatus": { "conflict": "Эта комбинация недоступна" },
+    "hotkeyStatus": {
+      "conflict": "Эта комбинация недоступна"
+    },
     "hotkeyProvider": {
       "portal": "Глобальные хоткеи назначает система, поэтому здесь показаны сочетания, которые она закрепила за Tyco. Изменить их можно кнопкой «Изменить в системе».",
       "external": "Эта сессия не даёт Tyco назначать глобальные хоткеи. Добавьте в конфигурацию композитора команды из полей ниже.",
@@ -430,10 +434,25 @@
     "markdownCleanKeepHorizontalRules": "Сохранять горизонтальные разделители (---)",
     "markdownCleanKeepTaskCheckboxes": "Сохранять чекбоксы задач ([ ] / [x])",
     "installPluginPackage": "Установить пакет плагина",
-    "pluginTrustNotice": "Плагины выполняются с доступом к приложению. Устанавливайте пакеты только от авторов, которым доверяете.",
-    "installTrustedPlugin": "Доверять и установить",
+    "pluginTrustNotice": "Код плагина выполняется в изолированном Worker. Устанавливайте пакеты из доверенных источников: заявленные сервисы могут читать или изменять ваши данные.",
+    "installTrustedPlugin": "Установить плагин",
     "removePluginPackage": "Удалить пакет",
-    "pluginPackageFailed": "Операция с плагином не удалась: {detail}"
+    "pluginPackageFailed": "Операция с плагином не удалась: {detail}",
+    "restorePluginPackage": "Восстановить предыдущую версию",
+    "pluginCapabilities": "Возможности",
+    "pluginCapability": {
+      "editor": "Редактор",
+      "browser": "Внешний браузер",
+      "notes": "Заметки",
+      "none": "Нет"
+    },
+    "pluginStatus": {
+      "disabled": "Отключён",
+      "activating": "Активация",
+      "active": "Активен",
+      "error": "Ошибка",
+      "incompatible": "Несовместим"
+    }
   },
   "editor": {
     "case": "Регистр",

@@ -31,13 +31,13 @@ const noteTool = tool('write', {
       id: 'note',
       name: 'Note',
       phrases: ['note'],
-      menu: { replaces: 'Notes:note', preferredKey: 'c' },
+      menu: { preferredKey: 'c' },
     },
     {
       id: 'daily',
       name: 'Daily',
       toolConfig: { saveMode: 'append' },
-      menu: { replaces: 'Notes:daily', preferredKey: 'd' },
+      menu: { preferredKey: 'd' },
     },
   ],
 })
@@ -125,42 +125,13 @@ describe('seedDefaultCommands', () => {
     expect(seeded.commands).toEqual([own])
   })
 
-  it('takes the place and the key of the former plugin item', () => {
-    const seeded = seedDefaultCommands(
-      config({
-        seededCommands: ['default:core.correct'],
-        // the user moved the note item to `q`
-        mainActions: [{ type: 'plugin', actionId: 'Notes:note' }],
-        mainActionRegistrations: ['Notes:note'],
-      }),
-      registry(noteTool),
-      t
-    )!
-    expect(seeded.mainActions[0]).toEqual({
-      type: 'command',
-      commandId: defaultCommandId('Notes.write', 'note'),
-    })
-    // `daily` was never placed: the command goes to its preferred key
-    expect(seeded.mainActions[PRESETS_KEYS.indexOf('d')]).toEqual({
-      type: 'command',
-      commandId: defaultCommandId('Notes.write', 'daily'),
-    })
-    expect(seeded.mainActions.filter(Boolean)).toHaveLength(2)
-    expect(seeded.mainActionRegistrations).toContain('Notes:daily')
+  it('uses preferred free slots without replacing existing menu items', () => {
+    const seeded = seedDefaultCommands(config({ seededCommands: ['default:core.correct'], mainActions: [{ type: 'standard', actionId: 'insertIntoWindow' }] }), registry(noteTool), t)!
+    expect(seeded.mainActions[0]).toEqual({ type: 'standard', actionId: 'insertIntoWindow' })
+    expect(seeded.mainActions[PRESETS_KEYS.indexOf('c')]).toEqual({ type: 'command', commandId: defaultCommandId('Notes.write', 'note') })
+    expect(seeded.mainActions[PRESETS_KEYS.indexOf('d')]).toEqual({ type: 'command', commandId: defaultCommandId('Notes.write', 'daily') })
   })
 
-  it('leaves out a plugin item the user removed from the menu', () => {
-    const seeded = seedDefaultCommands(
-      config({
-        seededCommands: ['default:core.correct'],
-        mainActionRegistrations: ['Notes:note', 'Notes:daily'],
-      }),
-      registry(noteTool),
-      t
-    )!
-    expect(seeded.mainActions.filter(Boolean)).toEqual([])
-    expect(seeded.commands).toHaveLength(2)
-  })
 })
 
 describe('createDefaultCommandsSync', () => {

@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPluginInstallation } from './plugin-installation'
 
 const preview = {
-  path: '/package.tyco-plugin',
+  path: '/package.tyco-plugin', digest: 'reviewed-digest',
   manifest: {
     id: 'example',
     version: '1.0.0',
-    apiVersion: 1,
+    apiVersion: 2, defaultLocale: 'en_US', locales: { en_US: {} },
     capabilities: [],
   },
 }
@@ -15,6 +15,7 @@ function setup() {
   const deps = {
     inspect: vi.fn(async () => preview),
     install: vi.fn(async () => {}),
+    restore: vi.fn(async () => {}),
     remove: vi.fn(async () => {}),
     refresh: vi.fn(async () => {}),
     reservedIds: ['bundled'],

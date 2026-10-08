@@ -80,31 +80,12 @@ for (const output of builds.flatMap((value) =>
 const definition = (
   await import(pathToFileURL(resolve(root, 'dist/plugin.js')).href)
 ).default()
-const {
-  id,
-  version,
-  apiVersion,
-  capabilities,
-  legacyIds,
-  label,
-  labelKey,
-  description,
-  descriptionKey,
-} = definition
+const { pluginManifest, PLUGIN_PACKAGE_FORMAT_VERSION } = await import('@tyco/plugin-sdk')
 await writeFile(
   resolve(root, 'dist/plugin.tyco-plugin'),
   JSON.stringify({
-    manifest: {
-      id,
-      version,
-      apiVersion,
-      capabilities,
-      legacyIds,
-      label,
-      labelKey,
-      description,
-      descriptionKey,
-    },
+    formatVersion: PLUGIN_PACKAGE_FORMAT_VERSION,
+    manifest: pluginManifest(definition),
     module: await readFile(resolve(root, 'dist/plugin.js'), 'utf8'),
   }) + '\n'
 )
