@@ -469,6 +469,7 @@ import {
   resolveUiLanguagePreference,
   toHtmlLang,
 } from '../lib/locale/language'
+import { applyPluginDefaults } from '../lib/plugins/plugin-config'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
 import {
@@ -482,7 +483,7 @@ import {
   selectSttProvider,
 } from '../lib/stt/stt-config'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
-import { pluginIndexes, usePlugins } from '../plugins'
+import { pluginIndexes } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
@@ -809,28 +810,7 @@ function serializeUserConfig(config: unknown) {
 }
 
 function ensurePluginDefaults(config: Record<string, any>) {
-  if (!config.plugins) {
-    config.plugins = {}
-  }
-
-  for (const pluginFactory of pluginIndexes) {
-    const plugin = pluginFactory()
-    if (!config.plugins[plugin.name]) {
-      config.plugins[plugin.name] = {}
-    }
-
-    if (config.plugins[plugin.name].enabled === undefined) {
-      config.plugins[plugin.name].enabled = true
-    }
-
-    if (plugin.defaultConfig?.fields) {
-      for (const field of plugin.defaultConfig.fields) {
-        if (config.plugins[plugin.name][field.name] === undefined) {
-          config.plugins[plugin.name][field.name] = field.defaultValue
-        }
-      }
-    }
-  }
+  config.plugins = applyPluginDefaults(pluginIndexes, config.plugins)
 }
 
 // configs created before the accessibility settings come without these keys;
@@ -1251,7 +1231,6 @@ const updatePluginEnabled = (pluginName: string, enabled: boolean) => {
     userConfig.value.plugins[pluginName] = {}
   }
   userConfig.value.plugins[pluginName].enabled = enabled
-  usePlugins().reloadPlugins(userConfig.value)
 }
 
 const updatePluginConfig = (
@@ -1262,7 +1241,6 @@ const updatePluginConfig = (
     ...userConfig.value.plugins[pluginName],
     ...values,
   }
-  usePlugins().reloadPlugins(userConfig.value)
 }
 onMounted(() => {
   void loadStorageInfo()

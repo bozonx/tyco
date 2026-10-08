@@ -1,4 +1,6 @@
 import type {
+  InstalledPluginPackage,
+  PluginPackagePreview,
   ChatHistoryItem,
   CommandRunRecord,
   EditorHistoryEntry,
@@ -25,6 +27,13 @@ import type { InputRect } from '../quick-panel/input-region'
  * instead of a failure at run time
  */
 export interface DesktopFunctions {
+  inspectPluginPackage: { args: []; result: PluginPackagePreview | null }
+  listInstalledPlugins: { args: []; result: InstalledPluginPackage[] }
+  installPluginPackage: {
+    args: [preview: PluginPackagePreview]
+    result: InstalledPluginPackage
+  }
+  removePluginPackage: { args: [id: string]; result: void }
   saveUserConfig: { args: [userConfig: UserConfig]; result: void }
   patchLocalState: { args: [patch: Partial<LocalState>]; result: LocalState }
   getStorageInfo: { args: []; result: StorageInfo }

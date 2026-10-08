@@ -1,0 +1,9 @@
+{
+  "label": "Search the internet",
+  "url": "Internet search URL",
+  "description": "Opens a web search for the text in the browser",
+  "phrases": "(search|find|google) [for]",
+  "noSearchBaseUrl": "No base URL configured for internet search",
+  "textTooLongForSearch": "The text is too long to search for: select a fragment",
+  "openInBrowserFailed": "Could not open the browser"
+}

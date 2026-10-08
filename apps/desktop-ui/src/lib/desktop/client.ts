@@ -13,6 +13,7 @@ import { isTauri, invoke as tauriInvoke } from '@tauri-apps/api/core'
 import { listen as tauriListen } from '@tauri-apps/api/event'
 
 type AppEventPayloads = {
+  [DESKTOP_EVENTS.PLUGINS_CHANGED]: null
   [DESKTOP_EVENTS.OPEN_MAIN_CHAT]: { text?: string }
   [DESKTOP_EVENTS.PARAMS_CHANGED]: InitParams
   [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer

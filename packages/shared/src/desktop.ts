@@ -152,6 +152,7 @@ export const DEFAULT_INIT_PARAMS: InitParams = {
 }
 
 export const DESKTOP_EVENTS = {
+  PLUGINS_CHANGED: 'plugins-changed',
   PARAMS_CHANGED: 'app://params-changed',
   CONTEXT_CAPTURED: 'app://context-captured',
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
@@ -169,6 +170,10 @@ export const DESKTOP_EVENTS = {
 } as const
 
 export const DESKTOP_COMMANDS = {
+  INSPECT_PLUGIN_PACKAGE: 'inspect_plugin_package',
+  LIST_INSTALLED_PLUGINS: 'list_installed_plugins',
+  INSTALL_PLUGIN_PACKAGE: 'install_plugin_package',
+  REMOVE_PLUGIN_PACKAGE: 'remove_plugin_package',
   GET_INIT_PARAMS: 'get_init_params',
   GET_STORAGE_INFO: 'get_storage_info',
   OPEN_STORAGE_LOCATION: 'open_storage_location',

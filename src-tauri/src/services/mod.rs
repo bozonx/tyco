@@ -15,6 +15,7 @@ pub mod llm_config;
 pub mod net;
 pub mod notes;
 pub mod platform;
+pub mod plugins;
 pub mod runtime;
 pub mod secret_detector;
 pub mod secrets;

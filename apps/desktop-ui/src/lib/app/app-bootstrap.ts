@@ -17,7 +17,7 @@ export interface AppBootstrapDeps {
     handler: (payload: unknown) => void | Promise<void>
   ) => Promise<() => void>
   emitGlobal: (event: GlobalEvents, payload?: unknown) => void
-  initPlugins: () => void
+  initPlugins: () => void | Promise<void>
   handleNavKeyUp: (event: KeyboardEvent) => void
   addWindowKeyupListener: (
     handler: (event: KeyboardEvent) => void
@@ -56,7 +56,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
 
   const start = async () => {
     removeWindowKeyupListener = deps.addWindowKeyupListener(handleKeyUp)
-    deps.initPlugins()
 
     removeParamsListener = await deps.listen(
       DESKTOP_EVENTS.PARAMS_CHANGED,
@@ -74,6 +73,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
 
     const initialParams = await deps.loadInitialParams()
     await applyParams(initialParams, { forceNavigate: true })
+    await deps.initPlugins()
     deps.emitGlobal(GlobalEvents.INITED)
   }
 

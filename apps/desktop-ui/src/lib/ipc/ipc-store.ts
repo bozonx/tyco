@@ -50,6 +50,19 @@ type CommandMap = {
 
 export function createCommandMap(): CommandMap {
   return {
+    inspectPluginPackage: { command: DESKTOP_COMMANDS.INSPECT_PLUGIN_PACKAGE },
+    listInstalledPlugins: { command: DESKTOP_COMMANDS.LIST_INSTALLED_PLUGINS },
+    installPluginPackage: {
+      command: DESKTOP_COMMANDS.INSTALL_PLUGIN_PACKAGE,
+      buildArgs: ([preview]) => ({
+        path: preview.path,
+        manifest: preview.manifest,
+      }),
+    },
+    removePluginPackage: {
+      command: DESKTOP_COMMANDS.REMOVE_PLUGIN_PACKAGE,
+      buildArgs: ([id]) => ({ id }),
+    },
     saveUserConfig: {
       command: DESKTOP_COMMANDS.SAVE_USER_CONFIG,
       buildArgs: ([userConfig]) => ({ userConfig }),

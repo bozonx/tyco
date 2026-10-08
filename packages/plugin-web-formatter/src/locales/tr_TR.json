@@ -1,0 +1,18 @@
+{
+  "label": "Web kodu biçimlendirme",
+  "description": "HTML, XML, CSS, JavaScript, TypeScript ve JSON biçimlendirir",
+  "language": "Dil",
+  "auto": "Otomatik algıla",
+  "chooseLanguage": "Desteklenen dil güvenilir biçimde algılanamadı. Eklenti ayarlarından dili seçin.",
+  "invalidCode": "Kod seçilen dilde ayrıştırılamadı. Metin değiştirilmedi.",
+  "tabWidth": "Girinti boyutu",
+  "useTabs": "Sekme kullan",
+  "printWidth": "Hedef satır genişliği",
+  "singleQuote": "JS / TS için tek tırnak",
+  "semi": "JS / TS için noktalı virgül",
+  "xmlWhitespace": "XML boşluk yönetimi",
+  "xmlStrict": "Katı: anlamlı boşlukları koru",
+  "xmlPreserve": "Metni koru, öğe düzenini biçimlendir",
+  "xmlIgnore": "Yoksay: boşluklar değişebilir",
+  "formatCode": "Web kodunu / XML biçimlendir"
+}

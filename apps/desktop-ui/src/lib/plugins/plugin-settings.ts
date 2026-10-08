@@ -1,3 +1,5 @@
+import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
+import { pluginMessageKey, scopeConfigFields } from './plugin-resources'
 import type { InputConfigItem } from '../../types'
 import type { PluginIndex } from '../../types/plugins'
 
@@ -8,6 +10,7 @@ export interface InstalledPluginItem {
   descriptionKey?: string
   description?: string
   enabled: boolean
+  error?: string
   fields: Array<InputConfigItem & { value: unknown }>
 }
 
@@ -17,23 +20,29 @@ export function resolveInstalledPlugins(
 ): InstalledPluginItem[] {
   return indexes.map((pluginIndex) => {
     const plugin = pluginIndex()
-    const pluginName = plugin.name
-    const pluginState =
-      (userConfig?.plugins?.[pluginName] as Record<string, unknown>) || {}
+    const pluginName = pluginId(plugin)
+    const pluginState = getPluginState(plugin, userConfig?.plugins)
+    let config: Record<string, unknown> = {}
+    let error = plugin._loadError
+    try {
+      config = resolvePluginConfig(plugin, pluginState)
+    } catch (reason) {
+      error = reason instanceof Error ? reason.message : String(reason)
+    }
     const isEnabled = pluginState.enabled !== false
     const rawFields = plugin.defaultConfig?.fields || []
 
     return {
       name: pluginName,
-      labelKey: plugin.labelKey,
+      labelKey: pluginMessageKey(pluginName, plugin.labelKey),
       label: plugin.label,
-      descriptionKey: plugin.descriptionKey,
+      descriptionKey: pluginMessageKey(pluginName, plugin.descriptionKey),
       description: plugin.description,
       enabled: isEnabled,
-      fields: rawFields.map((field) => ({
-        ...field,
-        value: pluginState[field.name],
-      })),
+      ...(error ? { error } : {}),
+      fields: scopeConfigFields(pluginName, error ? [] : rawFields).map(
+        (field) => ({ ...field, value: config[field.name] })
+      ),
     }
   })
 }

@@ -7,7 +7,16 @@ vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
+vi.mock('../../stores/ipc', () => ({
+  useIpcStore: () => ({ callFunction: vi.fn() }),
+}))
+vi.mock('../../composables/useToast', () => ({
+  default: () => ({ toast: vi.fn() }),
+}))
+
 vi.mock('../../plugins', () => ({
+  builtinPluginIds: ['PluginWithConfig'],
+  usePlugins: () => ({ refreshInstalledPlugins: vi.fn(async () => {}) }),
   pluginIndexes: [
     () => ({
       name: 'PluginWithConfig',

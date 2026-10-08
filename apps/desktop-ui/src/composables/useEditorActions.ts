@@ -1,5 +1,5 @@
 import { createTextEditModel } from '../lib/edit-menu/text-edit'
-import { WebFormatError } from '../lib/editor/web-formatter'
+import { isPluginCancellation, isPluginError } from '@tyco/plugin-sdk'
 import { useI18n } from './useI18n'
 import useToast from './useToast'
 import type { ActionItem } from '../stores/actionMenu'
@@ -81,8 +81,9 @@ export const useEditorActions = () => {
       if (result === 'empty') toast('toast.textNotSelected', 'warn')
       if (result === 'stale') toast('toast.textTransformStale', 'warn')
     } catch (error) {
+      if (isPluginCancellation(error)) return
       const detail = error instanceof Error ? error.message : String(error)
-      if (error instanceof WebFormatError) {
+      if (isPluginError(error)) {
         toast(error.messageKey, 'error')
       } else {
         toast('toast.textTransformFailed', 'error', { detail })

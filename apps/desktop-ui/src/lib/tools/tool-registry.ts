@@ -47,6 +47,7 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
     const next = new Map(tools.value)
     for (const tool of definitions) {
       const id = pluginToolId(pluginName, tool.id)
+      if (next.has(id)) throw new Error(`Duplicate tool ID: ${id}`)
       next.set(id, { ...tool, id, owner, baseConfig })
     }
     set(next)
@@ -61,7 +62,24 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
     )
   }
 
-  return { get, list, registerCoreTools, registerPluginTools, clearPluginTools }
+  const unregisterPlugin = (id: string) => {
+    set(
+      new Map(
+        [...tools.value].filter(
+          ([, tool]) => tool.owner.kind !== 'plugin' || tool.owner.name !== id
+        )
+      )
+    )
+  }
+
+  return {
+    unregisterPlugin,
+    get,
+    list,
+    registerCoreTools,
+    registerPluginTools,
+    clearPluginTools,
+  }
 }
 
 export type ToolRegistry = ReturnType<typeof createToolRegistry>

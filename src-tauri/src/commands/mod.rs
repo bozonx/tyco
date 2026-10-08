@@ -3,6 +3,7 @@ pub mod app;
 pub mod history;
 pub mod net;
 pub mod notes;
+pub mod plugins;
 pub mod secrets;
 pub mod selection;
 pub mod voice;

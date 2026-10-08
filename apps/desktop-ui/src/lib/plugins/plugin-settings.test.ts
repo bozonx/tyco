@@ -41,7 +41,8 @@ describe('plugin-settings', () => {
           type: 'text',
           name: 'apiKey',
           defaultValue: 'default-key',
-          value: undefined,
+          value: 'default-key',
+          options: undefined,
         },
       ],
     })

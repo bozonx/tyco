@@ -1,0 +1,12 @@
+{
+  "label": "Metin harf düzeni",
+  "description": "Metin büyüklüğünü dönüştürür: camelCase, snake_case, PascalCase, BÜYÜK HARF ve diğerleri",
+  "capitalizeFirst": "İlk harfi büyüt",
+  "sentenceCase": "Cümle düzeni",
+  "identifierToText": "Tanımlayıcıyı metne dönüştür",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

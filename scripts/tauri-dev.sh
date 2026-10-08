@@ -32,6 +32,8 @@ if [[ "${DEV_OS}" == "linux" ]]; then
   fi
 fi
 
+PLUGIN_SCRIPT_CSP="$(node -p 'require(process.argv[1]).app.security.csp["script-src"]' "${REPOSITORY_ROOT}/src-tauri/tauri.conf.json")"
+
 DEV_CONFIG=$(
   cat << JSON
 {
@@ -42,7 +44,7 @@ DEV_CONFIG=$(
     "security": {
       "csp": {
         "connect-src": "'self' ipc: asset: http://asset.localhost http://ipc.localhost http://localhost:${PORT} ws://localhost:${PORT}",
-        "script-src": "'self' 'wasm-unsafe-eval' http://localhost:${PORT}"
+        "script-src": "${PLUGIN_SCRIPT_CSP} http://localhost:${PORT}"
       }
     }
   }

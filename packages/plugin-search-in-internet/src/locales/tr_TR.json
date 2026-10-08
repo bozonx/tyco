@@ -1,0 +1,9 @@
+{
+  "label": "İnternette ara",
+  "url": "İnternet arama URL'si",
+  "description": "Metin için tarayıcıda web araması açar",
+  "phrases": "(ara|bul)",
+  "noSearchBaseUrl": "İnternet araması için temel URL ayarlanmamış",
+  "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin",
+  "openInBrowserFailed": "Tarayıcı açılamadı"
+}

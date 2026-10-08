@@ -26,8 +26,8 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Use kebab-case for filenames across all TypeScript and utility modules (e.g., `context-menu.ts`, `editor-sync.ts`).
   - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
 - **I18n & Locales**:
-  - Locale messages are isolated in `apps/desktop-ui/src/lib/i18n/locales/*.json`.
-  - All keys across all locales must stay synchronized. Run `pnpm check:i18n` to validate.
+  - Core locale messages live in `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin messages live in their own `packages/plugin-*/src/locales/*.json`.
+  - All keys across locales within each package must stay synchronized. Run `pnpm check:i18n` to validate.
 - **IPC & System Contracts**:
   - Linux D-Bus contract uses `org.tyco.Service`, `/org/tyco/Object`, and `org.tyco.Interface`.
 - **Rust Layer**:
@@ -49,7 +49,7 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
 ## Offline Constraint
 
 The app must work without network access. Do not add fonts, icons, stylesheets
-or scripts loaded from a CDN. Icons come from `@iconify-json/mdi` and are
+or scripts loaded from a CDN. Plugin icons are bundled in their packages by `@tyco/plugin-build`. Core icons come from `@iconify-json/mdi` and are
 subsetted at build time by `apps/desktop-ui/build/offline-icons-plugin.ts`,
 which scans the sources for `mdi:*` names; referencing a new icon is enough.
 

@@ -36,15 +36,6 @@ export function truncate(
   return src.slice(0, maxLength) + suffix
 }
 
-export {
-  toCamelCase,
-  toPascalCase,
-  toSnakeCase,
-  toKebabCase,
-  toConstantCase,
-  identifierToText,
-} from './text-case'
-
 export type DefaultHandler = (...args: any[]) => void
 
 export class IndexedEventEmitter<T extends DefaultHandler = DefaultHandler> {

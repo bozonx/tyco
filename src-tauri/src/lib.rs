@@ -122,6 +122,24 @@ fn spawn_x11_tracker(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .register_uri_scheme_protocol("tyco-plugin", |context, request| {
+            let result = context
+                .app_handle()
+                .state::<services::plugins::PluginStore>()
+                .module(request.uri().path());
+            let (status, body) = match result {
+                Ok(module) => (200, module.into_bytes()),
+                Err(_) => (404, b"Plugin module is unavailable".to_vec()),
+            };
+            tauri::http::Response::builder()
+                .status(status)
+                .header("Content-Type", "application/javascript; charset=utf-8")
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .body(body)
+                .expect("Valid plugin protocol response")
+        })
         .plugin(logger_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(single_instance(|app, args, _cwd| {
@@ -130,6 +148,9 @@ pub fn run() {
             }
         }))
         .setup(|app| {
+            app.manage(services::plugins::PluginStore::new(
+                storage::app_data_dir(app.handle())?.join("plugins"),
+            )?);
             runtime::create_windows(app)?;
             let user_config = storage::read_or_create_user_config(app.handle())?;
             if let Err(error) =
@@ -208,6 +229,10 @@ pub fn run() {
             type_into_window_and_close,
             put_into_clipboard_and_close,
             copy_text,
+            commands::plugins::inspect_plugin_package,
+            commands::plugins::list_installed_plugins,
+            commands::plugins::install_plugin_package,
+            commands::plugins::remove_plugin_package,
             save_note,
             append_note,
             net_fetch,

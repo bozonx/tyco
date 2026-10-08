@@ -26,7 +26,8 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["NODE_ENV", "PORT", "TYCO_LOCAL_AI_KIT"]
+      "env": ["NODE_ENV", "PORT", "TYCO_LOCAL_AI_KIT"],
+      "dependsOn": ["^build"]
     }
   }
 }

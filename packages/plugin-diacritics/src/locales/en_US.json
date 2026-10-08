@@ -1,0 +1,14 @@
+{
+  "label": "Diacritics",
+  "description": "Applies only to selected letters. Clear all also turns ё → е, й → и and ñ → n.",
+  "actions": "Toolbar buttons",
+  "acute": "Acute / stress ◌́",
+  "grave": "Grave ◌̀",
+  "circumflex": "Circumflex ◌̂",
+  "diaeresis": "Diaeresis ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Caron ◌̌",
+  "macron": "Macron ◌̄",
+  "clearAcute": "Remove acute / stress",
+  "clear": "Remove all diacritics"
+}

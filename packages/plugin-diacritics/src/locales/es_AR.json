@@ -1,0 +1,14 @@
+{
+  "label": "Diacríticos",
+  "description": "Solo modifica la selección. Quitar todos también convierte ё → е, й → и y ñ → n.",
+  "actions": "Botones de la barra de herramientas",
+  "acute": "Acento agudo ◌́",
+  "grave": "Acento grave ◌̀",
+  "circumflex": "Circunflejo ◌̂",
+  "diaeresis": "Diéresis ◌̈",
+  "tilde": "Virgulilla ◌̃",
+  "caron": "Carón ◌̌",
+  "macron": "Macrón ◌̄",
+  "clearAcute": "Quitar acento agudo",
+  "clear": "Quitar todos los diacríticos"
+}

@@ -93,6 +93,7 @@ if (typeof document !== 'undefined') {
   document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
 }
 const selectionListeners: (() => void)[] = []
+let removePluginsListener: (() => void) | undefined
 let removeMainChatListener: (() => void) | undefined
 let removeMainEditorListener: (() => void) | undefined
 let removeMainClosedListener: (() => void) | undefined
@@ -108,8 +109,9 @@ const bootstrap = createAppBootstrap({
   listen: (event, handler) =>
     desktopClient.listen(event as never, handler as never),
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
-  initPlugins: () => {
-    usePlugins().reloadPlugins()
+  initPlugins: async () => {
+    await usePlugins().refreshInstalledPlugins()
+    await usePlugins().reloadPlugins()
     // external calls find the commands of plugin tools by this catalog
     if (isQuickWindow) useToolCatalogStore().start()
   },
@@ -225,6 +227,13 @@ watch(
 )
 
 onMounted(() => {
+  void desktopClient
+    .listen(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
+      void usePlugins().refreshInstalledPlugins()
+    })
+    .then((remove) => {
+      removePluginsListener = remove
+    })
   // a failure has been reported already; the window keeps the defaults, and
   // the store refuses to save them over the user's files
   bootstrap
@@ -295,6 +304,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   bootstrap.stop()
+  removePluginsListener?.()
+  void usePlugins().manager.dispose()
   activationMetrics.stop()
   removeMainEditorListener?.()
   removeMainClosedListener?.()

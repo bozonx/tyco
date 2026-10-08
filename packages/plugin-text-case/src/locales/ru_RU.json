@@ -1,0 +1,12 @@
+{
+  "label": "Регистр текста",
+  "description": "Преобразует регистр текста: camelCase, snake_case, PascalCase, UPPERCASE и другие",
+  "capitalizeFirst": "Первая буква заглавная",
+  "sentenceCase": "Регистр предложений",
+  "identifierToText": "Идентификатор в текст",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

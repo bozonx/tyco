@@ -35,24 +35,8 @@ export const PRESETS_KEYS = [
   'b',
 ]
 
-export interface InputConfigOption {
-  id: string | number
-  name?: string
-  labelKey?: string
-}
-
-export interface SortableChecklistItem {
-  id: string
-  enabled: boolean
-}
-
-export interface InputConfigItem {
-  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'sortable-checklist'
-  name: string
-  label?: string
-  labelKey?: string
-  value?: any
-  defaultValue?: any
-  options?: InputConfigOption[]
-  vertical?: boolean
-}
+export type {
+  InputConfigOption,
+  InputConfigItem,
+  SortableChecklistItem,
+} from '@tyco/plugin-sdk'

@@ -105,5 +105,25 @@ export default defineConfig(
     rules: { 'no-console': 'off' },
   },
 
+  {
+    files: ['packages/plugin-*/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../*',
+            '@/*',
+            '@tyco/shared',
+            '@tyco/desktop-ui',
+            'pinia',
+            'vue',
+            '@tauri-apps/*',
+          ],
+        },
+      ],
+    },
+  },
+
   prettierConfig
 )

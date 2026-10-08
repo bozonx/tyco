@@ -1,3 +1,4 @@
+import type { ActionItem } from '@tyco/plugin-sdk'
 import { shallowRef } from 'vue'
 
 import {
@@ -17,20 +18,7 @@ import {
 } from '../commands/command-runner'
 import { assignPluginActions } from './main-actions'
 
-export interface ActionItem {
-  id?: string
-  preferredKey?: string
-  name?: string
-  labelKey?: string
-  icon?: string
-  disabled?: boolean
-  /** Why the action is disabled, shown on hover */
-  hint?: string
-  useFullEditorText?: boolean
-  preserveWhitespace?: boolean
-  action: (text: string) => Promise<void>
-}
-
+export type { ActionItem } from '@tyco/plugin-sdk'
 export interface ActionMenuDependencies extends CommandRunnerDependencies {
   typeIntoWindowAndClose: (text: string) => void
   putIntoClipboardAndClose: (text: string) => Promise<void>
@@ -211,7 +199,14 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     registeredActionsMenu.value = []
   }
 
+  const unregisterPlugin = (id: string) => {
+    registeredActionsMenu.value = registeredActionsMenu.value.filter(
+      (item) => !item.id?.startsWith(`${id}:`)
+    )
+  }
+
   return {
+    unregisterPlugin,
     getRegisteredActions,
     resolveMainActions,
     getDefaultActions,

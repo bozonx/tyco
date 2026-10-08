@@ -1,0 +1,18 @@
+{
+  "label": "Web code formatting",
+  "description": "Formats HTML, XML, CSS, JavaScript, TypeScript, and JSON",
+  "language": "Language",
+  "auto": "Detect automatically",
+  "chooseLanguage": "Cannot reliably detect a supported language. Select the language in the web formatting plugin settings.",
+  "invalidCode": "Cannot parse this code in the selected language. The text was kept unchanged.",
+  "tabWidth": "Indent size",
+  "useTabs": "Use tabs",
+  "printWidth": "Target line width",
+  "singleQuote": "Prefer single quotes in JS / TS",
+  "semi": "Semicolons in JS / TS",
+  "xmlWhitespace": "XML whitespace handling",
+  "xmlStrict": "Strict: preserve meaningful whitespace",
+  "xmlPreserve": "Preserve text, format element layout",
+  "xmlIgnore": "Ignore: whitespace may change",
+  "formatCode": "Format web code / XML"
+}

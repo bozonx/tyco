@@ -1,5 +1,41 @@
 <template>
   <div class="flex flex-col gap-3">
+    <button
+      class="btn btn-sm self-start"
+      :disabled="installation.busy.value"
+      @click="installation.inspect()"
+    >
+      {{ t('settings.installPluginPackage') }}
+    </button>
+    <div
+      v-if="installation.preview.value"
+      class="surface p-3 flex flex-col gap-2"
+    >
+      <p class="font-medium">
+        {{
+          installation.preview.value.manifest.label ||
+          installation.preview.value.manifest.id
+        }}
+        · {{ installation.preview.value.manifest.version }}
+      </p>
+      <p class="text-sm text-muted">{{ t('settings.pluginTrustNotice') }}</p>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-sm btn-primary"
+          :disabled="installation.busy.value"
+          @click="installation.install()"
+        >
+          {{ t('settings.installTrustedPlugin') }}
+        </button>
+        <button
+          class="btn btn-sm"
+          :disabled="installation.busy.value"
+          @click="installation.cancel()"
+        >
+          {{ t('common.cancel') }}
+        </button>
+      </div>
+    </div>
     <div v-if="installedPlugins.length === 0" class="text-sm text-muted">
       {{ t('settings.noInstalledPlugins') }}
     </div>
@@ -26,6 +62,9 @@
               plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
             }}
           </h3>
+          <p v-if="plugin.error" class="text-xs text-error mt-0.5">
+            {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
+          </p>
           <p
             v-if="plugin.descriptionKey || plugin.description"
             class="text-xs text-muted mt-0.5"
@@ -38,6 +77,14 @@
           </p>
         </div>
 
+        <button
+          v-if="!builtinPluginIds?.includes(plugin.name)"
+          class="btn btn-sm"
+          :disabled="installation.busy.value"
+          @click.stop="installation.remove(plugin.name)"
+        >
+          {{ t('settings.removePluginPackage') }}
+        </button>
         <div class="plugin-toggle" @click.stop>
           <FieldCheckbox
             :value="plugin.enabled"
@@ -64,8 +111,11 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import useToast from '../../composables/useToast'
+import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import { pluginIndexes } from '../../plugins'
+import { builtinPluginIds, pluginIndexes, usePlugins } from '../../plugins'
+import { useIpcStore } from '../../stores/ipc'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
 
@@ -79,6 +129,33 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const ipc = useIpcStore()
+const { toast } = useToast()
+const requireResult = <T,>(result: {
+  success: boolean
+  result?: T
+  error?: string
+}): T | undefined => {
+  if (!result.success)
+    throw new Error(result.error ?? 'Plugin operation failed')
+  return result.result
+}
+const installation = createPluginInstallation({
+  inspect: async () =>
+    requireResult(await ipc.callFunction('inspectPluginPackage', [])) ?? null,
+  install: async (preview) => {
+    requireResult(await ipc.callFunction('installPluginPackage', [preview]))
+  },
+  remove: async (id) => {
+    requireResult(await ipc.callFunction('removePluginPackage', [id]))
+  },
+  refresh: () => usePlugins().refreshInstalledPlugins(),
+  reservedIds: builtinPluginIds ?? [],
+  reportError: (error) =>
+    toast('settings.pluginPackageFailed', 'error', {
+      detail: error instanceof Error ? error.message : String(error),
+    }),
+})
 
 const installedPlugins = computed(() => {
   return resolveInstalledPlugins(pluginIndexes, props.userConfig)

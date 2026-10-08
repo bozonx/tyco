@@ -7,19 +7,15 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const localesDir = path.join(
-  __dirname,
-  '../apps/desktop-ui/src/lib/i18n/locales'
-)
-const localeFiles = fs
-  .readdirSync(localesDir)
-  .filter((f) => f.endsWith('.json'))
-
-if (localeFiles.length === 0) {
-  console.error('❌ No locale files found in', localesDir)
-  process.exit(1)
-}
-
+const root = path.resolve(__dirname, '..')
+const localeDirectories = [
+  path.join(root, 'apps/desktop-ui/src/lib/i18n/locales'),
+  ...fs
+    .readdirSync(path.join(root, 'packages'))
+    .filter((name) => name.startsWith('plugin-'))
+    .map((name) => path.join(root, 'packages', name, 'src/locales'))
+    .filter((dir) => fs.existsSync(dir)),
+]
 /**
  * Flattens a locale object into dot-separated key paths.
  *
@@ -50,17 +46,6 @@ function getAllKeys(obj, prefix = '') {
   return keys
 }
 
-const baseLocale = 'en_US.json'
-if (!localeFiles.includes(baseLocale)) {
-  console.error(`❌ Base locale ${baseLocale} not found.`)
-  process.exit(1)
-}
-
-const baseData = JSON.parse(
-  fs.readFileSync(path.join(localesDir, baseLocale), 'utf8')
-)
-const baseKeys = getAllKeys(baseData).sort()
-
 /**
  * @param {Record<string, unknown>} source
  * @param {string} key
@@ -85,49 +70,67 @@ function getPlaceholders(value) {
   return [...value.matchAll(/\{[^{}]+\}/g)].map((match) => match[0]).sort()
 }
 
-console.log(`Base locale (${baseLocale}) total keys:`, baseKeys.length)
-
 let hasErrors = false
 
-for (const file of localeFiles) {
-  if (file === baseLocale) continue
-
-  const data = JSON.parse(fs.readFileSync(path.join(localesDir, file), 'utf8'))
-  const keys = getAllKeys(data).sort()
-  const missingInFile = baseKeys.filter((k) => !keys.includes(k))
-  const extraInFile = keys.filter((k) => !baseKeys.includes(k))
-
-  console.log(`Checking ${file}: ${keys.length} keys`)
-
-  if (missingInFile.length > 0) {
-    hasErrors = true
-    console.error(`\n❌ Missing in ${file}:`)
-    missingInFile.forEach((k) => console.error('  -', k))
+for (const localesDir of localeDirectories) {
+  const localeFiles = fs
+    .readdirSync(localesDir)
+    .filter((file) => file.endsWith('.json'))
+  const baseLocale = 'en_US.json'
+  if (!localeFiles.includes(baseLocale)) {
+    console.error(`❌ Base locale ${baseLocale} not found.`)
+    process.exit(1)
   }
 
-  if (extraInFile.length > 0) {
-    hasErrors = true
-    console.error(`\n❌ Extra keys in ${file} (not in ${baseLocale}):`)
-    extraInFile.forEach((k) => console.error('  -', k))
-  }
+  const baseData = JSON.parse(
+    fs.readFileSync(path.join(localesDir, baseLocale), 'utf8')
+  )
+  const baseKeys = getAllKeys(baseData).sort()
 
-  for (const key of baseKeys) {
-    const baseValue = getValue(baseData, key)
-    const value = getValue(data, key)
-    if (typeof value !== typeof baseValue) {
+  console.log(`Base locale (${baseLocale}) total keys:`, baseKeys.length)
+
+  for (const file of localeFiles) {
+    if (file === baseLocale) continue
+
+    const data = JSON.parse(
+      fs.readFileSync(path.join(localesDir, file), 'utf8')
+    )
+    const keys = getAllKeys(data).sort()
+    const missingInFile = baseKeys.filter((k) => !keys.includes(k))
+    const extraInFile = keys.filter((k) => !baseKeys.includes(k))
+
+    console.log(`Checking ${file}: ${keys.length} keys`)
+
+    if (missingInFile.length > 0) {
       hasErrors = true
-      console.error(`\n❌ Type mismatch in ${file} at ${key}`)
+      console.error(`\n❌ Missing in ${file}:`)
+      missingInFile.forEach((k) => console.error('  -', k))
     }
-    if (typeof value === 'string' && !value.trim()) {
+
+    if (extraInFile.length > 0) {
       hasErrors = true
-      console.error(`\n❌ Empty translation in ${file} at ${key}`)
+      console.error(`\n❌ Extra keys in ${file} (not in ${baseLocale}):`)
+      extraInFile.forEach((k) => console.error('  -', k))
     }
-    if (
-      JSON.stringify(getPlaceholders(value)) !==
-      JSON.stringify(getPlaceholders(baseValue))
-    ) {
-      hasErrors = true
-      console.error(`\n❌ Placeholder mismatch in ${file} at ${key}`)
+
+    for (const key of baseKeys) {
+      const baseValue = getValue(baseData, key)
+      const value = getValue(data, key)
+      if (typeof value !== typeof baseValue) {
+        hasErrors = true
+        console.error(`\n❌ Type mismatch in ${file} at ${key}`)
+      }
+      if (typeof value === 'string' && !value.trim()) {
+        hasErrors = true
+        console.error(`\n❌ Empty translation in ${file} at ${key}`)
+      }
+      if (
+        JSON.stringify(getPlaceholders(value)) !==
+        JSON.stringify(getPlaceholders(baseValue))
+      ) {
+        hasErrors = true
+        console.error(`\n❌ Placeholder mismatch in ${file} at ${key}`)
+      }
     }
   }
 }

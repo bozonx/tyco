@@ -1,15 +1,7 @@
+import type { EditItem } from '@tyco/plugin-sdk'
 import { shallowRef } from 'vue'
 
-export interface EditItem {
-  id?: string
-  name?: string
-  labelKey?: string
-  label?: string
-  icon?: string
-  selectionOnly?: boolean
-  action: (text: string) => Promise<string> | string
-}
-
+export type { EditItem } from '@tyco/plugin-sdk'
 export interface EditMenuDependencies {
   doCaseTransform: (text: string, caseType: string) => string
   formatMdAndStyle: (text: string) => Promise<string>
@@ -65,15 +57,15 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
   }
 
   const registerCaseItems = (items: EditItem[]) => {
-    registeredCaseMenu.value.push(...items)
+    registeredCaseMenu.value = [...registeredCaseMenu.value, ...items]
   }
 
   const registerFormatItems = (items: EditItem[]) => {
-    registeredFormatMenu.value.push(...items)
+    registeredFormatMenu.value = [...registeredFormatMenu.value, ...items]
   }
 
   const registerEditItems = (items: EditItem[]) => {
-    registeredOtherEditMenu.value.push(...items)
+    registeredOtherEditMenu.value = [...registeredOtherEditMenu.value, ...items]
   }
 
   const clearRegisteredItems = () => {
@@ -82,7 +74,15 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
     registeredOtherEditMenu.value = []
   }
 
+  const unregisterPlugin = (id: string) => {
+    const keep = (item: EditItem) => !item.id?.startsWith(`${id}:`)
+    registeredCaseMenu.value = registeredCaseMenu.value.filter(keep)
+    registeredFormatMenu.value = registeredFormatMenu.value.filter(keep)
+    registeredOtherEditMenu.value = registeredOtherEditMenu.value.filter(keep)
+  }
+
   return {
+    unregisterPlugin,
     getDefaultCaseItems,
     getDefaultFormatItems,
     getCaseItems,

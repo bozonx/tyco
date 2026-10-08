@@ -1,0 +1,12 @@
+{
+  "label": "Text case",
+  "description": "Converts text between camelCase, snake_case, PascalCase, UPPERCASE, and other styles",
+  "capitalizeFirst": "Capitalize first letter",
+  "sentenceCase": "Sentence case",
+  "identifierToText": "Identifier to text",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

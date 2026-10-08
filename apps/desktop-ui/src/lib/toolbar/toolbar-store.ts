@@ -22,14 +22,21 @@ export function createToolbarStoreModel() {
   }
 
   const registerToolbarItems = (items: ToolbarItem[]) => {
-    registeredToolbarItems.value.push(...items)
+    registeredToolbarItems.value = [...registeredToolbarItems.value, ...items]
   }
 
   const clearToolbarItems = () => {
     registeredToolbarItems.value = []
   }
 
+  const unregisterPlugin = (id: string) => {
+    registeredToolbarItems.value = registeredToolbarItems.value.filter(
+      (item) => !item.id?.startsWith(`${id}:`)
+    )
+  }
+
   return {
+    unregisterPlugin,
     getToolbarItems,
     getLeftToolbarItems,
     getRightToolbarItems,

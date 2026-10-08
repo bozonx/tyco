@@ -1,0 +1,19 @@
+{
+  "name": "@tyco/plugin-build",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "bin"
+  ],
+  "bin": {
+    "tyco-plugin-build": "./bin/build-plugin.mjs"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "vite": "catalog:",
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify/utils": "^3.1.7"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "label": "Aksan işaretleri",
+  "description": "Yalnızca seçili metne uygulanır. Tümünü temizleme ё → е, й → и ve ñ → n dönüşümlerini de yapar.",
+  "actions": "Araç çubuğu düğmeleri",
+  "acute": "Akut ◌́",
+  "grave": "Grav ◌̀",
+  "circumflex": "Sirkumfleks ◌̂",
+  "diaeresis": "İki nokta ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Karon ◌̌",
+  "macron": "Makron ◌̄",
+  "clearAcute": "Akutu kaldır",
+  "clear": "Tüm aksan işaretlerini kaldır"
+}

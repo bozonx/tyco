@@ -1,0 +1,9 @@
+{
+  "label": "Buscar en internet",
+  "url": "URL de búsqueda en internet",
+  "description": "Abre una búsqueda del texto en el navegador",
+  "phrases": "(buscá|googleá)",
+  "noSearchBaseUrl": "No hay URL base configurada para la búsqueda",
+  "textTooLongForSearch": "El texto es demasiado largo para buscarlo: selecciona un fragmento",
+  "openInBrowserFailed": "No se pudo abrir el navegador"
+}
