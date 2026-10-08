@@ -312,6 +312,14 @@
           @edit-command="editCommand"
         />
 
+        <SettingsLauncherTab
+          v-else-if="currentTab === 'launcher-commands'"
+          :user-config="userConfig"
+          @update:launcher-commands="userConfig.launcherCommands = $event"
+          @create-command="createLauncherCommand"
+          @edit-command="editCommand"
+        />
+
         <SettingsCommandsTab
           v-else-if="currentTab === 'commands'"
           :key="focusCommandId"
@@ -443,6 +451,7 @@ import { normalizeMainActions } from '../lib/action-menu/main-actions'
 import {
   createCommand,
   normalizeCommands,
+  normalizeLauncherCommands,
 } from '../lib/commands/command-config'
 import {
   editorHistoryRetentionChoices,
@@ -482,6 +491,7 @@ import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
 import SettingsLanguagesTab from './settings/SettingsLanguagesTab.vue'
+import SettingsLauncherTab from './settings/SettingsLauncherTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
@@ -587,6 +597,11 @@ const actionTabs = computed(() => [
     text: t('settings.mainActionsTab'),
     key: 'main-actions',
     icon: 'mdi:gesture-tap-button',
+  },
+  {
+    text: t('settings.launcherCommandsTab'),
+    key: 'launcher-commands',
+    icon: 'mdi:console',
   },
   {
     text: t('settings.commandsTab'),
@@ -754,6 +769,10 @@ function createPreparedUserConfig(config: unknown) {
   normalizeLlmConfigSection(nextConfig)
   nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
   delete nextConfig.chatRoles
+  nextConfig.launcherCommands = normalizeLauncherCommands(
+    nextConfig.launcherCommands,
+    nextConfig.commands
+  )
   normalizeAiTasks(nextConfig)
   nextConfig.aiRules = {
     ...DEFAULT_USER_CONFIG.aiRules,
@@ -1089,6 +1108,19 @@ const createMenuCommand = (index: number, toolId: BuiltinToolId) => {
   slots[index] = { type: 'command', commandId: command.id }
   userConfig.value.commands = [...(userConfig.value.commands ?? []), command]
   userConfig.value.mainActions = slots
+  editCommand(command.id)
+}
+
+const createLauncherCommand = (index: number, toolId: BuiltinToolId) => {
+  const command = createCommand(toolId)
+  const nextCommands = [...normalizeCommands(userConfig.value.commands), command]
+  const slots = normalizeLauncherCommands(
+    userConfig.value.launcherCommands,
+    nextCommands
+  )
+  slots[index] = command.id
+  userConfig.value.commands = nextCommands
+  userConfig.value.launcherCommands = slots
   editCommand(command.id)
 }
 

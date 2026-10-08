@@ -10,6 +10,7 @@ import {
   type WebhookToolConfig,
 } from '@tyco/shared'
 
+import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 import { toolInputKind } from '../tools/tool-input'
 import type {
   RegisteredTool,
@@ -102,7 +103,6 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     logOutput: value.logOutput === true,
     confirm: confirmOf(value.confirm),
     availableIn: {
-      launcher: availableIn.launcher === true,
       external: availableIn.external === true,
       chat: availableIn.chat === true,
     },
@@ -125,6 +125,34 @@ export function normalizeCommands(value: unknown): CommandConfig[] {
     seen.add(command.id)
     return [command]
   })
+}
+
+/**
+ * Normalizes the 15 slots of the command overlay. Migrates from legacy
+ * `availableIn.launcher` when `value` is not an array.
+ */
+export function normalizeLauncherCommands(
+  value: unknown,
+  commands: readonly CommandConfig[] = []
+): (string | null)[] {
+  let source: readonly unknown[] | undefined
+  if (Array.isArray(value)) {
+    source = value
+  } else {
+    // Migration: populate slots with commands that had legacy `availableIn.launcher`
+    const rawCommands = commands as (CommandConfig & {
+      availableIn?: { launcher?: boolean }
+    })[]
+    source = rawCommands
+      .filter((c) => c.availableIn?.launcher)
+      .map((c) => c.id)
+  }
+  const existingIds = new Set(commands.map((c) => c.id))
+  return normalizeShortcutSlots<string>(
+    source.map((item) =>
+      typeof item === 'string' && item.trim() ? item : null
+    )
+  ).map((id) => (id && existingIds.has(id) ? id : null))
 }
 
 export function newCommandId(): string {
@@ -177,7 +205,7 @@ export function createCommand(
     logOutput: false,
     // a script runs with the rights of the user and cannot be undone
     confirm: toolId === 'script' ? 'always' : 'auto',
-    availableIn: { launcher: true, external: true, chat: false },
+    availableIn: { external: true, chat: false },
     enabled: true,
   }
 }

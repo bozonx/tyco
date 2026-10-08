@@ -121,17 +121,6 @@
 
     <div class="command-field-row">
       <FieldCheckbox
-        :value="command.availableIn.launcher"
-        :label="t('commands.inLauncher')"
-        @update:value="
-          update({ availableIn: { ...command.availableIn, launcher: $event } })
-        "
-      />
-      <InfoTooltip :text="t('commands.inLauncherInfo')" />
-    </div>
-
-    <div class="command-field-row">
-      <FieldCheckbox
         :value="command.availableIn.external"
         :label="t('commands.external')"
         @update:value="

@@ -1,10 +1,10 @@
 <template>
   <ActionOverlayLayout
     :title="title"
-    :onEsc="stage.kind === 'prepare' ? launcher.back : undefined"
-    :escMode="stage.kind === 'prepare' ? 'back' : 'auto'"
+    :onEsc="stage.kind === 'prepare' ? launcher.back : searchMode ? closeSearch : undefined"
+    :escMode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
   >
-    <template v-if="stage.kind === 'list' && hasSelection" #header-extra>
+    <template v-if="stage.kind === 'list' && !searchMode && hasSelection" #header-extra>
       <span class="launcher-selection" :title="selectedText">
         <Icon icon="mdi:format-quote-open" height="14" />
         {{ t('commandLauncher.selection', { count: selectedText.length }) }}
@@ -12,94 +12,7 @@
     </template>
 
     <template #preview>
-      <div v-if="stage.kind === 'list'" class="launcher-list-stage">
-        <div class="launcher-search">
-          <Icon icon="mdi:magnify" height="18" class="launcher-search-icon" />
-          <input
-            ref="searchRef"
-            class="launcher-search-input"
-            type="text"
-            :value="launcher.query"
-            :placeholder="t('commandLauncher.searchPlaceholder')"
-            :aria-label="t('commandLauncher.searchPlaceholder')"
-            role="combobox"
-            aria-autocomplete="list"
-            aria-controls="launcher-commands"
-            :aria-expanded="launcher.visible.length > 0"
-            :aria-activedescendant="
-              launcher.visible.length
-                ? `launcher-command-${launcher.highlighted}`
-                : undefined
-            "
-            spellcheck="false"
-            autocomplete="off"
-            @input="
-              launcher.setQuery(($event.target as HTMLInputElement).value)
-            "
-            @keydown="onSearchKeyDown"
-          />
-        </div>
-
-        <ul
-          v-if="launcher.visible.length"
-          id="launcher-commands"
-          class="launcher-commands"
-          role="listbox"
-        >
-          <li
-            v-for="(command, index) in launcher.visible"
-            :id="`launcher-command-${index}`"
-            :key="command.id"
-            role="option"
-            class="launcher-command"
-            :class="{ 'is-highlighted': index === launcher.highlighted }"
-            :aria-selected="index === launcher.highlighted"
-            @mouseenter="launcher.highlighted = index"
-            @mousedown.prevent
-            @click="void launcher.pick(command)"
-          >
-            <KeyButton v-if="index < LAUNCHER_KEY_COUNT" class="launcher-key">
-              {{ index + 1 }}
-            </KeyButton>
-            <span v-else class="launcher-key" />
-            <Icon
-              :icon="commandIcon(command, toolsStore)"
-              height="18"
-              class="launcher-command-icon"
-            />
-            <span class="launcher-command-text">
-              <span class="launcher-command-name">
-                {{ commandLabel(command) }}
-              </span>
-              <span v-if="command.description" class="launcher-command-desc">
-                {{ command.description }}
-              </span>
-            </span>
-            <Icon
-              v-if="commandTakesText(command, toolsStore)"
-              icon="mdi:text"
-              height="16"
-              class="launcher-command-flag"
-              :title="t('commandLauncher.takesText')"
-            />
-            <Icon
-              v-if="command.confirm === 'always'"
-              icon="mdi:shield-check-outline"
-              height="16"
-              class="launcher-command-flag"
-              :title="t('commandLauncher.asksConfirm')"
-            />
-          </li>
-        </ul>
-        <p v-else-if="launcher.commands.length" class="launcher-empty">
-          {{ t('commandLauncher.nothingFound') }}
-        </p>
-        <p v-else class="launcher-empty">
-          {{ t('commandLauncher.noCommands') }}
-        </p>
-      </div>
-
-      <div v-else-if="stage.kind === 'prepare'" class="launcher-prepare">
+      <div v-if="stage.kind === 'prepare'" class="launcher-prepare">
         <div class="launcher-prepare-head">
           <Icon :icon="commandIcon(stage.command, toolsStore)" height="20" />
           <span class="launcher-prepare-name">
@@ -134,37 +47,19 @@
       </div>
 
       <InProgressMessage
-        v-else
+        v-else-if="stage.kind === 'running'"
         :label="
           t('commandLauncher.running', { name: commandLabel(stage.command) })
         "
         :onCancel="launcher.cancel"
       />
+
+      <TextPreview v-else-if="hasSelection" :text="selectedText" />
     </template>
 
     <template #actions>
-      <div class="launcher-hints">
-        <template v-if="stage.kind === 'list'">
-          <span class="launcher-hint">
-            <KeyButton>1</KeyButton>–<KeyButton>9</KeyButton>
-            {{ t('commandLauncher.hintRun') }}
-          </span>
-          <span class="launcher-hint">
-            <KeyButton>↑</KeyButton><KeyButton>↓</KeyButton>
-            {{ t('commandLauncher.hintSelect') }}
-          </span>
-          <button
-            type="button"
-            class="launcher-hint"
-            :disabled="!launcher.visible.length"
-            @mousedown.prevent
-            @click="void launcher.pickHighlighted()"
-          >
-            <KeyButton>Enter</KeyButton>
-            {{ t('commandLauncher.hintRun') }}
-          </button>
-        </template>
-        <template v-else-if="stage.kind === 'prepare'">
+      <template v-if="stage.kind === 'prepare'">
+        <div class="launcher-hints">
           <button
             type="button"
             class="launcher-hint"
@@ -182,8 +77,38 @@
             <KeyButton>Shift</KeyButton><KeyButton>Enter</KeyButton>
             {{ t('commandLauncher.hintNewLine') }}
           </span>
-        </template>
-      </div>
+          <button
+            type="button"
+            class="launcher-hint"
+            @mousedown.prevent
+            @click="launcher.back"
+          >
+            <KeyButton>Esc</KeyButton>
+            {{ t('common.back') }}
+          </button>
+        </div>
+      </template>
+
+      <template v-else-if="stage.kind === 'list'">
+        <QueryPanel
+          v-if="searchMode"
+          v-model="query"
+          :placeholder="t('commandLauncher.searchPlaceholder')"
+          :options="searchOptions"
+          :hints="searchHints"
+          :emptyText="t('commandLauncher.nothingFound')"
+          :autoHighlight="query.trim() !== ''"
+          @submit="submitSearch"
+          @back="closeSearch"
+        />
+        <ShortcutList
+          v-else
+          :text="selectedText"
+          :spaceKey="searchAction"
+          :leftLetterKeys="leftLetterKeys"
+          :stopListening="props.stopListening"
+        />
+      </template>
     </template>
   </ActionOverlayLayout>
 </template>
@@ -193,19 +118,28 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { useOverlayNav } from '../../composables/useOverlayNav'
-import { LAUNCHER_KEY_COUNT } from '../../lib/command-launcher/launcher-model'
 import {
   commandIcon,
   commandLabel,
   commandTakesText,
   commandTarget,
+  isCommandAvailable,
 } from '../../lib/commands/command-config'
+import { searchCommands } from '../../lib/command-launcher/launcher-model'
+import { type ActionItem } from '../../stores/actionMenu'
 import { useCommandLauncherStore } from '../../stores/commandLauncher'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
+import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import KeyButton from '../common/KeyButton.vue'
+import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
+import QueryPanel, {
+  type QueryPanelHint,
+  type QueryPanelOption,
+  type QueryPanelSubmit,
+} from './QueryPanel.vue'
 import { Icon } from '@iconify/vue'
 
 const props = withDefaults(defineProps<{ stopListening?: boolean }>(), {
@@ -221,6 +155,9 @@ const stage = computed(() => launcher.stage)
 const selectedText = computed(() => ipcStore.params.selectedText ?? '')
 const hasSelection = computed(() => Boolean(selectedText.value.trim()))
 
+const searchMode = ref(false)
+const query = ref('')
+
 /** What the prepared command runs, so the user knows before confirming */
 const target = computed(() =>
   stage.value.kind === 'prepare'
@@ -234,66 +171,86 @@ const title = computed(() =>
     : commandLabel(stage.value.command)
 )
 
-const { handleEsc } = useOverlayNav(() =>
-  stage.value.kind === 'prepare'
-    ? { escMode: 'back', onEsc: launcher.back }
-    : {}
-)
+const closeSearch = () => {
+  searchMode.value = false
+  query.value = ''
+}
 
-const searchRef = ref<HTMLInputElement | null>(null)
+const { handleEsc } = useOverlayNav(() => {
+  if (stage.value.kind === 'prepare') {
+    return { escMode: 'back', onEsc: launcher.back }
+  }
+  if (searchMode.value) {
+    return { escMode: 'back', onEsc: closeSearch }
+  }
+  return {}
+})
+
 const textRef = ref<HTMLTextAreaElement | null>(null)
 
 const focusStage = () => {
   void nextTick(() => {
     if (props.stopListening) return
-    if (stage.value.kind === 'list') searchRef.value?.focus()
-    else textRef.value?.focus()
+    if (stage.value.kind === 'prepare') textRef.value?.focus()
   })
 }
 
-const scrollToHighlighted = () => {
-  void nextTick(() =>
-    document
-      .getElementById(`launcher-command-${launcher.highlighted}`)
-      ?.scrollIntoView({ block: 'nearest' })
-  )
-}
+const searchAction = computed<ActionItem>(() => ({
+  labelKey: 'commandLauncher.allCommands',
+  icon: 'mdi:magnify',
+  action: () => {
+    searchMode.value = true
+    query.value = ''
+  },
+}))
 
-/** `1`–`9` of the top row or the numpad, `null` for other keys */
-const digitOf = (event: KeyboardEvent): number | null => {
-  const match = /^(?:Digit|Numpad)([1-9])$/.exec(event.code)
-  return match ? Number(match[1]) : null
-}
+const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
+  launcher.slotCommands.map((command) => {
+    if (!command) return undefined
+    const available = isCommandAvailable(command, toolsStore)
+    return {
+      name: commandLabel(command),
+      icon: commandIcon(command, toolsStore),
+      hint: command.description,
+      disabled: !available,
+      action: () => {
+        void launcher.pick(command)
+      },
+    }
+  })
+)
 
-const onSearchKeyDown = (event: KeyboardEvent) => {
-  if (event.isComposing || props.stopListening) return
-  const digit = digitOf(event)
-  // a digit is typed into the search once there is a query; Alt runs anyway
-  if (
-    digit !== null &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.shiftKey &&
-    (event.altKey || !launcher.query)
-  ) {
-    event.preventDefault()
-    if (!event.repeat) void launcher.pickByKey(digit)
-    return
-  }
-  switch (event.key) {
-    case 'ArrowDown':
-    case 'ArrowUp':
-      event.preventDefault()
-      launcher.move(event.key === 'ArrowDown' ? 1 : -1)
-      scrollToHighlighted()
-      return
-    case 'Enter':
-      event.preventDefault()
-      if (!event.repeat) void launcher.pickHighlighted()
-      return
-    case 'Escape':
-      // acted on at keyup, like the other menus
-      event.preventDefault()
+const searchOptions = computed<QueryPanelOption[]>(() => {
+  const q = query.value.trim()
+  const list = q ? searchCommands(launcher.commands, q) : launcher.commands
+  return list.map((cmd) => ({
+    id: cmd.id,
+    label: commandLabel(cmd),
+    hint: cmd.description,
+    icon: commandIcon(cmd, toolsStore),
+  }))
+})
+
+const searchHints = computed<QueryPanelHint[]>(() => [
+  {
+    keys: ['Enter'],
+    label: t('commandLauncher.hintRun'),
+    disabled: searchOptions.value.length === 0,
+  },
+  {
+    keys: ['Esc'],
+    label: t('common.back'),
+    action: closeSearch,
+  },
+])
+
+function submitSearch({ option }: QueryPanelSubmit) {
+  if (!option) return
+  const cmd = launcher.commands.find((c) => c.id === option.id)
+  if (cmd) {
+    searchMode.value = false
+    query.value = ''
+    void launcher.pick(cmd)
   }
 }
 
@@ -344,8 +301,24 @@ const handleBlur = () => {
   escPressed = false
 }
 
-watch(() => stage.value.kind, focusStage)
-watch(() => [ipcStore.params.activationId, props.stopListening], focusStage)
+watch(
+  () => stage.value.kind,
+  (kind) => {
+    if (kind === 'prepare') {
+      searchMode.value = false
+    }
+    focusStage()
+  }
+)
+
+watch(
+  () => [ipcStore.params.activationId, props.stopListening],
+  () => {
+    searchMode.value = false
+    query.value = ''
+    focusStage()
+  }
+)
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
@@ -375,7 +348,6 @@ onUnmounted(() => {
   word-break: break-all;
 }
 
-.launcher-list-stage,
 .launcher-prepare {
   display: flex;
   flex-direction: column;
@@ -386,104 +358,6 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-.launcher-search {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  flex-shrink: 0;
-  height: 2.25rem;
-  padding: 0 0.75rem;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
-}
-
-.launcher-search:focus-within {
-  box-shadow: 0 0 0 3px
-    color-mix(in oklab, var(--color-primary) 16%, transparent);
-}
-
-.launcher-search-icon {
-  flex-shrink: 0;
-  color: var(--app-text-faint);
-}
-
-.launcher-search-input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: none;
-  background: transparent;
-  color: var(--color-base-content);
-  font-size: 0.9375rem;
-  outline: none;
-}
-
-.launcher-commands {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0%;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-}
-
-.launcher-command {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  min-height: 2.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.launcher-command.is-highlighted {
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
-}
-
-.launcher-key {
-  flex-shrink: 0;
-  min-width: 1.5rem;
-  justify-content: center;
-}
-
-.launcher-command-icon {
-  flex-shrink: 0;
-}
-
-.launcher-command-text {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.launcher-command-name {
-  overflow: hidden;
-  font-size: 0.9375rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.launcher-command-desc {
-  margin: 0;
-  overflow: hidden;
-  font-size: 0.75rem;
-  color: var(--app-text-muted);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.launcher-command-flag {
-  flex-shrink: 0;
-  color: var(--app-text-faint);
-}
-
-.launcher-empty,
 .launcher-confirm {
   margin: 0;
   padding: 0.5rem;
@@ -497,6 +371,15 @@ onUnmounted(() => {
   gap: var(--space-sm);
   font-size: 1rem;
   font-weight: 600;
+}
+
+.launcher-command-desc {
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .launcher-text {

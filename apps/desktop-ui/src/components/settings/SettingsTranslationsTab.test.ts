@@ -64,7 +64,7 @@ describe('SettingsTranslationsTab.vue', () => {
       .map((r) => r.attributes('data-label'))
     expect(rows).toContain('settings.translationProvider')
     expect(rows).toContain('settings.translationQuality')
-    expect(rows).toContain('settings.deeplPlan')
+    expect(rows).not.toContain('settings.deeplPlan')
     expect(rows).toContain('settings.apiKey')
 
     const qualityRow = wrapper
@@ -73,6 +73,43 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(qualityRow?.attributes('data-info')).toBe(
       'settings.translationQualityInfo'
     )
+  })
+
+  it('auto-detects deepl free vs pro endpoint when saving api key', async () => {
+    const userConfig = createConfig({ deeplEndpoint: 'free' })
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<section><slot /></section>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          FieldInput: {
+            props: ['value'],
+            emits: ['update:value'],
+            template:
+              '<input class="key-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+          },
+          FieldTextArea: true,
+          ShortcutSlots: true,
+        },
+      },
+    })
+
+    const input = wrapper.find('.key-input-stub')
+    const saveButton = wrapper.find('button.btn-primary')
+
+    // Pro key (no :fx suffix)
+    await input.setValue('some-pro-key-123')
+    await saveButton.trigger('click')
+    expect(userConfig.translation.deeplEndpoint).toBe('pro')
+    expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-pro-key-123')
+
+    // Free key (with :fx suffix)
+    await input.setValue('some-free-key:fx')
+    await saveButton.trigger('click')
+    expect(userConfig.translation.deeplEndpoint).toBe('free')
+    expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-free-key:fx')
   })
 
   it('emits navigate to languages when clicking quick language setup button', async () => {

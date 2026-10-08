@@ -21,6 +21,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const model = createCommandLauncherModel({
     tools: useToolsStore(),
     commands: () => ipcStore.params.userConfig?.commands,
+    launcherCommands: () => ipcStore.params.userConfig?.launcherCommands,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
     saveOutput: async (text) => {

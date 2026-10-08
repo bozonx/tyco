@@ -281,7 +281,6 @@ export type CommandConfirmMode = (typeof COMMAND_CONFIRM_MODES)[number]
 
 /** Where a command can be invoked, besides the action menu */
 export interface CommandAvailability {
-  launcher: boolean
   external: boolean
   chat: boolean
 }
@@ -397,6 +396,8 @@ export interface UserConfig {
   toTranslateLanguages: (string | null)[]
   translation: TranslationConfig
   mainActions: (MainActionConfig | null)[]
+  /** Slots of the command overlay (15 keys) */
+  launcherCommands: (string | null)[]
   /** The command library; the action menu refers to commands by id */
   commands: CommandConfig[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */
@@ -470,6 +471,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
   translation: DEFAULT_TRANSLATION_CONFIG,
   mainActions: DEFAULT_MAIN_ACTIONS,
+  launcherCommands: Array.from({ length: 15 }, () => null),
   commands: [],
   editorHistoryStorage: 'disk',
   editorHistoryMaxItems: 1000,

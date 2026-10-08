@@ -256,7 +256,7 @@
     "deeplPlanFree": "Ücretsiz",
     "deeplPlanPro": "Ücretli",
     "translationGlossary": "Sözlük",
-    "translationGlossaryInfo": "Her satıra bir terim:\n• kaynak = çeviri — terimi belirtilen şekilde çevirir;\n• !terim — terimi çevirmeden bırakır.",
+    "translationGlossaryInfo": "Çeviri kuralları (her satıra bir kural):\n\n• Kaynak = Çeviri — belirtilen kelime veya ifadeyi her zaman bu tam karşılıkla çevirir.\nÖrnek: workspace = çalışma alanı\n\n• !Terim — kelime veya ifadenin çevrilmesini önler (tüm metinde olduğu gibi korur).\nÖrnek: !TyCo\n(Satır başındaki ünlem işareti, arkasından gelen tüm ifadeyi korur).",
     "translationGlossaryHint": "Her satıra bir terim yazın. kaynak = çeviri veya terimi korumak için !terim kullanın.",
     "translationGlossaryPlaceholder": "workspace = çalışma alanı\n!TyCo",
     "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",

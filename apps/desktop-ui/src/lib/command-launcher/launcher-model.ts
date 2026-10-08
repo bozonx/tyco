@@ -42,11 +42,7 @@ export function isLauncherCommand(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {
-  return (
-    command.enabled &&
-    command.availableIn.launcher &&
-    isCommandAvailable(command, tools)
-  )
+  return command.enabled && isCommandAvailable(command, tools)
 }
 
 const normalize = (text: string): string =>
@@ -105,6 +101,8 @@ export interface CommandLauncherDependencies {
   tools: ToolLookup
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
+  /** The 15 slots of the command overlay */
+  launcherCommands?: () => readonly (string | null)[] | undefined
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
   /** Runs the command and tells the user how it went */
@@ -146,6 +144,26 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     )
   )
   const visible = computed(() => searchCommands(commands.value, query.value))
+
+  const slotCommands = computed<(CommandConfig | null)[]>(() => {
+    const rawSlots = deps.launcherCommands?.()
+    const all = deps.commands() ?? []
+    if (rawSlots && rawSlots.length > 0) {
+      return Array.from({ length: 15 }, (_, index) => {
+        const id = rawSlots[index]
+        if (!id) return null
+        return all.find((cmd) => cmd.id === id) ?? null
+      })
+    }
+    return Array.from({ length: 15 }, (_, index) => commands.value[index] ?? null)
+  })
+
+  const pickSlot = (index: number) => {
+    const command = slotCommands.value[index]
+    return command && isLauncherCommand(command, deps.tools)
+      ? pick(command)
+      : Promise.resolve()
+  }
 
   const reset = () => {
     controller?.abort()
@@ -371,11 +389,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     text,
     commands,
     visible,
+    slotCommands,
     canSubmit,
     reset,
     setQuery,
     move,
     pick,
+    pickSlot,
     request,
     cancel,
     pickHighlighted,
