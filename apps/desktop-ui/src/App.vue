@@ -266,7 +266,9 @@ onMounted(() => {
       menuModalsStore.closeAll()
       const { text } = payload as { text?: string }
       const trimmed = text?.trim()
-      void (trimmed ? chatStore.attachToChat(trimmed) : chatStore.openLastOrNewChat())
+      void (trimmed
+        ? chatStore.attachToChat(trimmed)
+        : chatStore.openLastOrNewChat())
     })
     .then((remove) => {
       removeMainChatListener = remove
