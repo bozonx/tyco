@@ -41,7 +41,11 @@
         <div class="plugin-toggle" @click.stop>
           <FieldCheckbox
             :value="plugin.enabled"
-            :label="t('settings.pluginEnabled')"
+            :title="
+              plugin.enabled
+                ? t('settings.pluginEnabled')
+                : t('settings.pluginDisabled')
+            "
             @update:value="setPluginEnabled(plugin.name, $event)"
           />
         </div>

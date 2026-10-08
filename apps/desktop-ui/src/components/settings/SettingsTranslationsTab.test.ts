@@ -44,9 +44,9 @@ describe('SettingsTranslationsTab.vue', () => {
             template: '<section class="section-stub"><slot /></section>',
           },
           FieldRow: {
-            props: ['label'],
+            props: ['label', 'info'],
             template:
-              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+              '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
           },
           FieldSelect: {
             props: ['value', 'options'],
@@ -66,6 +66,71 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(rows).toContain('settings.translationQuality')
     expect(rows).toContain('settings.deeplPlan')
     expect(rows).toContain('settings.apiKey')
+
+    const qualityRow = wrapper
+      .findAll('.field-row-stub')
+      .find((r) => r.attributes('data-label') === 'settings.translationQuality')
+    expect(qualityRow?.attributes('data-info')).toBe(
+      'settings.translationQualityInfo'
+    )
+  })
+
+  it('emits navigate to languages when clicking quick language setup button', async () => {
+    const userConfig = createConfig()
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<section><slot /></section>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          FieldInput: true,
+          FieldTextArea: true,
+          ShortcutSlots: true,
+        },
+      },
+    })
+
+    const button = wrapper.findComponent({ name: 'Button' })
+    expect(button.exists()).toBe(true)
+    await button.trigger('click')
+
+    expect(wrapper.emitted('navigate')).toEqual([['languages']])
+  })
+
+  it('renders glossary section with info tooltip and no description', () => {
+    const userConfig = createConfig()
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: {
+            props: ['title', 'description', 'info'],
+            template:
+              '<section class="section-stub" :data-title="title" :data-info="info" :data-desc="description"><slot /></section>',
+          },
+          FieldRow: true,
+          FieldSelect: true,
+          FieldInput: true,
+          FieldTextArea: true,
+          ShortcutSlots: true,
+        },
+      },
+    })
+
+    const sections = wrapper.findAll('.section-stub')
+    const firstSection = sections[0]
+    const glossarySection = sections[1]
+
+    expect(firstSection.attributes('data-title')).toBeUndefined()
+    expect(firstSection.attributes('data-desc')).toBeUndefined()
+    expect(glossarySection.attributes('data-title')).toBe(
+      'settings.translationGlossary'
+    )
+    expect(glossarySection.attributes('data-info')).toBe(
+      'settings.translationGlossaryInfo'
+    )
+    expect(glossarySection.attributes('data-desc')).toBeUndefined()
   })
 
   it('hides deepl plan and api key when llm provider is selected', () => {
@@ -75,11 +140,11 @@ describe('SettingsTranslationsTab.vue', () => {
       global: {
         stubs: {
           SettingsSection: {
-            props: ['title', 'description'],
+            props: ['title', 'description', 'info'],
             template: '<section class="section-stub"><slot /></section>',
           },
           FieldRow: {
-            props: ['label'],
+            props: ['label', 'info'],
             template:
               '<div class="field-row-stub" :data-label="label"><slot /></div>',
           },

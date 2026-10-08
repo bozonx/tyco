@@ -1,14 +1,6 @@
 <template>
   <div class="flex flex-col gap-6">
-    <SettingsSection
-      :title="t('settings.translationEngine')"
-      :description="t('settings.translationEngineHint')"
-    >
-      <template #actions>
-        <Button sm ghost icon="mdi:web" @click="emit('navigate', 'languages')">
-          {{ t('settings.translationLanguagesLink') }}
-        </Button>
-      </template>
+    <SettingsSection>
       <FieldRow :label="t('settings.translationProvider')">
         <FieldSelect
           class="w-full"
@@ -18,7 +10,10 @@
         />
       </FieldRow>
 
-      <FieldRow :label="t('settings.translationQuality')">
+      <FieldRow
+        :label="t('settings.translationQuality')"
+        :info="t('settings.translationQualityInfo')"
+      >
         <FieldSelect
           class="w-full"
           :value="translation.qualityGate"
@@ -73,9 +68,15 @@
       </FieldRow>
     </SettingsSection>
 
+    <div>
+      <Button sm neutral icon="mdi:web" @click="emit('navigate', 'languages')">
+        {{ t('settings.translationLanguagesLink') }}
+      </Button>
+    </div>
+
     <SettingsSection
       :title="t('settings.translationGlossary')"
-      :description="t('settings.translationGlossaryHint')"
+      :info="t('settings.translationGlossaryInfo')"
     >
       <FieldTextArea
         :value="glossaryText"

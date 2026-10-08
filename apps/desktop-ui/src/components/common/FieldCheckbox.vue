@@ -1,8 +1,9 @@
 <template>
-  <label class="field-checkbox">
+  <label class="field-checkbox" :title="title">
     <input
       type="checkbox"
       :checked="value"
+      :title="title"
       @change="handleChange"
       class="toggle toggle-primary toggle-sm"
     />
@@ -11,7 +12,11 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ value: boolean; label?: string }>()
+const props = defineProps<{
+  value: boolean
+  label?: string
+  title?: string
+}>()
 
 const emit = defineEmits<{ (e: 'update:value', value: boolean): void }>()
 
