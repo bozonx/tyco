@@ -1,5 +1,6 @@
 import type { InputConfigItem } from '@/types'
 
+import { clientLogger } from '../../lib/logger'
 import { runToolFromToolbar } from '../../lib/plugins/toolbar-tool'
 import {
   type PluginContext,
@@ -181,6 +182,11 @@ export default function pluginIndex() {
           )
           if (!result.success) {
             console.error('Failed to save the note', result.error)
+            clientLogger.error(
+              'Failed to save the note',
+              result.error,
+              'fast-note'
+            )
             return { ok: false, messageKey: 'toast.noteSaveFailed' }
           }
 

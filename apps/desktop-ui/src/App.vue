@@ -32,6 +32,7 @@ import { desktopClient } from './lib/desktop/client'
 import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
+import { clientLogger } from './lib/logger'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
@@ -235,6 +236,7 @@ onMounted(() => {
     .catch((error: unknown) => {
       // eslint-disable-next-line no-console
       console.error('App bootstrap failed', error)
+      clientLogger.error('App bootstrap failed', error, 'bootstrap')
     })
   if (isQuickWindow) void activationMetrics.start()
   // the quick window always exists, shown or not, so it takes the selection

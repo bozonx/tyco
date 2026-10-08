@@ -98,4 +98,35 @@ describe('PreviewMenu', () => {
     expect(alert.exists()).toBe(true)
     expect(alert.classes()).toContain('is-warning')
   })
+
+  it('reads translation view mode preference from localState', async () => {
+    const { useIpcStore } = await import('../../stores/ipc')
+    const ipcStore = useIpcStore()
+    ipcStore.params.localState = { translationViewMode: 'result' }
+
+    const wrapper = mount(PreviewMenu, {
+      props: { text: 'Translation text', sourceText: 'Original text' },
+      global: {
+        stubs: {
+          Icon: true,
+          ShortcutList: true,
+          ActionOverlayLayout: {
+            template: `
+              <div class="action-overlay-layout">
+                <slot name="header-extra" />
+                <slot name="preview" />
+                <slot name="actions" />
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    // When viewMode is 'result', ParallelTextPreview is not rendered, TextPreview is rendered
+    expect(
+      wrapper.findComponent({ name: 'ParallelTextPreview' }).exists()
+    ).toBe(false)
+    expect(wrapper.findComponent({ name: 'TextPreview' }).exists()).toBe(true)
+  })
 })

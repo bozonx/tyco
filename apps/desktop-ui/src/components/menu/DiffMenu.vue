@@ -47,10 +47,13 @@ const actionMenuStore = useActionMenuStore()
 const { t } = useI18n()
 const defaultActions = computed(() => actionMenuStore.getDefaultActions())
 
-const diffMode = ref<DiffViewMode>(readStoredDiffMode())
+const diffMode = ref<DiffViewMode>(
+  readStoredDiffMode(undefined, ipcStore.params.localState?.diffMode)
+)
 
 watch(diffMode, (newMode) => {
   writeStoredDiffMode(newMode)
+  void ipcStore.patchLocalState({ diffMode: newMode })
 })
 
 function cycleMode() {

@@ -109,6 +109,10 @@ export interface LocalState {
   recentAiPrompts?: string[]
   /** Languages picked from the full list in the translate menu, newest first */
   recentTranslateLanguages?: string[]
+  /** Preferred diff view mode: unified | split | result */
+  diffMode?: 'unified' | 'split' | 'result' | null
+  /** Preferred translation view mode in preview menu: split | result */
+  translationViewMode?: 'split' | 'result' | null
 }
 
 export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }
@@ -221,6 +225,7 @@ export const DESKTOP_COMMANDS = {
   PICK_DIRECTORY: 'pick_directory',
   LOG_CUSTOM_ACTION: 'log_custom_action',
   LOG_COMMAND_RUN: 'log_command_run',
+  LOG_CLIENT_MESSAGE: 'log_client_message',
   SET_TOOL_CATALOG: 'set_tool_catalog',
   GET_USER_CONFIG: 'get_user_config',
   COPY_TEXT: 'copy_text',

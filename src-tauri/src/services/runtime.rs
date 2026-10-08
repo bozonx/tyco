@@ -35,11 +35,7 @@ const WARMUP_STEP: Duration = Duration::from_millis(250);
 
 pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let params = state.params();
-    let label = app.state::<RuntimeWindows>().active_label();
-
-    if let Some(window) = app.get_webview_window(label) {
-        window.emit(PARAMS_CHANGED_EVENT, params)?;
-    }
+    app.emit(PARAMS_CHANGED_EVENT, params)?;
 
     Ok(())
 }
@@ -720,6 +716,21 @@ fn setup_tray(app: &mut App) -> Result<(), AppError> {
         })
         .build(app)?;
     Ok(())
+}
+
+/// Gracefully shuts down background services, cancel active runs, and clean up trackers.
+pub fn shutdown(app: &AppHandle) {
+    log::info!("Initiating application graceful shutdown");
+    super::custom_actions::cancel_all_scripts();
+    if let Some(state) = app.try_state::<AppState>() {
+        super::voice::stop_capture_on_shutdown(state.inner());
+    }
+    if let Some(net) = app.try_state::<super::net::NetState>() {
+        net.close_all();
+    }
+    #[cfg(target_os = "linux")]
+    super::platform::linux::kwin::stop_tracker();
+    log::info!("Graceful shutdown complete");
 }
 
 pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEvent) {

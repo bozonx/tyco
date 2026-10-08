@@ -77,6 +77,18 @@ pub fn log_command_run(app: AppHandle, record: CommandRunRecord) {
     }
 }
 
+#[tauri::command(async)]
+pub fn log_client_message(level: String, message: String, context: Option<String>) {
+    let sanitized = crate::services::secret_detector::redact_secrets(&message);
+    let ctx = context.map(|c| format!("[{c}] ")).unwrap_or_default();
+    match level.as_str() {
+        "error" => log::error!(target: "desktop_ui", "{ctx}{sanitized}"),
+        "warn" => log::warn!(target: "desktop_ui", "{ctx}{sanitized}"),
+        "debug" => log::debug!(target: "desktop_ui", "{ctx}{sanitized}"),
+        _ => log::info!(target: "desktop_ui", "{ctx}{sanitized}"),
+    }
+}
+
 /// The tools of the webview registry, sent by the quick window whenever the
 /// plugins load; external calls check the commands against it.
 #[tauri::command]

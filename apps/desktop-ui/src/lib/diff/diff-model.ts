@@ -22,7 +22,13 @@ export function isDiffViewMode(value: unknown): value is DiffViewMode {
   return typeof value === 'string' && VALID_MODES.has(value as DiffViewMode)
 }
 
-export function readStoredDiffMode(storage?: Storage): DiffViewMode {
+export function readStoredDiffMode(
+  storage?: Storage,
+  preferred?: DiffViewMode | null
+): DiffViewMode {
+  if (preferred && isDiffViewMode(preferred)) {
+    return preferred
+  }
   try {
     const targetStorage =
       storage ??

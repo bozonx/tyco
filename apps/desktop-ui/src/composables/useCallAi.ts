@@ -19,6 +19,7 @@ import {
   sttProviderNeedsKey,
 } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
+import { clientLogger } from '../lib/logger'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
@@ -110,6 +111,7 @@ export const useCallAi = () => {
     } catch (error) {
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error(`LLM request "${taskName}" failed`, llmError)
+      clientLogger.error(`LLM request "${taskName}" failed`, llmError, 'llm')
       if (options.notifyError !== false) {
         toastText(formatLlmError(llmError, translate), 'error')
       }
@@ -241,6 +243,7 @@ export const useCallAi = () => {
       if (options.signal?.aborted) return ''
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error('Translation request failed', llmError)
+      clientLogger.error('Translation request failed', llmError, 'translation')
       if (options.notifyError !== false) {
         toastText(formatLlmError(llmError, translate), 'error')
       }

@@ -127,6 +127,15 @@ describe('diff-model', () => {
       expect(readStoredDiffMode(storage)).toBe('unified')
     })
 
+    it('prefers explicit mode over storage if valid', () => {
+      const storage = new MockStorage()
+      writeStoredDiffMode('unified', storage)
+
+      expect(readStoredDiffMode(storage, 'split')).toBe('split')
+      expect(readStoredDiffMode(storage, null)).toBe('unified')
+      expect(readStoredDiffMode(storage, undefined)).toBe('unified')
+    })
+
     it('validates mode via isDiffViewMode', () => {
       expect(isDiffViewMode('unified')).toBe(true)
       expect(isDiffViewMode('split')).toBe(true)

@@ -815,11 +815,29 @@ pub fn read_or_create_local_state(app: &AppHandle) -> Result<LocalState, AppErro
     Ok(default_state)
 }
 
+pub const VALID_LOCAL_STATE_KEYS: &[&str] = &[
+    "lastChatId",
+    "lastMode",
+    "lastChatModelId",
+    "editorShowMarkup",
+    "recentAiPrompts",
+    "recentTranslateLanguages",
+    "diffMode",
+    "translationViewMode",
+];
+
 /// `current` with the fields of `patch` replaced; a `null` clears a field.
 pub fn merge_local_state(
     current: &LocalState,
     patch: serde_json::Map<String, Value>,
 ) -> Result<LocalState, AppError> {
+    for key in patch.keys() {
+        if !VALID_LOCAL_STATE_KEYS.contains(&key.as_str()) {
+            return Err(AppError::Message(format!(
+                "Unknown field in local state patch: {key}"
+            )));
+        }
+    }
     let mut merged = serde_json::to_value(current)?;
     if let Some(fields) = merged.as_object_mut() {
         fields.extend(patch);
@@ -1786,6 +1804,14 @@ mod tests {
     #[test]
     fn merge_local_state_rejects_a_mistyped_field() {
         let patch = json!({ "lastMode": 1 });
+        assert!(
+            merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
+        );
+    }
+
+    #[test]
+    fn merge_local_state_rejects_an_unknown_field() {
+        let patch = json!({ "nonExistentKey": "value" });
         assert!(
             merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
         );

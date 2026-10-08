@@ -5,8 +5,8 @@ mod services;
 mod state;
 
 use commands::actions::{
-    cancel_script_action, execute_script_action, log_command_run, log_custom_action,
-    pick_directory, pick_script_file, set_tool_catalog,
+    cancel_script_action, execute_script_action, log_client_message, log_command_run,
+    log_custom_action, pick_directory, pick_script_file, set_tool_catalog,
 };
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
@@ -40,8 +40,12 @@ use services::dbus;
 use services::{runtime, storage};
 use state::AppState;
 use tauri::Manager;
-use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_plugin_single_instance::init as single_instance;
+
+const LOG_FILE_NAME: &str = "tyco";
+const MAX_LOG_FILE_BYTES: u128 = 5 * 1024 * 1024;
+const LOG_ROTATION_KEEP_FILES: usize = 5;
 
 /// Writes to stdout during development and to the platform log directory in a
 /// bundled app, where stderr is not visible to anyone.
@@ -54,15 +58,26 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 
     let file_target = services::app_paths::early_log_dir("com.tyco.app")
         .expect("TYCO_DEV_HOME must contain a valid absolute path")
-        .map_or(TargetKind::LogDir { file_name: None }, |path| {
-            TargetKind::Folder {
+        .map_or(
+            TargetKind::LogDir {
+                file_name: Some(LOG_FILE_NAME.to_string()),
+            },
+            |path| TargetKind::Folder {
                 path,
-                file_name: None,
-            }
-        });
+                file_name: Some(LOG_FILE_NAME.to_string()),
+            },
+        );
 
     tauri_plugin_log::Builder::new()
         .level(level)
+        .level_for("reqwest", log::LevelFilter::Info)
+        .level_for("tungstenite", log::LevelFilter::Info)
+        .level_for("tokio_tungstenite", log::LevelFilter::Info)
+        .level_for("hyper", log::LevelFilter::Info)
+        .level_for("h2", log::LevelFilter::Info)
+        .level_for("tracing", log::LevelFilter::Info)
+        .max_file_size(MAX_LOG_FILE_BYTES)
+        .rotation_strategy(RotationStrategy::KeepSome(LOG_ROTATION_KEEP_FILES))
         .targets([Target::new(TargetKind::Stdout), Target::new(file_target)])
         .build()
 }
@@ -148,6 +163,7 @@ pub fn run() {
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
             services::activation_socket::spawn_server(app.handle().clone());
+            services::signals::spawn_signal_watcher(app.handle().clone());
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -214,14 +230,14 @@ pub fn run() {
             pick_directory,
             log_custom_action,
             log_command_run,
+            log_client_message,
             set_tool_catalog,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_app, event| {
+        .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
-                #[cfg(target_os = "linux")]
-                services::platform::linux::kwin::stop_tracker();
+                runtime::shutdown(app);
             }
         });
 }

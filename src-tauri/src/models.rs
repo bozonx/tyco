@@ -27,6 +27,12 @@ pub struct LocalState {
     /// Languages picked from the full list in the translate menu, newest first.
     #[serde(default)]
     pub recent_translate_languages: Vec<String>,
+    /// Preferred diff view mode: unified | split | result.
+    #[serde(default)]
+    pub diff_mode: Option<String>,
+    /// Preferred translation preview view mode: split | result.
+    #[serde(default)]
+    pub translation_view_mode: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -98,6 +98,10 @@ export interface DesktopFunctions {
     result: void
   }
   logCommandRun: { args: [record: CommandRunRecord]; result: void }
+  logClientMessage: {
+    args: [level: string, message: string, context?: string]
+    result: void
+  }
   setToolCatalog: { args: [tools: ToolCatalogEntry[]]; result: void }
   copyText: { args: [text: string]; result: void }
   getUserConfig: { args: []; result: UserConfig }

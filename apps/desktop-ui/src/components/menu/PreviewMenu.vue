@@ -73,9 +73,14 @@ const props = defineProps<{
   }
 }>()
 
+const ipcStore = useIpcStore()
 const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
 
 function readStoredTranslationMode(): ParallelViewMode {
+  const fromState = ipcStore.params.localState?.translationViewMode
+  if (fromState === 'split' || fromState === 'result') {
+    return fromState
+  }
   try {
     const stored = localStorage.getItem(TRANSLATION_VIEW_MODE_KEY)
     if (stored === 'split' || stored === 'result') return stored
@@ -103,6 +108,7 @@ watch(viewMode, (newMode) => {
   } catch {
     // Ignore storage access errors
   }
+  void ipcStore.patchLocalState({ translationViewMode: newMode })
 })
 
 function cycleMode() {
@@ -130,7 +136,6 @@ onUnmounted(() => {
 })
 
 const actionMenuStore = useActionMenuStore()
-const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const providerLabel = computed(() => {

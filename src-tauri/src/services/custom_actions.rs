@@ -205,12 +205,13 @@ pub fn log_custom_action(
     action_type: &str,
     details: &str,
 ) -> std::io::Result<()> {
+    let sanitized_details = redact_secrets(details.trim());
     let entry = format!(
         "[{}] [Action: \"{}\"] Type: {}\n{}\n{}\n",
         format_timestamp(),
         name,
         action_type,
-        truncate(details.trim(), MAX_LOGGED_OUTPUT_BYTES),
+        truncate(&sanitized_details, MAX_LOGGED_OUTPUT_BYTES),
         "=".repeat(80),
     );
     append_action_log(log_dir, &entry)
@@ -426,7 +427,9 @@ impl LogContext {
             (None, true) => String::from("SUCCESS"),
             (None, false) => String::from("FAILED"),
         };
-        // the command is logged as written: the text is the user's, not ours to keep
+        let stdout_sanitized = redact_secrets(result.stdout.trim());
+        let stderr_sanitized = redact_secrets(result.stderr.trim());
+        let command_sanitized = redact_secrets(self.command.trim());
         let entry = format!(
             "[{}] [Action: \"{}\"] Status: {} (exit code: {:?}) Duration: {:?}\nCommand: {}\nCWD: {}\n--- stdout ---\n{}\n--- stderr ---\n{}\n{}\n",
             format_timestamp(),
@@ -434,10 +437,10 @@ impl LogContext {
             status,
             result.exit_code,
             duration,
-            self.command,
+            command_sanitized,
             self.cwd,
-            or_empty(&result.stdout),
-            or_empty(&result.stderr),
+            or_empty(&truncate(&stdout_sanitized, MAX_LOGGED_OUTPUT_BYTES)),
+            or_empty(&truncate(&stderr_sanitized, MAX_LOGGED_OUTPUT_BYTES)),
             "=".repeat(80),
         );
         let _ = append_action_log(dir, &entry);
@@ -779,5 +782,17 @@ mod tests {
 
         assert!(reg1.flag.load(Ordering::SeqCst));
         assert!(reg2.flag.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn custom_action_log_redacts_secrets() {
+        let dir = std::env::temp_dir().join(format!("tyco_test_action_log_{}", std::process::id()));
+        let secret = "sk-1234567890abcdef1234567890abcdef";
+        log_custom_action(&dir, "test", "script", &format!("Token: {secret}")).unwrap();
+
+        let contents = fs::read_to_string(dir.join(LOG_FILE_NAME)).unwrap();
+        assert!(!contents.contains(secret));
+        assert!(contents.contains("[REDACTED"));
+        let _ = fs::remove_dir_all(&dir);
     }
 }

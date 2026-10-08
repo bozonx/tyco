@@ -163,7 +163,9 @@ const actionsMenu = computed(() => {
 })
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
-const diffMode = ref<DiffViewMode>(readStoredDiffMode())
+const diffMode = ref<DiffViewMode>(
+  readStoredDiffMode(undefined, ipcStore.params.localState?.diffMode)
+)
 
 /** Space was pressed while correcting: insert once the correction is in. */
 const insertQueued = ref(false)
@@ -177,7 +179,10 @@ const statusText = computed(() => {
   return t('write.nothingToCorrect')
 })
 
-watch(diffMode, (mode) => writeStoredDiffMode(mode))
+watch(diffMode, (mode) => {
+  writeStoredDiffMode(mode)
+  void ipcStore.patchLocalState({ diffMode: mode })
+})
 
 watch(
   () => props.correcting,
