@@ -97,7 +97,7 @@
           :options="searchOptions"
           :hints="searchHints"
           :emptyText="t('commandLauncher.nothingFound')"
-          :autoHighlight="query.trim() !== ''"
+          autoHighlight
           @submit="submitSearch"
           @back="closeSearch"
         />

@@ -74,7 +74,7 @@ describe('seedDefaultCommands', () => {
       toolId: 'core.correct',
       afterRun: 'replaceSelection',
       confirm: 'auto',
-      availableIn: { launcher: true, external: true, chat: false },
+      availableIn: { external: true, chat: false },
       enabled: true,
     })
     expect(seeded.commands[2].toolConfig).toEqual({ saveMode: 'append' })

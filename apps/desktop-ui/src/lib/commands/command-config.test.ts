@@ -14,6 +14,7 @@ import {
   normalizeCommand,
   normalizeCommandName,
   normalizeCommands,
+  normalizeLauncherCommands,
   removeCommandReferences,
   validateCommand,
 } from './command-config'
@@ -49,7 +50,7 @@ describe('normalizeCommand', () => {
       afterRun: 'none',
       logOutput: false,
       confirm: 'auto',
-      availableIn: { launcher: true, external: false, chat: false },
+      availableIn: { external: false, chat: false },
       enabled: true,
     })
   })
@@ -111,7 +112,6 @@ describe('createCommand', () => {
     const command = createCommand('script', 'id1')
     expect(command.confirm).toBe('always')
     expect(command.availableIn).toEqual({
-      launcher: true,
       external: true,
       chat: false,
     })
@@ -280,3 +280,27 @@ describe('commands of the core tools', () => {
     )
   })
 })
+
+describe('normalizeLauncherCommands', () => {
+  it('pads to 15 slots and filters out missing command ids', () => {
+    const cmd1 = createCommand('script', 'cmd1')
+    const slots = normalizeLauncherCommands(['cmd1', 'missing', null], [cmd1])
+    expect(slots).toHaveLength(15)
+    expect(slots[0]).toBe('cmd1')
+    expect(slots[1]).toBeNull()
+    expect(slots[2]).toBeNull()
+    expect(slots[14]).toBeNull()
+  })
+
+  it('migrates legacy commands with availableIn.launcher when value is undefined', () => {
+    const legacyCmd = {
+      ...createCommand('script', 'leg1'),
+      availableIn: { launcher: true, external: true, chat: false },
+    }
+    const slots = normalizeLauncherCommands(undefined, [legacyCmd as any])
+    expect(slots).toHaveLength(15)
+    expect(slots[0]).toBe('leg1')
+    expect(slots[1]).toBeNull()
+  })
+})
+

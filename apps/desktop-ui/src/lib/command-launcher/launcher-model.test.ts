@@ -57,18 +57,32 @@ function setup(
 }
 
 describe('isLauncherCommand', () => {
-  it('offers enabled commands available in the overlay', () => {
+  it('offers enabled commands whose tool is available', () => {
     expect(isLauncherCommand(backup, tools)).toBe(true)
     expect(isLauncherCommand({ ...backup, enabled: false }, tools)).toBe(false)
-    expect(
-      isLauncherCommand(
-        { ...backup, availableIn: { ...backup.availableIn, launcher: false } },
-        tools
-      )
-    ).toBe(false)
     expect(isLauncherCommand({ ...backup, toolId: 'notes.write' }, tools)).toBe(
       false
     )
+  })
+})
+
+describe('slotCommands and pickSlot', () => {
+  it('maps slots by launcherCommands and runs picked slot', async () => {
+    const run = vi.fn(async () => ({ success: true }))
+    const deps = {
+      tools,
+      commands: () => [backup, note],
+      launcherCommands: () => ['note', null, 'backup'],
+      selectedText: () => null,
+      run,
+    }
+    const model = createCommandLauncherModel(deps)
+    expect(model.slotCommands.value[0]?.id).toBe('note')
+    expect(model.slotCommands.value[1]).toBeNull()
+    expect(model.slotCommands.value[2]?.id).toBe('backup')
+
+    await model.pickSlot(2)
+    expect(run).toHaveBeenCalledWith(backup, '', expect.anything())
   })
 })
 

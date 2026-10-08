@@ -44,9 +44,9 @@ describe('SettingsTranslationsTab.vue', () => {
             template: '<section class="section-stub"><slot /></section>',
           },
           FieldRow: {
-            props: ['label', 'info'],
+            props: ['label', 'info', 'hint'],
             template:
-              '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
+              '<div class="field-row-stub" :data-label="label" :data-info="info" :data-hint="hint"><slot /></div>',
           },
           FieldSelect: {
             props: ['value', 'options'],
@@ -66,6 +66,15 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(rows).toContain('settings.translationQuality')
     expect(rows).not.toContain('settings.deeplPlan')
     expect(rows).toContain('settings.apiKey')
+
+    const providerRow = wrapper
+      .findAll('.field-row-stub')
+      .find(
+        (r) => r.attributes('data-label') === 'settings.translationProvider'
+      )
+    expect(providerRow?.attributes('data-hint')).toBe(
+      'settings.translationProviderHint'
+    )
 
     const qualityRow = wrapper
       .findAll('.field-row-stub')

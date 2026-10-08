@@ -1,7 +1,10 @@
 <template>
   <div class="flex flex-col gap-6">
     <SettingsSection>
-      <FieldRow :label="t('settings.translationProvider')">
+      <FieldRow
+        :label="t('settings.translationProvider')"
+        :hint="t('settings.translationProviderHint')"
+      >
         <FieldSelect
           class="w-full"
           :value="translation.provider"

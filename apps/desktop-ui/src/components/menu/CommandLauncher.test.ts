@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { nextTick, reactive } from 'vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CommandConfig } from '@tyco/shared'
 
@@ -79,39 +80,57 @@ const keydown = (target: Element, init: KeyboardEventInit) =>
     new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init })
   )
 
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
+
 afterEach(() => {
   vi.clearAllMocks()
   mocks.params.selectedText = null
 })
 
 describe('CommandLauncher', () => {
-  it('runs a command with its digit key', async () => {
+  it('runs a command with its slot key in the 5x3 grid', async () => {
     const backup = webhook('backup')
     const lights = webhook('lights')
     const wrapper = mountLauncher([backup, lights])
-    const input = wrapper.find('input').element
 
-    keydown(input, { key: '2', code: 'Digit2' })
+    // Key 'w' is the second key in PRESETS_KEYS ('q', 'w', 'e'...)
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyW', bubbles: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyW', bubbles: true })
+    )
     await nextTick()
 
     expect(mocks.run).toHaveBeenCalledWith(lights, '', expect.anything())
     wrapper.unmount()
   })
 
-  it('types a digit into the search once there is a query', async () => {
-    const wrapper = mountLauncher([webhook('backup')])
-    await wrapper.find('input').setValue('b')
+  it('opens search mode with Space or Enter and runs a searched command', async () => {
+    const backup = webhook('backup')
+    const wrapper = mountLauncher([backup])
 
-    const event = new KeyboardEvent('keydown', {
-      key: '1',
-      code: 'Digit1',
-      bubbles: true,
-      cancelable: true,
-    })
-    wrapper.find('input').element.dispatchEvent(event)
+    expect(wrapper.find('input').exists()).toBe(false)
 
-    expect(event.defaultPrevented).toBe(false)
-    expect(mocks.run).not.toHaveBeenCalled()
+    // Space opens search mode
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', bubbles: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Space', bubbles: true })
+    )
+    await nextTick()
+
+    const input = wrapper.find('input')
+    expect(input.exists()).toBe(true)
+
+    // Press enter on the input to run the highlighted match
+    keydown(input.element, { key: 'Enter', code: 'Enter' })
+    await nextTick()
+
+    expect(mocks.run).toHaveBeenCalledWith(backup, '', expect.anything())
     wrapper.unmount()
   })
 
@@ -119,8 +138,15 @@ describe('CommandLauncher', () => {
     const backup = webhook('backup', { confirm: 'always' })
     const wrapper = mountLauncher([backup])
 
-    keydown(wrapper.find('input').element, { key: 'Enter', code: 'Enter' })
+    // Press Q to select the first command
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyQ', bubbles: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyQ', bubbles: true })
+    )
     await nextTick()
+
     expect(mocks.run).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('commandLauncher.confirmRun')
 
@@ -134,8 +160,15 @@ describe('CommandLauncher', () => {
     const note = webhook('note', {}, true)
     const wrapper = mountLauncher([note])
 
-    keydown(wrapper.find('input').element, { key: 'Enter', code: 'Enter' })
+    // Press Q to select the first command
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyQ', bubbles: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyQ', bubbles: true })
+    )
     await nextTick()
+
     const textarea = wrapper.find('textarea')
     expect(textarea.exists()).toBe(true)
 
@@ -146,23 +179,36 @@ describe('CommandLauncher', () => {
     wrapper.unmount()
   })
 
-  it('goes back to the list with Esc and closes from the list', async () => {
-    const wrapper = mountLauncher([webhook('note', {}, true)])
-    keydown(wrapper.find('input').element, { key: 'Enter', code: 'Enter' })
-    await nextTick()
+  it('goes back from search with Esc and closes from grid with Esc', async () => {
+    const wrapper = mountLauncher([webhook('note')])
 
+    // Open search
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', bubbles: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Space', bubbles: true })
+    )
+    await nextTick()
+    expect(wrapper.find('input').exists()).toBe(true)
+
+    // Esc from search mode returns to grid
     keydown(document.body, { key: 'Escape', code: 'Escape' })
     window.dispatchEvent(
       new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape' })
     )
     await nextTick()
-    expect(wrapper.find('textarea').exists()).toBe(false)
+
+    expect(wrapper.find('input').exists()).toBe(false)
     expect(mocks.handleEsc).not.toHaveBeenCalled()
 
+    // Esc from grid closes the launcher
     keydown(document.body, { key: 'Escape', code: 'Escape' })
     window.dispatchEvent(
       new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape' })
     )
+    await nextTick()
+
     expect(mocks.handleEsc).toHaveBeenCalled()
     wrapper.unmount()
   })
