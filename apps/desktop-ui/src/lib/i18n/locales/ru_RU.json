@@ -398,7 +398,6 @@
     "markdownBullet": "Маркер списка",
     "markdownEmphasis": "Маркер курсива",
     "markdownStrong": "Маркер жирного текста",
-    "markdownHeadingStyle": "Стиль заголовков",
     "markdownIncrementListMarker": "Последовательная нумерация списков",
     "sectionMarkdownClean": "Преобразование Markdown в простой текст",
     "markdownCleanHint": "Правила очистки и удаления разметки при вызове команды «Формат» → «Markdown в обычный текст» в редакторе.",
@@ -416,6 +415,12 @@
     "markdownCleanLinkText": "Только текст",
     "markdownCleanLinkTextAndUrl": "Текст и ссылка (URL)",
     "markdownCleanLinkUrl": "Только ссылка (URL)",
+    "markdownCleanImageFormat": "Формат изображений",
+    "markdownCleanImageAlt": "Только описание (alt)",
+    "markdownCleanImageAltAndUrl": "Описание и ссылка (URL)",
+    "markdownCleanImageUrl": "Только ссылка (URL)",
+    "markdownCleanImageNone": "Не сохранять (удалять)",
+    "markdownCleanKeepHorizontalRules": "Сохранять горизонтальные разделители (---)",
     "markdownCleanKeepTaskCheckboxes": "Сохранять чекбоксы задач ([ ] / [x])"
   },
   "editor": {

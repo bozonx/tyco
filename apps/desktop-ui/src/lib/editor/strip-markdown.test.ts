@@ -105,9 +105,7 @@ describe('stripMarkdown', () => {
 
   it('supports image format options', () => {
     const md = 'Here is ![Alt text](https://example.com/pic.png).'
-    expect(stripMarkdown(md, { imageFormat: 'alt' })).toBe(
-      'Here is Alt text.'
-    )
+    expect(stripMarkdown(md, { imageFormat: 'alt' })).toBe('Here is Alt text.')
     expect(stripMarkdown(md, { imageFormat: 'altAndUrl' })).toBe(
       'Here is Alt text (https://example.com/pic.png).'
     )

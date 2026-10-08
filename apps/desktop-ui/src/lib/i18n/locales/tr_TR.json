@@ -398,7 +398,6 @@
     "markdownBullet": "Liste işareti",
     "markdownEmphasis": "İtalik işareti",
     "markdownStrong": "Kalın yazı işareti",
-    "markdownHeadingStyle": "Başlık stili",
     "markdownIncrementListMarker": "Sıralı liste numaralarını artır",
     "sectionMarkdownClean": "Markdown'ı düz metne dönüştürme",
     "markdownCleanHint": "Düzenleyicide 'Biçim' → 'Markdown metnini düz metne dönüştür' komutu kullanıldığında Markdown işaretlemesini temizleme kuralları.",
@@ -416,6 +415,12 @@
     "markdownCleanLinkText": "Yalnızca metin",
     "markdownCleanLinkTextAndUrl": "Metin ve URL",
     "markdownCleanLinkUrl": "Yalnızca URL",
+    "markdownCleanImageFormat": "Görsel biçimi",
+    "markdownCleanImageAlt": "Yalnızca açıklama (alt)",
+    "markdownCleanImageAltAndUrl": "Açıklama ve URL",
+    "markdownCleanImageUrl": "Yalnızca URL",
+    "markdownCleanImageNone": "Kaldır (ekleme)",
+    "markdownCleanKeepHorizontalRules": "Yatay ayırıcıları koru (---)",
     "markdownCleanKeepTaskCheckboxes": "Görev onay kutularını koru ([ ] / [x])"
   },
   "editor": {

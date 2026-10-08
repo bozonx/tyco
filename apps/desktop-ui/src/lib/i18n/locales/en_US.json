@@ -395,7 +395,6 @@
     "markdownBullet": "List marker",
     "markdownEmphasis": "Italic marker",
     "markdownStrong": "Bold marker",
-    "markdownHeadingStyle": "Heading style",
     "markdownIncrementListMarker": "Increment ordered list numbers",
     "sectionMarkdownClean": "Markdown to plain text conversion",
     "markdownCleanHint": "Rules for stripping Markdown markup when using 'Format' → 'Markdown to plain text' in the editor.",
@@ -413,6 +412,12 @@
     "markdownCleanLinkText": "Text only",
     "markdownCleanLinkTextAndUrl": "Text and URL",
     "markdownCleanLinkUrl": "URL only",
+    "markdownCleanImageFormat": "Image format",
+    "markdownCleanImageAlt": "Alt text only",
+    "markdownCleanImageAltAndUrl": "Alt text and URL",
+    "markdownCleanImageUrl": "URL only",
+    "markdownCleanImageNone": "Do not keep (remove)",
+    "markdownCleanKeepHorizontalRules": "Keep horizontal rules (---)",
     "markdownCleanKeepTaskCheckboxes": "Keep task checkboxes ([ ] / [x])"
   },
   "editor": {

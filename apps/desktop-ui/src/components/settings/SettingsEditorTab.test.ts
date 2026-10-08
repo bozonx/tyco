@@ -22,6 +22,8 @@ describe('SettingsEditorTab.vue', () => {
       blockquoteIndent: 'none',
       keepInlineCode: false,
       linkFormat: 'text',
+      imageFormat: 'alt',
+      keepThematicBreaks: false,
       keepTaskCheckboxes: true,
     },
   })
@@ -95,8 +97,16 @@ describe('SettingsEditorTab.vue', () => {
       wrapper.find('[data-label="settings.markdownCleanLinkFormat"]').exists()
     ).toBe(true)
     expect(
+      wrapper.find('[data-label="settings.markdownCleanImageFormat"]').exists()
+    ).toBe(true)
+    expect(
       wrapper
         .find('[data-label="settings.markdownCleanKeepInlineCode"]')
+        .exists()
+    ).toBe(true)
+    expect(
+      wrapper
+        .find('[data-label="settings.markdownCleanKeepHorizontalRules"]')
         .exists()
     ).toBe(true)
     expect(
