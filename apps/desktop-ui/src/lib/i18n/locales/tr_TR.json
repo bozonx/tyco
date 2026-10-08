@@ -128,6 +128,7 @@
     "tasksTab": "AI görevleri",
     "pluginsTab": "Eklentiler",
     "pluginEnabled": "Etkin",
+    "pluginDisabled": "Devre dışı",
     "pluginSettings": "Eklenti ayarları",
     "noInstalledPlugins": "Yüklü eklenti yok",
     "pluginStatusOn": "Açık",
@@ -401,6 +402,7 @@
     "markdownEmphasis": "İtalik işareti",
     "markdownStrong": "Kalın yazı işareti",
     "markdownIncrementListMarker": "Sıralı liste numaralarını artır",
+    "markdownIncrementListMarkerInfo": "Etkinleştirildiğinde sıralı liste numaralarını ardışık biçimlendirir (1., 2., 3.). Devre dışı bırakıldığında aynı numarayı (1., 1., 1.) korur; bu da satırların yerini değiştirmeyi ve Git farklarını daha temiz hale getirir.",
     "sectionMarkdownClean": "Markdown'ı düz metne dönüştürme",
     "markdownCleanHint": "Düzenleyicide 'Biçim' → 'Markdown metnini düz metne dönüştür' komutu kullanıldığında Markdown işaretlemesini temizleme kuralları.",
     "markdownCleanBullet": "Sırasız liste işareti",
@@ -616,6 +618,7 @@
     },
     "fastNote": {
       "label": "Hızlı not",
+      "description": "Metni notlar klasörünüzde yeni bir not olarak kaydeder veya var olan bir nota ekler",
       "pathToNotes": "Notlar klasörü yolu",
       "preset": "Ayar profili",
       "presetDefault": "Varsayılan (Yeni dosya)",
@@ -660,6 +663,7 @@
     },
     "webFormatter": {
       "label": "Web kodu biçimlendirme",
+      "description": "HTML, XML, CSS, JavaScript, TypeScript ve JSON biçimlendirir",
       "language": "Dil",
       "auto": "Otomatik algıla",
       "chooseLanguage": "Desteklenen dil güvenilir biçimde algılanamadı. Eklenti ayarlarından dili seçin.",
@@ -674,7 +678,10 @@
       "xmlPreserve": "Metni koru, öğe düzenini biçimlendir",
       "xmlIgnore": "Yoksay: boşluklar değişebilir"
     },
-    "textCase": { "label": "Metin harf düzeni" }
+    "textCase": {
+      "label": "Metin harf düzeni",
+      "description": "Metin büyüklüğünü dönüştürür: camelCase, snake_case, PascalCase, BÜYÜK HARF ve diğerleri"
+    }
   },
   "edit": {
     "beautifyMd": "Markdown biçimlendir",

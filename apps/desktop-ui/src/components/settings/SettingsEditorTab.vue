@@ -15,7 +15,10 @@
           @update:value="userConfig.markdown[field.name] = $event"
         />
       </FieldRow>
-      <FieldRow :label="t('settings.markdownIncrementListMarker')">
+      <FieldRow
+        :label="t('settings.markdownIncrementListMarker')"
+        :info="t('settings.markdownIncrementListMarkerInfo')"
+      >
         <FieldCheckbox
           v-model:value="userConfig.markdown.incrementListMarker"
         />

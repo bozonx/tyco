@@ -17,7 +17,7 @@ describe('stripMarkdown', () => {
         '# Title\n\n> quoted\n\n- one\n- two\n\n1. first\n2. second\n\n---\n\n```js\nlet a = 1\n```'
       )
     ).toBe(
-      'Title\n\nquoted\n\n- one\n- two\n\n1. first\n2. second\n\nlet a = 1'
+      'Title\n\nquoted\n\n- one\n- two\n\n1. first\n2. second\n\n---\n\nlet a = 1'
     )
   })
 

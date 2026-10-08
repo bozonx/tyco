@@ -23,18 +23,6 @@
       </FieldRow>
 
       <FieldRow
-        v-if="translation.provider === 'deepl'"
-        :label="t('settings.deeplPlan')"
-      >
-        <FieldSelect
-          class="w-full"
-          :value="translation.deeplEndpoint"
-          :options="deeplEndpointOptions"
-          @update:value="updateDeeplEndpoint"
-        />
-      </FieldRow>
-
-      <FieldRow
         v-if="translation.provider !== 'llm'"
         :label="t('settings.apiKey')"
         vertical
@@ -122,10 +110,6 @@ const qualityOptions = computed(() => [
   { id: 'on_problems', name: t('settings.translationQualityOnProblems') },
   { id: 'always', name: t('settings.translationQualityAlways') },
 ])
-const deeplEndpointOptions = computed(() => [
-  { id: 'free', name: t('settings.deeplPlanFree') },
-  { id: 'pro', name: t('settings.deeplPlanPro') },
-])
 
 const glossaryText = computed(() =>
   translation.value.glossary
@@ -150,13 +134,6 @@ function updateQualityGate(value: string | number | undefined) {
   })
 }
 
-function updateDeeplEndpoint(value: string | number | undefined) {
-  props.userConfig.translation = normalizeTranslationConfig({
-    ...translation.value,
-    deeplEndpoint: value,
-  })
-}
-
 function updateGlossary(value: string) {
   const entries: { term: string; use: string; doNotTranslate: boolean }[] = []
   for (const line of value.split('\n')) {
@@ -176,8 +153,15 @@ function updateGlossary(value: string) {
 }
 
 async function saveProviderKey() {
-  if (!keyDraft.value.trim()) return
-  await llmStore.setSecret(providerSecretId.value, keyDraft.value.trim())
+  const trimmed = keyDraft.value.trim()
+  if (!trimmed) return
+  if (providerSecretId.value === 'deepl') {
+    props.userConfig.translation = normalizeTranslationConfig({
+      ...translation.value,
+      deeplEndpoint: trimmed.endsWith(':fx') ? 'free' : 'pro',
+    })
+  }
+  await llmStore.setSecret(providerSecretId.value, trimmed)
   keyDraft.value = ''
 }
 

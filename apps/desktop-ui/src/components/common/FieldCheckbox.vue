@@ -12,11 +12,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  value: boolean
-  label?: string
-  title?: string
-}>()
+const props = defineProps<{ value: boolean; label?: string; title?: string }>()
 
 const emit = defineEmits<{ (e: 'update:value', value: boolean): void }>()
 

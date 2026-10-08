@@ -128,6 +128,7 @@
     "tasksTab": "Tareas de IA",
     "pluginsTab": "Plugins",
     "pluginEnabled": "Habilitado",
+    "pluginDisabled": "Deshabilitado",
     "pluginSettings": "Configuración del plugin",
     "noInstalledPlugins": "No hay plugins instalados",
     "pluginStatusOn": "Activado",
@@ -401,6 +402,7 @@
     "markdownEmphasis": "Marcador de cursiva",
     "markdownStrong": "Marcador de negrita",
     "markdownIncrementListMarker": "Numeración consecutiva de listas",
+    "markdownIncrementListMarkerInfo": "Cuando está activado, numera las listas en orden (1., 2., 3.). Al desactivarlo, mantiene el mismo número (1., 1., 1.), lo que facilita reordenar elementos y genera diffs de Git más limpios.",
     "sectionMarkdownClean": "Conversión de Markdown a texto sin formato",
     "markdownCleanHint": "Reglas para quitar el marcado Markdown al usar 'Formato' → 'Markdown a texto sin formato' en el editor.",
     "markdownCleanBullet": "Marcador de listas no ordenadas",
@@ -616,6 +618,7 @@
     },
     "fastNote": {
       "label": "Nota rápida",
+      "description": "Guarda el texto en una nota nueva o lo añade a una existente, en tu carpeta de notas",
       "pathToNotes": "Ruta a la carpeta de notas",
       "preset": "Perfil de configuración",
       "presetDefault": "Predeterminado (Nuevo archivo)",
@@ -660,6 +663,7 @@
     },
     "webFormatter": {
       "label": "Formato de código web",
+      "description": "Formatea HTML, XML, CSS, JavaScript, TypeScript y JSON",
       "language": "Lenguaje",
       "auto": "Detectar automáticamente",
       "chooseLanguage": "No se pudo detectar un lenguaje compatible con certeza. Elegí el lenguaje en los ajustes del plugin.",
@@ -674,7 +678,10 @@
       "xmlPreserve": "Conservar texto y formatear elementos",
       "xmlIgnore": "Ignorar: los espacios pueden cambiar"
     },
-    "textCase": { "label": "Mayúsculas y minúsculas" }
+    "textCase": {
+      "label": "Mayúsculas y minúsculas",
+      "description": "Convierte texto entre camelCase, snake_case, PascalCase, MAYÚSCULAS y otros estilos"
+    }
   },
   "edit": {
     "beautifyMd": "Formatear Markdown",

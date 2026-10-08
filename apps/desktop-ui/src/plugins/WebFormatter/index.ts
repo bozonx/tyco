@@ -10,6 +10,7 @@ export default function pluginIndex() {
   return {
     name: 'WebFormatter',
     labelKey: 'plugin.webFormatter.label',
+    descriptionKey: 'plugin.webFormatter.description',
     defaultConfig: {
       fields: [
         {

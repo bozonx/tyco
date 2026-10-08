@@ -23,7 +23,7 @@ describe('SettingsEditorTab.vue', () => {
       keepInlineCode: false,
       linkFormat: 'text',
       imageFormat: 'alt',
-      keepThematicBreaks: false,
+      keepThematicBreaks: true,
       keepTaskCheckboxes: true,
     },
   })
@@ -40,9 +40,9 @@ describe('SettingsEditorTab.vue', () => {
               '<section class="section-stub" :data-title="title" :data-info="info"><slot /></section>',
           },
           FieldRow: {
-            props: ['label'],
+            props: ['label', 'info'],
             template:
-              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+              '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
           },
           FieldSelect: {
             props: ['value', 'options'],
@@ -73,11 +73,13 @@ describe('SettingsEditorTab.vue', () => {
     expect(
       wrapper.find('[data-label="settings.markdownBullet"]').exists()
     ).toBe(true)
-    expect(
-      wrapper
-        .find('[data-label="settings.markdownIncrementListMarker"]')
-        .exists()
-    ).toBe(true)
+    const incrementRow = wrapper.find(
+      '[data-label="settings.markdownIncrementListMarker"]'
+    )
+    expect(incrementRow.exists()).toBe(true)
+    expect(incrementRow.attributes('data-info')).toBe(
+      'settings.markdownIncrementListMarkerInfo'
+    )
 
     // Markdown clean rows
     expect(
@@ -135,5 +137,6 @@ describe('SettingsEditorTab.vue', () => {
     expect(userConfig.markdownClean).toBeDefined()
     expect(userConfig.markdownClean.bullet).toBe('-')
     expect(userConfig.markdownClean.codeBlockIndent).toBe('none')
+    expect(userConfig.markdownClean.keepThematicBreaks).toBe(true)
   })
 })

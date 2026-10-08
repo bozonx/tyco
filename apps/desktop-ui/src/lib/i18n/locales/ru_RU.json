@@ -128,6 +128,7 @@
     "tasksTab": "Задания для AI",
     "pluginsTab": "Плагины",
     "pluginEnabled": "Включен",
+    "pluginDisabled": "Выключен",
     "pluginSettings": "Настройки плагина",
     "noInstalledPlugins": "Нет установленных плагинов",
     "pluginStatusOn": "Вкл",
@@ -401,6 +402,7 @@
     "markdownEmphasis": "Маркер курсива",
     "markdownStrong": "Маркер жирного текста",
     "markdownIncrementListMarker": "Последовательная нумерация списков",
+    "markdownIncrementListMarkerInfo": "При включении форматирует нумерованные списки последовательно (1., 2., 3.). При выключении оставляет одинаковый маркер (1., 1., 1.), что удобно для перемещения строк и чистых изменений в Git.",
     "sectionMarkdownClean": "Преобразование Markdown в простой текст",
     "markdownCleanHint": "Правила очистки и удаления разметки при вызове команды «Формат» → «Markdown в обычный текст» в редакторе.",
     "markdownCleanBullet": "Маркер ненумерованных списков",
@@ -616,6 +618,7 @@
     },
     "fastNote": {
       "label": "Быстрая заметка",
+      "description": "Сохраняет текст новой заметкой или дописывает в существующую, в папке заметок",
       "pathToNotes": "Путь к папке с заметками",
       "preset": "Профиль настроек",
       "presetDefault": "По умолчанию (Новый файл)",
@@ -660,6 +663,7 @@
     },
     "webFormatter": {
       "label": "Форматирование веб-кода",
+      "description": "Форматирует HTML, XML, CSS, JavaScript, TypeScript и JSON",
       "language": "Язык",
       "auto": "Определять автоматически",
       "chooseLanguage": "Не удалось надёжно определить поддерживаемый язык. Выберите язык в настройках плагина форматирования веб-кода.",
@@ -674,7 +678,10 @@
       "xmlPreserve": "Сохранять текст, форматировать расположение элементов",
       "xmlIgnore": "Игнорировать: пробелы могут измениться"
     },
-    "textCase": { "label": "Регистр текста" }
+    "textCase": {
+      "label": "Регистр текста",
+      "description": "Преобразует регистр текста: camelCase, snake_case, PascalCase, UPPERCASE и другие"
+    }
   },
   "edit": {
     "beautifyMd": "Форматировать Markdown",

@@ -26,6 +26,7 @@ export default function pluginIndex() {
   return {
     name: 'TextCase',
     labelKey: 'plugin.textCase.label',
+    descriptionKey: 'plugin.textCase.description',
     defaultConfig: {
       fields: Object.keys(transforms).map((name): InputConfigItem => ({
         type: 'checkbox',

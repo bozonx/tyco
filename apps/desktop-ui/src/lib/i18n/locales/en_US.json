@@ -125,6 +125,7 @@
     "tasksTab": "AI tasks",
     "pluginsTab": "Plugins",
     "pluginEnabled": "Enabled",
+    "pluginDisabled": "Disabled",
     "pluginSettings": "Plugin settings",
     "noInstalledPlugins": "No plugins installed",
     "pluginStatusOn": "On",
@@ -398,6 +399,7 @@
     "markdownEmphasis": "Italic marker",
     "markdownStrong": "Bold marker",
     "markdownIncrementListMarker": "Increment ordered list numbers",
+    "markdownIncrementListMarkerInfo": "When enabled, numbers list items sequentially (1., 2., 3.). When disabled, keeps uniform numbers (1., 1., 1.), making item reordering and Git diffs cleaner.",
     "sectionMarkdownClean": "Markdown to plain text conversion",
     "markdownCleanHint": "Rules for stripping Markdown markup when using 'Format' → 'Markdown to plain text' in the editor.",
     "markdownCleanBullet": "Unordered list marker",
@@ -613,6 +615,7 @@
     },
     "fastNote": {
       "label": "Quick note",
+      "description": "Saves the text as a new note or appends it to one, in your notes folder",
       "pathToNotes": "Notes folder path",
       "preset": "Preset profile",
       "presetDefault": "Default (New file)",
@@ -657,6 +660,7 @@
     },
     "webFormatter": {
       "label": "Web code formatting",
+      "description": "Formats HTML, XML, CSS, JavaScript, TypeScript, and JSON",
       "language": "Language",
       "auto": "Detect automatically",
       "chooseLanguage": "Cannot reliably detect a supported language. Select the language in the web formatting plugin settings.",
@@ -671,7 +675,10 @@
       "xmlPreserve": "Preserve text, format element layout",
       "xmlIgnore": "Ignore: whitespace may change"
     },
-    "textCase": { "label": "Text case" }
+    "textCase": {
+      "label": "Text case",
+      "description": "Converts text between camelCase, snake_case, PascalCase, UPPERCASE, and other styles"
+    }
   },
   "edit": {
     "beautifyMd": "Format Markdown",

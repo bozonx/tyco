@@ -23,6 +23,7 @@ export default function pluginIndex() {
   return {
     name: 'SearchInInternet',
     labelKey: 'plugin.searchInInternet.label',
+    descriptionKey: 'plugin.searchInInternet.description',
     defaultConfig: { fields: [urlField] },
     init: (ctx: PluginContext) => {
       const search: ToolDefinition = {

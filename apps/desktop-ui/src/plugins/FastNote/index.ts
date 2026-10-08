@@ -117,6 +117,7 @@ export default function pluginIndex() {
   return {
     name: 'FastNote',
     labelKey: 'plugin.fastNote.label',
+    descriptionKey: 'plugin.fastNote.description',
     defaultConfig: { fields: FIELDS },
     init: (ctx: PluginContext) => {
       const write: ToolDefinition = {

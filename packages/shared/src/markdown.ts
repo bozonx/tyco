@@ -45,7 +45,7 @@ export const DEFAULT_MARKDOWN_CLEAN_SETTINGS: MarkdownCleanSettings = {
   keepInlineCode: false,
   linkFormat: 'text',
   imageFormat: 'alt',
-  keepThematicBreaks: false,
+  keepThematicBreaks: true,
   keepTaskCheckboxes: true,
 }
 
@@ -78,7 +78,7 @@ export function normalizeMarkdownCleanSettings(
     )
       ? input.imageFormat!
       : DEFAULT_MARKDOWN_CLEAN_SETTINGS.imageFormat,
-    keepThematicBreaks: input.keepThematicBreaks === true,
+    keepThematicBreaks: input.keepThematicBreaks !== false,
     keepTaskCheckboxes: input.keepTaskCheckboxes !== false,
   }
 }
