@@ -265,7 +265,8 @@ onMounted(() => {
       if (isQuickWindow) return
       menuModalsStore.closeAll()
       const { text } = payload as { text?: string }
-      void (text ? chatStore.attachToChat(text) : chatStore.openLastOrNewChat())
+      const trimmed = text?.trim()
+      void (trimmed ? chatStore.attachToChat(trimmed) : chatStore.openLastOrNewChat())
     })
     .then((remove) => {
       removeMainChatListener = remove
