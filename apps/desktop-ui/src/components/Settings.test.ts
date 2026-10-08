@@ -280,5 +280,16 @@ describe('Settings.vue', () => {
       'settings.storageCache · settings.storageLogs',
     ])
     expect(storageItems[1].find('.storage-path').text()).toBe('/test/local')
+
+    const firstItemButtons = storageItems[0].findAll(
+      '.storage-path-actions .storage-copy-btn'
+    )
+    expect(firstItemButtons).toHaveLength(2)
+    expect(firstItemButtons[0].attributes('aria-label')).toBe(
+      'settings.storageCopyPath'
+    )
+    expect(firstItemButtons[1].attributes('aria-label')).toBe(
+      'settings.storageOpenFolder'
+    )
   })
 })
