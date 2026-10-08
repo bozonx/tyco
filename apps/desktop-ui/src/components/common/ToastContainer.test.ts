@@ -31,6 +31,7 @@ describe('ToastContainer', () => {
 
     const closeBtn = wrapper.find('button[aria-label="Close"]')
     expect(closeBtn.exists()).toBe(true)
+    expect(closeBtn.attributes('tabindex')).toBe('-1')
     await closeBtn.trigger('click')
 
     expect(toastStore.toasts).toHaveLength(0)

@@ -159,14 +159,13 @@ const loadEditorHistory = async () => {
 }
 
 const reportOperationError = () => {
-  toast.toast(t('history.operationFailed'), 'error')
+  toast.toast('history.operationFailed', 'error')
 }
 
 const clearEditorHistory = async () => {
   hideUndo()
   try {
     await historyStore.clearEditorHistory()
-    toast.toast(t('history.inputCleared'), 'success')
   } catch {
     reportOperationError()
   }

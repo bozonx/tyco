@@ -47,7 +47,11 @@ export default function pluginIndex() {
         run: async ({ input, config }) => {
           const text = String(input.text ?? '').trim()
           if (!text) {
-            return { ok: false, messageKey: 'toast.textNotSelected' }
+            return {
+              ok: false,
+              level: 'warn',
+              messageKey: 'toast.textNotSelected',
+            }
           }
           if (text.length > MAX_SEARCH_LENGTH) {
             return {

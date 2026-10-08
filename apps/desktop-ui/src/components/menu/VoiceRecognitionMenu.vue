@@ -248,7 +248,7 @@ function stopRecordingTimer() {
 const voiceSession = createVoiceSession({
   maxRecordingMs: MAX_RECORDING_MS,
   onLimit: () => {
-    toast(t('toast.recordingLimitReached'), 'warn')
+    toast('toast.recordingLimitReached', 'warn')
     void finish()
   },
 })
@@ -286,7 +286,8 @@ const cancel = async () => {
     await cancelDictation()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    toast(message || t('toast.voiceRecognitionFailed'), 'error')
+    if (message) toastText(message, 'error')
+    else toast('toast.voiceRecognitionFailed', 'error')
   } finally {
     isStarted.value = false
     isTranscribing.value = false
@@ -316,7 +317,7 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
     isTranscribing.value = false
 
     if (!recognizedText.trim()) {
-      toast(t('toast.nothingRecognized'), 'warn')
+      toast('toast.nothingRecognized', 'warn')
       notifyCancelled()
       return
     }
@@ -348,12 +349,13 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
           await historyStore
             .saveSourceResult(sourceId, formattedText)
             .catch(() => {
-              toast(t('history.operationFailed'), 'error')
+              toast('history.operationFailed', 'error')
             })
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        toast(message || t('menu.correction'), 'error')
+        if (message) toastText(message, 'error')
+        else toast('menu.correction', 'error')
       } finally {
         menuModalsStore.clearPendingModal()
       }
@@ -365,7 +367,8 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
   } catch (error) {
     if (!voiceSession.signal?.aborted) {
       const message = error instanceof Error ? error.message : String(error)
-      toast(message || t('toast.voiceRecognitionFailed'), 'error')
+      if (message) toastText(message, 'error')
+      else toast('toast.voiceRecognitionFailed', 'error')
       notifyCancelled()
     }
   } finally {
@@ -384,7 +387,8 @@ function handleSessionError(error: Error) {
 
   if (!hasText.value) {
     hasSession = false
-    toast(error.message || t('toast.voiceRecognitionFailed'), 'error')
+    if (error.message) toastText(error.message, 'error')
+    else toast('toast.voiceRecognitionFailed', 'error')
     voiceSession.abort()
     notifyCancelled()
     return
@@ -447,7 +451,8 @@ async function startSession() {
     } catch (error) {
       if (generation !== sessionGeneration) return
       const message = error instanceof Error ? error.message : String(error)
-      toast(message || t('toast.voiceRecognitionFailed'), 'error')
+      if (message) toastText(message, 'error')
+      else toast('toast.voiceRecognitionFailed', 'error')
       voiceSession.abort()
       notifyCancelled()
     }

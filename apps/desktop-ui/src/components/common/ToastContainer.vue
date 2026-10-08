@@ -41,8 +41,10 @@
 
         <button
           type="button"
+          tabindex="-1"
           class="shrink-0 p-1 rounded hover:bg-[var(--app-hover)] text-[var(--app-text-faint)] hover:text-[var(--color-base-content)] transition-colors -mr-1 -mt-0.5 cursor-pointer"
           aria-label="Close"
+          @mousedown.prevent
           @click="toastStore.removeToast(item.id)"
         >
           <Icon icon="mdi:close" height="14" />

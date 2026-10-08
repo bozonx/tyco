@@ -148,7 +148,12 @@ export default function pluginIndex() {
         ],
         run: async ({ input, config, source }): Promise<ToolResult> => {
           const text = String(input.text ?? '').trim()
-          if (!text) return { ok: false, messageKey: 'toast.textNotSelected' }
+          if (!text)
+            return {
+              ok: false,
+              level: 'warn',
+              messageKey: 'toast.textNotSelected',
+            }
 
           const settings = config as Partial<FastNoteConfig>
           const baseDir = settings.pathToNotes?.trim()

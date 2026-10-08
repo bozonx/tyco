@@ -8,6 +8,8 @@ export const i18n = createI18n({
   locale: DEFAULT_UI_LOCALE,
   fallbackLocale: DEFAULT_UI_LOCALE,
   messages,
+  missingWarn: false,
+  fallbackWarn: false,
 })
 
 type GlobalI18n = {

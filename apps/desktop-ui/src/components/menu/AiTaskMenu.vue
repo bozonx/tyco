@@ -211,8 +211,7 @@ async function savePromptAsTask() {
   }
 
   const result = await ipcStore.saveUserConfig({ ...userConfig, aiTasks })
-  if (result.success) toast('menu.aiPromptSaved', 'success')
-  else toast('toast.desktopCommandFailed', 'error')
+  if (!result.success) toast('toast.desktopCommandFailed', 'error')
 }
 
 async function makeDiff(

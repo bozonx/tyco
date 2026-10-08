@@ -125,7 +125,7 @@ export default function usePluginContext() {
     toast(
       message: string,
       type: 'success' | 'error' | 'warn' | 'info' = 'info',
-      timeout = 10000
+      timeout?: number
     ) {
       toast(message, type, timeout)
     }

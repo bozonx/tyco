@@ -171,7 +171,7 @@ describe('FastNote plugin', () => {
 
     await toolbarItems[0].action()
 
-    expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'error')
+    expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
 

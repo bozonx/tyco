@@ -199,7 +199,7 @@ export const useCallAi = () => {
     options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'error')
+      toast('toast.textNotSelected', 'warn')
       return ''
     }
 
@@ -227,7 +227,7 @@ export const useCallAi = () => {
     options: TranslateOptions = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'error')
+      toast('toast.textNotSelected', 'warn')
       return ''
     }
 
@@ -257,7 +257,7 @@ export const useCallAi = () => {
     options: TranslateOptions = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'error')
+      toast('toast.textNotSelected', 'warn')
       return ''
     }
 
@@ -273,7 +273,7 @@ export const useCallAi = () => {
     options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'error')
+      toast('toast.textNotSelected', 'warn')
       return ''
     }
 
@@ -295,7 +295,7 @@ export const useCallAi = () => {
     options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'error')
+      toast('toast.textNotSelected', 'warn')
       return ''
     }
     if (!prompt.trim()) return ''

@@ -7,9 +7,14 @@ export default function useToast() {
   const toast = (
     message: string,
     type: ToastType = 'info',
+    paramsOrTimeout?: number | Record<string, string | number>,
     timeout?: number
   ) => {
-    toastStore.addToast(translate(message), type, { duration: timeout })
+    const params =
+      typeof paramsOrTimeout === 'object' ? paramsOrTimeout : undefined
+    const duration =
+      typeof paramsOrTimeout === 'number' ? paramsOrTimeout : timeout
+    toastStore.addToast(translate(message, params), type, { duration })
   }
 
   /** For text that is already final, e.g. an error message from a provider */

@@ -78,16 +78,15 @@ export const useEditorActions = () => {
   const doEdit = async (item: EditItem): Promise<void> => {
     try {
       const result = await textEdit.run(item)
-      if (result === 'empty') toast(t('toast.textNotSelected'), 'error')
-      if (result === 'stale') toast(t('toast.textTransformStale'), 'warn')
+      if (result === 'empty') toast('toast.textNotSelected', 'warn')
+      if (result === 'stale') toast('toast.textTransformStale', 'warn')
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)
-      toast(
-        error instanceof WebFormatError
-          ? t(error.messageKey)
-          : t('toast.textTransformFailed', { detail }),
-        'error'
-      )
+      if (error instanceof WebFormatError) {
+        toast(error.messageKey, 'error')
+      } else {
+        toast('toast.textTransformFailed', 'error', { detail })
+      }
     }
   }
 

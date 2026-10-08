@@ -104,6 +104,74 @@ describe('createToastStoreModel', () => {
     expect(store.toasts.value).toHaveLength(0)
   })
 
+  it('pauses and resumes multiple times without losing remaining time', () => {
+    let currentTime = 1000
+    const now = () => currentTime
+    const store = createToastStoreModel({ now })
+
+    const id = store.addToast('Multi hover toast', 'info', { duration: 4000 })
+
+    // Pass 1000ms
+    currentTime += 1000
+    vi.advanceTimersByTime(1000)
+
+    // Pause 1
+    store.pauseToast(id)
+    expect(store.toasts.value[0]?.remainingMs).toBe(3000)
+
+    // Hover for 3000ms
+    currentTime += 3000
+    vi.advanceTimersByTime(3000)
+
+    // Resume 1
+    store.resumeToast(id)
+
+    // Pass 1000ms
+    currentTime += 1000
+    vi.advanceTimersByTime(1000)
+
+    // Pause 2
+    store.pauseToast(id)
+    expect(store.toasts.value[0]?.remainingMs).toBe(2000)
+
+    // Hover for 2000ms
+    currentTime += 2000
+    vi.advanceTimersByTime(2000)
+
+    // Resume 2
+    store.resumeToast(id)
+
+    // Advance remaining 1999ms
+    currentTime += 1999
+    vi.advanceTimersByTime(1999)
+    expect(store.toasts.value).toHaveLength(1)
+
+    currentTime += 1
+    vi.advanceTimersByTime(1)
+    expect(store.toasts.value).toHaveLength(0)
+  })
+
+  it('deduplicates identical toasts by refreshing duration', () => {
+    const store = createToastStoreModel()
+    const id1 = store.addToast('Duplicate message', 'warn', { duration: 3000 })
+
+    vi.advanceTimersByTime(1500)
+    expect(store.toasts.value).toHaveLength(1)
+
+    // Add duplicate message
+    const id2 = store.addToast('Duplicate message', 'warn', { duration: 3000 })
+    expect(id2).toBe(id1)
+    expect(store.toasts.value).toHaveLength(1)
+    expect(store.toasts.value[0]?.remainingMs).toBe(3000)
+
+    // Should stay alive for full new duration (1500 + 2999 = 4499ms total from start)
+    vi.advanceTimersByTime(2999)
+    expect(store.toasts.value).toHaveLength(1)
+
+    vi.advanceTimersByTime(1)
+    expect(store.toasts.value).toHaveLength(0)
+  })
+
   it('respects MAX_TOASTS limit by evicting oldest toasts', () => {
     const store = createToastStoreModel()
 

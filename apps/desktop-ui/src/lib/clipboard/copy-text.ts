@@ -19,7 +19,7 @@ export interface CopyTextDependencies {
 export function createCopyText(deps: CopyTextDependencies) {
   return async (text: string): Promise<CopyTextResult> => {
     if (!text.trim()) {
-      deps.showToast('toast.textNotSelected', 'error')
+      deps.showToast('toast.textNotSelected', 'warn')
       return 'empty'
     }
 

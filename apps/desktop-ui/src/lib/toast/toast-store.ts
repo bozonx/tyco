@@ -17,7 +17,7 @@ export interface ToastItem {
   remainingMs: number
   isPaused: boolean
   timerId?: ReturnType<typeof setTimeout> | null
-  pauseStartedAt?: number | null
+  timerStartedAt?: number | null
 }
 
 export interface ToastDependencies {
@@ -27,10 +27,10 @@ export interface ToastDependencies {
 }
 
 export const DEFAULT_TOAST_DURATIONS: Record<ToastType, number> = {
-  success: 4000,
-  info: 4000,
-  warn: 6000,
-  error: 8000,
+  success: 3000,
+  info: 3000,
+  warn: 5000,
+  error: 7000,
 }
 
 export const MAX_TOASTS = 5
@@ -48,6 +48,7 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
       clearTimeoutFn(item.timerId)
       item.timerId = null
     }
+    item.timerStartedAt = null
   }
 
   const removeToast = (id: string) => {
@@ -65,6 +66,7 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
       return
     }
 
+    item.timerStartedAt = now()
     item.timerId = setTimeoutFn(() => {
       removeToast(item.id)
     }, item.remainingMs)
@@ -76,6 +78,27 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
     options: ToastOptions = {}
   ): string => {
     const duration = options.duration ?? DEFAULT_TOAST_DURATIONS[type]
+
+    const existingIndex = toasts.value.findIndex(
+      (t) =>
+        t.message === message &&
+        t.type === type &&
+        (t.title ?? undefined) === (options.title ?? undefined)
+    )
+
+    if (existingIndex !== -1) {
+      const existing = toasts.value[existingIndex]
+      existing.duration = duration
+      existing.remainingMs = duration
+      existing.isPaused = false
+      if (duration > 0) {
+        scheduleDismiss(existing)
+      } else {
+        clearItemTimer(existing)
+      }
+      return existing.id
+    }
+
     const id = `toast-${now()}-${++counter}`
 
     const item: ToastItem = {
@@ -88,7 +111,7 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
       remainingMs: duration,
       isPaused: false,
       timerId: null,
-      pauseStartedAt: null,
+      timerStartedAt: null,
     }
 
     if (duration > 0) {
@@ -112,17 +135,12 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
     const item = toasts.value.find((t) => t.id === id)
     if (!item || item.isPaused || item.duration <= 0) return
 
-    clearItemTimer(item)
     item.isPaused = true
-    const currentNow = now()
-    const elapsedSinceStart = item.pauseStartedAt
-      ? 0
-      : currentNow - (item.createdAt + (item.duration - item.remainingMs))
-    item.remainingMs = Math.max(
-      0,
-      item.remainingMs - Math.max(0, elapsedSinceStart)
-    )
-    item.pauseStartedAt = currentNow
+    if (item.timerStartedAt != null) {
+      const elapsed = now() - item.timerStartedAt
+      item.remainingMs = Math.max(0, item.remainingMs - Math.max(0, elapsed))
+    }
+    clearItemTimer(item)
   }
 
   const resumeToast = (id: string) => {
@@ -130,7 +148,6 @@ export function createToastStoreModel(deps: ToastDependencies = {}) {
     if (!item || !item.isPaused || item.duration <= 0) return
 
     item.isPaused = false
-    item.pauseStartedAt = null
     scheduleDismiss(item)
   }
 

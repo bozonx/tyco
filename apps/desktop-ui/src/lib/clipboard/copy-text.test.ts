@@ -37,10 +37,7 @@ describe('createCopyText', () => {
 
     expect(deps.writeText).not.toHaveBeenCalled()
     expect(deps.saveOutput).not.toHaveBeenCalled()
-    expect(deps.showToast).toHaveBeenCalledWith(
-      'toast.textNotSelected',
-      'error'
-    )
+    expect(deps.showToast).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
   })
 
   it('reports an unavailable clipboard and records nothing', async () => {
