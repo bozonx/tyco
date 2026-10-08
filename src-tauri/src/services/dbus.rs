@@ -13,7 +13,6 @@ use crate::services::platform::window_tracker::{self, tracker, WindowKind};
 use crate::services::{external_api, runtime};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
-const MESSAGE_INTERFACE: &str = "org.tyco.Interface";
 const MESSAGE_DEST: &str = "org.tyco.Service";
 const KWIN_SERVICE: &str = "org.kde.KWin";
 
@@ -66,23 +65,6 @@ struct TycoDbus {
 
 #[interface(name = "org.tyco.Interface")]
 impl TycoDbus {
-    /// Versioned request/response envelope, identical to local IPC.
-    async fn request(&self, request: &str) -> zbus::fdo::Result<String> {
-        if request.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES {
-            return Err(zbus::fdo::Error::InvalidArgs(
-                "Protocol message is too large".into(),
-            ));
-        }
-        let request = serde_json::from_str(request)
-            .map_err(|error| zbus::fdo::Error::InvalidArgs(format!("Invalid request: {error}")))?;
-        Ok(serde_json::to_string(&external_api::dispatch(
-            &self.app,
-            request,
-            ActivationSource::Dbus,
-        ))
-        .expect("response serialization"))
-    }
-
     async fn open(&self, mode: &str, text: &str, selection: bool) -> zbus::fdo::Result<()> {
         dbus_result(external_api::dispatch(
             &self.app,
@@ -96,114 +78,12 @@ impl TycoDbus {
         .map(|_| ())
     }
 
-    async fn run(&self, request: &str) -> zbus::fdo::Result<String> {
-        if request.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES {
-            return Err(zbus::fdo::Error::InvalidArgs(
-                "Protocol message is too large".into(),
-            ));
-        }
-        let request = serde_json::from_str(request).map_err(|error| {
-            zbus::fdo::Error::InvalidArgs(format!("Invalid run request: {error}"))
-        })?;
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Run { request },
-            ActivationSource::Dbus,
-        ))
-    }
-
-    async fn status(&self) -> zbus::fdo::Result<String> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Status,
-            ActivationSource::Dbus,
-        ))
-    }
-
-    async fn describe_command(&self, target: &str, by_name: bool) -> zbus::fdo::Result<String> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::DescribeCommand {
-                target: target.into(),
-                by_name,
-            },
-            ActivationSource::Dbus,
-        ))
-    }
-
-    async fn job_status(&self, id: &str) -> zbus::fdo::Result<String> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::JobStatus { id: id.into() },
-            ActivationSource::Dbus,
-        ))
-    }
-
-    async fn cancel_job(&self, id: &str) -> zbus::fdo::Result<String> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::JobCancel { id: id.into() },
-            ActivationSource::Dbus,
-        ))
-    }
-
-    /// Legacy adapter; fields are no longer passed straight to runtime activation.
-    async fn switch_mode(&self, message: &str) -> zbus::fdo::Result<()> {
-        let (mode, _window_id, text) = parse_switch_mode_message(message);
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Open {
-                mode: mode.into(),
-                text: text.map(str::to_owned),
-                selection: false,
-            },
-            ActivationSource::Dbus,
-        ))
-        .map(|_| ())
-    }
-
     async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
         dbus_result(external_api::dispatch(
             &self.app,
             tyco_activation_protocol::Request::Replace {
                 action: action.into(),
             },
-            ActivationSource::Dbus,
-        ))
-        .map(|_| ())
-    }
-
-    /// Legacy interactive adapter. Use Run for observable completion.
-    async fn run_command(&self, command: &str, text: &str) -> zbus::fdo::Result<()> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::RunCommand {
-                target: command.into(),
-                text: (!text.is_empty()).then(|| text.into()),
-            },
-            ActivationSource::Dbus,
-        ))
-        .map(|_| ())
-    }
-
-    async fn list_commands(&self) -> zbus::fdo::Result<String> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::ListCommands,
-            ActivationSource::Dbus,
-        ))
-    }
-
-    #[zbus(name = "Ping")]
-    async fn ping(&self) -> zbus::fdo::Result<&str> {
-        Ok(MESSAGE_INTERFACE)
-    }
-
-    #[zbus(name = "Quit")]
-    async fn quit(&self) -> zbus::fdo::Result<()> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Quit,
             ActivationSource::Dbus,
         ))
         .map(|_| ())
@@ -330,43 +210,4 @@ async fn ensure_sent_by_kwin(
 
 fn not_kwin() -> zbus::fdo::Error {
     zbus::fdo::Error::AccessDenied(String::from("Only KWin may report windows"))
-}
-
-pub fn parse_switch_mode_message(message: &str) -> (&str, Option<&str>, Option<&str>) {
-    let mut parts = message.splitn(3, '|');
-    let mode = parts.next().unwrap_or("editor");
-    let window_id = parts.next().filter(|value| !value.is_empty());
-    let selected_text = parts.next().filter(|value| !value.is_empty());
-    (mode, window_id, selected_text)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_switch_mode_message_full() {
-        let (mode, window_id, selected_text) =
-            parse_switch_mode_message("chat|12345|some selected text");
-        assert_eq!(mode, "chat");
-        assert_eq!(window_id, Some("12345"));
-        assert_eq!(selected_text, Some("some selected text"));
-    }
-
-    #[test]
-    fn test_parse_switch_mode_message_empty_fields() {
-        let (mode, window_id, selected_text) = parse_switch_mode_message("editor||");
-        assert_eq!(mode, "editor");
-        assert_eq!(window_id, None);
-        assert_eq!(selected_text, None);
-    }
-
-    #[test]
-    fn test_parse_switch_mode_message_with_pipes_in_selected_text() {
-        let (mode, window_id, selected_text) =
-            parse_switch_mode_message("correction|999|text | with | pipes");
-        assert_eq!(mode, "correction");
-        assert_eq!(window_id, Some("999"));
-        assert_eq!(selected_text, Some("text | with | pipes"));
-    }
 }

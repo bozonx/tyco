@@ -191,38 +191,33 @@ Quick menu в LHC, которое вызывает команды tyco чере�
 
 ### 3.4. Внешний вызов: D-Bus и `tyco-ctl`
 
-> This section records the original design. The implemented contract, permission
-> model, local transports, and migration rules are documented in
-> [External control API](external-control.md).
+> The implemented contract, permission model, and local transports are documented
+> in [External control API](../docs/external-control.md).
 
 Связь односторонняя: LHC, скрипты и хоткеи оконного менеджера вызывают
 команды tyco, а tyco о LHC ничего не знает.
 
 - **D-Bus** (`org.tyco.Interface`, Linux):
-  - `RunCommand(command: s, text: s)` — запустить команду; `text` пустой,
-    если аргумента нет;
-  - `ListCommands() -> s` — JSON-массив `{ id, name, input }` команд с
-    `availableIn.external`, чтобы LHC мог показать список для выбора.
+  - `Open(mode: s, text: s, selection: b)` opens an interactive window;
+  - `ReplaceSelection(action: s)` applies an interactive selection action,
+    including `command:<id>` for a library command;
+  - discovery, background execution, results, and job management use `tyco-ctl`.
 - **`tyco-ctl`** (все платформы, через существующий activation-сокет):
-  - `tyco-ctl run <command> [text...]` — слова после команды образуют текст;
-    `tyco-ctl run <command> -` читает текст из stdin (предпочтительно для
-    чувствительного текста: аргументы командной строки видны другим
-    процессам). stdin читается только по явному `-`: процесс, запущенный
-    хоткеем оконного менеджера, может унаследовать stdin, который никогда не
-    закроется. Один перевод строки в конце текста отбрасывается;
-  - `tyco-ctl commands` — тот же JSON, что `ListCommands`.
+  - `tyco-ctl run <id> --text TEXT` executes a command with explicit text;
+  - `tyco-ctl run <id> --stdin --wait` reads input without altering whitespace
+    and returns the completed command's output;
+  - `tyco-ctl commands list --json` lists externally available commands;
+  - `tyco-ctl open select --selection` opens the text action menu;
+  - `tyco-ctl open command-launcher --selection` opens the command chooser.
 
-Пустой текст — то же, что его отсутствие. Текст, переданный команде без
-входа, отбрасывается: такой команде он не нужен, а вызывающий скрипт может
-передавать текст всем командам одинаково. Сообщение протокола сокета —
-до 1 МиБ.
+Input is preserved exactly, including whitespace. Commands that do not accept
+text reject text input. Protocol messages are limited to 1 MiB.
 
-**Поиск команды по `command`:** сначала точное совпадение с id; затем
-совпадение с названием после нормализации (регистр, `ё → е`, пробелы) среди
-команд, которые можно вызвать извне (включена, `availableIn.external`,
-инструмент доступен). Если таких несколько — ошибка «неоднозначно» со
-списком их id, ничего не запускается. Если по названию нашлась только
-недоступная команда — ошибка с причиной («выключена», «недоступна извне»).
+Command lookup uses an exact stable ID by default. `--name` explicitly requests
+normalized display-name lookup among externally available commands. Ambiguous
+names fail without executing a command; unavailable tools or missing grants
+also fail explicitly.
+
 В редакторе команды id виден и копируется кнопкой: для привязок в LHC
 надёжнее id, название удобнее для ручных скриптов.
 
@@ -236,7 +231,7 @@ Quick menu в LHC, которое вызывает команды tyco чере�
 перезагрузке плагинов передаёт в Rust **каталог инструментов**
 (`set_tool_catalog`): `{ id, input: 'none' | 'text' | 'parsed' | 'structured', available, reason? }` (`structured` — вход, который из текста может заполнить
 только LLM: такая команда принимает текст лишь с `llmArgumentParsing`). Rust хранит его в памяти и по нему решает «инструмент
-недоступен», «принимает ли команда текст» (`ListCommands`, фон или оверлей).
+недоступен», «принимает ли команда текст» (`tyco-ctl commands list`, фон или оверлей).
 Пока каталог не пришёл (первые секунды после запуска), команда незнакомого
 Rust инструмента получает ошибку «инструменты ещё загружаются»; `script` и
 `webhook` известны Rust всегда. Нормализация названия задана дважды:
@@ -1108,13 +1103,13 @@ script/webhook-настроек; пункт `command` строится чере�
 Rust:
 
 - `services/external_commands.rs` — поиск команды по id или названию,
-  список для `ListCommands`, выбор между фоном и оверлеем, каталог
+  список для `tyco-ctl commands list`, выбор между фоном и оверлеем, каталог
   инструментов из webview вместо `KNOWN_TOOLS`; миграция конфига —
   `services/config_migration.rs`;
-- `services/dbus.rs` — методы `RunCommand` и `ListCommands`;
-- `crates/activation-protocol` — запросы `RunCommand { target, text }` и
-  `ListCommands`, поле `output` в ответе; команды `tyco-ctl run` и
-  `tyco-ctl commands`;
+- `services/dbus.rs` exposes only `Open` and `ReplaceSelection`, plus the
+  internal KWin tracker interface;
+- `crates/activation-protocol` defines the local CLI protocol: command discovery,
+  execution, job management, and response envelopes;
 - запуск передаётся в webview событием `app://command-run`, как
   `ReplaceSelection`, или активацией оверлея с `launcherRequest`; список для
   `ListCommands` Rust строит сам из конфига;
@@ -1141,7 +1136,7 @@ Rust:
   `inputSchema` до вызова, как и вход от агента.
 - Внешний вызов доступен любому процессу пользователя на сессионной шине или
   на локальном activation-сокете. Это не расширяет права: такой процесс и так
-  может запустить что угодно от имени пользователя. Поэтому `RunCommand`
+  может запустить что угодно от имени пользователя. Поэтому внешний запуск команды
   запускает только команды с `availableIn.external`, соблюдает `confirm` и не
   позволяет передать настройки — только `text`.
 - Агенту доступны только команды с `availableIn.chat`, а не «сырые»
@@ -1164,8 +1159,8 @@ Rust:
    пользователя не меняется. Полезно само по себе, даже без голоса.
    Фразы, описание, подтверждение и «в оверлее» / «извне» уже есть в модели,
    но в редакторе появятся вместе с этапами, которые их используют.
-2. **✅ Внешний вызов.** `RunCommand` / `ListCommands` в D-Bus, `tyco-ctl run` /
-   `tyco-ctl commands`, поиск по id и названию. После этого LHC может
+2. **✅ Внешний вызов.** D-Bus `Open` / `ReplaceSelection`, `tyco-ctl run` /
+   `tyco-ctl commands list`, поиск по id и названию. После этого LHC может
    вызывать команды.
    Реализация: `services/external_commands.rs` (поиск, список, маршрут),
    фоновый запуск — `lib/commands/external-run.ts` в быстром окне, остальное —
@@ -1174,7 +1169,7 @@ Rust:
 3. **✅ Оверлей команд с клавиатуры.** Хоткей выбора, список, поиск, `1`–`9`,
    ввод текста для команд со входом, подтверждение, история.
    Реализация: режим `commandLauncher` в быстром окне (хоткей по умолчанию не
-   назначен, `tyco-ctl activate commandLauncher`), модель
+   назначен, `tyco-ctl open commandLauncher`), модель
    `lib/command-launcher/launcher-model.ts`. Пока в поле поиска пусто, `1`–`9`
    запускают команду, после ввода цифра идёт в поиск, а `Alt+1`–`9` запускают
    всегда. Подтверждение и ввод текста — один шаг: поле с текстом (выделение
@@ -1220,7 +1215,7 @@ Rust:
       `command:<id>` (`lib/selection-replace`, источник в журнале — `selection`):
       оверлей, если текст — нетронутое выделение, прячется и вызывает
       `replace_selection_with_command`; внешний вызов без текста сразу
-      запускает selection run (так работает и `tyco-ctl replace command:<id>`).
+      запускает selection run (так работает и `tyco-ctl run <id> --selection --replace --interactive`).
       Текст из поля ввода, редактора или внешнего вызова — меню результата.
       `copy` кладёт вывод в буфер через `copy_text`, не трогая окна.
 
@@ -1298,9 +1293,9 @@ Rust:
   раскладкой клавиш не делаем: это роль Quick menu в LHC.
 - **Экран истории команд** — просмотр записей `[Command: …]` с фильтром по
   команде и источнику, если журнала `actions.log` окажется мало.
-- **Ответ внешнему вызову с результатом:** сейчас `RunCommand` не ждёт
-  выполнения. Если понадобится использовать вывод команды в скриптах —
-  отдельный метод с ожиданием и таймаутом.
+- **External execution results:** `tyco-ctl run --wait` returns command output;
+  `tyco-ctl jobs` monitors or cancels execution. D-Bus only acknowledges
+  interactive activation.
 - **MCP-инструменты без настроек:** создавать команду для каждого вручную или
   разрешать агенту весь сервер целиком с подтверждением на каждый вызов.
 - **Остановка записи по паузе** — подобрать длительность и решить, нужна ли

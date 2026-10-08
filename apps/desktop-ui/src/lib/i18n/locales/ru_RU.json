@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "Команда не принимает текст: уберите {placeholder} или включите «Принимает текст».",
     "errorUnknownTool": "Неизвестный инструмент.",
     "external": "Доступна извне",
-    "externalInfo": "Разрешённую команду можно запустить из приложений и скриптов: tyco-ctl run <ID>, tyco-ctl run <название> --name или D-Bus Run. Для подтверждения или ввода добавьте --interactive.",
+    "externalInfo": "Разрешённую команду можно запустить из приложений и скриптов: tyco-ctl run <ID>, tyco-ctl run <название> --name. Для подтверждения или ввода добавьте --interactive.",
     "fieldOff": "Нет",
     "fieldOn": "Да",
     "fromPluginSettings": "Из настроек плагина: {value}",

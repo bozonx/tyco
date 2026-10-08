@@ -62,18 +62,8 @@ pub fn is_selection_action(value: &str) -> bool {
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "command", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Request {
-    Activate {
-        mode: String,
-    },
     Replace {
         action: String,
-    },
-    /// Runs a command of the library, found by its id or its name.
-    RunCommand {
-        target: String,
-        /// The text the command gets; absent when there is none.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        text: Option<String>,
     },
     /// The commands that may be run from outside, as JSON.
     ListCommands,
@@ -243,9 +233,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn rejects_removed_protocol_requests() {
+        for request in [
+            r#"{"command":"activate","mode":"editor"}"#,
+            r#"{"command":"runCommand","target":"test"}"#,
+        ] {
+            assert!(serde_json::from_str::<Request>(request).is_err());
+        }
+    }
+
+    #[test]
     fn request_round_trips() {
-        let request = Request::Activate {
+        let request = Request::Open {
             mode: "editor".into(),
+            text: None,
+            selection: false,
         };
         let mut output = Vec::new();
         write_message(&mut output, &request).unwrap();
@@ -256,7 +258,7 @@ mod tests {
     #[test]
     fn replace_request_round_trips() {
         let request = Request::Replace {
-            action: "translate.1".into(),
+            action: "command:translate-es".into(),
         };
         let mut output = Vec::new();
         write_message(&mut output, &request).unwrap();
@@ -267,13 +269,11 @@ mod tests {
     #[test]
     fn command_requests_round_trip() {
         for request in [
-            Request::RunCommand {
-                target: "backup".into(),
-                text: None,
-            },
-            Request::RunCommand {
-                target: "Note".into(),
-                text: Some("buy milk\nand bread".into()),
+            Request::Run {
+                request: RunRequest {
+                    target: "backup".into(),
+                    ..Default::default()
+                },
             },
             Request::ListCommands,
             Request::Quit,

@@ -259,7 +259,7 @@ const rows = computed<HotkeyRow[]>(() => [
       mode,
       DEFAULT_USER_CONFIG.hotkeys[mode]
     ),
-    command: `tyco-ctl activate ${mode}`,
+    command: `tyco-ctl open ${mode}`,
     externalHint: t('settings.externalMethodsHint'),
   })),
   {
@@ -276,7 +276,8 @@ const rows = computed<HotkeyRow[]>(() => [
       inlineId,
       DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
     ),
-    command: `tyco-ctl replace ${INLINE_CORRECTION}`,
+    command:
+      'tyco-ctl run default:core.correct:fix --selection --replace --interactive',
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
     inline: true,

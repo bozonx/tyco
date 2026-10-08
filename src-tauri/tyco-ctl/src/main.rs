@@ -3,20 +3,19 @@ use std::io::{self, Read, Write};
 use std::time::{Duration, Instant};
 
 use tyco_activation_protocol::{
-    is_selection_action, is_start_mode, transport, Job, JobState, OutputMode, Request, Response,
-    RunRequest, MAX_MESSAGE_BYTES,
+    is_start_mode, transport, Job, JobState, OutputMode, Request, Response, RunRequest,
+    MAX_MESSAGE_BYTES,
 };
 
 const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl open <mode> [--text TEXT | --selection]
-       tyco-ctl commands [list [--json] | describe <id> [--name]]
+       tyco-ctl commands <list [--json] | describe <id> [--name]>
        tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
                     [--replace] [--interactive] [--output return|configured]
                     [--wait] [--json] [--timeout SECONDS]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
        tyco-ctl quit
 
-Legacy aliases: activate <mode>, replace <action>, run <id> [text... | -].
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and returned output.
 Tyco must already be running in the same user session.";
@@ -55,7 +54,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
             }
         }
         "commands" => match args.get(1).map(String::as_str) {
-            None | Some("list") => {
+            Some("list") => {
                 if args.iter().skip(2).any(|arg| arg != "--json") || args.len() > 3 {
                     return Err(USAGE.into());
                 }
@@ -73,7 +72,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
             }
             _ => return Err(USAGE.into()),
         },
-        "open" | "activate" => {
+        "open" => {
             let mode = mode(&value(1)?);
             if !is_start_mode(&mode) {
                 return Err(format!("Unknown mode: {mode}"));
@@ -100,11 +99,6 @@ fn parse(args: &[String]) -> Result<Command, String> {
                 text,
                 selection,
             };
-        }
-        "replace" if args.len() == 2 && is_selection_action(&args[1]) => {
-            command.request = Request::Replace {
-                action: args[1].clone(),
-            }
         }
         "run" => {
             let mut request = RunRequest {
@@ -149,20 +143,13 @@ fn parse(args: &[String]) -> Result<Command, String> {
                         }
                         input_set = true;
                     }
-                    "--stdin" | "-" if !input_set => {
+                    "--stdin" if !input_set => {
                         command.stdin = true;
                         input_set = true;
                     }
                     "--selection" if !input_set => {
                         request.selection = true;
                         input_set = true;
-                    }
-                    value if !value.starts_with('-') && !input_set => {
-                        if args[index..].iter().any(|arg| arg.starts_with("--")) {
-                            return Err("Use --text when mixing text and options".into());
-                        }
-                        request.text = Some(args[index..].join(" "));
-                        break;
                     }
                     _ => return Err(USAGE.into()),
                 }
@@ -316,18 +303,19 @@ mod tests {
         parse(&args.iter().map(|arg| (*arg).into()).collect::<Vec<_>>())
     }
     #[test]
-    fn explicit_run_options_and_legacy_aliases() {
+    fn explicit_run_options_reject_legacy_aliases() {
         let parsed = command(&["run", "test", "--stdin", "--wait"]).unwrap();
         assert!(parsed.stdin && parsed.wait);
         let Request::Run { request } = parsed.request else {
             panic!()
         };
         assert!(!request.interactive && !request.selection);
-        assert_eq!(
-            command(&["activate", "commandLauncher"]).unwrap().request,
-            command(&["open", "command-launcher"]).unwrap().request
-        );
-        assert!(command(&["replace", "command:test"]).is_ok());
+        assert!(command(&["activate", "commandLauncher"]).is_err());
+        assert!(command(&["commands"]).is_err());
+        assert!(command(&["run", "test", "text"]).is_err());
+        assert!(command(&["run", "test", "-"]).is_err());
+        assert!(command(&["open", "command-launcher", "--selection"]).is_ok());
+        assert!(command(&["replace", "command:test"]).is_err());
         assert!(command(&["run", "test", "--replace"]).is_err());
         assert!(command(&["run", "test", "--stdin", "--text", "x"]).is_err());
         assert!(command(&["run", "test", "--input-json", "[]"]).is_err());

@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "Komut metin almıyor: {placeholder} öğesini kaldırın veya “Metin alır” seçeneğini açın.",
     "errorUnknownTool": "Bilinmeyen araç.",
     "external": "Dışarıdan erişilebilir",
-    "externalInfo": "Diğer uygulamalar ve betikler izin verilen bir komutu tyco-ctl run <kimlik>, tyco-ctl run <ad> --name veya D-Bus Run ile çalıştırabilir. Onay veya giriş gerektiğinde --interactive kullanın.",
+    "externalInfo": "Diğer uygulamalar ve betikler izin verilen bir komutu tyco-ctl run <kimlik>, tyco-ctl run <ad> --name ile çalıştırabilir. Onay veya giriş gerektiğinde --interactive kullanın.",
     "fieldOff": "Hayır",
     "fieldOn": "Evet",
     "fromPluginSettings": "Eklenti ayarlarından: {value}",

@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "El comando no recibe texto: quitá {placeholder} o activá «Recibe texto».",
     "errorUnknownTool": "Herramienta desconocida.",
     "external": "Disponible desde afuera",
-    "externalInfo": "Otras aplicaciones y scripts pueden ejecutar un comando permitido con tyco-ctl run <ID>, tyco-ctl run <nombre> --name o D-Bus Run. Usá --interactive si se necesita confirmación o entrada.",
+    "externalInfo": "Otras aplicaciones y scripts pueden ejecutar un comando permitido con tyco-ctl run <ID>, tyco-ctl run <nombre> --name. Usá --interactive si se necesita confirmación o entrada.",
     "fieldOff": "No",
     "fieldOn": "Sí",
     "fromPluginSettings": "De los ajustes del plugin: {value}",

@@ -101,7 +101,7 @@
     "errorTextPlaceholder": "The command takes no text: remove {placeholder} or turn on “Takes text”.",
     "errorUnknownTool": "Unknown tool.",
     "external": "Available from outside",
-    "externalInfo": "Other applications and scripts can run an allowed command with tyco-ctl run <ID>, tyco-ctl run <name> --name, or D-Bus Run. Use --interactive when confirmation or input is required.",
+    "externalInfo": "Other applications and scripts can run an allowed command with tyco-ctl run <ID>, tyco-ctl run <name> --name. Use --interactive when confirmation or input is required.",
     "fieldOff": "No",
     "fieldOn": "Yes",
     "fromPluginSettings": "From the plugin settings: {value}",

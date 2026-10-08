@@ -1,5 +1,5 @@
-//! Commands of the library run from outside the app: D-Bus `RunCommand` and
-//! `tyco-ctl run`. The command is found here, from the config the backend
+//! Commands of the library run from outside the app through `tyco-ctl run`
+//! and interactive selection actions. The command is found here, from the config the backend
 //! holds, so a wrong id or name is an error of the call itself. The run is
 //! handed to the webview of the quick window: in the background when nothing
 //! has to be asked or shown, otherwise in the command overlay. Plugin tools
@@ -354,58 +354,6 @@ pub struct LauncherRequest {
     pub input: Option<serde_json::Map<String, Value>>,
 }
 
-/// How a found command runs.
-#[derive(Debug, PartialEq, Eq)]
-enum Route {
-    /// No window: the outcome goes to the status bubble and notifications.
-    Background,
-    /// The command overlay: it asks for the text or a confirmation, or shows
-    /// the output in the result menu.
-    Overlay,
-    /// A selection run: the selection of the focused window is the text, and
-    /// the output replaces it, as with the selection hotkeys.
-    Selection,
-}
-
-fn route(command: &ExternalCommand, text: Option<&str>) -> Route {
-    if command.confirm {
-        return Route::Overlay;
-    }
-    if command.replaces_selection {
-        // a text of the call is not a selection: the result menu shows the
-        // output instead
-        return match (command.takes_text, text) {
-            (true, None) => Route::Selection,
-            _ => Route::Overlay,
-        };
-    }
-    if command.shows_menu || (command.takes_text && text.is_none()) {
-        Route::Overlay
-    } else {
-        Route::Background
-    }
-}
-
-/// Legacy name/ID resolution and routing. Authorization remains in the dispatcher.
-pub fn legacy_request(
-    user_config: &Value,
-    catalog: Option<&ToolCatalog>,
-    target: &str,
-    text: Option<String>,
-) -> Result<tyco_activation_protocol::RunRequest, LookupError> {
-    let found = find(user_config, catalog, target)?;
-    let selection = route(&found, text.as_deref()) == Route::Selection;
-    Ok(tyco_activation_protocol::RunRequest {
-        target: found.id,
-        text,
-        interactive: true,
-        selection,
-        replace: selection,
-        output: tyco_activation_protocol::OutputMode::Configured,
-        ..Default::default()
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -689,49 +637,5 @@ mod tests {
             ])
         );
         assert_eq!(list(&json!({}), None), "[]");
-    }
-
-    #[test]
-    fn opens_the_overlay_only_when_it_has_to() {
-        let command = |takes_text, confirm, shows_menu| ExternalCommand {
-            id: String::from("x"),
-            takes_text,
-            structured: false,
-            confirm,
-            shows_menu,
-            replaces_selection: false,
-        };
-        assert_eq!(
-            route(&command(false, false, false), None),
-            Route::Background
-        );
-        assert_eq!(
-            route(&command(true, false, false), Some("t")),
-            Route::Background
-        );
-        // the text comes from the selection or the field
-        assert_eq!(route(&command(true, false, false), None), Route::Overlay);
-        assert_eq!(route(&command(false, true, false), None), Route::Overlay);
-        // the output goes to the result menu
-        assert_eq!(
-            route(&command(true, false, true), Some("t")),
-            Route::Overlay
-        );
-    }
-
-    #[test]
-    fn replaces_the_selection_when_no_text_is_given() {
-        let replacing = |confirm| ExternalCommand {
-            id: String::from("x"),
-            takes_text: true,
-            structured: false,
-            confirm,
-            shows_menu: false,
-            replaces_selection: true,
-        };
-        assert_eq!(route(&replacing(false), None), Route::Selection);
-        // a given text is no selection: its output goes to the result menu
-        assert_eq!(route(&replacing(false), Some("t")), Route::Overlay);
-        assert_eq!(route(&replacing(true), None), Route::Overlay);
     }
 }

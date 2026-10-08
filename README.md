@@ -79,7 +79,9 @@ tyco-ctl run my-command --stdin --wait < input.txt > output.txt
 
 Tyco must already be running. Linux/macOS use a protected Unix socket; Windows
 uses a named pipe restricted to the current logon session. Linux additionally
-supports D-Bus (`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`).
+supports interactive `Open` and `ReplaceSelection` actions over D-Bus
+(`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`). Use `tyco-ctl`
+for command discovery, execution results, and job management.
 
 Settings → Commands controls external execution, selection capture/replacement,
 and recording activation. Every executable command needs an individual external
@@ -95,5 +97,5 @@ tyco-ctl run default:core.correct:fix --selection --replace --interactive --wait
 The command and selection grants must both be enabled. Internal selection
 hotkeys retain their own behavior; they are independent of external access.
 
-See [External control API](dev_docs/external-control.md) for the complete CLI,
+See [External control API](docs/external-control.md) for the complete CLI,
 D-Bus contract, permissions, exit codes, platform behavior, and migration guide.

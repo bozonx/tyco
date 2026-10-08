@@ -1,7 +1,7 @@
 # Кроссплатформенность: поддержка, особенности систем, тестирование
 
 > External CLI/D-Bus invocation rules and transport details are maintained in
-> [External control API](external-control.md). External selection tests below
+> [External control API](../docs/external-control.md). External selection tests below
 > require the master selection permission and an individual command grant.
 
 Статус: платформенный слой перестроен, X11 доведён до уровня KDE Wayland;
@@ -210,15 +210,15 @@ Wayland делается только в KDE.
 Сценарии:
 
 1. Запустить редактор (kate / gedit / xterm), ввести текст, выделить его.
-2. Вызвать `tyco-ctl replace correction` — проверить текст в редакторе и что
+2. Вызвать `tyco-ctl run default:core.correct:fix --selection --replace --interactive` — проверить текст в редакторе и что
    буфер обмена вернулся к прежнему.
-3. Вызвать `tyco-ctl activate write`, набрать текст, отправить — проверить, что
+3. Вызвать `tyco-ctl open write`, набрать текст, отправить — проверить, что
    он попал в редактор, а не в окно Tyco.
 4. Закрыть целевое окно до отправки — проверить, что текст остался в буфере.
 5. Создать команду-скрипт `printf %s "$TYCO_TEXT" > /tmp/tyco-cmd`, доступную
    извне. `tyco-ctl run <id> текст` — проверить файл и что окно не
    показалось; `tyco-ctl run <id>` с выделением в редакторе — что команда
-   выполнилась на выделении; `tyco-ctl commands` — JSON со списком.
+   выполнилась на выделении; `tyco-ctl commands list` — JSON со списком.
 
 Тексты в редакторе проверяются через `xdotool`/`xclip` (X11) или через
 сохранение файла редактором. Webview управляется `tauri-driver` +

@@ -454,18 +454,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             Ok(job) => Response::json(&job),
             Err(error) => error,
         },
-        Request::RunCommand { target, text } => {
-            let state = app.state::<AppState>();
-            match external_commands::legacy_request(
-                &state.params().user_config,
-                state.tool_catalog().as_ref(),
-                &target,
-                text,
-            ) {
-                Ok(request) => dispatch(app, Request::Run { request }, source),
-                Err(error) => lookup_error(error),
-            }
-        }
         Request::JobStatus { id } => app
             .state::<ExternalJobs>()
             .get(&id)
@@ -492,63 +480,9 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                     source,
                 );
             }
-            // Legacy built-ins are adapters to explicitly allowed library commands.
-            let target = if action == "correction" {
-                Some("default:core.correct:fix".to_owned())
-            } else if let Some(slot) = action
-                .strip_prefix("translate.")
-                .and_then(|slot| slot.parse::<usize>().ok())
-            {
-                config["toTranslateLanguages"][slot]
-                    .as_str()
-                    .map(|language| format!("default:core.translate:{language}"))
-            } else if let Some(slot) = action
-                .strip_prefix("aiTask.")
-                .and_then(|slot| slot.parse::<usize>().ok())
-            {
-                config["commands"]
-                    .as_array()
-                    .and_then(|commands| {
-                        commands.iter().find(|command| {
-                            command["toolId"] == "core.aiTask"
-                                && command["toolConfig"]["prompt"]
-                                    == config["aiTasks"][slot]["rule"]
-                        })
-                    })
-                    .and_then(|command| command["id"].as_str())
-                    .map(str::to_owned)
-            } else {
-                None
-            };
-            match target {
-                Some(target) => dispatch(
-                    app,
-                    Request::Run {
-                        request: RunRequest {
-                            target,
-                            selection: true,
-                            replace: true,
-                            interactive: true,
-                            ..Default::default()
-                        },
-                    },
-                    source,
-                ),
-                None => Response::coded_error(
-                    "NotFound",
-                    "No library command for this legacy selection action",
-                ),
-            }
+            Response::coded_error("InvalidArgs", "Use command:<id> for selection actions")
         }
-        Request::Activate { mode } => dispatch(
-            app,
-            Request::Open {
-                mode,
-                text: None,
-                selection: false,
-            },
-            source,
-        ),
+
         Request::Open {
             mode,
             text,

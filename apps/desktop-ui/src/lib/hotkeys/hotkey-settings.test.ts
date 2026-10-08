@@ -20,10 +20,7 @@ describe('hotkey settings', () => {
       provider: 'external',
       canConfigure: false,
       actions: {
-        editor: {
-          status: 'external',
-          externalCommand: 'tyco-ctl activate editor',
-        },
+        editor: { status: 'external', externalCommand: 'tyco-ctl open editor' },
       },
       systemTriggers: {},
       registered: false,
@@ -32,9 +29,7 @@ describe('hotkey settings', () => {
     })
 
     expect(state.canConfigure).toBe(false)
-    expect(state.statuses.editor?.externalCommand).toBe(
-      'tyco-ctl activate editor'
-    )
+    expect(state.statuses.editor?.externalCommand).toBe('tyco-ctl open editor')
     expect(providerNoteKey(state)).toBe('settings.hotkeyProvider.external')
   })
 

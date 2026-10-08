@@ -42,6 +42,44 @@ Local access does not identify a trusted application: an allowed command may
 be invoked by other processes with access to the same user/session boundary.
 There is no per-script identity or per-client grant system.
 
+## Open the text action chooser
+
+Use `select` to open the action menu for text. Use `command-launcher` for the
+searchable library command chooser. Both accept explicit text or the current
+selection; opening either without input does not capture the selection.
+
+```sh
+# Open the text action menu for the current selection.
+tyco-ctl open select --selection
+
+# Open the text action menu with supplied text.
+tyco-ctl open select --text 'Please improve this text.'
+
+# Open the searchable command chooser for the current selection.
+tyco-ctl open command-launcher --selection
+```
+
+On Linux the same windows can be opened through the session bus:
+
+```sh
+# Open the text action menu for the current selection.
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
+  select '' true
+
+# Open the text action menu with supplied text.
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
+  select 'Please improve this text.' false
+
+# Open the searchable command chooser for the current selection.
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
+  commandLauncher '' true
+```
+
+Selection capture requires **Allow external selection capture and replacement**.
+Executing an external library command also requires the master command grant
+and that command's individual grant. Supplied text is visible in process
+arguments; use `tyco-ctl run --stdin` for private scripted input.
+
 ## Permissions
 
 Settings → Commands contains three independent controls:
@@ -50,7 +88,7 @@ Settings → Commands contains three independent controls:
   Every command additionally requires its own external permission and must be
   enabled. Enabling the master switch does not expose all commands.
 - **Allow external selection capture and replacement**: permits explicit
-  `--selection`, `--replace`, and legacy selection adapters.
+  `--selection`, `--replace`, and selection actions.
 - **Allow external recording activation**: permits opening `voice`,
   `voice-chat`, and `write`, which can start recording.
 
@@ -82,7 +120,7 @@ with `ConfigurationChanged` instead of executing a stale configuration.
 ```text
  tyco-ctl status
  tyco-ctl open <mode> [--text TEXT | --selection]
- tyco-ctl commands [list [--json] | describe <id> [--name]]
+ tyco-ctl commands <list [--json] | describe <id> [--name]>
  tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
               [--replace] [--interactive] [--output return|configured]
               [--wait] [--json] [--timeout SECONDS]
@@ -108,7 +146,7 @@ The old camelCase spellings and `config` remain valid aliases.
 Opening UI does not implicitly capture a selection. `--selection` captures
 before opening the window and requires the selection permission. It restores
 the clipboard after capture. Later changes to clipboard content are preserved. Opening recording modes requires the recording
-permission, even when they are invoked through a legacy alias.
+permission.
 
 ### Discover commands
 
@@ -246,97 +284,33 @@ Machine error codes are stable identifiers separate from human-readable text.
 
 ## D-Bus
 
-The preferred automation method is `Request(s) -> s`: one JSON request string
-and one JSON response envelope. This retains machine-readable error codes.
-`Status` reports `apiVersion: 1`.
+D-Bus is limited to interactive desktop actions on Linux. Use `tyco-ctl` for
+command discovery, background execution, job monitoring/cancellation, status,
+and quitting the application. Both transports share the authorization dispatcher.
+
+| Method             | Input                                       | Output |
+| ------------------ | ------------------------------------------- | ------ |
+| `Open`             | mode string, text string, selection boolean | None   |
+| `ReplaceSelection` | action string                               | None   |
+
+`Open` uses the supplied text when selection is false. When selection is true,
+it captures the current selection instead. `ReplaceSelection` uses the same
+selection execution as `tyco-ctl run <id> --selection --replace --interactive`.
+Its action must be `command:<id>` with a stable library command ID.
 
 ```sh
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Request s \
-  '{"command":"status"}'
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
+  select '' true
 
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Request s \
-  '{"command":"run","request":{"target":"my-backup"}}'
-
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Request s \
-  '{"command":"jobStatus","id":"job-1234-1"}'
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface ReplaceSelection s \
+  'command:my-correction'
 ```
 
-Requests use the tagged `command` field:
-
-| Command                   | Fields                                        |
-| ------------------------- | --------------------------------------------- |
-| `status`                  | None                                          |
-| `open`                    | `mode`, optional `text`, optional `selection` |
-| `listCommands`            | None                                          |
-| `describeCommand`         | `target`, optional `byName`                   |
-| `run`                     | `request`: run options below                  |
-| `jobStatus` / `jobCancel` | `id`                                          |
-| `quit`                    | None                                          |
-
-Run options: `target`, `byName`, `text`, `input` (JSON object), `interactive`,
-`selection`, `replace`, `output` (`return` or `configured`). Booleans default to
-false; output defaults to `return`. D-Bus does not hold a method call open for
-tool completion: poll `jobStatus` using the returned ID.
-
-```json
-{
-  "success": true,
-  "output": "{\"id\":\"job-1234-1\",\"commandId\":\"my-backup\",\"state\":\"accepted\"}"
-}
-```
-
-```json
-{
-  "success": false,
-  "error": "External commands access is disabled",
-  "code": "AccessDenied"
-}
-```
-
-`output` in the envelope is a serialized JSON string for discovery/jobs/status;
-it is absent for operations with no payload. This retains compatibility with
-the shared local protocol's existing response envelope.
-
-Convenience methods use the same dispatcher:
-
-| Method            | Input                                       | Output                |
-| ----------------- | ------------------------------------------- | --------------------- |
-| `Status`          | None                                        | JSON string           |
-| `Open`            | mode string, text string, selection boolean | None                  |
-| `Run`             | Run options JSON string                     | Job JSON string       |
-| `ListCommands`    | None                                        | JSON array string     |
-| `DescribeCommand` | target string, byName boolean               | JSON string           |
-| `JobStatus`       | job ID string                               | Job JSON string       |
-| `CancelJob`       | job ID string                               | Job JSON string       |
-| `Ping`            | None                                        | Public interface name |
-| `Quit`            | None                                        | None                  |
-
-Convenience methods return standard D-Bus errors with the machine error code
-in the message. Use `Request` when a structured code is required.
+Methods return standard D-Bus errors with the machine error code in the message.
+Successful calls acknowledge activation; they do not return command results or
+wait for completion. Use `tyco-ctl run` and `tyco-ctl jobs` for observable execution.
 
 KWin reports use the separate `org.tyco.KwinTracker` interface at the same
 object. `KwinWindowActivated`, `KwinWindowClosed`, and `KwinWindowMissing` are
 internal methods: they accept only the current owner of `org.kde.KWin`, not
 ordinary API clients.
-
-## Migration
-
-- `activate <mode>` remains an alias for `open`; it no longer captures selection
-  implicitly. Add `--selection` if required and grant selection access.
-- `commands` remains an alias for `commands list`.
-- `run <id> text...` and `run <id> -` remain input syntax aliases. Run now defaults
-  to non-interactive, returned-output execution. Add `--interactive` and/or
-  `--output configured` to request previous UI/output behavior.
-- Calls by display name now use `--name`; use IDs for stable integrations.
-- `replace command:<id>` remains an interactive selection/replacement adapter.
-  It now enforces both the master and individual command grants and confirmation.
-- Legacy `replace correction`, `translate.N`, and `aiTask.N` resolve to library
-  commands. The resolved command must exist and have external permission.
-  Prefer `run <stable-id> --selection --replace --interactive` because slot
-  indexes change when settings are reordered.
-- D-Bus `RunCommand(command, text)` remains an interactive compatibility adapter;
-  `Run`/`Request` provide observable job completion. `SwitchMode` accepts its old
-  pipe-separated string but ignores caller-supplied window IDs. Use typed `Open`
-  instead. `ReplaceSelection` uses the same protected legacy adapters as the CLI.
-- Clients built for the old TCP endpoint must be rebuilt. No insecure TCP
-  compatibility listener is retained.

@@ -78,10 +78,14 @@ impl HotkeyTarget {
         }
     }
 
-    fn cli_command(&self) -> String {
+    fn cli_command(&self, config: &serde_json::Value) -> String {
         match self {
-            Self::Mode(mode) => format!("tyco-ctl activate {}", mode.as_str()),
-            Self::Selection(action) => format!("tyco-ctl replace {action}"),
+            Self::Mode(mode) => format!("tyco-ctl open {}", mode.as_str()),
+            Self::Selection(action) => {
+                let id = selection_command_id(config, action).unwrap_or_default();
+                let quoted = id.replace('\'', "'\\''");
+                format!("tyco-ctl run '{quoted}' --selection --replace --interactive")
+            }
         }
     }
 
@@ -424,6 +428,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
                     external_command: Some(external_command(
                         &binding.target,
                         binding.shortcut.as_deref(),
+                        &config,
                     )),
                     message: None,
                 };
@@ -499,7 +504,11 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         ))),
         ProviderKind::External => Ok(ApplyHotkeyResult {
             status: HotkeyApplyStatus::External,
-            external_command: Some(external_command(&target, shortcut.map(|_| requested))),
+            external_command: Some(external_command(
+                &target,
+                shortcut.map(|_| requested),
+                &app.state::<AppState>().params().user_config,
+            )),
             message: None,
         }),
     }
@@ -589,23 +598,54 @@ fn apply_global_shortcut(
     Ok(ready)
 }
 
+fn selection_command_id(config: &serde_json::Value, action: &str) -> Option<String> {
+    if let Some(id) = action.strip_prefix(tyco_activation_protocol::COMMAND_ACTION_PREFIX) {
+        return Some(id.into());
+    }
+    if action == "correction" {
+        return Some("default:core.correct:fix".into());
+    }
+    if let Some(slot) = action
+        .strip_prefix("translate.")
+        .and_then(|slot| slot.parse::<usize>().ok())
+    {
+        return config["toTranslateLanguages"][slot]
+            .as_str()
+            .map(|language| format!("default:core.translate:{language}"));
+    }
+    let slot = action.strip_prefix("aiTask.")?.parse::<usize>().ok()?;
+    let rule = config["aiTasks"][slot]["rule"].as_str()?;
+    config["commands"].as_array()?.iter().find(|command| {
+        command["toolId"] == "core.aiTask" && command["toolConfig"]["prompt"].as_str() == Some(rule)
+    })?["id"]
+        .as_str()
+        .map(str::to_owned)
+}
+
 /// The line that binds `target` in the desktop's own configuration; without
 /// a shortcut only the command to bind.
-fn external_command(target: &HotkeyTarget, shortcut: Option<&str>) -> String {
+fn external_command(
+    target: &HotkeyTarget,
+    shortcut: Option<&str>,
+    config: &serde_json::Value,
+) -> String {
     let Some(shortcut) = shortcut else {
-        return target.cli_command();
+        return target.cli_command(config);
     };
     match session::current().desktop {
         Desktop::Hyprland => {
             let (modifiers, key) = hyprland_shortcut(shortcut);
-            format!("bind = {modifiers}, {key}, exec, {}", target.cli_command())
+            format!(
+                "bind = {modifiers}, {key}, exec, {}",
+                target.cli_command(config)
+            )
         }
         Desktop::Sway => format!(
             "bindsym {} exec {}",
             sway_shortcut(shortcut),
-            target.cli_command()
+            target.cli_command(config)
         ),
-        _ => target.cli_command(),
+        _ => target.cli_command(config),
     }
 }
 
@@ -1219,6 +1259,25 @@ mod tests {
     }
 
     #[test]
+    fn external_selection_commands_use_stable_ids() {
+        let config = serde_json::json!({"toTranslateLanguages": ["es_AR"]});
+        assert_eq!(
+            selection_command_id(&config, "correction").as_deref(),
+            Some("default:core.correct:fix")
+        );
+        assert_eq!(
+            selection_command_id(&config, "translate.0").as_deref(),
+            Some("default:core.translate:es_AR")
+        );
+        assert_eq!(selection_command_id(&config, "aiTask.9"), None);
+        let target = HotkeyTarget::Selection("command:owner's-task".into());
+        assert_eq!(
+            target.cli_command(&config),
+            "tyco-ctl run 'owner'\\''s-task' --selection --replace --interactive"
+        );
+    }
+
+    #[test]
     fn parses_hotkey_targets() {
         assert_eq!(
             HotkeyTarget::parse("editor").unwrap(),
@@ -1227,7 +1286,7 @@ mod tests {
         let target = HotkeyTarget::parse("replace.aiTask.2").unwrap();
         assert_eq!(target, HotkeyTarget::Selection(String::from("aiTask.2")));
         assert_eq!(target.id(), "replace.aiTask.2");
-        assert_eq!(target.cli_command(), "tyco-ctl replace aiTask.2");
+        assert_eq!(target.cli_command(&serde_json::json!({"aiTasks":[{}, {}, {"rule":"fix"}], "commands":[{"id":"task-fix", "toolId":"core.aiTask", "toolConfig":{"prompt":"fix"}}]})), "tyco-ctl run 'task-fix' --selection --replace --interactive");
         assert!(HotkeyTarget::parse("replace.bogus").is_err());
         assert!(HotkeyTarget::parse("bogus").is_err());
     }
