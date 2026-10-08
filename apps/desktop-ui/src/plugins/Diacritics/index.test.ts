@@ -1,20 +1,76 @@
-import { describe, expect, it } from 'vitest'
-import type { EditItem } from '../../lib/edit-menu/edit-menu-store'
+import { describe, expect, it, vi } from 'vitest'
+
 import { createPluginTestContext } from '../plugin-test-context'
 import diacritics from './index'
 
 describe('diacritics plugin', () => {
-  it.each(['general', 'russian', 'spanish'])(
-    'requires selection for every operation in %s',
-    (profile) => {
-      const { ctx, mocks } = createPluginTestContext({ config: { profile } })
-      diacritics().init(ctx)
-      const items = mocks.registerEditItems.mock.calls[0]![0] as EditItem[]
-      expect(items.every((item) => item.selectionOnly)).toBe(true)
-      expect(items.some((item) => item.id === 'diacritics-clear')).toBe(true)
-      expect(items.some((item) => item.id === 'diacritics-acute')).toBe(true)
-      if (profile === 'russian') expect(items).toHaveLength(3)
-      if (profile === 'spanish') expect(items).toHaveLength(5)
-    }
-  )
+  it('registers default toolbar items with position left and selectionOnly', () => {
+    const { ctx, toolbarItems } = createPluginTestContext()
+    diacritics().init(ctx)
+
+    expect(toolbarItems).toHaveLength(1)
+    expect(toolbarItems[0].id).toBe('diacritics-acute')
+    expect(toolbarItems[0].position).toBe('left')
+    expect(toolbarItems[0].selectionOnly).toBe(true)
+    expect(toolbarItems[0].label).toBe('◌́')
+    expect(toolbarItems[0].tooltipKey).toBe('plugin.diacritics.acute')
+  })
+
+  it('registers user-configured actions in custom order', () => {
+    const { ctx, toolbarItems } = createPluginTestContext({
+      config: {
+        actions: [
+          { id: 'circumflex', enabled: true },
+          { id: 'clearAcute', enabled: true },
+          { id: 'acute', enabled: false },
+        ],
+      },
+    })
+    diacritics().init(ctx)
+
+    expect(toolbarItems).toHaveLength(2)
+    expect(toolbarItems[0].id).toBe('diacritics-circumflex')
+    expect(toolbarItems[0].label).toBe('◌̂')
+    expect(toolbarItems[1].id).toBe('diacritics-clear-acute')
+    expect(toolbarItems[1].label).toBe('−◌́')
+  })
+
+  it('migrates legacy profile config when actions is not set', () => {
+    const { ctx, toolbarItems } = createPluginTestContext({
+      config: { profile: 'spanish' },
+    })
+    diacritics().init(ctx)
+
+    expect(toolbarItems.map((i) => i.id)).toEqual([
+      'diacritics-acute',
+      'diacritics-diaeresis',
+      'diacritics-tilde',
+    ])
+  })
+
+  it('transforms selected text and focuses editor on action execution', async () => {
+    const { ctx, mocks, toolbarItems } = createPluginTestContext({
+      selectedText: 'e',
+    })
+    diacritics().init(ctx)
+
+    const acuteItem = toolbarItems.find((i) => i.id === 'diacritics-acute')!
+    await acuteItem.action()
+
+    expect(mocks.replaceEditorInputSelection).toHaveBeenCalledWith('é')
+    expect(mocks.setEditorInputFocus).toHaveBeenCalled()
+  })
+
+  it('warns when attempting action without selection', async () => {
+    const { ctx, mocks, toolbarItems } = createPluginTestContext({
+      selectedText: '',
+    })
+    diacritics().init(ctx)
+
+    const acuteItem = toolbarItems.find((i) => i.id === 'diacritics-acute')!
+    await acuteItem.action()
+
+    expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
+    expect(mocks.replaceEditorInputSelection).not.toHaveBeenCalled()
+  })
 })

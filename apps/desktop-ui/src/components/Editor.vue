@@ -17,12 +17,21 @@
             v-for="item in leftToolbarItems"
             :key="item.id"
             sm
-            square
+            :square="!getToolbarLabel(item) || getToolbarLabel(item).length <= 2"
             ghost
+            :disabled="
+              item.disabled ||
+              (item.selectionOnly && !editorInputStore.hasSelection)
+            "
             :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
-            <Icon :icon="item.icon" height="18" />
+            <Icon v-if="item.icon" :icon="item.icon" height="18" />
+            <span
+              v-if="getToolbarLabel(item)"
+              class="text-sm font-medium leading-none"
+              >{{ getToolbarLabel(item) }}</span
+            >
           </Button>
         </div>
 
@@ -32,12 +41,21 @@
             v-for="item in rightToolbarItems"
             :key="item.id"
             sm
-            square
+            :square="!getToolbarLabel(item) || getToolbarLabel(item).length <= 2"
             ghost
+            :disabled="
+              item.disabled ||
+              (item.selectionOnly && !editorInputStore.hasSelection)
+            "
             :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
-            <Icon :icon="item.icon" height="18" />
+            <Icon v-if="item.icon" :icon="item.icon" height="18" />
+            <span
+              v-if="getToolbarLabel(item)"
+              class="text-sm font-medium leading-none"
+              >{{ getToolbarLabel(item) }}</span
+            >
           </Button>
           <Button
             sm
@@ -320,7 +338,19 @@ const getToolbarTooltip = (item: ToolbarItem): string => {
   if (item.tooltipKey) {
     return t(item.tooltipKey)
   }
-  return item.tooltip || ''
+  if (item.tooltip) {
+    return item.tooltip
+  }
+  if (item.labelKey) {
+    return t(item.labelKey)
+  }
+  return item.label || ''
+}
+
+const getToolbarLabel = (item: ToolbarItem): string => {
+  if (item.label) return item.label
+  if (item.labelKey) return t(item.labelKey)
+  return ''
 }
 
 const handleAiTask = async () => {

@@ -132,6 +132,36 @@ describe('Settings.vue', () => {
     expect(translationsIdx).toBe(llmIdx + 1)
   })
 
+  it('places editor tab in primary tabs right after general tab', () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: {
+            props: ['tabs'],
+            template: `
+              <div class="tabs-stub">
+                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                  {{ tab.text }}
+                </button>
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    const tabKeys = wrapper
+      .findAll('.tabs-stub button')
+      .map((btn) => btn.attributes('data-key'))
+
+    const generalIdx = tabKeys.indexOf('general')
+    const editorIdx = tabKeys.indexOf('editor')
+
+    expect(generalIdx).toBeGreaterThan(-1)
+    expect(editorIdx).toBeGreaterThan(-1)
+    expect(editorIdx).toBe(generalIdx + 1)
+  })
+
   it('includes hotkeys tab in primary tabs with settings.hotkeysTab text', () => {
     const wrapper = mount(Settings, {
       global: {

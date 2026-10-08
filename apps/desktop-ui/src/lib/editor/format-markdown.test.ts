@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_MARKDOWN_SETTINGS,
+  DEFAULT_MARKDOWN_CLEAN_SETTINGS,
   normalizeMarkdownSettings,
+  normalizeMarkdownCleanSettings,
 } from '@tyco/shared'
 import { formatMarkdown } from './format-markdown'
 import { htmlToMarkdown } from './html-to-markdown'
@@ -72,5 +74,27 @@ describe('Markdown settings', () => {
         incrementListMarker: false,
       })
     ).toBe('1. one\n1. two')
+  })
+})
+
+describe('Markdown clean settings', () => {
+  it('supplies defaults and handles invalid values', () => {
+    expect(normalizeMarkdownCleanSettings(undefined)).toEqual(
+      DEFAULT_MARKDOWN_CLEAN_SETTINGS
+    )
+    expect(
+      normalizeMarkdownCleanSettings({
+        bullet: 'invalid',
+        codeBlockIndent: 'invalid',
+        blockquoteIndent: 'invalid',
+        linkFormat: 'invalid',
+        keepInlineCode: 'notABool',
+        keepTaskCheckboxes: 'notABool',
+      })
+    ).toEqual({
+      ...DEFAULT_MARKDOWN_CLEAN_SETTINGS,
+      keepInlineCode: false,
+      keepTaskCheckboxes: true,
+    })
   })
 })

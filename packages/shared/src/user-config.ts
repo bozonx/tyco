@@ -1,4 +1,9 @@
-import type { MarkdownSettings } from './markdown'
+import {
+  type MarkdownSettings,
+  type MarkdownCleanSettings,
+  DEFAULT_MARKDOWN_SETTINGS,
+  DEFAULT_MARKDOWN_CLEAN_SETTINGS,
+} from './markdown'
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
@@ -425,6 +430,7 @@ export interface UserConfig {
     holdAction?: string
   } | null)[]
   markdown?: MarkdownSettings
+  markdownClean?: MarkdownCleanSettings
   plugins: Record<string, unknown>
 }
 
@@ -495,5 +501,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
       rule: 'Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.',
     },
   ],
+  markdown: DEFAULT_MARKDOWN_SETTINGS,
+  markdownClean: DEFAULT_MARKDOWN_CLEAN_SETTINGS,
   plugins: {},
 }

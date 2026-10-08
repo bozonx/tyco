@@ -4,6 +4,7 @@
       v-for="item in config"
       :key="item.name"
       :label="item.labelKey ? t(item.labelKey) : item.label || item.name"
+      :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
       <FieldInput
         v-if="item.type === 'text'"
@@ -27,6 +28,13 @@
         :value="values[item.name]"
         @update:value="updateValue(item.name, $event)"
       />
+      <FieldSortableChecklist
+        v-else-if="item.type === 'sortable-checklist'"
+        :value="values[item.name]"
+        :options="item.options || []"
+        :default-value="item.defaultValue"
+        @update:value="updateValue(item.name, $event)"
+      />
     </FieldRow>
   </div>
 </template>
@@ -39,6 +47,7 @@ import FieldCheckbox from './FieldCheckbox.vue'
 import FieldInput from './FieldInput.vue'
 import FieldRow from './FieldRow.vue'
 import FieldSelect from './FieldSelect.vue'
+import FieldSortableChecklist from './FieldSortableChecklist.vue'
 import FieldTextArea from './FieldTextArea.vue'
 import type { InputConfigItem } from '@/types'
 

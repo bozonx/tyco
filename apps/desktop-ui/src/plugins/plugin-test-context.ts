@@ -35,6 +35,8 @@ export function createPluginTestContext(
     getEditorInputValue: vi.fn(() => options.value ?? ''),
     getEditorInputSelectedText: vi.fn(() => options.selectedText ?? ''),
     setEditorInputValue: vi.fn(),
+    replaceEditorInputSelection: vi.fn(),
+    setEditorInputFocus: vi.fn(),
     toast: vi.fn(),
     callApiFunction: vi.fn(async () => options.apiResult ?? { success: true }),
     getMyConfig: vi.fn(() => options.config),

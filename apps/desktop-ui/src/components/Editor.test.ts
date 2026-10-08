@@ -125,6 +125,51 @@ describe('Editor.vue toolbar', () => {
     ])
   })
 
+  it('renders toolbar buttons with text labels and respects selectionOnly disabled state', async () => {
+    const { useToolbarStore } = await import('../stores/toolbar')
+    const { useEditorInputStore } = await import('../stores/editorInput')
+    const toolbarStore = useToolbarStore()
+    const editorInputStore = useEditorInputStore()
+
+    const onAction = vi.fn()
+    toolbarStore.registerToolbarItems([
+      {
+        id: 'diacritics-acute',
+        label: '◌́',
+        position: 'left',
+        selectionOnly: true,
+        tooltipKey: 'plugin.diacritics.acute',
+        action: onAction,
+      },
+    ])
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title', 'disabled'],
+            template:
+              '<button class="btn-stub" :title="title" :disabled="disabled"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const acuteBtn = wrapper.find('button[title="plugin.diacritics.acute"]')
+    expect(acuteBtn.exists()).toBe(true)
+    expect(acuteBtn.text()).toContain('◌́')
+    expect(acuteBtn.attributes('disabled')).toBeDefined()
+
+    // Select text in editor
+    editorInputStore.setSelection('a', 0, 1)
+    await wrapper.vm.$nextTick()
+
+    expect(acuteBtn.attributes('disabled')).toBeUndefined()
+  })
+
   it('does not render the bottom actions block for registered actions', async () => {
     const { useActionMenuStore } = await import('../stores/actionMenu')
     useActionMenuStore().registerActionsItems([

@@ -18,7 +18,8 @@ export const useEditMenuStore = defineStore('editMenu', () => {
   return createEditMenuStoreModel({
     doCaseTransform,
     formatMdAndStyle: async (text) =>
-      formatMarkdown(text, ipcStore.params?.userConfig.markdown),
-    stripMarkdown,
+      formatMarkdown(text, ipcStore.params?.userConfig?.markdown),
+    stripMarkdown: (text) =>
+      stripMarkdown(text, ipcStore.params?.userConfig?.markdownClean),
   })
 })
