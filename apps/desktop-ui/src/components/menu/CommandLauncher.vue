@@ -1,10 +1,19 @@
 <template>
   <ActionOverlayLayout
     :title="title"
-    :onEsc="stage.kind === 'prepare' ? launcher.back : searchMode ? closeSearch : undefined"
+    :onEsc="
+      stage.kind === 'prepare'
+        ? launcher.back
+        : searchMode
+          ? closeSearch
+          : undefined
+    "
     :escMode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
   >
-    <template v-if="stage.kind === 'list' && !searchMode && hasSelection" #header-extra>
+    <template
+      v-if="stage.kind === 'list' && !searchMode && hasSelection"
+      #header-extra
+    >
       <span class="launcher-selection" :title="selectedText">
         <Icon icon="mdi:format-quote-open" height="14" />
         {{ t('commandLauncher.selection', { count: selectedText.length }) }}
@@ -118,6 +127,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { useOverlayNav } from '../../composables/useOverlayNav'
+import { searchCommands } from '../../lib/command-launcher/launcher-model'
 import {
   commandIcon,
   commandLabel,
@@ -125,7 +135,6 @@ import {
   commandTarget,
   isCommandAvailable,
 } from '../../lib/commands/command-config'
-import { searchCommands } from '../../lib/command-launcher/launcher-model'
 import { type ActionItem } from '../../stores/actionMenu'
 import { useCommandLauncherStore } from '../../stores/commandLauncher'
 import { useIpcStore } from '../../stores/ipc'
@@ -198,7 +207,7 @@ const focusStage = () => {
 const searchAction = computed<ActionItem>(() => ({
   labelKey: 'commandLauncher.allCommands',
   icon: 'mdi:magnify',
-  action: () => {
+  action: async () => {
     searchMode.value = true
     query.value = ''
   },
@@ -213,8 +222,8 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       icon: commandIcon(command, toolsStore),
       hint: command.description,
       disabled: !available,
-      action: () => {
-        void launcher.pick(command)
+      action: async () => {
+        await launcher.pick(command)
       },
     }
   })
@@ -237,11 +246,7 @@ const searchHints = computed<QueryPanelHint[]>(() => [
     label: t('commandLauncher.hintRun'),
     disabled: searchOptions.value.length === 0,
   },
-  {
-    keys: ['Esc'],
-    label: t('common.back'),
-    action: closeSearch,
-  },
+  { keys: ['Esc'], label: t('common.back'), action: closeSearch },
 ])
 
 function submitSearch({ option }: QueryPanelSubmit) {

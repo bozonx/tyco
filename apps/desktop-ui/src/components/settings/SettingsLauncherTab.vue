@@ -99,7 +99,10 @@ const commandOptions = computed(() => {
 })
 
 function moveSlot(from: number, to: number) {
-  emit('update:launcherCommands', moveShortcutSlot(launcherSlots.value, from, to))
+  emit(
+    'update:launcherCommands',
+    moveShortcutSlot(launcherSlots.value, from, to)
+  )
 }
 
 function setSlot(index: number, value: string | null) {

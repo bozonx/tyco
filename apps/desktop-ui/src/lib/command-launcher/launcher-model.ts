@@ -155,7 +155,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
         return all.find((cmd) => cmd.id === id) ?? null
       })
     }
-    return Array.from({ length: 15 }, (_, index) => commands.value[index] ?? null)
+    return Array.from(
+      { length: 15 },
+      (_, index) => commands.value[index] ?? null
+    )
   })
 
   const pickSlot = (index: number) => {

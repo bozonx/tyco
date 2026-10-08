@@ -111,10 +111,7 @@ describe('createCommand', () => {
   it('asks to confirm a new script and offers it everywhere but the chat', () => {
     const command = createCommand('script', 'id1')
     expect(command.confirm).toBe('always')
-    expect(command.availableIn).toEqual({
-      external: true,
-      chat: false,
-    })
+    expect(command.availableIn).toEqual({ external: true, chat: false })
     expect(createCommand('webhook').confirm).toBe('auto')
   })
 })
@@ -226,7 +223,7 @@ describe('external names', () => {
   const named = (id: string, name: string, external = true): CommandConfig => ({
     ...createCommand('webhook', id),
     name,
-    availableIn: { launcher: true, external, chat: false },
+    availableIn: { external, chat: false },
   })
 
   it('compares names regardless of case, ё and spaces', () => {
@@ -303,4 +300,3 @@ describe('normalizeLauncherCommands', () => {
     expect(slots[1]).toBeNull()
   })
 })
-

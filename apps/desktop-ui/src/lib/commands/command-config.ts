@@ -143,9 +143,7 @@ export function normalizeLauncherCommands(
     const rawCommands = commands as (CommandConfig & {
       availableIn?: { launcher?: boolean }
     })[]
-    source = rawCommands
-      .filter((c) => c.availableIn?.launcher)
-      .map((c) => c.id)
+    source = rawCommands.filter((c) => c.availableIn?.launcher).map((c) => c.id)
   }
   const existingIds = new Set(commands.map((c) => c.id))
   return normalizeShortcutSlots<string>(

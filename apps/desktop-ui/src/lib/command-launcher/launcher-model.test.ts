@@ -331,7 +331,7 @@ describe('external calls', () => {
   const lamp = command(
     'lamp',
     'Lamp',
-    { availableIn: { launcher: false, external: true, chat: false } },
+    { availableIn: { external: true, chat: false } },
     { takesText: false }
   )
 
@@ -343,10 +343,7 @@ describe('external calls', () => {
   }
 
   it('runs a command missing from the overlay list on the given text', async () => {
-    const hidden = {
-      ...note,
-      availableIn: { launcher: false, external: true, chat: false },
-    }
+    const hidden = { ...note, availableIn: { external: true, chat: false } }
     const { deps, model } = setupExternal([hidden])
     await model.request({ commandId: 'note', text: 'from LHC' })
     expect(deps.run).toHaveBeenCalledWith(hidden, 'from LHC', expect.anything())

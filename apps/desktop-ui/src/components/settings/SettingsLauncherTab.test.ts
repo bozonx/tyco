@@ -18,7 +18,9 @@ vi.mock('../../stores/tools', async () => {
 const cmd1 = { ...createCommand('script', 'cmd1'), name: 'Script 1' }
 const cmd2 = { ...createCommand('webhook', 'cmd2'), name: 'Webhook 2' }
 
-const mountTab = (launcherCommands: (string | null)[] = ['cmd1', null, 'cmd2']) =>
+const mountTab = (
+  launcherCommands: (string | null)[] = ['cmd1', null, 'cmd2']
+) =>
   mount(SettingsLauncherTab, {
     props: {
       userConfig: {
@@ -37,7 +39,9 @@ describe('SettingsLauncherTab.vue', () => {
 
   it('emits editCommand when pencil button is clicked', async () => {
     const wrapper = mountTab()
-    const editBtn = wrapper.find('.shortcut-slot button[title="commands.editCommand"]')
+    const editBtn = wrapper.find(
+      '.shortcut-slot button[title="commands.editCommand"]'
+    )
     expect(editBtn.exists()).toBe(true)
 
     await editBtn.trigger('click')
@@ -50,7 +54,9 @@ describe('SettingsLauncherTab.vue', () => {
     expect(deleteBtn.exists()).toBe(true)
 
     await deleteBtn.trigger('click')
-    const emitted = wrapper.emitted('update:launcherCommands')?.[0]?.[0] as (string | null)[]
+    const emitted = wrapper.emitted('update:launcherCommands')?.[0]?.[0] as (
+      string | null
+    )[]
     expect(emitted).toBeDefined()
     expect(emitted[0]).toBeNull()
   })

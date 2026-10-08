@@ -1113,7 +1113,10 @@ const createMenuCommand = (index: number, toolId: BuiltinToolId) => {
 
 const createLauncherCommand = (index: number, toolId: BuiltinToolId) => {
   const command = createCommand(toolId)
-  const nextCommands = [...normalizeCommands(userConfig.value.commands), command]
+  const nextCommands = [
+    ...normalizeCommands(userConfig.value.commands),
+    command,
+  ]
   const slots = normalizeLauncherCommands(
     userConfig.value.launcherCommands,
     nextCommands
