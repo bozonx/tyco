@@ -34,8 +34,22 @@ const inline = (nodes: MdNode[] = [], options: MarkdownCleanSettings): string =>
             : (node.value ?? '')
         case 'break':
           return '\n'
-        case 'image':
-          return node.alt ?? ''
+        case 'image': {
+          const alt = node.alt ?? ''
+          const url = node.url ?? ''
+          if (options.imageFormat === 'none') {
+            return ''
+          }
+          if (options.imageFormat === 'url') {
+            return url || alt
+          }
+          if (options.imageFormat === 'altAndUrl') {
+            if (!url || alt === url) return alt || url
+            if (!alt) return url
+            return `${alt} (${url})`
+          }
+          return alt
+        }
         case 'html':
           return (node.value ?? '').replace(HTML_TAG, '')
         case 'footnoteReference':
@@ -140,6 +154,7 @@ const block = (node: MdNode, options: MarkdownCleanSettings): string | null => {
         )
         .join('\n')
     case 'thematicBreak':
+      return options.keepThematicBreaks ? '---' : null
     case 'definition':
     case 'footnoteDefinition':
       return null

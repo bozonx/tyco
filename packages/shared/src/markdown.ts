@@ -33,6 +33,8 @@ export interface MarkdownCleanSettings {
   blockquoteIndent: 'none' | '2spaces' | '4spaces' | 'tab' | 'angle'
   keepInlineCode: boolean
   linkFormat: 'text' | 'textAndUrl' | 'url'
+  imageFormat: 'alt' | 'altAndUrl' | 'url' | 'none'
+  keepThematicBreaks: boolean
   keepTaskCheckboxes: boolean
 }
 
@@ -42,6 +44,8 @@ export const DEFAULT_MARKDOWN_CLEAN_SETTINGS: MarkdownCleanSettings = {
   blockquoteIndent: 'none',
   keepInlineCode: false,
   linkFormat: 'text',
+  imageFormat: 'alt',
+  keepThematicBreaks: false,
   keepTaskCheckboxes: true,
 }
 
@@ -69,6 +73,12 @@ export function normalizeMarkdownCleanSettings(
     linkFormat: ['text', 'textAndUrl', 'url'].includes(input.linkFormat ?? '')
       ? input.linkFormat!
       : DEFAULT_MARKDOWN_CLEAN_SETTINGS.linkFormat,
+    imageFormat: ['alt', 'altAndUrl', 'url', 'none'].includes(
+      input.imageFormat ?? ''
+    )
+      ? input.imageFormat!
+      : DEFAULT_MARKDOWN_CLEAN_SETTINGS.imageFormat,
+    keepThematicBreaks: input.keepThematicBreaks === true,
     keepTaskCheckboxes: input.keepTaskCheckboxes !== false,
   }
 }

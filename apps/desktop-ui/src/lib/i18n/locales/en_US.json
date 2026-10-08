@@ -181,6 +181,7 @@
     "sttLanguageHint": "Naming the language gives the most accurate recognition. Several languages lets the model guess, and it may take one language for another.",
     "sttLanguageUser": "User language",
     "sttLanguageMulti": "Several languages (auto)",
+    "sttLlmFormatting": "Format with LLM after recognition",
     "formatWithLlm": "Post-process text with LLM",
     "sttLlmRules": "Post-processing rules",
     "removeModel": "Remove model",

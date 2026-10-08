@@ -184,6 +184,7 @@
     "sttLanguageHint": "Indicar el idioma da el reconocimiento más preciso. Con varios idiomas el modelo lo adivina y puede confundir uno con otro.",
     "sttLanguageUser": "Idioma del usuario",
     "sttLanguageMulti": "Varios idiomas (auto)",
+    "sttLlmFormatting": "Formato con LLM tras el reconocimiento de texto",
     "formatWithLlm": "Procesar el texto con LLM",
     "sttLlmRules": "Reglas de procesamiento",
     "removeModel": "Eliminar modelo",

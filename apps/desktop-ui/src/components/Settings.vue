@@ -107,7 +107,7 @@
                 v-if="userConfig.editorHistoryStorage !== 'off'"
                 class="editor-history-nested"
               >
-                <FieldRow :label="t('settings.editorHistoryMaxItems')">
+                <FieldRow :label="t('settings.editorHistoryMaxItems')" nested>
                   <FieldInput
                     type="number"
                     :value="userConfig.editorHistoryMaxItems"
@@ -118,6 +118,7 @@
                   <FieldRow
                     :label="t('settings.editorHistoryRetentionDays')"
                     :info="t('settings.editorHistoryRetentionDaysHint')"
+                    nested
                   >
                     <FieldSelect
                       :value="userConfig.editorHistoryRetentionDays ?? 0"
@@ -128,6 +129,7 @@
                   <FieldRow
                     :label="t('settings.sanitizeSecretsInEditorHistory')"
                     :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
+                    nested
                   >
                     <FieldCheckbox
                       v-model:value="userConfig.sanitizeSecretsInEditorHistory"
@@ -378,6 +380,9 @@
                 </Button>
               </div>
             </FieldRow>
+          </SettingsSection>
+
+          <SettingsSection :title="t('settings.sttLlmFormatting')">
             <FieldRow :label="t('settings.formatWithLlm')">
               <FieldCheckbox
                 :value="Boolean(currentSttModel.formatWithLlm)"
@@ -1317,6 +1322,11 @@ onUnmounted(() => {
 .editor-history-nested {
   background-color: var(--app-surface-sunken);
   border-top: 1px solid var(--app-border-subtle);
+  border-left: 2px solid var(--app-border-strong);
+}
+
+.editor-history-nested :deep(.field-row + .field-row) {
+  border-top: none;
 }
 
 .editor-history-group + .field-row {

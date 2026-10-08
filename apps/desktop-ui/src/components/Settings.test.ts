@@ -48,7 +48,7 @@ vi.mock('../stores/ipc', () => ({
 }))
 
 vi.mock('../stores/llm', () => ({
-  useLlmStore: () => ({ refreshSecrets: vi.fn() }),
+  useLlmStore: () => ({ refreshSecrets: vi.fn(), secrets: {} }),
 }))
 
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
@@ -291,5 +291,44 @@ describe('Settings.vue', () => {
     expect(firstItemButtons[1].attributes('aria-label')).toBe(
       'settings.storageOpenFolder'
     )
+  })
+
+  it('renders stt provider and llm formatting sections in stt tab', async () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: true,
+          SettingsSection: {
+            props: ['title'],
+            template:
+              '<section class="settings-section-stub" :data-title="title"><slot /></section>',
+          },
+          FieldRow: {
+            props: ['label'],
+            template:
+              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+          },
+          FieldSelect: true,
+          FieldInput: true,
+          FieldCheckbox: true,
+          FieldTextArea: true,
+          Button: true,
+        },
+      },
+    })
+
+    const vm = wrapper.vm as any
+    vm.currentTab = 'stt'
+    await wrapper.vm.$nextTick()
+
+    const sections = wrapper.findAll('.settings-section-stub')
+    expect(sections).toHaveLength(2)
+    expect(sections[0].attributes('data-title')).toBeFalsy()
+    expect(sections[1].attributes('data-title')).toBe(
+      'settings.sttLlmFormatting'
+    )
+    expect(
+      sections[1].find('[data-label="settings.formatWithLlm"]').exists()
+    ).toBe(true)
   })
 })

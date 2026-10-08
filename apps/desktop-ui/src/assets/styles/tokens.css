@@ -52,7 +52,7 @@
   --ui-scale: 1;
 
   /* Field row label width — global token so FieldRow and FieldsByCfg stay in sync */
-  --field-label-width: 220px;
+  --field-label-width: 250px;
 
   /* Editor (CodeMirror) typography and padding */
   --editor-font-family: var(--font-sans);

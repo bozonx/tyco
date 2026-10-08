@@ -50,9 +50,20 @@
           :options="cleanLinkFormatOptions"
         />
       </FieldRow>
+      <FieldRow :label="t('settings.markdownCleanImageFormat')">
+        <FieldSelect
+          v-model:value="userConfig.markdownClean.imageFormat"
+          :options="cleanImageFormatOptions"
+        />
+      </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepInlineCode')">
         <FieldCheckbox
           v-model:value="userConfig.markdownClean.keepInlineCode"
+        />
+      </FieldRow>
+      <FieldRow :label="t('settings.markdownCleanKeepHorizontalRules')">
+        <FieldCheckbox
+          v-model:value="userConfig.markdownClean.keepThematicBreaks"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepTaskCheckboxes')">
@@ -104,14 +115,6 @@ const markdownFields = computed(() => [
     labelKey: 'settings.markdownStrong',
     options: ['*', '_'].map((id) => ({ id, name: id.repeat(2) })),
   },
-  {
-    name: 'headingStyle',
-    labelKey: 'settings.markdownHeadingStyle',
-    options: [
-      { id: 'atx', name: '# / ##' },
-      { id: 'setext', name: '=== / ---' },
-    ],
-  },
 ])
 
 const cleanBulletOptions = computed(() => [
@@ -139,5 +142,12 @@ const cleanLinkFormatOptions = computed(() => [
   { id: 'text', name: t('settings.markdownCleanLinkText') },
   { id: 'textAndUrl', name: t('settings.markdownCleanLinkTextAndUrl') },
   { id: 'url', name: t('settings.markdownCleanLinkUrl') },
+])
+
+const cleanImageFormatOptions = computed(() => [
+  { id: 'alt', name: t('settings.markdownCleanImageAlt') },
+  { id: 'altAndUrl', name: t('settings.markdownCleanImageAltAndUrl') },
+  { id: 'url', name: t('settings.markdownCleanImageUrl') },
+  { id: 'none', name: t('settings.markdownCleanImageNone') },
 ])
 </script>

@@ -184,6 +184,7 @@
     "sttLanguageHint": "Dili belirtmek en doğru tanımayı sağlar. Birden çok dilde model dili tahmin eder ve bir dili başkasıyla karıştırabilir.",
     "sttLanguageUser": "Kullanıcı dili",
     "sttLanguageMulti": "Birden çok dil (otomatik)",
+    "sttLlmFormatting": "Metin tanıma sonrası LLM ile biçimlendirme",
     "formatWithLlm": "Metni LLM ile işle",
     "sttLlmRules": "İşleme kuralları",
     "removeModel": "Modeli sil",

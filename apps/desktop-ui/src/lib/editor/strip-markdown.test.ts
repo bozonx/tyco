@@ -102,4 +102,28 @@ describe('stripMarkdown', () => {
       '\tLine 1\n\tLine 2'
     )
   })
+
+  it('supports image format options', () => {
+    const md = 'Here is ![Alt text](https://example.com/pic.png).'
+    expect(stripMarkdown(md, { imageFormat: 'alt' })).toBe(
+      'Here is Alt text.'
+    )
+    expect(stripMarkdown(md, { imageFormat: 'altAndUrl' })).toBe(
+      'Here is Alt text (https://example.com/pic.png).'
+    )
+    expect(stripMarkdown(md, { imageFormat: 'url' })).toBe(
+      'Here is https://example.com/pic.png.'
+    )
+    expect(stripMarkdown(md, { imageFormat: 'none' })).toBe('Here is .')
+  })
+
+  it('supports keeping or stripping horizontal rules', () => {
+    const md = 'First section\n\n---\n\nSecond section'
+    expect(stripMarkdown(md, { keepThematicBreaks: false })).toBe(
+      'First section\n\nSecond section'
+    )
+    expect(stripMarkdown(md, { keepThematicBreaks: true })).toBe(
+      'First section\n\n---\n\nSecond section'
+    )
+  })
 })
