@@ -58,4 +58,14 @@ describe('selectSttProvider', () => {
     expect(config.aiModelUsage.stt).toBe('sherpa-onnx-stt')
     expect(activeSttModel(config).baseUrl).toBe('ws://localhost:6006')
   })
+
+  it('preserves formatWithLlm when switching provider', () => {
+    const config = normalizeSttConfig({})
+    activeSttModel(config).formatWithLlm = true
+
+    selectSttProvider(config, 'sherpa-onnx')
+
+    expect(config.aiModelUsage.stt).toBe('sherpa-onnx-stt')
+    expect(activeSttModel(config).formatWithLlm).toBe(true)
+  })
 })

@@ -658,7 +658,7 @@
     },
     "theme": "Tema",
     "translationEngine": "Motor de traducción",
-    "translationEngineLink": "Servicio de traducción",
+    "translationsMethodHint": "Si necesitás configurar el método de traducción, andá a",
     "translationGlossary": "Glosario",
     "translationGlossaryInfo": "Reglas de traducción (una por línea):\n\n• Origen = Traducción: traducir siempre la palabra o frase indicada con esa variante exacta.\nEjemplo: workspace = espacio de trabajo\n\n• !Término: no traducir la palabra o frase (mantener tal cual en todo el texto).\nEjemplo: !TyCo\n(El signo de exclamación al inicio de la línea protege toda la frase posterior).",
     "translationGlossaryPlaceholder": "workspace = espacio de trabajo\n!TyCo",

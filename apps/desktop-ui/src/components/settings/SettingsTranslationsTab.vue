@@ -59,12 +59,6 @@
       </FieldRow>
     </SettingsSection>
 
-    <div>
-      <Button sm neutral icon="mdi:web" @click="emit('navigate', 'languages')">
-        {{ t('settings.translationLanguagesLink') }}
-      </Button>
-    </div>
-
     <SettingsSection
       :title="t('settings.translationGlossary')"
       :info="t('settings.translationGlossaryInfo')"
@@ -75,6 +69,12 @@
         @update:value="updateGlossary"
       />
     </SettingsSection>
+
+    <div class="translation-languages-footer">
+      <Button sm neutral icon="mdi:web" @click="emit('navigate', 'languages')">
+        {{ t('settings.translationLanguagesLink') }}
+      </Button>
+    </div>
   </div>
 </template>
 
@@ -172,3 +172,10 @@ async function removeProviderKey() {
   await llmStore.removeSecret(providerSecretId.value)
 }
 </script>
+
+<style scoped>
+.translation-languages-footer {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--app-border-subtle);
+}
+</style>

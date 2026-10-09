@@ -658,7 +658,7 @@
     },
     "theme": "Theme",
     "translationEngine": "Translation engine",
-    "translationEngineLink": "Translation service",
+    "translationsMethodHint": "To configure the translation method, go to",
     "translationGlossary": "Glossary",
     "translationGlossaryInfo": "Translation rules (one entry per line):\n\n• Source = Translation — always translate the specified word or phrase using this exact wording.\nExample: workspace = workspace\n\n• !Term — do not translate the word or phrase (keep as is in the entire text).\nExample: !TyCo\n(An exclamation mark at the start of the line protects the entire phrase after it).",
     "translationGlossaryPlaceholder": "workspace = workspace\n!TyCo",

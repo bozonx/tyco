@@ -48,6 +48,13 @@ export function selectSttProvider(
   config: SttConfig,
   provider: SttProvider
 ): void {
+  const current = activeSttModel(config)
+  const formatWithLlm = current?.formatWithLlm
   const model = config.sttModels.find((item) => item.provider === provider)
-  if (model) config.aiModelUsage.stt = model.id
+  if (model) {
+    if (formatWithLlm !== undefined) {
+      model.formatWithLlm = formatWithLlm
+    }
+    config.aiModelUsage.stt = model.id
+  }
 }

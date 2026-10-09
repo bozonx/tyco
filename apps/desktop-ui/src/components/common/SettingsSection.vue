@@ -1,7 +1,7 @@
 <template>
   <section class="settings-section">
     <header
-      v-if="title || description || $slots.actions"
+      v-if="title || description || $slots.description || $slots.actions"
       class="settings-section-header"
     >
       <div class="min-w-0">
@@ -9,8 +9,11 @@
           <span>{{ title }}</span>
           <InfoTooltip v-if="info" :text="info" />
         </h3>
-        <p v-if="description" class="settings-section-description">
-          {{ description }}
+        <p
+          v-if="description || $slots.description"
+          class="settings-section-description"
+        >
+          <slot name="description">{{ description }}</slot>
         </p>
       </div>
       <div v-if="$slots.actions" class="flex items-center gap-2 shrink-0">

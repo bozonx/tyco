@@ -179,6 +179,59 @@ describe('Settings.vue', () => {
     expect(editorIdx).toBe(generalIdx + 1)
   })
 
+  it('places history tab in primary tabs right after editor tab', () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: {
+            props: ['tabs'],
+            template: `
+              <div class="tabs-stub">
+                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                  {{ tab.text }}
+                </button>
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    const tabKeys = wrapper
+      .findAll('.tabs-stub button')
+      .map((btn) => btn.attributes('data-key'))
+
+    const editorIdx = tabKeys.indexOf('editor')
+    const historyIdx = tabKeys.indexOf('history')
+
+    expect(editorIdx).toBeGreaterThan(-1)
+    expect(historyIdx).toBeGreaterThan(-1)
+    expect(historyIdx).toBe(editorIdx + 1)
+
+    const historyTab = wrapper.find('.tabs-stub button[data-key="history"]')
+    expect(historyTab.text()).toBe('settings.historyTab')
+  })
+
+  it('renders SettingsHistoryTab when history tab is active', async () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: true,
+          SettingsHistoryTab: {
+            props: ['userConfig', 'effectiveAppLanguage'],
+            template: '<div class="history-tab-stub" />',
+          },
+        },
+      },
+    })
+
+    const vm = wrapper.vm as any
+    vm.currentTab = 'history'
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.history-tab-stub').exists()).toBe(true)
+  })
+
   it('includes hotkeys tab in primary tabs with settings.hotkeysTab text', () => {
     const wrapper = mount(Settings, {
       global: {

@@ -1,15 +1,15 @@
 <template>
   <div class="flex flex-col gap-6">
-    <SettingsSection :description="t('settings.translationsHint')" bare>
-      <template #actions>
-        <Button
-          sm
-          ghost
-          icon="mdi:translate"
+    <SettingsSection bare>
+      <template #description>
+        <span>{{ t('settings.translationsHint') }} </span>
+        <span>{{ t('settings.translationsMethodHint') }} </span>
+        <button
+          type="button"
+          class="settings-inline-link"
           @click="emit('navigate', 'translations')"
         >
-          {{ t('settings.translationEngineLink') }}
-        </Button>
+          {{ t('settings.translationsTab') }}</button>.
       </template>
       <ShortcutSlots
         :items="translateLanguageSlots"
@@ -42,7 +42,6 @@ import {
   moveShortcutSlot,
   normalizeShortcutSlots,
 } from '../../lib/shortcut-slots/shortcut-slots'
-import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
@@ -98,3 +97,22 @@ function updateLanguage(index: number, value: string | number | undefined) {
   emitSlots(slots)
 }
 </script>
+
+<style scoped>
+.settings-inline-link {
+  display: inline;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+}
+
+.settings-inline-link:hover {
+  filter: brightness(1.15);
+}
+</style>

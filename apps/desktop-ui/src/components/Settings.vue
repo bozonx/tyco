@@ -88,78 +88,6 @@
             </FieldRow>
           </SettingsSection>
 
-          <SettingsSection :title="t('settings.sectionHistory')">
-            <div class="editor-history-group">
-              <FieldRow
-                :label="t('settings.editorHistoryStorage')"
-                :info="t('settings.editorHistoryStorageHint')"
-              >
-                <FieldSelect
-                  v-model:value="userConfig.editorHistoryStorage"
-                  :options="editorHistoryStorageOptions"
-                />
-              </FieldRow>
-              <div
-                v-if="userConfig.editorHistoryStorage !== 'off'"
-                class="editor-history-nested"
-              >
-                <FieldRow :label="t('settings.editorHistoryMaxItems')" nested>
-                  <FieldInput
-                    type="number"
-                    :value="userConfig.editorHistoryMaxItems"
-                    @update:value="setEditorHistoryLimit"
-                  />
-                </FieldRow>
-                <template v-if="userConfig.editorHistoryStorage === 'disk'">
-                  <FieldRow
-                    :label="t('settings.editorHistoryRetentionDays')"
-                    :info="t('settings.editorHistoryRetentionDaysHint')"
-                    nested
-                  >
-                    <FieldSelect
-                      :value="userConfig.editorHistoryRetentionDays ?? 0"
-                      :options="editorHistoryRetentionOptions"
-                      @update:value="setEditorHistoryRetentionDays"
-                    />
-                  </FieldRow>
-                  <FieldRow
-                    :label="t('settings.sanitizeSecretsInEditorHistory')"
-                    :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
-                    nested
-                  >
-                    <FieldCheckbox
-                      v-model:value="userConfig.sanitizeSecretsInEditorHistory"
-                    />
-                  </FieldRow>
-                </template>
-              </div>
-            </div>
-            <FieldRow
-              :label="t('settings.chatHistoryMaxItems')"
-              :info="t('settings.chatHistoryPrivacyHint')"
-            >
-              <FieldInput
-                type="number"
-                :value="userConfig.chatHistoryMaxItems"
-                @update:value="setHistoryLimit('chatHistoryMaxItems', $event)"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.clearChatHistory')"
-              :info="t('settings.clearChatHistoryHint')"
-            >
-              <Button
-                xs
-                ghost
-                class="text-error"
-                icon="mdi:trash-can-outline"
-                @click="showClearChatHistoryModal = true"
-              >
-                {{ t('history.clear') }}
-              </Button>
-            </FieldRow>
-          </SettingsSection>
-
           <SettingsSection :title="t('settings.sectionWindowInsertion')">
             <FieldRow
               :label="t('settings.windowInsertion')"
@@ -261,6 +189,12 @@
         <SettingsEditorTab
           v-else-if="currentTab === 'editor'"
           :user-config="userConfig"
+        />
+
+        <SettingsHistoryTab
+          v-else-if="currentTab === 'history'"
+          :user-config="userConfig"
+          :effective-app-language="effectiveAppLanguage"
         />
 
         <template v-else-if="currentTab === 'accessibility'">
@@ -449,16 +383,6 @@
         />
       </div>
     </div>
-
-    <ConfirmModal
-      :open="showClearChatHistoryModal"
-      :title="t('history.clearConfirmTitle')"
-      :message="t('settings.clearChatHistoryConfirmDialog')"
-      :confirm-text="t('history.clearConfirmButton')"
-      danger
-      @confirm="onClearChatHistory"
-      @cancel="showClearChatHistoryModal = false"
-    />
   </div>
 </template>
 
@@ -474,10 +398,7 @@ import {
   normalizeCommands,
   normalizeLauncherCommands,
 } from '../lib/commands/command-config'
-import {
-  editorHistoryRetentionChoices,
-  normalizeEditorConfig,
-} from '../lib/history/editor-history-storage'
+import { normalizeEditorConfig } from '../lib/history/editor-history-storage'
 import { syncI18nLocale } from '../lib/i18n'
 import { resolveSubmitKey } from '../lib/input-keys/input-keys'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -488,7 +409,6 @@ import {
   getNavigatorLanguages,
   normalizeLocale,
   resolveUiLanguagePreference,
-  toHtmlLang,
 } from '../lib/locale/language'
 import {
   applyPluginDefaults,
@@ -509,14 +429,13 @@ import {
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
 import { useActionMenuStore } from '../stores/actionMenu'
-import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
-import ConfirmModal from './common/ConfirmModal.vue'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
+import SettingsHistoryTab from './settings/SettingsHistoryTab.vue'
 import SettingsLanguagesTab from './settings/SettingsLanguagesTab.vue'
 import SettingsLauncherTab from './settings/SettingsLauncherTab.vue'
 import SettingsLlmTab from './settings/SettingsLlmTab.vue'
@@ -550,20 +469,11 @@ import {
 } from '@tyco/shared'
 
 const actionMenuStore = useActionMenuStore()
-const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const themeStore = useThemeStore()
 const { t } = useI18n()
-const { toast, toastText } = useToast()
-
-const showClearChatHistoryModal = ref(false)
-
-async function onClearChatHistory() {
-  showClearChatHistoryModal.value = false
-  await historyStore.clearChatHistory()
-  toast(t('history.cleared'), 'info')
-}
+const { toastText } = useToast()
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -586,6 +496,7 @@ let saveQueue: Promise<void> = Promise.resolve()
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
   { text: t('settings.editorTab'), key: 'editor', icon: 'mdi:pencil-outline' },
+  { text: t('settings.historyTab'), key: 'history', icon: 'mdi:history' },
   {
     text: t('settings.hotkeysTab'),
     key: 'global-actions',
@@ -907,38 +818,6 @@ function normalizeAiTasks(config: Record<string, any>) {
   )
 }
 
-/**
- * The field hands over text; the backend expects a number and treats 0 as "keep
- * nothing". A half typed value (empty, negative) is not stored
- */
-function setHistoryLimit(
-  key: 'editorHistoryMaxItems' | 'chatHistoryMaxItems',
-  value: string
-) {
-  const parsed = Number(value)
-
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
-
-  userConfig.value[key] = Math.round(parsed)
-}
-
-/** Turning the history off is a storage of its own, so the limit stays above 0 */
-function setEditorHistoryLimit(value: string) {
-  const parsed = Number(value)
-
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 1) return
-
-  userConfig.value.editorHistoryMaxItems = Math.round(parsed)
-}
-
-function setEditorHistoryRetentionDays(value: number | string | undefined) {
-  const parsed = Number(value)
-
-  if (!Number.isInteger(parsed) || parsed < 0) return
-
-  userConfig.value.editorHistoryRetentionDays = parsed
-}
-
 const navigatorLanguages = computed(() => getNavigatorLanguages())
 
 const isAppLanguageManual = computed(
@@ -1012,30 +891,6 @@ function flushPendingAutosave() {
   saveTimer = null
   void persistUserConfig()
 }
-
-const editorHistoryStorageOptions = computed(() => [
-  { id: 'disk', name: t('settings.editorHistoryStorageDisk') },
-  { id: 'session', name: t('settings.editorHistoryStorageSession') },
-  { id: 'off', name: t('settings.editorHistoryStorageOff') },
-])
-
-const editorHistoryRetentionOptions = computed(() => {
-  const format = new Intl.NumberFormat(toHtmlLang(effectiveAppLanguage.value), {
-    style: 'unit',
-    unit: 'day',
-    unitDisplay: 'long',
-  })
-
-  return editorHistoryRetentionChoices(
-    userConfig.value.editorHistoryRetentionDays
-  ).map((days) => ({
-    id: days,
-    name:
-      days === 0
-        ? t('settings.editorHistoryRetentionForever')
-        : format.format(days),
-  }))
-})
 
 const pasteShortcutOptions = computed(() => {
   return [
@@ -1238,6 +1093,9 @@ async function removeSttKey() {
 
 const setSttFormatWithLlm = (value: boolean) => {
   currentSttModel.value.formatWithLlm = value
+  for (const model of userConfig.value.sttModels ?? []) {
+    model.formatWithLlm = value
+  }
 }
 
 const setSttLanguage = (value: string | number | undefined) => {
@@ -1360,20 +1218,6 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xl);
   font-size: 0.875rem;
   color: var(--color-warning);
-}
-
-.editor-history-nested {
-  background-color: var(--app-surface-sunken);
-  border-top: 1px solid var(--app-border-subtle);
-  border-left: 2px solid var(--app-border-strong);
-}
-
-.editor-history-nested :deep(.field-row + .field-row) {
-  border-top: none;
-}
-
-.editor-history-group + .field-row {
-  border-top: 1px solid var(--app-border-subtle);
 }
 
 .storage-details {
