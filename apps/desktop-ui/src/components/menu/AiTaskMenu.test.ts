@@ -53,12 +53,7 @@ describe('AiTaskMenu', () => {
     },
   })
 
-  it('binds the chat to Shift+Space and the own request to Space/Enter', async () => {
-    const chatStore = useChatStore()
-    const attachSpy = vi.spyOn(chatStore, 'attachToChat').mockResolvedValue()
-    const menuModalsStore = useMenuModalsStore()
-    const closeAllSpy = vi.spyOn(menuModalsStore, 'closeAll')
-
+  it('does not bind chat to Shift+Space and binds the own request to Space/Enter', async () => {
     let shortcutListProps: Record<string, any> = {}
 
     const wrapper = mount(AiTaskMenu, {
@@ -66,11 +61,8 @@ describe('AiTaskMenu', () => {
       global: { stubs: stubs((props) => (shortcutListProps = props)) },
     })
 
-    expect(shortcutListProps.altAction.labelKey).toBe('action.askInChat')
-    expect(shortcutListProps.altText).toBe('Some task text')
-    await shortcutListProps.altAction.action('Some task text')
-    expect(closeAllSpy).toHaveBeenCalled()
-    expect(attachSpy).toHaveBeenCalledWith('Some task text')
+    expect(shortcutListProps.altAction).toBeUndefined()
+    expect(shortcutListProps.altText).toBeUndefined()
 
     expect(shortcutListProps.spaceKey.labelKey).toBe('menu.aiCustomPrompt')
     await shortcutListProps.spaceKey.action('Some task text')

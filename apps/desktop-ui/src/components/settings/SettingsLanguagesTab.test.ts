@@ -14,9 +14,8 @@ describe('SettingsLanguagesTab.vue', () => {
       global: {
         stubs: {
           SettingsSection: {
-            template: '<section><slot name="actions" /><slot /></section>',
+            template: '<section><slot name="description" /><slot /></section>',
           },
-          Button: { template: '<button class="link-stub"><slot /></button>' },
           ShortcutSlots: {
             name: 'ShortcutSlots',
             props: ['items'],
@@ -42,10 +41,10 @@ describe('SettingsLanguagesTab.vue', () => {
     ])
   })
 
-  it('links to the translation service', async () => {
+  it('links to the translation settings tab', async () => {
     const wrapper = mountTab()
 
-    await wrapper.find('.link-stub').trigger('click')
+    await wrapper.find('.settings-inline-link').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([['translations']])
   })

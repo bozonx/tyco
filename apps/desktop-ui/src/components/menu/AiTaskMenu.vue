@@ -22,11 +22,6 @@
         v-else
         :text="props.text"
         :spaceKey="customPromptAction"
-        :altText="props.text"
-        altAlwaysVisible
-        :altAction="chatAction"
-        :altLabel="t('action.askInChat')"
-        altIcon="mdi:chat-outline"
         :leftLetterKeys="leftLetterKeys"
         :stopListening="props.stopListening"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
@@ -89,14 +84,6 @@ const isQuickWindow = (() => {
   }
 })()
 
-const chatAction: ActionItem = {
-  labelKey: 'action.askInChat',
-  icon: 'mdi:chat-outline',
-  action: async (text) => {
-    menuModalsStore.closeAll()
-    await chatStore.attachToChat(text)
-  },
-}
 
 const customPromptAction: ActionItem = {
   labelKey: 'menu.aiCustomPrompt',

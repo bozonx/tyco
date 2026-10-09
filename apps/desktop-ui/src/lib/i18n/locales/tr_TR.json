@@ -657,7 +657,6 @@
       "unavailable": "Metin ekleme kullanılamıyor: {error}"
     },
     "theme": "Tema",
-    "translationEngine": "Çeviri motoru",
     "translationsMethodHint": "Çeviri yöntemini yapılandırmak için şu sayfaya gidin:",
     "translationGlossary": "Sözlük",
     "translationGlossaryInfo": "Çeviri kuralları (her satıra bir kural):\n\n• Kaynak = Çeviri — belirtilen kelime veya ifadeyi her zaman bu tam karşılıkla çevirir.\nÖrnek: workspace = çalışma alanı\n\n• !Terim — kelime veya ifadenin çevrilmesini önler (tüm metinde olduğu gibi korur).\nÖrnek: !TyCo\n(Satır başındaki ünlem işareti, arkasından gelen tüm ifadeyi korur).",
