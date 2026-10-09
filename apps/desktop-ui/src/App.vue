@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import ToastContainer from './components/common/ToastContainer.vue'
@@ -187,7 +187,8 @@ const capturedSelection = createCapturedSelection({
 })
 // the text selected elsewhere when chat was called goes into chat attachments
 const capturedChatSelection = createCapturedChatSelection({
-  startChatWithAttachment: (text) => chatStore.attachToChat(text),
+  startChatWithAttachment: (text) =>
+    chatStore.startChat({ attachments: [text], withoutEditorContext: true }),
   getSelectedText: () => editorInputStore.selectedText,
 })
 // the voice chat hotkey opens a dictation into the chat with the selection as
@@ -291,10 +292,17 @@ onMounted(() => {
       const trimmedText = text?.trim()
       const trimmedQuestion = question?.trim()
       if (trimmedText) {
-        await chatStore.attachToChat(trimmedText)
+        await chatStore.startChat({
+          attachments: [trimmedText],
+          withoutEditorContext: true,
+        })
+      } else if (trimmedQuestion) {
+        await chatStore.startChat({ withoutEditorContext: true })
       } else {
         await chatStore.openLastOrNewChat()
       }
+
+      await nextTick()
 
       if (trimmedQuestion) {
         chatInputStore.setValue(trimmedQuestion)

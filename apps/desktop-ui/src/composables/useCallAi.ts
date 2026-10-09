@@ -137,6 +137,10 @@ export const useCallAi = () => {
       language: currentDictationLanguage(model),
       hasApiKey: needsKey,
       ...handlers,
+      onError: (error) => {
+        clientLogger.error('Speech recognition session failed', error, 'stt')
+        handlers.onError(error)
+      },
     })
   }
 

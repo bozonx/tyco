@@ -139,4 +139,43 @@ describe('tauri-socket', () => {
       payload: null,
     })
   })
+
+  it.each([
+    DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY,
+    DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT,
+    DESKTOP_COMMANDS.NET_SOCKET_CLOSE,
+  ])(
+    'reports an IPC failure in %s to the transcript reader',
+    async (command) => {
+      const fake = createFakeNetIpc({
+        [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 2,
+        [command]: () => {
+          throw 'Audio delivery failed'
+        },
+      })
+      const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
+        signal: new AbortController().signal,
+      })
+      const messages = collect(session.messages)
+      const rejected = expect(messages).rejects.toThrow('Audio delivery failed')
+
+      if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY) {
+        session.send(new Uint8Array([1, 2]))
+        session.send('must not overtake failed audio')
+      } else if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT) {
+        session.send('audio control message')
+      } else {
+        session.close()
+      }
+
+      await rejected
+      await tick()
+      expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_CLOSE)).toHaveLength(1)
+      if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY) {
+        expect(
+          fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)
+        ).toHaveLength(0)
+      }
+    }
+  )
 })

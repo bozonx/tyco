@@ -125,4 +125,27 @@ describe('createLiveDictation', () => {
     expect(t.capture.stop).toHaveBeenCalled()
     expect(t.onError).not.toHaveBeenCalled()
   })
+
+  it('reports a provider that closes while the microphone is recording', async () => {
+    const t = setup()
+    await t.start()
+    t.parts.end()
+    await tick()
+
+    expect(t.capture.stop).toHaveBeenCalledOnce()
+    expect(t.onError).toHaveBeenCalledWith(
+      new Error('The speech recognition session closed while recording')
+    )
+    await expect(t.dictation.finish()).rejects.toThrow('closed while recording')
+  })
+
+  it('reports a finish timeout when the provider never returned any text', async () => {
+    const t = setup(20)
+    await t.start()
+
+    await expect(t.dictation.finish()).rejects.toThrow(
+      'Timed out waiting for the speech recognition result'
+    )
+    expect(t.requests[0].signal?.aborted).toBe(true)
+  })
 })

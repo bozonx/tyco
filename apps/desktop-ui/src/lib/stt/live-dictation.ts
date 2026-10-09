@@ -46,6 +46,7 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
   let session: Promise<void> | undefined
   let state = createLiveTranscriptState()
   let failure: Error | undefined
+  let finishing = false
 
   const stopCapture = () => deps.capture.stop().catch(() => undefined)
 
@@ -57,6 +58,7 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
       controller = current
       state = createLiveTranscriptState()
       failure = undefined
+      finishing = false
 
       const { sampleRate, audio } = await deps.capture.start()
       const parts = deps.stt.transcribeLive({
@@ -80,6 +82,11 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
               request.onText(state)
             }
           }
+          if (!finishing && !current.signal.aborted) {
+            throw new Error(
+              'The speech recognition session closed while recording'
+            )
+          }
         } catch (error) {
           if (current.signal.aborted) return
           failure = error instanceof Error ? error : new Error(String(error))
@@ -90,11 +97,15 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
     },
 
     async finish() {
+      finishing = true
       await deps.capture.stop()
       // a provider that never closes must not hold the text hostage
       let timer: ReturnType<typeof setTimeout> | undefined
       const timedOut = new Promise<void>((resolve) => {
         timer = setTimeout(() => {
+          failure ??= new Error(
+            'Timed out waiting for the speech recognition result'
+          )
           controller?.abort()
           resolve()
         }, deps.finishTimeoutMs ?? FINISH_TIMEOUT_MS)

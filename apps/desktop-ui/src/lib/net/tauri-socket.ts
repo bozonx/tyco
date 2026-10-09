@@ -76,23 +76,36 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     // chain keeps audio and the closing message in the order they were sent.
     let outgoing = Promise.resolve()
     let closeRequested = false
+    let sendFailed = false
 
-    const enqueue = (send: () => Promise<unknown>) => {
-      outgoing = outgoing.then(send).then(
-        () => undefined,
-        () => undefined
-      )
+    const enqueue = (send: () => Promise<unknown>, cleanup = false) => {
+      outgoing = outgoing
+        .then(() => {
+          if (!cleanup && (sendFailed || closed)) return
+          return send()
+        })
+        .then(
+          () => undefined,
+          (error: unknown) => {
+            if (sendFailed || closed) return
+            sendFailed = true
+            queue.fail(new Error(errorMessage(error), { cause: error }))
+            close()
+          }
+        )
     }
 
     const close = (payload?: string) => {
       if (closeRequested || closed) return
       closeRequested = true
       signal.removeEventListener('abort', onAbort)
-      enqueue(() =>
-        ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_CLOSE, {
-          id,
-          payload: payload ?? null,
-        })
+      enqueue(
+        () =>
+          ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_CLOSE, {
+            id,
+            payload: payload ?? null,
+          }),
+        true
       )
     }
 
