@@ -61,7 +61,10 @@ const translateLanguageOptions = computed(() => {
     (props.userConfig.toTranslateLanguages || []).filter(Boolean),
     false,
     t
-  )
+  ).map((option) => ({
+    id: option.id,
+    name: option.id ? `${option.name} (${option.id})` : option.name,
+  }))
 })
 
 const translateLanguageSlots = computed(() =>

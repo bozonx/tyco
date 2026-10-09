@@ -37,10 +37,6 @@
         {{ t('settings.actionsCategory') }}
       </div>
       <Tabs :tabs="actionTabs" v-model:value="currentTab" variant="vertical" />
-      <div class="settings-nav-footer">
-        <Icon icon="mdi:cloud-check-outline" height="14" />
-        <span>{{ t('settings.autosaveHint') }}</span>
-      </div>
     </aside>
 
     <div class="settings-content">
@@ -643,13 +639,13 @@ const actionTabs = computed(() => [
     key: 'launcher-commands',
     icon: 'mdi:console',
   },
+  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
+  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
   {
     text: t('settings.commandsTab'),
     key: 'commands',
     icon: 'mdi:console-line',
   },
-  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
-  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
 ])
 
 const currentTabTitle = computed(() => {
@@ -905,7 +901,9 @@ function normalizeAiTasks(config: Record<string, any>) {
   config.aiTasks = normalizeShortcutSlots<Record<string, any>>(
     config.aiTasks
   ).map((task) =>
-    task ? { name: task.name || '', rule: task.rule || '' } : null
+    task && (task.name?.trim() || task.rule?.trim())
+      ? { name: task.name || '', rule: task.rule || '' }
+      : null
   )
 }
 
@@ -1335,16 +1333,6 @@ onUnmounted(() => {
   color: var(--app-text-faint);
 }
 
-.settings-nav-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-top: auto;
-  padding: var(--space-sm);
-  font-size: 0.75rem;
-  color: var(--app-text-faint);
-}
-
 .settings-content {
   flex: 1;
   min-width: 0;
@@ -1569,7 +1557,6 @@ onUnmounted(() => {
 
   .settings-nav-title,
   .settings-nav-category,
-  .settings-nav-footer span,
   .settings-nav :deep(.app-tab .truncate),
   .settings-subnav-item .truncate,
   .settings-subnav-status {

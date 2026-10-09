@@ -19,8 +19,8 @@ describe('web code formatter', () => {
     ['scss', '$color:red;.a{color:$color;&:hover{color:blue}}'],
     ['less', '@color:red;.a{color:@color}'],
     ['xml', '<?xml version="1.0"?><root><item a="1" b="2"/></root>'],
-  ] as const)('formats %s and is idempotent', async (language, input) => {
-    const config = { language, xmlWhitespaceSensitivity: 'preserve' as const }
+  ] as const)('formats %s and is idempotent', async (_language, input) => {
+    const config = { xmlWhitespaceSensitivity: 'preserve' as const }
     const output = await formatWebCode(input, config)
     expect(output).not.toBe(input)
     expect(await formatWebCode(output, config)).toBe(output)
@@ -29,18 +29,15 @@ describe('web code formatter', () => {
     const input =
       '<root b="2" a="1">Hello <b>world</b> !<![CDATA[x < y]]></root>'
     const output = await formatWebCode(input, {
-      language: 'xml',
       xmlWhitespaceSensitivity: 'strict',
     })
     expect(output.trim()).toBe(input)
   })
   it('rejects malformed XML and JSON without returning transformed text', async () => {
-    await expect(
-      formatWebCode('<root><item></root>', { language: 'xml' })
-    ).rejects.toBeInstanceOf(WebFormatError)
-    await expect(
-      formatWebCode('{"a":}', { language: 'json' })
-    ).rejects.toBeInstanceOf(WebFormatError)
+    await expect(formatWebCode('<root><item></root>')).rejects.toBeInstanceOf(
+      WebFormatError
+    )
+    await expect(formatWebCode('{"a":}')).rejects.toBeInstanceOf(WebFormatError)
   })
   it('detects JSON, XML, HTML and TypeScript', async () => {
     expect(await detectWebLanguage('{"x":1}')).toBe('json')
@@ -61,9 +58,7 @@ describe('web code formatter', () => {
       throw Error('CSP blocked eval')
     })
     try {
-      expect(await formatWebCode('<root/>', { language: 'xml' })).toContain(
-        '<root />'
-      )
+      expect(await formatWebCode('<root/>')).toContain('<root />')
     } finally {
       evaluate.mockRestore()
     }
@@ -74,7 +69,6 @@ describe('web code formatter', () => {
     ).toBe(2)
     expect(
       await formatWebCode('const x={a:"b"}', {
-        language: 'javascript',
         singleQuote: true,
         semi: false,
         tabWidth: 4,

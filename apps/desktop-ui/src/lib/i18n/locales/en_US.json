@@ -433,7 +433,6 @@
     "appLanguage": "Interface language",
     "appLanguageAuto": "Auto",
     "appLanguageManual": "Change",
-    "autosaveHint": "Changes are saved automatically",
     "backToPlugins": "Back to plugins",
     "baseUrl": "Base URL",
     "browseWorkingDir": "Select working directory…",
@@ -588,8 +587,6 @@
     "pluginPackageFailed": "Plugin operation failed: {detail}",
     "pluginStatus": {
       "activating": "Activating",
-      "active": "Active",
-      "disabled": "Disabled",
       "error": "Failed",
       "incompatible": "Incompatible"
     },

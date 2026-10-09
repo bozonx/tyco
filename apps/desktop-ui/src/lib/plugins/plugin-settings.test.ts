@@ -75,6 +75,30 @@ describe('plugin-settings', () => {
     expect(plugins[1].enabled).toBe(true)
   })
 
+  it.each(['active', 'disabled'] as const)(
+    'hides the ordinary %s runtime status',
+    (status) => {
+      const plugins = resolveInstalledPlugins(
+        samplePlugins,
+        { plugins: { AlphaPlugin: { enabled: true } } },
+        { AlphaPlugin: { status } }
+      )
+      expect(plugins[0].status).toBeUndefined()
+    }
+  )
+
+  it.each(['activating', 'error', 'incompatible'] as const)(
+    'shows the exceptional %s runtime status',
+    (status) => {
+      const plugins = resolveInstalledPlugins(
+        samplePlugins,
+        { plugins: { AlphaPlugin: { enabled: true } } },
+        { AlphaPlugin: { status } }
+      )
+      expect(plugins[0].status).toBe(status)
+    }
+  )
+
   it('correctly constructs and parses plugin tab keys', () => {
     expect(getPluginTabKey('AlphaPlugin')).toBe('plugin:AlphaPlugin')
     expect(parsePluginTabKey('plugin:AlphaPlugin')).toBe('AlphaPlugin')

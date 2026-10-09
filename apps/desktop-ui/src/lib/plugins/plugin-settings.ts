@@ -12,7 +12,7 @@ export interface InstalledPluginItem {
   description?: string
   enabled: boolean
   version?: string
-  status?: PluginRuntimeState['status']
+  status?: Exclude<PluginRuntimeState['status'], 'active' | 'disabled'>
   canRestore?: boolean
   error?: string
   fields: Array<InputConfigItem & { value: unknown }>
@@ -35,6 +35,7 @@ export function resolveInstalledPlugins(
       error = reason instanceof Error ? reason.message : String(reason)
     }
     const isEnabled = pluginState.enabled === true
+    const status = isEnabled ? runtime[pluginName]?.status : undefined
     const rawFields = plugin.defaultConfig?.fields || []
 
     return {
@@ -45,7 +46,7 @@ export function resolveInstalledPlugins(
       description: plugin.description,
       enabled: isEnabled,
       version: plugin.version,
-      status: isEnabled ? runtime[pluginName]?.status : 'disabled',
+      status: status === 'active' || status === 'disabled' ? undefined : status,
       canRestore: plugin._canRestore ?? false,
       ...(error ? { error } : {}),
       fields: scopeConfigFields(pluginName, error ? [] : rawFields).map(

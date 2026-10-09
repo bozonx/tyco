@@ -433,7 +433,6 @@
     "appLanguage": "Язык интерфейса",
     "appLanguageAuto": "Авто",
     "appLanguageManual": "Изменить",
-    "autosaveHint": "Изменения сохраняются автоматически",
     "backToPlugins": "Назад к плагинам",
     "baseUrl": "Базовый URL",
     "browseWorkingDir": "Выбрать рабочую папку…",
@@ -588,8 +587,6 @@
     "pluginPackageFailed": "Операция с плагином не удалась: {detail}",
     "pluginStatus": {
       "activating": "Активация",
-      "active": "Активен",
-      "disabled": "Отключён",
       "error": "Ошибка",
       "incompatible": "Несовместим"
     },

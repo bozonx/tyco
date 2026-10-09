@@ -204,6 +204,33 @@ describe('Settings.vue', () => {
     expect(hotkeysTab.text()).toBe('settings.hotkeysTab')
   })
 
+  it('places commands tab at the very bottom of actions category', () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: {
+            props: ['tabs'],
+            template: `
+              <div class="tabs-stub">
+                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                  {{ tab.text }}
+                </button>
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    const allTabsContainers = wrapper.findAll('.tabs-stub')
+    // Second tabs container is action tabs
+    const actionTabKeys = allTabsContainers[1]
+      .findAll('button')
+      .map((btn) => btn.attributes('data-key'))
+
+    expect(actionTabKeys[actionTabKeys.length - 1]).toBe('commands')
+  })
+
   it('renders contrast and motion as FieldSelect controls in accessibility tab', async () => {
     const wrapper = mount(Settings, {
       global: {

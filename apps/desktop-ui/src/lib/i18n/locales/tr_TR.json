@@ -433,7 +433,6 @@
     "appLanguage": "Arayüz dili",
     "appLanguageAuto": "Otomatik",
     "appLanguageManual": "Değiştir",
-    "autosaveHint": "Değişiklikler otomatik olarak kaydedilir",
     "backToPlugins": "Eklentilere dön",
     "baseUrl": "Temel URL",
     "browseWorkingDir": "Çalışma klasörü seç…",
@@ -588,8 +587,6 @@
     "pluginPackageFailed": "Eklenti işlemi başarısız: {detail}",
     "pluginStatus": {
       "activating": "Etkinleştiriliyor",
-      "active": "Etkin",
-      "disabled": "Devre dışı",
       "error": "Hata",
       "incompatible": "Uyumsuz"
     },

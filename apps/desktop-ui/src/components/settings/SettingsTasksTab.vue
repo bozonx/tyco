@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import {
@@ -75,4 +75,16 @@ function updateTask(index: number, field: keyof AiTask, value: unknown) {
   slots[index] = { ...slots[index]!, [field]: value }
   emitSlots(slots)
 }
+
+onUnmounted(() => {
+  const hasEmpty = taskSlots.value.some(
+    (task) => task && !task.name.trim() && !task.rule.trim()
+  )
+  if (hasEmpty) {
+    const cleaned = taskSlots.value.map((task) =>
+      task && (task.name.trim() || task.rule.trim()) ? task : null
+    )
+    emitSlots(cleaned)
+  }
+})
 </script>

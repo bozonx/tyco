@@ -1,10 +1,6 @@
 import type { PluginDefinition } from '@tyco/plugin-sdk'
 import { locales } from './locales.js'
-import {
-  formatWebCode,
-  WEB_LANGUAGES,
-  type WebFormatterConfig,
-} from './web-formatter.js'
+import { formatWebCode, type WebFormatterConfig } from './web-formatter.js'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 import type { PluginContext } from '@tyco/plugin-sdk'
 
@@ -20,25 +16,6 @@ export default function pluginIndex(): PluginDefinition {
     descriptionKey: 'local.description',
     defaultConfig: {
       fields: [
-        {
-          type: 'select',
-          name: 'language',
-          labelKey: 'local.language',
-          defaultValue: 'auto',
-          options: WEB_LANGUAGES.map((id) => ({
-            id,
-            ...(id === 'auto'
-              ? { labelKey: 'local.auto' }
-              : {
-                  name:
-                    id === 'javascript'
-                      ? 'JavaScript'
-                      : id === 'typescript'
-                        ? 'TypeScript'
-                        : id.toUpperCase(),
-                }),
-          })),
-        },
         {
           type: 'select',
           name: 'tabWidth',

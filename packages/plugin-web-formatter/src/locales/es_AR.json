@@ -1,10 +1,7 @@
 {
   "label": "Formato de código web",
-  "description": "Formatea HTML, XML, CSS, JavaScript, TypeScript y JSON",
-  "language": "Lenguaje",
-  "auto": "Detectar automáticamente",
-  "chooseLanguage": "No se pudo detectar un lenguaje compatible con certeza. Elegí el lenguaje en los ajustes del plugin.",
-  "invalidCode": "No se pudo analizar el código en el lenguaje elegido. El texto no cambió.",
+  "description": "Formatea automáticamente HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript y JSON",
+  "invalidCode": "No se pudo analizar el código. El texto no cambió.",
   "tabWidth": "Tamaño de sangría",
   "useTabs": "Usar tabulaciones",
   "printWidth": "Ancho de línea deseado",
@@ -14,5 +11,6 @@
   "xmlStrict": "Estricto: conservar espacios significativos",
   "xmlPreserve": "Conservar texto y formatear elementos",
   "xmlIgnore": "Ignorar: los espacios pueden cambiar",
-  "formatCode": "Formatear código web / XML"
+  "formatCode": "Formatear código web / XML",
+  "unsupportedLanguage": "No se pudo detectar un lenguaje compatible con certeza. El texto no cambió."
 }

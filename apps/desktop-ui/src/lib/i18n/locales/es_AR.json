@@ -433,7 +433,6 @@
     "appLanguage": "Idioma de la interfaz",
     "appLanguageAuto": "Auto",
     "appLanguageManual": "Cambiar",
-    "autosaveHint": "Los cambios se guardan automáticamente",
     "backToPlugins": "Volver a complementos",
     "baseUrl": "URL base",
     "browseWorkingDir": "Elegir carpeta de trabajo…",
@@ -588,8 +587,6 @@
     "pluginPackageFailed": "La operación del plugin falló: {detail}",
     "pluginStatus": {
       "activating": "Activando",
-      "active": "Activo",
-      "disabled": "Desactivado",
       "error": "Error",
       "incompatible": "Incompatible"
     },

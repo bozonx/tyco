@@ -180,7 +180,7 @@ const DYNAMIC_KEYS = new Set([
   ...['editor', 'browser', 'notes', 'none'].map(
     (cap) => `settings.pluginCapability.${cap}`
   ),
-  ...['disabled', 'activating', 'active', 'error', 'incompatible'].map(
+  ...['activating', 'error', 'incompatible'].map(
     (status) => `settings.pluginStatus.${status}`
   ),
   ...[

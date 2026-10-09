@@ -2,7 +2,6 @@ import { PluginError } from '@tyco/plugin-sdk'
 import type { Options, Plugin } from 'prettier'
 
 export const WEB_LANGUAGES = [
-  'auto',
   'json',
   'javascript',
   'typescript',
@@ -14,7 +13,6 @@ export const WEB_LANGUAGES = [
 ] as const
 export type WebLanguage = (typeof WEB_LANGUAGES)[number]
 export interface WebFormatterConfig {
-  language: WebLanguage
   tabWidth: number
   useTabs: boolean
   printWidth: number
@@ -40,9 +38,6 @@ export function normalizeWebFormatterConfig(
       : fallback
   }
   return {
-    language: WEB_LANGUAGES.includes(config.language!)
-      ? config.language!
-      : 'auto',
     tabWidth: number(config.tabWidth, 2, 1, 8),
     printWidth: number(config.printWidth, 80, 40, 240),
     useTabs: config.useTabs === true,
@@ -57,9 +52,7 @@ export function normalizeWebFormatterConfig(
 }
 
 /** Prefer explicit syntax; highlighting is only a conservative fallback. */
-export async function detectWebLanguage(
-  text: string
-): Promise<Exclude<WebLanguage, 'auto'>> {
+export async function detectWebLanguage(text: string): Promise<WebLanguage> {
   const source = text.trim()
   try {
     JSON.parse(source)
@@ -100,7 +93,7 @@ export async function detectWebLanguage(
     (detected.secondBest &&
       detected.relevance - detected.secondBest.relevance < 2)
   ) {
-    throw new WebFormatError('local.chooseLanguage')
+    throw new WebFormatError('local.unsupportedLanguage')
   }
   return language as (typeof supported)[number]
 }
@@ -112,10 +105,7 @@ export async function formatWebCode(
 ): Promise<string> {
   const settings = normalizeWebFormatterConfig(config)
   if (!text.trim()) return text
-  const language =
-    settings.language === 'auto'
-      ? await detectWebLanguage(text)
-      : settings.language
+  const language = await detectWebLanguage(text)
   const { format } = await import('prettier/standalone')
   let parser: string = language
   let plugins: Plugin[]
