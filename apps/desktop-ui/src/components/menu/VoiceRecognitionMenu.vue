@@ -540,9 +540,19 @@ onUnmounted(() => {
 
 .voice-bar-wave {
   display: flex;
-  align-items: center;
-  flex: 0 0 11rem;
+  flex: 0 0 12rem;
   min-width: 0;
+}
+
+.voice-bar-wave :deep(.audio-waveform-container) {
+  height: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: none;
+  border-radius: var(--radius-md);
+}
+
+.voice-bar-wave :deep(.waveform-visualizer) {
+  gap: 2px;
 }
 
 .voice-bar .voice-bar-transcript {

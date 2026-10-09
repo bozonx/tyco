@@ -192,11 +192,13 @@ onUnmounted(() => {
   gap: 4px;
   height: 32px;
   width: 100%;
+  overflow: hidden;
 }
 
+/* Bars narrow down instead of spilling out of a narrow container */
 .waveform-bar {
-  width: 4px;
-  min-width: 4px;
+  flex: 0 1 4px;
+  min-width: 1px;
   background-color: var(--color-primary);
   border-radius: 999px;
   transition: height 0.05s ease-out;
