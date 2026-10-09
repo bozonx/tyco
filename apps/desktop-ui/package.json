@@ -29,7 +29,7 @@
     "@lezer/highlight": "^1.2.3",
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/api": "^2.12.1",
     "@tyco/shared": "workspace:*",
     "daisyui": "^5.7.42",
     "diff": "^9.0.0",
