@@ -22,38 +22,6 @@
     </label>
 
     <div class="command-field">
-      <span class="command-field-label">
-        {{ t('commands.idLabel') }}
-        <InfoTooltip :text="t('commands.idInfo')" />
-      </span>
-      <div class="command-field-row">
-        <code class="command-id" :title="command.id">{{ command.id }}</code>
-        <Button
-          type="button"
-          ghost
-          square
-          sm
-          :title="copied ? t('commands.idCopied') : t('commands.copyId')"
-          @click="copyId"
-        >
-          <Icon
-            :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
-            width="16"
-            height="16"
-          />
-        </Button>
-      </div>
-    </div>
-
-    <div class="command-field-row">
-      <FieldCheckbox
-        :value="command.enabled"
-        :label="t('commands.enabled')"
-        @update:value="update({ enabled: $event })"
-      />
-    </div>
-
-    <div class="command-field">
       <span class="command-field-label">{{ t('commands.toolLabel') }}</span>
       <div class="command-tool">
         <Icon
@@ -62,6 +30,7 @@
           height="16"
         />
         <span>{{ tool ? toolLabel(tool, t) : command.toolId }}</span>
+        <span v-if="addedBy" class="command-origin">· {{ addedBy }}</span>
       </div>
       <p v-if="unavailable" class="command-warning">
         {{ t(unavailable) }}
@@ -119,41 +88,71 @@
       />
     </div>
 
-    <div class="command-field-row">
-      <FieldCheckbox
-        :value="command.availableIn.external"
-        :label="t('commands.external')"
-        @update:value="
-          update({ availableIn: { ...command.availableIn, external: $event } })
-        "
-      />
-      <InfoTooltip :text="t('commands.externalInfo')" />
-    </div>
-    <p v-if="nameTwins.length" class="command-warning">
-      {{
-        t('commands.warningExternalNameTwins', {
-          names: nameTwins.map(commandLabel).join(', '),
-        })
-      }}
-    </p>
+    <section class="command-group">
+      <h4 class="command-group-title">{{ t('commands.externalGroup') }}</h4>
+      <div class="command-field-row">
+        <FieldCheckbox
+          :value="command.availableIn.external"
+          :label="t('commands.external')"
+          @update:value="
+            update({
+              availableIn: { ...command.availableIn, external: $event },
+            })
+          "
+        />
+        <InfoTooltip :text="t('commands.externalInfo')" />
+      </div>
+      <div class="command-field-row">
+        <code class="command-cli" :title="cliCommand">{{ cliCommand }}</code>
+        <Button
+          type="button"
+          ghost
+          square
+          sm
+          :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
+          :aria-label="t('commands.copyCli')"
+          @click="copyCli"
+        >
+          <Icon
+            :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+            width="16"
+            height="16"
+          />
+        </Button>
+      </div>
+      <p v-if="nameTwins.length" class="command-warning">
+        {{
+          t('commands.warningExternalNameTwins', {
+            names: nameTwins.map(commandLabel).join(', '),
+          })
+        }}
+      </p>
+    </section>
 
-    <div class="command-field-row">
-      <FieldCheckbox
-        :value="command.confirm === 'always'"
-        :label="t('commands.confirm')"
-        @update:value="update({ confirm: $event ? 'always' : 'auto' })"
-      />
-      <InfoTooltip :text="t('commands.confirmInfo')" />
-    </div>
-
-    <div class="command-field-row">
-      <FieldCheckbox
-        :value="command.logOutput"
-        :label="t('settings.actionLogOutput')"
-        @update:value="update({ logOutput: $event })"
-      />
-      <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-    </div>
+    <details class="command-group" :open="advancedOpen">
+      <summary class="command-group-title command-group-toggle">
+        <Icon icon="mdi:chevron-right" width="16" height="16" />
+        {{ t('commands.advanced') }}
+      </summary>
+      <div class="command-group-body">
+        <div class="command-field-row">
+          <FieldCheckbox
+            :value="command.confirm === 'always'"
+            :label="t('commands.confirm')"
+            @update:value="update({ confirm: $event ? 'always' : 'auto' })"
+          />
+          <InfoTooltip :text="t('commands.confirmInfo')" />
+        </div>
+        <div class="command-field-row">
+          <FieldCheckbox
+            :value="command.logOutput"
+            :label="t('settings.actionLogOutput')"
+            @update:value="update({ logOutput: $event })"
+          />
+          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+        </div>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -162,6 +161,8 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import {
+  commandAddedBy,
+  commandCliCall,
   commandLabel,
   commandTakesText,
   commandTool,
@@ -228,19 +229,35 @@ function updateToolConfig(field: string, value: unknown) {
   })
 }
 
+/** Who added a default command: the app or a plugin */
+const addedBy = computed(() => {
+  const origin = commandAddedBy(props.command, toolsStore)
+  if (!origin) return ''
+  return origin.kind === 'plugin'
+    ? t('commands.addedByPlugin', { name: origin.name })
+    : t('commands.addedByApp')
+})
+
+/** Shown open when one of its settings is on, so it is not missed */
+const advancedOpen = ref(
+  props.command.confirm === 'always' || props.command.logOutput
+)
+
+const cliCommand = computed(() => commandCliCall(props.command.id))
+
 const copied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
-async function copyId() {
+async function copyCli() {
   try {
-    await navigator.clipboard.writeText(props.command.id)
+    await navigator.clipboard.writeText(cliCommand.value)
     copied.value = true
     if (copiedTimer) clearTimeout(copiedTimer)
     copiedTimer = setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
-    // clipboard access might be denied; the id stays selectable
+    // clipboard access might be denied; the line stays selectable
   }
 }
 
@@ -286,7 +303,52 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.command-id {
+.command-origin {
+  color: var(--app-text-muted);
+}
+
+.command-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 0.5rem);
+  padding-top: var(--space-sm, 0.5rem);
+  border-top: 1px solid var(--app-border-subtle, var(--app-border));
+}
+
+.command-group-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+
+.command-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
+  cursor: pointer;
+  list-style: none;
+}
+
+.command-group-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.command-group-toggle svg {
+  transition: transform var(--transition-fast);
+}
+
+details[open] > .command-group-toggle svg {
+  transform: rotate(90deg);
+}
+
+.command-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 0.5rem);
+}
+
+.command-cli {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

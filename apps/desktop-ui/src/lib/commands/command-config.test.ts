@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CommandConfig } from '@tyco/shared'
+import type { CommandConfig, MainActionConfig } from '@tyco/shared'
 
 import { testTools } from '../tools/testing'
 
 import {
+  commandAddedBy,
+  commandCliCall,
   commandLabel,
   commandTakesText,
   commandTarget,
@@ -16,6 +18,8 @@ import {
   normalizeCommands,
   normalizeLauncherCommands,
   removeCommandReferences,
+  restoreCommand,
+  restoreCommandReferences,
   validateCommand,
 } from './command-config'
 
@@ -108,9 +112,9 @@ describe('normalizeCommands', () => {
 })
 
 describe('createCommand', () => {
-  it('asks to confirm a new script and keeps external access opt-in', () => {
+  it('runs a new command without asking and keeps external access opt-in', () => {
     const command = createCommand('script', 'id1')
-    expect(command.confirm).toBe('always')
+    expect(command.confirm).toBe('auto')
     expect(command.availableIn).toEqual({ external: false, chat: false })
     expect(createCommand('webhook').confirm).toBe('auto')
   })
@@ -298,5 +302,63 @@ describe('normalizeLauncherCommands', () => {
     expect(slots).toHaveLength(15)
     expect(slots[0]).toBe('leg1')
     expect(slots[1]).toBeNull()
+  })
+})
+
+describe('command removal', () => {
+  const a = createCommand('script', 'a')
+  const b = createCommand('script', 'b')
+  const c = createCommand('script', 'c')
+
+  it('puts a command back at its index', () => {
+    expect(restoreCommand([a, c], b, 1).map((item) => item.id)).toEqual([
+      'a',
+      'b',
+      'c',
+    ])
+    expect(restoreCommand([a], c, 5).map((item) => item.id)).toEqual(['a', 'c'])
+    expect(restoreCommand([a, b], b, 0).map((item) => item.id)).toEqual([
+      'a',
+      'b',
+    ])
+  })
+
+  it('refills only the menu slots that held the command and are empty', () => {
+    const previous: (MainActionConfig | null)[] = [
+      { type: 'command', commandId: 'b' },
+      { type: 'command', commandId: 'b' },
+      { type: 'standard', actionId: 'translation' },
+    ]
+    const current: (MainActionConfig | null)[] = [
+      null,
+      { type: 'command', commandId: 'a' },
+      { type: 'standard', actionId: 'translation' },
+    ]
+    expect(restoreCommandReferences(current, previous, 'b')).toEqual([
+      { type: 'command', commandId: 'b' },
+      { type: 'command', commandId: 'a' },
+      { type: 'standard', actionId: 'translation' },
+    ])
+  })
+})
+
+describe('commandCliCall', () => {
+  it('quotes an id only when the shell needs it', () => {
+    expect(commandCliCall('default:core.translate:en_US')).toBe(
+      'tyco-ctl run default:core.translate:en_US'
+    )
+    expect(commandCliCall("it's mine")).toBe("tyco-ctl run 'it'\\''s mine'")
+  })
+})
+
+describe('commandAddedBy', () => {
+  it('names the owner of a default command only', () => {
+    const tools = { get: () => undefined }
+    expect(commandAddedBy(createCommand('script', 'mine'), tools)).toBe(
+      undefined
+    )
+    expect(
+      commandAddedBy(createCommand('script', 'default:core.x:y'), tools)
+    ).toEqual({ kind: 'core' })
   })
 })

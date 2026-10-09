@@ -13,7 +13,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 2
+export const CONFIG_VERSION = 3
 
 export type ModelTag =
   | 'voice'
@@ -366,14 +366,18 @@ export const SUBMIT_KEYS = ['enter', 'ctrlEnter'] as const
 export type SubmitKey = (typeof SUBMIT_KEYS)[number]
 export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 
+/**
+ * What local applications may do through tyco-ctl and D-Bus besides running the
+ * commands granted one by one
+ */
 export interface ExternalAccess {
-  commands: boolean
+  /** Read the selection of the focused window and replace it */
   selection: boolean
+  /** Open the modes that start recording */
   recording: boolean
 }
 
 export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
-  commands: true,
   selection: false,
   recording: false,
 }

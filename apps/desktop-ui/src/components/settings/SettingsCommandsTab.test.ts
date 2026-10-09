@@ -78,21 +78,10 @@ describe('SettingsCommandsTab.vue', () => {
     expect(wrapper.find('.tool-picker').exists()).toBe(false)
   })
 
-  it('keeps a command whose removal is not confirmed', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('removes a command with its menu items and offers to undo it', async () => {
+    removeSecret.mockClear()
     const wrapper = mountTab()
     await wrapper.findAll('.delete-btn')[0].trigger('click')
-    expect(confirm).toHaveBeenCalledWith('commands.removeConfirmSecret')
-    expect(wrapper.emitted('update:commands')).toBeUndefined()
-    expect(removeSecret).not.toHaveBeenCalled()
-    confirm.mockRestore()
-  })
-
-  it('removes a command with its menu items and its webhook token', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const wrapper = mountTab()
-    await wrapper.findAll('.delete-btn')[0].trigger('click')
-    confirm.mockRestore()
 
     const [commands] = wrapper.emitted('update:commands')![0] as [
       { id: string }[],
@@ -101,34 +90,72 @@ describe('SettingsCommandsTab.vue', () => {
     expect(wrapper.emitted('update:mainActions')![0]).toEqual([
       [null, { type: 'standard', actionId: 'translation' }],
     ])
-    expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
-  })
-  it('changes the master switch without exposing commands', async () => {
-    const wrapper = mountTab()
-    await wrapper
-      .find('.external-access input[type="checkbox"]')
-      .setValue(false)
-    expect(wrapper.emitted('update:externalAccess')?.[0]).toEqual([
-      { commands: false, selection: false, recording: false },
-    ])
-    expect(wrapper.emitted('update:commands')).toBeUndefined()
+    expect(wrapper.find('.commands-notice').text()).toContain(
+      'commands.removed'
+    )
+    // the token stays while the removal can be undone
+    expect(removeSecret).not.toHaveBeenCalled()
   })
 
-  it('grants external access only to the selected commands', async () => {
+  it('puts a removed command back where it was', async () => {
+    removeSecret.mockClear()
     const wrapper = mountTab()
-    await wrapper
-      .findAll('.command-header input[type="checkbox"]')[0]
-      .setValue(true)
-    const grant = wrapper
-      .findAll('button')
-      .find((button) => button.text() === 'commands.grantSelected')!
-    await grant.trigger('click')
-    const [commands] = wrapper.emitted('update:commands')![0] as [
+    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    await wrapper.setProps({
+      userConfig: {
+        commands: [script],
+        mainActions: [null, { type: 'standard', actionId: 'translation' }],
+      } as unknown as UserConfig,
+    })
+    await wrapper.find('.commands-notice button').trigger('click')
+
+    const [commands] = wrapper.emitted('update:commands')![1] as [
+      { id: string }[],
+    ]
+    expect(commands.map((command) => command.id)).toEqual(['wh1', 'sc1'])
+    expect(wrapper.emitted('update:mainActions')![1]).toEqual([
+      [
+        { type: 'command', commandId: 'wh1' },
+        { type: 'standard', actionId: 'translation' },
+      ],
+    ])
+    expect(wrapper.find('.commands-notice').exists()).toBe(false)
+    wrapper.unmount()
+    expect(removeSecret).not.toHaveBeenCalled()
+  })
+
+  it('removes the webhook token once undo is no longer offered', async () => {
+    removeSecret.mockClear()
+    const wrapper = mountTab()
+    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    wrapper.unmount()
+    expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
+  })
+
+  it('switches a command on and off and grants it external access', async () => {
+    const wrapper = mountTab()
+    const card = wrapper.findAll('.command-card')[1]
+    await card.find('.enabled-switch input').setValue(false)
+    await card.find('.external-btn').trigger('click')
+
+    const [disabled] = wrapper.emitted('update:commands')![0] as [
       CommandConfig[],
     ]
-    expect(commands[0].availableIn.external).toBe(true)
-    expect(commands[1].availableIn.external).toBe(false)
-    expect(commands[0].enabled).toBe(webhook.enabled)
-    expect(commands[1]).toEqual(script)
+    expect(disabled[1].enabled).toBe(false)
+    expect(disabled[0].enabled).toBe(true)
+    const [external] = wrapper.emitted('update:commands')![1] as [
+      CommandConfig[],
+    ]
+    expect(external[1].availableIn.external).toBe(true)
+    expect(external[0].availableIn.external).toBe(false)
+  })
+
+  it('grants selection capture without touching the commands', async () => {
+    const wrapper = mountTab()
+    await wrapper.findAll('.field-row input[type="checkbox"]')[0].setValue(true)
+    expect(wrapper.emitted('update:externalAccess')?.[0]).toEqual([
+      { selection: true, recording: false },
+    ])
+    expect(wrapper.emitted('update:commands')).toBeUndefined()
   })
 })

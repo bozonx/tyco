@@ -301,13 +301,6 @@ struct ListedCommand {
 /// The commands that may be called from outside, as a JSON array of
 /// `{ id, name, input }`, in the order of the library.
 pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
-    if user_config
-        .pointer("/externalAccess/commands")
-        .and_then(Value::as_bool)
-        == Some(false)
-    {
-        return "[]".into();
-    }
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())

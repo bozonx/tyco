@@ -1,44 +1,14 @@
 <template>
   <SettingsSection :description="t('commands.hint')" bare>
     <div class="commands-tab">
-      <div class="external-access">
-        <FieldCheckbox
-          :value="externalAccess.commands"
-          :label="t('commands.externalMaster')"
-          @update:value="setExternalAccess('commands', $event)"
-        />
-        <FieldCheckbox
-          :value="externalAccess.selection"
-          :label="t('commands.externalSelection')"
-          @update:value="setExternalAccess('selection', $event)"
-        />
-        <FieldCheckbox
-          :value="externalAccess.recording"
-          :label="t('commands.externalRecording')"
-          @update:value="setExternalAccess('recording', $event)"
-        />
-        <p class="commands-empty">{{ t('commands.externalAccessHint') }}</p>
-      </div>
-      <div v-if="commands.length" class="commands-add">
-        <FieldCheckbox
-          :value="allSelected"
-          :label="t('commands.selectAll')"
-          @update:value="selectAll($event)"
-        />
-        <Button
-          v-if="selectedCount"
-          sm
-          ghost
-          @click="setSelectedExternal(true)"
-          >{{ t('commands.grantSelected') }}</Button
-        >
-        <Button
-          v-if="selectedCount"
-          sm
-          ghost
-          @click="setSelectedExternal(false)"
-          >{{ t('commands.revokeSelected') }}</Button
-        >
+      <div v-if="removed" class="commands-notice" role="status">
+        <Icon icon="mdi:trash-can-outline" width="16" height="16" />
+        <span class="commands-notice-text">
+          {{ t('commands.removed', { name: removedName }) }}
+        </span>
+        <Button xs ghost icon="mdi:undo" @click="undoRemove">
+          {{ t('commands.undo') }}
+        </Button>
       </div>
       <p v-if="!commands.length" class="commands-empty">
         {{ t('commands.empty') }}
@@ -60,21 +30,6 @@
           :style="itemStyle(index)"
         >
           <div class="command-header">
-            <input
-              type="checkbox"
-              :checked="selectedCommandIds.has(command.id)"
-              :aria-label="
-                t('commands.selectCommand', {
-                  name: command.name || command.id,
-                })
-              "
-              @change="
-                selectCommand(
-                  command.id,
-                  ($event.target as HTMLInputElement).checked
-                )
-              "
-            />
             <div
               class="drag-handle"
               :title="t('settings.dragToReorder')"
@@ -97,7 +52,6 @@
               <span class="command-name" :class="{ 'is-empty': !command.name }">
                 {{ command.name || t('commands.unnamed') }}
               </span>
-              <span class="command-badge">{{ toolName(command) }}</span>
               <span
                 v-if="!commandTakesText(command, toolsStore)"
                 class="command-badge"
@@ -107,25 +61,12 @@
               <span v-if="inMenu.has(command.id)" class="command-badge">
                 {{ t('commands.badgeInMenu') }}
               </span>
-              <span v-if="command.availableIn.external" class="command-badge">
-                {{ t('commands.badgeExternal') }}
-              </span>
-              <span v-if="!command.enabled" class="command-badge is-muted">
-                {{ t('commands.badgeDisabled') }}
-              </span>
               <span
-                v-else-if="unavailableReason(command)"
+                v-if="command.enabled && unavailableReason(command)"
                 class="command-badge is-muted"
                 :title="t(unavailableReason(command)!)"
               >
                 {{ t('commands.badgeUnavailable') }}
-              </span>
-              <span
-                v-if="addedBy(command)"
-                class="command-badge is-muted"
-                :title="addedBy(command)"
-              >
-                <Icon icon="mdi:star-outline" width="14" height="14" />
               </span>
               <span
                 v-if="
@@ -145,6 +86,35 @@
                 :class="{ 'rotate-180': isExpanded(command.id) }"
               />
             </button>
+            <Button
+              :class="
+                command.availableIn.external
+                  ? 'external-btn is-on'
+                  : 'external-btn'
+              "
+              xs
+              ghost
+              square
+              :aria-pressed="command.availableIn.external"
+              :title="t('commands.external')"
+              :aria-label="t('commands.external')"
+              @click="
+                setCommand(command.id, {
+                  availableIn: {
+                    ...command.availableIn,
+                    external: !command.availableIn.external,
+                  },
+                })
+              "
+            >
+              <Icon icon="mdi:console-line" width="16" height="16" />
+            </Button>
+            <FieldCheckbox
+              class="enabled-switch"
+              :value="command.enabled"
+              :title="t('commands.enabled')"
+              @update:value="setCommand(command.id, { enabled: $event })"
+            />
             <Button
               class="delete-btn"
               xs
@@ -210,10 +180,42 @@
       </div>
     </div>
   </SettingsSection>
+
+  <SettingsSection
+    :title="t('commands.externalTitle')"
+    :description="t('commands.externalDescription')"
+  >
+    <FieldRow
+      :label="t('commands.externalSelection')"
+      :info="t('commands.externalSelectionInfo')"
+    >
+      <FieldCheckbox
+        :value="externalAccess.selection"
+        :title="t('commands.externalSelection')"
+        @update:value="setExternalAccess('selection', $event)"
+      />
+    </FieldRow>
+    <FieldRow
+      :label="t('commands.externalRecording')"
+      :info="t('commands.externalRecordingInfo')"
+    >
+      <FieldCheckbox
+        :value="externalAccess.recording"
+        :title="t('commands.externalRecording')"
+        @update:value="setExternalAccess('recording', $event)"
+      />
+    </FieldRow>
+  </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { type ComponentPublicInstance, computed, nextTick, ref } from 'vue'
+import {
+  type ComponentPublicInstance,
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+} from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { useSortableList } from '../../composables/useSortableList'
@@ -225,6 +227,8 @@ import {
   externalNameTwins,
   normalizeCommands,
   removeCommandReferences,
+  restoreCommand,
+  restoreCommandReferences,
   validateCommand,
   webhookToolConfig,
 } from '../../lib/commands/command-config'
@@ -234,6 +238,7 @@ import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import CommandEditor from './CommandEditor.vue'
 import { Icon } from '@iconify/vue'
@@ -271,34 +276,11 @@ const setExternalAccess = (key: keyof ExternalAccess, value: boolean) =>
 
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
-const selectedCommandIds = ref(new Set<string>())
-const selectedCount = computed(
-  () =>
-    commands.value.filter((command) => selectedCommandIds.value.has(command.id))
-      .length
-)
-const allSelected = computed(
-  () =>
-    commands.value.length > 0 && selectedCount.value === commands.value.length
-)
-const selectCommand = (id: string, selected: boolean) => {
-  const next = new Set(selectedCommandIds.value)
-  if (selected) next.add(id)
-  else next.delete(id)
-  selectedCommandIds.value = next
-}
-const selectAll = (selected: boolean) => {
-  selectedCommandIds.value = new Set(
-    selected ? commands.value.map((command) => command.id) : []
-  )
-}
-const setSelectedExternal = (external: boolean) => {
+function setCommand(id: string, patch: Partial<CommandConfig>) {
   emit(
     'update:commands',
     commands.value.map((command) =>
-      selectedCommandIds.value.has(command.id)
-        ? { ...command, availableIn: { ...command.availableIn, external } }
-        : command
+      command.id === id ? { ...command, ...patch } : command
     )
   )
 }
@@ -338,22 +320,8 @@ async function reveal(id: string) {
 
 if (props.focusCommandId) void reveal(props.focusCommandId)
 
-const toolName = (command: CommandConfig) => {
-  const tool = toolsStore.get(command.toolId)
-  return tool ? toolLabel(tool, t) : command.toolId
-}
-
 const unavailableReason = (command: CommandConfig) =>
   commandUnavailableReason(command, toolsStore)
-
-/** Who added a default command: the app or a plugin */
-function addedBy(command: CommandConfig): string {
-  if (!command.id.startsWith('default:')) return ''
-  const owner = toolsStore.get(command.toolId)?.owner
-  return owner?.kind === 'plugin'
-    ? t('commands.addedByPlugin', { name: owner.name })
-    : t('commands.addedByApp')
-}
 
 /** The tool picker of a new command is open */
 const pickingTool = ref(false)
@@ -399,32 +367,72 @@ function updateCommand(index: number, command: CommandConfig) {
   emit('update:commands', next)
 }
 
-/** The command leaves the menu, and its webhook token goes with it */
+/** A removed command the user can still bring back */
+interface RemovedCommand {
+  command: CommandConfig
+  index: number
+  /** The menu before the removal, when the command was in it */
+  mainActions?: (MainActionConfig | null)[]
+}
+
+const removed = ref<RemovedCommand | null>(null)
+const removedName = computed(
+  () => removed.value?.command.name.trim() || t('commands.unnamed')
+)
+
+/** The command leaves the menu at once; its webhook token once undo is gone */
 function removeCommand(command: CommandConfig) {
-  const name = command.name.trim() || t('commands.unnamed')
-  const hasSecret =
-    command.toolId === 'webhook' && webhookToolConfig(command).authSecret
-  const question = t(
-    hasSecret ? 'commands.removeConfirmSecret' : 'commands.removeConfirm',
-    { name }
-  )
-  if (!window.confirm(question)) return
+  finishRemoval()
+  const index = commands.value.findIndex((item) => item.id === command.id)
+  const mainActions = props.userConfig.mainActions ?? []
+  removed.value = {
+    command,
+    index,
+    mainActions: inMenu.value.has(command.id) ? [...mainActions] : undefined,
+  }
   emit(
     'update:commands',
     commands.value.filter((item) => item.id !== command.id)
   )
-  if (inMenu.value.has(command.id)) {
+  if (removed.value.mainActions) {
+    emit('update:mainActions', removeCommandReferences(mainActions, command.id))
+  }
+}
+
+function undoRemove() {
+  const entry = removed.value
+  if (!entry) return
+  removed.value = null
+  emit(
+    'update:commands',
+    restoreCommand(commands.value, entry.command, entry.index)
+  )
+  if (entry.mainActions) {
     emit(
       'update:mainActions',
-      removeCommandReferences(props.userConfig.mainActions ?? [], command.id)
+      restoreCommandReferences(
+        props.userConfig.mainActions ?? [],
+        entry.mainActions,
+        entry.command.id
+      )
     )
   }
+}
+
+/** Undo is no longer offered: the token of a removed webhook goes too */
+function finishRemoval() {
+  const entry = removed.value
+  removed.value = null
+  if (!entry) return
+  const { command } = entry
   if (command.toolId === 'webhook' && webhookToolConfig(command).authSecret) {
     llmStore.removeSecret(webhookSecretId(command.id)).catch(() => {
       // a leftover token is bound to its origin and harmless
     })
   }
 }
+
+onBeforeUnmount(finishRemoval)
 </script>
 
 <style scoped>
@@ -486,6 +494,25 @@ function removeCommand(command: CommandConfig) {
 .commands-empty {
   font-size: 0.875rem;
   color: var(--app-text-muted);
+}
+
+.commands-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md, var(--radius-sm));
+  background-color: var(--app-surface);
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.commands-notice-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .commands-list {
@@ -620,6 +647,18 @@ function removeCommand(command: CommandConfig) {
 .command-card.is-dragged .drag-handle {
   opacity: 1;
   pointer-events: auto;
+}
+
+.external-btn {
+  color: var(--app-text-faint);
+}
+
+.external-btn.is-on {
+  color: var(--color-primary);
+}
+
+.enabled-switch {
+  margin: 0 var(--space-xs);
 }
 
 .delete-btn {

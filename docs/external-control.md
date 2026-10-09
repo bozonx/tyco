@@ -82,32 +82,33 @@ arguments; use `tyco-ctl run --stdin` for private scripted input.
 
 ## Permissions
 
-Settings → Commands contains three independent controls:
+Each library command is allowed on its own: the terminal icon in its row in
+Settings → Commands, or **Available from outside** in its settings. The command
+must also be enabled. Newly created and seeded core/plugin commands are not
+granted external access.
 
-- **Allow external command execution**: master switch for library commands.
-  Every command additionally requires its own external permission and must be
-  enabled. Enabling the master switch does not expose all commands.
-- **Allow external selection capture and replacement**: permits explicit
-  `--selection`, `--replace`, and selection actions.
-- **Allow external recording activation**: permits opening `voice`,
-  `voice-chat`, and `write`, which can start recording.
+The **External access** section below the list holds two capabilities that are
+independent of the command grants:
 
-The defaults are `commands: true`, `selection: false`, `recording: false`.
-Existing individual command grants are preserved. Select commands in the settings
-list to grant or revoke external access in bulk; this changes only those selected
-commands and does not grant access to future commands. Newly created and seeded core/plugin
-commands are not automatically granted external access. Internal hotkeys and
-UI actions do not acquire external permissions merely because they share the
-underlying execution code.
+- **Read and replace selected text**: permits explicit `--selection`,
+  `--replace`, and selection actions.
+- **Start microphone recording**: permits opening `voice`, `voice-chat`, and
+  `write`, which can start recording.
+
+Both are off by default. Internal hotkeys and UI actions do not acquire external
+permissions merely because they share the underlying execution code.
 
 The corresponding user configuration is:
 
 ```yaml
 externalAccess:
-  commands: true
   selection: false
   recording: false
 ```
+
+Configs before version 3 also had `externalAccess.commands`, a master switch
+for all commands. The migration drops it; a config where it was `false` has the
+external grant of every command revoked instead.
 
 A command's external grant does not bypass its tool's availability or permission
 checks. `confirm: always` requires interactive user confirmation; there is no

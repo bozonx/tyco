@@ -14,15 +14,13 @@ pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
 
 type ApiResult<T> = Result<T, Response>;
 
+/// Selection capture and recording are opt-in; which commands run from
+/// outside is decided by each command's own grant.
 fn access_allowed(config: &Value, capability: &str) -> bool {
-    match config.get("externalAccess") {
-        None => capability == "commands",
-        Some(access) if access.is_object() => match access.get(capability) {
-            None => capability == "commands",
-            Some(value) => value.as_bool().unwrap_or(false),
-        },
-        Some(_) => false,
-    }
+    config
+        .pointer(&format!("/externalAccess/{capability}"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
 }
 
 fn permission(config: &Value, capability: &str) -> ApiResult<()> {
@@ -39,7 +37,6 @@ fn permission(config: &Value, capability: &str) -> ApiResult<()> {
 fn lookup(app: &AppHandle, request: &RunRequest) -> ApiResult<ExternalCommand> {
     let state = app.state::<AppState>();
     let config = state.params().user_config;
-    permission(&config, "commands")?;
     if !request.by_name
         && !config
             .get("commands")
@@ -414,7 +411,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             let config = app.state::<AppState>().params().user_config;
             Response::json(
                 &json!({ "apiVersion": API_VERSION, "running": true, "externalAccess": {
-                "commands": access_allowed(&config, "commands"),
                 "selection": access_allowed(&config, "selection"),
                 "recording": access_allowed(&config, "recording"),
             } }),
@@ -583,12 +579,12 @@ mod tests {
     }
     #[test]
     fn permission_defaults_deny_capture() {
-        assert!(permission(&json!({}), "commands").is_ok());
         assert!(permission(&json!({}), "selection").is_err());
         assert!(permission(&json!({}), "recording").is_err());
-        assert!(permission(&json!({"externalAccess":{"commands":"false"}}), "commands").is_err());
-        assert!(permission(&json!({"externalAccess":null}), "commands").is_err());
-        assert!(permission(&json!({"externalAccess":{"commands":false}}), "commands").is_err());
+        assert!(permission(&json!({"externalAccess":null}), "selection").is_err());
+        assert!(permission(&json!({"externalAccess":{"selection":"true"}}), "selection").is_err());
+        assert!(permission(&json!({"externalAccess":{"selection":true}}), "selection").is_ok());
+        assert!(permission(&json!({"externalAccess":{"selection":true}}), "recording").is_err());
     }
     #[test]
     fn replacement_preserves_original_surrounding_whitespace() {

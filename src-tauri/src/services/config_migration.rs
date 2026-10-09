@@ -6,7 +6,7 @@ use serde_json::{json, Map, Value};
 
 /// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
 /// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 2;
+pub const CONFIG_VERSION: u64 = 3;
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -38,6 +38,9 @@ pub fn migrate(user_config: &mut Value) -> bool {
     // plugin tools. The version still goes up: a build of version 1 knows
     // neither the core and plugin tools nor the `replaceSelection` and `copy`
     // outputs, and would drop the plugin items of the menu on save
+    if from < 3 {
+        drop_external_commands_switch(user_config);
+    }
     stamp_current_version(user_config);
     true
 }
@@ -168,6 +171,35 @@ fn command_from_action(kind: &str, id: &str, action: &Map<String, Value>) -> Val
         "availableIn": { "launcher": false, "external": false, "chat": false },
         "enabled": true,
     })
+}
+
+/// Version 3: the grant of each command alone decides whether it runs from
+/// outside. A config that denied every command keeps them all denied.
+fn drop_external_commands_switch(user_config: &mut Value) {
+    let Some(config) = user_config.as_object_mut() else {
+        return;
+    };
+    let Some(access) = config
+        .get_mut("externalAccess")
+        .and_then(Value::as_object_mut)
+    else {
+        return;
+    };
+    let denied = access.remove("commands").and_then(|value| value.as_bool()) == Some(false);
+    if !denied {
+        return;
+    }
+    let Some(commands) = config.get_mut("commands").and_then(Value::as_array_mut) else {
+        return;
+    };
+    for command in commands {
+        if let Some(available_in) = command
+            .get_mut("availableIn")
+            .and_then(Value::as_object_mut)
+        {
+            available_in.insert(String::from("external"), Value::Bool(false));
+        }
+    }
 }
 
 /// The name of the copy kept of a config before it is migrated from `version`.
@@ -330,9 +362,53 @@ mod tests {
         });
         let before = config.clone();
         assert!(migrate(&mut config));
-        assert_eq!(config["configVersion"], json!(2));
+        assert_eq!(config["configVersion"], json!(CONFIG_VERSION));
         config["configVersion"] = json!(1);
         assert_eq!(config, before);
+    }
+
+    #[test]
+    fn drops_the_external_commands_switch_and_keeps_the_grants() {
+        let mut config = json!({
+            "configVersion": 2,
+            "externalAccess": { "commands": true, "selection": true, "recording": false },
+            "commands": [{ "id": "a", "availableIn": { "external": true } }]
+        });
+        assert!(migrate(&mut config));
+        assert_eq!(
+            config["externalAccess"],
+            json!({ "selection": true, "recording": false })
+        );
+        assert_eq!(
+            config["commands"][0]["availableIn"]["external"],
+            json!(true)
+        );
+    }
+
+    #[test]
+    fn a_denied_external_commands_switch_revokes_every_grant() {
+        let mut config = json!({
+            "configVersion": 2,
+            "externalAccess": { "commands": false, "selection": false, "recording": false },
+            "commands": [
+                { "id": "a", "availableIn": { "external": true, "chat": false } },
+                { "id": "b", "availableIn": { "external": false } },
+                { "id": "c" }
+            ]
+        });
+        assert!(migrate(&mut config));
+        assert_eq!(
+            config["externalAccess"],
+            json!({ "selection": false, "recording": false })
+        );
+        assert_eq!(
+            config["commands"],
+            json!([
+                { "id": "a", "availableIn": { "external": false, "chat": false } },
+                { "id": "b", "availableIn": { "external": false } },
+                { "id": "c" }
+            ])
+        );
     }
 
     #[test]
