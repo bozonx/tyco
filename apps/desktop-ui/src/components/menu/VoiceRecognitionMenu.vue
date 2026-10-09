@@ -2,55 +2,57 @@
   <!-- The bar leaves the rest of the screen, or the editor, in view while the
        user speaks; the keys are the same as in the full layout -->
   <div v-if="props.variant === 'bar'" class="voice-bar" role="region">
-    <div class="voice-bar-wave">
-      <AudioWaveform
-        :level="audioLevel"
-        :peak="audioPeak"
-        :duration-ms="recordingDurationMs"
-        :is-transcribing="isTranscribing"
-      />
-    </div>
     <LiveTranscript
       class="voice-bar-transcript"
       :committed="transcript.committed"
       :draft="transcript.draft"
     />
-    <div class="voice-bar-actions">
-      <template v-if="quickSend">
+    <div class="voice-bar-footer">
+      <div class="voice-bar-wave">
+        <AudioWaveform
+          :level="audioLevel"
+          :peak="audioPeak"
+          :duration-ms="recordingDurationMs"
+          :is-transcribing="isTranscribing"
+        />
+      </div>
+      <div class="voice-bar-actions">
+        <template v-if="quickSend">
+          <ShortcutButton
+            sm
+            :keys="submitKeys"
+            icon="mdi:send"
+            primary
+            :disabled="isFinishing"
+            @click="() => finish('submit')"
+          >
+            {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
+          </ShortcutButton>
+          <ShortcutButton
+            sm
+            :keys="['Tab']"
+            icon="mdi:form-textbox"
+            :disabled="isFinishing"
+            @click="() => finish('insert')"
+          >
+            {{ t('menu.voiceToInput') }}
+          </ShortcutButton>
+        </template>
         <ShortcutButton
+          v-else
           sm
-          :keys="submitKeys"
-          icon="mdi:send"
+          :keys="['Space', 'Enter']"
+          icon="mdi:check"
           primary
-          :disabled="isFinishing"
-          @click="() => finish('submit')"
-        >
-          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
-        </ShortcutButton>
-        <ShortcutButton
-          sm
-          :keys="['Tab']"
-          icon="mdi:form-textbox"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >
-          {{ t('menu.voiceToInput') }}
+          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
         </ShortcutButton>
-      </template>
-      <ShortcutButton
-        v-else
-        sm
-        :keys="['Space', 'Enter']"
-        icon="mdi:check"
-        primary
-        :disabled="isFinishing"
-        @click="() => finish('insert')"
-      >
-        {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-      </ShortcutButton>
-      <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
-        {{ t('common.cancel') }}
-      </ShortcutButton>
+        <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
+          {{ t('common.cancel') }}
+        </ShortcutButton>
+      </div>
     </div>
   </div>
 
@@ -526,8 +528,8 @@ onUnmounted(() => {
 <style scoped>
 .voice-bar {
   display: flex;
-  align-items: stretch;
-  gap: var(--space-sm);
+  flex-direction: column;
+  gap: var(--space-xs);
   width: 100%;
   height: 7.5rem;
   padding: var(--space-sm);
@@ -538,36 +540,68 @@ onUnmounted(() => {
   box-shadow: var(--app-shadow-md);
 }
 
-.voice-bar-wave {
+.voice-bar .voice-bar-transcript {
+  flex: 1 1 0%;
+  min-height: 0;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.voice-bar-footer {
   display: flex;
-  flex: 0 0 12rem;
+  align-items: center;
+  gap: var(--space-md);
+  flex-shrink: 0;
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--app-border-subtle);
+}
+
+/* The waveform, the status and the timer share one line */
+.voice-bar-wave {
+  flex: 0 1 18rem;
   min-width: 0;
 }
 
 .voice-bar-wave :deep(.audio-waveform-container) {
-  height: 100%;
-  padding: var(--space-sm) var(--space-md);
+  padding: 0;
   border-bottom: none;
-  border-radius: var(--radius-md);
+  background-color: transparent;
+}
+
+.voice-bar-wave :deep(.listening-state) {
+  flex-direction: row;
+  gap: var(--space-sm);
 }
 
 .voice-bar-wave :deep(.waveform-visualizer) {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 28px;
   gap: 2px;
 }
 
-.voice-bar .voice-bar-transcript {
-  flex: 1 1 0%;
-  min-width: 0;
-  padding: var(--space-xs) var(--space-md);
-  border-left: 1px solid var(--app-border-subtle);
+.voice-bar-wave :deep(.waveform-meta) {
+  width: auto;
+  flex-shrink: 0;
+  gap: var(--space-sm);
+}
+
+.voice-bar-wave :deep(.transcribing-state) {
+  min-height: 0;
+  padding: 0;
 }
 
 .voice-bar-actions {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
   gap: var(--space-xs);
+  margin-left: auto;
   flex-shrink: 0;
+}
+
+/* In a row the buttons take their content width, not an equal share */
+.voice-bar-actions :deep(.shortcut) {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .voice-context {
