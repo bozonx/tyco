@@ -30,7 +30,6 @@ use crate::services::platform::session::{self, Desktop, DisplayServer};
 use crate::services::runtime;
 use crate::services::selection_replace::{self, HotkeyPress, TriggerWait};
 use crate::state::AppState;
-use tyco_activation_protocol::is_selection_action;
 
 /// Emitted when the desktop reports changed portal shortcuts.
 pub const HOTKEYS_CHANGED_EVENT: &str = "app://hotkeys-changed";
@@ -39,6 +38,8 @@ const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
 const SELECTION_HOTKEYS_CONFIG_KEY: &str = "selectionHotkeys";
 const SELECTION_TARGET_PREFIX: &str = "replace.";
 const CORRECTION_ACTION: &str = "correction";
+/// The default command the inline correction runs
+const CORRECTION_COMMAND_ID: &str = "default:core.correct:fix";
 const DEFAULT_CORRECTION_KEY: &str = "F";
 /// The modifiers of every default shortcut. Ctrl+Alt is AltGr on Windows,
 /// which types characters on many layouts (Ctrl+Alt+E is € in German), so
@@ -50,20 +51,21 @@ const DEFAULT_MODIFIERS: &str = if cfg!(target_os = "windows") {
 };
 const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 
-/// What a hotkey does: open a mode, or replace the selection in the focused
-/// window with the result of an action, see `selection_replace`.
+/// What a hotkey does: open a mode, or correct the selection in the focused
+/// window in place, see `selection_replace`. Commands have no hotkeys: they
+/// run from the overlay, by voice, or through tyco-ctl.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum HotkeyTarget {
     Mode(StartMode),
-    Selection(String),
+    InlineCorrection,
 }
 
 impl HotkeyTarget {
-    /// The id shared with the UI and the portal: the mode name, or the
-    /// action prefixed with `replace.`.
+    /// The id shared with the UI and the portal: the mode name, or
+    /// `replace.correction`.
     pub(crate) fn parse(id: &str) -> Result<Self, AppError> {
         match id.strip_prefix(SELECTION_TARGET_PREFIX) {
-            Some(action) if is_selection_action(action) => Ok(Self::Selection(action.to_owned())),
+            Some(CORRECTION_ACTION) => Ok(Self::InlineCorrection),
             Some(action) => Err(AppError::Message(format!(
                 "Unknown selection action: {action}"
             ))),
@@ -74,17 +76,15 @@ impl HotkeyTarget {
     pub(crate) fn id(&self) -> String {
         match self {
             Self::Mode(mode) => mode.as_str().to_owned(),
-            Self::Selection(action) => format!("{SELECTION_TARGET_PREFIX}{action}"),
+            Self::InlineCorrection => format!("{SELECTION_TARGET_PREFIX}{CORRECTION_ACTION}"),
         }
     }
 
-    fn cli_command(&self, config: &serde_json::Value) -> String {
+    fn cli_command(&self) -> String {
         match self {
             Self::Mode(mode) => format!("tyco-ctl open {}", mode.as_str()),
-            Self::Selection(action) => {
-                let id = selection_command_id(config, action).unwrap_or_default();
-                let quoted = id.replace('\'', "'\\''");
-                format!("tyco-ctl run '{quoted}' --selection --replace --interactive")
+            Self::InlineCorrection => {
+                format!("tyco-ctl run {CORRECTION_COMMAND_ID} --selection --replace --interactive")
             }
         }
     }
@@ -95,9 +95,9 @@ impl HotkeyTarget {
             Self::Mode(mode) => {
                 runtime::activate(app, Activation::new(*mode, ActivationSource::Hotkey))
             }
-            Self::Selection(action) => selection_replace::trigger(
+            Self::InlineCorrection => selection_replace::trigger(
                 app,
-                action,
+                CORRECTION_ACTION,
                 TriggerWait::HotkeyRelease(HotkeyPress::new(hotkey_id)),
             ),
         }
@@ -428,7 +428,6 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
                     external_command: Some(external_command(
                         &binding.target,
                         binding.shortcut.as_deref(),
-                        &config,
                     )),
                     message: None,
                 };
@@ -504,11 +503,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         ))),
         ProviderKind::External => Ok(ApplyHotkeyResult {
             status: HotkeyApplyStatus::External,
-            external_command: Some(external_command(
-                &target,
-                shortcut.map(|_| requested),
-                &app.state::<AppState>().params().user_config,
-            )),
+            external_command: Some(external_command(&target, shortcut.map(|_| requested))),
             message: None,
         }),
     }
@@ -598,54 +593,23 @@ fn apply_global_shortcut(
     Ok(ready)
 }
 
-fn selection_command_id(config: &serde_json::Value, action: &str) -> Option<String> {
-    if let Some(id) = action.strip_prefix(tyco_activation_protocol::COMMAND_ACTION_PREFIX) {
-        return Some(id.into());
-    }
-    if action == "correction" {
-        return Some("default:core.correct:fix".into());
-    }
-    if let Some(slot) = action
-        .strip_prefix("translate.")
-        .and_then(|slot| slot.parse::<usize>().ok())
-    {
-        return config["toTranslateLanguages"][slot]
-            .as_str()
-            .map(|language| format!("default:core.translate:{language}"));
-    }
-    let slot = action.strip_prefix("aiTask.")?.parse::<usize>().ok()?;
-    let rule = config["aiTasks"][slot]["rule"].as_str()?;
-    config["commands"].as_array()?.iter().find(|command| {
-        command["toolId"] == "core.aiTask" && command["toolConfig"]["prompt"].as_str() == Some(rule)
-    })?["id"]
-        .as_str()
-        .map(str::to_owned)
-}
-
 /// The line that binds `target` in the desktop's own configuration; without
 /// a shortcut only the command to bind.
-fn external_command(
-    target: &HotkeyTarget,
-    shortcut: Option<&str>,
-    config: &serde_json::Value,
-) -> String {
+fn external_command(target: &HotkeyTarget, shortcut: Option<&str>) -> String {
     let Some(shortcut) = shortcut else {
-        return target.cli_command(config);
+        return target.cli_command();
     };
     match session::current().desktop {
         Desktop::Hyprland => {
             let (modifiers, key) = hyprland_shortcut(shortcut);
-            format!(
-                "bind = {modifiers}, {key}, exec, {}",
-                target.cli_command(config)
-            )
+            format!("bind = {modifiers}, {key}, exec, {}", target.cli_command())
         }
         Desktop::Sway => format!(
             "bindsym {} exec {}",
             sway_shortcut(shortcut),
-            target.cli_command(config)
+            target.cli_command()
         ),
-        _ => target.cli_command(config),
+        _ => target.cli_command(),
     }
 }
 
@@ -766,7 +730,7 @@ fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
 /// Only the correction replaces the selection from a hotkey.
 fn selection_binding(config: &Value) -> HotkeyBinding {
     HotkeyBinding {
-        target: HotkeyTarget::Selection(CORRECTION_ACTION.to_owned()),
+        target: HotkeyTarget::InlineCorrection,
         shortcut: configured_shortcut(
             config
                 .get(SELECTION_HOTKEYS_CONFIG_KEY)
@@ -794,7 +758,7 @@ fn global_target(id: &str) -> Option<HotkeyTarget> {
     let target = HotkeyTarget::parse(id).ok()?;
     let global = match &target {
         HotkeyTarget::Mode(mode) => GLOBAL_HOTKEY_MODES.contains(mode),
-        HotkeyTarget::Selection(action) => action == CORRECTION_ACTION,
+        HotkeyTarget::InlineCorrection => true,
     };
     global.then_some(target)
 }
@@ -1259,21 +1223,10 @@ mod tests {
     }
 
     #[test]
-    fn external_selection_commands_use_stable_ids() {
-        let config = serde_json::json!({"toTranslateLanguages": ["es_AR"]});
+    fn the_inline_correction_runs_the_default_command() {
         assert_eq!(
-            selection_command_id(&config, "correction").as_deref(),
-            Some("default:core.correct:fix")
-        );
-        assert_eq!(
-            selection_command_id(&config, "translate.0").as_deref(),
-            Some("default:core.translate:es_AR")
-        );
-        assert_eq!(selection_command_id(&config, "aiTask.9"), None);
-        let target = HotkeyTarget::Selection("command:owner's-task".into());
-        assert_eq!(
-            target.cli_command(&config),
-            "tyco-ctl run 'owner'\\''s-task' --selection --replace --interactive"
+            HotkeyTarget::InlineCorrection.cli_command(),
+            "tyco-ctl run default:core.correct:fix --selection --replace --interactive"
         );
     }
 
@@ -1283,10 +1236,13 @@ mod tests {
             HotkeyTarget::parse("editor").unwrap(),
             HotkeyTarget::Mode(StartMode::Editor)
         );
-        let target = HotkeyTarget::parse("replace.aiTask.2").unwrap();
-        assert_eq!(target, HotkeyTarget::Selection(String::from("aiTask.2")));
-        assert_eq!(target.id(), "replace.aiTask.2");
-        assert_eq!(target.cli_command(&serde_json::json!({"aiTasks":[{}, {}, {"rule":"fix"}], "commands":[{"id":"task-fix", "toolId":"core.aiTask", "toolConfig":{"prompt":"fix"}}]})), "tyco-ctl run 'task-fix' --selection --replace --interactive");
+        let target = HotkeyTarget::parse("replace.correction").unwrap();
+        assert_eq!(target, HotkeyTarget::InlineCorrection);
+        assert_eq!(target.id(), "replace.correction");
+        // commands have no hotkeys
+        assert!(HotkeyTarget::parse("replace.command:task-fix").is_err());
+        assert!(HotkeyTarget::parse("replace.aiTask.2").is_err());
+        assert!(HotkeyTarget::parse("replace.translate.0").is_err());
         assert!(HotkeyTarget::parse("replace.bogus").is_err());
         assert!(HotkeyTarget::parse("bogus").is_err());
     }
@@ -1307,7 +1263,7 @@ mod tests {
         );
         assert_eq!(
             global_target("replace.correction"),
-            Some(HotkeyTarget::Selection(String::from("correction")))
+            Some(HotkeyTarget::InlineCorrection)
         );
         assert_eq!(global_target("history"), None);
         assert_eq!(global_target("config"), None);

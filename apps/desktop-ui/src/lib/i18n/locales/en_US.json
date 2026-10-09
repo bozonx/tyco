@@ -106,7 +106,7 @@
     "externalRecording": "Start microphone recording",
     "externalRecordingInfo": "An application can open voice input or voice chat, which start recording right away (tyco-ctl open voice).",
     "externalSelection": "Read and replace selected text",
-    "externalSelectionInfo": "An application can get the text selected in the active window and put the result of a command in its place (tyco-ctl run <ID> --selection --replace). Needed to run commands on the selection from desktop shortcuts.",
+    "externalSelectionInfo": "An application can get the text selected in the active window and put the result of a command in its place (tyco-ctl run <ID> --selection --replace). Needed for scripts and other applications to run commands on the selected text.",
     "externalTitle": "External access",
     "fieldOff": "No",
     "fieldOn": "Yes",

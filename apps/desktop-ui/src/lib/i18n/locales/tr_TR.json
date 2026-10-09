@@ -106,7 +106,7 @@
     "externalRecording": "Mikrofon kaydını başlatma",
     "externalRecordingInfo": "Bir uygulama, hemen kayda başlayan sesli girişi veya sesli sohbeti açabilir (tyco-ctl open voice).",
     "externalSelection": "Seçili metni okuma ve değiştirme",
-    "externalSelectionInfo": "Bir uygulama etkin penceredeki seçili metni alabilir ve yerine bir komutun sonucunu koyabilir (tyco-ctl run <kimlik> --selection --replace). Masaüstü kısayollarıyla seçim üzerinde komut çalıştırmak için gerekir.",
+    "externalSelectionInfo": "Bir uygulama etkin penceredeki seçili metni alabilir ve yerine bir komutun sonucunu koyabilir (tyco-ctl run <kimlik> --selection --replace). Betiklerin ve diğer uygulamaların seçili metin üzerinde komut çalıştırması için gerekir.",
     "externalTitle": "Dış erişim",
     "fieldOff": "Hayır",
     "fieldOn": "Evet",

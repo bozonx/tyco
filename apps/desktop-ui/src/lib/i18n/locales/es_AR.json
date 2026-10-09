@@ -106,7 +106,7 @@
     "externalRecording": "Iniciar la grabación del micrófono",
     "externalRecordingInfo": "Una aplicación puede abrir la entrada por voz o el chat de voz, que empiezan a grabar enseguida (tyco-ctl open voice).",
     "externalSelection": "Leer y reemplazar el texto seleccionado",
-    "externalSelectionInfo": "Una aplicación puede obtener el texto seleccionado en la ventana activa y poner en su lugar el resultado de un comando (tyco-ctl run <ID> --selection --replace). Hace falta para ejecutar comandos sobre la selección desde atajos del escritorio.",
+    "externalSelectionInfo": "Una aplicación puede obtener el texto seleccionado en la ventana activa y poner en su lugar el resultado de un comando (tyco-ctl run <ID> --selection --replace). Hace falta para que los scripts y otras aplicaciones ejecuten comandos sobre el texto seleccionado.",
     "externalTitle": "Acceso externo",
     "fieldOff": "No",
     "fieldOn": "Sí",
