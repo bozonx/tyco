@@ -3,6 +3,7 @@
   <div v-if="props.bar && !isInsertMenu" class="voice-bar-layer">
     <VoiceRecognitionMenu
       variant="bar"
+      with-next
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -10,6 +11,7 @@
   <ContentPadding v-else>
     <VoiceRecognitionMenu
       v-if="!isInsertMenu"
+      with-next
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -27,6 +29,8 @@ import { ref, watch } from 'vue'
 
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
+import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
+import { useActionMenuStore } from '../stores/actionMenu'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
@@ -48,6 +52,7 @@ const emit = defineEmits<{
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
+const actionMenuStore = useActionMenuStore()
 const isInsertMenu = ref(false)
 const resText = ref('')
 
@@ -65,7 +70,20 @@ watch(
   }
 )
 
-function handleCorrected(resultText: string) {
+function handleCorrected(
+  resultText: string,
+  _recognizedText: string,
+  _correctedText: string | undefined,
+  intent: VoiceFinishIntent
+) {
+  const insertAction = actionMenuStore
+    .getDefaultActions()
+    .find((action) => action.id === 'insertIntoWindow')
+  // without a target window the text stays in the actions step, not lost
+  if (intent !== 'next' && insertAction && ipcStore.params?.windowId) {
+    void insertAction.action(resultText)
+    return
+  }
   resText.value = resultText
   isInsertMenu.value = true
 }

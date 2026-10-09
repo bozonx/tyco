@@ -38,17 +38,28 @@
             {{ t('menu.voiceToInput') }}
           </ShortcutButton>
         </template>
-        <ShortcutButton
-          v-else
-          sm
-          :keys="['Space', 'Enter']"
-          icon="mdi:check"
-          primary
-          :disabled="isFinishing"
-          @click="() => finish('insert')"
-        >
-          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-        </ShortcutButton>
+        <template v-else>
+          <ShortcutButton
+            sm
+            :keys="['Space', 'Enter']"
+            :icon="insertIcon"
+            primary
+            :disabled="isFinishing"
+            @click="() => finish('insert')"
+          >
+            {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
+          </ShortcutButton>
+          <ShortcutButton
+            v-if="withNext"
+            sm
+            :keys="['Tab']"
+            icon="mdi:arrow-right"
+            :disabled="isFinishing"
+            @click="() => finish('next')"
+          >
+            {{ t('write.next') }}
+          </ShortcutButton>
+        </template>
         <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
           {{ t('common.cancel') }}
         </ShortcutButton>
@@ -100,16 +111,26 @@
         >
           {{ t('menu.voiceToInput') }}
         </ShortcutButton>
-        <ShortcutButton
-          v-else
-          :keys="['Space', 'Enter']"
-          icon="mdi:check"
-          primary
-          :disabled="isFinishing"
-          @click="() => finish('insert')"
-        >
-          {{ isFinishing ? t('common.inProgress') : t('menu.finish') }}
-        </ShortcutButton>
+        <template v-else>
+          <ShortcutButton
+            :keys="['Space', 'Enter']"
+            :icon="insertIcon"
+            primary
+            :disabled="isFinishing"
+            @click="() => finish('insert')"
+          >
+            {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
+          </ShortcutButton>
+          <ShortcutButton
+            v-if="withNext"
+            :keys="['Tab']"
+            icon="mdi:arrow-right"
+            :disabled="isFinishing"
+            @click="() => finish('next')"
+          >
+            {{ t('write.next') }}
+          </ShortcutButton>
+        </template>
       </div>
     </template>
   </ActionOverlayLayout>
@@ -158,6 +179,11 @@ const props = defineProps<{
    * submit it, Tab only inserts it
    */
   quickSend?: boolean
+  /**
+   * Space and Enter insert the result into the target window, Tab opens the
+   * step with the actions for it, as the quick text input does
+   */
+  withNext?: boolean
   /** `bar`: a compact strip instead of the full screen layout */
   variant?: 'sheet' | 'bar'
   /** Where the bar is shown: the editor keeps its own params, see `inline` */
@@ -211,6 +237,12 @@ const chatContext = computed(() => {
     .filter(Boolean)
     .join('\n\n')
 })
+const insertLabelKey = computed(() =>
+  props.withNext ? 'action.insertIntoWindow' : 'menu.finish'
+)
+const insertIcon = computed(() =>
+  props.withNext ? 'mdi:application-export' : 'mdi:check'
+)
 const submitKeys = computed(() => {
   const hotkey = ipcStore.params?.userConfig?.hotkeys?.voiceChat
   return hotkey ? ['Enter', 'Space', hotkey] : ['Enter', 'Space']
@@ -415,14 +447,22 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
+  if (props.withNext && event.code === 'Tab') {
+    event.preventDefault()
+    void finish('next')
+    return
+  }
+
   if (event.code === 'Space' || event.code === 'Enter') {
     void finish(props.quickSend ? 'submit' : 'insert')
   }
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  // Tab finishes the quick dictation; it must not move the focus first
-  if (props.quickSend && event.code === 'Tab') event.preventDefault()
+  // Tab finishes the dictation; it must not move the focus first
+  if ((props.quickSend || props.withNext) && event.code === 'Tab') {
+    event.preventDefault()
+  }
 }
 
 async function startSession() {
