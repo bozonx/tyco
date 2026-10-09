@@ -230,9 +230,14 @@ function handleScroll() {
   showScrollButton.value = distance > 160
 }
 
-async function scrollToBottom(behavior: 'auto' | 'smooth' = 'auto') {
+// Follows the stream instantly: a smooth scroll restarted on every chunk
+// can stop at a fractional offset, and WebKitGTK then shows blurry text
+async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
   await nextTick()
-  scroller.value?.scrollTo({ top: scroller.value.scrollHeight, behavior })
+  const element = scroller.value
+  if (!element) return
+  const top = Math.max(0, element.scrollHeight - element.clientHeight)
+  element.scrollTo({ top: Math.round(top), behavior })
 }
 
 onMounted(() => {
@@ -270,7 +275,6 @@ watch(
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  scroll-behavior: smooth;
 }
 .chat-column {
   display: flex;

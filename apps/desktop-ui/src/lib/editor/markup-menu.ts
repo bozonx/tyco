@@ -59,6 +59,7 @@ export const buildMarkupItems = ({
     icon: showMarkup
       ? 'mdi:checkbox-marked-outline'
       : 'mdi:checkbox-blank-outline',
+    shortcut: 'Ctrl+Shift+M',
     separatorBefore: true,
     action: toggleShowMarkup,
   },

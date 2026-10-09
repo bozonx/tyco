@@ -6,13 +6,24 @@
         v-show="!compact"
         class="editor-toolbar flex items-center justify-between gap-2"
       >
-        <!-- Left column: Case and Format dropdowns, then plugin items -->
+        <!-- Left column: Case and Format dropdowns, view mode, then plugin items -->
         <div class="flex items-center gap-1">
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
           <DropdownMenu
             :label="t('editor.format')"
             :items="formatDropdownItems"
           />
+          <Button
+            sm
+            square
+            ghost
+            :active="showMarkup"
+            :aria-pressed="showMarkup"
+            :title="`${t('editor.markup.showSource')} (Ctrl+Shift+M)`"
+            @click="toggleShowMarkup"
+          >
+            <Icon icon="mdi:language-markdown-outline" height="18" />
+          </Button>
           <Button
             v-for="item in leftToolbarItems"
             :key="item.id"
@@ -254,6 +265,7 @@ import { computed } from 'vue'
 import { useCopyText } from '../composables/useCopyText'
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
+import { useShowMarkup } from '../composables/useShowMarkup'
 import { desktopClient } from '../lib/desktop/client'
 import { appNavigation } from '../lib/navigation/navigation'
 import { resolveModeRoute } from '../lib/navigation/routes'
@@ -282,6 +294,7 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
+const { showMarkup, toggleShowMarkup } = useShowMarkup()
 const isDev = import.meta.env.DEV
 
 /** The voice input runs in a bar under the editor, which stays in view */

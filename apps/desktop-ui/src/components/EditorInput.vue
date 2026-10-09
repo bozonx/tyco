@@ -13,10 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorActions } from '../composables/useEditorActions'
 import { useI18n } from '../composables/useI18n'
+import { useShowMarkup } from '../composables/useShowMarkup'
 import useToast from '../composables/useToast'
 import {
   copySelection,
@@ -73,10 +74,7 @@ interface OpenMenu {
 
 const menu = ref<OpenMenu | null>(null)
 
-/** The raw Markdown everywhere instead of the formatted look */
-const showMarkup = computed(
-  () => ipcStore.params.localState?.editorShowMarkup === true
-)
+const { showMarkup, toggleShowMarkup } = useShowMarkup()
 
 let view: EditorView | null = null
 
@@ -156,10 +154,7 @@ const menuGroups = (): EditorMenuGroups => ({
       view.focus()
     },
     showMarkup: showMarkup.value,
-    toggleShowMarkup: () => {
-      void ipcStore.patchLocalState({ editorShowMarkup: !showMarkup.value })
-      view?.focus()
-    },
+    toggleShowMarkup,
   }),
 })
 
@@ -205,6 +200,7 @@ onMounted(() => {
       paste: true,
       getMarkdownSettings: () => ipcStore.params?.userConfig.markdown,
       markdownPreview: !showMarkup.value,
+      onToggleMarkup: toggleShowMarkup,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
       onSelectionChange: (text, start, end) =>

@@ -52,7 +52,20 @@ export interface CreateEditorStateOptions
    * switches it later
    */
   markdownPreview?: boolean
+  /** Switch between the formatted look and the raw Markdown (Mod-Shift-m) */
+  onToggleMarkup?: () => void
 }
+
+const toggleMarkupKeymap = (onToggle: () => void): Extension =>
+  keymap.of([
+    {
+      key: 'Mod-Shift-m',
+      run: () => {
+        onToggle()
+        return true
+      },
+    },
+  ])
 
 /** Set of editor extensions */
 export const createEditorExtensions = (
@@ -62,6 +75,9 @@ export const createEditorExtensions = (
   historyKeysExtension(),
   // before the default keymap: Mod-i selects the parent syntax node there
   keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
+  ...(options.onToggleMarkup
+    ? [toggleMarkupKeymap(options.onToggleMarkup)]
+    : []),
   EditorView.lineWrapping,
   EditorState.allowMultipleSelections.of(false),
   // shows an insertion point while text is dragged into the editor

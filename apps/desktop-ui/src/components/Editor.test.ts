@@ -114,7 +114,7 @@ describe('Editor.vue toolbar', () => {
     )
     expect(
       leftColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
-    ).toEqual(['tool.left'])
+    ).toEqual(['editor.markup.showSource (Ctrl+Shift+M)', 'tool.left'])
     expect(
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
     ).toEqual([
