@@ -517,7 +517,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                             }
                         }
                     } else {
-                        Some(text.unwrap_or_default())
+                        text
                     };
                     match runtime::activate(app, activation) {
                         Ok(()) => Response::success(),

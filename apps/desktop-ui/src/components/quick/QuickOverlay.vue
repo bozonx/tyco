@@ -42,6 +42,9 @@
       <div v-show="currentMode === 'translate'" class="quick-mode-layer">
         <TranslateModeView v-if="currentMode === 'translate'" />
       </div>
+      <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
+        <VoiceChatView v-if="currentMode === 'voiceChat'" />
+      </div>
     </div>
   </div>
 </template>
@@ -68,6 +71,7 @@ import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import TranslateModeView from '../../views/TranslateModeView.vue'
+import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'

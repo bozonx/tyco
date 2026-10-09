@@ -92,4 +92,24 @@ describe('createCapturedChatSelection', () => {
 
     expect(startChatWithAttachment).not.toHaveBeenCalled()
   })
+
+  it('prefers external selection arriving after editor fallback', () => {
+    const { selection, startChatWithAttachment } = setup(() => 'Fallback text')
+
+    selection.apply(
+      activation({ mode: START_MODES.EDITOR, selectedText: null })
+    )
+    expect(
+      selection.apply(activation({ activationId: 2, selectedText: null }))
+    ).toBe(true)
+    expect(
+      selection.apply(
+        activation({ activationId: 2, selectedText: 'External text' })
+      )
+    ).toBe(true)
+    expect(startChatWithAttachment.mock.calls).toEqual([
+      ['Fallback text'],
+      ['External text'],
+    ])
+  })
 })

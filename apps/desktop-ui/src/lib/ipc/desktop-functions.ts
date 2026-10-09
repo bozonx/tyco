@@ -43,7 +43,10 @@ export interface DesktopFunctions {
   closeWindow: { args: []; result: void }
   dismissQuickWindow: { args: []; result: void }
   setQuickInputRegion: { args: [region: InputRect | null]; result: void }
-  openMainChat: { args: [text?: string]; result: void }
+  openMainChat: {
+    args: [text?: string, question?: string, autoSend?: boolean]
+    result: void
+  }
   openMainEditor: { args: [text?: string, sourceText?: string]; result: void }
   activateMode: { args: [mode: string, text?: string]; result: void }
   applyHotkey: {

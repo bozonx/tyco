@@ -22,6 +22,7 @@ export interface CapturedChatSelectionDeps {
  */
 export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
   let lastAppliedActivation: number | undefined
+  let appliedFromExternal = false
   let currentActivation: number | undefined
   let windowWasShown = false
   let shownBeforeActivation = false
@@ -30,24 +31,32 @@ export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
     if (params.activationId !== currentActivation) {
       currentActivation = params.activationId
       shownBeforeActivation = windowWasShown
+      appliedFromExternal = false
     }
     windowWasShown = params.isWindowShown
 
-    const editorText = shownBeforeActivation
-      ? deps.getSelectedText?.()
-      : undefined
+    const hasExternal = Boolean(params.selectedText?.trim())
+    const editorText =
+      shownBeforeActivation && !hasExternal
+        ? deps.getSelectedText?.()
+        : undefined
     const text = (params.selectedText ?? editorText ?? '').trim()
 
-    if (
-      params.mode !== START_MODES.CHAT ||
-      !params.isWindowShown ||
-      !text ||
-      params.activationId === lastAppliedActivation
-    ) {
+    if (params.mode !== START_MODES.CHAT || !params.isWindowShown || !text) {
+      return false
+    }
+
+    if (params.activationId === lastAppliedActivation) {
+      if (hasExternal && !appliedFromExternal) {
+        appliedFromExternal = true
+        void deps.startChatWithAttachment(text)
+        return true
+      }
       return false
     }
 
     lastAppliedActivation = params.activationId
+    appliedFromExternal = hasExternal
     void deps.startChatWithAttachment(text)
 
     return true

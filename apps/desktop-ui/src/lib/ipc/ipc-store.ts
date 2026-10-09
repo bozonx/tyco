@@ -89,7 +89,7 @@ export function createCommandMap(): CommandMap {
     },
     openMainChat: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
-      buildArgs: ([text]) => ({ text }),
+      buildArgs: ([text, question, autoSend]) => ({ text, question, autoSend }),
     },
     openMainEditor: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,

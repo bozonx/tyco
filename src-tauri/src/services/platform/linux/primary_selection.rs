@@ -76,6 +76,7 @@ fn update<T>(change: impl FnOnce(&mut OwnerState) -> T) -> T {
 
 /// Whether the primary selection was made in `window_id`; `None` when that is
 /// not known, see the module docs.
+#[allow(dead_code)]
 pub fn made_in(window_id: Option<&str>) -> Option<bool> {
     update(|state| state.made_in(window_id))
 }

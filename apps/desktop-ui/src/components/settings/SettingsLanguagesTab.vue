@@ -9,7 +9,8 @@
           class="settings-inline-link"
           @click="emit('navigate', 'translations')"
         >
-          {{ t('settings.translationsTab') }}</button>.
+          {{ t('settings.translationsTab') }}</button
+        >.
       </template>
       <ShortcutSlots
         :items="translateLanguageSlots"

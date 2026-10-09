@@ -1,6 +1,5 @@
 use std::process::{Command, Stdio};
 
-use super::primary_selection;
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::window_tracker::tracker;
 
@@ -56,16 +55,14 @@ impl ForegroundContext for SystemForegroundContext {
     }
 
     /// The primary selection, which holds what was selected last in any
-    /// window; on Wayland only when it was made in `source`, see
-    /// `primary_selection`.
-    async fn capture_selection(&self, source: Option<Self::Source>) -> Option<String> {
+    /// window; falls back to clipboard.
+    async fn capture_selection(&self, _source: Option<Self::Source>) -> Option<String> {
         match self.display {
-            DisplayServer::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"]),
+            DisplayServer::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"])
+                .or_else(|| Self::command_output("xclip", &["-selection", "clipboard", "-o"])),
             DisplayServer::Wayland => {
-                if primary_selection::made_in(source.as_deref()) == Some(false) {
-                    return None;
-                }
                 Self::command_output("wl-paste", &["--primary", "--no-newline"])
+                    .or_else(|| Self::command_output("wl-paste", &["--no-newline"]))
             }
             DisplayServer::Native | DisplayServer::Unknown => None,
         }

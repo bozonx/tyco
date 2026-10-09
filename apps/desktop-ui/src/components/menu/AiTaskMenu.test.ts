@@ -3,7 +3,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'

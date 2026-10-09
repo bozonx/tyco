@@ -37,6 +37,7 @@ import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
+import { useChatInputStore } from './stores/chatInput'
 import { useCommandLauncherStore } from './stores/commandLauncher'
 import { useDefaultCommandsStore } from './stores/commands'
 import { useEditorInputStore } from './stores/editorInput'
@@ -61,6 +62,7 @@ const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
+const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
@@ -277,14 +279,31 @@ onMounted(() => {
       .then((remove) => selectionListeners.push(remove))
   }
   void desktopClient
-    .listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, (payload) => {
+    .listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, async (payload) => {
       if (isQuickWindow) return
       menuModalsStore.closeAll()
-      const { text } = payload as { text?: string }
-      const trimmed = text?.trim()
-      void (trimmed
-        ? chatStore.attachToChat(trimmed)
-        : chatStore.openLastOrNewChat())
+      await appNavigation.goToChat()
+      const { text, question, autoSend } = (payload || {}) as {
+        text?: string
+        question?: string
+        autoSend?: boolean
+      }
+      const trimmedText = text?.trim()
+      const trimmedQuestion = question?.trim()
+      if (trimmedText) {
+        await chatStore.attachToChat(trimmedText)
+      } else {
+        await chatStore.openLastOrNewChat()
+      }
+
+      if (trimmedQuestion) {
+        chatInputStore.setValue(trimmedQuestion)
+        if (autoSend) {
+          await chatStore.sendInput()
+        } else {
+          chatInputStore.focus()
+        }
+      }
     })
     .then((remove) => {
       removeMainChatListener = remove

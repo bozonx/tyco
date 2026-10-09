@@ -84,7 +84,6 @@ const isQuickWindow = (() => {
   }
 })()
 
-
 const customPromptAction: ActionItem = {
   labelKey: 'menu.aiCustomPrompt',
   icon: 'mdi:pencil-outline',

@@ -41,13 +41,10 @@ pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
 }
 
 fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Result<(), AppError> {
-    let label = app.state::<RuntimeWindows>().active_label();
-    if let Some(window) = app.get_webview_window(label) {
-        window.emit(
-            CONTEXT_CAPTURED_EVENT,
-            serde_json::json!({ "selectedText": selected_text }),
-        )?;
-    }
+    app.emit(
+        CONTEXT_CAPTURED_EVENT,
+        serde_json::json!({ "selectedText": selected_text }),
+    )?;
     Ok(())
 }
 
@@ -62,6 +59,7 @@ impl ContextCapture {
     /// Records `captured` and returns it unless the previous capture already
     /// saw it. The primary selection outlives a deselection in most apps, so an
     /// unchanged one is most likely a leftover rather than a fresh selection.
+    #[cfg(test)]
     fn fresh_selection(&self, captured: Option<String>) -> Option<String> {
         let mut last = self.last_selection.lock().expect("selection lock poisoned");
         let previous = last.replace(captured.clone());
@@ -155,9 +153,6 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         activation.window_id.clone_from(&source);
     }
     let editor_mode = activation.mode == StartMode::Editor;
-    // a voice question continues the open chat, so only a selection made
-    // since the previous activation becomes its context
-    let fresh_only = editor_mode || activation.mode == StartMode::VoiceChat;
     // the editor must not take over a selection made in Tyco itself
     let capture_selection =
         activation.selected_text.is_none() && !(editor_mode && has_focused_window(app));
@@ -174,11 +169,7 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
         thread::spawn(move || {
             let captured =
                 tauri::async_runtime::block_on(super::platform::capture_selection(source));
-            let fresh = handle
-                .state::<ContextCapture>()
-                .fresh_selection(captured.clone());
-            // the editor takes the selection over, so only a fresh one may replace its text
-            let selected_text = if fresh_only { fresh } else { captured };
+            let selected_text = captured;
             if let Err(error) = on_main_thread(&handle, move |app| {
                 if app
                     .state::<ContextCapture>()
@@ -190,7 +181,8 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
                 }
                 let state = app.state::<AppState>();
                 state.update_params(|params| params.selected_text.clone_from(&selected_text));
-                emit_captured_context(app, selected_text)
+                emit_captured_context(app, selected_text)?;
+                emit_params(app, &state)
             }) {
                 log::warn!("Could not publish captured foreground context: {error}");
             }
@@ -325,12 +317,11 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
         | StartMode::AiTasks
         | StartMode::CommandLauncher
         | StartMode::Correction
-        | StartMode::Translate => QUICK_WINDOW_LABEL,
-        StartMode::Editor
-        | StartMode::Chat
         | StartMode::VoiceChat
-        | StartMode::History
-        | StartMode::Config => MAIN_WINDOW_LABEL,
+        | StartMode::Translate => QUICK_WINDOW_LABEL,
+        StartMode::Editor | StartMode::Chat | StartMode::History | StartMode::Config => {
+            MAIN_WINDOW_LABEL
+        }
     }
 }
 
@@ -392,12 +383,21 @@ pub fn open_main_editor(
     )
 }
 
-pub fn open_main_chat(app: &AppHandle, text: Option<String>) -> Result<(), AppError> {
+pub fn open_main_chat(
+    app: &AppHandle,
+    text: Option<String>,
+    question: Option<String>,
+    auto_send: Option<bool>,
+) -> Result<(), AppError> {
     show_main_with(
         app,
         StartMode::Chat,
         OPEN_MAIN_CHAT_EVENT,
-        serde_json::json!({ "text": text }),
+        serde_json::json!({
+            "text": text,
+            "question": question,
+            "autoSend": auto_send.unwrap_or(false),
+        }),
     )
 }
 
@@ -812,6 +812,7 @@ mod tests {
             StartMode::AiTasks,
             StartMode::CommandLauncher,
             StartMode::Correction,
+            StartMode::VoiceChat,
             StartMode::Translate,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
@@ -819,7 +820,6 @@ mod tests {
         for mode in [
             StartMode::Editor,
             StartMode::Chat,
-            StartMode::VoiceChat,
             StartMode::History,
             StartMode::Config,
         ] {

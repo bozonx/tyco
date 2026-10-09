@@ -231,6 +231,7 @@ const chatStore = useChatStore()
 const chatContext = computed(() => {
   if (!props.quickSend) return ''
   return [
+    ipcStore.params?.selectedText,
     ...(chatStore.newChatParams?.attachments || []),
     chatStore.editorContext?.text,
   ]
