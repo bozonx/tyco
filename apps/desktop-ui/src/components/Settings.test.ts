@@ -204,7 +204,7 @@ describe('Settings.vue', () => {
     expect(hotkeysTab.text()).toBe('settings.hotkeysTab')
   })
 
-  it('places commands tab at the very bottom of actions category', () => {
+  it('places launcher commands above commands and commands at the very bottom of actions category', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
@@ -228,7 +228,13 @@ describe('Settings.vue', () => {
       .findAll('button')
       .map((btn) => btn.attributes('data-key'))
 
-    expect(actionTabKeys[actionTabKeys.length - 1]).toBe('commands')
+    expect(actionTabKeys).toEqual([
+      'main-actions',
+      'tasks',
+      'languages',
+      'launcher-commands',
+      'commands',
+    ])
   })
 
   it('renders contrast and motion as FieldSelect controls in accessibility tab', async () => {

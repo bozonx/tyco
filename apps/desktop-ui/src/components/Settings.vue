@@ -634,13 +634,13 @@ const actionTabs = computed(() => [
     key: 'main-actions',
     icon: 'mdi:gesture-tap-button',
   },
+  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
+  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
   {
     text: t('settings.launcherCommandsTab'),
     key: 'launcher-commands',
     icon: 'mdi:console',
   },
-  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
-  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
   {
     text: t('settings.commandsTab'),
     key: 'commands',
