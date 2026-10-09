@@ -510,6 +510,7 @@
       "portalNoSettings": "Los atajos globales los asigna el sistema, así que acá se muestran los que vinculó para Tyco. Cambialos en la configuración del sistema."
     },
     "hotkeyStatus": { "conflict": "Esta combinación no está disponible" },
+    "historyTab": "Historial",
     "hotkeysMissing": "Algunos atajos se borraron en la configuración del sistema y no funcionan. Usá «Registrar de nuevo» para recuperarlos.",
     "hotkeysTab": "Atajos",
     "inlineCorrectionExternalHint": "Ejecutá este comando desde un script o un atajo del sistema. D-Bus: método ReplaceSelection de org.tyco.Interface.",
@@ -614,7 +615,8 @@
     "saveKey": "Guardar clave",
     "sectionAccessibility": "Accesibilidad",
     "sectionAppearance": "Apariencia",
-    "sectionHistory": "Historial",
+    "sectionChatHistory": "Historial del chat",
+    "sectionEditorHistory": "Historial del editor",
     "sectionMarkdown": "Formato de Markdown",
     "sectionMarkdownClean": "Conversión de Markdown a texto sin formato",
     "sectionWindowInsertion": "Inserción en otras aplicaciones",

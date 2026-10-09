@@ -510,6 +510,7 @@
       "portalNoSettings": "Глобальные хоткеи назначает система, поэтому здесь показаны сочетания, которые она закрепила за Tyco. Изменить их можно в настройках системы."
     },
     "hotkeyStatus": { "conflict": "Эта комбинация недоступна" },
+    "historyTab": "История",
     "hotkeysMissing": "Часть хоткеев удалена в системных настройках и не работает. Нажмите «Зарегистрировать заново», чтобы вернуть их.",
     "hotkeysTab": "Хоткеи",
     "inlineCorrectionExternalHint": "Запустите эту команду из скрипта или системного сочетания клавиш. D-Bus: метод ReplaceSelection интерфейса org.tyco.Interface.",
@@ -614,7 +615,8 @@
     "saveKey": "Сохранить ключ",
     "sectionAccessibility": "Доступность",
     "sectionAppearance": "Внешний вид",
-    "sectionHistory": "История",
+    "sectionChatHistory": "История чата",
+    "sectionEditorHistory": "История редактора",
     "sectionMarkdown": "Форматирование Markdown",
     "sectionMarkdownClean": "Преобразование Markdown в простой текст",
     "sectionWindowInsertion": "Вставка в другие приложения",

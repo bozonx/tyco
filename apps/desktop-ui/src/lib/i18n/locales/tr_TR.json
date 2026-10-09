@@ -510,6 +510,7 @@
       "portalNoSettings": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları sistem ayarlarında değiştirin."
     },
     "hotkeyStatus": { "conflict": "Bu birleşim kullanılamıyor" },
+    "historyTab": "Geçmiş",
     "hotkeysMissing": "Bazı kısayollar sistem ayarlarında silindi ve çalışmıyor. Geri getirmek için «Yeniden kaydet»i kullanın.",
     "hotkeysTab": "Kısayollar",
     "inlineCorrectionExternalHint": "Bu komutu bir betikten veya sistem kısayolundan çalıştırın. D-Bus: org.tyco.Interface arayüzünün ReplaceSelection yöntemi.",
@@ -614,7 +615,8 @@
     "saveKey": "Anahtarı kaydet",
     "sectionAccessibility": "Erişilebilirlik",
     "sectionAppearance": "Görünüm",
-    "sectionHistory": "Geçmiş",
+    "sectionChatHistory": "Sohbet geçmişi",
+    "sectionEditorHistory": "Düzenleyici geçmişi",
     "sectionMarkdown": "Markdown biçimlendirme",
     "sectionMarkdownClean": "Markdown'ı düz metne dönüştürme",
     "sectionWindowInsertion": "Diğer uygulamalara ekleme",

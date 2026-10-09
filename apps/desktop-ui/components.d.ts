@@ -71,6 +71,7 @@ declare module 'vue' {
     SettingsCommandsTab: typeof import('./src/components/settings/SettingsCommandsTab.vue')['default']
     SettingsEditorTab: typeof import('./src/components/settings/SettingsEditorTab.vue')['default']
     SettingsGlobalActionsTab: typeof import('./src/components/settings/SettingsGlobalActionsTab.vue')['default']
+    SettingsHistoryTab: typeof import('./src/components/settings/SettingsHistoryTab.vue')['default']
     SettingsLanguagesTab: typeof import('./src/components/settings/SettingsLanguagesTab.vue')['default']
     SettingsLauncherTab: typeof import('./src/components/settings/SettingsLauncherTab.vue')['default']
     SettingsLlmTab: typeof import('./src/components/settings/SettingsLlmTab.vue')['default']

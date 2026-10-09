@@ -510,6 +510,7 @@
       "portalNoSettings": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them in the system settings."
     },
     "hotkeyStatus": { "conflict": "This combination is unavailable" },
+    "historyTab": "History",
     "hotkeysMissing": "Some hotkeys were removed in the system settings and do not work. Use “Register again” to bring them back.",
     "hotkeysTab": "Hotkeys",
     "inlineCorrectionExternalHint": "Run this command from a script or a system shortcut. D-Bus: method ReplaceSelection of org.tyco.Interface.",
@@ -614,7 +615,8 @@
     "saveKey": "Save key",
     "sectionAccessibility": "Accessibility",
     "sectionAppearance": "Appearance",
-    "sectionHistory": "History",
+    "sectionChatHistory": "Chat history",
+    "sectionEditorHistory": "Editor history",
     "sectionMarkdown": "Markdown formatting",
     "sectionMarkdownClean": "Markdown to plain text conversion",
     "sectionWindowInsertion": "Inserting into other apps",
