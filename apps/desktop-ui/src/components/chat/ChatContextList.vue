@@ -1,39 +1,34 @@
 <template>
   <div v-if="visible" class="context-list">
-    <!-- the editor is not in view of the chat: its text is only offered, and
-         the row says plainly that it does not go along -->
+    <!-- the editor is not in view of the chat: its text is only offered,
+         and the whole row is the action that attaches it -->
     <div v-if="suggestion" class="context-suggestion" role="status">
-      <Icon
-        icon="mdi:file-document-edit-outline"
-        height="14"
-        class="shrink-0"
-      />
-      <span class="context-suggestion-text" :title="suggestion.title">
-        {{ suggestion.label }}
-        <span class="context-suggestion-excerpt">{{ suggestion.excerpt }}</span>
-      </span>
-      <Button
-        xs
-        ghost
-        icon="mdi:paperclip"
-        class="context-suggestion-action"
-        @click="chatStore.acceptEditorContext(suggestion.text)"
-      >
-        {{ t('chat.attachSuggestion') }}
-      </Button>
-      <Button
-        v-if="chatStore.messages.length > 0"
-        xs
-        ghost
-        icon="mdi:message-plus-outline"
-        class="context-suggestion-action"
-        @click="startNewChatWithContext"
-      >
-        {{ t('chat.startNewChatWithContext') }}
-      </Button>
       <button
         type="button"
-        class="context-suggestion-hide"
+        class="context-suggestion-attach"
+        :title="suggestion.title"
+        @click="chatStore.acceptEditorContext(suggestion.text)"
+      >
+        <Icon icon="mdi:paperclip" height="14" class="shrink-0" />
+        <span class="context-suggestion-text">
+          {{ suggestion.label }}
+          <span class="context-suggestion-excerpt">{{
+            suggestion.excerpt
+          }}</span>
+        </span>
+      </button>
+      <button
+        v-if="chatStore.messages.length > 0"
+        type="button"
+        class="context-suggestion-icon"
+        :title="t('chat.startNewChatWithContext')"
+        @click="startNewChatWithContext"
+      >
+        <Icon icon="mdi:message-plus-outline" height="14" />
+      </button>
+      <button
+        type="button"
+        class="context-suggestion-icon"
         :title="t('chat.hideSuggestion')"
         @click="chatStore.dismissEditorContext(suggestion.text)"
       >
@@ -84,7 +79,6 @@ import {
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
-import Button from '../common/Button.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import { Icon } from '@iconify/vue'
 
@@ -161,20 +155,37 @@ function startNewChatWithContext() {
 .context-suggestion {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.15rem;
   min-width: 0;
-  padding: 0.15rem 0.2rem 0.15rem 0.5rem;
-  border: 1px dashed var(--app-border);
-  border-radius: var(--radius-md);
+  max-width: 100%;
+  align-self: flex-start;
   color: var(--app-text-faint);
   font-size: 0.72rem;
 }
+.context-suggestion-attach {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.2rem 0.5rem;
+  border: 1px dashed var(--app-border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  cursor: pointer;
+}
+.context-suggestion-attach:hover {
+  border-style: solid;
+  background: var(--app-hover);
+  color: var(--color-base-content);
+}
 .context-suggestion-text {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.context-suggestion-excerpt {
+  opacity: 0.75;
 }
 .context-suggestion-excerpt::before {
   content: ' «';
@@ -182,19 +193,15 @@ function startNewChatWithContext() {
 .context-suggestion-excerpt::after {
   content: '»';
 }
-.context-suggestion-action {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-}
-.context-suggestion-hide {
+.context-suggestion-icon {
   display: inline-flex;
   flex-shrink: 0;
-  padding: 0.15rem;
+  padding: 0.2rem;
   border-radius: var(--radius-sm);
   color: var(--app-text-faint);
   cursor: pointer;
 }
-.context-suggestion-hide:hover {
+.context-suggestion-icon:hover {
   background: var(--app-hover);
   color: var(--color-base-content);
 }
@@ -209,10 +216,5 @@ function startNewChatWithContext() {
 }
 .context-budget.is-over {
   color: var(--color-error);
-}
-@media (max-width: 640px) {
-  .context-suggestion {
-    flex-wrap: wrap;
-  }
 }
 </style>
