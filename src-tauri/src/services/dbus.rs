@@ -159,8 +159,10 @@ struct ApiError {
 impl From<Response> for ApiError {
     fn from(response: Response) -> Self {
         let code = response.code.as_deref().unwrap_or("Failed");
-        let name = OwnedErrorName::try_from(format!("{ERROR_PREFIX}.{code}"))
-            .unwrap_or_else(|_| OwnedErrorName::try_from(format!("{ERROR_PREFIX}.Failed")).unwrap());
+        let name =
+            OwnedErrorName::try_from(format!("{ERROR_PREFIX}.{code}")).unwrap_or_else(|_| {
+                ErrorName::from_static_str_unchecked("org.tyco.Error.Failed").into()
+            });
         Self {
             name,
             message: response.error.unwrap_or_default(),
@@ -169,6 +171,9 @@ impl From<Response> for ApiError {
 }
 
 impl DBusError for ApiError {
+    // `Message::method_error` needs the whole call, which the trait does not
+    // pass; zbus' own `DBusError` derive builds the reply the same way.
+    #[allow(deprecated)]
     fn create_reply(&self, call: &Header<'_>) -> zbus::Result<Message> {
         Builder::error(call, self.name())?.build(&self.message)
     }
@@ -284,4 +289,18 @@ async fn ensure_sent_by_kwin(
 
 fn not_kwin() -> zbus::fdo::Error {
     zbus::fdo::Error::AccessDenied(String::from("Only KWin may report windows"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn errors_are_named_after_their_codes() {
+        let error = ApiError::from(Response::coded_error("AccessDenied", "blocked"));
+        assert_eq!(error.name().as_str(), "org.tyco.Error.AccessDenied");
+        assert_eq!(error.description(), Some("blocked"));
+        let error = ApiError::from(Response::coded_error("not a name!", "odd"));
+        assert_eq!(error.name().as_str(), "org.tyco.Error.Failed");
+    }
 }

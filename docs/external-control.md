@@ -63,16 +63,16 @@ On Linux the same windows can be opened through the session bus:
 
 ```sh
 # Open the text action menu for the current selection.
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
-  select '' true
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  OpenWithSelection s select
 
 # Open the text action menu with supplied text.
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
-  select 'Please improve this text.' false
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  OpenWithText ss select 'Please improve this text.'
 
 # Open the searchable command chooser for the current selection.
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
-  commandLauncher '' true
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  OpenWithSelection s command-launcher
 ```
 
 Selection capture requires **Allow external selection capture and replacement**.
@@ -121,7 +121,8 @@ with `ConfigurationChanged` instead of executing a stale configuration.
 ```text
  tyco-ctl status
  tyco-ctl open <mode> [--text TEXT | --selection]
- tyco-ctl commands <list [--json] | describe <id> [--name]>
+ tyco-ctl commands list [--json]
+ tyco-ctl commands describe <id> [--name]
  tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
               [--replace] [--interactive] [--output return|configured]
               [--wait] [--json] [--timeout SECONDS]
@@ -130,6 +131,9 @@ with `ConfigurationChanged` instead of executing a stale configuration.
 ```
 
 `--help` and `--version` work without a running Tyco instance.
+
+`status` prints a JSON object with `apiVersion`, the app `version`, and the
+`externalAccess` capabilities that are currently allowed.
 
 ### Open the UI
 
@@ -157,16 +161,18 @@ tyco-ctl commands describe default:core.correct:fix
 tyco-ctl commands describe 'My command' --name
 ```
 
-Lists and descriptions are JSON. The list includes currently callable commands,
-with `id`, `name`, `input`, `confirmationRequired`, `canReplaceSelection`, and
-`afterRun`. A structured input is marked `structured`; a description also
+`commands list` prints one `id<TAB>name` line per command; `--json` prints the
+full list instead. Descriptions are always JSON. The list includes the commands
+that are currently callable, with `id`, `name`, `input`, `confirmationRequired`,
+`canReplaceSelection`, and `afterRun`. A structured input is marked `structured`; a description also
 includes `textAccepted` and the tool's `inputSchema` when the catalog provides
 one. Command-specific schema overrides are validated by the executing tool
 registry. Disabled, denied, missing, or unavailable commands return a coded
-error when described. A disabled master command switch yields an empty list.
+error when described.
 
-Use stable IDs in scripts. `--name` explicitly selects a display name, ignoring
-case and redundant whitespace; an ambiguous name is rejected. Display names
+Use stable IDs in scripts. Without `--name` the target is only ever an ID.
+`--name` explicitly selects a display name, ignoring case and redundant
+whitespace; an ambiguous name is rejected with `AmbiguousName`. Display names
 can change with configuration or localization.
 
 ### Execute and return the result
@@ -263,7 +269,8 @@ at most 128 are retained, evicting the oldest terminal jobs first. Jobs that do
 not finish within 300 seconds are cancelled with `TimedOut`. Returned output
 is capped at 512 KiB and must also fit the escaped 1 MiB protocol envelope. Oversized output fails with `OutputTooLarge`.
 
-Client `--timeout` controls waiting (default 300, range 1–3600 seconds). A client
+Client `--timeout` controls waiting (default 300, range 1–3600 seconds); it is
+accepted only together with waiting, like `run --json`. A client
 wait timeout does not itself cancel the job; use `jobs cancel` explicitly. Local
 IPC frames have a 10-second read/write deadline and a 1 MiB limit. Idle clients
 do not block the listener; connections are bounded.
@@ -273,9 +280,9 @@ do not block the listener; connections are bounded.
 | Code | Meaning                                                 |
 | ---- | ------------------------------------------------------- |
 | 0    | Request accepted, or successful completion when waiting |
-| 2    | Invalid arguments/input or missing input                |
+| 2    | Invalid arguments/input, missing input, ambiguous name  |
 | 3    | Permission denied or interactive confirmation required  |
-| 4    | Service/command unavailable, not ready, or not found    |
+| 4    | Service/command unavailable, disabled, busy, not found  |
 | 5    | Execution or other API failure                          |
 | 6    | Timeout                                                 |
 | 7    | Cancellation                                            |
@@ -285,31 +292,41 @@ Machine error codes are stable identifiers separate from human-readable text.
 
 ## D-Bus
 
-D-Bus is limited to interactive desktop actions on Linux. Use `tyco-ctl` for
-command discovery, background execution, job monitoring/cancellation, status,
-and quitting the application. Both transports share the authorization dispatcher.
+D-Bus is a shortcut-friendly launcher on Linux: it opens Tyco windows and
+starts library commands the way a user would. It has no discovery, background
+execution, job monitoring, or quitting; use `tyco-ctl` for those. Both share the
+authorization dispatcher, so the same grants and capabilities apply.
 
-| Method             | Input                                       | Output |
-| ------------------ | ------------------------------------------- | ------ |
-| `Open`             | mode string, text string, selection boolean | None   |
-| `ReplaceSelection` | action string                               | None   |
+| Method              | Arguments          | What it does                                        |
+| ------------------- | ------------------ | --------------------------------------------------- |
+| `Open`              | `s` mode           | Opens the window of the mode                        |
+| `OpenWithText`      | `s` mode, `s` text | Opens it with the text as input                     |
+| `OpenWithSelection` | `s` mode           | Opens it with the selection of the focused window   |
+| `RunCommand`        | `s` command ID     | Runs the command interactively, applying `afterRun` |
+| `ReplaceSelection`  | `s` command ID     | Replaces the selection with the command's output    |
 
-`Open` uses the supplied text when selection is false. When selection is true,
-it captures the current selection instead. `ReplaceSelection` uses the same
-selection execution as `tyco-ctl run <id> --selection --replace --interactive`.
-Its action must be `command:<id>` with a stable library command ID.
+Modes are those of `tyco-ctl open`. `RunCommand` behaves like
+`tyco-ctl run <id> --interactive --output configured`: it asks for missing
+input or confirmation in the command launcher. `ReplaceSelection` behaves like
+`tyco-ctl run <id> --selection --replace --interactive`. Command IDs are
+stable library IDs; display names are not accepted.
 
 ```sh
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface Open ssb \
-  select '' true
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  Open s editor
 
-busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface ReplaceSelection s \
-  'command:my-correction'
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  RunCommand s my-backup
+
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  ReplaceSelection s default:core.correct:fix
 ```
 
-Methods return standard D-Bus errors with the machine error code in the message.
 Successful calls acknowledge activation; they do not return command results or
-wait for completion. Use `tyco-ctl run` and `tyco-ctl jobs` for observable execution.
+wait for completion. A failure is a D-Bus error named after the machine code,
+for example `org.tyco.Error.AccessDenied`, `org.tyco.Error.NotFound`, or
+`org.tyco.Error.ConfirmationRequired`; the message is human-readable. Malformed
+arguments fail with the standard `org.freedesktop.DBus.Error.InvalidArgs`.
 
 KWin reports use the separate `org.tyco.KwinTracker` interface at the same
 object. `KwinWindowActivated`, `KwinWindowClosed`, and `KwinWindowMissing` are

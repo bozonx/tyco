@@ -32,6 +32,18 @@ pub fn canonical_mode(value: &str) -> &str {
     }
 }
 
+/// The spelling of a mode the CLI documents, e.g. `voice-chat` for
+/// `voiceChat`; the inverse of `canonical_mode`.
+pub fn cli_mode(mode: &str) -> &str {
+    match mode {
+        "voiceChat" => "voice-chat",
+        "aiTasks" => "ai-tasks",
+        "commandLauncher" => "command-launcher",
+        "config" => "settings",
+        _ => mode,
+    }
+}
+
 pub fn is_start_mode(value: &str) -> bool {
     START_MODES.contains(&canonical_mode(value))
 }
@@ -200,6 +212,14 @@ pub fn write_message<T: Serialize>(writer: &mut impl Write, message: &T) -> io::
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cli_spellings_of_modes_round_trip() {
+        for mode in START_MODES {
+            assert_eq!(canonical_mode(cli_mode(mode)), *mode);
+            assert!(!cli_mode(mode).chars().any(char::is_uppercase), "{mode}");
+        }
+    }
 
     #[test]
     fn rejects_removed_protocol_requests() {

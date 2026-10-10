@@ -111,3 +111,16 @@ export function providerNoteKey(state: HotkeySettingsState): string | null {
 export function hasConflict(state: HotkeySettingsState, id: string): boolean {
   return state.statuses[id]?.status === 'conflict'
 }
+
+/** CLI spellings of the modes whose ids are not already lowercase words */
+const CLI_MODES: Record<string, string> = {
+  voiceChat: 'voice-chat',
+  aiTasks: 'ai-tasks',
+  commandLauncher: 'command-launcher',
+  config: 'settings',
+}
+
+/** The shell line that opens `mode`, spelled as `tyco-ctl --help` lists it */
+export function modeCliCall(mode: string): string {
+  return `tyco-ctl open ${CLI_MODES[mode] ?? mode}`
+}

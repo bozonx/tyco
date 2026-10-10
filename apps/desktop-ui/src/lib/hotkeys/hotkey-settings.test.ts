@@ -9,6 +9,7 @@ import {
   isEditable,
   isSystemManaged,
   missingHotkeys,
+  modeCliCall,
   providerNoteKey,
 } from './hotkey-settings'
 
@@ -138,5 +139,11 @@ describe('hotkey settings', () => {
 
     expect(hasConflict(state, 'editor')).toBe(false)
     expect(hasConflict(state, 'voice')).toBe(true)
+  })
+
+  it('spells modes the way the CLI documents them', () => {
+    expect(modeCliCall('editor')).toBe('tyco-ctl open editor')
+    expect(modeCliCall('voiceChat')).toBe('tyco-ctl open voice-chat')
+    expect(modeCliCall('config')).toBe('tyco-ctl open settings')
   })
 })

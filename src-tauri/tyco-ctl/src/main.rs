@@ -9,13 +9,16 @@ use tyco_activation_protocol::{
 
 const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl open <mode> [--text TEXT | --selection]
-       tyco-ctl commands <list [--json] | describe <id> [--name]>
+       tyco-ctl commands list [--json]
+       tyco-ctl commands describe <id> [--name]
        tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
                     [--replace] [--interactive] [--output return|configured]
                     [--wait] [--json] [--timeout SECONDS]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
        tyco-ctl quit
 
+Modes: editor, write, chat, voice-chat, voice, select, ai-tasks,
+       command-launcher, correction, translate, history, settings.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and returned output.
 Tyco must already be running in the same user session.";
@@ -26,8 +29,11 @@ struct Command {
     stdin: bool,
     wait: bool,
     json: bool,
-    timeout: u64,
+    /// `None` until `--timeout` is given; it only bounds `--wait`.
+    timeout: Option<u64>,
 }
+
+const DEFAULT_TIMEOUT: u64 = 300;
 
 fn mode(value: &str) -> String {
     tyco_activation_protocol::canonical_mode(value).into()
@@ -39,7 +45,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
         stdin: false,
         wait: false,
         json: false,
-        timeout: 300,
+        timeout: None,
     };
     let Some(action) = args.first().map(String::as_str) else {
         return Err(USAGE.into());
@@ -55,8 +61,10 @@ fn parse(args: &[String]) -> Result<Command, String> {
         }
         "commands" => match args.get(1).map(String::as_str) {
             Some("list") => {
-                if args.iter().skip(2).any(|arg| arg != "--json") || args.len() > 3 {
-                    return Err(USAGE.into());
+                match &args[2..] {
+                    [] => {}
+                    [flag] if flag == "--json" => command.json = true,
+                    _ => return Err(USAGE.into()),
                 }
                 command.request = Request::ListCommands;
             }
@@ -119,7 +127,8 @@ fn parse(args: &[String]) -> Result<Command, String> {
                     "--json" => command.json = true,
                     "--timeout" => {
                         index += 1;
-                        command.timeout = value(index)?.parse().map_err(|_| "Invalid timeout")?;
+                        command.timeout =
+                            Some(value(index)?.parse().map_err(|_| "Invalid timeout")?);
                     }
                     "--output" => {
                         index += 1;
@@ -158,6 +167,9 @@ fn parse(args: &[String]) -> Result<Command, String> {
             if request.replace && !request.selection {
                 return Err("--replace requires --selection".into());
             }
+            if !command.wait && (command.json || command.timeout.is_some()) {
+                return Err("--json and --timeout require --wait".into());
+            }
             command.request = Request::Run { request };
         }
         "jobs" => {
@@ -173,9 +185,10 @@ fn parse(args: &[String]) -> Result<Command, String> {
             while index < args.len() {
                 match args[index].as_str() {
                     "--json" => command.json = true,
-                    "--timeout" => {
+                    "--timeout" if command.wait => {
                         index += 1;
-                        command.timeout = value(index)?.parse().map_err(|_| "Invalid timeout")?;
+                        command.timeout =
+                            Some(value(index)?.parse().map_err(|_| "Invalid timeout")?);
                     }
                     _ => return Err(USAGE.into()),
                 }
@@ -184,7 +197,10 @@ fn parse(args: &[String]) -> Result<Command, String> {
         }
         _ => return Err(USAGE.into()),
     }
-    if command.timeout == 0 || command.timeout > 3600 {
+    if command
+        .timeout
+        .is_some_and(|timeout| timeout == 0 || timeout > 3600)
+    {
         return Err("Timeout must be between 1 and 3600 seconds".into());
     }
     Ok(command)
@@ -196,9 +212,9 @@ fn checked(response: Response) -> Result<Response, (i32, String)> {
     }
     let code = response.code.as_deref().unwrap_or("Failed");
     let exit = match code {
-        "InvalidArgs" | "InvalidInput" | "InputRequired" | "InvalidRequest" => 2,
+        "InvalidArgs" | "InvalidInput" | "InputRequired" | "InvalidRequest" | "AmbiguousName" => 2,
         "AccessDenied" | "ConfirmationRequired" | "InteractionRequired" => 3,
-        "NotFound" | "Unavailable" | "NotReady" => 4,
+        "NotFound" | "Unavailable" | "NotReady" | "Disabled" | "Busy" => 4,
         "TimedOut" => 6,
         "Cancelled" => 7,
         _ => 5,
@@ -211,6 +227,23 @@ fn checked(response: Response) -> Result<Response, (i32, String)> {
 
 fn send(request: &Request) -> Result<Response, (i32, String)> {
     checked(transport::send(request).map_err(|error| (4, error))?)
+}
+
+fn job_of(response: Response) -> Result<Job, (i32, String)> {
+    serde_json::from_value(response.result.unwrap_or_default())
+        .map_err(|error| (5, format!("Invalid job response: {error}")))
+}
+
+/// `id<TAB>name` lines, for people; `--json` gives the full list.
+fn command_lines(list: &serde_json::Value) -> String {
+    list.as_array()
+        .into_iter()
+        .flatten()
+        .map(|command| {
+            let field = |key| command[key].as_str().unwrap_or_default();
+            format!("{}\t{}\n", field("id"), field("name"))
+        })
+        .collect()
 }
 
 fn wait(mut job: Job, timeout: u64) -> Result<Job, (i32, String)> {
@@ -226,9 +259,7 @@ fn wait(mut job: Job, timeout: u64) -> Result<Job, (i32, String)> {
             ));
         }
         std::thread::sleep(Duration::from_millis(100));
-        let response = send(&Request::JobStatus { id: job.id.clone() })?;
-        job = serde_json::from_str(response.output.as_deref().unwrap_or(""))
-            .map_err(|error| (5, format!("Invalid job response: {error}")))?;
+        job = job_of(send(&Request::JobStatus { id: job.id.clone() })?)?;
     }
     Ok(job)
 }
@@ -263,9 +294,10 @@ fn run() -> Result<(), (i32, String)> {
     }
     let response = send(&command.request)?;
     if command.wait {
-        let job: Job = serde_json::from_str(response.output.as_deref().unwrap_or(""))
-            .map_err(|error| (5, format!("Invalid job response: {error}")))?;
-        let job = wait(job, command.timeout)?;
+        let job = wait(
+            job_of(response)?,
+            command.timeout.unwrap_or(DEFAULT_TIMEOUT),
+        )?;
         if command.json {
             println!("{}", serde_json::to_string(&job).unwrap());
         }
@@ -283,8 +315,12 @@ fn run() -> Result<(), (i32, String)> {
                     .map_err(|error| (5, error.to_string()))?;
             }
         }
-    } else if let Some(output) = response.output {
-        println!("{output}");
+    } else if let Some(result) = response.result {
+        if matches!(command.request, Request::ListCommands) && !command.json {
+            print!("{}", command_lines(&result));
+        } else {
+            println!("{result}");
+        }
     }
     Ok(())
 }
@@ -320,6 +356,22 @@ mod tests {
         assert!(command(&["run", "test", "--stdin", "--text", "x"]).is_err());
         assert!(command(&["run", "test", "--input-json", "[]"]).is_err());
         assert!(command(&["jobs", "wait", "job-1", "--timeout", "0"]).is_err());
+        assert!(command(&["jobs", "status", "job-1", "--timeout", "5"]).is_err());
+        assert!(command(&["run", "test", "--stdin", "--json"]).is_err());
+        assert!(command(&["run", "test", "--stdin", "--timeout", "5"]).is_err());
+        assert!(command(&["run", "test", "--stdin", "--wait", "--timeout", "5"]).is_ok());
+    }
+
+    #[test]
+    fn lists_commands_for_people_unless_json_is_asked() {
+        assert!(!command(&["commands", "list"]).unwrap().json);
+        assert!(command(&["commands", "list", "--json"]).unwrap().json);
+        assert!(command(&["commands", "list", "--json", "--json"]).is_err());
+        let list = serde_json::json!([
+            { "id": "fix", "name": "Fix", "input": "text" },
+            { "id": "backup", "name": "Бэкап", "input": "none" }
+        ]);
+        assert_eq!(command_lines(&list), "fix\tFix\nbackup\tБэкап\n");
     }
     #[test]
     fn errors_have_stable_exit_codes() {
@@ -334,6 +386,18 @@ mod tests {
                 .unwrap_err()
                 .0,
             5
+        );
+        assert_eq!(
+            checked(Response::coded_error("AmbiguousName", "twins"))
+                .unwrap_err()
+                .0,
+            2
+        );
+        assert_eq!(
+            checked(Response::coded_error("Busy", "busy"))
+                .unwrap_err()
+                .0,
+            4
         );
     }
 }

@@ -158,6 +158,7 @@ import {
   isEditable,
   isSystemManaged,
   missingHotkeys,
+  modeCliCall,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
@@ -259,7 +260,7 @@ const rows = computed<HotkeyRow[]>(() => [
       mode,
       DEFAULT_USER_CONFIG.hotkeys[mode]
     ),
-    command: `tyco-ctl open ${mode}`,
+    command: modeCliCall(mode),
     externalHint: t('settings.externalMethodsHint'),
   })),
   {

@@ -82,7 +82,10 @@ impl HotkeyTarget {
 
     fn cli_command(&self) -> String {
         match self {
-            Self::Mode(mode) => format!("tyco-ctl open {}", mode.as_str()),
+            Self::Mode(mode) => format!(
+                "tyco-ctl open {}",
+                tyco_activation_protocol::cli_mode(mode.as_str())
+            ),
             Self::InlineCorrection => {
                 format!("tyco-ctl run {CORRECTION_COMMAND_ID} --selection --replace --interactive")
             }
@@ -1220,6 +1223,14 @@ mod tests {
         assert!(bindings.iter().all(|binding| binding.target
             != HotkeyTarget::Mode(StartMode::History)
             && binding.target != HotkeyTarget::Mode(StartMode::Config)));
+    }
+
+    #[test]
+    fn modes_open_with_their_cli_spelling() {
+        assert_eq!(
+            HotkeyTarget::Mode(StartMode::VoiceChat).cli_command(),
+            "tyco-ctl open voice-chat"
+        );
     }
 
     #[test]
