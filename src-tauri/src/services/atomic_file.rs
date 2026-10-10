@@ -12,6 +12,11 @@ use crate::errors::AppError;
 /// file. The file is readable by its owner only, as it may hold user texts or
 /// keys.
 pub fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
+    write_private_bytes(path, raw.as_bytes())
+}
+
+/// Atomically writes private binary data.
+pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
     let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
     tmp_name.push(".tmp");
     let tmp_path = path.with_file_name(tmp_name);
@@ -33,7 +38,7 @@ pub fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
     }
     {
         let mut file = options.open(&tmp_path)?;
-        file.write_all(raw.as_bytes())?;
+        file.write_all(raw)?;
         file.sync_all()?;
     }
     fs::rename(&tmp_path, path)?;

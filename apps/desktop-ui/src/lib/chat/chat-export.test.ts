@@ -39,3 +39,23 @@ describe('formatChatToMarkdown', () => {
     expect(result).toContain('> line 1\n> line 2')
   })
 })
+
+it('marks images omitted from text export without leaking internal paths', () => {
+  const markdown = formatChatToMarkdown([
+    {
+      role: 'user',
+      content: '',
+      images: [
+        {
+          id: 'internal-id',
+          mediaType: 'image/png',
+          width: 32,
+          height: 24,
+          size: 100,
+        },
+      ],
+    },
+  ])
+  expect(markdown).toContain('[Image omitted: 32 × 24, image/png]')
+  expect(markdown).not.toContain('internal-id')
+})

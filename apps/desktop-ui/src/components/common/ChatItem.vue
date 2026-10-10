@@ -10,6 +10,14 @@
         />
       </div>
 
+      <div v-if="message.images?.length" class="flex flex-wrap gap-2">
+        <ChatImageAttachment
+          v-for="image in message.images"
+          :key="image.id"
+          :image="image"
+          @loaded="emit('content-resized')"
+        />
+      </div>
       <ChatMarkdown
         v-if="message.role === 'assistant'"
         :content="message.content"
@@ -17,15 +25,19 @@
         @copy-code="copyText"
         @content-resized="emit('content-resized')"
       />
-      <div v-else class="chat-item-bubble selectable">
+      <div v-else-if="message.content" class="chat-item-bubble selectable">
         {{ message.content }}
       </div>
 
-      <div v-if="message.content" class="message-actions">
+      <div
+        v-if="message.content || message.images?.length"
+        class="message-actions"
+      >
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
         <button
+          v-if="message.content"
           type="button"
           class="message-action"
           :title="copied ? t('chat.copied') : t('chat.copy')"
@@ -54,6 +66,7 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import ChatAttachment from '../chat/ChatAttachment.vue'
+import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import ChatMarkdown from '../chat/ChatMarkdown.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'

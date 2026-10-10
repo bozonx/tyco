@@ -47,3 +47,22 @@ describe('chat-model', () => {
     expect(contextBudgetCharacters(100)).toBe(4_000)
   })
 })
+
+describe('vision model options', () => {
+  it('defaults only known shipped vision models and honors overrides', () => {
+    const llm = config()
+    let options = chatModelOptions(llm, () => true)
+    expect(
+      options.filter((model) => model.vision).map((model) => model.id)
+    ).toEqual(['gemini-flash', 'openrouter-gpt-4-1-mini'])
+    llm.models[0].vision = true
+    llm.models[1].vision = false
+    options = chatModelOptions(llm, () => true)
+    expect(options.find((model) => model.id === 'local-qwen')?.vision).toBe(
+      true
+    )
+    expect(options.find((model) => model.id === 'gemini-flash')?.vision).toBe(
+      false
+    )
+  })
+})

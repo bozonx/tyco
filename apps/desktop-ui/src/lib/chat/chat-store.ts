@@ -7,10 +7,13 @@ import {
   prepareChatRequest,
   trimChatContext,
 } from './chat-helpers'
+import { IMAGE_BUDGET_CHARACTERS, MAX_CHAT_IMAGES } from './chat-image-input'
+
 import { draftChatTitle, needsGeneratedTitle } from './chat-title'
 import {
   APP_CONFIG,
   type ChatAttachment,
+  type ChatImage,
   type ChatHistoryItem,
   type ChatMessage,
   type ChatParams,
@@ -22,12 +25,13 @@ import { APP_ROUTES, type AppRoutePath } from '../navigation/routes'
 export interface ChatRequestModel {
   id: string
   /** How many characters the request may carry */
+  vision?: boolean
   budgetCharacters: number
 }
 
 export interface ChatStoreDeps {
   sendChatMessage: (
-    message: string,
+    message: string | ChatMessage,
     prevMessages: ChatMessage[],
     devInstructions: string | undefined,
     options: {
@@ -52,6 +56,8 @@ export interface ChatStoreDeps {
   chatNotFoundError: () => string
   messageTooLongError: () => string
   noModelError: () => string
+  imageModelError?: () => string
+  imageTitle?: () => string
   createId: () => string
   nowIso: () => string
   saveLocalState: (state: Partial<LocalState>) => void | Promise<void>
@@ -80,6 +86,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const lastFailedTurn = ref<{
     message: string
     attachments?: ChatAttachment[]
+    images?: ChatImage[]
   } | null>(null)
   const abortController = ref<AbortController | null>(null)
   let generationId = 0
@@ -132,6 +139,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         lastFailedTurn.value = {
           message: user.content,
           attachments: user.attachments,
+          images: user.images,
         }
       }
     } else if (last?.role === 'assistant') {
@@ -140,6 +148,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         lastFailedTurn.value = {
           message: user.content,
           attachments: user.attachments,
+          images: user.images,
         }
       }
       last.status = 'stopped'
@@ -187,9 +196,10 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
   const sendMessage = async (
     message: string,
-    attachments: ChatAttachment[] = []
+    attachments: ChatAttachment[] = [],
+    images: ChatImage[] = []
   ) => {
-    if (!message?.trim()) {
+    if (!message?.trim() && !images.length) {
       deps.notifyError(deps.emptyMessageError())
       return
     }
@@ -204,21 +214,32 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       return ''
     }
 
-    const failed = lastFailedTurn.value
     if (
+      images.length > MAX_CHAT_IMAGES ||
+      ((images.length || messages.value.some((item) => item.images?.length)) &&
+        !model.vision)
+    ) {
+      deps.notifyError(deps.imageModelError?.() || deps.noModelError())
+      return ''
+    }
+
+    const failed = lastFailedTurn.value
+    const retrying = Boolean(
       failed?.message === message &&
+      JSON.stringify(failed.images || []) === JSON.stringify(images) &&
       messages.value.at(-1)?.role === 'user' &&
       messages.value.at(-1)?.content === message
-    ) {
-      messages.value.pop()
+    )
+    if (retrying) {
       // the context of the failed turn goes with it again
       attachments = uniqueAttachments([
-        ...(failed.attachments || []),
+        ...(failed?.attachments || []),
         ...attachments,
       ])
     }
 
     const inputSize =
+      images.length * IMAGE_BUDGET_CHARACTERS +
       message.length +
       attachments.reduce((sum, item) => sum + item.text.length, 0)
     if (inputSize > model.budgetCharacters) {
@@ -226,6 +247,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       return ''
     }
 
+    if (retrying) messages.value.pop()
     error.value = ''
     isStopped.value = false
     lastFailedTurn.value = null
@@ -233,13 +255,17 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
     const prevMessages = trimChatContext(
       messages.value,
-      Math.max(0, model.budgetCharacters - inputSize)
+      Math.max(0, model.budgetCharacters - inputSize),
+      MAX_CHAT_IMAGES - images.length
     )
 
     const { preparedMessage, userMessage } = prepareChatRequest(
       message,
       attachments
     )
+
+    if (images.length)
+      userMessage.images = images.map((image) => ({ ...image }))
 
     const userMessageIndex = messages.value.length
     messages.value.push(userMessage)
@@ -248,9 +274,12 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       newChatParams.value.id = deps.createId()
     }
     if (!newChatParams.value.title) {
-      newChatParams.value.title = draftChatTitle(message)
+      newChatParams.value.title = message.trim()
+        ? draftChatTitle(message)
+        : deps.imageTitle?.() || 'Image'
     }
     newChatParams.value.attachments = []
+    newChatParams.value.images = []
     dismissedEditorContext.value = null
     acceptedEditorContext.value = null
 
@@ -275,7 +304,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     try {
       result = await deps.sendChatMessage(
-        preparedMessage,
+        images.length ? userMessage : preparedMessage,
         prevMessages,
         devInstructions,
         {
@@ -300,13 +329,13 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         error.value = e instanceof Error ? e.message : String(e)
         if (!assistantMessage.content) {
           messages.value.splice(userMessageIndex + 1, 1)
-          lastFailedTurn.value = { message, attachments }
+          lastFailedTurn.value = { message, attachments, images }
           isGenerating.value = false
           abortController.value = null
           return ''
         }
         assistantMessage.status = 'stopped'
-        lastFailedTurn.value = { message, attachments }
+        lastFailedTurn.value = { message, attachments, images }
       }
     } finally {
       if (currentGenerationId === generationId) {
@@ -349,6 +378,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const failed = lastFailedTurn.value
     if (!failed || isGenerating.value) return ''
 
+    const previousMessages = [...messages.value]
+    const beforeGeneration = generationId
     const last = messages.value.at(-1)
     if (last?.role === 'assistant' && last.status === 'stopped') {
       messages.value.pop()
@@ -358,7 +389,13 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       messages.value.pop()
     }
 
-    return sendMessage(failed.message, failed.attachments)
+    const result = await sendMessage(
+      failed.message,
+      failed.attachments,
+      failed.images
+    )
+    if (generationId === beforeGeneration) messages.value = previousMessages
+    return result
   }
 
   const regenerateMessage = async (assistantIndex: number) => {
@@ -378,7 +415,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     const previousMessages = [...messages.value]
     messages.value = messages.value.slice(0, userIndex)
-    const pending = sendMessage(userMessage.content, userMessage.attachments)
+    const pending = sendMessage(
+      userMessage.content,
+      userMessage.attachments,
+      userMessage.images
+    )
     const currentGenerationId = generationId
     const result = await pending
     if (!result && currentGenerationId === generationId) {

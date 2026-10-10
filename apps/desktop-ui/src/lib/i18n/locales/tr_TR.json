@@ -81,7 +81,17 @@
     "voiceCancelHint": "İptal etmek için Escape tuşuna basın",
     "voiceContext": "Soru bu metin hakkında sorulacak",
     "voiceInput": "Ses girişi",
-    "voiceSendHint": "Hemen göndermek için Ctrl+Enter tuşlarına basın"
+    "voiceSendHint": "Hemen göndermek için Ctrl+Enter tuşlarına basın",
+    "imageTitle": "Görsel",
+    "addImage": "Görsel ekle",
+    "viewImage": "Görseli görüntüle",
+    "removeImage": "Görseli kaldır",
+    "closeImage": "Görseli kapat",
+    "imageProcessing": "Görsel işleniyor…",
+    "imageUnavailable": "Görsel kullanılamıyor",
+    "imageModelRequired": "Model ayarlarından görselleri destekleyen bir model seçin.",
+    "imageLimit": "Bir mesaja en fazla 4 görsel ekleyebilirsiniz.",
+    "imageImportFailed": "Görsel eklenemedi. En fazla 10 MiB ve 24 megapiksel boyutunda PNG, JPEG veya WebP kullanın."
   },
   "commandLauncher": {
     "allCommands": "Tüm komutlar",
@@ -727,7 +737,8 @@
     "unassignHotkey": "Kısayolu kaldır",
     "userLanguage": "Kullanıcı dili",
     "windowInsertion": "Ekleme yöntemi",
-    "windowInsertionHint": "Başka bir uygulamada tuşlara basan program: xdotool X11'de, ydotool Wayland'de çalışır. Aşağıdaki alan programın yoludur."
+    "windowInsertionHint": "Başka bir uygulamada tuşlara basan program: xdotool X11'de, ydotool Wayland'de çalışır. Aşağıdaki alan programın yoludur.",
+    "vision": "Görsel desteği"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

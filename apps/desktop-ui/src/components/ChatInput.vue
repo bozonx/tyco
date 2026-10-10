@@ -5,6 +5,7 @@
     rows="1"
     :placeholder="placeholder"
     :value="chatInputStore.value"
+    @paste="handlePaste"
     @input="handleInput"
     @keydown="handleKeydown"
     @blur="handleBlur"
@@ -71,6 +72,25 @@ watch(
     resize()
   }
 )
+
+function handlePaste(event: ClipboardEvent) {
+  const files = Array.from(event.clipboardData?.files || [])
+  if (!files.length) return
+  event.preventDefault()
+  const text = event.clipboardData?.getData('text/plain')
+  const textarea = textareaRef.value
+  if (text && textarea) {
+    textarea.setRangeText(
+      text,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      'end'
+    )
+    chatInputStore.setValue(textarea.value)
+    resize()
+  }
+  void chatStore.addImages(files)
+}
 
 function handleInput(event: Event) {
   chatInputStore.setValue((event.target as HTMLTextAreaElement).value)

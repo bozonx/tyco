@@ -82,11 +82,25 @@ impl From<StoredChatAttachment> for ChatAttachment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatImage {
+    pub id: String,
+    #[serde(rename = "mediaType")]
+    pub media_type: String,
+    pub width: u32,
+    pub height: u32,
+    pub size: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attachments: Vec<ChatAttachment>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub images: Vec<ChatImage>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 }

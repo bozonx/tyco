@@ -81,7 +81,17 @@
     "voiceCancelHint": "Press Escape to cancel",
     "voiceContext": "The question will be about this text",
     "voiceInput": "Voice input",
-    "voiceSendHint": "Press Ctrl+Enter to send immediately"
+    "voiceSendHint": "Press Ctrl+Enter to send immediately",
+    "imageTitle": "Image",
+    "addImage": "Attach image",
+    "viewImage": "View image",
+    "removeImage": "Remove image",
+    "closeImage": "Close image",
+    "imageProcessing": "Processing image…",
+    "imageUnavailable": "Image is unavailable",
+    "imageModelRequired": "Choose a model that supports images in model settings.",
+    "imageLimit": "You can attach up to 4 images per message.",
+    "imageImportFailed": "Could not attach the image. Use PNG, JPEG or WebP up to 10 MiB and 24 megapixels."
   },
   "commandLauncher": {
     "allCommands": "All commands",
@@ -730,7 +740,8 @@
     "unassignHotkey": "Remove shortcut",
     "userLanguage": "User language",
     "windowInsertion": "Insertion method",
-    "windowInsertionHint": "The program that presses keys in another app: xdotool works on X11, ydotool on Wayland. The field below holds its path."
+    "windowInsertionHint": "The program that presses keys in another app: xdotool works on X11, ydotool on Wayland. The field below holds its path.",
+    "vision": "Image input"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

@@ -81,7 +81,17 @@
     "voiceCancelHint": "Нажмите Escape для отмены",
     "voiceContext": "Вопрос будет задан об этом тексте",
     "voiceInput": "Голосовой ввод",
-    "voiceSendHint": "Нажмите Ctrl+Enter, чтобы отправить сразу"
+    "voiceSendHint": "Нажмите Ctrl+Enter, чтобы отправить сразу",
+    "imageTitle": "Изображение",
+    "addImage": "Прикрепить изображение",
+    "viewImage": "Открыть изображение",
+    "removeImage": "Удалить изображение",
+    "closeImage": "Закрыть изображение",
+    "imageProcessing": "Обработка изображения…",
+    "imageUnavailable": "Изображение недоступно",
+    "imageModelRequired": "Выберите модель с поддержкой изображений в настройках моделей.",
+    "imageLimit": "К сообщению можно прикрепить до 4 изображений.",
+    "imageImportFailed": "Не удалось прикрепить изображение. Используйте PNG, JPEG или WebP до 10 МиБ и 24 мегапикселей."
   },
   "commandLauncher": {
     "allCommands": "Все команды",
@@ -727,7 +737,8 @@
     "unassignHotkey": "Убрать сочетание",
     "userLanguage": "Язык пользователя",
     "windowInsertion": "Способ вставки",
-    "windowInsertionHint": "Программа, которая нажимает клавиши в другом приложении: xdotool работает в X11, ydotool — в Wayland. В поле ниже — путь к ней."
+    "windowInsertionHint": "Программа, которая нажимает клавиши в другом приложении: xdotool работает в X11, ydotool — в Wayland. В поле ниже — путь к ней.",
+    "vision": "Поддержка изображений"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

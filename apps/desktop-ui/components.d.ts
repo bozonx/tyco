@@ -21,6 +21,7 @@ declare module 'vue' {
     Card: typeof import('./src/components/common/Card.vue')['default']
     ChatAttachment: typeof import('./src/components/chat/ChatAttachment.vue')['default']
     ChatContextList: typeof import('./src/components/chat/ChatContextList.vue')['default']
+    ChatImageAttachment: typeof import('./src/components/chat/ChatImageAttachment.vue')['default']
     ChatInput: typeof import('./src/components/ChatInput.vue')['default']
     ChatItem: typeof import('./src/components/common/ChatItem.vue')['default']
     ChatMarkdown: typeof import('./src/components/chat/ChatMarkdown.vue')['default']

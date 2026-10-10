@@ -79,6 +79,16 @@ export function usableModels(config: LlmConfig) {
   })
 }
 
+/** Defaults only for the vision models shipped with the app. */
+export function supportsImages(model: LlmModel): boolean {
+  return (
+    model.vision ??
+    ((model.provider === 'google' && model.model === 'gemini-2.5-flash') ||
+      (model.provider === 'openrouter' &&
+        model.model === 'openai/gpt-4.1-mini'))
+  )
+}
+
 function toDefinition(
   model: LlmModel,
   provider: LlmProvider
@@ -95,6 +105,10 @@ function toDefinition(
     // One tier for all: a fallback never crosses tiers, and the user's chain
     // is the whole policy
     tier: 'standard',
+    modalities: {
+      input: supportsImages(model) ? ['text', 'image'] : ['text'],
+      output: ['text'],
+    },
     contextSize: model.contextSize ?? DEFAULT_CONTEXT_SIZE,
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,

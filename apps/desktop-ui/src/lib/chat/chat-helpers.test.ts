@@ -67,3 +67,23 @@ describe('chat-helpers', () => {
     expect(trimChatContext([newest], 10)).toEqual([])
   })
 })
+
+describe('image context', () => {
+  const image = {
+    id: 'image',
+    mediaType: 'image/png' as const,
+    width: 1,
+    height: 1,
+    size: 3,
+  }
+  it('trims entire turns when image slots or budget are exhausted', () => {
+    const messages = [
+      { role: 'user' as const, content: 'Image question', images: [image] },
+      { role: 'assistant' as const, content: 'Image answer' },
+      { role: 'user' as const, content: 'Recent question' },
+      { role: 'assistant' as const, content: 'Recent answer' },
+    ]
+    expect(trimChatContext(messages, 1000)).toEqual(messages.slice(2))
+    expect(trimChatContext(messages, 100_000, 0)).toEqual(messages.slice(2))
+  })
+})

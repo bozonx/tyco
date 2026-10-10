@@ -1,5 +1,7 @@
 import type { ChatAttachment, ChatHistoryItem, ChatMessage } from '@tyco/shared'
 
+import { IMAGE_BUDGET_CHARACTERS, MAX_CHAT_IMAGES } from './chat-image-input'
+
 import { formatAttachmentsForPrompt } from './chat-attachment'
 
 export interface PreparedChatRequest {
@@ -32,7 +34,8 @@ export function createAssistantMessage(content: string): ChatMessage {
 /** Keeps complete recent turns within a conservative character budget. */
 export function trimChatContext(
   messages: ChatMessage[],
-  maxCharacters: number
+  maxCharacters: number,
+  availableImages = MAX_CHAT_IMAGES
 ): ChatMessage[] {
   const turns: ChatMessage[][] = []
   for (const message of messages) {
@@ -42,6 +45,7 @@ export function trimChatContext(
 
   const selected: ChatMessage[][] = []
   let used = 0
+  let imageCount = 0
   for (let index = turns.length - 1; index >= 0; index -= 1) {
     const turn = turns[index]
     const size = turn.reduce(
@@ -51,9 +55,18 @@ export function trimChatContext(
         (item.attachments || []).reduce((n, a) => n + a.text.length, 0),
       0
     )
-    if (used + size > maxCharacters) break
+    const images = turn.reduce(
+      (sum, item) => sum + (item.images?.length || 0),
+      0
+    )
+    if (
+      used + size + images * IMAGE_BUDGET_CHARACTERS > maxCharacters ||
+      imageCount + images > availableImages
+    )
+      break
     selected.unshift(turn)
-    used += size
+    used += size + images * IMAGE_BUDGET_CHARACTERS
+    imageCount += images
   }
   return selected.flat()
 }

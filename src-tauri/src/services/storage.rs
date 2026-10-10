@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::models::{
@@ -1533,6 +1533,10 @@ pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppErro
     )
 }
 
+pub fn chat_image_directory(app: &AppHandle) -> Result<PathBuf, AppError> {
+    Ok(app_data_sub_dir(app, "chats")?.join("images"))
+}
+
 pub fn save_chat_history(
     app: &AppHandle,
     user_config: &Value,
@@ -1547,6 +1551,12 @@ pub fn save_chat_history(
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = get_chat_history(app)?;
 
+    app.state::<crate::state::AppState>()
+        .chat_images
+        .lock()
+        .expect("chat image lock poisoned")
+        .persist(&chats_dir.join("images"), &chat_history_item)?;
+
     // Save full chat to its own file
     let chat_file_path =
         chats_dir.join(format!("{}.json", sanitize_chat_id(&chat_history_item.id)?));
@@ -1554,9 +1564,8 @@ pub fn save_chat_history(
 
     upsert_chat_index(&mut history, &chat_history_item);
     policy.drop_expired(&mut history, now_ms());
-    remove_orphan_chat_files(&chats_dir, &history)?;
-
-    write_json(&chats_dir.join("index.json"), &history)
+    write_json(&chats_dir.join("index.json"), &history)?;
+    remove_orphan_chat_files(&chats_dir, &history)
 }
 
 /// Puts the chat on top of the index, without its messages to keep the index
@@ -1658,7 +1667,7 @@ pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppEr
         }
     }
 
-    Ok(())
+    super::chat_images::collect_orphans(&chats_dir)
 }
 
 /// What the settings say about the chat history.
@@ -1764,9 +1773,13 @@ fn enforce_chat_history_policy(app: &AppHandle, policy: ChatHistoryPolicy) -> Re
     remove_orphan_chat_files(&chats_dir, &history)
 }
 
-/// Removes the index and every chat file.
+/// Removes the index, chat files, and persisted image bytes.
 pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
+    let images_dir = chats_dir.join("images");
+    if images_dir.exists() {
+        fs::remove_dir_all(images_dir)?;
+    }
 
     for entry in fs::read_dir(&chats_dir)?.flatten() {
         let path = entry.path();
@@ -1830,7 +1843,7 @@ fn remove_orphan_chat_files(
         }
     }
 
-    Ok(())
+    super::chat_images::collect_orphans(chats_dir)
 }
 
 #[cfg(test)]
@@ -1968,6 +1981,7 @@ mod tests {
             role: String::from("user"),
             content: String::from("Где купить БИЛЕТЫ?"),
             attachments: Vec::new(),
+            images: Vec::new(),
             status: None,
         }];
 

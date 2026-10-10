@@ -122,10 +122,11 @@ describe('chat window navigation', () => {
 
     await useChatStore().sendInput()
 
-    expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
-      { text: 'pending' },
-      { text: 'a part', source: 'editor-selection' },
-    ])
+    expect(mocks.sendMessage).toHaveBeenCalledWith(
+      'Question',
+      [{ text: 'pending' }, { text: 'a part', source: 'editor-selection' }],
+      []
+    )
     expect(mocks.clear).toHaveBeenCalled()
   })
 
@@ -152,9 +153,11 @@ describe('chat window navigation', () => {
     })
     await store.sendInput()
 
-    expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
-      { text: 'pending' },
-    ])
+    expect(mocks.sendMessage).toHaveBeenCalledWith(
+      'Question',
+      [{ text: 'pending' }],
+      []
+    )
   })
   it('does not overwrite a draft when a previous request completes after cancellation', async () => {
     let resolve!: (text: string) => void

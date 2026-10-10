@@ -61,6 +61,7 @@ export interface LlmModel {
   temperature?: number
   maxOutputTokens?: number
   contextSize?: number
+  vision?: boolean
 }
 
 export const LLM_TASKS = [

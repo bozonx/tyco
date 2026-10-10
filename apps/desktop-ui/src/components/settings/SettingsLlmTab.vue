@@ -186,6 +186,12 @@
                 </Button>
               </div>
               <template v-if="expandedModels.has(model.id)">
+                <FieldRow :label="t('settings.vision')">
+                  <FieldCheckbox
+                    :value="supportsImages(model)"
+                    @update:value="model.vision = $event"
+                  />
+                </FieldRow>
                 <FieldRow :label="t('settings.temperature')">
                   <FieldInput
                     type="number"
@@ -333,6 +339,7 @@ import { computed, onMounted, reactive } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { supportsImages } from '../../lib/llm/llm-catalog'
 import {
   addCompatibleProvider,
   addModel,
@@ -347,6 +354,7 @@ import {
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useLlmStore } from '../../stores/llm'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'

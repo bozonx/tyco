@@ -3,6 +3,7 @@ pub mod activation_metrics;
 pub mod activation_socket;
 pub mod app_paths;
 pub mod atomic_file;
+pub mod chat_images;
 pub mod clipboard;
 pub mod config_migration;
 pub mod custom_actions;

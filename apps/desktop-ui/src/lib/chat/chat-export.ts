@@ -33,6 +33,12 @@ export function formatChatToMarkdown(
       }
     }
 
+    for (const image of message.images || []) {
+      section.push(
+        `[Image omitted: ${image.width} × ${image.height}, ${image.mediaType}]`
+      )
+    }
+
     if (message.content?.trim()) {
       section.push(message.content.trim())
     }

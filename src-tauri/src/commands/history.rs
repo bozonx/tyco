@@ -31,7 +31,16 @@ pub fn get_chat(
     id: String,
 ) -> Result<Option<ChatHistoryItem>, AppError> {
     let _guard = state.lock_history_storage();
-    storage::get_chat(&app, id)
+    let chat = storage::get_chat(&app, id)?;
+    if let Some(chat) = &chat {
+        let directory = storage::chat_image_directory(&app)?;
+        let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+        for image in chat.messages.iter().flat_map(|message| &message.images) {
+            // A broken image must not prevent the rest of the chat from opening.
+            let _ = images.get(&directory, &image.id);
+        }
+    }
+    Ok(chat)
 }
 
 #[tauri::command(async)]
@@ -131,4 +140,40 @@ pub fn clear_editor_history(app: AppHandle, state: State<'_, AppState>) -> Resul
 pub fn clear_chat_history(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
     let _guard = state.lock_history_storage();
     storage::clear_chat_history(&app)
+}
+
+/// Receives a normalized PNG; drafts never touch the filesystem.
+#[tauri::command(async)]
+pub fn store_chat_image(
+    state: State<'_, AppState>,
+    data: String,
+    name: Option<String>,
+) -> Result<crate::models::ChatImage, AppError> {
+    use base64::Engine;
+    if data.len() > (crate::services::chat_images::MAX_IMAGE_BYTES * 4 / 3 + 4) {
+        return Err(AppError::Message("Image size limit exceeded".into()));
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .map_err(|_| AppError::Message("Invalid image encoding".into()))?;
+    state
+        .chat_images
+        .lock()
+        .expect("chat image lock poisoned")
+        .insert(&bytes, name)
+}
+
+#[tauri::command(async)]
+pub fn get_chat_image(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<tauri::ipc::Response, AppError> {
+    let _guard = state.lock_history_storage();
+    let bytes = state
+        .chat_images
+        .lock()
+        .expect("chat image lock poisoned")
+        .get(&storage::chat_image_directory(&app)?, &id)?;
+    Ok(tauri::ipc::Response::new(bytes))
 }

@@ -66,3 +66,38 @@ describe('llm-prompt', () => {
     ).toBe('to en_US, only en_US; {{OTHER}}')
   })
 })
+
+describe('image prompts', () => {
+  const image = {
+    id: 'image',
+    mediaType: 'image/png' as const,
+    width: 1,
+    height: 1,
+    size: 3,
+  }
+  it('includes image bytes for both historical and current user messages', () => {
+    const bytes = new Uint8Array([1, 2, 3])
+    const prompt = buildLlmPrompt(
+      [
+        { role: 'user', content: 'Earlier', images: [image] },
+        { role: 'assistant', content: 'Answer' },
+        { role: 'user', content: '', images: [image] },
+      ],
+      { rulePrefix: 'Rules', imageBytes: new Map([['image', bytes]]) }
+    )
+    expect(prompt.messages[0].content).toEqual([
+      { type: 'text', text: 'Earlier' },
+      { type: 'file', data: bytes, mediaType: 'image/png' },
+    ])
+    expect(prompt.messages[2].content).toEqual([
+      { type: 'file', data: bytes, mediaType: 'image/png' },
+    ])
+  })
+  it('never silently drops an unavailable image', () => {
+    expect(() =>
+      buildLlmPrompt([{ role: 'user', content: '', images: [image] }], {
+        rulePrefix: 'Rules',
+      })
+    ).toThrow('Chat image is unavailable')
+  })
+})

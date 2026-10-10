@@ -283,3 +283,112 @@ describe('llm-client', () => {
     expect(body.model).toBe('llama3')
   })
 })
+
+describe('vision transport', () => {
+  const imagePrompt = {
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          {
+            type: 'file' as const,
+            data: new Uint8Array([1, 2, 3]),
+            mediaType: 'image/png',
+          },
+        ],
+      },
+    ],
+  }
+  it('serializes image bytes through the configured transport and streams the reply', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      streamResponse(sse(['Image reply']))
+    )
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    llm.models[0].vision = true
+    const { client } = setup(fetch, llm)
+    expect(
+      await client.run('chat', imagePrompt, {
+        models: ['local-qwen'],
+        onChunk: () => undefined,
+      })
+    ).toBe('Image reply')
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(body.messages[0]).toEqual({
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: 'data:image/png;base64,AQID' } },
+      ],
+    })
+  })
+  it('refuses image input before transport when the model is text-only', async () => {
+    const fetch = vi.fn<FetchFunction>()
+    const { client } = setup(fetch)
+    await expect(
+      client.run('chat', imagePrompt, { models: ['local-qwen'] })
+    ).rejects.toMatchObject({ kind: 'no_model' })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+})
+
+describe('built-in vision adapters', () => {
+  const imagePrompt = {
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          {
+            type: 'file' as const,
+            data: new Uint8Array([1, 2, 3]),
+            mediaType: 'image/png',
+          },
+        ],
+      },
+    ],
+  }
+  it('sends image data to Google through the transport', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      jsonResponse(200, {
+        candidates: [
+          {
+            content: { role: 'model', parts: [{ text: 'Image reply' }] },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 1,
+          candidatesTokenCount: 1,
+          totalTokenCount: 2,
+        },
+      })
+    )
+    const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
+      google: { origins: ['https://generativelanguage.googleapis.com'] },
+    })
+    expect(
+      await client.run('chat', imagePrompt, { models: ['gemini-flash'] })
+    ).toBe('Image reply')
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(body.contents[0].parts).toContainEqual({
+      inlineData: { mimeType: 'image/png', data: 'AQID' },
+    })
+  })
+  it('sends image data to OpenRouter through the transport', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      streamResponse(sse(['Image reply']))
+    )
+    const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
+      openrouter: { origins: ['https://openrouter.ai'] },
+    })
+    expect(
+      await client.run('chat', imagePrompt, {
+        models: ['openrouter-gpt-4-1-mini'],
+        onChunk: () => undefined,
+      })
+    ).toBe('Image reply')
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(body.messages[0].content).toContainEqual({
+      type: 'image_url',
+      image_url: { url: 'data:image/png;base64,AQID' },
+    })
+  })
+})

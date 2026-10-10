@@ -1,3 +1,10 @@
+import {
+  createChatImageInput,
+  prepareChatImage,
+  MAX_CHAT_IMAGES,
+  IMAGE_BUDGET_CHARACTERS,
+} from '../lib/chat/chat-image-input'
+import { storeChatImage } from '../lib/chat/chat-image-storage'
 import { defineStore } from 'pinia'
 import { computed, nextTick, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -82,6 +89,8 @@ export const useChatStore = defineStore('chat', () => {
     chatNotFoundError: () => translate('history.empty'),
     messageTooLongError: () => translate('llmErrors.contextLength'),
     noModelError: () => translate('chat.noModels'),
+    imageModelError: () => translate('chat.imageModelRequired'),
+    imageTitle: () => translate('chat.imageTitle'),
     createId: () => makeUniqId(8),
     nowIso: () => new Date().toISOString(),
     saveLocalState: async (patch) => {
@@ -93,6 +102,7 @@ export const useChatStore = defineStore('chat', () => {
       return picked
         ? {
             id: picked.id,
+            vision: picked.vision,
             budgetCharacters: contextBudgetCharacters(picked.contextSize),
           }
         : null
@@ -147,7 +157,8 @@ export const useChatStore = defineStore('chat', () => {
     if (!picked) return null
     return resolveContextBudget(
       [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
-      contextBudgetCharacters(picked.contextSize)
+      contextBudgetCharacters(picked.contextSize),
+      (model.newChatParams.value.images?.length || 0) * IMAGE_BUDGET_CHARACTERS
     )
   })
 
@@ -175,10 +186,59 @@ export const useChatStore = defineStore('chat', () => {
     chatInputStore.focus()
   }
 
+  const importingImages = ref(0)
+  const imageInput = createChatImageInput({
+    prepare: prepareChatImage,
+    store: storeChatImage,
+  })
+  const pendingImages = computed(() => model.newChatParams.value.images || [])
+  const imageModelRequired = computed(
+    () =>
+      !selectedModel.value?.vision &&
+      (pendingImages.value.length > 0 ||
+        model.messages.value.some((message) => message.images?.length))
+  )
+
+  async function addImages(files: File[]) {
+    if (!files.length || model.isGenerating.value) return
+    const draft = model.newChatParams.value
+    if (files.length + pendingImages.value.length > MAX_CHAT_IMAGES) {
+      toast(translate('chat.imageLimit'), 'error')
+      return
+    }
+    importingImages.value++
+    try {
+      await imageInput.add(
+        files,
+        (image) => {
+          const current = draft.images || []
+          if (current.some((item) => item.id === image.id)) return
+          if (current.length >= MAX_CHAT_IMAGES)
+            throw new Error('Image count limit exceeded')
+          draft.images = [...current, image]
+        },
+        () => model.newChatParams.value === draft
+      )
+    } catch {
+      toast(translate('chat.imageImportFailed'), 'error')
+    } finally {
+      importingImages.value--
+    }
+  }
+
   let inputSubmission = 0
 
   return {
     ...model,
+    addImages,
+    importingImages,
+    pendingImages,
+    imageModelRequired,
+    removeImage: (id: string) => {
+      model.newChatParams.value.images = pendingImages.value.filter(
+        (image) => image.id !== id
+      )
+    },
     modelOptions,
     selectedModel,
     editorContext,
@@ -241,11 +301,18 @@ export const useChatStore = defineStore('chat', () => {
     /** Sends the input; false when there is nothing to send or a reply runs */
     async sendInput(): Promise<boolean> {
       const message = chatInputStore.value.trim()
-      if (!message || model.isGenerating.value) return false
+      if (
+        (!message && !pendingImages.value.length) ||
+        model.isGenerating.value ||
+        importingImages.value
+      )
+        return false
       const attachments = [...attachedContext.value]
       const submission = ++inputSubmission
       const initialMessageCount = model.messages.value.length
-      const pending = model.sendMessage(message, attachments)
+      const pending = model.sendMessage(message, attachments, [
+        ...pendingImages.value,
+      ])
       const chatId = model.newChatParams.value.id
       const messages = model.messages.value
       chatInputStore.clear()

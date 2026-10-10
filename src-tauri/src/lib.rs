@@ -15,9 +15,10 @@ use commands::app::{
     submit_activation_metric_value, suspend_hotkeys,
 };
 use commands::history::{
-    clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_editor_history,
-    remove_from_chat_history, remove_from_editor_history, rename_chat, restore_editor_history_item,
-    save_chat_history, save_editor_history, search_chat_history, set_editor_history_result,
+    clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_chat_image,
+    get_editor_history, remove_from_chat_history, remove_from_editor_history, rename_chat,
+    restore_editor_history_item, save_chat_history, save_editor_history, search_chat_history,
+    set_editor_history_result, store_chat_image,
 };
 use commands::net::{
     net_cancel, net_fetch, net_socket_close, net_socket_open, net_socket_send_binary,
@@ -240,6 +241,8 @@ pub fn run() {
             get_editor_history,
             get_chat_history,
             get_chat,
+            store_chat_image,
+            get_chat_image,
             save_editor_history,
             set_editor_history_result,
             restore_editor_history_item,

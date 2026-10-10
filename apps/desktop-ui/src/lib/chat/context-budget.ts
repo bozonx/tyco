@@ -19,9 +19,10 @@ export interface ContextBudget {
  */
 export function resolveContextBudget(
   texts: string[],
-  budget: number
+  budget: number,
+  imageCharacters = 0
 ): ContextBudget {
-  const used = texts.reduce((sum, text) => sum + text.length, 0)
+  const used = texts.reduce((sum, text) => sum + text.length, imageCharacters)
   const ratio = budget > 0 ? used / budget : used > 0 ? Infinity : 0
   const level: ContextBudgetLevel =
     ratio > 1 ? 'over' : ratio >= CONTEXT_BUDGET_HIGH_RATIO ? 'high' : 'ok'

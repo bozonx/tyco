@@ -1,3 +1,4 @@
+import { getChatImage } from '../lib/chat/chat-image-storage'
 import { translate } from '../lib/i18n'
 import { LlmError, toLlmError, type LlmRunName } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
@@ -94,13 +95,33 @@ export const useCallAi = () => {
     messages: string | ChatMessage[],
     options: AiRequestOptions & { instructions?: string; rules?: string } = {}
   ) {
-    const prompt = buildLlmPrompt(messages, {
-      instructions: options.instructions,
-      rules: options.rules,
-      rulePrefix: currentAppConfig().rulePrefix,
-    })
-
     try {
+      const imageBytes = new Map<string, Uint8Array<ArrayBuffer>>()
+      if (typeof messages !== 'string') {
+        for (const message of messages) {
+          for (const image of message.images || []) {
+            if (options.signal?.aborted) return ''
+            if (!imageBytes.has(image.id))
+              imageBytes.set(
+                image.id,
+                await getChatImage(image.id).catch(() => {
+                  throw new LlmError(
+                    'unknown',
+                    translate('chat.imageUnavailable')
+                  )
+                })
+              )
+          }
+        }
+      }
+      if (options.signal?.aborted) return ''
+      const prompt = buildLlmPrompt(messages, {
+        imageBytes,
+        instructions: options.instructions,
+        rules: options.rules,
+        rulePrefix: currentAppConfig().rulePrefix,
+      })
+
       return await llmStore.client.run(taskName, prompt, {
         models: options.models,
         onChunk: options.onChunk,
@@ -160,7 +181,7 @@ export const useCallAi = () => {
   }
 
   const sendChatMessage = async (
-    message: string,
+    message: string | ChatMessage,
     prevMessages: ChatMessage[],
     devInstructions: string | undefined,
     options: Omit<AiRequestOptions, 'models'> & { modelId: string }
@@ -168,7 +189,12 @@ export const useCallAi = () => {
     const { modelId, ...rest } = options
     return await aiRequest(
       AI_TASKS.CHAT,
-      [...prevMessages, { role: 'user', content: message }],
+      [
+        ...prevMessages,
+        typeof message === 'string'
+          ? { role: 'user', content: message }
+          : message,
+      ],
       {
         ...rest,
         models: [modelId],

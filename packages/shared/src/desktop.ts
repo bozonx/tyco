@@ -20,9 +20,20 @@ export interface ChatAttachment {
   source?: ChatAttachmentSource
 }
 
+/** A normalized image owned by the Rust chat image store. */
+export interface ChatImage {
+  id: string
+  mediaType: 'image/png'
+  width: number
+  height: number
+  size: number
+  name?: string
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'developer'
   content: string
+  images?: ChatImage[]
   attachments?: ChatAttachment[]
   status?: 'complete' | 'stopped'
 }
@@ -46,6 +57,7 @@ export interface ChatParams {
   id?: string
   /** The title the chat has in the history */
   title?: string
+  images?: ChatImage[]
   attachments?: ChatAttachment[]
   /**
    * The chat takes nothing from the editor: it was started for a question about
@@ -204,6 +216,8 @@ export const DESKTOP_COMMANDS = {
   GET_EDITOR_HISTORY: 'get_editor_history',
   GET_CHAT_HISTORY: 'get_chat_history',
   GET_CHAT: 'get_chat',
+  STORE_CHAT_IMAGE: 'store_chat_image',
+  GET_CHAT_IMAGE: 'get_chat_image',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
   SET_EDITOR_HISTORY_RESULT: 'set_editor_history_result',
   RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',

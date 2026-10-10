@@ -80,7 +80,38 @@
       <div v-else class="chat-composer">
         <ChatContextList />
 
+        <div v-if="chatStore.pendingImages.length" class="flex flex-wrap gap-2">
+          <ChatImageAttachment
+            v-for="image in chatStore.pendingImages"
+            :key="image.id"
+            :image="image"
+            removable
+            @remove="chatStore.removeImage(image.id)"
+          />
+        </div>
+        <div
+          v-if="chatStore.importingImages"
+          class="text-sm text-muted"
+          role="status"
+        >
+          {{ t('chat.imageProcessing') }}
+        </div>
+        <div
+          v-if="chatStore.imageModelRequired"
+          class="text-sm text-error"
+          role="alert"
+        >
+          {{ t('chat.imageModelRequired') }}
+        </div>
         <ChatInput @send="sendMessage" />
+        <input
+          ref="imagePicker"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          class="hidden"
+          @change="pickImages"
+        />
 
         <div class="chat-composer-bar">
           <DropdownMenu
@@ -94,6 +125,18 @@
           />
           <span class="composer-hint">{{ inputHint }}</span>
           <div class="composer-actions">
+            <Button
+              sm
+              ghost
+              square
+              :disabled="
+                chatStore.isGenerating || Boolean(chatStore.importingImages)
+              "
+              :title="t('chat.addImage')"
+              @click="imagePicker?.click()"
+            >
+              <Icon icon="mdi:image-plus-outline" height="18" />
+            </Button>
             <Button
               sm
               ghost
@@ -148,6 +191,7 @@ import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import ChatContextList from './chat/ChatContextList.vue'
+import ChatImageAttachment from './chat/ChatImageAttachment.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import VoiceRecognitionMenu from './menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
@@ -178,9 +222,18 @@ const inputHint = computed(() => {
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
+const imagePicker = ref<HTMLInputElement | null>(null)
+function pickImages(event: Event) {
+  const input = event.target as HTMLInputElement
+  void chatStore.addImages(Array.from(input.files || []))
+  input.value = ''
+}
 const canSend = computed(
   () =>
-    Boolean(chatInputStore.value.trim()) &&
+    (Boolean(chatInputStore.value.trim()) ||
+      chatStore.pendingImages.length > 0) &&
+    !chatStore.importingImages &&
+    !chatStore.imageModelRequired &&
     !chatStore.isGenerating &&
     chatStore.contextBudget?.level !== 'over'
 )

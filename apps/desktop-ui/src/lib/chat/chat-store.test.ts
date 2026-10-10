@@ -607,3 +607,94 @@ describe('chat-store', () => {
     expect(store.newChatParams.value.title).toBe('New')
   })
 })
+
+describe('image turns', () => {
+  const image = {
+    id: 'image',
+    mediaType: 'image/png' as const,
+    width: 1,
+    height: 1,
+    size: 3,
+  }
+  it('accepts an image-only turn and preserves images through retry, regenerate and branch', async () => {
+    const send = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Offline'))
+      .mockResolvedValue('Answer')
+    const deps = createDeps({
+      sendChatMessage: send,
+      imageTitle: () => 'Image',
+      getChatModel: () => ({
+        id: 'vision',
+        vision: true,
+        budgetCharacters: 100_000,
+      }),
+    })
+    const store = createChatStoreModel(deps)
+    await store.sendMessage('', [], [image])
+    expect(store.messages.value[0].images).toEqual([image])
+    await store.retryLastTurn()
+    expect(send.mock.calls[1][0]).toMatchObject({
+      role: 'user',
+      content: '',
+      images: [image],
+    })
+    await store.regenerateMessage(1)
+    expect(send.mock.calls[2][0].images).toEqual([image])
+    await store.branchChat(1)
+    expect(store.messages.value[0].images).toEqual([image])
+    expect(deps.saveChatHistory).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        messages: expect.arrayContaining([
+          expect.objectContaining({ images: [image] }),
+        ]),
+      })
+    )
+  })
+  it('rejects text-only models without consuming the draft', async () => {
+    const deps = createDeps({ imageModelError: () => 'Vision required' })
+    const store = createChatStoreModel(deps)
+    store.newChatParams.value.images = [image]
+    await store.sendMessage('', [], [image])
+    expect(deps.notifyError).toHaveBeenCalledWith('Vision required')
+    expect(store.newChatParams.value.images).toEqual([image])
+    expect(store.messages.value).toEqual([])
+  })
+  it('accounts for image cost before dispatch', async () => {
+    const deps = createDeps({
+      getChatModel: () => ({
+        id: 'small',
+        vision: true,
+        budgetCharacters: 1000,
+      }),
+    })
+    const store = createChatStoreModel(deps)
+    await store.sendMessage('', [], [image])
+    expect(deps.notifyError).toHaveBeenCalledWith('Message too long')
+    expect(deps.sendChatMessage).not.toHaveBeenCalled()
+  })
+})
+
+describe('image retry validation', () => {
+  it('keeps the failed turn when the selected model no longer accepts images', async () => {
+    let vision = true
+    const deps = createDeps({
+      sendChatMessage: vi.fn().mockRejectedValue(new Error('Offline')),
+      getChatModel: () => ({ id: 'model', vision, budgetCharacters: 100_000 }),
+    })
+    const store = createChatStoreModel(deps)
+    const image = {
+      id: 'image',
+      mediaType: 'image/png' as const,
+      width: 1,
+      height: 1,
+      size: 3,
+    }
+    await store.sendMessage('', [], [image])
+    vision = false
+    await store.retryLastTurn()
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: '', images: [image] },
+    ])
+  })
+})

@@ -1,11 +1,16 @@
 import type { LlmConfig } from '@tyco/shared'
 
-import { DEFAULT_CONTEXT_SIZE, usableModels } from '../llm/llm-catalog'
+import {
+  DEFAULT_CONTEXT_SIZE,
+  supportsImages,
+  usableModels,
+} from '../llm/llm-catalog'
 
 export interface ChatModelOption {
   id: string
   name: string
   provider: string
+  vision: boolean
   contextSize: number
 }
 
@@ -26,6 +31,7 @@ export function chatModelOptions(
       id: model.id,
       name: model.name?.trim() || model.model.trim(),
       provider: provider.name?.trim() || provider.type,
+      vision: supportsImages(model),
       contextSize: model.contextSize ?? DEFAULT_CONTEXT_SIZE,
     }))
 }

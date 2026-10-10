@@ -96,6 +96,7 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
       model: typeof item.model === 'string' ? item.model : '',
     }
     if (typeof item.name === 'string') model.name = item.name
+    if (typeof item.vision === 'boolean') model.vision = item.vision
     const temperature = finiteNumber(item.temperature)
     if (temperature !== undefined && temperature >= 0 && temperature <= 2) {
       model.temperature = temperature
