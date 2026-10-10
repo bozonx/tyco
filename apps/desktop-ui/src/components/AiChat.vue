@@ -14,8 +14,8 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
-          :assistant-name="chatStore.selectedModel?.name"
           @branch="branch(index)"
+          @copy-markdown-to-point="copyMarkdownToPoint(index)"
         />
 
         <div
@@ -121,6 +121,7 @@ import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { formatChatToMarkdown } from '../lib/chat/chat-export'
 import {
   newlineShortcut,
   resolveSubmitKey,
@@ -216,6 +217,14 @@ async function branch(index: number) {
   pinnedToBottom.value = true
   await chatStore.branchChat(index)
   toast(t('chat.branchCreated'), 'info')
+}
+
+async function copyMarkdownToPoint(index: number) {
+  const slice = chatStore.messages.slice(0, index + 1)
+  const title = chatStore.newChatParams.title || ''
+  const md = formatChatToMarkdown(slice, title ? { title } : undefined)
+  await navigator.clipboard.writeText(md)
+  toast(t('chat.markdownCopied'), 'info')
 }
 
 function voiceInput() {

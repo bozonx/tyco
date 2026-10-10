@@ -14,6 +14,16 @@
         sm
         ghost
         square
+        :active="isSearchOpen"
+        :title="t('chat.searchChats')"
+        @click="toggleSearch"
+      >
+        <Icon icon="mdi:magnify" height="18" />
+      </Button>
+      <Button
+        sm
+        ghost
+        square
         :title="t('chat.collapseSidebar')"
         @click="emit('collapse')"
       >
@@ -30,9 +40,12 @@
     </div>
 
     <SearchInput
+      v-if="isSearchOpen"
+      ref="searchInputRef"
       v-model="query"
       class="sidebar-search"
       :placeholder="t('chat.searchChats')"
+      @keydown.esc="closeSearch"
     />
 
     <div class="chat-list-scroll">
@@ -177,8 +190,24 @@ const { toast } = useToast()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
-
+const isSearchOpen = ref(false)
+const searchInputRef = ref<{ focus(): void } | null>(null)
 const query = ref('')
+
+async function toggleSearch() {
+  isSearchOpen.value = !isSearchOpen.value
+  if (isSearchOpen.value) {
+    await nextTick()
+    searchInputRef.value?.focus?.()
+  } else {
+    query.value = ''
+  }
+}
+
+function closeSearch() {
+  isSearchOpen.value = false
+  query.value = ''
+}
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])

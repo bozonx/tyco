@@ -10,19 +10,6 @@
         />
       </div>
 
-      <div v-if="message.role === 'assistant'" class="assistant-header">
-        <div class="assistant-badge">
-          <Icon
-            icon="mdi:creation-outline"
-            height="14"
-            class="assistant-icon"
-          />
-          <span class="assistant-name">{{
-            assistantName || t('chat.assistant')
-          }}</span>
-        </div>
-      </div>
-
       <div
         v-if="message.role === 'assistant'"
         ref="markdownRoot"
@@ -47,27 +34,15 @@
           <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
           {{ copied ? t('chat.copied') : t('chat.copy') }}
         </button>
-        <button
-          type="button"
-          class="message-action"
-          :title="t('chat.copyMarkdown')"
-          @click="copyMarkdown"
-        >
-          <Icon
-            :icon="copiedMarkdown ? 'mdi:check' : 'mdi:language-markdown'"
-            height="14"
-          />
-          {{ copiedMarkdown ? t('chat.copied') : t('chat.copyMarkdown') }}
-        </button>
-        <button
-          type="button"
-          class="message-action"
-          :title="t('chat.branchChat')"
-          @click="branch"
-        >
-          <Icon icon="mdi:source-branch" height="14" />
-          {{ t('chat.branchChat') }}
-        </button>
+        <DropdownMenu
+          xs
+          square
+          hide-chevron
+          placement="top"
+          icon="mdi:dots-horizontal"
+          :title="t('common.more')"
+          :items="moreMenuItems"
+        />
       </div>
     </div>
   </article>
@@ -86,19 +61,31 @@ import {
 import { useI18n } from '../../composables/useI18n'
 import { renderChatMarkdown } from '../../lib/chat/chat-markdown'
 import ChatAttachment from '../chat/ChatAttachment.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
 
-const props = defineProps<{ message: ChatMessage; assistantName?: string }>()
-const emit = defineEmits<{ (e: 'branch'): void }>()
+const props = defineProps<{ message: ChatMessage }>()
+const emit = defineEmits<{
+  (e: 'branch'): void
+  (e: 'copy-markdown-to-point'): void
+}>()
 const { t } = useI18n()
 const markdownRoot = ref<HTMLElement | null>(null)
 const copied = ref(false)
-const copiedMarkdown = ref(false)
 
-function branch() {
-  emit('branch')
-}
+const moreMenuItems = computed<DropdownMenuItem[]>(() => [
+  {
+    label: t('chat.copyMarkdownToPoint'),
+    icon: 'mdi:language-markdown',
+    action: () => emit('copy-markdown-to-point'),
+  },
+  {
+    label: t('chat.branchChat'),
+    icon: 'mdi:source-branch',
+    action: () => emit('branch'),
+  },
+])
 let highlightTimer: number | undefined
 const renderedContent = computed(() =>
   renderChatMarkdown(props.message.content)
@@ -139,25 +126,6 @@ function copyMessage() {
   void copyText(props.message.content)
 }
 
-async function copyMarkdown() {
-  let md = props.message.content
-  if (props.message.attachments?.length) {
-    const quotes = props.message.attachments
-      .map((a) =>
-        a
-          .trim()
-          .split('\n')
-          .map((l) => `> ${l}`)
-          .join('\n')
-      )
-      .join('\n\n')
-    md = `${quotes}\n\n${md}`
-  }
-  await navigator.clipboard.writeText(md)
-  copiedMarkdown.value = true
-  window.setTimeout(() => (copiedMarkdown.value = false), 1500)
-}
-
 function handleMarkdownClick(event: MouseEvent) {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
     '[data-code-copy]'
@@ -184,31 +152,6 @@ onBeforeUnmount(() => {
 }
 .chat-item.is-user {
   justify-content: flex-end;
-}
-.chat-item.is-assistant .chat-item-content {
-  width: 100%;
-}
-.assistant-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
-}
-.assistant-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--app-surface-raised);
-  border: 1px solid var(--app-border-subtle);
-  color: var(--app-text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
-  user-select: none;
-}
-.assistant-icon {
-  color: var(--color-primary);
 }
 .chat-item.is-assistant .chat-item-content {
   width: 100%;
