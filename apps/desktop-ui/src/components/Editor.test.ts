@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Editor from './Editor.vue'
+import { Icon } from '@iconify/vue'
 
 vi.mock('../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -67,36 +68,36 @@ describe('Editor.vue toolbar', () => {
     ])
   })
 
-  it('offers explicit formatted and Markdown modes with an accessible active state', async () => {
-    const { useIpcStore } = await import('../stores/ipc')
-    const store = useIpcStore()
-    const patch = vi
-      .spyOn(store, 'patchLocalState')
-      .mockResolvedValue({ success: true, result: {} })
-    const wrapper = mount(Editor, {
-      global: {
-        stubs: {
-          Icon: true,
-          EditorInput: true,
-          DropdownMenu: true,
-          Button: true,
-        },
+  it('toggles the Markdown view with one highlighted button that resets on leave', async () => {
+    const { useShowMarkup } = await import('../composables/useShowMarkup')
+    const stubs = {
+      Icon: true,
+      EditorInput: true,
+      DropdownMenu: true,
+      Button: {
+        props: ['title', 'active'],
+        template:
+          '<button class="btn-stub" :class="{ \'btn-active\': active }" :title="title"><slot /></button>',
       },
-    })
-    const options = wrapper.findAll('.editor-view-option')
-    expect(options.map((option) => option.text())).toEqual([
-      'editor.markup.formatted',
-      'editor.markup.source',
-    ])
-    expect(options.map((option) => option.attributes('aria-pressed'))).toEqual([
-      'true',
-      'false',
-    ])
-    await options[0].trigger('click')
-    expect(patch).not.toHaveBeenCalled()
-    await options[1].trigger('click')
-    expect(patch).toHaveBeenCalledWith({ editorShowMarkup: true })
+    }
+    const wrapper = mount(Editor, { global: { stubs } })
+    const toggle = () => wrapper.find('.view-mode-toggle')
+
+    expect(toggle().attributes('aria-pressed')).toBe('false')
+    expect(toggle().classes()).not.toContain('btn-active')
+    expect(toggle().attributes('title')).toBe('editor.markup.switchToSource')
+    expect(toggle().findComponent(Icon).props('icon')).toBe('mdi:format-text')
+
+    await toggle().trigger('click')
+    expect(toggle().attributes('aria-pressed')).toBe('true')
+    expect(toggle().classes()).toContain('btn-active')
+    expect(toggle().attributes('title')).toBe('editor.markup.switchToFormatted')
+    expect(toggle().findComponent(Icon).props('icon')).toBe(
+      'mdi:language-markdown-outline'
+    )
+
     wrapper.unmount()
+    expect(useShowMarkup().showMarkup.value).toBe(false)
   })
 
   it('renders plugin toolbar buttons in left and right positions', async () => {
@@ -145,7 +146,9 @@ describe('Editor.vue toolbar', () => {
       '.flex.items-center.justify-between > .flex.items-center'
     )
     expect(
-      leftColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
+      leftColumn
+        .findAll('.btn-stub:not(.view-mode-toggle)')
+        .map((btn) => btn.attributes('title'))
     ).toEqual(['tool.left'])
     expect(
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))

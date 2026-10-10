@@ -200,9 +200,8 @@
     "format": "Formato",
     "inputLabel": "Editor de texto",
     "markup": {
-      "viewMode": "Vista del editor",
-      "formatted": "Con formato",
-      "source": "Markdown",
+      "switchToFormatted": "Ahora: Markdown. Cambiar a texto con formato (Ctrl+Shift+M)",
+      "switchToSource": "Ahora: texto con formato. Cambiar a Markdown (Ctrl+Shift+M)",
       "bold": "Negrita",
       "bulletList": "Lista con viñetas",
       "code": "Código",

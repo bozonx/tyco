@@ -200,9 +200,8 @@
     "format": "Biçim",
     "inputLabel": "Metin düzenleyici",
     "markup": {
-      "viewMode": "Editör görünümü",
-      "formatted": "Biçimlendirilmiş",
-      "source": "Markdown",
+      "switchToFormatted": "Şu an: Markdown. Biçimlendirilmiş metne geç (Ctrl+Shift+M)",
+      "switchToSource": "Şu an: biçimlendirilmiş metin. Markdown görünümüne geç (Ctrl+Shift+M)",
       "bold": "Kalın",
       "bulletList": "Madde işaretli liste",
       "code": "Kod",

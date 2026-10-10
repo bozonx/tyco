@@ -1,23 +1,25 @@
-import { computed } from 'vue'
+import { ref } from 'vue'
 
 import { useEditorInputStore } from '../stores/editorInput'
-import { useIpcStore } from '../stores/ipc'
 
 /**
  * The editor view mode: the raw Markdown everywhere instead of the formatted
- * look. Kept in the local state, so it survives restarts.
+ * look. Not persisted: the editor opens formatted and returns to it once the
+ * page is left (see `resetShowMarkup`).
  */
-export function useShowMarkup() {
-  const ipcStore = useIpcStore()
-  const editorInputStore = useEditorInputStore()
+const showMarkup = ref(false)
 
-  const showMarkup = computed(
-    () => ipcStore.params.localState?.editorShowMarkup === true
-  )
+/** Back to the formatted look, without moving the focus */
+export function resetShowMarkup(): void {
+  showMarkup.value = false
+}
+
+export function useShowMarkup() {
+  const editorInputStore = useEditorInputStore()
 
   const setShowMarkup = (show: boolean): void => {
     if (show === showMarkup.value) return
-    void ipcStore.patchLocalState({ editorShowMarkup: show })
+    showMarkup.value = show
     editorInputStore.focus()
   }
 

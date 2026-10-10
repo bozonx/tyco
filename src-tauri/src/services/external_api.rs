@@ -34,27 +34,54 @@ fn permission(config: &Value, capability: &str) -> ApiResult<()> {
     }
 }
 
-fn lookup(app: &AppHandle, request: &RunRequest) -> ApiResult<ExternalCommand> {
+fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<ExternalCommand> {
     let state = app.state::<AppState>();
     let config = state.params().user_config;
-    if !request.by_name
-        && !config
-            .get("commands")
-            .and_then(Value::as_array)
-            .is_some_and(|commands| {
-                commands.iter().any(|command| {
-                    command.get("id").and_then(Value::as_str) == Some(request.target.as_str())
-                })
-            })
-    {
-        return Err(Response::coded_error("NotFound", "No command with this ID"));
-    }
-    if request.by_name {
-        external_commands::find_by_name(&config, state.tool_catalog().as_ref(), &request.target)
+    let catalog = state.tool_catalog();
+    if by_name {
+        external_commands::find_by_name(&config, catalog.as_ref(), target)
     } else {
-        external_commands::find(&config, state.tool_catalog().as_ref(), &request.target)
+        external_commands::find_by_id(&config, catalog.as_ref(), target)
     }
     .map_err(lookup_error)
+}
+
+/// The command `id` as the user config holds it.
+fn raw_command<'a>(config: &'a Value, id: &str) -> Option<&'a Value> {
+    config["commands"]
+        .as_array()
+        .and_then(|commands| commands.iter().find(|item| item["id"] == id))
+}
+
+fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
+    let command = lookup(app, target, by_name)?;
+    let state = app.state::<AppState>();
+    let config = state.params().user_config;
+    let raw = raw_command(&config, &command.id);
+    let input_schema = raw
+        .and_then(|raw| raw["toolId"].as_str())
+        .and_then(|tool_id| {
+            state
+                .tool_catalog()
+                .and_then(|catalog| catalog.get(tool_id).cloned())
+        })
+        .and_then(|tool| tool.input_schema);
+    Ok(json!({
+        "id": command.id,
+        "name": raw.and_then(|item| item.get("name")),
+        "input": if command.structured {
+            "structured"
+        } else if command.takes_text {
+            "text"
+        } else {
+            "none"
+        },
+        "textAccepted": command.takes_text,
+        "confirmationRequired": command.confirm,
+        "canReplaceSelection": command.takes_text && !command.structured,
+        "afterRun": raw.and_then(|item| item.get("afterRun")),
+        "inputSchema": input_schema,
+    }))
 }
 
 fn lookup_error(error: LookupError) -> Response {
@@ -137,7 +164,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
             "Command execution tools are still loading",
         ));
     }
-    let command = lookup(app, &request)?;
+    let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
     if request.replace {
         request.output = tyco_activation_protocol::OutputMode::Return;
@@ -163,10 +190,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
             return Err(Response::coded_error("Busy", error));
         }
     };
-    if let Some(raw) = config["commands"]
-        .as_array()
-        .and_then(|commands| commands.iter().find(|item| item["id"] == command.id))
-    {
+    if let Some(raw) = raw_command(&config, &command.id) {
         jobs.remember_command(&job.id, raw.clone());
     }
     let needs_ui = (request.output == tyco_activation_protocol::OutputMode::Configured
@@ -315,12 +339,10 @@ fn cancel(app: &AppHandle, id: &str, code: &str) -> Response {
 
 pub fn claim(app: &AppHandle, id: &str) -> bool {
     let jobs = app.state::<ExternalJobs>();
-    let Some((command_id, mut request)) = jobs.claim(id) else {
+    let Some((command_id, request)) = jobs.claim(id) else {
         return false;
     };
-    request.target = command_id.clone();
-    request.by_name = false;
-    if let Err(error) = lookup(app, &request) {
+    if let Err(error) = lookup(app, &command_id, false) {
         complete(
             app,
             id,
@@ -351,10 +373,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
             return false;
         }
     }
-    let current = config["commands"]
-        .as_array()
-        .and_then(|commands| commands.iter().find(|item| item["id"] == command_id));
-    if !jobs.command_unchanged(id, current) {
+    if !jobs.command_unchanged(id, raw_command(&config, &command_id)) {
         complete(
             app,
             id,
@@ -386,6 +405,43 @@ pub fn spawn_reaper(app: AppHandle) {
     });
 }
 
+fn open(
+    app: &AppHandle,
+    mode: &str,
+    text: Option<String>,
+    selection: bool,
+    source: ActivationSource,
+) -> ApiResult<()> {
+    let mode = StartMode::parse(mode)
+        .map_err(|error| Response::coded_error("InvalidArgs", error.to_string()))?;
+    if selection && text.is_some() {
+        return Err(Response::coded_error(
+            "InvalidInput",
+            "Choose text or selection",
+        ));
+    }
+    let config = app.state::<AppState>().params().user_config;
+    if selection {
+        permission(&config, "selection")?;
+    }
+    if matches!(
+        mode,
+        StartMode::Voice | StartMode::VoiceChat | StartMode::Write
+    ) {
+        permission(&config, "recording")?;
+    }
+    let mut activation = Activation::new(mode, source);
+    activation.selected_text = if selection {
+        let (id, text) = selection_replace::prepare_external(app)
+            .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))?;
+        let _ = selection_replace::finish(app, id, None);
+        Some(text)
+    } else {
+        text
+    };
+    runtime::activate(app, activation).map_err(|error| Response::error(error.to_string()))
+}
+
 pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> Response {
     let response = dispatch_inner(app, request, source);
     if serde_json::to_vec(&response).map_or(true, |bytes| {
@@ -409,43 +465,29 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     match request {
         Request::Status => {
             let config = app.state::<AppState>().params().user_config;
-            Response::json(
-                &json!({ "apiVersion": API_VERSION, "running": true, "externalAccess": {
-                "selection": access_allowed(&config, "selection"),
-                "recording": access_allowed(&config, "recording"),
-            } }),
-            )
+            Response::json(&json!({
+                "apiVersion": API_VERSION,
+                "version": app.package_info().version.to_string(),
+                "running": true,
+                "externalAccess": {
+                    "selection": access_allowed(&config, "selection"),
+                    "recording": access_allowed(&config, "recording"),
+                },
+            }))
         }
+        // Each command carries its own grant, so the list holds the granted ones.
         Request::ListCommands => {
             let state = app.state::<AppState>();
             let config = state.params().user_config;
-            if !access_allowed(&config, "commands") {
-                return Response::output("[]");
-            }
-            Response::output(external_commands::list(
+            Response::json(&external_commands::list(
                 &config,
                 state.tool_catalog().as_ref(),
             ))
         }
-        Request::DescribeCommand { target, by_name } => {
-            let request = RunRequest {
-                target,
-                by_name,
-                ..Default::default()
-            };
-            match lookup(app, &request) {
-                Ok(command) => {
-                    let config = app.state::<AppState>().params().user_config;
-                    let raw = config["commands"]
-                        .as_array()
-                        .and_then(|commands| commands.iter().find(|item| item["id"] == command.id));
-                    Response::json(
-                        &json!({"id":command.id, "name":raw.and_then(|item| item.get("name")), "input":if command.structured {"structured"} else if command.takes_text {"text"} else {"none"}, "textAccepted":command.takes_text, "confirmationRequired":command.confirm, "canReplaceSelection":command.takes_text && !command.structured, "afterRun":raw.and_then(|item| item.get("afterRun")), "inputSchema":app.state::<AppState>().tool_catalog().as_ref().and_then(|catalog| raw.and_then(|raw|raw["toolId"].as_str()).and_then(|id|catalog.get(id))).and_then(|tool|tool.input_schema.clone()) }),
-                    )
-                }
-                Err(error) => error,
-            }
-        }
+        Request::DescribeCommand { target, by_name } => match describe(app, &target, by_name) {
+            Ok(description) => Response::json(&description),
+            Err(error) => error,
+        },
         Request::Run { request } => match start(app, request, source) {
             Ok(job) => Response::json(&job),
             Err(error) => error,
@@ -456,73 +498,14 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             .map(|job| Response::json(&job))
             .unwrap_or_else(|| Response::coded_error("NotFound", "No such job")),
         Request::JobCancel { id } => cancel(app, &id, "Cancelled"),
-        Request::Replace { action } => {
-            let config = app.state::<AppState>().params().user_config;
-            if let Err(error) = permission(&config, "selection") {
-                return error;
-            }
-            if let Some(id) = action.strip_prefix(tyco_activation_protocol::COMMAND_ACTION_PREFIX) {
-                return dispatch(
-                    app,
-                    Request::Run {
-                        request: RunRequest {
-                            target: id.into(),
-                            selection: true,
-                            replace: true,
-                            interactive: true,
-                            ..Default::default()
-                        },
-                    },
-                    source,
-                );
-            }
-            Response::coded_error("InvalidArgs", "Use command:<id> for selection actions")
-        }
-
         Request::Open {
             mode,
             text,
             selection,
-        } => {
-            let mode = tyco_activation_protocol::canonical_mode(&mode).to_owned();
-            let config = app.state::<AppState>().params().user_config;
-            if selection {
-                if let Err(error) = permission(&config, "selection") {
-                    return error;
-                }
-            }
-            if selection && text.is_some() {
-                return Response::coded_error("InvalidInput", "Choose text or selection");
-            }
-            if matches!(mode.as_str(), "voice" | "voiceChat" | "write") {
-                if let Err(error) = permission(&config, "recording") {
-                    return error;
-                }
-            }
-            match StartMode::parse(&mode) {
-                Ok(mode) => {
-                    let mut activation = Activation::new(mode, source);
-                    activation.selected_text = if selection {
-                        match selection_replace::prepare_external(app) {
-                            Ok((id, text)) => {
-                                let _ = selection_replace::finish(app, id, None);
-                                Some(text)
-                            }
-                            Err(error) => {
-                                return Response::coded_error("SelectionFailed", error.to_string())
-                            }
-                        }
-                    } else {
-                        text
-                    };
-                    match runtime::activate(app, activation) {
-                        Ok(()) => Response::success(),
-                        Err(error) => Response::error(error.to_string()),
-                    }
-                }
-                Err(error) => Response::coded_error("InvalidArgs", error.to_string()),
-            }
-        }
+        } => match open(app, &mode, text, selection, source) {
+            Ok(()) => Response::success(),
+            Err(error) => error,
+        },
         Request::Quit => {
             app.state::<AppState>().set_quitting(true);
             let app = app.clone();

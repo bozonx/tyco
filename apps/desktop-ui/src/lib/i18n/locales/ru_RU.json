@@ -200,9 +200,8 @@
     "format": "Формат",
     "inputLabel": "Текстовый редактор",
     "markup": {
-      "viewMode": "Вид редактора",
-      "formatted": "Форматированный",
-      "source": "Markdown",
+      "switchToFormatted": "Сейчас: Markdown. Переключить на форматированный текст (Ctrl+Shift+M)",
+      "switchToSource": "Сейчас: форматированный текст. Переключить на Markdown (Ctrl+Shift+M)",
       "bold": "Жирный",
       "bulletList": "Маркированный список",
       "code": "Код",

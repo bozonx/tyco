@@ -200,9 +200,8 @@
     "format": "Format",
     "inputLabel": "Text editor",
     "markup": {
-      "viewMode": "Editor view",
-      "formatted": "Formatted",
-      "source": "Markdown",
+      "switchToFormatted": "Now: Markdown. Switch to formatted text (Ctrl+Shift+M)",
+      "switchToSource": "Now: formatted text. Switch to Markdown (Ctrl+Shift+M)",
       "bold": "Bold",
       "bulletList": "Bulleted list",
       "code": "Code",

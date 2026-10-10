@@ -2,9 +2,10 @@ use std::sync::Mutex;
 use std::thread;
 
 use tauri::AppHandle;
-use zbus::message::Header;
-use zbus::names::{BusName, OwnedUniqueName};
-use zbus::{interface, Connection};
+use tyco_activation_protocol::{OutputMode, Request, Response, RunRequest};
+use zbus::message::{Builder, Header, Message};
+use zbus::names::{BusName, ErrorName, OwnedErrorName, OwnedUniqueName};
+use zbus::{interface, Connection, DBusError};
 
 use crate::services::activation::ActivationSource;
 use crate::services::platform::linux::kwin;
@@ -15,6 +16,9 @@ use crate::services::{external_api, runtime};
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_DEST: &str = "org.tyco.Service";
 const KWIN_SERVICE: &str = "org.kde.KWin";
+/// Errors are named after the machine codes of the API, e.g.
+/// `org.tyco.Error.AccessDenied`.
+const ERROR_PREFIX: &str = "org.tyco.Error";
 
 /// Serves the D-Bus interface on a dedicated thread. A failure here (no session
 /// bus, the name already taken by another instance) must not take the app down:
@@ -59,53 +63,123 @@ pub fn spawn_dbus_server(app: AppHandle) {
     });
 }
 
+/// A shortcut-friendly launcher: it opens windows and starts commands as a
+/// user would. Discovery, background runs, jobs and quitting are left to
+/// `tyco-ctl`, see `docs/external-control.md`.
 struct TycoDbus {
     app: AppHandle,
 }
 
 #[interface(name = "org.tyco.Interface")]
 impl TycoDbus {
-    async fn open(&self, mode: &str, text: &str, selection: bool) -> zbus::fdo::Result<()> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Open {
-                mode: mode.into(),
-                text: (!selection).then(|| text.to_owned()),
-                selection,
-            },
-            ActivationSource::Dbus,
-        ))
-        .map(|_| ())
+    /// Opens the window of `mode`.
+    async fn open(&self, mode: String) -> Result<(), ApiError> {
+        self.open_with(mode, None, false).await
     }
 
-    async fn replace_selection(&self, action: &str) -> zbus::fdo::Result<()> {
-        dbus_result(external_api::dispatch(
-            &self.app,
-            tyco_activation_protocol::Request::Replace {
-                action: action.into(),
-            },
-            ActivationSource::Dbus,
-        ))
-        .map(|_| ())
+    /// Opens the window of `mode` with `text` as its input.
+    async fn open_with_text(&self, mode: String, text: String) -> Result<(), ApiError> {
+        self.open_with(mode, Some(text), false).await
+    }
+
+    /// Opens the window of `mode` with the selection of the focused window.
+    async fn open_with_selection(&self, mode: String) -> Result<(), ApiError> {
+        self.open_with(mode, None, true).await
+    }
+
+    /// Runs the library command `id` as the command launcher does: it asks
+    /// for input or confirmation when needed and applies its `afterRun`.
+    async fn run_command(&self, id: String) -> Result<(), ApiError> {
+        self.run(RunRequest {
+            target: id,
+            interactive: true,
+            output: OutputMode::Configured,
+            ..Default::default()
+        })
+        .await
+    }
+
+    /// Replaces the selection of the focused window with the output of the
+    /// library command `id`.
+    async fn replace_selection(&self, id: String) -> Result<(), ApiError> {
+        self.run(RunRequest {
+            target: id,
+            selection: true,
+            replace: true,
+            interactive: true,
+            ..Default::default()
+        })
+        .await
     }
 }
 
-fn dbus_result(response: tyco_activation_protocol::Response) -> zbus::fdo::Result<String> {
-    if response.success {
-        return Ok(response.output.unwrap_or_default());
+impl TycoDbus {
+    async fn open_with(
+        &self,
+        mode: String,
+        text: Option<String>,
+        selection: bool,
+    ) -> Result<(), ApiError> {
+        self.dispatch(Request::Open {
+            mode,
+            text,
+            selection,
+        })
+        .await
     }
-    let message = format!(
-        "{}: {}",
-        response.code.as_deref().unwrap_or("Failed"),
-        response.error.unwrap_or_default()
-    );
-    Err(match response.code.as_deref() {
-        Some("AccessDenied" | "ConfirmationRequired") => zbus::fdo::Error::AccessDenied(message),
-        Some("InvalidArgs" | "InvalidInput" | "InputRequired") => {
-            zbus::fdo::Error::InvalidArgs(message)
+
+    async fn run(&self, request: RunRequest) -> Result<(), ApiError> {
+        self.dispatch(Request::Run { request }).await
+    }
+
+    /// Selection capture and window activation block, so they run off the
+    /// bus thread: the KWin reports must keep coming in meanwhile.
+    async fn dispatch(&self, request: Request) -> Result<(), ApiError> {
+        let app = self.app.clone();
+        let response = tauri::async_runtime::spawn_blocking(move || {
+            external_api::dispatch(&app, request, ActivationSource::Dbus)
+        })
+        .await
+        .unwrap_or_else(|error| Response::error(error.to_string()));
+        if response.success {
+            Ok(())
+        } else {
+            Err(ApiError::from(response))
         }
-        _ => zbus::fdo::Error::Failed(message),
-    })
+    }
+}
+
+/// A failed call, named `org.tyco.Error.<code>`.
+#[derive(Debug)]
+struct ApiError {
+    name: OwnedErrorName,
+    message: String,
+}
+
+impl From<Response> for ApiError {
+    fn from(response: Response) -> Self {
+        let code = response.code.as_deref().unwrap_or("Failed");
+        let name = OwnedErrorName::try_from(format!("{ERROR_PREFIX}.{code}"))
+            .unwrap_or_else(|_| OwnedErrorName::try_from(format!("{ERROR_PREFIX}.Failed")).unwrap());
+        Self {
+            name,
+            message: response.error.unwrap_or_default(),
+        }
+    }
+}
+
+impl DBusError for ApiError {
+    fn create_reply(&self, call: &Header<'_>) -> zbus::Result<Message> {
+        Builder::error(call, self.name())?.build(&self.message)
+    }
+
+    fn name(&self) -> ErrorName<'_> {
+        self.name.as_ref()
+    }
+
+    fn description(&self) -> Option<&str> {
+        Some(&self.message)
+    }
 }
 
 struct TycoKwin {

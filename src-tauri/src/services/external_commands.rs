@@ -211,52 +211,22 @@ fn callable(
     })
 }
 
-/// The command `target` names: the one with this id, otherwise the only one
-/// of the callable commands with this name.
-pub fn find(
+/// The command with the id `id`. A name never stands for an id: a call by
+/// name says so explicitly, see `find_by_name`.
+pub fn find_by_id(
     user_config: &Value,
     catalog: Option<&ToolCatalog>,
-    target: &str,
+    id: &str,
 ) -> Result<ExternalCommand, LookupError> {
-    let commands = commands_of(user_config);
-    let target = target.trim();
-    let by_id = commands
+    let id = id.trim();
+    commands_of(user_config)
         .iter()
-        .find(|command| !id_of(command).is_empty() && id_of(command) == target);
-    let command = match by_id {
-        Some(command) => command,
-        None => {
-            let name = normalize_name(target);
-            let named: Vec<&Value> = commands
-                .iter()
-                .filter(|command| {
-                    !name.is_empty() && normalize_name(str_field(command, "name")) == name
-                })
-                .collect();
-            let callable: Vec<&Value> = named
-                .iter()
-                .copied()
-                .filter(|command| callable(command, catalog).is_ok())
-                .collect();
-            match (callable.as_slice(), named.first()) {
-                ([command], _) => *command,
-                ([], Some(command)) => *command,
-                ([], None) => return Err(LookupError::NotFound(target.to_owned())),
-                (several, _) => {
-                    return Err(LookupError::Ambiguous(
-                        target.to_owned(),
-                        several
-                            .iter()
-                            .map(|command| id_of(command).to_owned())
-                            .collect(),
-                    ))
-                }
-            }
-        }
-    };
-    callable(command, catalog)
+        .find(|command| !id.is_empty() && id_of(command) == id)
+        .ok_or_else(|| LookupError::NotFound(id.to_owned()))
+        .and_then(|command| callable(command, catalog))
 }
 
+/// The only callable command with the name `name`, compared normalized.
 pub fn find_by_name(
     user_config: &Value,
     catalog: Option<&ToolCatalog>,
@@ -299,8 +269,8 @@ struct ListedCommand {
 }
 
 /// The commands that may be called from outside, as a JSON array of
-/// `{ id, name, input }`, in the order of the library.
-pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
+/// `{ id, name, input, ... }`, in the order of the library.
+pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())
@@ -328,7 +298,7 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> String {
             }
         })
         .collect();
-    serde_json::to_string(&listed).unwrap_or_else(|_| String::from("[]"))
+    serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
 }
 
 /// A command the overlay opens with, see `Activation::launcher_request`.
@@ -486,19 +456,22 @@ mod tests {
         ])
     }
 
-    fn find_in(target: &str) -> Result<ExternalCommand, LookupError> {
-        find(&config(), Some(&catalog()), target)
+    fn find_in(id: &str) -> Result<ExternalCommand, LookupError> {
+        find_by_id(&config(), Some(&catalog()), id)
+    }
+
+    fn find_named(name: &str) -> Result<ExternalCommand, LookupError> {
+        find_by_name(&config(), Some(&catalog()), name)
     }
 
     #[test]
-    fn explicit_name_lookup_does_not_resolve_an_id_collision() {
-        assert_eq!(
-            find_by_name(&config(), Some(&catalog()), "Lamp")
-                .unwrap()
-                .id,
-            "lamp-2"
-        );
+    fn ids_and_names_do_not_stand_for_each_other() {
+        assert_eq!(find_named("Lamp").unwrap().id, "lamp-2");
         assert_eq!(find_in("Lamp").unwrap().id, "Lamp");
+        assert_eq!(
+            find_in("Бэкап"),
+            Err(LookupError::NotFound(String::from("Бэкап")))
+        );
     }
 
     #[test]
@@ -508,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    fn finds_a_command_by_id_first() {
+    fn finds_a_command_by_its_trimmed_id() {
         let found = find_in(" backup ").unwrap();
         assert_eq!(
             found,
@@ -521,14 +494,12 @@ mod tests {
                 replaces_selection: false,
             }
         );
-        // the id wins over the name of another command
-        assert_eq!(find_in("Lamp").unwrap().id, "Lamp");
     }
 
     #[test]
     fn finds_a_command_by_its_normalized_name() {
-        assert_eq!(find_in("бэкап").unwrap().id, "backup");
-        let note = find_in("work note").unwrap();
+        assert_eq!(find_named("бэкап").unwrap().id, "backup");
+        let note = find_named("work note").unwrap();
         assert_eq!(note.id, "note");
         assert!(note.takes_text);
         assert!(note.shows_menu);
@@ -546,7 +517,7 @@ mod tests {
             Err(LookupError::NotExternal(String::from("hidden")))
         );
         assert_eq!(
-            find_in("Off"),
+            find_named("Off"),
             Err(LookupError::Disabled(String::from("off")))
         );
         assert_eq!(
@@ -566,11 +537,11 @@ mod tests {
     #[test]
     fn learns_plugin_tools_from_the_catalog() {
         assert_eq!(
-            find(&config(), None, "plugin"),
+            find_by_id(&config(), None, "plugin"),
             Err(LookupError::ToolsLoading(String::from("plugin")))
         );
         // the backend knows its own tools without the catalog
-        assert_eq!(find(&config(), None, "backup").unwrap().id, "backup");
+        assert_eq!(find_by_id(&config(), None, "backup").unwrap().id, "backup");
         let note = find_in("plugin").unwrap();
         assert!(note.takes_text);
         assert!(!find_in("lights").unwrap().takes_text);
@@ -582,7 +553,7 @@ mod tests {
     fn knows_a_command_that_replaces_the_selection() {
         let mut catalog = catalog();
         catalog.get_mut("core.translate").unwrap().available = true;
-        let found = find(&config(), Some(&catalog), "translate").unwrap();
+        let found = find_by_id(&config(), Some(&catalog), "translate").unwrap();
         assert!(found.replaces_selection);
         assert!(!found.shows_menu);
     }
@@ -591,7 +562,7 @@ mod tests {
     fn refuses_a_name_shared_by_callable_commands() {
         // twin-c may not be called from outside, so it does not count
         assert_eq!(
-            find_in("TWIN"),
+            find_named("TWIN"),
             Err(LookupError::Ambiguous(
                 String::from("TWIN"),
                 vec![String::from("twin-a"), String::from("twin-b")]
@@ -601,7 +572,7 @@ mod tests {
 
     #[test]
     fn lists_the_callable_commands() {
-        let listed: Value = serde_json::from_str(&list(&config(), Some(&catalog()))).unwrap();
+        let listed = list(&config(), Some(&catalog()));
         assert!(listed
             .as_array()
             .unwrap()
@@ -629,6 +600,6 @@ mod tests {
                 { "id": "lamp-2", "name": "Lamp", "input": "text" }
             ])
         );
-        assert_eq!(list(&json!({}), None), "[]");
+        assert_eq!(list(&json!({}), None), json!([]));
     }
 }

@@ -2,11 +2,9 @@ use tauri::{AppHandle, State};
 
 use std::time::Duration;
 
-use tyco_activation_protocol::COMMAND_ACTION_PREFIX;
-
 use crate::errors::AppError;
 use crate::services::runtime;
-use crate::services::selection_replace::{self, FinishStatus};
+use crate::services::selection_replace::{self, FinishStatus, COMMAND_ACTION_PREFIX};
 use crate::services::status_overlay::{self, OverlayRequest};
 use crate::state::AppState;
 

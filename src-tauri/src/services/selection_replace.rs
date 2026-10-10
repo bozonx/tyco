@@ -13,13 +13,27 @@ use std::time::{Duration, Instant};
 use serde::Serialize;
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
-use tyco_activation_protocol::is_selection_action;
 
 use crate::errors::AppError;
 use crate::state::AppState;
 
 pub const SELECTION_RUN_EVENT: &str = "app://selection-run";
 pub const SELECTION_CANCEL_EVENT: &str = "app://selection-cancel";
+
+/// Prefix of the selection action that runs a command of the library.
+pub const COMMAND_ACTION_PREFIX: &str = "command:";
+
+/// Actions that replace the selection in the focused window with their
+/// result: `correction`, and `command:<id>`, a command of the library that
+/// returns a text.
+pub fn is_selection_action(value: &str) -> bool {
+    if value == "correction" {
+        return true;
+    }
+    value
+        .strip_prefix(COMMAND_ACTION_PREFIX)
+        .is_some_and(|id| !id.trim().is_empty())
+}
 
 /// The portal reports the press of a hotkey; its keys are still down then.
 const HOTKEY_RELEASE_TIMEOUT: Duration = Duration::from_millis(600);
@@ -676,6 +690,24 @@ pub fn hotkey_released(id: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn validates_selection_actions() {
+        for valid in ["correction", "command:default:core.correct:fix"] {
+            assert!(is_selection_action(valid), "{valid}");
+        }
+        for invalid in [
+            "",
+            // slots of translation languages and AI tasks are not actions
+            "translate.0",
+            "aiTask.12",
+            "other.1",
+            "command:",
+            "command: ",
+        ] {
+            assert!(!is_selection_action(invalid), "{invalid}");
+        }
+    }
 
     fn run(id: u64, age: Duration) -> Run {
         Run {

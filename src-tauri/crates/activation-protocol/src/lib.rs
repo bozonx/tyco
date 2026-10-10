@@ -36,28 +36,10 @@ pub fn is_start_mode(value: &str) -> bool {
     START_MODES.contains(&canonical_mode(value))
 }
 
-/// Prefix of the selection action that runs a command of the library.
-pub const COMMAND_ACTION_PREFIX: &str = "command:";
-
-/// Actions that replace the selection in the focused window with their
-/// result: `correction`, and `command:<id>`, a command of the library that
-/// returns a text.
-pub fn is_selection_action(value: &str) -> bool {
-    if value == "correction" {
-        return true;
-    }
-    value
-        .strip_prefix(COMMAND_ACTION_PREFIX)
-        .is_some_and(|id| !id.trim().is_empty())
-}
-
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(tag = "command", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Request {
-    Replace {
-        action: String,
-    },
-    /// The commands that may be run from outside, as JSON.
+    /// The commands that may be run from outside.
     ListCommands,
     Status,
     Open {
@@ -93,9 +75,9 @@ pub struct Response {
     pub error: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
-    /// What the request asked for, e.g. the JSON list of commands.
+    /// What the request asked for, e.g. the list of commands or a job.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub output: Option<String>,
+    pub result: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq, Eq)]
@@ -162,12 +144,16 @@ impl Response {
             success: false,
             error: Some(message.into()),
             code: Some(code.into()),
-            output: None,
+            result: None,
         }
     }
+
     pub fn json(value: &impl Serialize) -> Self {
-        match serde_json::to_string(value) {
-            Ok(json) => Self::output(json),
+        match serde_json::to_value(value) {
+            Ok(result) => Self {
+                result: Some(result),
+                ..Self::success()
+            },
             Err(error) => Self::error(error.to_string()),
         }
     }
@@ -177,16 +163,7 @@ impl Response {
             success: true,
             error: None,
             code: None,
-            output: None,
-        }
-    }
-
-    pub fn output(output: impl Into<String>) -> Self {
-        Self {
-            success: true,
-            error: None,
-            code: None,
-            output: Some(output.into()),
+            result: None,
         }
     }
 
@@ -195,7 +172,7 @@ impl Response {
             success: false,
             error: Some(error.into()),
             code: Some("Failed".into()),
-            output: None,
+            result: None,
         }
     }
 }
@@ -229,38 +206,20 @@ mod tests {
         for request in [
             r#"{"command":"activate","mode":"editor"}"#,
             r#"{"command":"runCommand","target":"test"}"#,
+            r#"{"command":"replace","action":"command:test"}"#,
         ] {
             assert!(serde_json::from_str::<Request>(request).is_err());
         }
     }
 
     #[test]
-    fn request_round_trips() {
-        let request = Request::Open {
-            mode: "editor".into(),
-            text: None,
-            selection: false,
-        };
-        let mut output = Vec::new();
-        write_message(&mut output, &request).unwrap();
-        let decoded: Request = read_message(&mut output.as_slice()).unwrap();
-        assert_eq!(decoded, request);
-    }
-
-    #[test]
-    fn replace_request_round_trips() {
-        let request = Request::Replace {
-            action: "command:translate-es".into(),
-        };
-        let mut output = Vec::new();
-        write_message(&mut output, &request).unwrap();
-        let decoded: Request = read_message(&mut output.as_slice()).unwrap();
-        assert_eq!(decoded, request);
-    }
-
-    #[test]
-    fn command_requests_round_trip() {
+    fn requests_round_trip() {
         for request in [
+            Request::Open {
+                mode: "editor".into(),
+                text: None,
+                selection: false,
+            },
             Request::Run {
                 request: RunRequest {
                     target: "backup".into(),
@@ -278,31 +237,13 @@ mod tests {
     }
 
     #[test]
-    fn a_response_carries_its_output() {
+    fn a_response_carries_its_result_as_json() {
         let mut output = Vec::new();
-        write_message(&mut output, &Response::output("[]")).unwrap();
+        write_message(&mut output, &Response::json(&serde_json::json!([]))).unwrap();
+        assert_eq!(output, b"{\"success\":true,\"result\":[]}\n");
         let decoded: Response = read_message(&mut output.as_slice()).unwrap();
-        assert_eq!(decoded.output.as_deref(), Some("[]"));
-        // a response of an older build has no output
-        let old: Response = read_message(&mut &b"{\"success\":true}\n"[..]).unwrap();
-        assert_eq!(old, Response::success());
-    }
-
-    #[test]
-    fn validates_selection_actions() {
-        for valid in ["correction", "command:default:core.correct:fix"] {
-            assert!(is_selection_action(valid), "{valid}");
-        }
-        for invalid in [
-            "",
-            // slots of translation languages and AI tasks are not actions
-            "translate.0",
-            "aiTask.12",
-            "other.1",
-            "command:",
-            "command: ",
-        ] {
-            assert!(!is_selection_action(invalid), "{invalid}");
-        }
+        assert_eq!(decoded.result, Some(serde_json::json!([])));
+        let empty: Response = read_message(&mut &b"{\"success\":true}\n"[..]).unwrap();
+        assert_eq!(empty, Response::success());
     }
 }
