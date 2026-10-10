@@ -49,24 +49,7 @@
     />
 
     <div class="chat-list-scroll">
-      <ul v-if="draftChat" class="chat-list draft-list">
-        <li class="chat-list-row">
-          <button
-            type="button"
-            class="chat-list-item is-active"
-            :title="draftChat"
-            @click="emit('navigate')"
-          >
-            <Icon
-              icon="mdi:message-plus-outline"
-              height="15"
-              class="shrink-0"
-            />
-            <span class="truncate">{{ draftChat }}</span>
-          </button>
-        </li>
-      </ul>
-      <div v-if="groups.length === 0 && !draftChat" class="chat-list-empty">
+      <div v-if="groups.length === 0" class="chat-list-empty">
         {{ query ? t('history.nothingFound') : t('history.empty') }}
       </div>
       <section v-for="group in groups" :key="group.key" class="chat-group">
@@ -245,16 +228,6 @@ const groups = computed(() =>
     filterChatHistory(historyStore.chatHistory, query.value, matchedIds.value)
   )
 )
-
-/** The current chat while it is not stored yet: it is shown on top anyway */
-const draftChat = computed(() => {
-  const id = chatStore.newChatParams.id
-  if (query.value.trim()) return null
-  if (id && historyStore.chatHistory.some((item) => item.id === id)) {
-    return null
-  }
-  return chatStore.newChatParams.title || t('chat.newChat')
-})
 
 function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
   return [
@@ -443,9 +416,6 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-}
-.draft-list + .chat-group {
-  margin-top: var(--space-lg);
 }
 .chat-group + .chat-group {
   margin-top: var(--space-lg);
