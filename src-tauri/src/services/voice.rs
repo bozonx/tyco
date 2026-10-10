@@ -40,6 +40,8 @@ pub struct VoiceAudioLevelPayload {
 pub struct VoiceCaptureInfo {
     /// Rate of the PCM16 mono chunks that follow.
     pub sample_rate: u32,
+    /// What `stop_capture` takes to stop this capture and no other.
+    pub session_id: u64,
 }
 
 /// Control messages on the audio channel; the audio itself goes as raw bytes.
@@ -59,26 +61,32 @@ pub async fn start_capture<S: EventSink>(
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     let _operation = state.lock_voice_capture().await;
-    stop_capture_unlocked(state).await?;
+    // one microphone: a new dictation ends the previous one
+    stop_capture_unlocked(state, None).await?;
 
     let app_handle = app.clone();
+    let session_id = state.next_voice_capture_id();
     let (session, sample_rate) =
-        tokio::task::spawn_blocking(move || create_capture_session(app_handle, sink))
+        tokio::task::spawn_blocking(move || create_capture_session(app_handle, sink, session_id))
             .await
             .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
     state.replace_voice_capture_session(Some(session));
 
-    Ok(VoiceCaptureInfo { sample_rate })
+    Ok(VoiceCaptureInfo {
+        sample_rate,
+        session_id,
+    })
 }
 
 /// Stops the microphone; returns once the last chunk and `end` are sent.
-pub async fn stop_capture(state: &AppState) -> Result<(), AppError> {
+/// With `session_id`, only that capture is stopped: a newer one goes on.
+pub async fn stop_capture(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
     let _operation = state.lock_voice_capture().await;
-    stop_capture_unlocked(state).await
+    stop_capture_unlocked(state, session_id).await
 }
 
-async fn stop_capture_unlocked(state: &AppState) -> Result<(), AppError> {
-    let Some(session) = state.replace_voice_capture_session(None) else {
+async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
+    let Some(session) = state.take_voice_capture_session(session_id) else {
         return Ok(());
     };
     tokio::task::spawn_blocking(move || {
@@ -103,6 +111,7 @@ pub fn stop_capture_on_shutdown(state: &AppState) {
 fn create_capture_session<S: EventSink>(
     app: AppHandle,
     sink: S,
+    id: u64,
 ) -> Result<(VoiceCaptureSession, u32), AppError> {
     let stop_flag = Arc::new(AtomicBool::new(false));
     let thread_stop_flag = Arc::clone(&stop_flag);
@@ -116,7 +125,14 @@ fn create_capture_session<S: EventSink>(
     });
 
     match setup_rx.recv_timeout(SETUP_TIMEOUT) {
-        Ok(Ok(sample_rate)) => Ok((VoiceCaptureSession { stop_flag, thread }, sample_rate)),
+        Ok(Ok(sample_rate)) => Ok((
+            VoiceCaptureSession {
+                id,
+                stop_flag,
+                thread,
+            },
+            sample_rate,
+        )),
         Ok(Err(error)) => {
             let _ = thread.join();
             Err(AppError::Message(error))

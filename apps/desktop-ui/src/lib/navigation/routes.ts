@@ -52,6 +52,25 @@ export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
   [START_MODES.CONFIG]: APP_ROUTES.CONFIG.path,
 }
 
+/**
+ * Modes shown by the quick window; the rest belong to the main window. Keep in
+ * sync with `window_label_for_mode` in `src-tauri/src/services/runtime.rs`.
+ */
+export const QUICK_WINDOW_MODES: ReadonlySet<START_MODES> = new Set([
+  START_MODES.WRITE,
+  START_MODES.VOICE,
+  START_MODES.SELECT,
+  START_MODES.AI_TASKS,
+  START_MODES.COMMAND_LAUNCHER,
+  START_MODES.CORRECTION,
+  START_MODES.VOICE_CHAT,
+  START_MODES.TRANSLATE,
+])
+
+export function isQuickWindowMode(mode: START_MODES | null): boolean {
+  return mode !== null && QUICK_WINDOW_MODES.has(mode)
+}
+
 export function resolveModeRoute(mode: START_MODES | null): AppRoutePath {
   return mode ? MODE_ROUTE_MAP[mode] : APP_ROUTES.HOME.path
 }

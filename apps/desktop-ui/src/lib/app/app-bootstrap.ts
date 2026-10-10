@@ -12,6 +12,12 @@ export interface AppBootstrapDeps {
   setParams: (params: Partial<InitParams>) => void
   closeAllModals: () => void
   navigateTo: (path: AppRoutePath) => Promise<void>
+  /**
+   * Whether this window shows the mode. Both windows get every activation, and
+   * a screen opened for the other window's mode would run there unseen: a
+   * dictation would take the microphone from the window the user looks at
+   */
+  ownsMode?: (mode: InitParams['mode']) => boolean
   listen: (
     event: string,
     handler: (payload: unknown) => void | Promise<void>
@@ -35,6 +41,15 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     options: { forceNavigate?: boolean } = {}
   ) => {
     deps.setParams(params)
+
+    if (deps.ownsMode && !deps.ownsMode(params.mode)) {
+      // the screen stays as it was; at start there is none yet
+      if (lastAppliedMode === undefined) {
+        lastAppliedMode = null
+        await deps.navigateTo(resolveModeRoute(null))
+      }
+      return
+    }
 
     const shouldNavigate =
       options.forceNavigate ||

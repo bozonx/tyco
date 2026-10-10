@@ -21,6 +21,10 @@ type CaptureEvent = { type: 'end' } | { type: 'error'; message: string }
 
 /** The microphone in Rust, streamed as it records; see `services/voice.rs`. */
 export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
+  // the microphone is shared by the windows: a stop names the capture it ends,
+  // so a late one leaves a capture started since, here or in another window
+  let sessionId: number | undefined
+
   return {
     async start() {
       const queue = createAsyncQueue<AudioChunk>()
@@ -35,10 +39,14 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
       }
 
       try {
-        const { sampleRate } = await ipc.invoke<{ sampleRate: number }>(
-          DESKTOP_COMMANDS.START_VOICE_CAPTURE,
-          { onAudio: ipc.createChannel(onMessage) }
-        )
+        const started = await ipc.invoke<{
+          sampleRate: number
+          sessionId: number
+        }>(DESKTOP_COMMANDS.START_VOICE_CAPTURE, {
+          onAudio: ipc.createChannel(onMessage),
+        })
+        sessionId = started.sessionId
+        const { sampleRate } = started
         return { sampleRate, audio: queue.values }
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })
@@ -47,7 +55,9 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
 
     async stop() {
       try {
-        await ipc.invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE)
+        // nothing started here: there is nothing of ours to stop
+        if (sessionId === undefined) return
+        await ipc.invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, { sessionId })
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })
       }

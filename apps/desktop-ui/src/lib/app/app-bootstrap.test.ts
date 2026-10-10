@@ -122,6 +122,45 @@ describe('app-bootstrap', () => {
     expect(deps.navigateTo).toHaveBeenNthCalledWith(2, APP_ROUTES.WRITE.path)
   })
 
+  it('leaves the screen alone for a mode of the other window', async () => {
+    const { deps, listeners } = createDeps({
+      ownsMode: (mode) => mode !== START_MODES.VOICE,
+    })
+    const bootstrap = createAppBootstrap(deps)
+
+    await bootstrap.start()
+    const paramsChangedHandler = listeners.get('app://params-changed')
+    const voice = { ...DEFAULT_INIT_PARAMS, mode: START_MODES.VOICE }
+    await paramsChangedHandler?.(voice)
+
+    expect(deps.setParams).toHaveBeenLastCalledWith(voice)
+    expect(deps.navigateTo).toHaveBeenCalledTimes(1)
+    expect(deps.closeAllModals).toHaveBeenCalledTimes(1)
+
+    // back to the screen it already shows: nothing to redo
+    await paramsChangedHandler?.({
+      ...DEFAULT_INIT_PARAMS,
+      mode: START_MODES.EDITOR,
+    })
+    expect(deps.navigateTo).toHaveBeenCalledTimes(1)
+  })
+
+  it('starts on the home screen with a mode of the other window', async () => {
+    const { deps } = createDeps({
+      loadInitialParams: vi.fn(async () => ({
+        ...DEFAULT_INIT_PARAMS,
+        mode: START_MODES.VOICE,
+      })),
+      ownsMode: (mode) => mode !== START_MODES.VOICE,
+    })
+
+    await createAppBootstrap(deps).start()
+
+    expect(deps.navigateTo).toHaveBeenCalledExactlyOnceWith(
+      APP_ROUTES.HOME.path
+    )
+  })
+
   it('merges captured context without navigation or modal side effects', async () => {
     const { deps, listeners } = createDeps()
     const bootstrap = createAppBootstrap(deps)

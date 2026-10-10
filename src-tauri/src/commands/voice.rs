@@ -18,6 +18,9 @@ pub async fn start_voice_capture(
 }
 
 #[tauri::command]
-pub async fn stop_voice_capture(state: State<'_, AppState>) -> Result<(), AppError> {
-    voice::stop_capture(&state).await
+pub async fn stop_voice_capture(
+    state: State<'_, AppState>,
+    session_id: Option<u64>,
+) -> Result<(), AppError> {
+    voice::stop_capture(&state, session_id).await
 }

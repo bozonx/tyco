@@ -20,21 +20,19 @@ import { useRoute } from 'vue-router'
 
 import ToastContainer from './components/common/ToastContainer.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
-import { useChatVoiceInput } from './composables/useChatVoiceInput'
-import { GlobalEvents, useGlobalEvents } from './composables/useGlobalEvents'
+import { useGlobalEvents } from './composables/useGlobalEvents'
 import { useI18n } from './composables/useI18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
 import { createMainWindowReset } from './lib/app/main-window-reset'
 import { createCapturedChatSelection } from './lib/chat/captured-chat-selection'
-import { createVoiceChatActivation } from './lib/chat/voice-chat-activation'
 import { desktopClient } from './lib/desktop/client'
 import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { clientLogger } from './lib/logger'
 import { appNavigation } from './lib/navigation/navigation'
-import { MODE_ROUTE_MAP } from './lib/navigation/routes'
+import { MODE_ROUTE_MAP, isQuickWindowMode } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useChatInputStore } from './stores/chatInput'
@@ -109,6 +107,8 @@ const bootstrap = createAppBootstrap({
   setParams: (params) => ipcStore.setParams(params),
   closeAllModals: () => menuModalsStore.closeAll(),
   navigateTo: (path) => appNavigation.push(path),
+  // the quick window has no routes of its own: it renders by the mode
+  ownsMode: (mode) => isQuickWindow || !isQuickWindowMode(mode),
   listen: (event, handler) =>
     desktopClient.listen(event as never, handler as never),
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
@@ -191,18 +191,6 @@ const capturedChatSelection = createCapturedChatSelection({
     chatStore.startChat({ attachments: [text], withoutEditorContext: true }),
   getSelectedText: () => editorInputStore.selectedText,
 })
-// the voice chat hotkey opens a dictation into the chat with the selection as
-// its context, then submits it
-const { isVoiceInputOpen, openChatVoiceInput } = useChatVoiceInput()
-const voiceChatActivation = createVoiceChatActivation({
-  isVoiceInputOpen,
-  currentPath: () => appNavigation.currentPath(),
-  startCleanChat: () => chatStore.startChat({ withoutEditorContext: true }),
-  closeAllModals: () => menuModalsStore.closeAll(),
-  openQuickVoiceInput: () => openChatVoiceInput({ quickSend: true }),
-  submitVoiceInput: () => globalEvents.emit(GlobalEvents.VOICE_SUBMIT),
-  attachSelection: (text) => chatStore.addAttachment(text),
-})
 watch(
   () => [
     ipcStore.params.activationId,
@@ -214,7 +202,6 @@ watch(
     if (!isQuickWindow) {
       capturedSelection.apply(ipcStore.params)
       capturedChatSelection.apply(ipcStore.params)
-      void voiceChatActivation.apply(ipcStore.params)
     }
   }
 )
