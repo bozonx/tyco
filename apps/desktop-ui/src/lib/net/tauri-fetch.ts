@@ -37,6 +37,9 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
       ? undefined
       : new Uint8Array(await request.arrayBuffer())
 
+    // Body encoding is asynchronous; cancellation may happen while it runs.
+    if (signal?.aborted) throw abortReason(signal)
+
     return await new Promise<Response>((resolve, reject) => {
       let id: number | undefined
       let headReceived = false

@@ -29,6 +29,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   const pendingModal = ref<Record<string, any> | null>(null)
   const steps = ref<MenuStep[]>([])
   let lastStepId = 0
+  let pendingId = 0
 
   const topStep = computed(() => steps.value[steps.value.length - 1])
   const currentModal = computed(() => topStep.value?.modal ?? MenuModals.NONE)
@@ -67,11 +68,23 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     removed.forEach(leave)
   }
 
-  const setPendingModal = (params: Record<string, any>) => {
+  const setPendingModal = (
+    params: Record<string, any>,
+    owner?: number
+  ): number => {
+    if (owner !== undefined && (owner !== pendingId || !pendingModal.value)) {
+      return owner
+    }
+    if (owner === undefined) {
+      cancelPending()
+      pendingId += 1
+    }
     pendingModal.value = params
+    return pendingId
   }
 
-  const clearPendingModal = () => {
+  const clearPendingModal = (owner?: number) => {
+    if (owner !== undefined && owner !== pendingId) return
     pendingModal.value = null
   }
 
@@ -111,6 +124,8 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     closeAll,
     setPendingModal,
     clearPendingModal,
+    isPendingModal: (owner: number) =>
+      owner === pendingId && pendingModal.value !== null,
     cancelPending,
     updateStep,
     hasStep,

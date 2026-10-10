@@ -175,6 +175,8 @@ export const useChatStore = defineStore('chat', () => {
     chatInputStore.focus()
   }
 
+  let inputSubmission = 0
+
   return {
     ...model,
     modelOptions,
@@ -241,10 +243,21 @@ export const useChatStore = defineStore('chat', () => {
       const message = chatInputStore.value.trim()
       if (!message || model.isGenerating.value) return false
       const attachments = [...attachedContext.value]
+      const submission = ++inputSubmission
       const pending = model.sendMessage(message, attachments)
+      const chatId = model.newChatParams.value.id
+      const messages = model.messages.value
       chatInputStore.clear()
-      // a failed message goes back into the input
-      if (!(await pending)) chatInputStore.setValue(message)
+      // Restore only this failed submission, without replacing a newer draft.
+      if (
+        !(await pending) &&
+        submission === inputSubmission &&
+        model.newChatParams.value.id === chatId &&
+        model.messages.value === messages &&
+        !model.isStopped.value &&
+        !chatInputStore.value
+      )
+        chatInputStore.setValue(message)
       return true
     },
   }

@@ -3,27 +3,28 @@ export interface QuickInsertDeps {
   cancelCorrection: () => void
   saveOutput: (text: string) => Promise<unknown>
   insert: (text: string) => Promise<void>
-  setPending: (cancel: () => void) => void
-  clearPending: () => void
+  setPending: (cancel: () => void) => number | void
+  clearPending: (owner?: number | void) => void
   reportError: (error: unknown) => void
 }
 
 /** Owns a submission until insertion starts; abandoned results cannot paste. */
 export function createQuickInsert(deps: QuickInsertDeps) {
-  let active: object | null = null
+  let active: { owner?: number | void } | null = null
 
   const cancel = () => {
     if (!active) return
+    const owner = active.owner
     active = null
     deps.cancelCorrection()
-    deps.clearPending()
+    deps.clearPending(owner)
   }
 
   const start = async (text: string): Promise<void> => {
     if (active || !text.trim()) return
-    const run = {}
+    const run: { owner?: number | void } = {}
     active = run
-    deps.setPending(cancel)
+    run.owner = deps.setPending(cancel)
     try {
       const result = await deps.correct(text)
       if (active !== run) return
@@ -36,7 +37,7 @@ export function createQuickInsert(deps: QuickInsertDeps) {
     } finally {
       if (active === run) {
         active = null
-        deps.clearPending()
+        deps.clearPending(run.owner)
       }
     }
   }

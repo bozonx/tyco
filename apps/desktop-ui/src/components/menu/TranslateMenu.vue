@@ -284,8 +284,6 @@ const translate = async (targetLanguage: string, source?: string) => {
     return
   }
 
-  const sourceId = await historyStore.saveSource(sourceText, 'translate')
-
   // the menu step, when the menu is one: closing it hides the result
   const stepId = menuModalsStore.currentStepId
   const controller = new AbortController()
@@ -294,23 +292,31 @@ const translate = async (targetLanguage: string, source?: string) => {
     checking: 'menu.translationProgressChecking',
     repairing: 'menu.translationProgressRepairing',
   } as const
-  const setStage = (stage: keyof typeof stageLabels) =>
-    menuModalsStore.setPendingModal({
-      label: t(stageLabels[stage]),
-      onCancel: () => controller.abort(),
-    })
-  setStage('translating')
+  const owner = menuModalsStore.setPendingModal({
+    label: t(stageLabels.translating),
+    onCancel: () => controller.abort(),
+  })
+  const setStage = (stage: keyof typeof stageLabels) => {
+    if (controller.signal.aborted) return
+    menuModalsStore.setPendingModal(
+      { label: t(stageLabels[stage]), onCancel: () => controller.abort() },
+      owner
+    )
+  }
   try {
+    const sourceId = await historyStore.saveSource(sourceText, 'translate')
+    if (controller.signal.aborted) return
     const result = await translateTo(targetLanguage, sourceText, {
       signal: controller.signal,
       onStage: setStage,
       sourceLanguage: source,
     })
-    if (!result) return
+    if (!result || controller.signal.aborted) return
     await historyStore.saveSourceResult(sourceId, result.text).catch(() => {
       toast('history.operationFailed', 'error')
     })
     // closed meanwhile: the result is in the history, not on the screen
+    if (controller.signal.aborted) return
     if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
       text: result.text,
@@ -327,7 +333,7 @@ const translate = async (targetLanguage: string, source?: string) => {
     const message = error instanceof Error ? error.message : String(error)
     toastText(message, 'error')
   } finally {
-    menuModalsStore.clearPendingModal()
+    menuModalsStore.clearPendingModal(owner)
   }
 }
 </script>

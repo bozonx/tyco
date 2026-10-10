@@ -1,10 +1,13 @@
 import { Catalog, createAiKit, type StreamPart } from '@bozonx/ai-kit'
 import { DESKTOP_COMMANDS } from '@tyco/shared'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { bytes, createFakeNetIpc } from './fake-net-ipc'
 import { createSecretKeyProvider } from './secrets'
 import { createTauriTransport } from './tauri-net'
+import { createSttClient } from '../stt/stt-client'
+import { createAsyncQueue } from './async-queue'
+import type { AudioChunk } from '@bozonx/ai-kit'
 
 /** What an OpenAI-compatible server streams for a two-token answer */
 const SSE_CHUNKS = [
@@ -105,5 +108,66 @@ describe('ai-kit over the Tauri transport', () => {
         messages: [{ role: 'user', content: 'hi' }],
       })
     ).rejects.toMatchObject({ kind: 'auth' })
+  })
+  it('propagates chat cancellation through the SDK to the Rust proxy', async () => {
+    const controller = new AbortController()
+    const { fake, kit } = createKit({
+      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+        setTimeout(() => {
+          emit({
+            type: 'head',
+            status: 200,
+            statusText: 'OK',
+            headers: [['content-type', 'text/event-stream']],
+          })
+          emit(bytes(SSE_CHUNKS[0]))
+        })
+        return 4
+      },
+    })
+    const text: string[] = []
+    for await (const part of kit.stream({
+      policy: { taskClass: 'chat' },
+      messages: [{ role: 'user', content: 'hi' }],
+      abortSignal: controller.signal,
+    })) {
+      if (part.type === 'text-delta') {
+        text.push(part.text)
+        controller.abort()
+      }
+    }
+    expect(text).toEqual(['Hel'])
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 4 })
+  })
+
+  it('propagates STT cancellation through the kit while its handshake is pending', async () => {
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 5,
+    })
+    const controller = new AbortController()
+    const audio = createAsyncQueue<AudioChunk>()
+    const stt = createSttClient({ transport: createTauriTransport(fake.ipc) })
+    const pending = (async () => {
+      for await (const _part of stt.transcribeLive({
+        model: { id: 'speech', provider: 'deepgram', model: 'nova-3' },
+        audio: audio.values,
+        sampleRate: 16000,
+        hasApiKey: true,
+        signal: controller.signal,
+      })) {
+        /* Drain the terminal cancellation event. */
+      }
+    })()
+    await vi.waitFor(() =>
+      expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_OPEN)).toHaveLength(1)
+    )
+    const rejected = expect(pending).rejects.toMatchObject({ kind: 'aborted' })
+    controller.abort()
+    await rejected
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_OPEN)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 5 })
   })
 })

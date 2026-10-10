@@ -7,7 +7,7 @@ use crate::errors::AppError;
 use crate::services::net::http::{self, FetchRequest};
 use crate::services::net::request::{prepare, Protocol};
 use crate::services::net::socket::{self, SocketCommand, SocketRequest};
-use crate::services::net::NetState;
+use crate::services::net::{EventSink, NetState};
 use crate::services::secrets::SecretStore;
 use crate::state::AppState;
 
@@ -62,9 +62,9 @@ pub fn net_cancel(net: State<'_, NetState>, id: u64) {
     net.cancel_fetch(id);
 }
 
-/// Resolves once the socket is open; frames arrive through `on_event`.
+/// Returns an id before connecting, so the handshake is cancellable too.
 #[tauri::command]
-pub async fn net_socket_open(
+pub fn net_socket_open(
     net: State<'_, NetState>,
     secrets: State<'_, SecretStore>,
     app_state: State<'_, AppState>,
@@ -85,18 +85,30 @@ pub async fn net_socket_open(
         &secret_snapshot,
     )
     .map_err(AppError::Message)?;
-    let connection = socket::connect(&prepared, &request.protocols)
-        .await
-        .map_err(AppError::Message)?;
-
     let id = net.next_id();
     let sockets = net.sockets();
-    let (sender, receiver) = mpsc::unbounded_channel();
-    sockets.lock().expect("sockets lock").insert(id, sender);
+    let fetches = net.fetches();
+    let (handle, registration) = AbortHandle::new_pair();
+    fetches.lock().expect("fetches lock").insert(id, handle);
 
     tauri::async_runtime::spawn(async move {
-        socket::run_socket(connection, receiver, &on_event).await;
+        let run = async {
+            let connection = match socket::connect(&prepared, &request.protocols).await {
+                Ok(connection) => connection,
+                Err(message) => {
+                    on_event.event(&socket::SocketEvent::Error { message });
+                    return;
+                }
+            };
+            let (sender, receiver) = mpsc::unbounded_channel();
+            sockets.lock().expect("sockets lock").insert(id, sender);
+            if on_event.event(&socket::SocketEvent::Open) {
+                socket::run_socket(connection, receiver, &on_event).await;
+            }
+        };
+        let _ = Abortable::new(run, registration).await;
         sockets.lock().expect("sockets lock").remove(&id);
+        fetches.lock().expect("fetches lock").remove(&id);
     });
 
     Ok(id)

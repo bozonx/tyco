@@ -48,6 +48,7 @@ pub enum SocketCommand {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum SocketEvent {
+    Open,
     Message { data: String },
     Close { code: u16, reason: String },
     Error { message: String },

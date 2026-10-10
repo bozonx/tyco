@@ -160,7 +160,10 @@ describe('createCorrectionStep', () => {
           menu.nextModal(MenuModals.INSERT, params),
         setPending: (params: Record<string, unknown>) =>
           menu.setPendingModal(params),
-        clearPending: () => menu.clearPendingModal(),
+        clearPending: (owner?: number | void) =>
+          menu.clearPendingModal(owner ?? undefined),
+        isPending: (owner: number | void) =>
+          owner !== undefined && menu.isPendingModal(owner),
         saveResult: vi.fn().mockResolvedValue(undefined),
         reportError: vi.fn(() => 'failed'),
       }
@@ -168,6 +171,26 @@ describe('createCorrectionStep', () => {
       return { menu, request, deps, step, signal: () => signal }
     }
 
+    it('keeps a newer overlay after an old correction is cancelled', async () => {
+      const { menu, request, step } = setupPending()
+      const pending = step.start('helo')
+      menu.cancelPending()
+      menu.setPendingModal({ label: 'New request' })
+      request.resolve('Late correction')
+      await pending
+      expect(menu.pendingModal.value).toEqual({ label: 'New request' })
+      expect(menu.currentModal.value).toBe(MenuModals.NONE)
+    })
+
+    it('saves a result without reopening a closed menu', async () => {
+      const { menu, request, deps, step } = setupPending()
+      const pending = step.start('helo')
+      menu.closeAll()
+      request.resolve('hello')
+      await pending
+      expect(menu.currentModal.value).toBe(MenuModals.NONE)
+      expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
+    })
     it('shows pending overlay while correcting and opens diff on success', async () => {
       const { menu, request, deps, step } = setupPending()
       menu.nextModal(MenuModals.INSERT, { text: 'helo' })

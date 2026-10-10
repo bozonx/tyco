@@ -140,4 +140,28 @@ describe('TranslateMenu', () => {
     await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
     expect(translateTo.mock.calls[0]![0]).toBe('de_DE')
   })
+  it('drops late results and stages after cancellation without clearing a new operation', async () => {
+    let resolve!: (value: typeof result) => void
+    translateTo.mockReturnValue(
+      new Promise<typeof result>((done) => {
+        resolve = done
+      })
+    )
+    useIpcStore().params.userConfig.toTranslateLanguages = ['de_DE']
+    const wrapper = mountMenu()
+    const pending = shortcutListProps.leftLetterKeys[0].action()
+    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
+    const options = translateTo.mock.calls[0]![2]
+    const menu = useMenuModalsStore()
+    menu.cancelPending()
+    expect(options.signal.aborted).toBe(true)
+    menu.setPendingModal({ label: 'New operation' })
+    options.onStage('repairing')
+    resolve(result)
+    await pending
+    expect(useHistoryStore().saveSourceResult).not.toHaveBeenCalled()
+    expect(menu.currentModal).toBe(MenuModals.TRANSLATE)
+    expect(menu.pendingModal).toEqual({ label: 'New operation' })
+    wrapper.unmount()
+  })
 })

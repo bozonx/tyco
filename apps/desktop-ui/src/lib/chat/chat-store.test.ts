@@ -361,7 +361,8 @@ describe('chat-store', () => {
     expect(deps.generateChatTitle).toHaveBeenCalledWith(
       'Hello there',
       'Assistant reply',
-      'model-1'
+      'model-1',
+      expect.any(AbortSignal)
     )
     expect(store.newChatParams.value.title).toBe('Greeting')
 
@@ -528,5 +529,81 @@ describe('chat-store', () => {
       lastChatId: 'branch-id-1',
     })
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
+  })
+  it.each(['', 'Partial'])(
+    'stops a reply with %j content and lets the user retry',
+    async (partial) => {
+      let resolve!: (text: string) => void
+      let options!: Parameters<ChatStoreDeps['sendChatMessage']>[3]
+      const send = vi
+        .fn<ChatStoreDeps['sendChatMessage']>()
+        .mockImplementationOnce((_text, _previous, _instructions, input) => {
+          options = input
+          return new Promise((done) => {
+            resolve = done
+          })
+        })
+        .mockResolvedValue('Complete')
+      const store = createChatStoreModel(createDeps({ sendChatMessage: send }))
+      const pending = store.sendMessage('Question')
+      if (partial) options.onChunk?.(partial)
+      store.stopGeneration()
+      expect(options.signal?.aborted).toBe(true)
+      expect(store.isGenerating.value).toBe(false)
+      expect(store.isStopped.value).toBe(true)
+      options.onChunk?.('Late')
+      resolve('Late')
+      await pending
+      expect(store.messages.value.at(-1)?.content).toBe(partial || 'Question')
+      await store.retryLastTurn()
+      expect(store.isStopped.value).toBe(false)
+      expect(store.messages.value.map((message) => message.content)).toEqual([
+        'Question',
+        'Complete',
+      ])
+    }
+  )
+
+  it('does not restore an old regeneration over a newly opened chat', async () => {
+    let resolve!: (text: string) => void
+    const store = createChatStoreModel(
+      createDeps({
+        sendChatMessage: () =>
+          new Promise((done) => {
+            resolve = done
+          }),
+      })
+    )
+    store.messages.value = [
+      { role: 'user', content: 'Old question' },
+      { role: 'assistant', content: 'Old answer' },
+    ]
+    const pending = store.regenerateMessage(1)
+    await store.startChat({ title: 'New chat' })
+    resolve('Late answer')
+    await pending
+    expect(store.messages.value).toEqual([])
+    expect(store.newChatParams.value.title).toBe('New chat')
+  })
+  it('cancels a pending title when leaving the chat and ignores its result', async () => {
+    let resolve!: (title: string) => void
+    let signal!: AbortSignal
+    const deps = createDeps({
+      generateChatTitle: (_question, _answer, _model, input) => {
+        signal = input!
+        return new Promise((done) => {
+          resolve = done
+        })
+      },
+    })
+    const store = createChatStoreModel(deps)
+    await store.sendMessage('First question')
+    await vi.waitFor(() => expect(signal).toBeDefined())
+    await store.startChat({ title: 'New' })
+    expect(signal.aborted).toBe(true)
+    resolve('Late title')
+    await Promise.resolve()
+    expect(deps.renameChat).not.toHaveBeenCalled()
+    expect(store.newChatParams.value.title).toBe('New')
   })
 })

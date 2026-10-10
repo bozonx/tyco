@@ -32,18 +32,17 @@ import {
   type SttModel,
 } from '@tyco/shared'
 
-/** The microphone streams from Rust, and the provider socket leaves from it */
-const dictation = createLiveDictation({
-  capture: createVoiceCaptureControl(tauriNetIpc),
-  stt: createSttClient({ transport: createTauriTransport(tauriNetIpc) }),
-})
-
 export interface DictationHandlers {
   onText: (state: LiveTranscriptState) => void
   onError: (error: Error) => void
 }
 
 export const useCallAi = () => {
+  /** The microphone streams from Rust, and the provider socket leaves from it */
+  const dictation = createLiveDictation({
+    capture: createVoiceCaptureControl(tauriNetIpc),
+    stt: createSttClient({ transport: createTauriTransport(tauriNetIpc) }),
+  })
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
   const translationStore = useTranslationStore()
@@ -109,6 +108,7 @@ export const useCallAi = () => {
         onModel: options.onModel,
       })
     } catch (error) {
+      if (options.signal?.aborted) return ''
       const llmError = error instanceof LlmError ? error : toLlmError(error)
       console.error(`LLM request "${taskName}" failed`, llmError)
       clientLogger.error(`LLM request "${taskName}" failed`, llmError, 'llm')
@@ -184,7 +184,8 @@ export const useCallAi = () => {
   const generateChatTitle = async (
     question: string,
     answer: string,
-    modelId: string
+    modelId: string,
+    signal?: AbortSignal
   ) => {
     const raw = await aiRequest(
       AI_TASKS.CHAT,
@@ -193,6 +194,7 @@ export const useCallAi = () => {
         models: [modelId],
         notifyError: false,
         instructions: CHAT_TITLE_INSTRUCTIONS,
+        signal,
       }
     )
     return cleanGeneratedTitle(raw)

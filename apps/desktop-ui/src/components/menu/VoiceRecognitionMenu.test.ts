@@ -40,12 +40,16 @@ vi.mock('../../lib/desktop/client', () => ({
 }))
 
 import { useIpcStore } from '../../stores/ipc'
+import { useHistoryStore } from '../../stores/history'
+import { useMenuModalsStore } from '../../stores/menuModals'
 
 describe('VoiceRecognitionMenu', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     useIpcStore().params.isWindowShown = true
     vi.clearAllMocks()
+    mocks.shouldFormatRecognizedText.mockReturnValue(false)
+    mocks.finishDictation.mockResolvedValue('recognized voice')
   })
 
   it('renders chat action buttons (Finish, Cancel cross, Send button) when chat is true in bar mode', async () => {
@@ -173,5 +177,66 @@ describe('VoiceRecognitionMenu', () => {
     expect(mocks.finishDictation).toHaveBeenCalled()
     expect(wrapper.emitted('corrected')).toBeTruthy()
     expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
+  })
+  const mountChat = () =>
+    mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: true,
+          AudioWaveform: true,
+          ShortcutButton: true,
+          Icon: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+
+  it('does not submit a transcript returned after the menu unmounts', async () => {
+    let resolve!: (text: string) => void
+    mocks.finishDictation.mockReturnValue(
+      new Promise<string>((done) => {
+        resolve = done
+      })
+    )
+    const wrapper = mountChat()
+    await flushPromises()
+    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await flushPromises()
+    wrapper.unmount()
+    resolve('Late transcript')
+    await flushPromises()
+    expect(wrapper.emitted('corrected')).toBeUndefined()
+  })
+
+  it('does not save a partial correction after cancellation or clear a new operation', async () => {
+    let resolve!: (text: string) => void
+    mocks.shouldFormatRecognizedText.mockReturnValue(true)
+    mocks.voiceCorrection.mockReturnValue(
+      new Promise<string>((done) => {
+        resolve = done
+      })
+    )
+    const history = useHistoryStore()
+    vi.spyOn(history, 'saveSource').mockResolvedValue('voice-source')
+    const save = vi.spyOn(history, 'saveSourceResult').mockResolvedValue()
+    const wrapper = mountChat()
+    await flushPromises()
+    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await flushPromises()
+    const menu = useMenuModalsStore()
+    menu.cancelPending()
+    menu.setPendingModal({ label: 'New operation' })
+    resolve('Partial correction')
+    await flushPromises()
+    expect(save).not.toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toBeUndefined()
+    expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    expect(menu.pendingModal).toEqual({ label: 'New operation' })
+    wrapper.unmount()
   })
 })

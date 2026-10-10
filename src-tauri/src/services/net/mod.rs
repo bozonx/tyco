@@ -120,3 +120,51 @@ impl NetState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use futures_util::future::Abortable;
+    use tokio::io::AsyncReadExt;
+    use tokio::net::TcpListener;
+
+    use super::*;
+    use crate::services::net::request::{prepare, Protocol};
+    use crate::services::secrets::Secrets;
+
+    #[tokio::test]
+    async fn cancellation_drops_an_unfinished_socket_handshake() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let prepared = prepare(
+            Protocol::WebSocket,
+            &format!("ws://{address}/"),
+            &[],
+            &Secrets::new(),
+        )
+        .unwrap();
+        let net = NetState::new().unwrap();
+        let id = net.next_id();
+        let (handle, registration) = AbortHandle::new_pair();
+        net.fetches.lock().unwrap().insert(id, handle);
+        let connecting = tokio::spawn(async move {
+            Abortable::new(socket::connect(&prepared, &[]), registration).await
+        });
+        let (mut peer, _) = listener.accept().await.unwrap();
+        let mut bytes = [0; 4096];
+        assert!(peer.read(&mut bytes).await.unwrap() > 0);
+
+        net.cancel_fetch(id);
+        assert!(connecting.await.unwrap().is_err());
+        let remaining = tokio::time::timeout(Duration::from_secs(1), async {
+            loop {
+                if peer.read(&mut bytes).await.unwrap() == 0 {
+                    break;
+                }
+            }
+        })
+        .await;
+        assert!(remaining.is_ok(), "cancel closes the pending connection");
+        assert!(net.fetches.lock().unwrap().is_empty());
+        net.cancel_fetch(id);
+    }
+}

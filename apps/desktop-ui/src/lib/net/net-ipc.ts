@@ -29,6 +29,7 @@ export type FetchEvent =
   | { type: 'error'; message: string }
 
 export type SocketEvent =
+  | { type: 'open' }
   | { type: 'message'; data: string }
   | { type: 'close'; code: number; reason: string }
   | { type: 'error'; message: string }

@@ -31,6 +31,16 @@
         </div>
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
+        <div
+          v-if="chatStore.isStopped && !chatStore.error"
+          class="chat-error"
+          role="status"
+        >
+          <span>{{ t('chat.stopped') }}</span>
+          <Button xs ghost icon="mdi:reload" @click="retry">
+            {{ t('chat.retry') }}
+          </Button>
+        </div>
         <div v-if="chatStore.error" class="chat-error" role="alert">
           <Icon icon="mdi:alert-circle-outline" height="18" />
           <span>{{ chatStore.error }}</span>
@@ -221,8 +231,15 @@ async function sendMessage() {
 }
 
 async function retry() {
+  const draft = chatInputStore.value
+  const chatId = chatStore.newChatParams.id
   const result = await chatStore.retryLastTurn()
-  if (result) chatInputStore.clear()
+  if (
+    result &&
+    chatStore.newChatParams.id === chatId &&
+    chatInputStore.value === draft
+  )
+    chatInputStore.clear()
 }
 
 async function branch(index: number) {

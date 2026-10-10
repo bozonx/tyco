@@ -43,7 +43,10 @@ export const useCorrectionStore = defineStore('correction', () => {
     openStep: (params) => menuModalsStore.nextModal(MenuModals.INSERT, params),
     updateStep: menuModalsStore.updateStep,
     setPending: (params) => menuModalsStore.setPendingModal(params),
-    clearPending: () => menuModalsStore.clearPendingModal(),
+    clearPending: (owner) =>
+      menuModalsStore.clearPendingModal(owner ?? undefined),
+    isPending: (owner) =>
+      owner !== undefined && menuModalsStore.isPendingModal(owner),
     saveResult: async (text, result) => {
       try {
         const sourceId = await historyStore.saveSource(text, 'correction')
@@ -74,7 +77,8 @@ export const useCorrectionStore = defineStore('correction', () => {
     },
     setPending: (onCancel) =>
       menuModalsStore.setPendingModal({ correction: true, onCancel }),
-    clearPending: menuModalsStore.clearPendingModal,
+    clearPending: (owner) =>
+      menuModalsStore.clearPendingModal(owner ?? undefined),
     reportError: (error) => toastText(describeError(error), 'error'),
   })
 

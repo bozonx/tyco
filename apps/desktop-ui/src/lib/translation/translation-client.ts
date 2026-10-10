@@ -70,6 +70,7 @@ export function createTranslationClient(deps: TranslationClientDeps): {
 } {
   return {
     async translate(text, options) {
+      options.signal?.throwIfAborted()
       const config = deps.getConfig()
       const glossary: GlossaryEntry[] = config.glossary
       options.onStage?.('translating')
@@ -104,6 +105,7 @@ export function createTranslationClient(deps: TranslationClientDeps): {
                 )
               },
       })
+      options.signal?.throwIfAborted()
       return {
         text: pipeline.translation,
         provider: pipeline.repair?.provider ?? pipeline.first.provider,

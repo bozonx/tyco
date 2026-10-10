@@ -385,13 +385,18 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
     return
   }
 
+  const generation = sessionGeneration
+  let signal = voiceSession.signal
+  const isCurrent = () => generation === sessionGeneration && !signal?.aborted
   isFinishing.value = true
   stopRecordingTimer()
   voiceSession.stopTimer()
 
   try {
     await starting
-    if (!hasSession || voiceSession.signal?.aborted) {
+    signal = voiceSession.signal
+    if (!isCurrent()) return
+    if (!hasSession || signal?.aborted) {
       notifyCancelled()
       return
     }
@@ -399,6 +404,7 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
     isTranscribing.value = true
     // the provider's last words arrive after the microphone is off
     const recognizedText = await finishDictation()
+    if (!isCurrent()) return
     isStarted.value = false
     isTranscribing.value = false
 
@@ -422,17 +428,16 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
         recognizedText,
         'voice-correction'
       )
-      menuModalsStore.setPendingModal({
+      if (!isCurrent()) return
+      const owner = menuModalsStore.setPendingModal({
         correction: true,
         onCancel: () => voiceSession.abort(),
       })
 
       try {
-        const formattedText = await voiceCorrection(
-          recognizedText,
-          voiceSession.signal
-        )
+        const formattedText = await voiceCorrection(recognizedText, signal)
 
+        if (!isCurrent()) return
         if (formattedText.trim()) {
           resultText = formattedText
           correctedText = formattedText
@@ -443,30 +448,32 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
             })
         }
       } catch (error) {
+        if (!isCurrent()) return
         const message = error instanceof Error ? error.message : String(error)
         if (message) toastText(message, 'error')
         else toast('menu.correction', 'error')
       } finally {
-        menuModalsStore.clearPendingModal()
+        menuModalsStore.clearPendingModal(owner)
       }
     }
 
-    if (!voiceSession.signal?.aborted) {
-      emit('corrected', resultText, recognizedText, correctedText, intent)
-    } else {
-      notifyCancelled()
-    }
+    if (!isCurrent()) return
+    emit('corrected', resultText, recognizedText, correctedText, intent)
   } catch (error) {
-    if (!voiceSession.signal?.aborted) {
+    if (!isCurrent()) return
+    if (!signal?.aborted) {
       const message = error instanceof Error ? error.message : String(error)
       if (message) toastText(message, 'error')
       else toast('toast.voiceRecognitionFailed', 'error')
     }
     notifyCancelled()
   } finally {
-    isStarted.value = false
-    isTranscribing.value = false
-    isFinishing.value = false
+    if (generation === sessionGeneration) {
+      isStarted.value = false
+      isTranscribing.value = false
+      isFinishing.value = false
+      if (signal?.aborted) notifyCancelled()
+    }
   }
 }
 

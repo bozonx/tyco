@@ -40,7 +40,8 @@ export interface ChatStoreDeps {
   generateChatTitle: (
     question: string,
     answer: string,
-    modelId: string
+    modelId: string,
+    signal?: AbortSignal
   ) => Promise<string>
   saveChatHistory: (item: ChatHistoryItem) => void | Promise<void>
   renameChat: (id: string, title: string) => void | Promise<void>
@@ -71,6 +72,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const newChatParams = ref<ChatParams>({})
   const isGenerating = ref(false)
   const error = ref('')
+  const isStopped = ref(false)
   /** The editor text the user removed from the current chat */
   const dismissedEditorContext = ref<string | null>(null)
   /** The suggested editor text the user took into the next message */
@@ -81,6 +83,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   } | null>(null)
   const abortController = ref<AbortController | null>(null)
   let generationId = 0
+  let titleController: AbortController | undefined
 
   const currentTitle = () => newChatParams.value.title || ''
 
@@ -112,12 +115,15 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   /** Stops the answer; `save` keeps what came of it in the history */
   const halt = (save: boolean) => {
     generationId += 1
+    titleController?.abort()
+    titleController = undefined
     if (abortController.value) {
       abortController.value.abort()
       abortController.value = null
     }
     if (!isGenerating.value) return
     isGenerating.value = false
+    isStopped.value = true
     const last = messages.value.at(-1)
     if (last?.role === 'assistant' && !last.content) {
       messages.value.pop()
@@ -129,6 +135,13 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         }
       }
     } else if (last?.role === 'assistant') {
+      const user = messages.value.at(-2)
+      if (user?.role === 'user') {
+        lastFailedTurn.value = {
+          message: user.content,
+          attachments: user.attachments,
+        }
+      }
       last.status = 'stopped'
       if (save) void persist(messages.value)
     }
@@ -142,18 +155,24 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     if (!id || !needsGeneratedTitle(messages.value, title)) return
 
     const [question, answer] = messages.value
+    titleController?.abort()
+    const controller = new AbortController()
+    titleController = controller
     let generated: string
     try {
       generated = await deps.generateChatTitle(
         question.content,
         answer.content,
-        modelId
+        modelId,
+        controller.signal
       )
     } catch {
       // the draft title stays
       return
+    } finally {
+      if (titleController === controller) titleController = undefined
     }
-    if (!generated) return
+    if (!generated || controller.signal.aborted) return
 
     const isCurrent = newChatParams.value.id === id
     // renamed meanwhile, by the user or in another way
@@ -208,6 +227,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
 
     error.value = ''
+    isStopped.value = false
     lastFailedTurn.value = null
 
     const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
@@ -242,10 +262,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const currentGenerationId = ++generationId
 
     // the question is kept even when no answer comes
+    const chatId = newChatParams.value.id
     void persist(messages.value.slice(0, userMessageIndex + 1)).then(
       (saved) => {
-        if (saved && newChatParams.value.id) {
-          void deps.saveLocalState({ lastChatId: newChatParams.value.id })
+        if (saved && chatId && newChatParams.value.id === chatId) {
+          void deps.saveLocalState({ lastChatId: chatId })
         }
       }
     )
@@ -302,16 +323,18 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
 
     if (await persist(messages.value)) {
-      void maybeGenerateTitle(model.id)
+      if (currentGenerationId === generationId)
+        void maybeGenerateTitle(model.id)
     }
 
-    return assistantMessage.content
+    return currentGenerationId === generationId ? assistantMessage.content : ''
   }
 
   const reset = (chatParams: ChatParams = {}) => {
     messages.value = []
     newChatParams.value = chatParams
     error.value = ''
+    isStopped.value = false
     dismissedEditorContext.value = null
     acceptedEditorContext.value = null
     lastFailedTurn.value = null
@@ -355,11 +378,13 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     const previousMessages = [...messages.value]
     messages.value = messages.value.slice(0, userIndex)
-    const result = await sendMessage(
-      userMessage.content,
-      userMessage.attachments
-    )
-    if (!result) messages.value = previousMessages
+    const pending = sendMessage(userMessage.content, userMessage.attachments)
+    const currentGenerationId = generationId
+    const result = await pending
+    if (!result && currentGenerationId === generationId) {
+      messages.value = previousMessages
+      await persist(messages.value)
+    }
     return result
   }
 
@@ -441,6 +466,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     messages,
     newChatParams,
     isGenerating,
+    isStopped,
     error,
     dismissedEditorContext,
     acceptedEditorContext,

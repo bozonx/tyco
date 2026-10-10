@@ -25,9 +25,10 @@ export interface CorrectionStepDeps {
   /** Changes the params of the step; false when it is gone */
   updateStep?: (id: number, params: Partial<CorrectionStepParams>) => boolean
   /** Shows an in-progress overlay while waiting for correction */
-  setPending?: (params: Record<string, unknown>) => void
+  setPending?: (params: Record<string, unknown>) => number | void
   /** Clears the in-progress overlay */
-  clearPending?: () => void
+  clearPending?: (owner?: number | void) => void
+  isPending?: (owner: number | void) => boolean
   saveResult: (text: string, result: string) => Promise<void>
   /** Reports a failure; returns the message to show on the step */
   reportError: (error: unknown) => string
@@ -72,23 +73,25 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
           extra.onCancel()
         }
       }
-      deps.setPending({ ...extra, correction: true, onCancel })
+      const owner = deps.setPending({ ...extra, correction: true, onCancel })
 
       let result: string
+      let showResult: boolean
       try {
         result = await deps.correct(text, controller.signal)
       } catch (error) {
-        deps.clearPending?.()
+        deps.clearPending?.(owner)
         if (controller.signal.aborted) return
         if (deps.isAborted?.(error)) return
         deps.reportError(error)
         return
       } finally {
-        deps.clearPending?.()
+        showResult = deps.isPending?.(owner) ?? true
+        deps.clearPending?.(owner)
       }
 
       if (controller.signal.aborted) return
-      deps.openStep({ ...base, ...resultParams(text, result) })
+      if (showResult) deps.openStep({ ...base, ...resultParams(text, result) })
       await deps.saveResult(text, result)
       return
     }

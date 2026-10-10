@@ -107,6 +107,7 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
 
   return {
     async run(task, prompt, options = {}) {
+      if (options.signal?.aborted) return ''
       const config = deps.getConfig()
       const chain =
         options.models ?? (task === 'chat' ? [] : config.tasks[task]) ?? []
@@ -122,6 +123,7 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
 
       let firstError: LlmError | undefined
       for (const model of candidates) {
+        if (options.signal?.aborted) return ''
         let emittedText = false
         let streamedText = ''
         // the catalog's task classes come from `tasks`; the chat is one too

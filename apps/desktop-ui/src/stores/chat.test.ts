@@ -33,6 +33,7 @@ vi.mock('../lib/chat/chat-store', () => ({
     messages: ref([]),
     newChatParams: ref({ attachments: [{ text: 'pending' }] }),
     isGenerating: ref(false),
+    isStopped: ref(false),
     dismissedEditorContext: ref(null),
     acceptedEditorContext: ref(null),
   }),
@@ -67,6 +68,10 @@ describe('chat window navigation', () => {
     vi.clearAllMocks()
     mocks.label = 'main'
     mocks.input.value = ''
+    mocks.clear.mockImplementation(() => {
+      mocks.input.value = ''
+    })
+    mocks.sendMessage.mockResolvedValue('answer')
     mocks.editor.value = ''
     mocks.editor.selectedText = ''
   })
@@ -142,5 +147,21 @@ describe('chat window navigation', () => {
     expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
       { text: 'pending' },
     ])
+  })
+  it('does not overwrite a draft when a previous request completes after cancellation', async () => {
+    let resolve!: (text: string) => void
+    mocks.sendMessage.mockReturnValue(
+      new Promise<string>((done) => {
+        resolve = done
+      })
+    )
+    mocks.input.value = 'First question'
+    const store = useChatStore()
+    const pending = store.sendInput()
+    mocks.input.value = 'New draft'
+    resolve('')
+    await pending
+    expect(mocks.setValue).not.toHaveBeenCalled()
+    expect(mocks.input.value).toBe('New draft')
   })
 })

@@ -16,7 +16,10 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 describe('tauri-socket', () => {
   it('opens through the proxy with headers and protocols', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 9,
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 9
+      },
     })
 
     await createTauriSocketOpener(fake.ipc)(
@@ -40,6 +43,7 @@ describe('tauri-socket', () => {
     const fake = createFakeNetIpc({
       [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
         // Frames may arrive before the open command resolves.
+        emit({ type: 'open' })
         emit({ type: 'message', data: 'one' })
         return 1
       },
@@ -56,7 +60,10 @@ describe('tauri-socket', () => {
 
   it('fails the messages on an abnormal close', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 1,
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 1
+      },
     })
     const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
       signal: new AbortController().signal,
@@ -91,7 +98,10 @@ describe('tauri-socket', () => {
   it('sends frames in order, binary as a raw body', async () => {
     const order: string[] = []
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 4,
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 4
+      },
       [DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY]: async () => {
         // A slow first frame must not be overtaken by the next ones.
         await new Promise((resolve) => setTimeout(resolve, 10))
@@ -124,7 +134,10 @@ describe('tauri-socket', () => {
 
   it('closes on abort', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 2,
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 2
+      },
     })
     const controller = new AbortController()
     await createTauriSocketOpener(fake.ipc)('ws://x/', {
@@ -134,10 +147,7 @@ describe('tauri-socket', () => {
     controller.abort()
     await tick()
 
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_CLOSE)[0].args).toEqual({
-      id: 2,
-      payload: null,
-    })
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 2 })
   })
 
   it.each([
@@ -148,7 +158,10 @@ describe('tauri-socket', () => {
     'reports an IPC failure in %s to the transcript reader',
     async (command) => {
       const fake = createFakeNetIpc({
-        [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 2,
+        [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+          emit({ type: 'open' })
+          return 2
+        },
         [command]: () => {
           throw 'Audio delivery failed'
         },
@@ -178,4 +191,74 @@ describe('tauri-socket', () => {
       }
     }
   )
+  it('cancels a handshake before its IPC id arrives and ignores late frames', async () => {
+    let resolveId!: (id: number) => void
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () =>
+        new Promise<number>((resolve) => {
+          resolveId = resolve
+        }),
+    })
+    const controller = new AbortController()
+    const pending = createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: controller.signal,
+    })
+    controller.abort()
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
+    resolveId(7)
+    fake.emit({ type: 'open' })
+    fake.emit({ type: 'message', data: 'late' })
+    await tick()
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 7 })
+  })
+
+  it('honors a connection deadline without limiting an established session', async () => {
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 8,
+    })
+    const connect = new AbortController()
+    const lifetime = new AbortController()
+    const pending = createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: lifetime.signal,
+      connectSignal: connect.signal,
+    })
+    connect.abort(new DOMException('Connection timed out', 'TimeoutError'))
+    await expect(pending).rejects.toMatchObject({ name: 'TimeoutError' })
+    await tick()
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+
+    const nextConnect = new AbortController()
+    const next = createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: lifetime.signal,
+      connectSignal: nextConnect.signal,
+    })
+    fake.emit({ type: 'open' })
+    const session = await next
+    nextConnect.abort()
+    session.send('audio')
+    await tick()
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)).toHaveLength(1)
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    fake.emit({ type: 'close', code: 1000, reason: '' })
+  })
+
+  it('aborts immediately even while final transcripts are being drained', async () => {
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 2
+      },
+    })
+    const controller = new AbortController()
+    const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: controller.signal,
+    })
+    session.close('end-of-stream')
+    await tick()
+    const messages = collect(session.messages)
+    controller.abort()
+    await expect(messages).rejects.toMatchObject({ name: 'AbortError' })
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  })
 })

@@ -202,4 +202,16 @@ describe('tauri-fetch', () => {
     ).rejects.toMatchObject({ name: 'AbortError' })
     expect(fake.calls).toHaveLength(0)
   })
+  it('does not send a POST cancelled while its body is encoded', async () => {
+    const fake = createFakeNetIpc()
+    const controller = new AbortController()
+    const pending = createTauriFetch(fake.ipc)('https://example.com/', {
+      method: 'POST',
+      body: '{}',
+      signal: controller.signal,
+    })
+    controller.abort()
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)).toHaveLength(0)
+  })
 })
