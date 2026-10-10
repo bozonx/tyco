@@ -59,16 +59,27 @@
         :label="t('settings.translationCorrection')"
         :info="t('settings.translationCorrectionInfo')"
       >
-        <FieldSelect
-          class="w-full"
-          :value="translation.qualityGate"
-          :options="qualityOptions"
-          @update:value="updateQualityGate"
-        />
+        <div class="flex w-full flex-col items-start gap-2">
+          <FieldSelect
+            class="w-full"
+            :value="translation.qualityGate"
+            :options="qualityOptions"
+            @update:value="updateQualityGate"
+          />
+          <Button
+            v-if="translation.qualityGate === 'always' && !correctionPromptOpen"
+            xs
+            ghost
+            icon="mdi:plus"
+            @click="correctionPromptOpen = true"
+          >
+            {{ t('settings.translationCorrectionPromptAdd') }}
+          </Button>
+        </div>
       </FieldRow>
 
       <FieldRow
-        v-if="translation.qualityGate === 'always'"
+        v-if="translation.qualityGate === 'always' && correctionPromptOpen"
         :label="t('settings.translationCorrectionPrompt')"
         :info="t('settings.translationCorrectionPromptInfo')"
         vertical
@@ -108,6 +119,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
+import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -122,6 +134,10 @@ const { t } = useI18n()
 const llmStore = useLlmStore()
 const keyDraft = ref('')
 const translation = computed(() => props.userConfig.translation)
+// Not persisted: an empty prompt starts collapsed every time the page opens.
+const correctionPromptOpen = ref(
+  Boolean(props.userConfig.translation.correctionPrompt?.trim())
+)
 const providerSecretId = computed(() =>
   translation.value.provider === 'google' ? 'google-translate' : 'deepl'
 )

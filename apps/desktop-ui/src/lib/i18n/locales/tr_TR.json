@@ -696,6 +696,7 @@
     "translationCorrectionAlways": "Her zaman",
     "translationCorrectionInfo": "Çeviriden sonra metin otomatik olarak denetlenir: eksik parçalar, bozuk biçimlendirme, bağlantılar, sayılar, yer tutucular ve sözlük ihlalleri. Denetim yapay zekâ olmadan çalışır ve ücretsizdir.\n\n• Kapalı — çeviri olduğu gibi kullanılır; bulunan sorunlar yalnızca gösterilir.\n• Yalnızca sorun bulunursa — yapay zekâ modeli yalnızca bulunan yerleri düzeltir. Sorun yoksa ek istek yapılmaz.\n• Her zaman — yapay zekâ modeli çeviriyi her zaman gözden geçirip düzeltir. Daha yavaş ve pahalıdır ama DeepL ve Google sonrasında faydalıdır: sözlükteki \"=\" kuralları, çeviri talimatları ve düzeltme istemi uygulanır.\n\nDüzeltme, LLM sekmesinde çeviri için atanan modelle yapılır. Başarısız olursa ilk çeviri korunur.",
     "translationCorrectionPrompt": "Düzeltme istemi",
+    "translationCorrectionPromptAdd": "Düzeltme istemi belirle",
     "translationCorrectionPromptInfo": "\"Her zaman\" modundaki düzeltme için ek talimatlar, örneğin \"metni günlük dile çevir\" veya \"terimleri tutarlı tut\". Sistem istemine ve çeviri talimatlarına eklenir, onların yerini almaz.",
     "translationRules": "Çeviri talimatları",
     "translationRulesInfo": "Yapay zekâ modeli için ek talimatlar: üslup, ton, hitap şekli vb. Yapay zekâ modeliyle çeviride ve çeviri sonrası düzeltmede uygulanır. DeepL ve Google bunları kullanmaz; bu hizmetlerle talimatlar yalnızca düzeltme açıkken çalışır.",

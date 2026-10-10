@@ -696,6 +696,7 @@
     "translationCorrectionAlways": "Always",
     "translationCorrectionInfo": "After translation, the text is checked automatically for missing fragments, broken markup, links, numbers, placeholders and glossary violations. The check runs without AI and costs nothing.\n\n• Off — the translation is used as is; detected problems are only shown.\n• Only if problems are found — the AI model fixes only the detected spots. If there are no problems, no extra request is made.\n• Always — the AI model always proofreads and edits the translation. Slower and more expensive, but useful after DeepL and Google: glossary \"=\" rules, translation instructions and the correction prompt are applied.\n\nCorrection runs on the model assigned to translation on the LLM tab. If it fails, the original translation is kept.",
     "translationCorrectionPrompt": "Correction prompt",
+    "translationCorrectionPromptAdd": "Set correction prompt",
     "translationCorrectionPromptInfo": "Extra instructions for the correction in the \"Always\" mode, e.g. \"make the text conversational\" or \"keep terminology consistent\". They are added to the system prompt and the translation instructions without replacing them.",
     "translationRules": "Translation instructions",
     "translationRulesInfo": "Extra instructions for the AI model: style, tone, formality and so on. Applied when translating with an AI model and during post-translation correction. DeepL and Google do not use them, so with these services the instructions only work when correction is enabled.",

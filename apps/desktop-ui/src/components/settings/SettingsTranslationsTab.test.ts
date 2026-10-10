@@ -157,6 +157,33 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-free-key:fx')
   })
 
+  it('keeps an empty correction prompt collapsed behind a button', async () => {
+    const userConfig = createConfig({ qualityGate: 'always' })
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<section><slot /></section>' },
+          FieldRow: {
+            props: ['label'],
+            template:
+              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+          },
+          FieldSelect: true,
+          FieldInput: true,
+          FieldTextArea: true,
+        },
+      },
+    })
+    const promptRow = () =>
+      wrapper.find('[data-label="settings.translationCorrectionPrompt"]')
+
+    expect(promptRow().exists()).toBe(false)
+    await wrapper.findComponent({ name: 'Button' }).trigger('click')
+    expect(promptRow().exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'Button' }).exists()).toBe(false)
+  })
+
   it('links to the languages page from the page description', async () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
