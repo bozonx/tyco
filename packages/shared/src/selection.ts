@@ -2,17 +2,14 @@ import type { UserConfig } from './user-config'
 
 /**
  * Actions that replace the selection in the focused window with their result,
- * see `src-tauri/src/services/selection_replace.rs`. Slots index the configured
- * translation languages and AI tasks
+ * see `src-tauri/src/services/selection_replace.rs`
  */
 export type SelectionAction =
   | { kind: 'correction' }
-  | { kind: 'translate'; slot: number }
-  | { kind: 'aiTask'; slot: number }
   /** A command of the library whose output replaces the selection */
   | { kind: 'command'; commandId: string }
 
-/** Hotkey ids of selection actions carry this prefix, e.g. `replace.aiTask.0` */
+/** Hotkey ids of selection actions carry this prefix, e.g. `replace.correction` */
 export const SELECTION_HOTKEY_PREFIX = 'replace.'
 
 /** Prefix of the selection action of a command, e.g. `command:<id>` */
@@ -24,17 +21,12 @@ export function parseSelectionAction(id: string): SelectionAction | null {
     const commandId = id.slice(COMMAND_SELECTION_PREFIX.length)
     return commandId.trim() ? { kind: 'command', commandId } : null
   }
-  const match = /^(translate|aiTask)\.(\d{1,3})$/.exec(id)
-  if (!match) return null
-  return { kind: match[1] as 'translate' | 'aiTask', slot: Number(match[2]) }
+  return null
 }
 
 export function selectionActionId(action: SelectionAction): string {
   if (action.kind === 'correction') return 'correction'
-  if (action.kind === 'command') {
-    return `${COMMAND_SELECTION_PREFIX}${action.commandId}`
-  }
-  return `${action.kind}.${action.slot}`
+  return `${COMMAND_SELECTION_PREFIX}${action.commandId}`
 }
 
 export type SelectionRunErrorCode =

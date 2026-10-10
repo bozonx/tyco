@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
 import { useI18n } from '../../composables/useI18n'
@@ -94,8 +94,13 @@ import QueryPanel, {
 import { Icon } from '@iconify/vue'
 
 const props = withDefaults(
-  defineProps<{ text?: string; stopListening?: boolean }>(),
-  { text: '', stopListening: false }
+  defineProps<{
+    text?: string
+    stopListening?: boolean
+    /** A language to translate into at once: the main menu item of it */
+    language?: string
+  }>(),
+  { text: '', stopListening: false, language: undefined }
 )
 
 const ipcStore = useIpcStore()
@@ -336,6 +341,17 @@ const translate = async (targetLanguage: string, source?: string) => {
     menuModalsStore.clearPendingModal(owner)
   }
 }
+
+// once: back on this step from the result, the menu waits for a choice
+onMounted(() => {
+  const language = props.language
+  if (!language) return
+  const stepId = menuModalsStore.currentStepId
+  if (stepId !== undefined) {
+    menuModalsStore.updateStep(stepId, { language: undefined })
+  }
+  void translate(language)
+})
 </script>
 
 <style scoped>

@@ -16,6 +16,7 @@ import {
   type CommandRunnerDependencies,
   createCommandRunner,
 } from '../commands/command-runner'
+import { getLanguageLabel } from '../locale/language'
 import { assignPluginActions } from './main-actions'
 
 export type { ActionItem } from '@tyco/plugin-sdk'
@@ -24,8 +25,10 @@ export interface ActionMenuDependencies extends CommandRunnerDependencies {
   putIntoClipboardAndClose: (text: string) => Promise<void>
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
-  openAiTaskModal: (text: string) => void
-  openTranslateModal: (text: string) => void
+  /** With `taskId` the dialog runs that AI task at once */
+  openAiTaskModal: (text: string, taskId?: string) => void
+  /** With `language` the dialog translates into it at once */
+  openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
   startCorrection: (
     text: string,
@@ -37,6 +40,8 @@ export interface ActionMenuDependencies extends CommandRunnerDependencies {
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
+  /** The AI tasks the menu items of the `aiTask` type refer to by id */
+  aiTasks?: () => readonly ({ id: string; name: string } | null)[] | undefined
 }
 
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
@@ -52,6 +57,36 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       await deps.saveOutput(text)
       await commandRunner.run(command, text, { source: 'menu' })
     },
+  })
+
+  /** Runs `action` on the text, unless there is none */
+  const withText =
+    (action: (text: string) => void) =>
+    async (text: string): Promise<void> => {
+      if (!text?.trim()) {
+        deps.showToast('toast.textNotSelected', 'error')
+        return
+      }
+      action(text)
+    }
+
+  /** The menu item of an AI task, or none when the task is gone */
+  const createAiTaskActionItem = (taskId: string): ActionItem | undefined => {
+    const task = deps.aiTasks?.()?.find((item) => item?.id === taskId)
+    if (!task?.name) return undefined
+    return {
+      id: `aiTask:${taskId}`,
+      name: task.name,
+      icon: 'mdi:robot-outline',
+      action: withText((text) => deps.openAiTaskModal(text, taskId)),
+    }
+  }
+
+  const createTranslationActionItem = (language: string): ActionItem => ({
+    id: `translation:${language}`,
+    labelKey: getLanguageLabel(language),
+    icon: 'mdi:translate',
+    action: withText((text) => deps.openTranslateModal(text, language)),
   })
 
   /** Corrects `text` on a step of its own, unless it is empty or too short. */
@@ -170,6 +205,10 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
         return command && isMenuCommand(command, deps.tools)
           ? createCommandActionItem(command)
           : undefined
+      }
+      if (item.type === 'aiTask') return createAiTaskActionItem(item.taskId)
+      if (item.type === 'translation') {
+        return createTranslationActionItem(item.language)
       }
       return undefined
     })

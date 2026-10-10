@@ -26,9 +26,9 @@ const result = { text: 'Hallo Welt', provider: 'llm', kind: 'llm', quality: {} }
 describe('TranslateMenu', () => {
   let shortcutListProps: Record<string, any> = {}
 
-  const mountMenu = () =>
+  const mountMenu = (props: Record<string, unknown> = {}) =>
     mount(TranslateMenu, {
-      props: { text: 'Hello world' },
+      props: { text: 'Hello world', ...props },
       global: {
         stubs: {
           TextPreview: true,
@@ -72,6 +72,28 @@ describe('TranslateMenu', () => {
       'Hello world',
       expect.objectContaining({ sourceLanguage: undefined })
     )
+  })
+
+  it('translates into the language of the main menu item once', async () => {
+    const menuModalsStore = useMenuModalsStore()
+    menuModalsStore.updateStep(menuModalsStore.currentStepId!, {
+      language: 'de_DE',
+    })
+    mountMenu({ language: 'de_DE' })
+
+    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
+    expect(translateTo).toHaveBeenCalledWith(
+      'de_DE',
+      'Hello world',
+      expect.anything()
+    )
+    await vi.waitFor(() =>
+      expect(menuModalsStore.currentModal).not.toBe(MenuModals.TRANSLATE)
+    )
+    // back on the step, the menu waits for a choice
+    menuModalsStore.back()
+    expect(menuModalsStore.currentModal).toBe(MenuModals.TRANSLATE)
+    expect(menuModalsStore.currentModalParams.language).toBeUndefined()
   })
 
   it('translates into any language picked from the full list', async () => {

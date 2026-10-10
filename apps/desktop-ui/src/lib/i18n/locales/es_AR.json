@@ -364,7 +364,7 @@
     "translationQualityRemaining": "Quedaron problemas de calidad después de la corrección",
     "translationQualityRepairFailed": "Falló el paso de corrección; se conservó la primera traducción.",
     "translationQualityRepaired": "Los problemas de calidad se corrigieron automáticamente.",
-    "voiceChat": "Mensaje de voz al chat",
+    "voiceChat": "Dictar mensaje a un nuevo chat",
     "voiceInput": "Entrada de voz",
     "voiceSend": "Enviar",
     "voiceToInput": "Insertar en el campo"
@@ -387,28 +387,20 @@
     "done": "Listo",
     "emptyResult": "El modelo devolvió un resultado vacío",
     "failed": {
-      "aiTask": "No se pudo aplicar la tarea de IA",
       "command": "El comando falló",
-      "correction": "No se pudo corregir el texto",
-      "translate": "No se pudo traducir el texto"
+      "correction": "No se pudo corregir el texto"
     },
     "focusChanged": "La ventana cambió mientras tanto, así que el resultado se copió al portapapeles",
-    "missingAiTask": "No hay una tarea de IA configurada en esta posición",
-    "missingLanguage": "No hay un idioma configurado en esta posición de traducción",
     "noSelection": "No hay nada seleccionado",
     "noTarget": "Ninguna ventana de aplicación tiene el foco",
     "resultInClipboard": "El resultado está en el portapapeles",
     "unchanged": {
-      "aiTask": "La tarea de IA dejó el texto sin cambios",
       "command": "El comando dejó el texto como estaba",
-      "correction": "No se encontraron errores",
-      "translate": "La traducción es igual al texto"
+      "correction": "No se encontraron errores"
     },
     "working": {
-      "aiTask": "Aplicando la tarea de IA…",
       "command": "Ejecutando el comando…",
-      "correction": "Corrigiendo…",
-      "translate": "Traduciendo…"
+      "correction": "Corrigiendo…"
     }
   },
   "settings": {
@@ -564,6 +556,7 @@
       "unavailable": "No disponibles"
     },
     "mainActionsHint": "Acciones disponibles en el menú principal. Arrastrá las tarjetas para asignarlas a distintas teclas rápidas.",
+    "mainActionTaskRemoved": "Tarea de IA eliminada",
     "mainActionsTab": "Acciones principales",
     "markdownBullet": "Marcador de lista",
     "markdownCleanBlockquoteAngle": "> (conservar prefijo de cita)",

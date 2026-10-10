@@ -364,7 +364,7 @@
     "translationQualityRemaining": "Some quality issues remain after the repair",
     "translationQualityRepairFailed": "The quality pass failed; the first translation was kept.",
     "translationQualityRepaired": "Quality issues were repaired automatically.",
-    "voiceChat": "Voice message to chat",
+    "voiceChat": "Dictate message to new chat",
     "voiceInput": "Voice input",
     "voiceSend": "Send",
     "voiceToInput": "Insert into input"
@@ -387,28 +387,20 @@
     "done": "Done",
     "emptyResult": "The model returned an empty result",
     "failed": {
-      "aiTask": "AI task failed",
       "command": "Command failed",
-      "correction": "Correction failed",
-      "translate": "Translation failed"
+      "correction": "Correction failed"
     },
     "focusChanged": "The window changed meanwhile, so the result was copied to the clipboard",
-    "missingAiTask": "No AI task is configured in this slot",
-    "missingLanguage": "No language is configured in this translation slot",
     "noSelection": "Nothing is selected",
     "noTarget": "No application window has the focus",
     "resultInClipboard": "The result is in the clipboard",
     "unchanged": {
-      "aiTask": "The AI task left the text as it was",
       "command": "The command left the text as it was",
-      "correction": "No mistakes found",
-      "translate": "The translation is the same as the text"
+      "correction": "No mistakes found"
     },
     "working": {
-      "aiTask": "Applying the AI task…",
       "command": "Running the command…",
-      "correction": "Correcting…",
-      "translate": "Translating…"
+      "correction": "Correcting…"
     }
   },
   "settings": {
@@ -564,6 +556,7 @@
       "unavailable": "Unavailable"
     },
     "mainActionsHint": "Actions available from the main action menu. Drag cards to assign them to different hotkeys.",
+    "mainActionTaskRemoved": "Deleted AI task",
     "mainActionsTab": "Main actions",
     "markdownBullet": "List marker",
     "markdownCleanBlockquoteAngle": "> (keep quote prefix)",

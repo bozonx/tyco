@@ -40,6 +40,7 @@ import {
   type MainActionGroup,
   buildMainActionOptions,
   commandGroup,
+  duplicatesDirectChoice,
   mainActionOptionId,
   pluginActionGroup,
   standardActionGroup,
@@ -50,6 +51,7 @@ import {
   isMenuCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
+import { getLanguageLabel } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { pluginIndexes } from '../../plugins'
@@ -60,6 +62,7 @@ import FieldSelect from '../common/FieldSelect.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import { Icon } from '@iconify/vue'
 import {
+  type CommandConfig,
   type MainActionConfig,
   STANDARD_ACTION_IDS,
   type StandardActionId,
@@ -85,6 +88,38 @@ const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
 const optionId = mainActionOptionId
 
+/** The AI tasks the menu can refer to: those with a name */
+const aiTasks = computed(() =>
+  (props.userConfig.aiTasks ?? []).flatMap((task) =>
+    task?.id && task.name.trim() ? [task] : []
+  )
+)
+
+/** The translation languages, and those the slots translate into already */
+const languages = computed(() => [
+  ...new Set([
+    ...(props.userConfig.toTranslateLanguages ?? []).filter(
+      (language): language is string => !!language
+    ),
+    ...actionSlots.value.flatMap((slot) =>
+      slot?.type === 'translation' ? [slot.language] : []
+    ),
+  ]),
+])
+
+const slotIds = computed(() => new Set(actionSlots.value.map(optionId)))
+
+/**
+ * A command that does what a language or a task of the picker does is left out,
+ * unless a slot holds it
+ */
+const isOffered = (command: CommandConfig) =>
+  slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
+  !duplicatesDirectChoice(command, {
+    languages: languages.value,
+    rules: aiTasks.value.map((task) => task.rule),
+  })
+
 /** Actions that open a dialog to pick what to do are marked as such */
 const OPENS_DIALOG = new Set<StandardActionId>(['translation', 'aiTask'])
 
@@ -95,6 +130,16 @@ const availableActions = computed((): MainActionChoice[] => [
       ? `${t(`action.${actionId}`)}…`
       : t(`action.${actionId}`),
     group: standardActionGroup(actionId),
+  })),
+  ...languages.value.map((language) => ({
+    config: { type: 'translation' as const, language },
+    name: t(getLanguageLabel(language)),
+    group: { kind: 'translation' as const },
+  })),
+  ...aiTasks.value.map((task) => ({
+    config: { type: 'aiTask' as const, taskId: task.id },
+    name: task.name,
+    group: { kind: 'aiTask' as const },
   })),
   // plugins offer only the actions they register for this menu
   ...actionMenuStore
@@ -114,7 +159,9 @@ const availableActions = computed((): MainActionChoice[] => [
     ),
   // only commands that take the text of the editor fit the menu
   ...commands.value
-    .filter((command) => isMenuCommand(command, toolsStore))
+    .filter(
+      (command) => isMenuCommand(command, toolsStore) && isOffered(command)
+    )
     .map((command) => ({
       config: { type: 'command' as const, commandId: command.id },
       name: commandLabel(command),
@@ -151,6 +198,8 @@ function groupLabel(group: MainActionGroup): string {
 
 /** The name of a slot whose action is not on offer, e.g. a disabled command */
 function unavailableName(slot: MainActionConfig): string {
+  if (slot.type === 'aiTask') return t('settings.mainActionTaskRemoved')
+  if (slot.type === 'translation') return slot.language
   if (slot.type !== 'command') return slot.actionId
   const command = commands.value.find((item) => item.id === slot.commandId)
   return t('commands.unavailableInMenu', {

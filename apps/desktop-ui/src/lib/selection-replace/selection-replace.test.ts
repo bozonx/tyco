@@ -56,19 +56,11 @@ function setup(overrides: Record<string, unknown> = {}) {
 describe('selection actions', () => {
   it('parses and formats action ids', () => {
     expect(parseSelectionAction('correction')).toEqual({ kind: 'correction' })
-    expect(parseSelectionAction('translate.2')).toEqual({
-      kind: 'translate',
-      slot: 2,
-    })
-    expect(parseSelectionAction('aiTask.0')).toEqual({
-      kind: 'aiTask',
-      slot: 0,
-    })
-    expect(parseSelectionAction('aiTask.x')).toBeNull()
+    expect(selectionActionId({ kind: 'correction' })).toBe('correction')
+    // slots of translation languages and AI tasks are not actions any more
+    expect(parseSelectionAction('translate.0')).toBeNull()
+    expect(parseSelectionAction('aiTask.0')).toBeNull()
     expect(parseSelectionAction('other')).toBeNull()
-    expect(selectionActionId({ kind: 'translate', slot: 1 })).toBe(
-      'translate.1'
-    )
   })
 
   it('carries the id of a command, whatever it holds', () => {
@@ -166,7 +158,7 @@ describe('createSelectionReplace', () => {
 
   it('reports a failed request in the bubble and a notification', async () => {
     const { request, deps, model } = setup()
-    const done = model.handleRun(event({ action: 'translate.0' }))
+    const done = model.handleRun(event({ action: 'command:fix' }))
     request.reject(new Error('quota'))
     await done
     expect(deps.finish).toHaveBeenCalledWith(1, null)
@@ -174,7 +166,7 @@ describe('createSelectionReplace', () => {
       expect.objectContaining({ kind: 'error', text: 'Error: quota' })
     )
     expect(deps.notify).toHaveBeenCalledWith(
-      'selection.failed.translate',
+      'selection.failed.command',
       'Error: quota'
     )
   })

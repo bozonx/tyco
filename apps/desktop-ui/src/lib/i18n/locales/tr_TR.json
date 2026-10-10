@@ -364,7 +364,7 @@
     "translationQualityRemaining": "Düzeltmeden sonra bazı kalite sorunları kaldı",
     "translationQualityRepairFailed": "Düzeltme adımı başarısız oldu; ilk çeviri korundu.",
     "translationQualityRepaired": "Kalite sorunları otomatik olarak düzeltildi.",
-    "voiceChat": "Sohbete sesli mesaj",
+    "voiceChat": "Yeni sohbete mesaj dikte edin",
     "voiceInput": "Sesli giriş",
     "voiceSend": "Gönder",
     "voiceToInput": "Giriş alanına ekle"
@@ -387,29 +387,18 @@
     "done": "Tamam",
     "emptyResult": "Model boş bir sonuç döndürdü",
     "failed": {
-      "aiTask": "Yapay zekâ görevi uygulanamadı",
       "command": "Komut başarısız oldu",
-      "correction": "Metin düzeltilemedi",
-      "translate": "Metin çevrilemedi"
+      "correction": "Metin düzeltilemedi"
     },
     "focusChanged": "Bu sırada pencere değişti, bu yüzden sonuç panoya kopyalandı",
-    "missingAiTask": "Bu yuvada bir yapay zekâ görevi ayarlanmamış",
-    "missingLanguage": "Bu çeviri yuvasında bir dil ayarlanmamış",
     "noSelection": "Hiçbir şey seçili değil",
     "noTarget": "Odakta bir uygulama penceresi yok",
     "resultInClipboard": "Sonuç panoda",
     "unchanged": {
-      "aiTask": "Yapay zekâ görevi metni değiştirmedi",
       "command": "Komut metni olduğu gibi bıraktı",
-      "correction": "Hata bulunamadı",
-      "translate": "Çeviri metinle aynı"
+      "correction": "Hata bulunamadı"
     },
-    "working": {
-      "aiTask": "Yapay zekâ görevi uygulanıyor…",
-      "command": "Komut çalışıyor…",
-      "correction": "Düzeltiliyor…",
-      "translate": "Çevriliyor…"
-    }
+    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "actionAfterRunLabel": "Bitince",
@@ -564,6 +553,7 @@
       "unavailable": "Kullanılamayanlar"
     },
     "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",
+    "mainActionTaskRemoved": "Silinmiş AI görevi",
     "mainActionsTab": "Ana eylemler",
     "markdownBullet": "Liste işareti",
     "markdownCleanBlockquoteAngle": "> (alıntı önekini koru)",

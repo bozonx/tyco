@@ -43,6 +43,8 @@ export function mainActionOptionId(
 ): string {
   if (!item) return ''
   if (item.type === 'command') return `command:${item.commandId}`
+  if (item.type === 'aiTask') return `aiTask:${item.taskId}`
+  if (item.type === 'translation') return `translation:${item.language}`
   return `${item.type}:${item.actionId}`
 }
 
@@ -69,6 +71,28 @@ export function commandGroup(
   const owner = commandTool(command, tools)?.owner
   if (owner?.kind === 'plugin') return { kind: 'plugin', plugin: owner.name }
   return { kind: 'commands' }
+}
+
+/**
+ * Whether the command does just what an item of the picker does already: a
+ * translation into one of the translation languages, or the rule of an AI task.
+ * Such commands are made once from the settings, see `defaultCommands`
+ */
+export function duplicatesDirectChoice(
+  command: CommandConfig,
+  direct: { languages: readonly string[]; rules: readonly string[] }
+): boolean {
+  const value = (key: string) => {
+    const field = command.toolConfig[key]
+    return typeof field === 'string' ? field.trim() : ''
+  }
+  if (command.toolId === 'core.translate') {
+    return direct.languages.includes(value('language'))
+  }
+  if (command.toolId === 'core.aiTask') {
+    return direct.rules.some((rule) => rule.trim() === value('prompt'))
+  }
+  return false
 }
 
 /**

@@ -691,6 +691,38 @@ fn normalize_main_actions_config(user_config: &mut Value) -> bool {
     changed
 }
 
+/// Gives every AI task without one a stable `id`, `task-<n>`, which the main
+/// action menu refers to the task by. Empty slots stay empty.
+fn assign_ai_task_ids(tasks: &mut [Value]) -> bool {
+    let has_id = |task: &Value| {
+        task.get("id")
+            .and_then(Value::as_str)
+            .is_some_and(|id| !id.trim().is_empty())
+    };
+    let mut used: Vec<String> = tasks
+        .iter()
+        .filter(|task| has_id(task))
+        .filter_map(|task| task["id"].as_str().map(str::to_owned))
+        .collect();
+    let mut changed = false;
+    for task in tasks.iter_mut() {
+        if has_id(task) {
+            continue;
+        }
+        let Some(fields) = task.as_object_mut() else {
+            continue;
+        };
+        let id = (1..)
+            .map(|n| format!("task-{n}"))
+            .find(|id| !used.contains(id))
+            .unwrap_or_default();
+        fields.insert(String::from("id"), Value::String(id.clone()));
+        used.push(id);
+        changed = true;
+    }
+    changed
+}
+
 fn normalize_ai_rules_and_tasks(user_config: &mut Value) -> bool {
     let defaults = default_user_config();
     let default_rules = &defaults["aiRules"];
@@ -721,9 +753,12 @@ fn normalize_ai_rules_and_tasks(user_config: &mut Value) -> bool {
         changed = true;
     }
 
-    if config.get("aiTasks").and_then(Value::as_array).is_none() {
-        config.insert(String::from("aiTasks"), defaults["aiTasks"].clone());
-        changed = true;
+    match config.get_mut("aiTasks").and_then(Value::as_array_mut) {
+        Some(tasks) => changed |= assign_ai_task_ids(tasks),
+        None => {
+            config.insert(String::from("aiTasks"), defaults["aiTasks"].clone());
+            changed = true;
+        }
     }
 
     if config.get("plugins").and_then(Value::as_object).is_none() {
@@ -2244,6 +2279,25 @@ mod tests {
         assert!(config["aiRules"].get("base").is_none());
         assert_eq!(config["aiRules"]["chat"], json!(""));
         assert!(config["aiTasks"].as_array().is_some());
+        assert!(!normalize_ai_rules_and_tasks(&mut config));
+    }
+
+    #[test]
+    fn normalize_ai_rules_and_tasks_gives_tasks_ids() {
+        let mut config = json!({
+            "aiTasks": [
+                { "name": "a", "rule": "x" },
+                null,
+                { "id": "task-1", "name": "b", "rule": "y" },
+                { "id": " ", "name": "c", "rule": "z" }
+            ]
+        });
+
+        assert!(normalize_ai_rules_and_tasks(&mut config));
+        assert_eq!(config["aiTasks"][0]["id"], json!("task-2"));
+        assert_eq!(config["aiTasks"][1], Value::Null);
+        assert_eq!(config["aiTasks"][2]["id"], json!("task-1"));
+        assert_eq!(config["aiTasks"][3]["id"], json!("task-3"));
         assert!(!normalize_ai_rules_and_tasks(&mut config));
     }
 

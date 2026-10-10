@@ -265,4 +265,38 @@ describe('createActionMenuStoreModel', () => {
       text: 'menu text',
     })
   })
+
+  it('builds the items of AI tasks and languages, which open their dialog', async () => {
+    const { deps } = setup()
+    const store = createActionMenuStoreModel({
+      ...deps,
+      mainActions: () => [
+        { type: 'aiTask', taskId: 'task-2' },
+        { type: 'aiTask', taskId: 'gone' },
+        { type: 'translation', language: 'en_US' },
+      ],
+      aiTasks: () => [null, { id: 'task-2', name: 'Shorten' }],
+    })
+
+    const slots = store.getShortcutActions()
+    expect(slots.map((action) => action?.id)).toEqual([
+      'aiTask:task-2',
+      undefined,
+      'translation:en_US',
+    ])
+    expect(slots[0]).toMatchObject({ name: 'Shorten' })
+    expect(slots[2]).toMatchObject({ labelKey: 'language.en_US' })
+
+    await slots[0]?.action('some text')
+    expect(deps.openAiTaskModal).toHaveBeenCalledWith('some text', 'task-2')
+    await slots[2]?.action('some text')
+    expect(deps.openTranslateModal).toHaveBeenCalledWith('some text', 'en_US')
+
+    await slots[2]?.action('  ')
+    expect(deps.openTranslateModal).toHaveBeenCalledTimes(1)
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.textNotSelected',
+      'error'
+    )
+  })
 })

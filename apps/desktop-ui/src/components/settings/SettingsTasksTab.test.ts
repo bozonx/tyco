@@ -11,7 +11,9 @@ describe('SettingsTasksTab.vue', () => {
   it('adds and updates task slots', async () => {
     const wrapper = mount(SettingsTasksTab, {
       props: {
-        userConfig: { aiTasks: [{ name: 'Existing', rule: 'Do this' }] },
+        userConfig: {
+          aiTasks: [{ id: 'task-1', name: 'Existing', rule: 'Do this' }],
+        },
       },
       global: {
         stubs: {
@@ -30,6 +32,7 @@ describe('SettingsTasksTab.vue', () => {
 
     const slots = wrapper.findComponent({ name: 'ShortcutSlots' })
     expect(slots.props('items')[0]).toEqual({
+      id: 'task-1',
       name: 'Existing',
       rule: 'Do this',
     })
@@ -42,7 +45,7 @@ describe('SettingsTasksTab.vue', () => {
       name: string
       rule: string
     } | null)[]
-    expect(firstEmitted[1]).toEqual({ name: '', rule: '' })
+    expect(firstEmitted[1]).toEqual({ id: 'task-2', name: '', rule: '' })
   })
 
   it('prunes empty tasks when unmounted', async () => {

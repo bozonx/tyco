@@ -108,7 +108,9 @@ describe('AiTaskMenu', () => {
 
   it('saves an own request as a task in a free key', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.aiTasks = [{ name: 'edit', rule: 'Edit it' }]
+    ipcStore.params.userConfig.aiTasks = [
+      { id: 'task-1', name: 'edit', rule: 'Edit it' },
+    ]
     const saveUserConfig = vi
       .spyOn(ipcStore, 'saveUserConfig')
       .mockResolvedValue({ success: true, result: undefined })
@@ -126,8 +128,8 @@ describe('AiTaskMenu', () => {
 
     await vi.waitFor(() => expect(saveUserConfig).toHaveBeenCalled())
     expect(saveUserConfig.mock.calls[0]![0].aiTasks).toEqual([
-      { name: 'edit', rule: 'Edit it' },
-      { name: 'Make it formal', rule: 'Make it formal' },
+      { id: 'task-1', name: 'edit', rule: 'Edit it' },
+      { id: 'task-2', name: 'Make it formal', rule: 'Make it formal' },
     ])
   })
 
@@ -168,7 +170,9 @@ describe('AiTaskMenu', () => {
 
   it('keeps the result of a menu closed meanwhile off the screen', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.aiTasks = [{ name: 'edit', rule: 'Edit it' }]
+    ipcStore.params.userConfig.aiTasks = [
+      { id: 'task-1', name: 'edit', rule: 'Edit it' },
+    ]
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     const saveResult = vi
@@ -212,5 +216,33 @@ describe('AiTaskMenu', () => {
 
     expect(saveResult).toHaveBeenCalledWith('source-1', 'Changed text')
     expect(menuModalsStore.currentModal).toBe(MenuModals.NONE)
+  })
+
+  it('runs the task of the main menu item once, by its id', async () => {
+    const ipcStore = useIpcStore()
+    ipcStore.params.userConfig.aiTasks = [
+      null,
+      { id: 'task-7', name: 'edit', rule: 'Edit it' },
+    ]
+    const historyStore = useHistoryStore()
+    vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
+    vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
+    const menuModalsStore = useMenuModalsStore()
+    const text = 'Some task text that is long enough to process'
+    menuModalsStore.nextModal(MenuModals.AI_TASK, { text, taskId: 'task-7' })
+    aiTasks.mockResolvedValue('Changed text')
+
+    mount(AiTaskMenu, {
+      props: menuModalsStore.currentModalParams,
+      global: { stubs: stubs(() => {}) },
+    })
+
+    await vi.waitFor(() =>
+      expect(menuModalsStore.currentModal).toBe(MenuModals.DIFF)
+    )
+    expect(aiTasks).toHaveBeenCalledWith(1, text, expect.anything())
+    // back on the step, the menu waits for a choice
+    menuModalsStore.back()
+    expect(menuModalsStore.currentModalParams.taskId).toBeUndefined()
   })
 })

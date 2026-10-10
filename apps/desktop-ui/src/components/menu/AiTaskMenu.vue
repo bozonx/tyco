@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useCallAi } from '../../composables/useCallAi'
 import { useI18n } from '../../composables/useI18n'
@@ -57,8 +57,13 @@ import QueryPanel, {
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const props = withDefaults(
-  defineProps<{ text?: string; stopListening?: boolean }>(),
-  { text: '', stopListening: false }
+  defineProps<{
+    text?: string
+    stopListening?: boolean
+    /** An AI task to run at once, by its id: the main menu item of the task */
+    taskId?: string
+  }>(),
+  { text: '', stopListening: false, taskId: undefined }
 )
 
 const routeParamsStore = useRouteParams()
@@ -104,20 +109,37 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       index: number
     ) =>
       item && item.name
-        ? {
-            name: item.name,
-            action: async () => {
-              const task = ipcStore.params.userConfig?.aiTasks?.[index]
-              if (!task || !task.rule?.trim()) {
-                toast('toast.desktopCommandFailed', 'error')
-                return
-              }
-              await makeDiff((text, signal) => aiTasks(index, text, { signal }))
-            },
-          }
+        ? { name: item.name, action: () => runTask(index) }
         : undefined
   )
 )
+
+async function runTask(index: number) {
+  const task = ipcStore.params.userConfig?.aiTasks?.[index]
+  if (!task || !task.rule?.trim()) {
+    toast('toast.desktopCommandFailed', 'error')
+    return
+  }
+  await makeDiff((text, signal) => aiTasks(index, text, { signal }))
+}
+
+// once: back on this step from the result, the menu waits for a choice
+onMounted(() => {
+  const taskId = props.taskId
+  if (!taskId) return
+  const stepId = menuModalsStore.currentStepId
+  if (stepId !== undefined) {
+    menuModalsStore.updateStep(stepId, { taskId: undefined })
+  }
+  const index = (ipcStore.params.userConfig?.aiTasks ?? []).findIndex(
+    (task) => task?.id === taskId
+  )
+  if (index < 0) {
+    toast('toast.desktopCommandFailed', 'error')
+    return
+  }
+  void runTask(index)
+})
 
 const recentPrompts = computed(
   () => ipcStore.params.localState?.recentAiPrompts ?? []

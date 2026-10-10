@@ -266,6 +266,7 @@ pub fn default_user_config() -> Value {
       },
       "aiTasks": [
         {
+          "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }

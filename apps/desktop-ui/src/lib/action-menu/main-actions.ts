@@ -36,6 +36,20 @@ export function normalizeMainActions(
       return { type: 'command', commandId: item.commandId }
     }
     if (
+      item?.type === 'aiTask' &&
+      typeof item.taskId === 'string' &&
+      item.taskId.trim()
+    ) {
+      return { type: 'aiTask', taskId: item.taskId }
+    }
+    if (
+      item?.type === 'translation' &&
+      typeof item.language === 'string' &&
+      item.language.trim()
+    ) {
+      return { type: 'translation', language: item.language }
+    }
+    if (
       !item ||
       item.type !== 'standard' ||
       !isStandardActionId(item.actionId)

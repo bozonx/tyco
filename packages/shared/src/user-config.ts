@@ -340,8 +340,24 @@ export interface CommandMainAction {
   commandId: string
 }
 
+/** An AI task of `aiTasks`, by its `id` */
+export interface AiTaskMainAction {
+  type: 'aiTask'
+  taskId: string
+}
+
+/** A translation into a language of `toTranslateLanguages` */
+export interface TranslationMainAction {
+  type: 'translation'
+  language: string
+}
+
 export type MainActionConfig =
-  StandardMainAction | PluginMainAction | CommandMainAction
+  | StandardMainAction
+  | PluginMainAction
+  | CommandMainAction
+  | AiTaskMainAction
+  | TranslationMainAction
 
 export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
   STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
@@ -448,6 +464,8 @@ export interface UserConfig {
     voiceCorrection: string
   }
   aiTasks: ({
+    /** Stable, hidden from the user: what the main menu refers to the task by */
+    id: string
     name: string
     rule: string
     tapAction?: string
@@ -526,6 +544,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
   aiTasks: [
     {
+      id: 'deepEdit',
       name: 'deepEdit',
       rule: 'Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.',
     },

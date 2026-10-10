@@ -37,6 +37,21 @@ describe('normalizeMainActions', () => {
       null,
     ])
   })
+
+  it('keeps references to AI tasks and translation languages', () => {
+    const raw = [
+      { type: 'aiTask', taskId: 'task-1' },
+      { type: 'aiTask', taskId: '' },
+      { type: 'translation', language: 'en_US' },
+      { type: 'translation' },
+    ]
+    expect(normalizeMainActions(raw).slice(0, 4)).toEqual([
+      { type: 'aiTask', taskId: 'task-1' },
+      null,
+      { type: 'translation', language: 'en_US' },
+      null,
+    ])
+  })
 })
 
 describe('assignPluginActions', () => {

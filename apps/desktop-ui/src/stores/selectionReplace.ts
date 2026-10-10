@@ -20,7 +20,7 @@ import {
 
 const HISTORY_OPERATIONS: Partial<
   Record<SelectionAction['kind'], EditorHistoryOperation>
-> = { correction: 'correction', translate: 'translate', aiTask: 'ai-task' }
+> = { correction: 'correction' }
 
 /** A command run cancelled from within its tool */
 class SelectionAbort extends Error {}
@@ -41,7 +41,7 @@ function describeError(error: unknown): string {
 export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
-  const { correctText, translateText, aiTasks } = useCallAi()
+  const { correctText } = useCallAi()
   const runner = createCommandRunner(useCommandRunnerDependencies())
 
   /** Runs a command of the library for the output that replaces the text */
@@ -82,23 +82,9 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     text: string,
     signal: AbortSignal
   ): Promise<string> => {
-    const userConfig = ipcStore.params.userConfig
     switch (action.kind) {
       case 'correction':
         return correctText(text, { signal, notifyError: false })
-      case 'translate':
-        if (!userConfig.toTranslateLanguages[action.slot]) {
-          throw new Error(translate('selection.missingLanguage'))
-        }
-        return translateText(action.slot, text, {
-          signal,
-          notifyError: false,
-        }).then((result) => (result ? result.text : ''))
-      case 'aiTask':
-        if (!userConfig.aiTasks[action.slot]) {
-          throw new Error(translate('selection.missingAiTask'))
-        }
-        return aiTasks(action.slot, text, { signal, notifyError: false })
       case 'command':
         return runCommand(action.commandId, text, signal)
     }

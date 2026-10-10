@@ -391,6 +391,7 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
+import { withAiTaskIds } from '../lib/ai-tasks/custom-prompt'
 import {
   createCommand,
   normalizeCommands,
@@ -808,12 +809,12 @@ function normalizeAiTasks(config: Record<string, any>) {
     config.aiTasks = []
   }
 
-  config.aiTasks = normalizeShortcutSlots<Record<string, any>>(
-    config.aiTasks
-  ).map((task) =>
-    task && (task.name?.trim() || task.rule?.trim())
-      ? { name: task.name || '', rule: task.rule || '' }
-      : null
+  config.aiTasks = withAiTaskIds(
+    normalizeShortcutSlots<Record<string, any>>(config.aiTasks).map((task) =>
+      task && (task.name?.trim() || task.rule?.trim())
+        ? { id: task.id, name: task.name || '', rule: task.rule || '' }
+        : null
+    )
   )
 }
 

@@ -32,11 +32,11 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
-    openAiTaskModal: (text: string) => {
-      menuModalsStore.nextModal(MenuModals.AI_TASK, { text })
+    openAiTaskModal: (text: string, taskId?: string) => {
+      menuModalsStore.nextModal(MenuModals.AI_TASK, { text, taskId })
     },
-    openTranslateModal: (text: string) => {
-      menuModalsStore.nextModal(MenuModals.TRANSLATE, { text })
+    openTranslateModal: (text: string, language?: string) => {
+      menuModalsStore.nextModal(MenuModals.TRANSLATE, { text, language })
     },
     startCorrection: (text: string, extra?: Record<string, unknown>) =>
       // the result replaces the text in the editor as well
@@ -50,6 +50,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       ipcStore.params.userConfig.mainActionRegistrations,
     mainActions: () => ipcStore.params.userConfig.mainActions,
     commands: () => ipcStore.params.userConfig.commands,
+    aiTasks: () => ipcStore.params.userConfig.aiTasks,
     ...useCommandRunnerDependencies(),
   })
 })

@@ -29,6 +29,7 @@
 import { computed, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import { newAiTaskId } from '../../lib/ai-tasks/custom-prompt'
 import {
   moveShortcutSlot,
   normalizeShortcutSlots,
@@ -43,7 +44,7 @@ const emit = defineEmits<{ (e: 'update:aiTasks', value: any[]): void }>()
 
 const { t } = useI18n()
 
-type AiTask = { name: string; rule: string }
+type AiTask = { id: string; name: string; rule: string }
 
 const taskSlots = computed(() =>
   normalizeShortcutSlots<AiTask>(props.userConfig.aiTasks)
@@ -59,7 +60,7 @@ function moveTask(from: number, to: number) {
 
 function addTask(index: number) {
   const slots = [...taskSlots.value]
-  slots[index] = { name: '', rule: '' }
+  slots[index] = { id: newAiTaskId(slots), name: '', rule: '' }
   emitSlots(slots)
 }
 

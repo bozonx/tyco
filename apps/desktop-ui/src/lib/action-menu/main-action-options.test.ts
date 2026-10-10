@@ -5,6 +5,7 @@ import type { RegisteredTool, ToolLookup } from '../tools/tool-types'
 import {
   buildMainActionOptions,
   commandGroup,
+  duplicatesDirectChoice,
   type MainActionChoice,
   type MainActionGroup,
   mainActionOptionId,
@@ -108,5 +109,55 @@ describe('buildMainActionOptions', () => {
       { id: 'command:on', name: 'on', group: 'commands' },
       { id: 'command:off', name: 'missing command:off', group: 'unavailable' },
     ])
+  })
+})
+
+describe('mainActionOptionId', () => {
+  it('names AI tasks by id and translations by language', () => {
+    expect(mainActionOptionId({ type: 'aiTask', taskId: 'task-1' })).toBe(
+      'aiTask:task-1'
+    )
+    expect(mainActionOptionId({ type: 'translation', language: 'en_US' })).toBe(
+      'translation:en_US'
+    )
+  })
+})
+
+describe('duplicatesDirectChoice', () => {
+  const direct = { languages: ['en_US'], rules: [' Be brief '] }
+  const command = (toolId: string, toolConfig: Record<string, unknown>) => ({
+    ...createCommand(toolId),
+    toolConfig,
+  })
+
+  it('finds commands that do what a language or a task does', () => {
+    expect(
+      duplicatesDirectChoice(
+        command('core.translate', { language: 'en_US' }),
+        direct
+      )
+    ).toBe(true)
+    expect(
+      duplicatesDirectChoice(
+        command('core.aiTask', { prompt: 'Be brief' }),
+        direct
+      )
+    ).toBe(true)
+  })
+
+  it('keeps the commands that do something else', () => {
+    expect(
+      duplicatesDirectChoice(
+        command('core.translate', { language: 'de_DE' }),
+        direct
+      )
+    ).toBe(false)
+    expect(
+      duplicatesDirectChoice(
+        command('core.aiTask', { prompt: 'Other' }),
+        direct
+      )
+    ).toBe(false)
+    expect(duplicatesDirectChoice(command('script', {}), direct)).toBe(false)
   })
 })
