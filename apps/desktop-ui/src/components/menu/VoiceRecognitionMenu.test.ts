@@ -1,0 +1,177 @@
+import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
+
+const mocks = vi.hoisted(() => ({
+  startDictation: vi.fn().mockResolvedValue(undefined),
+  finishDictation: vi.fn().mockResolvedValue('recognized voice'),
+  cancelDictation: vi.fn().mockResolvedValue(undefined),
+  shouldFormatRecognizedText: vi.fn().mockReturnValue(false),
+  voiceCorrection: vi.fn(),
+  toast: vi.fn(),
+  toastText: vi.fn(),
+}))
+
+vi.mock('../../composables/useCallAi', () => ({
+  useCallAi: () => ({
+    startDictation: mocks.startDictation,
+    finishDictation: mocks.finishDictation,
+    cancelDictation: mocks.cancelDictation,
+    shouldFormatRecognizedText: mocks.shouldFormatRecognizedText,
+    voiceCorrection: mocks.voiceCorrection,
+  }),
+}))
+
+vi.mock('../../composables/useI18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+
+vi.mock('../../composables/useToast', () => ({
+  default: () => ({ toast: mocks.toast, toastText: mocks.toastText }),
+}))
+
+vi.mock('../../lib/desktop/client', () => ({
+  desktopClient: {
+    isAvailable: vi.fn().mockReturnValue(false),
+    listen: vi.fn().mockResolvedValue(() => {}),
+  },
+}))
+
+import { useIpcStore } from '../../stores/ipc'
+
+describe('VoiceRecognitionMenu', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    useIpcStore().params.isWindowShown = true
+    vi.clearAllMocks()
+  })
+
+  it('renders chat action buttons (Finish, Cancel cross, Send button) when chat is true in bar mode', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: {
+            props: ['keys', 'icon'],
+            template: '<button class="shortcut-btn"><slot /></button>',
+          },
+          Button: {
+            props: ['square', 'ghost', 'title', 'disabled'],
+            template: '<button class="btn" :title="title"><slot /></button>',
+          },
+          Icon: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    const buttons = wrapper.findAll('button')
+    // ShortcutButton (Finish), Button (Cancel), Button (Send)
+    expect(buttons.length).toBe(3)
+
+    const cancelBtn = wrapper.find('button[title="chat.voiceCancelHint"]')
+    expect(cancelBtn.exists()).toBe(true)
+
+    const sendBtn = wrapper.find('button[title="chat.voiceSendHint"]')
+    expect(sendBtn.exists()).toBe(true)
+  })
+
+  it('triggers finish with submit on send button click', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+          Button: {
+            props: ['square', 'ghost', 'title', 'disabled'],
+            template:
+              '<button class="btn" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+          Icon: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    const sendBtn = wrapper.find('button[title="chat.voiceSendHint"]')
+    await sendBtn.trigger('click')
+    await flushPromises()
+
+    expect(mocks.finishDictation).toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toBeTruthy()
+    expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
+  })
+
+  it('triggers cancel on cross button click', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+          Button: {
+            props: ['square', 'ghost', 'title', 'disabled'],
+            template:
+              '<button class="btn" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+          Icon: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    const cancelBtn = wrapper.find('button[title="chat.voiceCancelHint"]')
+    await cancelBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.emitted('cancelled')).toBeTruthy()
+  })
+
+  it('triggers finish with submit on Ctrl+Enter keydown', async () => {
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+          Button: true,
+          Icon: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        code: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+      })
+    )
+    await flushPromises()
+
+    expect(mocks.finishDictation).toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toBeTruthy()
+    expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
+  })
+})

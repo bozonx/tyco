@@ -51,6 +51,7 @@
       <VoiceRecognitionMenu
         v-if="isInlineVoice"
         variant="bar"
+        chat
         v-bind="menuModalsStore.currentModalParams"
         @cancelled="menuModalsStore.closeAll()"
         @corrected="menuModalsStore.closeAll()"

@@ -37,4 +37,34 @@ describe('LiveTranscript', () => {
     expect(wrapper.text()).toContain('next words')
     expect(wrapper.find('.live-transcript-cursor').exists()).toBe(true)
   })
+
+  it('renders preceding prefix text when speaking continues', () => {
+    const wrapper = mount(LiveTranscript, {
+      props: { committed: '', draft: '', prefix: 'Earlier text' },
+    })
+
+    expect(wrapper.find('.live-transcript-placeholder').exists()).toBe(false)
+    expect(wrapper.find('.live-transcript-content').exists()).toBe(true)
+    expect(wrapper.find('.live-transcript-prefix').text()).toBe('Earlier text')
+    expect(wrapper.text()).toContain('menu.speakNow')
+    expect(wrapper.find('.live-transcript-cursor').exists()).toBe(true)
+  })
+
+  it('renders prefix, committed, draft, and suffix seamlessly', () => {
+    const wrapper = mount(LiveTranscript, {
+      props: {
+        committed: 'new words',
+        draft: 'in progress',
+        prefix: 'Before',
+        suffix: 'After',
+      },
+    })
+
+    expect(wrapper.find('.live-transcript-prefix').text()).toBe('Before')
+    expect(wrapper.find('.live-transcript-suffix').text()).toBe('After')
+    expect(wrapper.text()).toContain('Before')
+    expect(wrapper.text()).toContain('new words')
+    expect(wrapper.text()).toContain('in progress')
+    expect(wrapper.text()).toContain('After')
+  })
 })

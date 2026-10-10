@@ -56,7 +56,9 @@
     "startNewChatWithContext": "Start new chat with this context",
     "stop": "Stop",
     "stopped": "Stopped",
-    "voiceInput": "Voice input"
+    "voiceCancelHint": "Press Escape to cancel",
+    "voiceInput": "Voice input",
+    "voiceSendHint": "Press Ctrl+Enter to send immediately"
   },
   "commandLauncher": {
     "allCommands": "All commands",
@@ -211,7 +213,7 @@
     "unknown": "Unknown error"
   },
   "history": {
-    "chatsDisabled": "Saving chats is turned off in the settings.",
+    "chatsDisabled": "History is not saved to disk",
     "clear": "Clear history",
     "clearConfirm": "Delete all entries ({count})?",
     "clearConfirmButton": "Delete all",

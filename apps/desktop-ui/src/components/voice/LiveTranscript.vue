@@ -1,18 +1,25 @@
 <template>
   <div ref="container" class="live-transcript selectable">
     <Transition name="fade" mode="out-in">
-      <div v-if="!hasContent" class="live-transcript-placeholder">
+      <div v-if="!hasContent && !hasPrefix" class="live-transcript-placeholder">
         <span class="placeholder-text">{{
           placeholder || t('menu.speakNow')
         }}</span>
         <span class="placeholder-cursor" aria-hidden="true" />
       </div>
       <div v-else class="live-transcript-content">
-        <span>{{ committed }}</span>
+        <span v-if="prefix" class="live-transcript-prefix">{{ prefix }}</span>
+        <span v-if="committed">{{ prefixSpacer }}{{ committed }}</span>
         <span v-if="draft" class="live-transcript-draft"
-          >{{ committed ? ' ' : '' }}{{ draft }}</span
+          >{{ draftSpacer }}{{ draft }}</span
+        >
+        <span v-if="!hasContent" class="placeholder-text placeholder-inline"
+          >{{ prefixSpacer }}{{ placeholder || t('menu.speakNow') }}</span
         >
         <span class="live-transcript-cursor" aria-hidden="true" />
+        <span v-if="suffix" class="live-transcript-suffix"
+          >{{ suffixSpacer }}{{ suffix }}</span
+        >
       </div>
     </Transition>
   </div>
@@ -30,21 +37,49 @@ const props = defineProps<{
   draft?: string
   /** Optional custom placeholder text */
   placeholder?: string
+  /** Text that preceded the voice dictation (e.g. earlier content in input) */
+  prefix?: string
+  /** Text that follows the voice dictation (e.g. content after caret) */
+  suffix?: string
 }>()
 
 const { t } = useI18n()
 const container = ref<HTMLElement>()
 
 const hasContent = computed(() => Boolean(props.committed || props.draft))
+const hasPrefix = computed(() => Boolean(props.prefix || props.suffix))
+
+const prefixSpacer = computed(() => {
+  if (!props.prefix) return ''
+  return /\s$/.test(props.prefix) ? '' : ' '
+})
+
+const draftSpacer = computed(() => {
+  if (props.committed) {
+    return /\s$/.test(props.committed) ? '' : ' '
+  }
+  return prefixSpacer.value
+})
+
+const suffixSpacer = computed(() => {
+  if (props.draft) {
+    return /\s$/.test(props.draft) ? '' : ' '
+  }
+  if (props.committed) {
+    return /\s$/.test(props.committed) ? '' : ' '
+  }
+  return prefixSpacer.value
+})
 
 // the newest words are the ones being spoken: keep them in view
 watch(
-  () => [props.committed, props.draft],
+  () => [props.committed, props.draft, props.prefix],
   async () => {
     await nextTick()
     const element = container.value
     if (element) element.scrollTop = element.scrollHeight
-  }
+  },
+  { immediate: true }
 )
 </script>
 
@@ -75,6 +110,17 @@ watch(
 
 .placeholder-text {
   font-style: italic;
+}
+
+.placeholder-inline {
+  color: var(--app-text-muted);
+  user-select: none;
+  pointer-events: none;
+}
+
+.live-transcript-prefix,
+.live-transcript-suffix {
+  opacity: 0.85;
 }
 
 .live-transcript-content {

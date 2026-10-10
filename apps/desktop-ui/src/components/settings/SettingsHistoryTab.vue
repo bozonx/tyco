@@ -5,7 +5,6 @@
         <Button
           xs
           ghost
-          class="text-error"
           icon="mdi:trash-can-outline"
           @click="showClearEditorHistoryModal = true"
         >
@@ -65,7 +64,6 @@
         <Button
           xs
           ghost
-          class="text-error"
           icon="mdi:trash-can-outline"
           @click="showClearChatHistoryModal = true"
         >

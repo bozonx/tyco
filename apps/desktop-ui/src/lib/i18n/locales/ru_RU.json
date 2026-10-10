@@ -56,7 +56,9 @@
     "startNewChatWithContext": "Новый чат с этим контекстом",
     "stop": "Остановить",
     "stopped": "Остановлено",
-    "voiceInput": "Голосовой ввод"
+    "voiceCancelHint": "Нажмите Escape для отмены",
+    "voiceInput": "Голосовой ввод",
+    "voiceSendHint": "Нажмите Ctrl+Enter, чтобы отправить сразу"
   },
   "commandLauncher": {
     "allCommands": "Все команды",
@@ -211,7 +213,7 @@
     "unknown": "Неизвестная ошибка"
   },
   "history": {
-    "chatsDisabled": "Сохранение чатов отключено в настройках.",
+    "chatsDisabled": "История не сохраняется на диск",
     "clear": "Очистить историю",
     "clearConfirm": "Удалить все записи ({count})?",
     "clearConfirmButton": "Удалить все",

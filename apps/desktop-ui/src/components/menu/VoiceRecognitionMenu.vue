@@ -6,6 +6,8 @@
       class="voice-bar-transcript"
       :committed="transcript.committed"
       :draft="transcript.draft"
+      :prefix="props.prefix"
+      :suffix="props.suffix"
     />
     <div class="voice-bar-footer">
       <div class="voice-bar-wave">
@@ -17,28 +19,7 @@
         />
       </div>
       <div class="voice-bar-actions">
-        <template v-if="quickSend">
-          <ShortcutButton
-            sm
-            :keys="submitKeys"
-            icon="mdi:send"
-            primary
-            :disabled="isFinishing"
-            @click="() => finish('submit')"
-          >
-            {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
-          </ShortcutButton>
-          <ShortcutButton
-            sm
-            :keys="['Tab']"
-            icon="mdi:form-textbox"
-            :disabled="isFinishing"
-            @click="() => finish('insert')"
-          >
-            {{ t('menu.voiceToInput') }}
-          </ShortcutButton>
-        </template>
-        <template v-else>
+        <template v-if="props.chat">
           <ShortcutButton
             sm
             :keys="['Space', 'Enter']"
@@ -49,20 +30,74 @@
           >
             {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
           </ShortcutButton>
-          <ShortcutButton
-            v-if="withNext"
+          <Button
             sm
-            :keys="['Tab']"
-            icon="mdi:arrow-right"
+            ghost
+            square
+            :title="t('chat.voiceCancelHint')"
             :disabled="isFinishing"
-            @click="() => finish('next')"
+            @click="cancel"
           >
-            {{ t('write.next') }}
+            <Icon icon="mdi:close" height="18" />
+          </Button>
+          <Button
+            sm
+            square
+            :title="t('chat.voiceSendHint')"
+            :disabled="isFinishing"
+            @click="() => finish('submit')"
+          >
+            <Icon icon="mdi:arrow-up" height="19" />
+          </Button>
+        </template>
+        <template v-else>
+          <template v-if="quickSend">
+            <ShortcutButton
+              sm
+              :keys="submitKeys"
+              icon="mdi:send"
+              primary
+              :disabled="isFinishing"
+              @click="() => finish('submit')"
+            >
+              {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
+            </ShortcutButton>
+            <ShortcutButton
+              sm
+              :keys="['Tab']"
+              icon="mdi:form-textbox"
+              :disabled="isFinishing"
+              @click="() => finish('insert')"
+            >
+              {{ t('menu.voiceToInput') }}
+            </ShortcutButton>
+          </template>
+          <template v-else>
+            <ShortcutButton
+              sm
+              :keys="['Space', 'Enter']"
+              :icon="insertIcon"
+              primary
+              :disabled="isFinishing"
+              @click="() => finish('insert')"
+            >
+              {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
+            </ShortcutButton>
+            <ShortcutButton
+              v-if="withNext"
+              sm
+              :keys="['Tab']"
+              icon="mdi:arrow-right"
+              :disabled="isFinishing"
+              @click="() => finish('next')"
+            >
+              {{ t('write.next') }}
+            </ShortcutButton>
+          </template>
+          <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
+            {{ t('common.cancel') }}
           </ShortcutButton>
         </template>
-        <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
-          {{ t('common.cancel') }}
-        </ShortcutButton>
       </div>
     </div>
   </div>
@@ -87,6 +122,8 @@
       <LiveTranscript
         :committed="transcript.committed"
         :draft="transcript.draft"
+        :prefix="props.prefix"
+        :suffix="props.suffix"
       />
     </template>
 
@@ -159,9 +196,11 @@ import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
 import { useQuickDismissStore } from '../../stores/quickDismiss'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Button from '../common/Button.vue'
 import TextPreview from '../common/TextPreview.vue'
 import AudioWaveform from '../voice/AudioWaveform.vue'
 import LiveTranscript from '../voice/LiveTranscript.vue'
+import { Icon } from '@iconify/vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 type CorrectedHandler = (
@@ -188,6 +227,12 @@ const props = defineProps<{
   variant?: 'sheet' | 'bar'
   /** Where the bar is shown: the editor keeps its own params, see `inline` */
   inline?: boolean
+  /** Dictation is opened from the AI chat */
+  chat?: boolean
+  /** Text that preceded the voice dictation (e.g. earlier content in input) */
+  prefix?: string
+  /** Text that follows the voice dictation (e.g. content after caret) */
+  suffix?: string
 }>()
 
 const emit = defineEmits<{
@@ -355,6 +400,10 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
     isTranscribing.value = false
 
     if (!recognizedText.trim()) {
+      if (props.chat && intent === 'submit' && props.prefix?.trim()) {
+        emit('corrected', '', '', undefined, 'submit')
+        return
+      }
       toast('toast.nothingRecognized', 'warn')
       notifyCancelled()
       return
@@ -447,6 +496,12 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
+  if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
+    event.preventDefault()
+    void finish('submit')
+    return
+  }
+
   if (props.quickSend && event.code === 'Tab') {
     event.preventDefault()
     void finish('insert')
@@ -465,6 +520,12 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
+    event.preventDefault()
+    void finish('submit')
+    return
+  }
+
   // Tab finishes the dictation; it must not move the focus first
   if ((props.quickSend || props.withNext) && event.code === 'Tab') {
     event.preventDefault()

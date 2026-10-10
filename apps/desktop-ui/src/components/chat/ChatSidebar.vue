@@ -29,11 +29,6 @@
       </Button>
     </div>
 
-    <div v-if="chatHistoryDisabled" class="sidebar-notice">
-      <Icon icon="mdi:information-outline" height="15" class="shrink-0" />
-      <span>{{ t('history.chatsDisabled') }}</span>
-    </div>
-
     <SearchInput
       v-model="query"
       class="sidebar-search"
@@ -110,8 +105,15 @@
       </section>
     </div>
 
-    <div v-if="historyStore.chatHistory.length" class="sidebar-footer">
+    <div
+      v-if="historyStore.chatHistory.length || chatHistoryDisabled"
+      class="sidebar-footer"
+    >
+      <p v-if="chatHistoryDisabled" class="history-disabled-hint">
+        {{ t('history.chatsDisabled') }}
+      </p>
       <Button
+        v-if="historyStore.chatHistory.length"
         xs
         ghost
         icon="mdi:trash-can-outline"
@@ -371,17 +373,25 @@ onUnmounted(() => {
 }
 .sidebar-footer {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
   padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
 }
 .sidebar-clear-btn {
+  align-self: flex-start;
   color: var(--app-text-faint);
   font-size: 0.75rem;
 }
 .sidebar-clear-btn:hover {
   color: var(--color-error);
+}
+.history-disabled-hint {
+  margin: 0;
+  color: var(--app-text-faint);
+  font-size: 0.72rem;
+  line-height: 1.3;
 }
 .sidebar-notice {
   display: flex;

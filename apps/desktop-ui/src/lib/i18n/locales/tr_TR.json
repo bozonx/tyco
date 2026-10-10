@@ -56,7 +56,9 @@
     "startNewChatWithContext": "Bu bağlamla yeni sohbet başlat",
     "stop": "Durdur",
     "stopped": "Durduruldu",
-    "voiceInput": "Ses girişi"
+    "voiceCancelHint": "İptal etmek için Escape tuşuna basın",
+    "voiceInput": "Ses girişi",
+    "voiceSendHint": "Hemen göndermek için Ctrl+Enter tuşlarına basın"
   },
   "commandLauncher": {
     "allCommands": "Tüm komutlar",
@@ -211,7 +213,7 @@
     "unknown": "Bilinmeyen hata"
   },
   "history": {
-    "chatsDisabled": "Sohbet kaydetme ayarlarda kapalı.",
+    "chatsDisabled": "Geçmiş diske kaydedilmiyor",
     "clear": "Geçmişi temizle",
     "clearConfirm": "Tüm kayıtlar ({count}) silinsin mi?",
     "clearConfirmButton": "Tümünü sil",

@@ -47,6 +47,7 @@ export const useChatInputStore = defineStore('chatInput', () => {
   return {
     value,
     focusCount,
+    selection,
     setValue,
     focus,
     clear,

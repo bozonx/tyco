@@ -56,7 +56,9 @@
     "startNewChatWithContext": "Iniciar nuevo chat con este contexto",
     "stop": "Detener",
     "stopped": "Detenido",
-    "voiceInput": "Entrada por voz"
+    "voiceCancelHint": "Presione Escape para cancelar",
+    "voiceInput": "Entrada por voz",
+    "voiceSendHint": "Presione Ctrl+Enter para enviar inmediatamente"
   },
   "commandLauncher": {
     "allCommands": "Todos los comandos",
@@ -211,7 +213,7 @@
     "unknown": "Error desconocido"
   },
   "history": {
-    "chatsDisabled": "Guardar chats está desactivado en la configuración.",
+    "chatsDisabled": "El historial no se guarda en el disco",
     "clear": "Limpiar historial",
     "clearConfirm": "¿Borrar todas las entradas ({count})?",
     "clearConfirmButton": "Borrar todo",
