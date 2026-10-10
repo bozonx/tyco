@@ -3,6 +3,7 @@
     <header
       v-if="title || description || $slots.description || $slots.actions"
       class="settings-section-header"
+      :class="{ 'has-description': description || $slots.description }"
     >
       <div class="min-w-0">
         <h3 v-if="title" class="settings-section-title">
@@ -47,11 +48,15 @@ withDefaults(
 
 .settings-section-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
   margin-bottom: var(--space-sm);
   padding: 0 var(--space-xs);
+}
+
+.settings-section-header.has-description {
+  align-items: flex-end;
 }
 
 .settings-section-title {

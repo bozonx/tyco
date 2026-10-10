@@ -1,6 +1,18 @@
 <template>
   <div class="flex flex-col gap-6">
     <SettingsSection :title="t('settings.sectionEditorHistory')">
+      <template #actions>
+        <Button
+          xs
+          ghost
+          class="text-error"
+          icon="mdi:trash-can-outline"
+          @click="showClearEditorHistoryModal = true"
+        >
+          {{ t('history.clear') }}
+        </Button>
+      </template>
+
       <div class="editor-history-group">
         <FieldRow
           :label="t('settings.editorHistoryStorage')"
@@ -49,6 +61,18 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.sectionChatHistory')">
+      <template #actions>
+        <Button
+          xs
+          ghost
+          class="text-error"
+          icon="mdi:trash-can-outline"
+          @click="showClearChatHistoryModal = true"
+        >
+          {{ t('history.clear') }}
+        </Button>
+      </template>
+
       <div class="editor-history-group">
         <FieldRow
           :label="t('settings.chatHistoryEnabled')"
@@ -73,21 +97,17 @@
           </FieldRow>
         </div>
       </div>
-      <FieldRow
-        :label="t('settings.clearChatHistory')"
-        :info="t('settings.clearChatHistoryHint')"
-      >
-        <Button
-          xs
-          ghost
-          class="text-error"
-          icon="mdi:trash-can-outline"
-          @click="showClearChatHistoryModal = true"
-        >
-          {{ t('history.clear') }}
-        </Button>
-      </FieldRow>
     </SettingsSection>
+
+    <ConfirmModal
+      :open="showClearEditorHistoryModal"
+      :title="t('settings.clearEditorHistoryConfirmTitle')"
+      :message="t('settings.clearEditorHistoryConfirmDialog')"
+      :confirm-text="t('history.clearConfirmButton')"
+      danger
+      @confirm="onClearEditorHistory"
+      @cancel="showClearEditorHistoryModal = false"
+    />
 
     <ConfirmModal
       :open="showDisableChatHistoryModal"
@@ -143,6 +163,14 @@ const props = defineProps<{
 const { t } = useI18n()
 const { toast } = useToast()
 const historyStore = useHistoryStore()
+
+const showClearEditorHistoryModal = ref(false)
+
+async function onClearEditorHistory() {
+  showClearEditorHistoryModal.value = false
+  await historyStore.clearEditorHistory()
+  toast(t('history.cleared'), 'info')
+}
 
 const showClearChatHistoryModal = ref(false)
 
@@ -246,9 +274,5 @@ const chatHistoryRetentionOptions = computed(() =>
 
 .editor-history-nested :deep(.field-row + .field-row) {
   border-top: none;
-}
-
-.editor-history-group + .field-row {
-  border-top: 1px solid var(--app-border-subtle);
 }
 </style>

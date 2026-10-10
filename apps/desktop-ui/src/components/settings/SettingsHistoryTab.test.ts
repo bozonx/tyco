@@ -5,6 +5,7 @@ import SettingsHistoryTab from './SettingsHistoryTab.vue'
 
 const mockToast = vi.fn()
 const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
+const mockClearEditorHistory = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -15,7 +16,10 @@ vi.mock('../../composables/useToast', () => ({
 }))
 
 vi.mock('../../stores/history', () => ({
-  useHistoryStore: () => ({ clearChatHistory: mockClearChatHistory }),
+  useHistoryStore: () => ({
+    clearChatHistory: mockClearChatHistory,
+    clearEditorHistory: mockClearEditorHistory,
+  }),
 }))
 
 describe('SettingsHistoryTab.vue', () => {
@@ -41,7 +45,7 @@ describe('SettingsHistoryTab.vue', () => {
           SettingsSection: {
             props: ['title'],
             template:
-              '<section class="section-stub" :data-title="title"><slot /></section>',
+              '<section class="section-stub" :data-title="title"><slot name="actions" /><slot /></section>',
           },
           FieldRow: {
             props: ['label', 'info', 'nested'],
@@ -169,9 +173,23 @@ describe('SettingsHistoryTab.vue', () => {
         .find('[data-label="settings.chatHistoryRetentionDays"]')
         .exists()
     ).toBe(true)
-    expect(
-      chatSection.find('[data-label="settings.clearChatHistory"]').exists()
-    ).toBe(true)
+    expect(chatSection.find('.btn-stub').exists()).toBe(true)
+  })
+
+  it('opens confirm modal on clear editor history button click and clears on confirmation', async () => {
+    const wrapper = mountTab()
+
+    const editorSection = wrapper.findAll('.section-stub')[0]
+    const clearButton = editorSection.find('.btn-stub')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+
+    await clearButton.trigger('click')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
+
+    await wrapper.find('.confirm-btn').trigger('click')
+    expect(mockClearEditorHistory).toHaveBeenCalledTimes(1)
+    expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 
   it('opens confirm modal on clear chat history button click and clears on confirmation', async () => {
