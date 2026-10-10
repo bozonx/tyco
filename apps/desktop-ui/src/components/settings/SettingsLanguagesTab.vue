@@ -2,8 +2,9 @@
   <div class="flex flex-col gap-6">
     <SettingsSection bare>
       <template #description>
-        <span>{{ t('settings.translationsHint') }} </span>
-        <span>{{ t('settings.translationsMethodHint') }} </span>
+        <span>{{ t('settings.translationsHint') }}</span
+        >{{ ' ' }} <span>{{ t('settings.translationsMethodHint') }}</span
+        >{{ ' ' }}
         <button
           type="button"
           class="settings-inline-link"

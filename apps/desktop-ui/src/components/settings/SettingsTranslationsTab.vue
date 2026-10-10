@@ -2,7 +2,8 @@
   <div class="flex flex-col gap-6">
     <SettingsSection>
       <template #description>
-        <span>{{ t('settings.translationsPageHint') }} </span>
+        <span>{{ t('settings.translationsPageHint') }}</span
+        >{{ ' ' }}
         <button
           type="button"
           class="settings-inline-link"
@@ -80,6 +81,7 @@
     </SettingsSection>
 
     <SettingsSection
+      v-if="usesTranslationRules"
       :title="t('settings.translationRules')"
       :info="t('settings.translationRulesInfo')"
     >
@@ -136,6 +138,12 @@ const qualityOptions = computed(() => [
   { id: 'on_problems', name: t('settings.translationCorrectionOnProblems') },
   { id: 'always', name: t('settings.translationCorrectionAlways') },
 ])
+// DeepL and Google ignore the rules; only the AI correction pass reads them.
+const usesTranslationRules = computed(
+  () =>
+    translation.value.provider === 'llm' ||
+    translation.value.qualityGate !== 'off'
+)
 // Without the AI correction pass, `term = use` rules are only checked,
 // never applied, by DeepL and Google.
 const glossaryHint = computed(() =>

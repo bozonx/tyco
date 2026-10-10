@@ -176,7 +176,7 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(wrapper.emitted('navigate')).toEqual([['languages']])
   })
 
-  it('renders rules and glossary sections, hinting glossary limits for machine translation', async () => {
+  it('shows rules only when an AI model reads them and hints glossary limits', async () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
       props: { userConfig },
@@ -195,18 +195,16 @@ describe('SettingsTranslationsTab.vue', () => {
       },
     })
 
-    const sections = wrapper.findAll('.section-stub')
-    expect(sections[0]?.attributes('data-title')).toBeUndefined()
-    expect(sections[1]?.attributes('data-title')).toBe(
-      'settings.translationRules'
-    )
-    expect(sections[1]?.attributes('data-info')).toBe(
-      'settings.translationRulesInfo'
-    )
-    const glossarySection = sections[2]
-    expect(glossarySection?.attributes('data-title')).toBe(
-      'settings.translationGlossary'
-    )
+    const titles = () =>
+      wrapper.findAll('.section-stub').map((s) => s.attributes('data-title'))
+    const section = (title: string) =>
+      wrapper
+        .findAll('.section-stub')
+        .find((s) => s.attributes('data-title') === title)
+
+    // DeepL without correction never reads the translation instructions.
+    expect(titles()).not.toContain('settings.translationRules')
+    const glossarySection = section('settings.translationGlossary')
     expect(glossarySection?.attributes('data-info')).toBe(
       'settings.translationGlossaryInfo'
     )
@@ -217,9 +215,15 @@ describe('SettingsTranslationsTab.vue', () => {
     await wrapper.setProps({
       userConfig: createConfig({ qualityGate: 'on_problems' }),
     })
+    expect(section('settings.translationRules')?.attributes('data-info')).toBe(
+      'settings.translationRulesInfo'
+    )
     expect(
-      wrapper.findAll('.section-stub')[2]?.attributes('data-desc')
+      section('settings.translationGlossary')?.attributes('data-desc')
     ).toBeFalsy()
+
+    await wrapper.setProps({ userConfig: createConfig({ provider: 'llm' }) })
+    expect(titles()).toContain('settings.translationRules')
   })
 
   it('hides deepl plan and api key when llm provider is selected', () => {
