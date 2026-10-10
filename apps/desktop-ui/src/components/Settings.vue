@@ -252,7 +252,6 @@
           v-else-if="currentTab === 'main-actions'"
           :user-config="userConfig"
           @update:main-actions="updateMainActions"
-          @create-command="createMenuCommand"
           @edit-command="editCommand"
         />
 
@@ -392,7 +391,6 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
-import { normalizeMainActions } from '../lib/action-menu/main-actions'
 import {
   createCommand,
   normalizeCommands,
@@ -972,16 +970,6 @@ watch(currentTab, (tab) => {
 const editCommand = (commandId: string) => {
   focusCommandId.value = commandId
   currentTab.value = 'commands'
-}
-
-/** A new command of the library, placed in the slot it was created from */
-const createMenuCommand = (index: number, toolId: BuiltinToolId) => {
-  const command = createCommand(toolId)
-  const slots = normalizeMainActions(userConfig.value.mainActions)
-  slots[index] = { type: 'command', commandId: command.id }
-  userConfig.value.commands = [...(userConfig.value.commands ?? []), command]
-  userConfig.value.mainActions = slots
-  editCommand(command.id)
 }
 
 const createLauncherCommand = (index: number, toolId: BuiltinToolId) => {

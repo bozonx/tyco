@@ -556,6 +556,13 @@
     "llmConnections": "Connections",
     "llmConnectionsHint": "Configure where Tyco sends requests. Models are added inside their connection. Keys are stored separately and are never shown again.",
     "llmTab": "LLM",
+    "mainActionGroups": {
+      "basic": "Basic",
+      "translation": "Translation",
+      "aiTask": "AI tasks",
+      "commands": "My commands",
+      "unavailable": "Unavailable"
+    },
     "mainActionsHint": "Actions available from the main action menu. Drag cards to assign them to different hotkeys.",
     "mainActionsTab": "Main actions",
     "markdownBullet": "List marker",

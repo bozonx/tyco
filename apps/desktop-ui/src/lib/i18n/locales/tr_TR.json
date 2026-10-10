@@ -556,6 +556,13 @@
     "llmConnections": "Bağlantılar",
     "llmConnectionsHint": "Tyco'nun istekleri nereye göndereceğini ayarlayın. Modeller kendi bağlantılarının içine eklenir. Anahtarlar ayrı saklanır.",
     "llmTab": "LLM",
+    "mainActionGroups": {
+      "basic": "Temel",
+      "translation": "Çeviri",
+      "aiTask": "AI görevleri",
+      "commands": "Komutlarım",
+      "unavailable": "Kullanılamayanlar"
+    },
     "mainActionsHint": "Ana eylem menüsündeki eylemler. Kartları farklı kısayol tuşlarına atamak için sürükleyin.",
     "mainActionsTab": "Ana eylemler",
     "markdownBullet": "Liste işareti",

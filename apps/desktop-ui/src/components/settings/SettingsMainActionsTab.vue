@@ -35,13 +35,24 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import {
+  type MainActionChoice,
+  type MainActionGroup,
+  buildMainActionOptions,
+  commandGroup,
+  mainActionOptionId,
+  pluginActionGroup,
+  standardActionGroup,
+} from '../../lib/action-menu/main-action-options'
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
 import {
   commandLabel,
   isMenuCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
+import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
+import { pluginIndexes } from '../../plugins'
 import { useActionMenuStore } from '../../stores/actionMenu'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
@@ -49,9 +60,9 @@ import FieldSelect from '../common/FieldSelect.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import { Icon } from '@iconify/vue'
 import {
-  type BuiltinToolId,
   type MainActionConfig,
   STANDARD_ACTION_IDS,
+  type StandardActionId,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -59,12 +70,8 @@ const props = defineProps<{ userConfig: UserConfig }>()
 
 const emit = defineEmits<{
   (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
-  /** A new command of the library goes to the slot at `index` */
-  (event: 'createCommand', index: number, toolId: BuiltinToolId): void
   (event: 'editCommand', commandId: string): void
 }>()
-
-const NEW_COMMAND_PREFIX = 'new:'
 
 const { t } = useI18n()
 const actionMenuStore = useActionMenuStore()
@@ -76,17 +83,20 @@ const actionSlots = computed(() =>
 
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
-const optionId = (item: MainActionConfig | null | undefined): string => {
-  if (!item) return ''
-  if (item.type === 'command') return `command:${item.commandId}`
-  return `${item.type}:${item.actionId}`
-}
+const optionId = mainActionOptionId
 
-const availableActions = computed(() => [
+/** Actions that open a dialog to pick what to do are marked as such */
+const OPENS_DIALOG = new Set<StandardActionId>(['translation', 'aiTask'])
+
+const availableActions = computed((): MainActionChoice[] => [
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
-    name: t(`action.${actionId}`),
+    name: OPENS_DIALOG.has(actionId)
+      ? `${t(`action.${actionId}`)}…`
+      : t(`action.${actionId}`),
+    group: standardActionGroup(actionId),
   })),
+  // plugins offer only the actions they register for this menu
   ...actionMenuStore
     .getRegisteredActions()
     .flatMap((action) =>
@@ -97,6 +107,7 @@ const availableActions = computed(() => [
               name: action.labelKey
                 ? t(action.labelKey)
                 : (action.name ?? action.id),
+              group: pluginActionGroup(action.id),
             },
           ]
         : []
@@ -107,8 +118,36 @@ const availableActions = computed(() => [
     .map((command) => ({
       config: { type: 'command' as const, commandId: command.id },
       name: commandLabel(command),
+      group: commandGroup(command, toolsStore),
     })),
 ])
+
+const pluginLabels = computed(
+  () =>
+    new Map(
+      resolveInstalledPlugins(pluginIndexes, props.userConfig).map((plugin) => [
+        plugin.name,
+        plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name,
+      ])
+    )
+)
+
+function groupLabel(group: MainActionGroup): string {
+  switch (group.kind) {
+    case 'basic':
+      return t('settings.mainActionGroups.basic')
+    case 'translation':
+      return t('settings.mainActionGroups.translation')
+    case 'aiTask':
+      return t('settings.mainActionGroups.aiTask')
+    case 'commands':
+      return t('settings.mainActionGroups.commands')
+    case 'unavailable':
+      return t('settings.mainActionGroups.unavailable')
+    case 'plugin':
+      return pluginLabels.value.get(group.plugin) ?? group.plugin
+  }
+}
 
 /** The name of a slot whose action is not on offer, e.g. a disabled command */
 function unavailableName(slot: MainActionConfig): string {
@@ -119,22 +158,14 @@ function unavailableName(slot: MainActionConfig): string {
   })
 }
 
-const actionOptions = computed(() => {
-  const options = [
-    ...availableActions.value.map(({ config, name }) => ({
-      id: optionId(config),
-      name,
-    })),
-    { id: `${NEW_COMMAND_PREFIX}script`, name: t('commands.newScript') },
-    { id: `${NEW_COMMAND_PREFIX}webhook`, name: t('commands.newWebhook') },
-  ]
-  for (const slot of actionSlots.value) {
-    if (slot && !options.some((option) => option.id === optionId(slot))) {
-      options.push({ id: optionId(slot), name: unavailableName(slot) })
-    }
-  }
-  return options
-})
+const actionOptions = computed(() =>
+  buildMainActionOptions({
+    choices: availableActions.value,
+    slots: actionSlots.value,
+    unavailableName,
+    groupLabel,
+  })
+)
 
 function moveAction(from: number, to: number) {
   emit('update:mainActions', moveShortcutSlot(actionSlots.value, from, to))
@@ -157,15 +188,6 @@ function removeAction(index: number) {
 
 function updateAction(index: number, value: string | number | undefined) {
   if (value === optionId(actionSlots.value[index])) return
-
-  if (value === `${NEW_COMMAND_PREFIX}script`) {
-    emit('createCommand', index, 'script')
-    return
-  }
-  if (value === `${NEW_COMMAND_PREFIX}webhook`) {
-    emit('createCommand', index, 'webhook')
-    return
-  }
 
   const selected = availableActions.value.find(
     ({ config }) => optionId(config) === value

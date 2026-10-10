@@ -556,6 +556,13 @@
     "llmConnections": "Conexiones",
     "llmConnectionsHint": "Configurá dónde envía Tyco las solicitudes. Los modelos se agregan dentro de su conexión. Las claves se guardan por separado.",
     "llmTab": "LLM",
+    "mainActionGroups": {
+      "basic": "Básicas",
+      "translation": "Traducción",
+      "aiTask": "Tareas de IA",
+      "commands": "Mis comandos",
+      "unavailable": "No disponibles"
+    },
     "mainActionsHint": "Acciones disponibles en el menú principal. Arrastrá las tarjetas para asignarlas a distintas teclas rápidas.",
     "mainActionsTab": "Acciones principales",
     "markdownBullet": "Marcador de lista",
