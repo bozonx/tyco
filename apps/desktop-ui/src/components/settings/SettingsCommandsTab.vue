@@ -87,33 +87,12 @@
                 :class="{ 'rotate-180': isExpanded(command.id) }"
               />
             </button>
-            <Button
-              :class="
-                command.availableIn.external
-                  ? 'external-btn is-on'
-                  : 'external-btn'
-              "
-              xs
-              ghost
-              square
-              :aria-pressed="command.availableIn.external"
-              :title="t('commands.external')"
-              :aria-label="t('commands.external')"
-              @click="
-                setCommand(command.id, {
-                  availableIn: {
-                    ...command.availableIn,
-                    external: !command.availableIn.external,
-                  },
-                })
-              "
-            >
-              <Icon icon="mdi:console-line" width="16" height="16" />
-            </Button>
             <FieldCheckbox
               class="enabled-switch"
               :value="command.enabled"
-              :title="t('commands.enabled')"
+              :title="
+                t(command.enabled ? 'commands.disable' : 'commands.enable')
+              "
               @update:value="setCommand(command.id, { enabled: $event })"
             />
             <DropdownMenu
@@ -693,14 +672,6 @@ onBeforeUnmount(finishRemoval)
 .command-card.is-dragged .drag-handle {
   opacity: 1;
   pointer-events: auto;
-}
-
-.external-btn {
-  color: var(--app-text-faint);
-}
-
-.external-btn.is-on {
-  color: var(--color-primary);
 }
 
 .enabled-switch {

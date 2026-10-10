@@ -158,22 +158,31 @@ describe('SettingsCommandsTab.vue', () => {
     expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
   })
 
-  it('switches a command on and off and grants it external access', async () => {
+  it('switches a command on and off with a matching title', async () => {
     const wrapper = mountTab()
     const card = wrapper.findAll('.command-card')[1]
+    expect(card.find('.enabled-switch input').attributes('title')).toBe(
+      'commands.disable'
+    )
+    expect(card.find('.external-btn').exists()).toBe(false)
     await card.find('.enabled-switch input').setValue(false)
-    await card.find('.external-btn').trigger('click')
 
     const [disabled] = wrapper.emitted('update:commands')![0] as [
       CommandConfig[],
     ]
     expect(disabled[1].enabled).toBe(false)
     expect(disabled[0].enabled).toBe(true)
-    const [external] = wrapper.emitted('update:commands')![1] as [
+    await wrapper.setProps({
+      userConfig: { ...wrapper.props('userConfig'), commands: disabled },
+    })
+    expect(card.find('.enabled-switch input').attributes('title')).toBe(
+      'commands.enable'
+    )
+    await card.find('.enabled-switch input').setValue(true)
+    const [enabled] = wrapper.emitted('update:commands')![1] as [
       CommandConfig[],
     ]
-    expect(external[1].availableIn.external).toBe(true)
-    expect(external[0].availableIn.external).toBe(false)
+    expect(enabled[1].enabled).toBe(true)
   })
 
   it('grants selection capture without touching the commands', async () => {

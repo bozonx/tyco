@@ -55,14 +55,6 @@
           {{ t('commands.afterRunNoneScriptHint') }}
         </p>
       </div>
-      <div v-if="tool?.logsOutput" class="command-field-row">
-        <FieldCheckbox
-          :value="command.logOutput"
-          :label="t('settings.actionLogOutput')"
-          @update:value="update({ logOutput: $event })"
-        />
-        <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-      </div>
     </section>
 
     <section class="command-group">
@@ -96,45 +88,6 @@
           {{ t('commands.placeConfigure') }}
         </Button>
       </div>
-      <div class="command-field-row">
-        <FieldCheckbox
-          :value="command.availableIn.external"
-          :label="t('commands.external')"
-          @update:value="
-            update({
-              availableIn: { ...command.availableIn, external: $event },
-            })
-          "
-        />
-        <InfoTooltip :text="t('commands.externalInfo')" />
-      </div>
-      <template v-if="command.availableIn.external">
-        <div class="command-field-row">
-          <code class="command-cli" :title="cliCommand">{{ cliCommand }}</code>
-          <Button
-            type="button"
-            ghost
-            square
-            sm
-            :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
-            :aria-label="t('commands.copyCli')"
-            @click="copyCli"
-          >
-            <Icon
-              :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
-              width="16"
-              height="16"
-            />
-          </Button>
-        </div>
-        <p v-if="nameTwins.length" class="command-warning">
-          {{
-            t('commands.warningExternalNameTwins', {
-              names: nameTwins.map(commandLabel).join(', '),
-            })
-          }}
-        </p>
-      </template>
     </section>
 
     <details v-if="testable" class="command-group">
@@ -183,6 +136,55 @@
             @update:value="updateTimeout"
           />
         </label>
+        <div v-if="tool?.logsOutput" class="command-field-row">
+          <FieldCheckbox
+            :value="command.logOutput"
+            :label="t('settings.actionLogOutput')"
+            @update:value="update({ logOutput: $event })"
+          />
+          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+        </div>
+        <div class="command-field-row">
+          <FieldCheckbox
+            :value="command.availableIn.external"
+            :label="t('commands.external')"
+            @update:value="
+              update({
+                availableIn: { ...command.availableIn, external: $event },
+              })
+            "
+          />
+          <InfoTooltip :text="t('commands.externalInfo')" />
+        </div>
+        <template v-if="command.availableIn.external">
+          <div class="command-field-row">
+            <code class="command-cli" :title="cliCommand">{{
+              cliCommand
+            }}</code>
+            <Button
+              type="button"
+              ghost
+              square
+              sm
+              :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
+              :aria-label="t('commands.copyCli')"
+              @click="copyCli"
+            >
+              <Icon
+                :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+                width="16"
+                height="16"
+              />
+            </Button>
+          </div>
+          <p v-if="nameTwins.length" class="command-warning">
+            {{
+              t('commands.warningExternalNameTwins', {
+                names: nameTwins.map(commandLabel).join(', '),
+              })
+            }}
+          </p>
+        </template>
         <p v-if="origin" class="command-hint">{{ origin }}</p>
       </div>
     </details>
@@ -340,7 +342,10 @@ const origin = computed(() => {
 
 /** Shown open when one of its settings is set, so it is not missed */
 const advancedOpen = ref(
-  Boolean(props.command.description) || Boolean(scriptConfig.value.timeoutSec)
+  Boolean(props.command.description) ||
+    Boolean(scriptConfig.value.timeoutSec) ||
+    props.command.logOutput ||
+    props.command.availableIn.external
 )
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
