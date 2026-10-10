@@ -31,7 +31,7 @@ vi.mock('../lib/chat/chat-store', () => ({
     attachToChat: mocks.attachToChat,
     sendMessage: mocks.sendMessage,
     messages: ref([]),
-    newChatParams: ref({ attachments: ['pending'] }),
+    newChatParams: ref({ attachments: [{ text: 'pending' }] }),
     isGenerating: ref(false),
     dismissedEditorContext: ref(null),
     acceptedEditorContext: ref(null),
@@ -72,10 +72,10 @@ describe('chat window navigation', () => {
   })
 
   it('opens the chat with context and focuses its input', async () => {
-    await useChatStore().startChat({ attachments: ['  context  '] })
+    await useChatStore().startChat({ attachments: [{ text: '  context  ' }] })
     expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.startChat).toHaveBeenCalledWith({
-      attachments: ['  context  '],
+      attachments: [{ text: '  context  ' }],
     })
     expect(mocks.focus).toHaveBeenCalledOnce()
     expect(mocks.callFunction).not.toHaveBeenCalled()
@@ -83,10 +83,10 @@ describe('chat window navigation', () => {
 
   it('transfers context from the quick window to the main window', async () => {
     mocks.label = 'quick'
-    await useChatStore().startChat({ attachments: ['  context  '] })
+    await useChatStore().startChat({ attachments: [{ text: '  context  ' }] })
     expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      '  context  ',
+      { text: '  context  ' },
     ])
     expect(mocks.startChat).not.toHaveBeenCalled()
     expect(mocks.focus).not.toHaveBeenCalled()
@@ -97,7 +97,7 @@ describe('chat window navigation', () => {
     await useChatStore().attachToChat('selection')
     expect(mocks.closeAll).toHaveBeenCalledOnce()
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      'selection',
+      { text: 'selection', source: undefined },
     ])
     expect(mocks.attachToChat).not.toHaveBeenCalled()
   })
@@ -110,10 +110,22 @@ describe('chat window navigation', () => {
     await useChatStore().sendInput()
 
     expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
-      'pending',
-      'a part',
+      { text: 'pending' },
+      { text: 'a part', source: 'editor-selection' },
     ])
     expect(mocks.clear).toHaveBeenCalled()
+  })
+
+  it('tells the source of a text an action gives to the chat', async () => {
+    mocks.editor.value = 'Draft with a part'
+    mocks.editor.selectedText = 'a part'
+
+    await useChatStore().attachToChat('Draft with a part')
+
+    expect(mocks.attachToChat).toHaveBeenCalledWith({
+      text: 'Draft with a part',
+      source: 'editor-text',
+    })
   })
 
   it('only suggests the whole editor text', async () => {
@@ -127,6 +139,8 @@ describe('chat window navigation', () => {
     })
     await store.sendInput()
 
-    expect(mocks.sendMessage).toHaveBeenCalledWith('Question', ['pending'])
+    expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
+      { text: 'pending' },
+    ])
   })
 })

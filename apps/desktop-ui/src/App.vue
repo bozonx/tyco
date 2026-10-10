@@ -50,7 +50,7 @@ import { useToolCatalogStore } from './stores/tools'
 import { useWriterInputStore } from './stores/writerInput'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { type START_MODES } from '@tyco/shared'
-import { type EditorTransfer } from '@tyco/shared'
+import { type ChatAttachment, type EditorTransfer } from '@tyco/shared'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
@@ -187,8 +187,11 @@ const capturedSelection = createCapturedSelection({
 })
 // the text selected elsewhere when chat was called goes into chat attachments
 const capturedChatSelection = createCapturedChatSelection({
-  startChatWithAttachment: (text) =>
-    chatStore.startChat({ attachments: [text], withoutEditorContext: true }),
+  startChatWithAttachment: (attachment) =>
+    chatStore.startChat({
+      attachments: [attachment],
+      withoutEditorContext: true,
+    }),
   getSelectedText: () => editorInputStore.selectedText,
 })
 watch(
@@ -271,16 +274,16 @@ onMounted(() => {
       if (isQuickWindow) return
       menuModalsStore.closeAll()
       await appNavigation.goToChat()
-      const { text, question, autoSend } = (payload || {}) as {
-        text?: string
+      const { attachment, question, autoSend } = (payload || {}) as {
+        attachment?: ChatAttachment | null
         question?: string
         autoSend?: boolean
       }
-      const trimmedText = text?.trim()
+      const trimmedText = attachment?.text?.trim()
       const trimmedQuestion = question?.trim()
-      if (trimmedText) {
+      if (attachment && trimmedText) {
         await chatStore.startChat({
-          attachments: [trimmedText],
+          attachments: [{ ...attachment, text: trimmedText }],
           withoutEditorContext: true,
         })
       } else if (trimmedQuestion) {

@@ -7,10 +7,23 @@ export interface IpcResult<T = unknown> {
   result?: T
 }
 
+/**
+ * Where an attached text came from: `selection` was selected in another
+ * application, the others come from the editor of the app
+ */
+export type ChatAttachmentSource =
+  'selection' | 'editor-selection' | 'editor-text'
+
+export interface ChatAttachment {
+  text: string
+  /** Unknown for attachments stored before the source was kept */
+  source?: ChatAttachmentSource
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'developer'
   content: string
-  attachments?: string[]
+  attachments?: ChatAttachment[]
   status?: 'complete' | 'stopped'
 }
 
@@ -33,7 +46,7 @@ export interface ChatParams {
   id?: string
   /** The title the chat has in the history */
   title?: string
-  attachments?: string[]
+  attachments?: ChatAttachment[]
   /**
    * The chat takes nothing from the editor: it was started for a question about
    * a text selected in another application

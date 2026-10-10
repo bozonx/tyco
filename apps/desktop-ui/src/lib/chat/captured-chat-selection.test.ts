@@ -32,7 +32,10 @@ describe('createCapturedChatSelection', () => {
 
     expect(selection.apply(activation())).toBe(true)
 
-    expect(startChatWithAttachment).toHaveBeenCalledWith('Selected for chat')
+    expect(startChatWithAttachment).toHaveBeenCalledWith({
+      text: 'Selected for chat',
+      source: 'selection',
+    })
   })
 
   it('waits for the selection captured after the activation', () => {
@@ -52,8 +55,8 @@ describe('createCapturedChatSelection', () => {
     selection.apply(activation({ activationId: 2, selectedText: 'Next' }))
 
     expect(startChatWithAttachment.mock.calls).toEqual([
-      ['Selected for chat'],
-      ['Next'],
+      [{ text: 'Selected for chat', source: 'selection' }],
+      [{ text: 'Next', source: 'selection' }],
     ])
   })
 
@@ -66,7 +69,10 @@ describe('createCapturedChatSelection', () => {
     expect(
       selection.apply(activation({ activationId: 2, selectedText: null }))
     ).toBe(true)
-    expect(startChatWithAttachment).toHaveBeenCalledWith('Fallback text')
+    expect(startChatWithAttachment).toHaveBeenCalledWith({
+      text: 'Fallback text',
+      source: 'editor-selection',
+    })
   })
 
   it('leaves the editor selection of a hidden window alone', () => {
@@ -80,7 +86,9 @@ describe('createCapturedChatSelection', () => {
     ).toBe(false)
     // the selection captured elsewhere arrives later and is taken
     expect(selection.apply(activation({ activationId: 2 }))).toBe(true)
-    expect(startChatWithAttachment.mock.calls).toEqual([['Selected for chat']])
+    expect(startChatWithAttachment.mock.calls).toEqual([
+      [{ text: 'Selected for chat', source: 'selection' }],
+    ])
   })
 
   it('ignores other modes, a hidden window and a blank selection', () => {
@@ -108,8 +116,8 @@ describe('createCapturedChatSelection', () => {
       )
     ).toBe(true)
     expect(startChatWithAttachment.mock.calls).toEqual([
-      ['Fallback text'],
-      ['External text'],
+      [{ text: 'Fallback text', source: 'editor-selection' }],
+      [{ text: 'External text', source: 'selection' }],
     ])
   })
 })

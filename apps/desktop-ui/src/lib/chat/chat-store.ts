@@ -10,6 +10,7 @@ import {
 import { draftChatTitle, needsGeneratedTitle } from './chat-title'
 import {
   APP_CONFIG,
+  type ChatAttachment,
   type ChatHistoryItem,
   type ChatMessage,
   type ChatParams,
@@ -58,6 +59,13 @@ export interface ChatStoreDeps {
   getChatModel: () => ChatRequestModel | null
 }
 
+/** The same text attached twice goes once, with the source it came first */
+const uniqueAttachments = (attachments: ChatAttachment[]) =>
+  attachments.filter(
+    (item, index) =>
+      attachments.findIndex((other) => other.text === item.text) === index
+  )
+
 export function createChatStoreModel(deps: ChatStoreDeps) {
   const messages = ref<ChatMessage[]>([])
   const newChatParams = ref<ChatParams>({})
@@ -69,7 +77,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const acceptedEditorContext = ref<string | null>(null)
   const lastFailedTurn = ref<{
     message: string
-    attachments?: string[]
+    attachments?: ChatAttachment[]
   } | null>(null)
   const abortController = ref<AbortController | null>(null)
   let generationId = 0
@@ -158,7 +166,10 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
   }
 
-  const sendMessage = async (message: string, attachments: string[] = []) => {
+  const sendMessage = async (
+    message: string,
+    attachments: ChatAttachment[] = []
+  ) => {
     if (!message?.trim()) {
       deps.notifyError(deps.emptyMessageError())
       return
@@ -182,13 +193,15 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     ) {
       messages.value.pop()
       // the context of the failed turn goes with it again
-      attachments = [
-        ...new Set([...(failed.attachments || []), ...attachments]),
-      ]
+      attachments = uniqueAttachments([
+        ...(failed.attachments || []),
+        ...attachments,
+      ])
     }
 
     const inputSize =
-      message.length + attachments.reduce((sum, item) => sum + item.length, 0)
+      message.length +
+      attachments.reduce((sum, item) => sum + item.text.length, 0)
     if (inputSize > model.budgetCharacters) {
       deps.notifyError(deps.messageTooLongError())
       return ''
@@ -374,12 +387,12 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 
-  const addAttachment = (attachment: string) => {
-    const trimmed = attachment?.trim()
-    if (!trimmed) return
+  const addAttachment = (attachment: ChatAttachment) => {
+    const text = attachment.text?.trim()
+    if (!text) return
     const current = newChatParams.value.attachments || []
-    if (!current.includes(trimmed)) {
-      newChatParams.value.attachments = [...current, trimmed]
+    if (!current.some((item) => item.text === text)) {
+      newChatParams.value.attachments = [...current, { ...attachment, text }]
     }
   }
 
@@ -387,15 +400,15 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
    * Gives the text to the chat: to the current one while it is still empty, to
    * a new one otherwise
    */
-  const attachToChat = async (text: string) => {
-    const trimmed = text?.trim()
-    if (!trimmed) return
+  const attachToChat = async (attachment: ChatAttachment) => {
+    const text = attachment.text?.trim()
+    if (!text) return
     if (messages.value.length > 0 || isGenerating.value) {
-      await startChat({ attachments: [trimmed] })
+      await startChat({ attachments: [{ ...attachment, text }] })
       return
     }
     if (!newChatParams.value.id) newChatParams.value.id = deps.createId()
-    addAttachment(trimmed)
+    addAttachment(attachment)
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 

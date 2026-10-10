@@ -1,4 +1,4 @@
-import { START_MODES, type InitParams } from '@tyco/shared'
+import { START_MODES, type ChatAttachment, type InitParams } from '@tyco/shared'
 
 export type SelectionActivation = Pick<
   InitParams,
@@ -6,7 +6,7 @@ export type SelectionActivation = Pick<
 >
 
 export interface CapturedChatSelectionDeps {
-  startChatWithAttachment: (attachment: string) => Promise<void> | void
+  startChatWithAttachment: (attachment: ChatAttachment) => Promise<void> | void
   /** The selection in the editor of this window */
   getSelectedText?: () => string | undefined
 }
@@ -41,6 +41,10 @@ export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
         ? deps.getSelectedText?.()
         : undefined
     const text = (params.selectedText ?? editorText ?? '').trim()
+    const attachment: ChatAttachment = {
+      text,
+      source: hasExternal ? 'selection' : 'editor-selection',
+    }
 
     if (params.mode !== START_MODES.CHAT || !params.isWindowShown || !text) {
       return false
@@ -49,7 +53,7 @@ export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
     if (params.activationId === lastAppliedActivation) {
       if (hasExternal && !appliedFromExternal) {
         appliedFromExternal = true
-        void deps.startChatWithAttachment(text)
+        void deps.startChatWithAttachment(attachment)
         return true
       }
       return false
@@ -57,7 +61,7 @@ export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
 
     lastAppliedActivation = params.activationId
     appliedFromExternal = hasExternal
-    void deps.startChatWithAttachment(text)
+    void deps.startChatWithAttachment(attachment)
 
     return true
   }

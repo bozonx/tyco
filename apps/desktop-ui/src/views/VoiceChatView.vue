@@ -3,7 +3,7 @@
     <VoiceRecognitionMenu
       variant="sheet"
       quick-send
-      :context="context"
+      :context="context?.text"
       @remove-context="contextRemoved = true"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
@@ -37,7 +37,7 @@ watch(
 )
 /** What the question is about; it is shown before it goes to the chat */
 const context = computed(() =>
-  contextRemoved.value ? '' : chatStore.voiceChatContext
+  contextRemoved.value ? null : chatStore.voiceChatContext
 )
 
 async function handleCorrected(
@@ -49,7 +49,7 @@ async function handleCorrected(
   const autoSend = intent === 'submit'
 
   await ipcStore.callFunction('openMainChat', [
-    context.value || undefined,
+    context.value ?? undefined,
     resultText,
     autoSend,
   ])

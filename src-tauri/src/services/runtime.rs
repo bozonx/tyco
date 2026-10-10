@@ -385,7 +385,7 @@ pub fn open_main_editor(
 
 pub fn open_main_chat(
     app: &AppHandle,
-    text: Option<String>,
+    attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
 ) -> Result<(), AppError> {
@@ -394,7 +394,7 @@ pub fn open_main_chat(
         StartMode::Chat,
         OPEN_MAIN_CHAT_EVENT,
         serde_json::json!({
-            "text": text,
+            "attachment": attachment,
             "question": question,
             "autoSend": auto_send.unwrap_or(false),
         }),

@@ -13,17 +13,34 @@
             :label="t('editor.format')"
             :items="formatDropdownItems"
           />
-          <Button
-            sm
-            square
-            ghost
-            :active="showMarkup"
-            :aria-pressed="showMarkup"
-            :title="`${t('editor.markup.showSource')} (Ctrl+Shift+M)`"
-            @click="toggleShowMarkup"
+          <div
+            class="editor-view-switch"
+            role="group"
+            :aria-label="t('editor.markup.viewMode')"
           >
-            <Icon icon="mdi:language-markdown-outline" height="18" />
-          </Button>
+            <button
+              type="button"
+              class="editor-view-option"
+              :class="{ 'is-active': !showMarkup }"
+              :aria-pressed="!showMarkup"
+              :title="`${t('editor.markup.formatted')} (Ctrl+Shift+M)`"
+              @click="setShowMarkup(false)"
+            >
+              <Icon icon="mdi:format-text" height="16" />
+              <span>{{ t('editor.markup.formatted') }}</span>
+            </button>
+            <button
+              type="button"
+              class="editor-view-option"
+              :class="{ 'is-active': showMarkup }"
+              :aria-pressed="showMarkup"
+              :title="`${t('editor.markup.source')} (Ctrl+Shift+M)`"
+              @click="setShowMarkup(true)"
+            >
+              <Icon icon="mdi:language-markdown-outline" height="16" />
+              <span>{{ t('editor.markup.source') }}</span>
+            </button>
+          </div>
           <Button
             v-for="item in leftToolbarItems"
             :key="item.id"
@@ -294,7 +311,7 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
-const { showMarkup, toggleShowMarkup } = useShowMarkup()
+const { showMarkup, setShowMarkup } = useShowMarkup()
 const isDev = import.meta.env.DEV
 
 /** The voice input runs in a bar under the editor, which stays in view */
@@ -435,7 +452,57 @@ const handleCopy = async () => {
   flex: 0 1 auto;
 }
 
-.is-compact .editor-body {
+.is-compact .editor-view-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-inline: 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-md);
+  background: var(--app-surface);
+  flex-shrink: 0;
+}
+
+.editor-view-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.editor-view-option:hover {
+  background: var(--app-surface-raised);
+  color: var(--color-base-content);
+}
+
+.editor-view-option.is-active {
+  background: var(--app-accent-soft);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--color-primary) 25%, transparent);
+}
+
+.editor-view-option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.editor-toolbar > div:first-child {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.editor-body {
   flex: 0 1 auto;
   align-items: flex-end;
 }
@@ -470,6 +537,56 @@ const handleCopy = async () => {
   padding: 0.3125rem 0.375rem;
   border-bottom: 1px solid var(--app-border-subtle);
   background-color: var(--app-surface-raised);
+}
+
+.editor-view-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-inline: 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-md);
+  background: var(--app-surface);
+  flex-shrink: 0;
+}
+
+.editor-view-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.editor-view-option:hover {
+  background: var(--app-surface-raised);
+  color: var(--color-base-content);
+}
+
+.editor-view-option.is-active {
+  background: var(--app-accent-soft);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--color-primary) 25%, transparent);
+}
+
+.editor-view-option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.editor-toolbar > div:first-child {
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .editor-body {

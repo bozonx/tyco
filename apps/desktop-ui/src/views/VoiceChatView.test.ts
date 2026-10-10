@@ -11,7 +11,12 @@ const mocks = vi.hoisted(() => ({
     mode: 'voiceChat',
     activationId: 1,
   },
-  chat: { voiceChatContext: 'Selected context' },
+  chat: {
+    voiceChatContext: { text: 'Selected context', source: 'selection' } as {
+      text: string
+      source: string
+    } | null,
+  },
   navPanel: { resetNavParams: vi.fn() },
   callFunction: vi.fn(),
 }))
@@ -46,7 +51,10 @@ describe('VoiceChatView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.params.selectedText = 'Selected context'
-    mocks.chat.voiceChatContext = 'Selected context'
+    mocks.chat.voiceChatContext = {
+      text: 'Selected context',
+      source: 'selection',
+    }
   })
 
   it('shows the context the question goes with', () => {
@@ -62,7 +70,7 @@ describe('VoiceChatView', () => {
 
     menu.vm.$emit('removeContext')
     await flushPromises()
-    expect(menu.props('context')).toBe('')
+    expect(menu.props('context')).toBeUndefined()
 
     menu.vm.$emit('corrected', 'Why?', 'Why?', undefined, 'submit')
     await flushPromises()
@@ -88,7 +96,7 @@ describe('VoiceChatView', () => {
     await flushPromises()
 
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      'Selected context',
+      { text: 'Selected context', source: 'selection' },
       'How does this work?',
       true,
     ])
@@ -109,7 +117,7 @@ describe('VoiceChatView', () => {
     await flushPromises()
 
     expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      'Selected context',
+      { text: 'Selected context', source: 'selection' },
       'Explain this function',
       false,
     ])

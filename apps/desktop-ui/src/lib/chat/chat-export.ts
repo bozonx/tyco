@@ -22,7 +22,7 @@ export function formatChatToMarkdown(
 
     if (message.attachments?.length) {
       for (const attachment of message.attachments) {
-        const trimmed = attachment.trim()
+        const trimmed = attachment.text.trim()
         if (trimmed) {
           const quoted = trimmed
             .split('\n')

@@ -1,6 +1,7 @@
 import type {
   InstalledPluginPackage,
   PluginPackagePreview,
+  ChatAttachment,
   ChatHistoryItem,
   CommandRunRecord,
   EditorHistoryEntry,
@@ -44,7 +45,7 @@ export interface DesktopFunctions {
   dismissQuickWindow: { args: []; result: void }
   setQuickInputRegion: { args: [region: InputRect | null]; result: void }
   openMainChat: {
-    args: [text?: string, question?: string, autoSend?: boolean]
+    args: [attachment?: ChatAttachment, question?: string, autoSend?: boolean]
     result: void
   }
   openMainEditor: { args: [text?: string, sourceText?: string]; result: void }

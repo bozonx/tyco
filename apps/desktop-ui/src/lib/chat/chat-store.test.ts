@@ -43,10 +43,10 @@ describe('chat-store', () => {
     store.newChatParams.value = {
       id: 'chat-id-1',
       title: 'Hello',
-      attachments: ['file-a'],
+      attachments: [{ text: 'file-a' }],
     }
 
-    const result = await store.sendMessage('Hello', ['file-a'])
+    const result = await store.sendMessage('Hello', [{ text: 'file-a' }])
 
     expect(result).toBe('Assistant reply')
     expect(store.messages.value).toHaveLength(2)
@@ -59,7 +59,7 @@ describe('chat-store', () => {
       expect.objectContaining({
         description: 'Hello',
         messages: [
-          { role: 'user', content: 'Hello', attachments: ['file-a'] },
+          { role: 'user', content: 'Hello', attachments: [{ text: 'file-a' }] },
           { role: 'assistant', content: 'Assistant reply' },
         ],
       })
@@ -132,10 +132,10 @@ describe('chat-store', () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
 
-    await store.startChat({ attachments: ['context'] })
+    await store.startChat({ attachments: [{ text: 'context' }] })
 
     expect(store.newChatParams.value).toEqual({
-      attachments: ['context'],
+      attachments: [{ text: 'context' }],
       id: 'chat-id-1',
     })
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
@@ -243,21 +243,25 @@ describe('chat-store', () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
 
-    store.addAttachment('attachment 1')
-    store.addAttachment('attachment 2')
-    store.addAttachment('attachment 1') // duplicate should not be added
-    store.addAttachment('   ') // empty should be ignored
+    store.addAttachment({ text: 'attachment 1' })
+    store.addAttachment({ text: 'attachment 2' })
+    store.addAttachment({ text: 'attachment 1' }) // duplicate should not be added
+    store.addAttachment({ text: '   ' }) // empty should be ignored
 
     expect(store.newChatParams.value.attachments).toEqual([
-      'attachment 1',
-      'attachment 2',
+      { text: 'attachment 1' },
+      { text: 'attachment 2' },
     ])
 
     store.removeAttachment(0)
-    expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
+    expect(store.newChatParams.value.attachments).toEqual([
+      { text: 'attachment 2' },
+    ])
 
     store.removeAttachment(5) // invalid index does nothing
-    expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
+    expect(store.newChatParams.value.attachments).toEqual([
+      { text: 'attachment 2' },
+    ])
   })
 
   it('keeps a taken editor suggestion until the message is sent', async () => {
@@ -273,7 +277,7 @@ describe('chat-store', () => {
     expect(store.acceptedEditorContext.value).toBeNull()
 
     store.acceptEditorContext('draft')
-    await store.sendMessage('Question', ['draft'])
+    await store.sendMessage('Question', [{ text: 'draft' }])
     expect(store.acceptedEditorContext.value).toBeNull()
   })
 
@@ -408,13 +412,13 @@ describe('chat-store', () => {
       .mockResolvedValueOnce('Answer')
     const store = createChatStoreModel(createDeps({ sendChatMessage }))
 
-    await store.sendMessage('Question', ['context'])
+    await store.sendMessage('Question', [{ text: 'context' }])
     await store.sendMessage('Question')
 
     expect(store.messages.value[0]).toEqual({
       role: 'user',
       content: 'Question',
-      attachments: ['context'],
+      attachments: [{ text: 'context' }],
     })
     expect(store.messages.value).toHaveLength(2)
   })
@@ -437,18 +441,18 @@ describe('chat-store', () => {
     const store = createChatStoreModel(deps)
     await store.startChat({})
 
-    await store.attachToChat('first')
+    await store.attachToChat({ text: 'first' })
     expect(store.newChatParams.value).toMatchObject({
       id: 'chat-1',
-      attachments: ['first'],
+      attachments: [{ text: 'first' }],
     })
 
-    await store.sendMessage('Question', ['first'])
-    await store.attachToChat('second')
+    await store.sendMessage('Question', [{ text: 'first' }])
+    await store.attachToChat({ text: 'second' })
     expect(store.messages.value).toEqual([])
     expect(store.newChatParams.value).toMatchObject({
       id: 'chat-2',
-      attachments: ['second'],
+      attachments: [{ text: 'second' }],
     })
   })
 

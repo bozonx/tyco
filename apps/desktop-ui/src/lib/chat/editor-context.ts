@@ -1,6 +1,15 @@
-import type { ChatMessage } from '@tyco/shared'
+import type {
+  ChatAttachment,
+  ChatAttachmentSource,
+  ChatMessage,
+} from '@tyco/shared'
 
-export type EditorContextSource = 'selection' | 'editor'
+import { attachmentTexts } from './chat-attachment'
+
+export type EditorContextSource = Extract<
+  ChatAttachmentSource,
+  'editor-selection' | 'editor-text'
+>
 
 /**
  * `attached` goes with the next message; `suggested` is only offered, the user
@@ -23,7 +32,7 @@ export interface EditorContextInput {
   /** Messages of the chat, with the attachments they were sent with */
   messages: ChatMessage[]
   /** Attachments added to the next message in other ways */
-  pendingAttachments: string[]
+  pendingAttachments: ChatAttachment[]
   /** The editor text the user removed from this chat */
   dismissed: string | null
   /** The suggested text the user took into the next message */
@@ -52,10 +61,12 @@ export function resolveEditorContext(
   const text = selection || input.editorText.trim()
   if (!text) return null
 
-  const sent = input.messages.flatMap((message) => message.attachments ?? [])
+  const sent = input.messages.flatMap((message) =>
+    attachmentTexts(message.attachments)
+  )
   if (
     sent.includes(text) ||
-    input.pendingAttachments.includes(text) ||
+    input.pendingAttachments.some((item) => item.text === text) ||
     input.dismissed === text
   ) {
     return null
@@ -66,7 +77,7 @@ export function resolveEditorContext(
 
   return {
     text,
-    source: selection ? 'selection' : 'editor',
+    source: selection ? 'editor-selection' : 'editor-text',
     updated: sent.length > 0,
     mode: freshSelection || input.accepted === text ? 'attached' : 'suggested',
   }
@@ -84,11 +95,13 @@ export interface VoiceChatContextInput {
  * application, otherwise a fresh selection in the editor. The whole editor text
  * never goes along: the question is sent without the user reviewing it
  */
-export function resolveVoiceChatContext(input: VoiceChatContextInput): string {
+export function resolveVoiceChatContext(
+  input: VoiceChatContextInput
+): ChatAttachment | null {
   const external = input.externalSelection?.trim()
-  if (external) return external
+  if (external) return { text: external, source: 'selection' }
   const selection = input.editorSelection.trim()
   return selection && selection !== input.staleSelection?.trim()
-    ? selection
-    : ''
+    ? { text: selection, source: 'editor-selection' }
+    : null
 }

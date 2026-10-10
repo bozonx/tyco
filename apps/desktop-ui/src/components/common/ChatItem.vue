@@ -5,8 +5,8 @@
         <ChatAttachment
           v-for="(attachment, index) in message.attachments"
           :key="index"
-          :label="t('chat.attachedText')"
-          :text="attachment"
+          :text="attachment.text"
+          :source="attachment.source"
         />
       </div>
 

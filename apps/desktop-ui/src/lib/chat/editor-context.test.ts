@@ -21,7 +21,7 @@ function input(patch: Partial<EditorContextInput> = {}): EditorContextInput {
 }
 
 const sent = (attachment: string): ChatMessage[] => [
-  { role: 'user', content: 'q', attachments: [attachment] },
+  { role: 'user', content: 'q', attachments: [{ text: attachment }] },
   { role: 'assistant', content: 'a' },
 ]
 
@@ -33,7 +33,7 @@ describe('resolveEditorContext', () => {
   it('only suggests the whole editor text', () => {
     expect(resolveEditorContext(input({ editorText: ' draft ' }))).toEqual({
       text: 'draft',
-      source: 'editor',
+      source: 'editor-text',
       updated: false,
       mode: 'suggested',
     })
@@ -44,7 +44,11 @@ describe('resolveEditorContext', () => {
       resolveEditorContext(
         input({ editorText: 'whole draft', selectedText: 'draft' })
       )
-    ).toMatchObject({ text: 'draft', source: 'selection', mode: 'attached' })
+    ).toMatchObject({
+      text: 'draft',
+      source: 'editor-selection',
+      mode: 'attached',
+    })
   })
 
   it('only suggests a selection made before the chat came into view', () => {
@@ -88,7 +92,10 @@ describe('resolveEditorContext', () => {
   it('does not duplicate an attachment added another way', () => {
     expect(
       resolveEditorContext(
-        input({ editorText: 'draft', pendingAttachments: ['draft'] })
+        input({
+          editorText: 'draft',
+          pendingAttachments: [{ text: 'draft', source: 'selection' }],
+        })
       )
     ).toBeNull()
   })
@@ -111,7 +118,7 @@ describe('resolveVoiceChatContext', () => {
         editorSelection: 'inside',
         staleSelection: null,
       })
-    ).toBe('outside')
+    ).toEqual({ text: 'outside', source: 'selection' })
   })
 
   it('takes a fresh selection in the editor', () => {
@@ -121,7 +128,7 @@ describe('resolveVoiceChatContext', () => {
         editorSelection: 'inside',
         staleSelection: null,
       })
-    ).toBe('inside')
+    ).toEqual({ text: 'inside', source: 'editor-selection' })
   })
 
   it('skips a selection left from an earlier showing of the window', () => {
@@ -131,6 +138,6 @@ describe('resolveVoiceChatContext', () => {
         editorSelection: 'inside',
         staleSelection: 'inside',
       })
-    ).toBe('')
+    ).toBeNull()
   })
 })

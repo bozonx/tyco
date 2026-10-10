@@ -52,12 +52,44 @@ pub struct InitParams {
     pub launcher_request: Option<LauncherRequest>,
 }
 
+/// A text the user attached to a chat message.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(from = "StoredChatAttachment")]
+pub struct ChatAttachment {
+    pub text: String,
+    /// Where the text came from; unknown for attachments stored as plain
+    /// strings, before the source was kept.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+}
+
+/// An attachment as the history holds it: a plain string in older files.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum StoredChatAttachment {
+    Text(String),
+    Full {
+        text: String,
+        #[serde(default)]
+        source: Option<String>,
+    },
+}
+
+impl From<StoredChatAttachment> for ChatAttachment {
+    fn from(stored: StoredChatAttachment) -> Self {
+        match stored {
+            StoredChatAttachment::Text(text) => Self { text, source: None },
+            StoredChatAttachment::Full { text, source } => Self { text, source },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attachments: Vec<String>,
+    pub attachments: Vec<ChatAttachment>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 }
@@ -294,5 +326,47 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
         is_window_shown: false,
         window_profile: WindowProfile::Sheet,
         launcher_request: None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chat_message_reads_plain_string_attachments_of_older_files() {
+        let message: ChatMessage = serde_json::from_value(serde_json::json!({
+            "role": "user",
+            "content": "q",
+            "attachments": ["old", { "text": "new", "source": "editor-text" }],
+        }))
+        .unwrap();
+
+        assert_eq!(
+            message.attachments,
+            vec![
+                ChatAttachment {
+                    text: String::from("old"),
+                    source: None,
+                },
+                ChatAttachment {
+                    text: String::from("new"),
+                    source: Some(String::from("editor-text")),
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn chat_attachment_is_written_as_an_object() {
+        let attachment = ChatAttachment {
+            text: String::from("t"),
+            source: None,
+        };
+
+        assert_eq!(
+            serde_json::to_value(&attachment).unwrap(),
+            serde_json::json!({ "text": "t" })
+        );
     }
 }

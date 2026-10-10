@@ -11,6 +11,10 @@ import {
   pickChatModel,
 } from '../lib/chat/chat-model'
 import { createChatStoreModel } from '../lib/chat/chat-store'
+import {
+  attachmentTexts,
+  inferAttachmentSource,
+} from '../lib/chat/chat-attachment'
 import { resolveContextBudget } from '../lib/chat/context-budget'
 import {
   resolveEditorContext,
@@ -25,6 +29,7 @@ import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menuModals'
 import { makeUniqId } from '@/lib/squidlet-lib-local'
+import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
 
 export const useChatStore = defineStore('chat', () => {
   const { toast } = useToast()
@@ -125,20 +130,23 @@ export const useChatStore = defineStore('chat', () => {
         })
   )
 
-  /** The texts that go with the next message besides the input */
-  const attachedContext = computed(() => [
-    ...(model.newChatParams.value.attachments || []),
-    ...(editorContext.value?.mode === 'attached'
-      ? [editorContext.value.text]
-      : []),
-  ])
+  /** What goes with the next message besides the input */
+  const attachedContext = computed<ChatAttachment[]>(() => {
+    const context = editorContext.value
+    return [
+      ...(model.newChatParams.value.attachments || []),
+      ...(context?.mode === 'attached'
+        ? [{ text: context.text, source: context.source }]
+        : []),
+    ]
+  })
 
   /** How much of the model the next message takes; null without a model */
   const contextBudget = computed(() => {
     const picked = selectedModel.value
     if (!picked) return null
     return resolveContextBudget(
-      [...attachedContext.value, chatInputStore.value.trim()],
+      [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
       contextBudgetCharacters(picked.contextSize)
     )
   })
@@ -153,9 +161,9 @@ export const useChatStore = defineStore('chat', () => {
   )
 
   /** Runs in the main window; the quick window hands the text over to it */
-  const inMainWindow = async (text: string | undefined) => {
+  const inMainWindow = async (attachment: ChatAttachment | undefined) => {
     if (getCurrentWindow().label !== 'quick') return true
-    await ipcStore.callFunctionOrNotify('openMainChat', [text])
+    await ipcStore.callFunctionOrNotify('openMainChat', [attachment])
     return false
   }
 
@@ -179,11 +187,24 @@ export const useChatStore = defineStore('chat', () => {
       await saveLocalState({ lastChatModelId: id })
     },
     startChat,
-    /** Gives a text selected elsewhere to the chat */
-    async attachToChat(text: string) {
+    /**
+     * Gives a text to the chat; without a source, it is told by the text, see
+     * `inferAttachmentSource`
+     */
+    async attachToChat(text: string, source?: ChatAttachmentSource) {
+      const attachment: ChatAttachment = {
+        text,
+        source:
+          source ??
+          inferAttachmentSource(text, {
+            externalSelection: ipcStore.params.selectedText,
+            editorSelection: editorInputStore.selectedText,
+            editorText: editorInputStore.value,
+          }),
+      }
       menuModalsStore.closeAll()
-      if (!(await inMainWindow(text))) return
-      await model.attachToChat(text)
+      if (!(await inMainWindow(attachment))) return
+      await model.attachToChat(attachment)
       await nextTick()
       chatInputStore.focus()
     },

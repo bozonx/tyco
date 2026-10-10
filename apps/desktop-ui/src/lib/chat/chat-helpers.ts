@@ -1,4 +1,6 @@
-import type { ChatHistoryItem, ChatMessage } from '@tyco/shared'
+import type { ChatAttachment, ChatHistoryItem, ChatMessage } from '@tyco/shared'
+
+import { formatAttachmentsForPrompt } from './chat-attachment'
 
 export interface PreparedChatRequest {
   userMessage: ChatMessage
@@ -7,17 +9,17 @@ export interface PreparedChatRequest {
 
 export function prepareChatRequest(
   message: string,
-  attachments: string[] = []
+  attachments: ChatAttachment[] = []
 ): PreparedChatRequest {
-  const attachString = attachments
-    .map((item) => `<attachment>${JSON.stringify(item)}</attachment>`)
-    .join('\n\n')
+  const attachString = formatAttachmentsForPrompt(attachments)
 
   return {
     userMessage: {
       role: 'user',
       content: message,
-      ...(attachments.length ? { attachments: [...attachments] } : {}),
+      ...(attachments.length
+        ? { attachments: attachments.map((item) => ({ ...item })) }
+        : {}),
     },
     preparedMessage: [attachString, message].filter(Boolean).join('\n\n'),
   }
@@ -44,7 +46,9 @@ export function trimChatContext(
     const turn = turns[index]
     const size = turn.reduce(
       (sum, item) =>
-        sum + item.content.length + (item.attachments || []).join('').length,
+        sum +
+        item.content.length +
+        (item.attachments || []).reduce((n, a) => n + a.text.length, 0),
       0
     )
     if (used + size > maxCharacters) break

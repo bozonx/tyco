@@ -1,20 +1,20 @@
 <template>
   <span
     class="chat-attachment"
-    :class="[`is-${variant}`, { 'is-open': open, 'is-arriving': arriving }]"
+    :class="{
+      'is-open': open,
+      'is-arriving': arriving,
+      'is-pending': removable,
+    }"
   >
     <button
       type="button"
       class="chat-attachment-toggle"
       :title="toggleTitle"
-      :aria-expanded="variant === 'attached' ? open : undefined"
-      @click="toggle"
+      :aria-expanded="open"
+      @click="open = !open"
     >
-      <Icon
-        :icon="variant === 'suggested' ? 'mdi:plus' : icon"
-        height="14"
-        class="shrink-0"
-      />
+      <Icon :icon="attachmentIcon(source)" height="14" class="shrink-0" />
       <span class="chat-attachment-label">{{ label }}</span>
       <span class="chat-attachment-excerpt">{{ excerpt }}</span>
       <span class="chat-attachment-size">{{ size }}</span>
@@ -36,50 +36,41 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import {
+  attachmentExcerpt,
+  attachmentIcon,
+  attachmentLabelKey,
+  attachmentTitle,
+} from '../../lib/chat/chat-attachment'
 import { Icon } from '@iconify/vue'
+import type { ChatAttachmentSource } from '@tyco/shared'
 
-const props = withDefaults(
-  defineProps<{
-    label: string
-    text: string
-    icon?: string
-    removable?: boolean
-    /** `suggested`: offered only, a click takes it into the next message */
-    variant?: 'attached' | 'suggested'
-    /** Draws attention when it appears: it may arrive after the chat opened */
-    announce?: boolean
-  }>(),
-  { icon: 'mdi:text-box-outline', variant: 'attached' }
-)
-const emit = defineEmits<{ (e: 'remove'): void; (e: 'accept'): void }>()
+/** A text attached to a chat message: one sent, or one going with the next */
+const props = defineProps<{
+  text: string
+  source?: ChatAttachmentSource
+  /** Follows the label, e.g. that the text changed */
+  note?: string
+  removable?: boolean
+  /** Draws attention when it appears: it may arrive after the chat opened */
+  announce?: boolean
+}>()
+const emit = defineEmits<{ (e: 'remove'): void }>()
 const { t } = useI18n()
 const open = ref(false)
 const arriving = ref(false)
 
-const EXCERPT_LENGTH = 120
-const TITLE_LENGTH = 400
-
-/** The beginning of the text in one line: what it is about at a glance */
-const excerpt = computed(() =>
-  props.text.replace(/\s+/g, ' ').trim().slice(0, EXCERPT_LENGTH)
-)
+const label = computed(() => {
+  const base = t(attachmentLabelKey(props.source))
+  return props.note ? `${base} · ${props.note}` : base
+})
+const excerpt = computed(() => attachmentExcerpt(props.text))
 const size = computed(() =>
   t('chat.attachmentSize', { count: props.text.length.toLocaleString() })
 )
-const toggleTitle = computed(() => {
-  const head =
-    props.variant === 'suggested'
-      ? t('chat.attachSuggestion')
-      : t('chat.showAttachment')
-  const preview = props.text.trim().slice(0, TITLE_LENGTH)
-  const more = props.text.trim().length > TITLE_LENGTH ? '…' : ''
-  return `${head}\n\n${preview}${more}`
-})
-
-function toggle() {
-  if (props.variant === 'suggested') emit('accept')
-  else open.value = !open.value
-}
+const toggleTitle = computed(() =>
+  attachmentTitle(t('chat.showAttachment'), props.text)
+)
 
 onMounted(() => {
   if (props.announce) arriving.value = true
@@ -97,21 +88,12 @@ onMounted(() => {
   color: var(--app-text-muted);
   font-size: 0.72rem;
 }
-.chat-attachment.is-attached {
+.chat-attachment.is-pending {
   border-color: color-mix(
     in oklab,
     var(--color-primary) 35%,
     var(--app-border)
   );
-}
-.chat-attachment.is-suggested {
-  border-style: dashed;
-  background: transparent;
-  color: var(--app-text-faint);
-}
-.chat-attachment.is-suggested:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  color: var(--color-base-content);
 }
 .chat-attachment.is-open {
   border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);

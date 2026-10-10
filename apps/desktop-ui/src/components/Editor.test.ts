@@ -67,6 +67,38 @@ describe('Editor.vue toolbar', () => {
     ])
   })
 
+  it('offers explicit formatted and Markdown modes with an accessible active state', async () => {
+    const { useIpcStore } = await import('../stores/ipc')
+    const store = useIpcStore()
+    const patch = vi
+      .spyOn(store, 'patchLocalState')
+      .mockResolvedValue({ success: true, result: {} })
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: true,
+        },
+      },
+    })
+    const options = wrapper.findAll('.editor-view-option')
+    expect(options.map((option) => option.text())).toEqual([
+      'editor.markup.formatted',
+      'editor.markup.source',
+    ])
+    expect(options.map((option) => option.attributes('aria-pressed'))).toEqual([
+      'true',
+      'false',
+    ])
+    await options[0].trigger('click')
+    expect(patch).not.toHaveBeenCalled()
+    await options[1].trigger('click')
+    expect(patch).toHaveBeenCalledWith({ editorShowMarkup: true })
+    wrapper.unmount()
+  })
+
   it('renders plugin toolbar buttons in left and right positions', async () => {
     const { useToolbarStore } = await import('../stores/toolbar')
     const toolbarStore = useToolbarStore()
@@ -114,7 +146,7 @@ describe('Editor.vue toolbar', () => {
     )
     expect(
       leftColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
-    ).toEqual(['editor.markup.showSource (Ctrl+Shift+M)', 'tool.left'])
+    ).toEqual(['tool.left'])
     expect(
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
     ).toEqual([

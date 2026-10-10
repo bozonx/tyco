@@ -14,7 +14,7 @@ describe('formatChatToMarkdown', () => {
       {
         role: 'user',
         content: 'Hello, what is this?',
-        attachments: ['context code snippet'],
+        attachments: [{ text: 'context code snippet' }],
       },
       { role: 'assistant', content: 'It is a code snippet.' },
     ]
@@ -31,7 +31,7 @@ describe('formatChatToMarkdown', () => {
       {
         role: 'user',
         content: 'Explain this',
-        attachments: ['line 1\nline 2'],
+        attachments: [{ text: 'line 1\nline 2' }],
       },
     ]
 

@@ -15,10 +15,13 @@ export function useShowMarkup() {
     () => ipcStore.params.localState?.editorShowMarkup === true
   )
 
-  const toggleShowMarkup = (): void => {
-    void ipcStore.patchLocalState({ editorShowMarkup: !showMarkup.value })
+  const setShowMarkup = (show: boolean): void => {
+    if (show === showMarkup.value) return
+    void ipcStore.patchLocalState({ editorShowMarkup: show })
     editorInputStore.focus()
   }
 
-  return { showMarkup, toggleShowMarkup }
+  const toggleShowMarkup = (): void => setShowMarkup(!showMarkup.value)
+
+  return { showMarkup, setShowMarkup, toggleShowMarkup }
 }

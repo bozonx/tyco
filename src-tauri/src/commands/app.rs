@@ -51,11 +51,11 @@ pub async fn get_hotkey_provider_info(
 #[tauri::command]
 pub fn open_main_chat(
     app: AppHandle,
-    text: Option<String>,
+    attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
 ) -> Result<(), AppError> {
-    runtime::open_main_chat(&app, text, question, auto_send)
+    runtime::open_main_chat(&app, attachment, question, auto_send)
 }
 
 #[tauri::command]

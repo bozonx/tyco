@@ -43,7 +43,13 @@ describe('llm-prompt', () => {
 
   it('includes stored attachments in conversation context', () => {
     const prompt = buildLlmPrompt(
-      [{ role: 'user', content: 'Explain it', attachments: ['Source text'] }],
+      [
+        {
+          role: 'user',
+          content: 'Explain it',
+          attachments: [{ text: 'Source text' }],
+        },
+      ],
       { rulePrefix: 'Rules' }
     )
 

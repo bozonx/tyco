@@ -1,6 +1,8 @@
 import type { ModelMessage } from '@bozonx/ai-kit'
 import type { ChatMessage } from '@tyco/shared'
 
+import { formatAttachmentsForPrompt } from '../chat/chat-attachment'
+
 export interface LlmPrompt {
   system?: string
   messages: ModelMessage[]
@@ -16,11 +18,7 @@ export interface LlmPromptOptions {
 }
 
 function messageContent(message: ChatMessage): string {
-  const attachments = (message.attachments || [])
-    .map(
-      (attachment) => `<attachment>${JSON.stringify(attachment)}</attachment>`
-    )
-    .join('\n\n')
+  const attachments = formatAttachmentsForPrompt(message.attachments)
 
   return [attachments, message.content].filter(Boolean).join('\n\n').trim()
 }

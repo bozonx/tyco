@@ -9,16 +9,25 @@ import {
 
 describe('chat-helpers', () => {
   it('prepares a chat request with attachments', () => {
-    const result = prepareChatRequest('Hello', ['file-a', 'file-b'])
+    const result = prepareChatRequest('Hello', [
+      { text: 'file-a' },
+      { text: 'file-b', source: 'editor-text' },
+    ])
 
     expect(result.userMessage).toEqual({
       role: 'user',
       content: 'Hello',
-      attachments: ['file-a', 'file-b'],
+      attachments: [
+        { text: 'file-a' },
+        { text: 'file-b', source: 'editor-text' },
+      ],
     })
 
     expect(result.preparedMessage).toContain(
       '<attachment>"file-a"</attachment>'
+    )
+    expect(result.preparedMessage).toContain(
+      '<attachment source="editor-text">"file-b"</attachment>'
     )
     expect(result.preparedMessage).toContain('Hello')
   })
