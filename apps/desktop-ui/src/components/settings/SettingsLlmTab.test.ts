@@ -31,7 +31,7 @@ describe('SettingsLlmTab.vue', () => {
     },
   }
 
-  it('renders AI rules section with chat, correction and translate fields', () => {
+  it('renders AI rules section with chat and correction fields', () => {
     const aiRules = {
       chat: 'Chat rule text',
       correction: 'Correction rule text',
@@ -77,11 +77,7 @@ describe('SettingsLlmTab.vue', () => {
     const correctionRow = wrapper.find('[data-label="settings.textCorrection"]')
     expect(correctionRow.exists()).toBe(true)
 
-    const translateRow = wrapper.find('[data-label="settings.llmTranslation"]')
-    expect(translateRow.exists()).toBe(true)
-    expect(translateRow.attributes('data-info')).toBe(
-      'settings.llmTranslationHint'
-    )
-    expect(translateRow.attributes('data-hint')).toBeUndefined()
+    // Translation rules live on the translation settings page.
+    expect(wrapper.findAll('.textarea-stub')).toHaveLength(2)
   })
 })

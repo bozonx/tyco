@@ -103,13 +103,16 @@ export interface TranslationConfig {
   qualityGate: TranslationQualityGate
   deeplEndpoint: 'free' | 'pro'
   glossary: TranslationGlossaryEntry[]
+  /** Extra instructions for the AI correction pass in the `always` mode. */
+  correctionPrompt: string
 }
 
 export const DEFAULT_TRANSLATION_CONFIG: TranslationConfig = {
   provider: 'llm',
-  qualityGate: 'on_problems',
+  qualityGate: 'off',
   deeplEndpoint: 'free',
   glossary: [],
+  correctionPrompt: '',
 }
 
 export const DEFAULT_LLM_MODEL_ID = 'local-qwen'

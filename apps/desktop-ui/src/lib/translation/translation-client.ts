@@ -99,7 +99,8 @@ export function createTranslationClient(deps: TranslationClientDeps): {
                   translation,
                   problems,
                   options,
-                  glossary
+                  glossary,
+                  config.qualityGate === 'always' ? config.correctionPrompt : ''
                 )
               },
       })
@@ -247,7 +248,8 @@ async function repairWithLlm(
   translation: string,
   problems: TranslationProblem[],
   options: TranslationRunOptions,
-  glossary: GlossaryEntry[]
+  glossary: GlossaryEntry[],
+  correctionPrompt: string
 ): Promise<FirstPass> {
   const repaired: string[] = []
   let detectedProvider = 'llm'
@@ -262,6 +264,9 @@ async function repairWithLlm(
     const prompt = buildPrompt({
       system: [
         translationSystem(options, applicable),
+        correctionPrompt.trim()
+          ? `User instructions for the correction pass:\n${correctionPrompt.trim()}`
+          : '',
         renderProblemsForPrompt(problems),
       ]
         .filter(Boolean)

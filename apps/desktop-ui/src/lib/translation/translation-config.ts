@@ -24,6 +24,8 @@ export function normalizeTranslationConfig(value: unknown): TranslationConfig {
     glossary: Array.isArray(input.glossary)
       ? input.glossary.flatMap(normalizeGlossaryEntry)
       : [],
+    correctionPrompt:
+      typeof input.correctionPrompt === 'string' ? input.correctionPrompt : '',
   }
 }
 

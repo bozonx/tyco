@@ -9,6 +9,7 @@ function config(overrides: Partial<TranslationConfig> = {}): TranslationConfig {
     qualityGate: 'off',
     deeplEndpoint: 'free',
     glossary: [],
+    correctionPrompt: '',
     ...overrides,
   }
 }
@@ -34,6 +35,25 @@ describe('createTranslationClient', () => {
     )
     expect(result.text).toBe('Здравствуйте.')
     expect(result.quality.repaired).toBe(true)
+  })
+
+  it('adds the correction prompt only to the always-on correction pass', async () => {
+    const runLlm = vi
+      .fn()
+      .mockResolvedValueOnce('Привет.')
+      .mockResolvedValueOnce('Здравствуйте.')
+    const client = createTranslationClient({
+      getConfig: () =>
+        config({ qualityGate: 'always', correctionPrompt: 'Use formal tone.' }),
+      keys: { get: vi.fn() },
+      transport: { fetch: vi.fn(), openSocket: vi.fn() },
+      runLlm,
+    })
+
+    await client.translate('Hello.', { targetLanguage: 'ru' })
+
+    expect(runLlm.mock.calls[0]?.[0].system).not.toContain('Use formal tone.')
+    expect(runLlm.mock.calls[1]?.[0].system).toContain('Use formal tone.')
   })
 
   it('uses the selected machine provider and protects placeholders', async () => {

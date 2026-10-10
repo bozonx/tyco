@@ -216,9 +216,10 @@ pub fn default_user_config() -> Value {
       "toTranslateLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
       "translation": {
         "provider": "llm",
-        "qualityGate": "on_problems",
+        "qualityGate": "off",
         "deeplEndpoint": "free",
-        "glossary": []
+        "glossary": [],
+        "correctionPrompt": ""
       },
       "mainActions": [
         { "type": "standard", "actionId": "insertIntoWindow" },

@@ -657,6 +657,14 @@ fn normalize_translation_config(user_config: &mut Value) -> bool {
         changed = true;
     }
 
+    if !translation
+        .get("correctionPrompt")
+        .is_some_and(Value::is_string)
+    {
+        translation.insert(String::from("correctionPrompt"), json!(""));
+        changed = true;
+    }
+
     changed
 }
 
@@ -2219,7 +2227,8 @@ mod tests {
 
         assert!(normalize_translation_config(&mut config));
         assert_eq!(config["translation"]["provider"], json!("llm"));
-        assert_eq!(config["translation"]["qualityGate"], json!("on_problems"));
+        assert_eq!(config["translation"]["qualityGate"], json!("off"));
+        assert_eq!(config["translation"]["correctionPrompt"], json!(""));
         assert!(!normalize_translation_config(&mut config));
     }
 

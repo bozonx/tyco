@@ -6,9 +6,10 @@ describe('normalizeTranslationConfig', () => {
   it('adds safe defaults to legacy user configuration', () => {
     expect(normalizeTranslationConfig(undefined)).toEqual({
       provider: 'llm',
-      qualityGate: 'on_problems',
+      qualityGate: 'off',
       deeplEndpoint: 'free',
       glossary: [],
+      correctionPrompt: '',
     })
   })
 
@@ -18,6 +19,7 @@ describe('normalizeTranslationConfig', () => {
         provider: 'deepl',
         qualityGate: 'always',
         deeplEndpoint: 'pro',
+        correctionPrompt: 'Use informal tone.',
         glossary: [
           { term: ' TyCo ', use: 'TyCo', doNotTranslate: true },
           { term: 'workspace', use: ' рабочее пространство ' },
@@ -36,6 +38,7 @@ describe('normalizeTranslationConfig', () => {
           doNotTranslate: false,
         },
       ],
+      correctionPrompt: 'Use informal tone.',
     })
   })
 })

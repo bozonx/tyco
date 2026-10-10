@@ -21,10 +21,12 @@ vi.mock('../../stores/llm', () => ({
 describe('SettingsTranslationsTab.vue', () => {
   const createConfig = (overrides = {}) => ({
     toTranslateLanguages: ['en', 'es', null, null, null],
+    aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
     translation: {
       provider: 'deepl',
-      qualityGate: 'on_problems',
+      qualityGate: 'off',
       deeplEndpoint: 'free',
+      correctionPrompt: '',
       glossary: [
         { term: 'foo', use: 'bar', doNotTranslate: false },
         { term: 'baz', use: 'baz', doNotTranslate: true },
@@ -54,7 +56,6 @@ describe('SettingsTranslationsTab.vue', () => {
           },
           FieldInput: true,
           FieldTextArea: true,
-          ShortcutSlots: true,
         },
       },
     })
@@ -63,7 +64,7 @@ describe('SettingsTranslationsTab.vue', () => {
       .findAll('.field-row-stub')
       .map((r) => r.attributes('data-label'))
     expect(rows).toContain('settings.translationProvider')
-    expect(rows).toContain('settings.translationQuality')
+    expect(rows).toContain('settings.translationCorrection')
     expect(rows).not.toContain('settings.deeplPlan')
     expect(rows).toContain('settings.apiKey')
 
@@ -72,16 +73,52 @@ describe('SettingsTranslationsTab.vue', () => {
       .find(
         (r) => r.attributes('data-label') === 'settings.translationProvider'
       )
-    expect(providerRow?.attributes('data-hint')).toBe(
-      'settings.translationProviderHint'
-    )
+    expect(providerRow?.attributes('data-hint')).toBeUndefined()
 
-    const qualityRow = wrapper
+    const correctionRow = wrapper
       .findAll('.field-row-stub')
-      .find((r) => r.attributes('data-label') === 'settings.translationQuality')
-    expect(qualityRow?.attributes('data-info')).toBe(
-      'settings.translationQualityInfo'
+      .find(
+        (r) => r.attributes('data-label') === 'settings.translationCorrection'
+      )
+    expect(correctionRow?.attributes('data-info')).toBe(
+      'settings.translationCorrectionInfo'
     )
+    expect(rows).not.toContain('settings.translationCorrectionPrompt')
+  })
+
+  it('shows the correction prompt only in the always mode', async () => {
+    const userConfig = createConfig({
+      qualityGate: 'always',
+      correctionPrompt: 'Keep it short',
+    })
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<section><slot /></section>' },
+          FieldRow: {
+            props: ['label'],
+            template:
+              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+          },
+          FieldSelect: true,
+          FieldInput: true,
+          FieldTextArea: {
+            props: ['value'],
+            emits: ['update:value'],
+            template:
+              '<textarea class="text-area-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+          },
+        },
+      },
+    })
+
+    const promptRow = wrapper.find(
+      '[data-label="settings.translationCorrectionPrompt"]'
+    )
+    expect(promptRow.exists()).toBe(true)
+    await promptRow.find('textarea').setValue('Be formal')
+    expect(userConfig.translation.correctionPrompt).toBe('Be formal')
   })
 
   it('auto-detects deepl free vs pro endpoint when saving api key', async () => {
@@ -100,7 +137,6 @@ describe('SettingsTranslationsTab.vue', () => {
               '<input class="key-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
           },
           FieldTextArea: true,
-          ShortcutSlots: true,
         },
       },
     })
@@ -121,30 +157,26 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-free-key:fx')
   })
 
-  it('emits navigate to languages when clicking quick language setup button', async () => {
+  it('links to the languages page from the page description', async () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
       props: { userConfig },
       global: {
         stubs: {
-          SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: { template: '<div><slot /></div>' },
           FieldSelect: true,
           FieldInput: true,
           FieldTextArea: true,
-          ShortcutSlots: true,
         },
       },
     })
 
-    const button = wrapper.findComponent({ name: 'Button' })
-    expect(button.exists()).toBe(true)
-    await button.trigger('click')
+    await wrapper.find('.settings-inline-link').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([['languages']])
   })
 
-  it('renders glossary section with info tooltip and no description', () => {
+  it('renders rules and glossary sections, hinting glossary limits for machine translation', async () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
       props: { userConfig },
@@ -159,24 +191,35 @@ describe('SettingsTranslationsTab.vue', () => {
           FieldSelect: true,
           FieldInput: true,
           FieldTextArea: true,
-          ShortcutSlots: true,
         },
       },
     })
 
     const sections = wrapper.findAll('.section-stub')
-    const firstSection = sections[0]
-    const glossarySection = sections[1]
-
-    expect(firstSection.attributes('data-title')).toBeUndefined()
-    expect(firstSection.attributes('data-desc')).toBeUndefined()
-    expect(glossarySection.attributes('data-title')).toBe(
+    expect(sections[0]?.attributes('data-title')).toBeUndefined()
+    expect(sections[1]?.attributes('data-title')).toBe(
+      'settings.translationRules'
+    )
+    expect(sections[1]?.attributes('data-info')).toBe(
+      'settings.translationRulesInfo'
+    )
+    const glossarySection = sections[2]
+    expect(glossarySection?.attributes('data-title')).toBe(
       'settings.translationGlossary'
     )
-    expect(glossarySection.attributes('data-info')).toBe(
+    expect(glossarySection?.attributes('data-info')).toBe(
       'settings.translationGlossaryInfo'
     )
-    expect(glossarySection.attributes('data-desc')).toBeUndefined()
+    expect(glossarySection?.attributes('data-desc')).toBe(
+      'settings.translationGlossaryMachineHint'
+    )
+
+    await wrapper.setProps({
+      userConfig: createConfig({ qualityGate: 'on_problems' }),
+    })
+    expect(
+      wrapper.findAll('.section-stub')[2]?.attributes('data-desc')
+    ).toBeFalsy()
   })
 
   it('hides deepl plan and api key when llm provider is selected', () => {
@@ -200,7 +243,6 @@ describe('SettingsTranslationsTab.vue', () => {
           },
           FieldInput: true,
           FieldTextArea: true,
-          ShortcutSlots: true,
         },
       },
     })
@@ -209,7 +251,7 @@ describe('SettingsTranslationsTab.vue', () => {
       .findAll('.field-row-stub')
       .map((r) => r.attributes('data-label'))
     expect(rows).toContain('settings.translationProvider')
-    expect(rows).toContain('settings.translationQuality')
+    expect(rows).toContain('settings.translationCorrection')
     expect(rows).not.toContain('settings.deeplPlan')
     expect(rows).not.toContain('settings.apiKey')
   })
@@ -230,12 +272,11 @@ describe('SettingsTranslationsTab.vue', () => {
             template:
               '<textarea class="text-area-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
           },
-          ShortcutSlots: true,
         },
       },
     })
 
-    const textarea = wrapper.find('.text-area-stub')
+    const textarea = wrapper.findAll('.text-area-stub').at(-1)!
     await textarea.setValue('hello = privet\n!KeepThis')
 
     expect(userConfig.translation.glossary).toEqual([

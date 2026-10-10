@@ -1,27 +1,23 @@
 <template>
   <div class="flex flex-col gap-6">
     <SettingsSection>
-      <FieldRow
-        :label="t('settings.translationProvider')"
-        :hint="t('settings.translationProviderHint')"
-      >
+      <template #description>
+        <span>{{ t('settings.translationsPageHint') }} </span>
+        <button
+          type="button"
+          class="settings-inline-link"
+          @click="emit('navigate', 'languages')"
+        >
+          {{ t('settings.languagesTab') }}</button
+        >.
+      </template>
+
+      <FieldRow :label="t('settings.translationProvider')">
         <FieldSelect
           class="w-full"
           :value="translation.provider"
           :options="providerOptions"
           @update:value="updateProvider"
-        />
-      </FieldRow>
-
-      <FieldRow
-        :label="t('settings.translationQuality')"
-        :info="t('settings.translationQualityInfo')"
-      >
-        <FieldSelect
-          class="w-full"
-          :value="translation.qualityGate"
-          :options="qualityOptions"
-          @update:value="updateQualityGate"
         />
       </FieldRow>
 
@@ -57,11 +53,43 @@
           </button>
         </div>
       </FieldRow>
+
+      <FieldRow
+        :label="t('settings.translationCorrection')"
+        :info="t('settings.translationCorrectionInfo')"
+      >
+        <FieldSelect
+          class="w-full"
+          :value="translation.qualityGate"
+          :options="qualityOptions"
+          @update:value="updateQualityGate"
+        />
+      </FieldRow>
+
+      <FieldRow
+        v-if="translation.qualityGate === 'always'"
+        :label="t('settings.translationCorrectionPrompt')"
+        :info="t('settings.translationCorrectionPromptInfo')"
+        vertical
+      >
+        <FieldTextArea
+          :value="translation.correctionPrompt"
+          @update:value="updateCorrectionPrompt"
+        />
+      </FieldRow>
+    </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.translationRules')"
+      :info="t('settings.translationRulesInfo')"
+    >
+      <FieldTextArea v-model:value="userConfig.aiRules.translate" />
     </SettingsSection>
 
     <SettingsSection
       :title="t('settings.translationGlossary')"
       :info="t('settings.translationGlossaryInfo')"
+      :description="glossaryHint"
     >
       <FieldTextArea
         :value="glossaryText"
@@ -69,12 +97,6 @@
         @update:value="updateGlossary"
       />
     </SettingsSection>
-
-    <div class="translation-languages-footer">
-      <Button sm neutral icon="mdi:web" @click="emit('navigate', 'languages')">
-        {{ t('settings.translationLanguagesLink') }}
-      </Button>
-    </div>
   </div>
 </template>
 
@@ -84,10 +106,11 @@ import { computed, ref } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
-import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import SettingsSection from '../common/SettingsSection.vue'
 
 const props = defineProps<{ userConfig: Record<string, any> }>()
 
@@ -109,10 +132,18 @@ const providerOptions = computed(() => [
   { id: 'llm', name: t('settings.translationProviderLlm') },
 ])
 const qualityOptions = computed(() => [
-  { id: 'off', name: t('settings.translationQualityOff') },
-  { id: 'on_problems', name: t('settings.translationQualityOnProblems') },
-  { id: 'always', name: t('settings.translationQualityAlways') },
+  { id: 'off', name: t('settings.translationCorrectionOff') },
+  { id: 'on_problems', name: t('settings.translationCorrectionOnProblems') },
+  { id: 'always', name: t('settings.translationCorrectionAlways') },
 ])
+// Without the AI correction pass, `term = use` rules are only checked,
+// never applied, by DeepL and Google.
+const glossaryHint = computed(() =>
+  translation.value.provider !== 'llm' &&
+  translation.value.qualityGate === 'off'
+    ? t('settings.translationGlossaryMachineHint')
+    : ''
+)
 
 const glossaryText = computed(() =>
   translation.value.glossary
@@ -135,6 +166,10 @@ function updateQualityGate(value: string | number | undefined) {
     ...translation.value,
     qualityGate: value,
   })
+}
+
+function updateCorrectionPrompt(value: string) {
+  props.userConfig.translation.correctionPrompt = value
 }
 
 function updateGlossary(value: string) {
@@ -174,8 +209,20 @@ async function removeProviderKey() {
 </script>
 
 <style scoped>
-.translation-languages-footer {
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--app-border-subtle);
+.settings-inline-link {
+  display: inline;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+}
+
+.settings-inline-link:hover {
+  filter: brightness(1.15);
 }
 </style>

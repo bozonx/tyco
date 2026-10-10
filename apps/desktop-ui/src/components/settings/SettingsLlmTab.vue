@@ -325,13 +325,6 @@
     <FieldRow :label="t('settings.textCorrection')" vertical>
       <FieldTextArea v-model:value="aiRules.correction" />
     </FieldRow>
-    <FieldRow
-      :label="t('settings.llmTranslation')"
-      :info="t('settings.llmTranslationHint')"
-      vertical
-    >
-      <FieldTextArea v-model:value="aiRules.translate" />
-    </FieldRow>
   </SettingsSection>
 </template>
 
