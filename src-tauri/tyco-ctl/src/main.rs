@@ -20,7 +20,8 @@ const USAGE: &str = "Usage: tyco-ctl status
 Modes: editor, write, chat, voice-chat, voice, select, ai-tasks,
        command-launcher, correction, translate, history, settings.
 Use --stdin for private text. Input is preserved exactly.
-Run defaults to non-interactive execution and returned output.
+Run defaults to non-interactive execution and always returns output.
+--output configured is a legacy alias for return. Use --replace to replace a selection.
 Tyco must already be running in the same user session.";
 
 #[derive(Debug, PartialEq, Eq)]

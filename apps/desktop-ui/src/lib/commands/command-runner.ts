@@ -7,7 +7,11 @@ import {
   validateToolInput,
 } from '../tools/tool-input'
 import type { ToolLookup, ToolResult } from '../tools/tool-types'
-import { commandLabel, commandUnavailableReason } from './command-config'
+import {
+  commandAfterRun,
+  commandLabel,
+  commandUnavailableReason,
+} from './command-config'
 
 export type ToastKind = 'info' | 'warn' | 'error' | 'success'
 
@@ -36,6 +40,8 @@ export interface CommandRunOptions {
   signal?: AbortSignal
   /** Where the command is invoked from; the action menu by default */
   source?: CommandRunSource
+  /** Quick-command input still belongs to the captured selection. */
+  hasSelection?: boolean
 }
 
 /** How a run ended; the user has been told already */
@@ -76,8 +82,8 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Runs the commands of the library through the tool registry and does what each
- * one says with the output: a toast, or the action menu on it
+ * Runs library commands through the tool registry and handles their output
+ * according to the invocation context
  */
 export function createCommandRunner(deps: CommandRunnerDependencies) {
   /** Tells the user what the tool reported */
@@ -181,9 +187,9 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
           logOutput: command.logOutput,
         },
         wantsOutput:
-          options.source === 'external' ||
           options.output === 'return' ||
-          command.afterRun !== 'none',
+          commandAfterRun(command, options.source, options.hasSelection) !==
+            'none',
       })
       if (signal.aborted) return { ok: false, cancelled: true }
       return {
@@ -239,15 +245,26 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         result.code
       )
     }
-    if (options.output === 'return')
+    const afterRun = commandAfterRun(
+      command,
+      options.source,
+      options.hasSelection
+    )
+    if (options.output === 'return' || afterRun === 'return')
       return { success: true, output: result.content }
     let outcome: CommandRunOutcome
-    switch (command.afterRun) {
+    switch (afterRun) {
       // the text did not come from a selection here: the overlay hands a
       // selection over to a selection run, see `transform`
       case 'replaceSelection':
       case 'showMenu':
-        outcome = showOutput(result.content ?? '', result.sourceText ?? '')
+        if (result.content === undefined) {
+          report(result)
+          if (!result.keepWindow) deps.closeWindow?.()
+          outcome = succeeded
+        } else {
+          outcome = showOutput(result.content, result.sourceText ?? '')
+        }
         break
       case 'copy':
         outcome = await copyOutput(result.content ?? '', result.keepWindow)
@@ -257,9 +274,7 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         if (!result.keepWindow) deps.closeWindow?.()
         outcome = succeeded
     }
-    return options.source === 'external'
-      ? { ...outcome, output: result.content }
-      : outcome
+    return outcome
   }
 
   /**
@@ -275,7 +290,7 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       failure: _failure,
       sourceText: _source,
       ...result
-    } = await invoke(command, text, options)
+    } = await invoke(command, text, { ...options, output: 'return' })
     return result
   }
 

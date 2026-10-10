@@ -1,13 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { CommandConfig, ScriptExecutionResult } from '@tyco/shared'
+import type {
+  CommandConfig,
+  CustomActionAfterRun,
+  ScriptExecutionResult,
+} from '@tyco/shared'
 
 import type { BuiltinToolDependencies } from '../tools/builtin-tools'
 import { testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
-import { createCommand } from './command-config'
+import { createCommand, launcherAfterRunFromLegacy } from './command-config'
 import {
   type CommandRunnerDependencies,
+  type CommandRunOptions,
   createCommandRunner,
 } from './command-runner'
 
@@ -69,7 +74,18 @@ function setup(
     closeWindow: vi.fn(),
     ...rest,
   }
-  return { deps, runner: createCommandRunner(deps) }
+  const runner = createCommandRunner(deps)
+  return {
+    deps,
+    runner: {
+      ...runner,
+      run: (
+        command: CommandConfig,
+        text: string,
+        options: CommandRunOptions = {}
+      ) => runner.run(command, text, { source: 'launcher', ...options }),
+    },
+  }
 }
 
 describe('script commands', () => {
@@ -161,7 +177,10 @@ describe('script commands', () => {
       .fn()
       .mockResolvedValue(result({ stdout: 'UPPER\n' }))
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(script({}, { afterRun: 'showMenu' }), 'upper')
+    await runner.run(
+      script({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      'upper'
+    )
     expect(executeScriptAction.mock.calls[0][0].captureOutput).toBe(true)
     expect(deps.showResultMenu).toHaveBeenCalledWith('UPPER', 'upper')
     expect(deps.closeWindow).not.toHaveBeenCalled()
@@ -172,7 +191,10 @@ describe('script commands', () => {
       .fn()
       .mockResolvedValue(result({ stdout: '\n' }))
     const { deps, runner } = setup({ executeScriptAction })
-    const outcome = await runner.run(script({}, { afterRun: 'showMenu' }), 'x')
+    const outcome = await runner.run(
+      script({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      'x'
+    )
     expect(outcome.success).toBe(false)
     expect(deps.showResultMenu).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith(
@@ -228,7 +250,10 @@ describe('webhook commands', () => {
   it('opens the action menu on the answer', async () => {
     const executeWebhook = vi.fn().mockResolvedValue('{"text":"done"}')
     const { deps, runner } = setup({ executeWebhook })
-    await runner.run(webhook({}, { afterRun: 'showMenu' }), 'x')
+    await runner.run(
+      webhook({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      'x'
+    )
     expect(deps.showResultMenu).toHaveBeenCalledWith('done', 'x')
   })
 
@@ -439,10 +464,79 @@ describe('the output of a command', () => {
     inputSchema: TEXT_INPUT_SCHEMA,
     run: vi.fn(async () => ({ ok: true, content: output })),
   })
-  const command = (afterRun: CommandConfig['afterRun']): CommandConfig => ({
+  const command = (afterRun: CustomActionAfterRun): CommandConfig => ({
     ...createCommand('Test.echo', 'e-1'),
     name: 'Echo',
-    afterRun,
+    launcherAfterRun: launcherAfterRunFromLegacy(afterRun),
+  })
+
+  it.each(['none', 'copy', 'replaceSelection'] as const)(
+    'shows menu results regardless of quick-command setting %s',
+    async (setting) => {
+      const tool = echo('result')
+      const copyText = vi.fn(async () => {})
+      const { deps, runner } = setup({ copyText }, [tool])
+      expect(
+        await runner.run(command(setting), 'source', { source: 'menu' })
+      ).toEqual({ success: true })
+      expect(deps.showResultMenu).toHaveBeenCalledWith('result', 'source')
+      expect(copyText).not.toHaveBeenCalled()
+      expect(deps.closeWindow).not.toHaveBeenCalled()
+      expect(tool.run).toHaveBeenCalledWith(
+        expect.objectContaining({ wantsOutput: true })
+      )
+    }
+  )
+
+  it.each(['none', 'copy', 'showMenu', 'replaceSelection'] as const)(
+    'returns external output without UI or clipboard actions for %s',
+    async (setting) => {
+      const tool = echo('result\n')
+      const copyText = vi.fn(async () => {})
+      const { deps, runner } = setup({ copyText }, [tool])
+      expect(
+        await runner.run(command(setting), 'source', {
+          source: 'external',
+          output: 'configured',
+        })
+      ).toEqual({ success: true, output: 'result\n' })
+      expect(tool.run).toHaveBeenCalledWith(
+        expect.objectContaining({ wantsOutput: true })
+      )
+      expect(deps.showResultMenu).not.toHaveBeenCalled()
+      expect(deps.closeWindow).not.toHaveBeenCalled()
+      expect(copyText).not.toHaveBeenCalled()
+      expect(deps.showToast).not.toHaveBeenCalled()
+    }
+  )
+
+  it('applies independent quick-command output settings', async () => {
+    const copyText = vi.fn(async () => {})
+    const { deps, runner } = setup({ copyText }, [echo('result')])
+    const config = {
+      ...command('none'),
+      launcherAfterRun: {
+        withSelection: 'copy' as const,
+        withoutSelection: 'showMenu' as const,
+      },
+    }
+    await runner.run(config, 'selected', { hasSelection: true })
+    expect(copyText).toHaveBeenCalledWith('result')
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
+    await runner.run(config, 'typed', { hasSelection: false })
+    expect(deps.showResultMenu).toHaveBeenCalledWith('result', 'typed')
+    expect(copyText).toHaveBeenCalledTimes(1)
+  })
+
+  it('captures output for explicit selection transformations even if quick commands ignore it', async () => {
+    const tool = echo('result')
+    const { runner } = setup({}, [tool])
+    expect(
+      await runner.transform(command('none'), 'source', { source: 'selection' })
+    ).toEqual({ ok: true, content: 'result' })
+    expect(tool.run).toHaveBeenCalledWith(
+      expect.objectContaining({ wantsOutput: true })
+    )
   })
 
   it('copies the output and closes the window', async () => {
@@ -494,7 +588,7 @@ describe('the output of a command', () => {
 })
 
 describe('external returned output', () => {
-  it('waits for script output even when afterRun is none', async () => {
+  it('waits for script output even when quick commands ignore output', async () => {
     const executeScriptAction = vi.fn(async () => result({ stdout: 'raw\n\n' }))
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(script({ command: 'echo test' }), '', {

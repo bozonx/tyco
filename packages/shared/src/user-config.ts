@@ -13,7 +13,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 4
+export const CONFIG_VERSION = 5
 
 export type ModelTag =
   | 'voice'
@@ -296,6 +296,12 @@ export interface CommandAvailability {
   chat: boolean
 }
 
+/** Output handling for quick commands, based on the input source. */
+export interface CommandLauncherAfterRun {
+  withSelection: CustomActionAfterRun
+  withoutSelection: Exclude<CustomActionAfterRun, 'replaceSelection'>
+}
+
 /**
  * A user command of the command library: a tool with its settings, invoked from
  * the action menu and, later, the command overlay, external calls and the chat.
@@ -327,8 +333,11 @@ export interface CommandConfig {
    * structured input and do not parse text themselves
    */
   llmArgumentParsing: boolean
-  /** What to do with text the tool returns */
-  afterRun: CustomActionAfterRun
+  /**
+   * What quick commands do with returned text; other contexts have fixed
+   * behavior
+   */
+  launcherAfterRun: CommandLauncherAfterRun
   logOutput: boolean
   availableIn: CommandAvailability
   enabled: boolean

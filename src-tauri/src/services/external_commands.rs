@@ -63,9 +63,6 @@ pub struct ExternalCommand {
     pub id: String,
     pub takes_text: bool,
     pub structured: bool,
-    pub shows_menu: bool,
-    /// Its output replaces the selection, see `afterRun`.
-    pub replaces_selection: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -197,15 +194,12 @@ fn callable(
         return Err(LookupError::NotExternal(id));
     }
     let takes_text = tool_status(command, catalog)?;
-    let after_run = str_field(command, "afterRun");
     Ok(ExternalCommand {
         id,
         takes_text,
         structured: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
             .is_some_and(|tool| tool.input == ToolInput::Structured),
-        shows_menu: after_run == "showMenu",
-        replaces_selection: after_run == "replaceSelection",
     })
 }
 
@@ -262,7 +256,8 @@ struct ListedCommand {
     /// `text` or `none`
     input: &'static str,
     can_replace_selection: bool,
-    after_run: String,
+    /// External callers always receive the output.
+    output: &'static str,
 }
 
 /// The commands that may be called from outside, as a JSON array of
@@ -290,7 +285,7 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
                     "none"
                 },
                 can_replace_selection: found.takes_text && !found.structured,
-                after_run: str_field(command, "afterRun").to_owned(),
+                output: "return",
             }
         })
         .collect();
@@ -484,8 +479,6 @@ mod tests {
                 id: String::from("backup"),
                 takes_text: false,
                 structured: false,
-                shows_menu: false,
-                replaces_selection: false,
             }
         );
     }
@@ -496,7 +489,6 @@ mod tests {
         let note = find_named("work note").unwrap();
         assert_eq!(note.id, "note");
         assert!(note.takes_text);
-        assert!(note.shows_menu);
     }
 
     #[test]
@@ -544,12 +536,11 @@ mod tests {
     }
 
     #[test]
-    fn knows_a_command_that_replaces_the_selection() {
+    fn accepts_commands_independently_of_launcher_output_settings() {
         let mut catalog = catalog();
         catalog.get_mut("core.translate").unwrap().available = true;
         let found = find_by_id(&config(), Some(&catalog), "translate").unwrap();
-        assert!(found.replaces_selection);
-        assert!(!found.shows_menu);
+        assert!(found.takes_text);
     }
 
     #[test]
@@ -571,7 +562,9 @@ mod tests {
             .as_array()
             .unwrap()
             .iter()
-            .all(|item| item["canReplaceSelection"].is_boolean()));
+            .all(|item| item["canReplaceSelection"].is_boolean()
+                && item["output"] == "return"
+                && item.get("afterRun").is_none()));
         let essential: Vec<Value> = listed
             .as_array()
             .unwrap()

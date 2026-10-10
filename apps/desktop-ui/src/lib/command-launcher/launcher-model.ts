@@ -8,6 +8,7 @@ import type {
 } from '@tyco/shared'
 
 import {
+  commandAfterRun,
   commandLabel,
   commandTakesText,
   isCommandAvailable,
@@ -226,8 +227,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     input: string | null
   ): Promise<CommandRunOutcome> => {
     if (
-      !externalCall?.jobId &&
-      command.afterRun === 'replaceSelection' &&
+      source === 'launcher' &&
+      commandAfterRun(command, source, fromSelection) === 'replaceSelection' &&
       input !== null &&
       fromSelection &&
       deps.replaceSelection
@@ -255,6 +256,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       outcome = await deps.run(command, input ?? '', {
         signal: runController.signal,
         source,
+        hasSelection: fromSelection,
         input: call?.input,
         output: call?.output,
       })
@@ -315,8 +317,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
 
   /**
-   * An external call that needs the overlay: its text, otherwise the selection,
-   * then the field, as for a picked command
+   * An external call that needs the overlay: use explicit text or ask for
+   * input. Selection capture and replacement belong to the caller
    */
   const request = async (call: LauncherRequest): Promise<void> => {
     reset()
@@ -334,11 +336,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     }
     source = 'external'
     externalCall = call
-    await start(
-      command,
-      call.text ?? (call.jobId ? '' : (deps.selectedText() ?? '')),
-      !call.jobId && call.text === undefined
-    )
+    await start(command, call.text ?? '', false)
   }
 
   /** Stops the running command; it is reported as cancelled */
@@ -390,6 +388,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       reset()
       return true
     }
+    externalCall = null
     source = 'launcher'
     stage.value = { kind: 'list' }
     return true
@@ -404,7 +403,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const selectionArrived = async (selection: string | null | undefined) => {
     const current = stage.value
     if (
-      !externalCall?.jobId &&
+      source === 'launcher' &&
       current.kind === 'prepare' &&
       commandTakesText(current.command, deps.tools) &&
       !textEdited &&

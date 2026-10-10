@@ -78,7 +78,7 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
         },
         "textAccepted": command.takes_text,
         "canReplaceSelection": command.takes_text && !command.structured,
-        "afterRun": raw.and_then(|item| item.get("afterRun")),
+        "output": "return",
         "inputSchema": input_schema,
     }))
 }
@@ -121,15 +121,6 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "This command does not accept input",
         ));
     }
-    if request.output == tyco_activation_protocol::OutputMode::Configured
-        && (command.shows_menu || (command.replaces_selection && !request.replace))
-        && !request.interactive
-    {
-        return Err(Response::coded_error(
-            "InteractionRequired",
-            "Configured output requires interactive UI",
-        ));
-    }
     if command.structured && !command.takes_text && request.input.is_none() {
         return Err(Response::coded_error(
             "InputRequired",
@@ -159,9 +150,9 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     }
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
-    if request.replace {
-        request.output = tyco_activation_protocol::OutputMode::Return;
-    }
+    // Keep accepting legacy configured output requests, but external calls
+    // always return output; only the caller can request a selection replacement.
+    request.output = tyco_activation_protocol::OutputMode::Return;
     let config = app.state::<AppState>().params().user_config;
     let selection = if request.selection {
         permission(&config, "selection")?;
@@ -186,9 +177,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     if let Some(raw) = raw_command(&config, &command.id) {
         jobs.remember_command(&job.id, raw.clone());
     }
-    let needs_ui = (request.output == tyco_activation_protocol::OutputMode::Configured
-        && (command.shows_menu || (command.replaces_selection && !request.replace)))
-        || (command.takes_text && request.text.is_none() && request.input.is_none());
+    let needs_ui = command.takes_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
         let mut activation = Activation::new(StartMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
@@ -518,8 +507,6 @@ mod tests {
             id: "test".into(),
             takes_text: true,
             structured: false,
-            shows_menu: false,
-            replaces_selection: false,
         }
     }
     #[test]
@@ -543,6 +530,17 @@ mod tests {
         request.selection = true;
         assert!(validate_run(&command, &request).is_err());
     }
+    #[test]
+    fn legacy_configured_output_does_not_require_interactive_ui() {
+        let request = RunRequest {
+            target: "test".into(),
+            text: Some("input".into()),
+            output: tyco_activation_protocol::OutputMode::Configured,
+            ..Default::default()
+        };
+        assert!(validate_run(&command(), &request).is_ok());
+    }
+
     #[test]
     fn permission_defaults_deny_capture() {
         assert!(permission(&json!({}), "selection").is_err());

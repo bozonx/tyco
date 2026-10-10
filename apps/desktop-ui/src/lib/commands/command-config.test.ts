@@ -6,6 +6,7 @@ import { testTools } from '../tools/testing'
 
 import {
   commandAddedBy,
+  commandAfterRun,
   commandCliCall,
   commandLabel,
   commandTakesText,
@@ -59,11 +60,55 @@ describe('normalizeCommand', () => {
       toolId: 'script',
       toolConfig: { command: 'echo', workingDir: '', takesText: true },
       llmArgumentParsing: false,
-      afterRun: 'none',
+      launcherAfterRun: { withSelection: 'none', withoutSelection: 'none' },
       logOutput: false,
       availableIn: { external: false, chat: false },
       enabled: true,
     })
+  })
+
+  it.each([
+    ['none', 'none', 'none'],
+    ['showMenu', 'showMenu', 'showMenu'],
+    ['copy', 'copy', 'copy'],
+    ['replaceSelection', 'replaceSelection', 'showMenu'],
+  ])(
+    'migrates legacy %s output settings',
+    (legacy, withSelection, withoutSelection) => {
+      const command = normalizeCommand({
+        id: 'old',
+        toolId: 'script',
+        afterRun: legacy,
+      })!
+      expect(command.launcherAfterRun).toEqual({
+        withSelection,
+        withoutSelection,
+      })
+      expect(command).not.toHaveProperty('afterRun')
+      expect(normalizeCommand(command)).toEqual(command)
+    }
+  )
+
+  it('preserves separate settings and rejects replacement without a selection', () => {
+    expect(
+      normalizeCommand({
+        id: 'new',
+        toolId: 'script',
+        afterRun: 'copy',
+        launcherAfterRun: {
+          withSelection: 'none',
+          withoutSelection: 'replaceSelection',
+        },
+      })?.launcherAfterRun
+    ).toEqual({ withSelection: 'none', withoutSelection: 'showMenu' })
+    expect(
+      normalizeCommand({
+        id: 'partial',
+        toolId: 'script',
+        afterRun: 'copy',
+        launcherAfterRun: { withSelection: 'invalid' },
+      })?.launcherAfterRun
+    ).toEqual({ withSelection: 'none', withoutSelection: 'copy' })
   })
 
   it('normalizes the settings of a webhook', () => {
@@ -293,7 +338,10 @@ describe('commands of the core tools', () => {
       defaultAfterRun: 'replaceSelection',
     })
     expect(translate.toolConfig).toEqual({ language: '' })
-    expect(translate.afterRun).toBe('replaceSelection')
+    expect(translate.launcherAfterRun).toEqual({
+      withSelection: 'replaceSelection',
+      withoutSelection: 'showMenu',
+    })
     expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
   })
@@ -403,5 +451,23 @@ describe('commandAddedBy', () => {
     expect(
       commandAddedBy(createCommand('script', 'default:core.x:y'), tools)
     ).toEqual({ kind: 'core' })
+  })
+})
+
+describe('commandAfterRun', () => {
+  it('uses quick-command settings only in their matching context', () => {
+    const command = {
+      ...createCommand('script'),
+      launcherAfterRun: {
+        withSelection: 'copy' as const,
+        withoutSelection: 'none' as const,
+      },
+    }
+    expect(commandAfterRun(command, 'launcher', true)).toBe('copy')
+    expect(commandAfterRun(command, 'launcher', false)).toBe('none')
+    expect(commandAfterRun(command, 'menu', true)).toBe('showMenu')
+    expect(commandAfterRun(command, 'menu', false)).toBe('showMenu')
+    expect(commandAfterRun(command, 'external', true)).toBe('return')
+    expect(commandAfterRun(command, 'external', false)).toBe('return')
   })
 })

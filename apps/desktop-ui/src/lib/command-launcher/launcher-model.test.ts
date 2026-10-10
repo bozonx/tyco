@@ -152,7 +152,11 @@ describe('createCommandLauncherModel', () => {
     deps.selectedText.mockReturnValue('buy milk')
     await model.pickByKey(2)
     expect(deps.saveOutput).toHaveBeenCalledWith('buy milk')
-    expect(deps.run).toHaveBeenCalledWith(note, 'buy milk', expect.anything())
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'buy milk',
+      expect.objectContaining({ source: 'launcher', hasSelection: true })
+    )
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ commandId: 'note', text: 'buy milk' })
     )
@@ -175,7 +179,11 @@ describe('createCommandLauncherModel', () => {
     model.setText('call mom')
     expect(model.canSubmit.value).toBe(true)
     await model.submit()
-    expect(deps.run).toHaveBeenCalledWith(note, 'call mom', expect.anything())
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'call mom',
+      expect.objectContaining({ source: 'launcher', hasSelection: false })
+    )
     expect(model.stage.value.kind).toBe('list')
   })
 
@@ -186,7 +194,7 @@ describe('createCommandLauncherModel', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'late selection',
-      expect.anything()
+      expect.objectContaining({ hasSelection: true })
     )
     expect(model.stage.value.kind).toBe('list')
   })
@@ -318,19 +326,22 @@ describe('external calls', () => {
     )
   })
 
-  it('takes the selection when the call brings no text', async () => {
+  it('asks for explicit text without capturing the selection for external calls', async () => {
     const { deps, model } = setupExternal([note])
     deps.selectedText.mockReturnValue('selected')
     await model.request({ commandId: 'note' })
-    expect(deps.run).toHaveBeenCalledWith(note, 'selected', expect.anything())
-  })
-
-  it('asks for the text, then runs on a selection captured late', async () => {
-    const { deps, model } = setupExternal([note])
-    await model.request({ commandId: 'note' })
     expect(model.stage.value.kind).toBe('prepare')
+    expect(deps.run).not.toHaveBeenCalled()
     await model.selectionArrived('late')
-    expect(deps.run).toHaveBeenCalledWith(note, 'late', expect.anything())
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(model.text.value).toBe('')
+    model.setText('explicit')
+    await model.submit()
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'explicit',
+      expect.objectContaining({ source: 'external', hasSelection: false })
+    )
   })
 
   it('reports a command gone from the library', async () => {
@@ -386,7 +397,12 @@ describe('commands that replace the selection', () => {
   const replacing = command(
     'translate',
     'Translate',
-    { afterRun: 'replaceSelection' },
+    {
+      launcherAfterRun: {
+        withSelection: 'replaceSelection',
+        withoutSelection: 'showMenu',
+      },
+    },
     {}
   )
 
@@ -423,6 +439,33 @@ describe('commands that replace the selection', () => {
       expect.objectContaining({ id: 'translate' }),
       'hola amigo',
       expect.anything()
+    )
+  })
+
+  it('uses the no-selection setting after editing captured text on retry', async () => {
+    const configured = {
+      ...replacing,
+      launcherAfterRun: {
+        withSelection: 'copy' as const,
+        withoutSelection: 'showMenu' as const,
+      },
+    }
+    const { deps, model } = setup([configured], {
+      run: vi.fn(async () => ({ success: false })),
+    })
+    deps.selectedText.mockReturnValue('captured')
+    await model.pickByKey(1)
+    expect(deps.run).toHaveBeenLastCalledWith(
+      configured,
+      'captured',
+      expect.objectContaining({ hasSelection: true })
+    )
+    model.setText('edited')
+    await model.submit()
+    expect(deps.run).toHaveBeenLastCalledWith(
+      configured,
+      'edited',
+      expect.objectContaining({ hasSelection: false })
     )
   })
 

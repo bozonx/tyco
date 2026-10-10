@@ -7,7 +7,11 @@ import type {
   DefaultCommandsContext,
   RegisteredTool,
 } from '../tools/tool-types'
-import { createCommand, normalizeCommands } from './command-config'
+import {
+  createCommand,
+  launcherAfterRunFromLegacy,
+  normalizeCommands,
+} from './command-config'
 
 /** The id of a default command: stable, so a deleted one is known */
 export function defaultCommandId(toolId: string, localId: string): string {
@@ -43,7 +47,10 @@ function toCommand(
     name: preset.name,
     phrases: preset.phrases ?? [],
     toolConfig: { ...base.toolConfig, ...preset.toolConfig },
-    afterRun: preset.afterRun ?? base.afterRun,
+    launcherAfterRun:
+      preset.afterRun === undefined
+        ? base.launcherAfterRun
+        : launcherAfterRunFromLegacy(preset.afterRun),
     availableIn: { external: false, chat: false },
   }
   if (preset.description) command.description = preset.description

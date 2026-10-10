@@ -117,6 +117,7 @@ pub struct RunRequest {
 pub enum OutputMode {
     #[default]
     Return,
+    /// Legacy alias for returned output; UI settings do not affect external calls.
     Configured,
 }
 

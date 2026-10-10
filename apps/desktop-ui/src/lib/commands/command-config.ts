@@ -2,6 +2,8 @@ import {
   ACTION_TEXT_PLACEHOLDER,
   CUSTOM_ACTION_AFTER_RUN,
   type CommandConfig,
+  type CommandLauncherAfterRun,
+  type CommandRunSource,
   type CustomActionAfterRun,
   type MainActionConfig,
   SCRIPT_MAX_TIMEOUT_SEC,
@@ -28,6 +30,51 @@ const afterRunOf = (value: unknown): CustomActionAfterRun =>
   CUSTOM_ACTION_AFTER_RUN.includes(value as CustomActionAfterRun)
     ? (value as CustomActionAfterRun)
     : 'none'
+
+/** Preserves legacy output settings in the two quick-command contexts. */
+export function launcherAfterRunFromLegacy(
+  value: unknown
+): CommandLauncherAfterRun {
+  const afterRun = afterRunOf(value)
+  return {
+    withSelection: afterRun,
+    withoutSelection: afterRun === 'replaceSelection' ? 'showMenu' : afterRun,
+  }
+}
+
+function normalizeLauncherAfterRun(
+  value: unknown,
+  legacy: unknown
+): CommandLauncherAfterRun {
+  const defaults = launcherAfterRunFromLegacy(legacy)
+  if (!isRecord(value)) return defaults
+  const withSelection =
+    value.withSelection === undefined
+      ? defaults.withSelection
+      : afterRunOf(value.withSelection)
+  const withoutSelection =
+    value.withoutSelection === undefined
+      ? defaults.withoutSelection
+      : afterRunOf(value.withoutSelection)
+  return {
+    withSelection,
+    withoutSelection:
+      withoutSelection === 'replaceSelection' ? 'showMenu' : withoutSelection,
+  }
+}
+
+/** Output handling belongs to the invocation context, not the tool. */
+export function commandAfterRun(
+  command: CommandConfig,
+  source: CommandRunSource = 'menu',
+  hasSelection = false
+): CustomActionAfterRun | 'return' {
+  if (source === 'external') return 'return'
+  if (source !== 'launcher') return 'showMenu'
+  return hasSelection
+    ? command.launcherAfterRun.withSelection
+    : command.launcherAfterRun.withoutSelection
+}
 
 function headersOf(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {}
@@ -103,7 +150,10 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     toolId,
     toolConfig: isRecord(value.toolConfig) ? value.toolConfig : {},
     llmArgumentParsing: value.llmArgumentParsing === true,
-    afterRun: afterRunOf(value.afterRun),
+    launcherAfterRun: normalizeLauncherAfterRun(
+      value.launcherAfterRun,
+      value.afterRun
+    ),
     logOutput: value.logOutput === true,
     availableIn: {
       external: availableIn.external === true,
@@ -202,7 +252,7 @@ export function createCommand(
     toolId,
     toolConfig: defaultToolConfig(toolId),
     llmArgumentParsing: false,
-    afterRun: tool?.defaultAfterRun ?? 'none',
+    launcherAfterRun: launcherAfterRunFromLegacy(tool?.defaultAfterRun),
     logOutput: false,
     availableIn: { external: false, chat: false },
     enabled: true,

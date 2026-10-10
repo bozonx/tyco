@@ -52,14 +52,26 @@ describe('CommandEditor.vue', () => {
 
   it('shows the result menu instead of a replacement once the text is off', async () => {
     const wrapper = mountEditor(
-      script({ command: 'ls' }, { name: 'ls', afterRun: 'replaceSelection' })
+      script(
+        { command: 'ls' },
+        {
+          name: 'ls',
+          launcherAfterRun: {
+            withSelection: 'replaceSelection',
+            withoutSelection: 'copy',
+          },
+        }
+      )
     )
     wrapper
       .findComponent({ name: 'CustomActionFields' })
       .vm.$emit('update', 'takesText', false)
     const command = lastUpdate(wrapper)
     expect(command.toolConfig.takesText).toBe(false)
-    expect(command.afterRun).toBe('showMenu')
+    expect(command.launcherAfterRun).toEqual({
+      withSelection: 'showMenu',
+      withoutSelection: 'copy',
+    })
   })
 
   it('offers no replacement for a command without text', () => {
@@ -69,6 +81,41 @@ describe('CommandEditor.vue', () => {
       script({ command: 'ls', takesText: false }, { name: 'ls' })
     )
     expect(noText.text()).not.toContain('commands.afterRunReplaceSelection')
+  })
+
+  it('edits each quick-command context independently and shows fixed behavior elsewhere', async () => {
+    const command = script(
+      { command: 'echo' },
+      {
+        name: 'Echo',
+        launcherAfterRun: {
+          withSelection: 'replaceSelection',
+          withoutSelection: 'showMenu',
+        },
+      }
+    )
+    const wrapper = mountEditor(command)
+    const selects = wrapper.findAll('select')
+    expect(selects).toHaveLength(2)
+    expect(selects[0].find('option[value="replaceSelection"]').exists()).toBe(
+      true
+    )
+    expect(selects[1].find('option[value="replaceSelection"]').exists()).toBe(
+      false
+    )
+    expect(wrapper.text()).toContain('commands.resultMenuBehavior')
+    expect(wrapper.text()).toContain('commands.resultExternalBehavior')
+    await selects[0].setValue('copy')
+    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
+      withSelection: 'copy',
+      withoutSelection: 'showMenu',
+    })
+    await wrapper.setProps({ command: lastUpdate(wrapper) })
+    await selects[1].setValue('none')
+    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
+      withSelection: 'copy',
+      withoutSelection: 'none',
+    })
   })
 
   it('shows the call from outside only for a command allowed there', () => {
@@ -94,7 +141,9 @@ describe('CommandEditor.vue', () => {
       script({ command: 'ls', takesText: false }, { name: 'ls' }),
       { menuSlot: 1 }
     )
-    const places = wrapper.findAll('.command-place')
+    const places = wrapper
+      .findAll('.command-place')
+      .filter((place) => place.find('button').exists())
     expect(places[0].text()).toContain('W')
     expect(places[0].text()).toContain('commands.placeMenuEditorOnly')
     expect(places[1].text()).toContain('commands.placeLauncherSearch')

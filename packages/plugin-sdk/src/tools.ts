@@ -85,7 +85,10 @@ export interface ToolResult {
   messageKey?: string
   /** Plain text: the detail after `messageKey`, or the whole message */
   message?: string
-  /** Text output: handled by `afterRun`, logged, or returned to the agent */
+  /**
+   * Text output: handled by the invocation context, logged, or returned to the
+   * caller
+   */
   content?: string
   /** The window stays open after a run without output, e.g. for the editor */
   keepWindow?: boolean
@@ -104,6 +107,10 @@ export interface DefaultCommand {
   phrases?: string[]
   description?: string
   toolConfig?: Record<string, unknown>
+  /**
+   * Initial quick-command output handling; selection replacement becomes a
+   * result view without selection.
+   */
   afterRun?: CustomActionAfterRun
   /** Adds a menu item, taking the place of a former plugin action item */
   menu?: { preferredKey?: string }

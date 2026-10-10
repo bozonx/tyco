@@ -39,21 +39,56 @@
     </div>
 
     <section class="command-group">
-      <h4 class="command-group-title">{{ t('commands.resultGroup') }}</h4>
-      <div class="command-field">
-        <span class="command-field-label">
-          {{ t('settings.actionAfterRunLabel') }}
-          <InfoTooltip :text="t('commands.afterRunInfo')" />
-        </span>
-        <SegmentedControl
-          :value="command.afterRun"
-          :label="t('settings.actionAfterRunLabel')"
-          :options="afterRunOptions"
-          @update:value="update({ afterRun: $event as CustomActionAfterRun })"
+      <h4 class="command-group-title">
+        {{ t('commands.resultGroup') }}
+        <InfoTooltip :text="t('commands.afterRunInfo')" />
+      </h4>
+      <div class="command-place">
+        <span class="command-place-name">{{ t('commands.placeMenu') }}</span>
+        <span class="command-place-state">{{
+          t('commands.resultMenuBehavior')
+        }}</span>
+      </div>
+      <label v-if="takesText" class="command-field">
+        <span class="command-field-label">{{
+          t('commands.launcherWithSelection')
+        }}</span>
+        <FieldSelect
+          :value="command.launcherAfterRun.withSelection"
+          :title="t('commands.launcherWithSelection')"
+          :options="selectionAfterRunOptions"
+          @update:value="
+            updateLauncherAfterRun(
+              'withSelection',
+              $event as CustomActionAfterRun
+            )
+          "
         />
-        <p v-if="backgroundScript" class="command-hint">
-          {{ t('commands.afterRunNoneScriptHint') }}
-        </p>
+      </label>
+      <label class="command-field">
+        <span class="command-field-label">{{
+          t('commands.launcherWithoutSelection')
+        }}</span>
+        <FieldSelect
+          :value="command.launcherAfterRun.withoutSelection"
+          :title="t('commands.launcherWithoutSelection')"
+          :options="afterRunOptions"
+          @update:value="
+            updateLauncherAfterRun(
+              'withoutSelection',
+              $event as CustomActionAfterRun
+            )
+          "
+        />
+      </label>
+      <p v-if="backgroundScript" class="command-hint">
+        {{ t('commands.afterRunNoneScriptHint') }}
+      </p>
+      <div class="command-place">
+        <span class="command-place-name">{{ t('commands.externalRun') }}</span>
+        <span class="command-place-state">{{
+          t('commands.resultExternalBehavior')
+        }}</span>
       </div>
     </section>
 
@@ -214,9 +249,9 @@ import { PRESETS_KEYS } from '../../types'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import KeyButton from '../common/KeyButton.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CustomActionFields from './CustomActionFields.vue'
 import FieldIssues from './FieldIssues.vue'
@@ -292,9 +327,12 @@ function updateToolConfig(field: string, value: unknown) {
   if (
     field === 'takesText' &&
     value === false &&
-    props.command.afterRun === 'replaceSelection'
+    props.command.launcherAfterRun.withSelection === 'replaceSelection'
   ) {
-    patch.afterRun = 'showMenu'
+    patch.launcherAfterRun = {
+      ...props.command.launcherAfterRun,
+      withSelection: 'showMenu',
+    }
   }
   update(patch)
 }
@@ -315,19 +353,37 @@ function suggestName() {
   if (name) update({ name })
 }
 
+function updateLauncherAfterRun(
+  context: keyof CommandConfig['launcherAfterRun'],
+  value: CustomActionAfterRun
+) {
+  if (context === 'withoutSelection' && value === 'replaceSelection') return
+  update({
+    launcherAfterRun: { ...props.command.launcherAfterRun, [context]: value },
+  })
+}
+
 const afterRunOptions = computed(() => [
-  { id: 'none', name: t('settings.actionAfterRunNone') },
-  { id: 'showMenu', name: t('settings.actionAfterRunShowMenu') },
-  // only a text the command got can be replaced
-  ...(takesText.value
-    ? [{ id: 'replaceSelection', name: t('commands.afterRunReplaceSelection') }]
-    : []),
+  { id: 'showMenu', name: t('commands.afterRunShowResult') },
   { id: 'copy', name: t('commands.afterRunCopy') },
+  { id: 'none', name: t('settings.actionAfterRunNone') },
 ])
 
-/** A script nobody waits for: it may stay in the background */
+const selectionAfterRunOptions = computed(() => [
+  { id: 'replaceSelection', name: t('commands.afterRunReplaceSelection') },
+  ...afterRunOptions.value,
+])
+
+/**
+ * Only quick-command runs configured to ignore output may stay in the
+ * background.
+ */
 const backgroundScript = computed(
-  () => props.command.toolId === 'script' && props.command.afterRun === 'none'
+  () =>
+    props.command.toolId === 'script' &&
+    (props.command.launcherAfterRun.withoutSelection === 'none' ||
+      (takesText.value &&
+        props.command.launcherAfterRun.withSelection === 'none'))
 )
 
 /** Who added a default command and which tool it runs */
