@@ -17,6 +17,9 @@ const mocks = vi.hoisted(() => ({
   input: { value: '' },
   editor: { value: '', selectedText: '' },
 }))
+const chatModelMessages = ref<unknown[]>([])
+const chatModelIsGenerating = ref(false)
+
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: mocks.label }),
 }))
@@ -30,9 +33,9 @@ vi.mock('../lib/chat/chat-store', () => ({
     startChat: mocks.startChat,
     attachToChat: mocks.attachToChat,
     sendMessage: mocks.sendMessage,
-    messages: ref([]),
+    messages: chatModelMessages,
     newChatParams: ref({ attachments: [{ text: 'pending' }] }),
-    isGenerating: ref(false),
+    isGenerating: chatModelIsGenerating,
     isStopped: ref(false),
     dismissedEditorContext: ref(null),
     acceptedEditorContext: ref(null),
@@ -71,7 +74,12 @@ describe('chat window navigation', () => {
     mocks.clear.mockImplementation(() => {
       mocks.input.value = ''
     })
-    mocks.sendMessage.mockResolvedValue('answer')
+    chatModelMessages.value = []
+    chatModelIsGenerating.value = false
+    mocks.sendMessage.mockImplementation(async (msg: string) => {
+      chatModelMessages.value.push({ role: 'user', content: msg })
+      return 'answer'
+    })
     mocks.editor.value = ''
     mocks.editor.selectedText = ''
   })
@@ -163,5 +171,22 @@ describe('chat window navigation', () => {
     await pending
     expect(mocks.setValue).not.toHaveBeenCalled()
     expect(mocks.input.value).toBe('New draft')
+  })
+
+  it('restores input when request could not be dispatched', async () => {
+    mocks.sendMessage.mockImplementation(async () => '')
+    mocks.input.value = 'Failed question'
+    const store = useChatStore()
+    const sent = await store.sendInput()
+    expect(sent).toBe(false)
+    expect(mocks.setValue).toHaveBeenCalledWith('Failed question')
+  })
+
+  it('does not restore input when request was dispatched to chat', async () => {
+    mocks.input.value = 'Dispatched question'
+    const store = useChatStore()
+    const sent = await store.sendInput()
+    expect(sent).toBe(true)
+    expect(mocks.setValue).not.toHaveBeenCalled()
   })
 })

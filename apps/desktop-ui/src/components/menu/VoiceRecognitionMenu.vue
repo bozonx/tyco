@@ -112,17 +112,21 @@
            the answer will be about -->
       <div v-if="props.context" class="voice-context">
         <div class="voice-context-header">
-          <Icon icon="mdi:selection-drag" height="14" class="shrink-0" />
-          <span>{{ t('chat.voiceContext') }}</span>
-          <Button
-            xs
-            ghost
-            icon="mdi:close"
+          <Icon
+            icon="mdi:selection-drag"
+            height="14"
+            class="shrink-0 text-primary"
+          />
+          <span class="voice-context-title">{{ t('chat.voiceContext') }}</span>
+          <button
+            type="button"
+            class="voice-context-remove"
             :title="t('chat.removeAttachment')"
+            :aria-label="t('chat.removeAttachment')"
             @click="emit('removeContext')"
           >
-            {{ t('chat.removeAttachment') }}
-          </Button>
+            <Icon icon="mdi:close" height="14" />
+          </button>
         </div>
         <TextPreview :text="props.context" />
       </div>
@@ -292,10 +296,7 @@ const insertLabelKey = computed(() =>
 const insertIcon = computed(() =>
   props.withNext ? 'mdi:application-export' : 'mdi:check'
 )
-const submitKeys = computed(() => {
-  const hotkey = ipcStore.params?.userConfig?.hotkeys?.voiceChat
-  return hotkey ? ['Enter', 'Space', hotkey] : ['Enter', 'Space']
-})
+const submitKeys = ['Enter']
 
 let recordingTimer: ReturnType<typeof setInterval> | undefined
 let unlistenAudioLevel: (() => void) | undefined
@@ -729,15 +730,38 @@ onUnmounted(() => {
   color: var(--app-text-muted);
   font-size: 0.75rem;
 }
-.voice-context-header > span {
+.voice-context-title {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.voice-context-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.15rem;
+  border-radius: var(--radius-sm);
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.voice-context-remove:hover {
+  background: var(--app-hover);
+  color: var(--color-error);
 }
 .voice-context {
+  display: flex;
+  flex-direction: column;
   flex: 0 1 auto;
   max-height: 40%;
   min-height: 0;
+  gap: var(--space-xs);
   overflow-y: auto;
   border-bottom: 1px solid var(--app-border-subtle);
+  padding-bottom: var(--space-xs);
 }
 
 .voice-shortcuts {

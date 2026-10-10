@@ -244,20 +244,31 @@ export const useChatStore = defineStore('chat', () => {
       if (!message || model.isGenerating.value) return false
       const attachments = [...attachedContext.value]
       const submission = ++inputSubmission
+      const initialMessageCount = model.messages.value.length
       const pending = model.sendMessage(message, attachments)
       const chatId = model.newChatParams.value.id
       const messages = model.messages.value
       chatInputStore.clear()
-      // Restore only this failed submission, without replacing a newer draft.
-      if (
-        !(await pending) &&
-        submission === inputSubmission &&
-        model.newChatParams.value.id === chatId &&
-        model.messages.value === messages &&
-        !model.isStopped.value &&
-        !chatInputStore.value
-      )
-        chatInputStore.setValue(message)
+
+      // Restore only if the request could not be sent (e.g. no model or exceeded budget).
+      // Once the request is dispatched to the chat, it stays in the conversation and must not
+      // be restored into the input upon completion or failure of the assistant turn.
+      const dispatched =
+        model.messages.value.length > initialMessageCount ||
+        model.isGenerating.value
+
+      if (!dispatched) {
+        await pending
+        if (
+          submission === inputSubmission &&
+          model.newChatParams.value.id === chatId &&
+          model.messages.value === messages &&
+          !chatInputStore.value
+        ) {
+          chatInputStore.setValue(message)
+        }
+        return false
+      }
       return true
     },
   }
