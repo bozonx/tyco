@@ -28,17 +28,18 @@
         <button
           type="button"
           class="message-action"
-          :title="t('chat.copy')"
+          :title="copied ? t('chat.copied') : t('chat.copy')"
+          :aria-label="copied ? t('chat.copied') : t('chat.copy')"
           @click="copyMessage"
         >
           <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
-          {{ copied ? t('chat.copied') : t('chat.copy') }}
         </button>
         <DropdownMenu
           xs
           square
           hide-chevron
           placement="top"
+          align="right"
           icon="mdi:dots-horizontal"
           :title="t('common.more')"
           :items="moreMenuItems"
@@ -263,6 +264,8 @@ onBeforeUnmount(() => {
 }
 .message-actions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: var(--space-xs);
   min-height: 1.7rem;
   margin-top: var(--space-xs);
@@ -271,6 +274,7 @@ onBeforeUnmount(() => {
 }
 .message-status {
   align-self: center;
+  margin-right: auto;
   color: var(--app-text-faint);
   font-size: 0.72rem;
 }
@@ -281,11 +285,12 @@ onBeforeUnmount(() => {
 .message-action {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.4rem;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
   border-radius: var(--radius-sm);
   color: var(--app-text-muted);
-  font-size: 0.72rem;
   cursor: pointer;
 }
 .message-action:hover {
