@@ -296,7 +296,7 @@ const insertLabelKey = computed(() =>
 const insertIcon = computed(() =>
   props.withNext ? 'mdi:application-export' : 'mdi:check'
 )
-const submitKeys = ['Enter']
+const submitKeys = ['Space', 'Enter']
 
 let recordingTimer: ReturnType<typeof setInterval> | undefined
 let unlistenAudioLevel: (() => void) | undefined
