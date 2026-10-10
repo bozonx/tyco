@@ -210,6 +210,23 @@ describe('createCorrectionStep', () => {
       expect(deps.saveResult).not.toHaveBeenCalled()
     })
 
+    it('invokes extra.onCancel when provided and user cancels', async () => {
+      const { menu, request, step, signal } = setupPending()
+      const onCancel = vi.fn()
+
+      const done = step.start('helo', { onCancel })
+
+      expect(menu.pendingModal.value).toMatchObject({ correction: true })
+      menu.cancelPending()
+
+      expect(signal()?.aborted).toBe(true)
+      expect(onCancel).toHaveBeenCalledOnce()
+      expect(menu.pendingModal.value).toBeNull()
+
+      request.resolve('hello')
+      await done
+    })
+
     it('clears pending and reports error without leaving a failed step on error', async () => {
       const { menu, request, deps, step } = setupPending()
       menu.nextModal(MenuModals.INSERT, { text: 'helo' })

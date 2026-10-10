@@ -52,7 +52,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
       currentModal: () => menuModalsStore.currentModal,
       canGoBack: () =>
         menuModalsStore.currentModal !== MenuModals.NONE &&
-        menuModalsStore.menuBreadcrumbs.length > 0,
+        menuModalsStore.menuBreadcrumbs.length > 1,
       isQuickWindow,
       t,
       goBack,

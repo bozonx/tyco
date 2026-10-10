@@ -28,7 +28,7 @@ function handleCancel() {
 const correctionMode = createCorrectionMode({
   // the selection was taken to be corrected and put back: nothing else to do
   startCorrection: (text) =>
-    actionMenuStore.correct(text, { insertOnly: true }),
+    actionMenuStore.correct(text, { insertOnly: true, onCancel: handleCancel }),
   setPending: (pending) => {
     isStarting.value = pending
   },

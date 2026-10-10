@@ -343,7 +343,10 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
 
   try {
     await starting
-    if (!hasSession || voiceSession.signal?.aborted) return
+    if (!hasSession || voiceSession.signal?.aborted) {
+      notifyCancelled()
+      return
+    }
     hasSession = false
     isTranscribing.value = true
     // the provider's last words arrive after the microphone is off
@@ -398,14 +401,16 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
 
     if (!voiceSession.signal?.aborted) {
       emit('corrected', resultText, recognizedText, correctedText, intent)
+    } else {
+      notifyCancelled()
     }
   } catch (error) {
     if (!voiceSession.signal?.aborted) {
       const message = error instanceof Error ? error.message : String(error)
       if (message) toastText(message, 'error')
       else toast('toast.voiceRecognitionFailed', 'error')
-      notifyCancelled()
     }
+    notifyCancelled()
   } finally {
     isStarted.value = false
     isTranscribing.value = false

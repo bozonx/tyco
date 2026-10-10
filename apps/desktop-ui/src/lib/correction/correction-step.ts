@@ -66,7 +66,13 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
     const controller = new AbortController()
 
     if (deps.setPending) {
-      deps.setPending({ correction: true, onCancel: () => controller.abort() })
+      const onCancel = () => {
+        controller.abort()
+        if (typeof extra.onCancel === 'function') {
+          extra.onCancel()
+        }
+      }
+      deps.setPending({ ...extra, correction: true, onCancel })
 
       let result: string
       try {
@@ -92,7 +98,12 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
       text,
       oldText: '',
       correcting: true,
-      onLeave: () => controller.abort(),
+      onLeave: () => {
+        controller.abort()
+        if (typeof extra.onCancel === 'function') {
+          extra.onCancel()
+        }
+      },
     })
 
     let result: string

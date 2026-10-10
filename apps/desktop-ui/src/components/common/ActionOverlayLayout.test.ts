@@ -101,4 +101,17 @@ describe('ActionOverlayLayout', () => {
     expect(mocks.discardWriterInput).toHaveBeenCalled()
     expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
   })
+
+  it('triggers closeWindow when only current modal is in breadcrumbs', async () => {
+    mocks.breadcrumbs = ['insert']
+    const wrapper = mount(ActionOverlayLayout, {
+      props: { title: 'Test Title' },
+    })
+
+    expect(wrapper.find('.action-overlay-esc').text()).toContain(
+      'common.cancel'
+    )
+    await wrapper.find('.action-overlay-esc').trigger('click')
+    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
+  })
 })
