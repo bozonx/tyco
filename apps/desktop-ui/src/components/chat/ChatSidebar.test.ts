@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   newChatParams: { id: null as string | null, title: '' },
   isGenerating: false,
   messages: [] as any[],
-  startChat: vi.fn(),
+  startNewChat: vi.fn(),
   openChat: vi.fn(),
   clearChatHistory: vi.fn(),
 }))
@@ -36,7 +36,7 @@ vi.mock('../../stores/chat', () => ({
     isGenerating: mocks.isGenerating,
     newChatParams: mocks.newChatParams,
     messages: mocks.messages,
-    startChat: mocks.startChat,
+    startNewChat: mocks.startNewChat,
     openChat: mocks.openChat,
     abandonChat: vi.fn(),
     whenSaved: vi.fn().mockResolvedValue(undefined),

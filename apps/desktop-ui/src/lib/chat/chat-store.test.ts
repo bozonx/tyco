@@ -260,6 +260,23 @@ describe('chat-store', () => {
     expect(store.newChatParams.value.attachments).toEqual(['attachment 2'])
   })
 
+  it('keeps a taken editor suggestion until the message is sent', async () => {
+    const deps = createDeps()
+    const store = createChatStoreModel(deps)
+
+    store.dismissEditorContext('draft')
+    store.acceptEditorContext('draft')
+    expect(store.acceptedEditorContext.value).toBe('draft')
+    expect(store.dismissedEditorContext.value).toBeNull()
+
+    store.dismissEditorContext('draft')
+    expect(store.acceptedEditorContext.value).toBeNull()
+
+    store.acceptEditorContext('draft')
+    await store.sendMessage('Question', ['draft'])
+    expect(store.acceptedEditorContext.value).toBeNull()
+  })
+
   it('ignores a late answer after starting another chat', async () => {
     let resolveRequest!: (value: string) => void
     const sendChatMessage = vi.fn(

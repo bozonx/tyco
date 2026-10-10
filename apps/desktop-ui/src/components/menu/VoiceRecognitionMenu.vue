@@ -110,8 +110,21 @@
     <template #preview>
       <!-- the question goes to the chat with this text: the user sees what
            the answer will be about -->
-      <div v-if="chatContext" class="voice-context">
-        <TextPreview :text="chatContext" />
+      <div v-if="props.context" class="voice-context">
+        <div class="voice-context-header">
+          <Icon icon="mdi:selection-drag" height="14" class="shrink-0" />
+          <span>{{ t('chat.voiceContext') }}</span>
+          <Button
+            xs
+            ghost
+            icon="mdi:close"
+            :title="t('chat.removeAttachment')"
+            @click="emit('removeContext')"
+          >
+            {{ t('chat.removeAttachment') }}
+          </Button>
+        </div>
+        <TextPreview :text="props.context" />
       </div>
       <AudioWaveform
         :level="audioLevel"
@@ -190,7 +203,6 @@ import {
 } from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceSession } from '../../lib/stt/voice-session'
-import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menuModals'
@@ -233,6 +245,8 @@ const props = defineProps<{
   prefix?: string
   /** Text that follows the voice dictation (e.g. content after caret) */
   suffix?: string
+  /** The text the question goes to the chat with */
+  context?: string
 }>()
 
 const emit = defineEmits<{
@@ -244,6 +258,7 @@ const emit = defineEmits<{
     intent: VoiceFinishIntent
   ): void
   (e: 'cancelled'): void
+  (e: 'removeContext'): void
 }>()
 
 const {
@@ -271,18 +286,6 @@ const isTranscribing = ref(false)
 const audioLevel = ref(0)
 const audioPeak = ref(0)
 const recordingDurationMs = ref(0)
-const chatStore = useChatStore()
-/** What goes to the chat along with the question, see `ChatContextList` */
-const chatContext = computed(() => {
-  if (!props.quickSend) return ''
-  return [
-    ipcStore.params?.selectedText,
-    ...(chatStore.newChatParams?.attachments || []),
-    chatStore.editorContext?.text,
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-})
 const insertLabelKey = computed(() =>
   props.withNext ? 'action.insertIntoWindow' : 'menu.finish'
 )
@@ -711,6 +714,17 @@ onUnmounted(() => {
   width: auto;
 }
 
+.voice-context-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+}
+.voice-context-header > span {
+  flex: 1;
+}
 .voice-context {
   flex: 0 1 auto;
   max-height: 40%;

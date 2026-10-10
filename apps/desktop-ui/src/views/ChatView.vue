@@ -14,7 +14,7 @@
         class="sidebar-tool"
         :title="t('chat.newChat')"
         :disabled="chatStore.isGenerating"
-        @click="chatStore.startChat({})"
+        @click="chatStore.startNewChat()"
       >
         <Icon icon="mdi:plus" height="19" />
       </button>

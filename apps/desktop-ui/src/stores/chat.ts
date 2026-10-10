@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useChatInputStore } from './chatInput'
 
@@ -11,7 +11,11 @@ import {
   pickChatModel,
 } from '../lib/chat/chat-model'
 import { createChatStoreModel } from '../lib/chat/chat-store'
-import { resolveEditorContext } from '../lib/chat/editor-context'
+import { resolveContextBudget } from '../lib/chat/context-budget'
+import {
+  resolveEditorContext,
+  resolveVoiceChatContext,
+} from '../lib/chat/editor-context'
 import { translate } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { appNavigation } from '../lib/navigation/navigation'
@@ -90,6 +94,22 @@ export const useChatStore = defineStore('chat', () => {
     },
   })
 
+  /**
+   * The editor selection made before the chat came into view: it is only
+   * suggested, see `resolveEditorContext`
+   */
+  const staleEditorSelection = ref<string | null>(null)
+  const markEditorSelectionStale = () => {
+    staleEditorSelection.value = editorInputStore.selectedText.trim() || null
+  }
+  // the editor of a hidden window keeps the selection of its last use
+  watch(
+    () => ipcStore.params.isWindowShown,
+    (isShown) => {
+      if (!isShown) markEditorSelectionStale()
+    }
+  )
+
   /** What the editor offers to the next message */
   const editorContext = computed(() =>
     model.newChatParams.value.withoutEditorContext
@@ -100,7 +120,36 @@ export const useChatStore = defineStore('chat', () => {
           messages: model.messages.value,
           pendingAttachments: model.newChatParams.value.attachments || [],
           dismissed: model.dismissedEditorContext.value,
+          accepted: model.acceptedEditorContext.value,
+          staleSelection: staleEditorSelection.value,
         })
+  )
+
+  /** The texts that go with the next message besides the input */
+  const attachedContext = computed(() => [
+    ...(model.newChatParams.value.attachments || []),
+    ...(editorContext.value?.mode === 'attached'
+      ? [editorContext.value.text]
+      : []),
+  ])
+
+  /** How much of the model the next message takes; null without a model */
+  const contextBudget = computed(() => {
+    const picked = selectedModel.value
+    if (!picked) return null
+    return resolveContextBudget(
+      [...attachedContext.value, chatInputStore.value.trim()],
+      contextBudgetCharacters(picked.contextSize)
+    )
+  })
+
+  /** What a question asked by voice from the quick window is about */
+  const voiceChatContext = computed(() =>
+    resolveVoiceChatContext({
+      externalSelection: ipcStore.params.selectedText,
+      editorSelection: editorInputStore.selectedText,
+      staleSelection: staleEditorSelection.value,
+    })
   )
 
   /** Runs in the main window; the quick window hands the text over to it */
@@ -110,21 +159,26 @@ export const useChatStore = defineStore('chat', () => {
     return false
   }
 
+  const startChat = async (params: Parameters<typeof model.startChat>[0]) => {
+    menuModalsStore.closeAll()
+    if (!(await inMainWindow(params.attachments?.[0]))) return
+    await model.startChat(params)
+    await nextTick()
+    chatInputStore.focus()
+  }
+
   return {
     ...model,
     modelOptions,
     selectedModel,
     editorContext,
+    attachedContext,
+    contextBudget,
+    voiceChatContext,
     async selectModel(id: string) {
       await saveLocalState({ lastChatModelId: id })
     },
-    async startChat(params: Parameters<typeof model.startChat>[0]) {
-      menuModalsStore.closeAll()
-      if (!(await inMainWindow(params.attachments?.[0]))) return
-      await model.startChat(params)
-      await nextTick()
-      chatInputStore.focus()
-    },
+    startChat,
     /** Gives a text selected elsewhere to the chat */
     async attachToChat(text: string) {
       menuModalsStore.closeAll()
@@ -139,9 +193,16 @@ export const useChatStore = defineStore('chat', () => {
       await nextTick()
       chatInputStore.focus()
     },
+    /** A new empty chat started from the chat itself */
+    async startNewChat() {
+      await startChat({})
+      markEditorSelectionStale()
+    },
     async openChat(id: string, options?: { silent?: boolean }) {
       menuModalsStore.closeAll()
       const result = await model.openChat(id, options)
+      // the editor selection has nothing to do with the opened conversation
+      markEditorSelectionStale()
       await nextTick()
       chatInputStore.focus()
       return result
@@ -149,6 +210,7 @@ export const useChatStore = defineStore('chat', () => {
     async branchChat(index: number) {
       menuModalsStore.closeAll()
       const result = await model.branchChat(index)
+      markEditorSelectionStale()
       await nextTick()
       chatInputStore.focus()
       return result
@@ -157,10 +219,7 @@ export const useChatStore = defineStore('chat', () => {
     async sendInput(): Promise<boolean> {
       const message = chatInputStore.value.trim()
       if (!message || model.isGenerating.value) return false
-      const attachments = [
-        ...(model.newChatParams.value?.attachments || []),
-        ...(editorContext.value ? [editorContext.value.text] : []),
-      ]
+      const attachments = [...attachedContext.value]
       const pending = model.sendMessage(message, attachments)
       chatInputStore.clear()
       // a failed message goes back into the input

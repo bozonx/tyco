@@ -1,14 +1,22 @@
 <template>
-  <span class="chat-attachment" :class="{ 'is-open': open }">
+  <span
+    class="chat-attachment"
+    :class="[`is-${variant}`, { 'is-open': open, 'is-arriving': arriving }]"
+  >
     <button
       type="button"
       class="chat-attachment-toggle"
-      :title="t('chat.showAttachment')"
-      :aria-expanded="open"
-      @click="open = !open"
+      :title="toggleTitle"
+      :aria-expanded="variant === 'attached' ? open : undefined"
+      @click="toggle"
     >
-      <Icon :icon="icon" height="14" class="shrink-0" />
-      <span class="truncate">{{ label }}</span>
+      <Icon
+        :icon="variant === 'suggested' ? 'mdi:plus' : icon"
+        height="14"
+        class="shrink-0"
+      />
+      <span class="chat-attachment-label">{{ label }}</span>
+      <span class="chat-attachment-excerpt">{{ excerpt }}</span>
       <span class="chat-attachment-size">{{ size }}</span>
     </button>
     <button
@@ -25,25 +33,57 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  label: string
-  text: string
-  icon?: string
-  removable?: boolean
-}>()
-const emit = defineEmits<{ (e: 'remove'): void }>()
+const props = withDefaults(
+  defineProps<{
+    label: string
+    text: string
+    icon?: string
+    removable?: boolean
+    /** `suggested`: offered only, a click takes it into the next message */
+    variant?: 'attached' | 'suggested'
+    /** Draws attention when it appears: it may arrive after the chat opened */
+    announce?: boolean
+  }>(),
+  { icon: 'mdi:text-box-outline', variant: 'attached' }
+)
+const emit = defineEmits<{ (e: 'remove'): void; (e: 'accept'): void }>()
 const { t } = useI18n()
 const open = ref(false)
+const arriving = ref(false)
 
-const icon = computed(() => props.icon || 'mdi:text-box-outline')
+const EXCERPT_LENGTH = 120
+const TITLE_LENGTH = 400
+
+/** The beginning of the text in one line: what it is about at a glance */
+const excerpt = computed(() =>
+  props.text.replace(/\s+/g, ' ').trim().slice(0, EXCERPT_LENGTH)
+)
 const size = computed(() =>
   t('chat.attachmentSize', { count: props.text.length.toLocaleString() })
 )
+const toggleTitle = computed(() => {
+  const head =
+    props.variant === 'suggested'
+      ? t('chat.attachSuggestion')
+      : t('chat.showAttachment')
+  const preview = props.text.trim().slice(0, TITLE_LENGTH)
+  const more = props.text.trim().length > TITLE_LENGTH ? '…' : ''
+  return `${head}\n\n${preview}${more}`
+})
+
+function toggle() {
+  if (props.variant === 'suggested') emit('accept')
+  else open.value = !open.value
+}
+
+onMounted(() => {
+  if (props.announce) arriving.value = true
+})
 </script>
 
 <style scoped>
@@ -57,8 +97,27 @@ const size = computed(() =>
   color: var(--app-text-muted);
   font-size: 0.72rem;
 }
+.chat-attachment.is-attached {
+  border-color: color-mix(
+    in oklab,
+    var(--color-primary) 35%,
+    var(--app-border)
+  );
+}
+.chat-attachment.is-suggested {
+  border-style: dashed;
+  background: transparent;
+  color: var(--app-text-faint);
+}
+.chat-attachment.is-suggested:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+  color: var(--color-base-content);
+}
 .chat-attachment.is-open {
-  border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+}
+.chat-attachment.is-arriving {
+  animation: chat-attachment-arrive 1.2s ease-out;
 }
 .chat-attachment-toggle {
   display: inline-flex;
@@ -73,7 +132,27 @@ const size = computed(() =>
 .chat-attachment-toggle:hover {
   color: var(--color-base-content);
 }
+.chat-attachment-label {
+  flex-shrink: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chat-attachment-excerpt {
+  min-width: 0;
+  max-width: 18rem;
+  overflow: hidden;
+  color: var(--app-text-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-attachment-excerpt::before {
+  content: '«';
+}
+.chat-attachment-excerpt::after {
+  content: '»';
+}
 .chat-attachment-size {
+  flex-shrink: 0;
   color: var(--app-text-faint);
   white-space: nowrap;
 }
@@ -104,5 +183,20 @@ const size = computed(() =>
   text-align: left;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+@keyframes chat-attachment-arrive {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(in oklab, var(--color-primary) 55%, transparent);
+    background: var(--app-accent-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 0.5rem transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-attachment.is-arriving {
+    animation: none;
+  }
 }
 </style>

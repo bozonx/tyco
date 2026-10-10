@@ -272,7 +272,7 @@ async function copyChatMarkdown(id: string) {
 }
 
 async function startChat() {
-  await chatStore.startChat({})
+  await chatStore.startNewChat()
   emit('navigate')
 }
 

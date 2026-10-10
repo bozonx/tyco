@@ -7,7 +7,7 @@
             <Icon icon="mdi:creation-outline" height="26" />
           </div>
           <div class="font-medium">{{ t('chat.emptyTitle') }}</div>
-          <div class="text-sm text-muted">{{ t('chat.emptyHint') }}</div>
+          <div class="text-sm text-muted">{{ emptyHint }}</div>
         </div>
 
         <ChatItem
@@ -169,7 +169,15 @@ const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
 const canSend = computed(
-  () => Boolean(chatInputStore.value.trim()) && !chatStore.isGenerating
+  () =>
+    Boolean(chatInputStore.value.trim()) &&
+    !chatStore.isGenerating &&
+    chatStore.contextBudget?.level !== 'over'
+)
+const emptyHint = computed(() =>
+  chatStore.attachedContext.length > 0
+    ? t('chat.emptyHintWithContext')
+    : t('chat.emptyHint')
 )
 const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)

@@ -3,7 +3,7 @@
     ref="textareaRef"
     class="main-input"
     rows="1"
-    :placeholder="t('input.textPlaceholder')"
+    :placeholder="placeholder"
     :value="chatInputStore.value"
     @input="handleInput"
     @keydown="handleKeydown"
@@ -12,13 +12,14 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../composables/useI18n'
 import {
   resolveInputKeyAction,
   resolveSubmitKey,
 } from '../lib/input-keys/input-keys'
+import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chatInput'
 import { useIpcStore } from '../stores/ipc'
 
@@ -27,6 +28,13 @@ const chatInputStore = useChatInputStore()
 const ipcStore = useIpcStore()
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const { t } = useI18n()
+const chatStore = useChatStore()
+/** Tells that the question will be about the attached text */
+const placeholder = computed(() =>
+  chatStore.attachedContext.length > 0
+    ? t('chat.placeholderWithContext')
+    : t('input.textPlaceholder')
+)
 
 function resize() {
   const textarea = textareaRef.value

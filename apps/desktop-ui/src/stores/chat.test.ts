@@ -34,6 +34,7 @@ vi.mock('../lib/chat/chat-store', () => ({
     newChatParams: ref({ attachments: ['pending'] }),
     isGenerating: ref(false),
     dismissedEditorContext: ref(null),
+    acceptedEditorContext: ref(null),
   }),
 }))
 vi.mock('./ipc', () => ({
@@ -101,16 +102,31 @@ describe('chat window navigation', () => {
     expect(mocks.attachToChat).not.toHaveBeenCalled()
   })
 
-  it('sends the input with the attachments and the editor text', async () => {
+  it('sends the input with the attachments and the editor selection', async () => {
     mocks.input.value = ' Question '
-    mocks.editor.value = 'Draft'
+    mocks.editor.value = 'Draft with a part'
+    mocks.editor.selectedText = 'a part'
 
     await useChatStore().sendInput()
 
     expect(mocks.sendMessage).toHaveBeenCalledWith('Question', [
       'pending',
-      'Draft',
+      'a part',
     ])
     expect(mocks.clear).toHaveBeenCalled()
+  })
+
+  it('only suggests the whole editor text', async () => {
+    mocks.input.value = 'Question'
+    mocks.editor.value = 'Draft'
+
+    const store = useChatStore()
+    expect(store.editorContext).toMatchObject({
+      text: 'Draft',
+      mode: 'suggested',
+    })
+    await store.sendInput()
+
+    expect(mocks.sendMessage).toHaveBeenCalledWith('Question', ['pending'])
   })
 })

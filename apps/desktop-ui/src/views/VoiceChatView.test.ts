@@ -9,8 +9,9 @@ const mocks = vi.hoisted(() => ({
     selectedText: 'Selected context' as string | null,
     isWindowShown: true,
     mode: 'voiceChat',
+    activationId: 1,
   },
-  editorInput: { selectedText: '', value: '' },
+  chat: { voiceChatContext: 'Selected context' },
   navPanel: { resetNavParams: vi.fn() },
   callFunction: vi.fn(),
 }))
@@ -22,8 +23,8 @@ vi.mock('../components/common/ContentPadding.vue', () => ({
 vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   default: {
     name: 'VoiceRecognitionMenu',
-    props: ['variant', 'quickSend'],
-    emits: ['corrected', 'cancelled'],
+    props: ['variant', 'quickSend', 'context'],
+    emits: ['corrected', 'cancelled', 'removeContext'],
     template: '<div class="voice-menu" />',
   },
 }))
@@ -39,14 +40,38 @@ vi.mock('../stores/navPanel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
 
-vi.mock('../stores/editorInput', () => ({
-  useEditorInputStore: () => mocks.editorInput,
-}))
+vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chat }))
 
 describe('VoiceChatView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.params.selectedText = 'Selected context'
+    mocks.chat.voiceChatContext = 'Selected context'
+  })
+
+  it('shows the context the question goes with', () => {
+    const wrapper = mount(VoiceChatView)
+    const menu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    expect(menu.props('context')).toBe('Selected context')
+  })
+
+  it('sends the question without the context the user removed', async () => {
+    const wrapper = mount(VoiceChatView)
+    const menu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    menu.vm.$emit('removeContext')
+    await flushPromises()
+    expect(menu.props('context')).toBe('')
+
+    menu.vm.$emit('corrected', 'Why?', 'Why?', undefined, 'submit')
+    await flushPromises()
+
+    expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
+      undefined,
+      'Why?',
+      true,
+    ])
   })
 
   it('submits voice result to main chat with autoSend=true when intent is submit', async () => {

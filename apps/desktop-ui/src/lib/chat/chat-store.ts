@@ -65,6 +65,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const error = ref('')
   /** The editor text the user removed from the current chat */
   const dismissedEditorContext = ref<string | null>(null)
+  /** The suggested editor text the user took into the next message */
+  const acceptedEditorContext = ref<string | null>(null)
   const lastFailedTurn = ref<{
     message: string
     attachments?: string[]
@@ -217,6 +219,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
     newChatParams.value.attachments = []
     dismissedEditorContext.value = null
+    acceptedEditorContext.value = null
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)
@@ -297,6 +300,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     newChatParams.value = chatParams
     error.value = ''
     dismissedEditorContext.value = null
+    acceptedEditorContext.value = null
     lastFailedTurn.value = null
   }
 
@@ -426,6 +430,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     isGenerating,
     error,
     dismissedEditorContext,
+    acceptedEditorContext,
     sendMessage,
     stopGeneration,
     retryLastTurn,
@@ -447,6 +452,16 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     whenSaved: () => lastWrite.then(() => undefined),
     dismissEditorContext: (text: string) => {
       dismissedEditorContext.value = text
+      if (acceptedEditorContext.value === text) {
+        acceptedEditorContext.value = null
+      }
+    },
+    /** Takes the suggested editor text into the next message */
+    acceptEditorContext: (text: string) => {
+      acceptedEditorContext.value = text
+      if (dismissedEditorContext.value === text) {
+        dismissedEditorContext.value = null
+      }
     },
     /** Renames the current chat in memory, after it was renamed in storage */
     setTitle: (id: string, title: string) => {

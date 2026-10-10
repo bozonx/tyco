@@ -1,28 +1,29 @@
 <template>
-  <div
-    v-if="attachments.length || chatStore.editorContext"
-    class="context-list"
-  >
+  <div v-if="visible" class="context-list">
     <ChatAttachment
       v-for="(attachment, index) in attachments"
-      :key="`attachment-${index}`"
+      :key="`attachment-${attachment}`"
       :label="t('chat.selectedText')"
       :text="attachment"
       icon="mdi:selection-drag"
       removable
+      announce
       @remove="chatStore.removeAttachment(index)"
     />
     <ChatAttachment
-      v-if="chatStore.editorContext"
-      :key="`editor-${chatStore.editorContext.source}`"
+      v-if="editorContext"
+      :key="`editor-${editorContext.source}-${editorContext.mode}`"
       :label="editorContextLabel"
-      :text="chatStore.editorContext.text"
+      :text="editorContext.text"
+      :variant="editorContext.mode"
       icon="mdi:file-document-edit-outline"
       removable
-      @remove="dismissEditorContext"
+      :announce="editorContext.mode === 'attached'"
+      @remove="chatStore.dismissEditorContext(editorContext.text)"
+      @accept="chatStore.acceptEditorContext(editorContext.text)"
     />
     <Button
-      v-if="chatStore.editorContext && chatStore.messages.length > 0"
+      v-if="editorContext && chatStore.messages.length > 0"
       xs
       ghost
       icon="mdi:message-plus-outline"
@@ -32,6 +33,15 @@
     >
       {{ t('chat.startNewChatWithContext') }}
     </Button>
+    <div
+      v-if="budgetWarning"
+      class="context-budget"
+      :class="`is-${budgetWarning.level}`"
+      role="status"
+    >
+      <Icon icon="mdi:alert-outline" height="14" class="shrink-0" />
+      <span>{{ budgetWarning.text }}</span>
+    </div>
   </div>
 </template>
 
@@ -42,15 +52,17 @@ import { useI18n } from '../../composables/useI18n'
 import { useChatStore } from '../../stores/chat'
 import Button from '../common/Button.vue'
 import ChatAttachment from './ChatAttachment.vue'
+import { Icon } from '@iconify/vue'
 
-/** What goes to the next chat message along with it */
+/** What goes to the next chat message along with it, and what may go */
 const chatStore = useChatStore()
 const { t } = useI18n()
 
 const attachments = computed(() => chatStore.newChatParams?.attachments || [])
+const editorContext = computed(() => chatStore.editorContext)
 
 const editorContextLabel = computed(() => {
-  const context = chatStore.editorContext
+  const context = editorContext.value
   if (!context) return ''
   const label =
     context.source === 'selection'
@@ -59,13 +71,30 @@ const editorContextLabel = computed(() => {
   return context.updated ? `${label} · ${t('chat.contextUpdated')}` : label
 })
 
-function dismissEditorContext() {
-  const context = chatStore.editorContext
-  if (context) chatStore.dismissEditorContext(context.text)
-}
+const budgetWarning = computed(() => {
+  const budget = chatStore.contextBudget
+  if (!budget || budget.level === 'ok') return null
+  return {
+    level: budget.level,
+    text:
+      budget.level === 'over'
+        ? t('chat.contextBudgetOver', {
+            used: budget.used.toLocaleString(),
+            budget: budget.budget.toLocaleString(),
+          })
+        : t('chat.contextBudgetHigh', { percent: budget.percent }),
+  }
+})
+
+const visible = computed(
+  () =>
+    attachments.value.length > 0 ||
+    Boolean(editorContext.value) ||
+    Boolean(budgetWarning.value)
+)
 
 function startNewChatWithContext() {
-  const context = chatStore.editorContext
+  const context = editorContext.value
   if (!context) return
   void chatStore.startChat({ attachments: [context.text] })
 }
@@ -81,5 +110,18 @@ function startNewChatWithContext() {
 .new-chat-context-btn {
   font-size: 0.72rem;
   color: var(--color-primary);
+}
+.context-budget {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+}
+.context-budget.is-high {
+  color: var(--color-warning);
+}
+.context-budget.is-over {
+  color: var(--color-error);
 }
 </style>
