@@ -1,12 +1,20 @@
 <template>
   <ContentPadding>
     <VoiceRecognitionMenu
+      v-if="!isInsertMenu"
       variant="sheet"
       quick-send
       :context="context?.text"
       @remove-context="contextRemoved = true"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
+    />
+    <!-- Tab: the user wants another action for the text, not the chat -->
+    <InsertMenu
+      v-else
+      :text="resText"
+      :allowInsertButton="true"
+      :stopListening="menuModalsStore.anyModalOpen"
     />
   </ContentPadding>
 </template>
@@ -15,24 +23,32 @@
 import { computed, ref, watch } from 'vue'
 
 import ContentPadding from '../components/common/ContentPadding.vue'
+import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
 import { useIpcStore } from '../stores/ipc'
+import { useMenuModalsStore } from '../stores/menuModals'
 import { useNavPanelStore } from '../stores/navPanel'
 
 const ipcStore = useIpcStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
+const menuModalsStore = useMenuModalsStore()
 
 navPanelStore.resetNavParams({ panelVisible: false })
 
 /** The user removed the context of this activation */
 const contextRemoved = ref(false)
+/** The dictated text went to the actions step instead of the chat */
+const isInsertMenu = ref(false)
+const resText = ref('')
 watch(
   () => ipcStore.params.activationId,
   () => {
     contextRemoved.value = false
+    isInsertMenu.value = false
+    resText.value = ''
   }
 )
 /** What the question is about; it is shown before it goes to the chat */
@@ -46,6 +62,12 @@ async function handleCorrected(
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
+  if (intent === 'next') {
+    resText.value = resultText
+    isInsertMenu.value = true
+    return
+  }
+
   const autoSend = intent === 'submit'
 
   await ipcStore.callFunction('openMainChat', [

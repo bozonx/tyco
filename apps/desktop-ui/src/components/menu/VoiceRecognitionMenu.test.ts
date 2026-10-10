@@ -39,6 +39,10 @@ vi.mock('../../lib/desktop/client', () => ({
   },
 }))
 
+import {
+  GlobalEvents,
+  useGlobalEvents,
+} from '../../composables/useGlobalEvents'
 import { useIpcStore } from '../../stores/ipc'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menuModals'
@@ -178,6 +182,47 @@ describe('VoiceRecognitionMenu', () => {
     expect(wrapper.emitted('corrected')).toBeTruthy()
     expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
   })
+  describe('quick voice chat keys', () => {
+    const mountQuickSend = () =>
+      mount(VoiceRecognitionMenu, {
+        props: { variant: 'sheet', quickSend: true },
+        global: {
+          stubs: {
+            ActionOverlayLayout: {
+              template:
+                '<div><slot name="preview" /><slot name="actions" /></div>',
+            },
+            LiveTranscript: true,
+            AudioWaveform: true,
+            TextPreview: true,
+            ShortcutButton: true,
+            Icon: true,
+          },
+        },
+      })
+
+    const keyUp = async (init: KeyboardEventInit) => {
+      const { globalEvents } = useGlobalEvents()
+      globalEvents.emit(GlobalEvents.KEY_UP, new KeyboardEvent('keyup', init))
+      await flushPromises()
+    }
+
+    it.each([
+      [{ code: 'Enter' }, 'submit'],
+      [{ code: 'Space' }, 'submit'],
+      [{ code: 'Enter', shiftKey: true }, 'insert'],
+      [{ code: 'Tab' }, 'next'],
+    ] as const)('finishes %o with %s', async (init, intent) => {
+      const wrapper = mountQuickSend()
+      await flushPromises()
+
+      await keyUp(init)
+
+      expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe(intent)
+      wrapper.unmount()
+    })
+  })
+
   const mountChat = () =>
     mount(VoiceRecognitionMenu, {
       props: { variant: 'bar', chat: true },

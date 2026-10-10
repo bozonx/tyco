@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
     } | null,
   },
   navPanel: { resetNavParams: vi.fn() },
+  menuModals: { anyModalOpen: false },
   callFunction: vi.fn(),
 }))
 
@@ -32,6 +33,18 @@ vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
     emits: ['corrected', 'cancelled', 'removeContext'],
     template: '<div class="voice-menu" />',
   },
+}))
+
+vi.mock('../components/menu/InsertMenu.vue', () => ({
+  default: {
+    name: 'InsertMenu',
+    props: ['text', 'allowInsertButton', 'stopListening'],
+    template: '<div class="insert-menu" />',
+  },
+}))
+
+vi.mock('../stores/menuModals', () => ({
+  useMenuModalsStore: () => mocks.menuModals,
 }))
 
 vi.mock('../stores/ipc', () => ({
@@ -122,6 +135,22 @@ describe('VoiceChatView', () => {
       false,
     ])
     expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow')
+  })
+
+  it('opens the actions for the text instead of the chat when intent is next', async () => {
+    const wrapper = mount(VoiceChatView)
+    const menu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    menu.vm.$emit('corrected', 'Some text', 'Some text', undefined, 'next')
+    await flushPromises()
+
+    expect(
+      wrapper.findComponent({ name: 'VoiceRecognitionMenu' }).exists()
+    ).toBe(false)
+    expect(wrapper.findComponent({ name: 'InsertMenu' }).props('text')).toBe(
+      'Some text'
+    )
+    expect(mocks.callFunction).not.toHaveBeenCalled()
   })
 
   it('dismisses quick window on cancel', async () => {

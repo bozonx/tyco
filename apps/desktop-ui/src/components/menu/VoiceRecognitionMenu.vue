@@ -64,12 +64,21 @@
             </ShortcutButton>
             <ShortcutButton
               sm
-              :keys="['Tab']"
+              :keys="['Shift', 'Enter']"
               icon="mdi:form-textbox"
               :disabled="isFinishing"
               @click="() => finish('insert')"
             >
               {{ t('menu.voiceToInput') }}
+            </ShortcutButton>
+            <ShortcutButton
+              sm
+              :keys="['Tab']"
+              icon="mdi:arrow-right"
+              :disabled="isFinishing"
+              @click="() => finish('next')"
+            >
+              {{ t('write.next') }}
             </ShortcutButton>
           </template>
           <template v-else>
@@ -158,12 +167,21 @@
         </ShortcutButton>
         <ShortcutButton
           v-if="quickSend"
-          :keys="['Tab']"
+          :keys="['Shift', 'Enter']"
           icon="mdi:form-textbox"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >
           {{ t('menu.voiceToInput') }}
+        </ShortcutButton>
+        <ShortcutButton
+          v-if="quickSend"
+          :keys="['Tab']"
+          icon="mdi:arrow-right"
+          :disabled="isFinishing"
+          @click="() => finish('next')"
+        >
+          {{ t('write.next') }}
         </ShortcutButton>
         <template v-else>
           <ShortcutButton
@@ -231,7 +249,8 @@ const props = defineProps<{
   onCancel?: (() => void) | (() => void)[]
   /**
    * The result is sent right away: Enter, Space and the voice chat hotkey
-   * submit it, Tab only inserts it
+   * submit it, Shift+Enter only inserts it, Tab opens the step with the actions
+   * for it
    */
   quickSend?: boolean
   /**
@@ -513,13 +532,14 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  if (props.quickSend && event.code === 'Tab') {
+  // as in a chat input, Shift+Enter keeps the text without sending it
+  if (props.quickSend && event.shiftKey && event.code === 'Enter') {
     event.preventDefault()
     void finish('insert')
     return
   }
 
-  if (props.withNext && event.code === 'Tab') {
+  if ((props.quickSend || props.withNext) && event.code === 'Tab') {
     event.preventDefault()
     void finish('next')
     return
