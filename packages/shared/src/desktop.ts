@@ -206,6 +206,7 @@ export const DESKTOP_COMMANDS = {
   CLOSE_WINDOW: 'close_window',
   DISMISS_QUICK_WINDOW: 'dismiss_quick_window',
   SET_QUICK_INPUT_REGION: 'set_quick_input_region',
+  OPEN_IN_BROWSER: 'open_in_browser',
   OPEN_IN_BROWSER_AND_CLOSE: 'open_in_browser_and_close',
   START_VOICE_CAPTURE: 'start_voice_capture',
   STOP_VOICE_CAPTURE: 'stop_voice_capture',

@@ -33,6 +33,12 @@ pub fn open_in_browser_and_close(app: AppHandle, url: String) -> Result<(), AppE
     runtime::hide_active_window(&app)
 }
 
+/// Opens a chat citation without hiding the conversation.
+#[tauri::command(async)]
+pub fn open_in_browser(url: String) -> Result<(), AppError> {
+    open_url(&url)
+}
+
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
 /// Async so it runs off the main thread: the GTK loop must be free to unmap
@@ -124,7 +130,14 @@ fn run_command(binary: &str, args: &[&str]) -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
-    use super::web_url;
+    use super::{open_in_browser, web_url};
+
+    #[test]
+    fn chat_opener_rejects_non_web_urls_without_launching_a_process() {
+        for url in ["file:///etc/passwd", "javascript:alert(1)", "not a url"] {
+            assert!(open_in_browser(url.to_string()).is_err());
+        }
+    }
 
     #[test]
     fn accepts_web_urls_only() {

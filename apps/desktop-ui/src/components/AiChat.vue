@@ -14,8 +14,12 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
+          :streaming="
+            chatStore.isGenerating && index === chatStore.messages.length - 1
+          "
           @branch="branch(index)"
           @copy-markdown-to-point="copyMarkdownToPoint(index)"
+          @content-resized="handleContentResized"
         />
 
         <div
@@ -238,6 +242,10 @@ function handleScroll() {
     element.scrollHeight - element.scrollTop - element.clientHeight
   pinnedToBottom.value = distance < 80
   showScrollButton.value = distance > 160
+}
+
+function handleContentResized() {
+  if (pinnedToBottom.value) void scrollToBottom()
 }
 
 // Follows the stream instantly: a smooth scroll restarted on every chunk

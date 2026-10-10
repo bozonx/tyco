@@ -80,6 +80,7 @@ export interface DesktopFunctions {
   clearChatHistory: { args: []; result: void }
   typeIntoWindowAndClose: { args: [text: string]; result: void }
   putIntoClipboardAndClose: { args: [text: string]; result: void }
+  openInBrowser: { args: [url: string]; result: void }
   openInBrowserAndClose: { args: [url: string]; result: void }
   finishSelectionRun: {
     args: [runId: number, text: string | null]

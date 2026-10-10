@@ -169,6 +169,10 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.PUT_INTO_CLIPBOARD_AND_CLOSE,
       buildArgs: ([text]) => ({ text }),
     },
+    openInBrowser: {
+      command: DESKTOP_COMMANDS.OPEN_IN_BROWSER,
+      buildArgs: ([url]) => ({ url: String(url) }),
+    },
     openInBrowserAndClose: {
       command: DESKTOP_COMMANDS.OPEN_IN_BROWSER_AND_CLOSE,
       buildArgs: ([url]) => ({ url: String(url) }),
