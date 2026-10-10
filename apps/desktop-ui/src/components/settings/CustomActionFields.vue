@@ -4,20 +4,23 @@
       <div class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionCommandLabel') }}
+          <InfoTooltip
+            :text="
+              script.takesText
+                ? t('settings.actionCommandInfo', { placeholder: TEXT })
+                : t('settings.actionCommandNoTextInfo')
+            "
+          />
         </span>
         <ActionTemplateField
           ref="commandRef"
+          multiline
           :value="script.command"
           :no-text="!script.takesText"
           :placeholder="
             script.takesText
               ? t('settings.actionCommandPlaceholder', { placeholder: TEXT })
               : t('settings.actionCommandNoTextPlaceholder')
-          "
-          :info="
-            script.takesText
-              ? t('settings.actionCommandInfo', { placeholder: TEXT })
-              : t('settings.actionCommandNoTextInfo')
           "
           @update:value="update('command', $event)"
         >
@@ -33,6 +36,17 @@
           </Button>
         </ActionTemplateField>
         <FieldIssues :issues="issuesOf('command')" />
+      </div>
+
+      <div class="action-field-row">
+        <FieldCheckbox
+          :value="script.takesText"
+          :label="t('commands.takesText')"
+          @update:value="update('takesText', $event)"
+        />
+        <InfoTooltip
+          :text="t('commands.takesTextScriptInfo', { placeholder: TEXT })"
+        />
       </div>
 
       <div class="action-field">
@@ -61,6 +75,17 @@
     </template>
 
     <template v-else-if="command.toolId === 'webhook'">
+      <div class="action-field-row">
+        <FieldCheckbox
+          :value="webhook.takesText"
+          :label="t('commands.takesText')"
+          @update:value="update('takesText', $event)"
+        />
+        <InfoTooltip
+          :text="t('commands.takesTextWebhookInfo', { placeholder: TEXT })"
+        />
+      </div>
+
       <div class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionWebhookUrlLabel') }}
@@ -205,6 +230,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'

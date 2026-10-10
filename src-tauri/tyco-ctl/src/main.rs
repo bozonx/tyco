@@ -213,7 +213,7 @@ fn checked(response: Response) -> Result<Response, (i32, String)> {
     let code = response.code.as_deref().unwrap_or("Failed");
     let exit = match code {
         "InvalidArgs" | "InvalidInput" | "InputRequired" | "InvalidRequest" | "AmbiguousName" => 2,
-        "AccessDenied" | "ConfirmationRequired" | "InteractionRequired" => 3,
+        "AccessDenied" | "InteractionRequired" => 3,
         "NotFound" | "Unavailable" | "NotReady" | "Disabled" | "Busy" => 4,
         "TimedOut" => 6,
         "Cancelled" => 7,

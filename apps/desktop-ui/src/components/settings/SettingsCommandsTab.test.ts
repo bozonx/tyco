@@ -10,6 +10,9 @@ vi.mock('../../composables/useI18n', () => ({
 }))
 
 const removeSecret = vi.fn().mockResolvedValue(undefined)
+const toast = vi.fn()
+
+vi.mock('../../composables/useToast', () => ({ default: () => ({ toast }) }))
 
 vi.mock('../../stores/llm', () => ({ useLlmStore: () => ({ removeSecret }) }))
 vi.mock('../../stores/tools', async () => {
@@ -40,6 +43,17 @@ const mountTab = (focusCommandId?: string) =>
     global: { stubs: { CommandEditor: true } },
   })
 
+/** Picks an item of the menu of the card, e.g. the danger one: delete */
+async function pickMenuItem(
+  wrapper: ReturnType<typeof mountTab>,
+  card: number,
+  selector: string
+) {
+  const header = wrapper.findAll('.command-header')[card]
+  await header.find('.dropdown-trigger').trigger('click')
+  await header.find(selector).trigger('click')
+}
+
 describe('SettingsCommandsTab.vue', () => {
   it('lists the commands and marks the ones in the menu', () => {
     const wrapper = mountTab()
@@ -48,6 +62,18 @@ describe('SettingsCommandsTab.vue', () => {
     expect(cards[0].text()).toContain('Hook')
     expect(cards[0].text()).toContain('commands.badgeInMenu')
     expect(cards[1].text()).not.toContain('commands.badgeInMenu')
+  })
+
+  it('copies the id of a command from its menu', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+    const wrapper = mountTab()
+    await pickMenuItem(wrapper, 1, '.dropdown-item:not(.is-danger)')
+    expect(writeText).toHaveBeenCalledWith('sc1')
+    expect(toast).toHaveBeenCalledWith('commands.idCopied', 'success')
   })
 
   it('opens the editor of the focused command', () => {
@@ -81,7 +107,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('removes a command with its menu items and offers to undo it', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
 
     const [commands] = wrapper.emitted('update:commands')![0] as [
       { id: string }[],
@@ -100,7 +126,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('puts a removed command back where it was', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
     await wrapper.setProps({
       userConfig: {
         commands: [script],
@@ -127,7 +153,7 @@ describe('SettingsCommandsTab.vue', () => {
   it('removes the webhook token once undo is no longer offered', async () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
-    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
     wrapper.unmount()
     expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
   })

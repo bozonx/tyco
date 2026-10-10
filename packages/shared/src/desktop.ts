@@ -265,6 +265,8 @@ export interface ScriptActionRequest {
   text: string
   /** The output is used: the command is waited for longer */
   captureOutput: boolean
+  /** How long the output is waited for, in seconds; absent for the default */
+  timeoutSec?: number
   logOutput: boolean
   /** Lets `cancel_script_action` stop the command while it is waited for */
   runId?: string
@@ -285,7 +287,7 @@ export type CommandRunSource =
 
 /**
  * The command the command overlay opens with: an external call that needs a
- * text, a confirmation or the result menu
+ * text or the result menu
  */
 export interface LauncherRequest {
   commandId: string

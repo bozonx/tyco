@@ -65,6 +65,7 @@ export function createScriptTool(
     description: 'Runs a shell command of the user',
     inputSchema: TEXT_INPUT_SCHEMA,
     inputSchemaFor: takesTextSchema,
+    logsOutput: true,
     run: async (call) => {
       const config = scriptToolConfigOf(call.config)
       if (!config.command.trim()) {
@@ -133,6 +134,7 @@ export function createWebhookTool(
     description: 'Sends an HTTP request configured by the user',
     inputSchema: TEXT_INPUT_SCHEMA,
     inputSchemaFor: takesTextSchema,
+    logsOutput: true,
     run: async (call) => {
       const config = webhookToolConfigOf(call.config)
       if (!config.url.trim()) {

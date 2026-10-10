@@ -43,6 +43,21 @@ describe('buildScriptRequest', () => {
     ).toBeUndefined()
   })
 
+  it('passes the timeout of the command only when it has one', () => {
+    const options = { captureOutput: true, logOutput: false }
+    expect(
+      buildScriptRequest(
+        'Echo',
+        { command: 'echo', timeoutSec: 5 },
+        '',
+        options
+      ).timeoutSec
+    ).toBe(5)
+    expect(
+      buildScriptRequest('Echo', { command: 'echo' }, '', options)
+    ).not.toHaveProperty('timeoutSec')
+  })
+
   it('passes an empty text for a call without one', () => {
     expect(
       buildScriptRequest('Backup', { command: 'backup.sh' }, null, {

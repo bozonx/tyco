@@ -63,7 +63,6 @@ pub struct ExternalCommand {
     pub id: String,
     pub takes_text: bool,
     pub structured: bool,
-    pub confirm: bool,
     pub shows_menu: bool,
     /// Its output replaces the selection, see `afterRun`.
     pub replaces_selection: bool,
@@ -205,7 +204,6 @@ fn callable(
         structured: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
             .is_some_and(|tool| tool.input == ToolInput::Structured),
-        confirm: str_field(command, "confirm") == "always",
         shows_menu: after_run == "showMenu",
         replaces_selection: after_run == "replaceSelection",
     })
@@ -263,7 +261,6 @@ struct ListedCommand {
     name: String,
     /// `text` or `none`
     input: &'static str,
-    confirmation_required: bool,
     can_replace_selection: bool,
     after_run: String,
 }
@@ -292,7 +289,6 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
                 } else {
                     "none"
                 },
-                confirmation_required: found.confirm,
                 can_replace_selection: found.takes_text && !found.structured,
                 after_run: str_field(command, "afterRun").to_owned(),
             }
@@ -331,7 +327,6 @@ mod tests {
                     "name": "Бэкап",
                     "toolId": "script",
                     "toolConfig": { "command": "backup.sh", "takesText": false },
-                    "confirm": "always",
                     "availableIn": { "launcher": true, "external": true }
                 },
                 {
@@ -489,7 +484,6 @@ mod tests {
                 id: String::from("backup"),
                 takes_text: false,
                 structured: false,
-                confirm: true,
                 shows_menu: false,
                 replaces_selection: false,
             }
@@ -577,8 +571,7 @@ mod tests {
             .as_array()
             .unwrap()
             .iter()
-            .all(|item| item["confirmationRequired"].is_boolean()
-                && item["canReplaceSelection"].is_boolean()));
+            .all(|item| item["canReplaceSelection"].is_boolean()));
         let essential: Vec<Value> = listed
             .as_array()
             .unwrap()

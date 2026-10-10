@@ -262,7 +262,17 @@ export interface ScriptToolConfig {
   workingDir?: string
   /** The command takes the text; without it `{{TEXT}}` is not allowed */
   takesText: boolean
+  /**
+   * How long the output is waited for, in seconds; absent for
+   * `SCRIPT_OUTPUT_TIMEOUT_SEC`
+   */
+  timeoutSec?: number
 }
+
+/** How long a script whose output is used runs by default, in seconds */
+export const SCRIPT_OUTPUT_TIMEOUT_SEC = 60
+/** The longest a script whose output is used may run, in seconds */
+export const SCRIPT_MAX_TIMEOUT_SEC = 3600
 
 /** `toolConfig` of a `webhook` command */
 export interface WebhookToolConfig {
@@ -278,9 +288,6 @@ export interface WebhookToolConfig {
   /** The webhook takes the text; without it `{{TEXT}}` is not allowed */
   takesText: boolean
 }
-
-export const COMMAND_CONFIRM_MODES = ['auto', 'always'] as const
-export type CommandConfirmMode = (typeof COMMAND_CONFIRM_MODES)[number]
 
 /** Where a command can be invoked, besides the action menu */
 export interface CommandAvailability {
@@ -322,7 +329,6 @@ export interface CommandConfig {
   /** What to do with text the tool returns */
   afterRun: CustomActionAfterRun
   logOutput: boolean
-  confirm: CommandConfirmMode
   availableIn: CommandAvailability
   enabled: boolean
 }

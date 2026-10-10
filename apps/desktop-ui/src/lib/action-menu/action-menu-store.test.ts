@@ -214,6 +214,40 @@ describe('createActionMenuStoreModel', () => {
     ])
   })
 
+  it('builds the items of commands that take no text only where asked', async () => {
+    const { deps } = setup()
+    const noText = {
+      ...createCommand('script', 'sc1'),
+      name: 'Backup',
+      toolConfig: { command: 'backup', takesText: false },
+    }
+    const executeScriptAction = vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        exitCode: 0,
+        stdout: '',
+        stderr: '',
+        running: false,
+      })
+    const store = createActionMenuStoreModel({
+      ...deps,
+      tools: testTools({ executeScriptAction }),
+      mainActions: () => [{ type: 'command', commandId: 'sc1' }],
+      commands: () => [noText],
+    })
+
+    expect(store.getShortcutActions()).toEqual([])
+    const [item] = store.getShortcutActions({ textless: true })
+    expect(item?.id).toBe('command:sc1')
+    expect(store.getActionsMenu({ textless: true })).toHaveLength(1)
+
+    await item?.action('editor text')
+    // the text does not leave the app with a command that takes none
+    expect(deps.saveOutput).not.toHaveBeenCalled()
+    expect(executeScriptAction.mock.calls[0][0]).toMatchObject({ text: '' })
+  })
+
   it('builds the items of commands that take text, in their slots', async () => {
     const { deps } = setup()
     const script = {

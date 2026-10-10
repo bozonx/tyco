@@ -10,6 +10,7 @@ import {
 import {
   commandIcon,
   commandLabel,
+  commandTakesText,
   isMenuCommand,
 } from '../commands/command-config'
 import {
@@ -44,17 +45,26 @@ export interface ActionMenuDependencies extends CommandRunnerDependencies {
   aiTasks?: () => readonly ({ id: string; name: string } | null)[] | undefined
 }
 
+/** Which items a menu shows */
+export interface ActionMenuOptions {
+  /**
+   * The items of commands that take no text: they belong where the menu is
+   * opened from the editor, not where it acts on a text just made or captured
+   */
+  textless?: boolean
+}
+
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   const registeredActionsMenu = shallowRef<ActionItem[]>([])
   const commandRunner = createCommandRunner(deps)
 
-  /** The menu item of a command; the text leaves the app with it */
+  /** The menu item of a command; the text, if it takes one, leaves the app */
   const createCommandActionItem = (command: CommandConfig): ActionItem => ({
     id: `command:${command.id}`,
     name: commandLabel(command),
     icon: commandIcon(command, deps.tools),
     action: async (text: string) => {
-      await deps.saveOutput(text)
+      if (commandTakesText(command, deps.tools)) await deps.saveOutput(text)
       await commandRunner.run(command, text, { source: 'menu' })
     },
   })
@@ -185,7 +195,9 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     registrations = deps.mainActionRegistrations?.()
   ) => assignPluginActions(config, registeredActionsMenu.value, registrations)
 
-  const getShortcutActions = (): (ActionItem | undefined)[] => {
+  const getShortcutActions = ({ textless = false }: ActionMenuOptions = {}): (
+    ActionItem | undefined
+  )[] => {
     const defaults = new Map(
       getDefaultActions().map((action) => [action.id, action])
     )
@@ -200,9 +212,12 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
       if (item.type === 'standard') return defaults.get(item.actionId)
       if (item.type === 'plugin') return plugins.get(item.actionId)
       if (item.type === 'command') {
-        // a disabled command, or one that takes no text, leaves its slot empty
+        // a disabled command, or one that takes no text where the menu has
+        // no place for it, leaves its slot empty
         const command = commands.get(item.commandId)
-        return command && isMenuCommand(command, deps.tools)
+        return command &&
+          isMenuCommand(command, deps.tools) &&
+          (textless || commandTakesText(command, deps.tools))
           ? createCommandActionItem(command)
           : undefined
       }
@@ -219,8 +234,10 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     ]
   }
 
-  const getActionsMenu = () =>
-    getShortcutActions().filter((action): action is ActionItem => !!action)
+  const getActionsMenu = (options?: ActionMenuOptions) =>
+    getShortcutActions(options).filter(
+      (action): action is ActionItem => !!action
+    )
 
   const registerActionsItems = (actions: ActionItem[]) => {
     const next = [...registeredActionsMenu.value]

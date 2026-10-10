@@ -39,7 +39,6 @@
           {{ target }}
         </code>
         <textarea
-          v-if="commandTakesText(stage.command, toolsStore)"
           ref="textRef"
           class="launcher-text"
           :value="launcher.text"
@@ -50,9 +49,6 @@
           "
           @keydown="onTextKeyDown"
         />
-        <p v-else class="launcher-confirm">
-          {{ t('commandLauncher.confirmRun') }}
-        </p>
       </div>
 
       <InProgressMessage
@@ -79,10 +75,7 @@
             <KeyButton>Enter</KeyButton>
             {{ t('commandLauncher.hintRun') }}
           </button>
-          <span
-            v-if="commandTakesText(stage.command, toolsStore)"
-            class="launcher-hint"
-          >
+          <span class="launcher-hint">
             <KeyButton>Shift</KeyButton><KeyButton>Enter</KeyButton>
             {{ t('commandLauncher.hintNewLine') }}
           </span>
@@ -131,7 +124,6 @@ import { searchCommands } from '../../lib/command-launcher/launcher-model'
 import {
   commandIcon,
   commandLabel,
-  commandTakesText,
   commandTarget,
   isCommandAvailable,
 } from '../../lib/commands/command-config'
@@ -167,7 +159,7 @@ const hasSelection = computed(() => Boolean(selectedText.value.trim()))
 const searchMode = ref(false)
 const query = ref('')
 
-/** What the prepared command runs, so the user knows before confirming */
+/** What the prepared command runs, so the user knows before it does */
 const target = computed(() =>
   stage.value.kind === 'prepare'
     ? commandTarget(stage.value.command).trim()
@@ -275,18 +267,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if (props.stopListening) return
   if (event.code === 'Escape') {
     escPressed = !event.repeat || escPressed
-    return
-  }
-  // the field has handled it, e.g. the Enter that opened this step
-  if (event.defaultPrevented) return
-  // Enter confirms a command that takes no text; there is no field for it
-  if (
-    stage.value.kind === 'prepare' &&
-    !commandTakesText(stage.value.command, toolsStore) &&
-    event.key === 'Enter'
-  ) {
-    event.preventDefault()
-    if (!event.repeat) void launcher.submit()
   }
 }
 
@@ -361,13 +341,6 @@ onUnmounted(() => {
   height: 100%;
   padding: var(--space-sm);
   box-sizing: border-box;
-}
-
-.launcher-confirm {
-  margin: 0;
-  padding: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--app-text-muted);
 }
 
 .launcher-prepare-head {

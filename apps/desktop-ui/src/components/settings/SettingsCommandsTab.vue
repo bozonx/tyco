@@ -48,6 +48,7 @@
                 width="18"
                 height="18"
                 class="shrink-0"
+                :title="toolName(command)"
               />
               <span class="command-name" :class="{ 'is-empty': !command.name }">
                 {{ command.name || t('commands.unnamed') }}
@@ -58,7 +59,7 @@
               >
                 {{ t('commands.badgeNoText') }}
               </span>
-              <span v-if="inMenu.has(command.id)" class="command-badge">
+              <span v-if="menuSlots.has(command.id)" class="command-badge">
                 {{ t('commands.badgeInMenu') }}
               </span>
               <span
@@ -115,25 +116,26 @@
               :title="t('commands.enabled')"
               @update:value="setCommand(command.id, { enabled: $event })"
             />
-            <Button
-              class="delete-btn"
+            <DropdownMenu
               xs
-              ghost
               square
-              :title="t('common.delete')"
-              @click="removeCommand(command)"
-            >
-              <Icon icon="mdi:trash-can-outline" width="16" height="16" />
-            </Button>
+              hide-chevron
+              align="right"
+              icon="mdi:dots-vertical"
+              :title="t('commands.moreActions')"
+              :items="commandMenu(command)"
+            />
           </div>
 
           <div v-if="isExpanded(command.id)" class="command-body">
             <CommandEditor
               :command="command"
               :user-config="userConfig"
-              :in-menu="inMenu.has(command.id)"
+              :menu-slot="menuSlots.get(command.id)"
+              :launcher-slot="launcherSlots.get(command.id)"
               :name-twins="externalNameTwins(commands, command, toolsStore)"
               @update="updateCommand(index, $event)"
+              @navigate="emit('navigate', $event)"
             />
           </div>
         </div>
@@ -219,6 +221,7 @@ import {
 
 import { useI18n } from '../../composables/useI18n'
 import { useSortableList } from '../../composables/useSortableList'
+import useToast from '../../composables/useToast'
 import {
   commandIcon,
   commandTakesText,
@@ -237,6 +240,7 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
@@ -261,9 +265,12 @@ const emit = defineEmits<{
   (event: 'update:externalAccess', value: ExternalAccess): void
   (event: 'update:commands', value: CommandConfig[]): void
   (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
+  /** Opens another tab of the settings */
+  (event: 'navigate', tab: string): void
 }>()
 
 const { t } = useI18n()
+const { toast } = useToast()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 
@@ -285,14 +292,53 @@ function setCommand(id: string, patch: Partial<CommandConfig>) {
   )
 }
 
-const inMenu = computed(
-  () =>
-    new Set(
-      (props.userConfig.mainActions ?? []).flatMap((slot) =>
-        slot?.type === 'command' ? [slot.commandId] : []
-      )
-    )
-)
+/** The first slot of the action menu that holds each command */
+const menuSlots = computed(() => {
+  const slots = new Map<string, number>()
+  ;(props.userConfig.mainActions ?? []).forEach((slot, index) => {
+    if (slot?.type === 'command' && !slots.has(slot.commandId)) {
+      slots.set(slot.commandId, index)
+    }
+  })
+  return slots
+})
+
+/** The slot of the command overlay that holds each command */
+const launcherSlots = computed(() => {
+  const slots = new Map<string, number>()
+  ;(props.userConfig.launcherCommands ?? []).forEach((id, index) => {
+    if (id && !slots.has(id)) slots.set(id, index)
+  })
+  return slots
+})
+
+const toolName = (command: CommandConfig) => {
+  const tool = toolsStore.get(command.toolId)
+  return tool ? toolLabel(tool, t) : command.toolId
+}
+
+async function copyId(command: CommandConfig) {
+  try {
+    await navigator.clipboard.writeText(command.id)
+    toast('commands.idCopied', 'success')
+  } catch {
+    // clipboard access might be denied
+  }
+}
+
+const commandMenu = (command: CommandConfig): DropdownMenuItem[] => [
+  {
+    label: t('commands.copyId'),
+    icon: 'mdi:identifier',
+    action: () => copyId(command),
+  },
+  {
+    label: t('common.delete'),
+    icon: 'mdi:trash-can-outline',
+    danger: true,
+    action: () => removeCommand(command),
+  },
+]
 
 const expanded = ref(
   new Set<string>(props.focusCommandId ? [props.focusCommandId] : [])
@@ -388,7 +434,7 @@ function removeCommand(command: CommandConfig) {
   removed.value = {
     command,
     index,
-    mainActions: inMenu.value.has(command.id) ? [...mainActions] : undefined,
+    mainActions: menuSlots.value.has(command.id) ? [...mainActions] : undefined,
   }
   emit(
     'update:commands',
@@ -659,14 +705,6 @@ onBeforeUnmount(finishRemoval)
 
 .enabled-switch {
   margin: 0 var(--space-xs);
-}
-
-.delete-btn {
-  color: var(--app-text-muted);
-}
-
-.delete-btn:hover {
-  color: var(--color-error);
 }
 
 .commands-add {

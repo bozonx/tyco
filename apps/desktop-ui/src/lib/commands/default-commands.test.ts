@@ -73,7 +73,6 @@ describe('seedDefaultCommands', () => {
       name: 'Fix',
       toolId: 'core.correct',
       afterRun: 'replaceSelection',
-      confirm: 'auto',
       availableIn: { external: false, chat: false },
       enabled: true,
     })

@@ -105,7 +105,6 @@ export interface DefaultCommand {
   description?: string
   toolConfig?: Record<string, unknown>
   afterRun?: CustomActionAfterRun
-  confirm?: 'auto' | 'always'
   /** Adds a menu item, taking the place of a former plugin action item */
   menu?: { preferredKey?: string }
 }

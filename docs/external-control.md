@@ -111,8 +111,7 @@ for all commands. The migration drops it; a config where it was `false` has the
 external grant of every command revoked instead.
 
 A command's external grant does not bypass its tool's availability or permission
-checks. `confirm: always` requires interactive user confirmation; there is no
-`--yes` bypass. Permission and command configuration are checked again when the
+checks. Permission and command configuration are checked again when the
 quick webview claims a job. A command changed after submission is rejected
 with `ConfigurationChanged` instead of executing a stale configuration.
 
@@ -163,7 +162,7 @@ tyco-ctl commands describe 'My command' --name
 
 `commands list` prints one `id<TAB>name` line per command; `--json` prints the
 full list instead. Descriptions are always JSON. The list includes the commands
-that are currently callable, with `id`, `name`, `input`, `confirmationRequired`,
+that are currently callable, with `id`, `name`, `input`,
 `canReplaceSelection`, and `afterRun`. A structured input is marked `structured`; a description also
 includes `textAccepted` and the tool's `inputSchema` when the catalog provides
 one. Command-specific schema overrides are validated by the executing tool
@@ -184,8 +183,8 @@ tyco-ctl run my-reminder --input-json '{"at":"18:00","message":"Call"}' --wait
 ```
 
 These commands require individual external grants. A normal `run` is
-non-interactive. Missing text returns `InputRequired`; required confirmation
-returns `ConfirmationRequired`. It does not open a window, capture a selection,
+non-interactive. Missing text returns `InputRequired`. It does not open a
+window, capture a selection,
 or perform the command's configured after-run action implicitly.
 
 `--stdin` preserves the input exactly, including trailing newlines. `--text`
@@ -216,7 +215,7 @@ tyco-ctl run default:core.correct:fix --selection --replace --interactive --wait
 tyco-ctl run my-transform --selection --wait
 ```
 
-Interactive execution may ask for input or confirmation. It never implicitly
+Interactive execution may ask for input. It never implicitly
 uses a selection. `--selection` captures the focused application's selected
 text; without `--replace`, the output is returned and the old clipboard is
 restored when the job ends. `--replace` requires `--selection`, overrides configured after-run output handling, and inserts the
@@ -224,7 +223,7 @@ result back into the original target. Empty replacement output is a failure.
 
 A changed foreground window prevents insertion: the result remains in the
 clipboard, the job fails with `SelectionFailed`, and its output remains
-available for recovery. An interactive confirmation window is hidden before
+available for recovery. An interactive command launcher is hidden before
 replacement so focus can return to the target. No window is forcibly focused
 when an unrelated application has taken focus.
 
@@ -281,7 +280,7 @@ do not block the listener; connections are bounded.
 | ---- | ------------------------------------------------------- |
 | 0    | Request accepted, or successful completion when waiting |
 | 2    | Invalid arguments/input, missing input, ambiguous name  |
-| 3    | Permission denied or interactive confirmation required  |
+| 3    | Permission denied or interactive UI required            |
 | 4    | Service/command unavailable, disabled, busy, not found  |
 | 5    | Execution or other API failure                          |
 | 6    | Timeout                                                 |
@@ -307,7 +306,7 @@ authorization dispatcher, so the same grants and capabilities apply.
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
 `tyco-ctl run <id> --interactive --output configured`: it asks for missing
-input or confirmation in the command launcher. `ReplaceSelection` behaves like
+input in the command launcher. `ReplaceSelection` behaves like
 `tyco-ctl run <id> --selection --replace --interactive`. Command IDs are
 stable library IDs; display names are not accepted.
 
@@ -325,7 +324,7 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
 Successful calls acknowledge activation; they do not return command results or
 wait for completion. A failure is a D-Bus error named after the machine code,
 for example `org.tyco.Error.AccessDenied`, `org.tyco.Error.NotFound`, or
-`org.tyco.Error.ConfirmationRequired`; the message is human-readable. Malformed
+`org.tyco.Error.InteractionRequired`; the message is human-readable. Malformed
 arguments fail with the standard `org.freedesktop.DBus.Error.InvalidArgs`.
 
 KWin reports use the separate `org.tyco.KwinTracker` interface at the same

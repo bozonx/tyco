@@ -1,95 +1,101 @@
 <template>
   <div class="command-editor">
+    <p v-if="unavailable" class="command-warning">
+      {{ t(unavailable) }}
+    </p>
+
     <label class="command-field">
-      <span class="command-field-label">{{ t('commands.nameLabel') }}</span>
+      <span class="command-field-label">
+        {{ t('commands.nameLabel') }}
+        <span class="command-required" aria-hidden="true">*</span>
+      </span>
       <FieldInput
         :value="command.name"
         :placeholder="t('commands.namePlaceholder')"
         @update:value="update({ name: $event })"
       />
+      <FieldIssues :issues="nameIssues" />
     </label>
 
-    <label class="command-field">
-      <span class="command-field-label">
-        {{ t('commands.descriptionLabel') }}
-        <InfoTooltip :text="t('commands.descriptionInfo')" />
-      </span>
-      <FieldInput
-        :value="command.description ?? ''"
-        :placeholder="t('commands.descriptionPlaceholder')"
-        @update:value="updateDescription"
+    <!-- focusout: a command left without a name takes one from what it runs -->
+    <div class="command-tool-fields" @focusout="suggestName">
+      <CustomActionFields
+        v-if="customActionTool"
+        :key="command.id"
+        :command="command"
+        @update="updateToolConfig"
       />
-    </label>
-
-    <div class="command-field">
-      <span class="command-field-label">{{ t('commands.toolLabel') }}</span>
-      <div class="command-tool">
-        <Icon
-          :icon="tool?.icon ?? 'mdi:puzzle-outline'"
-          width="16"
-          height="16"
-        />
-        <span>{{ tool ? toolLabel(tool, t) : command.toolId }}</span>
-        <span v-if="addedBy" class="command-origin">· {{ addedBy }}</span>
-      </div>
-      <p v-if="unavailable" class="command-warning">
-        {{ t(unavailable) }}
+      <ToolConfigFields
+        v-else-if="tool"
+        :key="`${command.id}:tools`"
+        :command="command"
+        :tool="tool"
+        :user-config="userConfig"
+        @update="updateToolConfig"
+      />
+      <p v-else class="command-warning">
+        {{ t('commands.unknownTool', { tool: command.toolId }) }}
       </p>
     </div>
 
-    <div v-if="customActionTool" class="command-field-row">
-      <FieldCheckbox
-        :value="takesText"
-        :label="t('commands.takesText')"
-        @update:value="updateToolConfig('takesText', $event)"
-      />
-      <InfoTooltip :text="t('commands.takesTextInfo')" />
-    </div>
-    <p v-if="inMenu && tool && !takesText" class="command-warning">
-      {{ t('commands.warningMenuNeedsText') }}
-    </p>
-
-    <CustomActionFields
-      v-if="customActionTool"
-      :key="command.id"
-      :command="command"
-      @update="updateToolConfig"
-    />
-    <ToolConfigFields
-      v-else-if="tool"
-      :key="`${command.id}:tools`"
-      :command="command"
-      :tool="tool"
-      :user-config="userConfig"
-      @update="updateToolConfig"
-    />
-    <p v-else class="command-warning">
-      {{ t('commands.unknownTool', { tool: command.toolId }) }}
-    </p>
-
-    <div class="command-field">
-      <span class="command-field-label">
-        {{ t('settings.actionAfterRunLabel') }}
-        <InfoTooltip :text="t('commands.afterRunInfo')" />
-      </span>
-      <SegmentedControl
-        :value="command.afterRun"
-        :label="t('settings.actionAfterRunLabel')"
-        :options="[
-          { id: 'none', name: t('settings.actionAfterRunNone') },
-          { id: 'showMenu', name: t('settings.actionAfterRunShowMenu') },
-          {
-            id: 'replaceSelection',
-            name: t('commands.afterRunReplaceSelection'),
-          },
-          { id: 'copy', name: t('commands.afterRunCopy') },
-        ]"
-        @update:value="update({ afterRun: $event as CustomActionAfterRun })"
-      />
-    </div>
+    <section class="command-group">
+      <h4 class="command-group-title">{{ t('commands.resultGroup') }}</h4>
+      <div class="command-field">
+        <span class="command-field-label">
+          {{ t('settings.actionAfterRunLabel') }}
+          <InfoTooltip :text="t('commands.afterRunInfo')" />
+        </span>
+        <SegmentedControl
+          :value="command.afterRun"
+          :label="t('settings.actionAfterRunLabel')"
+          :options="afterRunOptions"
+          @update:value="update({ afterRun: $event as CustomActionAfterRun })"
+        />
+        <p v-if="backgroundScript" class="command-hint">
+          {{ t('commands.afterRunNoneScriptHint') }}
+        </p>
+      </div>
+      <div v-if="tool?.logsOutput" class="command-field-row">
+        <FieldCheckbox
+          :value="command.logOutput"
+          :label="t('settings.actionLogOutput')"
+          @update:value="update({ logOutput: $event })"
+        />
+        <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+      </div>
+    </section>
 
     <section class="command-group">
-      <h4 class="command-group-title">{{ t('commands.externalGroup') }}</h4>
+      <h4 class="command-group-title">{{ t('commands.availabilityGroup') }}</h4>
+      <div class="command-place">
+        <span class="command-place-name">{{ t('commands.placeMenu') }}</span>
+        <span class="command-place-state">
+          <template v-if="menuSlot !== undefined">
+            <KeyButton>{{ slotKey(menuSlot) }}</KeyButton>
+            <span v-if="!takesText">{{
+              t('commands.placeMenuEditorOnly')
+            }}</span>
+          </template>
+          <template v-else>{{ t('commands.placeNotAdded') }}</template>
+        </span>
+        <Button xs ghost @click="emit('navigate', 'main-actions')">
+          {{ t('commands.placeConfigure') }}
+        </Button>
+      </div>
+      <div class="command-place">
+        <span class="command-place-name">
+          {{ t('commands.placeLauncher') }}
+        </span>
+        <span class="command-place-state">
+          <KeyButton v-if="launcherSlot !== undefined">
+            {{ slotKey(launcherSlot) }}
+          </KeyButton>
+          <template v-else>{{ t('commands.placeLauncherSearch') }}</template>
+        </span>
+        <Button xs ghost @click="emit('navigate', 'launcher-commands')">
+          {{ t('commands.placeConfigure') }}
+        </Button>
+      </div>
       <div class="command-field-row">
         <FieldCheckbox
           :value="command.availableIn.external"
@@ -102,32 +108,44 @@
         />
         <InfoTooltip :text="t('commands.externalInfo')" />
       </div>
-      <div class="command-field-row">
-        <code class="command-cli" :title="cliCommand">{{ cliCommand }}</code>
-        <Button
-          type="button"
-          ghost
-          square
-          sm
-          :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
-          :aria-label="t('commands.copyCli')"
-          @click="copyCli"
-        >
-          <Icon
-            :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
-            width="16"
-            height="16"
-          />
-        </Button>
-      </div>
-      <p v-if="nameTwins.length" class="command-warning">
-        {{
-          t('commands.warningExternalNameTwins', {
-            names: nameTwins.map(commandLabel).join(', '),
-          })
-        }}
-      </p>
+      <template v-if="command.availableIn.external">
+        <div class="command-field-row">
+          <code class="command-cli" :title="cliCommand">{{ cliCommand }}</code>
+          <Button
+            type="button"
+            ghost
+            square
+            sm
+            :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
+            :aria-label="t('commands.copyCli')"
+            @click="copyCli"
+          >
+            <Icon
+              :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+              width="16"
+              height="16"
+            />
+          </Button>
+        </div>
+        <p v-if="nameTwins.length" class="command-warning">
+          {{
+            t('commands.warningExternalNameTwins', {
+              names: nameTwins.map(commandLabel).join(', '),
+            })
+          }}
+        </p>
+      </template>
     </section>
+
+    <details v-if="testable" class="command-group">
+      <summary class="command-group-title command-group-toggle">
+        <Icon icon="mdi:chevron-right" width="16" height="16" />
+        {{ t('commands.testGroup') }}
+      </summary>
+      <div class="command-group-body">
+        <CommandTestRun :command="command" />
+      </div>
+    </details>
 
     <details class="command-group" :open="advancedOpen">
       <summary class="command-group-title command-group-toggle">
@@ -135,22 +153,37 @@
         {{ t('commands.advanced') }}
       </summary>
       <div class="command-group-body">
-        <div class="command-field-row">
-          <FieldCheckbox
-            :value="command.confirm === 'always'"
-            :label="t('commands.confirm')"
-            @update:value="update({ confirm: $event ? 'always' : 'auto' })"
+        <label class="command-field">
+          <span class="command-field-label">
+            {{ t('commands.descriptionLabel') }}
+            <InfoTooltip :text="t('commands.descriptionInfo')" />
+          </span>
+          <FieldInput
+            :value="command.description ?? ''"
+            :placeholder="t('commands.descriptionPlaceholder')"
+            @update:value="updateDescription"
           />
-          <InfoTooltip :text="t('commands.confirmInfo')" />
-        </div>
-        <div class="command-field-row">
-          <FieldCheckbox
-            :value="command.logOutput"
-            :label="t('settings.actionLogOutput')"
-            @update:value="update({ logOutput: $event })"
+        </label>
+        <label v-if="command.toolId === 'script'" class="command-field">
+          <span class="command-field-label">
+            {{ t('commands.timeoutLabel') }}
+            <InfoTooltip
+              :text="
+                t('commands.timeoutInfo', {
+                  seconds: SCRIPT_OUTPUT_TIMEOUT_SEC,
+                  max: SCRIPT_MAX_TIMEOUT_SEC,
+                })
+              "
+            />
+          </span>
+          <FieldInput
+            type="number"
+            :value="scriptConfig.timeoutSec ?? ''"
+            :placeholder="String(SCRIPT_OUTPUT_TIMEOUT_SEC)"
+            @update:value="updateTimeout"
           />
-          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
-        </div>
+        </label>
+        <p v-if="origin" class="command-hint">{{ origin }}</p>
       </div>
     </details>
   </div>
@@ -167,37 +200,54 @@ import {
   commandTakesText,
   commandTool,
   commandUnavailableReason,
+  normalizeCommandName,
+  scriptToolConfig,
+  suggestCommandName,
+  validateCommand,
 } from '../../lib/commands/command-config'
+import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
+import { PRESETS_KEYS } from '../../types'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import KeyButton from '../common/KeyButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
+import CommandTestRun from './CommandTestRun.vue'
 import CustomActionFields from './CustomActionFields.vue'
+import FieldIssues from './FieldIssues.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
 import { Icon } from '@iconify/vue'
-import type {
-  CommandConfig,
-  CustomActionAfterRun,
-  UserConfig,
+import {
+  type CommandConfig,
+  type CustomActionAfterRun,
+  SCRIPT_MAX_TIMEOUT_SEC,
+  SCRIPT_OUTPUT_TIMEOUT_SEC,
+  type UserConfig,
 } from '@tyco/shared'
 
 const props = withDefaults(
   defineProps<{
     command: CommandConfig
-    /** The command is an item of the action menu */
-    inMenu?: boolean
+    /** The slot of the action menu that holds the command */
+    menuSlot?: number
+    /** The slot of the command overlay that holds the command */
+    launcherSlot?: number
     /** Other commands an external call by this name could mean */
     nameTwins?: CommandConfig[]
     /** For the settings of the tool: translation languages, AI tasks */
     userConfig?: UserConfig
   }>(),
-  { inMenu: false, nameTwins: () => [] }
+  { nameTwins: () => [] }
 )
 
-const emit = defineEmits<{ (event: 'update', command: CommandConfig): void }>()
+const emit = defineEmits<{
+  (event: 'update', command: CommandConfig): void
+  /** Opens another tab of the settings */
+  (event: 'navigate', tab: string): void
+}>()
 
 const { t } = useI18n()
 
@@ -208,10 +258,19 @@ const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
 const takesText = computed(() => commandTakesText(props.command, toolsStore))
+const testable = computed(() => canTestCommand(props.command))
+const scriptConfig = computed(() => scriptToolConfig(props.command))
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailable = computed(() =>
   tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
 )
+const nameIssues = computed(() =>
+  validateCommand(props.command, toolsStore).filter(
+    (issue) => issue.field === 'name'
+  )
+)
+
+const slotKey = (index: number) => PRESETS_KEYS[index]?.toUpperCase() ?? ''
 
 function update(patch: Partial<CommandConfig>) {
   emit('update', { ...props.command, ...patch })
@@ -224,26 +283,72 @@ function updateDescription(value: string) {
 
 function updateToolConfig(field: string, value: unknown) {
   const { [field]: _previous, ...rest } = props.command.toolConfig
-  update({
+  const patch: Partial<CommandConfig> = {
     toolConfig: value === undefined ? rest : { ...rest, [field]: value },
-  })
+  }
+  // without a text there is nothing to replace: the result menu is shown
+  if (
+    field === 'takesText' &&
+    value === false &&
+    props.command.afterRun === 'replaceSelection'
+  ) {
+    patch.afterRun = 'showMenu'
+  }
+  update(patch)
 }
 
-/** Who added a default command: the app or a plugin */
-const addedBy = computed(() => {
-  const origin = commandAddedBy(props.command, toolsStore)
-  if (!origin) return ''
-  return origin.kind === 'plugin'
-    ? t('commands.addedByPlugin', { name: origin.name })
-    : t('commands.addedByApp')
-})
+function updateTimeout(value: string) {
+  const seconds = Number.parseInt(value, 10)
+  updateToolConfig(
+    'timeoutSec',
+    Number.isFinite(seconds) && seconds > 0
+      ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC)
+      : undefined
+  )
+}
 
-/** Shown open when one of its settings is on, so it is not missed */
-const advancedOpen = ref(
-  props.command.confirm === 'always' || props.command.logOutput
+function suggestName() {
+  if (props.command.name.trim()) return
+  const name = suggestCommandName(props.command)
+  if (name) update({ name })
+}
+
+const afterRunOptions = computed(() => [
+  { id: 'none', name: t('settings.actionAfterRunNone') },
+  { id: 'showMenu', name: t('settings.actionAfterRunShowMenu') },
+  // only a text the command got can be replaced
+  ...(takesText.value
+    ? [{ id: 'replaceSelection', name: t('commands.afterRunReplaceSelection') }]
+    : []),
+  { id: 'copy', name: t('commands.afterRunCopy') },
+])
+
+/** A script nobody waits for: it may stay in the background */
+const backgroundScript = computed(
+  () => props.command.toolId === 'script' && props.command.afterRun === 'none'
 )
 
-const cliCommand = computed(() => commandCliCall(props.command.id))
+/** Who added a default command and which tool it runs */
+const origin = computed(() => {
+  const owner = commandAddedBy(props.command, toolsStore)
+  const label = tool.value ? toolLabel(tool.value, t) : props.command.toolId
+  if (!owner) return t('commands.toolInfo', { tool: label })
+  return owner.kind === 'plugin'
+    ? t('commands.toolInfoPlugin', { tool: label, name: owner.name })
+    : t('commands.toolInfoApp', { tool: label })
+})
+
+/** Shown open when one of its settings is set, so it is not missed */
+const advancedOpen = ref(
+  Boolean(props.command.description) || Boolean(scriptConfig.value.timeoutSec)
+)
+
+/** By the name, which reads better, while it is unique; otherwise by the id */
+const cliCommand = computed(() =>
+  normalizeCommandName(props.command.name) && !props.nameTwins.length
+    ? commandCliCall(props.command.name.trim(), true)
+    : commandCliCall(props.command.id)
+)
 
 const copied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | null = null
@@ -289,11 +394,8 @@ onUnmounted(() => {
   color: var(--app-text-muted);
 }
 
-.command-tool {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  font-size: 0.875rem;
+.command-required {
+  color: var(--color-error);
 }
 
 .command-field-row {
@@ -301,10 +403,6 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm, 0.5rem);
   width: 100%;
-}
-
-.command-origin {
-  color: var(--app-text-muted);
 }
 
 .command-group {
@@ -348,6 +446,27 @@ details[open] > .command-group-toggle svg {
   gap: var(--space-sm, 0.5rem);
 }
 
+.command-place {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.5rem);
+  min-height: 1.75rem;
+  font-size: 0.875rem;
+}
+
+.command-place-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.command-place-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
 .command-cli {
   min-width: 0;
   overflow: hidden;
@@ -356,6 +475,11 @@ details[open] > .command-group-toggle svg {
   font-size: 0.75rem;
   color: var(--app-text-muted);
   user-select: all;
+}
+
+.command-hint {
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
 }
 
 .command-warning {

@@ -54,7 +54,6 @@ const webhook = (
   return {
     ...base,
     name: id,
-    confirm: 'auto',
     toolConfig: { ...base.toolConfig, url: 'https://x.test', takesText },
     ...extra,
   }
@@ -130,28 +129,6 @@ describe('CommandLauncher', () => {
     keydown(input.element, { key: 'Enter', code: 'Enter' })
     await nextTick()
 
-    expect(mocks.run).toHaveBeenCalledWith(backup, '', expect.anything())
-    wrapper.unmount()
-  })
-
-  it('waits for another Enter to run a command that asks to confirm', async () => {
-    const backup = webhook('backup', { confirm: 'always' })
-    const wrapper = mountLauncher([backup])
-
-    // Press Q to select the first command
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'KeyQ', bubbles: true })
-    )
-    window.dispatchEvent(
-      new KeyboardEvent('keyup', { code: 'KeyQ', bubbles: true })
-    )
-    await nextTick()
-
-    expect(mocks.run).not.toHaveBeenCalled()
-    expect(wrapper.text()).toContain('commandLauncher.confirmRun')
-
-    keydown(document.body, { key: 'Enter', code: 'Enter' })
-    await nextTick()
     expect(mocks.run).toHaveBeenCalledWith(backup, '', expect.anything())
     wrapper.unmount()
   })

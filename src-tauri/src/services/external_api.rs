@@ -77,7 +77,6 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
             "none"
         },
         "textAccepted": command.takes_text,
-        "confirmationRequired": command.confirm,
         "canReplaceSelection": command.takes_text && !command.structured,
         "afterRun": raw.and_then(|item| item.get("afterRun")),
         "inputSchema": input_schema,
@@ -129,12 +128,6 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         return Err(Response::coded_error(
             "InteractionRequired",
             "Configured output requires interactive UI",
-        ));
-    }
-    if command.confirm && !request.interactive {
-        return Err(Response::coded_error(
-            "ConfirmationRequired",
-            "This command requires interactive confirmation",
         ));
     }
     if command.structured && !command.takes_text && request.input.is_none() {
@@ -195,7 +188,6 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     }
     let needs_ui = (request.output == tyco_activation_protocol::OutputMode::Configured
         && (command.shows_menu || (command.replaces_selection && !request.replace)))
-        || command.confirm
         || (command.takes_text && request.text.is_none() && request.input.is_none());
     let handoff = if needs_ui {
         let mut activation = Activation::new(StartMode::CommandLauncher, source);
@@ -273,7 +265,7 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
     if let Some((job, Some(run_id), _)) =
         jobs.finish(id, state, completion.output, completion.message, code)
     {
-        // The original target is retained even while a confirmation window is open.
+        // The original target is retained even while the command launcher is open.
         let replace = job.state == JobState::Succeeded && jobs_request_replace(app, id);
         let output = job.output.clone().filter(|text| !text.trim().is_empty());
         if replace {
@@ -526,14 +518,13 @@ mod tests {
             id: "test".into(),
             takes_text: true,
             structured: false,
-            confirm: false,
             shows_menu: false,
             replaces_selection: false,
         }
     }
     #[test]
-    fn automation_requires_explicit_input_and_confirmation() {
-        let mut command = command();
+    fn automation_requires_explicit_input() {
+        let command = command();
         let mut request = RunRequest {
             target: "test".into(),
             ..Default::default()
@@ -547,14 +538,6 @@ mod tests {
         );
         request.text = Some("\n".into());
         assert!(validate_run(&command, &request).is_ok());
-        command.confirm = true;
-        assert_eq!(
-            validate_run(&command, &request)
-                .unwrap_err()
-                .code
-                .as_deref(),
-            Some("ConfirmationRequired")
-        );
         request.interactive = true;
         assert!(validate_run(&command, &request).is_ok());
         request.selection = true;

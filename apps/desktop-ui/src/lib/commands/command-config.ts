@@ -1,11 +1,10 @@
 import {
   ACTION_TEXT_PLACEHOLDER,
-  COMMAND_CONFIRM_MODES,
   CUSTOM_ACTION_AFTER_RUN,
   type CommandConfig,
-  type CommandConfirmMode,
   type CustomActionAfterRun,
   type MainActionConfig,
+  SCRIPT_MAX_TIMEOUT_SEC,
   type ScriptToolConfig,
   type WebhookToolConfig,
 } from '@tyco/shared'
@@ -30,11 +29,6 @@ const afterRunOf = (value: unknown): CustomActionAfterRun =>
     ? (value as CustomActionAfterRun)
     : 'none'
 
-const confirmOf = (value: unknown): CommandConfirmMode =>
-  COMMAND_CONFIRM_MODES.includes(value as CommandConfirmMode)
-    ? (value as CommandConfirmMode)
-    : 'auto'
-
 function headersOf(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {}
   return Object.fromEntries(
@@ -44,13 +38,22 @@ function headersOf(value: unknown): Record<string, string> {
   )
 }
 
+/** A whole number of seconds the script may run, or `undefined` for none */
+function timeoutOf(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
+  const seconds = Math.round(value)
+  return seconds >= 1 ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC) : undefined
+}
+
 export function scriptToolConfigOf(
   config: Record<string, unknown>
 ): ScriptToolConfig {
+  const timeoutSec = timeoutOf(config.timeoutSec)
   return {
     command: stringOr(config.command),
     workingDir: stringOr(config.workingDir),
     takesText: config.takesText !== false,
+    ...(timeoutSec ? { timeoutSec } : {}),
   }
 }
 
@@ -102,7 +105,6 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     llmArgumentParsing: value.llmArgumentParsing === true,
     afterRun: afterRunOf(value.afterRun),
     logOutput: value.logOutput === true,
-    confirm: confirmOf(value.confirm),
     availableIn: {
       external: availableIn.external === true,
       chat: availableIn.chat === true,
@@ -202,8 +204,6 @@ export function createCommand(
     llmArgumentParsing: false,
     afterRun: tool?.defaultAfterRun ?? 'none',
     logOutput: false,
-    // a command is called to run at once; asking first is opt-in
-    confirm: 'auto',
     availableIn: { external: false, chat: false },
     enabled: true,
   }
@@ -262,20 +262,48 @@ export function commandTakesText(
   return kind === 'text' || kind === 'parsed'
 }
 
-/** Whether the command can be an item of the action menu */
+/**
+ * Whether the command can be an item of the action menu. One that takes no text
+ * shows up only where the menu is opened from the editor, see
+ * `getShortcutActions`
+ */
 export function isMenuCommand(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {
-  return (
-    command.enabled &&
-    isCommandAvailable(command, tools) &&
-    commandTakesText(command, tools)
-  )
+  return command.enabled && isCommandAvailable(command, tools)
 }
 
 export function commandIcon(command: CommandConfig, tools: ToolLookup): string {
   return commandTool(command, tools)?.icon ?? 'mdi:puzzle-outline'
+}
+
+/** The last part of a path, without quotes */
+const baseName = (path: string): string =>
+  path
+    .replace(/^['"]|['"]$/g, '')
+    .split(/[\\/]/)
+    .filter(Boolean)
+    .at(-1) ?? ''
+
+/**
+ * A name for a command that has none, from what it runs: the program of a
+ * script, the host of a webhook; empty when there is nothing to take it from
+ */
+export function suggestCommandName(command: CommandConfig): string {
+  if (command.toolId === 'script') {
+    const line = scriptToolConfig(command).command.trim()
+    const program = line.match(/^(['"])(.*?)\1|^\S+/)
+    return program ? baseName(program[2] ?? program[0]) : ''
+  }
+  if (command.toolId === 'webhook') {
+    try {
+      return new URL(webhookToolConfig(command).url.trim()).hostname
+    } catch {
+      return ''
+    }
+  }
+  return ''
 }
 
 /** The name shown for the command, never empty */
@@ -360,6 +388,9 @@ export function validateCommand(
   tools: ToolLookup
 ): CommandIssue[] {
   const issues: CommandIssue[] = []
+  if (!command.name.trim()) {
+    issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
+  }
   if (command.toolId === 'script') {
     const config = scriptToolConfig(command)
     if (!config.command.trim()) {
@@ -413,12 +444,15 @@ export function commandAddedBy(
   return tools.get(command.toolId)?.owner ?? { kind: 'core' }
 }
 
-/** The shell line that runs the command from another application */
-export function commandCliCall(id: string): string {
-  const quoted = /^[\w:.@-]+$/.test(id)
-    ? id
-    : `'${id.replaceAll("'", "'\\''")}'`
-  return `tyco-ctl run ${quoted}`
+const shellQuote = (value: string): string =>
+  /^[\w:.@-]+$/.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`
+
+/**
+ * The shell line that runs the command from another application: by its name
+ * when `byName`, otherwise by its id
+ */
+export function commandCliCall(target: string, byName = false): string {
+  return `tyco-ctl run ${shellQuote(target)}${byName ? ' --name' : ''}`
 }
 
 /** The library with a removed command put back where it was */

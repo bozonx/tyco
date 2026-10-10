@@ -271,6 +271,7 @@
           @update:external-access="userConfig.externalAccess = $event"
           @update:commands="updateCommands"
           @update:main-actions="updateMainActions"
+          @navigate="currentTab = $event"
         />
 
         <div v-else-if="currentTab === 'stt'">

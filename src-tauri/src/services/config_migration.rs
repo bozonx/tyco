@@ -170,7 +170,6 @@ fn command_from_action(kind: &str, id: &str, action: &Map<String, Value>) -> Val
         "llmArgumentParsing": false,
         "afterRun": after_run,
         "logOutput": action.get("logOutput").and_then(Value::as_bool).unwrap_or(false),
-        "confirm": "auto",
         "availableIn": { "launcher": false, "external": false, "chat": false },
         "enabled": true,
     })
@@ -305,7 +304,6 @@ mod tests {
                     "llmArgumentParsing": false,
                     "afterRun": "showMenu",
                     "logOutput": true,
-                    "confirm": "auto",
                     "availableIn": { "launcher": false, "external": false, "chat": false },
                     "enabled": true
                 },
@@ -325,7 +323,6 @@ mod tests {
                     "llmArgumentParsing": false,
                     "afterRun": "none",
                     "logOutput": false,
-                    "confirm": "auto",
                     "availableIn": { "launcher": false, "external": false, "chat": false },
                     "enabled": true
                 }

@@ -23,7 +23,6 @@ const command = (
   return {
     ...base,
     name,
-    confirm: 'auto',
     toolConfig: { ...base.toolConfig, url: 'https://x.test', ...toolConfig },
     ...extra,
   }
@@ -192,45 +191,12 @@ describe('createCommandLauncherModel', () => {
     expect(model.stage.value.kind).toBe('list')
   })
 
-  it('only fills in a late selection for a command that confirms', async () => {
-    const confirmed = { ...note, confirm: 'always' as const }
-    const { deps, model } = setup([confirmed])
-    await model.pickByKey(1)
-    await model.selectionArrived('late selection')
-    expect(model.text.value).toBe('late selection')
-    expect(deps.run).not.toHaveBeenCalled()
-  })
-
   it('keeps the typed text from a selection captured late', async () => {
     const { model } = setup()
     await model.pickByKey(2)
     model.setText('typed')
     await model.selectionArrived('late selection')
     expect(model.text.value).toBe('typed')
-  })
-
-  it('asks to confirm a command that wants it', async () => {
-    const confirmed = { ...backup, confirm: 'always' as const }
-    const { deps, model } = setup([confirmed])
-    await model.pickHighlighted()
-    expect(deps.run).not.toHaveBeenCalled()
-    expect(model.stage.value).toEqual({
-      kind: 'prepare',
-      command: confirmed,
-      autoRun: false,
-    })
-    expect(model.canSubmit.value).toBe(true)
-    await model.submit()
-    expect(deps.run).toHaveBeenCalledWith(confirmed, '', expect.anything())
-  })
-
-  it('shows the selection for confirmation', async () => {
-    const confirmed = { ...note, confirm: 'always' as const }
-    const { deps, model } = setup([confirmed])
-    deps.selectedText.mockReturnValue('selected')
-    await model.pickHighlighted()
-    expect(model.stage.value.kind).toBe('prepare')
-    expect(model.text.value).toBe('selected')
   })
 
   it('keeps the text for another try when the command fails', async () => {
@@ -367,22 +333,6 @@ describe('external calls', () => {
     expect(deps.run).toHaveBeenCalledWith(note, 'late', expect.anything())
   })
 
-  it('asks to confirm a command that wants it', async () => {
-    const confirmed = { ...lamp, confirm: 'always' as const }
-    const { deps, model } = setupExternal([confirmed])
-    await model.request({ commandId: 'lamp' })
-    expect(model.stage.value).toEqual({
-      kind: 'prepare',
-      command: confirmed,
-      autoRun: false,
-    })
-    expect(deps.run).not.toHaveBeenCalled()
-    await model.submit()
-    expect(deps.logRun).toHaveBeenCalledWith(
-      expect.objectContaining({ source: 'external' })
-    )
-  })
-
   it('reports a command gone from the library', async () => {
     const { deps, model, commandMissing } = setupExternal([note])
     await model.request({ commandId: 'gone' })
@@ -464,10 +414,7 @@ describe('commands that replace the selection', () => {
   })
 
   it('runs on a typed or edited text, for the result menu', async () => {
-    const { deps, model, replaceSelection } = setupReplacing([
-      { ...replacing, confirm: 'always' },
-    ])
-    deps.selectedText.mockReturnValue('hola')
+    const { deps, model, replaceSelection } = setupReplacing()
     await model.pickByKey(1)
     model.setText('hola amigo')
     await model.submit()
@@ -477,17 +424,6 @@ describe('commands that replace the selection', () => {
       'hola amigo',
       expect.anything()
     )
-  })
-
-  it('confirms first, then hands the untouched selection over', async () => {
-    const { deps, model, replaceSelection } = setupReplacing([
-      { ...replacing, confirm: 'always' },
-    ])
-    deps.selectedText.mockReturnValue('hola')
-    await model.pickByKey(1)
-    expect(replaceSelection).not.toHaveBeenCalled()
-    await model.submit()
-    expect(replaceSelection).toHaveBeenCalled()
   })
 
   it('treats the text of an external call as no selection', async () => {
@@ -532,22 +468,22 @@ describe('external job requests', () => {
     expect(finishJob).toHaveBeenCalledWith('job-input', { success: true })
   })
 
-  it('does not claim a job until confirmation and cancels an abandoned prompt', async () => {
-    const confirmed = { ...backup, confirm: 'always' as const }
-    const { deps } = setup([confirmed])
+  it('does not claim a job until the text is given and cancels an abandoned prompt', async () => {
+    const { deps } = setup([note])
     const claimJob = vi.fn(async () => true)
     const finishJob = vi.fn(async () => {})
     const model = createCommandLauncherModel({ ...deps, claimJob, finishJob })
     await model.request({
-      commandId: confirmed.id,
-      jobId: 'job-confirm',
+      commandId: note.id,
+      jobId: 'job-text',
       output: 'return',
     })
+    expect(model.stage.value.kind).toBe('prepare')
     expect(claimJob).not.toHaveBeenCalled()
     expect(deps.run).not.toHaveBeenCalled()
-    model.cancelExternal('job-confirm')
+    model.cancelExternal('job-text')
     expect(finishJob).toHaveBeenCalledWith(
-      'job-confirm',
+      'job-text',
       expect.objectContaining({ success: false, cancelled: true })
     )
   })

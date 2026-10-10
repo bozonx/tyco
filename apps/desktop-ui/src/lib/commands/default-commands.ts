@@ -44,7 +44,6 @@ function toCommand(
     phrases: preset.phrases ?? [],
     toolConfig: { ...base.toolConfig, ...preset.toolConfig },
     afterRun: preset.afterRun ?? base.afterRun,
-    confirm: preset.confirm ?? 'auto',
     availableIn: { external: false, chat: false },
   }
   if (preset.description) command.description = preset.description

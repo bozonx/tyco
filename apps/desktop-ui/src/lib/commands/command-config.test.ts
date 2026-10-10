@@ -20,10 +20,18 @@ import {
   removeCommandReferences,
   restoreCommand,
   restoreCommandReferences,
+  scriptToolConfigOf,
+  suggestCommandName,
   validateCommand,
 } from './command-config'
 
 const tools = testTools()
+
+/** A new command with a name, which a command must have */
+const namedCommand = (toolId: string, id: string): CommandConfig => ({
+  ...createCommand(toolId, id),
+  name: 'Command',
+})
 
 const withConfig = (
   command: CommandConfig,
@@ -53,7 +61,6 @@ describe('normalizeCommand', () => {
       llmArgumentParsing: false,
       afterRun: 'none',
       logOutput: false,
-      confirm: 'auto',
       availableIn: { external: false, chat: false },
       enabled: true,
     })
@@ -96,6 +103,19 @@ describe('normalizeCommand', () => {
   })
 })
 
+describe('scriptToolConfigOf', () => {
+  it('keeps a whole positive timeout up to an hour', () => {
+    expect(scriptToolConfigOf({ timeoutSec: 90.4 }).timeoutSec).toBe(90)
+    expect(scriptToolConfigOf({ timeoutSec: 99999 }).timeoutSec).toBe(3600)
+    expect(scriptToolConfigOf({ timeoutSec: 0 })).not.toHaveProperty(
+      'timeoutSec'
+    )
+    expect(scriptToolConfigOf({ timeoutSec: '30' })).not.toHaveProperty(
+      'timeoutSec'
+    )
+  })
+})
+
 describe('normalizeCommands', () => {
   it('keeps the first of commands with the same id', () => {
     const commands = normalizeCommands([
@@ -112,25 +132,37 @@ describe('normalizeCommands', () => {
 })
 
 describe('createCommand', () => {
-  it('runs a new command without asking and keeps external access opt-in', () => {
+  it('keeps external access opt-in', () => {
     const command = createCommand('script', 'id1')
-    expect(command.confirm).toBe('auto')
     expect(command.availableIn).toEqual({ external: false, chat: false })
-    expect(createCommand('webhook').confirm).toBe('auto')
   })
 })
 
 describe('menu commands', () => {
-  it('admits only enabled commands that take text', () => {
+  it('admits enabled commands, with or without text', () => {
     const script = createCommand('script', 'a')
     expect(isMenuCommand(script, tools)).toBe(true)
     expect(isMenuCommand({ ...script, enabled: false }, tools)).toBe(false)
     expect(isMenuCommand(withConfig(script, { takesText: false }), tools)).toBe(
-      false
+      true
     )
     expect(commandTakesText({ ...script, toolId: 'notes.write' }, tools)).toBe(
       false
     )
+  })
+
+  it('suggests a name from the program of a script or the host of a webhook', () => {
+    const script = (command: string) =>
+      suggestCommandName(withConfig(createCommand('script', 's'), { command }))
+    expect(script('ls -la')).toBe('ls')
+    expect(script("'/home/me/dev files/test.sh' {{TEXT}}")).toBe('test.sh')
+    expect(script('/usr/bin/backup')).toBe('backup')
+    expect(script('  ')).toBe('')
+    const hook = (url: string) =>
+      suggestCommandName(withConfig(createCommand('webhook', 'w'), { url }))
+    expect(hook('https://hooks.example.com/x?y=1')).toBe('hooks.example.com')
+    expect(hook('not a url')).toBe('')
+    expect(suggestCommandName(createCommand('core.aiTask', 'a'))).toBe('')
   })
 
   it('names a command after its shell command when it has no name', () => {
@@ -162,11 +194,19 @@ describe('menu commands', () => {
 })
 
 describe('validateCommand', () => {
+  it('requires a name', () => {
+    const script = withConfig(createCommand('script', 'a'), { command: 'ls' })
+    expect(validateCommand(script, tools)).toEqual([
+      { field: 'name', messageKey: 'commands.errorNoName' },
+    ])
+    expect(validateCommand({ ...script, name: '  ' }, tools)).toHaveLength(1)
+  })
+
   it('requires the command of a script and the URL of a webhook', () => {
-    expect(validateCommand(createCommand('script', 'a'), tools)).toEqual([
+    expect(validateCommand(namedCommand('script', 'a'), tools)).toEqual([
       { field: 'command', messageKey: 'commands.errorNoCommand' },
     ])
-    expect(validateCommand(createCommand('webhook', 'a'), tools)).toEqual([
+    expect(validateCommand(namedCommand('webhook', 'a'), tools)).toEqual([
       { field: 'url', messageKey: 'commands.errorNoUrl' },
     ])
   })
@@ -174,7 +214,7 @@ describe('validateCommand', () => {
   it('rejects the text placeholder in a command without text', () => {
     expect(
       validateCommand(
-        withConfig(createCommand('script', 'a'), {
+        withConfig(namedCommand('script', 'a'), {
           command: 'notify-send {{TEXT}}',
           takesText: false,
         }),
@@ -185,7 +225,7 @@ describe('validateCommand', () => {
     ])
     expect(
       validateCommand(
-        withConfig(createCommand('webhook', 'a'), {
+        withConfig(namedCommand('webhook', 'a'), {
           url: 'https://x.test/{{TEXT}}',
           payloadTemplate: '{"t":"{{TEXT}}"}',
           takesText: false,
@@ -198,7 +238,7 @@ describe('validateCommand', () => {
   it('allows the placeholder in a command that takes text', () => {
     expect(
       validateCommand(
-        withConfig(createCommand('script', 'a'), {
+        withConfig(namedCommand('script', 'a'), {
           command: 'notify-send {{TEXT}}',
         }),
         tools
@@ -268,17 +308,17 @@ describe('commands of the core tools', () => {
       },
     ])
     expect(
-      validateCommand(createCommand('core.translate', 't'), coreTools)
+      validateCommand(namedCommand('core.translate', 't'), coreTools)
     ).toEqual([{ field: 'language', messageKey: 'commands.errorNoLanguage' }])
     expect(
       validateCommand(
-        withConfig(createCommand('core.aiTask', 'a'), { prompt: 'Shorter' }),
+        withConfig(namedCommand('core.aiTask', 'a'), { prompt: 'Shorter' }),
         coreTools
       )
     ).toEqual([])
-    expect(validateCommand(createCommand('Gone.tool', 'g'), coreTools)).toEqual(
-      [{ field: 'toolId', messageKey: 'commands.errorUnknownTool' }]
-    )
+    expect(validateCommand(namedCommand('Gone.tool', 'g'), coreTools)).toEqual([
+      { field: 'toolId', messageKey: 'commands.errorUnknownTool' },
+    ])
   })
 })
 
@@ -348,6 +388,9 @@ describe('commandCliCall', () => {
       'tyco-ctl run default:core.translate:en_US'
     )
     expect(commandCliCall("it's mine")).toBe("tyco-ctl run 'it'\\''s mine'")
+    expect(commandCliCall('Work note', true)).toBe(
+      "tyco-ctl run 'Work note' --name"
+    )
   })
 })
 

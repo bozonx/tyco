@@ -254,8 +254,8 @@ Rust инструмента получает ошибку «инструмент
   экране нет;
 - остальные открывают **оверлей команд** сразу на этой команде
   (`InitParams.launcherRequest`): команде со входом без `text` текст берётся
-  из выделения, а если его нет — из поля ввода; `confirm: 'always'` —
-  подтверждение; `afterRun: 'showMenu'` — выполнение и меню результата;
+  из выделения, а если его нет — из поля ввода; `afterRun: 'showMenu'` —
+  выполнение и меню результата;
 - каждое выполнение записывается в `actions.log` с источником `external`, как
   запуск из оверлея (§7.3).
 
@@ -425,11 +425,10 @@ Rust инструмента получает ошибку «инструмент
 - нет совпадения → оставить в оверлее список команд с поиском, транскрипт и
   кнопку «Отправить в чат».
 
-У команды есть флаг `confirm: 'auto' | 'always'`. Для инструмента `script`, для
-всех MCP-инструментов и для команд с разбором аргумента через LLM (§5.2) по
-умолчанию `always`: действие нельзя отменить, а результат разбора стоит
-показать. Флаг действует при любом способе вызова, кроме меню действий над
-текстом: там пользователь уже явно выбрал пункт.
+Флага подтверждения у команды нет. Был `confirm: 'auto' | 'always'`, но он
+срабатывал при каждом вызове, кроме меню действий, то есть просто добавлял
+лишний Enter. Подтверждение зависит от способа вызова, а не от команды:
+голосу его даёт качество совпадения (выше), агенту — настройка чата (§12).
 
 **Окно отмены.** Команда, запущенная голосом без подтверждения, выполняется
 не сразу: оверлей показывает «Выполняю „Бэкап“… [Отменить]» в течение
@@ -464,8 +463,8 @@ script/webhook-команды пользователя.
 - Название сохраняется текстом на текущем языке интерфейса (по `nameKey`):
   внешний вызов ищет команду по названию в Rust и не знает i18n-ключей. При
   смене языка интерфейса названия не меняются, как у команд пользователя.
-- `availableIn.launcher` и `availableIn.external` — `true`, `confirm` —
-  `auto`, фразы — из `phrasesKey` на текущем языке.
+- `availableIn.launcher` и `availableIn.external` — `true`, фразы — из
+  `phrasesKey` на текущем языке.
 - `menu: { replaces?, preferredKey? }` — команда сразу получает пункт в меню
   действий. `replaces` — id прежнего пункта плагина (`FastNote:fastNote`):
   если он стоит в `mainActions`, его место занимает ссылка на команду, и
@@ -535,7 +534,6 @@ export interface CommandConfig {
   /** What to do with text the tool returns (§3.2) */
   afterRun: 'none' | 'showMenu' | 'replaceSelection' | 'copy'
   logOutput: boolean
-  confirm: 'auto' | 'always'
   /** Where the command can be invoked, besides the action menu */
   availableIn: { launcher: boolean; external: boolean; chat: boolean }
   enabled: boolean
@@ -617,8 +615,8 @@ export interface AiTaskToolConfig {
 
 1. превращается в `CommandConfig` с тем же `id` и `name`, `toolId` по типу,
    `toolConfig` из его полей, `takesText: true`, теми же `afterRun` и
-   `logOutput`, `phrases: []`, `confirm: 'auto'` (поведение в меню не
-   меняется), `llmArgumentParsing: false`, `availableIn` — всё `false`;
+   `logOutput`, `phrases: []`, `llmArgumentParsing: false`, `availableIn` —
+   всё `false`;
 2. заменяется в `mainActions` на `{ type: 'command', commandId: id }`.
 
 `id` сохраняется, поэтому секрет вебхука (`webhookSecretId(id)`) находится по
@@ -716,7 +714,6 @@ export interface DefaultCommand {
   description?: string
   toolConfig?: Record<string, unknown>
   afterRun?: CommandConfig['afterRun']
-  confirm?: CommandConfig['confirm']
   /** Adds a menu item, taking the place of a former plugin action item */
   menu?: { replaces?: string; preferredKey?: string }
 }
@@ -1018,12 +1015,18 @@ export interface PluginContext {
 - Список: название, фразы, инструмент, вход (нет / текст / разбор), где
   доступна, включена ли. Порядок — перетаскиванием (`lib/sortable`); он же
   задаёт порядок в оверлее и клавиши `1`–`9`.
-- Редактор: название, id (только чтение, кнопка «Копировать» — для LHC и
-  скриптов), описание, фразы (список тегов, с подсказкой по синтаксису
-  `( | )` и `[ ]`), инструмент и его поля, «принимает текст» (для
+- Редактор: название (обязательно; пустое берётся из программы скрипта или
+  хоста вебхука), фразы (список тегов, с подсказкой по синтаксису `( | )` и
+  `[ ]`), поля инструмента, «передавать текст» (внутри полей
   script/webhook), «разбирать аргумент с помощью LLM» (только для
-  инструментов со структурированным входом без `parseText`), что делать с
-  выводом, логировать вывод, подтверждение, «в оверлее» / «извне».
+  инструментов со структурированным входом без `parseText`). Группа
+  «Результат»: что делать с выводом, логировать вывод (только у инструментов,
+  которые это умеют). Группа «Где доступна»: слот меню основных действий и
+  быстрых команд со ссылкой на их настройки, «извне» со строкой `tyco-ctl`.
+  «Проверка» запускает script/webhook на тестовом тексте и показывает stdout,
+  stderr и код выхода. В «Дополнительно» — описание и таймаут скрипта. Id
+  копируется из меню ⋯ карточки. Команда без текста в меню основных
+  действий показывается только в редакторе.
 - Для `script` и `webhook` — общий редактор полей, вынесенный из вкладки
   основных действий. Для `core.translate` — выбор языка (из слотов перевода
   или любой), для `core.aiTask` — поле инструкции и «Взять из AI-задачи».
@@ -1067,11 +1070,11 @@ apps/desktop-ui/src/lib/
     tool-input.ts            # text → input: none, text, parseText, LLM extract
   commands/
     command-config.ts        # defaults, validation, name normalization
-    command-runner.ts        # input, parsing, confirm, undo window, afterRun, cancel
+    command-runner.ts        # input, parsing, undo window, afterRun, cancel
     default-commands.ts      # seeding defaults, replacing plugin menu items
     external-run.ts          # external calls run in the background
   command-launcher/
-    launcher-model.ts        # overlay state: list, search, keys, confirmation
+    launcher-model.ts        # overlay state: list, search, keys, text input
   voice-commands/
     normalize.ts             # case, punctuation, aliases, numbers, triggers
     stemmer.ts               # per-language stemming over the chosen library
@@ -1137,8 +1140,8 @@ Rust:
 - Внешний вызов доступен любому процессу пользователя на сессионной шине или
   на локальном activation-сокете. Это не расширяет права: такой процесс и так
   может запустить что угодно от имени пользователя. Поэтому внешний запуск команды
-  запускает только команды с `availableIn.external`, соблюдает `confirm` и не
-  позволяет передать настройки — только `text`.
+  запускает только команды с `availableIn.external` и не позволяет передать
+  настройки — только `text`.
 - Агенту доступны только команды с `availableIn.chat`, а не «сырые»
   инструменты.
 - Аргументы и вывод в истории проходят через детектор секретов (§7.3).
@@ -1256,7 +1259,8 @@ Rust:
 - **Цикл агента в `lib/chat`.** Сообщение → ответ модели → вызовы инструментов
   → результаты → следующий шаг, с лимитом шагов и отменой.
 - **UI в чате.** Вызов инструмента показывается в ленте (команда, вход,
-  результат). Подтверждение по флагу `confirm` — прямо в чате.
+  результат). Подтверждать ли вызовы — настройка чата, а не флаг команды;
+  подтверждение показывается прямо в чате.
 - **Флаг «в чате»** появляется в редакторе команды вместе с агентом.
 - **MCP-клиент в Rust.** Новый сервис: запуск stdio-серверов, жизненный цикл,
   `tools/list` и `tools/call`, таймауты, логи. Webview обращается к нему через

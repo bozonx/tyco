@@ -22,8 +22,11 @@ pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
 /// The text also comes to the command in this variable and on stdin.
 pub const TEXT_ENV_VAR: &str = "TYCO_TEXT";
 
-/// How long a command whose output is needed may run before it is killed.
+/// How long a command whose output is needed may run before it is killed,
+/// unless the command sets its own time; see `SCRIPT_OUTPUT_TIMEOUT_SEC`.
 const OUTPUT_TIMEOUT: Duration = Duration::from_secs(60);
+/// The longest time a command may set; see `SCRIPT_MAX_TIMEOUT_SEC`.
+const MAX_OUTPUT_TIMEOUT: Duration = Duration::from_secs(3600);
 /// How long a command whose output is not needed is waited for. One still
 /// running by then, e.g. a GUI app it started, is left in the background.
 const STATUS_WAIT: Duration = Duration::from_secs(3);
@@ -58,6 +61,8 @@ pub struct ScriptRequest<'a> {
     /// The caller uses the output: the command is waited for longer and
     /// killed if it does not finish in time.
     pub capture_output: bool,
+    /// Replaces `OUTPUT_TIMEOUT`, up to `MAX_OUTPUT_TIMEOUT`.
+    pub output_timeout: Option<Duration>,
     pub log_output: bool,
     /// Lets `cancel_script` stop the command while it is waited for.
     pub run_id: Option<&'a str>,
@@ -487,8 +492,12 @@ pub fn execute_script(
     let stderr = child.stderr.take();
     let mut running = Running::start(child, stdout, stderr, request.text);
 
+    let output_timeout = request
+        .output_timeout
+        .filter(|timeout| !timeout.is_zero())
+        .map_or(OUTPUT_TIMEOUT, |timeout| timeout.min(MAX_OUTPUT_TIMEOUT));
     let wait = if request.capture_output {
-        OUTPUT_TIMEOUT
+        output_timeout
     } else {
         STATUS_WAIT
     };
@@ -518,7 +527,7 @@ pub fn execute_script(
             &log,
             format!(
                 "The command did not finish in {} s",
-                OUTPUT_TIMEOUT.as_secs()
+                output_timeout.as_secs()
             ),
         ));
     }
@@ -574,6 +583,7 @@ mod tests {
             working_dir: None,
             text,
             capture_output: true,
+            output_timeout: None,
             log_output: false,
             run_id: None,
         }
@@ -691,6 +701,21 @@ mod tests {
         )
         .unwrap();
         assert!(result.running);
+        assert!(started.elapsed() < Duration::from_secs(10));
+    }
+
+    #[test]
+    fn kills_a_command_that_outlives_its_own_timeout() {
+        let started = Instant::now();
+        let error = execute_script(
+            &ScriptRequest {
+                output_timeout: Some(Duration::from_secs(1)),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        )
+        .unwrap_err();
+        assert_eq!(error.to_string(), "The command did not finish in 1 s");
         assert!(started.elapsed() < Duration::from_secs(10));
     }
 

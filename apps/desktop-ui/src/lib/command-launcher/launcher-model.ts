@@ -27,9 +27,8 @@ export const LAUNCHER_KEY_COUNT = 9
  *
  * - `list` — the commands, with the search;
  * - `prepare` — one command before it runs: the text it takes, typed or taken
- *   from the selection, or a confirmation for a command that asks for one.
- *   `autoRun`: no confirmation is needed, so the command runs as soon as the
- *   selection comes;
+ *   from the selection. `autoRun`: the command runs as soon as the selection
+ *   comes; not after a failed run, whose text stays for another try;
  * - `running` — the command is on its way.
  */
 export type LauncherStage =
@@ -284,18 +283,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       // the text stays for another try
       text.value = input
       stage.value = { kind: 'prepare', command, autoRun: false }
-    } else if (command.confirm === 'always') {
-      stage.value = { kind: 'prepare', command, autoRun: false }
     } else {
       stage.value = { kind: 'list' }
     }
     return outcome
   }
 
-  /**
-   * Runs the command on `given`, or first asks for its text when there is none,
-   * or for a confirmation when the command wants one
-   */
+  /** Runs the command on `given`, or first asks for its text when there is none */
   const start = async (
     command: CommandConfig,
     given: string,
@@ -303,12 +297,11 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   ) => {
     const takesText = commandTakesText(command, deps.tools)
     const input = takesText ? given : ''
-    const confirm = command.confirm === 'always'
     fromSelection = selection && Boolean(input.trim())
-    if ((takesText && !input.trim()) || confirm) {
+    if (takesText && !input.trim()) {
       text.value = input
       textEdited = false
-      stage.value = { kind: 'prepare', command, autoRun: !confirm }
+      stage.value = { kind: 'prepare', command, autoRun: true }
       return
     }
     await execute(command, takesText ? input : null)
@@ -323,7 +316,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   /**
    * An external call that needs the overlay: its text, otherwise the selection,
-   * then the field or a confirmation, as for a picked command
+   * then the field, as for a picked command
    */
   const request = async (call: LauncherRequest): Promise<void> => {
     reset()
@@ -404,9 +397,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   /**
    * The selection is captured after the overlay opens: if it comes while the
-   * user is asked for the text and has typed nothing, it becomes the text, and
-   * a command that asks for no confirmation runs on it, as if the selection had
-   * been there when it was picked
+   * user is asked for the text and has typed nothing, it becomes the text and
+   * the command runs on it, as if the selection had been there when it was
+   * picked
    */
   const selectionArrived = async (selection: string | null | undefined) => {
     const current = stage.value

@@ -155,7 +155,10 @@ const actionsMenu = computed(() => {
       .getDefaultActions()
       .filter((action) => action.id === 'insertIntoWindow')
   }
-  const actions = actionMenuStore.getShortcutActions()
+  // a command that takes no text belongs to the menu opened from the editor
+  const actions = actionMenuStore.getShortcutActions({
+    textless: !props.correction && routeParamsStore.isEditorPage(),
+  })
   if (!props.allowInsertButton) {
     return actions.filter((action) => action?.id !== 'insertIntoWindow')
   }
