@@ -49,16 +49,30 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.sectionChatHistory')">
-      <FieldRow
-        :label="t('settings.chatHistoryMaxItems')"
-        :info="t('settings.chatHistoryPrivacyHint')"
-      >
-        <FieldInput
-          type="number"
-          :value="userConfig.chatHistoryMaxItems"
-          @update:value="setChatHistoryLimit"
-        />
-      </FieldRow>
+      <div class="editor-history-group">
+        <FieldRow
+          :label="t('settings.chatHistoryEnabled')"
+          :info="t('settings.chatHistoryEnabledHint')"
+        >
+          <FieldCheckbox
+            :value="chatHistoryChecked"
+            @update:value="setChatHistoryEnabled"
+          />
+        </FieldRow>
+        <div v-if="chatHistoryChecked" class="editor-history-nested">
+          <FieldRow
+            :label="t('settings.chatHistoryRetentionDays')"
+            :info="t('settings.chatHistoryRetentionDaysHint')"
+            nested
+          >
+            <FieldSelect
+              :value="userConfig.chatHistoryRetentionDays ?? 0"
+              :options="chatHistoryRetentionOptions"
+              @update:value="setChatHistoryRetentionDays"
+            />
+          </FieldRow>
+        </div>
+      </div>
       <FieldRow
         :label="t('settings.clearChatHistory')"
         :info="t('settings.clearChatHistoryHint')"
@@ -74,6 +88,16 @@
         </Button>
       </FieldRow>
     </SettingsSection>
+
+    <ConfirmModal
+      :open="showDisableChatHistoryModal"
+      :title="t('settings.disableChatHistoryConfirmTitle')"
+      :message="t('settings.disableChatHistoryConfirmDialog')"
+      :confirm-text="t('settings.disableChatHistoryConfirmButton')"
+      danger
+      @confirm="onDisableChatHistory"
+      @cancel="showDisableChatHistoryModal = false"
+    />
 
     <ConfirmModal
       :open="showClearChatHistoryModal"
@@ -92,6 +116,10 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import {
+  chatHistoryRetentionChoices,
+  isChatHistoryEnabled,
+} from '../../lib/chat/chat-history-settings'
 import { editorHistoryRetentionChoices } from '../../lib/history/editor-history-storage'
 import {
   getNavigatorLanguages,
@@ -124,10 +152,32 @@ async function onClearChatHistory() {
   toast(t('history.cleared'), 'info')
 }
 
-function setChatHistoryLimit(value: string) {
+const showDisableChatHistoryModal = ref(false)
+
+/** Shown off while the user confirms turning it off */
+const chatHistoryChecked = computed(
+  () =>
+    isChatHistoryEnabled(props.userConfig) && !showDisableChatHistoryModal.value
+)
+
+/** Turning it off deletes the saved chats, so it asks first */
+function setChatHistoryEnabled(enabled: boolean) {
+  if (enabled) {
+    props.userConfig.chatHistoryEnabled = true
+    return
+  }
+  showDisableChatHistoryModal.value = true
+}
+
+function onDisableChatHistory() {
+  showDisableChatHistoryModal.value = false
+  props.userConfig.chatHistoryEnabled = false
+}
+
+function setChatHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) return
-  props.userConfig.chatHistoryMaxItems = Math.round(parsed)
+  if (!Number.isInteger(parsed) || parsed < 0) return
+  props.userConfig.chatHistoryRetentionDays = parsed
 }
 
 function setEditorHistoryLimit(value: string) {
@@ -159,23 +209,32 @@ const editorHistoryStorageOptions = computed(() => [
   { id: 'off', name: t('settings.editorHistoryStorageOff') },
 ])
 
-const editorHistoryRetentionOptions = computed(() => {
+const retentionOptions = (choices: number[], foreverLabel: string) => {
   const format = new Intl.NumberFormat(toHtmlLang(currentLanguage.value), {
     style: 'unit',
     unit: 'day',
     unitDisplay: 'long',
   })
 
-  return editorHistoryRetentionChoices(
-    props.userConfig.editorHistoryRetentionDays
-  ).map((days) => ({
+  return choices.map((days) => ({
     id: days,
-    name:
-      days === 0
-        ? t('settings.editorHistoryRetentionForever')
-        : format.format(days),
+    name: days === 0 ? foreverLabel : format.format(days),
   }))
-})
+}
+
+const editorHistoryRetentionOptions = computed(() =>
+  retentionOptions(
+    editorHistoryRetentionChoices(props.userConfig.editorHistoryRetentionDays),
+    t('settings.editorHistoryRetentionForever')
+  )
+)
+
+const chatHistoryRetentionOptions = computed(() =>
+  retentionOptions(
+    chatHistoryRetentionChoices(props.userConfig.chatHistoryRetentionDays),
+    t('settings.chatHistoryRetentionNever')
+  )
+)
 </script>
 
 <style scoped>

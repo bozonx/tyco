@@ -158,6 +158,7 @@ import {
   filterChatHistory,
   groupChatHistory,
 } from '../../lib/chat/chat-history-list'
+import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -184,9 +185,8 @@ const chatToDelete = ref<string | null>(null)
 const removedChat = ref<ChatHistoryItem | null>(null)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
 
-const isLimitZero = (value: unknown) => String(value ?? '').trim() === '0'
-const chatHistoryDisabled = computed(() =>
-  isLimitZero(ipcStore.params.userConfig?.chatHistoryMaxItems)
+const chatHistoryDisabled = computed(
+  () => !isChatHistoryEnabled(ipcStore.params.userConfig)
 )
 
 /** Chats whose messages match the query, found in storage */

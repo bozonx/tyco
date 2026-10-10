@@ -716,6 +716,7 @@ function createPreparedUserConfig(config: unknown) {
   normalizeLlmConfigSection(nextConfig)
   nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
   delete nextConfig.chatRoles
+  delete nextConfig.chatHistoryMaxItems
   nextConfig.launcherCommands = normalizeLauncherCommands(
     nextConfig.launcherCommands,
     nextConfig.commands

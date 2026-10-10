@@ -13,7 +13,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 3
+export const CONFIG_VERSION = 4
 
 export type ModelTag =
   | 'voice'
@@ -431,7 +431,10 @@ export interface UserConfig {
   editorHistoryRetentionDays?: number
   /** Kept on the disk only */
   sanitizeSecretsInEditorHistory?: boolean
-  chatHistoryMaxItems: number
+  /** Chats are saved; turning it off deletes the saved ones */
+  chatHistoryEnabled: boolean
+  /** Chats without a message for longer are deleted; 0 keeps them forever */
+  chatHistoryRetentionDays: number
   llm: LlmConfig
   sttModels: SttModel[]
   aiModelUsage: { stt: string }
@@ -495,7 +498,8 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   editorHistoryMaxItems: 1000,
   editorHistoryRetentionDays: 30,
   sanitizeSecretsInEditorHistory: true,
-  chatHistoryMaxItems: 50,
+  chatHistoryEnabled: true,
+  chatHistoryRetentionDays: 0,
   llm: DEFAULT_LLM_CONFIG,
   sttModels: [
     {

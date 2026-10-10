@@ -28,7 +28,8 @@ describe('SettingsHistoryTab.vue', () => {
     editorHistoryMaxItems: 100,
     editorHistoryRetentionDays: 30,
     sanitizeSecretsInEditorHistory: true,
-    chatHistoryMaxItems: 20,
+    chatHistoryEnabled: true,
+    chatHistoryRetentionDays: 0,
     ...overrides,
   })
 
@@ -161,7 +162,12 @@ describe('SettingsHistoryTab.vue', () => {
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     expect(
-      chatSection.find('[data-label="settings.chatHistoryMaxItems"]').exists()
+      chatSection.find('[data-label="settings.chatHistoryEnabled"]').exists()
+    ).toBe(true)
+    expect(
+      chatSection
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
     ).toBe(true)
     expect(
       chatSection.find('[data-label="settings.clearChatHistory"]').exists()
@@ -184,14 +190,41 @@ describe('SettingsHistoryTab.vue', () => {
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 
-  it('updates chatHistoryMaxItems when valid value is input', async () => {
+  it('turns the chat history off only after the confirmation', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.findAll('.section-stub')[1]
-    const input = chatSection.find('.field-input-stub')
-    await input.setValue('0')
+    await chatSection.find('.field-checkbox-stub').setValue(false)
+    expect(config.chatHistoryEnabled).toBe(true)
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
 
-    expect(config.chatHistoryMaxItems).toBe(0)
+    await wrapper.find('.cancel-btn').trigger('click')
+    expect(config.chatHistoryEnabled).toBe(true)
+    expect(
+      (chatSection.find('.field-checkbox-stub').element as HTMLInputElement)
+        .checked
+    ).toBe(true)
+
+    await chatSection.find('.field-checkbox-stub').setValue(false)
+    await wrapper.find('.confirm-btn').trigger('click')
+    expect(config.chatHistoryEnabled).toBe(false)
+    expect(
+      wrapper
+        .findAll('.section-stub')[1]
+        .find('[data-label="settings.chatHistoryRetentionDays"]')
+        .exists()
+    ).toBe(false)
+  })
+
+  it('turns the chat history on without asking', async () => {
+    const config = createConfig({ chatHistoryEnabled: false })
+    const wrapper = mountTab(config)
+
+    const chatSection = wrapper.findAll('.section-stub')[1]
+    await chatSection.find('.field-checkbox-stub').setValue(true)
+
+    expect(config.chatHistoryEnabled).toBe(true)
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

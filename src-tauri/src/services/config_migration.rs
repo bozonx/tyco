@@ -6,7 +6,7 @@ use serde_json::{json, Map, Value};
 
 /// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
 /// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 3;
+pub const CONFIG_VERSION: u64 = 4;
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -40,6 +40,9 @@ pub fn migrate(user_config: &mut Value) -> bool {
     // outputs, and would drop the plugin items of the menu on save
     if from < 3 {
         drop_external_commands_switch(user_config);
+    }
+    if from < 4 {
+        replace_chat_history_limit(user_config);
     }
     stamp_current_version(user_config);
     true
@@ -199,6 +202,26 @@ fn drop_external_commands_switch(user_config: &mut Value) {
         {
             available_in.insert(String::from("external"), Value::Bool(false));
         }
+    }
+}
+
+/// Version 4: the chat history is no longer capped by a number of chats. A
+/// zero limit meant "do not save chats", which the switch says now; any other
+/// limit keeps the chats, and for as long as the default retention does.
+fn replace_chat_history_limit(user_config: &mut Value) {
+    let Some(config) = user_config.as_object_mut() else {
+        return;
+    };
+    let Some(limit) = config.remove("chatHistoryMaxItems") else {
+        return;
+    };
+    let zero = match &limit {
+        Value::Number(number) => number.as_u64() == Some(0),
+        Value::String(text) => text.trim() == "0",
+        _ => false,
+    };
+    if zero {
+        config.insert(String::from("chatHistoryEnabled"), Value::Bool(false));
     }
 }
 
@@ -409,6 +432,23 @@ mod tests {
                 { "id": "c" }
             ])
         );
+    }
+
+    #[test]
+    fn a_zero_chat_limit_turns_the_chat_history_off() {
+        for limit in [json!(0), json!(" 0 ")] {
+            let mut config = json!({ "configVersion": 3, "chatHistoryMaxItems": limit });
+            assert!(migrate(&mut config));
+            assert!(config.get("chatHistoryMaxItems").is_none());
+            assert_eq!(config["chatHistoryEnabled"], json!(false));
+        }
+    }
+
+    #[test]
+    fn a_chat_limit_above_zero_is_dropped() {
+        let mut config = json!({ "configVersion": 3, "chatHistoryMaxItems": 50 });
+        assert!(migrate(&mut config));
+        assert_eq!(config, json!({ "configVersion": CONFIG_VERSION }));
     }
 
     #[test]
