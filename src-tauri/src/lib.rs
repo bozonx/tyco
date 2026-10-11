@@ -26,7 +26,7 @@ use commands::net::{
     net_socket_send_text,
 };
 use commands::notes::{append_note, save_note};
-use commands::secrets::{secrets_remove, secrets_set, secrets_status, secrets_storage};
+use commands::secrets::{secrets_remove, secrets_set, secrets_status, secrets_vault_state};
 use commands::selection::{
     check_text_injection, finish_selection_run, notify_desktop, replace_selection_with_command,
     show_status_overlay,
@@ -192,7 +192,7 @@ pub fn run() {
             std::thread::spawn(move || {
                 secrets_app
                     .state::<services::secrets::SecretStore>()
-                    .open();
+                    .vault_state();
             });
             app.manage(services::net::NetState::new()?);
             services::hotkeys::setup(app)?;
@@ -287,7 +287,7 @@ pub fn run() {
             net_socket_send_binary,
             net_socket_close,
             secrets_status,
-            secrets_storage,
+            secrets_vault_state,
             secrets_set,
             secrets_remove,
             finish_selection_run,

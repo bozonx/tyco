@@ -6,11 +6,11 @@
 //! that binding any script in the webview could send the reference to a host
 //! of its choosing and have the proxy fill the real key in for it.
 //!
-//! The values live in the system credential store. `secrets.json` lists the
-//! secrets and their origins, and holds a value itself only when there is no
-//! such store, e.g. a Linux session without a Secret Service; the settings
-//! then tell the user so. Values found in the file are moved into the store
-//! as soon as one is there.
+//! The values live in the system credential store only; without one no key
+//! can be saved. `secrets.json` lists the secrets and their origins. It holds
+//! a value only when an older version wrote it there, or the config migration
+//! took it out of the config: such a value is moved into the store as soon as
+//! the store opens, and used from the file until then.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -18,7 +18,7 @@ use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use url::Url;
 
 use crate::errors::AppError;
@@ -61,15 +61,14 @@ pub trait SecretVault: Send + Sync {
     fn delete(&self, id: &str) -> Result<(), String>;
 }
 
-/// Where the values of new secrets go.
+/// Whether the system credential store can be reached.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum SecretStorage {
-    /// The system credential store.
-    System,
-    /// `secrets.json`, readable by its owner only: there is no system store,
-    /// or it refused a write.
-    File,
+pub enum VaultState {
+    Available,
+    /// There is no store, or it could not be reached: no key can be saved,
+    /// and the stored ones cannot be read.
+    Unavailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -79,19 +78,22 @@ pub struct SecretEntry {
     pub origins: Vec<String>,
 }
 
-/// What the webview may know about a secret: that it exists, and where it goes.
+/// What the webview may know about a secret: that it exists, where it goes,
+/// and whether its value can be read now.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SecretStatus {
     pub origins: Vec<String>,
+    /// False while the vault holding the value is locked or unreachable.
+    pub available: bool,
 }
 
-/// A secret as `secrets.json` keeps it. Files written before the vault
-/// existed have a value in every entry.
+/// A secret as `secrets.json` keeps it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct StoredSecret {
     origins: Vec<String>,
-    /// Set only when the value is not in the vault.
+    /// A value not moved into the vault yet: written by an older version or
+    /// by the config migration. Never set for a new secret.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     value: Option<String>,
 }
@@ -111,7 +113,7 @@ struct StoreState {
     vault_values: BTreeMap<String, String>,
     /// `None` until the vault has been asked: reaching it may show a system
     /// prompt, so that waits until a secret is needed.
-    storage: Option<SecretStorage>,
+    vault: Option<VaultState>,
 }
 
 impl StoreState {
@@ -121,10 +123,24 @@ impl StoreState {
     }
 }
 
+/// The calls that reach the vault block, possibly on an unlock prompt: run
+/// them through [`with_store`], never on the main thread.
 pub struct SecretStore {
     path: Option<PathBuf>,
     vault: Option<Box<dyn SecretVault>>,
     state: Mutex<StoreState>,
+}
+
+/// Runs `task` on a blocking thread, so that waiting for the vault holds
+/// neither the main thread nor an async worker.
+pub async fn with_store<T: Send + 'static>(
+    app: &AppHandle,
+    task: impl FnOnce(&SecretStore) -> T + Send + 'static,
+) -> Result<T, AppError> {
+    let app = app.clone();
+    tauri::async_runtime::spawn_blocking(move || task(&app.state::<SecretStore>()))
+        .await
+        .map_err(|error| AppError::Message(error.to_string()))
 }
 
 impl SecretStore {
@@ -161,109 +177,115 @@ impl SecretStore {
         })
     }
 
-    #[cfg(test)]
-    pub fn in_memory() -> Self {
-        Self {
-            path: None,
-            vault: None,
-            state: Mutex::new(StoreState::default()),
-        }
-    }
-
-    /// Reaches the vault once: reads the values it holds and moves into it
-    /// the ones the file holds. Returns where new secrets go.
-    pub fn open(&self) -> SecretStorage {
+    /// Asks the vault again when it was unreachable, e.g. it has been
+    /// unlocked or installed since.
+    pub fn vault_state(&self) -> VaultState {
         let mut state = self.lock();
-        self.open_locked(&mut state)
+        self.open_locked(&mut state, true)
     }
 
-    /// Which secrets can be used and where each may be sent. Never the values.
+    /// Which secrets exist, where each may be sent, and whether it can be
+    /// used now. Never the values.
     pub fn status(&self) -> BTreeMap<String, SecretStatus> {
-        self.snapshot()
-            .into_iter()
-            .map(|(id, entry)| {
+        let mut state = self.lock();
+        self.open_locked(&mut state, false);
+        state
+            .stored
+            .iter()
+            .map(|(id, stored)| {
                 (
-                    id,
+                    id.clone(),
                     SecretStatus {
-                        origins: entry.origins,
+                        origins: stored.origins.clone(),
+                        available: state.value(id).is_some(),
                     },
                 )
             })
             .collect()
     }
 
-    /// Stores a secret. Origins default to the provider's own for a built-in
-    /// id and are required for any other.
+    /// Stores a secret in the vault. Origins default to the provider's own
+    /// for a built-in id and are required for any other. Fails when there is
+    /// no vault: the value is never written to a file.
     pub fn set(&self, id: &str, value: &str, origins: Option<Vec<String>>) -> Result<(), AppError> {
-        validate_id(id)?;
-        let value = value.trim();
-        if value.is_empty() {
-            return Err(AppError::Message(format!("Secret \"{id}\" is empty")));
-        }
-
-        let origins = match origins {
-            Some(origins) if !origins.is_empty() => origins
-                .iter()
-                .map(|origin| normalize_origin(origin))
-                .collect::<Result<Vec<_>, _>>()?,
-            _ => builtin_origins(id).ok_or_else(|| {
-                AppError::Message(format!(
-                    "Secret \"{id}\" is not a known provider; name the origins it may be sent to"
-                ))
-            })?,
-        };
+        let (value, origins) = checked_secret(id, value, origins)?;
 
         let mut state = self.lock();
-        let in_vault = match (self.open_locked(&mut state), &self.vault) {
-            (SecretStorage::System, Some(vault)) => match vault.set(id, value) {
-                Ok(()) => true,
-                Err(error) => {
-                    log::warn!("Keeping API keys in {SECRETS_FILE_NAME} from now on: {error}");
-                    state.storage = Some(SecretStorage::File);
-                    false
-                }
-            },
-            _ => false,
+        let vault = match (self.open_locked(&mut state, true), &self.vault) {
+            (VaultState::Available, Some(vault)) => vault,
+            _ => return Err(vault_unavailable()),
         };
+        vault.set(id, value).map_err(|error| {
+            AppError::Message(format!("Could not save secret \"{id}\": {error}"))
+        })?;
 
-        if in_vault {
-            state.vault_values.insert(id.to_string(), value.to_string());
-        } else {
-            state.vault_values.remove(id);
-        }
+        state.vault_values.insert(id.to_string(), value.to_string());
         state.stored.insert(
             id.to_string(),
             StoredSecret {
-                origins: dedup(origins),
-                value: (!in_vault).then(|| value.to_string()),
+                origins,
+                value: None,
             },
         );
         self.persist(&state)
     }
 
+    /// Keeps a key taken out of an old config in the file, without reaching
+    /// the vault: the migration runs at the start, which an unlock prompt
+    /// must not hold up. The config held the key in the clear until now, and
+    /// the vault takes it once it opens.
+    pub fn stage(
+        &self,
+        id: &str,
+        value: &str,
+        origins: Option<Vec<String>>,
+    ) -> Result<(), AppError> {
+        let (value, origins) = checked_secret(id, value, origins)?;
+
+        let mut state = self.lock();
+        state.vault_values.remove(id);
+        state.stored.insert(
+            id.to_string(),
+            StoredSecret {
+                origins,
+                value: Some(value.to_string()),
+            },
+        );
+        self.persist(&state)
+    }
+
+    /// Removes a secret from the vault and from the file. Fails when the
+    /// vault holds the value and cannot be reached: dropping the secret from
+    /// the list alone would leave the key behind unseen.
     pub fn remove(&self, id: &str) -> Result<(), AppError> {
         let mut state = self.lock();
-        let Some(removed) = state.stored.remove(id) else {
+        let Some(stored) = state.stored.get(id) else {
             return Ok(());
         };
-        state.vault_values.remove(id);
-        self.persist(&state)?;
 
-        if removed.value.is_none() {
-            if let Some(vault) = &self.vault {
-                if let Err(error) = vault.delete(id) {
-                    log::warn!("Secret \"{id}\" stays in the vault: {error}");
+        // a staged value may sit next to an older copy in the vault, so the
+        // vault is cleared in any case
+        if let Some(vault) = &self.vault {
+            if let Err(error) = vault.delete(id) {
+                if stored.value.is_none() {
+                    return Err(AppError::Message(format!(
+                        "Could not remove secret \"{id}\": {error}"
+                    )));
                 }
+                log::warn!("Secret \"{id}\" may stay in the vault: {error}");
             }
         }
-        Ok(())
+
+        state.stored.remove(id);
+        state.vault_values.remove(id);
+        self.persist(&state)
     }
 
     /// A copy for one request, so the lock is not held across network I/O.
     /// Holds only the secrets that have a value at hand.
     pub fn snapshot(&self) -> Secrets {
         let mut state = self.lock();
-        self.open_locked(&mut state);
+        self.open_locked(&mut state, false);
         state
             .stored
             .iter()
@@ -280,9 +302,15 @@ impl SecretStore {
             .collect()
     }
 
-    fn open_locked(&self, state: &mut StoreState) -> SecretStorage {
-        if let Some(storage) = state.storage {
-            return storage;
+    /// Reaches the vault: reads the values it holds and moves into it the
+    /// ones the file holds. Asked once, or again with `retry` while it was
+    /// unreachable; a request does not retry, as a missing vault may take a
+    /// D-Bus timeout to answer.
+    fn open_locked(&self, state: &mut StoreState, retry: bool) -> VaultState {
+        if let Some(known) = state.vault {
+            if !(retry && known == VaultState::Unavailable) {
+                return known;
+            }
         }
         let Some(vault) = self
             .vault
@@ -290,15 +318,15 @@ impl SecretStore {
             .filter(|vault| match vault.get(PROBE_ID) {
                 Ok(_) => true,
                 Err(error) => {
-                    log::warn!("Keeping API keys in {SECRETS_FILE_NAME}: {error}");
+                    log::warn!("The system keychain is unavailable: {error}");
                     false
                 }
             })
         else {
-            state.storage = Some(SecretStorage::File);
-            return SecretStorage::File;
+            state.vault = Some(VaultState::Unavailable);
+            return VaultState::Unavailable;
         };
-        state.storage = Some(SecretStorage::System);
+        state.vault = Some(VaultState::Available);
 
         let mut moved = false;
         for (id, stored) in state.stored.iter_mut() {
@@ -329,7 +357,7 @@ impl SecretStore {
                 log::error!("Could not drop the moved keys from {SECRETS_FILE_NAME}: {error}");
             }
         }
-        SecretStorage::System
+        VaultState::Available
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, StoreState> {
@@ -345,6 +373,38 @@ impl SecretStore {
         })?;
         crate::services::atomic_file::write_private(path, &raw)
     }
+}
+
+fn vault_unavailable() -> AppError {
+    AppError::Message(String::from(
+        "The system keychain is unavailable, so the key cannot be saved",
+    ))
+}
+
+/// The trimmed value and the normalized origins of a secret to store.
+fn checked_secret<'a>(
+    id: &str,
+    value: &'a str,
+    origins: Option<Vec<String>>,
+) -> Result<(&'a str, Vec<String>), AppError> {
+    validate_id(id)?;
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(AppError::Message(format!("Secret \"{id}\" is empty")));
+    }
+
+    let origins = match origins {
+        Some(origins) if !origins.is_empty() => origins
+            .iter()
+            .map(|origin| normalize_origin(origin))
+            .collect::<Result<Vec<_>, _>>()?,
+        _ => builtin_origins(id).ok_or_else(|| {
+            AppError::Message(format!(
+                "Secret \"{id}\" is not a known provider; name the origins it may be sent to"
+            ))
+        })?,
+    };
+    Ok((value, dedup(origins)))
 }
 
 /// Writes the value and reads it back: the copy in the file is dropped only
@@ -495,6 +555,22 @@ mod tests {
         fn value(&self, id: &str) -> Option<String> {
             self.values.lock().unwrap().get(id).cloned()
         }
+
+        fn put(&self, id: &str, value: &str) {
+            self.values
+                .lock()
+                .unwrap()
+                .insert(id.to_string(), value.to_string());
+        }
+    }
+
+    /// A store with a working vault and no file.
+    fn in_memory() -> SecretStore {
+        SecretStore {
+            path: None,
+            vault: Some(Box::new(Arc::new(FakeVault::default()))),
+            state: Mutex::new(StoreState::default()),
+        }
     }
 
     fn temp_secrets_path(label: &str) -> PathBuf {
@@ -510,7 +586,7 @@ mod tests {
 
     #[test]
     fn builtin_id_gets_provider_origins() {
-        let store = SecretStore::in_memory();
+        let store = in_memory();
         store.set("google", " key ", None).unwrap();
         store.set("deepl", " deepl-key ", None).unwrap();
 
@@ -529,7 +605,7 @@ mod tests {
 
     #[test]
     fn custom_id_requires_origins() {
-        let store = SecretStore::in_memory();
+        let store = in_memory();
         assert!(store.set("openai-compatible", "key", None).is_err());
 
         store
@@ -556,7 +632,7 @@ mod tests {
 
     #[test]
     fn rejects_bad_ids_and_empty_values() {
-        let store = SecretStore::in_memory();
+        let store = in_memory();
         assert!(store.set("Google", "key", None).is_err());
         assert!(store.set("", "key", None).is_err());
         assert!(store.set("google", "   ", None).is_err());
@@ -564,28 +640,25 @@ mod tests {
 
     #[test]
     fn status_never_carries_values() {
-        let store = SecretStore::in_memory();
+        let store = in_memory();
         store.set("deepseek", "sk-secret", None).unwrap();
         let raw = serde_json::to_string(&store.status()).unwrap();
         assert!(!raw.contains("sk-secret"));
     }
 
     #[test]
-    fn persists_and_reloads() {
-        let path = temp_secrets_path("file");
-        let dir = path.parent().unwrap().to_path_buf();
+    fn values_go_to_the_vault_and_not_to_the_file() {
+        let path = temp_secrets_path("vault");
+        let vault = Arc::new(FakeVault::default());
 
-        let store = SecretStore::load(path.clone(), None).unwrap();
-        store.set("openrouter", "or-key", None).unwrap();
+        let store = load_with(&path, &vault);
         store.set("deepseek", "ds-key", None).unwrap();
-        store.remove("deepseek").unwrap();
-        assert_eq!(store.open(), SecretStorage::File);
 
-        let reloaded = SecretStore::load(path.clone(), None).unwrap();
-        let snapshot = reloaded.snapshot();
-        assert_eq!(snapshot.get("openrouter").unwrap().value, "or-key");
-        assert!(!snapshot.contains_key("deepseek"));
-
+        assert_eq!(store.vault_state(), VaultState::Available);
+        assert_eq!(vault.value("deepseek").as_deref(), Some("ds-key"));
+        let raw = fs::read_to_string(&path).unwrap();
+        assert!(!raw.contains("ds-key"));
+        assert!(raw.contains("https://api.deepseek.com"));
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -593,7 +666,13 @@ mod tests {
             assert_eq!(mode & 0o777, 0o600);
         }
 
-        fs::remove_dir_all(&dir).unwrap();
+        let reloaded = load_with(&path, &vault);
+        assert_eq!(reloaded.snapshot()["deepseek"].value, "ds-key");
+
+        reloaded.remove("deepseek").unwrap();
+        assert_eq!(vault.value("deepseek"), None);
+        assert!(load_with(&path, &vault).status().is_empty());
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
@@ -613,24 +692,65 @@ mod tests {
     }
 
     #[test]
-    fn values_go_to_the_vault_and_not_to_the_file() {
-        let path = temp_secrets_path("vault");
+    fn without_a_vault_no_key_is_saved() {
+        let path = temp_secrets_path("no-vault");
         let vault = Arc::new(FakeVault::default());
+        vault.unreachable.store(true, Ordering::SeqCst);
 
         let store = load_with(&path, &vault);
-        store.set("deepseek", "ds-key", None).unwrap();
+        assert!(store.set("groq", "gq-key", None).is_err());
+        assert_eq!(store.vault_state(), VaultState::Unavailable);
+        assert!(store.status().is_empty());
+        assert!(!path.exists());
 
-        assert_eq!(store.open(), SecretStorage::System);
-        assert_eq!(vault.value("deepseek").as_deref(), Some("ds-key"));
-        let raw = fs::read_to_string(&path).unwrap();
-        assert!(!raw.contains("ds-key"));
-        assert!(raw.contains("https://api.deepseek.com"));
+        // the vault is asked again, e.g. once the user has unlocked it
+        vault.unreachable.store(false, Ordering::SeqCst);
+        store.set("groq", "gq-key", None).unwrap();
+        assert_eq!(vault.value("groq").as_deref(), Some("gq-key"));
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
 
-        let reloaded = load_with(&path, &vault);
-        assert_eq!(reloaded.snapshot()["deepseek"].value, "ds-key");
+    #[test]
+    fn a_refused_write_is_an_error() {
+        let path = temp_secrets_path("read-only");
+        let vault = Arc::new(FakeVault::default());
+        vault.read_only.store(true, Ordering::SeqCst);
 
-        reloaded.remove("deepseek").unwrap();
-        assert_eq!(vault.value("deepseek"), None);
+        let store = load_with(&path, &vault);
+        assert!(store.set("anthropic", "an-key", None).is_err());
+
+        assert_eq!(store.vault_state(), VaultState::Available);
+        assert!(store.status().is_empty());
+        assert!(!path.exists());
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn a_secret_of_an_unreachable_vault_stays_listed() {
+        let path = temp_secrets_path("unreachable");
+        let vault = Arc::new(FakeVault::default());
+        load_with(&path, &vault)
+            .set("google", "g-key", None)
+            .unwrap();
+
+        vault.unreachable.store(true, Ordering::SeqCst);
+        let offline = load_with(&path, &vault);
+        assert_eq!(
+            offline.status()["google"],
+            SecretStatus {
+                origins: vec![String::from("https://generativelanguage.googleapis.com")],
+                available: false,
+            }
+        );
+        assert!(offline.snapshot().is_empty());
+        // removing it now would leave the key in the vault unseen
+        assert!(offline.remove("google").is_err());
+        assert!(offline.status().contains_key("google"));
+
+        vault.unreachable.store(false, Ordering::SeqCst);
+        assert_eq!(offline.vault_state(), VaultState::Available);
+        assert!(offline.status()["google"].available);
+        assert_eq!(offline.snapshot()["google"].value, "g-key");
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
@@ -655,61 +775,58 @@ mod tests {
     }
 
     #[test]
-    fn without_a_vault_values_stay_in_the_file() {
-        let path = temp_secrets_path("no-vault");
+    fn a_value_in_the_file_is_used_until_the_vault_takes_it() {
+        let path = temp_secrets_path("staged");
         let vault = Arc::new(FakeVault::default());
         vault.unreachable.store(true, Ordering::SeqCst);
 
         let store = load_with(&path, &vault);
-        store.set("groq", "gq-key", None).unwrap();
+        store
+            .stage(
+                "openai",
+                "sk-staged",
+                Some(vec!["https://api.openai.com".into()]),
+            )
+            .unwrap();
+        assert_eq!(store.snapshot()["openai"].value, "sk-staged");
+        assert!(store.status()["openai"].available);
+        assert!(fs::read_to_string(&path).unwrap().contains("sk-staged"));
 
-        assert_eq!(store.open(), SecretStorage::File);
-        assert!(fs::read_to_string(&path).unwrap().contains("gq-key"));
-        assert_eq!(store.snapshot()["groq"].value, "gq-key");
-
-        // the next start finds a vault and moves the value into it
         vault.unreachable.store(false, Ordering::SeqCst);
         let reloaded = load_with(&path, &vault);
-        assert_eq!(reloaded.open(), SecretStorage::System);
-        assert_eq!(vault.value("groq").as_deref(), Some("gq-key"));
-        assert!(!fs::read_to_string(&path).unwrap().contains("gq-key"));
+        assert_eq!(reloaded.vault_state(), VaultState::Available);
+        assert_eq!(vault.value("openai").as_deref(), Some("sk-staged"));
+        assert!(!fs::read_to_string(&path).unwrap().contains("sk-staged"));
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
-    fn a_refused_write_falls_back_to_the_file() {
-        let path = temp_secrets_path("read-only");
+    fn removing_a_value_in_the_file_clears_an_older_copy_in_the_vault() {
+        let path = temp_secrets_path("stale");
         let vault = Arc::new(FakeVault::default());
-        vault.read_only.store(true, Ordering::SeqCst);
+        vault.put("deepl", "d-stale");
 
         let store = load_with(&path, &vault);
-        store.set("anthropic", "an-key", None).unwrap();
+        store.stage("deepl", "d-new", None).unwrap();
+        store.remove("deepl").unwrap();
 
-        assert_eq!(store.open(), SecretStorage::File);
-        assert_eq!(vault.value("anthropic"), None);
-        assert_eq!(store.snapshot()["anthropic"].value, "an-key");
-        assert!(fs::read_to_string(&path).unwrap().contains("an-key"));
+        assert_eq!(vault.value("deepl"), None);
+        assert!(store.status().is_empty());
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
-    fn a_secret_of_an_unreachable_vault_is_kept_for_later() {
-        let path = temp_secrets_path("unreachable");
+    fn a_value_in_the_file_can_be_removed_without_a_vault() {
+        let path = temp_secrets_path("staged-offline");
         let vault = Arc::new(FakeVault::default());
-        load_with(&path, &vault)
-            .set("google", "g-key", None)
-            .unwrap();
-
         vault.unreachable.store(true, Ordering::SeqCst);
-        let offline = load_with(&path, &vault);
-        assert!(offline.status().is_empty());
-        offline.set("deepl", "d-key", None).unwrap();
 
-        vault.unreachable.store(false, Ordering::SeqCst);
-        let online = load_with(&path, &vault);
-        let snapshot = online.snapshot();
-        assert_eq!(snapshot["google"].value, "g-key");
-        assert_eq!(snapshot["deepl"].value, "d-key");
+        let store = load_with(&path, &vault);
+        store.stage("groq", "gq-key", None).unwrap();
+        store.remove("groq").unwrap();
+
+        assert!(store.status().is_empty());
+        assert!(!fs::read_to_string(&path).unwrap().contains("gq-key"));
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 

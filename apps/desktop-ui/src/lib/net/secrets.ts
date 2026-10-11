@@ -9,18 +9,25 @@ export const SECRET_REF_PREFIX = 'tyco-secret:'
 /** Provider ids that may be called without a key by default */
 export const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
 
-/** What the webview may know about a secret: that it exists, and where it goes */
+/**
+ * What the webview may know about a secret: that it exists, where it goes, and
+ * whether its value can be read now
+ */
 export interface SecretStatus {
   origins: string[]
+  /** False while the system keychain holding the value is locked or missing */
+  available: boolean
 }
 
 export type SecretsStatus = Record<string, SecretStatus>
 
-/**
- * Where new keys go: the system credential store, or a file readable by the
- * user only when the system has no such store
- */
-export type SecretStorage = 'system' | 'file'
+/** Whether the system keychain can be reached; without it no key is saved */
+export type VaultState = 'available' | 'unavailable'
+
+/** Whether a stored secret can be used for a request now */
+export function isSecretUsable(secrets: SecretsStatus, id: string): boolean {
+  return Object.hasOwn(secrets, id) && secrets[id].available
+}
 
 export function secretRef(id: string): string {
   return SECRET_REF_PREFIX + id
@@ -40,7 +47,7 @@ export function httpOrigin(value: string | undefined): string | null {
 
 export interface SecretsClient {
   status: () => Promise<SecretsStatus>
-  storage: () => Promise<SecretStorage>
+  vaultState: () => Promise<VaultState>
   /**
    * Origins default to the provider's own for a known provider id and are
    * required for any other, e.g. an `openai-compatible` endpoint
@@ -52,7 +59,8 @@ export interface SecretsClient {
 export function createSecretsClient(ipc: NetIpc): SecretsClient {
   return {
     status: () => ipc.invoke<SecretsStatus>(DESKTOP_COMMANDS.SECRETS_STATUS),
-    storage: () => ipc.invoke<SecretStorage>(DESKTOP_COMMANDS.SECRETS_STORAGE),
+    vaultState: () =>
+      ipc.invoke<VaultState>(DESKTOP_COMMANDS.SECRETS_VAULT_STATE),
     set: (id, value, origins) =>
       ipc.invoke(DESKTOP_COMMANDS.SECRETS_SET, {
         id,
@@ -78,8 +86,13 @@ export function createSecretKeyProvider(
     async get(provider) {
       const secrets = await status()
 
-      if (Object.hasOwn(secrets, provider)) {
+      if (isSecretUsable(secrets, provider)) {
         return secretRef(provider)
+      }
+      if (Object.hasOwn(secrets, provider)) {
+        throw new Error(
+          `The API key for provider "${provider}" is in a locked or missing system keychain`
+        )
       }
       if (isKeyless(provider)) {
         return ''

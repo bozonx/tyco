@@ -52,7 +52,7 @@ function jsonResponse(status: number, body: unknown) {
 function setup(
   fetch: FetchFunction,
   llm: LlmConfig = structuredClone(DEFAULT_LLM_CONFIG),
-  secrets: Record<string, { origins: string[] }> = {}
+  secrets: Record<string, { origins: string[]; available: boolean }> = {}
 ) {
   const transport: Transport = {
     fetch,
@@ -99,7 +99,7 @@ describe('llm-client', () => {
       streamResponse(sse(['from deepseek']))
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      deepseek: { origins: ['https://api.deepseek.com'] },
+      deepseek: { origins: ['https://api.deepseek.com'], available: true },
     })
 
     const text = await client.run('chat', prompt, {
@@ -208,7 +208,7 @@ describe('llm-client', () => {
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
     llm.tasks.aiTasks = ['deepseek-chat']
     const { client } = setup(fetch, llm, {
-      deepseek: { origins: ['https://api.deepseek.com'] },
+      deepseek: { origins: ['https://api.deepseek.com'], available: true },
     })
 
     await client.run('aiTasks', prompt, { onChunk: () => undefined })
@@ -381,7 +381,10 @@ describe('built-in vision adapters', () => {
       })
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      google: { origins: ['https://generativelanguage.googleapis.com'] },
+      google: {
+        origins: ['https://generativelanguage.googleapis.com'],
+        available: true,
+      },
     })
     expect(
       await client.run('chat', imagePrompt, { models: ['gemini-flash'] })
@@ -396,7 +399,7 @@ describe('built-in vision adapters', () => {
       streamResponse(sse(['Image reply']))
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      openrouter: { origins: ['https://openrouter.ai'] },
+      openrouter: { origins: ['https://openrouter.ai'], available: true },
     })
     expect(
       await client.run('chat', imagePrompt, {

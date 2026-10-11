@@ -9,6 +9,7 @@ import {
 } from '../lib/chat/chat-title'
 import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import { resolveLanguagePreference } from '../lib/locale/language'
+import { isSecretUsable } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { createLiveDictation } from '../lib/stt/live-dictation'
 import { dictationLanguageFor } from '../lib/stt/dictation-language'
@@ -146,7 +147,7 @@ export const useCallAi = () => {
     const needsKey = sttProviderNeedsKey(model.provider)
     if (needsKey) {
       await llmStore.refreshSecrets()
-      if (!Object.hasOwn(llmStore.secrets, secretId(model))) {
+      if (!isSecretUsable(llmStore.secrets, secretId(model))) {
         throw new Error(
           `No API key configured for provider "${model.provider}"`
         )

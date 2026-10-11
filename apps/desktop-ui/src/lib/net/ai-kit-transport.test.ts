@@ -19,7 +19,7 @@ const SSE_CHUNKS = [
 
 function createKit(
   handler: Parameters<typeof createFakeNetIpc>[0] = {},
-  secrets: Record<string, { origins: string[] }> = {}
+  secrets: Record<string, { origins: string[]; available: boolean }> = {}
 ) {
   const fake = createFakeNetIpc(handler)
   const kit = createAiKit({
@@ -62,7 +62,12 @@ describe('ai-kit over the Tauri transport', () => {
           return 1
         },
       },
-      { 'openai-compatible': { origins: ['http://localhost:11434'] } }
+      {
+        'openai-compatible': {
+          origins: ['http://localhost:11434'],
+          available: true,
+        },
+      }
     )
 
     const parts: StreamPart[] = []

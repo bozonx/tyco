@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
@@ -7,12 +7,18 @@ vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
+const mockToastText = vi.fn()
+
+vi.mock('../../composables/useToast', () => ({
+  default: () => ({ toast: vi.fn(), toastText: mockToastText }),
+}))
+
 const mockSetSecret = vi.fn().mockResolvedValue(undefined)
 const mockRemoveSecret = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({
-    secrets: { deepl: 'tyco-secret:deepl' },
+    secrets: { deepl: { origins: ['https://api.deepl.com'], available: true } },
     setSecret: mockSetSecret,
     removeSecret: mockRemoveSecret,
   }),
@@ -155,6 +161,38 @@ describe('SettingsTranslationsTab.vue', () => {
     await saveButton.trigger('click')
     expect(userConfig.translation.deeplEndpoint).toBe('free')
     expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-free-key:fx')
+  })
+
+  it('reports a key the keychain refused and keeps the endpoint', async () => {
+    mockSetSecret.mockRejectedValueOnce(new Error('keychain unavailable'))
+    const userConfig = createConfig({ deeplEndpoint: 'free' })
+    const wrapper = mount(SettingsTranslationsTab, {
+      props: { userConfig },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<section><slot /></section>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          FieldInput: {
+            props: ['value'],
+            emits: ['update:value'],
+            template:
+              '<input class="key-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+          },
+          FieldTextArea: true,
+        },
+      },
+    })
+
+    await wrapper.find('.key-input-stub').setValue('some-pro-key-123')
+    await wrapper.find('button.btn-primary').trigger('click')
+    await flushPromises()
+
+    expect(userConfig.translation.deeplEndpoint).toBe('free')
+    expect(mockToastText).toHaveBeenCalledWith(
+      expect.stringContaining('keychain unavailable'),
+      'error'
+    )
   })
 
   it('keeps an empty correction prompt collapsed behind a button', async () => {

@@ -703,7 +703,7 @@
     "sanitizeSecretsInEditorHistory": "Ocultar contraseñas y claves",
     "sanitizeSecretsInEditorHistoryHint": "Reemplaza lo que parece contraseñas, claves API, tokens, claves privadas y credenciales en enlaces, también en entradas ya guardadas. Es una heurística: un secreto con una forma inusual puede quedar. No afecta el historial de chats.",
     "saveKey": "Guardar clave",
-    "secretStorageFile": "No hay un llavero del sistema disponible, así que las claves de API se guardan en un archivo que solo tu cuenta de usuario puede leer. Instalá o desbloqueá GNOME Keyring, KWallet o KeePassXC para guardarlas en el llavero del sistema.",
+    "secretStorageUnavailable": "El llavero del sistema no está disponible o está bloqueado, así que las claves de API no se pueden guardar ni leer. Instalá o desbloqueá GNOME Keyring, KWallet o KeePassXC.",
     "sectionAccessibility": "Accesibilidad",
     "sectionAppearance": "Apariencia",
     "sectionChatHistory": "Historial del chat",

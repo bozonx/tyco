@@ -118,6 +118,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import useToast from '../../composables/useToast'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
 import Button from '../common/Button.vue'
@@ -133,6 +134,7 @@ const props = defineProps<{ userConfig: Record<string, any> }>()
 const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
 
 const { t } = useI18n()
+const { toastText } = useToast()
 const llmStore = useLlmStore()
 const keyDraft = ref('')
 const translation = computed(() => props.userConfig.translation)
@@ -219,18 +221,27 @@ function updateGlossary(value: string) {
 async function saveProviderKey() {
   const trimmed = keyDraft.value.trim()
   if (!trimmed) return
+  try {
+    await llmStore.setSecret(providerSecretId.value, trimmed)
+  } catch (error) {
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+    return
+  }
   if (providerSecretId.value === 'deepl') {
     props.userConfig.translation = normalizeTranslationConfig({
       ...translation.value,
       deeplEndpoint: trimmed.endsWith(':fx') ? 'free' : 'pro',
     })
   }
-  await llmStore.setSecret(providerSecretId.value, trimmed)
   keyDraft.value = ''
 }
 
 async function removeProviderKey() {
-  await llmStore.removeSecret(providerSecretId.value)
+  try {
+    await llmStore.removeSecret(providerSecretId.value)
+  } catch (error) {
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+  }
 }
 </script>
 

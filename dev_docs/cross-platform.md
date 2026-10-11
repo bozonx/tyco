@@ -44,7 +44,7 @@ platform/
   session.rs          определение сессии один раз за процесс
   window_tracker.rs   общее состояние «какое окно активно, куда вставлять»
   keychain.rs         системное хранилище ключей: Keychain, Credential Manager,
-                      Secret Service; без него ключи остаются в secrets.json
+                      Secret Service; без него ключи не сохраняются
   linux/
     kwin.rs           бэкенд трекера: KWin-скрипты (KDE Wayland)
     x11.rs            бэкенд трекера: события _NET_ACTIVE_WINDOW (X11)

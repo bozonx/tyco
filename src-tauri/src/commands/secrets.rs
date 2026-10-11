@@ -1,33 +1,36 @@
 use std::collections::BTreeMap;
 
-use tauri::State;
+use tauri::AppHandle;
 
 use crate::errors::AppError;
-use crate::services::secrets::{SecretStatus, SecretStorage, SecretStore};
+use crate::services::secrets::{with_store, SecretStatus, SecretStore, VaultState};
+
+// Each command may wait for the system keychain, e.g. on an unlock prompt,
+// so all of them run off the main thread.
 
 /// Which secrets exist and where each may be sent. Never the values.
 #[tauri::command]
-pub fn secrets_status(secrets: State<'_, SecretStore>) -> BTreeMap<String, SecretStatus> {
-    secrets.status()
+pub async fn secrets_status(app: AppHandle) -> Result<BTreeMap<String, SecretStatus>, AppError> {
+    with_store(&app, SecretStore::status).await
 }
 
-/// Where new keys go, for the settings to warn when it is not the system store.
+/// Whether keys can be saved, for the settings to warn when they cannot.
 #[tauri::command]
-pub fn secrets_storage(secrets: State<'_, SecretStore>) -> SecretStorage {
-    secrets.open()
+pub async fn secrets_vault_state(app: AppHandle) -> Result<VaultState, AppError> {
+    with_store(&app, SecretStore::vault_state).await
 }
 
 #[tauri::command]
-pub fn secrets_set(
-    secrets: State<'_, SecretStore>,
+pub async fn secrets_set(
+    app: AppHandle,
     id: String,
     value: String,
     origins: Option<Vec<String>>,
 ) -> Result<(), AppError> {
-    secrets.set(&id, &value, origins)
+    with_store(&app, move |secrets| secrets.set(&id, &value, origins)).await?
 }
 
 #[tauri::command]
-pub fn secrets_remove(secrets: State<'_, SecretStore>, id: String) -> Result<(), AppError> {
-    secrets.remove(&id)
+pub async fn secrets_remove(app: AppHandle, id: String) -> Result<(), AppError> {
+    with_store(&app, move |secrets| secrets.remove(&id)).await?
 }

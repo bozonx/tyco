@@ -1,10 +1,12 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { SecretsStatus, VaultState } from '../../lib/net/secrets'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 
 const store = vi.hoisted(() => ({
-  secretStorage: null as 'system' | 'file' | null,
+  vaultState: null as VaultState | null,
+  secrets: {} as SecretsStatus,
 }))
 
 vi.mock('../../composables/useI18n', () => ({
@@ -13,18 +15,30 @@ vi.mock('../../composables/useI18n', () => ({
 
 vi.mock('../../stores/llm', () => ({ useLlmStore: () => store }))
 
+const origins = ['https://api.openai.com']
+
 describe('SecretStorageNotice.vue', () => {
-  it('warns when keys are kept in a file', () => {
-    store.secretStorage = 'file'
+  it('warns when the keychain is unavailable', () => {
+    store.vaultState = 'unavailable'
+    store.secrets = {}
     const wrapper = mount(SecretStorageNotice)
 
-    expect(wrapper.text()).toContain('settings.secretStorageFile')
+    expect(wrapper.text()).toContain('settings.secretStorageUnavailable')
   })
 
-  it.each(['system', null] as const)(
-    'stays hidden for the storage %s',
-    (storage) => {
-      store.secretStorage = storage
+  it('warns when a stored key cannot be read', () => {
+    store.vaultState = 'available'
+    store.secrets = { openai: { origins, available: false } }
+    const wrapper = mount(SecretStorageNotice)
+
+    expect(wrapper.text()).toContain('settings.secretStorageUnavailable')
+  })
+
+  it.each(['available', null] as const)(
+    'stays hidden for the keychain state %s',
+    (state) => {
+      store.vaultState = state
+      store.secrets = { openai: { origins, available: true } }
       const wrapper = mount(SecretStorageNotice)
 
       expect(wrapper.text()).toBe('')

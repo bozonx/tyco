@@ -106,9 +106,10 @@ pub fn migrate_llm_config(config: &mut Value) -> Option<Vec<MigratedSecret>> {
     Some(secrets)
 }
 
-/// Runs the migration and stores the keys it moved out of the config. Changes
-/// nothing when a key cannot be stored: dropping it from the config first
-/// would lose it.
+/// Runs the migration and hands the keys it moved out of the config to the
+/// secret store, which moves them into the system keychain once that opens.
+/// Changes nothing when a key cannot be stored: dropping it from the config
+/// first would lose it.
 pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
     let mut migrated = config.clone();
     let Some(secrets) = migrate_llm_config(&mut migrated) else {
@@ -118,7 +119,7 @@ pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
     if !secrets.is_empty() {
         let stored = SecretStore::load_for_app(app).and_then(|store| {
             secrets.iter().try_for_each(|secret| {
-                store.set(&secret.id, &secret.value, Some(vec![secret.origin.clone()]))
+                store.stage(&secret.id, &secret.value, Some(vec![secret.origin.clone()]))
             })
         });
         if let Err(error) = stored {

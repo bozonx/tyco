@@ -6,13 +6,29 @@ import { createSecretKeyProvider, createSecretsClient } from './secrets'
 
 describe('secrets', () => {
   const status = async () => ({
-    google: { origins: ['https://generativelanguage.googleapis.com'] },
+    google: {
+      origins: ['https://generativelanguage.googleapis.com'],
+      available: true,
+    },
   })
 
   it('hands out a reference, never a key', async () => {
     const keys = createSecretKeyProvider(status)
 
     await expect(keys.get('google')).resolves.toBe('tyco-secret:google')
+  })
+
+  it('refuses a key the keychain cannot give out now', async () => {
+    const keys = createSecretKeyProvider(async () => ({
+      google: {
+        origins: ['https://generativelanguage.googleapis.com'],
+        available: false,
+      },
+    }))
+
+    await expect(keys.get('google')).rejects.toThrow(
+      'locked or missing system keychain'
+    )
   })
 
   it('lets a keyless provider through with an empty key', async () => {
@@ -43,7 +59,7 @@ describe('secrets', () => {
     await client.set('openai-compatible', 'k', ['http://localhost:11434'])
     await client.remove('deepseek')
     await client.status()
-    await client.storage()
+    await client.vaultState()
 
     expect(fake.calls.map(({ command, args }) => [command, args])).toEqual([
       [
@@ -60,7 +76,7 @@ describe('secrets', () => {
       ],
       [DESKTOP_COMMANDS.SECRETS_REMOVE, { id: 'deepseek' }],
       [DESKTOP_COMMANDS.SECRETS_STATUS, undefined],
-      [DESKTOP_COMMANDS.SECRETS_STORAGE, undefined],
+      [DESKTOP_COMMANDS.SECRETS_VAULT_STATE, undefined],
     ])
   })
 })

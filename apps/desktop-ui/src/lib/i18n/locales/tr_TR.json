@@ -700,7 +700,7 @@
     "sanitizeSecretsInEditorHistory": "Şifreleri ve anahtarları gizle",
     "sanitizeSecretsInEditorHistoryHint": "Şifreye, API anahtarına, belirtece, özel anahtara ve bağlantılardaki kimlik bilgilerine benzeyenleri, kayıtlı ögelerde de değiştirir. Bu bir sezgisel yöntemdir: alışılmadık biçimdeki bir sır kalabilir. Sohbet geçmişi etkilenmez.",
     "saveKey": "Anahtarı kaydet",
-    "secretStorageFile": "Sistem anahtar zinciri kullanılamıyor, bu yüzden API anahtarları yalnızca kullanıcı hesabınızın okuyabildiği bir dosyada tutuluyor. Anahtarları sistem anahtar zincirinde tutmak için GNOME Keyring, KWallet veya KeePassXC'yi kurun ya da kilidini açın.",
+    "secretStorageUnavailable": "Sistem anahtar zinciri kullanılamıyor veya kilitli, bu yüzden API anahtarları kaydedilemiyor ve okunamıyor. GNOME Keyring, KWallet veya KeePassXC'yi kurun ya da kilidini açın.",
     "sectionAccessibility": "Erişilebilirlik",
     "sectionAppearance": "Görünüm",
     "sectionChatHistory": "Sohbet geçmişi",

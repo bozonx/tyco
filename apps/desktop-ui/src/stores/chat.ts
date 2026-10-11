@@ -10,6 +10,7 @@ import { createChatFileController } from '../lib/chat/chat-file-controller'
 import { createChatFileReader } from '../lib/chat/chat-file-reader'
 import { trimChatContext } from '../lib/chat/chat-helpers'
 import { formatLlmError } from '../lib/llm/llm-errors'
+import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
 import { defineStore } from 'pinia'
 import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
@@ -57,7 +58,7 @@ export const useChatStore = defineStore('chat', () => {
   const modelOptions = computed(() =>
     chatModelOptions(
       normalizeLlmConfig(ipcStore.params.userConfig?.llm),
-      (id) => Object.hasOwn(llmStore.secrets, id)
+      (id) => isSecretUsable(llmStore.secrets, id)
     )
   )
   const selectedModel = computed(() =>

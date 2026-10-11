@@ -1,6 +1,6 @@
 use futures_util::future::{AbortHandle, Abortable};
 use tauri::ipc::{Channel, InvokeBody, InvokeResponseBody, Request};
-use tauri::State;
+use tauri::{AppHandle, State};
 use tokio::sync::mpsc;
 
 use crate::errors::AppError;
@@ -8,7 +8,7 @@ use crate::services::net::http::{self, FetchRequest};
 use crate::services::net::request::{prepare, Protocol};
 use crate::services::net::socket::{self, SocketCommand, SocketRequest};
 use crate::services::net::{EventSink, NetState};
-use crate::services::secrets::SecretStore;
+use crate::services::secrets::{with_store, SecretStore};
 use crate::state::AppState;
 
 /// Header that names the socket a raw binary frame is for.
@@ -16,16 +16,17 @@ const SOCKET_ID_HEADER: &str = "x-tyco-socket-id";
 
 /// Starts a request and returns its id at once; the response arrives through
 /// `on_event`. A request that cannot be sent at all — a bad URL, a secret for
-/// the wrong host — fails here instead.
+/// the wrong host — fails here instead. Async: the first request may wait
+/// for the system keychain to open.
 #[tauri::command]
-pub fn net_fetch(
+pub async fn net_fetch(
+    app: AppHandle,
     net: State<'_, NetState>,
-    secrets: State<'_, SecretStore>,
     app_state: State<'_, AppState>,
     request: FetchRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let secret_snapshot = secrets.snapshot();
+    let secret_snapshot = with_store(&app, SecretStore::snapshot).await?;
     ensure_allowed_origin(
         Protocol::Http,
         &request.url,
@@ -64,14 +65,14 @@ pub fn net_cancel(net: State<'_, NetState>, id: u64) {
 
 /// Returns an id before connecting, so the handshake is cancellable too.
 #[tauri::command]
-pub fn net_socket_open(
+pub async fn net_socket_open(
+    app: AppHandle,
     net: State<'_, NetState>,
-    secrets: State<'_, SecretStore>,
     app_state: State<'_, AppState>,
     request: SocketRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let secret_snapshot = secrets.snapshot();
+    let secret_snapshot = with_store(&app, SecretStore::snapshot).await?;
     ensure_allowed_origin(
         Protocol::WebSocket,
         &request.url,

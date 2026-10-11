@@ -7,7 +7,7 @@ import {
   createSecretKeyProvider,
   createSecretsClient,
   type SecretsStatus,
-  type SecretStorage,
+  type VaultState,
 } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from './ipc'
@@ -17,8 +17,8 @@ export const useLlmStore = defineStore('llm', () => {
   const secretsClient = createSecretsClient(tauriNetIpc)
   /** Which provider keys exist; never the keys themselves */
   const secrets = ref<SecretsStatus>({})
-  /** Where new keys go; null until known */
-  const secretStorage = ref<SecretStorage | null>(null)
+  /** Whether keys can be saved; null until known */
+  const vaultState = ref<VaultState | null>(null)
 
   const getConfig = () => normalizeLlmConfig(ipcStore.params.userConfig?.llm)
   const client = createLlmClient({
@@ -31,14 +31,14 @@ export const useLlmStore = defineStore('llm', () => {
   })
 
   async function refreshSecrets() {
-    // asked every time: a write the system store refuses sends new keys
-    // into the file
-    const [status, storage] = await Promise.all([
+    // asked every time: the keychain may have been unlocked or installed
+    // since
+    const [status, state] = await Promise.all([
       secretsClient.status(),
-      secretsClient.storage(),
+      secretsClient.vaultState(),
     ])
     secrets.value = status
-    secretStorage.value = storage
+    vaultState.value = state
   }
 
   async function setSecret(id: string, value: string, origins?: string[]) {
@@ -54,7 +54,7 @@ export const useLlmStore = defineStore('llm', () => {
   return {
     client,
     secrets,
-    secretStorage,
+    vaultState,
     refreshSecrets,
     setSecret,
     removeSecret,
