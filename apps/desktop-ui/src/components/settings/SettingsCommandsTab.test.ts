@@ -24,7 +24,7 @@ vi.mock('../../stores/tools', async () => {
 const webhook = {
   ...createCommand('webhook', 'wh1'),
   name: 'Hook',
-  toolConfig: { url: 'https://x.test', authSecret: true, takesText: true },
+  toolConfig: { url: 'https://x.test', authSecret: true },
 }
 const script = { ...createCommand('script', 'sc1'), name: 'Backup' }
 

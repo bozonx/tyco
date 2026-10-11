@@ -56,6 +56,8 @@ export enum START_MODES {
   VOICE_CHAT = 'voiceChat',
   HISTORY = 'history',
   CONFIG = 'config',
+  /** Asks whether an external call may use the selection; Tyco opens it itself */
+  EXTERNAL_ACCESS = 'externalAccess',
 }
 
 export interface ChatParams {
@@ -159,7 +161,19 @@ export interface InitParams {
   /** The command the command overlay opens with, for an external call */
   launcherPage?: number
   launcherRequest?: LauncherRequest | null
+  /** What the access prompt asks about, see `START_MODES.EXTERNAL_ACCESS` */
+  accessRequest?: AccessRequest | null
 }
+
+/** An external call that wants the selection while access to it is off */
+export interface AccessRequest {
+  jobId: string
+  commandName: string
+  /** The output is to replace the selection, not only to be returned */
+  replace: boolean
+}
+
+export type AccessDecision = 'once' | 'always' | 'deny'
 
 export type CapturedContext = Pick<InitParams, 'selectedText'>
 
@@ -271,6 +285,7 @@ export const DESKTOP_COMMANDS = {
   OPEN_ACTION_LOG: 'open_action_log',
   LOG_CLIENT_MESSAGE: 'log_client_message',
   SET_TOOL_CATALOG: 'set_tool_catalog',
+  ANSWER_EXTERNAL_ACCESS: 'answer_external_access',
   CLAIM_EXTERNAL_JOB: 'claim_external_job',
   FINISH_EXTERNAL_JOB: 'finish_external_job',
   GET_USER_CONFIG: 'get_user_config',

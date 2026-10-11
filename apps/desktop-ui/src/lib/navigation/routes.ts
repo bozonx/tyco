@@ -50,6 +50,8 @@ export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
   [START_MODES.VOICE_CHAT]: APP_ROUTES.CHAT.path,
   [START_MODES.HISTORY]: APP_ROUTES.HISTORY.path,
   [START_MODES.CONFIG]: APP_ROUTES.CONFIG.path,
+  // the quick window renders it by the mode, see `QuickOverlay`
+  [START_MODES.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
 }
 
 /**
@@ -65,6 +67,7 @@ export const QUICK_WINDOW_MODES: ReadonlySet<START_MODES> = new Set([
   START_MODES.CORRECTION,
   START_MODES.VOICE_CHAT,
   START_MODES.TRANSLATE,
+  START_MODES.EXTERNAL_ACCESS,
 ])
 
 export function isQuickWindowMode(mode: START_MODES | null): boolean {

@@ -120,6 +120,27 @@ pub fn claim_external_job(app: AppHandle, window: tauri::WebviewWindow, id: Stri
         && crate::services::external_api::claim(&app, &id)
 }
 
+/// The answer of the access prompt; only the quick window shows it. Async:
+/// it waits for the focus to go back to the window of the selection.
+#[tauri::command]
+pub async fn answer_external_access(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    job_id: String,
+    decision: crate::services::external_access::AccessDecision,
+) -> Result<(), AppError> {
+    if window.label() != crate::services::runtime::QUICK_WINDOW_LABEL {
+        return Err(AppError::Message(String::from(
+            "Only the quick window answers access requests",
+        )));
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::external_access::answer(&app, &job_id, decision)
+    })
+    .await
+    .map_err(|error| AppError::Message(error.to_string()))?
+}
+
 #[tauri::command(async)]
 pub fn finish_external_job(
     app: AppHandle,

@@ -1,0 +1,146 @@
+<template>
+  <ContentPadding>
+    <ActionOverlayLayout
+      :title="t('externalAccess.title')"
+      :esc-label="t('externalAccess.deny')"
+      :on-esc="deny"
+    >
+      <template #preview>
+        <div class="access-prompt">
+          <Icon
+            icon="mdi:shield-key-outline"
+            width="32"
+            height="32"
+            class="access-prompt-icon"
+          />
+          <p class="access-prompt-text">
+            {{
+              t(
+                request?.replace
+                  ? 'externalAccess.askReplace'
+                  : 'externalAccess.askRead',
+                { name: request?.commandName ?? '' }
+              )
+            }}
+          </p>
+          <p class="access-prompt-note">
+            {{ t('externalAccess.unknownCaller') }}
+          </p>
+          <p class="access-prompt-note">
+            {{ t('externalAccess.settingsHint') }}
+          </p>
+        </div>
+      </template>
+      <template #actions>
+        <!-- nothing is focused: a key meant for the window under the prompt
+             must not allow the call -->
+        <div class="access-prompt-actions">
+          <Button class="access-allow-once" @click="respond('once')">
+            {{ t('externalAccess.allowOnce') }}
+          </Button>
+          <Button
+            class="access-allow-always"
+            neutral
+            @click="respond('always')"
+          >
+            {{ t('externalAccess.allowAlways') }}
+          </Button>
+          <Button class="access-deny" ghost @click="deny">
+            {{ t('externalAccess.deny') }}
+          </Button>
+        </div>
+      </template>
+    </ActionOverlayLayout>
+  </ContentPadding>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, watch } from 'vue'
+
+import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
+import Button from '../components/common/Button.vue'
+import ContentPadding from '../components/common/ContentPadding.vue'
+import { useI18n } from '../composables/useI18n'
+import { createAccessPrompt } from '../lib/external-access/access-prompt'
+import { useIpcStore } from '../stores/ipc'
+import { useNavPanelStore } from '../stores/navPanel'
+import { Icon } from '@iconify/vue'
+import type { AccessDecision } from '@tyco/shared'
+
+const { t } = useI18n()
+const ipcStore = useIpcStore()
+
+useNavPanelStore().resetNavParams({ panelVisible: false })
+
+const request = computed(() => ipcStore.params.accessRequest ?? null)
+
+const prompt = createAccessPrompt({
+  answer: async (jobId, decision) => {
+    const result = await ipcStore.callFunction('answerExternalAccess', [
+      jobId,
+      decision,
+    ])
+    if (!result.success) throw new Error(result.error)
+  },
+})
+
+const respond = (decision: AccessDecision) =>
+  prompt.respond(request.value?.jobId, decision)
+const deny = () => respond('deny')
+
+const handleKeyUp = (event: KeyboardEvent) => {
+  if (event.code === 'Escape' && !event.repeat) {
+    event.preventDefault()
+    deny()
+  }
+}
+
+// a request replaced by another one without an answer is denied
+watch(
+  () => request.value?.jobId,
+  (_jobId, previous) => prompt.dismiss(previous)
+)
+
+onMounted(() => window.addEventListener('keyup', handleKeyUp))
+
+// the view goes with the window: a prompt closed without an answer denies
+onUnmounted(() => {
+  window.removeEventListener('keyup', handleKeyUp)
+  prompt.dismiss(request.value?.jobId)
+})
+</script>
+
+<style scoped>
+.access-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex: 1;
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.access-prompt-icon {
+  color: var(--color-warning);
+}
+
+.access-prompt-text {
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.access-prompt-note {
+  max-width: 36rem;
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.access-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+</style>

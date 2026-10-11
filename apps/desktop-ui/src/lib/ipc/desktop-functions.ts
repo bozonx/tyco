@@ -1,4 +1,5 @@
 import type {
+  AccessDecision,
   InstalledPluginPackage,
   PluginPackagePreview,
   ChatAttachment,
@@ -116,6 +117,11 @@ export interface DesktopFunctions {
   openActionLog: { args: []; result: boolean }
   logClientMessage: {
     args: [level: string, message: string, context?: string]
+    result: void
+  }
+  /** The answer of the access prompt for the job */
+  answerExternalAccess: {
+    args: [jobId: string, decision: AccessDecision]
     result: void
   }
   claimExternalJob: { args: [id: string]; result: boolean }

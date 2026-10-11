@@ -137,7 +137,7 @@ const menuGroups = (): EditorMenuGroups => ({
   formatItems: editItems(editMenuStore.getFormatItems(), 'format'),
   otherEditItems: editItems(editMenuStore.getOtherEditItems(), 'edit'),
   actionItems: actionMenuStore
-    .getActionsMenu({ textless: true })
+    .getActionsMenu()
     .map((item: ActionItem, index: number) => ({
       id: item.id || item.labelKey || item.name || `action-${index}`,
       label: getLabel(item),

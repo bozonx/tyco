@@ -128,7 +128,6 @@ fn command_from_action(kind: &str, id: &str, action: &Map<String, Value>) -> Val
         json!({
             "command": string_field(action, "command"),
             "workingDir": string_field(action, "workingDir"),
-            "takesText": true,
         })
     } else {
         let method = if action.get("method").and_then(Value::as_str) == Some("GET") {
@@ -153,7 +152,6 @@ fn command_from_action(kind: &str, id: &str, action: &Map<String, Value>) -> Val
             "headers": headers,
             "payloadTemplate": string_field(action, "payloadTemplate"),
             "authSecret": action.get("authSecret").and_then(Value::as_bool).unwrap_or(false),
-            "takesText": true,
         })
     };
     let after_run = if action.get("afterRun").and_then(Value::as_str) == Some("showMenu") {
@@ -337,8 +335,7 @@ mod tests {
                     "toolId": "script",
                     "toolConfig": {
                         "command": "echo {{TEXT}}",
-                        "workingDir": "~/work",
-                        "takesText": true
+                        "workingDir": "~/work"
                     },
                     "llmArgumentParsing": false,
                     "launcherAfterRun": { "withSelection": "showMenu", "withoutSelection": "showMenu" },
@@ -356,8 +353,7 @@ mod tests {
                         "method": "GET",
                         "headers": { "x-a": "1" },
                         "payloadTemplate": "",
-                        "authSecret": true,
-                        "takesText": true
+                        "authSecret": true
                     },
                     "llmArgumentParsing": false,
                     "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" },

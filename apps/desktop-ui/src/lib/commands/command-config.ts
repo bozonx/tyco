@@ -1,5 +1,4 @@
 import {
-  ACTION_TEXT_PLACEHOLDER,
   CUSTOM_ACTION_AFTER_RUN,
   type CommandConfig,
   type CommandLauncherAfterRun,
@@ -98,7 +97,6 @@ export function scriptToolConfigOf(
   return {
     command: stringOr(config.command),
     workingDir: stringOr(config.workingDir),
-    takesText: config.takesText !== false,
     ...(timeoutSec ? { timeoutSec } : {}),
   }
 }
@@ -112,7 +110,6 @@ export function webhookToolConfigOf(
     headers: headersOf(config.headers),
     payloadTemplate: stringOr(config.payloadTemplate),
     authSecret: Boolean(config.authSecret),
-    takesText: config.takesText !== false,
   }
 }
 
@@ -215,7 +212,7 @@ export function newCommandId(): string {
 function defaultToolConfig(toolId: string): Record<string, unknown> {
   switch (toolId) {
     case 'script':
-      return { command: '', workingDir: '', takesText: true }
+      return { command: '', workingDir: '' }
     case 'webhook':
       return {
         url: '',
@@ -223,7 +220,6 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
         headers: {},
         payloadTemplate: '',
         authSecret: false,
-        takesText: true,
       }
     case 'core.translate':
       return { language: '' }
@@ -303,11 +299,7 @@ export function commandTakesText(
   return kind === 'text' || kind === 'parsed'
 }
 
-/**
- * Whether the command can be an item of the action menu. One that takes no text
- * shows up only where the menu is opened from the editor, see
- * `getShortcutActions`
- */
+/** Whether the command can be an item of the action menu */
 export function isMenuCommand(
   command: CommandConfig,
   tools: ToolLookup
@@ -433,9 +425,6 @@ export interface CommandIssue {
   messageKey: string
 }
 
-const hasPlaceholder = (value: string | undefined): boolean =>
-  Boolean(value?.includes(ACTION_TEXT_PLACEHOLDER))
-
 /** What keeps the command from running as the user expects */
 export function validateCommand(
   command: CommandConfig,
@@ -450,30 +439,10 @@ export function validateCommand(
     if (!config.command.trim()) {
       issues.push({ field: 'command', messageKey: 'commands.errorNoCommand' })
     }
-    if (!config.takesText && hasPlaceholder(config.command)) {
-      issues.push({
-        field: 'command',
-        messageKey: 'commands.errorTextPlaceholder',
-      })
-    }
   } else if (command.toolId === 'webhook') {
     const config = webhookToolConfig(command)
     if (!config.url.trim()) {
       issues.push({ field: 'url', messageKey: 'commands.errorNoUrl' })
-    }
-    if (!config.takesText) {
-      if (hasPlaceholder(config.url)) {
-        issues.push({
-          field: 'url',
-          messageKey: 'commands.errorTextPlaceholder',
-        })
-      }
-      if (config.method === 'POST' && hasPlaceholder(config.payloadTemplate)) {
-        issues.push({
-          field: 'payloadTemplate',
-          messageKey: 'commands.errorTextPlaceholder',
-        })
-      }
     }
   } else if (command.toolId === 'core.translate') {
     if (!stringOr(command.toolConfig.language).trim()) {

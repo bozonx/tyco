@@ -225,6 +225,10 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.LOG_CLIENT_MESSAGE,
       buildArgs: ([level, message, context]) => ({ level, message, context }),
     },
+    answerExternalAccess: {
+      command: DESKTOP_COMMANDS.ANSWER_EXTERNAL_ACCESS,
+      buildArgs: ([jobId, decision]) => ({ jobId, decision }),
+    },
     claimExternalJob: {
       command: DESKTOP_COMMANDS.CLAIM_EXTERNAL_JOB,
       buildArgs: ([id]) => ({ id }),

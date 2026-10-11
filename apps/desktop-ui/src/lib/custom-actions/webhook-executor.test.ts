@@ -42,17 +42,14 @@ describe('fillJsonTemplate', () => {
 })
 
 describe('buildWebhookRequest', () => {
-  it('sends the default JSON payload with POST', () => {
+  it('sends the default JSON payload with POST, without the text', () => {
     const { url, init } = buildWebhookRequest(webhook(), 'test text')
     expect(url).toBe('https://api.example.com/endpoint')
     expect(init.method).toBe('POST')
     expect(init.headers['content-type']).toContain('application/json')
     const body = JSON.parse(init.body as string)
-    expect(body).toMatchObject({
-      text: 'test text',
-      action: 'My Webhook',
-      source: 'tyco',
-    })
+    expect(body).toMatchObject({ action: 'My Webhook', source: 'tyco' })
+    expect(body).not.toHaveProperty('text')
   })
 
   it('sends a template that is not JSON as plain text', () => {
@@ -64,12 +61,12 @@ describe('buildWebhookRequest', () => {
     expect(init.headers['content-type']).toContain('text/plain')
   })
 
-  it('adds the text as a query parameter with GET', () => {
+  it('adds no text to a GET request without a placeholder', () => {
     const { url, init } = buildWebhookRequest(
       webhook({ method: 'GET', url: 'https://api.example.com/trigger' }),
       'hello world'
     )
-    expect(url).toBe('https://api.example.com/trigger?text=hello+world')
+    expect(url).toBe('https://api.example.com/trigger')
     expect(init.body).toBeUndefined()
     expect(init.headers['content-type']).toBeUndefined()
   })

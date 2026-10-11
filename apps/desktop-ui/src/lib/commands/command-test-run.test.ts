@@ -13,7 +13,7 @@ const script = (
   ...createCommand('script', 'sc1'),
   name: 'Echo',
   ...extra,
-  toolConfig: { command: 'echo', takesText: true, ...toolConfig },
+  toolConfig: { command: 'echo {{TEXT}}', ...toolConfig },
 })
 
 const finished: ScriptExecutionResult = {
@@ -57,7 +57,7 @@ describe('runCommandTest', () => {
   it('gives no text to a script that takes none', async () => {
     const d = deps()
     await runCommandTest(
-      script({ takesText: false }),
+      script({ command: 'backup.sh' }),
       'hi',
       testTools(),
       d,
@@ -119,7 +119,7 @@ describe('runCommandTest', () => {
     const webhook: CommandConfig = {
       ...createCommand('webhook', 'wh1'),
       name: 'Hook',
-      toolConfig: { url: 'https://x.test', takesText: true },
+      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
     }
     const result = await runCommandTest(
       webhook,

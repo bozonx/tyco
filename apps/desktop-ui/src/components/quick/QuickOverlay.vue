@@ -45,6 +45,14 @@
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
       </div>
+      <!-- gone with the window: a prompt hidden without an answer denies -->
+      <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">
+        <ExternalAccessView
+          v-if="
+            currentMode === 'externalAccess' && ipcStore.params.isWindowShown
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -69,6 +77,7 @@ import { useWriterInputStore } from '../../stores/writerInput'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
+import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import SelectModeView from '../../views/SelectModeView.vue'
 import TranslateModeView from '../../views/TranslateModeView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'

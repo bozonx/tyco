@@ -23,12 +23,16 @@ const command = (
   return {
     ...base,
     name,
-    toolConfig: { ...base.toolConfig, url: 'https://x.test', ...toolConfig },
+    toolConfig: {
+      ...base.toolConfig,
+      url: 'https://x.test/?q={{TEXT}}',
+      ...toolConfig,
+    },
     ...extra,
   }
 }
 
-const backup = command('backup', 'Backup', {}, { takesText: false })
+const backup = command('backup', 'Backup', {}, { url: 'https://x.test' })
 const note = command('note', 'Work note', {
   phrases: ['(write|add) to [the] notebook'],
 })
@@ -36,7 +40,7 @@ const lights = command(
   'lights',
   'Свет в кабинете',
   { description: 'Turns the office lights on' },
-  { takesText: false }
+  { url: 'https://x.test' }
 )
 
 function setup(
@@ -328,7 +332,7 @@ describe('external calls', () => {
     'lamp',
     'Lamp',
     { availableIn: { external: true, chat: false } },
-    { takesText: false }
+    { url: 'https://x.test' }
   )
 
   function setupExternal(commands: CommandConfig[]) {

@@ -99,9 +99,6 @@
         <span class="command-place-state">
           <template v-if="menuSlot !== undefined">
             <KeyButton>{{ slotKey(menuSlot) }}</KeyButton>
-            <span v-if="!takesText">{{
-              t('commands.placeMenuEditorOnly')
-            }}</span>
           </template>
           <template v-else>{{ t('commands.placeNotAdded') }}</template>
         </span>
@@ -335,21 +332,9 @@ function updateDescription(value: string) {
 
 function updateToolConfig(field: string, value: unknown) {
   const { [field]: _previous, ...rest } = props.command.toolConfig
-  const patch: Partial<CommandConfig> = {
+  update({
     toolConfig: value === undefined ? rest : { ...rest, [field]: value },
-  }
-  // without a text there is nothing to replace: the result menu is shown
-  if (
-    field === 'takesText' &&
-    value === false &&
-    props.command.launcherAfterRun.withSelection === 'replaceSelection'
-  ) {
-    patch.launcherAfterRun = {
-      ...props.command.launcherAfterRun,
-      withSelection: 'showMenu',
-    }
-  }
-  update(patch)
+  })
 }
 
 function updateTimeout(value: string) {

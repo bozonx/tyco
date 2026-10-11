@@ -18,6 +18,8 @@ struct Entry {
     selection: Option<u64>,
     command_snapshot: Option<serde_json::Value>,
     pending_completion: Option<Job>,
+    /// The user allowed this call to use the selection, see `external_access`.
+    selection_approved: bool,
 }
 
 #[derive(Default)]
@@ -79,6 +81,7 @@ impl ExternalJobs {
                 selection,
                 command_snapshot: None,
                 pending_completion: None,
+                selection_approved: false,
             },
         );
         Ok(job)
@@ -101,6 +104,35 @@ impl ExternalJobs {
             .unwrap_or_else(|error| error.into_inner())
             .get(id)
             .is_some_and(|entry| entry.command_snapshot.as_ref() == command)
+    }
+
+    pub fn approve_selection(&self, id: &str) {
+        if let Some(entry) = self
+            .entries
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get_mut(id)
+        {
+            entry.selection_approved = true;
+        }
+    }
+
+    pub fn selection_approved(&self, id: &str) -> bool {
+        self.entries
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(id)
+            .is_some_and(|entry| entry.selection_approved)
+    }
+
+    /// The request of a job not claimed yet.
+    pub fn accepted_request(&self, id: &str) -> Option<RunRequest> {
+        self.entries
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(id)
+            .filter(|entry| entry.job.state == JobState::Accepted)
+            .map(|entry| entry.request.clone())
     }
 
     pub fn get(&self, id: &str) -> Option<Job> {
@@ -226,6 +258,24 @@ impl ExternalJobs {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn a_selection_approval_holds_for_its_job_only() {
+        let jobs = ExternalJobs::default();
+        let first = jobs
+            .create("test".into(), RunRequest::default(), None)
+            .unwrap();
+        let second = jobs
+            .create("test".into(), RunRequest::default(), None)
+            .unwrap();
+        jobs.approve_selection(&first.id);
+        assert!(jobs.selection_approved(&first.id));
+        assert!(!jobs.selection_approved(&second.id));
+        assert!(jobs.accepted_request(&first.id).is_some());
+        jobs.claim(&first.id);
+        // a claimed job is past the prompt and must not be handed off again
+        assert!(jobs.accepted_request(&first.id).is_none());
+    }
+
     #[test]
     fn claim_and_completion_are_single_use() {
         let jobs = ExternalJobs::default();

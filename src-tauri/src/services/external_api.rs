@@ -5,6 +5,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use tyco_activation_protocol::{Job, JobState, Request, Response, RunRequest, API_VERSION};
 
 use super::activation::{Activation, ActivationSource, StartMode};
+use super::external_access::{self, AccessPrompt, AccessRequest};
 use super::external_commands::{self, ExternalCommand, LookupError};
 use super::external_jobs::ExternalJobs;
 use super::{runtime, selection_replace};
@@ -154,8 +155,16 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     // always return output; only the caller can request a selection replacement.
     request.output = tyco_activation_protocol::OutputMode::Return;
     let config = app.state::<AppState>().params().user_config;
+    // without the permission the user is asked, see `external_access`
+    let ask = request.selection && !access_allowed(&config, "selection");
+    if ask && app.state::<AccessPrompt>().is_pending() {
+        return Err(Response::coded_error(
+            "AccessDenied",
+            "Another request for the selection is waiting for an answer",
+        ));
+    }
     let selection = if request.selection {
-        permission(&config, "selection")?;
+        // taken before the prompt, which moves the focus away from it
         let (id, text) = selection_replace::prepare_external(app)
             .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))?;
         request.text = Some(text);
@@ -177,6 +186,57 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     if let Some(raw) = raw_command(&config, &command.id) {
         jobs.remember_command(&job.id, raw.clone());
     }
+    if ask {
+        let prompt = AccessRequest {
+            job_id: job.id.clone(),
+            command_name: command_name(&config, &command.id),
+            replace: request.replace,
+        };
+        if let Err(error) = external_access::ask(app, prompt, source) {
+            let message = error.to_string();
+            fail(app, &job.id, message.clone(), "Unavailable");
+            return Err(Response::coded_error("Unavailable", message));
+        }
+        return Ok(job);
+    }
+    hand_off(app, &job.id, &command, &request, source)?;
+    Ok(job)
+}
+
+/// The name the user gave the command, for the access prompt.
+fn command_name(config: &Value, id: &str) -> String {
+    raw_command(config, id)
+        .and_then(|command| command["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .unwrap_or(id)
+        .to_owned()
+}
+
+fn fail(app: &AppHandle, id: &str, message: String, code: &str) {
+    complete(
+        app,
+        id,
+        JobCompletion {
+            success: false,
+            cancelled: false,
+            output: None,
+            message: Some(message),
+            code: Some(code.into()),
+        },
+    );
+}
+
+/// Gives an accepted job to the quick window: to the command overlay when it
+/// still needs input, to the background runner otherwise.
+fn hand_off(
+    app: &AppHandle,
+    job_id: &str,
+    command: &ExternalCommand,
+    request: &RunRequest,
+    source: ActivationSource,
+) -> ApiResult<()> {
+    let config = app.state::<AppState>().params().user_config;
     let needs_ui = command.takes_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
         let mut activation = Activation::new(StartMode::CommandLauncher, source);
@@ -185,7 +245,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
         activation.launcher_request = Some(external_commands::LauncherRequest {
             command_id: command.id.clone(),
             text: request.text.clone(),
-            job_id: Some(job.id.clone()),
+            job_id: Some(job_id.to_owned()),
             output: request.output,
             input: request.input.clone(),
         });
@@ -193,25 +253,51 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     } else {
         app.get_webview_window(runtime::QUICK_WINDOW_LABEL).ok_or_else(|| "Quick window not found".to_owned())
             .and_then(|window| window.emit(external_commands::COMMAND_RUN_EVENT, json!({
-                "commandId": command.id, "jobId": job.id, "text": request.text, "input": request.input,
+                "commandId": command.id, "jobId": job_id, "text": request.text, "input": request.input,
                 "output": request.output, "userConfig": config,
             })).map_err(|error| error.to_string()))
     };
-    if let Err(error) = handoff {
-        complete(
-            app,
-            &job.id,
-            JobCompletion {
-                success: false,
-                cancelled: false,
-                output: None,
-                message: Some(error.clone()),
-                code: Some("Unavailable".into()),
-            },
-        );
-        return Err(Response::coded_error("Unavailable", error));
-    }
-    Ok(job)
+    handoff.map_err(|error| {
+        fail(app, job_id, error.clone(), "Unavailable");
+        Response::coded_error("Unavailable", error)
+    })
+}
+
+/// Runs a job the user allowed to use the selection, unless it ended or its
+/// command went away while the prompt was shown.
+pub fn resume(app: &AppHandle, job_id: &str, source: ActivationSource) {
+    let Some(request) = app.state::<ExternalJobs>().accepted_request(job_id) else {
+        return;
+    };
+    let command = match lookup(app, &request.target, request.by_name) {
+        Ok(command) => command,
+        Err(error) => {
+            complete(
+                app,
+                job_id,
+                JobCompletion {
+                    success: false,
+                    cancelled: false,
+                    output: None,
+                    message: error.error,
+                    code: error.code,
+                },
+            );
+            return;
+        }
+    };
+    // a failed handoff has completed the job with its error already
+    let _ = hand_off(app, job_id, &command, &request, source);
+}
+
+/// The user did not allow the job to use the selection.
+pub fn deny_selection(app: &AppHandle, job_id: &str) {
+    fail(
+        app,
+        job_id,
+        "The user did not allow access to the selection".into(),
+        "AccessDenied",
+    );
 }
 
 #[derive(Debug, Deserialize)]
@@ -300,6 +386,7 @@ fn cancel(app: &AppHandle, id: &str, code: &str) -> Response {
         return Response::coded_error("NotFound", "No such job");
     };
     if !job.state.is_terminal() {
+        external_access::withdraw(app, id);
         complete(
             app,
             id,
@@ -338,7 +425,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
         return false;
     }
     let config = app.state::<AppState>().params().user_config;
-    if request.selection {
+    if request.selection && !jobs.selection_approved(id) {
         if let Err(error) = permission(&config, "selection") {
             complete(
                 app,

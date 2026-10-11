@@ -54,10 +54,10 @@ describe('toolInputKind', () => {
   it('follows the settings when the schema depends on them', () => {
     const scriptLike = tool({
       inputSchemaFor: (config) =>
-        config.takesText === false ? NO_INPUT_SCHEMA : TEXT_INPUT_SCHEMA,
+        config.noInput ? NO_INPUT_SCHEMA : TEXT_INPUT_SCHEMA,
     })
     expect(toolInputKind(scriptLike, {})).toBe('text')
-    expect(toolInputKind(scriptLike, { takesText: false })).toBe('none')
+    expect(toolInputKind(scriptLike, { noInput: true })).toBe('none')
   })
 
   it('needs a parser for a structured input', () => {

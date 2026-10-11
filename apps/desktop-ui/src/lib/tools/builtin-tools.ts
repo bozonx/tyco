@@ -2,6 +2,8 @@ import {
   SCRIPT_CANCELLED_ERROR,
   type ScriptActionRequest,
   type ScriptExecutionResult,
+  scriptTakesText,
+  webhookTakesText,
 } from '@tyco/shared'
 
 import {
@@ -47,9 +49,9 @@ const cancelled: ToolResult = { ok: false, cancelled: true }
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error)
 
-/** The input schema of a script or a webhook: the text, unless it takes none */
-const takesTextSchema = (config: Record<string, unknown>) =>
-  config.takesText === false ? NO_INPUT_SCHEMA : TEXT_INPUT_SCHEMA
+/** The text, when the settings of a script or a webhook mention it */
+const textSchema = (takesText: boolean) =>
+  takesText ? TEXT_INPUT_SCHEMA : NO_INPUT_SCHEMA
 
 const textOf = (input: Record<string, unknown>): string | null =>
   typeof input.text === 'string' ? input.text : null
@@ -64,7 +66,8 @@ export function createScriptTool(
     icon: 'mdi:console-line',
     description: 'Runs a shell command of the user',
     inputSchema: TEXT_INPUT_SCHEMA,
-    inputSchemaFor: takesTextSchema,
+    inputSchemaFor: (config) =>
+      textSchema(scriptTakesText(scriptToolConfigOf(config))),
     logsOutput: true,
     run: async (call) => {
       const config = scriptToolConfigOf(call.config)
@@ -86,7 +89,7 @@ export function createScriptTool(
           ...buildScriptRequest(
             call.command?.name || config.command.trim(),
             config,
-            config.takesText ? textOf(call.input) : null,
+            scriptTakesText(config) ? textOf(call.input) : null,
             {
               captureOutput: call.wantsOutput,
               logOutput: call.command?.logOutput ?? false,
@@ -133,7 +136,8 @@ export function createWebhookTool(
     icon: 'mdi:webhook',
     description: 'Sends an HTTP request configured by the user',
     inputSchema: TEXT_INPUT_SCHEMA,
-    inputSchemaFor: takesTextSchema,
+    inputSchemaFor: (config) =>
+      textSchema(webhookTakesText(webhookToolConfigOf(config))),
     logsOutput: true,
     run: async (call) => {
       const config = webhookToolConfigOf(call.config)
@@ -149,7 +153,7 @@ export function createWebhookTool(
             name: call.command?.name || 'Webhook',
             logOutput: call.command?.logOutput ?? false,
           },
-          config.takesText ? textOf(call.input) : null,
+          webhookTakesText(config) ? textOf(call.input) : null,
           call.signal
         )
       } catch (error) {

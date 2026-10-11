@@ -54,7 +54,10 @@ const webhook = (
   return {
     ...base,
     name: id,
-    toolConfig: { ...base.toolConfig, url: 'https://x.test', takesText },
+    toolConfig: {
+      ...base.toolConfig,
+      url: takesText ? 'https://x.test/?q={{TEXT}}' : 'https://x.test',
+    },
     ...extra,
   }
 }

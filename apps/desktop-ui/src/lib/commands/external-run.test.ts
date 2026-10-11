@@ -17,7 +17,7 @@ import {
 const lamp: CommandConfig = {
   ...createCommand('webhook', 'lamp'),
   name: 'Lamp',
-  toolConfig: { url: 'https://x.test', takesText: false },
+  toolConfig: { url: 'https://x.test' },
 }
 
 const event = (extra: Partial<CommandRunEvent> = {}): CommandRunEvent => ({

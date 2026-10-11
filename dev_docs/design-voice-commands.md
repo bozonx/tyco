@@ -576,12 +576,16 @@ export interface UserConfig {
 ### 4.2. Настройки встроенных инструментов
 
 `toolConfig` у `script` и `webhook` — поля нынешних `ScriptMainAction` и
-`WebhookMainAction` без `type`, `id`, `name`, `afterRun` и `logOutput`, плюс
-новое поле `takesText: boolean` (по умолчанию `true`). Общий редактор полей
-(`CustomActionFields.vue`) переезжает во вкладку «Команды».
+`WebhookMainAction` без `type`, `id`, `name`, `afterRun` и `logOutput`. Общий
+редактор полей (`CustomActionFields.vue`) переезжает во вкладку «Команды».
 
-`takesText: false` — команда без входа: `{{TEXT}}` в команде или шаблоне
-запроса не допускается, редактор показывает ошибку.
+Отдельного флага «принимает текст» нет: он выводится из настроек
+(`scriptTakesText` / `webhookTakesText` в `@tyco/shared`, на Rust —
+`external_commands.rs`). Скрипт принимает текст, если в команде есть `{{TEXT}}`
+или `TYCO_TEXT`; тогда текст приходит и подстановкой, и в `TYCO_TEXT`, и в
+stdin. Вебхук принимает текст, если `{{TEXT}}` стоит в URL или в шаблоне тела
+POST-запроса; неявно (параметром `text` или полем тела по умолчанию) текст не
+отправляется. Команда без текста запускается сразу, ничего не спрашивая.
 
 `toolConfig` встроенных инструментов ядра (§3.7):
 
@@ -614,7 +618,7 @@ export interface AiTaskToolConfig {
 из `mainActions`:
 
 1. превращается в `CommandConfig` с тем же `id` и `name`, `toolId` по типу,
-   `toolConfig` из его полей, `takesText: true`, теми же `afterRun` и
+   `toolConfig` из его полей, теми же `afterRun` и
    `logOutput`, `phrases: []`, `llmArgumentParsing: false`, `availableIn` —
    всё `false`;
 2. заменяется в `mainActions` на `{ type: 'command', commandId: id }`.
@@ -1221,7 +1225,7 @@ Rust:
       `core.*` — `lib/tools/core-tools.ts`. Функции `command-config` получают
       реестр вторым аргументом (`ToolLookup`). Кроме полей из §5.1 у
       `ToolDefinition` есть `inputSchemaFor(config)` (вход `script`/`webhook`
-      зависит от `takesText`), `defaultAfterRun` (инструменты «текст → текст»
+      зависит от того, упомянут ли в настройках текст), `defaultAfterRun` (инструменты «текст → текст»
       создают команды с `replaceSelection`) и `descriptionKey` (описание в выборе
       инструмента); у `ToolCall` — `command` (id, имя, `logOutput`) и
       `wantsOutput`; у `ToolResult` — `level`, `cancelled` и `keepWindow` (окно

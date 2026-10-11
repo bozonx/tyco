@@ -20,7 +20,7 @@ const script = (
 ): CommandConfig => ({
   ...createCommand('script', 's-1'),
   name: 'Echo',
-  toolConfig: { command: 'echo 123', takesText: true, ...toolConfig },
+  toolConfig: { command: 'echo {{TEXT}}', ...toolConfig },
   ...extra,
 })
 
@@ -31,8 +31,7 @@ const webhook = (
   ...createCommand('webhook', 'wh-1'),
   name: 'My Webhook',
   toolConfig: {
-    url: 'https://api.example.com/endpoint',
-    takesText: true,
+    url: 'https://api.example.com/endpoint?q={{TEXT}}',
     ...toolConfig,
   },
   ...extra,
@@ -115,7 +114,7 @@ describe('script commands', () => {
 
     expect(executeScriptAction).toHaveBeenCalledWith({
       name: 'Echo',
-      command: 'echo 123',
+      command: 'echo {{TEXT}}',
       workingDir: '/tmp',
       text: 'input',
       captureOutput: false,
@@ -132,7 +131,7 @@ describe('script commands', () => {
   it('gives no text to a command that takes none', async () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { runner } = setup({ executeScriptAction })
-    await runner.run(script({ takesText: false }), 'ignored')
+    await runner.run(script({ command: 'backup.sh' }), 'ignored')
     expect(executeScriptAction.mock.calls[0][0].text).toBe('')
   })
 
@@ -210,7 +209,7 @@ describe('script commands', () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { runner } = setup({ executeScriptAction })
     await runner.run(script({}, { name: '' }), 'x')
-    expect(executeScriptAction.mock.calls[0][0].name).toBe('echo 123')
+    expect(executeScriptAction.mock.calls[0][0].name).toBe('echo {{TEXT}}')
   })
 })
 
@@ -229,7 +228,7 @@ describe('webhook commands', () => {
       expect.objectContaining({
         id: 'wh-1',
         name: 'My Webhook',
-        url: 'https://api.example.com/endpoint',
+        url: 'https://api.example.com/endpoint?q={{TEXT}}',
         method: 'GET',
         logOutput: true,
       }),
@@ -246,7 +245,10 @@ describe('webhook commands', () => {
   it('sends no text for a webhook that takes none', async () => {
     const executeWebhook = vi.fn().mockResolvedValue('')
     const { runner } = setup({ executeWebhook })
-    await runner.run(webhook({ takesText: false }), 'ignored')
+    await runner.run(
+      webhook({ url: 'https://api.example.com/endpoint' }),
+      'ignored'
+    )
     expect(executeWebhook.mock.calls[0][1]).toBeNull()
   })
 

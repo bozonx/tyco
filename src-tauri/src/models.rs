@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::services::activation::WindowProfile;
+use crate::services::external_access::AccessRequest;
 use crate::services::external_commands::LauncherRequest;
 use crate::services::hotkeys;
 
@@ -48,6 +49,9 @@ pub struct InitParams {
     #[serde(default)]
     pub launcher_page: usize,
     pub launcher_request: Option<LauncherRequest>,
+    /// What the access prompt asks about, see `external_access`.
+    #[serde(default)]
+    pub access_request: Option<AccessRequest>,
 }
 
 /// A text the user attached to a chat message.
@@ -364,6 +368,7 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
         window_profile: WindowProfile::Sheet,
         launcher_page: 0,
         launcher_request: None,
+        access_request: None,
     }
 }
 

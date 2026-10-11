@@ -808,7 +808,8 @@ fn default_key(mode: StartMode) -> Option<&'static str> {
         | StartMode::Correction
         | StartMode::Translate
         | StartMode::History
-        | StartMode::Config => None,
+        | StartMode::Config
+        | StartMode::ExternalAccess => None,
     }
 }
 
@@ -1085,6 +1086,7 @@ fn mode_description(mode: StartMode) -> &'static str {
         StartMode::Translate => "Translate selected text",
         StartMode::History => "Open history",
         StartMode::Config => "Open settings",
+        StartMode::ExternalAccess => "Answer a request for the selection",
     }
 }
 

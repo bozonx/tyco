@@ -58,7 +58,7 @@ describe('normalizeCommand', () => {
       name: '',
       phrases: [],
       toolId: 'script',
-      toolConfig: { command: 'echo', workingDir: '', takesText: true },
+      toolConfig: { command: 'echo', workingDir: '' },
       llmArgumentParsing: false,
       launcherAfterRun: { withSelection: 'none', withoutSelection: 'none' },
       logOutput: false,
@@ -120,7 +120,6 @@ describe('normalizeCommand', () => {
           url: 'https://x.test',
           method: 'PUT',
           headers: { 'x-a': '1', 'x-b': 2 },
-          takesText: false,
         },
       })?.toolConfig
     ).toEqual({
@@ -129,7 +128,6 @@ describe('normalizeCommand', () => {
       headers: { 'x-a': '1' },
       payloadTemplate: '',
       authSecret: false,
-      takesText: false,
     })
   })
 
@@ -188,12 +186,41 @@ describe('menu commands', () => {
     const script = createCommand('script', 'a')
     expect(isMenuCommand(script, tools)).toBe(true)
     expect(isMenuCommand({ ...script, enabled: false }, tools)).toBe(false)
-    expect(isMenuCommand(withConfig(script, { takesText: false }), tools)).toBe(
-      true
-    )
+    expect(commandTakesText(script, tools)).toBe(false)
+    expect(isMenuCommand(script, tools)).toBe(true)
     expect(commandTakesText({ ...script, toolId: 'notes.write' }, tools)).toBe(
       false
     )
+  })
+
+  it('takes the text a script mentions', () => {
+    const script = (command: string) =>
+      withConfig(createCommand('script', 'a'), { command })
+    expect(commandTakesText(script('echo {{TEXT}}'), tools)).toBe(true)
+    expect(commandTakesText(script('printf %s "$TYCO_TEXT"'), tools)).toBe(true)
+    expect(commandTakesText(script('backup.sh'), tools)).toBe(false)
+  })
+
+  it('takes the text where the placeholder of a webhook stands', () => {
+    const webhook = (toolConfig: Record<string, unknown>) =>
+      withConfig(createCommand('webhook', 'a'), {
+        url: 'https://x.test',
+        ...toolConfig,
+      })
+    expect(
+      commandTakesText(webhook({ url: 'https://x.test/{{TEXT}}' }), tools)
+    ).toBe(true)
+    expect(
+      commandTakesText(webhook({ payloadTemplate: '{"t":"{{TEXT}}"}' }), tools)
+    ).toBe(true)
+    // a GET request has no body
+    expect(
+      commandTakesText(
+        webhook({ method: 'GET', payloadTemplate: '{"t":"{{TEXT}}"}' }),
+        tools
+      )
+    ).toBe(false)
+    expect(commandTakesText(webhook({}), tools)).toBe(false)
   })
 
   it('suggests a name from the program of a script or the host of a webhook', () => {
@@ -254,30 +281,6 @@ describe('validateCommand', () => {
     expect(validateCommand(namedCommand('webhook', 'a'), tools)).toEqual([
       { field: 'url', messageKey: 'commands.errorNoUrl' },
     ])
-  })
-
-  it('rejects the text placeholder in a command without text', () => {
-    expect(
-      validateCommand(
-        withConfig(namedCommand('script', 'a'), {
-          command: 'notify-send {{TEXT}}',
-          takesText: false,
-        }),
-        tools
-      )
-    ).toEqual([
-      { field: 'command', messageKey: 'commands.errorTextPlaceholder' },
-    ])
-    expect(
-      validateCommand(
-        withConfig(namedCommand('webhook', 'a'), {
-          url: 'https://x.test/{{TEXT}}',
-          payloadTemplate: '{"t":"{{TEXT}}"}',
-          takesText: false,
-        }),
-        tools
-      ).map((issue) => issue.field)
-    ).toEqual(['url', 'payloadTemplate'])
   })
 
   it('allows the placeholder in a command that takes text', () => {

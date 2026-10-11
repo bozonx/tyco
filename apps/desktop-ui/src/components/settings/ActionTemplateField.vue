@@ -21,7 +21,6 @@
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
     <Button
-      v-if="!noText"
       type="button"
       ghost
       square
@@ -51,8 +50,6 @@ const props = defineProps<{
   placeholder?: string
   info?: string
   multiline?: boolean
-  /** The command takes no text: no button inserts the placeholder */
-  noText?: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'update:value', value: string): void }>()

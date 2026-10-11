@@ -26,7 +26,7 @@ const script = (
 ): CommandConfig => ({
   ...createCommand('script', 'sc1'),
   ...extra,
-  toolConfig: { command: '', workingDir: '', takesText: true, ...toolConfig },
+  toolConfig: { command: '', workingDir: '', ...toolConfig },
 })
 
 const mountEditor = (
@@ -61,42 +61,18 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.emitted('update')).toBeUndefined()
   })
 
-  it('shows the result menu instead of a replacement once the text is off', async () => {
-    const wrapper = mountEditor(
-      script(
-        { command: 'ls' },
-        {
-          name: 'ls',
-          launcherAfterRun: {
-            withSelection: 'replaceSelection',
-            withoutSelection: 'copy',
-          },
-        }
-      )
-    )
-    wrapper
-      .findComponent({ name: 'CustomActionFields' })
-      .vm.$emit('update', 'takesText', false)
-    const command = lastUpdate(wrapper)
-    expect(command.toolConfig.takesText).toBe(false)
-    expect(command.launcherAfterRun).toEqual({
-      withSelection: 'showMenu',
-      withoutSelection: 'copy',
-    })
-  })
-
   it('offers no replacement for a command without text', () => {
-    const withText = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
-    expect(withText.text()).toContain('commands.afterRunReplaceSelection')
-    const noText = mountEditor(
-      script({ command: 'ls', takesText: false }, { name: 'ls' })
+    const withText = mountEditor(
+      script({ command: 'wc {{TEXT}}' }, { name: 'wc' })
     )
+    expect(withText.text()).toContain('commands.afterRunReplaceSelection')
+    const noText = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     expect(noText.text()).not.toContain('commands.afterRunReplaceSelection')
   })
 
   it('edits each quick-command context independently and shows fixed behavior elsewhere', async () => {
     const command = script(
-      { command: 'echo' },
+      { command: 'echo {{TEXT}}' },
       {
         name: 'Echo',
         launcherAfterRun: {
@@ -148,15 +124,13 @@ describe('CommandEditor.vue', () => {
   })
 
   it('shows where the command is placed and leads to those settings', async () => {
-    const wrapper = mountEditor(
-      script({ command: 'ls', takesText: false }, { name: 'ls' }),
-      { menuSlot: 1 }
-    )
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }), {
+      menuSlot: 1,
+    })
     const places = wrapper
       .findAll('.command-place')
       .filter((place) => place.find('button').exists())
     expect(places[0].text()).toContain('W')
-    expect(places[0].text()).toContain('commands.placeMenuEditorOnly')
     expect(places[1].text()).toContain('commands.placeLauncherSearch')
     await places[1].find('button').trigger('click')
     expect(wrapper.emitted('navigate')).toEqual([['launcher-commands']])

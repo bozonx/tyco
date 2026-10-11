@@ -12,11 +12,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::errors::AppError;
+use crate::services::custom_actions::{TEXT_ENV_VAR, TEXT_PLACEHOLDER};
 
 pub const COMMAND_RUN_EVENT: &str = "app://command-run";
-
-/// Tools the backend knows itself; the others come with the tool catalog.
-const BUILTIN_TOOLS: [&str; 2] = ["script", "webhook"];
 
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -151,16 +149,33 @@ fn is_external(command: &Value) -> bool {
         == Some(true)
 }
 
+/// Whether a script takes the text: its command mentions `{{TEXT}}` or
+/// `TYCO_TEXT`. Keep in sync with `scriptTakesText` in
+/// `packages/shared/src/user-config.ts`.
+fn script_takes_text(config: &Value) -> bool {
+    let command = str_field(config, "command");
+    command.contains(TEXT_PLACEHOLDER) || command.contains(TEXT_ENV_VAR)
+}
+
+/// Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body
+/// of a POST request. Keep in sync with `webhookTakesText` in
+/// `packages/shared/src/user-config.ts`.
+fn webhook_takes_text(config: &Value) -> bool {
+    str_field(config, "url").contains(TEXT_PLACEHOLDER)
+        || (str_field(config, "method") != "GET"
+            && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
+}
+
 /// Whether the tool of the command can run it, and if so whether it takes
 /// a text.
 fn tool_status(command: &Value, catalog: Option<&ToolCatalog>) -> Result<bool, LookupError> {
     let id = id_of(command).to_owned();
     let tool_id = str_field(command, "toolId").trim();
-    if BUILTIN_TOOLS.contains(&tool_id) {
-        return Ok(command
-            .pointer("/toolConfig/takesText")
-            .and_then(Value::as_bool)
-            != Some(false));
+    let config = command.get("toolConfig").unwrap_or(&Value::Null);
+    match tool_id {
+        "script" => return Ok(script_takes_text(config)),
+        "webhook" => return Ok(webhook_takes_text(config)),
+        _ => {}
     }
     let catalog = catalog.ok_or_else(|| LookupError::ToolsLoading(id.clone()))?;
     let tool = catalog
@@ -321,14 +336,14 @@ mod tests {
                     "id": "backup",
                     "name": "Бэкап",
                     "toolId": "script",
-                    "toolConfig": { "command": "backup.sh", "takesText": false },
+                    "toolConfig": { "command": "backup.sh" },
                     "availableIn": { "launcher": true, "external": true }
                 },
                 {
                     "id": "note",
                     "name": "Work  Note",
                     "toolId": "webhook",
-                    "toolConfig": { "url": "https://example.com" },
+                    "toolConfig": { "url": "https://example.com/?q={{TEXT}}" },
                     "afterRun": "showMenu",
                     "availableIn": { "external": true }
                 },
@@ -410,7 +425,7 @@ mod tests {
                     "id": "Lamp",
                     "name": "Свет",
                     "toolId": "webhook",
-                    "toolConfig": { "url": "https://example.com", "takesText": false },
+                    "toolConfig": { "url": "https://example.com" },
                     "availableIn": { "external": true }
                 },
                 {
@@ -536,6 +551,34 @@ mod tests {
     }
 
     #[test]
+    fn a_script_takes_the_text_it_mentions() {
+        assert!(script_takes_text(&json!({ "command": "echo {{TEXT}}" })));
+        assert!(script_takes_text(
+            &json!({ "command": "printf %s \"$TYCO_TEXT\"" })
+        ));
+        assert!(!script_takes_text(&json!({ "command": "backup.sh" })));
+        assert!(!script_takes_text(&json!({})));
+    }
+
+    #[test]
+    fn a_webhook_takes_the_text_where_its_placeholder_stands() {
+        assert!(webhook_takes_text(
+            &json!({ "url": "https://x.test/?q={{TEXT}}", "method": "GET" })
+        ));
+        assert!(webhook_takes_text(&json!({
+            "url": "https://x.test",
+            "payloadTemplate": "{\"text\": \"{{TEXT}}\"}"
+        })));
+        // a GET request sends no body
+        assert!(!webhook_takes_text(&json!({
+            "url": "https://x.test",
+            "method": "GET",
+            "payloadTemplate": "{{TEXT}}"
+        })));
+        assert!(!webhook_takes_text(&json!({ "url": "https://x.test" })));
+    }
+
+    #[test]
     fn accepts_commands_independently_of_launcher_output_settings() {
         let mut catalog = catalog();
         catalog.get_mut("core.translate").unwrap().available = true;
@@ -580,10 +623,10 @@ mod tests {
                 { "id": "lights", "name": "Lights", "input": "none" },
                 { "id": "remind", "name": "Remind", "input": "structured" },
                 { "id": "remind-raw", "name": "Remind raw", "input": "structured" },
-                { "id": "twin-a", "name": "Twin", "input": "text" },
-                { "id": "twin-b", "name": "twin", "input": "text" },
+                { "id": "twin-a", "name": "Twin", "input": "none" },
+                { "id": "twin-b", "name": "twin", "input": "none" },
                 { "id": "Lamp", "name": "Свет", "input": "none" },
-                { "id": "lamp-2", "name": "Lamp", "input": "text" }
+                { "id": "lamp-2", "name": "Lamp", "input": "none" }
             ])
         );
         assert_eq!(list(&json!({}), None), json!([]));

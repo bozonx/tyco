@@ -225,7 +225,9 @@ pub fn run() {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
         .manage(services::external_jobs::ExternalJobs::default())
+        .manage(services::external_access::AccessPrompt::default())
         .invoke_handler(tauri::generate_handler![
+            commands::actions::answer_external_access,
             commands::actions::claim_external_job,
             commands::actions::finish_external_job,
             get_init_params,

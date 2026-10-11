@@ -16,7 +16,7 @@ export type CustomActionLog = (
 ) => Promise<void>
 
 /** A webhook to call: the settings of the tool and who calls it */
-export interface WebhookTarget extends Omit<WebhookToolConfig, 'takesText'> {
+export interface WebhookTarget extends WebhookToolConfig {
   /** The id of the command; the Authorization secret is kept under it */
   id: string
   name: string
@@ -49,8 +49,8 @@ function isJson(value: string): boolean {
 }
 
 /**
- * The request for `text`; `null` is a call without text: no `text` parameter or
- * field is added
+ * The request for `text`; the text goes only where `{{TEXT}}` stands, and
+ * `null` is a call without text
  */
 export function buildWebhookRequest(
   target: WebhookTarget,
@@ -63,15 +63,6 @@ export function buildWebhookRequest(
     url = url
       .split(ACTION_TEXT_PLACEHOLDER)
       .join(encodeURIComponent(text ?? ''))
-  } else if (method === 'GET' && text !== null) {
-    try {
-      const parsed = new URL(url)
-      parsed.searchParams.set('text', text)
-      url = parsed.toString()
-    } catch {
-      const sep = url.includes('?') ? '&' : '?'
-      url = `${url}${sep}text=${encodeURIComponent(text)}`
-    }
   }
 
   const headers: Record<string, string> = { 'user-agent': 'Tyco-Desktop' }
@@ -80,7 +71,6 @@ export function buildWebhookRequest(
     body = target.payloadTemplate?.trim()
       ? fillJsonTemplate(target.payloadTemplate, text ?? '')
       : JSON.stringify({
-          ...(text === null ? {} : { text }),
           action: target.name || target.id,
           timestamp: Date.now(),
           source: 'tyco',

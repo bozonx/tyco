@@ -256,12 +256,12 @@ describe('createActionMenuStoreModel', () => {
     ])
   })
 
-  it('builds the items of commands that take no text only where asked', async () => {
+  it('builds the items of commands that take no text in their slots', async () => {
     const { deps } = setup()
     const noText = {
       ...createCommand('script', 'sc1'),
       name: 'Backup',
-      toolConfig: { command: 'backup', takesText: false },
+      toolConfig: { command: 'backup' },
     }
     const executeScriptAction = vi
       .fn()
@@ -279,10 +279,9 @@ describe('createActionMenuStoreModel', () => {
       commands: () => [noText],
     })
 
-    expect(store.getShortcutActions()).toEqual([])
-    const [item] = store.getShortcutActions({ textless: true })
+    const [item] = store.getShortcutActions()
     expect(item?.id).toBe('command:sc1')
-    expect(store.getActionsMenu({ textless: true })).toHaveLength(1)
+    expect(store.getActionsMenu()).toHaveLength(1)
 
     await item?.action('editor text')
     // the text does not leave the app with a command that takes none
@@ -290,16 +289,16 @@ describe('createActionMenuStoreModel', () => {
     expect(executeScriptAction.mock.calls[0][0]).toMatchObject({ text: '' })
   })
 
-  it('builds the items of commands that take text, in their slots', async () => {
+  it('builds the items of enabled commands, in their slots', async () => {
     const { deps } = setup()
     const script = {
       ...createCommand('script', 'sc1'),
       name: 'Echo',
-      toolConfig: { command: 'echo', takesText: true },
+      toolConfig: { command: 'echo {{TEXT}}' },
     }
     const noText = {
       ...createCommand('webhook', 'wh1'),
-      toolConfig: { url: 'https://x.test', takesText: false },
+      toolConfig: { url: 'https://x.test' },
     }
     const disabled = { ...createCommand('script', 'sc2'), enabled: false }
     const executeScriptAction = vi
@@ -327,7 +326,7 @@ describe('createActionMenuStoreModel', () => {
     const slots = store.getShortcutActions()
     expect(slots.map((action) => action?.id)).toEqual([
       'command:sc1',
-      undefined,
+      'command:wh1',
       undefined,
       undefined,
       'translation',
@@ -337,7 +336,7 @@ describe('createActionMenuStoreModel', () => {
     await slots[0]?.action('menu text')
     expect(deps.saveOutput).toHaveBeenCalledWith('menu text')
     expect(executeScriptAction.mock.calls[0][0]).toMatchObject({
-      command: 'echo',
+      command: 'echo {{TEXT}}',
       text: 'menu text',
     })
   })

@@ -277,6 +277,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         params.selected_text = activation.selected_text;
         params.launcher_page = activation.launcher_page;
         params.launcher_request = activation.launcher_request;
+        params.access_request = activation.access_request;
         params.is_window_shown = true;
         params.window_profile = activation.mode.profile();
     });
@@ -297,7 +298,8 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
         | StartMode::CommandLauncher
         | StartMode::Correction
         | StartMode::VoiceChat
-        | StartMode::Translate => QUICK_WINDOW_LABEL,
+        | StartMode::Translate
+        | StartMode::ExternalAccess => QUICK_WINDOW_LABEL,
         StartMode::Editor | StartMode::Chat | StartMode::History | StartMode::Config => {
             MAIN_WINDOW_LABEL
         }
@@ -795,6 +797,7 @@ mod tests {
             StartMode::Correction,
             StartMode::VoiceChat,
             StartMode::Translate,
+            StartMode::ExternalAccess,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
         }

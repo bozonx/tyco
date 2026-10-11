@@ -96,6 +96,15 @@ independent of the command grants:
 It is off by default. Internal hotkeys and UI actions do not acquire external
 permissions merely because they share the underlying execution code.
 
+While it is off, `tyco-ctl run <id> --selection` does not fail at once: Tyco
+captures the selection and asks the user in its quick window whether the call
+may use it. **Allow once** runs this call only, **Always allow** turns the
+permission on, and **Deny**, Esc or closing the prompt fails the job with
+`AccessDenied`. The prompt cannot tell which application is asking. One prompt
+is shown at a time; another such call meanwhile fails with `AccessDenied`. A
+prompt left unanswered ends with the job's timeout. `open --selection` still
+requires the permission and does not ask.
+
 Opening a mode that records, such as `voice`, `voice-chat` or `write`, needs no
 permission: the recording happens in a visible Tyco window and nothing of it is
 returned to the caller. Hotkeys bound in the desktop's own configuration, as on

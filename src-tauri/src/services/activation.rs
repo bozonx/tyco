@@ -1,6 +1,7 @@
 use serde_json::Value;
 
 use crate::errors::AppError;
+use crate::services::external_access::AccessRequest;
 use crate::services::external_commands::LauncherRequest;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -17,6 +18,9 @@ pub enum StartMode {
     Translate,
     History,
     Config,
+    /// Asks the user whether an external call may use the selection; Tyco
+    /// opens it itself, so no caller can name it.
+    ExternalAccess,
 }
 
 impl StartMode {
@@ -70,6 +74,7 @@ impl StartMode {
             Self::Translate => "translate",
             Self::History => "history",
             Self::Config => "config",
+            Self::ExternalAccess => "externalAccess",
         }
     }
     pub fn profile(self) -> WindowProfile {
@@ -116,6 +121,8 @@ pub struct Activation {
     /// The command the command overlay opens with, for an external call.
     pub launcher_page: usize,
     pub launcher_request: Option<LauncherRequest>,
+    /// What the access prompt asks about, see `external_access`.
+    pub access_request: Option<AccessRequest>,
 }
 
 impl Activation {
@@ -127,6 +134,7 @@ impl Activation {
             selected_text: None,
             launcher_page: 0,
             launcher_request: None,
+            access_request: None,
         }
     }
 

@@ -215,6 +215,9 @@ export interface PluginMainAction {
 /** Stands in for the text in a command, a webhook URL or its payload */
 export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 
+/** The environment variable a script gets the text in, besides stdin */
+export const ACTION_TEXT_ENV_VAR = 'TYCO_TEXT'
+
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
  * replacing the selection it got the text from (the result menu when the text
@@ -257,12 +260,14 @@ export interface AiTaskToolConfig {
 
 /** `toolConfig` of a `script` command */
 export interface ScriptToolConfig {
-  /** A shell command; `{{TEXT}}` is replaced with the text, quoted */
+  /**
+   * A shell command; `{{TEXT}}` is replaced with the text, quoted. The command
+   * takes the text only when it mentions `{{TEXT}}` or `TYCO_TEXT`, see
+   * `scriptTakesText`
+   */
   command: string
   /** Empty for the home directory */
   workingDir?: string
-  /** The command takes the text; without it `{{TEXT}}` is not allowed */
-  takesText: boolean
   /**
    * How long the output is waited for, in seconds; absent for
    * `SCRIPT_OUTPUT_TIMEOUT_SEC`
@@ -286,9 +291,28 @@ export interface WebhookToolConfig {
    * `webhookSecretId(commandId)`, bound to the origin of the URL
    */
   authSecret?: boolean
-  /** The webhook takes the text; without it `{{TEXT}}` is not allowed */
-  takesText: boolean
 }
+
+/**
+ * Whether a script takes the text: its command mentions `{{TEXT}}` or
+ * `TYCO_TEXT`. Keep in sync with `script_takes_text` in
+ * `src-tauri/src/services/external_commands.rs`
+ */
+export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
+  config.command.includes(ACTION_TEXT_PLACEHOLDER) ||
+  config.command.includes(ACTION_TEXT_ENV_VAR)
+
+/**
+ * Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body of
+ * a POST request. Keep in sync with `webhook_takes_text` in
+ * `src-tauri/src/services/external_commands.rs`
+ */
+export const webhookTakesText = (
+  config: Pick<WebhookToolConfig, 'url' | 'method' | 'payloadTemplate'>
+) =>
+  config.url.includes(ACTION_TEXT_PLACEHOLDER) ||
+  (config.method !== 'GET' &&
+    Boolean(config.payloadTemplate?.includes(ACTION_TEXT_PLACEHOLDER)))
 
 /** Where a command can be invoked, besides the action menu */
 export interface CommandAvailability {
