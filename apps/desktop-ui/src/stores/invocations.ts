@@ -36,10 +36,6 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
     closeWindow: () => {
       void ipcStore.callFunctionOrNotify('closeWindow', [])
     },
-    copyText: async (text) => {
-      const result = await ipcStore.callFunction('copyText', [text])
-      if (!result.success) throw new Error(result.error ?? 'copyText')
-    },
     showError: (messageKey, detail) => {
       toastText(
         detail ? `${translate(messageKey)}: ${detail}` : translate(messageKey),
@@ -53,15 +49,15 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
 }
 
 /**
- * Runs the core tools for the steps that gathered their settings themselves: a
- * translation into the picked language, an AI task, a correction
+ * Runs the core tools for the flows that gathered their settings themselves: a
+ * translation into the picked language, an AI task, a correction, an insertion
  */
 export const useInvocationsStore = defineStore('invocations', () => {
   const toolsStore = useToolsStore()
   const runner = createInvocationRunner(useInvocationRunnerDependencies())
 
-  /** The output of the tool on `text`; the step shows it and the errors */
-  const transform = (
+  /** Runs the tool on `text` and hands back its result to show */
+  const call = (
     toolId: CoreToolId,
     text: string,
     options: InvocationOptions & { toolConfig?: Record<string, unknown> } = {}
@@ -74,5 +70,5 @@ export const useInvocationsStore = defineStore('invocations', () => {
     )
   }
 
-  return { transform }
+  return { call }
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { testCopyTool } from '../tools/testing'
 import { createToolRegistry } from '../tools/tool-registry'
 import {
   TEXT_INPUT_SCHEMA,
@@ -29,16 +30,16 @@ const builtin: Invocation = {
 }
 
 function setup(tool: ToolDefinition = echoTool()) {
+  const copyText = vi.fn(async (_text: string) => {})
   const deps = {
-    tools: createToolRegistry([tool]),
+    tools: createToolRegistry([tool, testCopyTool(copyText)]),
     showToast: vi.fn(),
     showError: vi.fn(),
     showText: vi.fn(),
     showResultMenu: vi.fn(),
     closeWindow: vi.fn(),
-    copyText: vi.fn(async () => {}),
   }
-  return { deps, tool, runner: createInvocationRunner(deps) }
+  return { deps, tool, copyText, runner: createInvocationRunner(deps) }
 }
 
 describe('built-in invocations', () => {
@@ -91,7 +92,7 @@ describe('built-in invocations', () => {
   })
 
   it('copies the output where the context asks for it', async () => {
-    const { runner, deps } = setup()
+    const { runner, deps, copyText } = setup()
     const outcome = await runner.run(
       {
         ...builtin,
@@ -101,7 +102,24 @@ describe('built-in invocations', () => {
       { source: 'launcher' }
     )
     expect(outcome).toEqual({ success: true })
-    expect(deps.copyText).toHaveBeenCalledWith('ECHO')
+    expect(copyText).toHaveBeenCalledWith('ECHO')
+    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
     expect(deps.closeWindow).toHaveBeenCalled()
+  })
+
+  it('reports a clipboard that fails and keeps the window', async () => {
+    const { runner, deps, copyText } = setup()
+    copyText.mockRejectedValue(new Error('No clipboard'))
+    const outcome = await runner.run(
+      {
+        ...builtin,
+        launcherSink: { withSelection: 'copy', withoutSelection: 'copy' },
+      },
+      'hello',
+      { source: 'launcher' }
+    )
+    expect(outcome).toEqual({ success: false, message: 'No clipboard' })
+    expect(deps.showText).toHaveBeenCalledWith('No clipboard', 'error')
+    expect(deps.closeWindow).not.toHaveBeenCalled()
   })
 })

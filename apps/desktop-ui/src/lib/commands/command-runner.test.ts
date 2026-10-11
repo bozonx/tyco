@@ -7,7 +7,7 @@ import type {
 } from '@tyco/shared'
 
 import type { BuiltinToolDependencies } from '../tools/builtin-tools'
-import { testTools } from '../tools/testing'
+import { testCopyTool, testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand, launcherAfterRunFromLegacy } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
@@ -50,7 +50,11 @@ const result = (
 })
 
 function setup(
-  extra: Partial<InvocationRunnerDependencies> & BuiltinToolDependencies = {},
+  extra: Partial<InvocationRunnerDependencies> &
+    BuiltinToolDependencies & {
+      /** What `core.copy` does: the clipboard sink runs it */
+      copyText?: (text: string) => Promise<void>
+    } = {},
   tools: readonly ToolDefinition[] = []
 ) {
   const {
@@ -58,12 +62,13 @@ function setup(
     cancelScriptAction,
     executeWebhook,
     newRunId,
+    copyText = async () => {},
     ...rest
   } = extra
   const deps = {
     tools: testTools(
       { executeScriptAction, cancelScriptAction, executeWebhook, newRunId },
-      tools
+      [...tools, testCopyTool(copyText)]
     ),
     showToast: vi.fn(),
     showError: vi.fn(),

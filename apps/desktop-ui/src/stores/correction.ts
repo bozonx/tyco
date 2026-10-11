@@ -14,7 +14,6 @@ import { createQuickInsert } from '../lib/quick-input/quick-insert'
 import { useCorrectorStore } from './corrector'
 import { useHistoryStore } from './history'
 import { useInvocationsStore } from './invocations'
-import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menuModals'
 
 function describeError(error: unknown): string {
@@ -32,7 +31,7 @@ export const useCorrectionStore = defineStore('correction', () => {
 
   /** The correction of `text` by the `core.correct` tool */
   const correct = async (text: string, signal: AbortSignal) => {
-    const result = await invocations.transform('core.correct', text, { signal })
+    const result = await invocations.call('core.correct', text, { signal })
     if (result.cancelled) throw new CorrectionAbortedError()
     if (!result.ok) throw new Error(toolResultMessage(result, translate))
     return result.content ?? ''
@@ -64,17 +63,19 @@ export const useCorrectionStore = defineStore('correction', () => {
     isAborted: isCorrectionAborted,
   })
 
-  const ipcStore = useIpcStore()
+  // the correction of the submission being inserted, to stop it
+  let insertCorrection: AbortController | null = null
   const quickInsert = createQuickInsert({
-    correct: corrector.request,
-    cancelCorrection: corrector.cancel,
+    correct: (text) => {
+      insertCorrection = new AbortController()
+      return correct(text, insertCorrection.signal)
+    },
+    cancelCorrection: () => insertCorrection?.abort(),
     saveOutput: historyStore.saveOutput,
+    // a failed insertion is reported by the tool: the window may be gone
     insert: async (text) => {
-      const result = await ipcStore.callFunction('typeIntoWindowAndClose', [
-        text,
-      ])
-      if (!result.success)
-        throw new Error(result.error || 'Text insertion failed')
+      const result = await invocations.call('core.insert', text)
+      if (!result.ok) throw new Error(toolResultMessage(result, translate))
     },
     setPending: (onCancel) =>
       menuModalsStore.setPendingModal({ correction: true, onCancel }),

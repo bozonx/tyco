@@ -1,3 +1,5 @@
+import type { CoreToolId } from '@tyco/shared'
+
 import type { ToolResult } from '../tools/tool-types'
 import type {
   Invocation,
@@ -18,8 +20,13 @@ export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
   /** Opens the action menu on `text`, the result of a run on `sourceText` */
   showResultMenu?: (text: string, sourceText: string) => void
   closeWindow?: () => void
-  /** Puts the output of a run into the clipboard */
-  copyText?: (text: string) => Promise<void>
+}
+
+/** The clipboard sink puts the output there with the tool the copy action runs */
+const copyInvocation: Invocation = {
+  toolId: 'core.copy' satisfies CoreToolId,
+  toolConfig: {},
+  label: 'core.copy',
 }
 
 const succeeded: InvocationOutcome = { success: true }
@@ -34,9 +41,6 @@ const cancelled: InvocationOutcome = {
   cancelled: true,
   message: 'Cancelled',
 }
-
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
 
 /**
  * Runs invocations through the tool registry and hands their output to the sink
@@ -80,14 +84,12 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
       deps.showToast('toast.actionEmptyOutput', 'warn')
       return failed('Empty output')
     }
-    try {
-      await deps.copyText?.(text)
-    } catch (error) {
-      const message = errorMessage(error)
-      deps.showError?.('toast.commandFailed', message)
-      return failed(message)
+    const result = await invoke(copyInvocation, text, { output: 'return' })
+    if (result.cancelled) return cancelled
+    report(result)
+    if (!result.ok) {
+      return failed(result.failure ?? result.message ?? 'Copy failed')
     }
-    deps.showToast('toast.copied', 'success')
     if (!keepWindow) deps.closeWindow?.()
     return succeeded
   }

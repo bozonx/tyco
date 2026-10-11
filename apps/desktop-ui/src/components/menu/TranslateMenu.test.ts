@@ -14,7 +14,7 @@ vi.mock('../../composables/useI18n', () => ({
 
 const transform = vi.hoisted(() => vi.fn())
 vi.mock('../../stores/invocations', () => ({
-  useInvocationsStore: () => ({ transform }),
+  useInvocationsStore: () => ({ call: transform }),
 }))
 
 vi.mock('@tauri-apps/api/window', () => ({

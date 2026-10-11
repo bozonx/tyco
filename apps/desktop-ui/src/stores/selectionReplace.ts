@@ -41,7 +41,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
 
   /** Corrects the text with the `core.correct` tool */
   const correct = async (text: string, signal: AbortSignal) => {
-    const result = await invocations.transform('core.correct', text, {
+    const result = await invocations.call('core.correct', text, {
       signal,
       source: 'selection',
     })

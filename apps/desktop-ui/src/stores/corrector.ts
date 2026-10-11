@@ -25,7 +25,6 @@ export const useCorrectorStore = defineStore('corrector', () => {
 
   return {
     correct,
-    request: corrector.request,
     peek: corrector.peek,
     speculate: corrector.speculate,
     cancel: corrector.cancel,

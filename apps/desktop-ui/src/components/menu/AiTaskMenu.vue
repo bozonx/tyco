@@ -247,7 +247,7 @@ async function makeDiff(prompt: string) {
   try {
     const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
     if (controller.signal.aborted) return
-    const result = await invocations.transform('core.aiTask', trimmedText, {
+    const result = await invocations.call('core.aiTask', trimmedText, {
       signal: controller.signal,
       toolConfig: { prompt },
     })

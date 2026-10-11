@@ -316,7 +316,7 @@ const translate = async (targetLanguage: string, source?: string) => {
   try {
     const sourceId = await historyStore.saveSource(sourceText, 'translate')
     if (controller.signal.aborted) return
-    const result = await invocations.transform('core.translate', sourceText, {
+    const result = await invocations.call('core.translate', sourceText, {
       signal: controller.signal,
       onProgress: setStage,
       toolConfig: { language: targetLanguage, sourceLanguage: source },
