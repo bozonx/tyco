@@ -21,6 +21,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const model = createCommandLauncherModel({
     tools: useToolsStore(),
     commands: () => ipcStore.params.userConfig?.commands,
+    launcherPages: () => ipcStore.params.userConfig?.launcherPages,
     launcherCommands: () => ipcStore.params.userConfig?.launcherCommands,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
@@ -77,7 +78,10 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       if (ipcStore.params.mode !== START_MODES.COMMAND_LAUNCHER) return
       const request = ipcStore.params.launcherRequest
       if (request) void model.request(request)
-      else model.reset()
+      else {
+        model.reset()
+        model.setPage(ipcStore.params.launcherPage ?? 0)
+      }
     }
   )
 

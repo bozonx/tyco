@@ -541,7 +541,7 @@
     "hotkeyActions": {
       "aiTasks": "Yapay zekâ görevleri",
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
-      "commandLauncher": "Hızlı komutlar",
+      "commandLauncher": "Hızlı komutlar: sayfa 1",
       "correction": "Önizlemeli düzeltme",
       "editor": "Seçili metni düzenleyicide aç",
       "inlineCorrection": "Seçili metni yerinde düzelt",
@@ -549,7 +549,11 @@
       "translate": "Seçili metni çevir",
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
-      "write": "Hızlı metin girişi"
+      "write": "Hızlı metin girişi",
+      "commandLauncher2": "Hızlı komutlar: sayfa 2",
+      "commandLauncher3": "Hızlı komutlar: sayfa 3",
+      "commandLauncher4": "Hızlı komutlar: sayfa 4",
+      "commandLauncher5": "Hızlı komutlar: sayfa 5"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -743,7 +747,10 @@
     "userLanguage": "Kullanıcı dili",
     "windowInsertion": "Ekleme yöntemi",
     "windowInsertionHint": "Başka bir uygulamada tuşlara basan program: xdotool X11'de, ydotool Wayland'de çalışır. Aşağıdaki alan programın yoludur.",
-    "vision": "Görsel desteği"
+    "vision": "Görsel desteği",
+    "launcherPage": "Hızlı komutlar: sayfa {page}",
+    "addLauncherPage": "Sayfa ekle",
+    "removeLauncherPage": "Sayfayı sil"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

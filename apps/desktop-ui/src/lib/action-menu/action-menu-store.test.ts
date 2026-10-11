@@ -23,6 +23,18 @@ describe('createActionMenuStoreModel', () => {
     return { store, deps }
   }
 
+  it('opens command pages beyond the global shortcut range with the current text', async () => {
+    const { deps } = setup()
+    const openLauncherPage = vi.fn(async () => {})
+    const store = createActionMenuStoreModel({
+      ...deps,
+      openLauncherPage,
+      mainActions: () => [{ type: 'launcherPage', page: 12 }],
+    })
+    await store.getShortcutActions()[0]?.action('current text')
+    expect(openLauncherPage).toHaveBeenCalledWith(12, 'current text')
+  })
+
   it('shows toast when attempting actions on empty text', async () => {
     const { store, deps } = setup()
     const actions = store.getDefaultActions()

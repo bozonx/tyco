@@ -17,6 +17,7 @@ import {
   type CommandRunnerDependencies,
   createCommandRunner,
 } from '../commands/command-runner'
+import { translate } from '../i18n'
 import { getLanguageLabel } from '../locale/language'
 import { assignPluginActions } from './main-actions'
 
@@ -38,6 +39,7 @@ export interface ActionMenuDependencies extends CommandRunnerDependencies {
   startChatWithAttachment: (text: string) => void
   minCorrectionLength?: () => number
   mainActionRegistrations?: () => readonly string[] | undefined
+  openLauncherPage?: (page: number, text: string) => Promise<void>
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
@@ -209,6 +211,14 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
     )
     const slots = resolveMainActions().map((item) => {
       if (!item) return undefined
+      if (item.type === 'launcherPage')
+        return {
+          name: translate('settings.launcherPage', { page: item.page + 1 }),
+          icon: 'mdi:view-grid-outline',
+          action: async (text: string) => {
+            await deps.openLauncherPage?.(item.page, text)
+          },
+        }
       if (item.type === 'standard') return defaults.get(item.actionId)
       if (item.type === 'plugin') return plugins.get(item.actionId)
       if (item.type === 'command') {

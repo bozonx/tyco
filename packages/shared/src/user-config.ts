@@ -369,6 +369,7 @@ export interface TranslationMainAction {
 }
 
 export type MainActionConfig =
+  | { type: 'launcherPage'; page: number }
   | StandardMainAction
   | PluginMainAction
   | CommandMainAction
@@ -450,6 +451,7 @@ export interface UserConfig {
   mainActions: (MainActionConfig | null)[]
   /** Slots of the command overlay (15 keys) */
   launcherCommands: (string | null)[]
+  launcherPages?: (string | null)[][]
   /** The command library; the action menu refers to commands by id */
   commands: CommandConfig[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */
@@ -506,6 +508,10 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     select: 'Ctrl+Alt+S',
     aiTasks: '',
     commandLauncher: '',
+    commandLauncher2: '',
+    commandLauncher3: '',
+    commandLauncher4: '',
+    commandLauncher5: '',
     correction: '',
     translate: '',
   },

@@ -259,6 +259,7 @@
           v-else-if="currentTab === 'launcher-commands'"
           :user-config="userConfig"
           @update:launcher-commands="userConfig.launcherCommands = $event"
+          @update:launcher-pages="updateLauncherPages"
           @create-command="createLauncherCommand"
           @edit-command="editCommand"
         />
@@ -721,6 +722,10 @@ function createPreparedUserConfig(config: unknown) {
     nextConfig.launcherCommands,
     nextConfig.commands
   )
+  nextConfig.launcherPages = (nextConfig.launcherPages ?? []).map(
+    (page: (string | null)[]) =>
+      normalizeLauncherCommands(page, nextConfig.commands)
+  )
   normalizeAiTasks(nextConfig)
   nextConfig.aiRules = {
     ...DEFAULT_USER_CONFIG.aiRules,
@@ -958,6 +963,21 @@ const updateMainActions = (actions: (MainActionConfig | null)[]) => {
   userConfig.value.mainActions = actions
 }
 
+const updateLauncherPages = (pages: (string | null)[][]) => {
+  const previous = userConfig.value.launcherPages ?? []
+  if (pages.length < previous.length) {
+    const removed =
+      previous.findIndex((page: (string | null)[]) => !pages.includes(page)) + 1
+    userConfig.value.mainActions = userConfig.value.mainActions.map(
+      (item: MainActionConfig | null) => {
+        if (item?.type !== 'launcherPage' || item.page < removed) return item
+        return item.page === removed ? null : { ...item, page: item.page - 1 }
+      }
+    )
+  }
+  userConfig.value.launcherPages = pages
+}
+
 const updateCommands = (commands: CommandConfig[]) => {
   userConfig.value.commands = commands
 }
@@ -974,19 +994,29 @@ const editCommand = (commandId: string) => {
   currentTab.value = 'commands'
 }
 
-const createLauncherCommand = (index: number, toolId: BuiltinToolId) => {
+const createLauncherCommand = (
+  index: number,
+  toolId: BuiltinToolId,
+  page = 0
+) => {
   const command = createCommand(toolId)
   const nextCommands = [
     ...normalizeCommands(userConfig.value.commands),
     command,
   ]
   const slots = normalizeLauncherCommands(
-    userConfig.value.launcherCommands,
+    page
+      ? userConfig.value.launcherPages?.[page - 1]
+      : userConfig.value.launcherCommands,
     nextCommands
   )
   slots[index] = command.id
   userConfig.value.commands = nextCommands
-  userConfig.value.launcherCommands = slots
+  if (page) {
+    const pages = [...(userConfig.value.launcherPages ?? [])]
+    pages[page - 1] = slots
+    userConfig.value.launcherPages = pages
+  } else userConfig.value.launcherCommands = slots
   editCommand(command.id)
 }
 

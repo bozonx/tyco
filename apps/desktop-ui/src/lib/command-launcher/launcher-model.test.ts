@@ -531,3 +531,25 @@ describe('external job requests', () => {
     )
   })
 })
+
+describe('launcher pages', () => {
+  it('switches independent slots, wraps and rejects absent pages', () => {
+    const { deps } = setup()
+    const model = createCommandLauncherModel({
+      ...deps,
+      launcherCommands: () => ['backup'],
+      launcherPages: () => [['note'], ['lights']],
+    })
+    expect(model.slotCommands.value[0]?.id).toBe('backup')
+    model.nextPage()
+    expect(model.slotCommands.value[0]?.id).toBe('note')
+    model.setPage(2)
+    expect(model.slotCommands.value[0]?.id).toBe('lights')
+    model.setPage(3)
+    expect(model.page.value).toBe(2)
+    model.nextPage()
+    expect(model.page.value).toBe(0)
+    model.nextPage(-1)
+    expect(model.page.value).toBe(2)
+  })
+})

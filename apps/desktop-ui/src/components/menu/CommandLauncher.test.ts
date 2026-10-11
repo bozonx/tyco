@@ -59,9 +59,13 @@ const webhook = (
   }
 }
 
-function mountLauncher(commands: CommandConfig[]) {
+function mountLauncher(
+  commands: CommandConfig[],
+  launcherPages: (string | null)[][] = []
+) {
   mocks.store = reactive(
     createCommandLauncherModel({
+      launcherPages: () => launcherPages,
       tools: testTools(),
       commands: () => commands,
       selectedText: () => mocks.params.selectedText,
@@ -89,6 +93,29 @@ afterEach(() => {
 })
 
 describe('CommandLauncher', () => {
+  it('selects pages with digits and cycles with Tab without running commands', async () => {
+    const wrapper = mountLauncher([webhook('backup')], [['backup'], []])
+    const press = (key: string, shiftKey = false) =>
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key,
+          code: key === 'Tab' ? 'Tab' : `Digit${key}`,
+          shiftKey,
+          cancelable: true,
+        })
+      )
+    press('2')
+    expect((mocks.store as { page: number }).page).toBe(1)
+    press('Tab')
+    expect((mocks.store as { page: number }).page).toBe(2)
+    press('Tab')
+    expect((mocks.store as { page: number }).page).toBe(0)
+    press('Tab', true)
+    expect((mocks.store as { page: number }).page).toBe(2)
+    expect(mocks.run).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('runs a command with its slot key in the 5x3 grid', async () => {
     const backup = webhook('backup')
     const lights = webhook('lights')

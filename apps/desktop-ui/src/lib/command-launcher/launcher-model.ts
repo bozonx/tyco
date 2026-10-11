@@ -107,6 +107,7 @@ export interface CommandLauncherDependencies {
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
   /** The 15 slots of the command overlay */
+  launcherPages?: () => readonly (readonly (string | null)[])[] | undefined
   launcherCommands?: () => readonly (string | null)[] | undefined
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
@@ -130,6 +131,14 @@ export interface CommandLauncherDependencies {
 
 /** The command overlay opened from the keyboard: list, search, keys, input */
 export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
+  const page = ref(0)
+  const pageCount = computed(() => 1 + (deps.launcherPages?.()?.length ?? 0))
+  const setPage = (index: number) => {
+    if (Number.isInteger(index) && index >= 0 && index < pageCount.value)
+      page.value = index
+  }
+  const nextPage = (delta = 1) =>
+    setPage((page.value + delta + pageCount.value) % pageCount.value)
   const query = ref('')
   const highlighted = ref(0)
   const stage = shallowRef<LauncherStage>({ kind: 'list' })
@@ -152,7 +161,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const visible = computed(() => searchCommands(commands.value, query.value))
 
   const slotCommands = computed<(CommandConfig | null)[]>(() => {
-    const rawSlots = deps.launcherCommands?.()
+    const rawSlots =
+      page.value === 0
+        ? deps.launcherCommands?.()
+        : deps.launcherPages?.()?.[page.value - 1]
     const all = deps.commands() ?? []
     if (rawSlots && rawSlots.length > 0) {
       return Array.from({ length: 15 }, (_, index) => {
@@ -185,6 +197,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     controller?.abort()
     controller = null
     source = 'launcher'
+    page.value = 0
     query.value = ''
     highlighted.value = 0
     text.value = ''
@@ -417,6 +430,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
 
   return {
+    page,
+    pageCount,
+    setPage,
+    nextPage,
     query,
     highlighted,
     stage,

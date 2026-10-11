@@ -31,6 +31,26 @@ const mountTab = (
   })
 
 describe('SettingsLauncherTab.vue', () => {
+  it('adds an empty page and deletes the selected extra page', async () => {
+    const wrapper = mountTab()
+    const add = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'settings.addLauncherPage')!
+    await add.trigger('click')
+    const pages = wrapper.emitted('update:launcherPages')?.[0]?.[0] as (
+      string | null
+    )[][]
+    expect(pages).toEqual([Array(15).fill(null)])
+    await wrapper.setProps({
+      userConfig: { ...wrapper.props('userConfig'), launcherPages: pages },
+    })
+    const remove = wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'settings.removeLauncherPage')!
+    await remove.trigger('click')
+    expect(wrapper.emitted('update:launcherPages')?.[1]?.[0]).toEqual([])
+  })
+
   it('renders 15 shortcut slots with configured commands', () => {
     const wrapper = mountTab()
     const slots = wrapper.findAll('.shortcut-slot')
@@ -63,9 +83,11 @@ describe('SettingsLauncherTab.vue', () => {
 
   it('emits createCommand when choosing new script', async () => {
     const wrapper = mountTab()
-    const select = wrapper.findComponent({ name: 'FieldSelect' })
+    const select = wrapper
+      .find('.shortcut-slot')
+      .findComponent({ name: 'FieldSelect' })
     select.vm.$emit('update:value', 'new:script')
 
-    expect(wrapper.emitted('createCommand')?.[0]).toEqual([0, 'script'])
+    expect(wrapper.emitted('createCommand')?.[0]).toEqual([0, 'script', 0])
   })
 })

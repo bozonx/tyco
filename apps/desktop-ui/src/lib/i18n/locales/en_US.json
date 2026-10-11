@@ -544,7 +544,7 @@
     "hotkeyActions": {
       "aiTasks": "AI tasks",
       "chat": "Use selected text as context in AI chat",
-      "commandLauncher": "Quick commands",
+      "commandLauncher": "Quick commands: page 1",
       "correction": "Correction with preview",
       "editor": "Open selected text in the editor",
       "inlineCorrection": "Correct selected text in place",
@@ -552,7 +552,11 @@
       "translate": "Translate selected text",
       "voice": "Voice input",
       "voiceChat": "Voice question about selected text in AI chat",
-      "write": "Quick text input"
+      "write": "Quick text input",
+      "commandLauncher2": "Quick commands: page 2",
+      "commandLauncher3": "Quick commands: page 3",
+      "commandLauncher4": "Quick commands: page 4",
+      "commandLauncher5": "Quick commands: page 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -746,7 +750,10 @@
     "userLanguage": "User language",
     "windowInsertion": "Insertion method",
     "windowInsertionHint": "The program that presses keys in another app: xdotool works on X11, ydotool on Wayland. The field below holds its path.",
-    "vision": "Image input"
+    "vision": "Image input",
+    "launcherPage": "Quick commands: page {page}",
+    "addLauncherPage": "Add page",
+    "removeLauncherPage": "Delete page"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

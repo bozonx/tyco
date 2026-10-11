@@ -103,13 +103,30 @@
           @submit="submitSearch"
           @back="closeSearch"
         />
-        <ShortcutList
-          v-else
-          :text="selectedText"
-          :spaceKey="searchAction"
-          :leftLetterKeys="leftLetterKeys"
-          :stopListening="props.stopListening"
-        />
+        <div v-else>
+          <div class="launcher-hints launcher-pages">
+            <button
+              v-for="index in launcher.pageCount"
+              :key="index"
+              class="launcher-hint"
+              :aria-pressed="launcher.page === index - 1"
+              @click="launcher.setPage(index - 1)"
+            >
+              <KeyButton v-if="index <= 10">{{
+                index === 10 ? 0 : index
+              }}</KeyButton
+              >{{ t('settings.launcherPage', { page: index }) }}
+            </button>
+            <span class="launcher-hint"><KeyButton>Tab</KeyButton></span>
+          </div>
+          <ShortcutList
+            :key="launcher.page"
+            :text="selectedText"
+            :spaceKey="searchAction"
+            :leftLetterKeys="leftLetterKeys"
+            :stopListening="props.stopListening"
+          />
+        </div>
       </template>
     </template>
   </ActionOverlayLayout>
@@ -265,6 +282,22 @@ let escPressed = false
 
 const handleKeyDown = (event: KeyboardEvent) => {
   if (props.stopListening) return
+  if (
+    stage.value.kind === 'list' &&
+    !searchMode.value &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.isComposing
+  ) {
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      if (!event.repeat) launcher.nextPage(event.shiftKey ? -1 : 1)
+    } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
+      event.preventDefault()
+      launcher.setPage(event.key === '0' ? 9 : Number(event.key) - 1)
+    }
+  }
   if (event.code === 'Escape') {
     escPressed = !event.repeat || escPressed
   }
@@ -320,6 +353,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.launcher-pages {
+  max-height: 5rem;
+  overflow-y: auto;
+  margin-bottom: var(--space-sm);
+}
+
+.launcher-pages button[aria-pressed='true'] {
+  color: var(--color-primary);
+  background-color: var(--app-hover);
+}
+
 .launcher-target {
   flex-shrink: 0;
   max-height: 4.5rem;

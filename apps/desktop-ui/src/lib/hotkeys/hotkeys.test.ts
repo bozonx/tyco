@@ -9,12 +9,20 @@ import {
 
 describe('hotkeys', () => {
   it('defines a default binding for global activation modes', () => {
-    const expectedModes = Object.values(START_MODES).filter(
-      (mode) => mode !== START_MODES.HISTORY && mode !== START_MODES.CONFIG
-    )
+    const expectedModes = [
+      ...Object.values(START_MODES).filter(
+        (mode) => mode !== START_MODES.HISTORY && mode !== START_MODES.CONFIG
+      ),
+      ...[2, 3, 4, 5].map((page) => `commandLauncher${page}`),
+    ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()
     )
+  })
+
+  it('leaves the additional command page shortcuts unassigned', () => {
+    for (const page of [2, 3, 4, 5])
+      expect(DEFAULT_USER_CONFIG.hotkeys[`commandLauncher${page}`]).toBe('')
   })
 
   it('normalizes aliases and modifier order', () => {

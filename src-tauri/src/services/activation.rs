@@ -112,6 +112,7 @@ pub struct Activation {
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
     /// The command the command overlay opens with, for an external call.
+    pub launcher_page: usize,
     pub launcher_request: Option<LauncherRequest>,
 }
 
@@ -122,8 +123,26 @@ impl Activation {
             source,
             window_id: None,
             selected_text: None,
+            launcher_page: 0,
             launcher_request: None,
         }
+    }
+
+    pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
+        if let Some(page) = value
+            .strip_prefix("commandLauncher")
+            .filter(|page| !page.is_empty())
+        {
+            let page = page
+                .parse::<usize>()
+                .ok()
+                .filter(|page| *page > 0)
+                .ok_or_else(|| AppError::Message("Invalid command page".into()))?;
+            let mut activation = Self::new(StartMode::CommandLauncher, source);
+            activation.launcher_page = page - 1;
+            return Ok(activation);
+        }
+        Ok(Self::new(StartMode::parse(value)?, source))
     }
 
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
@@ -139,16 +158,27 @@ impl Activation {
                 ))
             }
         };
-        Ok(Some(Self::new(
-            StartMode::parse(mode)?,
-            ActivationSource::Cli,
-        )))
+        Ok(Some(Self::from_mode(mode, ActivationSource::Cli)?))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn command_pages_parse_without_changing_the_overlay_mode() {
+        let activation = Activation::from_mode("commandLauncher5", ActivationSource::Ui).unwrap();
+        assert_eq!(activation.mode, StartMode::CommandLauncher);
+        assert_eq!(activation.launcher_page, 4);
+        assert!(Activation::from_mode("commandLauncher0", ActivationSource::Ui).is_err());
+        assert_eq!(
+            Activation::from_mode("commandLauncher42", ActivationSource::Ui)
+                .unwrap()
+                .launcher_page,
+            41
+        );
+    }
 
     #[test]
     fn modes_round_trip() {

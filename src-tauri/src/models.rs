@@ -46,6 +46,7 @@ pub struct InitParams {
     pub window_profile: WindowProfile,
     /// The command the command overlay opens with, for an external call.
     #[serde(default)]
+    pub launcher_page: usize,
     pub launcher_request: Option<LauncherRequest>,
 }
 
@@ -338,6 +339,7 @@ pub fn default_init_params(user_config: Value, local_state: LocalState) -> InitP
         app_config: app_config(),
         is_window_shown: false,
         window_profile: WindowProfile::Sheet,
+        launcher_page: 0,
         launcher_request: None,
     }
 }

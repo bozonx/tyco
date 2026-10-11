@@ -22,6 +22,12 @@ export function normalizeMainActions(
 
   return normalizeShortcutSlots<MainActionConfig>(source).map((item) => {
     if (
+      item?.type === 'launcherPage' &&
+      Number.isInteger(item.page) &&
+      item.page >= 0
+    )
+      return { type: 'launcherPage', page: item.page }
+    if (
       item?.type === 'plugin' &&
       typeof item.actionId === 'string' &&
       item.actionId.trim()

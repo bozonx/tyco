@@ -152,6 +152,7 @@ export interface InitParams {
   isWindowShown: boolean
   windowProfile: 'panel' | 'sheet'
   /** The command the command overlay opens with, for an external call */
+  launcherPage?: number
   launcherRequest?: LauncherRequest | null
 }
 

@@ -48,6 +48,12 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
     mainActionRegistrations: () =>
       ipcStore.params.userConfig.mainActionRegistrations,
+    openLauncherPage: async (page, text) => {
+      await ipcStore.callFunction('activateMode', [
+        `commandLauncher${page + 1}`,
+        text,
+      ])
+    },
     mainActions: () => ipcStore.params.userConfig.mainActions,
     commands: () => ipcStore.params.userConfig.commands,
     aiTasks: () => ipcStore.params.userConfig.aiTasks,

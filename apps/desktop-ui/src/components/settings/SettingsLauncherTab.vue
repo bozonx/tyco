@@ -1,5 +1,16 @@
 <template>
   <SettingsSection :description="t('settings.launcherCommandsHint')" bare>
+    <div class="flex items-center gap-2 mb-3">
+      <FieldSelect
+        :value="page"
+        :options="pageOptions"
+        @update:value="page = Number($event)"
+      />
+      <Button @click="addPage">{{ t('settings.addLauncherPage') }}</Button>
+      <Button :disabled="page === 0" @click="removePage">{{
+        t('settings.removeLauncherPage')
+      }}</Button>
+    </div>
     <ShortcutSlots
       :items="launcherSlots"
       @move="moveSlot"
@@ -32,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
 import {
@@ -52,9 +63,15 @@ import type { BuiltinToolId, UserConfig } from '@tyco/shared'
 const props = defineProps<{ userConfig: UserConfig }>()
 
 const emit = defineEmits<{
+  (event: 'update:launcherPages', value: (string | null)[][]): void
   (event: 'update:launcherCommands', value: (string | null)[]): void
   /** A new command of the library goes to the slot at `index` */
-  (event: 'createCommand', index: number, toolId: BuiltinToolId): void
+  (
+    event: 'createCommand',
+    index: number,
+    toolId: BuiltinToolId,
+    page: number
+  ): void
   (event: 'editCommand', commandId: string): void
 }>()
 
@@ -65,8 +82,46 @@ const toolsStore = useToolsStore()
 
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
+const page = ref(0)
+const pageOptions = computed(() =>
+  Array.from(
+    { length: 1 + (props.userConfig.launcherPages?.length ?? 0) },
+    (_, id) => ({ id, name: t('settings.launcherPage', { page: id + 1 }) })
+  )
+)
+function addPage() {
+  const pages = [
+    ...(props.userConfig.launcherPages ?? []),
+    Array<string | null>(15).fill(null),
+  ]
+  emit('update:launcherPages', pages)
+  page.value = pages.length
+}
+function removePage() {
+  if (!page.value) return
+  emit(
+    'update:launcherPages',
+    (props.userConfig.launcherPages ?? []).filter(
+      (_, index) => index !== page.value - 1
+    )
+  )
+  page.value = Math.max(0, page.value - 1)
+}
+function updateSlots(slots: (string | null)[]) {
+  if (!page.value) emit('update:launcherCommands', slots)
+  else {
+    const pages = [...(props.userConfig.launcherPages ?? [])]
+    pages[page.value - 1] = slots
+    emit('update:launcherPages', pages)
+  }
+}
 const launcherSlots = computed(() =>
-  normalizeLauncherCommands(props.userConfig.launcherCommands, commands.value)
+  normalizeLauncherCommands(
+    page.value
+      ? props.userConfig.launcherPages?.[page.value - 1]
+      : props.userConfig.launcherCommands,
+    commands.value
+  )
 )
 
 const availableCommands = computed(() =>
@@ -99,16 +154,13 @@ const commandOptions = computed(() => {
 })
 
 function moveSlot(from: number, to: number) {
-  emit(
-    'update:launcherCommands',
-    moveShortcutSlot(launcherSlots.value, from, to)
-  )
+  updateSlots(moveShortcutSlot(launcherSlots.value, from, to))
 }
 
 function setSlot(index: number, value: string | null) {
   const slots = [...launcherSlots.value]
   slots[index] = value
-  emit('update:launcherCommands', slots)
+  updateSlots(slots)
 }
 
 function addSlot(index: number) {
@@ -125,11 +177,11 @@ function updateSlot(index: number, value: string | number | undefined) {
   if (value === current) return
 
   if (value === `${NEW_COMMAND_PREFIX}script`) {
-    emit('createCommand', index, 'script')
+    emit('createCommand', index, 'script', page.value)
     return
   }
   if (value === `${NEW_COMMAND_PREFIX}webhook`) {
-    emit('createCommand', index, 'webhook')
+    emit('createCommand', index, 'webhook', page.value)
     return
   }
 

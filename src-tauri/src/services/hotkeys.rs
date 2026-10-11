@@ -58,12 +58,20 @@ const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 pub(crate) enum HotkeyTarget {
     Mode(StartMode),
     InlineCorrection,
+    LauncherPage(usize),
 }
 
 impl HotkeyTarget {
     /// The id shared with the UI and the portal: the mode name, or
     /// `replace.correction`.
     pub(crate) fn parse(id: &str) -> Result<Self, AppError> {
+        if let Some(page) = id
+            .strip_prefix("commandLauncher")
+            .and_then(|page| page.parse::<usize>().ok())
+            .filter(|page| (2..=5).contains(page))
+        {
+            return Ok(Self::LauncherPage(page));
+        }
         match id.strip_prefix(SELECTION_TARGET_PREFIX) {
             Some(CORRECTION_ACTION) => Ok(Self::InlineCorrection),
             Some(action) => Err(AppError::Message(format!(
@@ -75,6 +83,7 @@ impl HotkeyTarget {
 
     pub(crate) fn id(&self) -> String {
         match self {
+            Self::LauncherPage(page) => format!("commandLauncher{page}"),
             Self::Mode(mode) => mode.as_str().to_owned(),
             Self::InlineCorrection => format!("{SELECTION_TARGET_PREFIX}{CORRECTION_ACTION}"),
         }
@@ -82,6 +91,7 @@ impl HotkeyTarget {
 
     fn cli_command(&self) -> String {
         match self {
+            Self::LauncherPage(page) => format!("tyco --mode=commandLauncher{page}"),
             Self::Mode(mode) => format!(
                 "tyco-ctl open {}",
                 tyco_activation_protocol::cli_mode(mode.as_str())
@@ -95,6 +105,10 @@ impl HotkeyTarget {
     /// Runs the target for a press of the hotkey with the given provider id.
     fn trigger(&self, app: &AppHandle, hotkey_id: &str) -> Result<(), AppError> {
         match self {
+            Self::LauncherPage(page) => runtime::activate(
+                app,
+                Activation::from_mode(&format!("commandLauncher{page}"), ActivationSource::Hotkey)?,
+            ),
             Self::Mode(mode) => {
                 runtime::activate(app, Activation::new(*mode, ActivationSource::Hotkey))
             }
@@ -727,7 +741,18 @@ fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         ),
         description: mode_description(mode).to_owned(),
     });
-    modes.chain([selection_binding(config)]).collect()
+    let pages = (2..=5).map(|page| HotkeyBinding {
+        target: HotkeyTarget::LauncherPage(page),
+        shortcut: configured_shortcut(
+            configured.and_then(|values| values.get(&format!("commandLauncher{page}"))),
+            || None,
+        ),
+        description: format!("Quick commands: page {page}"),
+    });
+    modes
+        .chain(pages)
+        .chain([selection_binding(config)])
+        .collect()
 }
 
 /// Only the correction replaces the selection from a hotkey.
@@ -761,7 +786,7 @@ fn global_target(id: &str) -> Option<HotkeyTarget> {
     let target = HotkeyTarget::parse(id).ok()?;
     let global = match &target {
         HotkeyTarget::Mode(mode) => GLOBAL_HOTKEY_MODES.contains(mode),
-        HotkeyTarget::InlineCorrection => true,
+        HotkeyTarget::InlineCorrection | HotkeyTarget::LauncherPage(_) => true,
     };
     global.then_some(target)
 }
@@ -802,7 +827,7 @@ fn default_bindings() -> Vec<HotkeyBinding> {
 /// The `hotkeys` of the default user config on this platform; an unassigned
 /// hotkey is an empty string.
 pub fn default_hotkeys_config() -> Value {
-    let hotkeys = GLOBAL_HOTKEY_MODES
+    let mut hotkeys = GLOBAL_HOTKEY_MODES
         .into_iter()
         .map(|mode| {
             (
@@ -811,6 +836,12 @@ pub fn default_hotkeys_config() -> Value {
             )
         })
         .collect::<Map<_, _>>();
+    for page in 2..=5 {
+        hotkeys.insert(
+            format!("commandLauncher{page}"),
+            Value::String(String::new()),
+        );
+    }
     Value::Object(hotkeys)
 }
 
@@ -1164,7 +1195,7 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1);
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 5);
         assert!(defaults.contains(&String::from("replace.correction")));
     }
 
@@ -1179,7 +1210,7 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1);
+        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 5);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("voice"), None);
         assert_eq!(shortcut("select"), default_shortcut(StartMode::Select));

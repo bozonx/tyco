@@ -157,11 +157,10 @@ pub fn patch_local_state(
 
 #[tauri::command]
 pub fn activate_mode(app: AppHandle, mode: String, text: Option<String>) -> Result<(), AppError> {
-    let parsed_mode = crate::services::activation::StartMode::parse(&mode)?;
-    let mut activation = crate::services::activation::Activation::new(
-        parsed_mode,
+    let mut activation = crate::services::activation::Activation::from_mode(
+        &mode,
         crate::services::activation::ActivationSource::Ui,
-    );
+    )?;
     activation.selected_text = text;
     runtime::activate(&app, activation)
 }

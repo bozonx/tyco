@@ -544,7 +544,7 @@
     "hotkeyActions": {
       "aiTasks": "Tareas de IA",
       "chat": "Usar el texto seleccionado como contexto en el chat con IA",
-      "commandLauncher": "Comandos rápidos",
+      "commandLauncher": "Comandos rápidos: página 1",
       "correction": "Corrección con vista previa",
       "editor": "Abrir el texto seleccionado en el editor",
       "inlineCorrection": "Corregir el texto seleccionado en su lugar",
@@ -552,7 +552,11 @@
       "translate": "Traducir el texto seleccionado",
       "voice": "Entrada por voz",
       "voiceChat": "Pregunta por voz sobre el texto seleccionado en el chat con IA",
-      "write": "Entrada rápida de texto"
+      "write": "Entrada rápida de texto",
+      "commandLauncher2": "Comandos rápidos: página 2",
+      "commandLauncher3": "Comandos rápidos: página 3",
+      "commandLauncher4": "Comandos rápidos: página 4",
+      "commandLauncher5": "Comandos rápidos: página 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -746,7 +750,10 @@
     "userLanguage": "Idioma del usuario",
     "windowInsertion": "Método de inserción",
     "windowInsertionHint": "El programa que presiona teclas en otra aplicación: xdotool funciona en X11 y ydotool en Wayland. En el campo de abajo va su ruta.",
-    "vision": "Entrada de imágenes"
+    "vision": "Entrada de imágenes",
+    "launcherPage": "Comandos rápidos: página {page}",
+    "addLauncherPage": "Agregar página",
+    "removeLauncherPage": "Eliminar página"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
