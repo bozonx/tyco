@@ -97,9 +97,6 @@
               >
                 {{ t('commands.badgeNoText') }}
               </span>
-              <span v-if="menuSlots.has(command.id)" class="command-badge">
-                {{ t('commands.badgeInMenu') }}
-              </span>
               <span
                 v-if="command.enabled && unavailableReason(command)"
                 class="command-badge is-muted"
@@ -125,6 +122,45 @@
                 :class="{ 'rotate-180': isExpanded(command.id) }"
               />
             </button>
+            <div class="command-placements">
+              <button
+                v-if="menuSlots.has(command.id)"
+                type="button"
+                class="command-badge"
+                :title="t('commands.placeConfigure')"
+                @click="emit('navigate', 'main-actions')"
+              >
+                {{
+                  t('commands.badgeInMenu', {
+                    key: slotKey(menuSlots.get(command.id)!),
+                  })
+                }}
+              </button>
+              <button
+                v-for="slot in launcherSlots.get(command.id) ?? []"
+                :key="`${slot.page}:${slot.index}`"
+                type="button"
+                class="command-badge"
+                :title="t('commands.placeConfigure')"
+                @click="emit('navigate', 'launcher-commands')"
+              >
+                {{
+                  t('commands.badgeInLauncher', {
+                    page: slot.page + 1,
+                    key: slotKey(slot.index),
+                  })
+                }}
+              </button>
+              <button
+                v-if="!launcherSlots.has(command.id)"
+                type="button"
+                class="command-badge"
+                :title="t('commands.placeConfigure')"
+                @click="emit('navigate', 'launcher-commands')"
+              >
+                {{ t('commands.badgeLauncherSearch') }}
+              </button>
+            </div>
             <FieldCheckbox
               class="enabled-switch"
               :value="command.enabled"
@@ -148,8 +184,6 @@
             <CommandEditor
               :command="command"
               :user-config="userConfig"
-              :menu-slot="menuSlots.get(command.id)"
-              :launcher-slot="launcherSlots.get(command.id)"
               :name-twins="externalNameTwins(commands, command, toolsStore)"
               @update="updateCommand(index, $event)"
               @navigate="emit('navigate', $event)"
@@ -206,6 +240,7 @@ import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
+import { PRESETS_KEYS } from '../../types'
 import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
@@ -272,11 +307,22 @@ const menuSlots = computed(() => {
   return slots
 })
 
-/** The slot of the command overlay that holds each command */
+const slotKey = (index: number) => PRESETS_KEYS[index]?.toUpperCase() ?? ''
+
+/** Every quick-command page and key assigned to each command. */
 const launcherSlots = computed(() => {
-  const slots = new Map<string, number>()
-  ;(props.userConfig.launcherCommands ?? []).forEach((id, index) => {
-    if (id && !slots.has(id)) slots.set(id, index)
+  const slots = new Map<string, { page: number; index: number }[]>()
+  const pages = [
+    props.userConfig.launcherCommands ?? [],
+    ...(props.userConfig.launcherPages ?? []),
+  ]
+  pages.forEach((commands, page) => {
+    commands.forEach((id, index) => {
+      if (!id) return
+      const placements = slots.get(id) ?? []
+      placements.push({ page, index })
+      slots.set(id, placements)
+    })
   })
   return slots
 })
@@ -603,6 +649,22 @@ onBeforeUnmount(finishRemoval)
 .command-name.is-empty,
 .command-card.is-disabled .command-name {
   color: var(--app-text-muted);
+}
+
+.command-placements {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+  max-width: 50%;
+}
+
+.command-placements .command-badge {
+  cursor: pointer;
+}
+
+.command-placements .command-badge:hover {
+  background: var(--app-hover);
 }
 
 .command-badge {

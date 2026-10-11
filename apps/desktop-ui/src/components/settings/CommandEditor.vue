@@ -56,45 +56,11 @@
       <div class="command-group-body">
         <section class="command-group">
           <h4 class="command-group-title">
-            {{ t('commands.availabilityGroup') }}
+            {{ t('commands.launcherResultGroup') }}
           </h4>
-          <div class="command-place">
-            <span class="command-place-name">{{
-              t('commands.placeMenu')
-            }}</span>
-            <span class="command-place-state">
-              <template v-if="menuSlot !== undefined">
-                <KeyButton>{{ slotKey(menuSlot) }}</KeyButton>
-              </template>
-              <template v-else>{{ t('commands.placeNotAdded') }}</template>
-            </span>
-            <Button xs ghost @click="emit('navigate', 'main-actions')">
-              {{ t('commands.placeConfigure') }}
-            </Button>
-          </div>
-          <p
-            v-if="menuSlot !== undefined"
-            class="command-place-detail command-hint"
-          >
-            {{ t('commands.resultMenuBehavior') }}
+          <p v-if="takesText" class="command-hint">
+            {{ t('commands.launcherSelectionHint') }}
           </p>
-
-          <div class="command-place">
-            <span class="command-place-name">
-              {{ t('commands.placeLauncher') }}
-            </span>
-            <span class="command-place-state">
-              <KeyButton v-if="launcherSlot !== undefined">
-                {{ slotKey(launcherSlot) }}
-              </KeyButton>
-              <template v-else>{{
-                t('commands.placeLauncherSearch')
-              }}</template>
-            </span>
-            <Button xs ghost @click="emit('navigate', 'launcher-commands')">
-              {{ t('commands.placeConfigure') }}
-            </Button>
-          </div>
           <label
             v-if="takesText"
             class="command-place-detail command-place-result"
@@ -259,14 +225,12 @@ import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
-import { PRESETS_KEYS } from '../../types'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
-import KeyButton from '../common/KeyButton.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CustomActionFields from './CustomActionFields.vue'
 import FieldIssues from './FieldIssues.vue'
@@ -283,10 +247,6 @@ import {
 const props = withDefaults(
   defineProps<{
     command: CommandConfig
-    /** The slot of the action menu that holds the command */
-    menuSlot?: number
-    /** The slot of the command overlay that holds the command */
-    launcherSlot?: number
     /** Other commands an external call by this name could mean */
     nameTwins?: CommandConfig[]
     /** For the settings of the tool: translation languages, AI tasks */
@@ -323,8 +283,6 @@ const nameIssues = computed(() =>
     (issue) => issue.field === 'name'
   )
 )
-
-const slotKey = (index: number) => PRESETS_KEYS[index]?.toUpperCase() ?? ''
 
 function update(patch: Partial<CommandConfig>) {
   emit('update', { ...props.command, ...patch })
@@ -516,27 +474,6 @@ details[open] > .command-group-toggle svg {
   display: flex;
   flex-direction: column;
   gap: var(--space-md, 0.75rem);
-}
-
-.command-place {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm, 0.5rem);
-  min-height: 1.75rem;
-  font-size: 0.875rem;
-}
-
-.command-place-name {
-  flex: 1;
-  min-width: 0;
-}
-
-.command-place-state {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  font-size: 0.75rem;
-  color: var(--app-text-muted);
 }
 
 .command-place-detail {

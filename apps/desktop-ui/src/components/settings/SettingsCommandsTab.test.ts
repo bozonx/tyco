@@ -6,7 +6,10 @@ import SettingsCommandsTab from './SettingsCommandsTab.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
 vi.mock('../../composables/useI18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, unknown>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
+  }),
 }))
 
 const removeSecret = vi.fn().mockResolvedValue(undefined)
@@ -62,6 +65,29 @@ describe('SettingsCommandsTab.vue', () => {
     expect(cards[0].text()).toContain('Hook')
     expect(cards[0].text()).toContain('commands.badgeInMenu')
     expect(cards[1].text()).not.toContain('commands.badgeInMenu')
+  })
+
+  it('shows action keys and assignments on every launcher page', async () => {
+    const wrapper = mountTab()
+    await wrapper.setProps({
+      userConfig: {
+        ...wrapper.props('userConfig'),
+        launcherCommands: ['wh1'],
+        launcherPages: [[null, 'wh1'], ['sc1']],
+      },
+    })
+    const placements = wrapper.findAll('.command-placements')
+    expect(placements[0].text()).toContain('"key":"Q"')
+    expect(placements[0].text()).toContain('"page":1,"key":"Q"')
+    expect(placements[0].text()).toContain('"page":2,"key":"W"')
+    expect(placements[1].text()).toContain('"page":3,"key":"Q"')
+    await placements[0].find('button').trigger('click')
+    await placements[0].findAll('button')[1].trigger('click')
+    expect(wrapper.emitted('navigate')).toEqual([
+      ['main-actions'],
+      ['launcher-commands'],
+    ])
+    expect(wrapper.find('.command-body').exists()).toBe(false)
   })
 
   it('copies the id of a command from its menu', async () => {

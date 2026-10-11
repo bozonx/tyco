@@ -121,17 +121,6 @@ describe('CommandEditor.vue', () => {
     ).toBe('tyco-ctl run sc1')
   })
 
-  it('shows the fixed result only where the command is placed', () => {
-    const command = script({ command: 'ls' }, { name: 'ls' })
-    const hidden = mountEditor(command).text()
-    expect(hidden).not.toContain('commands.resultMenuBehavior')
-    const placed = mountEditor(
-      { ...command, availableIn: { external: true, chat: false } },
-      { menuSlot: 0 }
-    ).text()
-    expect(placed).toContain('commands.resultMenuBehavior')
-  })
-
   it('labels the only quick-command select of a command without text', () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     expect(wrapper.findAll('select')).toHaveLength(1)
@@ -144,24 +133,17 @@ describe('CommandEditor.vue', () => {
     const advanced = wrapper.findAll('details').at(-1)!
     expect(advanced.element.open).toBe(false)
     expect(advanced.find('section').text()).toContain(
-      'commands.availabilityGroup'
+      'commands.launcherResultGroup'
     )
-    expect(advanced.findAll('.command-place')).toHaveLength(2)
+    expect(advanced.findAll('.command-place')).toHaveLength(0)
     expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(2)
-    expect(wrapper.findAll('.command-place')).toHaveLength(2)
+    expect(wrapper.findAll('.command-place')).toHaveLength(0)
   })
 
-  it('shows where the command is placed and leads to those settings', async () => {
-    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }), {
-      menuSlot: 1,
-    })
-    const places = wrapper
-      .findAll('.command-place')
-      .filter((place) => place.find('button').exists())
-    expect(places[0].text()).toContain('W')
-    expect(places[1].text()).toContain('commands.placeLauncherSearch')
-    await places[1].find('button').trigger('click')
-    expect(wrapper.emitted('navigate')).toEqual([['launcher-commands']])
+  it('explains selection-specific result behavior for text commands', () => {
+    const wrapper = mountEditor(script({ command: 'echo {{TEXT}}' }))
+    expect(wrapper.text()).toContain('commands.launcherSelectionHint')
+    expect(wrapper.findAll('select')).toHaveLength(2)
   })
 
   it('stores a whole timeout and drops an empty one', async () => {
