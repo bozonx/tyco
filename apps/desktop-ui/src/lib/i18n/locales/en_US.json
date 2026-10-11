@@ -697,6 +697,7 @@
     "sanitizeSecretsInEditorHistory": "Mask passwords and keys",
     "sanitizeSecretsInEditorHistoryHint": "Replaces what looks like passwords, API keys, tokens, private keys and credentials in links, also in entries already saved. A heuristic: a secret in an unusual form may remain. Chat history is not affected.",
     "saveKey": "Save key",
+    "secretStorageFile": "No system keychain is available, so API keys are kept in a file that only your user account can read. Install or unlock GNOME Keyring, KWallet or KeePassXC to keep them in the system keychain.",
     "sectionAccessibility": "Accessibility",
     "sectionAppearance": "Appearance",
     "sectionChatHistory": "Chat history",

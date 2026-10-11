@@ -26,7 +26,7 @@ use commands::net::{
     net_socket_send_text,
 };
 use commands::notes::{append_note, save_note};
-use commands::secrets::{secrets_remove, secrets_set, secrets_status};
+use commands::secrets::{secrets_remove, secrets_set, secrets_status, secrets_storage};
 use commands::selection::{
     check_text_injection, finish_selection_run, notify_desktop, replace_selection_with_command,
     show_status_overlay,
@@ -186,6 +186,14 @@ pub fn run() {
             let local_state = storage::read_or_create_local_state(app.handle())?;
             app.manage(AppState::new(default_init_params(user_config, local_state)));
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
+            // reaching the system store may wait for an unlock prompt, which
+            // must not hold up the start
+            let secrets_app = app.handle().clone();
+            std::thread::spawn(move || {
+                secrets_app
+                    .state::<services::secrets::SecretStore>()
+                    .open();
+            });
             app.manage(services::net::NetState::new()?);
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
@@ -277,6 +285,7 @@ pub fn run() {
             net_socket_send_binary,
             net_socket_close,
             secrets_status,
+            secrets_storage,
             secrets_set,
             secrets_remove,
             finish_selection_run,

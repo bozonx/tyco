@@ -45,6 +45,19 @@ pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Creates one of Tyco's own directories, closed to other users: the files in
+/// it may hold user texts or keys. An existing directory is closed too, so
+/// that one made by an older version gets the same permissions.
+pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
+    fs::create_dir_all(path)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+    }
+    Ok(())
+}
+
 /// Moves an unreadable file out of the way so that the app can start with
 /// defaults, keeping the original for the user to recover. Returns where it
 /// went.
@@ -136,6 +149,27 @@ mod tests {
 
         let mode = fs::metadata(&path).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o600);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn private_dirs_are_closed_to_other_users() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = temp_dir("private-dir");
+        let existing = dir.join("existing");
+        fs::create_dir_all(&existing).unwrap();
+        fs::set_permissions(&existing, fs::Permissions::from_mode(0o755)).unwrap();
+        let created = dir.join("nested/created");
+
+        create_private_dir(&existing).unwrap();
+        create_private_dir(&created).unwrap();
+
+        for path in [&existing, &created] {
+            let mode = fs::metadata(path).unwrap().permissions().mode();
+            assert_eq!(mode & 0o777, 0o700);
+        }
         let _ = fs::remove_dir_all(&dir);
     }
 

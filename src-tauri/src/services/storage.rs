@@ -11,14 +11,14 @@ use crate::models::{
     default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
     LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
-use crate::services::atomic_file::{read_or_quarantine, write_private};
+use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
 use crate::services::secret_detector::redact_secrets;
 use crate::services::{app_paths::AppPaths, config_migration, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.config_dir;
 
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
 
     Ok(dir)
 }
@@ -26,32 +26,32 @@ fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
 pub fn app_data_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.data_dir;
 
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
 
     Ok(dir)
 }
 
 fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
     let dir = app_data_dir(app)?.join(sub);
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
     Ok(dir)
 }
 
 pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.cache_dir;
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
     Ok(dir)
 }
 
 pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.log_dir;
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
     Ok(dir)
 }
 
 fn app_state_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.state_dir;
-    fs::create_dir_all(&dir)?;
+    create_private_dir(&dir)?;
     Ok(dir)
 }
 

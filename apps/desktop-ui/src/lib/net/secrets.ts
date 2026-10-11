@@ -16,6 +16,12 @@ export interface SecretStatus {
 
 export type SecretsStatus = Record<string, SecretStatus>
 
+/**
+ * Where new keys go: the system credential store, or a file readable by the
+ * user only when the system has no such store
+ */
+export type SecretStorage = 'system' | 'file'
+
 export function secretRef(id: string): string {
   return SECRET_REF_PREFIX + id
 }
@@ -34,6 +40,7 @@ export function httpOrigin(value: string | undefined): string | null {
 
 export interface SecretsClient {
   status: () => Promise<SecretsStatus>
+  storage: () => Promise<SecretStorage>
   /**
    * Origins default to the provider's own for a known provider id and are
    * required for any other, e.g. an `openai-compatible` endpoint
@@ -45,6 +52,7 @@ export interface SecretsClient {
 export function createSecretsClient(ipc: NetIpc): SecretsClient {
   return {
     status: () => ipc.invoke<SecretsStatus>(DESKTOP_COMMANDS.SECRETS_STATUS),
+    storage: () => ipc.invoke<SecretStorage>(DESKTOP_COMMANDS.SECRETS_STORAGE),
     set: (id, value, origins) =>
       ipc.invoke(DESKTOP_COMMANDS.SECRETS_SET, {
         id,

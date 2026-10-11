@@ -4,6 +4,8 @@
 
 mod file_manager;
 mod foreground_context;
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+pub mod keychain;
 mod panel_surface;
 pub mod session;
 pub mod shell;

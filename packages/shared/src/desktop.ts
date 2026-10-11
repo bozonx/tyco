@@ -251,6 +251,7 @@ export const DESKTOP_COMMANDS = {
   NET_SOCKET_SEND_BINARY: 'net_socket_send_binary',
   NET_SOCKET_CLOSE: 'net_socket_close',
   SECRETS_STATUS: 'secrets_status',
+  SECRETS_STORAGE: 'secrets_storage',
   SECRETS_SET: 'secrets_set',
   SECRETS_REMOVE: 'secrets_remove',
   ACTIVATE_MODE: 'activate_mode',

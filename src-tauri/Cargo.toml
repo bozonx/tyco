@@ -47,6 +47,8 @@ evdev = "0.13"
 tokio = { version = "1", features = ["macros", "rt", "net", "io-util", "time"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+# the Secret Service over zbus, like the rest of the D-Bus code
+keyring = { version = "3", features = ["async-secret-service", "crypto-rust"] }
 ashpd = { version = "0.13.13", features = ["global_shortcuts"] }
 gtk = "0.18"
 gtk-sys = "0.18"
@@ -56,7 +58,11 @@ x11rb = "0.13"
 [target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
 tauri-plugin-global-shortcut = "2.3.2"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
 [target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_DataExchange", "Win32_System_Memory"] }
 
 [profile.release]

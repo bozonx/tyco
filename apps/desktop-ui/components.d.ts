@@ -69,6 +69,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchInput: typeof import('./src/components/common/SearchInput.vue')['default']
+    SecretStorageNotice: typeof import('./src/components/settings/SecretStorageNotice.vue')['default']
     SegmentedControl: typeof import('./src/components/common/SegmentedControl.vue')['default']
     Settings: typeof import('./src/components/Settings.vue')['default']
     SettingsCommandsTab: typeof import('./src/components/settings/SettingsCommandsTab.vue')['default']

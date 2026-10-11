@@ -53,6 +53,7 @@
             {{ t('common.remove') }}
           </button>
         </div>
+        <SecretStorageNotice class="mt-2" />
       </FieldRow>
 
       <FieldRow
@@ -125,6 +126,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import SecretStorageNotice from './SecretStorageNotice.vue'
 
 const props = defineProps<{ userConfig: Record<string, any> }>()
 

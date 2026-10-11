@@ -43,6 +43,7 @@ describe('secrets', () => {
     await client.set('openai-compatible', 'k', ['http://localhost:11434'])
     await client.remove('deepseek')
     await client.status()
+    await client.storage()
 
     expect(fake.calls.map(({ command, args }) => [command, args])).toEqual([
       [
@@ -59,6 +60,7 @@ describe('secrets', () => {
       ],
       [DESKTOP_COMMANDS.SECRETS_REMOVE, { id: 'deepseek' }],
       [DESKTOP_COMMANDS.SECRETS_STATUS, undefined],
+      [DESKTOP_COMMANDS.SECRETS_STORAGE, undefined],
     ])
   })
 })

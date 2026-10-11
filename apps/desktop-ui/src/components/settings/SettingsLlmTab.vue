@@ -30,6 +30,7 @@
     </template>
 
     <div class="flex flex-col gap-3">
+      <SecretStorageNotice />
       <div
         v-for="provider in llm.providers"
         :key="provider.id"
@@ -379,6 +380,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import SecretStorageNotice from './SecretStorageNotice.vue'
 import { Icon } from '@iconify/vue'
 import {
   LLM_TASKS,
