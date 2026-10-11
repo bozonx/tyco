@@ -5,12 +5,7 @@
         <span class="action-field-label">
           {{ t('settings.actionCommandLabel') }}
           <InfoTooltip
-            :text="
-              t('settings.actionCommandInfo', {
-                placeholder: TEXT,
-                variable: ACTION_TEXT_ENV_VAR,
-              })
-            "
+            :text="t('settings.actionCommandInfo', { placeholder: TEXT })"
           />
         </span>
         <ActionTemplateField
@@ -200,7 +195,6 @@ import ActionTemplateField from './ActionTemplateField.vue'
 import FieldIssues from './FieldIssues.vue'
 import { Icon } from '@iconify/vue'
 import {
-  ACTION_TEXT_ENV_VAR,
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
   webhookSecretId,

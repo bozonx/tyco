@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::services::custom_actions::{TEXT_ENV_VAR, TEXT_PLACEHOLDER};
+use crate::services::custom_actions::TEXT_PLACEHOLDER;
 
 pub const COMMAND_RUN_EVENT: &str = "app://command-run";
 
@@ -149,12 +149,12 @@ fn is_external(command: &Value) -> bool {
         == Some(true)
 }
 
-/// Whether a script takes the text: its command mentions `{{TEXT}}` or
-/// `TYCO_TEXT`. Keep in sync with `scriptTakesText` in
+/// Whether a script takes the text: its command mentions `{{TEXT}}`.
+/// Keep in sync with `scriptTakesText` in
 /// `packages/shared/src/user-config.ts`.
 fn script_takes_text(config: &Value) -> bool {
     let command = str_field(config, "command");
-    command.contains(TEXT_PLACEHOLDER) || command.contains(TEXT_ENV_VAR)
+    command.contains(TEXT_PLACEHOLDER)
 }
 
 /// Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body
@@ -553,7 +553,7 @@ mod tests {
     #[test]
     fn a_script_takes_the_text_it_mentions() {
         assert!(script_takes_text(&json!({ "command": "echo {{TEXT}}" })));
-        assert!(script_takes_text(
+        assert!(!script_takes_text(
             &json!({ "command": "printf %s \"$TYCO_TEXT\"" })
         ));
         assert!(!script_takes_text(&json!({ "command": "backup.sh" })));

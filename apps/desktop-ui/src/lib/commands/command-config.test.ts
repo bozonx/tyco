@@ -197,7 +197,9 @@ describe('menu commands', () => {
     const script = (command: string) =>
       withConfig(createCommand('script', 'a'), { command })
     expect(commandTakesText(script('echo {{TEXT}}'), tools)).toBe(true)
-    expect(commandTakesText(script('printf %s "$TYCO_TEXT"'), tools)).toBe(true)
+    expect(commandTakesText(script('printf %s "$TYCO_TEXT"'), tools)).toBe(
+      false
+    )
     expect(commandTakesText(script('backup.sh'), tools)).toBe(false)
   })
 

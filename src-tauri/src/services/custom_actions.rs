@@ -19,8 +19,6 @@ use crate::services::secret_detector::redact_secrets;
 
 /// Stands in for the text in a command; see `shell::substitute`.
 pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
-/// The text also comes to the command in this variable and on stdin.
-pub const TEXT_ENV_VAR: &str = "TYCO_TEXT";
 
 /// How long a command whose output is needed may run before it is killed,
 /// unless the command sets its own time; see `SCRIPT_OUTPUT_TIMEOUT_SEC`.
@@ -328,19 +326,7 @@ struct Running {
 }
 
 impl Running {
-    fn start(
-        mut child: Child,
-        stdout: Option<ChildStdout>,
-        stderr: Option<ChildStderr>,
-        text: &str,
-    ) -> Self {
-        if let Some(mut stdin) = child.stdin.take() {
-            // a command that never reads stdin must not block the caller
-            let text = text.to_string();
-            thread::spawn(move || {
-                let _ = stdin.write_all(text.as_bytes());
-            });
-        }
+    fn start(child: Child, stdout: Option<ChildStdout>, stderr: Option<ChildStderr>) -> Self {
         let stdout_buffer = Buffer::default();
         let stderr_buffer = Buffer::default();
         let mut readers = Vec::new();
@@ -484,8 +470,7 @@ pub fn execute_script(
         log.cwd = cwd.to_string_lossy().into_owned();
     }
     command
-        .env(TEXT_ENV_VAR, request.text)
-        .stdin(Stdio::piped())
+        .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
@@ -495,7 +480,7 @@ pub fn execute_script(
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
-    let mut running = Running::start(child, stdout, stderr, request.text);
+    let mut running = Running::start(child, stdout, stderr);
 
     let output_timeout = request
         .output_timeout
@@ -624,7 +609,6 @@ mod tests {
 
     #[cfg(not(target_os = "windows"))]
     mod commands {
-        pub const ECHO_ENV: &str = "printf %s \"$TYCO_TEXT\"";
         pub const CAT: &str = "cat";
         pub const ECHO_PLACEHOLDER: &str = "printf %s {{TEXT}}";
         pub const PWD: &str = "pwd";
@@ -633,7 +617,6 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     mod commands {
-        pub const ECHO_ENV: &str = "[Console]::Out.Write($env:TYCO_TEXT)";
         pub const CAT: &str = "[Console]::Out.Write([Console]::In.ReadToEnd())";
         pub const ECHO_PLACEHOLDER: &str = "[Console]::Out.Write({{TEXT}})";
         pub const PWD: &str = "(Get-Location).Path";
@@ -641,17 +624,18 @@ mod tests {
     }
 
     #[test]
-    fn passes_the_text_in_every_way() {
+    fn passes_the_text_through_the_placeholder() {
         let text = "don't \"stop\" $HOME";
-        for command in [
-            commands::ECHO_ENV,
-            commands::CAT,
-            commands::ECHO_PLACEHOLDER,
-        ] {
-            let result = execute_script(&request(command, text), None).unwrap();
-            assert!(result.success, "{command}: {}", result.stderr);
-            assert_eq!(result.stdout, text, "{command}");
-        }
+        let result = execute_script(&request(commands::ECHO_PLACEHOLDER, text), None).unwrap();
+        assert!(result.success, "{}", result.stderr);
+        assert_eq!(result.stdout, text);
+    }
+
+    #[test]
+    fn does_not_pass_text_to_stdin() {
+        let result = execute_script(&request(commands::CAT, "input text"), None).unwrap();
+        assert!(result.success, "{}", result.stderr);
+        assert_eq!(result.stdout, "");
     }
 
     #[test]

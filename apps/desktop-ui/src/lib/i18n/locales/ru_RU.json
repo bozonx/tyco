@@ -457,7 +457,7 @@
   },
   "settings": {
     "actionAfterRunNone": "Ничего",
-    "actionCommandInfo": "Выполняется в системной оболочке (sh, zsh или PowerShell). Команда получает текст, только если в ней есть {placeholder} или {variable}. {placeholder} заменяется текстом — уже в кавычках и экранированным, свои кавычки не нужны; текст также приходит в stdin и в переменную окружения {variable}.",
+    "actionCommandInfo": "Выполняется в системной оболочке (sh, zsh или PowerShell). Текст передаётся только на место {placeholder}. Он подставляется уже в кавычках и экранированным, свои кавычки не нужны.",
     "actionCommandLabel": "Команда",
     "actionCommandPlaceholder": "Например: notify-send Tyco {placeholder}",
     "actionInsertScript": "Вставить файл скрипта…",

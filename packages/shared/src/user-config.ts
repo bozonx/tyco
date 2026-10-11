@@ -215,9 +215,6 @@ export interface PluginMainAction {
 /** Stands in for the text in a command, a webhook URL or its payload */
 export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 
-/** The environment variable a script gets the text in, besides stdin */
-export const ACTION_TEXT_ENV_VAR = 'TYCO_TEXT'
-
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
  * replacing the selection it got the text from (the result menu when the text
@@ -262,8 +259,7 @@ export interface AiTaskToolConfig {
 export interface ScriptToolConfig {
   /**
    * A shell command; `{{TEXT}}` is replaced with the text, quoted. The command
-   * takes the text only when it mentions `{{TEXT}}` or `TYCO_TEXT`, see
-   * `scriptTakesText`
+   * takes the text only when it mentions `{{TEXT}}`, see `scriptTakesText`
    */
   command: string
   /** Empty for the home directory */
@@ -294,13 +290,12 @@ export interface WebhookToolConfig {
 }
 
 /**
- * Whether a script takes the text: its command mentions `{{TEXT}}` or
- * `TYCO_TEXT`. Keep in sync with `script_takes_text` in
+ * Whether a script takes the text: its command mentions `{{TEXT}}`. Keep in
+ * sync with `script_takes_text` in
  * `src-tauri/src/services/external_commands.rs`
  */
 export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
-  config.command.includes(ACTION_TEXT_PLACEHOLDER) ||
-  config.command.includes(ACTION_TEXT_ENV_VAR)
+  config.command.includes(ACTION_TEXT_PLACEHOLDER)
 
 /**
  * Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body of

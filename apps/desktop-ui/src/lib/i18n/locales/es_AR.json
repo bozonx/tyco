@@ -460,7 +460,7 @@
   },
   "settings": {
     "actionAfterRunNone": "Nada",
-    "actionCommandInfo": "Se ejecuta en la shell del sistema (sh, zsh o PowerShell). El comando recibe el texto solo si menciona {placeholder} o {variable}. {placeholder} se reemplaza por el texto, ya entre comillas y escapado, así que no hacen falta comillas; el texto también llega por stdin y en la variable de entorno {variable}.",
+    "actionCommandInfo": "Se ejecuta en la shell del sistema (sh, zsh o PowerShell). El texto se inserta solo donde aparece {placeholder}, ya entre comillas y escapado, así que no hacen falta comillas adicionales.",
     "actionCommandLabel": "Comando",
     "actionCommandPlaceholder": "p. ej.: notify-send Tyco {placeholder}",
     "actionInsertScript": "Insertar un archivo de script…",

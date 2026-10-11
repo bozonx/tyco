@@ -460,7 +460,7 @@
   },
   "settings": {
     "actionAfterRunNone": "Nothing",
-    "actionCommandInfo": "Runs in the system shell (sh, zsh or PowerShell). The command gets the text only when it mentions {placeholder} or {variable}. {placeholder} is replaced with the text, already quoted and escaped, so no quotes are needed around it; the text also comes on stdin and in the {variable} environment variable.",
+    "actionCommandInfo": "Runs in the system shell (sh, zsh or PowerShell). The command gets the text only where {placeholder} appears. It is replaced with the text, already quoted and escaped, so no quotes are needed around it.",
     "actionCommandLabel": "Command",
     "actionCommandPlaceholder": "e.g. notify-send Tyco {placeholder}",
     "actionInsertScript": "Insert a script file…",

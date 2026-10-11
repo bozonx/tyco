@@ -8,7 +8,7 @@ const MAX_ERROR_DETAIL_LENGTH = 200
 
 /**
  * The request the backend runs; a call without text passes an empty one: the
- * backend substitutes `{{TEXT}}` and fills `TYCO_TEXT` and stdin with it
+ * backend substitutes `{{TEXT}}` with the quoted and escaped text
  */
 export function buildScriptRequest(
   name: string,

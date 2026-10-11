@@ -457,7 +457,7 @@
   },
   "settings": {
     "actionAfterRunNone": "Hiçbir şey",
-    "actionCommandInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. Komut metni yalnızca {placeholder} veya {variable} içeriyorsa alır. {placeholder} metinle değiştirilir; metin zaten tırnak içinde ve kaçışlıdır, ek tırnak gerekmez. Metin ayrıca stdin'den ve {variable} ortam değişkeninden gelir.",
+    "actionCommandInfo": "Sistem kabuğunda (sh, zsh veya PowerShell) çalışır. Metin yalnızca {placeholder} yerine eklenir. Metin zaten tırnak içinde ve kaçışlıdır, ek tırnak gerekmez.",
     "actionCommandLabel": "Komut",
     "actionCommandPlaceholder": "ör. notify-send Tyco {placeholder}",
     "actionInsertScript": "Betik dosyası ekle…",
