@@ -24,6 +24,7 @@ export function formatChatToMarkdown(
       for (const attachment of message.attachments) {
         const trimmed = attachment.text.trim()
         if (trimmed) {
+          if (attachment.name) section.push(JSON.stringify(attachment.name))
           const quoted = trimmed
             .split('\n')
             .map((line) => `> ${line}`)

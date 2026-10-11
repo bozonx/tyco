@@ -27,6 +27,12 @@ vi.mock('../composables/useCallAi', () => ({ useCallAi: () => ({}) }))
 vi.mock('../composables/useToast', () => ({
   default: () => ({ toast: vi.fn() }),
 }))
+vi.mock('../lib/chat/chat-image-storage', () => ({
+  storeChatImage: vi.fn(),
+  loadChatWithImages: vi.fn(),
+  readDroppedChatFile: vi.fn(),
+  syncChatImages: vi.fn(async () => undefined),
+}))
 vi.mock('../lib/navigation/navigation', () => ({ appNavigation: {} }))
 vi.mock('../lib/chat/chat-store', () => ({
   createChatStoreModel: () => ({
@@ -37,6 +43,8 @@ vi.mock('../lib/chat/chat-store', () => ({
     newChatParams: ref({ attachments: [{ text: 'pending' }] }),
     isGenerating: chatModelIsGenerating,
     isStopped: ref(false),
+    savingImages: ref([]),
+    omitHistoryImages: ref(false),
     dismissedEditorContext: ref(null),
     acceptedEditorContext: ref(null),
   }),

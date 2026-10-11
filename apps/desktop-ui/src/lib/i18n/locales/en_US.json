@@ -83,7 +83,6 @@
     "voiceInput": "Voice input",
     "voiceSendHint": "Press Ctrl+Enter to send immediately",
     "imageTitle": "Image",
-    "addImage": "Attach image",
     "viewImage": "View image",
     "removeImage": "Remove image",
     "closeImage": "Close image",
@@ -91,7 +90,24 @@
     "imageUnavailable": "Image is unavailable",
     "imageModelRequired": "Choose a model that supports images in model settings.",
     "imageLimit": "You can attach up to 4 images per message.",
-    "imageImportFailed": "Could not attach the image. Use PNG, JPEG or WebP up to 10 MiB and 24 megapixels."
+    "addFile": "Attach file",
+    "fileUnsupported": "Unsupported format. Choose PNG, JPEG, WebP, a text file, PDF or DOCX.",
+    "fileSizeLimit": "File too large: source files up to 10 MB, processed images up to 20 MB. Try a lower image quality.",
+    "fileInvalid": "Cannot read this file. It may be damaged, use an unsupported encoding, or exceed image dimension limits.",
+    "fileEmpty": "The file has no readable text or content.",
+    "fileTextLimit": "Too much text. Split the file into parts of up to 500,000 characters.",
+    "fileCountLimit": "Attach up to 16 files per message.",
+    "pdfPageLimit": "PDF has more than 100 pages. Split the document into parts.",
+    "pdfPassword": "PDF is password protected. Attach a copy without a password.",
+    "imageMemoryLimit": "Not enough memory for active chat images. Remove unneeded attachments or start a new chat.",
+    "dropFiles": "Drop files to attach them to the chat.",
+    "continueWithoutImages": "Continue without previous images",
+    "historyImagesOmitted": "Previous images are excluded from requests; history is preserved.",
+    "restoreHistoryImages": "Include previous images again",
+    "historyTrimmed": "Older conversation turns excluded by the context limit: {count}.",
+    "imageOmitted": "[Previous images excluded by the user]",
+    "documentTextHint": "Documents are sent as extracted text; layout and embedded pictures are excluded. Scanned PDF pages are sent as images.",
+    "fileProcessing": "Processing files…"
   },
   "commandLauncher": {
     "allCommands": "All commands",
@@ -360,7 +376,8 @@
     "rateLimit": "Too many requests to the provider; try again later",
     "timeout": "The model took too long to answer",
     "unavailable": "The provider is not reachable",
-    "unknown": "The AI request failed"
+    "unknown": "The AI request failed",
+    "imageUnsupported": "The provider rejected a request with images. Check vision support and model settings, or continue without images. Server details follow."
   },
   "menu": {
     "actions": "Actions",
@@ -756,7 +773,13 @@
     "addLauncherPage": "Add page",
     "removeLauncherPage": "Delete page",
     "launcherPageTakesText": "Take the selected text",
-    "launcherPageTakesTextInfo": "Turn off for pages whose commands do not work with text: the window opens without the selected text, so a leftover of an earlier selection never reaches the commands."
+    "launcherPageTakesTextInfo": "Turn off for pages whose commands do not work with text: the window opens without the selected text, so a leftover of an earlier selection never reaches the commands.",
+    "chatAttachments": "Chat attachments",
+    "chatImageQuality": "Image quality",
+    "chatImageQualityHint": "Applies to new attachments. Higher quality uses more memory and context. Metadata is removed in every mode; limits are 24 MP and 20 MB after processing.",
+    "imageQualityEconomy": "Economy — up to 1024 px",
+    "imageQualityBalanced": "Balanced — up to 1568 px",
+    "imageQualityOriginal": "No resizing"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

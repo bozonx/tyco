@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ChatSidebar from './ChatSidebar.vue'
 
@@ -17,6 +17,13 @@ const mocks = vi.hoisted(() => ({
   startNewChat: vi.fn(),
   openChat: vi.fn(),
   clearChatHistory: vi.fn(),
+  removeFromChatHistory: vi.fn(),
+  restoreChatItem: vi.fn(),
+  releaseUndo: vi.fn(async () => undefined),
+}))
+
+vi.mock('../../lib/chat/chat-image-storage', () => ({
+  releaseChatImageUndo: mocks.releaseUndo,
 }))
 
 vi.mock('../../composables/useI18n', () => ({
@@ -48,10 +55,13 @@ vi.mock('../../stores/history', () => ({
     chatHistory: reactive(mocks.chatHistory),
     searchChats: vi.fn().mockResolvedValue([]),
     clearChatHistory: mocks.clearChatHistory,
+    removeFromChatHistory: mocks.removeFromChatHistory,
+    restoreChatItem: mocks.restoreChatItem,
   }),
 }))
 
 describe('ChatSidebar.vue', () => {
+  afterEach(() => vi.useRealTimers())
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.userConfig.chatHistoryEnabled = true
@@ -139,5 +149,76 @@ describe('ChatSidebar.vue', () => {
     await searchBtn.trigger('click')
     await flushPromises()
     expect(wrapper.find('.sidebar-search').exists()).toBe(false)
+  })
+
+  async function deleteImageChat() {
+    const item = {
+      id: 'image-chat',
+      description: 'Image chat',
+      lastMsgDate: new Date().toISOString(),
+      messages: [],
+    }
+    mocks.chatHistory.push(item)
+    mocks.removeFromChatHistory.mockResolvedValueOnce(item)
+    const wrapper = mount(ChatSidebar, {
+      global: {
+        stubs: {
+          Button: { template: '<button><slot /></button>' },
+          Icon: true,
+          SearchInput: true,
+          DropdownMenu: {
+            name: 'DropdownMenu',
+            props: ['items'],
+            template: '<span />',
+          },
+          ConfirmModal: {
+            name: 'ConfirmModal',
+            props: ['open'],
+            emits: ['confirm'],
+            template: '<span />',
+          },
+        },
+      },
+    })
+    const menu = wrapper.findComponent({ name: 'DropdownMenu' })
+    const actions = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+    actions.find((action) => action.label === 'chat.deleteChat')!.action()
+    await flushPromises()
+    wrapper
+      .findAllComponents({ name: 'ConfirmModal' })
+      .at(-1)!
+      .vm.$emit('confirm')
+    await flushPromises()
+    return wrapper
+  }
+
+  it('releases deleted image ownership when the undo window expires', async () => {
+    vi.useFakeTimers()
+    const wrapper = await deleteImageChat()
+    expect(mocks.releaseUndo).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(8000)
+    expect(mocks.releaseUndo).toHaveBeenCalledWith('image-chat')
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+
+  it('keeps deleted images pinned until undo persistence finishes', async () => {
+    let finish!: () => void
+    mocks.restoreChatItem.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    const wrapper = await deleteImageChat()
+    await wrapper.get('.sidebar-notice button').trigger('click')
+    expect(mocks.releaseUndo).not.toHaveBeenCalled()
+    finish()
+    await flushPromises()
+    expect(mocks.releaseUndo).toHaveBeenCalledWith('image-chat')
+    wrapper.unmount()
   })
 })

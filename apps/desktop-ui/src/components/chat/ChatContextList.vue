@@ -39,9 +39,10 @@
     <div v-if="attached.length" class="context-attached">
       <ChatAttachment
         v-for="(attachment, index) in attachments"
-        :key="`attachment-${attachment.text}`"
+        :key="`attachment-${index}`"
         :text="attachment.text"
         :source="attachment.source"
+        :name="attachment.name"
         removable
         announce
         @remove="chatStore.removeAttachment(index)"

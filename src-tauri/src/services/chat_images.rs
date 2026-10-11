@@ -11,9 +11,10 @@ use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
 use crate::models::{ChatHistoryItem, ChatImage};
 
-pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
+pub const MAX_IMAGE_BYTES: usize = 20 * 1024 * 1024;
 const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
-const MAX_DIMENSION: u32 = 1568;
+const MAX_DIMENSION: u32 = 16_384;
+const MAX_PIXELS: u64 = 24_000_000;
 
 fn invalid(message: &str) -> AppError {
     AppError::Message(message.to_string())
@@ -37,7 +38,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     }
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_limits(png::Limits {
-        bytes: 32 * 1024 * 1024,
+        bytes: 128 * 1024 * 1024,
     });
     let mut reader = decoder
         .read_info()
@@ -47,6 +48,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         || info.height == 0
         || info.width > MAX_DIMENSION
         || info.height > MAX_DIMENSION
+        || u64::from(info.width) * u64::from(info.height) > MAX_PIXELS
         || info.animation_control.is_some()
         || info.bit_depth != png::BitDepth::Eight
         || !matches!(info.color_type, png::ColorType::Rgb | png::ColorType::Rgba)
@@ -87,12 +89,38 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
 pub struct ChatImageStore {
     images: HashMap<String, (ChatImage, Vec<u8>)>,
     size: usize,
+    owners: HashMap<String, HashSet<String>>,
+    expires: HashMap<String, std::time::Instant>,
 }
 
 impl ChatImageStore {
+    fn expire_owners(&mut self) {
+        let now = std::time::Instant::now();
+        self.expires.retain(|owner, deadline| {
+            if *deadline > now {
+                true
+            } else {
+                self.owners.remove(owner);
+                false
+            }
+        });
+    }
+
     fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
+        self.expire_owners();
         if self.images.contains_key(&image.id) {
             return Ok(());
+        }
+        if self.size + bytes.len() > MAX_SESSION_BYTES {
+            let held: HashSet<_> = self.owners.values().flatten().cloned().collect();
+            self.images.retain(|id, (_, cached)| {
+                if held.contains(id) {
+                    true
+                } else {
+                    self.size -= cached.len();
+                    false
+                }
+            });
         }
         if self.size + bytes.len() > MAX_SESSION_BYTES {
             return Err(invalid("Chat image session memory limit exceeded"));
@@ -100,6 +128,51 @@ impl ChatImageStore {
         self.size += bytes.len();
         self.images.insert(image.id.clone(), (image, bytes));
         Ok(())
+    }
+
+    /// Window ownership keeps active drafts alive even when saved history is removed.
+    pub fn hold(&mut self, owner: &str, id: &str) {
+        self.owners
+            .entry(owner.to_string())
+            .or_default()
+            .insert(id.to_string());
+    }
+
+    pub fn hold_undo(&mut self, owner: &str, id: &str) {
+        self.hold(owner, id);
+        // UI releases its eight-second undo explicitly; abandoned webviews cannot pin forever.
+        self.expires.insert(
+            owner.to_string(),
+            std::time::Instant::now() + std::time::Duration::from_secs(30),
+        );
+    }
+
+    pub fn sync(&mut self, owner: &str, ids: &[String]) -> Result<(), AppError> {
+        self.expire_owners();
+        for id in ids {
+            validate_id(id)?;
+        }
+        self.owners
+            .insert(owner.to_string(), ids.iter().cloned().collect());
+        let held: HashSet<_> = self.owners.values().flatten().cloned().collect();
+        self.images.retain(|id, (_, bytes)| {
+            if held.contains(id) {
+                true
+            } else {
+                self.size -= bytes.len();
+                false
+            }
+        });
+        Ok(())
+    }
+
+    pub fn release_owner(&mut self, owner: &str) {
+        self.expires
+            .retain(|key, _| key != owner && !key.starts_with(&format!("{owner}/")));
+        self.owners
+            .retain(|key, _| key != owner && !key.starts_with(&format!("{owner}/")));
+        let _ = self.sync(owner, &[]);
+        self.owners.remove(owner);
     }
 
     pub fn insert(&mut self, bytes: &[u8], name: Option<String>) -> Result<ChatImage, AppError> {
@@ -227,6 +300,57 @@ mod tests {
     }
 
     #[test]
+    fn releases_drafts_and_preserves_other_windows_and_imports() {
+        let mut store = ChatImageStore::default();
+        let image = store.insert(&png(), None).unwrap();
+        store.hold("main/import/lease", &image.id);
+        store.sync("main", &[]).unwrap();
+        assert_eq!(store.size, image.size);
+        store.sync("main", std::slice::from_ref(&image.id)).unwrap();
+        store.release_owner("main/import/lease");
+        store.hold("quick", &image.id);
+        store.release_owner("main");
+        assert_eq!(store.size, image.size);
+        store.release_owner("quick");
+        assert_eq!(store.size, 0);
+        assert!(store.images.is_empty());
+    }
+
+    #[test]
+    fn undo_survives_window_sync_and_expires_without_releasing_active_images() {
+        let mut store = ChatImageStore::default();
+        let image = store.insert(&png(), None).unwrap();
+        store.hold_undo("main/undo/chat", &image.id);
+        store.sync("main", &[]).unwrap();
+        assert!(store.images.contains_key(&image.id));
+        store.expires.insert(
+            "main/undo/chat".into(),
+            std::time::Instant::now() - std::time::Duration::from_secs(1),
+        );
+        store.hold("quick", &image.id);
+        store.sync("main", &[]).unwrap();
+        assert!(!store.owners.contains_key("main/undo/chat"));
+        assert!(store.images.contains_key(&image.id));
+        store.release_owner("quick");
+        assert!(store.images.is_empty());
+    }
+
+    #[test]
+    fn evicts_unowned_read_cache_but_never_active_images() {
+        let mut store = ChatImageStore::default();
+        let (image, bytes) = normalize(&png(), None).unwrap();
+        store
+            .images
+            .insert("cache".into(), (image.clone(), vec![0; MAX_SESSION_BYTES]));
+        store.size = MAX_SESSION_BYTES;
+        store.remember(image.clone(), bytes).unwrap();
+        assert_eq!(store.size, image.size);
+        assert!(!store.images.contains_key("cache"));
+        store.hold("main", &image.id);
+        store.sync("quick", &[]).unwrap();
+        assert!(store.images.contains_key(&image.id));
+    }
+    #[test]
     fn rejects_invalid_input_and_paths() {
         assert!(normalize(b"not a PNG", None).is_err());
         assert!(normalize(&vec![0; MAX_IMAGE_BYTES + 1], None).is_err());
@@ -293,8 +417,16 @@ mod tests {
         };
         assert!(store.persist(Path::new("/nonexistent"), &chat).is_err());
         let mut full = ChatImageStore {
+            images: HashMap::from([(
+                "held".into(),
+                (
+                    store.images.values().next().unwrap().0.clone(),
+                    vec![0; MAX_SESSION_BYTES],
+                ),
+            )]),
             size: MAX_SESSION_BYTES,
-            ..Default::default()
+            owners: HashMap::from([("window".into(), HashSet::from(["held".into()]))]),
+            expires: HashMap::new(),
         };
         assert!(full.insert(&png(), None).is_err());
     }

@@ -22,7 +22,11 @@ import type { LlmPrompt } from './llm-prompt'
 const CALL_TIMEOUT_MS = 300_000
 
 export type LlmErrorKind =
-  Exclude<AiErrorKind, 'no_candidates'> | 'no_model' | 'config' | 'unknown'
+  | Exclude<AiErrorKind, 'no_candidates'>
+  | 'no_model'
+  | 'config'
+  | 'unknown'
+  | 'image_unsupported'
 
 export class LlmError extends Error {
   readonly kind: LlmErrorKind
@@ -172,7 +176,25 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
           if (options.signal?.aborted) return streamedText
           const llmError = toLlmError(error)
           if (emittedText) throw llmError
-          firstError ??= llmError
+          const hasImages = prompt.messages.some(
+            (message) =>
+              Array.isArray(message.content) &&
+              message.content.some(
+                (part) =>
+                  part.type === 'file' && part.mediaType.startsWith('image/')
+              )
+          )
+          firstError ??=
+            hasImages &&
+            (llmError.kind === 'invalid_request' ||
+              (llmError.kind === 'unknown' &&
+                /(?:unsupported|not support).*(?:image|vision)|(?:image|vision).*(?:unsupported|not support)/i.test(
+                  llmError.message
+                )))
+              ? new LlmError('image_unsupported', llmError.message, {
+                  cause: llmError,
+                })
+              : llmError
         }
       }
       throw firstError ?? new LlmError('unknown', 'All language models failed')

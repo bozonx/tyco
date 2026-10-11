@@ -157,6 +157,7 @@ import {
   groupChatHistory,
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
+import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -312,8 +313,15 @@ async function confirmDeleteChat() {
   await removeChat(id)
 }
 
+function releaseRemovedChat() {
+  const id = removedChat.value?.id
+  removedChat.value = null
+  if (id) void releaseChatImageUndo(id).catch(() => undefined)
+}
+
 async function removeChat(id: string) {
   clearTimeout(undoTimer)
+  releaseRemovedChat()
   // leave the chat first, or its pending write would bring it back
   if (chatStore.newChatParams.id === id) {
     chatStore.abandonChat()
@@ -323,9 +331,7 @@ async function removeChat(id: string) {
   const removed = await historyStore.removeFromChatHistory(id)
   if (removed || item) {
     removedChat.value = removed || item || null
-    undoTimer = setTimeout(() => {
-      removedChat.value = null
-    }, 8000)
+    undoTimer = setTimeout(releaseRemovedChat, 8000)
   }
 }
 
@@ -334,7 +340,11 @@ async function undoRemoveChat() {
   const item = removedChat.value
   removedChat.value = null
   if (item) {
-    await historyStore.restoreChatItem(item)
+    try {
+      await historyStore.restoreChatItem(item)
+    } finally {
+      await releaseChatImageUndo(item.id).catch(() => undefined)
+    }
   }
 }
 
@@ -344,6 +354,8 @@ async function confirmClearAll() {
 }
 
 async function clearAllChats() {
+  clearTimeout(undoTimer)
+  releaseRemovedChat()
   if (chatStore.messages.length) {
     chatStore.abandonChat()
     await chatStore.whenSaved()
@@ -353,6 +365,7 @@ async function clearAllChats() {
 
 onUnmounted(() => {
   clearTimeout(undoTimer)
+  releaseRemovedChat()
   clearTimeout(searchTimer)
 })
 </script>

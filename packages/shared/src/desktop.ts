@@ -18,6 +18,8 @@ export interface ChatAttachment {
   text: string
   /** Unknown for attachments stored before the source was kept */
   source?: ChatAttachmentSource
+  name?: string
+  mediaType?: string
 }
 
 /** A normalized image owned by the Rust chat image store. */
@@ -219,6 +221,9 @@ export const DESKTOP_COMMANDS = {
   GET_CHAT: 'get_chat',
   STORE_CHAT_IMAGE: 'store_chat_image',
   GET_CHAT_IMAGE: 'get_chat_image',
+  SYNC_CHAT_IMAGES: 'sync_chat_images',
+  RELEASE_CHAT_IMAGE_UNDO: 'release_chat_image_undo',
+  READ_CHAT_FILE: 'read_chat_file',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
   SET_EDITOR_HISTORY_RESULT: 'set_editor_history_result',
   RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',

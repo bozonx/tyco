@@ -1,14 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
-import type { ChatImage } from '@tyco/shared'
-import { createChatImageInput, imageDimensions } from './chat-image-input'
+import { describe, expect, it } from 'vitest'
+import { imageDimensions, imageBudgetCharacters } from './chat-image-input'
 
-const image: ChatImage = {
-  id: 'image',
-  mediaType: 'image/png',
-  width: 1,
-  height: 1,
-  size: 4,
-}
 function png(width: number, height: number) {
   const bytes = new Uint8Array(24)
   bytes.set([137, 80, 78, 71, 13, 10, 26, 10], 0)
@@ -30,52 +22,21 @@ describe('chat image input', () => {
     expect(() => imageDimensions(new TextEncoder().encode('<svg/>'))).toThrow()
   })
 
-  it('does not attach an import to a replaced draft', async () => {
-    let finish!: (bytes: Uint8Array<ArrayBuffer>) => void
-    let current = true
-    const store = vi.fn(async () => image)
-    const accept = vi.fn()
-    const input = createChatImageInput({
-      prepare: () =>
-        new Promise((resolve) => {
-          finish = resolve
-        }),
-      store,
+  it('accepts the dimensions of minimal lossless WebP files', () => {
+    const bytes = new Uint8Array(26)
+    bytes.set(new TextEncoder().encode('RIFF'), 0)
+    bytes.set(new TextEncoder().encode('WEBPVP8L'), 8)
+    bytes[20] = 47
+    expect(imageDimensions(bytes)).toEqual({
+      width: 1,
+      height: 1,
+      type: 'image/webp',
     })
-    const pending = input.add([new File(['x'], 'x.png')], accept, () => current)
-    await Promise.resolve()
-    current = false
-    finish(new Uint8Array([1]))
-    await pending
-    expect(store).not.toHaveBeenCalled()
-    expect(accept).not.toHaveBeenCalled()
   })
-
-  it('preserves file order and recovers after a failed import', async () => {
-    const names: string[] = []
-    const prepare = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('Invalid image'))
-      .mockResolvedValue(new Uint8Array([1]))
-    const input = createChatImageInput({
-      prepare,
-      store: async (_, name) => {
-        names.push(name)
-        return image
-      },
-    })
-    await expect(
-      input.add(
-        [new File([], 'bad')],
-        () => {},
-        () => true
-      )
-    ).rejects.toThrow()
-    await input.add(
-      [new File([], 'first'), new File([], 'second')],
-      () => {},
-      () => true
-    )
-    expect(names).toEqual(['first', 'second'])
+  it('budgets large originals more conservatively than resized images', () => {
+    expect(imageBudgetCharacters({ width: 1024, height: 1024 })).toBe(4096 * 3)
+    expect(
+      imageBudgetCharacters({ width: 6000, height: 4000 })
+    ).toBeGreaterThan(4096 * 3)
   })
 })

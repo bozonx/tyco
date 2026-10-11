@@ -362,6 +362,7 @@
           v-else-if="currentTab === 'llm'"
           :llm="userConfig.llm"
           :ai-rules="userConfig.aiRules"
+          v-model:image-quality="userConfig.chatImageQuality"
           @provider-removed="finishProviderRemoval"
         />
 

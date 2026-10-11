@@ -57,8 +57,17 @@ export function formatAttachmentsForPrompt(
   attachments: ChatAttachment[] = []
 ): string {
   return attachments
-    .map(({ text, source }) => {
-      const attribute = source ? ` source="${source}"` : ''
+    .map(({ text, source, name, mediaType }) => {
+      const escape = (value: string) =>
+        value
+          .replaceAll('&', '&amp;')
+          .replaceAll('"', '&quot;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+      const attribute =
+        (source ? ` source="${escape(source)}"` : '') +
+        (name ? ` name="${escape(name)}"` : '') +
+        (mediaType ? ` media-type="${escape(mediaType)}"` : '')
       return `<attachment${attribute}>${JSON.stringify(text)}</attachment>`
     })
     .join('\n\n')

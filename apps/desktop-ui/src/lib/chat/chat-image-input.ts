@@ -2,9 +2,18 @@ import type { ChatImage } from '@tyco/shared'
 
 export const MAX_CHAT_IMAGES = 4
 export const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
-export const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_CHAT_IMAGE_BYTES = 20 * 1024 * 1024
 /** Conservative request allowance; provider-specific estimates can replace it. */
 export const IMAGE_BUDGET_CHARACTERS = 4096 * 3
+export function imageBudgetCharacters(
+  image: Pick<ChatImage, 'width' | 'height'>
+): number {
+  return Math.max(
+    IMAGE_BUDGET_CHARACTERS,
+    (Math.ceil(image.width / 512) * Math.ceil(image.height / 512) * 256 + 256) *
+      3
+  )
+}
 const MAX_SOURCE_PIXELS = 24_000_000
 const MAX_SOURCE_DIMENSION = 16_384
 
@@ -58,18 +67,19 @@ export function imageDimensions(bytes: Uint8Array): {
       offset += length
     }
   } else if (
-    bytes.length >= 30 &&
+    bytes.length >= 25 &&
     ascii(0, 4) === 'RIFF' &&
     ascii(8, 4) === 'WEBP'
   ) {
     const chunk = ascii(12, 4)
-    if (chunk === 'VP8X') {
+    if (chunk === 'VP8X' && bytes.length >= 30) {
       // Animated WebP is deliberately excluded from the first slice.
       if (bytes[20] & 2) throw new Error('Animated images are not supported')
       width = 1 + bytes[24] + (bytes[25] << 8) + (bytes[26] << 16)
       height = 1 + bytes[27] + (bytes[28] << 8) + (bytes[29] << 16)
     } else if (
       chunk === 'VP8 ' &&
+      bytes.length >= 30 &&
       bytes[23] === 157 &&
       bytes[24] === 1 &&
       bytes[25] === 42
@@ -96,7 +106,8 @@ export function imageDimensions(bytes: Uint8Array): {
 }
 
 export async function prepareChatImage(
-  file: File
+  file: File,
+  quality: 'economy' | 'balanced' | 'original' = 'balanced'
 ): Promise<Uint8Array<ArrayBuffer>> {
   if (!file.size || file.size > MAX_SOURCE_IMAGE_BYTES)
     throw new Error('Image size limit exceeded')
@@ -119,7 +130,8 @@ export async function prepareChatImage(
     }
     const scale = Math.min(
       1,
-      1568 / Math.max(image.naturalWidth, image.naturalHeight)
+      (quality === 'economy' ? 1024 : quality === 'original' ? 16_384 : 1568) /
+        Math.max(image.naturalWidth, image.naturalHeight)
     )
     const canvas = document.createElement('canvas')
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
@@ -139,34 +151,5 @@ export async function prepareChatImage(
     return new Uint8Array(await normalized.arrayBuffer())
   } finally {
     URL.revokeObjectURL(url)
-  }
-}
-
-export interface ChatImageInputDeps {
-  prepare: (file: File) => Promise<Uint8Array<ArrayBuffer>>
-  store: (bytes: Uint8Array<ArrayBuffer>, name: string) => Promise<ChatImage>
-}
-
-/** Serializes imports; late completions cannot attach to a different draft. */
-export function createChatImageInput(deps: ChatImageInputDeps) {
-  let queue = Promise.resolve()
-  return {
-    add(
-      files: File[],
-      accept: (image: ChatImage) => void,
-      isCurrent: () => boolean
-    ): Promise<void> {
-      const task = queue.then(async () => {
-        for (const file of files) {
-          if (!isCurrent()) return
-          const bytes = await deps.prepare(file)
-          if (!isCurrent()) return
-          const image = await deps.store(bytes, file.name)
-          if (isCurrent()) accept(image)
-        }
-      })
-      queue = task.catch(() => undefined)
-      return task
-    },
   }
 }

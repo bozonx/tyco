@@ -61,7 +61,10 @@
       <Icon icon="mdi:arrow-down" height="18" />
     </button>
 
-    <div class="composer-wrap">
+    <div class="composer-wrap" @dragover.prevent @drop.prevent="dropFiles">
+      <div v-if="draggingFiles" class="text-sm text-muted" role="status">
+        {{ t('chat.dropFiles') }}
+      </div>
       <VoiceRecognitionMenu
         v-if="isInlineVoice"
         variant="bar"
@@ -94,7 +97,7 @@
           class="text-sm text-muted"
           role="status"
         >
-          {{ t('chat.imageProcessing') }}
+          {{ t('chat.fileProcessing') }}
         </div>
         <div
           v-if="chatStore.imageModelRequired"
@@ -103,14 +106,55 @@
         >
           {{ t('chat.imageModelRequired') }}
         </div>
+        <Button
+          v-if="
+            !chatStore.omitHistoryImages &&
+            !chatStore.pendingImages.length &&
+            chatStore.messages.some((message) => message.images?.length)
+          "
+          xs
+          ghost
+          @click="chatStore.omitHistoryImages = true"
+        >
+          {{ t('chat.continueWithoutImages') }}
+        </Button>
+        <div
+          v-if="chatStore.omitHistoryImages"
+          class="text-sm text-muted"
+          role="status"
+        >
+          {{ t('chat.historyImagesOmitted') }}
+          <Button xs ghost @click="chatStore.omitHistoryImages = false">{{
+            t('chat.restoreHistoryImages')
+          }}</Button>
+        </div>
+        <div
+          v-if="chatStore.trimmedTurns"
+          class="text-sm text-muted"
+          role="status"
+        >
+          {{ t('chat.historyTrimmed', { count: chatStore.trimmedTurns }) }}
+        </div>
+        <div
+          v-if="
+            chatStore.newChatParams.attachments?.some(
+              (item) =>
+                item.mediaType === 'application/pdf' ||
+                item.mediaType?.includes('wordprocessingml')
+            )
+          "
+          class="text-sm text-muted"
+        >
+          {{ t('chat.documentTextHint') }}
+        </div>
         <ChatInput @send="sendMessage" />
         <input
-          ref="imagePicker"
+          ref="filePicker"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          :accept="CHAT_FILE_ACCEPT"
           multiple
           class="hidden"
-          @change="pickImages"
+          @change="pickFiles"
         />
 
         <div class="chat-composer-bar">
@@ -132,10 +176,10 @@
               :disabled="
                 chatStore.isGenerating || Boolean(chatStore.importingImages)
               "
-              :title="t('chat.addImage')"
-              @click="imagePicker?.click()"
+              :title="t('chat.addFile')"
+              @click="filePicker?.click()"
             >
-              <Icon icon="mdi:image-plus-outline" height="18" />
+              <Icon icon="mdi:paperclip" height="18" />
             </Button>
             <Button
               sm
@@ -173,12 +217,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  toRaw,
+  watch,
+} from 'vue'
 
 import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { formatChatToMarkdown } from '../lib/chat/chat-export'
+import { CHAT_FILE_ACCEPT } from '../lib/chat/chat-file-input'
 import {
   newlineShortcut,
   resolveSubmitKey,
@@ -195,6 +248,7 @@ import ChatImageAttachment from './chat/ChatImageAttachment.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import VoiceRecognitionMenu from './menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
+import { getCurrentWebview } from '@tauri-apps/api/webview'
 import type { ChatMessage } from '@tyco/shared'
 
 const chatInputStore = useChatInputStore()
@@ -222,16 +276,17 @@ const inputHint = computed(() => {
 const scroller = ref<HTMLElement | null>(null)
 const pinnedToBottom = ref(true)
 const showScrollButton = ref(false)
-const imagePicker = ref<HTMLInputElement | null>(null)
-function pickImages(event: Event) {
+const filePicker = ref<HTMLInputElement | null>(null)
+function pickFiles(event: Event) {
   const input = event.target as HTMLInputElement
-  void chatStore.addImages(Array.from(input.files || []))
+  void chatStore.addFiles(Array.from(input.files || []))
   input.value = ''
 }
 const canSend = computed(
   () =>
     (Boolean(chatInputStore.value.trim()) ||
-      chatStore.pendingImages.length > 0) &&
+      chatStore.pendingImages.length > 0 ||
+      chatStore.attachedContext.length > 0) &&
     !chatStore.importingImages &&
     !chatStore.imageModelRequired &&
     !chatStore.isGenerating &&
@@ -249,7 +304,7 @@ const streamHasContent = computed(() => {
 
 const modelMenuItems = computed<DropdownMenuItem[]>(() => [
   ...chatStore.modelOptions.map((option) => ({
-    label: `${option.name} · ${option.provider}`,
+    label: `${option.name} · ${option.provider}${option.vision ? ` · ${t('settings.vision')}` : ''}`,
     icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
     action: () => chatStore.selectModel(option.id),
   })),
@@ -336,7 +391,28 @@ async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
   element.scrollTo({ top: Math.round(top), behavior })
 }
 
+const draggingFiles = ref(false)
+let unlistenDrop: (() => void) | undefined
+let disposed = false
+function dropFiles(event: DragEvent) {
+  void chatStore.addFiles(Array.from(event.dataTransfer?.files || []))
+}
+onBeforeUnmount(() => {
+  disposed = true
+  unlistenDrop?.()
+})
 onMounted(() => {
+  void getCurrentWebview()
+    .onDragDropEvent(async ({ payload }) => {
+      draggingFiles.value = payload.type === 'enter' || payload.type === 'over'
+      if (payload.type !== 'drop') return
+      if (!disposed) await chatStore.addDroppedFiles(payload.paths)
+    })
+    .then((unlisten) => {
+      if (disposed) unlisten()
+      else unlistenDrop = unlisten
+    })
+    .catch(() => undefined)
   // keys may have been added or removed while the chat was not shown
   // on failure the list stays as it was with the keys known before
   llmStore.refreshSecrets().catch(() => undefined)

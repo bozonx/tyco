@@ -1,4 +1,4 @@
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, WebviewWindow};
 
 use crate::errors::AppError;
 use crate::models::{ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem};
@@ -26,9 +26,11 @@ pub fn get_chat_history(
 
 #[tauri::command(async)]
 pub fn get_chat(
+    window: WebviewWindow,
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
+    lease: Option<String>,
 ) -> Result<Option<ChatHistoryItem>, AppError> {
     let _guard = state.lock_history_storage();
     let chat = storage::get_chat(&app, id)?;
@@ -37,6 +39,9 @@ pub fn get_chat(
         let mut images = state.chat_images.lock().expect("chat image lock poisoned");
         for image in chat.messages.iter().flat_map(|message| &message.images) {
             // A broken image must not prevent the rest of the chat from opening.
+            if let Some(lease) = &lease {
+                images.hold(&format!("{}/import/{lease}", window.label()), &image.id);
+            }
             let _ = images.get(&directory, &image.id);
         }
     }
@@ -122,11 +127,23 @@ pub fn remove_from_editor_history(
 
 #[tauri::command(async)]
 pub fn remove_from_chat_history(
+    window: WebviewWindow,
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
 ) -> Result<(), AppError> {
     let _guard = state.lock_history_storage();
+    if let Some(chat) = storage::get_chat(&app, id.clone())? {
+        let directory = storage::chat_image_directory(&app)?;
+        let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+        let owner = format!("{}/undo/{id}", window.label());
+        for image in chat.messages.iter().flat_map(|message| &message.images) {
+            images.hold_undo(&owner, &image.id);
+            if let Err(error) = images.get(&directory, &image.id) {
+                log::warn!("Could not preserve chat image for undo: {error}");
+            }
+        }
+    }
     storage::remove_from_chat_history(&app, id)
 }
 
@@ -145,9 +162,11 @@ pub fn clear_chat_history(app: AppHandle, state: State<'_, AppState>) -> Result<
 /// Receives a normalized PNG; drafts never touch the filesystem.
 #[tauri::command(async)]
 pub fn store_chat_image(
+    window: WebviewWindow,
     state: State<'_, AppState>,
     data: String,
     name: Option<String>,
+    lease: String,
 ) -> Result<crate::models::ChatImage, AppError> {
     use base64::Engine;
     if data.len() > (crate::services::chat_images::MAX_IMAGE_BYTES * 4 / 3 + 4) {
@@ -156,11 +175,10 @@ pub fn store_chat_image(
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(data)
         .map_err(|_| AppError::Message("Invalid image encoding".into()))?;
-    state
-        .chat_images
-        .lock()
-        .expect("chat image lock poisoned")
-        .insert(&bytes, name)
+    let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+    let image = images.insert(&bytes, name)?;
+    images.hold(&format!("{}/import/{lease}", window.label()), &image.id);
+    Ok(image)
 }
 
 #[tauri::command(async)]
@@ -176,4 +194,74 @@ pub fn get_chat_image(
         .expect("chat image lock poisoned")
         .get(&storage::chat_image_directory(&app)?, &id)?;
     Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command(async)]
+pub fn sync_chat_images(
+    window: WebviewWindow,
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+    leases: Vec<String>,
+) -> Result<(), AppError> {
+    let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+    images.sync(window.label(), &ids)?;
+    for lease in leases {
+        images.release_owner(&format!("{}/import/{lease}", window.label()));
+    }
+    Ok(())
+}
+
+/// Only bounded bytes are returned; a dropped path is never used as a webview URL.
+#[tauri::command(async)]
+pub fn read_chat_file(path: String) -> Result<tauri::ipc::Response, AppError> {
+    Ok(tauri::ipc::Response::new(read_chat_file_bytes(
+        std::path::Path::new(&path),
+    )?))
+}
+
+fn read_chat_file_bytes(path: &std::path::Path) -> Result<Vec<u8>, AppError> {
+    use std::io::Read;
+    const MAX_BYTES: u64 = 10 * 1024 * 1024;
+    let metadata = std::fs::metadata(path)?;
+    if !metadata.is_file() || metadata.len() > MAX_BYTES {
+        return Err(AppError::Message("File size limit exceeded".into()));
+    }
+    let file = std::fs::File::open(path)?;
+    let mut bytes = Vec::new();
+    file.take(MAX_BYTES + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > MAX_BYTES {
+        return Err(AppError::Message("File size limit exceeded".into()));
+    }
+    Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dropped_files_are_bounded_and_directories_are_rejected() {
+        let directory =
+            std::env::temp_dir().join(format!("tyco-chat-file-test-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("sample.txt");
+        std::fs::write(&path, b"contents").unwrap();
+        assert_eq!(read_chat_file_bytes(&path).unwrap(), b"contents");
+        assert!(read_chat_file_bytes(&directory).is_err());
+        std::fs::File::create(&path)
+            .unwrap()
+            .set_len(10 * 1024 * 1024 + 1)
+            .unwrap();
+        assert!(read_chat_file_bytes(&path).is_err());
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[tauri::command(async)]
+pub fn release_chat_image_undo(window: WebviewWindow, state: State<'_, AppState>, id: String) {
+    state
+        .chat_images
+        .lock()
+        .expect("chat image lock poisoned")
+        .release_owner(&format!("{}/undo/{id}", window.label()));
 }

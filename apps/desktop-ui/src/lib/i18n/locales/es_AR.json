@@ -83,7 +83,6 @@
     "voiceInput": "Entrada por voz",
     "voiceSendHint": "Presione Ctrl+Enter para enviar inmediatamente",
     "imageTitle": "Imagen",
-    "addImage": "Adjuntar imagen",
     "viewImage": "Ver imagen",
     "removeImage": "Quitar imagen",
     "closeImage": "Cerrar imagen",
@@ -91,7 +90,24 @@
     "imageUnavailable": "La imagen no está disponible",
     "imageModelRequired": "Elegí un modelo que admita imágenes en la configuración de modelos.",
     "imageLimit": "Podés adjuntar hasta 4 imágenes por mensaje.",
-    "imageImportFailed": "No se pudo adjuntar la imagen. Usá PNG, JPEG o WebP de hasta 10 MiB y 24 megapíxeles."
+    "addFile": "Adjuntar archivo",
+    "fileUnsupported": "Formato no compatible. Elegí PNG, JPEG, WebP, un archivo de texto, PDF o DOCX.",
+    "fileSizeLimit": "Archivo demasiado grande: originales de hasta 10 MB e imágenes procesadas de hasta 20 MB. Probá una calidad menor.",
+    "fileInvalid": "No se pudo leer el archivo. Puede estar dañado, usar una codificación no compatible o superar los límites de dimensiones.",
+    "fileEmpty": "El archivo no tiene texto ni contenido legible.",
+    "fileTextLimit": "Demasiado texto. Dividí el archivo en partes de hasta 500.000 caracteres.",
+    "fileCountLimit": "Podés adjuntar hasta 16 archivos por mensaje.",
+    "pdfPageLimit": "El PDF tiene más de 100 páginas. Dividí el documento en partes.",
+    "pdfPassword": "El PDF está protegido con contraseña. Adjuntá una copia sin contraseña.",
+    "imageMemoryLimit": "No hay memoria suficiente para las imágenes del chat activo. Quitá adjuntos o iniciá un chat nuevo.",
+    "dropFiles": "Soltá los archivos para adjuntarlos al chat.",
+    "continueWithoutImages": "Continuar sin imágenes anteriores",
+    "historyImagesOmitted": "Las imágenes anteriores se excluyen de las solicitudes; el historial se conserva.",
+    "restoreHistoryImages": "Volver a incluir imágenes anteriores",
+    "historyTrimmed": "Intercambios anteriores excluidos por el límite de contexto: {count}.",
+    "imageOmitted": "[Imágenes anteriores excluidas por el usuario]",
+    "documentTextHint": "Los documentos se envían como texto extraído; se omiten el diseño y las imágenes incrustadas. Las páginas PDF escaneadas se envían como imágenes.",
+    "fileProcessing": "Procesando archivos…"
   },
   "commandLauncher": {
     "allCommands": "Todos los comandos",
@@ -360,7 +376,8 @@
     "rateLimit": "Demasiadas solicitudes al proveedor; probá más tarde",
     "timeout": "El modelo tardó demasiado en responder",
     "unavailable": "No se puede conectar con el proveedor",
-    "unknown": "La solicitud a la IA falló"
+    "unknown": "La solicitud a la IA falló",
+    "imageUnsupported": "El proveedor rechazó una solicitud con imágenes. Revisá la compatibilidad con vision y la configuración del modelo, o continuá sin imágenes. A continuación se muestran los detalles del servidor."
   },
   "menu": {
     "actions": "Acciones",
@@ -756,7 +773,13 @@
     "addLauncherPage": "Agregar página",
     "removeLauncherPage": "Eliminar página",
     "launcherPageTakesText": "Usar el texto seleccionado",
-    "launcherPageTakesTextInfo": "Desactivalo en las páginas cuyos comandos no trabajan con texto: la ventana se abre sin el texto seleccionado, así lo que quedó de una selección anterior nunca llega a los comandos."
+    "launcherPageTakesTextInfo": "Desactivalo en las páginas cuyos comandos no trabajan con texto: la ventana se abre sin el texto seleccionado, así lo que quedó de una selección anterior nunca llega a los comandos.",
+    "chatAttachments": "Adjuntos del chat",
+    "chatImageQuality": "Calidad de imagen",
+    "chatImageQualityHint": "Se aplica a nuevos adjuntos. Una mayor calidad usa más memoria y contexto. Los metadatos siempre se eliminan; límites: 24 MP y 20 MB después del procesamiento.",
+    "imageQualityEconomy": "Económica — hasta 1024 px",
+    "imageQualityBalanced": "Equilibrada — hasta 1568 px",
+    "imageQualityOriginal": "Sin reducir"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

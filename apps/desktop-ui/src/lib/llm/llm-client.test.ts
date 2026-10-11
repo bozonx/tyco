@@ -320,6 +320,25 @@ describe('vision transport', () => {
       ],
     })
   })
+  it('reports provider rejection of image input without losing the server detail', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      jsonResponse(400, {
+        error: {
+          message: 'This model does not support images',
+          type: 'invalid_request_error',
+        },
+      })
+    )
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    llm.models[0].vision = true
+    const { client } = setup(fetch, llm)
+    await expect(
+      client.run('chat', imagePrompt, { models: ['local-qwen'] })
+    ).rejects.toMatchObject({
+      kind: 'image_unsupported',
+      message: expect.stringContaining('does not support images'),
+    })
+  })
   it('refuses image input before transport when the model is text-only', async () => {
     const fetch = vi.fn<FetchFunction>()
     const { client } = setup(fetch)

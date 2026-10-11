@@ -1,6 +1,6 @@
 import type { ChatAttachment, ChatHistoryItem, ChatMessage } from '@tyco/shared'
 
-import { IMAGE_BUDGET_CHARACTERS, MAX_CHAT_IMAGES } from './chat-image-input'
+import { imageBudgetCharacters } from './chat-image-input'
 
 import { formatAttachmentsForPrompt } from './chat-attachment'
 
@@ -35,7 +35,7 @@ export function createAssistantMessage(content: string): ChatMessage {
 export function trimChatContext(
   messages: ChatMessage[],
   maxCharacters: number,
-  availableImages = MAX_CHAT_IMAGES
+  availableImages = Number.POSITIVE_INFINITY
 ): ChatMessage[] {
   const turns: ChatMessage[][] = []
   for (const message of messages) {
@@ -59,13 +59,22 @@ export function trimChatContext(
       (sum, item) => sum + (item.images?.length || 0),
       0
     )
+    const imageSize = turn.reduce(
+      (sum, item) =>
+        sum +
+        (item.images || []).reduce(
+          (total, image) => total + imageBudgetCharacters(image),
+          0
+        ),
+      0
+    )
     if (
-      used + size + images * IMAGE_BUDGET_CHARACTERS > maxCharacters ||
+      used + size + imageSize > maxCharacters ||
       imageCount + images > availableImages
     )
       break
     selected.unshift(turn)
-    used += size + images * IMAGE_BUDGET_CHARACTERS
+    used += size + imageSize
     imageCount += images
   }
   return selected.flat()

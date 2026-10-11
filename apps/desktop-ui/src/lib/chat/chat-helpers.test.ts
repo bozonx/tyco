@@ -87,3 +87,18 @@ describe('image context', () => {
     expect(trimChatContext(messages, 100_000, 0)).toEqual(messages.slice(2))
   })
 })
+
+it('keeps previous image turns when the new message fills four image slots', () => {
+  const image = {
+    id: 'old',
+    mediaType: 'image/png' as const,
+    width: 100,
+    height: 100,
+    size: 100,
+  }
+  const messages = [
+    { role: 'user' as const, content: 'old image', images: [image] },
+    { role: 'assistant' as const, content: 'old answer' },
+  ]
+  expect(trimChatContext(messages, 100_000)).toEqual(messages)
+})

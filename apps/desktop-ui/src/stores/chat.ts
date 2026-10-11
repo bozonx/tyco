@@ -1,12 +1,18 @@
+import { imageBudgetCharacters } from '../lib/chat/chat-image-input'
 import {
-  createChatImageInput,
-  prepareChatImage,
-  MAX_CHAT_IMAGES,
-  IMAGE_BUDGET_CHARACTERS,
-} from '../lib/chat/chat-image-input'
-import { storeChatImage } from '../lib/chat/chat-image-storage'
+  storeChatImage,
+  syncChatImages,
+  readDroppedChatFile,
+  loadChatWithImages,
+} from '../lib/chat/chat-image-storage'
+import { type ChatFileErrorKind } from '../lib/chat/chat-file-input'
+import { createChatFileController } from '../lib/chat/chat-file-controller'
+import { createChatFileReader } from '../lib/chat/chat-file-reader'
+import { trimChatContext } from '../lib/chat/chat-helpers'
+import { formatLlmError } from '../lib/llm/llm-errors'
+import { LlmError } from '../lib/llm/llm-client'
 import { defineStore } from 'pinia'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useChatInputStore } from './chatInput'
 
@@ -80,7 +86,7 @@ export const useChatStore = defineStore('chat', () => {
         throw error
       }
     },
-    loadChatHistoryItem: (id) => historyStore.loadChat(id),
+    loadChatHistoryItem: loadChatWithImages,
     navigateTo: (path) => appNavigation.push(path),
     notifyError: (message) => {
       toast(message, 'error')
@@ -91,6 +97,11 @@ export const useChatStore = defineStore('chat', () => {
     noModelError: () => translate('chat.noModels'),
     imageModelError: () => translate('chat.imageModelRequired'),
     imageTitle: () => translate('chat.imageTitle'),
+    imageOmittedText: () => translate('chat.imageOmitted'),
+    formatError: (error) =>
+      error instanceof LlmError
+        ? formatLlmError(error, translate)
+        : String(error instanceof Error ? error.message : error),
     createId: () => makeUniqId(8),
     nowIso: () => new Date().toISOString(),
     saveLocalState: async (patch) => {
@@ -158,7 +169,10 @@ export const useChatStore = defineStore('chat', () => {
     return resolveContextBudget(
       [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
       contextBudgetCharacters(picked.contextSize),
-      (model.newChatParams.value.images?.length || 0) * IMAGE_BUDGET_CHARACTERS
+      (model.newChatParams.value.images || []).reduce(
+        (sum, image) => sum + imageBudgetCharacters(image),
+        0
+      )
     )
   })
 
@@ -186,59 +200,64 @@ export const useChatStore = defineStore('chat', () => {
     chatInputStore.focus()
   }
 
-  const importingImages = ref(0)
-  const imageInput = createChatImageInput({
-    prepare: prepareChatImage,
-    store: storeChatImage,
+  const historyImagesRequired = computed(() => {
+    if (model.omitHistoryImages.value || !selectedModel.value) return false
+    const inputSize = contextBudget.value?.used || 0
+    return trimChatContext(
+      model.messages.value,
+      Math.max(
+        0,
+        contextBudgetCharacters(selectedModel.value.contextSize) - inputSize
+      )
+    ).some((message) => message.images?.length)
   })
-  const pendingImages = computed(() => model.newChatParams.value.images || [])
   const imageModelRequired = computed(
     () =>
       !selectedModel.value?.vision &&
-      (pendingImages.value.length > 0 ||
-        model.messages.value.some((message) => message.images?.length))
+      (pendingImages.value.length > 0 || historyImagesRequired.value)
   )
-
-  async function addImages(files: File[]) {
-    if (!files.length || model.isGenerating.value) return
-    const draft = model.newChatParams.value
-    if (files.length + pendingImages.value.length > MAX_CHAT_IMAGES) {
-      toast(translate('chat.imageLimit'), 'error')
-      return
-    }
-    importingImages.value++
-    try {
-      await imageInput.add(
-        files,
-        (image) => {
-          const current = draft.images || []
-          if (current.some((item) => item.id === image.id)) return
-          if (current.length >= MAX_CHAT_IMAGES)
-            throw new Error('Image count limit exceeded')
-          draft.images = [...current, image]
-        },
-        () => model.newChatParams.value === draft
-      )
-    } catch {
-      toast(translate('chat.imageImportFailed'), 'error')
-    } finally {
-      importingImages.value--
-    }
+  const fileErrorKeys: Record<ChatFileErrorKind, string> = {
+    unsupported: 'chat.fileUnsupported',
+    size: 'chat.fileSizeLimit',
+    invalid: 'chat.fileInvalid',
+    empty: 'chat.fileEmpty',
+    textLimit: 'chat.fileTextLimit',
+    imageLimit: 'chat.imageLimit',
+    fileLimit: 'chat.fileCountLimit',
+    pdfPages: 'chat.pdfPageLimit',
+    password: 'chat.pdfPassword',
+    memory: 'chat.imageMemoryLimit',
   }
+  const files = createChatFileController({
+    getDraft: () => model.newChatParams.value,
+    getMessages: () => model.messages.value,
+    getSavingImages: () => model.savingImages.value,
+    isGenerating: () => model.isGenerating.value,
+    prepare: createChatFileReader({
+      quality: () => ipcStore.params.userConfig?.chatImageQuality || 'balanced',
+      storeImage: storeChatImage,
+    }),
+    addAttachment: model.addAttachment,
+    readDroppedFile: readDroppedChatFile,
+    syncImages: syncChatImages,
+    report: (name, kind) =>
+      toast(`${name}: ${translate(fileErrorKeys[kind])}`, 'error'),
+    reportSyncError: () => toast(translate('chat.imageUnavailable'), 'error'),
+  })
+  onScopeDispose(files.dispose)
+  const importingImages = files.importing
+  const pendingImages = files.pendingImages
 
   let inputSubmission = 0
 
   return {
     ...model,
-    addImages,
+    addFiles: files.addFiles,
+    addDroppedFiles: files.addDroppedFiles,
     importingImages,
     pendingImages,
     imageModelRequired,
-    removeImage: (id: string) => {
-      model.newChatParams.value.images = pendingImages.value.filter(
-        (image) => image.id !== id
-      )
-    },
+    removeImage: files.removeImage,
     modelOptions,
     selectedModel,
     editorContext,
@@ -272,7 +291,7 @@ export const useChatStore = defineStore('chat', () => {
     },
     async openLastOrNewChat() {
       menuModalsStore.closeAll()
-      await model.openLastOrNewChat()
+      await files.whileOpening(() => model.openLastOrNewChat())
       await nextTick()
       chatInputStore.focus()
     },
@@ -283,7 +302,7 @@ export const useChatStore = defineStore('chat', () => {
     },
     async openChat(id: string, options?: { silent?: boolean }) {
       menuModalsStore.closeAll()
-      const result = await model.openChat(id, options)
+      const result = await files.whileOpening(() => model.openChat(id, options))
       // the editor selection has nothing to do with the opened conversation
       markEditorSelectionStale()
       await nextTick()
@@ -302,7 +321,9 @@ export const useChatStore = defineStore('chat', () => {
     async sendInput(): Promise<boolean> {
       const message = chatInputStore.value.trim()
       if (
-        (!message && !pendingImages.value.length) ||
+        (!message &&
+          !pendingImages.value.length &&
+          !attachedContext.value.length) ||
         model.isGenerating.value ||
         importingImages.value
       )

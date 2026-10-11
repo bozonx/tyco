@@ -6,6 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite'
 
 import { resolveLocalAiKit } from './build/local-ai-kit.ts'
+import { offlinePdfAssetsPlugin } from './build/offline-pdf-assets-plugin.ts'
 import { offlineIconsPlugin } from './build/offline-icons-plugin.ts'
 
 const rootDir = import.meta.dirname
@@ -32,7 +33,13 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
-    plugins: [vue(), tailwindcss(), Components({}), offlineIconsPlugin(srcDir)],
+    plugins: [
+      vue(),
+      tailwindcss(),
+      Components({}),
+      offlineIconsPlugin(srcDir),
+      offlinePdfAssetsPlugin(),
+    ],
     resolve: {
       alias: [
         { find: '@', replacement: srcDir },

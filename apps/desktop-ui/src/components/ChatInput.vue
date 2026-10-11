@@ -89,7 +89,7 @@ function handlePaste(event: ClipboardEvent) {
     chatInputStore.setValue(textarea.value)
     resize()
   }
-  void chatStore.addImages(files)
+  void chatStore.addFiles(files)
 }
 
 function handleInput(event: Event) {

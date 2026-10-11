@@ -1,251 +1,107 @@
-# Изображения в AI-чате: первый вертикальный срез
+# Chat files and vision
 
-Дата: 2026-10-10.
+The composer has one file picker, clipboard file paste, and native Tauri file
+drops. All paths use the same bounded, sequential importer. An error is reported
+for each file; later files still import. Replacing the draft discards late
+results. Native reads keep the composer busy before disk IO begins.
 
-## Что реализовано
+## Formats and local processing
 
-В основном чате можно прикрепить изображение через кнопку выбора файла или
-вставку из буфера в поле ввода. Поддерживаются статические PNG, JPEG и WebP.
-Смешанная вставка сохраняет текст из буфера в позиции курсора и прикрепляет
-картинку. Обычная текстовая вставка работает как раньше.
+- PNG, JPEG, and non-animated WebP are decoded, drawn into a canvas, and
+  normalized to PNG. Rust validates and re-encodes pixels, stripping metadata.
+- Text files (including Markdown, CSV, JSON, configuration, and supported source
+  code extensions) are read as UTF-8, or BOM-marked UTF-16. Invalid encodings and
+  NUL-containing binary content are rejected. File names and media types are
+  preserved in history, previews, prompts, and text export.
+- DOCX extraction reads only `word/document.xml` with bounded streaming ZIP
+  inflation. Paragraphs, table cells, tabs, and breaks are converted to plain
+  text. Embedded images, document layout, headers, and external relationships
+  are not included. DTDs and entities are rejected.
+- PDF text is extracted locally using PDF.js. Pages without a readable text
+  layer, including image scans with only a small footer text layer, are rendered to images and use the same vision import path. Mixed PDFs
+  preserve both text and rendered pages. Password-protected and oversized
+  documents receive explicit errors. Rendered pages have named page numbers.
+  There is no separate OCR service; the vision model interprets scan pages.
 
-Вложения показываются миниатюрами в черновике и сообщениях. Из черновика
-картинку можно удалить; нажатие на миниатюру открывает просмотр сохранённой
-версии. Escape закрывает просмотр. Ошибка загрузки показывается отдельно,
-остальной чат остаётся доступным. Объектные URL освобождаются при смене
-картинки и уничтожении компонента.
+PDF.js runs in a bundled legacy worker. CMaps, standard fonts, and WASM resources
+are served from local `pdf-assets/` in both dev and production. No CDN or CSP
+relaxation is required. The parser does not execute PDF document actions.
 
-Можно отправить сообщение только из изображений. Начальный заголовок такого
-чата — локализованное «Изображение». Автоматическое создание заголовка для
-такого сообщения пока не запускается. Переводы интерфейса добавлены во все
-четыре локали.
+## Quality and limits
 
-Изображения проходят через подготовку запроса, адаптер SDK и существующий
-Rust-прокси. Повторная отправка после ошибки, остановка, регенерация и
-ветвление сохраняют ссылки на изображения. В историю сохраняется сам
-пользовательский вопрос, даже если модель не ответила.
+Settings → language models → chat attachments controls new image imports:
 
-## Контракт и подготовка
+- Economy: longest edge up to 1024 pixels.
+- Balanced (default): longest edge up to 1568 pixels.
+- No resizing: retain decoded pixel dimensions within safety limits.
 
-`ChatMessage.images` и `ChatParams.images` отделены от текстовых вложений.
-Запись изображения содержит SHA-256, MIME-тип, размеры, размер файла и
-необязательное имя. В Rust поле сообщений имеет значение по умолчанию;
-старые файлы истории без изображений продолжают читаться.
+Every mode strips metadata and stores normalized PNG, not the original file.
+Changing quality does not reconstruct previously reduced images. PDF scans are
+rendered at up to twice their PDF point dimensions, with a 3072-pixel longest
+edge, before the chosen normalization policy applies.
 
-В первом срезе сохранённый формат всегда `image/png`. Webview сначала
-проверяет сигнатуру и размеры исходника, затем декодирует его и рисует на
-canvas с сохранением пропорций. Большая сторона ограничена 1568 пикселями;
-маленькие картинки не увеличиваются. PNG сохраняет прозрачность и избегает
-дополнительных потерь при JPEG-сжатии скриншотов.
+Source files are limited to 10 MiB. Images are limited to 24 million pixels,
+16384 pixels per edge, and 20 MiB after normalization. Each new message accepts
+up to four images and sixteen file attachments (rendered pages consume image
+slots). Extracted text is limited to 500000 characters, DOCX document XML to
+4 MiB after decompression, and PDF documents to 100 pages. Scan PDFs exceeding
+the available image slots must be split. Unsupported formats are never sent
+as arbitrary binary data.
 
-Rust получает подготовленные байты, декодирует PNG с ограничением памяти и
-повторно кодирует только пиксели. Метаданные исходника, в том числе EXIF, не
-попадают в сохранённую картинку. Hash и метаданные конечного файла вычисляет
-Rust. При сохранении чата он проверяет соответствие ссылки фактическим
-размерам, типу и размеру байтов. Изображения разрешены только в сообщениях
-пользователя.
+Text-extracted documents work with ordinary text models. Only image attachments
+and rendered PDF scan pages require a vision model. The model selector marks
+models configured for vision. The flag describes expected capability; the
+provider can still reject the request. Image request rejection gets a localized
+explanation and bounded server details, while authentication, context, and
+network errors retain their respective explanations.
 
-Лимиты первого среза:
+## Context and history
 
-| Ограничение                                  | Значение       |
-| -------------------------------------------- | -------------- |
-| Размер исходного файла                       | 10 МиБ         |
-| Число пикселей исходника                     | 24 миллиона    |
-| Каждая сторона исходника                     | 16 384 пикселя |
-| Большая сторона подготовленной картинки      | 1568 пикселей  |
-| Размер сохранённого PNG                      | 5 МиБ          |
-| Изображения в одном сообщении                | 4              |
-| Изображения во всём отправляемом контексте   | 4              |
-| Сумма байтов в хранилище текущей сессии Rust | 128 МиБ        |
+Four images is a per-new-message import limit, not a limit on the full request.
+Older turns are retained while the conservative context budget allows them.
+Image allowances grow for large originals. This is an estimate, not a
+provider-specific tokenizer. Excluded old turns are reported in the composer.
 
-Лимит обработанного PNG может отклонить шумную фотографию, даже если
-исходный JPEG укладывается в лимиты. Анимация PNG и WebP отклоняется; GIF,
-SVG, AVIF и HEIC в этот срез не входят. Различия в отображении цветов и
-ориентации зависят от декодера webview; необходима ручная проверка на ОС.
+Vision is checked against the actual trimmed request. An old image outside the
+request does not prevent using a text model. If retained images require vision,
+the user can explicitly continue without previous images. Only the prepared
+request is changed: omission markers are added, stored history stays intact,
+and previous images can be included again. Newly attached images still require
+vision even when historical images are excluded.
 
-Импорт выполняется последовательно. Пока он идёт, отправка отключена.
-Результат импорта не добавляется в другой чат, если пользователь сменил
-черновик. При пакетном импорте уже добавленные файлы остаются прикреплёнными,
-если следующий файл завершился ошибкой.
+Image-only and file-only messages, retry, regeneration, branching, and Markdown
+export are supported. Text export includes file names and text; image pixels
+are explicitly marked as omitted.
 
-## Хранение и очистка
+## Image ownership
 
-Черновики находятся только в ограниченном хранилище Rust в памяти. Импорт
-сам по себе не создаёт файлов приложения. На диск изображения попадают при
-сохранении сообщения с включённой историей:
+Rust bounds retained compressed image bytes to 128 MiB per session. Active
+window images, imports, and unfinished history writes own their bytes. Import
+and history-loading leases protect against older ownership updates racing with
+new imports. Window ownership is reconciled after imports and history loading
+finish. Removing a draft image or switching chats releases unneeded bytes.
+Destroying a window releases its ownership and import leases. Deleted chat images
+are temporarily held for Undo; the sidebar releases them after restoration,
+expiry, replacement, or unmount. A backend deadline also bounds abandoned undo
+owners.
 
-`chats/images/<sha256>.png`.
+Unowned read cache entries are evicted under pressure. Owned data is never
+silently evicted. An active chat that itself exceeds the session quota receives
+an error; starting another chat releases its ownership. History-loaded images
+remain available to an active chat if saved history is deleted. Unsaved drafts
+never touch disk. History persistence stores validated hash-addressed images
+atomically; orphan collection scans surviving chat references.
 
-Байтов нет в JSON истории. Одинаковые нормализованные изображения используют
-один файл; ветка чата копирует ссылки. Имя исходника остаётся атрибутом
-конкретного вложения и не участвует в hash.
+## Verification
 
-Новые бинарные файлы записываются атомарно, с приватными правами на Unix.
-Порядок сохранения: изображения, файл чата, индекс, очистка. Операции истории
-сериализуются существующим общим mutex Rust, включая доступ из разных окон.
-Промежуточный сбой может оставить лишний файл, который очистится позднее;
-полноценной транзакции между файлом чата и индексом пока нет.
+Unit tests cover file classification, encoding, per-file failures, decompression
+limits, mixed PDFs, scan rendering, cancellation, queues, ownership handoff,
+context trimming, explicit historical image omission, attachment-only messages,
+file metadata roundtrips, and provider image rejection. Rust tests cover owners
+across windows, cache eviction, quotas, bounded native reads, normalization,
+history persistence, and orphan collection.
 
-GC читает сохранившиеся файлы чатов и удаляет PNG без ссылок. Дополнительный
-список ссылок в индексе пока не вводится. Это проще для небольших историй и
-не создаёт второй источник истины. Если файл чата не разбирается, очистка
-изображений прекращается без удаления потенциально нужных байтов. GC
-выполняется после сохранения, удаления чата и удаления чатов по сроку
-хранения. Полная очистка истории удаляет также каталог изображений.
-
-Для предпросмотра и отправки webview вызывает `get_chat_image` и получает
-бинарный IPC-ответ. Произвольные пути не принимаются: идентификатор должен
-быть SHA-256 в нижнем регистре. Доступ через файловый протокол и CSP не
-расширялись. Выбор файла использует обычный системный диалог через HTML
-file input; отдельного Rust-импорта произвольных путей пока нет.
-
-При открытии истории доступные изображения подгружаются в память Rust.
-Поэтому очистка истории или отключение её сохранения не уничтожает
-изображения уже открытого чата. При выключенной истории новые изображения
-не записываются на диск. Повторное включение истории позволяет сохранить
-байты активного чата из памяти.
-
-Важное ограничение: первый срез удерживает импортированные и загруженные
-изображения до завершения процесса. Удаление вложения освобождает его
-предпросмотр, но не байты в Rust. При достижении 128 МиБ новые загрузки
-отклоняются, без вытеснения нужных картинок. Нужно перезапустить приложение;
-несохранённые вложения при этом пропадут. Это временное решение жизненного
-цикла, а не окончательная политика памяти.
-
-## Модели и бюджет
-
-`LlmModel.vision` — явный пользовательский переключатель в дополнительных
-настройках модели. Если значение не задано, изображения разрешены только
-для двух известных моделей из стартовой конфигурации:
-
-- Google `gemini-2.5-flash`;
-- OpenRouter `openai/gpt-4.1-mini`.
-
-У остальных моделей, включая пользовательские OpenAI-compatible endpoints,
-поддержка по умолчанию выключена. Владелец локального vision-сервера может
-включить её вручную. Переключатель описывает ожидаемую возможность модели;
-сервер всё равно может отклонить запрос.
-
-В каталог ai-kit передаются входные модальности `text` и, при разрешении,
-`image`. Байты загружаются перед вызовом SDK. Используется современная
-часть сообщения `file` с MIME-типом `image/png`: текущий SDK помечает прежний
-вариант `image` как устаревший. ai-kit распознаёт оба варианта. Изменять
-соседний `../ai-kit` для первого среза не потребовалось.
-
-Если выбранная модель текстовая, а в черновике или текущем чате есть картинки,
-отправка блокируется с пояснением. Исторические картинки молча не удаляются
-из запроса. Это намеренно строгий режим первого среза, даже если старый ход
-иначе уже не поместился бы в контекст.
-
-Оценка бюджета — 4096 токенов на изображение, переведённых в условные символы
-через существующий коэффициент 3. Это фиксированное приближение, не точный
-счётчик и не универсальная гарантия для всех моделей. Индикатор учитывает
-картинки нового сообщения. Старый контекст обрезается целыми ходами диалога
-по бюджету и числу изображений; ответ не остаётся без своего вопроса.
-Оценщик ai-kit отдельно использует свою приблизительную стоимость
-изображения, поэтому числа на разных слоях пока не унифицированы.
-
-Текстовый Markdown-экспорт явно отмечает пропущенное изображение, его размеры
-и формат. Внутренние пути и временные Blob URL не экспортируются. Самих
-файлов в текстовом экспорте нет.
-
-## Проверка первого среза
-
-Автоматические проверки покрывают:
-
-- размеры до декодирования, последовательность импорта и смену черновика;
-- смешанную и обычную вставку в поле ввода;
-- загрузку миниатюр, ошибку чтения и освобождение объектных URL;
-- сообщение только из картинки, retry, regenerate и branch;
-- отказ текстовой модели без потери черновика или неудачного хода;
-- учёт бюджета и обрезку контекста целыми ходами;
-- части запроса с байтами для старого и нового сообщений;
-- сериализацию изображений реальными адаптерами Google, OpenRouter и
-  OpenAI-compatible через тестовый транспорт;
-- Rust-нормализацию, удаление метаданных, дедупликацию, disk roundtrip,
-  GC и сохранение сессионной копии после удаления файла;
-- недопустимые идентификаторы, повреждённый ввод и неверные метаданные;
-- явную пометку в текстовом экспорте.
-
-Проверки адаптеров выполняются с опубликованным `@bozonx/ai-kit`, который
-используется production-сборкой. Реальные запросы к облачным аккаунтам не
-выполнялись. Нативная ручная проверка окна, системного выбора файла, буфера
-и просмотрщика на всех поддерживаемых ОС остаётся необходимой.
-
-## Следующие шаги
-
-### 1. Владение байтами и завершённый жизненный цикл
-
-Ввести явных владельцев ресурсов: черновик, открытый чат в каждом окне,
-выполняющийся запрос, передача между окнами. Нужны операции удержания и
-освобождения ссылки, очистка ресурсов при закрытии окна и запрет удаления
-во время запроса. Отдельно хранить вытесняемый кэш чтения истории.
-
-После этого удаление вложения и смена чата смогут возвращать память сразу,
-а очистка истории будет сохранять только действительно активные байты.
-Добавить тесты двух окон, прекращения импорта и отключения истории во время
-генерации. Разделить ошибки формата, размера и квоты памяти в UI.
-
-### 2. Отказоустойчивость хранения
-
-Добавить восстановление индекса из файлов чатов при старте, очистку
-незавершённых атомарных записей и тесты сбоев между каждым шагом сохранения.
-Не удалять неопределённые ссылки при повреждённой истории. При больших
-историях рассмотреть отдельную запись индекса с `imageIds`, которую
-вычисляет Rust и можно восстановить из сообщений.
-
-Добавить общую квоту диска и ограничения числа файлов. Автоматическое
-удаление по квоте должно уважать текущие ссылки и настройку хранения.
-Убедиться, что чтение повреждённых картинок не превращается в ошибку всего
-чата; добавить механизм явного повторного прикрепления потерянного файла.
-
-### 3. Качество и возможности моделей
-
-Согласовать оценку изображения, системного промпта и резерва ответа в одном
-месте. Оценщик должен учитывать конкретную модель и режим детализации;
-неизвестным моделям нужна осторожная оценка с явным обозначением её
-приблизительности. Проверить поведение при больших скриншотах с мелким
-текстом: 1568 пикселей нельзя считать универсальным оптимумом.
-
-Добавить выбор качества и более компактные WebP/JPEG, если это полезно для
-конкретного провайдера. Сохранение оригинала должно быть отдельным решением
-с понятным влиянием на приватность и объём диска. Оригинальные EXIF
-нельзя сохранять случайно.
-
-В селекторе моделей показать поддержку изображений. При необходимости
-добавить режим продолжения исторического чата без картинок с явным
-предупреждением и пометками только в подготовленном запросе. Не менять
-исходные сообщения истории. Для заголовка image-only чата можно использовать
-первый ответ модели, избегая второй передачи изображения без необходимости.
-
-### 4. Другие способы добавления
-
-Добавить перетаскивание через Tauri и единый проверяемый Rust-импорт путей.
-Не отключать перехват файлов окна без проверки последствий на каждой ОС.
-Новый путь должен завершаться той же нормализацией, что paste и file input.
-
-Добавить передачу изображений из быстрого окна в главное по идентификаторам
-с временным владельцем до подтверждения получения. Отдельно реализовать
-чтение картинки из системного буфера для сценариев без DOM paste.
-
-### 5. Просмотр и экспорт
-
-Загружать миниатюры по видимости, чтобы длинная история не декодировала все
-изображения сразу. Добавить масштабирование, перемещение и информацию о
-размерах в просмотрщик. Проверить клавиатурный сценарий и возврат фокуса.
-
-Реализовать переносимый экспорт Markdown с каталогом изображений либо ZIP.
-Использовать относительные пути, экранировать имена и сохранять порядок
-вложений. Экспорт картинок должен быть явным действием пользователя.
-
-### 6. Ручная матрица перед выпуском
-
-Проверить PNG-скриншот из буфера, JPEG с EXIF-ориентацией, прозрачный PNG,
-lossless/lossy WebP, шумное фото, повреждённый файл и превышение лимитов.
-Повторить сценарии на KDE Wayland, X11, Windows WebView2 и macOS WKWebView.
-
-Для каждой модели проверить реальную отправку, остановку потока, сетевую
-ошибку и повторную отправку. Для истории проверить перезапуск приложения,
-ветвление с удалением исходного чата, срок хранения и переключение истории
-во время активного диалога. Эти проверки должны выполняться и в bundle с
-production CSP.
+Browser smoke checks exercise actual PDF text extraction, scan rendering, and
+image normalization under a CSP equivalent to the production directives used
+by these paths. Native picker, clipboard, drop events, and real provider calls
+still need release verification on each supported OS.

@@ -1,4 +1,23 @@
 <template>
+  <SettingsSection :title="t('settings.chatAttachments')">
+    <FieldRow
+      :label="t('settings.chatImageQuality')"
+      :hint="t('settings.chatImageQualityHint')"
+      vertical
+    >
+      <FieldSelect
+        :value="imageQuality || 'balanced'"
+        :options="[
+          { id: 'economy', name: t('settings.imageQualityEconomy') },
+          { id: 'balanced', name: t('settings.imageQualityBalanced') },
+          { id: 'original', name: t('settings.imageQualityOriginal') },
+        ]"
+        @update:value="
+          emit('update:imageQuality', $event as UserConfig['chatImageQuality'])
+        "
+      />
+    </FieldRow>
+  </SettingsSection>
   <SettingsSection
     :title="t('settings.llmConnections')"
     :description="t('settings.llmConnectionsHint')"
@@ -371,8 +390,15 @@ import {
 } from '@tyco/shared'
 
 type ConnectionState = 'checking' | 'success' | 'error'
-const props = defineProps<{ llm: LlmConfig; aiRules?: UserConfig['aiRules'] }>()
-const emit = defineEmits<{ (event: 'providerRemoved', id: string): void }>()
+const props = defineProps<{
+  llm: LlmConfig
+  aiRules?: UserConfig['aiRules']
+  imageQuality?: UserConfig['chatImageQuality']
+}>()
+const emit = defineEmits<{
+  (event: 'providerRemoved', id: string): void
+  (event: 'update:imageQuality', value: UserConfig['chatImageQuality']): void
+}>()
 const { t } = useI18n()
 const { toast, toastText } = useToast()
 const llmStore = useLlmStore()

@@ -698,3 +698,94 @@ describe('image retry validation', () => {
     ])
   })
 })
+
+describe('file and image context policies', () => {
+  const image = {
+    id: 'old',
+    mediaType: 'image/png' as const,
+    width: 100,
+    height: 100,
+    size: 100,
+  }
+  it('sends an attachment-only turn and preserves file metadata in history', async () => {
+    const deps = createDeps()
+    const store = createChatStoreModel(deps)
+    const attachment = {
+      text: 'file contents',
+      name: 'source.ts',
+      mediaType: 'text/plain',
+    }
+    await store.sendMessage('', [attachment])
+    expect(store.messages.value[0].attachments).toEqual([attachment])
+    expect(deps.sendChatMessage).toHaveBeenCalled()
+  })
+  it('allows text models when old image turns exceed the actual context budget', async () => {
+    const deps = createDeps({
+      getChatModel: () => ({
+        id: 'text',
+        vision: false,
+        budgetCharacters: 4000,
+      }),
+    })
+    const store = createChatStoreModel(deps)
+    store.messages.value = [
+      { role: 'user', content: 'old', images: [image] },
+      { role: 'assistant', content: 'reply' },
+    ]
+    await store.sendMessage('new')
+    expect(deps.sendChatMessage).toHaveBeenCalled()
+    expect(store.trimmedTurns.value).toBe(1)
+  })
+  it('requires explicit consent to omit historical images and leaves history intact', async () => {
+    const deps = createDeps({
+      imageModelError: () => 'Vision required',
+      imageOmittedText: () => '[Images omitted]',
+    })
+    const store = createChatStoreModel(deps)
+    store.messages.value = [
+      { role: 'user', content: 'old', images: [image] },
+      { role: 'assistant', content: 'reply' },
+    ]
+    await store.sendMessage('new')
+    expect(deps.sendChatMessage).not.toHaveBeenCalled()
+    store.omitHistoryImages.value = true
+    await store.sendMessage('new')
+    expect(deps.sendChatMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      [
+        expect.objectContaining({
+          images: [],
+          content: 'old\n\n[Images omitted]',
+        }),
+        { role: 'assistant', content: 'reply' },
+      ],
+      expect.anything(),
+      expect.anything()
+    )
+    expect(store.messages.value[0].images).toEqual([image])
+  })
+  it('holds image bytes until a pending history write finishes', async () => {
+    let finish!: () => void
+    const deps = createDeps({
+      getChatModel: () => ({
+        id: 'vision',
+        vision: true,
+        budgetCharacters: 100_000,
+      }),
+      saveChatHistory: () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        }),
+      sendChatMessage: () => new Promise(() => {}),
+    })
+    const store = createChatStoreModel(deps)
+    void store.sendMessage('image', [], [image])
+    await Promise.resolve()
+    expect(store.savingImages.value).toHaveLength(1)
+    store.abandonChat()
+    expect(store.savingImages.value).toHaveLength(1)
+    finish()
+    await store.whenSaved()
+    expect(store.savingImages.value).toHaveLength(0)
+  })
+})

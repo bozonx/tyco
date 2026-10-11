@@ -49,6 +49,7 @@ import type { ChatAttachmentSource } from '@tyco/shared'
 const props = defineProps<{
   text: string
   source?: ChatAttachmentSource
+  name?: string
   /** Follows the label, e.g. that the text changed */
   note?: string
   removable?: boolean
@@ -61,7 +62,7 @@ const open = ref(false)
 const arriving = ref(false)
 
 const label = computed(() => {
-  const base = t(attachmentLabelKey(props.source))
+  const base = props.name || t(attachmentLabelKey(props.source))
   return props.note ? `${base} · ${props.note}` : base
 })
 const excerpt = computed(() => attachmentExcerpt(props.text))

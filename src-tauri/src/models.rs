@@ -59,6 +59,10 @@ pub struct ChatAttachment {
     /// strings, before the source was kept.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
+    pub media_type: Option<String>,
 }
 
 /// An attachment as the history holds it: a plain string in older files.
@@ -70,14 +74,33 @@ enum StoredChatAttachment {
         text: String,
         #[serde(default)]
         source: Option<String>,
+        #[serde(default)]
+        name: Option<String>,
+        #[serde(default, rename = "mediaType")]
+        media_type: Option<String>,
     },
 }
 
 impl From<StoredChatAttachment> for ChatAttachment {
     fn from(stored: StoredChatAttachment) -> Self {
         match stored {
-            StoredChatAttachment::Text(text) => Self { text, source: None },
-            StoredChatAttachment::Full { text, source } => Self { text, source },
+            StoredChatAttachment::Text(text) => Self {
+                text,
+                source: None,
+                name: None,
+                media_type: None,
+            },
+            StoredChatAttachment::Full {
+                text,
+                source,
+                name,
+                media_type,
+            } => Self {
+                text,
+                source,
+                name,
+                media_type,
+            },
         }
     }
 }
@@ -363,13 +386,24 @@ mod tests {
                 ChatAttachment {
                     text: String::from("old"),
                     source: None,
+                    name: None,
+                    media_type: None,
                 },
                 ChatAttachment {
                     text: String::from("new"),
                     source: Some(String::from("editor-text")),
+                    name: None,
+                    media_type: None,
                 },
             ]
         );
+    }
+
+    #[test]
+    fn file_attachment_metadata_survives_history_roundtrip() {
+        let value = serde_json::json!({ "text": "contents", "name": "report.pdf", "mediaType": "application/pdf" });
+        let attachment: ChatAttachment = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(serde_json::to_value(attachment).unwrap(), value);
     }
 
     #[test]
@@ -377,6 +411,8 @@ mod tests {
         let attachment = ChatAttachment {
             text: String::from("t"),
             source: None,
+            name: None,
+            media_type: None,
         };
 
         assert_eq!(

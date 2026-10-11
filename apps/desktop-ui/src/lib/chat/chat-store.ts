@@ -7,7 +7,7 @@ import {
   prepareChatRequest,
   trimChatContext,
 } from './chat-helpers'
-import { IMAGE_BUDGET_CHARACTERS, MAX_CHAT_IMAGES } from './chat-image-input'
+import { imageBudgetCharacters, MAX_CHAT_IMAGES } from './chat-image-input'
 
 import { draftChatTitle, needsGeneratedTitle } from './chat-title'
 import {
@@ -58,6 +58,8 @@ export interface ChatStoreDeps {
   noModelError: () => string
   imageModelError?: () => string
   imageTitle?: () => string
+  imageOmittedText?: () => string
+  formatError?: (error: unknown) => string
   createId: () => string
   nowIso: () => string
   saveLocalState: (state: Partial<LocalState>) => void | Promise<void>
@@ -70,7 +72,9 @@ export interface ChatStoreDeps {
 const uniqueAttachments = (attachments: ChatAttachment[]) =>
   attachments.filter(
     (item, index) =>
-      attachments.findIndex((other) => other.text === item.text) === index
+      attachments.findIndex(
+        (other) => other.text === item.text && other.name === item.name
+      ) === index
   )
 
 export function createChatStoreModel(deps: ChatStoreDeps) {
@@ -79,6 +83,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const isGenerating = ref(false)
   const error = ref('')
   const isStopped = ref(false)
+  const omitHistoryImages = ref(false)
+  const trimmedTurns = ref(0)
   /** The editor text the user removed from the current chat */
   const dismissedEditorContext = ref<string | null>(null)
   /** The suggested editor text the user took into the next message */
@@ -96,6 +102,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
   // writes go one after another, so that an older state never lands last
   let lastWrite: Promise<unknown> = Promise.resolve()
+  const savingImages = ref<ChatImage[]>([])
 
   /** Writes the chat as it is; a failure is reported by the dependency */
   const persist = (chatMessages: ChatMessage[]): Promise<boolean> => {
@@ -107,12 +114,19 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       lastMsgDate: deps.nowIso(),
       messages: [...chatMessages],
     })
+    const held = chatMessages.flatMap((message) => message.images || [])
+    savingImages.value.push(...held)
     const write = lastWrite.then(async () => {
       try {
         await deps.saveChatHistory(entry)
         return true
       } catch {
         return false
+      } finally {
+        for (const image of held) {
+          const index = savingImages.value.indexOf(image)
+          if (index >= 0) savingImages.value.splice(index, 1)
+        }
       }
     })
     lastWrite = write
@@ -199,7 +213,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     attachments: ChatAttachment[] = [],
     images: ChatImage[] = []
   ) => {
-    if (!message?.trim() && !images.length) {
+    if (!message?.trim() && !images.length && !attachments.length) {
       deps.notifyError(deps.emptyMessageError())
       return
     }
@@ -216,8 +230,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
     if (
       images.length > MAX_CHAT_IMAGES ||
-      ((images.length || messages.value.some((item) => item.images?.length)) &&
-        !model.vision)
+      (images.length > 0 && !model.vision)
     ) {
       deps.notifyError(deps.imageModelError?.() || deps.noModelError())
       return ''
@@ -239,7 +252,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     }
 
     const inputSize =
-      images.length * IMAGE_BUDGET_CHARACTERS +
+      images.reduce((sum, image) => sum + imageBudgetCharacters(image), 0) +
       message.length +
       attachments.reduce((sum, item) => sum + item.text.length, 0)
     if (inputSize > model.budgetCharacters) {
@@ -247,17 +260,40 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       return ''
     }
 
+    const history = retrying ? messages.value.slice(0, -1) : messages.value
+    const requestHistory = omitHistoryImages.value
+      ? history.map((item) =>
+          item.images?.length
+            ? {
+                ...item,
+                images: [],
+                content: [
+                  item.content,
+                  deps.imageOmittedText?.() || '[Images omitted]',
+                ]
+                  .filter(Boolean)
+                  .join('\n\n'),
+              }
+            : item
+        )
+      : history
+    const prevMessages = trimChatContext(
+      requestHistory,
+      Math.max(0, model.budgetCharacters - inputSize)
+    )
+    if (!model.vision && prevMessages.some((item) => item.images?.length)) {
+      deps.notifyError(deps.imageModelError?.() || deps.noModelError())
+      return ''
+    }
+    trimmedTurns.value =
+      requestHistory.filter((item) => item.role === 'user').length -
+      prevMessages.filter((item) => item.role === 'user').length
     if (retrying) messages.value.pop()
     error.value = ''
     isStopped.value = false
     lastFailedTurn.value = null
 
     const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
-    const prevMessages = trimChatContext(
-      messages.value,
-      Math.max(0, model.budgetCharacters - inputSize),
-      MAX_CHAT_IMAGES - images.length
-    )
 
     const { preparedMessage, userMessage } = prepareChatRequest(
       message,
@@ -276,7 +312,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     if (!newChatParams.value.title) {
       newChatParams.value.title = message.trim()
         ? draftChatTitle(message)
-        : deps.imageTitle?.() || 'Image'
+        : attachments[0]?.name || deps.imageTitle?.() || 'Image'
     }
     newChatParams.value.attachments = []
     newChatParams.value.images = []
@@ -326,7 +362,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
       }
     } catch (e) {
       if (currentGenerationId === generationId) {
-        error.value = e instanceof Error ? e.message : String(e)
+        error.value =
+          deps.formatError?.(e) || (e instanceof Error ? e.message : String(e))
         if (!assistantMessage.content) {
           messages.value.splice(userMessageIndex + 1, 1)
           lastFailedTurn.value = { message, attachments, images }
@@ -364,6 +401,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     newChatParams.value = chatParams
     error.value = ''
     isStopped.value = false
+    omitHistoryImages.value = false
+    trimmedTurns.value = 0
     dismissedEditorContext.value = null
     acceptedEditorContext.value = null
     lastFailedTurn.value = null
@@ -457,7 +496,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const text = attachment.text?.trim()
     if (!text) return
     const current = newChatParams.value.attachments || []
-    if (!current.some((item) => item.text === text)) {
+    if (
+      !current.some(
+        (item) => item.text === text && item.name === attachment.name
+      )
+    ) {
       newChatParams.value.attachments = [...current, { ...attachment, text }]
     }
   }
@@ -505,9 +548,12 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
 
   return {
     messages,
+    savingImages,
     newChatParams,
     isGenerating,
     isStopped,
+    omitHistoryImages,
+    trimmedTurns,
     error,
     dismissedEditorContext,
     acceptedEditorContext,

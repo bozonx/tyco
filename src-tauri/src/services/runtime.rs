@@ -746,6 +746,13 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                 }
             }
             WindowEvent::Focused(false) => {}
+            WindowEvent::Destroyed => {
+                state
+                    .chat_images
+                    .lock()
+                    .expect("chat image lock poisoned")
+                    .release_owner(window_label);
+            }
             _ => {}
         }
     }

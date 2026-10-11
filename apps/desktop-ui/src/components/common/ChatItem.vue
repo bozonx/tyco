@@ -7,6 +7,7 @@
           :key="index"
           :text="attachment.text"
           :source="attachment.source"
+          :name="attachment.name"
         />
       </div>
 

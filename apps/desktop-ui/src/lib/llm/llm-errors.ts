@@ -3,6 +3,8 @@ import type { LlmError, LlmErrorKind } from './llm-client'
 /** The i18n key that tells the user what went wrong and what to do about it */
 export function llmErrorKey(kind: LlmErrorKind): string {
   switch (kind) {
+    case 'image_unsupported':
+      return 'llmErrors.imageUnsupported'
     case 'auth':
       return 'llmErrors.auth'
     case 'rate_limit':

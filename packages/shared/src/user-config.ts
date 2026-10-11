@@ -475,6 +475,7 @@ export interface UserConfig {
   /** Kept on the disk only */
   sanitizeSecretsInEditorHistory?: boolean
   /** Chats are saved; turning it off deletes the saved ones */
+  chatImageQuality?: 'economy' | 'balanced' | 'original'
   chatHistoryEnabled: boolean
   /** Chats without a message for longer are deleted; 0 keeps them forever */
   chatHistoryRetentionDays: number
@@ -547,6 +548,7 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
   editorHistoryMaxItems: 1000,
   editorHistoryRetentionDays: 30,
   sanitizeSecretsInEditorHistory: true,
+  chatImageQuality: 'balanced',
   chatHistoryEnabled: true,
   chatHistoryRetentionDays: 0,
   llm: DEFAULT_LLM_CONFIG,

@@ -2,9 +2,9 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ChatInput from './ChatInput.vue'
 
-const mocks = vi.hoisted(() => ({ addImages: vi.fn(), setValue: vi.fn() }))
+const mocks = vi.hoisted(() => ({ addFiles: vi.fn(), setValue: vi.fn() }))
 vi.mock('../stores/chat', () => ({
-  useChatStore: () => ({ attachedContext: [], addImages: mocks.addImages }),
+  useChatStore: () => ({ attachedContext: [], addFiles: mocks.addFiles }),
 }))
 vi.mock('../stores/chatInput', () => ({
   useChatInputStore: () => ({
@@ -21,7 +21,7 @@ vi.mock('../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-describe('chat image paste', () => {
+describe('chat file paste', () => {
   beforeEach(() => vi.clearAllMocks())
   it('attaches clipboard files and inserts accompanying text at the caret', () => {
     const wrapper = mount(ChatInput)
@@ -34,7 +34,7 @@ describe('chat image paste', () => {
     })
     textarea.dispatchEvent(event)
     expect(event.defaultPrevented).toBe(true)
-    expect(mocks.addImages).toHaveBeenCalledWith([file])
+    expect(mocks.addFiles).toHaveBeenCalledWith([file])
     expect(mocks.setValue).toHaveBeenCalledWith('Hello image')
     wrapper.unmount()
   })
@@ -46,7 +46,7 @@ describe('chat image paste', () => {
     })
     wrapper.get('textarea').element.dispatchEvent(event)
     expect(event.defaultPrevented).toBe(false)
-    expect(mocks.addImages).not.toHaveBeenCalled()
+    expect(mocks.addFiles).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

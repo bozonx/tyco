@@ -72,3 +72,13 @@ describe('attachment previews', () => {
     )
   })
 })
+
+it('includes file identity in the prompt and escapes untrusted attribute values', () => {
+  expect(
+    formatAttachmentsForPrompt([
+      { text: 'contents', name: 'a"<b>.txt', mediaType: 'text/plain' },
+    ])
+  ).toBe(
+    '<attachment name="a&quot;&lt;b&gt;.txt" media-type="text/plain">"contents"</attachment>'
+  )
+})
