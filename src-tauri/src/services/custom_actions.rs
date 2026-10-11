@@ -190,10 +190,15 @@ pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>,
     }
 }
 
+/// The log of command runs in `log_dir`.
+pub fn action_log_path(log_dir: &Path) -> PathBuf {
+    log_dir.join(LOG_FILE_NAME)
+}
+
 /// Appends to `actions.log`, moving a full one to `actions.log.1` first.
 pub fn append_action_log(log_dir: &Path, entry: &str) -> std::io::Result<()> {
     fs::create_dir_all(log_dir)?;
-    let log_path = log_dir.join(LOG_FILE_NAME);
+    let log_path = action_log_path(log_dir);
     if fs::metadata(&log_path).is_ok_and(|meta| meta.len() > MAX_LOG_FILE_BYTES) {
         fs::rename(&log_path, log_dir.join(format!("{LOG_FILE_NAME}.1")))?;
     }

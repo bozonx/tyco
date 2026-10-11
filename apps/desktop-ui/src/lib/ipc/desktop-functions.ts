@@ -112,6 +112,8 @@ export interface DesktopFunctions {
     result: void
   }
   logCommandRun: { args: [record: CommandRunRecord]; result: void }
+  /** Opens the log of command runs; `false` while there is none yet */
+  openActionLog: { args: []; result: boolean }
   logClientMessage: {
     args: [level: string, message: string, context?: string]
     result: void

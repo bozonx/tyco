@@ -268,6 +268,7 @@ export const DESKTOP_COMMANDS = {
   PICK_DIRECTORY: 'pick_directory',
   LOG_CUSTOM_ACTION: 'log_custom_action',
   LOG_COMMAND_RUN: 'log_command_run',
+  OPEN_ACTION_LOG: 'open_action_log',
   LOG_CLIENT_MESSAGE: 'log_client_message',
   SET_TOOL_CATALOG: 'set_tool_catalog',
   CLAIM_EXTERNAL_JOB: 'claim_external_job',

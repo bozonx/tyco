@@ -14,7 +14,7 @@ pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
 
 type ApiResult<T> = Result<T, Response>;
 
-/// Selection capture and recording are opt-in; which commands run from
+/// Selection capture is opt-in; which commands run from
 /// outside is decided by each command's own grant.
 fn access_allowed(config: &Value, capability: &str) -> bool {
     config
@@ -405,12 +405,6 @@ fn open(
     if selection {
         permission(&config, "selection")?;
     }
-    if matches!(
-        mode,
-        StartMode::Voice | StartMode::VoiceChat | StartMode::Write
-    ) {
-        permission(&config, "recording")?;
-    }
     let mut activation = Activation::new(mode, source);
     activation.selected_text = if selection {
         let (id, text) = selection_replace::prepare_external(app)
@@ -452,7 +446,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                 "running": true,
                 "externalAccess": {
                     "selection": access_allowed(&config, "selection"),
-                    "recording": access_allowed(&config, "recording"),
                 },
             }))
         }
@@ -544,11 +537,9 @@ mod tests {
     #[test]
     fn permission_defaults_deny_capture() {
         assert!(permission(&json!({}), "selection").is_err());
-        assert!(permission(&json!({}), "recording").is_err());
         assert!(permission(&json!({"externalAccess":null}), "selection").is_err());
         assert!(permission(&json!({"externalAccess":{"selection":"true"}}), "selection").is_err());
         assert!(permission(&json!({"externalAccess":{"selection":true}}), "selection").is_ok());
-        assert!(permission(&json!({"externalAccess":{"selection":true}}), "recording").is_err());
     }
     #[test]
     fn replacement_preserves_original_surrounding_whitespace() {

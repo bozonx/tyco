@@ -220,6 +220,7 @@ export function createCommandMap(): CommandMap {
       command: DESKTOP_COMMANDS.LOG_COMMAND_RUN,
       buildArgs: ([record]) => ({ record }),
     },
+    openActionLog: { command: DESKTOP_COMMANDS.OPEN_ACTION_LOG },
     logClientMessage: {
       command: DESKTOP_COMMANDS.LOG_CLIENT_MESSAGE,
       buildArgs: ([level, message, context]) => ({ level, message, context }),

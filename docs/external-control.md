@@ -87,28 +87,31 @@ Settings → Commands, or **Available from outside** in its settings. The comman
 must also be enabled. Newly created and seeded core/plugin commands are not
 granted external access.
 
-The **External access** section below the list holds two capabilities that are
+The **External access** section below the list holds one capability that is
 independent of the command grants:
 
 - **Read and replace selected text**: permits explicit `--selection`,
   `--replace`, and selection actions.
-- **Start microphone recording**: permits opening `voice`, `voice-chat`, and
-  `write`, which can start recording.
 
-Both are off by default. Internal hotkeys and UI actions do not acquire external
+It is off by default. Internal hotkeys and UI actions do not acquire external
 permissions merely because they share the underlying execution code.
+
+Opening a mode that records, such as `voice`, `voice-chat` or `write`, needs no
+permission: the recording happens in a visible Tyco window and nothing of it is
+returned to the caller. Hotkeys bound in the desktop's own configuration, as on
+Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
 
 The corresponding user configuration is:
 
 ```yaml
 externalAccess:
   selection: false
-  recording: false
 ```
 
 Configs before version 3 also had `externalAccess.commands`, a master switch
 for all commands. The migration drops it; a config where it was `false` has the
-external grant of every command revoked instead.
+external grant of every command revoked instead. An `externalAccess.recording`
+left from older builds is ignored and dropped on the next save from Settings.
 
 A command's external grant does not bypass its tool's availability or permission
 checks. Permission and command configuration are checked again when the
@@ -149,8 +152,7 @@ The old camelCase spellings and `config` remain valid aliases.
 
 Opening UI does not implicitly capture a selection. `--selection` captures
 before opening the window and requires the selection permission. It restores
-the clipboard after capture. Later changes to clipboard content are preserved. Opening recording modes requires the recording
-permission.
+the clipboard after capture. Later changes to clipboard content are preserved.
 
 ### Discover commands
 

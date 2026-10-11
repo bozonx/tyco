@@ -171,13 +171,24 @@
             @update:value="updateTimeout"
           />
         </label>
-        <div v-if="tool?.logsOutput" class="command-field-row">
-          <FieldCheckbox
-            :value="command.logOutput"
-            :label="t('settings.actionLogOutput')"
-            @update:value="update({ logOutput: $event })"
-          />
-          <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+        <div class="command-field-row">
+          <template v-if="tool?.logsOutput">
+            <FieldCheckbox
+              :value="command.logOutput"
+              :label="t('settings.actionLogOutput')"
+              @update:value="update({ logOutput: $event })"
+            />
+            <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
+          </template>
+          <Button
+            class="command-open-log"
+            xs
+            ghost
+            icon="mdi:file-document-outline"
+            @click="openLog"
+          >
+            {{ t('commands.openLog') }}
+          </Button>
         </div>
         <div class="command-field-row">
           <FieldCheckbox
@@ -230,6 +241,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/useI18n'
+import useToast from '../../composables/useToast'
 import {
   commandAddedBy,
   commandCliCall,
@@ -244,6 +256,7 @@ import {
 } from '../../lib/commands/command-config'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
+import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import { PRESETS_KEYS } from '../../types'
 import Button from '../common/Button.vue'
@@ -287,6 +300,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { toast } = useToast()
+const ipcStore = useIpcStore()
 
 const toolsStore = useToolsStore()
 const tool = computed(() => commandTool(props.command, toolsStore))
@@ -427,6 +442,12 @@ async function copyCli() {
   }
 }
 
+async function openLog() {
+  const res = await ipcStore.callFunction('openActionLog', [])
+  if (!res.success) toast('commands.openLogFailed', 'error')
+  else if (!res.result) toast('commands.logEmpty')
+}
+
 onUnmounted(() => {
   if (copiedTimer) clearTimeout(copiedTimer)
 })
@@ -526,6 +547,10 @@ details[open] > .command-group-toggle svg {
   gap: var(--space-xs, 0.25rem);
   font-size: 0.75rem;
   color: var(--app-text-muted);
+}
+
+.command-open-log {
+  margin-left: auto;
 }
 
 .command-cli {

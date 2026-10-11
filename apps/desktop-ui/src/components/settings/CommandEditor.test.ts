@@ -1,5 +1,5 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import CommandEditor from './CommandEditor.vue'
@@ -8,6 +8,12 @@ import type { CommandConfig } from '@tyco/shared'
 vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
+const { callFunction, toast } = vi.hoisted(() => ({
+  callFunction: vi.fn(),
+  toast: vi.fn(),
+}))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../composables/useToast', () => ({ default: () => ({ toast }) }))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()
@@ -36,6 +42,11 @@ const lastUpdate = (wrapper: ReturnType<typeof mountEditor>) =>
   wrapper.emitted('update')!.at(-1)![0] as CommandConfig
 
 describe('CommandEditor.vue', () => {
+  beforeEach(() => {
+    callFunction.mockReset()
+    toast.mockReset()
+  })
+
   it('requires a name and takes one from the script when left empty', async () => {
     const wrapper = mountEditor(script({ command: "'/opt/my tools/test.sh'" }))
     expect(wrapper.text()).toContain('commands.errorNoName')
@@ -158,5 +169,19 @@ describe('CommandEditor.vue', () => {
     expect(lastUpdate(wrapper).toolConfig.timeoutSec).toBe(90)
     await input.setValue('')
     expect(lastUpdate(wrapper).toolConfig).not.toHaveProperty('timeoutSec')
+  })
+
+  it('opens the log and tells when there is none yet', async () => {
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    const button = wrapper.find('.command-open-log')
+    callFunction.mockResolvedValueOnce({ success: true, result: true })
+    await button.trigger('click')
+    expect(callFunction).toHaveBeenCalledWith('openActionLog', [])
+    expect(toast).not.toHaveBeenCalled()
+
+    callFunction.mockResolvedValueOnce({ success: true, result: false })
+    await button.trigger('click')
+    await flushPromises()
+    expect(toast).toHaveBeenCalledWith('commands.logEmpty')
   })
 })

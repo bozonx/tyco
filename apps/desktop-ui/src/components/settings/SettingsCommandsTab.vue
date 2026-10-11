@@ -174,16 +174,6 @@
         @update:value="setExternalAccess('selection', $event)"
       />
     </FieldRow>
-    <FieldRow
-      :label="t('commands.externalRecording')"
-      :info="t('commands.externalRecordingInfo')"
-    >
-      <FieldCheckbox
-        :value="externalAccess.recording"
-        :title="t('commands.externalRecording')"
-        @update:value="setExternalAccess('recording', $event)"
-      />
-    </FieldRow>
   </SettingsSection>
 </template>
 
@@ -251,9 +241,11 @@ const { toast } = useToast()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 
-const externalAccess = computed(() => ({
-  ...DEFAULT_EXTERNAL_ACCESS,
-  ...props.userConfig.externalAccess,
+// only the known keys: a saved config may still hold the dropped `recording`
+const externalAccess = computed<ExternalAccess>(() => ({
+  selection:
+    props.userConfig.externalAccess?.selection ??
+    DEFAULT_EXTERNAL_ACCESS.selection,
 }))
 const setExternalAccess = (key: keyof ExternalAccess, value: boolean) =>
   emit('update:externalAccess', { ...externalAccess.value, [key]: value })

@@ -6,7 +6,7 @@ mod state;
 
 use commands::actions::{
     cancel_script_action, execute_script_action, log_client_message, log_command_run,
-    log_custom_action, pick_directory, pick_script_file, set_tool_catalog,
+    log_custom_action, open_action_log, pick_directory, pick_script_file, set_tool_catalog,
 };
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
@@ -299,6 +299,7 @@ pub fn run() {
             pick_directory,
             log_custom_action,
             log_command_run,
+            open_action_log,
             log_client_message,
             set_tool_catalog,
         ])

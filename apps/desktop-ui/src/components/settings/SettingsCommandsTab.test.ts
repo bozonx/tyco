@@ -189,7 +189,7 @@ describe('SettingsCommandsTab.vue', () => {
     const wrapper = mountTab()
     await wrapper.findAll('.field-row input[type="checkbox"]')[0].setValue(true)
     expect(wrapper.emitted('update:externalAccess')?.[0]).toEqual([
-      { selection: true, recording: false },
+      { selection: true },
     ])
     expect(wrapper.emitted('update:commands')).toBeUndefined()
   })

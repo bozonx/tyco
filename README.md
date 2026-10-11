@@ -83,8 +83,8 @@ supports interactive `Open` and `ReplaceSelection` actions over D-Bus
 (`org.tyco.Service`, `/org/tyco/Object`, `org.tyco.Interface`). Use `tyco-ctl`
 for command discovery, execution results, and job management.
 
-Settings → Commands controls external execution, selection capture/replacement,
-and recording activation. Every executable command needs an individual external
+Settings → Commands controls external execution and selection
+capture/replacement. Every executable command needs an individual external
 grant. New core/plugin commands are not automatically exposed. Non-interactive
 calls require explicit input; `--interactive` permits input/confirmation UI.
 Use `--wait` to obtain actual command completion, or manage the returned job ID

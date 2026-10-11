@@ -24,7 +24,7 @@ pub mod windows;
 #[path = "windows-clipboard.rs"]
 pub mod windows_clipboard;
 
-pub use file_manager::open_dir;
+pub use file_manager::{open_dir, open_file};
 pub use foreground_context::{capture_selection, capture_source};
 #[cfg(target_os = "linux")]
 pub use panel_surface::settle_panel_keyboard;

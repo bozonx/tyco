@@ -157,8 +157,6 @@
     "external": "Disponible desde afuera",
     "externalDescription": "Lo que pueden hacer las aplicaciones locales de tu sesión mediante tyco-ctl y D-Bus. El acceso a cada comando se activa en sus ajustes avanzados.",
     "externalInfo": "Las aplicaciones y scripts locales pueden ejecutar un comando permitido con tyco-ctl run <ID> o tyco-ctl run <nombre> --name. El resultado se devuelve a quien llamó. --interactive permite ingresar texto en una ventana; --selection --replace solicita explícitamente reemplazar la selección.",
-    "externalRecording": "Iniciar la grabación del micrófono",
-    "externalRecordingInfo": "Una aplicación puede abrir la entrada por voz o el chat de voz, que empiezan a grabar enseguida (tyco-ctl open voice).",
     "externalRun": "Llamada externa",
     "externalSelection": "Leer y reemplazar el texto seleccionado",
     "externalSelectionInfo": "Una aplicación puede obtener el texto seleccionado en la ventana activa y poner en su lugar el resultado de un comando (tyco-ctl run <ID> --selection --replace). Hace falta para que los scripts y otras aplicaciones ejecuten comandos sobre el texto seleccionado.",
@@ -219,7 +217,10 @@
     "undo": "Deshacer",
     "unknownTool": "La herramienta «{tool}» no está disponible en esta versión de Tyco.",
     "unnamed": "Comando sin nombre",
-    "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usá el ID."
+    "warningExternalNameTwins": "Otros comandos tienen el mismo nombre: {names}. Una llamada con este nombre se rechaza por ambigua; usá el ID.",
+    "openLog": "Abrir registro",
+    "logEmpty": "Todavía no se registró ningún comando",
+    "openLogFailed": "No se pudo abrir el registro"
   },
   "common": {
     "add": "Agregar",

@@ -82,6 +82,18 @@ pub fn log_command_run(app: AppHandle, record: CommandRunRecord) {
     }
 }
 
+/// Opens `actions.log` in the text viewer of the desktop; `false` while no
+/// command has been logged yet.
+#[tauri::command(async)]
+pub fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
+    let path = custom_actions::action_log_path(&storage::app_log_dir(&app)?);
+    if !path.is_file() {
+        return Ok(false);
+    }
+    crate::services::platform::open_file(&path)?;
+    Ok(true)
+}
+
 #[tauri::command(async)]
 pub fn log_client_message(level: String, message: String, context: Option<String>) {
     let sanitized = crate::services::secret_detector::redact_secrets(&message);

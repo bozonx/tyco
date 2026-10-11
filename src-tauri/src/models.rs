@@ -228,7 +228,7 @@ pub fn default_user_config() -> Value {
     };
 
     json!({
-      "externalAccess": { "selection": false, "recording": false },
+      "externalAccess": { "selection": false },
       "configVersion": crate::services::config_migration::CONFIG_VERSION,
       "hotkeys": hotkeys::default_hotkeys_config(),
       "selectionHotkeys": hotkeys::default_selection_hotkeys_config(),

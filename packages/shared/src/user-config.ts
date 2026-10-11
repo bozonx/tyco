@@ -409,14 +409,9 @@ export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
 export interface ExternalAccess {
   /** Read the selection of the focused window and replace it */
   selection: boolean
-  /** Open the modes that start recording */
-  recording: boolean
 }
 
-export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
-  selection: false,
-  recording: false,
-}
+export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = { selection: false }
 
 export interface UserConfig {
   externalAccess?: ExternalAccess

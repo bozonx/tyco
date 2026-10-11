@@ -157,8 +157,6 @@
     "external": "Dışarıdan erişilebilir",
     "externalDescription": "Oturumunuzdaki yerel uygulamaların tyco-ctl ve D-Bus üzerinden neler yapabileceği. Her komuta erişim, komutun gelişmiş ayarlarında etkinleştirilir.",
     "externalInfo": "Yerel uygulamalar ve betikler izin verilen komutu tyco-ctl run <kimlik> veya tyco-ctl run <ad> --name ile çalıştırabilir. Sonuç çağırana döndürülür. --interactive metin girişi penceresine izin verir; --selection --replace seçimin değiştirilmesini açıkça ister.",
-    "externalRecording": "Mikrofon kaydını başlatma",
-    "externalRecordingInfo": "Bir uygulama, hemen kayda başlayan sesli girişi veya sesli sohbeti açabilir (tyco-ctl open voice).",
     "externalRun": "Dış çağrı",
     "externalSelection": "Seçili metni okuma ve değiştirme",
     "externalSelectionInfo": "Bir uygulama etkin penceredeki seçili metni alabilir ve yerine bir komutun sonucunu koyabilir (tyco-ctl run <kimlik> --selection --replace). Betiklerin ve diğer uygulamaların seçili metin üzerinde komut çalıştırması için gerekir.",
@@ -219,7 +217,10 @@
     "undo": "Geri al",
     "unknownTool": "“{tool}” aracı Tyco'nun bu sürümünde kullanılamıyor.",
     "unnamed": "Adsız komut",
-    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın."
+    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
+    "openLog": "Günlüğü aç",
+    "logEmpty": "Henüz günlüğe kaydedilmiş komut yok",
+    "openLogFailed": "Günlük açılamadı"
   },
   "common": {
     "add": "Ekle",

@@ -157,8 +157,6 @@
     "external": "Available from outside",
     "externalDescription": "What local applications of your session may do through tyco-ctl and D-Bus. Access to each command is enabled in its advanced settings.",
     "externalInfo": "Local applications and scripts can run an allowed command with tyco-ctl run <ID> or tyco-ctl run <name> --name. The result is returned to the caller. --interactive allows text input UI; --selection --replace explicitly requests selection replacement.",
-    "externalRecording": "Start microphone recording",
-    "externalRecordingInfo": "An application can open voice input or voice chat, which start recording right away (tyco-ctl open voice).",
     "externalRun": "External call",
     "externalSelection": "Read and replace selected text",
     "externalSelectionInfo": "An application can get the text selected in the active window and put the result of a command in its place (tyco-ctl run <ID> --selection --replace). Needed for scripts and other applications to run commands on the selected text.",
@@ -219,7 +217,10 @@
     "undo": "Undo",
     "unknownTool": "The tool “{tool}” is not available in this version of Tyco.",
     "unnamed": "Untitled command",
-    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID."
+    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
+    "openLog": "Open log",
+    "logEmpty": "No command has been logged yet",
+    "openLogFailed": "Could not open the log"
   },
   "common": {
     "add": "Add",
