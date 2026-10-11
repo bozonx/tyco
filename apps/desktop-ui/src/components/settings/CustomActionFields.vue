@@ -52,6 +52,7 @@
       <div class="action-field">
         <span class="action-field-label">
           {{ t('settings.actionWorkingDirLabel') }}
+          <InfoTooltip :text="t('settings.actionWorkingDirInfo')" />
         </span>
         <div class="action-field-row">
           <FieldInput

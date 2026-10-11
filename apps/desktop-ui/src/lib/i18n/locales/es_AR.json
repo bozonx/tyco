@@ -482,6 +482,7 @@
     "actionWebhookUrlInfo": "{placeholder} en la URL se reemplaza por el texto codificado para URL. Sin él, una solicitud GET envía el texto en el parámetro «text».",
     "actionWebhookUrlLabel": "URL",
     "actionWorkingDirLabel": "Carpeta de trabajo",
+    "actionWorkingDirInfo": "Si queda vacía, el comando se ejecuta en tu carpeta personal.",
     "actionWorkingDirPlaceholder": "Carpeta personal",
     "actionsCategory": "Acciones",
     "addConnection": "Agregar conexión",

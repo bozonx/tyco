@@ -479,6 +479,7 @@
     "actionWebhookUrlInfo": "URL'deki {placeholder}, URL için kodlanmış metinle değiştirilir. Yoksa GET isteği metni “text” parametresiyle gönderir.",
     "actionWebhookUrlLabel": "URL",
     "actionWorkingDirLabel": "Çalışma klasörü",
+    "actionWorkingDirInfo": "Boş bırakılırsa komut ana klasörünüzde çalışır.",
     "actionWorkingDirPlaceholder": "Ana klasör",
     "actionsCategory": "Eylemler",
     "addConnection": "Bağlantı ekle",

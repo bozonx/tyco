@@ -482,6 +482,7 @@
     "actionWebhookUrlInfo": "{placeholder} in the URL is replaced with the URL-encoded text. Without it, a GET request sends the text as the “text” parameter.",
     "actionWebhookUrlLabel": "URL",
     "actionWorkingDirLabel": "Working directory",
+    "actionWorkingDirInfo": "Leave empty to run the command in your home directory.",
     "actionWorkingDirPlaceholder": "Home directory",
     "actionsCategory": "Actions",
     "addConnection": "Add connection",

@@ -479,6 +479,7 @@
     "actionWebhookUrlInfo": "{placeholder} в URL заменяется текстом, закодированным для URL. Без него GET-запрос передаёт текст параметром «text».",
     "actionWebhookUrlLabel": "URL",
     "actionWorkingDirLabel": "Рабочая папка",
+    "actionWorkingDirInfo": "Пусто — команда запускается в домашней папке пользователя.",
     "actionWorkingDirPlaceholder": "Домашняя папка",
     "actionsCategory": "Действия",
     "addConnection": "Добавить подключение",

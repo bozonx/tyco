@@ -2,8 +2,8 @@
   <div class="test-run">
     <FieldTextArea
       v-if="takesText"
+      class="test-run-text"
       :value="text"
-      auto-resize
       :placeholder="t('commands.testTextPlaceholder')"
       @update:value="text = $event"
     />
@@ -161,6 +161,10 @@ onUnmounted(stop)
   display: flex;
   flex-direction: column;
   gap: var(--space-sm, 0.5rem);
+}
+
+.test-run-text {
+  min-height: 4.5rem;
 }
 
 .test-run-actions {

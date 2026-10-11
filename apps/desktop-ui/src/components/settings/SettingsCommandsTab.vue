@@ -1,6 +1,44 @@
 <template>
   <SettingsSection :description="t('commands.hint')" bare>
+    <template #actions>
+      <Button
+        class="add-btn"
+        sm
+        icon="mdi:plus"
+        :aria-expanded="pickingTool"
+        @click="pickingTool = !pickingTool"
+      >
+        {{ t('commands.create') }}
+      </Button>
+    </template>
     <div class="commands-tab">
+      <div v-if="pickingTool" class="tool-picker">
+        <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
+        <button
+          v-for="tool in tools"
+          :key="tool.id"
+          type="button"
+          class="tool-option"
+          :class="{ 'is-unavailable': tool.reason }"
+          @click="addCommand(tool.id)"
+        >
+          <Icon
+            :icon="tool.icon ?? 'mdi:puzzle-outline'"
+            width="18"
+            height="18"
+            class="shrink-0"
+          />
+          <span class="tool-option-text">
+            <span class="tool-option-name">{{ tool.name }}</span>
+            <span v-if="tool.description" class="tool-option-description">
+              {{ tool.description }}
+            </span>
+            <span v-if="tool.reason" class="tool-option-reason">
+              {{ tool.reason }}
+            </span>
+          </span>
+        </button>
+      </div>
       <div v-if="removed" class="commands-notice" role="status">
         <Icon icon="mdi:trash-can-outline" width="16" height="16" />
         <span class="commands-notice-text">
@@ -119,52 +157,12 @@
           </div>
         </div>
       </div>
-
-      <div class="commands-add">
-        <Button
-          class="add-btn"
-          sm
-          ghost
-          :aria-expanded="pickingTool"
-          @click="pickingTool = !pickingTool"
-        >
-          <Icon icon="mdi:plus" width="16" height="16" />
-          {{ t('commands.create') }}
-        </Button>
-      </div>
-      <div v-if="pickingTool" class="tool-picker">
-        <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
-        <button
-          v-for="tool in tools"
-          :key="tool.id"
-          type="button"
-          class="tool-option"
-          :class="{ 'is-unavailable': tool.reason }"
-          @click="addCommand(tool.id)"
-        >
-          <Icon
-            :icon="tool.icon ?? 'mdi:puzzle-outline'"
-            width="18"
-            height="18"
-            class="shrink-0"
-          />
-          <span class="tool-option-text">
-            <span class="tool-option-name">{{ tool.name }}</span>
-            <span v-if="tool.description" class="tool-option-description">
-              {{ tool.description }}
-            </span>
-            <span v-if="tool.reason" class="tool-option-reason">
-              {{ tool.reason }}
-            </span>
-          </span>
-        </button>
-      </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
     :title="t('commands.externalTitle')"
-    :description="t('commands.externalDescription')"
+    :info="t('commands.externalDescription')"
   >
     <FieldRow
       :label="t('commands.externalSelection')"
@@ -465,6 +463,11 @@ onBeforeUnmount(finishRemoval)
   display: flex;
   flex-direction: column;
   gap: var(--space-xs, 0.25rem);
+  padding: var(--space-sm, 0.5rem);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
 }
 
 .tool-picker-hint {
@@ -676,22 +679,5 @@ onBeforeUnmount(finishRemoval)
 
 .enabled-switch {
   margin: 0 var(--space-xs);
-}
-
-.commands-add {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.add-btn {
-  flex: 1;
-  justify-content: center;
-  border: 1px dashed var(--app-border-strong);
-  color: var(--app-text-muted);
-}
-
-.add-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
 }
 </style>
