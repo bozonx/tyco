@@ -125,15 +125,11 @@ describe('CommandEditor.vue', () => {
     const command = script({ command: 'ls' }, { name: 'ls' })
     const hidden = mountEditor(command).text()
     expect(hidden).not.toContain('commands.resultMenuBehavior')
-    expect(hidden).not.toContain('commands.resultExternalBehavior')
-    expect(hidden).toContain('commands.placeExternalOff')
     const placed = mountEditor(
       { ...command, availableIn: { external: true, chat: false } },
       { menuSlot: 0 }
     ).text()
     expect(placed).toContain('commands.resultMenuBehavior')
-    expect(placed).toContain('commands.resultExternalBehavior')
-    expect(placed).toContain('commands.placeExternalOn')
   })
 
   it('labels the only quick-command select of a command without text', () => {
@@ -143,15 +139,16 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.text()).not.toContain('commands.launcherWithoutSelection')
   })
 
-  it('opens the advanced settings to allow a call from outside', async () => {
+  it('keeps placement settings inside advanced and uses one external toggle', () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     const advanced = wrapper.findAll('details').at(-1)!
     expect(advanced.element.open).toBe(false)
-    const external = wrapper
-      .findAll('.command-place')
-      .find((place) => place.text().includes('commands.externalRun'))!
-    await external.find('button').trigger('click')
-    expect(advanced.element.open).toBe(true)
+    expect(advanced.find('section').text()).toContain(
+      'commands.availabilityGroup'
+    )
+    expect(advanced.findAll('.command-place')).toHaveLength(2)
+    expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(2)
+    expect(wrapper.findAll('.command-place')).toHaveLength(2)
   })
 
   it('shows where the command is placed and leads to those settings', async () => {

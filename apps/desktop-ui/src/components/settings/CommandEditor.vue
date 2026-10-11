@@ -38,102 +38,6 @@
       </p>
     </div>
 
-    <section class="command-group">
-      <h4 class="command-group-title">{{ t('commands.availabilityGroup') }}</h4>
-      <div class="command-place">
-        <span class="command-place-name">{{ t('commands.placeMenu') }}</span>
-        <span class="command-place-state">
-          <template v-if="menuSlot !== undefined">
-            <KeyButton>{{ slotKey(menuSlot) }}</KeyButton>
-          </template>
-          <template v-else>{{ t('commands.placeNotAdded') }}</template>
-        </span>
-        <Button xs ghost @click="emit('navigate', 'main-actions')">
-          {{ t('commands.placeConfigure') }}
-        </Button>
-      </div>
-      <p
-        v-if="menuSlot !== undefined"
-        class="command-place-detail command-hint"
-      >
-        {{ t('commands.resultMenuBehavior') }}
-      </p>
-
-      <div class="command-place">
-        <span class="command-place-name">
-          {{ t('commands.placeLauncher') }}
-        </span>
-        <span class="command-place-state">
-          <KeyButton v-if="launcherSlot !== undefined">
-            {{ slotKey(launcherSlot) }}
-          </KeyButton>
-          <template v-else>{{ t('commands.placeLauncherSearch') }}</template>
-        </span>
-        <Button xs ghost @click="emit('navigate', 'launcher-commands')">
-          {{ t('commands.placeConfigure') }}
-        </Button>
-      </div>
-      <label v-if="takesText" class="command-place-detail command-place-result">
-        <span class="command-place-result-label">{{
-          t('commands.launcherWithSelection')
-        }}</span>
-        <FieldSelect
-          :value="command.launcherAfterRun.withSelection"
-          :title="t('commands.launcherWithSelection')"
-          :options="selectionAfterRunOptions"
-          @update:value="
-            updateLauncherAfterRun(
-              'withSelection',
-              $event as CustomActionAfterRun
-            )
-          "
-        />
-      </label>
-      <label class="command-place-detail command-place-result">
-        <span class="command-place-result-label">{{
-          takesText
-            ? t('commands.launcherWithoutSelection')
-            : t('commands.launcherResult')
-        }}</span>
-        <FieldSelect
-          :value="command.launcherAfterRun.withoutSelection"
-          :title="
-            takesText
-              ? t('commands.launcherWithoutSelection')
-              : t('commands.launcherResult')
-          "
-          :options="afterRunOptions"
-          @update:value="
-            updateLauncherAfterRun(
-              'withoutSelection',
-              $event as CustomActionAfterRun
-            )
-          "
-        />
-      </label>
-      <p v-if="backgroundScript" class="command-place-detail command-hint">
-        {{ t('commands.afterRunNoneScriptHint') }}
-      </p>
-
-      <div class="command-place">
-        <span class="command-place-name">{{ t('commands.externalRun') }}</span>
-        <span class="command-place-state">{{
-          command.availableIn.external
-            ? t('commands.placeExternalOn')
-            : t('commands.placeExternalOff')
-        }}</span>
-        <Button xs ghost @click="openExternalSettings">
-          {{ t('commands.placeConfigure') }}
-        </Button>
-      </div>
-      <p
-        v-if="command.availableIn.external"
-        class="command-place-detail command-hint"
-      >
-        {{ t('commands.resultExternalBehavior') }}
-      </p>
-    </section>
-
     <details v-if="testable" class="command-group">
       <summary class="command-group-title command-group-toggle">
         <Icon icon="mdi:chevron-right" width="16" height="16" />
@@ -144,12 +48,98 @@
       </div>
     </details>
 
-    <details ref="advancedEl" class="command-group" :open="advancedOpen">
+    <details class="command-group" :open="advancedOpen">
       <summary class="command-group-title command-group-toggle">
         <Icon icon="mdi:chevron-right" width="16" height="16" />
         {{ t('commands.advanced') }}
       </summary>
       <div class="command-group-body">
+        <section class="command-group">
+          <h4 class="command-group-title">
+            {{ t('commands.availabilityGroup') }}
+          </h4>
+          <div class="command-place">
+            <span class="command-place-name">{{
+              t('commands.placeMenu')
+            }}</span>
+            <span class="command-place-state">
+              <template v-if="menuSlot !== undefined">
+                <KeyButton>{{ slotKey(menuSlot) }}</KeyButton>
+              </template>
+              <template v-else>{{ t('commands.placeNotAdded') }}</template>
+            </span>
+            <Button xs ghost @click="emit('navigate', 'main-actions')">
+              {{ t('commands.placeConfigure') }}
+            </Button>
+          </div>
+          <p
+            v-if="menuSlot !== undefined"
+            class="command-place-detail command-hint"
+          >
+            {{ t('commands.resultMenuBehavior') }}
+          </p>
+
+          <div class="command-place">
+            <span class="command-place-name">
+              {{ t('commands.placeLauncher') }}
+            </span>
+            <span class="command-place-state">
+              <KeyButton v-if="launcherSlot !== undefined">
+                {{ slotKey(launcherSlot) }}
+              </KeyButton>
+              <template v-else>{{
+                t('commands.placeLauncherSearch')
+              }}</template>
+            </span>
+            <Button xs ghost @click="emit('navigate', 'launcher-commands')">
+              {{ t('commands.placeConfigure') }}
+            </Button>
+          </div>
+          <label
+            v-if="takesText"
+            class="command-place-detail command-place-result"
+          >
+            <span class="command-place-result-label">{{
+              t('commands.launcherWithSelection')
+            }}</span>
+            <FieldSelect
+              :value="command.launcherAfterRun.withSelection"
+              :title="t('commands.launcherWithSelection')"
+              :options="selectionAfterRunOptions"
+              @update:value="
+                updateLauncherAfterRun(
+                  'withSelection',
+                  $event as CustomActionAfterRun
+                )
+              "
+            />
+          </label>
+          <label class="command-place-detail command-place-result">
+            <span class="command-place-result-label">{{
+              takesText
+                ? t('commands.launcherWithoutSelection')
+                : t('commands.launcherResult')
+            }}</span>
+            <FieldSelect
+              :value="command.launcherAfterRun.withoutSelection"
+              :title="
+                takesText
+                  ? t('commands.launcherWithoutSelection')
+                  : t('commands.launcherResult')
+              "
+              :options="afterRunOptions"
+              @update:value="
+                updateLauncherAfterRun(
+                  'withoutSelection',
+                  $event as CustomActionAfterRun
+                )
+              "
+            />
+          </label>
+          <p v-if="backgroundScript" class="command-place-detail command-hint">
+            {{ t('commands.afterRunNoneScriptHint') }}
+          </p>
+        </section>
         <label class="command-field">
           <span class="command-field-label">
             {{ t('commands.descriptionLabel') }}
@@ -200,7 +190,7 @@
             {{ t('commands.openLog') }}
           </Button>
         </div>
-        <div ref="externalEl" class="command-field-row">
+        <div class="command-field-row">
           <FieldCheckbox
             :value="command.availableIn.external"
             :label="t('commands.external')"
@@ -418,15 +408,6 @@ const advancedOpen = ref(
     props.command.logOutput ||
     props.command.availableIn.external
 )
-
-const advancedEl = ref<HTMLDetailsElement>()
-const externalEl = ref<HTMLElement>()
-
-/** Access from outside is set in the advanced settings */
-function openExternalSettings() {
-  if (advancedEl.value) advancedEl.value.open = true
-  externalEl.value?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
-}
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
 const cliCommand = computed(() =>
