@@ -69,7 +69,6 @@
             @mousedown.prevent
             @click="launcher.dropSelection"
           >
-            <KeyButton>Backspace</KeyButton>
             <Icon icon="mdi:close" height="14" />
           </button>
         </div>

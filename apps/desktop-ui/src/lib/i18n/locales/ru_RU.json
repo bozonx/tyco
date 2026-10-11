@@ -298,7 +298,6 @@
     "clear": "Очистить историю",
     "clearConfirm": "Удалить все записи ({count})?",
     "clearConfirmButton": "Удалить все",
-    "clearConfirmDialog": "Все чаты ({count}) будут удалены.",
     "clearConfirmTitle": "Очистить историю чатов?",
     "cleared": "История очищена",
     "collapse": "Свернуть",

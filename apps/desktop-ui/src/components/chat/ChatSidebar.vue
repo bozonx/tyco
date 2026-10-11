@@ -101,38 +101,11 @@
       </section>
     </div>
 
-    <div
-      v-if="historyStore.chatHistory.length || chatHistoryDisabled"
-      class="sidebar-footer"
-    >
-      <p v-if="chatHistoryDisabled" class="history-disabled-hint">
+    <div v-if="chatHistoryDisabled" class="sidebar-footer">
+      <p class="history-disabled-hint">
         {{ t('history.chatsDisabled') }}
       </p>
-      <Button
-        v-if="historyStore.chatHistory.length"
-        xs
-        ghost
-        icon="mdi:trash-can-outline"
-        class="sidebar-clear-btn"
-        @click="showClearAllModal = true"
-      >
-        {{ t('history.clear') }}
-      </Button>
     </div>
-
-    <ConfirmModal
-      :open="showClearAllModal"
-      :title="t('history.clearConfirmTitle')"
-      :message="
-        t('history.clearConfirmDialog', {
-          count: historyStore.chatHistory.length,
-        })
-      "
-      :confirm-text="t('history.clearConfirmButton')"
-      danger
-      @confirm="confirmClearAll"
-      @cancel="showClearAllModal = false"
-    />
 
     <ConfirmModal
       :open="Boolean(chatToDelete)"
@@ -195,7 +168,6 @@ function closeSearch() {
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
-const showClearAllModal = ref(false)
 const chatToDelete = ref<string | null>(null)
 const removedChat = ref<ChatHistoryItem | null>(null)
 let undoTimer: ReturnType<typeof setTimeout> | undefined
@@ -245,7 +217,6 @@ function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
     {
       label: t('chat.deleteChat'),
       icon: 'mdi:trash-can-outline',
-      danger: true,
       action: () => {
         chatToDelete.value = item.id
       },
@@ -348,21 +319,6 @@ async function undoRemoveChat() {
   }
 }
 
-async function confirmClearAll() {
-  showClearAllModal.value = false
-  await clearAllChats()
-}
-
-async function clearAllChats() {
-  clearTimeout(undoTimer)
-  releaseRemovedChat()
-  if (chatStore.messages.length) {
-    chatStore.abandonChat()
-    await chatStore.whenSaved()
-  }
-  await historyStore.clearChatHistory()
-}
-
 onUnmounted(() => {
   clearTimeout(undoTimer)
   releaseRemovedChat()
@@ -393,14 +349,6 @@ onUnmounted(() => {
   gap: var(--space-xs);
   padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
-}
-.sidebar-clear-btn {
-  align-self: flex-start;
-  color: var(--app-text-faint);
-  font-size: 0.75rem;
-}
-.sidebar-clear-btn:hover {
-  color: var(--color-error);
 }
 .history-disabled-hint {
   margin: 0;

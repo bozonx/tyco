@@ -298,7 +298,6 @@
     "clear": "Limpiar historial",
     "clearConfirm": "¿Borrar todas las entradas ({count})?",
     "clearConfirmButton": "Borrar todo",
-    "clearConfirmDialog": "Se eliminarán todos los chats ({count}).",
     "clearConfirmTitle": "¿Limpiar historial de chats?",
     "cleared": "Historial limpiado",
     "collapse": "Contraer",

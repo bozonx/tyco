@@ -298,7 +298,6 @@
     "clear": "Clear history",
     "clearConfirm": "Delete all entries ({count})?",
     "clearConfirmButton": "Delete all",
-    "clearConfirmDialog": "All chats ({count}) will be deleted.",
     "clearConfirmTitle": "Clear chat history?",
     "cleared": "History cleared",
     "collapse": "Collapse",

@@ -7,9 +7,9 @@
         type="button"
         class="context-suggestion-attach"
         :title="suggestion.title"
-        @click="chatStore.acceptEditorContext(suggestion.text)"
+        @click="acceptContext(suggestion.text)"
       >
-        <Icon icon="mdi:paperclip" height="14" class="shrink-0" />
+        <Icon icon="mdi:text-box-outline" height="14" class="shrink-0" />
         <span class="context-suggestion-text">
           {{ suggestion.label }}
           <span class="context-suggestion-excerpt">{{
@@ -80,6 +80,7 @@ import {
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
+import { useChatInputStore } from '../../stores/chatInput'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import { Icon } from '@iconify/vue'
@@ -89,7 +90,13 @@ import { Icon } from '@iconify/vue'
  * texts in one row
  */
 const chatStore = useChatStore()
+const chatInputStore = useChatInputStore()
 const { t } = useI18n()
+
+function acceptContext(text: string) {
+  chatStore.acceptEditorContext(text)
+  chatInputStore.focus()
+}
 
 const attachments = computed(() => chatStore.newChatParams?.attachments || [])
 const editorContext = computed(() => chatStore.editorContext)
