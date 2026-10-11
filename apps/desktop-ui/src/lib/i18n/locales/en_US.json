@@ -117,6 +117,7 @@
     "hintNewLine": "New line",
     "hintRun": "Run",
     "nothingFound": "No commands found",
+    "pages": "Pages:",
     "running": "Running “{name}”…",
     "searchPlaceholder": "Search commands…",
     "selection": "Selected text: {count} chars",

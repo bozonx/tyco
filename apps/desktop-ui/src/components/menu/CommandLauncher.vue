@@ -119,19 +119,23 @@
         />
         <div v-else>
           <div class="launcher-hints launcher-pages">
+            <span class="launcher-pages-label">{{
+              t('commandLauncher.pages')
+            }}</span>
             <button
               v-for="index in launcher.pageCount"
               :key="index"
               class="launcher-hint"
               :aria-pressed="launcher.page === index - 1"
+              :aria-label="t('settings.launcherPage', { page: index })"
+              :title="t('settings.launcherPage', { page: index })"
               @click="launcher.setPage(index - 1)"
             >
-              <KeyButton v-if="index <= 10">{{
-                index === 10 ? 0 : index
-              }}</KeyButton
-              >{{ t('settings.launcherPage', { page: index }) }}
+              <KeyButton>{{ index === 10 ? 0 : index }}</KeyButton>
             </button>
-            <span class="launcher-hint"><KeyButton>Tab</KeyButton></span>
+            <span class="launcher-hint launcher-pages-tab"
+              ><KeyButton>Tab</KeyButton></span
+            >
           </div>
           <ShortcutList
             :key="launcher.page"
@@ -371,14 +375,42 @@ onUnmounted(() => {
 
 <style scoped>
 .launcher-pages {
+  gap: var(--space-xs);
   max-height: 5rem;
   overflow-y: auto;
   margin-bottom: var(--space-sm);
 }
 
+.launcher-pages-label {
+  color: var(--app-text-muted);
+  font-size: 0.8125rem;
+  margin-right: 0.125rem;
+}
+
+.launcher-pages button.launcher-hint {
+  padding: 0;
+}
+
+.launcher-pages button.launcher-hint:hover:not(:disabled) {
+  background-color: transparent;
+}
+
+.launcher-pages button.launcher-hint:hover:not(:disabled) :deep(.kbd) {
+  border-color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+}
+
 .launcher-pages button[aria-pressed='true'] {
+  background-color: transparent;
+}
+
+.launcher-pages button[aria-pressed='true'] :deep(.kbd) {
+  border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
   color: var(--color-primary);
-  background-color: var(--app-hover);
+  background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+}
+
+.launcher-pages-tab {
+  margin-left: var(--space-xs);
 }
 
 .launcher-target {

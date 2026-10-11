@@ -117,6 +117,7 @@
     "hintNewLine": "Новая строка",
     "hintRun": "Выполнить",
     "nothingFound": "Команды не найдены",
+    "pages": "Страницы:",
     "running": "Выполняю «{name}»…",
     "searchPlaceholder": "Поиск команды…",
     "selection": "Выделенный текст: {count} симв.",

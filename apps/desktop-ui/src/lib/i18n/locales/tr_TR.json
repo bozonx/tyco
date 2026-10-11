@@ -117,6 +117,7 @@
     "hintNewLine": "Yeni satır",
     "hintRun": "Çalıştır",
     "nothingFound": "Komut bulunamadı",
+    "pages": "Sayfalar:",
     "running": "«{name}» çalıştırılıyor…",
     "searchPlaceholder": "Komut ara…",
     "selection": "Seçili metin: {count} karakter",

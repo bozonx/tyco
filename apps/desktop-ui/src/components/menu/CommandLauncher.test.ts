@@ -107,6 +107,18 @@ describe('CommandLauncher', () => {
           cancelable: true,
         })
       )
+    expect(wrapper.find('.launcher-pages-label').text()).toBe(
+      'commandLauncher.pages'
+    )
+    const pageButtons = wrapper.findAll('.launcher-pages button')
+    expect(pageButtons).toHaveLength(3)
+    expect(pageButtons.map((b) => b.text())).toEqual(['1', '2', '3'])
+    expect(pageButtons[0].attributes('aria-pressed')).toBe('true')
+    expect(pageButtons[1].attributes('aria-pressed')).toBe('false')
+
+    await pageButtons[1].trigger('click')
+    expect((mocks.store as { page: number }).page).toBe(1)
+
     press('2')
     expect((mocks.store as { page: number }).page).toBe(1)
     press('Tab')
