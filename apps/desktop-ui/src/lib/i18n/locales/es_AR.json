@@ -96,6 +96,7 @@
   "commandLauncher": {
     "allCommands": "Todos los comandos",
     "commandMissing": "El comando {id} no está en la biblioteca.",
+    "dropSelection": "No usar el texto seleccionado",
     "hintNewLine": "Nueva línea",
     "hintRun": "Ejecutar",
     "nothingFound": "No se encontraron comandos",

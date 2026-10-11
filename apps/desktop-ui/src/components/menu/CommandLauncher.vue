@@ -10,16 +10,6 @@
     "
     :escMode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
   >
-    <template
-      v-if="stage.kind === 'list' && !searchMode && hasSelection"
-      #header-extra
-    >
-      <span class="launcher-selection" :title="selectedText">
-        <Icon icon="mdi:format-quote-open" height="14" />
-        {{ t('commandLauncher.selection', { count: selectedText.length }) }}
-      </span>
-    </template>
-
     <template #preview>
       <div v-if="stage.kind === 'prepare'" class="launcher-prepare">
         <div class="launcher-prepare-head">
@@ -59,7 +49,32 @@
         :onCancel="launcher.cancel"
       />
 
-      <TextPreview v-else-if="hasSelection" :text="selectedText" />
+      <!-- the selection may be a leftover of an earlier one: the user sees it
+           and can drop it before running a command -->
+      <div v-else-if="hasSelection" class="launcher-selection">
+        <div class="launcher-selection-header">
+          <Icon
+            icon="mdi:format-quote-open"
+            height="14"
+            class="shrink-0 text-primary"
+          />
+          <span class="launcher-selection-title">
+            {{ t('commandLauncher.selection', { count: selectedText.length }) }}
+          </span>
+          <button
+            type="button"
+            class="launcher-selection-drop"
+            :title="t('commandLauncher.dropSelection')"
+            :aria-label="t('commandLauncher.dropSelection')"
+            @mousedown.prevent
+            @click="launcher.dropSelection"
+          >
+            <KeyButton>Backspace</KeyButton>
+            <Icon icon="mdi:close" height="14" />
+          </button>
+        </div>
+        <TextPreview :text="selectedText" />
+      </div>
     </template>
 
     <template #actions>
@@ -170,7 +185,7 @@ const launcher = useCommandLauncherStore()
 const toolsStore = useToolsStore()
 
 const stage = computed(() => launcher.stage)
-const selectedText = computed(() => ipcStore.params.selectedText ?? '')
+const selectedText = computed(() => launcher.selection)
 const hasSelection = computed(() => Boolean(selectedText.value.trim()))
 
 const searchMode = ref(false)
@@ -296,6 +311,9 @@ const handleKeyDown = (event: KeyboardEvent) => {
     } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
       event.preventDefault()
       launcher.setPage(event.key === '0' ? 9 : Number(event.key) - 1)
+    } else if (event.key === 'Backspace' && hasSelection.value) {
+      event.preventDefault()
+      launcher.dropSelection()
     }
   }
   if (event.code === 'Escape') {
@@ -424,11 +442,44 @@ onUnmounted(() => {
 }
 
 .launcher-selection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-height: 0;
+  height: 100%;
+}
+
+.launcher-selection-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+}
+
+.launcher-selection-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launcher-selection-drop {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  padding: 0.15rem;
+  border-radius: var(--radius-sm);
   color: var(--app-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.launcher-selection-drop:hover {
+  background: var(--app-hover);
+  color: var(--color-error);
 }
 
 .launcher-hints {

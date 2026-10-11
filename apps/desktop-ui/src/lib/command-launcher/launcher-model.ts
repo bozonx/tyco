@@ -148,6 +148,15 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   let textEdited = false
   /** The text is the selection of the window under the overlay */
   let fromSelection = false
+  /**
+   * The user dropped the selection: it is most likely a leftover, since the
+   * primary selection outlives a deselection in most apps
+   */
+  const selectionDropped = ref(false)
+  /** The selection the commands take, empty once dropped */
+  const currentSelection = () =>
+    selectionDropped.value ? '' : (deps.selectedText() ?? '')
+  const selection = computed(currentSelection)
   /** Where the current command came from: the list or an external call */
   let source: CommandRunSource = 'launcher'
   let controller: AbortController | null = null
@@ -203,7 +212,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     text.value = ''
     textEdited = false
     fromSelection = false
+    selectionDropped.value = false
     stage.value = { kind: 'list' }
+  }
+
+  /** The commands run without the selection until the next activation */
+  const dropSelection = () => {
+    selectionDropped.value = true
   }
 
   const setQuery = (value: string) => {
@@ -326,7 +341,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const pick = async (command: CommandConfig): Promise<void> => {
     if (stage.value.kind === 'running') return
     source = 'launcher'
-    await start(command, deps.selectedText() ?? '', true)
+    await start(command, currentSelection(), true)
   }
 
   /**
@@ -413,17 +428,18 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
    * the command runs on it, as if the selection had been there when it was
    * picked
    */
-  const selectionArrived = async (selection: string | null | undefined) => {
+  const selectionArrived = async (arrived: string | null | undefined) => {
     const current = stage.value
     if (
       source === 'launcher' &&
+      !selectionDropped.value &&
       current.kind === 'prepare' &&
       commandTakesText(current.command, deps.tools) &&
       !textEdited &&
       !text.value.trim() &&
-      selection?.trim()
+      arrived?.trim()
     ) {
-      text.value = selection
+      text.value = arrived
       fromSelection = true
       if (current.autoRun) await submit()
     }
@@ -438,6 +454,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     highlighted,
     stage,
     text,
+    selection,
+    dropSelection,
     commands,
     visible,
     slotCommands,

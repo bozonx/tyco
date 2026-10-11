@@ -48,33 +48,11 @@ fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Resu
     Ok(())
 }
 
+/// Numbers the activations, so that a capture finishing after a newer
+/// activation does not publish its outdated selection.
 #[derive(Default)]
 struct ContextCapture {
     generation: AtomicU64,
-    /// The selection seen by the previous capture; `None` until the first one.
-    last_selection: Mutex<Option<Option<String>>>,
-}
-
-impl ContextCapture {
-    /// Records `captured` and returns it unless the previous capture already
-    /// saw it. The primary selection outlives a deselection in most apps, so an
-    /// unchanged one is most likely a leftover rather than a fresh selection.
-    #[cfg(test)]
-    fn fresh_selection(&self, captured: Option<String>) -> Option<String> {
-        let mut last = self.last_selection.lock().expect("selection lock poisoned");
-        let previous = last.replace(captured.clone());
-        match previous {
-            Some(previous) if previous == captured => None,
-            _ => captured,
-        }
-    }
-
-    fn seed_selection(&self, captured: Option<String>) {
-        self.last_selection
-            .lock()
-            .expect("selection lock poisoned")
-            .get_or_insert(captured);
-    }
 }
 
 #[cfg(target_os = "linux")]
@@ -167,9 +145,8 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     if capture_selection {
         let handle = app.clone();
         thread::spawn(move || {
-            let captured =
+            let selected_text =
                 tauri::async_runtime::block_on(super::platform::capture_selection(source));
-            let selected_text = captured;
             if let Err(error) = on_main_thread(&handle, move |app| {
                 if app
                     .state::<ContextCapture>()
@@ -623,11 +600,6 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ContextCapture::default());
     app.manage(super::selection_replace::SelectionRuns::default());
     app.manage(RuntimeWindows::default());
-    let handle = app.handle().clone();
-    thread::spawn(move || {
-        let selection = tauri::async_runtime::block_on(super::platform::capture_selection(None));
-        handle.state::<ContextCapture>().seed_selection(selection);
-    });
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;
@@ -826,40 +798,6 @@ mod tests {
         ] {
             assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }
-    }
-
-    #[test]
-    fn only_a_changed_selection_is_fresh() {
-        let capture = ContextCapture::default();
-        assert_eq!(
-            capture.fresh_selection(Some("a".into())).as_deref(),
-            Some("a")
-        );
-        assert_eq!(capture.fresh_selection(Some("a".into())), None);
-        assert_eq!(
-            capture.fresh_selection(Some("b".into())).as_deref(),
-            Some("b")
-        );
-        assert_eq!(capture.fresh_selection(None), None);
-        assert_eq!(
-            capture.fresh_selection(Some("b".into())).as_deref(),
-            Some("b")
-        );
-    }
-
-    #[test]
-    fn the_selection_present_at_startup_is_not_fresh() {
-        let capture = ContextCapture::default();
-        capture.seed_selection(Some("old".into()));
-        assert_eq!(capture.fresh_selection(Some("old".into())), None);
-
-        let captured_first = ContextCapture::default();
-        assert_eq!(
-            captured_first.fresh_selection(Some("a".into())).as_deref(),
-            Some("a")
-        );
-        captured_first.seed_selection(Some("b".into()));
-        assert_eq!(captured_first.fresh_selection(Some("a".into())), None);
     }
 
     #[test]

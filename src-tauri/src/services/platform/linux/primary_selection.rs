@@ -7,9 +7,14 @@
 //! had the focus at that moment, and an activation takes the selection only
 //! when it was made in its own window.
 //!
-//! Wayland only: `wl-paste --watch` reports the changes. Without it (X11, or a
-//! compositor that lacks the data control protocol) nothing is known about the
-//! owner, and the selection is taken as it is.
+//! A change made while a Tyco window has the focus is attributed to the window
+//! Tyco was called from: the change is reported asynchronously, so a hotkey
+//! pressed right after selecting may open a Tyco window first.
+//!
+//! Wayland only: `wl-paste --watch` reports the changes, and the window
+//! tracker tells the focused window. Without either (X11, a compositor that
+//! lacks the data control protocol, or no tracker backend) nothing is known
+//! about the owner, and the selection is taken as it is.
 
 use std::io::{BufRead, BufReader};
 use std::os::unix::process::CommandExt;
@@ -31,8 +36,8 @@ struct OwnerState {
     /// `wl-paste --watch` reports the selection it finds at start, which was
     /// made before the watch, in a window nobody knows.
     initial_pending: bool,
-    /// The window focused when the selection last changed; `None` when it is
-    /// not known, or no application window had the focus.
+    /// The window the selection was last made in, see the module docs; `None`
+    /// when it is not known, or no application window had the focus.
     owner: Option<String>,
 }
 
@@ -76,8 +81,10 @@ fn update<T>(change: impl FnOnce(&mut OwnerState) -> T) -> T {
 
 /// Whether the primary selection was made in `window_id`; `None` when that is
 /// not known, see the module docs.
-#[allow(dead_code)]
 pub fn made_in(window_id: Option<&str>) -> Option<bool> {
+    if !tracker().is_running() {
+        return None;
+    }
     update(|state| state.made_in(window_id))
 }
 
@@ -144,8 +151,8 @@ fn watch() -> std::io::Result<()> {
         if line.is_err() {
             break;
         }
-        let focused = tracker().active_window().map(|window| window.id);
-        update(|state| state.selection_changed(focused));
+        let owner = tracker().target();
+        update(|state| state.selection_changed(owner));
     }
     let status = child.wait()?;
     if !status.success() {

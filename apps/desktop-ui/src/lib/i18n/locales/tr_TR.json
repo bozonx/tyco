@@ -96,6 +96,7 @@
   "commandLauncher": {
     "allCommands": "Tüm komutlar",
     "commandMissing": "{id} komutu kitaplıkta yok.",
+    "dropSelection": "Seçili metni kullanma",
     "hintNewLine": "Yeni satır",
     "hintRun": "Çalıştır",
     "nothingFound": "Komut bulunamadı",

@@ -96,6 +96,7 @@
   "commandLauncher": {
     "allCommands": "Все команды",
     "commandMissing": "Команда {id} не найдена в библиотеке.",
+    "dropSelection": "Не использовать выделенный текст",
     "hintNewLine": "Новая строка",
     "hintRun": "Выполнить",
     "nothingFound": "Команды не найдены",

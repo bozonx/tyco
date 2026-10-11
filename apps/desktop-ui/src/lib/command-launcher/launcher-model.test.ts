@@ -207,6 +207,28 @@ describe('createCommandLauncherModel', () => {
     expect(model.text.value).toBe('typed')
   })
 
+  it('asks for the text once the selection is dropped', async () => {
+    const { deps, model } = setup()
+    deps.selectedText.mockReturnValue('leftover')
+    model.dropSelection()
+    expect(model.selection.value).toBe('')
+    await model.pickByKey(2)
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).toBe('prepare')
+    expect(model.text.value).toBe('')
+
+    await model.selectionArrived('leftover')
+    expect(deps.run).not.toHaveBeenCalled()
+  })
+
+  it('takes the selection again after a reset', () => {
+    const { deps, model } = setup()
+    deps.selectedText.mockReturnValue('selected')
+    model.dropSelection()
+    model.reset()
+    expect(model.selection.value).toBe('selected')
+  })
+
   it('keeps the text for another try when the command fails', async () => {
     const run = vi.fn(async () => ({ success: false, message: 'HTTP 500' }))
     const { deps, model } = setup(undefined, { run })
