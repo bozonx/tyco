@@ -11,6 +11,14 @@
         t('settings.removeLauncherPage')
       }}</Button>
     </div>
+    <div class="flex items-center gap-2 mb-3">
+      <FieldCheckbox
+        :value="takesText"
+        :label="t('settings.launcherPageTakesText')"
+        @update:value="setTakesText"
+      />
+      <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
+    </div>
     <ShortcutSlots
       :items="launcherSlots"
       @move="moveSlot"
@@ -55,7 +63,9 @@ import {
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import { Icon } from '@iconify/vue'
 import type { BuiltinToolId, UserConfig } from '@tyco/shared'
@@ -65,6 +75,7 @@ const props = defineProps<{ userConfig: UserConfig }>()
 const emit = defineEmits<{
   (event: 'update:launcherPages', value: (string | null)[][]): void
   (event: 'update:launcherCommands', value: (string | null)[]): void
+  (event: 'update:launcherPagesWithoutText', value: number[]): void
   /** A new command of the library goes to the slot at `index` */
   (
     event: 'createCommand',
@@ -106,6 +117,20 @@ function removePage() {
     )
   )
   page.value = Math.max(0, page.value - 1)
+}
+/** The commands of the page get the selection of the window */
+const takesText = computed(
+  () => !props.userConfig.launcherPagesWithoutText?.includes(page.value)
+)
+function setTakesText(value: boolean) {
+  const pages = (props.userConfig.launcherPagesWithoutText ?? []).filter(
+    (item) => item !== page.value
+  )
+  if (!value) pages.push(page.value)
+  emit(
+    'update:launcherPagesWithoutText',
+    pages.sort((a, b) => a - b)
+  )
 }
 function updateSlots(slots: (string | null)[]) {
   if (!page.value) emit('update:launcherCommands', slots)

@@ -260,6 +260,9 @@
           :user-config="userConfig"
           @update:launcher-commands="userConfig.launcherCommands = $event"
           @update:launcher-pages="updateLauncherPages"
+          @update:launcher-pages-without-text="
+            userConfig.launcherPagesWithoutText = $event
+          "
           @create-command="createLauncherCommand"
           @edit-command="editCommand"
         />
@@ -974,6 +977,11 @@ const updateLauncherPages = (pages: (string | null)[][]) => {
         return item.page === removed ? null : { ...item, page: item.page - 1 }
       }
     )
+    userConfig.value.launcherPagesWithoutText = (
+      userConfig.value.launcherPagesWithoutText ?? []
+    )
+      .filter((page: number) => page !== removed)
+      .map((page: number) => (page > removed ? page - 1 : page))
   }
   userConfig.value.launcherPages = pages
 }

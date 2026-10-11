@@ -751,7 +751,9 @@
     "vision": "Поддержка изображений",
     "launcherPage": "Быстрые команды: страница {page}",
     "addLauncherPage": "Добавить страницу",
-    "removeLauncherPage": "Удалить страницу"
+    "removeLauncherPage": "Удалить страницу",
+    "launcherPageTakesText": "Принимать выделенный текст",
+    "launcherPageTakesTextInfo": "Выключите для страниц, команды которых не работают с текстом: окно откроется без выделенного текста, и его остаток от прошлого выделения не попадёт в команды."
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

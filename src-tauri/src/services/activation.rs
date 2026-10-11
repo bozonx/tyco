@@ -1,3 +1,5 @@
+use serde_json::Value;
+
 use crate::errors::AppError;
 use crate::services::external_commands::LauncherRequest;
 
@@ -145,6 +147,23 @@ impl Activation {
         Ok(Self::new(StartMode::parse(value)?, source))
     }
 
+    /// Whether the activation takes the selection of the window it was made
+    /// from: not a page of the command overlay the user set to run without
+    /// text, see `launcherPagesWithoutText` of the config.
+    pub fn takes_selection(&self, user_config: &Value) -> bool {
+        if self.mode != StartMode::CommandLauncher || self.launcher_request.is_some() {
+            return true;
+        }
+        !user_config
+            .get("launcherPagesWithoutText")
+            .and_then(Value::as_array)
+            .is_some_and(|pages| {
+                pages
+                    .iter()
+                    .any(|page| page.as_u64() == Some(self.launcher_page as u64))
+            })
+    }
+
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
     pub fn from_args(args: &[String]) -> Result<Option<Self>, AppError> {
         let values = &args[args.len().min(1)..];
@@ -165,6 +184,18 @@ impl Activation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn a_command_page_set_without_text_takes_no_selection() {
+        let config = json!({ "launcherPagesWithoutText": [0, 2] });
+        let page = |mode: &str| Activation::from_mode(mode, ActivationSource::Ui).unwrap();
+        assert!(!page("commandLauncher").takes_selection(&config));
+        assert!(page("commandLauncher2").takes_selection(&config));
+        assert!(!page("commandLauncher3").takes_selection(&config));
+        assert!(page("commandLauncher3").takes_selection(&json!({})));
+        assert!(page("translate").takes_selection(&config));
+    }
 
     #[test]
     fn command_pages_parse_without_changing_the_overlay_mode() {

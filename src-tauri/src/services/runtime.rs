@@ -132,8 +132,9 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
     }
     let editor_mode = activation.mode == StartMode::Editor;
     // the editor must not take over a selection made in Tyco itself
-    let capture_selection =
-        activation.selected_text.is_none() && !(editor_mode && has_focused_window(app));
+    let capture_selection = activation.selected_text.is_none()
+        && !(editor_mode && has_focused_window(app))
+        && activation.takes_selection(&app.state::<AppState>().params().user_config);
     let generation = app
         .state::<ContextCapture>()
         .generation

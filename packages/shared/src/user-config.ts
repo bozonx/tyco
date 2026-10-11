@@ -452,6 +452,12 @@ export interface UserConfig {
   /** Slots of the command overlay (15 keys) */
   launcherCommands: (string | null)[]
   launcherPages?: (string | null)[][]
+  /**
+   * Pages of the command overlay that open without the selection, so that a
+   * leftover of an earlier one never reaches their commands; 0 is the page of
+   * `launcherCommands`
+   */
+  launcherPagesWithoutText?: number[]
   /** The command library; the action menu refers to commands by id */
   commands: CommandConfig[]
   /** Plugin actions whose initial shortcut assignment has been reviewed. */

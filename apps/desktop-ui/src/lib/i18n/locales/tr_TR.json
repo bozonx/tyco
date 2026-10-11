@@ -751,7 +751,9 @@
     "vision": "Görsel desteği",
     "launcherPage": "Hızlı komutlar: sayfa {page}",
     "addLauncherPage": "Sayfa ekle",
-    "removeLauncherPage": "Sayfayı sil"
+    "removeLauncherPage": "Sayfayı sil",
+    "launcherPageTakesText": "Seçili metni al",
+    "launcherPageTakesTextInfo": "Komutları metinle çalışmayan sayfalarda kapatın: pencere seçili metin olmadan açılır, böylece önceki bir seçimden kalan metin komutlara ulaşmaz."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

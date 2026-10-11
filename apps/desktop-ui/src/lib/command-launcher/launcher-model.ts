@@ -109,6 +109,8 @@ export interface CommandLauncherDependencies {
   /** The 15 slots of the command overlay */
   launcherPages?: () => readonly (readonly (string | null)[])[] | undefined
   launcherCommands?: () => readonly (string | null)[] | undefined
+  /** The pages whose commands run without the selection */
+  launcherPagesWithoutText?: () => readonly number[] | undefined
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
   /** Runs the command and tells the user how it went */
@@ -153,9 +155,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
    * primary selection outlives a deselection in most apps
    */
   const selectionDropped = ref(false)
-  /** The selection the commands take, empty once dropped */
+  /** The commands take the selection: not dropped, nor on a page without text */
+  const selectionAllowed = () =>
+    !selectionDropped.value &&
+    !deps.launcherPagesWithoutText?.()?.includes(page.value)
+  /** The selection the commands take, empty when not allowed */
   const currentSelection = () =>
-    selectionDropped.value ? '' : (deps.selectedText() ?? '')
+    selectionAllowed() ? (deps.selectedText() ?? '') : ''
   const selection = computed(currentSelection)
   /** Where the current command came from: the list or an external call */
   let source: CommandRunSource = 'launcher'
@@ -432,7 +438,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const current = stage.value
     if (
       source === 'launcher' &&
-      !selectionDropped.value &&
+      selectionAllowed() &&
       current.kind === 'prepare' &&
       commandTakesText(current.command, deps.tools) &&
       !textEdited &&

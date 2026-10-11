@@ -754,7 +754,9 @@
     "vision": "Image input",
     "launcherPage": "Quick commands: page {page}",
     "addLauncherPage": "Add page",
-    "removeLauncherPage": "Delete page"
+    "removeLauncherPage": "Delete page",
+    "launcherPageTakesText": "Take the selected text",
+    "launcherPageTakesTextInfo": "Turn off for pages whose commands do not work with text: the window opens without the selected text, so a leftover of an earlier selection never reaches the commands."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

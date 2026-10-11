@@ -574,4 +574,31 @@ describe('launcher pages', () => {
     model.nextPage(-1)
     expect(model.page.value).toBe(2)
   })
+
+  it('runs the commands of a page without text on no selection', async () => {
+    const { deps } = setup()
+    deps.selectedText.mockReturnValue('leftover')
+    const model = createCommandLauncherModel({
+      ...deps,
+      launcherCommands: () => ['note'],
+      launcherPages: () => [['note']],
+      launcherPagesWithoutText: () => [1],
+    })
+    model.setPage(1)
+    expect(model.selection.value).toBe('')
+    await model.pickSlot(0)
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).toBe('prepare')
+    await model.selectionArrived('leftover')
+    expect(deps.run).not.toHaveBeenCalled()
+
+    model.reset()
+    expect(model.selection.value).toBe('leftover')
+    await model.pickSlot(0)
+    expect(deps.run).toHaveBeenCalledWith(
+      note,
+      'leftover',
+      expect.objectContaining({ hasSelection: true })
+    )
+  })
 })

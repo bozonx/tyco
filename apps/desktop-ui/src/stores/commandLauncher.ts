@@ -23,6 +23,8 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     commands: () => ipcStore.params.userConfig?.commands,
     launcherPages: () => ipcStore.params.userConfig?.launcherPages,
     launcherCommands: () => ipcStore.params.userConfig?.launcherCommands,
+    launcherPagesWithoutText: () =>
+      ipcStore.params.userConfig?.launcherPagesWithoutText,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
     claimJob: async (id) => {

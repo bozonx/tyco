@@ -754,7 +754,9 @@
     "vision": "Entrada de imágenes",
     "launcherPage": "Comandos rápidos: página {page}",
     "addLauncherPage": "Agregar página",
-    "removeLauncherPage": "Eliminar página"
+    "removeLauncherPage": "Eliminar página",
+    "launcherPageTakesText": "Usar el texto seleccionado",
+    "launcherPageTakesTextInfo": "Desactivalo en las páginas cuyos comandos no trabajan con texto: la ventana se abre sin el texto seleccionado, así lo que quedó de una selección anterior nunca llega a los comandos."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
