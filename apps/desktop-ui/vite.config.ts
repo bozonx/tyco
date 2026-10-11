@@ -34,6 +34,13 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
+      {
+        name: 'watch-shared-contracts',
+        configureServer(server) {
+          // Shared sources sit outside Vite's root and must invalidate IPC contracts.
+          server.watcher.add(resolve(rootDir, '../../packages/shared/src'))
+        },
+      },
       vue(),
       tailwindcss(),
       Components({}),

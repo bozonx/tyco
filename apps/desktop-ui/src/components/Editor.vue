@@ -6,13 +6,8 @@
         v-show="!compact"
         class="editor-toolbar flex items-center justify-between gap-2"
       >
-        <!-- Left column: Case and Format dropdowns, view mode, then plugin items -->
+        <!-- Left column: view mode, Case and Format dropdowns, then plugin items -->
         <div class="flex items-center gap-1">
-          <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
-          <DropdownMenu
-            :label="t('editor.format')"
-            :items="formatDropdownItems"
-          />
           <Button
             sm
             square
@@ -30,6 +25,11 @@
               height="18"
             />
           </Button>
+          <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
+          <DropdownMenu
+            :label="t('editor.format')"
+            :items="formatDropdownItems"
+          />
           <Button
             v-for="item in leftToolbarItems"
             :key="item.id"

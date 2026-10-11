@@ -150,6 +150,18 @@
         />
 
         <div class="chat-composer-bar">
+          <Button
+            sm
+            ghost
+            square
+            :disabled="
+              chatStore.isGenerating || Boolean(chatStore.importingImages)
+            "
+            :title="t('chat.addFile')"
+            @click="filePicker?.click()"
+          >
+            <Icon icon="mdi:paperclip" height="18" />
+          </Button>
           <DropdownMenu
             xs
             class="model-picker"
@@ -161,18 +173,6 @@
           />
           <span class="composer-hint">{{ inputHint }}</span>
           <div class="composer-actions">
-            <Button
-              sm
-              ghost
-              square
-              :disabled="
-                chatStore.isGenerating || Boolean(chatStore.importingImages)
-              "
-              :title="t('chat.addFile')"
-              @click="filePicker?.click()"
-            >
-              <Icon icon="mdi:paperclip" height="18" />
-            </Button>
             <Button
               sm
               ghost

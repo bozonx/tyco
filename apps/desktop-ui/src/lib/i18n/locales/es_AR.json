@@ -818,7 +818,10 @@
     "voiceRecognitionFailed": "No se pudo iniciar el reconocimiento de voz",
     "webhookEmptyUrl": "La URL del webhook está vacía",
     "webhookFailed": "Error en la solicitud de webhook",
-    "webhookSuccess": "Webhook enviado con éxito"
+    "webhookSuccess": "Webhook enviado con éxito",
+    "voiceKeyMissing": "La entrada de voz necesita una clave de API de {provider}. Abrí Configuración → STT, seleccioná este proveedor y guardá la clave.",
+    "voiceKeyUnavailable": "La clave de API de {provider} está guardada pero no está disponible. Desbloqueá el llavero del sistema (GNOME Keyring, KWallet o KeePassXC) y volvé a intentar la entrada de voz.",
+    "voiceKeyCheckFailed": "No se pudo verificar la clave de API para la entrada de voz. Revisá el llavero del sistema y reiniciá la aplicación."
   },
   "tools": {
     "aiTask": "Tarea de IA",

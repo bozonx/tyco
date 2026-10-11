@@ -1,4 +1,3 @@
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import { createFakeNetIpc } from './fake-net-ipc'
@@ -62,21 +61,18 @@ describe('secrets', () => {
     await client.vaultState()
 
     expect(fake.calls.map(({ command, args }) => [command, args])).toEqual([
+      ['secrets_set', { id: 'deepseek', value: 'sk-1', origins: null }],
       [
-        DESKTOP_COMMANDS.SECRETS_SET,
-        { id: 'deepseek', value: 'sk-1', origins: null },
-      ],
-      [
-        DESKTOP_COMMANDS.SECRETS_SET,
+        'secrets_set',
         {
           id: 'openai-compatible',
           value: 'k',
           origins: ['http://localhost:11434'],
         },
       ],
-      [DESKTOP_COMMANDS.SECRETS_REMOVE, { id: 'deepseek' }],
-      [DESKTOP_COMMANDS.SECRETS_STATUS, undefined],
-      [DESKTOP_COMMANDS.SECRETS_VAULT_STATE, undefined],
+      ['secrets_remove', { id: 'deepseek' }],
+      ['secrets_status', undefined],
+      ['secrets_vault_state', undefined],
     ])
   })
 })

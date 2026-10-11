@@ -818,7 +818,10 @@
     "voiceRecognitionFailed": "Failed to start voice recognition",
     "webhookEmptyUrl": "Webhook URL is empty",
     "webhookFailed": "Webhook request failed",
-    "webhookSuccess": "Webhook sent successfully"
+    "webhookSuccess": "Webhook sent successfully",
+    "voiceKeyMissing": "Voice input requires an API key for {provider}. Open Settings → STT, select this provider and save the key.",
+    "voiceKeyUnavailable": "The API key for {provider} is saved but unavailable. Unlock the system keychain (GNOME Keyring, KWallet or KeePassXC) and try voice input again.",
+    "voiceKeyCheckFailed": "Could not check the API key for voice input. Check the system keychain and restart the app."
   },
   "tools": {
     "aiTask": "AI task",

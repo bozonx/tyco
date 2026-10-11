@@ -815,7 +815,10 @@
     "voiceRecognitionFailed": "Ses tanıma başlatılamadı",
     "webhookEmptyUrl": "Web kancası URL'si boş",
     "webhookFailed": "Web kancası isteği başarısız oldu",
-    "webhookSuccess": "Web kancası başarıyla gönderildi"
+    "webhookSuccess": "Web kancası başarıyla gönderildi",
+    "voiceKeyMissing": "Sesli giriş için {provider} API anahtarı gerekiyor. Ayarlar → STT bölümünü açın, bu sağlayıcıyı seçin ve anahtarı kaydedin.",
+    "voiceKeyUnavailable": "{provider} API anahtarı kayıtlı ancak kullanılamıyor. Sistem anahtar deposunun (GNOME Keyring, KWallet veya KeePassXC) kilidini açın ve sesli girişi tekrar deneyin.",
+    "voiceKeyCheckFailed": "Sesli giriş için API anahtarı kontrol edilemedi. Sistem anahtar deposunu kontrol edin ve uygulamayı yeniden başlatın."
   },
   "tools": {
     "aiTask": "Yapay zekâ görevi",
