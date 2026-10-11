@@ -258,6 +258,33 @@
           <Icon icon="mdi:microphone-outline" height="15" />
           Voice
         </Button>
+        <Button
+          sm
+          neutral
+          @click="openQuick('commandLauncher')"
+          title="Open Quick Commands"
+        >
+          <Icon icon="mdi:console-line" height="15" />
+          Commands
+        </Button>
+        <Button
+          sm
+          neutral
+          @click="openQuick('translate')"
+          title="Open Quick Translate"
+        >
+          <Icon icon="mdi:translate" height="15" />
+          Translate
+        </Button>
+        <Button
+          sm
+          neutral
+          @click="openQuick('correction')"
+          title="Open Quick Correction"
+        >
+          <Icon icon="mdi:text-box-edit-outline" height="15" />
+          Correction
+        </Button>
       </div>
 
       <slot />
@@ -321,7 +348,16 @@ const isInlineVoice = computed(
 )
 const copyText = useCopyText({ saveOutput: true })
 
-const openQuick = async (mode: 'write' | 'voice' | 'aiTasks' | 'select') => {
+const openQuick = async (
+  mode:
+    | 'write'
+    | 'voice'
+    | 'aiTasks'
+    | 'select'
+    | 'commandLauncher'
+    | 'translate'
+    | 'correction'
+) => {
   const text =
     editorInputStore.selectedText || editorInputStore.value || undefined
 

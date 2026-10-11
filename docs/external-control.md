@@ -133,8 +133,8 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl status
  tyco-ctl open <mode> [--text TEXT | --selection]
  tyco-ctl commands list [--json]
- tyco-ctl commands describe <id> [--name]
- tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
+ tyco-ctl commands describe <id | --name NAME>
+ tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
               [--replace] [--interactive] [--output return|configured]
               [--wait] [--json] [--timeout SECONDS]
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
@@ -168,7 +168,7 @@ the clipboard after capture. Later changes to clipboard content are preserved.
 ```sh
 tyco-ctl commands list --json
 tyco-ctl commands describe default:core.correct:fix
-tyco-ctl commands describe 'My command' --name
+tyco-ctl commands describe --name 'My command'
 ```
 
 `commands list` prints one `id<TAB>name` line per command; `--json` prints the
@@ -183,7 +183,8 @@ error when described.
 Use stable IDs in scripts. Without `--name` the target is only ever an ID.
 `--name` explicitly selects a display name, ignoring case and redundant
 whitespace; an ambiguous name is rejected with `AmbiguousName`. Display names
-can change with configuration or localization.
+can change with configuration or localization. The flag may also follow the
+name (`tyco-ctl run 'My command' --name`), as in earlier versions.
 
 ### Execute and return the result
 

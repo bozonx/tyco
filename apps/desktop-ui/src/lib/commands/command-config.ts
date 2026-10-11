@@ -475,7 +475,7 @@ const shellQuote = (value: string): string =>
  * when `byName`, otherwise by its id
  */
 export function commandCliCall(target: string, byName = false): string {
-  return `tyco-ctl run ${shellQuote(target)}${byName ? ' --name' : ''}`
+  return `tyco-ctl run ${byName ? '--name ' : ''}${shellQuote(target)}`
 }
 
 /** The library with a removed command put back where it was */

@@ -18,15 +18,6 @@
         </span>
       </button>
       <button
-        v-if="chatStore.messages.length > 0"
-        type="button"
-        class="context-suggestion-icon"
-        :title="t('chat.startNewChatWithContext')"
-        @click="startNewChatWithContext"
-      >
-        <Icon icon="mdi:message-plus-outline" height="14" />
-      </button>
-      <button
         type="button"
         class="context-suggestion-icon"
         :title="t('chat.hideSuggestion')"
@@ -146,14 +137,6 @@ const visible = computed(
     Boolean(suggestion.value) ||
     Boolean(budgetWarning.value)
 )
-
-function startNewChatWithContext() {
-  const context = editorContext.value
-  if (!context) return
-  void chatStore.startChat({
-    attachments: [{ text: context.text, source: context.source }],
-  })
-}
 </script>
 
 <style scoped>

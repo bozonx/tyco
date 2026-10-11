@@ -111,7 +111,7 @@ describe('CommandEditor.vue', () => {
       availableIn: { external: true, chat: false },
     }
     expect(mountEditor(external).find('.command-cli').text()).toBe(
-      "tyco-ctl run 'Work note' --name"
+      "tyco-ctl run --name 'Work note'"
     )
     // a name another command shares would be refused: the id is used
     expect(

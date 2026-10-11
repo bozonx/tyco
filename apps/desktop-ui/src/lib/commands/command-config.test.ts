@@ -440,7 +440,7 @@ describe('commandCliCall', () => {
     )
     expect(commandCliCall("it's mine")).toBe("tyco-ctl run 'it'\\''s mine'")
     expect(commandCliCall('Work note', true)).toBe(
-      "tyco-ctl run 'Work note' --name"
+      "tyco-ctl run --name 'Work note'"
     )
   })
 })

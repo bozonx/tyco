@@ -155,7 +155,8 @@
             {{ t('commands.descriptionLabel') }}
             <InfoTooltip :text="t('commands.descriptionInfo')" />
           </span>
-          <FieldInput
+          <FieldTextArea
+            class="command-description"
             :value="command.description ?? ''"
             :placeholder="t('commands.descriptionPlaceholder')"
             @update:value="updateDescription"
@@ -210,9 +211,7 @@
             "
           />
           <InfoTooltip :text="t('commands.externalInfo')" />
-        </div>
-        <template v-if="command.availableIn.external">
-          <div class="command-field-row">
+          <span v-if="command.availableIn.external" class="command-cli-call">
             <code class="command-cli" :title="cliCommand">{{
               cliCommand
             }}</code>
@@ -231,16 +230,19 @@
                 height="16"
               />
             </Button>
-          </div>
-          <p v-if="nameTwins.length" class="command-warning">
-            {{
-              t('commands.warningExternalNameTwins', {
-                names: nameTwins.map(commandLabel).join(', '),
-              })
-            }}
-          </p>
-        </template>
-        <p v-if="origin" class="command-hint">{{ origin }}</p>
+          </span>
+        </div>
+        <p
+          v-if="command.availableIn.external && nameTwins.length"
+          class="command-warning"
+        >
+          {{
+            t('commands.warningExternalNameTwins', {
+              names: nameTwins.map(commandLabel).join(', '),
+            })
+          }}
+        </p>
+        <p v-if="origin" class="command-hint command-origin">{{ origin }}</p>
       </div>
     </details>
   </div>
@@ -272,6 +274,7 @@ import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import KeyButton from '../common/KeyButton.vue'
 import CommandTestRun from './CommandTestRun.vue'
@@ -463,7 +466,7 @@ onUnmounted(() => {
 .command-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md, 0.75rem);
+  gap: var(--space-lg, 1rem);
   width: 100%;
 }
 
@@ -496,8 +499,8 @@ onUnmounted(() => {
 .command-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm, 0.5rem);
-  padding-top: var(--space-sm, 0.5rem);
+  gap: var(--space-md, 0.75rem);
+  padding-top: var(--space-md, 0.75rem);
   border-top: 1px solid var(--app-border-subtle, var(--app-border));
 }
 
@@ -531,7 +534,7 @@ details[open] > .command-group-toggle svg {
 .command-group-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm, 0.5rem);
+  gap: var(--space-md, 0.75rem);
 }
 
 .command-place {
@@ -581,6 +584,18 @@ details[open] > .command-group-toggle svg {
   margin-left: auto;
 }
 
+.command-description {
+  min-height: 4rem;
+}
+
+.command-cli-call {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
+  min-width: 0;
+  margin-left: auto;
+}
+
 .command-cli {
   min-width: 0;
   overflow: hidden;
@@ -594,6 +609,11 @@ details[open] > .command-group-toggle svg {
 .command-hint {
   font-size: 0.75rem;
   color: var(--app-text-muted);
+}
+
+.command-origin {
+  margin: 0;
+  text-align: right;
 }
 
 .command-warning {

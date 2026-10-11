@@ -10,8 +10,8 @@ use tyco_activation_protocol::{
 const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl open <mode> [--text TEXT | --selection]
        tyco-ctl commands list [--json]
-       tyco-ctl commands describe <id> [--name]
-       tyco-ctl run <id> [--name] [--text TEXT | --stdin | --input-json JSON | --selection]
+       tyco-ctl commands describe <id | --name NAME>
+       tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
                     [--replace] [--interactive] [--output return|configured]
                     [--wait] [--json] [--timeout SECONDS]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
@@ -70,14 +70,14 @@ fn parse(args: &[String]) -> Result<Command, String> {
                 command.request = Request::ListCommands;
             }
             Some("describe") => {
-                let target = value(2)?;
-                if args.len() > 4 || args.get(3).is_some_and(|arg| arg != "--name") {
-                    return Err(USAGE.into());
-                }
-                command.request = Request::DescribeCommand {
-                    target,
-                    by_name: args.len() == 4,
+                let (target, by_name) = match &args[2..] {
+                    [flag, name] if flag == "--name" => (name.clone(), true),
+                    [id] if id != "--name" => (id.clone(), false),
+                    // the flag after the target is the old spelling
+                    [name, flag] if flag == "--name" => (name.clone(), true),
+                    _ => return Err(USAGE.into()),
                 };
+                command.request = Request::DescribeCommand { target, by_name };
             }
             _ => return Err(USAGE.into()),
         },
@@ -110,18 +110,21 @@ fn parse(args: &[String]) -> Result<Command, String> {
             };
         }
         "run" => {
+            let by_name = args.get(1).is_some_and(|arg| arg == "--name");
             let mut request = RunRequest {
-                target: value(1)?,
+                target: value(if by_name { 2 } else { 1 })?,
+                by_name,
                 ..Default::default()
             };
             if request.target.trim().is_empty() {
                 return Err("Command ID is empty".into());
             }
-            let mut index = 2;
+            let mut index = if by_name { 3 } else { 2 };
             let mut input_set = false;
             while index < args.len() {
                 match args[index].as_str() {
-                    "--name" => request.by_name = true,
+                    // the flag after the target is the old spelling
+                    "--name" if !request.by_name => request.by_name = true,
                     "--interactive" => request.interactive = true,
                     "--replace" => request.replace = true,
                     "--wait" => command.wait = true,
@@ -361,6 +364,38 @@ mod tests {
         assert!(command(&["run", "test", "--stdin", "--json"]).is_err());
         assert!(command(&["run", "test", "--stdin", "--timeout", "5"]).is_err());
         assert!(command(&["run", "test", "--stdin", "--wait", "--timeout", "5"]).is_ok());
+    }
+
+    #[test]
+    fn names_a_command_with_the_flag_before_the_name() {
+        let run = |args: &[&str]| match command(args).unwrap().request {
+            Request::Run { request } => (request.target, request.by_name),
+            _ => panic!(),
+        };
+        assert_eq!(run(&["run", "--name", "ls"]), ("ls".into(), true));
+        assert_eq!(run(&["run", "ls", "--name"]), ("ls".into(), true));
+        assert_eq!(run(&["run", "ls"]), ("ls".into(), false));
+        assert!(command(&["run", "--name"]).is_err());
+        assert!(command(&["run", "--name", "ls", "--name"]).is_err());
+
+        let describe = |args: &[&str]| match command(args).unwrap().request {
+            Request::DescribeCommand { target, by_name } => (target, by_name),
+            _ => panic!(),
+        };
+        let name = ("My command".to_owned(), true);
+        assert_eq!(
+            describe(&["commands", "describe", "--name", "My command"]),
+            name
+        );
+        assert_eq!(
+            describe(&["commands", "describe", "My command", "--name"]),
+            name
+        );
+        assert_eq!(
+            describe(&["commands", "describe", "ls"]),
+            ("ls".into(), false)
+        );
+        assert!(command(&["commands", "describe", "--name"]).is_err());
     }
 
     #[test]
