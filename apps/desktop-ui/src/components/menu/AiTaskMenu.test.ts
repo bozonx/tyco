@@ -12,11 +12,12 @@ vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const aiTasks = vi.hoisted(() => vi.fn())
-const aiCustomPrompt = vi.hoisted(() => vi.fn())
-vi.mock('../../composables/useCallAi', () => ({
-  useCallAi: () => ({ aiTasks, aiCustomPrompt }),
+const transform = vi.hoisted(() => vi.fn())
+vi.mock('../../stores/invocations', () => ({
+  useInvocationsStore: () => ({ transform }),
 }))
+
+const output = (content: string) => ({ ok: true, content })
 
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: 'main' }),
@@ -79,7 +80,7 @@ describe('AiTaskMenu', () => {
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
     const menuModalsStore = useMenuModalsStore()
     menuModalsStore.nextModal(MenuModals.AI_TASK)
-    aiCustomPrompt.mockResolvedValue('Shorter text')
+    transform.mockResolvedValue(output('Shorter text'))
     let shortcutListProps: Record<string, any> = {}
     const text = 'Some task text that is long enough to process'
 
@@ -96,10 +97,13 @@ describe('AiTaskMenu', () => {
     await vi.waitFor(() =>
       expect(menuModalsStore.currentModal).toBe(MenuModals.DIFF)
     )
-    expect(aiCustomPrompt).toHaveBeenCalledWith(
-      'Make it shorter',
+    expect(transform).toHaveBeenCalledWith(
+      'core.aiTask',
       text,
-      expect.objectContaining({ signal: expect.any(AbortSignal) })
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+        toolConfig: { prompt: 'Make it shorter' },
+      })
     )
     expect(patchLocalState).toHaveBeenCalledWith({
       recentAiPrompts: ['Make it shorter'],
@@ -181,9 +185,9 @@ describe('AiTaskMenu', () => {
     const menuModalsStore = useMenuModalsStore()
     menuModalsStore.nextModal(MenuModals.AI_TASK)
     let finish: (text: string) => void = () => {}
-    aiTasks.mockReturnValue(
-      new Promise<string>((resolve) => {
-        finish = resolve
+    transform.mockReturnValue(
+      new Promise((resolve) => {
+        finish = (text) => resolve(output(text))
       })
     )
     let shortcutListProps: Record<string, any> = {}
@@ -208,7 +212,7 @@ describe('AiTaskMenu', () => {
     })
 
     const running = shortcutListProps.leftLetterKeys[0].action()
-    await vi.waitFor(() => expect(aiTasks).toHaveBeenCalled())
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     // the main window was closed while the task ran
     menuModalsStore.closeAll()
     finish('Changed text')
@@ -230,7 +234,7 @@ describe('AiTaskMenu', () => {
     const menuModalsStore = useMenuModalsStore()
     const text = 'Some task text that is long enough to process'
     menuModalsStore.nextModal(MenuModals.AI_TASK, { text, taskId: 'task-7' })
-    aiTasks.mockResolvedValue('Changed text')
+    transform.mockResolvedValue(output('Changed text'))
 
     mount(AiTaskMenu, {
       props: menuModalsStore.currentModalParams,
@@ -240,7 +244,11 @@ describe('AiTaskMenu', () => {
     await vi.waitFor(() =>
       expect(menuModalsStore.currentModal).toBe(MenuModals.DIFF)
     )
-    expect(aiTasks).toHaveBeenCalledWith(1, text, expect.anything())
+    expect(transform).toHaveBeenCalledWith(
+      'core.aiTask',
+      text,
+      expect.objectContaining({ toolConfig: { prompt: 'Edit it' } })
+    )
     // back on the step, the menu waits for a choice
     menuModalsStore.back()
     expect(menuModalsStore.currentModalParams.taskId).toBeUndefined()

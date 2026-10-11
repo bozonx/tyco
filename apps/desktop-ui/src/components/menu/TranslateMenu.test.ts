@@ -12,16 +12,20 @@ vi.mock('../../composables/useI18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const translateTo = vi.hoisted(() => vi.fn())
-vi.mock('../../composables/useCallAi', () => ({
-  useCallAi: () => ({ translateTo }),
+const transform = vi.hoisted(() => vi.fn())
+vi.mock('../../stores/invocations', () => ({
+  useInvocationsStore: () => ({ transform }),
 }))
 
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: 'main' }),
 }))
 
-const result = { text: 'Hallo Welt', provider: 'llm', kind: 'llm', quality: {} }
+const result = {
+  ok: true,
+  content: 'Hallo Welt',
+  meta: { provider: 'llm', kind: 'llm', quality: {} },
+}
 
 describe('TranslateMenu', () => {
   let shortcutListProps: Record<string, any> = {}
@@ -48,8 +52,8 @@ describe('TranslateMenu', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    translateTo.mockReset()
-    translateTo.mockResolvedValue(result)
+    transform.mockReset()
+    transform.mockResolvedValue(result)
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
@@ -67,10 +71,12 @@ describe('TranslateMenu', () => {
 
     await shortcutListProps.leftLetterKeys[0].action()
 
-    expect(translateTo).toHaveBeenCalledWith(
-      'de_DE',
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
       'Hello world',
-      expect.objectContaining({ sourceLanguage: undefined })
+      expect.objectContaining({
+        toolConfig: { language: 'de_DE', sourceLanguage: undefined },
+      })
     )
   })
 
@@ -81,11 +87,13 @@ describe('TranslateMenu', () => {
     })
     mountMenu({ language: 'de_DE' })
 
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo).toHaveBeenCalledWith(
-      'de_DE',
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
       'Hello world',
-      expect.anything()
+      expect.objectContaining({
+        toolConfig: expect.objectContaining({ language: 'de_DE' }),
+      })
     )
     await vi.waitFor(() =>
       expect(menuModalsStore.currentModal).not.toBe(MenuModals.TRANSLATE)
@@ -106,8 +114,8 @@ describe('TranslateMenu', () => {
     await input.setValue('ital')
     await input.trigger('keydown', { key: 'Enter' })
 
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo.mock.calls[0]![0]).toBe('it_IT')
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
     expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
       recentTranslateLanguages: ['it_IT'],
     })
@@ -125,11 +133,13 @@ describe('TranslateMenu', () => {
     await input.setValue('ital')
     await input.trigger('keydown', { key: 'Enter' })
 
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo).toHaveBeenCalledWith(
-      'it_IT',
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform).toHaveBeenCalledWith(
+      'core.translate',
       'Hello world',
-      expect.objectContaining({ sourceLanguage: 'pl_PL' })
+      expect.objectContaining({
+        toolConfig: { language: 'it_IT', sourceLanguage: 'pl_PL' },
+      })
     )
   })
 
@@ -142,12 +152,12 @@ describe('TranslateMenu', () => {
     await nextTick()
     const input = wrapper.find('input')
     await input.trigger('keydown', { key: 'Enter' })
-    expect(translateTo).not.toHaveBeenCalled()
+    expect(transform).not.toHaveBeenCalled()
 
     await input.trigger('keydown', { key: 'ArrowDown' })
     await input.trigger('keydown', { key: 'Enter' })
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo.mock.calls[0]![0]).toBe('it_IT')
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
   })
 
   it('finds a language by its English name', async () => {
@@ -159,12 +169,12 @@ describe('TranslateMenu', () => {
     await input.setValue('german')
     await input.trigger('keydown', { key: 'Enter' })
 
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    expect(translateTo.mock.calls[0]![0]).toBe('de_DE')
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de_DE')
   })
   it('drops late results and stages after cancellation without clearing a new operation', async () => {
     let resolve!: (value: typeof result) => void
-    translateTo.mockReturnValue(
+    transform.mockReturnValue(
       new Promise<typeof result>((done) => {
         resolve = done
       })
@@ -172,13 +182,13 @@ describe('TranslateMenu', () => {
     useIpcStore().params.userConfig.toTranslateLanguages = ['de_DE']
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()
-    await vi.waitFor(() => expect(translateTo).toHaveBeenCalled())
-    const options = translateTo.mock.calls[0]![2]
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    const options = transform.mock.calls[0]![2]
     const menu = useMenuModalsStore()
     menu.cancelPending()
     expect(options.signal.aborted).toBe(true)
     menu.setPendingModal({ label: 'New operation' })
-    options.onStage('repairing')
+    options.onProgress('repairing')
     resolve(result)
     await pending
     expect(useHistoryStore().saveSourceResult).not.toHaveBeenCalled()

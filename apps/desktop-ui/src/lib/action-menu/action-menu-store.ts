@@ -4,6 +4,7 @@ import { shallowRef } from 'vue'
 import {
   APP_CONFIG,
   type CommandConfig,
+  type CoreToolId,
   type MainActionConfig,
 } from '@tyco/shared'
 
@@ -13,18 +14,17 @@ import {
   commandTakesText,
   isMenuCommand,
 } from '../commands/command-config'
-import {
-  type CommandRunnerDependencies,
-  createCommandRunner,
-} from '../commands/command-runner'
+import { createCommandRunner } from '../commands/command-runner'
 import { translate } from '../i18n'
+import {
+  createInvocationRunner,
+  type InvocationRunnerDependencies,
+} from '../invocation/invocation-runner'
 import { getLanguageLabel } from '../locale/language'
 import { assignPluginActions } from './main-actions'
 
 export type { ActionItem } from '@tyco/plugin-sdk'
-export interface ActionMenuDependencies extends CommandRunnerDependencies {
-  typeIntoWindowAndClose: (text: string) => void
-  putIntoClipboardAndClose: (text: string) => Promise<void>
+export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
   /** With `taskId` the dialog runs that AI task at once */
@@ -36,7 +36,6 @@ export interface ActionMenuDependencies extends CommandRunnerDependencies {
     text: string,
     extra?: Record<string, unknown>
   ) => Promise<void>
-  startChatWithAttachment: (text: string) => void
   minCorrectionLength?: () => number
   mainActionRegistrations?: () => readonly string[] | undefined
   openLauncherPage?: (page: number, text: string) => Promise<void>
@@ -59,6 +58,31 @@ export interface ActionMenuOptions {
 export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   const registeredActionsMenu = shallowRef<ActionItem[]>([])
   const commandRunner = createCommandRunner(deps)
+  const invocationRunner = createInvocationRunner(deps)
+
+  /**
+   * The menu item of a built-in action that runs a core tool as it is: it needs
+   * no command of the library. `leavesApp` records the text before it goes
+   */
+  const createBuiltinActionItem = (
+    item: Required<Pick<ActionItem, 'id' | 'labelKey' | 'icon'>>,
+    toolId: CoreToolId,
+    leavesApp: boolean
+  ): ActionItem => ({
+    ...item,
+    action: async (text: string) => {
+      if (!text?.trim()) {
+        deps.showToast('toast.textNotSelected', 'error')
+        return
+      }
+      if (leavesApp) await deps.saveOutput(text)
+      await invocationRunner.run(
+        { toolId, toolConfig: {}, label: translate(item.labelKey) },
+        text,
+        { source: 'menu' }
+      )
+    },
+  })
 
   /** The menu item of a command; the text, if it takes one, leaves the app */
   const createCommandActionItem = (command: CommandConfig): ActionItem => ({
@@ -120,32 +144,24 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   }
 
   const getDefaultActions = (): ActionItem[] => [
-    {
-      id: 'insertIntoWindow',
-      labelKey: 'action.insertIntoWindow',
-      icon: 'mdi:application-export',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        await deps.saveOutput(text)
-        deps.typeIntoWindowAndClose(text)
+    createBuiltinActionItem(
+      {
+        id: 'insertIntoWindow',
+        labelKey: 'action.insertIntoWindow',
+        icon: 'mdi:application-export',
       },
-    },
-    {
-      id: 'copyToClipboard',
-      labelKey: 'action.copyToClipboard',
-      icon: 'mdi:clipboard-arrow-right-outline',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        await deps.saveOutput(text)
-        await deps.putIntoClipboardAndClose(text)
+      'core.insert',
+      true
+    ),
+    createBuiltinActionItem(
+      {
+        id: 'copyToClipboard',
+        labelKey: 'action.copyToClipboard',
+        icon: 'mdi:clipboard-arrow-right-outline',
       },
-    },
+      'core.copy',
+      true
+    ),
     {
       id: 'aiTask',
       labelKey: 'action.aiTask',
@@ -176,18 +192,15 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
         deps.openTranslateModal(text)
       },
     },
-    {
-      id: 'askInChat',
-      labelKey: 'action.askInChat',
-      icon: 'mdi:chat-outline',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        deps.startChatWithAttachment(text)
+    createBuiltinActionItem(
+      {
+        id: 'askInChat',
+        labelKey: 'action.askInChat',
+        icon: 'mdi:chat-outline',
       },
-    },
+      'core.askInChat',
+      false
+    ),
   ]
 
   const getRegisteredActions = () => registeredActionsMenu.value

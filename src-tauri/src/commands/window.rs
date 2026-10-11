@@ -78,12 +78,6 @@ pub fn copy_text(text: String) -> Result<(), AppError> {
     copy_to_clipboard(&text)
 }
 
-#[tauri::command(async)]
-pub fn put_into_clipboard_and_close(app: AppHandle, text: String) -> Result<(), AppError> {
-    copy_to_clipboard(&text)?;
-    runtime::hide_active_window(&app)
-}
-
 /// Only web pages are opened: the URL comes from the webview, and the system
 /// opener would just as well run a local file or another URL handler.
 fn web_url(value: &str) -> Result<url::Url, AppError> {

@@ -73,6 +73,8 @@ export interface ToolCall {
   command?: ToolCallCommand
   /** The output is used: it is not enough to start a long script and leave */
   wantsOutput: boolean
+  /** Tells the caller which stage a long run is at, for it to show */
+  onProgress?: (stage: string) => void
 }
 
 export interface ToolResult {
@@ -90,6 +92,11 @@ export interface ToolResult {
    * caller
    */
   content?: string
+  /**
+   * Facts about the output for a caller that shows them, e.g. the provider of a
+   * translation; the rest ignore them
+   */
+  meta?: Record<string, unknown>
   /** The window stays open after a run without output, e.g. for the editor */
   keepWindow?: boolean
 }

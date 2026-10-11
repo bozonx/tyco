@@ -33,15 +33,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { useCallAi } from '../../composables/useCallAi'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
+import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import { type ActionItem } from '../../stores/actionMenu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chatInput'
 import { useHistoryStore } from '../../stores/history'
+import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
@@ -69,7 +70,7 @@ const props = withDefaults(
 const routeParamsStore = useRouteParams()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
-const { aiTasks, aiCustomPrompt } = useCallAi()
+const invocations = useInvocationsStore()
 const appConfig = computed(() => ipcStore.params.appConfig)
 const { toast, toastText } = useToast()
 const historyStore = useHistoryStore()
@@ -120,7 +121,7 @@ async function runTask(index: number) {
     toast('toast.desktopCommandFailed', 'error')
     return
   }
-  await makeDiff((text, signal) => aiTasks(index, text, { signal }))
+  await makeDiff(task.rule)
 }
 
 // once: back on this step from the result, the menu waits for a choice
@@ -200,7 +201,7 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
     return
   }
 
-  await makeDiff((text, signal) => aiCustomPrompt(value, text, { signal }))
+  await makeDiff(value)
 }
 
 async function savePromptAsTask() {
@@ -222,9 +223,8 @@ async function savePromptAsTask() {
   if (!result.success) toast('toast.desktopCommandFailed', 'error')
 }
 
-async function makeDiff(
-  run: (text: string, signal: AbortSignal) => Promise<string>
-) {
+/** Applies `prompt` to the text with the `core.aiTask` tool, then the diff */
+async function makeDiff(prompt: string) {
   const trimmedText = props.text.trim()
 
   if (!trimmedText) {
@@ -247,9 +247,17 @@ async function makeDiff(
   try {
     const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
     if (controller.signal.aborted) return
-    const newText = await run(trimmedText, controller.signal)
-    if (controller.signal.aborted) return
-    if (!newText || !newText.trim()) {
+    const result = await invocations.transform('core.aiTask', trimmedText, {
+      signal: controller.signal,
+      toolConfig: { prompt },
+    })
+    if (result.cancelled || controller.signal.aborted) return
+    if (!result.ok) {
+      toastText(toolResultMessage(result, t), 'error')
+      return
+    }
+    const newText = result.content ?? ''
+    if (!newText.trim()) {
       toast('toast.desktopCommandFailed', 'error')
       return
     }

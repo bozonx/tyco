@@ -15,8 +15,11 @@ import { createBuiltinTools } from '../lib/tools/builtin-tools'
 import { createCoreTools } from '../lib/tools/core-tools'
 import { createToolCatalogSync } from '../lib/tools/tool-catalog'
 import { createToolRegistry } from '../lib/tools/tool-registry'
+import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useChatStore } from './chat'
+import { useCorrectorStore } from './corrector'
 import { useIpcStore } from './ipc'
+import { useMenuModalsStore } from './menuModals'
 
 /**
  * The tool registry of the window: the built-in tools of the app and those the
@@ -29,7 +32,8 @@ function describeError(error: unknown): string {
 
 export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
-  const { correctText, translateTo, aiCustomPrompt } = useCallAi()
+  const { translateTo, aiCustomPrompt } = useCallAi()
+  const correctorStore = useCorrectorStore()
   const { typeIntoWindowAndClose } = useCallApi()
 
   const llmUnavailable = (task: LlmTask) =>
@@ -44,14 +48,23 @@ export const useToolsStore = defineStore('tools', () => {
       if (!result.success) throw new Error(result.error ?? 'copyText')
     },
     askInChat: async (text) => {
+      // the chat takes the place of whatever step the menu was on
+      useMenuModalsStore().closeAll()
       await useChatStore().attachToChat(text)
     },
-    correctText: (text, signal) =>
-      correctText(text, { signal, notifyError: false }),
-    translateTo: (language, text, signal) =>
-      translateTo(language, text, { signal, notifyError: false }).then(
-        (result) => (result ? result.text : '')
-      ),
+    correctText: correctorStore.correct,
+    translateTo: async (language, text, options) => {
+      const result = await translateTo(language, text, {
+        ...options,
+        notifyError: false,
+      })
+      if (!result) return { text: '' }
+      const { text: translated, provider, kind, model, quality } = result
+      return {
+        text: translated,
+        meta: { provider, kind, model, quality } satisfies TranslationMeta,
+      }
+    },
     aiCustomPrompt: (prompt, text, signal) =>
       aiCustomPrompt(prompt, text, { signal, notifyError: false }),
     llmUnavailable,

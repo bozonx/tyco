@@ -10,11 +10,9 @@ import type { BuiltinToolDependencies } from '../tools/builtin-tools'
 import { testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand, launcherAfterRunFromLegacy } from './command-config'
-import {
-  type CommandRunnerDependencies,
-  type CommandRunOptions,
-  createCommandRunner,
-} from './command-runner'
+import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
+import type { InvocationOptions } from '../invocation/invocation-types'
+import { createCommandRunner } from './command-runner'
 
 const script = (
   toolConfig: Record<string, unknown> = {},
@@ -52,7 +50,7 @@ const result = (
 })
 
 function setup(
-  extra: Partial<CommandRunnerDependencies> & BuiltinToolDependencies = {},
+  extra: Partial<InvocationRunnerDependencies> & BuiltinToolDependencies = {},
   tools: readonly ToolDefinition[] = []
 ) {
   const {
@@ -82,7 +80,7 @@ function setup(
       run: (
         command: CommandConfig,
         text: string,
-        options: CommandRunOptions = {}
+        options: InvocationOptions = {}
       ) => runner.run(command, text, { source: 'launcher', ...options }),
     },
   }

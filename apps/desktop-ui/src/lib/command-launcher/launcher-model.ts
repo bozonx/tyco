@@ -14,9 +14,9 @@ import {
   isCommandAvailable,
 } from '../commands/command-config'
 import type {
-  CommandRunOptions,
-  CommandRunOutcome,
-} from '../commands/command-runner'
+  InvocationOptions,
+  InvocationOutcome,
+} from '../invocation/invocation-types'
 import { moveHighlight } from '../menu-query/menu-query'
 import type { ToolLookup } from '../tools/tool-types'
 
@@ -102,8 +102,8 @@ export interface CommandLauncherDependencies {
   claimJob?: (id: string) => Promise<boolean>
   finishJob?: (
     id: string,
-    outcome: CommandRunOutcome
-  ) => Promise<CommandRunOutcome | void>
+    outcome: InvocationOutcome
+  ) => Promise<InvocationOutcome | void>
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
   /** The 15 slots of the command overlay */
@@ -117,8 +117,8 @@ export interface CommandLauncherDependencies {
   run: (
     command: CommandConfig,
     text: string,
-    options?: CommandRunOptions
-  ) => Promise<CommandRunOutcome>
+    options?: InvocationOptions
+  ) => Promise<InvocationOutcome>
   /**
    * Hands a command whose output replaces the selection over to a selection
    * run: the overlay hides, and the selection is replaced where it is
@@ -243,7 +243,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const log = (
     command: CommandConfig,
     input: string | null,
-    outcome: CommandRunOutcome
+    outcome: InvocationOutcome
   ) => {
     const record: CommandRunRecord = {
       commandId: command.id,
@@ -259,7 +259,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const execute = async (
     command: CommandConfig,
     input: string | null
-  ): Promise<CommandRunOutcome> => {
+  ): Promise<InvocationOutcome> => {
     if (
       source === 'launcher' &&
       commandAfterRun(command, source, fromSelection) === 'replaceSelection' &&
@@ -285,7 +285,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       // the history keeps the text even when the command fails
       await deps.saveOutput?.(input).catch(() => {})
     }
-    let outcome: CommandRunOutcome
+    let outcome: InvocationOutcome
     try {
       outcome = await deps.run(command, input ?? '', {
         signal: runController.signal,

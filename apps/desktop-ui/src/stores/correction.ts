@@ -1,18 +1,20 @@
 import { defineStore } from 'pinia'
 
-import { useCallAi } from '../composables/useCallAi'
 import useToast from '../composables/useToast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
 import { translate } from '../lib/i18n'
+import { toolResultMessage } from '../lib/invocation/invocation-result'
 import { LlmError } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import {
-  createQuickCorrection,
+  CorrectionAbortedError,
   isCorrectionAborted,
 } from '../lib/quick-input/quick-correction'
 import { createQuickInsert } from '../lib/quick-input/quick-insert'
-import { useIpcStore } from './ipc'
+import { useCorrectorStore } from './corrector'
 import { useHistoryStore } from './history'
+import { useInvocationsStore } from './invocations'
+import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menuModals'
 
 function describeError(error: unknown): string {
@@ -21,24 +23,23 @@ function describeError(error: unknown): string {
 }
 
 export const useCorrectionStore = defineStore('correction', () => {
-  const { correctText } = useCallAi()
   const { toast, toastText } = useToast()
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
 
-  // one corrector for the whole window: a correction made in advance for the
-  // quick input is reused by whatever asks for the same text
-  const corrector = createQuickCorrection({
-    // errors are shown by the step that needed the result
-    correct: (text, signal) =>
-      correctText(text, { signal, notifyError: false }),
-  })
+  const corrector = useCorrectorStore()
+  const invocations = useInvocationsStore()
+
+  /** The correction of `text` by the `core.correct` tool */
+  const correct = async (text: string, signal: AbortSignal) => {
+    const result = await invocations.transform('core.correct', text, { signal })
+    if (result.cancelled) throw new CorrectionAbortedError()
+    if (!result.ok) throw new Error(toolResultMessage(result, translate))
+    return result.content ?? ''
+  }
 
   const step = createCorrectionStep({
-    correct: (text, signal) => {
-      signal.addEventListener('abort', () => corrector.cancel(), { once: true })
-      return corrector.request(text)
-    },
+    correct,
     peek: corrector.peek,
     openStep: (params) => menuModalsStore.nextModal(MenuModals.INSERT, params),
     updateStep: menuModalsStore.updateStep,

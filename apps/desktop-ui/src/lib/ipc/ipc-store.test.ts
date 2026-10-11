@@ -123,7 +123,7 @@ describe('ipc-store', () => {
     const store = createIpcStoreModel(deps)
 
     await store.callFunction('typeIntoWindowAndClose', ['text'])
-    await store.callFunction('putIntoClipboardAndClose', ['text'])
+    await store.callFunction('copyText', ['text'])
 
     expect(order).toEqual(['released', 'invoked', 'invoked'])
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(

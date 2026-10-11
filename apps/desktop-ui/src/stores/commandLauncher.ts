@@ -7,7 +7,7 @@ import useToast from '../composables/useToast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { translate } from '../lib/i18n'
-import { useCommandRunnerDependencies } from './commands'
+import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
@@ -15,7 +15,7 @@ import { useToolsStore } from './tools'
 export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
-  const runner = createCommandRunner(useCommandRunnerDependencies())
+  const runner = createCommandRunner(useInvocationRunnerDependencies())
   const { toastText } = useToast()
 
   const model = createCommandLauncherModel({

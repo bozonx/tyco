@@ -11,6 +11,9 @@ import {
   type WebhookToolConfig,
 } from '@tyco/shared'
 
+import type { Invocation, ResultSink } from '../invocation/invocation-types'
+import { invocationUnavailableReason } from '../invocation/invoke-tool'
+import { resolveSink } from '../invocation/result-sinks'
 import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 import { toolInputKind } from '../tools/tool-input'
 import type {
@@ -68,12 +71,8 @@ export function commandAfterRun(
   command: CommandConfig,
   source: CommandRunSource = 'menu',
   hasSelection = false
-): CustomActionAfterRun | 'return' {
-  if (source === 'external') return 'return'
-  if (source !== 'launcher') return 'showMenu'
-  return hasSelection
-    ? command.launcherAfterRun.withSelection
-    : command.launcherAfterRun.withoutSelection
+): ResultSink {
+  return resolveSink(commandInvocation(command), { source, hasSelection })
 }
 
 function headersOf(value: unknown): Record<string, string> {
@@ -283,19 +282,11 @@ export function commandInputKind(
  * Why the command cannot run now, as an i18n key: no such tool, the tool is not
  * available, or the command cannot get its input from a text
  */
-export function commandUnavailableReason(
+export const commandUnavailableReason = (
   command: CommandConfig,
   tools: ToolLookup
-): string | undefined {
-  const tool = commandTool(command, tools)
-  if (!tool) return 'commands.toolMissing'
-  const reason = tool.unavailableReason?.()
-  if (reason) return reason
-  if (commandInputKind(command, tools) === null) {
-    return 'commands.inputUnsupported'
-  }
-  return undefined
-}
+): string | undefined =>
+  invocationUnavailableReason(commandInvocation(command), tools)
 
 /** Whether the tool of the command can run it now */
 export const isCommandAvailable = (
@@ -364,6 +355,19 @@ export function commandLabel(command: CommandConfig): string {
   }
   if (command.toolId === 'webhook') return 'Webhook'
   return command.id
+}
+
+/** The invocation that runs the command */
+export function commandInvocation(command: CommandConfig): Invocation {
+  return {
+    toolId: command.toolId,
+    toolConfig: command.toolConfig,
+    label: commandLabel(command),
+    commandId: command.id,
+    llmArgumentParsing: command.llmArgumentParsing,
+    logOutput: command.logOutput,
+    launcherSink: command.launcherAfterRun,
+  }
 }
 
 /**

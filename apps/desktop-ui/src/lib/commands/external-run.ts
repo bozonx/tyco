@@ -7,7 +7,10 @@ import type {
 } from '@tyco/shared'
 
 import { commandLabel, normalizeCommands } from './command-config'
-import type { CommandRunOptions, CommandRunOutcome } from './command-runner'
+import type {
+  InvocationOptions,
+  InvocationOutcome,
+} from '../invocation/invocation-types'
 
 /** Quick commands finish before the bubble would show up */
 export const PENDING_OVERLAY_DELAY_MS = 400
@@ -25,13 +28,13 @@ export interface ExternalRunDependencies {
     command: CommandConfig,
     text: string,
     report: RunReport,
-    options?: CommandRunOptions
-  ) => Promise<CommandRunOutcome>
+    options?: InvocationOptions
+  ) => Promise<InvocationOutcome>
   claimJob?: (id: string) => Promise<boolean>
   finishJob?: (
     id: string,
-    outcome: CommandRunOutcome
-  ) => Promise<CommandRunOutcome | void>
+    outcome: InvocationOutcome
+  ) => Promise<InvocationOutcome | void>
   showOverlay: (request: StatusOverlayRequest | null) => void
   /** A desktop notification: it stays in the notification history */
   notify: (summary: string, body: string) => void
@@ -64,7 +67,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
 
   const handleRun = async (
     event: CommandRunEvent
-  ): Promise<CommandRunOutcome> => {
+  ): Promise<InvocationOutcome> => {
     const controller = new AbortController()
     if (event.jobId) {
       controllers.set(event.jobId, controller)
@@ -111,7 +114,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     const input = event.text ?? null
     if (input !== null) await deps.saveOutput?.(input).catch(() => {})
 
-    let outcome: CommandRunOutcome
+    let outcome: InvocationOutcome
     try {
       outcome = await deps.run(command, input ?? '', report, {
         signal: controller.signal,

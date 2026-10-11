@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type CoreToolDependencies, createCoreTools } from './core-tools'
+import {
+  type CoreToolDependencies,
+  type TranslateOptions,
+  createCoreTools,
+} from './core-tools'
 import type { ToolCall, ToolDefinition } from './tool-types'
 
 function setup(extra: Partial<CoreToolDependencies> = {}) {
@@ -10,7 +14,9 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
     askInChat: vi.fn(async () => {}),
     correctText: vi.fn(async (text: string) => `fixed ${text}`),
     translateTo: vi.fn(
-      async (language: string, text: string) => `${language}: ${text}`
+      async (language: string, text: string, _options: TranslateOptions) => ({
+        text: `${language}: ${text}`,
+      })
     ),
     aiCustomPrompt: vi.fn(
       async (prompt: string, text: string) => `${prompt} → ${text}`
@@ -101,6 +107,39 @@ describe('createCoreTools', () => {
       ok: true,
       content: 'Shorter → text',
     })
+  })
+
+  it('passes the source language and the stages to the translator', async () => {
+    const { deps, tools } = setup()
+    vi.mocked(deps.translateTo).mockImplementation(
+      async (language, text, options) => {
+        options.onStage?.('checking')
+        return { text: `${language}: ${text}`, meta: { provider: 'deepl' } }
+      }
+    )
+    const onProgress = vi.fn()
+    const signal = new AbortController().signal
+    const result = await tools
+      .get('core.translate')!
+      .run({
+        input: { text: 'hola' },
+        config: { language: 'en_US', sourceLanguage: 'es_AR' },
+        source: 'menu',
+        signal,
+        wantsOutput: true,
+        onProgress,
+      })
+    expect(result).toEqual({
+      ok: true,
+      content: 'en_US: hola',
+      meta: { provider: 'deepl' },
+    })
+    expect(deps.translateTo).toHaveBeenCalledWith('en_US', 'hola', {
+      signal,
+      sourceLanguage: 'es_AR',
+      onStage: onProgress,
+    })
+    expect(onProgress).toHaveBeenCalledWith('checking')
   })
 
   it('needs the language and the instruction of the command', async () => {

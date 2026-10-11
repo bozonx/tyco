@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { createExternalRun } from '../lib/commands/external-run'
 import { translate } from '../lib/i18n'
-import { useCommandRunnerDependencies } from './commands'
+import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 
@@ -14,7 +14,7 @@ import { useIpcStore } from './ipc'
 export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
-  const runnerDeps = useCommandRunnerDependencies()
+  const runnerDeps = useInvocationRunnerDependencies()
 
   return createExternalRun({
     claimJob: async (id) => {

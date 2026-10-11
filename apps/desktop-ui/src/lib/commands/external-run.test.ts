@@ -7,7 +7,7 @@ import {
 } from '@tyco/shared'
 
 import { createCommand } from './command-config'
-import type { CommandRunOutcome } from './command-runner'
+import type { InvocationOutcome } from '../invocation/invocation-types'
 import {
   type ExternalRunDependencies,
   type RunReport,
@@ -31,7 +31,7 @@ function setup(
     command: CommandConfig,
     text: string,
     report: RunReport
-  ) => Promise<CommandRunOutcome>
+  ) => Promise<InvocationOutcome>
 ) {
   const deps = {
     run: vi.fn(run),

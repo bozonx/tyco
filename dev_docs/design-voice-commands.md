@@ -323,14 +323,14 @@ Rust инструмента получает ошибку «инструмент
 2. **Ядро: встроенные возможности приложения** (`core.*`, §5.3). Тонкие
    адаптеры над уже существующим кодом, без нового поведения:
 
-   | Инструмент       | Вход  | Вывод | Код, который вызывается                           | Настройки          |
-   | ---------------- | ----- | ----- | ------------------------------------------------- | ------------------ |
-   | `core.insert`    | текст | нет   | вставка в окно (`typeIntoWindowAndClose`)         | —                  |
-   | `core.copy`      | текст | нет   | буфер обмена (`putIntoClipboardAndClose`)         | —                  |
-   | `core.correct`   | текст | текст | `correctText`, как в `selection-replace`          | —                  |
-   | `core.translate` | текст | текст | `translateTo(language)`                           | язык перевода      |
-   | `core.aiTask`    | текст | текст | `aiCustomPrompt(prompt)`                          | инструкция для LLM |
-   | `core.askInChat` | текст | нет   | открыть чат с текстом (`startChatWithAttachment`) | —                  |
+   | Инструмент       | Вход  | Вывод | Код, который вызывается                   | Настройки          |
+   | ---------------- | ----- | ----- | ----------------------------------------- | ------------------ |
+   | `core.insert`    | текст | нет   | вставка в окно (`typeIntoWindowAndClose`) | —                  |
+   | `core.copy`      | текст | нет   | буфер обмена (`copyText`)                 | —                  |
+   | `core.correct`   | текст | текст | `correctText`, как в `selection-replace`  | —                  |
+   | `core.translate` | текст | текст | `translateTo(language)`                   | язык перевода      |
+   | `core.aiTask`    | текст | текст | `aiCustomPrompt(prompt)`                  | инструкция для LLM |
+   | `core.askInChat` | текст | нет   | открыть чат с текстом (`attachToChat`)    | —                  |
 
    Перевод и AI-задача хранят в команде **язык** и **текст инструкции**, а не
    номер слота, как глобальные действия над выделением (`SelectionAction`):
@@ -746,6 +746,8 @@ export interface ToolCall {
   /** Where the call came from; `CommandRunSource` gains `menu` and `toolbar` */
   source: 'menu' | 'toolbar' | 'launcher' | 'external' | 'chat'
   signal: AbortSignal
+  /** Stages of a long run, for the caller to show */
+  onProgress?: (stage: string) => void
 }
 
 export interface ToolResult {
@@ -755,6 +757,8 @@ export interface ToolResult {
   message?: string
   /** Text output: handled by `afterRun`, logged, or returned to the agent */
   content?: string
+  /** Facts about the output for a caller that shows them (translation provider) */
+  meta?: Record<string, unknown>
 }
 
 export interface PluginContext {
@@ -764,7 +768,8 @@ export interface PluginContext {
 ```
 
 Инструмент сам не закрывает окно, не показывает меню результата и не пишет в
-историю: этим занимается `command-runner` по `afterRun`. Тосты успеха и
+историю: этим занимается `invocation-runner` по приёмнику, который выбирает
+контекст запуска (`resolveSink`). Тосты успеха и
 ошибки — через `ToolResult.message*`, чтобы при фоновом внешнем вызове они
 ушли в пузырь статуса и системное уведомление, а не в тост скрытого окна.
 
@@ -831,7 +836,7 @@ export interface PluginContext {
   `context.llm` отсутствует, и плагин должен либо справиться сам, либо
   вернуть понятную ошибку.
 
-Порядок в `command-runner`:
+Порядок запуска (`invocation/invoke-tool.ts`):
 
 1. получить текст (голос, выделение, поле ввода, внешний вызов);
 2. разобрать по таблице выше; ошибка разбора → оверлей с сообщением и
@@ -1068,9 +1073,15 @@ apps/desktop-ui/src/lib/
     tool-registry.ts         # built-in + plugin (+ MCP later) tools
     tool-catalog.ts          # registry → catalog sent to Rust
     tool-input.ts            # text → input: none, text, parseText, LLM extract
+  invocation/
+    invocation-types.ts      # Invocation: a tool with settings, no command needed
+    invoke-tool.ts           # availability, input, parsing, run, cancel
+    result-sinks.ts          # the context picks where the output goes
+    invocation-runner.ts     # invoke + sink + toasts
+    builtin-invocation.ts    # built-in actions and steps run core tools as is
   commands/
     command-config.ts        # defaults, validation, name normalization
-    command-runner.ts        # input, parsing, undo window, afterRun, cancel
+    command-runner.ts        # a command → its invocation; disabled ones stop
     default-commands.ts      # seeding defaults, replacing plugin menu items
     external-run.ts          # external calls run in the background
   command-launcher/
@@ -1084,7 +1095,9 @@ apps/desktop-ui/src/lib/
     phrase-lint.ts           # settings checks (§6.8)
     voice-command-session.ts # capture → transcript → resolve → run
 apps/desktop-ui/src/stores/
-  commands.ts                # thin Pinia wiring of the library and runner
+  commands.ts                # thin Pinia wiring of the default commands
+  invocations.ts             # runner dependencies; core tools for the steps
+  corrector.ts               # the one corrector under core.correct and steps
   commandLauncher.ts         # thin Pinia wiring of the overlay and voice session
 apps/desktop-ui/src/components/settings/
   SettingsCommandsTab.vue

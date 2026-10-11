@@ -237,7 +237,6 @@ export const DESKTOP_COMMANDS = {
   START_VOICE_CAPTURE: 'start_voice_capture',
   STOP_VOICE_CAPTURE: 'stop_voice_capture',
   TYPE_INTO_WINDOW_AND_CLOSE: 'type_into_window_and_close',
-  PUT_INTO_CLIPBOARD_AND_CLOSE: 'put_into_clipboard_and_close',
   SAVE_NOTE: 'save_note',
   APPEND_NOTE: 'append_note',
   NET_FETCH: 'net_fetch',

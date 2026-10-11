@@ -8,6 +8,19 @@ import {
   type ToolResult,
 } from './tool-types'
 
+export interface TranslateOptions {
+  signal: AbortSignal
+  /** Detected by the translator when absent */
+  sourceLanguage?: string
+  onStage?: (stage: string) => void
+}
+
+/** A text the LLM or the translator made, with facts about it for the caller */
+export interface TransformOutput {
+  text: string
+  meta?: Record<string, unknown>
+}
+
 export interface CoreToolDependencies {
   /** Pastes the text into the window the app was called over and hides it */
   insertText: (text: string) => Promise<void>
@@ -19,8 +32,8 @@ export interface CoreToolDependencies {
   translateTo: (
     language: string,
     text: string,
-    signal: AbortSignal
-  ) => Promise<string>
+    options: TranslateOptions
+  ) => Promise<TransformOutput>
   aiCustomPrompt: (
     prompt: string,
     text: string,
@@ -60,7 +73,10 @@ const noText: ToolResult = {
 function transformTool(
   deps: CoreToolDependencies,
   tool: Omit<ToolDefinition, 'run' | 'inputSchema'>,
-  transform: (call: ToolCall, text: string) => Promise<string> | ToolResult
+  transform: (
+    call: ToolCall,
+    text: string
+  ) => Promise<string | TransformOutput> | ToolResult
 ): ToolDefinition {
   return {
     defaultAfterRun: 'replaceSelection',
@@ -72,11 +88,15 @@ function transformTool(
       try {
         const result = transform(call, text)
         if (!(result instanceof Promise)) return result
-        const content = await result
+        const output = await result
         if (call.signal.aborted) return { ok: false, cancelled: true }
-        return content.trim()
-          ? { ok: true, content }
-          : { ok: false, messageKey: 'selection.emptyResult' }
+        const { text: content, meta } =
+          typeof output === 'string'
+            ? { text: output, meta: undefined }
+            : output
+        if (!content.trim())
+          return { ok: false, messageKey: 'selection.emptyResult' }
+        return meta ? { ok: true, content, meta } : { ok: true, content }
       } catch (error) {
         if (call.signal.aborted) return { ok: false, cancelled: true }
         return { ok: false, message: deps.describeError(error) }
@@ -174,7 +194,8 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       labelKey: 'tools.translate',
       descriptionKey: 'tools.translateDescription',
       icon: 'mdi:translate',
-      description: 'Translates the text into the language of the command',
+      description:
+        'Translates the text into the language of the command; `sourceLanguage` of the config skips detecting it',
       unavailableReason: () => deps.translatorUnavailable(),
       // one per translation language set at the time; a language added
       // later gets a command only when the user makes one
@@ -198,7 +219,12 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       if (!language) {
         return { ok: false, messageKey: 'commands.errorNoLanguage' }
       }
-      return deps.translateTo(language, text, call.signal)
+      const sourceLanguage = stringOf(call.config.sourceLanguage)
+      return deps.translateTo(language, text, {
+        signal: call.signal,
+        ...(sourceLanguage ? { sourceLanguage } : {}),
+        ...(call.onProgress ? { onStage: call.onProgress } : {}),
+      })
     }
   )
 

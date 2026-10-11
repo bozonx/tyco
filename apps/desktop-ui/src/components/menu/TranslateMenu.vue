@@ -62,9 +62,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { useCallAi } from '../../composables/useCallAi'
 import { useI18n } from '../../composables/useI18n'
 import useToast from '../../composables/useToast'
+import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import {
   AUTO_LANGUAGE_VALUE,
   buildLanguageOptions,
@@ -77,8 +77,10 @@ import {
   languageSearchNames,
   nativeLanguageName,
 } from '../../lib/translate-picker/translate-picker'
+import { translationMetaOf } from '../../lib/translation/translation-meta'
 import { type ActionItem } from '../../stores/actionMenu'
 import { useHistoryStore } from '../../stores/history'
+import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
 import { useRouteParams } from '../../stores/routeParams'
@@ -105,7 +107,7 @@ const props = withDefaults(
 
 const ipcStore = useIpcStore()
 const routeParamsStore = useRouteParams()
-const { translateTo } = useCallAi()
+const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
 const { toast, toastText } = useToast()
@@ -301,37 +303,40 @@ const translate = async (targetLanguage: string, source?: string) => {
     label: t(stageLabels.translating),
     onCancel: () => controller.abort(),
   })
-  const setStage = (stage: keyof typeof stageLabels) => {
-    if (controller.signal.aborted) return
+  const setStage = (stage: string) => {
+    if (controller.signal.aborted || !(stage in stageLabels)) return
     menuModalsStore.setPendingModal(
-      { label: t(stageLabels[stage]), onCancel: () => controller.abort() },
+      {
+        label: t(stageLabels[stage as keyof typeof stageLabels]),
+        onCancel: () => controller.abort(),
+      },
       owner
     )
   }
   try {
     const sourceId = await historyStore.saveSource(sourceText, 'translate')
     if (controller.signal.aborted) return
-    const result = await translateTo(targetLanguage, sourceText, {
+    const result = await invocations.transform('core.translate', sourceText, {
       signal: controller.signal,
-      onStage: setStage,
-      sourceLanguage: source,
+      onProgress: setStage,
+      toolConfig: { language: targetLanguage, sourceLanguage: source },
     })
-    if (!result || controller.signal.aborted) return
-    await historyStore.saveSourceResult(sourceId, result.text).catch(() => {
+    if (result.cancelled || controller.signal.aborted) return
+    if (!result.ok || result.content === undefined) {
+      toastText(toolResultMessage(result, t), 'error')
+      return
+    }
+    const text = result.content
+    await historyStore.saveSourceResult(sourceId, text).catch(() => {
       toast('history.operationFailed', 'error')
     })
     // closed meanwhile: the result is in the history, not on the screen
     if (controller.signal.aborted) return
     if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
     menuModalsStore.nextModal(MenuModals.PREVIEW, {
-      text: result.text,
+      text,
       sourceText,
-      translationMeta: {
-        provider: result.provider,
-        kind: result.kind,
-        model: result.model,
-        quality: result.quality,
-      },
+      translationMeta: translationMetaOf(result.meta),
     })
   } catch (error) {
     if (controller.signal.aborted) return

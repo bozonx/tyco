@@ -2,25 +2,47 @@ import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 
 import { createCommand } from '../commands/command-config'
+import { createCoreTools } from '../tools/core-tools'
 import { testTools } from '../tools/testing'
 import { createActionMenuStoreModel } from './action-menu-store'
 
+/** The core tools the built-in actions run, over mocks of what the app does */
+function coreTools() {
+  const services = {
+    insertText: vi.fn(async (_text: string) => {}),
+    copyText: vi.fn(async (_text: string) => {}),
+    askInChat: vi.fn(async (_text: string) => {}),
+  }
+  const tools = testTools(
+    {},
+    createCoreTools({
+      ...services,
+      correctText: vi.fn(),
+      translateTo: vi.fn(),
+      aiCustomPrompt: vi.fn(),
+      llmUnavailable: () => undefined,
+      translatorUnavailable: () => undefined,
+      describeError: String,
+    })
+  )
+  return { services, tools }
+}
+
 describe('createActionMenuStoreModel', () => {
   const setup = () => {
+    const { services, tools } = coreTools()
     const deps = {
-      typeIntoWindowAndClose: vi.fn(),
-      putIntoClipboardAndClose: vi.fn().mockResolvedValue(undefined),
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
-      startChatWithAttachment: vi.fn(),
       showToast: vi.fn(),
+      closeWindow: vi.fn(),
       minCorrectionLength: () => 10,
-      tools: testTools(),
+      tools,
     }
     const store = createActionMenuStoreModel(deps)
-    return { store, deps }
+    return { store, deps, services }
   }
 
   it('opens command pages beyond the global shortcut range with the current text', async () => {
@@ -36,7 +58,7 @@ describe('createActionMenuStoreModel', () => {
   })
 
   it('shows toast when attempting actions on empty text', async () => {
-    const { store, deps } = setup()
+    const { store, deps, services } = setup()
     const actions = store.getDefaultActions()
 
     const insertAction = actions.find(
@@ -48,12 +70,12 @@ describe('createActionMenuStoreModel', () => {
       'toast.textNotSelected',
       'error'
     )
-    expect(deps.typeIntoWindowAndClose).not.toHaveBeenCalled()
+    expect(services.insertText).not.toHaveBeenCalled()
     expect(deps.saveOutput).not.toHaveBeenCalled()
   })
 
   it('triggers insert action when valid text provided', async () => {
-    const { store, deps } = setup()
+    const { store, services } = setup()
     const actions = store.getDefaultActions()
 
     const insertAction = actions.find(
@@ -61,19 +83,31 @@ describe('createActionMenuStoreModel', () => {
     )
     await insertAction?.action('some text to insert')
 
-    expect(deps.typeIntoWindowAndClose).toHaveBeenCalledWith(
-      'some text to insert'
-    )
+    expect(services.insertText).toHaveBeenCalledWith('some text to insert')
+  })
+
+  it('copies the text and closes the window without a saved command', async () => {
+    const { store, deps, services } = setup()
+    await store
+      .getDefaultActions()
+      .find((a) => a.id === 'copyToClipboard')
+      ?.action('copied')
+
+    expect(services.copyText).toHaveBeenCalledWith('copied')
+    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.closeWindow).toHaveBeenCalled()
   })
 
   it('saves the text to history before it leaves the app', async () => {
-    const { store, deps } = setup()
+    const { store, deps, services } = setup()
     const order: string[] = []
     deps.saveOutput.mockImplementation(async () => {
       order.push('save')
     })
-    deps.typeIntoWindowAndClose.mockImplementation(() => order.push('insert'))
-    deps.putIntoClipboardAndClose.mockImplementation(async () => {
+    services.insertText.mockImplementation(async () => {
+      order.push('insert')
+    })
+    services.copyText.mockImplementation(async () => {
       order.push('copy')
     })
     const actions = store.getDefaultActions()
@@ -118,8 +152,8 @@ describe('createActionMenuStoreModel', () => {
     })
   })
 
-  it('triggers startChatWithAttachment for askInChat action', async () => {
-    const { store, deps } = setup()
+  it('opens the chat with the text for askInChat action', async () => {
+    const { store, deps, services } = setup()
     const actions = store.getDefaultActions()
 
     const askInChatAction = actions.find(
@@ -130,12 +164,11 @@ describe('createActionMenuStoreModel', () => {
       'toast.textNotSelected',
       'error'
     )
-    expect(deps.startChatWithAttachment).not.toHaveBeenCalled()
+    expect(services.askInChat).not.toHaveBeenCalled()
 
     await askInChatAction?.action('some context text')
-    expect(deps.startChatWithAttachment).toHaveBeenCalledWith(
-      'some context text'
-    )
+    expect(services.askInChat).toHaveBeenCalledWith('some context text')
+    expect(deps.saveOutput).not.toHaveBeenCalled()
   })
 
   it('allows registering custom action items', () => {
@@ -202,13 +235,10 @@ describe('createActionMenuStoreModel', () => {
       { type: 'standard' as const, actionId: 'copyToClipboard' as const },
     ]
     const deps = {
-      typeIntoWindowAndClose: vi.fn(),
-      putIntoClipboardAndClose: vi.fn().mockResolvedValue(undefined),
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
-      startChatWithAttachment: vi.fn(),
       showToast: vi.fn(),
       mainActions: () => mainActions,
       tools: testTools(),

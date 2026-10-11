@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia'
 
-import { useCallAi } from '../composables/useCallAi'
 import { translate } from '../lib/i18n'
 import { LlmError } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { commandLabel, normalizeCommands } from '../lib/commands/command-config'
 import { createCommandRunner } from '../lib/commands/command-runner'
+import { toolResultMessage } from '../lib/invocation/invocation-result'
 import { createSelectionReplace } from '../lib/selection-replace/selection-replace'
-import type { ToolResult } from '../lib/tools/tool-types'
-import { useCommandRunnerDependencies } from './commands'
+import {
+  useInvocationRunnerDependencies,
+  useInvocationsStore,
+} from './invocations'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import {
@@ -25,13 +27,6 @@ const HISTORY_OPERATIONS: Partial<
 /** A command run cancelled from within its tool */
 class SelectionAbort extends Error {}
 
-/** The text of a failed tool result, translated */
-function resultMessage(result: ToolResult): string {
-  const key = result.messageKey ? translate(result.messageKey) : ''
-  if (key && result.message) return `${key}: ${result.message}`
-  return key || result.message || ''
-}
-
 function describeError(error: unknown): string {
   if (error instanceof LlmError) return formatLlmError(error, translate)
   return error instanceof Error ? error.message : String(error)
@@ -41,8 +36,23 @@ function describeError(error: unknown): string {
 export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
   const ipcStore = useIpcStore()
   const historyStore = useHistoryStore()
-  const { correctText } = useCallAi()
-  const runner = createCommandRunner(useCommandRunnerDependencies())
+  const runner = createCommandRunner(useInvocationRunnerDependencies())
+  const invocations = useInvocationsStore()
+
+  /** Corrects the text with the `core.correct` tool */
+  const correct = async (text: string, signal: AbortSignal) => {
+    const result = await invocations.transform('core.correct', text, {
+      signal,
+      source: 'selection',
+    })
+    if (result.cancelled) throw new SelectionAbort()
+    if (!result.ok) {
+      throw new Error(
+        toolResultMessage(result, translate) || translate('toast.commandFailed')
+      )
+    }
+    return result.content ?? ''
+  }
 
   /** Runs a command of the library for the output that replaces the text */
   const runCommand = async (
@@ -69,7 +79,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
       text,
       success: result.ok,
     }
-    const message = resultMessage(result)
+    const message = toolResultMessage(result, translate)
     if (message) record.message = message
     void ipcStore.callFunction('logCommandRun', [record])
     if (result.cancelled) throw new SelectionAbort()
@@ -84,7 +94,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
   ): Promise<string> => {
     switch (action.kind) {
       case 'correction':
-        return correctText(text, { signal, notifyError: false })
+        return correct(text, signal)
       case 'command':
         return runCommand(action.commandId, text, signal)
     }

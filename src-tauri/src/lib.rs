@@ -33,7 +33,7 @@ use commands::selection::{
 use commands::voice::{start_voice_capture, stop_voice_capture};
 use commands::window::{
     close_window, copy_text, dismiss_quick_window, open_in_browser, open_in_browser_and_close,
-    put_into_clipboard_and_close, set_quick_input_region, type_into_window_and_close,
+    set_quick_input_region, type_into_window_and_close,
 };
 use models::default_init_params;
 #[cfg(target_os = "linux")]
@@ -258,7 +258,6 @@ pub fn run() {
             open_in_browser,
             open_in_browser_and_close,
             type_into_window_and_close,
-            put_into_clipboard_and_close,
             copy_text,
             commands::plugins::inspect_plugin_package,
             commands::plugins::list_installed_plugins,

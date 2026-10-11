@@ -283,43 +283,6 @@ export const useCallAi = () => {
     }
   }
 
-  const translateText = async (
-    toLangNum: number,
-    text?: string,
-    options: TranslateOptions = {}
-  ) => {
-    if (!text?.trim()) {
-      toast('toast.textNotSelected', 'warn')
-      return ''
-    }
-
-    const language = currentUserConfig().toTranslateLanguages[toLangNum]
-    if (!language) return ''
-
-    return translateTo(language, text, options)
-  }
-
-  const aiTasks = async (
-    presetNum: number,
-    text?: string,
-    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
-  ) => {
-    if (!text?.trim()) {
-      toast('toast.textNotSelected', 'warn')
-      return ''
-    }
-
-    const userConfig = currentUserConfig()
-    const task = userConfig.aiTasks[presetNum]
-    if (!task) return ''
-
-    return await aiRequest(AI_TASKS.AI_TASKS, text, {
-      ...options,
-      instructions: currentAppConfig().aiInstructions[AI_TASKS.AI_TASKS],
-      rules: task.rule,
-    })
-  }
-
   /** Applies an own request typed in the AI task menu, like a task's rule */
   const aiCustomPrompt = async (
     prompt: string,
@@ -353,9 +316,7 @@ export const useCallAi = () => {
     sendChatMessage,
     generateChatTitle,
     correctText,
-    translateText,
     translateTo,
-    aiTasks,
     aiCustomPrompt,
     saveLocalState,
   }
