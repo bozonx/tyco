@@ -44,6 +44,7 @@ declare module 'vue' {
     FieldInput: typeof import('./src/components/common/FieldInput.vue')['default']
     FieldIssues: typeof import('./src/components/settings/FieldIssues.vue')['default']
     FieldItems: typeof import('./src/components/common/FieldItems.vue')['default']
+    FieldNumber: typeof import('./src/components/common/FieldNumber.vue')['default']
     FieldRow: typeof import('./src/components/common/FieldRow.vue')['default']
     FieldsByCfg: typeof import('./src/components/common/FieldsByCfg.vue')['default']
     FieldSelect: typeof import('./src/components/common/FieldSelect.vue')['default']

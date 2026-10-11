@@ -27,8 +27,9 @@
           class="editor-history-nested"
         >
           <FieldRow :label="t('settings.editorHistoryMaxItems')" nested>
-            <FieldInput
-              type="number"
+            <FieldNumber
+              :min="1"
+              :step="1"
               :value="userConfig.editorHistoryMaxItems"
               @update:value="setEditorHistoryLimit"
             />
@@ -148,7 +149,7 @@ import { useHistoryStore } from '../../stores/history'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldInput from '../common/FieldInput.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'

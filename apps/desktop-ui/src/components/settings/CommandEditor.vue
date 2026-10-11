@@ -130,8 +130,10 @@
               "
             />
           </span>
-          <FieldInput
-            type="number"
+          <FieldNumber
+            :min="1"
+            :max="SCRIPT_MAX_TIMEOUT_SEC"
+            :step="1"
             :value="scriptConfig.timeoutSec ?? ''"
             :placeholder="String(SCRIPT_OUTPUT_TIMEOUT_SEC)"
             @update:value="updateTimeout"
@@ -228,6 +230,7 @@ import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'

@@ -4,7 +4,6 @@
     :value="String(value ?? '')"
     :placeholder="placeholder"
     class="input"
-    :class="{ 'input--number': type === 'number' }"
     @input="handleInput"
   />
 </template>
@@ -29,9 +28,5 @@ function handleInput(event: Event) {
 <style scoped>
 input {
   width: 100%;
-}
-
-.input--number {
-  width: 7.5rem;
 }
 </style>

@@ -56,7 +56,7 @@ describe('SettingsHistoryTab.vue', () => {
             props: ['value', 'options'],
             template: '<select class="field-select-stub" :data-val="value" />',
           },
-          FieldInput: {
+          FieldNumber: {
             props: ['value'],
             template:
               '<input class="field-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',

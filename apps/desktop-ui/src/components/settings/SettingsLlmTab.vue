@@ -213,8 +213,7 @@
                   />
                 </FieldRow>
                 <FieldRow :label="t('settings.temperature')">
-                  <FieldInput
-                    type="number"
+                  <FieldNumber
                     min="0"
                     max="2"
                     step="0.1"
@@ -223,8 +222,7 @@
                   />
                 </FieldRow>
                 <FieldRow :label="t('settings.maxTokens')">
-                  <FieldInput
-                    type="number"
+                  <FieldNumber
                     min="1"
                     :value="model.maxOutputTokens ?? ''"
                     :placeholder="t('settings.providerDefault')"
@@ -232,8 +230,7 @@
                   />
                 </FieldRow>
                 <FieldRow :label="t('settings.contextSize')">
-                  <FieldInput
-                    type="number"
+                  <FieldNumber
                     min="1"
                     :value="model.contextSize ?? ''"
                     :placeholder="t('settings.providerDefault')"
@@ -376,6 +373,7 @@ import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useLlmStore } from '../../stores/llm'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
