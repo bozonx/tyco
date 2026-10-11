@@ -25,6 +25,19 @@ describe('DOCX text extraction', () => {
     expect(attachment.name).toBe('report.docx')
     expect(attachment.mediaType).toContain('wordprocessingml')
   })
+  it('keeps text box paragraphs once, after their host paragraph', () => {
+    const textBox =
+      '<w:txbxContent><w:p><w:r><w:t>boxed</w:t></w:r></w:p></w:txbxContent>'
+    const attachment = readChatDocx(
+      zip(
+        `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"><w:body>` +
+          `<w:p><w:r><w:t>host</w:t></w:r><w:r><mc:AlternateContent><mc:Choice>${textBox}</mc:Choice><mc:Fallback>${textBox}</mc:Fallback></mc:AlternateContent></w:r></w:p>` +
+          '<w:p><w:r><w:t>after</w:t></w:r></w:p></w:body></w:document>'
+      ),
+      'box.docx'
+    )
+    expect(attachment.text).toBe('host\nboxed\nafter')
+  })
   it('rejects external entities, missing documents and corrupted XML', () => {
     expect(() =>
       readChatDocx(

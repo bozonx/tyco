@@ -22,10 +22,13 @@ export interface ChatAttachment {
   mediaType?: string
 }
 
-/** A normalized image owned by the Rust chat image store. */
+/**
+ * A normalized image owned by the Rust chat image store; PNG only in chats
+ * saved before WebP.
+ */
 export interface ChatImage {
   id: string
-  mediaType: 'image/png'
+  mediaType: 'image/webp' | 'image/png'
   width: number
   height: number
   size: number

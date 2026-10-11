@@ -43,6 +43,22 @@ describe('image attachment preview', () => {
     expect(wrapper.find('img').exists()).toBe(false)
     wrapper.unmount()
   })
+  it('retries a failed image on click with its own media type', async () => {
+    mocks.get
+      .mockRejectedValueOnce(new Error('Busy'))
+      .mockResolvedValueOnce(new Uint8Array([1]))
+    const wrapper = mount(ChatImageAttachment, {
+      props: { image: { ...image, mediaType: 'image/webp' } },
+    })
+    await flushPromises()
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
+    expect(mocks.get).toHaveBeenCalledTimes(2)
+    expect(wrapper.get('img').attributes('src')).toBe('blob:preview')
+    const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob
+    expect(blob.type).toBe('image/webp')
+    wrapper.unmount()
+  })
   it('does not allocate an object URL after disposal', async () => {
     let finish!: (bytes: Uint8Array) => void
     mocks.get.mockReturnValue(

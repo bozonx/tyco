@@ -1,107 +1,44 @@
 import type { ChatAttachment, ChatImage } from '@tyco/shared'
 
+import {
+  ChatFileError,
+  chatFileErrorKind,
+  type ChatFileErrorKind,
+  type ChatFileNotice,
+} from './chat-file-error'
 import { MAX_CHAT_IMAGES } from './chat-image-input'
 
 export const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
 export const MAX_CHAT_FILE_CHARACTERS = 500_000
 export const MAX_CHAT_FILES = 16
-export const TEXT_FILE_EXTENSIONS = new Set([
-  'txt',
-  'md',
-  'markdown',
-  'csv',
-  'tsv',
-  'json',
-  'jsonl',
-  'yaml',
-  'yml',
-  'xml',
-  'html',
-  'htm',
-  'css',
-  'scss',
-  'less',
-  'js',
-  'jsx',
-  'ts',
-  'tsx',
-  'vue',
-  'svelte',
-  'py',
-  'rs',
-  'go',
-  'java',
-  'kt',
-  'kts',
-  'c',
-  'h',
-  'cpp',
-  'hpp',
-  'cs',
-  'rb',
-  'php',
-  'sh',
-  'bash',
-  'zsh',
-  'sql',
-  'toml',
-  'ini',
-  'conf',
-  'log',
-  'tex',
-  'r',
-  'swift',
-  'dart',
-  'graphql',
-  'proto',
-])
-export const CHAT_FILE_ACCEPT = [
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.webp',
-  '.pdf',
-  '.docx',
-  ...Array.from(TEXT_FILE_EXTENSIONS, (extension) => `.${extension}`),
-].join(',')
-
-export type ChatFileErrorKind =
-  | 'unsupported'
-  | 'size'
-  | 'invalid'
-  | 'empty'
-  | 'textLimit'
-  | 'imageLimit'
-  | 'fileLimit'
-  | 'pdfPages'
-  | 'password'
-  | 'memory'
-
-export class ChatFileError extends Error {
-  constructor(readonly kind: ChatFileErrorKind) {
-    super(`Chat file import failed: ${kind}`)
-  }
-}
+export { ChatFileError, type ChatFileErrorKind } from './chat-file-error'
 
 export interface PreparedChatFile {
   attachments: ChatAttachment[]
   images: ChatImage[]
+  notices?: ChatFileNotice[]
 }
 
+/**
+ * Any other file is tried as text: the content, not the extension, tells a text
+ * file from a binary one.
+ */
 export function chatFileKind(name: string): 'image' | 'text' | 'pdf' | 'docx' {
   const extension = name.split('.').at(-1)?.toLowerCase() || ''
   if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) return 'image'
   if (extension === 'pdf' || extension === 'docx') return extension
-  if (
-    TEXT_FILE_EXTENSIONS.has(extension) ||
-    ['Dockerfile', 'Makefile', '.gitignore', '.env'].includes(name)
-  )
-    return 'text'
-  throw new ChatFileError('unsupported')
+  return 'text'
+}
+
+const SECRET_FILE =
+  /^(\.env(\..+)?|\.npmrc|\.netrc|\.pgpass|id_(rsa|dsa|ecdsa|ed25519)|credentials(\..+)?|.+\.(pem|key|p12|pfx))$/i
+
+/** Files that usually hold passwords or keys; the user is warned, not blocked */
+export function mayContainSecrets(name: string): boolean {
+  return SECRET_FILE.test(name)
 }
 
 export function validateChatFile(file: File) {
-  chatFileKind(file.name)
   if (!file.size) throw new ChatFileError('empty')
   if (file.size > MAX_CHAT_FILE_BYTES) throw new ChatFileError('size')
 }
@@ -122,9 +59,10 @@ export function textFileAttachment(
           : 'utf-8'
     text = new TextDecoder(encoding, { fatal: true }).decode(bytes)
   } catch {
-    throw new ChatFileError('invalid')
+    // binary formats are not valid UTF-8
+    throw new ChatFileError('unsupported')
   }
-  if (text.includes('\0')) throw new ChatFileError('invalid')
+  if (text.includes('\0')) throw new ChatFileError('unsupported')
   return extractedTextAttachment(text, name, mediaType)
 }
 
@@ -149,6 +87,7 @@ export interface ChatFileInputDeps {
   imageCount: () => number
   fileCount: () => number
   report: (file: string, error: ChatFileErrorKind) => void
+  notify: (file: string, notice: ChatFileNotice) => void
 }
 
 /**
@@ -177,16 +116,10 @@ export function createChatFileInput(deps: ChatFileInputDeps) {
             if (deps.imageCount() + prepared.images.length > MAX_CHAT_IMAGES)
               throw new ChatFileError('imageLimit')
             deps.accept(prepared)
+            for (const notice of prepared.notices || [])
+              deps.notify(file.name, notice)
           } catch (error) {
-            if (isCurrent())
-              deps.report(
-                file.name,
-                error instanceof ChatFileError
-                  ? error.kind
-                  : String(error).includes('memory limit')
-                    ? 'memory'
-                    : 'invalid'
-              )
+            if (isCurrent()) deps.report(file.name, chatFileErrorKind(error))
           }
         }
       })
@@ -220,20 +153,11 @@ export async function importDroppedChatFiles(
     if (!isCurrent()) return
     const name = path.split(/[\\/]/).at(-1) || path
     try {
-      chatFileKind(name)
       const file = await deps.read(path)
       if (!isCurrent()) return
       await deps.accept([file])
     } catch (error) {
-      if (isCurrent())
-        deps.report(
-          name,
-          error instanceof ChatFileError
-            ? error.kind
-            : String(error).includes('size limit')
-              ? 'size'
-              : 'invalid'
-        )
+      if (isCurrent()) deps.report(name, chatFileErrorKind(error))
     }
   }
 }

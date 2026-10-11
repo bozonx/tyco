@@ -36,13 +36,22 @@
       </button>
     </div>
 
-    <div v-if="attached.length" class="context-attached">
+    <div v-if="attached.length || images.length" class="context-attached">
+      <ChatImageAttachment
+        v-for="image in images"
+        :key="image.id"
+        :image="image"
+        removable
+        compact
+        @remove="chatStore.removeImage(image.id)"
+      />
       <ChatAttachment
         v-for="(attachment, index) in attachments"
         :key="`attachment-${index}`"
         :text="attachment.text"
         :source="attachment.source"
         :name="attachment.name"
+        :media-type="attachment.mediaType"
         removable
         announce
         @remove="chatStore.removeAttachment(index)"
@@ -81,15 +90,20 @@ import {
 } from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
 import ChatAttachment from './ChatAttachment.vue'
+import ChatImageAttachment from './ChatImageAttachment.vue'
 import { Icon } from '@iconify/vue'
 
-/** What goes to the next chat message along with it, and what may go */
+/**
+ * What goes to the next chat message along with it, and what may go: images and
+ * texts in one row
+ */
 const chatStore = useChatStore()
 const { t } = useI18n()
 
 const attachments = computed(() => chatStore.newChatParams?.attachments || [])
 const editorContext = computed(() => chatStore.editorContext)
 const attached = computed(() => chatStore.attachedContext)
+const images = computed(() => chatStore.pendingImages)
 
 const suggestion = computed(() => {
   const context = editorContext.value
@@ -128,6 +142,7 @@ const budgetWarning = computed(() => {
 const visible = computed(
   () =>
     attached.value.length > 0 ||
+    images.value.length > 0 ||
     Boolean(suggestion.value) ||
     Boolean(budgetWarning.value)
 )

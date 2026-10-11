@@ -14,7 +14,11 @@
       :aria-expanded="open"
       @click="open = !open"
     >
-      <Icon :icon="attachmentIcon(source)" height="14" class="shrink-0" />
+      <Icon
+        :icon="attachmentIcon(source, mediaType)"
+        height="14"
+        class="shrink-0"
+      />
       <span class="chat-attachment-label">{{ label }}</span>
       <span class="chat-attachment-excerpt">{{ excerpt }}</span>
       <span class="chat-attachment-size">{{ size }}</span>
@@ -50,6 +54,7 @@ const props = defineProps<{
   text: string
   source?: ChatAttachmentSource
   name?: string
+  mediaType?: string
   /** Follows the label, e.g. that the text changed */
   note?: string
   removable?: boolean

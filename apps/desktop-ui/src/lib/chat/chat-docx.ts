@@ -5,6 +5,44 @@ import { ChatFileError, extractedTextAttachment } from './chat-file-input'
 const MAX_XML_BYTES = 4 * 1024 * 1024
 const WORD_NAMESPACE =
   'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+const COMPATIBILITY_NAMESPACE =
+  'http://schemas.openxmlformats.org/markup-compatibility/2006'
+
+/**
+ * Paragraphs in document order. A paragraph nested in another one (a text box)
+ * becomes its own paragraph instead of being repeated inside its host, and
+ * `mc:Fallback` is skipped: it repeats its `mc:Choice` for older readers
+ */
+function collectParagraphs(
+  element: Element,
+  paragraphs: string[],
+  parts?: string[]
+) {
+  for (const child of element.children) {
+    if (
+      child.namespaceURI === COMPATIBILITY_NAMESPACE &&
+      child.localName === 'Fallback'
+    )
+      continue
+    if (child.namespaceURI === WORD_NAMESPACE) {
+      if (child.localName === 'p') {
+        const own: string[] = []
+        const index = paragraphs.push('') - 1
+        collectParagraphs(child, paragraphs, own)
+        paragraphs[index] = own.join('')
+        continue
+      }
+      if (parts && child.localName === 't') {
+        parts.push(child.textContent || '')
+        continue
+      }
+      if (parts && child.localName === 'tab') parts.push('\t')
+      if (parts && (child.localName === 'br' || child.localName === 'cr'))
+        parts.push('\n')
+    }
+    collectParagraphs(child, paragraphs, parts)
+  }
+}
 
 /**
  * Extract only document XML; never render HTML or follow external
@@ -45,22 +83,9 @@ export function readChatDocx(bytes: Uint8Array, name: string) {
   if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new ChatFileError('invalid')
   const document = new DOMParser().parseFromString(xml, 'application/xml')
   if (document.querySelector('parsererror')) throw new ChatFileError('invalid')
-  const paragraphs = Array.from(
-    document.getElementsByTagNameNS(WORD_NAMESPACE, 'p')
-  )
-  const text = paragraphs
-    .map((paragraph) => {
-      const parts: string[] = []
-      for (const element of paragraph.getElementsByTagName('*')) {
-        if (element.namespaceURI !== WORD_NAMESPACE) continue
-        if (element.localName === 't') parts.push(element.textContent || '')
-        else if (element.localName === 'tab') parts.push('\t')
-        else if (element.localName === 'br' || element.localName === 'cr')
-          parts.push('\n')
-      }
-      return parts.join('')
-    })
-    .join('\n')
+  const paragraphs: string[] = []
+  collectParagraphs(document.documentElement, paragraphs)
+  const text = paragraphs.join('\n')
   return extractedTextAttachment(
     text,
     name,

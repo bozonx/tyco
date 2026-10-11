@@ -14,7 +14,13 @@ export function attachmentLabelKey(source?: ChatAttachmentSource): string {
   }
 }
 
-export function attachmentIcon(source?: ChatAttachmentSource): string {
+export function attachmentIcon(
+  source?: ChatAttachmentSource,
+  mediaType?: string
+): string {
+  if (mediaType === 'application/pdf') return 'mdi:file-pdf-box'
+  if (mediaType?.includes('wordprocessingml')) return 'mdi:file-word-outline'
+  if (mediaType) return 'mdi:file-document-outline'
   switch (source) {
     case 'selection':
       return 'mdi:selection-drag'
@@ -52,23 +58,29 @@ export function inferAttachmentSource(
   return undefined
 }
 
-/** The attachments as the model gets them, before the question */
+const escapeAttribute = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+
+/**
+ * The attachments as the model gets them, before the question. The text stays
+ * as it is, readable and without escaping overhead; only a closing tag inside
+ * it is broken, so an attachment cannot end early
+ */
 export function formatAttachmentsForPrompt(
   attachments: ChatAttachment[] = []
 ): string {
   return attachments
     .map(({ text, source, name, mediaType }) => {
-      const escape = (value: string) =>
-        value
-          .replaceAll('&', '&amp;')
-          .replaceAll('"', '&quot;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
       const attribute =
-        (source ? ` source="${escape(source)}"` : '') +
-        (name ? ` name="${escape(name)}"` : '') +
-        (mediaType ? ` media-type="${escape(mediaType)}"` : '')
-      return `<attachment${attribute}>${JSON.stringify(text)}</attachment>`
+        (source ? ` source="${escapeAttribute(source)}"` : '') +
+        (name ? ` name="${escapeAttribute(name)}"` : '') +
+        (mediaType ? ` media-type="${escapeAttribute(mediaType)}"` : '')
+      const body = text.replace(/<(\/attachment)/gi, '<\\$1')
+      return `<attachment${attribute}>\n${body}\n</attachment>`
     })
     .join('\n\n')
 }

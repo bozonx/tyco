@@ -1,8 +1,17 @@
 import type { ChatImage } from '@tyco/shared'
 
+import { ChatFileError } from './chat-file-error'
+
+/** Mirrored by `MAX_MESSAGE_IMAGES` in `src-tauri/src/services/chat_images.rs` */
 export const MAX_CHAT_IMAGES = 4
 export const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
-export const MAX_CHAT_IMAGE_BYTES = 20 * 1024 * 1024
+/**
+ * The lossless PNG handed to Rust, which keeps it as a WebP; mirrors
+ * `MAX_SOURCE_BYTES` there
+ */
+export const MAX_CHAT_IMAGE_BYTES = 64 * 1024 * 1024
+/** The largest side providers accept (Anthropic rejects anything above) */
+const MAX_OUTPUT_DIMENSION = 8000
 /** Conservative request allowance; provider-specific estimates can replace it. */
 export const IMAGE_BUDGET_CHARACTERS = 4096 * 3
 export function imageBudgetCharacters(
@@ -110,7 +119,7 @@ export async function prepareChatImage(
   quality: 'economy' | 'balanced' | 'original' = 'balanced'
 ): Promise<Uint8Array<ArrayBuffer>> {
   if (!file.size || file.size > MAX_SOURCE_IMAGE_BYTES)
-    throw new Error('Image size limit exceeded')
+    throw new ChatFileError('size')
   const bytes = new Uint8Array(await file.arrayBuffer())
   const dimensions = imageDimensions(bytes)
   const blob = new Blob([bytes], { type: dimensions.type })
@@ -130,8 +139,11 @@ export async function prepareChatImage(
     }
     const scale = Math.min(
       1,
-      (quality === 'economy' ? 1024 : quality === 'original' ? 16_384 : 1568) /
-        Math.max(image.naturalWidth, image.naturalHeight)
+      (quality === 'economy'
+        ? 1024
+        : quality === 'original'
+          ? MAX_OUTPUT_DIMENSION
+          : 1568) / Math.max(image.naturalWidth, image.naturalHeight)
     )
     const canvas = document.createElement('canvas')
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
@@ -146,8 +158,7 @@ export async function prepareChatImage(
         'image/png'
       )
     )
-    if (normalized.size > MAX_CHAT_IMAGE_BYTES)
-      throw new Error('Image size limit exceeded')
+    if (normalized.size > MAX_CHAT_IMAGE_BYTES) throw new ChatFileError('size')
     return new Uint8Array(await normalized.arrayBuffer())
   } finally {
     URL.revokeObjectURL(url)

@@ -5,20 +5,25 @@ import {
   type ChatHistoryItem,
 } from '@tyco/shared'
 
-import { bytesToBase64 } from '../net/base64'
-
 const completedImports: string[] = []
 
+/** The PNG goes as the raw IPC body, not as base64 inside JSON */
 export async function storeChatImage(
   bytes: Uint8Array<ArrayBuffer>,
   name: string
 ): Promise<ChatImage> {
   const lease = crypto.randomUUID()
-  const image = await invoke<ChatImage>(DESKTOP_COMMANDS.STORE_CHAT_IMAGE, {
-    lease,
-    data: bytesToBase64(bytes),
-    name,
-  })
+  const image = await invoke<ChatImage>(
+    DESKTOP_COMMANDS.STORE_CHAT_IMAGE,
+    bytes,
+    {
+      headers: {
+        'x-chat-image-lease': lease,
+        // headers are ASCII; names are not
+        'x-chat-image-name': encodeURIComponent(name),
+      },
+    }
+  )
   completedImports.push(lease)
   return image
 }

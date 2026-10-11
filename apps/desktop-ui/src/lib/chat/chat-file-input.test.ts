@@ -1,29 +1,46 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { chatFileErrorKind } from './chat-file-error'
 import {
   chatFileKind,
   ChatFileError,
   createChatFileInput,
   MAX_CHAT_FILE_BYTES,
+  mayContainSecrets,
   textFileAttachment,
 } from './chat-file-input'
 
 const file = (name: string, content = 'text') => new File([content], name)
 
 describe('chat files', () => {
-  it('supports the allowlist and rejects executable, legacy office and binary files', () => {
+  it('reads known formats by extension and tries everything else as text', () => {
     expect(chatFileKind('PHOTO.JPEG')).toBe('image')
     expect(chatFileKind('report.PDF')).toBe('pdf')
     expect(chatFileKind('report.docx')).toBe('docx')
-    expect(chatFileKind('code.ts')).toBe('text')
-    for (const name of [
-      'app.exe',
-      'report.doc',
-      'report.xlsx',
-      'archive.zip',
-      'image.svg',
-    ])
-      expect(() => chatFileKind(name)).toThrow(ChatFileError)
+    for (const name of ['code.ts', 'Dockerfile', 'image.svg', 'notes.adoc'])
+      expect(chatFileKind(name)).toBe('text')
+  })
+  it('rejects binary content whatever the extension says', () => {
+    expect(() =>
+      textFileAttachment(new Uint8Array([77, 90, 0, 0]), 'app.exe')
+    ).toThrow(new ChatFileError('unsupported'))
+    expect(() =>
+      textFileAttachment(new Uint8Array([80, 75, 3, 4, 200]), 'sheet.xlsx')
+    ).toThrow(new ChatFileError('unsupported'))
+  })
+  it('recognizes files that usually hold secrets', () => {
+    for (const name of ['.env', '.env.local', 'id_ed25519', 'server.pem'])
+      expect(mayContainSecrets(name)).toBe(true)
+    for (const name of ['env.ts', 'readme.md', 'keys.txt'])
+      expect(mayContainSecrets(name)).toBe(false)
+  })
+  it('reads the error kind the Rust commands report', () => {
+    expect(chatFileErrorKind({ kind: 'size', message: 'File too large' })).toBe(
+      'size'
+    )
+    expect(chatFileErrorKind({ kind: 'memory', message: '' })).toBe('memory')
+    expect(chatFileErrorKind({ kind: 'password' })).toBe('invalid')
+    expect(chatFileErrorKind('size limit exceeded')).toBe('invalid')
   })
   it('preserves filenames, decodes BOMs and rejects binary and invalid UTF-8', () => {
     expect(
@@ -38,29 +55,36 @@ describe('chat files', () => {
   it('continues after failed files and reports exact filenames and reasons', async () => {
     const accept = vi.fn()
     const report = vi.fn()
+    const notify = vi.fn()
     const prepare = vi.fn(async (entry: File) => {
       if (entry.name === 'bad.pdf') throw new ChatFileError('password')
-      return { attachments: [{ text: entry.name }], images: [] }
+      if (entry.name === 'app.exe') throw new ChatFileError('unsupported')
+      return {
+        attachments: [{ text: entry.name }],
+        images: [],
+        notices: [{ kind: 'secrets' as const }],
+      }
     })
     const input = createChatFileInput({
       prepare,
       accept,
       report,
+      notify,
       imageCount: () => 0,
       fileCount: () => 0,
     })
     await input.add(
-      [file('bad.pdf'), file('app.exe'), file('good.txt')],
+      [file('bad.pdf'), file('app.exe'), file('.env')],
       () => true
     )
     expect(report.mock.calls).toEqual([
       ['bad.pdf', 'password'],
       ['app.exe', 'unsupported'],
     ])
-    expect(accept).toHaveBeenCalledExactlyOnceWith({
-      attachments: [{ text: 'good.txt' }],
-      images: [],
-    })
+    expect(accept).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ attachments: [{ text: '.env' }] })
+    )
+    expect(notify).toHaveBeenCalledExactlyOnceWith('.env', { kind: 'secrets' })
   })
   it('rejects oversized files before the reader and bounds each queued batch', async () => {
     const prepare = vi.fn()
@@ -69,6 +93,7 @@ describe('chat files', () => {
       prepare,
       accept: vi.fn(),
       report,
+      notify: vi.fn(),
       imageCount: () => 0,
       fileCount: () => 16,
     })
@@ -99,6 +124,7 @@ describe('chat files', () => {
       prepare,
       accept,
       report: vi.fn(),
+      notify: vi.fn(),
       imageCount: () => 0,
       fileCount: () => 0,
     })

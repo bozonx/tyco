@@ -16,6 +16,8 @@ const MAX_PDF_PAGES = 100
 export interface PdfContents {
   text?: ReturnType<typeof extractedTextAttachment>
   pages: File[]
+  /** Scanned pages left out because the message has no room for more images */
+  skippedPages?: number
 }
 
 /**
@@ -48,6 +50,7 @@ export async function readChatPdf(
     if (pdf.numPages > MAX_PDF_PAGES) throw new ChatFileError('pdfPages')
     const textParts: string[] = []
     const pages: File[] = []
+    let skippedPages = 0
     let characters = 0
     for (let index = 1; index <= pdf.numPages; index++) {
       if (!isCurrent()) return { pages: [] }
@@ -72,9 +75,9 @@ export async function readChatPdf(
               operation
             )
           )
-        if (!text || sparseImagePage) {
-          if (pages.length >= availableImages)
-            throw new ChatFileError('imageLimit')
+        if ((!text || sparseImagePage) && pages.length >= availableImages) {
+          skippedPages++
+        } else if (!text || sparseImagePage) {
           const base = page.getViewport({ scale: 1 })
           if (
             !Number.isFinite(base.width) ||
@@ -113,11 +116,14 @@ export async function readChatPdf(
       }
     }
     const text = textParts.join('\n\n')
+    if (!text && !pages.length)
+      throw new ChatFileError(skippedPages ? 'imageLimit' : 'empty')
     return {
       ...(text
         ? { text: extractedTextAttachment(text, name, 'application/pdf') }
         : {}),
       pages,
+      ...(skippedPages ? { skippedPages } : {}),
     }
   } catch (error) {
     if (error instanceof ChatFileError) throw error

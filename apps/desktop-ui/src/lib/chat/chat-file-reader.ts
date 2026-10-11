@@ -3,6 +3,7 @@ import type { ChatImage } from '@tyco/shared'
 import {
   chatFileKind,
   ChatFileError,
+  mayContainSecrets,
   textFileAttachment,
   type PreparedChatFile,
 } from './chat-file-input'
@@ -28,6 +29,7 @@ export function createChatFileReader(deps: ChatFileReaderDeps) {
       result.attachments.push(
         textFileAttachment(new Uint8Array(await file.arrayBuffer()), file.name)
       )
+      if (mayContainSecrets(file.name)) result.notices = [{ kind: 'secrets' }]
       return result
     }
     if (kind === 'docx') {
@@ -47,6 +49,8 @@ export function createChatFileReader(deps: ChatFileReaderDeps) {
         isCurrent
       )
       if (pdf.text) result.attachments.push(pdf.text)
+      if (pdf.skippedPages)
+        result.notices = [{ kind: 'pdfPagesSkipped', count: pdf.skippedPages }]
       images = pdf.pages
     }
     if (images.length > availableImages) throw new ChatFileError('imageLimit')
@@ -57,9 +61,9 @@ export function createChatFileReader(deps: ChatFileReaderDeps) {
       try {
         bytes = await prepareChatImage(image, deps.quality())
       } catch (error) {
-        throw new ChatFileError(
-          String(error).includes('size limit') ? 'size' : 'invalid'
-        )
+        throw error instanceof ChatFileError
+          ? error
+          : new ChatFileError('invalid')
       }
       if (!isCurrent()) return { attachments: [], images: [] }
       result.images.push(await deps.storeImage(bytes, image.name))

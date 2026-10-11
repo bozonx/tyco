@@ -73,22 +73,15 @@ watch(
   }
 )
 
+/**
+ * Office apps put a picture of copied text next to the text itself: a paste
+ * with text stays a text paste, and only a clipboard without text attaches its
+ * files
+ */
 function handlePaste(event: ClipboardEvent) {
   const files = Array.from(event.clipboardData?.files || [])
-  if (!files.length) return
+  if (!files.length || event.clipboardData?.getData('text/plain')) return
   event.preventDefault()
-  const text = event.clipboardData?.getData('text/plain')
-  const textarea = textareaRef.value
-  if (text && textarea) {
-    textarea.setRangeText(
-      text,
-      textarea.selectionStart,
-      textarea.selectionEnd,
-      'end'
-    )
-    chatInputStore.setValue(textarea.value)
-    resize()
-  }
   void chatStore.addFiles(files)
 }
 

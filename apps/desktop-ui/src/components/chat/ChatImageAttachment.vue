@@ -1,10 +1,10 @@
 <template>
-  <div class="image-attachment">
+  <div class="image-attachment" :class="{ 'is-compact': compact }">
     <button
       type="button"
-      :title="t('chat.viewImage')"
-      :disabled="!url"
-      @click="viewer?.showModal()"
+      :title="failed ? t('chat.imageError') : t('chat.viewImage')"
+      :disabled="!url && !failed"
+      @click="failed ? load() : viewer?.showModal()"
     >
       <img
         v-if="url"
@@ -46,7 +46,12 @@ import { getChatImage } from '../../lib/chat/chat-image-storage'
 import { Icon } from '@iconify/vue'
 import type { ChatImage } from '@tyco/shared'
 
-const props = defineProps<{ image: ChatImage; removable?: boolean }>()
+const props = defineProps<{
+  image: ChatImage
+  removable?: boolean
+  /** A smaller thumbnail, to sit in one row with the text attachments */
+  compact?: boolean
+}>()
 const emit = defineEmits<{ remove: []; loaded: [] }>()
 const { t } = useI18n()
 const url = ref('')
@@ -57,24 +62,21 @@ function release() {
   if (url.value) URL.revokeObjectURL(url.value)
   url.value = ''
 }
-watch(
-  () => props.image.id,
-  async (id) => {
-    const current = ++version
-    release()
-    failed.value = false
-    try {
-      const bytes = await getChatImage(id)
-      if (current === version)
-        url.value = URL.createObjectURL(
-          new Blob([bytes], { type: 'image/png' })
-        )
-    } catch {
-      if (current === version) failed.value = true
-    }
-  },
-  { immediate: true }
-)
+async function load() {
+  const current = ++version
+  release()
+  failed.value = false
+  try {
+    const bytes = await getChatImage(props.image.id)
+    if (current === version)
+      url.value = URL.createObjectURL(
+        new Blob([bytes], { type: props.image.mediaType })
+      )
+  } catch {
+    if (current === version) failed.value = true
+  }
+}
+watch(() => props.image.id, load, { immediate: true })
 onBeforeUnmount(() => {
   version++
   release()
@@ -98,6 +100,11 @@ function closeBackdrop(event: MouseEvent) {
   width: 8rem;
   height: 6rem;
   object-fit: contain;
+}
+.image-attachment.is-compact > button img {
+  width: auto;
+  max-width: 6rem;
+  height: 3rem;
 }
 .image-attachment span {
   display: block;

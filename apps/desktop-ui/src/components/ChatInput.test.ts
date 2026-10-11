@@ -23,19 +23,28 @@ vi.mock('../composables/useI18n', () => ({
 
 describe('chat file paste', () => {
   beforeEach(() => vi.clearAllMocks())
-  it('attaches clipboard files and inserts accompanying text at the caret', () => {
+  it('attaches clipboard files that come without text', () => {
     const wrapper = mount(ChatInput)
-    const textarea = wrapper.get('textarea').element
-    textarea.setSelectionRange(6, 11)
     const file = new File(['pixels'], 'screenshot.png', { type: 'image/png' })
     const event = new Event('paste', { cancelable: true })
     Object.defineProperty(event, 'clipboardData', {
-      value: { files: [file], getData: () => 'image' },
+      value: { files: [file], getData: () => '' },
     })
-    textarea.dispatchEvent(event)
+    wrapper.get('textarea').element.dispatchEvent(event)
     expect(event.defaultPrevented).toBe(true)
     expect(mocks.addFiles).toHaveBeenCalledWith([file])
-    expect(mocks.setValue).toHaveBeenCalledWith('Hello image')
+    wrapper.unmount()
+  })
+  it('pastes text copied from office apps without their picture of it', () => {
+    const wrapper = mount(ChatInput)
+    const file = new File(['pixels'], 'image.png', { type: 'image/png' })
+    const event = new Event('paste', { cancelable: true })
+    Object.defineProperty(event, 'clipboardData', {
+      value: { files: [file], getData: () => 'Copied cells' },
+    })
+    wrapper.get('textarea').element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    expect(mocks.addFiles).not.toHaveBeenCalled()
     wrapper.unmount()
   })
   it('leaves ordinary text paste to the textarea', () => {

@@ -2,6 +2,7 @@ use tauri::{AppHandle, State, WebviewWindow};
 
 use crate::errors::AppError;
 use crate::models::{ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem};
+use crate::services::chat_images::{ChatFileError, ChatFileErrorKind};
 use crate::services::storage;
 use crate::state::AppState;
 
@@ -159,24 +160,35 @@ pub fn clear_chat_history(app: AppHandle, state: State<'_, AppState>) -> Result<
     storage::clear_chat_history(&app)
 }
 
-/// Receives a normalized PNG; drafts never touch the filesystem.
+pub const CHAT_IMAGE_NAME_HEADER: &str = "x-chat-image-name";
+pub const CHAT_IMAGE_LEASE_HEADER: &str = "x-chat-image-lease";
+
+/// Receives a scaled PNG as the raw IPC body and keeps it as a WebP; drafts
+/// never touch the filesystem.
 #[tauri::command(async)]
 pub fn store_chat_image(
     window: WebviewWindow,
     state: State<'_, AppState>,
-    data: String,
-    name: Option<String>,
-    lease: String,
-) -> Result<crate::models::ChatImage, AppError> {
-    use base64::Engine;
-    if data.len() > (crate::services::chat_images::MAX_IMAGE_BYTES * 4 / 3 + 4) {
-        return Err(AppError::Message("Image size limit exceeded".into()));
-    }
-    let bytes = base64::engine::general_purpose::STANDARD
-        .decode(data)
-        .map_err(|_| AppError::Message("Invalid image encoding".into()))?;
+    request: tauri::ipc::Request<'_>,
+) -> Result<crate::models::ChatImage, ChatFileError> {
+    let header = |name: &str| {
+        request
+            .headers()
+            .get(name)
+            .and_then(|value| value.to_str().ok())
+            .map(|value| percent_encoding::percent_decode_str(value).decode_utf8_lossy())
+            .map(|value| value.into_owned())
+    };
+    let lease = header(CHAT_IMAGE_LEASE_HEADER)
+        .ok_or_else(|| ChatFileError::new(ChatFileErrorKind::Invalid, "Missing image lease"))?;
+    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
+        return Err(ChatFileError::new(
+            ChatFileErrorKind::Invalid,
+            "Expected a raw binary body",
+        ));
+    };
     let mut images = state.chat_images.lock().expect("chat image lock poisoned");
-    let image = images.insert(&bytes, name)?;
+    let image = images.insert(bytes, header(CHAT_IMAGE_NAME_HEADER))?;
     images.hold(&format!("{}/import/{lease}", window.label()), &image.id);
     Ok(image)
 }
@@ -213,24 +225,35 @@ pub fn sync_chat_images(
 
 /// Only bounded bytes are returned; a dropped path is never used as a webview URL.
 #[tauri::command(async)]
-pub fn read_chat_file(path: String) -> Result<tauri::ipc::Response, AppError> {
+pub fn read_chat_file(path: String) -> Result<tauri::ipc::Response, ChatFileError> {
     Ok(tauri::ipc::Response::new(read_chat_file_bytes(
         std::path::Path::new(&path),
     )?))
 }
 
-fn read_chat_file_bytes(path: &std::path::Path) -> Result<Vec<u8>, AppError> {
+fn read_chat_file_bytes(path: &std::path::Path) -> Result<Vec<u8>, ChatFileError> {
     use std::io::Read;
     const MAX_BYTES: u64 = 10 * 1024 * 1024;
-    let metadata = std::fs::metadata(path)?;
-    if !metadata.is_file() || metadata.len() > MAX_BYTES {
-        return Err(AppError::Message("File size limit exceeded".into()));
+    let unreadable =
+        |error: std::io::Error| ChatFileError::new(ChatFileErrorKind::Invalid, &error.to_string());
+    let too_large = || ChatFileError::new(ChatFileErrorKind::Size, "File size limit exceeded");
+    let metadata = std::fs::metadata(path).map_err(unreadable)?;
+    if !metadata.is_file() {
+        return Err(ChatFileError::new(
+            ChatFileErrorKind::Invalid,
+            "Not a regular file",
+        ));
     }
-    let file = std::fs::File::open(path)?;
+    if metadata.len() > MAX_BYTES {
+        return Err(too_large());
+    }
+    let file = std::fs::File::open(path).map_err(unreadable)?;
     let mut bytes = Vec::new();
-    file.take(MAX_BYTES + 1).read_to_end(&mut bytes)?;
+    file.take(MAX_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(unreadable)?;
     if bytes.len() as u64 > MAX_BYTES {
-        return Err(AppError::Message("File size limit exceeded".into()));
+        return Err(too_large());
     }
     Ok(bytes)
 }
@@ -252,7 +275,10 @@ mod tests {
             .unwrap()
             .set_len(10 * 1024 * 1024 + 1)
             .unwrap();
-        assert!(read_chat_file_bytes(&path).is_err());
+        assert_eq!(
+            read_chat_file_bytes(&path).unwrap_err().kind,
+            ChatFileErrorKind::Size
+        );
         std::fs::remove_dir_all(directory).unwrap();
     }
 }

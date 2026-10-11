@@ -242,6 +242,15 @@ export const useChatStore = defineStore('chat', () => {
     syncImages: syncChatImages,
     report: (name, kind) =>
       toast(`${name}: ${translate(fileErrorKeys[kind])}`, 'error'),
+    notify: (name, notice) =>
+      toast(
+        `${name}: ${
+          notice.kind === 'secrets'
+            ? translate('chat.fileSecretsWarning')
+            : translate('chat.pdfPagesSkipped', { count: notice.count })
+        }`,
+        'warn'
+      ),
     reportSyncError: () => toast(translate('chat.imageUnavailable'), 'error'),
   })
   onScopeDispose(files.dispose)

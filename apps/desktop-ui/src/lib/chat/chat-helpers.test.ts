@@ -24,10 +24,10 @@ describe('chat-helpers', () => {
     })
 
     expect(result.preparedMessage).toContain(
-      '<attachment>"file-a"</attachment>'
+      '<attachment>\nfile-a\n</attachment>'
     )
     expect(result.preparedMessage).toContain(
-      '<attachment source="editor-text">"file-b"</attachment>'
+      '<attachment source="editor-text">\nfile-b\n</attachment>'
     )
     expect(result.preparedMessage).toContain('Hello')
   })

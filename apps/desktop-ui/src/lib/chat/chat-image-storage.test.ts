@@ -10,8 +10,15 @@ import {
 
 it('hands completed import leases to ownership synchronization and retries failed syncs', async () => {
   mocks.invoke.mockResolvedValueOnce({ id: 'image' })
-  await storeChatImage(new Uint8Array([1]), 'a.png')
-  const lease = mocks.invoke.mock.calls[0][1].lease
+  const bytes = new Uint8Array([1])
+  await storeChatImage(bytes, 'фото.png')
+  const [command, body, options] = mocks.invoke.mock.calls[0]
+  expect(command).toBe('store_chat_image')
+  expect(body).toBe(bytes)
+  expect(options.headers['x-chat-image-name']).toBe(
+    encodeURIComponent('фото.png')
+  )
+  const lease = options.headers['x-chat-image-lease']
   mocks.invoke.mockRejectedValueOnce(new Error('IPC failed'))
   await expect(syncChatImages(['image'])).rejects.toThrow('IPC failed')
   mocks.invoke.mockResolvedValueOnce(undefined)

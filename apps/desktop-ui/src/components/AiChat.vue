@@ -61,8 +61,10 @@
       <Icon icon="mdi:arrow-down" height="18" />
     </button>
 
-    <div class="composer-wrap" @dragover.prevent @drop.prevent="dropFiles">
-      <div v-if="draggingFiles" class="text-sm text-muted" role="status">
+    <!-- files arrive through the native drag-and-drop event of the webview -->
+    <div class="composer-wrap" :class="{ 'is-dragging': draggingFiles }">
+      <div v-if="draggingFiles" class="drop-hint" role="status">
+        <Icon icon="mdi:paperclip" height="16" class="shrink-0" />
         {{ t('chat.dropFiles') }}
       </div>
       <VoiceRecognitionMenu
@@ -83,15 +85,6 @@
       <div v-else class="chat-composer">
         <ChatContextList />
 
-        <div v-if="chatStore.pendingImages.length" class="flex flex-wrap gap-2">
-          <ChatImageAttachment
-            v-for="image in chatStore.pendingImages"
-            :key="image.id"
-            :image="image"
-            removable
-            @remove="chatStore.removeImage(image.id)"
-          />
-        </div>
         <div
           v-if="chatStore.importingImages"
           class="text-sm text-muted"
@@ -151,7 +144,6 @@
         <input
           ref="filePicker"
           type="file"
-          :accept="CHAT_FILE_ACCEPT"
           multiple
           class="hidden"
           @change="pickFiles"
@@ -231,7 +223,6 @@ import { useChatVoiceInput } from '../composables/useChatVoiceInput'
 import { useI18n } from '../composables/useI18n'
 import useToast from '../composables/useToast'
 import { formatChatToMarkdown } from '../lib/chat/chat-export'
-import { CHAT_FILE_ACCEPT } from '../lib/chat/chat-file-input'
 import {
   newlineShortcut,
   resolveSubmitKey,
@@ -244,7 +235,6 @@ import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
 import ChatContextList from './chat/ChatContextList.vue'
-import ChatImageAttachment from './chat/ChatImageAttachment.vue'
 import type { DropdownMenuItem } from './common/DropdownMenu.vue'
 import VoiceRecognitionMenu from './menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
@@ -394,9 +384,6 @@ async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
 const draggingFiles = ref(false)
 let unlistenDrop: (() => void) | undefined
 let disposed = false
-function dropFiles(event: DragEvent) {
-  void chatStore.addFiles(Array.from(event.dataTransfer?.files || []))
-}
 onBeforeUnmount(() => {
   disposed = true
   unlistenDrop?.()
@@ -519,9 +506,22 @@ watch(
   flex: 1;
 }
 .composer-wrap {
+  position: relative;
   width: min(100%, 52rem);
   margin: 0 auto;
   padding: var(--space-sm) var(--space-lg) var(--space-md);
+}
+.composer-wrap.is-dragging .chat-composer {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+}
+.drop-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: var(--space-xs);
+  color: var(--color-primary);
+  font-size: 0.8rem;
 }
 .chat-composer {
   display: flex;

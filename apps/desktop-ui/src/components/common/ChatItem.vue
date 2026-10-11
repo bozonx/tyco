@@ -8,6 +8,7 @@
           :text="attachment.text"
           :source="attachment.source"
           :name="attachment.name"
+          :media-type="attachment.mediaType"
         />
       </div>
 

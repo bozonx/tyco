@@ -6,6 +6,7 @@ import type {
   ChatAttachment,
 } from '@tyco/shared'
 
+import type { ChatFileNotice } from './chat-file-error'
 import {
   createChatFileInput,
   importDroppedChatFiles,
@@ -27,6 +28,7 @@ export interface ChatFileControllerDeps {
   readDroppedFile: (path: string) => Promise<File>
   syncImages: (ids: string[]) => Promise<void>
   report: (name: string, kind: ChatFileErrorKind) => void
+  notify: (name: string, notice: ChatFileNotice) => void
   reportSyncError: () => void
 }
 
@@ -79,6 +81,7 @@ export function createChatFileController(deps: ChatFileControllerDeps) {
         draft.images = images
       },
       report: deps.report,
+      notify: deps.notify,
     })
     const task = fileQueue.then(async () => {
       if (!isCurrent()) return

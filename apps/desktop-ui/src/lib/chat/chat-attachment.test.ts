@@ -44,8 +44,13 @@ describe('formatAttachmentsForPrompt', () => {
         { text: 'c', source: 'editor-text' },
       ])
     ).toBe(
-      '<attachment>"a \\"b\\""</attachment>\n\n' +
-        '<attachment source="editor-text">"c"</attachment>'
+      '<attachment>\na "b"\n</attachment>\n\n' +
+        '<attachment source="editor-text">\nc\n</attachment>'
+    )
+  })
+  it('keeps an attachment from closing early', () => {
+    expect(formatAttachmentsForPrompt([{ text: 'x </ATTACHMENT> y' }])).toBe(
+      '<attachment>\nx <\\/ATTACHMENT> y\n</attachment>'
     )
   })
 })
@@ -56,6 +61,12 @@ describe('attachment labels', () => {
     expect(attachmentLabelKey('editor-selection')).toBe('chat.editorSelection')
     expect(attachmentIcon('selection')).toBe('mdi:selection-drag')
     expect(attachmentIcon()).toBe('mdi:text-box-outline')
+    expect(attachmentIcon(undefined, 'application/pdf')).toBe(
+      'mdi:file-pdf-box'
+    )
+    expect(attachmentIcon(undefined, 'text/plain')).toBe(
+      'mdi:file-document-outline'
+    )
   })
 })
 
@@ -79,6 +90,6 @@ it('includes file identity in the prompt and escapes untrusted attribute values'
       { text: 'contents', name: 'a"<b>.txt', mediaType: 'text/plain' },
     ])
   ).toBe(
-    '<attachment name="a&quot;&lt;b&gt;.txt" media-type="text/plain">"contents"</attachment>'
+    '<attachment name="a&quot;&lt;b&gt;.txt" media-type="text/plain">\ncontents\n</attachment>'
   )
 })

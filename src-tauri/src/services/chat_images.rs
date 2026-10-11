@@ -3,21 +3,64 @@
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::{Cursor, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
 use crate::models::{ChatHistoryItem, ChatImage};
 
-pub const MAX_IMAGE_BYTES: usize = 20 * 1024 * 1024;
+/// The lossless PNG the webview hands over before it becomes a WebP.
+pub const MAX_SOURCE_BYTES: usize = 64 * 1024 * 1024;
+/// A stored image; the strictest provider (Anthropic) accepts 5 MB per image.
+pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
+/// Images saved before WebP were PNGs of up to 20 MB.
+const MAX_STORED_BYTES: usize = 20 * 1024 * 1024;
 const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
-const MAX_DIMENSION: u32 = 16_384;
+/// The webview scales images down to this; providers reject larger ones.
+const MAX_DIMENSION: u32 = 8_000;
 const MAX_PIXELS: u64 = 24_000_000;
+/// Mirrors `MAX_CHAT_IMAGES` in `apps/desktop-ui/src/lib/chat/chat-image-input.ts`.
+const MAX_MESSAGE_IMAGES: usize = 4;
+/// Lower qualities are tried only while the image exceeds `MAX_IMAGE_BYTES`.
+const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];
+const FORMATS: [(&str, &str); 2] = [("webp", "image/webp"), ("png", "image/png")];
 
-fn invalid(message: &str) -> AppError {
-    AppError::Message(message.to_string())
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ChatFileErrorKind {
+    Size,
+    Memory,
+    Invalid,
+}
+
+/// Reaches the webview as `{ kind, message }`, so the UI never parses messages.
+#[derive(Debug, Serialize, thiserror::Error)]
+#[error("{message}")]
+pub struct ChatFileError {
+    pub kind: ChatFileErrorKind,
+    pub message: String,
+}
+
+impl ChatFileError {
+    pub fn new(kind: ChatFileErrorKind, message: &str) -> Self {
+        Self {
+            kind,
+            message: message.to_string(),
+        }
+    }
+}
+
+impl From<ChatFileError> for AppError {
+    fn from(error: ChatFileError) -> Self {
+        AppError::Message(error.message)
+    }
+}
+
+fn invalid(message: &str) -> ChatFileError {
+    ChatFileError::new(ChatFileErrorKind::Invalid, message)
 }
 
 pub fn validate_id(id: &str) -> Result<(), AppError> {
@@ -26,15 +69,34 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
     {
-        return Err(invalid("Invalid image id"));
+        return Err(AppError::Message("Invalid image id".into()));
     }
     Ok(())
 }
 
-/// Decode and re-encode pixels, never carrying source metadata onto disk.
-fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), AppError> {
-    if bytes.is_empty() || bytes.len() > MAX_IMAGE_BYTES {
-        return Err(invalid("Image size limit exceeded"));
+fn extension(media_type: &str) -> Option<&'static str> {
+    FORMATS
+        .iter()
+        .find(|(_, known)| *known == media_type)
+        .map(|(extension, _)| *extension)
+}
+
+fn within_limits(width: u32, height: u32) -> bool {
+    width > 0
+        && height > 0
+        && width <= MAX_DIMENSION
+        && height <= MAX_DIMENSION
+        && u64::from(width) * u64::from(height) <= MAX_PIXELS
+}
+
+/// Decode the webview's PNG and encode the pixels as a WebP, never carrying
+/// source metadata onto disk.
+fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), ChatFileError> {
+    if bytes.is_empty() || bytes.len() > MAX_SOURCE_BYTES {
+        return Err(ChatFileError::new(
+            ChatFileErrorKind::Size,
+            "Image size limit exceeded",
+        ));
     }
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_limits(png::Limits {
@@ -44,11 +106,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         .read_info()
         .map_err(|_| invalid("Invalid PNG image"))?;
     let info = reader.info();
-    if info.width == 0
-        || info.height == 0
-        || info.width > MAX_DIMENSION
-        || info.height > MAX_DIMENSION
-        || u64::from(info.width) * u64::from(info.height) > MAX_PIXELS
+    if !within_limits(info.width, info.height)
         || info.animation_control.is_some()
         || info.bit_depth != png::BitDepth::Eight
         || !matches!(info.color_type, png::ColorType::Rgb | png::ColorType::Rgba)
@@ -59,30 +117,63 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     let output = reader
         .next_frame(&mut pixels)
         .map_err(|_| invalid("Invalid PNG pixels"))?;
-    let mut normalized = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut normalized, output.width, output.height);
-        encoder.set_color(output.color_type);
-        encoder.set_depth(output.bit_depth);
-        let mut writer = encoder
-            .write_header()
-            .map_err(|_| invalid("PNG encoding failed"))?;
-        writer
-            .write_image_data(&pixels[..output.buffer_size()])
-            .map_err(|_| invalid("PNG encoding failed"))?;
-    }
-    if normalized.len() > MAX_IMAGE_BYTES {
-        return Err(invalid("Image size limit exceeded"));
-    }
-    let image = ChatImage {
-        id: format!("{:x}", Sha256::digest(&normalized)),
-        media_type: "image/png".into(),
-        width: output.width,
-        height: output.height,
-        size: normalized.len(),
-        name: name.map(|name| name.chars().take(255).collect()),
+    let pixels = &pixels[..output.buffer_size()];
+    let encoder = if output.color_type == png::ColorType::Rgba {
+        webp::Encoder::from_rgba(pixels, output.width, output.height)
+    } else {
+        webp::Encoder::from_rgb(pixels, output.width, output.height)
     };
-    Ok((image, normalized))
+    for quality in WEBP_QUALITIES {
+        let encoded = encoder
+            .encode_simple(false, quality)
+            .map_err(|_| invalid("WebP encoding failed"))?;
+        if encoded.len() > MAX_IMAGE_BYTES {
+            continue;
+        }
+        let image = ChatImage {
+            id: format!("{:x}", Sha256::digest(&*encoded)),
+            media_type: "image/webp".into(),
+            width: output.width,
+            height: output.height,
+            size: encoded.len(),
+            name: name.map(|name| name.chars().take(255).collect()),
+        };
+        return Ok((image, encoded.to_vec()));
+    }
+    Err(ChatFileError::new(
+        ChatFileErrorKind::Size,
+        "Image size limit exceeded",
+    ))
+}
+
+/// Dimensions from the header: stored bytes are already normalized and are
+/// verified by their hash, so they are never re-encoded.
+fn stored_dimensions(bytes: &[u8], media_type: &str) -> Result<(u32, u32), ChatFileError> {
+    let (width, height) = if media_type == "image/webp" {
+        let features =
+            webp::BitstreamFeatures::new(bytes).ok_or_else(|| invalid("Invalid WebP image"))?;
+        if features.has_animation() {
+            return Err(invalid("Animated images are not supported"));
+        }
+        (features.width(), features.height())
+    } else {
+        let reader = png::Decoder::new(Cursor::new(bytes))
+            .read_info()
+            .map_err(|_| invalid("Invalid PNG image"))?;
+        (reader.info().width, reader.info().height)
+    };
+    // Images saved before WebP could be up to 16384 pixels wide.
+    if width == 0 || height == 0 || u64::from(width) * u64::from(height) > MAX_PIXELS {
+        return Err(invalid("Unsupported image dimensions"));
+    }
+    Ok((width, height))
+}
+
+fn stored_file(directory: &Path, id: &str) -> Option<(PathBuf, &'static str)> {
+    FORMATS.iter().find_map(|(extension, media_type)| {
+        let path = directory.join(format!("{id}.{extension}"));
+        path.is_file().then_some((path, *media_type))
+    })
 }
 
 #[derive(Default)]
@@ -106,7 +197,7 @@ impl ChatImageStore {
         });
     }
 
-    fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
+    fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), ChatFileError> {
         self.expire_owners();
         if self.images.contains_key(&image.id) {
             return Ok(());
@@ -123,7 +214,10 @@ impl ChatImageStore {
             });
         }
         if self.size + bytes.len() > MAX_SESSION_BYTES {
-            return Err(invalid("Chat image session memory limit exceeded"));
+            return Err(ChatFileError::new(
+                ChatFileErrorKind::Memory,
+                "Chat image session memory limit exceeded",
+            ));
         }
         self.size += bytes.len();
         self.images.insert(image.id.clone(), (image, bytes));
@@ -175,7 +269,11 @@ impl ChatImageStore {
         self.owners.remove(owner);
     }
 
-    pub fn insert(&mut self, bytes: &[u8], name: Option<String>) -> Result<ChatImage, AppError> {
+    pub fn insert(
+        &mut self,
+        bytes: &[u8],
+        name: Option<String>,
+    ) -> Result<ChatImage, ChatFileError> {
         let (image, bytes) = normalize(bytes, name)?;
         self.remember(image.clone(), bytes)?;
         Ok(image)
@@ -186,25 +284,34 @@ impl ChatImageStore {
         if let Some((_, bytes)) = self.images.get(id) {
             return Ok(bytes.clone());
         }
+        let (path, media_type) = stored_file(directory, id)
+            .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
         let mut bytes = Vec::new();
-        fs::File::open(directory.join(format!("{id}.png")))?
-            .take((MAX_IMAGE_BYTES + 1) as u64)
+        fs::File::open(path)?
+            .take((MAX_STORED_BYTES + 1) as u64)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > MAX_IMAGE_BYTES || format!("{:x}", Sha256::digest(&bytes)) != id {
-            return Err(invalid("Corrupted chat image"));
+        if bytes.len() > MAX_STORED_BYTES || format!("{:x}", Sha256::digest(&bytes)) != id {
+            return Err(AppError::Message("Corrupted chat image".into()));
         }
-        let (image, normalized) = normalize(&bytes, None)?;
-        if image.id != id {
-            return Err(invalid("Noncanonical chat image"));
-        }
-        self.remember(image, normalized)?;
+        let (width, height) = stored_dimensions(&bytes, media_type)?;
+        let image = ChatImage {
+            id: id.to_string(),
+            media_type: media_type.into(),
+            width,
+            height,
+            size: bytes.len(),
+            name: None,
+        };
+        self.remember(image, bytes.clone())?;
         Ok(bytes)
     }
 
     pub fn persist(&mut self, directory: &Path, chat: &ChatHistoryItem) -> Result<(), AppError> {
         for message in &chat.messages {
-            if message.images.len() > 4 || (!message.images.is_empty() && message.role != "user") {
-                return Err(invalid("Unsupported chat image message"));
+            if message.images.len() > MAX_MESSAGE_IMAGES
+                || (!message.images.is_empty() && message.role != "user")
+            {
+                return Err(AppError::Message("Unsupported chat image message".into()));
             }
             for image in &message.images {
                 let bytes = self.get(directory, &image.id)?;
@@ -214,10 +321,12 @@ impl ChatImageStore {
                     || canonical.size != image.size
                     || canonical.media_type != image.media_type
                 {
-                    return Err(invalid("Invalid chat image metadata"));
+                    return Err(AppError::Message("Invalid chat image metadata".into()));
                 }
+                let extension = extension(&canonical.media_type)
+                    .ok_or_else(|| AppError::Message("Unsupported chat image type".into()))?;
                 fs::create_dir_all(directory)?;
-                let path = directory.join(format!("{}.png", image.id));
+                let path = directory.join(format!("{}.{extension}", image.id));
                 if !path.exists() {
                     write_private_bytes(&path, &bytes)?;
                 }
@@ -255,7 +364,10 @@ pub fn collect_orphans(chats_dir: &Path) -> Result<(), AppError> {
     for entry in fs::read_dir(directory)? {
         let path = entry?.path();
         if path.is_file()
-            && path.extension().is_some_and(|ext| ext == "png")
+            && path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| FORMATS.iter().any(|(known, _)| *known == ext))
             && path
                 .file_stem()
                 .and_then(|id| id.to_str())
@@ -353,7 +465,12 @@ mod tests {
     #[test]
     fn rejects_invalid_input_and_paths() {
         assert!(normalize(b"not a PNG", None).is_err());
-        assert!(normalize(&vec![0; MAX_IMAGE_BYTES + 1], None).is_err());
+        assert_eq!(
+            normalize(&vec![0; MAX_SOURCE_BYTES + 1], None)
+                .unwrap_err()
+                .kind,
+            ChatFileErrorKind::Size
+        );
         assert!(validate_id("../secret").is_err());
     }
 
@@ -393,7 +510,7 @@ mod tests {
         collect_orphans(&directory).unwrap();
         assert!(!directory
             .join("images")
-            .join(format!("{}.png", image.id))
+            .join(format!("{}.webp", image.id))
             .exists());
         assert!(store.get(&directory.join("images"), &image.id).is_ok());
         fs::remove_dir_all(directory).unwrap();
@@ -447,14 +564,35 @@ mod tests {
                 .write_image_data(&[10, 20, 30, 255])
                 .unwrap();
         }
-        let (_, clean) = normalize(&bytes, None).unwrap();
-        let info = png::Decoder::new(Cursor::new(&clean)).read_info().unwrap();
-        assert!(info.info().uncompressed_latin1_text.is_empty());
+        let (image, clean) = normalize(&bytes, None).unwrap();
+        assert_eq!(image.media_type, "image/webp");
+        assert_eq!(&clean[..4], b"RIFF");
+        assert_eq!(&clean[8..12], b"WEBP");
+        assert!(!clean
+            .windows(b"private-location".len())
+            .any(|window| window == b"private-location"));
         let mut oversized = Vec::new();
         {
             let encoder = png::Encoder::new(&mut oversized, MAX_DIMENSION + 1, 1);
             let _ = encoder.write_header().unwrap();
         }
         assert!(normalize(&oversized, None).is_err());
+    }
+
+    #[test]
+    fn reads_legacy_png_files_without_re_encoding_them() {
+        let directory =
+            std::env::temp_dir().join(format!("tyco-chat-legacy-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&directory);
+        fs::create_dir_all(&directory).unwrap();
+        let bytes = png();
+        let id = format!("{:x}", Sha256::digest(&bytes));
+        fs::write(directory.join(format!("{id}.png")), &bytes).unwrap();
+        let mut store = ChatImageStore::default();
+        assert_eq!(store.get(&directory, &id).unwrap(), bytes);
+        assert_eq!(store.images[&id].0.media_type, "image/png");
+        fs::write(directory.join(format!("{id}.png")), b"tampered").unwrap();
+        assert!(ChatImageStore::default().get(&directory, &id).is_err());
+        fs::remove_dir_all(directory).unwrap();
     }
 }

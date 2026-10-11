@@ -54,7 +54,7 @@ describe('llm-prompt', () => {
     )
 
     expect(prompt.messages[0]?.content).toContain(
-      '<attachment>"Source text"</attachment>'
+      '<attachment>\nSource text\n</attachment>'
     )
     expect(prompt.messages[0]?.content).toContain('Source text')
     expect(prompt.messages[0]?.content).toContain('Explain it')

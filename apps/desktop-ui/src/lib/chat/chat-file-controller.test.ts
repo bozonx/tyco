@@ -26,6 +26,7 @@ function setup() {
     readDroppedFile: async () => new File(['file'], 'a.png'),
     syncImages,
     report,
+    notify: vi.fn(),
     reportSyncError: vi.fn(),
   })
   return { controller, draft, syncImages, prepare, report }
@@ -96,6 +97,7 @@ describe('chat file controller ownership', () => {
         }),
       syncImages: vi.fn(async () => undefined),
       report: vi.fn(),
+      notify: vi.fn(),
       reportSyncError: vi.fn(),
     })
     const importing = controller.addDroppedFiles(['/tmp/a.png'])
