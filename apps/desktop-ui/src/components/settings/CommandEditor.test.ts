@@ -90,8 +90,6 @@ describe('CommandEditor.vue', () => {
     expect(selects[1].find('option[value="replaceSelection"]').exists()).toBe(
       false
     )
-    expect(wrapper.text()).toContain('commands.resultMenuBehavior')
-    expect(wrapper.text()).toContain('commands.resultExternalBehavior')
     await selects[0].setValue('copy')
     expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
       withSelection: 'copy',
@@ -121,6 +119,39 @@ describe('CommandEditor.vue', () => {
         .find('.command-cli')
         .text()
     ).toBe('tyco-ctl run sc1')
+  })
+
+  it('shows the fixed result only where the command is placed', () => {
+    const command = script({ command: 'ls' }, { name: 'ls' })
+    const hidden = mountEditor(command).text()
+    expect(hidden).not.toContain('commands.resultMenuBehavior')
+    expect(hidden).not.toContain('commands.resultExternalBehavior')
+    expect(hidden).toContain('commands.placeExternalOff')
+    const placed = mountEditor(
+      { ...command, availableIn: { external: true, chat: false } },
+      { menuSlot: 0 }
+    ).text()
+    expect(placed).toContain('commands.resultMenuBehavior')
+    expect(placed).toContain('commands.resultExternalBehavior')
+    expect(placed).toContain('commands.placeExternalOn')
+  })
+
+  it('labels the only quick-command select of a command without text', () => {
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    expect(wrapper.findAll('select')).toHaveLength(1)
+    expect(wrapper.text()).toContain('commands.launcherResult')
+    expect(wrapper.text()).not.toContain('commands.launcherWithoutSelection')
+  })
+
+  it('opens the advanced settings to allow a call from outside', async () => {
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    const advanced = wrapper.findAll('details').at(-1)!
+    expect(advanced.element.open).toBe(false)
+    const external = wrapper
+      .findAll('.command-place')
+      .find((place) => place.text().includes('commands.externalRun'))!
+    await external.find('button').trigger('click')
+    expect(advanced.element.open).toBe(true)
   })
 
   it('shows where the command is placed and leads to those settings', async () => {
