@@ -1,6 +1,51 @@
 use super::*;
 
 const CHAT_INDEX_FILE: &str = "index.json";
+const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
+
+/// The index and optional chat replacement are committed together. The journal
+/// remains until cleanup finishes, so interrupted saves and deletes are replayed.
+#[derive(Serialize, Deserialize)]
+struct ChatTransaction {
+    history: Vec<ChatHistoryItem>,
+    chat: Option<ChatHistoryItem>,
+}
+
+fn commit_chat_transaction(chats_dir: &Path, transaction: ChatTransaction) -> Result<(), AppError> {
+    validate_chat_transaction(&transaction)?;
+    write_json(&chats_dir.join(CHAT_TRANSACTION_FILE), &transaction)?;
+    recover_chat_transaction(chats_dir)
+}
+
+fn validate_chat_transaction(transaction: &ChatTransaction) -> Result<(), AppError> {
+    for item in &transaction.history {
+        sanitize_chat_id(&item.id)?;
+    }
+    if let Some(chat) = &transaction.chat {
+        sanitize_chat_id(&chat.id)?;
+    }
+    Ok(())
+}
+
+pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError> {
+    let journal = chats_dir.join(CHAT_TRANSACTION_FILE);
+    let raw = match fs::read(&journal) {
+        Ok(raw) => raw,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error.into()),
+    };
+    // A damaged journal is an error, never permission to delete stored chats.
+    let transaction: ChatTransaction = serde_json::from_slice(&raw)?;
+    validate_chat_transaction(&transaction)?;
+    if let Some(chat) = transaction.chat {
+        let id = sanitize_chat_id(&chat.id)?;
+        write_json(&chats_dir.join(format!("{id}.json")), &chat)?;
+    }
+    write_json(&chats_dir.join(CHAT_INDEX_FILE), &transaction.history)?;
+    remove_orphan_chat_files(chats_dir, &transaction.history)?;
+    remove_file_if_exists(&journal)?;
+    crate::services::atomic_file::sync_parent(&journal)
+}
 
 pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
     load_chat_index(&app_data_sub_dir(app, "chats")?)
@@ -10,6 +55,7 @@ pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppErro
 /// be read is built anew from the chat files: the chats are all there, and
 /// an empty index would have the next save remove them as orphans.
 fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
+    recover_chat_transaction(chats_dir)?;
     let index_path = chats_dir.join(CHAT_INDEX_FILE);
     if let Some(history) = read_or_quarantine(&index_path, |raw| Ok(serde_json::from_str(raw)?))? {
         return Ok(history);
@@ -31,8 +77,8 @@ fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
 /// orphan cleanup.
 fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
     let mut history = Vec::new();
-    for entry in fs::read_dir(chats_dir)?.flatten() {
-        let path = entry.path();
+    for entry in fs::read_dir(chats_dir)? {
+        let path = entry?.path();
         if chat_file_id(&path).is_none() || !path.is_file() {
             continue;
         }
@@ -78,6 +124,7 @@ pub fn save_chat_history(
         return Ok(());
     }
 
+    sanitize_chat_id(&chat_history_item.id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = get_chat_history(app)?;
 
@@ -87,15 +134,15 @@ pub fn save_chat_history(
         .expect("chat image lock poisoned")
         .persist(&chats_dir.join("images"), &chat_history_item)?;
 
-    // Save full chat to its own file
-    let chat_file_path =
-        chats_dir.join(format!("{}.json", sanitize_chat_id(&chat_history_item.id)?));
-    write_json(&chat_file_path, &chat_history_item)?;
-
     upsert_chat_index(&mut history, &chat_history_item);
     policy.drop_expired(&mut history, now_ms());
-    write_json(&chats_dir.join("index.json"), &history)?;
-    remove_orphan_chat_files(&chats_dir, &history)
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history,
+            chat: Some(chat_history_item),
+        },
+    )
 }
 
 /// Puts the chat on top of the index, without its messages to keep the index
@@ -131,18 +178,19 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<ChatHistoryItem>, 
 /// the index change: a rename is not activity in the chat.
 pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
+    let mut history = get_chat_history(app)?;
     let Some(mut chat) = get_chat(app, id.clone())? else {
         return Err(AppError::Message(String::from("Chat not found")));
     };
     chat.description = description;
-    write_json(
-        &chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?)),
-        &chat,
-    )?;
-
-    let mut history = get_chat_history(app)?;
     rename_in_chat_index(&mut history, &id, &chat.description);
-    write_json(&chats_dir.join("index.json"), &history)
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history,
+            chat: Some(chat),
+        },
+    )
 }
 
 fn rename_in_chat_index(history: &mut [ChatHistoryItem], id: &str, description: &str) {
@@ -153,8 +201,11 @@ fn rename_in_chat_index(history: &mut [ChatHistoryItem], id: &str, description: 
 
 /// Ids of the chats whose title or messages contain `query`, in index order.
 /// The index holds no messages, so each chat file is read.
-pub fn search_chat_history(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
-    let history = get_chat_history(app)?;
+pub(super) fn search_chats(
+    app: &AppHandle,
+    history: Vec<ChatHistoryItem>,
+    query: String,
+) -> Result<Vec<String>, AppError> {
     let mut found = Vec::new();
 
     for item in history {
@@ -184,20 +235,17 @@ fn chat_matches(chat: &ChatHistoryItem, query: &str) -> bool {
 }
 
 pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppError> {
-    let file_name = format!("{}.json", sanitize_chat_id(&id)?);
+    sanitize_chat_id(&id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = get_chat_history(app)?;
     history.retain(|item| item.id != id);
-    write_json(&chats_dir.join("index.json"), &history)?;
-
-    let chat_file_path = chats_dir.join(file_name);
-    if chat_file_path.exists() {
-        if let Err(error) = fs::remove_file(&chat_file_path) {
-            log::warn!("Could not remove {}: {error}", chat_file_path.display());
-        }
-    }
-
-    crate::services::chat_images::collect_orphans(&chats_dir)
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history,
+            chat: None,
+        },
+    )
 }
 
 /// What the settings say about the chat history.
@@ -302,13 +350,26 @@ pub(super) fn enforce_chat_history_policy(
     }
 
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    write_json(&chats_dir.join("index.json"), &history)?;
-    remove_orphan_chat_files(&chats_dir, &history)
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history,
+            chat: None,
+        },
+    )
 }
 
 /// Removes the index, chat files, and persisted image bytes.
 pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
+    recover_chat_transaction(&chats_dir)?;
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history: Vec::new(),
+            chat: None,
+        },
+    )?;
     let images_dir = chats_dir.join("images");
     if images_dir.exists() {
         fs::remove_dir_all(images_dir)?;
@@ -333,7 +394,7 @@ fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
             .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_');
 
     if !is_safe {
-        return Err(AppError::Message(String::from("Invalid chat id")));
+        return Err(AppError::InvalidInput(String::from("Invalid chat id")));
     }
 
     Ok(id.to_string())
@@ -347,15 +408,14 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatHistoryItem]) -> Re
         .map(|item| item.id.as_str())
         .collect::<std::collections::HashSet<_>>();
 
-    if let Ok(entries) = fs::read_dir(chats_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            let orphan = chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
-            if orphan && path.is_file() {
-                fs::remove_file(path)?;
-            }
+    for entry in fs::read_dir(chats_dir)? {
+        let path = entry?.path();
+        let orphan = chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
+        if orphan && path.is_file() {
+            fs::remove_file(&path)?;
         }
     }
+    crate::services::atomic_file::sync_parent(&chats_dir.join(CHAT_INDEX_FILE))?;
 
     crate::services::chat_images::collect_orphans(chats_dir)
 }
@@ -388,6 +448,92 @@ mod tests {
             last_msg_date: String::from("0"),
             messages: Vec::new(),
         }
+    }
+
+    #[test]
+    fn an_interrupted_save_replays_before_orphan_cleanup() {
+        let dir = temp_dir("interrupted-save");
+        let old = chat_item("old");
+        let new = chat_item("new");
+        write_json(&dir.join(CHAT_INDEX_FILE), &vec![old.clone()]).unwrap();
+        write_json(&dir.join("old.json"), &old).unwrap();
+        let journal = ChatTransaction {
+            history: vec![new.clone(), old],
+            chat: Some(new.clone()),
+        };
+        write_json(&dir.join(CHAT_TRANSACTION_FILE), &journal).unwrap();
+        // The process stopped after the chat was written but before the index.
+        write_json(&dir.join("new.json"), &new).unwrap();
+        let history = load_chat_index(&dir).unwrap();
+        assert_eq!(
+            history
+                .iter()
+                .map(|item| item.id.as_str())
+                .collect::<Vec<_>>(),
+            ["new", "old"]
+        );
+        remove_orphan_chat_files(&dir, &history).unwrap();
+        assert!(dir.join("new.json").exists());
+        assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
+        let dir = temp_dir("interrupted-delete");
+        let chat = chat_item("removed");
+        write_json(&dir.join("removed.json"), &chat).unwrap();
+        write_json(
+            &dir.join(CHAT_TRANSACTION_FILE),
+            &ChatTransaction {
+                history: Vec::new(),
+                chat: None,
+            },
+        )
+        .unwrap();
+        assert!(load_chat_index(&dir).unwrap().is_empty());
+        assert!(!dir.join("removed.json").exists());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
+        let dir = temp_dir("invalid-save");
+        let transaction = ChatTransaction {
+            history: vec![chat_item("../invalid")],
+            chat: None,
+        };
+        assert!(commit_chat_transaction(&dir, transaction).is_err());
+        assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
+        assert!(load_chat_index(&dir).unwrap().is_empty());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_journal_replays_even_if_no_chat_file_was_written_yet() {
+        let dir = temp_dir("journal-only");
+        let chat = chat_item("new");
+        write_json(
+            &dir.join(CHAT_TRANSACTION_FILE),
+            &ChatTransaction {
+                history: vec![chat.clone()],
+                chat: Some(chat),
+            },
+        )
+        .unwrap();
+        assert_eq!(load_chat_index(&dir).unwrap()[0].id, "new");
+        assert!(dir.join("new.json").exists());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_broken_transaction_never_runs_orphan_cleanup() {
+        let dir = temp_dir("broken-transaction");
+        write_json(&dir.join("kept.json"), &chat_item("kept")).unwrap();
+        fs::write(dir.join(CHAT_TRANSACTION_FILE), "{").unwrap();
+        assert!(load_chat_index(&dir).is_err());
+        assert!(dir.join("kept.json").exists());
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

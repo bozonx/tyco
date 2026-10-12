@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::models::{EditorHistoryItem, InitParams};
+use crate::models::InitParams;
 use crate::services::external_commands::ToolCatalog;
 
 pub struct VoiceCaptureSession {
@@ -14,7 +14,7 @@ pub struct VoiceCaptureSession {
 
 pub struct AppState {
     params: Mutex<InitParams>,
-    history_storage: Mutex<Vec<EditorHistoryItem>>,
+    pub(crate) history: crate::services::storage::HistoryStorage,
     config_storage: Mutex<()>,
     pub chat_images: Mutex<crate::services::chat_images::ChatImageStore>,
     quitting: AtomicBool,
@@ -29,7 +29,7 @@ impl AppState {
     pub fn new(params: InitParams) -> Self {
         Self {
             params: Mutex::new(params),
-            history_storage: Mutex::new(Vec::new()),
+            history: crate::services::storage::HistoryStorage::default(),
             config_storage: Mutex::new(()),
             chat_images: Mutex::new(crate::services::chat_images::ChatImageStore::default()),
             quitting: AtomicBool::new(false),
@@ -38,14 +38,6 @@ impl AppState {
             next_voice_capture_id: AtomicU64::new(1),
             tool_catalog: Mutex::new(None),
         }
-    }
-
-    /// Serializes read-modify-write operations on the history. Holds the
-    /// editor history itself while the settings keep it in memory only.
-    pub fn lock_history_storage(&self) -> std::sync::MutexGuard<'_, Vec<EditorHistoryItem>> {
-        self.history_storage
-            .lock()
-            .expect("history storage lock poisoned")
     }
 
     /// Serializes writes of the user config and the local state, so that the

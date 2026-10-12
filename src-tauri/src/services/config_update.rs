@@ -5,12 +5,12 @@ use crate::errors::AppError;
 
 pub fn merge_config(current: &Value, base: &Value, next: &Value) -> Result<Value, AppError> {
     if !current.is_object() || !base.is_object() || !next.is_object() {
-        return Err(AppError::Message(
+        return Err(AppError::InvalidInput(
             "The user config must be an object".into(),
         ));
     }
     merge(Some(current), Some(base), Some(next), "userConfig")?
-        .ok_or_else(|| AppError::Message("The user config cannot be removed".into()))
+        .ok_or_else(|| AppError::InvalidInput("The user config cannot be removed".into()))
 }
 
 fn merge(
@@ -46,7 +46,7 @@ fn merge(
         }
         return Ok(Some(Value::Object(result)));
     }
-    Err(AppError::Message(format!(
+    Err(AppError::ConfigConflict(format!(
         "Configuration changed in another window: {path}. Reopen settings before saving this field"
     )))
 }
@@ -80,7 +80,10 @@ mod tests {
                 json!({"commands":[],"plugins":{"example":false}}),
             ),
         ] {
-            assert!(merge_config(&current, &base, &next).is_err());
+            assert!(matches!(
+                merge_config(&current, &base, &next),
+                Err(AppError::ConfigConflict(_))
+            ));
         }
     }
 
@@ -90,6 +93,9 @@ mod tests {
             merge_config(&json!({"x":2}), &json!({"x":1}), &json!({"x":2})).unwrap(),
             json!({"x":2})
         );
-        assert!(merge_config(&json!({}), &Value::Null, &json!({})).is_err());
+        assert!(matches!(
+            merge_config(&json!({}), &Value::Null, &json!({})),
+            Err(AppError::InvalidInput(_))
+        ));
     }
 }

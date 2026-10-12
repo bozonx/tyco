@@ -9,6 +9,8 @@ import {
   type IpcResult,
 } from '@tyco/shared'
 
+import { desktopErrorMessage, isDesktopError } from './ipc-error'
+
 export interface DesktopClientDeps {
   isAvailable: () => boolean
   invoke: <T>(command: string, args?: Record<string, unknown>) => Promise<T>
@@ -57,9 +59,11 @@ export function createDesktopClient(deps: DesktopClientDeps) {
       const result = await deps.invoke<T>(command, args)
       return { success: true, result }
     } catch (error) {
-      // Rust errors arrive as their message string
-      const message = error instanceof Error ? error.message : String(error)
-      return { success: false, error: message }
+      return {
+        success: false,
+        error: desktopErrorMessage(error),
+        ...(isDesktopError(error) ? { errorCode: error.code } : {}),
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import type { SocketOpener, SocketSession } from '@bozonx/ai-kit'
 import { DESKTOP_COMMANDS } from '@tyco/shared'
 
+import { DesktopIpcError } from '../desktop/ipc-error'
 import { createAsyncQueue } from './async-queue'
 import {
   abortReason,
@@ -10,6 +11,11 @@ import {
   SOCKET_ID_HEADER,
   type SocketEvent,
 } from './net-ipc'
+
+// Bound both native frames and the pending IPC promise chain.
+const MAX_FRAME_BYTES = 256 * 1024
+const MAX_PENDING_BYTES = 1024 * 1024
+const MAX_PENDING_SENDS = 128
 
 /** Close codes `@bozonx/ai-kit` treats as a normal end of a session */
 const NORMAL_CLOSE_CODES = new Set([1000, 1005])
@@ -128,11 +134,35 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
 
     // Frames are separate IPC calls, which may be handled out of order; a
     // chain keeps audio and the closing message in the order they were sent.
+    let pendingBytes = 0
+    let pendingSends = 0
+    const encoder = new TextEncoder()
     let outgoing = Promise.resolve()
     let closeRequested = false
     let sendFailed = false
 
-    const enqueue = (send: () => Promise<unknown>, cleanup = false) => {
+    const enqueue = (
+      send: () => Promise<unknown>,
+      size: number,
+      cleanup = false
+    ) => {
+      if (
+        size > MAX_FRAME_BYTES ||
+        (!cleanup &&
+          (pendingBytes + size > MAX_PENDING_BYTES ||
+            pendingSends >= MAX_PENDING_SENDS))
+      ) {
+        abortWith(
+          new DesktopIpcError(
+            'resourceLimit',
+            'WebSocket send queue limit exceeded',
+            undefined
+          )
+        )
+        return
+      }
+      pendingBytes += size
+      pendingSends += 1
       outgoing = outgoing
         .then(() => {
           if (closed || (!cleanup && sendFailed)) return
@@ -141,12 +171,21 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
         .then(
           () => undefined,
           (error: unknown) => {
-            if (sendFailed || closed) return
+            if (closed) return
+            if (cleanup) {
+              abortWith(new Error(errorMessage(error), { cause: error }))
+              return
+            }
+            if (sendFailed) return
             sendFailed = true
             queue.fail(new Error(errorMessage(error), { cause: error }))
             close()
           }
         )
+        .finally(() => {
+          pendingBytes -= size
+          pendingSends -= 1
+        })
     }
 
     const close = (payload?: string) => {
@@ -158,6 +197,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
             id,
             payload: payload ?? null,
           }),
+        payload === undefined ? 0 : encoder.encode(payload).byteLength,
         true
       )
     }
@@ -167,18 +207,22 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
       send(data) {
         if (closeRequested || closed) return
         if (typeof data === 'string') {
-          enqueue(() =>
-            ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT, {
-              id,
-              text: data,
-            })
+          enqueue(
+            () =>
+              ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT, {
+                id,
+                text: data,
+              }),
+            encoder.encode(data).byteLength
           )
           return
         }
-        enqueue(() =>
-          ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY, data, {
-            headers: { [SOCKET_ID_HEADER]: String(id) },
-          })
+        enqueue(
+          () =>
+            ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY, data, {
+              headers: { [SOCKET_ID_HEADER]: String(id) },
+            }),
+          data.byteLength
         )
       },
       close,

@@ -19,8 +19,10 @@ const hiddenText = (doc: string, caret: number): string[] => {
     selection: EditorSelection.cursor(caret),
     extensions: [markdown({ base: markdownLanguage })],
   })
-  ensureSyntaxTree(state, state.doc.length, 5000)
-  return hiddenMarkup(state).map(({ from, to }) => doc.slice(from, to))
+  expect(ensureSyntaxTree(state, state.doc.length, 5000)).not.toBeNull()
+  // Parsing updates the context; a transaction publishes it to the state.
+  const parsed = state.update({}).state
+  return hiddenMarkup(parsed).map(({ from, to }) => doc.slice(from, to))
 }
 
 describe('hiddenMarkup', () => {

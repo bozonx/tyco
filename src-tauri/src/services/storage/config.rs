@@ -738,7 +738,7 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
 }
 
 pub fn newer_config_error() -> AppError {
-    AppError::Message(String::from(
+    AppError::UnsupportedConfig(String::from(
         "The config was written by a newer version of Tyco; update Tyco to change the settings",
     ))
 }

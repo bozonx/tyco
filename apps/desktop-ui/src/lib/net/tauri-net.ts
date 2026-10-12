@@ -1,6 +1,7 @@
 import type { Transport } from '@bozonx/ai-kit'
-import { Channel, invoke } from '@tauri-apps/api/core'
+import { Channel } from '@tauri-apps/api/core'
 
+import { invokeDesktop as invoke } from '../desktop/invoke'
 import type { NetIpc } from './net-ipc'
 import { createTauriFetch } from './tauri-fetch'
 import { createTauriSocketOpener } from './tauri-socket'

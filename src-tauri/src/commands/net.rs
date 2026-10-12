@@ -101,7 +101,7 @@ pub async fn net_socket_open(
                     return;
                 }
             };
-            let (sender, receiver) = mpsc::unbounded_channel();
+            let (sender, receiver) = mpsc::channel(socket::SOCKET_QUEUE_CAPACITY);
             sockets.lock().expect("sockets lock").insert(id, sender);
             if on_event.event(&socket::SocketEvent::Open) {
                 socket::run_socket(connection, receiver, &on_event).await;
@@ -198,8 +198,10 @@ pub fn net_socket_close(
     payload: Option<String>,
 ) -> Result<(), AppError> {
     // Closing a socket that has already gone is not an error.
-    let _ = net.socket_command(id, SocketCommand::Close(payload));
-    Ok(())
+    match net.socket_command(id, SocketCommand::Close(payload)) {
+        Err(error @ AppError::ResourceLimit(_)) => Err(error),
+        _ => Ok(()),
+    }
 }
 
 #[cfg(test)]

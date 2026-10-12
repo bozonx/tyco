@@ -1,3 +1,4 @@
+import { desktopErrorMessage } from '../desktop/ipc-error'
 /**
  * The IPC surface the network adapters need, injected so they run in tests
  * without a Tauri runtime.
@@ -50,5 +51,5 @@ export function isArrayBuffer(value: unknown): value is ArrayBuffer {
 }
 
 export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
+  return desktopErrorMessage(error)
 }

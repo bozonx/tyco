@@ -1,23 +1,34 @@
 <template>
   <SettingsSection :description="t('settings.launcherCommandsHint')" bare>
-    <div class="flex items-center gap-2 mb-3">
-      <FieldSelect
-        :value="page"
-        :options="pageOptions"
-        @update:value="page = Number($event)"
-      />
-      <Button @click="addPage">{{ t('settings.addLauncherPage') }}</Button>
-      <Button :disabled="page === 0" @click="removePage">{{
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <Button
+        v-for="(_, index) in pagesCount"
+        :key="index"
+        sm
+        :variant="page === index ? 'primary' : 'neutral'"
+        class="min-w-8"
+        :title="t('settings.launcherPage', { page: index + 1 })"
+        :aria-label="t('settings.launcherPage', { page: index + 1 })"
+        @click="page = index"
+      >
+        {{ index + 1 }}
+      </Button>
+      <Button sm @click="addPage">
+        {{ t('settings.addLauncherPage') }}
+      </Button>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 mb-3">
+      <div class="flex items-center gap-2">
+        <FieldCheckbox
+          :value="takesText"
+          :label="t('settings.launcherPageTakesText')"
+          @update:value="setTakesText"
+        />
+        <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
+      </div>
+      <Button :disabled="page === 0" sm @click="removePage">{{
         t('settings.removeLauncherPage')
       }}</Button>
-    </div>
-    <div class="flex items-center gap-2 mb-3">
-      <FieldCheckbox
-        :value="takesText"
-        :label="t('settings.launcherPageTakesText')"
-        @update:value="setTakesText"
-      />
-      <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
     </div>
     <ShortcutSlots
       :items="launcherSlots"
@@ -51,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -94,12 +105,14 @@ const toolsStore = useToolsStore()
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
 const page = ref(0)
-const pageOptions = computed(() =>
-  Array.from(
-    { length: 1 + (props.userConfig.launcherPages?.length ?? 0) },
-    (_, id) => ({ id, name: t('settings.launcherPage', { page: id + 1 }) })
-  )
+const pagesCount = computed(
+  () => 1 + (props.userConfig.launcherPages?.length ?? 0)
 )
+watch(pagesCount, (count) => {
+  if (page.value >= count) {
+    page.value = Math.max(0, count - 1)
+  }
+})
 function addPage() {
   const pages = [
     ...(props.userConfig.launcherPages ?? []),

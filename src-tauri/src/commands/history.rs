@@ -16,23 +16,12 @@ fn chat_images(state: &AppState) -> std::sync::MutexGuard<'_, ChatImageStore> {
 
 #[tauri::command]
 pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        let params = state.params();
-        storage::get_editor_history(&app, &params.user_config, &mut memory)
-    })
-    .await?
+    blocking(move || storage::get_editor_history(&app)).await?
 }
 
 #[tauri::command]
 pub async fn get_chat_history(app: AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        storage::get_chat_history(&app)
-    })
-    .await?
+    blocking(move || storage::get_chat_history(&app)).await?
 }
 
 #[tauri::command]
@@ -42,24 +31,8 @@ pub async fn get_chat(
     id: String,
     lease: Option<String>,
 ) -> Result<Option<ChatHistoryItem>, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        let chat = storage::get_chat(&app, id)?;
-        if let Some(chat) = &chat {
-            let directory = storage::chat_image_directory(&app)?;
-            let mut images = chat_images(&state);
-            for image in chat.messages.iter().flat_map(|message| &message.images) {
-                // A broken image must not prevent the rest of the chat from opening.
-                if let Some(lease) = &lease {
-                    images.hold(&format!("{}/import/{lease}", window.label()), &image.id);
-                }
-                let _ = images.get(&directory, &image.id);
-            }
-        }
-        Ok(chat)
-    })
-    .await?
+    let owner = lease.map(|lease| format!("{}/import/{lease}", window.label()));
+    blocking(move || storage::get_chat(&app, id, owner)).await?
 }
 
 #[tauri::command]
@@ -67,13 +40,7 @@ pub async fn save_editor_history(
     app: AppHandle,
     entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        let params = state.params();
-        storage::save_editor_history(&app, &params.user_config, &mut memory, entry)
-    })
-    .await?
+    blocking(move || storage::save_editor_history(&app, entry)).await?
 }
 
 #[tauri::command]
@@ -82,13 +49,7 @@ pub async fn set_editor_history_result(
     id: String,
     result: String,
 ) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        let params = state.params();
-        storage::set_editor_history_result(&app, &params.user_config, &mut memory, id, result)
-    })
-    .await?
+    blocking(move || storage::set_editor_history_result(&app, id, result)).await?
 }
 
 #[tauri::command]
@@ -96,13 +57,7 @@ pub async fn restore_editor_history_item(
     app: AppHandle,
     item: EditorHistoryItem,
 ) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        let params = state.params();
-        storage::restore_editor_history_item(&app, &params.user_config, &mut memory, item)
-    })
-    .await?
+    blocking(move || storage::restore_editor_history_item(&app, item)).await?
 }
 
 #[tauri::command]
@@ -110,44 +65,22 @@ pub async fn save_chat_history(
     app: AppHandle,
     chat_history_item: ChatHistoryItem,
 ) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        let params = state.params();
-        storage::save_chat_history(&app, &params.user_config, chat_history_item)
-    })
-    .await?
+    blocking(move || storage::save_chat_history(&app, chat_history_item)).await?
 }
 
 #[tauri::command]
 pub async fn rename_chat(app: AppHandle, id: String, description: String) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        storage::rename_chat(&app, id, description)
-    })
-    .await?
+    blocking(move || storage::rename_chat(&app, id, description)).await?
 }
 
 #[tauri::command]
 pub async fn search_chat_history(app: AppHandle, query: String) -> Result<Vec<String>, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        storage::search_chat_history(&app, query)
-    })
-    .await?
+    blocking(move || storage::search_chat_history(&app, query)).await?
 }
 
 #[tauri::command]
 pub async fn remove_from_editor_history(app: AppHandle, id: String) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        let params = state.params();
-        storage::remove_from_editor_history(&app, &params.user_config, &mut memory, id)
-    })
-    .await?
+    blocking(move || storage::remove_from_editor_history(&app, id)).await?
 }
 
 #[tauri::command]
@@ -156,49 +89,18 @@ pub async fn remove_from_chat_history(
     app: AppHandle,
     id: String,
 ) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        // the images are kept for the undo; a chat that cannot be read has
-        // none to keep, and must still be removable
-        match storage::get_chat(&app, id.clone()) {
-            Ok(Some(chat)) => {
-                let directory = storage::chat_image_directory(&app)?;
-                let mut images = chat_images(&state);
-                let owner = format!("{}/undo/{id}", window.label());
-                for image in chat.messages.iter().flat_map(|message| &message.images) {
-                    images.hold_undo(&owner, &image.id);
-                    if let Err(error) = images.get(&directory, &image.id) {
-                        log::warn!("Could not preserve chat image for undo: {error}");
-                    }
-                }
-            }
-            Ok(None) => {}
-            Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
-        }
-        storage::remove_from_chat_history(&app, id)
-    })
-    .await?
+    let owner = format!("{}/undo/{id}", window.label());
+    blocking(move || storage::remove_from_chat_history(&app, id, owner)).await?
 }
 
 #[tauri::command]
 pub async fn clear_editor_history(app: AppHandle) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let mut memory = state.lock_history_storage();
-        storage::clear_editor_history(&app, &mut memory)
-    })
-    .await?
+    blocking(move || storage::clear_editor_history(&app)).await?
 }
 
 #[tauri::command]
 pub async fn clear_chat_history(app: AppHandle) -> Result<(), AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        storage::clear_chat_history(&app)
-    })
-    .await?
+    blocking(move || storage::clear_chat_history(&app)).await?
 }
 
 pub const CHAT_IMAGE_NAME_HEADER: &str = "x-chat-image-name";
@@ -245,13 +147,7 @@ pub async fn store_chat_image(
 
 #[tauri::command]
 pub async fn get_chat_image(app: AppHandle, id: String) -> Result<tauri::ipc::Response, AppError> {
-    blocking(move || {
-        let state = app.state::<AppState>();
-        let _guard = state.lock_history_storage();
-        let bytes = chat_images(&state).get(&storage::chat_image_directory(&app)?, &id)?;
-        Ok(tauri::ipc::Response::new(bytes))
-    })
-    .await?
+    blocking(move || storage::get_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
 }
 
 #[tauri::command]

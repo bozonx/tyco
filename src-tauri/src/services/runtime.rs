@@ -1,3 +1,9 @@
+mod lifecycle;
+mod tray;
+mod warmup;
+
+pub use lifecycle::{create_windows, setup, shutdown};
+
 use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -7,9 +13,7 @@ use super::activation::{StartMode, WindowProfile, WINDOW_SIZE};
 use super::activation_coordinator::{ActivationCoordinator, ActivationHost};
 use super::platform::{InputRegion, PanelKeyboard};
 
-use tauri::menu::{MenuBuilder, MenuItemBuilder};
-use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{App, AppHandle, Emitter, Manager, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 
 use crate::errors::AppError;
 use crate::state::AppState;
@@ -25,13 +29,6 @@ pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
 /// The user closed the main window, as opposed to hiding it with a hotkey or
 /// the tray: what was open in it is done with.
 pub const MAIN_WINDOW_CLOSED_EVENT: &str = "app://main-window-closed";
-const TRAY_SHOW_ID: &str = "show";
-const TRAY_CORRECT_ID: &str = "correct-selection";
-const TRAY_QUIT_ID: &str = "quit";
-const WARMUP_ENV: &str = "TYCO_QUICK_WARMUP";
-const DEFAULT_WARMUP_CYCLES: u32 = 3;
-const WARMUP_DELAY: Duration = Duration::from_millis(400);
-const WARMUP_STEP: Duration = Duration::from_millis(250);
 
 pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let params = state.params();
@@ -310,20 +307,6 @@ fn window_label_for_mode(mode: StartMode) -> &'static str {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum TrayClickAction {
-    HideActiveWindow,
-    ShowApplication,
-}
-
-fn tray_click_action(is_window_shown: bool) -> TrayClickAction {
-    if is_window_shown {
-        TrayClickAction::HideActiveWindow
-    } else {
-        TrayClickAction::ShowApplication
-    }
-}
-
 fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppError> {
     let inactive_label = if active_label == MAIN_WINDOW_LABEL {
         QUICK_WINDOW_LABEL
@@ -500,227 +483,6 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     emit_params(app, &state)
 }
 
-/// Number of warmup cycles; `TYCO_QUICK_WARMUP=0` turns the warmup off.
-fn warmup_cycles(value: Option<&str>) -> u32 {
-    value
-        .and_then(|value| value.trim().parse().ok())
-        .unwrap_or(DEFAULT_WARMUP_CYCLES)
-}
-
-/// The first one or two shows of a window after process start take the slow
-/// path: the focus comes late or not at all, and the keys typed meanwhile go to
-/// the window below (see dev_docs/quick-input-report.md). The warmup goes
-/// through them before the user presses a hotkey. It leaves `AppState` and the
-/// webview alone and gives way to a real activation at any step.
-fn spawn_quick_warmup(app: AppHandle) {
-    let cycles = warmup_cycles(std::env::var(WARMUP_ENV).ok().as_deref());
-    if cycles == 0 {
-        return;
-    }
-    thread::spawn(move || {
-        thread::sleep(WARMUP_DELAY);
-        for _ in 0..cycles {
-            let shown = on_main_thread(&app, warmup_show);
-            thread::sleep(WARMUP_STEP);
-            let hidden = on_main_thread(&app, warmup_hide);
-            if let Err(error) = shown.and(hidden) {
-                log::warn!("Quick window warmup stopped: {error}");
-                return;
-            }
-            thread::sleep(WARMUP_STEP);
-        }
-        log::debug!("Quick window warmup finished after {cycles} cycles");
-    });
-}
-
-fn quick_window_in_use(app: &AppHandle) -> bool {
-    is_quick_window_shown(
-        app.state::<RuntimeWindows>().active_label(),
-        app.state::<AppState>().params().is_window_shown,
-    )
-}
-
-/// Shows the quick window the way an activation of the write mode does, but
-/// transparent and without touching the state.
-fn warmup_show(app: &AppHandle) -> Result<(), AppError> {
-    if quick_window_in_use(app) {
-        return Ok(());
-    }
-    let window = app
-        .get_webview_window(QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-    #[cfg(target_os = "linux")]
-    window.gtk_window()?.set_opacity(0.0);
-    let layer = panel_layer(app);
-    if layer.is_none() {
-        let (width, height) = WINDOW_SIZE;
-        window.set_size(tauri::LogicalSize::new(width, height))?;
-    }
-    super::platform::apply_panel_surface(&window, WindowProfile::Panel, layer)?;
-    window.set_focusable(true)?;
-    window.show()?;
-    if let Err(error) = window.set_focus() {
-        log::warn!("Could not focus window during warmup: {error}");
-    }
-    Ok(())
-}
-
-fn warmup_hide(app: &AppHandle) -> Result<(), AppError> {
-    // the user called the window in between: it is theirs now
-    if quick_window_in_use(app) {
-        return Ok(());
-    }
-    let window = app
-        .get_webview_window(QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-    if panel_layer(app).is_some() {
-        super::platform::disable_panel_keyboard(&window)?;
-    }
-    window.hide()?;
-    // the main window shown at startup gets back the focus the warmup took
-    if app.state::<AppState>().params().is_window_shown {
-        if let Some(main) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-            if let Err(error) = main.set_focus() {
-                log::warn!("Could not return focus after warmup: {error}");
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Creates the windows of `tauri.conf.json`, which does not create them
-/// itself: it cannot know where the webviews keep their storage, and would
-/// put a development build's into the user's data directory.
-pub fn create_windows(app: &App) -> Result<(), AppError> {
-    let paths = super::app_paths::AppPaths::resolve(app.handle())?;
-    for config in &app.config().app.windows {
-        let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
-        if let Some(dir) = paths.webview_dir() {
-            builder = builder.data_directory(dir.to_path_buf());
-        }
-        builder.build()?;
-    }
-    Ok(())
-}
-
-pub fn setup(app: &mut App) -> Result<(), AppError> {
-    app.manage(ActivationCoordinator::default());
-    app.manage(super::selection_replace::SelectionRuns::default());
-    app.manage(RuntimeWindows::default());
-    let main_window = app
-        .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
-    super::platform::enable_titlebar_buttons(&main_window)?;
-    #[cfg(target_os = "linux")]
-    {
-        let supported = super::platform::panel_surface_supported();
-        if supported {
-            let window = app
-                .get_webview_window(QUICK_WINDOW_LABEL)
-                .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-            super::platform::attach_panel_surface(&window)?;
-            log::info!("Using gtk-layer-shell for the quick window");
-        } else {
-            log::info!("gtk-layer-shell is unavailable; using a regular window");
-        }
-        app.manage(LayerShell {
-            supported,
-            keyboard: PanelKeyboard::from_env(),
-        });
-    }
-    setup_tray(app)?;
-    spawn_quick_warmup(app.handle().clone());
-    Ok(())
-}
-
-fn setup_tray(app: &mut App) -> Result<(), AppError> {
-    let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show Tyco").build(app)?;
-    let correct_item =
-        MenuItemBuilder::with_id(TRAY_CORRECT_ID, "Correct selected text").build(app)?;
-    let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app)?;
-    let menu = MenuBuilder::new(app)
-        .items(&[&show_item, &correct_item])
-        .separator()
-        .items(&[&quit_item])
-        .build()?;
-
-    let tray_icon = app.default_window_icon().cloned();
-
-    let mut builder = TrayIconBuilder::with_id("main-tray");
-
-    if let Some(icon) = tray_icon {
-        builder = builder.icon(icon);
-    }
-
-    builder
-        .menu(&menu)
-        .tooltip("TyCo - typing companion")
-        .on_menu_event(move |app, event| {
-            if let Some(state) = app.try_state::<AppState>() {
-                match event.id.as_ref() {
-                    TRAY_SHOW_ID => {
-                        if let Err(error) = show_application(app) {
-                            log::error!("Could not show the application: {error}");
-                        }
-                    }
-                    TRAY_CORRECT_ID => {
-                        if let Err(error) = super::selection_replace::trigger(
-                            app,
-                            "correction",
-                            super::selection_replace::TriggerWait::Delay(
-                                super::selection_replace::TRAY_MENU_DELAY,
-                            ),
-                        ) {
-                            log::error!("Could not correct the selection: {error}");
-                        }
-                    }
-                    TRAY_QUIT_ID => {
-                        state.set_quitting(true);
-                        app.exit(0);
-                    }
-                    _ => {}
-                }
-            }
-        })
-        .on_tray_icon_event(move |tray, event| {
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
-                ..
-            } = event
-            {
-                let app = tray.app_handle();
-                if let Some(state) = app.try_state::<AppState>() {
-                    let params = state.params();
-                    let result = match tray_click_action(params.is_window_shown) {
-                        TrayClickAction::HideActiveWindow => hide_active_window(app),
-                        TrayClickAction::ShowApplication => show_application(app),
-                    };
-                    if let Err(error) = result {
-                        log::error!("Tray click failed: {error}");
-                    }
-                }
-            }
-        })
-        .build(app)?;
-    Ok(())
-}
-
-/// Gracefully shuts down background services, cancel active runs, and clean up trackers.
-pub fn shutdown(app: &AppHandle) {
-    log::info!("Initiating application graceful shutdown");
-    super::custom_actions::cancel_all_scripts();
-    if let Some(state) = app.try_state::<AppState>() {
-        super::voice::stop_capture_on_shutdown(state.inner());
-    }
-    if let Some(net) = app.try_state::<super::net::NetState>() {
-        net.close_all();
-    }
-    #[cfg(target_os = "linux")]
-    super::platform::linux::kwin::stop_tracker();
-    log::info!("Graceful shutdown complete");
-}
-
 pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEvent) {
     if let Some(state) = app.try_state::<AppState>() {
         match event {
@@ -815,14 +577,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn warmup_runs_three_cycles_unless_configured() {
-        assert_eq!(warmup_cycles(None), 3);
-        assert_eq!(warmup_cycles(Some("0")), 0);
-        assert_eq!(warmup_cycles(Some(" 1 ")), 1);
-        assert_eq!(warmup_cycles(Some("many")), 3);
-    }
-
-    #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
         for mode in [
             StartMode::Write,
@@ -845,12 +599,6 @@ mod tests {
         ] {
             assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }
-    }
-
-    #[test]
-    fn tray_click_hides_a_visible_window_and_shows_the_application_otherwise() {
-        assert_eq!(tray_click_action(true), TrayClickAction::HideActiveWindow);
-        assert_eq!(tray_click_action(false), TrayClickAction::ShowApplication);
     }
 
     #[test]

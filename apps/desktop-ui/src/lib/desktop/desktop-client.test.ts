@@ -79,6 +79,16 @@ describe('desktop client', () => {
     }
   )
 
+  it('exposes native error codes without changing the message contract', async () => {
+    const { client, invoke } = setup(true)
+    invoke.mockRejectedValue({ code: 'ioError', message: 'Permission denied' })
+    expect(await client.invoke('example')).toEqual({
+      success: false,
+      error: 'Permission denied',
+      errorCode: 'ioError',
+    })
+  })
+
   it('validates native chat events before delivering them', async () => {
     const { client, handlers, remove } = setup(true)
     const handler = vi.fn()

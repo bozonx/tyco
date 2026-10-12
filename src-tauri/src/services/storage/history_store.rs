@@ -1,0 +1,230 @@
+//! Storage owns synchronization; IPC callers never take history locks.
+use std::sync::{Mutex, MutexGuard};
+
+use tauri::{AppHandle, Manager};
+
+use super::{chat_history as chats, editor_history as editor};
+use crate::errors::AppError;
+use crate::models::{ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem};
+use crate::state::AppState;
+
+#[derive(Default)]
+pub struct HistoryStorage {
+    editor: Mutex<Vec<EditorHistoryItem>>,
+    chats: Mutex<()>,
+}
+
+impl HistoryStorage {
+    fn editor(&self) -> MutexGuard<'_, Vec<EditorHistoryItem>> {
+        self.editor.lock().expect("editor history lock poisoned")
+    }
+
+    fn chats(&self) -> MutexGuard<'_, ()> {
+        self.chats.lock().expect("chat history lock poisoned")
+    }
+
+    /// Settings and their in-memory publication share the same lock order as
+    /// all history operations: editor, chats, then params. Both repositories
+    /// observe the new policy only after its storage transition finishes.
+    pub fn apply_settings(
+        &self,
+        app: &AppHandle,
+        previous: &serde_json::Value,
+        next: &serde_json::Value,
+    ) {
+        let mut memory = self.editor();
+        let _chats = self.chats();
+        if let Err(error) = editor::apply_history_settings_change(app, previous, next, &mut memory)
+        {
+            log::error!("Could not apply the history settings: {error}");
+        }
+        app.state::<AppState>()
+            .update_params(|params| params.user_config = next.clone());
+    }
+}
+
+fn with_editor<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&serde_json::Value, &mut Vec<EditorHistoryItem>) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<AppState>();
+    let mut memory = state.history.editor();
+    operation(&state.params().user_config, &mut memory)
+}
+
+fn with_chats<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&AppState) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<AppState>();
+    let _guard = state.history.chats();
+    operation(&state)
+}
+
+pub fn get_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
+    with_editor(app, |config, memory| {
+        editor::get_editor_history(app, config, memory)
+    })
+}
+
+pub fn save_editor_history(
+    app: &AppHandle,
+    entry: EditorHistoryEntry,
+) -> Result<Option<String>, AppError> {
+    with_editor(app, |config, memory| {
+        editor::save_editor_history(app, config, memory, entry)
+    })
+}
+
+pub fn set_editor_history_result(
+    app: &AppHandle,
+    id: String,
+    result: String,
+) -> Result<(), AppError> {
+    with_editor(app, |config, memory| {
+        editor::set_editor_history_result(app, config, memory, id, result)
+    })
+}
+
+pub fn restore_editor_history_item(
+    app: &AppHandle,
+    item: EditorHistoryItem,
+) -> Result<(), AppError> {
+    with_editor(app, |config, memory| {
+        editor::restore_editor_history_item(app, config, memory, item)
+    })
+}
+
+pub fn remove_from_editor_history(app: &AppHandle, id: String) -> Result<(), AppError> {
+    with_editor(app, |config, memory| {
+        editor::remove_from_editor_history(app, config, memory, id)
+    })
+}
+
+pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
+    with_editor(app, |_, memory| editor::clear_editor_history(app, memory))
+}
+
+pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
+    with_chats(app, |_| chats::get_chat_history(app))
+}
+
+/// Import leases and image loading are protected against concurrent cleanup.
+pub fn get_chat(
+    app: &AppHandle,
+    id: String,
+    owner: Option<String>,
+) -> Result<Option<ChatHistoryItem>, AppError> {
+    with_chats(app, |state| {
+        chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
+        let chat = chats::get_chat(app, id)?;
+        if let Some(chat) = &chat {
+            let directory = chats::chat_image_directory(app)?;
+            let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+            for image in chat.messages.iter().flat_map(|message| &message.images) {
+                if let Some(owner) = &owner {
+                    images.hold(owner, &image.id);
+                }
+                let _ = images.get(&directory, &image.id);
+            }
+        }
+        Ok(chat)
+    })
+}
+
+pub fn save_chat_history(app: &AppHandle, item: ChatHistoryItem) -> Result<(), AppError> {
+    with_chats(app, |state| {
+        chats::save_chat_history(app, &state.params().user_config, item)
+    })
+}
+
+pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(), AppError> {
+    with_chats(app, |_| chats::rename_chat(app, id, description))
+}
+
+pub fn search_chat_history(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
+    // The index is a snapshot. Atomic file replacements allow searching each
+    // chat without holding up unrelated saves or editor history operations.
+    let history = get_chat_history(app)?;
+    chats::search_chats(app, history, query)
+}
+
+pub fn remove_from_chat_history(
+    app: &AppHandle,
+    id: String,
+    owner: String,
+) -> Result<(), AppError> {
+    with_chats(app, |state| {
+        chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
+        match chats::get_chat(app, id.clone()) {
+            Ok(Some(chat)) => {
+                let directory = chats::chat_image_directory(app)?;
+                let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+                for image in chat.messages.iter().flat_map(|message| &message.images) {
+                    images.hold_undo(&owner, &image.id);
+                    if let Err(error) = images.get(&directory, &image.id) {
+                        log::warn!("Could not preserve chat image for undo: {error}");
+                    }
+                }
+            }
+            Ok(None) => {}
+            Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
+        }
+        chats::remove_from_chat_history(app, id)
+    })
+}
+
+pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
+    with_chats(app, |_| chats::clear_chat_history(app))
+}
+
+pub fn get_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {
+    with_chats(app, |state| {
+        state
+            .chat_images
+            .lock()
+            .expect("chat image lock poisoned")
+            .get(&chats::chat_image_directory(app)?, id)
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chat_operations_do_not_lock_editor_history() {
+        let storage = HistoryStorage::default();
+        let _chats = storage.chats();
+        assert!(storage.editor.try_lock().is_ok());
+    }
+
+    #[test]
+    fn editor_operations_do_not_lock_chat_history() {
+        let storage = HistoryStorage::default();
+        let _editor = storage.editor();
+        assert!(storage.chats.try_lock().is_ok());
+    }
+
+    #[test]
+    fn concurrent_editor_updates_are_serialized() {
+        let storage = HistoryStorage::default();
+        std::thread::scope(|scope| {
+            for index in 0..16 {
+                let storage = &storage;
+                scope.spawn(move || {
+                    storage.editor().push(EditorHistoryItem {
+                        id: index.to_string(),
+                        text: String::new(),
+                        kind: crate::models::EditorHistoryKind::Draft,
+                        operation: None,
+                        created_at: 1,
+                        result: None,
+                        sent: false,
+                    });
+                });
+            }
+        });
+        assert_eq!(storage.editor().len(), 16);
+    }
+}

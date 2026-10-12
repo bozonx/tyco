@@ -132,6 +132,55 @@ describe('tauri-socket', () => {
     expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)).toHaveLength(1)
   })
 
+  it('bounds queued audio while an IPC send is stalled', async () => {
+    let completeSend!: () => void
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 2
+      },
+      [DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY]: () =>
+        new Promise<void>((resolve) => {
+          completeSend = resolve
+        }),
+    })
+    const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: new AbortController().signal,
+    })
+    const messages = collect(session.messages)
+    const rejected = expect(messages).rejects.toThrow(
+      'WebSocket send queue limit exceeded'
+    )
+    session.send(new Uint8Array(256 * 1024))
+    await tick()
+    for (let i = 0; i < 5; i += 1) session.send(new Uint8Array(256 * 1024))
+    await rejected
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 2 })
+    completeSend()
+    await tick()
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY)).toHaveLength(
+      1
+    )
+  })
+
+  it('bounds the number of pending zero-length frames', async () => {
+    const fake = createFakeNetIpc({
+      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        emit({ type: 'open' })
+        return 2
+      },
+    })
+    const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
+      signal: new AbortController().signal,
+    })
+    const rejected = expect(collect(session.messages)).rejects.toThrow(
+      'WebSocket send queue limit exceeded'
+    )
+    for (let i = 0; i < 129; i += 1) session.send('')
+    await rejected
+    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  })
+
   it('closes on abort', async () => {
     const fake = createFakeNetIpc({
       [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {

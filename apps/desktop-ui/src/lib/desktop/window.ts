@@ -7,7 +7,6 @@ export const getDesktopWebview = () => getCurrentWebview()
 export const getDesktopWindowLabel = () =>
   isTauri() ? getCurrentWindow().label : 'main'
 
-export {
-  convertFileSrc as convertDesktopFileSrc,
-  invoke as invokeDesktop,
-} from '@tauri-apps/api/core'
+export { convertFileSrc as convertDesktopFileSrc } from '@tauri-apps/api/core'
+
+export { invokeDesktop } from './invoke'

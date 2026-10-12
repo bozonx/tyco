@@ -2,9 +2,26 @@ import type { SelectionRunEvent } from './selection'
 import { APP_CONFIG, type AppConfig } from './app-config'
 import { DEFAULT_USER_CONFIG, type UserConfig } from './user-config'
 
+export type DesktopErrorCode =
+  | 'operationFailed'
+  | 'configConflict'
+  | 'serviceUnavailable'
+  | 'resourceLimit'
+  | 'invalidInput'
+  | 'unsupportedConfig'
+  | 'runtimeError'
+  | 'ioError'
+  | 'invalidData'
+
+export interface DesktopErrorPayload {
+  code: DesktopErrorCode
+  message: string
+}
+
 export interface IpcResult<T = unknown> {
   success: boolean
   error?: string
+  errorCode?: DesktopErrorCode
   result?: T
 }
 

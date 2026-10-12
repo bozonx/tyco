@@ -17,7 +17,7 @@ use std::time::Duration;
 use futures_util::future::AbortHandle;
 use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody};
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::Sender;
 
 use crate::errors::AppError;
 use socket::SocketCommand;
@@ -55,7 +55,7 @@ pub struct NetState {
     client: reqwest::Client,
     next_id: AtomicU64,
     fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
-    sockets: Arc<Mutex<HashMap<u64, UnboundedSender<SocketCommand>>>>,
+    sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
 }
 
 impl NetState {
@@ -87,7 +87,7 @@ impl NetState {
         Arc::clone(&self.fetches)
     }
 
-    pub fn sockets(&self) -> Arc<Mutex<HashMap<u64, UnboundedSender<SocketCommand>>>> {
+    pub fn sockets(&self) -> Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>> {
         Arc::clone(&self.sockets)
     }
 
@@ -103,16 +103,31 @@ impl NetState {
         let sender = sockets
             .get(&id)
             .ok_or_else(|| AppError::Message(format!("Socket {id} is closed")))?;
-        sender
-            .send(command)
-            .map_err(|_| AppError::Message(format!("Socket {id} is closed")))
+        let size = match &command {
+            SocketCommand::Text(text) => text.len(),
+            SocketCommand::Binary(bytes) => bytes.len(),
+            SocketCommand::Close(payload) => payload.as_ref().map_or(0, String::len),
+        };
+        if size > socket::MAX_FRAME_BYTES {
+            return Err(AppError::ResourceLimit(
+                "WebSocket frame is too large".into(),
+            ));
+        }
+        sender.try_send(command).map_err(|error| match error {
+            tokio::sync::mpsc::error::TrySendError::Full(_) => {
+                AppError::ResourceLimit("WebSocket send queue is full".into())
+            }
+            tokio::sync::mpsc::error::TrySendError::Closed(_) => {
+                AppError::Message(format!("Socket {id} is closed"))
+            }
+        })
     }
 
     /// Closes all active sockets and aborts in-flight fetches on shutdown.
     pub fn close_all(&self) {
         let sockets = std::mem::take(&mut *self.sockets.lock().expect("sockets lock"));
         for sender in sockets.into_values() {
-            let _ = sender.send(SocketCommand::Close(None));
+            let _ = sender.try_send(SocketCommand::Close(None));
         }
         let fetches = std::mem::take(&mut *self.fetches.lock().expect("fetches lock"));
         for handle in fetches.into_values() {
@@ -130,6 +145,30 @@ mod tests {
     use super::*;
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::Secrets;
+
+    #[test]
+    fn outgoing_frames_and_queue_memory_are_bounded() {
+        let net = NetState::new().unwrap();
+        let (sender, mut receiver) = tokio::sync::mpsc::channel(socket::SOCKET_QUEUE_CAPACITY);
+        net.sockets.lock().unwrap().insert(1, sender);
+        assert!(matches!(
+            net.socket_command(
+                1,
+                SocketCommand::Binary(vec![0; socket::MAX_FRAME_BYTES + 1])
+            ),
+            Err(AppError::ResourceLimit(_))
+        ));
+        for _ in 0..socket::SOCKET_QUEUE_CAPACITY {
+            net.socket_command(1, SocketCommand::Text("frame".into()))
+                .unwrap();
+        }
+        assert!(matches!(
+            net.socket_command(1, SocketCommand::Text("overflow".into())),
+            Err(AppError::ResourceLimit(_))
+        ));
+        receiver.try_recv().unwrap();
+        net.socket_command(1, SocketCommand::Close(None)).unwrap();
+    }
 
     #[tokio::test]
     async fn cancellation_drops_an_unfinished_socket_handshake() {

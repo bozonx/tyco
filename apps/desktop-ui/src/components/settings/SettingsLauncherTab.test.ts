@@ -90,4 +90,30 @@ describe('SettingsLauncherTab.vue', () => {
 
     expect(wrapper.emitted('createCommand')?.[0]).toEqual([0, 'script', 0])
   })
+
+  it('renders page buttons with numbers and switches pages on click', async () => {
+    const wrapper = mount(SettingsLauncherTab, {
+      props: {
+        userConfig: {
+          commands: [cmd1, cmd2],
+          launcherCommands: ['cmd1'],
+          launcherPages: [['cmd2'], [null]],
+        } as unknown as UserConfig,
+      },
+    })
+    const buttons = wrapper.findAll('button')
+    const page1Btn = buttons.find((b) => b.text() === '1')!
+    const page2Btn = buttons.find((b) => b.text() === '2')!
+    const page3Btn = buttons.find((b) => b.text() === '3')!
+
+    expect(page1Btn.exists()).toBe(true)
+    expect(page2Btn.exists()).toBe(true)
+    expect(page3Btn.exists()).toBe(true)
+    expect(page1Btn.classes()).toContain('btn-primary')
+    expect(page2Btn.classes()).toContain('btn-neutral')
+
+    await page2Btn.trigger('click')
+    expect(page2Btn.classes()).toContain('btn-primary')
+    expect(page1Btn.classes()).toContain('btn-neutral')
+  })
 })

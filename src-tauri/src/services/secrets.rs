@@ -408,7 +408,7 @@ fn read_missing(vault: &dyn SecretVault, state: &mut StoreState) {
 }
 
 fn vault_unavailable() -> AppError {
-    AppError::Message(String::from(
+    AppError::ServiceUnavailable(String::from(
         "The system keychain is unavailable, so the key cannot be saved",
     ))
 }

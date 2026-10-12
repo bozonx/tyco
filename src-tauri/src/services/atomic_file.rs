@@ -4,6 +4,7 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::errors::AppError;
 
@@ -17,31 +18,54 @@ pub fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
 
 /// Atomically writes private binary data.
 pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
-    let mut tmp_name = path.file_name().unwrap_or_default().to_os_string();
-    tmp_name.push(".tmp");
-    let tmp_path = path.with_file_name(tmp_name);
+    static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
+    let (temporary, mut file) = loop {
+        let mut name = path.file_name().unwrap_or_default().to_os_string();
+        name.push(format!(
+            ".tmp-{}-{}",
+            std::process::id(),
+            NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
+        ));
+        let temporary_path = path.with_file_name(name);
+        let mut options = fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        match options.open(&temporary_path) {
+            Ok(file) => break (TemporaryFile(temporary_path), file),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(error.into()),
+        }
+    };
+    file.write_all(raw)?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(&temporary.0, path)?;
+    sync_parent(path)
+}
 
-    // a leftover of a crash may carry other permissions, and opening an
-    // existing file keeps them
-    match fs::remove_file(&tmp_path) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => return Err(error.into()),
+struct TemporaryFile(PathBuf);
+
+impl Drop for TemporaryFile {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
     }
+}
 
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create_new(true);
+/// Persists directory-entry changes after a rename or removal on Unix.
+pub(super) fn sync_parent(path: &Path) -> Result<(), AppError> {
     #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    {
-        let mut file = options.open(&tmp_path)?;
-        file.write_all(raw)?;
-        file.sync_all()?;
-    }
-    fs::rename(&tmp_path, path)?;
+    fs::File::open(
+        path.parent()
+            .filter(|dir| !dir.as_os_str().is_empty())
+            .unwrap_or(Path::new(".")),
+    )?
+    .sync_all()?;
+    #[cfg(not(unix))]
+    let _ = path;
     Ok(())
 }
 
@@ -78,6 +102,7 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     name.push(format!(".broken-{stamp}"));
     let target = path.with_file_name(name);
     fs::rename(path, &target)?;
+    sync_parent(path)?;
     Ok(target)
 }
 
@@ -144,6 +169,32 @@ mod tests {
             assert_eq!(mode & 0o777, 0o600);
         }
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn concurrent_writes_never_share_a_temporary_file() {
+        let dir = temp_dir("concurrent");
+        let path = dir.join("file.json");
+        std::thread::scope(|scope| {
+            for index in 0..16 {
+                let path = &path;
+                scope.spawn(move || write_private(path, &index.to_string()).unwrap());
+            }
+        });
+        let value: u32 = fs::read_to_string(&path).unwrap().parse().unwrap();
+        assert!(value < 16);
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_failed_rename_cleans_up_its_temporary_file() {
+        let dir = temp_dir("failed-rename");
+        let target = dir.join("directory");
+        fs::create_dir(&target).unwrap();
+        assert!(write_private(&target, "data").is_err());
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[cfg(unix)]

@@ -3,7 +3,7 @@ use std::time::Duration;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
-use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::sync::mpsc::Receiver;
 use tokio::time::{sleep_until, Instant};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
@@ -21,6 +21,9 @@ const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(20);
 /// How long a server gets to flush and close after an end-of-stream message,
 /// the same grace `@bozonx/ai-kit` gives its own sockets.
 const CLOSE_GRACE: Duration = Duration::from_secs(5);
+const WRITE_TIMEOUT: Duration = Duration::from_secs(20);
+pub const SOCKET_QUEUE_CAPACITY: usize = 32;
+pub const MAX_FRAME_BYTES: usize = 256 * 1024;
 /// Close code for a connection that ended without a close frame.
 const ABNORMAL_CLOSE: u16 = 1006;
 /// Close code for a close frame that carried no status.
@@ -83,10 +86,15 @@ pub async fn connect(prepared: &PreparedRequest, protocols: &[String]) -> Result
 
 /// Pumps one open socket until it closes. Ends with exactly one `Close` or
 /// `Error`, unless the listener is gone first.
-pub async fn run_socket<S: EventSink>(
+pub async fn run_socket<S: EventSink>(socket: Socket, commands: Receiver<SocketCommand>, sink: &S) {
+    run_socket_with(socket, commands, sink, WRITE_TIMEOUT).await;
+}
+
+async fn run_socket_with<S: EventSink>(
     socket: Socket,
-    mut commands: UnboundedReceiver<SocketCommand>,
+    mut commands: Receiver<SocketCommand>,
     sink: &S,
+    write_timeout: Duration,
 ) {
     let (mut write, mut read) = socket.split();
     let mut closing_deadline: Option<Instant> = None;
@@ -95,19 +103,19 @@ pub async fn run_socket<S: EventSink>(
         tokio::select! {
             command = commands.recv(), if closing_deadline.is_none() => {
                 let sent = match command {
-                    Some(SocketCommand::Text(text)) => write.send(Message::Text(text)).await,
-                    Some(SocketCommand::Binary(bytes)) => write.send(Message::Binary(bytes)).await,
+                    Some(SocketCommand::Text(text)) => bounded_write(write.send(Message::Text(text)), write_timeout, closing_deadline).await,
+                    Some(SocketCommand::Binary(bytes)) => bounded_write(write.send(Message::Binary(bytes)), write_timeout, closing_deadline).await,
                     Some(SocketCommand::Close(Some(payload))) => {
                         closing_deadline = Some(Instant::now() + CLOSE_GRACE);
-                        write.send(Message::Text(payload)).await
+                        bounded_write(write.send(Message::Text(payload)), write_timeout, closing_deadline).await
                     }
                     Some(SocketCommand::Close(None)) | None => {
                         closing_deadline = Some(Instant::now() + CLOSE_GRACE);
-                        write.send(Message::Close(Some(normal_close()))).await
+                        bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await
                     }
                 };
                 if let Err(error) = sent {
-                    sink.event(&SocketEvent::Error { message: error.to_string() });
+                    sink.event(&SocketEvent::Error { message: error });
                     return;
                 }
             }
@@ -115,24 +123,30 @@ pub async fn run_socket<S: EventSink>(
                 match message {
                     Some(Ok(Message::Text(data))) => {
                         if !sink.event(&SocketEvent::Message { data }) {
-                            let _ = write.send(Message::Close(Some(normal_close()))).await;
+                            let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
                     }
                     Some(Ok(Message::Binary(bytes))) => {
                         if !sink.bytes(bytes) {
-                            let _ = write.send(Message::Close(Some(normal_close()))).await;
+                            let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
                     }
                     Some(Ok(Message::Close(frame))) => {
                         // Sends the close reply tungstenite has queued.
-                        let _ = write.flush().await;
+                        let _ = bounded_write(write.flush(), write_timeout, closing_deadline).await;
                         let (code, reason) = frame
                             .map(|frame| (u16::from(frame.code), frame.reason.into_owned()))
                             .unwrap_or((NO_STATUS, String::new()));
                         sink.event(&SocketEvent::Close { code, reason });
                         return;
+                    }
+                    Some(Ok(Message::Ping(_))) => {
+                        if let Err(message) = bounded_write(write.flush(), write_timeout, closing_deadline).await {
+                            sink.event(&SocketEvent::Error { message });
+                            return;
+                        }
                     }
                     Some(Ok(_)) => {}
                     // We asked to close; a server that drops the connection
@@ -155,12 +169,25 @@ pub async fn run_socket<S: EventSink>(
                 }
             }
             _ = sleep_until(closing_deadline.unwrap_or_else(Instant::now)), if closing_deadline.is_some() => {
-                let _ = write.send(Message::Close(Some(normal_close()))).await;
                 sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
                 return;
             }
         }
     }
+}
+
+/// Every write yields on a deadline, including sends inside select branches.
+async fn bounded_write<T, E: std::fmt::Display>(
+    operation: impl std::future::Future<Output = Result<T, E>>,
+    timeout: Duration,
+    closing_deadline: Option<Instant>,
+) -> Result<T, String> {
+    let write_deadline = Instant::now() + timeout;
+    let deadline = write_deadline.min(closing_deadline.unwrap_or(write_deadline));
+    tokio::time::timeout_at(deadline, operation)
+        .await
+        .map_err(|_| String::from("WebSocket write timed out"))?
+        .map_err(|error| error.to_string())
 }
 
 fn normal_close() -> CloseFrame<'static> {
@@ -202,6 +229,66 @@ mod tests {
                 .push(serde_json::json!({ "bytes": bytes }));
             true
         }
+    }
+
+    #[tokio::test]
+    async fn a_stalled_write_obeys_the_close_deadline() {
+        let start = Instant::now();
+        let result = bounded_write(
+            std::future::pending::<Result<(), String>>(),
+            Duration::from_secs(20),
+            Some(start + Duration::from_millis(10)),
+        )
+        .await;
+        assert_eq!(result.unwrap_err(), "WebSocket write timed out");
+        assert!(start.elapsed() < Duration::from_secs(1));
+    }
+
+    #[tokio::test]
+    async fn a_peer_that_does_not_read_cannot_stall_the_socket_pump() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            let _socket = socket;
+            std::future::pending::<()>().await;
+        });
+        let prepared = prepare(
+            Protocol::WebSocket,
+            &format!("ws://{address}"),
+            &[],
+            &Secrets::new(),
+        )
+        .unwrap();
+        let socket = connect(&prepared, &[]).await.unwrap();
+        let (sender, receiver) = mpsc::channel(SOCKET_QUEUE_CAPACITY);
+        let producer = tokio::spawn(async move {
+            loop {
+                if sender
+                    .send(SocketCommand::Binary(vec![0; MAX_FRAME_BYTES]))
+                    .await
+                    .is_err()
+                {
+                    return;
+                }
+            }
+        });
+        let sink = RecordingSink::default();
+        tokio::time::timeout(
+            Duration::from_secs(3),
+            run_socket_with(socket, receiver, &sink, Duration::from_millis(20)),
+        )
+        .await
+        .unwrap();
+        assert!(sink
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|event| event["message"] == "WebSocket write timed out"));
+        producer.await.unwrap();
+        server.abort();
     }
 
     // The handshake callback's error type is tungstenite's, not ours.
@@ -262,10 +349,12 @@ mod tests {
         .unwrap();
 
         let socket = connect(&prepared, &[]).await.unwrap();
-        let (sender, receiver) = mpsc::unbounded_channel();
-        sender.send(SocketCommand::Binary(vec![0; 320])).unwrap();
+        let (sender, receiver) = mpsc::channel(SOCKET_QUEUE_CAPACITY);
         sender
-            .send(SocketCommand::Close(Some("end-of-stream".into())))
+            .try_send(SocketCommand::Binary(vec![0; 320]))
+            .unwrap();
+        sender
+            .try_send(SocketCommand::Close(Some("end-of-stream".into())))
             .unwrap();
 
         let sink = RecordingSink::default();
@@ -303,8 +392,8 @@ mod tests {
         )
         .unwrap();
         let socket = connect(&prepared, &[]).await.unwrap();
-        let (sender, receiver) = mpsc::unbounded_channel();
-        sender.send(SocketCommand::Close(None)).unwrap();
+        let (sender, receiver) = mpsc::channel(SOCKET_QUEUE_CAPACITY);
+        sender.try_send(SocketCommand::Close(None)).unwrap();
 
         let sink = RecordingSink::default();
         run_socket(socket, receiver, &sink).await;

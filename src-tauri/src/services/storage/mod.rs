@@ -1,10 +1,12 @@
 mod chat_history;
 mod config;
 mod editor_history;
+mod history_store;
 
-pub use chat_history::*;
+pub use chat_history::ChatHistoryPolicy;
 pub use config::*;
-pub use editor_history::*;
+pub use editor_history::{apply_history_settings_on_startup, EditorHistoryStorage};
+pub use history_store::*;
 
 use std::fs;
 use std::path::{Path, PathBuf};
