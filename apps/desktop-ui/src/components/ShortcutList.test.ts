@@ -18,19 +18,19 @@ const mocks = vi.hoisted(() => ({
   mode: 'write',
 }))
 
-vi.mock('../composables/useI18n', () => ({
+vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../stores/routeParams', () => ({
+vi.mock('../stores/route-params', () => ({
   useRouteParams: () => ({ toEditor: mocks.toEditor }),
 }))
 
-vi.mock('../stores/writerInput', () => ({
+vi.mock('../stores/writer-input', () => ({
   useWriterInputStore: () => ({ discard: mocks.discardWriterInput }),
 }))
 
-vi.mock('../stores/menuModals', () => ({
+vi.mock('../stores/menu-modals', () => ({
   MenuModals: {
     NONE: 'none',
     INSERT: 'insert',

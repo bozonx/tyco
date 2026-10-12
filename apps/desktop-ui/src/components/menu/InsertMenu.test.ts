@@ -2,14 +2,14 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useEditorInputStore } from '../../stores/editorInput'
-import { useMenuModalsStore } from '../../stores/menuModals'
+import { useEditorInputStore } from '../../stores/editor-input'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../ShortcutList.vue'
 import InsertMenu from './InsertMenu.vue'
 
 const mocks = vi.hoisted(() => ({ editorPage: true }))
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

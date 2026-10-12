@@ -28,8 +28,8 @@ import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
 import { useIpcStore } from '../stores/ipc'
-import { useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
+import { useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 const navPanelStore = useNavPanelStore()

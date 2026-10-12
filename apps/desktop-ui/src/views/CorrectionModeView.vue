@@ -9,9 +9,9 @@ import { ref, watch } from 'vue'
 
 import InProgressMessage from '../components/menu/InProgressMessage.vue'
 import { createCorrectionMode } from '../lib/correction-mode/correction-mode'
-import { useActionMenuStore } from '../stores/actionMenu'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useIpcStore } from '../stores/ipc'
-import { useNavPanelStore } from '../stores/navPanel'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()

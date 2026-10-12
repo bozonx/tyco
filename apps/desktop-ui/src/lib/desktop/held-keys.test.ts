@@ -62,3 +62,16 @@ describe('held-keys', () => {
     expect(await settled(waiting)).toBe(true)
   })
 })
+
+it('releases waiters and removes native listeners on disposal', async () => {
+  const source = new EventTarget()
+  const remove = vi.spyOn(source, 'removeEventListener')
+  const heldKeys = createHeldKeys(source)
+  source.dispatchEvent(keyEvent('keydown', 'ShiftLeft'))
+  const pending = heldKeys.waitForRelease(1000)
+  heldKeys.dispose()
+  await pending
+  expect(remove).toHaveBeenCalledTimes(3)
+  source.dispatchEvent(keyEvent('keydown', 'ShiftLeft'))
+  await heldKeys.waitForRelease(1000)
+})

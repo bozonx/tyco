@@ -62,8 +62,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import {
   AUTO_LANGUAGE_VALUE,
@@ -78,12 +78,12 @@ import {
   nativeLanguageName,
 } from '../../lib/translate-picker/translate-picker'
 import { translationMetaOf } from '../../lib/translation/translation-meta'
-import { type ActionItem } from '../../stores/actionMenu'
+import { type ActionItem } from '../../stores/action-menu'
 import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
-import { useRouteParams } from '../../stores/routeParams'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useRouteParams } from '../../stores/route-params'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import TextPreview from '../common/TextPreview.vue'

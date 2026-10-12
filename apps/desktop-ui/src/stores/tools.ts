@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 
 import type { LlmTask } from '@tyco/shared'
 
-import { useCallAi } from '../composables/useCallAi'
-import { useCallApi } from '../composables/useCallApi'
+import { useCallAi } from '../composables/use-call-ai'
+import { useCallApi } from '../composables/use-call-api'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
 import { LlmError } from '../lib/llm/llm-client'
@@ -19,7 +19,7 @@ import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useChatStore } from './chat'
 import { useCorrectorStore } from './corrector'
 import { useIpcStore } from './ipc'
-import { useMenuModalsStore } from './menuModals'
+import { useMenuModalsStore } from './menu-modals'
 
 /**
  * The tool registry of the window: the built-in tools of the app and those the

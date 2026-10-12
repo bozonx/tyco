@@ -281,8 +281,33 @@ describe('ipc-store', () => {
       expect(store.params.value.userConfig).toEqual(nextConfig)
       expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
         DESKTOP_COMMANDS.SAVE_USER_CONFIG,
-        { userConfig: nextConfig }
+        { userConfig: nextConfig, baseConfig: DEFAULT_INIT_PARAMS.userConfig }
       )
+    })
+
+    it('preserves a newer params event when an older save completes', async () => {
+      let finish!: (value: unknown) => void
+      const { store } = await loadedStore(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          })
+      )
+      const pending = store.saveUserConfig({
+        ...DEFAULT_INIT_PARAMS.userConfig,
+        theme: 'dark',
+      })
+      const newer = {
+        ...DEFAULT_INIT_PARAMS.userConfig,
+        theme: 'light' as const,
+      }
+      store.setParams({ userConfig: newer })
+      finish({
+        success: true,
+        result: { ...DEFAULT_INIT_PARAMS.userConfig, theme: 'dark' },
+      })
+      await pending
+      expect(store.params.value.userConfig).toEqual(newer)
     })
 
     it('does not replace stored user config when save fails', async () => {

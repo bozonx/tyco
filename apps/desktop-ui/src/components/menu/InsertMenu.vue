@@ -67,17 +67,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import {
   type DiffViewMode,
   readStoredDiffMode,
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
-import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
-import { useEditorInputStore } from '../../stores/editorInput'
+import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
+import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
-import { useMenuModalsStore } from '../../stores/menuModals'
-import { useRouteParams } from '../../stores/routeParams'
+import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useRouteParams } from '../../stores/route-params'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'

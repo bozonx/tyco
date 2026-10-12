@@ -17,7 +17,7 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: mocks.currentWindowLabel }),
 }))
 
-vi.mock('../../stores/menuModals', () => ({
+vi.mock('../../stores/menu-modals', () => ({
   MenuModals: { NONE: 'none', INSERT: 'insert', AI_TASK: 'ai-task' },
   useMenuModalsStore: () => ({
     currentModal: mocks.currentModal,
@@ -35,11 +35,11 @@ vi.mock('../../stores/ipc', () => ({
   }),
 }))
 
-vi.mock('../../stores/writerInput', () => ({
+vi.mock('../../stores/writer-input', () => ({
   useWriterInputStore: () => ({ discard: mocks.discardWriterInput }),
 }))
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

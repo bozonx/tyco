@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Overlay from '../common/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
 import AiTaskMenu from './AiTaskMenu.vue'

@@ -153,8 +153,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { useOverlayNav } from '../../composables/useOverlayNav'
+import { useI18n } from '../../composables/use-i18n'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { searchCommands } from '../../lib/command-launcher/launcher-model'
 import {
   commandIcon,
@@ -162,8 +162,8 @@ import {
   commandTarget,
   isCommandAvailable,
 } from '../../lib/commands/command-config'
-import { type ActionItem } from '../../stores/actionMenu'
-import { useCommandLauncherStore } from '../../stores/commandLauncher'
+import { type ActionItem } from '../../stores/action-menu'
+import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'

@@ -23,6 +23,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 
+#[cfg(debug_assertions)]
 const DEV_HOME_ENV: &str = "TYCO_DEV_HOME";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -131,6 +132,7 @@ pub fn dev_paths_from_env(_identifier: &str) -> Result<Option<AppPaths>, AppErro
     Ok(None)
 }
 
+#[cfg(any(debug_assertions, test))]
 fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
     #[cfg(target_os = "macos")]
     return AppPaths {

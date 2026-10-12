@@ -23,8 +23,8 @@ const chatModelIsGenerating = ref(false)
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: mocks.label }),
 }))
-vi.mock('../composables/useCallAi', () => ({ useCallAi: () => ({}) }))
-vi.mock('../composables/useToast', () => ({
+vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ({}) }))
+vi.mock('../composables/use-toast', () => ({
   default: () => ({ toast: vi.fn() }),
 }))
 vi.mock('../lib/chat/chat-image-storage', () => ({
@@ -58,11 +58,11 @@ vi.mock('./ipc', () => ({
 }))
 vi.mock('./llm', () => ({ useLlmStore: () => ({ secrets: {} }) }))
 vi.mock('./history', () => ({ useHistoryStore: () => ({}) }))
-vi.mock('./menuModals', () => ({
+vi.mock('./menu-modals', () => ({
   useMenuModalsStore: () => ({ closeAll: mocks.closeAll }),
 }))
-vi.mock('./editorInput', () => ({ useEditorInputStore: () => mocks.editor }))
-vi.mock('./chatInput', () => ({
+vi.mock('./editor-input', () => ({ useEditorInputStore: () => mocks.editor }))
+vi.mock('./chat-input', () => ({
   useChatInputStore: () => ({
     get value() {
       return mocks.input.value

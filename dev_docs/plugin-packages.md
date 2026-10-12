@@ -40,7 +40,12 @@ export default function plugin(): PluginDefinition {
     apiVersion: 2,
     capabilities: ['editor'],
     defaultLocale: 'en_US',
-    locales: { en_US: { label: 'Example', transform: 'Transform text' } },
+    locales: {
+      en_US: { label: 'Example', transform: 'Transform text' },
+      ru_RU: { label: 'Example', transform: 'Transform text' },
+      es_AR: { label: 'Example', transform: 'Transform text' },
+      tr_TR: { label: 'Example', transform: 'Transform text' },
+    },
     labelKey: 'local.label',
     init(ctx) {
       ctx.registerCaseItems([
@@ -65,8 +70,9 @@ Use `local.*` for plugin-owned messages. The host namespaces these keys in metad
 settings, contributions, tool results and portable `PluginError` instances. Common
 host notification keys such as `toast.textNotSelected` and `toast.commandFailed`
 are also supported. `ctx.t` translates plugin messages; `ctx.toastText` accepts
-already resolved text. A package must include its default dictionary and can
-provide any subset of other UI locales; missing messages fall back to its default.
+already resolved text. A package must include complete dictionaries for `en_US`, `ru_RU`, `es_AR`, and
+`tr_TR`. Keys, value types, and placeholders must match across all dictionaries.
+Missing translations are rejected; the host never falls back to another locale.
 
 Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool
 IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Icons are

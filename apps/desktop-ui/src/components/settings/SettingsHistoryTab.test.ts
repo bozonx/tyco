@@ -1,3 +1,4 @@
+import type { UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,11 +8,11 @@ const mockToast = vi.fn()
 const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
 const mockClearEditorHistory = vi.fn().mockResolvedValue(undefined)
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../composables/useToast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: mockToast, toastText: vi.fn() }),
 }))
 
@@ -27,7 +28,17 @@ describe('SettingsHistoryTab.vue', () => {
     vi.clearAllMocks()
   })
 
-  const createConfig = (overrides = {}) => ({
+  const createConfig = (
+    overrides = {}
+  ): Pick<
+    UserConfig,
+    | 'editorHistoryStorage'
+    | 'editorHistoryMaxItems'
+    | 'editorHistoryRetentionDays'
+    | 'sanitizeSecretsInEditorHistory'
+    | 'chatHistoryEnabled'
+    | 'chatHistoryRetentionDays'
+  > => ({
     editorHistoryStorage: 'disk',
     editorHistoryMaxItems: 100,
     editorHistoryRetentionDays: 30,

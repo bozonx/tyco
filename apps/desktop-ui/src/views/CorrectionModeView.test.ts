@@ -35,11 +35,11 @@ vi.mock('../stores/ipc', () => ({
   }),
 }))
 
-vi.mock('../stores/navPanel', () => ({
+vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
 
-vi.mock('../stores/actionMenu', () => ({
+vi.mock('../stores/action-menu', () => ({
   useActionMenuStore: () => ({ correct: mocks.correct }),
 }))
 

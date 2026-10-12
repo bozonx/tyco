@@ -16,8 +16,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { useMenuModalsStore } from '../../stores/menuModals'
+import { useI18n } from '../../composables/use-i18n'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 
 const props = withDefaults(
   defineProps<{

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import type { CoreToolId } from '@tyco/shared'
 
-import useToast from '../composables/useToast'
+import useToast from '../composables/use-toast'
 import { translate } from '../lib/i18n'
 import { builtinInvocation } from '../lib/invocation/builtin-invocation'
 import {
@@ -11,7 +11,7 @@ import {
 } from '../lib/invocation/invocation-runner'
 import type { InvocationOptions } from '../lib/invocation/invocation-types'
 import { useIpcStore } from './ipc'
-import { MenuModals, useMenuModalsStore } from './menuModals'
+import { MenuModals, useMenuModalsStore } from './menu-modals'
 import { useToolsStore } from './tools'
 
 /**

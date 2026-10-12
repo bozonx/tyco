@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   toastText: vi.fn(),
 }))
 
-vi.mock('../../composables/useCallAi', () => ({
+vi.mock('../../composables/use-call-ai', () => ({
   useCallAi: () => ({
     startDictation: mocks.startDictation,
     finishDictation: mocks.finishDictation,
@@ -24,11 +24,11 @@ vi.mock('../../composables/useCallAi', () => ({
   }),
 }))
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../composables/useToast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: mocks.toast, toastText: mocks.toastText }),
 }))
 
@@ -42,10 +42,10 @@ vi.mock('../../lib/desktop/client', () => ({
 import {
   GlobalEvents,
   useGlobalEvents,
-} from '../../composables/useGlobalEvents'
+} from '../../composables/use-global-events'
 import { useIpcStore } from '../../stores/ipc'
 import { useHistoryStore } from '../../stores/history'
-import { useMenuModalsStore } from '../../stores/menuModals'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 
 describe('VoiceRecognitionMenu', () => {
   beforeEach(() => {
@@ -192,7 +192,10 @@ describe('VoiceRecognitionMenu', () => {
               template:
                 '<div><slot name="preview" /><slot name="actions" /></div>',
             },
-            LiveTranscript: true,
+            LiveTranscript: {
+              props: ['committed', 'draft', 'prefix', 'suffix', 'placeholder'],
+              template: '<div />',
+            },
             AudioWaveform: true,
             TextPreview: true,
             ShortcutButton: true,
@@ -228,7 +231,10 @@ describe('VoiceRecognitionMenu', () => {
       props: { variant: 'bar', chat: true },
       global: {
         stubs: {
-          LiveTranscript: true,
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix', 'placeholder'],
+            template: '<div />',
+          },
           AudioWaveform: true,
           ShortcutButton: true,
           Icon: true,

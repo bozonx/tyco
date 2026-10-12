@@ -38,7 +38,7 @@ const mocks = vi.hoisted(() => ({
   },
   callFunction: vi.fn(),
 }))
-vi.mock('../composables/useI18n', () => ({
+vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 vi.mock('../stores/ipc', () => ({
@@ -48,20 +48,20 @@ vi.mock('../stores/ipc', () => ({
     callFunctionOrNotify: mocks.callFunction,
   }),
 }))
-vi.mock('../stores/writerInput', () => ({
+vi.mock('../stores/writer-input', () => ({
   useWriterInputStore: () => reactive(mocks.writer),
 }))
-vi.mock('../stores/menuModals', () => ({
+vi.mock('../stores/menu-modals', () => ({
   MenuModals: { INSERT: 'insert' },
   useMenuModalsStore: () => reactive(mocks.modals),
 }))
 vi.mock('../stores/correction', () => ({
   useCorrectionStore: () => mocks.correction,
 }))
-vi.mock('../stores/navPanel', () => ({
+vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavParams: vi.fn() }),
 }))
-vi.mock('../components/WriteModeInput.vue', () => ({
+vi.mock('../components/quick/WriteModeInput.vue', () => ({
   default: { template: '<textarea />' },
 }))
 

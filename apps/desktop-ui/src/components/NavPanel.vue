@@ -74,14 +74,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../composables/useI18n'
+import { useI18n } from '../composables/use-i18n'
 import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useChatStore } from '../stores/chat'
-import { useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
-import { useRouteParams } from '../stores/routeParams'
+import { useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
+import { useRouteParams } from '../stores/route-params'
 import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useRouteParams()

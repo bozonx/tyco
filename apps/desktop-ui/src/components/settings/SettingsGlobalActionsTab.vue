@@ -147,7 +147,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { desktopClient } from '../../lib/desktop/client'
 import {
   applyProviderInfo,

@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import {
   DEFAULT_LANGUAGE,
   buildLanguageOptions,
@@ -47,8 +47,11 @@ import {
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
+import type { UserConfig } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: Record<string, any> }>()
+const props = defineProps<{
+  userConfig: Pick<UserConfig, 'toTranslateLanguages'>
+}>()
 
 const emit = defineEmits<{
   (e: 'update:toTranslateLanguages', value: string[]): void

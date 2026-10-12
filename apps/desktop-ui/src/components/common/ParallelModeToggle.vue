@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { Icon } from '@iconify/vue'
 
 export type ParallelViewMode = 'split' | 'result'

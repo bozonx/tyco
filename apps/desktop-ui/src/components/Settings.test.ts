@@ -3,15 +3,30 @@ import { describe, expect, it, vi } from 'vitest'
 
 import Settings from './Settings.vue'
 
-vi.mock('../composables/useI18n', () => ({
+vi.mock(import('vue-router'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  useRoute: () => ({
+    query: {},
+    params: {},
+    path: '/',
+    fullPath: '/',
+    name: undefined,
+    hash: '',
+    matched: [],
+    meta: {},
+    redirectedFrom: undefined,
+  }),
+}))
+
+vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../composables/useToast', () => ({
+vi.mock('../composables/use-toast', () => ({
   default: () => ({ toastText: vi.fn() }),
 }))
 
-vi.mock('../stores/actionMenu', () => ({
+vi.mock('../stores/action-menu', () => ({
   useActionMenuStore: () => ({
     clearRegisteredActions: vi.fn(),
     resolveMainActions: (actions: any) => actions ?? [],
@@ -67,7 +82,7 @@ vi.mock('../plugins', () => ({
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       labelKey: 'plugin.a.label',
       defaultConfig: { fields: [] },
       init: vi.fn(),
@@ -79,7 +94,7 @@ vi.mock('../plugins', () => ({
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       label: 'Plugin B',
       defaultConfig: { fields: [] },
       init: vi.fn(),

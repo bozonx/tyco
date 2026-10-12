@@ -37,7 +37,10 @@ export interface DesktopFunctions {
   }
   restorePluginPackage: { args: [id: string]; result: void }
   removePluginPackage: { args: [id: string]; result: void }
-  saveUserConfig: { args: [userConfig: UserConfig]; result: void }
+  saveUserConfig: {
+    args: [userConfig: UserConfig, baseConfig: UserConfig]
+    result: UserConfig
+  }
   patchLocalState: { args: [patch: Partial<LocalState>]; result: LocalState }
   getStorageInfo: { args: []; result: StorageInfo }
   /** Shows the directory of a kind in the file manager */

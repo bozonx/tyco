@@ -1,35 +1,46 @@
 import { describe, expect, it, vi } from 'vitest'
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 
 import { createPluginResources, pluginNamespace } from './plugin-resources'
 
+const locales = (label: string) =>
+  Object.fromEntries(
+    SUPPORTED_PLUGIN_LOCALES.map((locale) => [
+      locale,
+      { label: `${label}:${locale}` },
+    ])
+  )
+
 describe('plugin resources', () => {
-  it('isolates dictionaries and supplies fallback messages for unsupported locales', () => {
+  it('isolates complete dictionaries without substituting another locale', () => {
     const host = {
       setMessages: vi.fn(),
       removeMessages: vi.fn(),
       addIcons: vi.fn(),
     }
-    const resources = createPluginResources(host, ['en_US', 'ru_RU', 'es_AR'])
-    resources.register('First', {
-      en_US: { label: 'First', detail: 'Detail' },
-      ru_RU: { label: 'First translated' },
-    })
-    resources.register('Second', { en_US: { label: 'Second' } })
+    const resources = createPluginResources(host, SUPPORTED_PLUGIN_LOCALES)
+    resources.register('First', locales('First'))
+    resources.register('Second', locales('Second'))
     expect(host.setMessages).toHaveBeenCalledWith(
       'ru_RU',
       pluginNamespace('First'),
-      { label: 'First translated', detail: 'Detail' }
-    )
-    expect(host.setMessages).toHaveBeenCalledWith(
-      'es_AR',
-      pluginNamespace('First'),
-      { label: 'First', detail: 'Detail' }
+      { label: 'First:ru_RU' }
     )
     resources.remove('First')
-    expect(host.removeMessages).toHaveBeenCalledTimes(3)
+    expect(host.removeMessages).toHaveBeenCalledTimes(4)
     expect(host.removeMessages).not.toHaveBeenCalledWith(
       'en_US',
       pluginNamespace('Second')
     )
+  })
+
+  it('rejects incomplete replacements before removing the existing resources', () => {
+    const host = { setMessages: vi.fn(), removeMessages: vi.fn() }
+    const resources = createPluginResources(host, SUPPORTED_PLUGIN_LOCALES)
+    resources.register('First', locales('First'))
+    expect(() =>
+      resources.register('First', { en_US: { label: 'First' } })
+    ).toThrow('Missing plugin locale')
+    expect(host.removeMessages).not.toHaveBeenCalled()
   })
 })

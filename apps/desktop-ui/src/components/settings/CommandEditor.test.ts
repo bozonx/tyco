@@ -5,7 +5,7 @@ import { createCommand } from '../../lib/commands/command-config'
 import CommandEditor from './CommandEditor.vue'
 import type { CommandConfig } from '@tyco/shared'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 const { callFunction, toast } = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ const { callFunction, toast } = vi.hoisted(() => ({
   toast: vi.fn(),
 }))
 vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
-vi.mock('../../composables/useToast', () => ({ default: () => ({ toast }) }))
+vi.mock('../../composables/use-toast', () => ({ default: () => ({ toast }) }))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()

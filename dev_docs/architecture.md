@@ -1,0 +1,81 @@
+# Architecture and verification
+
+TyCo is a desktop application with two trusted windows: `main` owns settings,
+plugin installation and key management; `quick` owns background jobs and
+activation. External plugin code runs in a worker on a separate custom origin.
+
+## Frontend dependencies
+
+- Views and components render UI and delegate operations to stores/composables.
+- Pinia stores wire dependencies and expose reactive model state.
+- `src/lib/` contains feature models and infrastructure adapters. Models must
+  not import components, views, stores or composables; ESLint enforces this.
+- Native APIs live behind `lib/desktop/` and `lib/net/tauri-net.ts`.
+- `@tyco/shared` contains wire contracts and config types; `@tyco/plugin-sdk`
+  contains the independently usable plugin contract.
+
+Utilities, stores and composables use kebab-case filenames. Vue components
+and their adjacent component tests retain PascalCase component names.
+Components are grouped by feature (`chat`, `editor`, `history`, `quick`,
+`settings`); shared presentation primitives live in `components/common`.
+
+Settings tabs edit a draft owned by `createSettingsSession`, not persisted
+state. The four tabs that deliberately mutate that draft have explicit local
+ESLint exceptions. Config normalization and autosave are separate tested models.
+Saves send both the edited config and its baseline. Rust merges independently
+changed fields under the config lock and rejects concurrent conflicting edits
+(including arrays). A rejected save preserves the draft; reopening settings
+loads the current config. New edits during a save are rebased onto its result.
+
+## Backend and trust boundaries
+
+`commands/` adapts IPC to services. `services/platform/` owns OS/session APIs.
+`services/storage/` separates config migration and local state, editor history,
+chat history and shared file primitives; existing callers use its public facade.
+
+`build.rs` declares every app command in `AppManifest`. Capability files grant
+explicit command permissions to `main`, `quick`, or both, without remote or
+wildcard window access. The core event listener permissions are shared; native
+focus/visibility/resize permissions belong to `quick`. Plugins receive neither
+these capabilities nor direct network access. Plugin host operations enforce
+the SDK capability list separately. Sandbox messages use serializable snapshots
+so Vue proxies never cross a MessagePort. Resource URLs preserve path separators
+and the Wry protocol prefix used by Windows; all three URL forms have unit tests.
+
+Every installed plugin must supply `en_US`, `ru_RU`, `es_AR`, and `tr_TR` with
+identical dictionary structure and interpolation arguments. Both Rust and the
+SDK validate this before activation. Dictionaries are never merged with another
+locale. Incompatible installed packages remain visible so they can be removed.
+
+## Checks and desktop smoke tests
+
+`pnpm check:architecture` checks command registration against AppManifest,
+frontend command names and explicit capabilities. Shared wire fixtures are
+validated in TypeScript and checked against Rust serialization.
+
+`pnpm validate:all` checks source quality, unit tests, frontend build and Rust.
+CI additionally runs:
+
+- `pnpm test:plugin-runtime` in Chromium for isolated worker behavior.
+- Actual Linux AppImage/deb packaging and artifact upload.
+- Required compilation and unit tests on Windows and macOS.
+- `pnpm test:desktop` against a built debug app in WebKitGTK using Tauri WebDriver,
+  Xvfb and a dedicated temporary `TYCO_DEV_HOME`.
+
+The desktop smoke requires `tauri-driver` and `WebKitWebDriver` in PATH, plus a
+running display and D-Bus session. Build with
+`pnpm tauri:build --debug --no-bundle`, then run:
+
+```sh
+xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/tyco-openbox.log 2>&1 & pnpm test:desktop'
+```
+
+It checks real IPC permissions, stale config saves, plugin custom-protocol/CSP
+isolation and lazy route loading. It does not substitute for platform tests of
+microphone capture, global hotkeys, clipboard restoration or injection into
+foreign applications. These remain the platform-specific scenarios described
+in `cross-platform.md`. Failed smoke tests produce a screenshot for CI artifacts.
+
+Routes are loaded dynamically. Heavy optional renderers also use dynamic
+imports. Track startup and memory measurements in the actual system webview;
+chunk size alone is not an estimate of total memory or startup latency.

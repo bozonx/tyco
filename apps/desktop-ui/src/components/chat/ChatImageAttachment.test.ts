@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('../../lib/chat/chat-image-storage', () => ({
   getChatImage: mocks.get,
 }))
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 const image = {

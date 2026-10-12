@@ -17,10 +17,10 @@ const mocks = vi.hoisted(() => ({
   store: null as unknown,
 }))
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-vi.mock('../../composables/useOverlayNav', () => ({
+vi.mock('../../composables/use-overlay-nav', () => ({
   useOverlayNav: (options?: () => { onEsc?: () => void }) => ({
     escLabel: 'Esc',
     handleEsc: () => {
@@ -41,7 +41,7 @@ vi.mock('../../stores/tools', async () => {
   const tools = testTools()
   return { useToolsStore: () => tools }
 })
-vi.mock('../../stores/commandLauncher', () => ({
+vi.mock('../../stores/command-launcher', () => ({
   useCommandLauncherStore: () => mocks.store,
 }))
 

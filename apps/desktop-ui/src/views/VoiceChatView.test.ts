@@ -43,7 +43,7 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
   },
 }))
 
-vi.mock('../stores/menuModals', () => ({
+vi.mock('../stores/menu-modals', () => ({
   useMenuModalsStore: () => mocks.menuModals,
 }))
 
@@ -54,7 +54,7 @@ vi.mock('../stores/ipc', () => ({
   }),
 }))
 
-vi.mock('../stores/navPanel', () => ({
+vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
 

@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 
 import SettingsPluginsTab from './SettingsPluginsTab.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({ callFunction: vi.fn() }),
 }))
-vi.mock('../../composables/useToast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: vi.fn() }),
 }))
 
@@ -26,7 +26,7 @@ vi.mock('../../plugins', () => ({
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       labelKey: 'plugin.withConfig.label',
       defaultConfig: {
         fields: [
@@ -38,7 +38,7 @@ vi.mock('../../plugins', () => ({
             apiVersion: 2,
             capabilities: [],
             defaultLocale: 'en_US',
-            locales: { en_US: {} },
+            locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
             labelKey: 'key',
             defaultValue: 'default-key',
           },
@@ -53,7 +53,7 @@ vi.mock('../../plugins', () => ({
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       labelKey: 'plugin.withoutConfig.label',
       init: vi.fn(),
     }),

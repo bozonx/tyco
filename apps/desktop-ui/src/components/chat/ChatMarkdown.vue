@@ -13,7 +13,7 @@
 import 'katex/dist/katex.min.css'
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { loadChatImage } from '../../lib/chat/chat-image'
 import { renderChatMarkdown } from '../../lib/chat/chat-markdown'
 import { createChatMarkdownView } from '../../lib/chat/chat-markdown-view'

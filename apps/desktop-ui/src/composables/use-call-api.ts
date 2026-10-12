@@ -1,0 +1,32 @@
+import { translate } from '../lib/i18n/index'
+import { useEditorInputStore } from '../stores/editor-input'
+import { useIpcStore } from '../stores/ipc'
+import useToast from './use-toast'
+
+export const useCallApi = () => {
+  const ipcStore = useIpcStore()
+  const editorInputStore = useEditorInputStore()
+  const { toastText } = useToast()
+
+  async function typeIntoWindowAndClose(text: string) {
+    if (!text?.trim()) return
+
+    const result = await ipcStore.callFunction('typeIntoWindowAndClose', [text])
+    if (result.success) return
+
+    const summary = translate('toast.insertFailed')
+    const body = result.error || ''
+    // the window may be hidden by now, where a toast would go unseen
+    void ipcStore.callFunction('notifyDesktop', [summary, body])
+    toastText(body ? `${summary}\n${body}` : summary, 'error')
+  }
+
+  function resolveText(text?: string): string {
+    if (text) {
+      return text
+    }
+    return editorInputStore.actionText()
+  }
+
+  return { resolveText, typeIntoWindowAndClose }
+}

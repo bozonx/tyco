@@ -2,10 +2,10 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useMenuModalsStore } from '../../stores/menuModals'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 import InProgressMessage from './InProgressMessage.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

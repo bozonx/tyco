@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 
 const props = withDefaults(
   defineProps<{

@@ -220,9 +220,9 @@ import {
   ref,
 } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { useSortableList } from '../../composables/useSortableList'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import { useSortableList } from '../../composables/use-sortable-list'
+import useToast from '../../composables/use-toast'
 import {
   commandIcon,
   commandTakesText,

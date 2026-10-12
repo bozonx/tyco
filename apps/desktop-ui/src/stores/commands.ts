@@ -21,8 +21,8 @@ export const useDefaultCommandsStore = defineStore('defaultCommands', () => {
       const result = await ipcStore.callFunction('getUserConfig', [])
       return result.success ? (result.result ?? null) : null
     },
-    saveUserConfig: async (userConfig) =>
-      (await ipcStore.saveUserConfig(userConfig)).success,
+    saveUserConfig: async (userConfig, baseConfig) =>
+      (await ipcStore.saveUserConfig(userConfig, baseConfig)).success,
     t: (key, params) =>
       translate(key, params as Record<string, string | number> | undefined),
   })

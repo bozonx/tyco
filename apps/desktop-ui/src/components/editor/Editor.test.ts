@@ -1,0 +1,394 @@
+import { createPinia, setActivePinia } from 'pinia'
+import { mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import Editor from './Editor.vue'
+import { Icon } from '@iconify/vue'
+
+vi.mock('../../composables/use-i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+
+const mockTypeIntoWindowAndClose = vi.fn()
+vi.mock('../../composables/use-call-api', () => ({
+  useCallApi: () => ({ typeIntoWindowAndClose: mockTypeIntoWindowAndClose }),
+}))
+
+describe('Editor.vue toolbar', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('renders Case and Format dropdowns in the left column and icon buttons in the right column', () => {
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: {
+            props: ['label', 'items'],
+            template:
+              '<div class="dropdown-stub" :data-label="label"><button>{{ label }}</button></div>',
+          },
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    // Check dropdowns
+    const dropdowns = wrapper.findAll('.dropdown-stub')
+    expect(dropdowns).toHaveLength(2)
+    expect(dropdowns[0].attributes('data-label')).toBe('editor.case')
+    expect(dropdowns[1].attributes('data-label')).toBe('editor.format')
+
+    // Check top right buttons: AI task, translation and insertIntoWindow
+    const aiTaskBtn = wrapper.find('button[title="action.aiTask"]')
+    expect(aiTaskBtn.exists()).toBe(true)
+
+    const translateBtn = wrapper.find('button[title="action.translation"]')
+    expect(translateBtn.exists()).toBe(true)
+
+    const insertBtn = wrapper.find('button[title="action.insertIntoWindow"]')
+    expect(insertBtn.exists()).toBe(true)
+
+    const rightColumn = wrapper.findAll(
+      '.flex.items-center.justify-between > .flex.items-center'
+    )[1]
+    const rightButtons = rightColumn.findAll('.btn-stub')
+    const titles = rightButtons.map((btn) => btn.attributes('title'))
+    expect(titles).toEqual([
+      'action.aiTask',
+      'action.translation',
+      'action.insertIntoWindow',
+    ])
+  })
+
+  it('toggles the Markdown view with one highlighted button that resets on leave', async () => {
+    const { useShowMarkup } = await import('../../composables/use-show-markup')
+    const stubs = {
+      Icon: true,
+      EditorInput: true,
+      DropdownMenu: true,
+      Button: {
+        props: ['title', 'active'],
+        template:
+          '<button class="btn-stub" :class="{ \'btn-active\': active }" :title="title"><slot /></button>',
+      },
+    }
+    const wrapper = mount(Editor, { global: { stubs } })
+    const toggle = () => wrapper.find('.view-mode-toggle')
+
+    expect(toggle().attributes('aria-pressed')).toBe('false')
+    expect(toggle().classes()).not.toContain('btn-active')
+    expect(toggle().attributes('title')).toBe('editor.markup.switchToSource')
+    expect(toggle().findComponent(Icon).props('icon')).toBe('mdi:format-text')
+
+    await toggle().trigger('click')
+    expect(toggle().attributes('aria-pressed')).toBe('true')
+    expect(toggle().classes()).toContain('btn-active')
+    expect(toggle().attributes('title')).toBe('editor.markup.switchToFormatted')
+    expect(toggle().findComponent(Icon).props('icon')).toBe(
+      'mdi:language-markdown-outline'
+    )
+
+    wrapper.unmount()
+    expect(useShowMarkup().showMarkup.value).toBe(false)
+  })
+
+  it('renders plugin toolbar buttons in left and right positions', async () => {
+    const { useToolbarStore } = await import('../../stores/toolbar')
+    const toolbarStore = useToolbarStore()
+
+    toolbarStore.registerToolbarItems([
+      {
+        id: 'left-tool',
+        icon: 'mdi:hammer',
+        position: 'left',
+        tooltipKey: 'tool.left',
+        action: vi.fn(),
+      },
+      {
+        id: 'right-tool',
+        icon: 'mdi:star',
+        position: 'right',
+        tooltipKey: 'tool.right',
+        action: vi.fn(),
+      },
+    ])
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const leftBtn = wrapper.find('button[title="tool.left"]')
+    expect(leftBtn.exists()).toBe(true)
+
+    const rightBtn = wrapper.find('button[title="tool.right"]')
+    expect(rightBtn.exists()).toBe(true)
+
+    const [leftColumn, rightColumn] = wrapper.findAll(
+      '.flex.items-center.justify-between > .flex.items-center'
+    )
+    expect(
+      leftColumn
+        .findAll('.btn-stub:not(.view-mode-toggle)')
+        .map((btn) => btn.attributes('title'))
+    ).toEqual(['tool.left'])
+    expect(
+      rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
+    ).toEqual([
+      'tool.right',
+      'action.aiTask',
+      'action.translation',
+      'action.insertIntoWindow',
+    ])
+  })
+
+  it('renders toolbar buttons with text labels and respects selectionOnly disabled state', async () => {
+    const { useToolbarStore } = await import('../../stores/toolbar')
+    const { useEditorInputStore } = await import('../../stores/editor-input')
+    const toolbarStore = useToolbarStore()
+    const editorInputStore = useEditorInputStore()
+
+    const onAction = vi.fn()
+    toolbarStore.registerToolbarItems([
+      {
+        id: 'diacritics-acute',
+        label: '◌́',
+        position: 'left',
+        selectionOnly: true,
+        tooltipKey: 'plugin.diacritics.acute',
+        action: onAction,
+      },
+    ])
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title', 'disabled'],
+            template:
+              '<button class="btn-stub" :title="title" :disabled="disabled"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const acuteBtn = wrapper.find('button[title="plugin.diacritics.acute"]')
+    expect(acuteBtn.exists()).toBe(true)
+    expect(acuteBtn.text()).toContain('◌́')
+    expect(acuteBtn.attributes('disabled')).toBeDefined()
+
+    // Select text in editor
+    editorInputStore.setSelection('a', 0, 1)
+    await wrapper.vm.$nextTick()
+
+    expect(acuteBtn.attributes('disabled')).toBeUndefined()
+  })
+
+  it('does not render the bottom actions block for registered actions', async () => {
+    const { useActionMenuStore } = await import('../../stores/action-menu')
+    useActionMenuStore().registerActionsItems([
+      { labelKey: 'plugin.custom', action: vi.fn() },
+    ])
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('editor.actions')
+    expect(wrapper.text()).not.toContain('plugin.custom')
+  })
+
+  it('includes registered plugin case and format items in dropdowns', async () => {
+    const { useEditMenuStore } = await import('../../stores/edit-menu')
+    const editMenuStore = useEditMenuStore()
+
+    editMenuStore.registerCaseItems([
+      { id: 'custom-case', labelKey: 'edit.customCase', action: vi.fn() },
+    ])
+
+    editMenuStore.registerFormatItems([
+      { id: 'custom-format', labelKey: 'edit.customFormat', action: vi.fn() },
+    ])
+
+    let caseItemsPassed: any[] = []
+    let formatItemsPassed: any[] = []
+
+    mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          Button: true,
+          DropdownMenu: {
+            props: ['label', 'items'],
+            setup(props) {
+              if (props.label === 'editor.case') {
+                caseItemsPassed = props.items as any[]
+              }
+              if (props.label === 'editor.format') {
+                formatItemsPassed = props.items as any[]
+              }
+              return () => null
+            },
+          },
+        },
+      },
+    })
+
+    expect(
+      caseItemsPassed.some((item) => item.label === 'edit.customCase')
+    ).toBe(true)
+    expect(
+      formatItemsPassed.some((item) => item.label === 'edit.customFormat')
+    ).toBe(true)
+  })
+
+  it('renders dev quick buttons and activates mode with editor text', async () => {
+    const { useEditorInputStore } = await import('../../stores/editor-input')
+    const { useIpcStore } = await import('../../stores/ipc')
+    const editorInputStore = useEditorInputStore()
+    const ipcStore = useIpcStore()
+
+    editorInputStore.setValue('hello from editor test', 'plain')
+
+    const callFunctionSpy = vi
+      .spyOn(ipcStore, 'callFunction')
+      .mockResolvedValue({ success: true, result: undefined } as any)
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const aiTasksQuickBtn = wrapper.find('button[title="Open Quick AI Tasks"]')
+    expect(aiTasksQuickBtn.exists()).toBe(true)
+
+    await aiTasksQuickBtn.trigger('click')
+
+    expect(callFunctionSpy).toHaveBeenCalledWith('activateMode', [
+      'aiTasks',
+      'hello from editor test',
+    ])
+  })
+
+  it('renders info tooltip with selection hint in the right rail and not in footer', () => {
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: true,
+          InfoTooltip: {
+            props: ['text', 'align', 'placement'],
+            template:
+              '<div class="info-tooltip-stub" :data-text="text" :data-align="align" :data-placement="placement"></div>',
+          },
+        },
+      },
+    })
+
+    const rail = wrapper.find('.editor-rail')
+    expect(rail.exists()).toBe(true)
+
+    const tooltip = rail.find('.info-tooltip-stub')
+    expect(tooltip.exists()).toBe(true)
+    expect(tooltip.attributes('data-text')).toBe('editor.selectionHint')
+    expect(tooltip.attributes('data-align')).toBe('end')
+    expect(tooltip.attributes('data-placement')).toBe('bottom')
+
+    expect(wrapper.find('.editor-hint').exists()).toBe(false)
+  })
+
+  const mountEditor = () =>
+    mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          VoiceRecognitionMenu: {
+            props: ['variant'],
+            template: '<div class="voice-stub" :data-variant="variant" />',
+          },
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="btn-stub" :title="title"><slot /></button>',
+          },
+        },
+      },
+    })
+
+  it('tells that the buttons act on the selection while there is one', async () => {
+    const { useEditorInputStore } = await import('../../stores/editor-input')
+    const editorInputStore = useEditorInputStore()
+    const wrapper = mountEditor()
+
+    expect(wrapper.find('.selection-chip').exists()).toBe(false)
+
+    editorInputStore.setValue('Hello foo world')
+    editorInputStore.setSelection('foo', 6, 9)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.selection-chip').exists()).toBe(true)
+    expect(
+      wrapper.find('button[title="editor.appliesToSelection"]').exists()
+    ).toBe(true)
+  })
+
+  it('runs the voice input in a bar under the editor, which stays inert', async () => {
+    const { MenuModals, useMenuModalsStore } =
+      await import('../../stores/menu-modals')
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mountEditor()
+
+    menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, { inline: true })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.voice-stub').attributes('data-variant')).toBe('bar')
+    expect(wrapper.find('.editor-input-area').attributes('inert')).toBeDefined()
+  })
+})

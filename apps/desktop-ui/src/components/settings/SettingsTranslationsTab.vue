@@ -117,8 +117,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
 import Button from '../common/Button.vue'
@@ -128,8 +128,14 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
+import type { UserConfig } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: Record<string, any> }>()
+const props = defineProps<{
+  userConfig: Pick<
+    UserConfig,
+    'toTranslateLanguages' | 'aiRules' | 'translation'
+  >
+}>()
 
 const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
 

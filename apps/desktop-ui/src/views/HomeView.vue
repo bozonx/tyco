@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from '../composables/useI18n'
+import { useI18n } from '../composables/use-i18n'
 import { APP_ROUTES } from '../lib/navigation/routes'
 
 const { t } = useI18n()

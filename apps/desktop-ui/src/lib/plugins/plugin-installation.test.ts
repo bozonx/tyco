@@ -10,7 +10,7 @@ const preview = {
     version: '1.0.0',
     apiVersion: 2,
     defaultLocale: 'en_US',
-    locales: { en_US: {} },
+    locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
     capabilities: [],
   },
 }

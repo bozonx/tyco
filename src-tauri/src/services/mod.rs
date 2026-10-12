@@ -6,6 +6,7 @@ pub mod atomic_file;
 pub mod chat_images;
 pub mod clipboard;
 pub mod config_migration;
+pub mod config_update;
 pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;

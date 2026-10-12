@@ -1,3 +1,4 @@
+import type { SelectionRunEvent } from './selection'
 import { APP_CONFIG, type AppConfig } from './app-config'
 import { DEFAULT_USER_CONFIG, type UserConfig } from './user-config'
 
@@ -212,6 +213,68 @@ export const DESKTOP_EVENTS = {
   COMMAND_RUN: 'app://command-run',
   EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
 } as const
+
+/** Serialized payloads shared by every desktop event adapter. */
+export interface AppEventPayloads {
+  [DESKTOP_EVENTS.PLUGINS_CHANGED]: null
+  [DESKTOP_EVENTS.OPEN_MAIN_CHAT]: OpenMainChatEvent
+  [DESKTOP_EVENTS.PARAMS_CHANGED]: InitParams
+  [DESKTOP_EVENTS.CONTEXT_CAPTURED]: CapturedContext
+  [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
+  [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
+  [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
+  [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
+  [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
+  [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
+  [DESKTOP_EVENTS.COMMAND_RUN]: CommandRunEvent
+  [DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL]: string
+  [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
+  [DESKTOP_EVENTS.MAIN_WINDOW_CLOSED]: null
+}
+
+export interface OpenMainChatEvent {
+  attachment?: ChatAttachment | null
+  question?: string | null
+  autoSend?: boolean
+}
+
+/** Rejects malformed externally delivered chat events before UI side effects. */
+export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
+  const record = (entry: unknown): entry is Record<string, unknown> =>
+    entry !== null && typeof entry === 'object' && !Array.isArray(entry)
+  if (
+    !record(value) ||
+    Object.keys(value).some(
+      (key) => !['attachment', 'question', 'autoSend'].includes(key)
+    )
+  )
+    throw new Error('Invalid main chat event')
+  if (value.question != null && typeof value.question !== 'string')
+    throw new Error('Invalid chat question')
+  if (value.autoSend !== undefined && typeof value.autoSend !== 'boolean')
+    throw new Error('Invalid chat submit flag')
+  if (value.attachment != null) {
+    const attachment = value.attachment
+    if (!record(attachment) || typeof attachment.text !== 'string')
+      throw new Error('Invalid chat attachment')
+    if (
+      attachment.source !== undefined &&
+      !['selection', 'editor-selection', 'editor-text'].includes(
+        String(attachment.source)
+      )
+    )
+      throw new Error('Invalid chat attachment source')
+    for (const key of ['name', 'mediaType'])
+      if (attachment[key] !== undefined && typeof attachment[key] !== 'string')
+        throw new Error('Invalid chat attachment metadata')
+  }
+  return value as OpenMainChatEvent
+}
+
+export type DesktopListen = <K extends keyof AppEventPayloads>(
+  event: K,
+  handler: (payload: AppEventPayloads[K]) => void | Promise<void>
+) => Promise<() => void>
 
 export const DESKTOP_COMMANDS = {
   INSPECT_PLUGIN_PACKAGE: 'inspect_plugin_package',

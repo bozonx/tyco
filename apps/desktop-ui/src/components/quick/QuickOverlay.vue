@@ -60,7 +60,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
+import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
   type InputRect,
@@ -69,11 +70,11 @@ import {
   unionRect,
 } from '../../lib/quick-panel/input-region'
 import { createWindowFocus } from '../../lib/quick-panel/window-focus'
-import { useCommandLauncherStore } from '../../stores/commandLauncher'
+import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
-import { useQuickDismissStore } from '../../stores/quickDismiss'
-import { useWriterInputStore } from '../../stores/writerInput'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useQuickDismissStore } from '../../stores/quick-dismiss'
+import { useWriterInputStore } from '../../stores/writer-input'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
@@ -83,7 +84,6 @@ import TranslateModeView from '../../views/TranslateModeView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteModeView from '../../views/WriteModeView.vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()

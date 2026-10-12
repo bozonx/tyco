@@ -5,7 +5,7 @@ import { createCommand } from '../../lib/commands/command-config'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
     t: (key: string, params?: Record<string, unknown>) =>
       params ? `${key} ${JSON.stringify(params)}` : key,
@@ -15,7 +15,7 @@ vi.mock('../../composables/useI18n', () => ({
 const removeSecret = vi.fn().mockResolvedValue(undefined)
 const toast = vi.fn()
 
-vi.mock('../../composables/useToast', () => ({ default: () => ({ toast }) }))
+vi.mock('../../composables/use-toast', () => ({ default: () => ({ toast }) }))
 
 vi.mock('../../stores/llm', () => ({ useLlmStore: () => ({ removeSecret }) }))
 vi.mock('../../stores/tools', async () => {

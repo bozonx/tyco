@@ -1,14 +1,15 @@
+import type { UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import SettingsEditorTab from './SettingsEditorTab.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
 describe('SettingsEditorTab.vue', () => {
-  const createConfig = () => ({
+  const createConfig = (): Pick<UserConfig, 'markdown' | 'markdownClean'> => ({
     markdown: {
       bullet: '-',
       emphasis: '*',
@@ -119,7 +120,7 @@ describe('SettingsEditorTab.vue', () => {
   })
 
   it('initializes missing markdown and markdownClean configs with defaults', () => {
-    const userConfig: Record<string, any> = {}
+    const userConfig: Pick<UserConfig, 'markdown' | 'markdownClean'> = {}
     mount(SettingsEditorTab, {
       props: { userConfig },
       global: {
@@ -133,10 +134,10 @@ describe('SettingsEditorTab.vue', () => {
     })
 
     expect(userConfig.markdown).toBeDefined()
-    expect(userConfig.markdown.bullet).toBe('-')
+    expect(userConfig.markdown!.bullet).toBe('-')
     expect(userConfig.markdownClean).toBeDefined()
-    expect(userConfig.markdownClean.bullet).toBe('-')
-    expect(userConfig.markdownClean.codeBlockIndent).toBe('none')
-    expect(userConfig.markdownClean.keepThematicBreaks).toBe(true)
+    expect(userConfig.markdownClean!.bullet).toBe('-')
+    expect(userConfig.markdownClean!.codeBlockIndent).toBe('none')
+    expect(userConfig.markdownClean!.keepThematicBreaks).toBe(true)
   })
 })

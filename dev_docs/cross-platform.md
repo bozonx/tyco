@@ -156,8 +156,8 @@ Wayland делается только в KDE.
 - Буфер обмена: нативный API вместо запуска `powershell` (300+ мс на старт).
 - Замена выделения: Ctrl+C / Ctrl+V через `SendInput`, снимок буфера —
   через Win32 Clipboard API.
-- Секреты: файл `secrets.json` защищён на Unix правами 0600, на Windows — ничем.
-  Нужен ACL или Credential Manager (крейт `keyring`).
+- Secrets use the platform keychain (`keyring`): Windows Credential Manager,
+  macOS Keychain, and Linux Secret Service. The webview receives references only.
 - Бандл: `nsis` или `msi`, подпись кода (иначе SmartScreen).
 
 ### macOS
@@ -175,10 +175,9 @@ Wayland делается только в KDE.
 
 ### Для всех ОС
 
-- Сокет активации — TCP `127.0.0.1:47829` без аутентификации: на общей машине
-  его может вызвать любой пользователь, два пользователя столкнутся портом.
-  Заменить на Unix-сокет в `XDG_RUNTIME_DIR` и named pipe на Windows (крейт
-  `interprocess`), протокол оставить.
+- Local control uses the authenticated transport in `tyco-activation-protocol`.
+  The platform implementations and end-to-end transport tests are maintained
+  in that crate, rather than an unauthenticated fixed TCP port.
 - Уведомления вне Linux не реализованы.
 
 ## 5. Тестирование
@@ -186,9 +185,8 @@ Wayland делается только в KDE.
 ### Уровень 1 — CI на каждый push
 
 - `ubuntu-latest`: fmt, clippy, тесты, сборка бандла (есть).
-- `windows-latest`, `macos-latest`: clippy и тесты (`rust-platforms` в
-  `ci.yml`). Пока разрешено падать — до готовности бэкендов; после этого
-  `continue-on-error` убрать.
+- `windows-latest`, `macos-latest`: required Clippy and unit tests
+  (`rust-platforms` in `ci.yml`). These checks no longer allow failures.
 - Добавить при выпуске релизов: `ubuntu-24.04-arm`, `windows-11-arm`, Intel
   macOS (пока GitHub даёт такие раннеры) — сборка бандла под каждую
   архитектуру.
@@ -278,3 +276,5 @@ XWayland-окне или в ВМ (уровень 3).
   производительность на железе: NEON против AVX, Metal на macOS.
 - Бандлы сейчас только `appimage` и `deb`; добавить `rpm`, `nsis`/`msi`,
   `dmg`, а также подпись для Windows и macOS.
+
+For the current dependency boundaries and automated desktop smoke workflow, see [architecture.md](architecture.md).

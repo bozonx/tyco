@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 import SettingsLlmTab from './SettingsLlmTab.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../composables/useToast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
 }))
 

@@ -132,8 +132,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import {

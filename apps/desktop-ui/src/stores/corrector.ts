@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { useCallAi } from '../composables/useCallAi'
+import { useCallAi } from '../composables/use-call-ai'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
 
 /**

@@ -55,7 +55,7 @@ export function createPluginPackageLoader(
             apiVersion: PLUGIN_API_VERSION,
             capabilities: [],
             defaultLocale: 'en_US',
-            locales: { en_US: {} },
+            locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
             name: manifest.id,
             _revision: modulePath,
             _external: true,

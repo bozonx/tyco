@@ -7,10 +7,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useEditorInputStore } from '../stores/editorInput'
+import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
-import { useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
+import { useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()

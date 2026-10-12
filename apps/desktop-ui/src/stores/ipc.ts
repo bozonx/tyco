@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import { desktopClient } from '../lib/desktop/client'
 import { createHeldKeys } from '../lib/desktop/held-keys'
@@ -11,6 +12,7 @@ const KEY_RELEASE_TIMEOUT_MS = 500
 
 export const useIpcStore = defineStore('ipc', () => {
   const heldKeys = createHeldKeys(window)
+  onScopeDispose(heldKeys.dispose)
   const toastStore = useToastStore()
   return createIpcStoreModel({
     desktopClient,

@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
+import { invokeDesktop as invoke } from '../desktop/window'
 import {
   DESKTOP_COMMANDS,
   type ChatImage,

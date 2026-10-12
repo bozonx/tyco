@@ -20,13 +20,15 @@ import { useRoute } from 'vue-router'
 
 import ToastContainer from './components/common/ToastContainer.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
-import { useGlobalEvents } from './composables/useGlobalEvents'
-import { useI18n } from './composables/useI18n'
+import { useGlobalEvents } from './composables/use-global-events'
+import { useI18n } from './composables/use-i18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
+import { createCleanupScope } from './lib/app/cleanup-scope'
 import { createMainWindowReset } from './lib/app/main-window-reset'
 import { createCapturedChatSelection } from './lib/chat/captured-chat-selection'
 import { desktopClient } from './lib/desktop/client'
+import { getDesktopWindowLabel } from './lib/desktop/window'
 import { createCapturedSelection } from './lib/editor-input/captured-selection'
 import { syncI18nLocale } from './lib/i18n'
 import { syncDocumentLanguageAttributes } from './lib/locale/language'
@@ -35,22 +37,21 @@ import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP, isQuickWindowMode } from './lib/navigation/routes'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
-import { useChatInputStore } from './stores/chatInput'
-import { useCommandLauncherStore } from './stores/commandLauncher'
+import { useChatInputStore } from './stores/chat-input'
+import { useCommandLauncherStore } from './stores/command-launcher'
 import { useDefaultCommandsStore } from './stores/commands'
-import { useEditorInputStore } from './stores/editorInput'
-import { useExternalCommandsStore } from './stores/externalCommands'
+import { useEditorInputStore } from './stores/editor-input'
+import { useExternalCommandsStore } from './stores/external-commands'
 import { useIpcStore } from './stores/ipc'
-import { useMenuModalsStore } from './stores/menuModals'
-import { useNavPanelStore } from './stores/navPanel'
-import { useRouteParams } from './stores/routeParams'
-import { useSelectionReplaceStore } from './stores/selectionReplace'
+import { useMenuModalsStore } from './stores/menu-modals'
+import { useNavPanelStore } from './stores/nav-panel'
+import { useRouteParams } from './stores/route-params'
+import { useSelectionReplaceStore } from './stores/selection-replace'
 import { useThemeStore } from './stores/theme'
 import { useToolCatalogStore } from './stores/tools'
-import { useWriterInputStore } from './stores/writerInput'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useWriterInputStore } from './stores/writer-input'
 import { type START_MODES } from '@tyco/shared'
-import { type ChatAttachment, type EditorTransfer } from '@tyco/shared'
+import { type AppEventPayloads } from '@tyco/shared'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
@@ -65,7 +66,7 @@ const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
 const routeParamsStore = useRouteParams()
 const route = useRoute()
-const isQuickWindow = getCurrentWindow().label === 'quick'
+const isQuickWindow = getDesktopWindowLabel() === 'quick'
 // The benchmark activates the write mode only. Tauri delivers its events to
 // every window, and an answer from the main window would race the real one
 const activationMetrics = createActivationMetricsClient({
@@ -93,11 +94,11 @@ const activationMetrics = createActivationMetricsClient({
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
 }
-const selectionListeners: (() => void)[] = []
-let removePluginsListener: (() => void) | undefined
-let removeMainChatListener: (() => void) | undefined
-let removeMainEditorListener: (() => void) | undefined
-let removeMainClosedListener: (() => void) | undefined
+const runtimeScope = createCleanupScope()
+const listenDesktop = <K extends keyof AppEventPayloads>(
+  event: K,
+  handler: (payload: AppEventPayloads[K]) => void | Promise<void>
+) => runtimeScope.listen(desktopClient.listen, event, handler)
 const mainWindowReset = createMainWindowReset({
   closeAllModals: () => menuModalsStore.closeAll(),
   goToEditor: () => appNavigation.goToEditor(),
@@ -109,8 +110,7 @@ const bootstrap = createAppBootstrap({
   navigateTo: (path) => appNavigation.push(path),
   // the quick window has no routes of its own: it renders by the mode
   ownsMode: (mode) => isQuickWindow || !isQuickWindowMode(mode),
-  listen: (event, handler) =>
-    desktopClient.listen(event as never, handler as never),
+  listen: desktopClient.listen,
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
   initPlugins: async () => {
     await usePlugins().refreshInstalledPlugins()
@@ -135,7 +135,7 @@ const bootstrap = createAppBootstrap({
 watch(
   () => ipcStore.params?.userConfig?.plugins,
   (plugins) => {
-    usePlugins().reloadPlugins({ plugins } as any)
+    void usePlugins().reloadPlugins({ ...ipcStore.params.userConfig, plugins })
   },
   { deep: true }
 )
@@ -221,13 +221,9 @@ watch(
 )
 
 onMounted(() => {
-  void desktopClient
-    .listen(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
-      void usePlugins().refreshInstalledPlugins()
-    })
-    .then((remove) => {
-      removePluginsListener = remove
-    })
+  void listenDesktop(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
+    void usePlugins().refreshInstalledPlugins()
+  })
   // a failure has been reported already; the window keeps the defaults, and
   // the store refuses to save them over the user's files
   bootstrap
@@ -246,95 +242,66 @@ onMounted(() => {
   // actions that run without a window
   if (isQuickWindow) {
     const selectionReplace = useSelectionReplaceStore()
-    void desktopClient
-      .listen(DESKTOP_EVENTS.SELECTION_RUN, (payload) => {
-        void selectionReplace.handleRun(payload)
-      })
-      .then((remove) => selectionListeners.push(remove))
-    void desktopClient
-      .listen(DESKTOP_EVENTS.SELECTION_CANCEL, (payload) => {
-        selectionReplace.handleCancel(payload.runId)
-      })
-      .then((remove) => selectionListeners.push(remove))
+    void listenDesktop(DESKTOP_EVENTS.SELECTION_RUN, (payload) => {
+      void selectionReplace.handleRun(payload)
+    })
+    void listenDesktop(DESKTOP_EVENTS.SELECTION_CANCEL, (payload) => {
+      selectionReplace.handleCancel(payload.runId)
+    })
     const externalCommands = useExternalCommandsStore()
-    void desktopClient
-      .listen(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, (id) => {
-        externalCommands.handleCancel(id)
-        useCommandLauncherStore().cancelExternal(id)
-      })
-      .then((remove) => selectionListeners.push(remove))
-    void desktopClient
-      .listen(DESKTOP_EVENTS.COMMAND_RUN, (payload) => {
-        void externalCommands.handleRun(payload)
-      })
-      .then((remove) => selectionListeners.push(remove))
+    void listenDesktop(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, (id) => {
+      externalCommands.handleCancel(id)
+      useCommandLauncherStore().cancelExternal(id)
+    })
+    void listenDesktop(DESKTOP_EVENTS.COMMAND_RUN, (payload) => {
+      void externalCommands.handleRun(payload)
+    })
   }
-  void desktopClient
-    .listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, async (payload) => {
-      if (isQuickWindow) return
-      menuModalsStore.closeAll()
-      await appNavigation.goToChat()
-      const { attachment, question, autoSend } = (payload || {}) as {
-        attachment?: ChatAttachment | null
-        question?: string
-        autoSend?: boolean
-      }
-      const trimmedText = attachment?.text?.trim()
-      const trimmedQuestion = question?.trim()
-      if (attachment && trimmedText) {
-        await chatStore.startChat({
-          attachments: [{ ...attachment, text: trimmedText }],
-          withoutEditorContext: true,
-        })
-      } else if (trimmedQuestion) {
-        await chatStore.startChat({ withoutEditorContext: true })
+  void listenDesktop(DESKTOP_EVENTS.OPEN_MAIN_CHAT, async (payload) => {
+    if (isQuickWindow) return
+    menuModalsStore.closeAll()
+    await appNavigation.goToChat()
+    const { attachment, question, autoSend } = payload
+    const trimmedText = attachment?.text?.trim()
+    const trimmedQuestion = question?.trim()
+    if (attachment && trimmedText) {
+      await chatStore.startChat({
+        attachments: [{ ...attachment, text: trimmedText }],
+        withoutEditorContext: true,
+      })
+    } else if (trimmedQuestion) {
+      await chatStore.startChat({ withoutEditorContext: true })
+    } else {
+      await chatStore.openLastOrNewChat()
+    }
+
+    await nextTick()
+
+    if (trimmedQuestion) {
+      chatInputStore.setValue(trimmedQuestion)
+      if (autoSend) {
+        await chatStore.sendInput()
       } else {
-        await chatStore.openLastOrNewChat()
+        chatInputStore.focus()
       }
-
-      await nextTick()
-
-      if (trimmedQuestion) {
-        chatInputStore.setValue(trimmedQuestion)
-        if (autoSend) {
-          await chatStore.sendInput()
-        } else {
-          chatInputStore.focus()
-        }
-      }
-    })
-    .then((remove) => {
-      removeMainChatListener = remove
-    })
-  void desktopClient
-    .listen(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, (payload) => {
-      if (!isQuickWindow) {
-        const transfer = payload as EditorTransfer
-        routeParamsStore.applyEditorTransfer(transfer.text, transfer.sourceText)
-        void appNavigation.goToEditor()
-      }
-    })
-    .then((remove) => {
-      removeMainEditorListener = remove
-    })
-  void desktopClient
-    .listen(DESKTOP_EVENTS.MAIN_WINDOW_CLOSED, () => {
-      if (!isQuickWindow) void mainWindowReset.reset()
-    })
-    .then((remove) => {
-      removeMainClosedListener = remove
-    })
+    }
+  })
+  void listenDesktop(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, (payload) => {
+    if (!isQuickWindow) {
+      routeParamsStore.applyEditorTransfer(payload.text, payload.sourceText)
+      void appNavigation.goToEditor()
+    }
+  })
+  void listenDesktop(DESKTOP_EVENTS.MAIN_WINDOW_CLOSED, () => {
+    if (!isQuickWindow) void mainWindowReset.reset()
+  })
 })
 
 onUnmounted(() => {
   bootstrap.stop()
-  removePluginsListener?.()
+  runtimeScope.stop()
   void usePlugins().manager.dispose()
   activationMetrics.stop()
-  removeMainEditorListener?.()
-  removeMainClosedListener?.()
-  removeMainChatListener?.()
-  selectionListeners.forEach((remove) => remove())
 })
 </script>
 
@@ -374,7 +341,7 @@ onUnmounted(() => {
 }
 .main {
   flex: 1 1 0%;
-  min-height: 0; /* Важно для flexbox, чтобы потомки могли сжиматься */
+  min-height: 0; /* Allow flex descendants to shrink. */
   min-width: 0;
   display: flex;
   flex-direction: column;

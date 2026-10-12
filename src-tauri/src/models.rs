@@ -54,6 +54,15 @@ pub struct InitParams {
     pub access_request: Option<AccessRequest>,
 }
 
+/// Payload of app://open-main-chat; mirrored by OpenMainChatEvent in shared.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OpenMainChatEvent {
+    pub attachment: Option<ChatAttachment>,
+    pub question: Option<String>,
+    pub auto_send: bool,
+}
+
 /// A text the user attached to a chat message.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(from = "StoredChatAttachment")]
@@ -424,5 +433,36 @@ mod tests {
             serde_json::to_value(&attachment).unwrap(),
             serde_json::json!({ "text": "t" })
         );
+    }
+}
+
+#[cfg(test)]
+mod desktop_contract_tests {
+    use super::*;
+
+    #[test]
+    fn main_chat_event_matches_the_shared_wire_fixture() {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../packages/shared/fixtures/desktop-events.json"
+        ))
+        .unwrap();
+        let payload = OpenMainChatEvent {
+            attachment: Some(ChatAttachment {
+                text: "Captured text".into(),
+                source: Some("selection".into()),
+                name: Some("selection.txt".into()),
+                media_type: Some("text/plain".into()),
+            }),
+            question: Some("Explain this text".into()),
+            auto_send: true,
+        };
+        assert_eq!(
+            serde_json::to_value(payload).unwrap(),
+            fixture["openMainChat"]
+        );
+        assert!(serde_json::from_value::<OpenMainChatEvent>(
+            serde_json::json!({"text":"wrong", "autoSend":true})
+        )
+        .is_err());
     }
 }

@@ -9,8 +9,8 @@ import { computed } from 'vue'
 
 import CommandLauncher from '../components/menu/CommandLauncher.vue'
 import { useIpcStore } from '../stores/ipc'
-import { useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
+import { useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()

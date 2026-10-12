@@ -1,36 +1,15 @@
 import {
   APP_CONFIG,
-  type CommandRunEvent,
+  parseOpenMainChatEvent,
+  type AppEventPayloads,
   DEFAULT_INIT_PARAMS,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
   type InitParams,
-  type EditorTransfer,
   type IpcResult,
-  type SelectionRunEvent,
 } from '@tyco/shared'
 import { isTauri, invoke as tauriInvoke } from '@tauri-apps/api/core'
 import { listen as tauriListen } from '@tauri-apps/api/event'
-
-type AppEventPayloads = {
-  [DESKTOP_EVENTS.PLUGINS_CHANGED]: null
-  [DESKTOP_EVENTS.OPEN_MAIN_CHAT]: {
-    text?: string
-    question?: string
-    autoSend?: boolean
-  }
-  [DESKTOP_EVENTS.PARAMS_CHANGED]: InitParams
-  [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
-  [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
-  [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
-  [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
-  [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
-  [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
-  [DESKTOP_EVENTS.COMMAND_RUN]: CommandRunEvent
-  [DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL]: string
-  [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
-  [DESKTOP_EVENTS.MAIN_WINDOW_CLOSED]: null
-}
 
 const localListeners = new Map<string, Set<(payload: unknown) => void>>()
 
@@ -78,12 +57,17 @@ async function invoke<T>(
 
 async function listen<EventName extends keyof AppEventPayloads>(
   event: EventName,
-  handler: (payload: AppEventPayloads[EventName]) => void
+  handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
 ): Promise<() => void> {
   if (isAvailable()) {
-    return await tauriListen(event, (eventPayload) => {
-      handler(eventPayload.payload as AppEventPayloads[EventName])
-    })
+    return await tauriListen<AppEventPayloads[EventName]>(
+      event,
+      (eventPayload) => {
+        if (event === DESKTOP_EVENTS.OPEN_MAIN_CHAT)
+          parseOpenMainChatEvent(eventPayload.payload)
+        void handler(eventPayload.payload)
+      }
+    )
   }
 
   // without the runtime the events come from `setLocalParams`

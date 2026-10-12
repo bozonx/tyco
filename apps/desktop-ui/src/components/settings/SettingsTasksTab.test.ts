@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import SettingsTasksTab from './SettingsTasksTab.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
@@ -53,8 +53,8 @@ describe('SettingsTasksTab.vue', () => {
       props: {
         userConfig: {
           aiTasks: [
-            { name: 'Keep', rule: 'Rule' },
-            { name: '', rule: '   ' },
+            { id: 'keep', name: 'Keep', rule: 'Rule' },
+            { id: 'empty', name: '', rule: '   ' },
           ],
         },
       },
@@ -80,7 +80,7 @@ describe('SettingsTasksTab.vue', () => {
       name: string
       rule: string
     } | null)[]
-    expect(lastEmitted[0]).toEqual({ name: 'Keep', rule: 'Rule' })
+    expect(lastEmitted[0]).toEqual({ id: 'keep', name: 'Keep', rule: 'Rule' })
     expect(lastEmitted[1]).toBeNull()
   })
 })

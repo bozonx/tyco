@@ -2,10 +2,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useEditorInputStore } from '../stores/editorInput'
+import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 import EditorView from './EditorView.vue'
 
 describe('Editor actions shortcut', () => {
@@ -90,6 +90,7 @@ describe('Editor actions shortcut', () => {
     editor.setValue('Unsaved text', 'plain')
     const snapshotSpy = vi.spyOn(editor, 'snapshotDraft')
     const ipc = useIpcStore()
+    vi.spyOn(ipc, 'callFunction').mockResolvedValue({ success: true })
     const callFunctionSpy = vi.spyOn(ipc, 'callFunctionOrNotify')
 
     const wrapper = mount(EditorView, {

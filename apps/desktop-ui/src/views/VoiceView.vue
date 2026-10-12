@@ -27,14 +27,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
-import { useActionMenuStore } from '../stores/actionMenu'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useIpcStore } from '../stores/ipc'
-import { useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const props = withDefaults(
   defineProps<{

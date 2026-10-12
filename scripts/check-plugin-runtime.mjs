@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @ts-nocheck
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { readFile, readdir, mkdtemp, rm } from 'node:fs/promises'
@@ -8,6 +7,7 @@ import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
+/** @type {{ manifest: object; module: string }[]} */
 const packages = []
 for (const name of await readdir(resolve(root, 'packages'))) {
   if (
@@ -30,7 +30,7 @@ const manifest = {
   apiVersion: 2,
   capabilities: [],
   defaultLocale: 'en_US',
-  locales: { en_US: {} },
+  locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
 }
 packages.push({
   manifest,
@@ -41,13 +41,16 @@ packages.push({
   ctx.registerToolbarItems([{ id: 'hang', action: () => { while (true) {} } }]);
 } })`,
 })
-let report
+/** @typedef {{ ok: boolean; verified: string[]; error?: string }} RuntimeReport */
+/** @type {(value: RuntimeReport) => void} */
+let report = () => {}
+/** @type {Promise<RuntimeReport>} */
 const completed = new Promise((resolveReport) => {
   report = resolveReport
 })
 const server = createServer(async (request, response) => {
   try {
-    const path = new URL(request.url, 'http://localhost').pathname
+    const path = new URL(request.url ?? '/', 'http://localhost').pathname
     if (path === '/result' && request.method === 'POST') {
       let body = ''
       for await (const chunk of request) body += chunk
@@ -76,7 +79,7 @@ const server = createServer(async (request, response) => {
         }))
       )
     } else if (/^\/packages\/\d+\.js$/.test(path))
-      body = packages[Number(path.match(/\d+/)[0])].module
+      body = packages[Number(path.match(/\d+/)?.[0] ?? '')].module
     else if (
       [
         '/runtime/index.html',
@@ -86,7 +89,7 @@ const server = createServer(async (request, response) => {
     ) {
       if (path.endsWith('.html')) type = 'text/html'
       body = await readFile(
-        resolve(root, 'src-tauri/plugin-runtime', path.split('/').at(-1))
+        resolve(root, 'src-tauri/plugin-runtime', path.split('/').at(-1) ?? '')
       )
       response.setHeader(
         'Content-Security-Policy',
@@ -104,7 +107,11 @@ const server = createServer(async (request, response) => {
     response.writeHead(500).end(String(error))
   }
 })
-await new Promise((resolveReady) => server.listen(0, '0.0.0.0', resolveReady))
+await new Promise((resolveReady) =>
+  server.listen(0, '0.0.0.0', () => resolveReady(undefined))
+)
+const address = server.address()
+assert.ok(address && typeof address === 'object')
 const profile = await mkdtemp(resolve(tmpdir(), 'tyco-plugin-browser-'))
 const browser = spawn(
   process.env.TYCO_TEST_BROWSER ?? 'chromium',
@@ -114,7 +121,7 @@ const browser = spawn(
     '--disable-gpu',
     '--disable-dev-shm-usage',
     `--user-data-dir=${profile}`,
-    `http://localhost:${server.address().port}/`,
+    `http://localhost:${address.port}/`,
   ],
   { stdio: 'ignore' }
 )

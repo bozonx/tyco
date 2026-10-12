@@ -49,8 +49,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
+import { useI18n } from '../../composables/use-i18n'
+import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'

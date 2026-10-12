@@ -1,15 +1,18 @@
-import type { PluginContext, PluginManifest } from '@tyco/plugin-sdk'
-import { convertFileSrc } from '@tauri-apps/api/core'
+import {
+  clonePluginValue,
+  type PluginContext,
+  type PluginManifest,
+} from '@tyco/plugin-sdk'
+import { convertDesktopFileSrc as convertFileSrc } from '../desktop/window'
+
+import { createPluginResourceUrl } from './plugin-resource-url'
 
 import { i18n } from '../i18n'
 import { messages } from '../i18n/messages'
 import { createPluginRpc, type PluginTransport } from './plugin-rpc'
 
-function pluginResourceUrl(id: string, path: string): string {
-  const url = new URL(convertFileSrc(path, 'tyco-plugin'))
-  url.hostname = `${Array.from(new TextEncoder().encode(id), (byte) => byte.toString(16).padStart(2, '0')).join('')}.localhost`
-  return url.href
-}
+const pluginResourceUrl = (id: string, path: string) =>
+  createPluginResourceUrl(id, path, convertFileSrc)
 
 /**
  * Each plugin gets a distinct origin and a worker without app IPC or
@@ -59,30 +62,12 @@ export function openPluginTransport(id: string): Promise<PluginTransport> {
     document.body.append(frame)
   })
 }
-function merge(
-  base: Record<string, unknown>,
-  translated: Record<string, unknown>
-): Record<string, unknown> {
-  const result = { ...base }
-  for (const [key, value] of Object.entries(translated))
-    result[key] =
-      value && typeof value === 'object' && !Array.isArray(value)
-        ? merge(
-            (base[key] as Record<string, unknown>) ?? {},
-            value as Record<string, unknown>
-          )
-        : value
-  return result
-}
 function snapshot(manifest: PluginManifest) {
   const locale = i18n.global.locale.value
-  return {
-    ...merge(messages.en_US, messages[locale]),
-    local: merge(
-      manifest.locales[manifest.defaultLocale],
-      manifest.locales[locale] ?? {}
-    ),
-  }
+  return clonePluginValue({
+    ...messages[locale],
+    local: manifest.locales[locale],
+  })
 }
 
 /**
@@ -93,9 +78,10 @@ export async function activatePluginSandbox(
   manifest: PluginManifest,
   modulePath: string,
   ctx: PluginContext,
-  onFailure: (error: Error) => void
+  onFailure: (error: Error) => void,
+  openTransport: (id: string) => Promise<PluginTransport> = openPluginTransport
 ): Promise<void> {
-  const transport = await openPluginTransport(manifest.id)
+  const transport = await openTransport(manifest.id)
   if (ctx.signal.aborted) {
     transport.close()
     throw new Error('Plugin activation cancelled')
@@ -227,12 +213,18 @@ export async function activatePluginSandbox(
   try {
     await rpc.request(
       'load',
-      { manifest, url: pluginResourceUrl(manifest.id, modulePath) },
+      {
+        manifest: clonePluginValue(manifest),
+        url: pluginResourceUrl(manifest.id, modulePath),
+      },
       ctx.signal
     )
     await rpc.request(
       'init',
-      { config: ctx.getMyConfig(), messages: snapshot(manifest) },
+      {
+        config: clonePluginValue(ctx.getMyConfig()),
+        messages: snapshot(manifest),
+      },
       ctx.signal
     )
   } catch (error) {

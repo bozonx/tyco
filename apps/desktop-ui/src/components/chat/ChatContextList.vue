@@ -74,13 +74,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import {
   attachmentExcerpt,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
-import { useChatInputStore } from '../../stores/chatInput'
+import { useChatInputStore } from '../../stores/chat-input'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import { Icon } from '@iconify/vue'

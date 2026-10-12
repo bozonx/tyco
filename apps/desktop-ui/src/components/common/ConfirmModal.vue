@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { onUnmounted, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import Button from './Button.vue'
 import { Icon } from '@iconify/vue'
 

@@ -1,7 +1,7 @@
 import { DEFAULT_INIT_PARAMS, START_MODES, type InitParams } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { GlobalEvents } from '../../composables/useGlobalEvents'
+import { GlobalEvents } from './global-events'
 import { APP_ROUTES } from '../navigation/routes'
 import { createAppBootstrap, type AppBootstrapDeps } from './app-bootstrap'
 
@@ -22,9 +22,12 @@ function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
     listen: vi.fn(
       async (
         event: string,
-        handler: (payload: unknown) => void | Promise<void>
+        handler: (payload: never) => void | Promise<void>
       ) => {
-        listeners.set(event, handler)
+        listeners.set(
+          event,
+          handler as (payload: unknown) => void | Promise<void>
+        )
         return vi.fn()
       }
     ),
@@ -190,5 +193,44 @@ describe('app-bootstrap', () => {
 
     expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.KEY_UP, event)
     expect(deps.handleNavKeyUp).toHaveBeenCalledWith(event)
+  })
+})
+
+describe('bootstrap lifetime', () => {
+  it('rolls back subscriptions when loading fails and can retry', async () => {
+    const removeKey = vi.fn()
+    const removeEvent = vi.fn()
+    const { deps } = createDeps({
+      addWindowKeyupListener: () => removeKey,
+      listen: async () => removeEvent,
+      loadInitialParams: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Failed'))
+        .mockResolvedValue(DEFAULT_INIT_PARAMS),
+    })
+    const bootstrap = createAppBootstrap(deps)
+    await expect(bootstrap.start()).rejects.toThrow('Failed')
+    expect(removeKey).toHaveBeenCalledOnce()
+    expect(removeEvent).toHaveBeenCalledTimes(2)
+    await bootstrap.start()
+    expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
+  })
+
+  it('does not initialize after a pending load finishes following stop', async () => {
+    let resolve!: (params: InitParams) => void
+    const { deps } = createDeps({
+      loadInitialParams: () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    })
+    const bootstrap = createAppBootstrap(deps)
+    const pending = bootstrap.start()
+    await vi.waitFor(() => expect(resolve).toBeTypeOf('function'))
+    bootstrap.stop()
+    resolve(DEFAULT_INIT_PARAMS)
+    await pending
+    expect(deps.initPlugins).not.toHaveBeenCalled()
+    expect(deps.setParams).not.toHaveBeenCalled()
   })
 })

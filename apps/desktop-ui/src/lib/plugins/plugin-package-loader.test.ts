@@ -6,7 +6,12 @@ const manifest = {
   apiVersion: 2,
   capabilities: [],
   defaultLocale: 'en_US',
-  locales: { en_US: { label: 'Example' } },
+  locales: Object.fromEntries(
+    ['en_US', 'ru_RU', 'es_AR', 'tr_TR'].map((locale) => [
+      locale,
+      { label: 'Example' },
+    ])
+  ),
 }
 const entry = {
   manifest,

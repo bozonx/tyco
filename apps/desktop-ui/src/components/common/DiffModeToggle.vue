@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import type { DiffViewMode } from '../../lib/diff/diff-model'
 import { Icon } from '@iconify/vue'
 

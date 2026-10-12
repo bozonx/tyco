@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import DiffModeToggle from './DiffModeToggle.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

@@ -10,18 +10,16 @@
         :label="t(field.labelKey)"
       >
         <FieldSelect
-          :value="userConfig.markdown[field.name]"
+          :value="markdown[field.name]"
           :options="field.options"
-          @update:value="userConfig.markdown[field.name] = $event"
+          @update:value="updateMarkdown(field.name, $event)"
         />
       </FieldRow>
       <FieldRow
         :label="t('settings.markdownIncrementListMarker')"
         :info="t('settings.markdownIncrementListMarkerInfo')"
       >
-        <FieldCheckbox
-          v-model:value="userConfig.markdown.incrementListMarker"
-        />
+        <FieldCheckbox v-model:value="markdown.incrementListMarker" />
       </FieldRow>
     </SettingsSection>
 
@@ -31,48 +29,42 @@
     >
       <FieldRow :label="t('settings.markdownCleanBullet')">
         <FieldSelect
-          v-model:value="userConfig.markdownClean.bullet"
+          v-model:value="markdownClean.bullet"
           :options="cleanBulletOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanCodeBlockIndent')">
         <FieldSelect
-          v-model:value="userConfig.markdownClean.codeBlockIndent"
+          v-model:value="markdownClean.codeBlockIndent"
           :options="cleanCodeBlockIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanBlockquoteIndent')">
         <FieldSelect
-          v-model:value="userConfig.markdownClean.blockquoteIndent"
+          v-model:value="markdownClean.blockquoteIndent"
           :options="cleanBlockquoteIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanLinkFormat')">
         <FieldSelect
-          v-model:value="userConfig.markdownClean.linkFormat"
+          v-model:value="markdownClean.linkFormat"
           :options="cleanLinkFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanImageFormat')">
         <FieldSelect
-          v-model:value="userConfig.markdownClean.imageFormat"
+          v-model:value="markdownClean.imageFormat"
           :options="cleanImageFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepInlineCode')">
-        <FieldCheckbox
-          v-model:value="userConfig.markdownClean.keepInlineCode"
-        />
+        <FieldCheckbox v-model:value="markdownClean.keepInlineCode" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepHorizontalRules')">
-        <FieldCheckbox
-          v-model:value="userConfig.markdownClean.keepThematicBreaks"
-        />
+        <FieldCheckbox v-model:value="markdownClean.keepThematicBreaks" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepTaskCheckboxes')">
-        <FieldCheckbox
-          v-model:value="userConfig.markdownClean.keepTaskCheckboxes"
-        />
+        <FieldCheckbox v-model:value="markdownClean.keepTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
   </div>
@@ -81,17 +73,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import type { MarkdownSettings, UserConfig } from '@tyco/shared'
 import {
   normalizeMarkdownCleanSettings,
   normalizeMarkdownSettings,
 } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: Record<string, any> }>()
+const props = defineProps<{
+  userConfig: Pick<UserConfig, 'markdown' | 'markdownClean'>
+}>()
 
 const { t } = useI18n()
 
@@ -102,19 +97,32 @@ if (!props.userConfig.markdownClean) {
   props.userConfig.markdownClean = normalizeMarkdownCleanSettings(undefined)
 }
 
+const markdown = computed(() => props.userConfig.markdown!)
+const markdownClean = computed(() => props.userConfig.markdownClean!)
+
+function updateMarkdown(
+  name: keyof Omit<MarkdownSettings, 'incrementListMarker'>,
+  value: unknown
+) {
+  Object.assign(
+    markdown.value,
+    normalizeMarkdownSettings({ ...markdown.value, [name]: value })
+  )
+}
+
 const markdownFields = computed(() => [
   {
-    name: 'bullet',
+    name: 'bullet' as const,
     labelKey: 'settings.markdownBullet',
     options: ['-', '*', '+'].map((id) => ({ id, name: id })),
   },
   {
-    name: 'emphasis',
+    name: 'emphasis' as const,
     labelKey: 'settings.markdownEmphasis',
     options: ['*', '_'].map((id) => ({ id, name: id })),
   },
   {
-    name: 'strong',
+    name: 'strong' as const,
     labelKey: 'settings.markdownStrong',
     options: ['*', '_'].map((id) => ({ id, name: id.repeat(2) })),
   },

@@ -44,7 +44,7 @@ const plugin =
     apiVersion: 2,
     capabilities: [],
     defaultLocale: 'en_US',
-    locales: { en_US: {} },
+    locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
     defaultConfig: {
       fields: [{ name: 'value', type: 'text', defaultValue: 0 }],
     },

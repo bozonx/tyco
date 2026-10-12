@@ -27,13 +27,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import {
   type DiffViewMode,
   readStoredDiffMode,
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
-import { type ActionItem, useActionMenuStore } from '../../stores/actionMenu'
+import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'

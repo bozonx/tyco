@@ -211,13 +211,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useCallAi } from '../../composables/useCallAi'
+import { useCallAi } from '../../composables/use-call-ai'
 import {
   GlobalEvents,
   useGlobalEvents,
-} from '../../composables/useGlobalEvents'
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+} from '../../composables/use-global-events'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
 import {
   createLiveTranscriptState,
@@ -227,8 +227,8 @@ import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceSession } from '../../lib/stt/voice-session'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
-import { useMenuModalsStore } from '../../stores/menuModals'
-import { useQuickDismissStore } from '../../stores/quickDismiss'
+import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Button from '../common/Button.vue'
 import TextPreview from '../common/TextPreview.vue'

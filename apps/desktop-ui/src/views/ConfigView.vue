@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { useNavPanelStore } from '../stores/navPanel'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const navPanelStore = useNavPanelStore()
 

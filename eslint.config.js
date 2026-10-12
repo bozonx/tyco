@@ -44,7 +44,6 @@ export default defineConfig(
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
-      'vue/no-mutating-props': 'off',
       'vue/attribute-hyphenation': 'off',
       'vue/attributes-order': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -74,7 +73,7 @@ export default defineConfig(
       '**/workers/**',
       '**/plugins/**',
       '**/stores/ipc.ts',
-      '**/composables/useCallAi.ts',
+      '**/composables/use-call-ai.ts',
     ],
     rules: { 'no-console': 'off' },
   },
@@ -131,6 +130,73 @@ export default defineConfig(
         },
       ],
     },
+  },
+
+  {
+    files: ['apps/desktop-ui/src/lib/**/*.ts'],
+    ignores: [
+      '**/*.test.ts',
+      'apps/desktop-ui/src/lib/desktop/**',
+      'apps/desktop-ui/src/lib/net/tauri-net.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/stores/**',
+                '**/components/**',
+                '**/views/**',
+                '**/composables/**',
+                '*.vue',
+              ],
+              message:
+                'Models must depend on injected services, not UI adapters.',
+            },
+            {
+              group: ['@tauri-apps/*'],
+              message: 'Use a desktop or network adapter for native APIs.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'apps/desktop-ui/src/components/**/*.vue',
+      'apps/desktop-ui/src/views/**/*.vue',
+      'apps/desktop-ui/src/stores/**/*.ts',
+      'apps/desktop-ui/src/composables/**/*.ts',
+      'apps/desktop-ui/src/App.vue',
+    ],
+    ignores: ['**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@tauri-apps/*'],
+              message: 'Use the desktop adapters for native APIs.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    // These tabs edit the settings session's owned draft, never persisted state.
+    files: [
+      'apps/desktop-ui/src/components/settings/SettingsEditorTab.vue',
+      'apps/desktop-ui/src/components/settings/SettingsHistoryTab.vue',
+      'apps/desktop-ui/src/components/settings/SettingsLlmTab.vue',
+      'apps/desktop-ui/src/components/settings/SettingsTranslationsTab.vue',
+    ],
+    rules: { 'vue/no-mutating-props': 'off' },
   },
 
   prettierConfig

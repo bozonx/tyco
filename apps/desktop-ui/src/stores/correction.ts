@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import useToast from '../composables/useToast'
+import useToast from '../composables/use-toast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
 import { translate } from '../lib/i18n'
 import { toolResultMessage } from '../lib/invocation/invocation-result'
@@ -14,7 +14,7 @@ import { createQuickInsert } from '../lib/quick-input/quick-insert'
 import { useCorrectorStore } from './corrector'
 import { useHistoryStore } from './history'
 import { useInvocationsStore } from './invocations'
-import { MenuModals, useMenuModalsStore } from './menuModals'
+import { MenuModals, useMenuModalsStore } from './menu-modals'
 
 function describeError(error: unknown): string {
   if (error instanceof LlmError) return formatLlmError(error, translate)

@@ -1,10 +1,12 @@
 import {
   DESKTOP_EVENTS,
-  type CapturedContext,
+  type DesktopListen,
   type InitParams,
 } from '@tyco/shared'
 
-import { GlobalEvents } from '../../composables/useGlobalEvents'
+import { createCleanupScope } from './cleanup-scope'
+
+import { GlobalEvents } from './global-events'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
 export interface AppBootstrapDeps {
@@ -18,10 +20,7 @@ export interface AppBootstrapDeps {
    * dictation would take the microphone from the window the user looks at
    */
   ownsMode?: (mode: InitParams['mode']) => boolean
-  listen: (
-    event: string,
-    handler: (payload: unknown) => void | Promise<void>
-  ) => Promise<() => void>
+  listen: DesktopListen
   emitGlobal: (event: GlobalEvents, payload?: unknown) => void
   initPlugins: () => void | Promise<void>
   handleNavKeyUp: (event: KeyboardEvent) => void
@@ -31,9 +30,8 @@ export interface AppBootstrapDeps {
 }
 
 export function createAppBootstrap(deps: AppBootstrapDeps) {
-  let removeParamsListener: (() => void) | undefined
-  let removeContextListener: (() => void) | undefined
-  let removeWindowKeyupListener: (() => void) | undefined
+  let scope: ReturnType<typeof createCleanupScope> | undefined
+  let starting: Promise<void> | undefined
   let lastAppliedMode: InitParams['mode'] | undefined
 
   const applyParams = async (
@@ -69,34 +67,49 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     deps.handleNavKeyUp(event)
   }
 
-  const start = async () => {
-    removeWindowKeyupListener = deps.addWindowKeyupListener(handleKeyUp)
-
-    removeParamsListener = await deps.listen(
-      DESKTOP_EVENTS.PARAMS_CHANGED,
-      async (params) => {
-        await applyParams(params as InitParams)
+  const start = (): Promise<void> => {
+    if (starting) return starting
+    if (scope && !scope.stopped) return Promise.resolve()
+    const run = createCleanupScope()
+    scope = run
+    lastAppliedMode = undefined
+    const work = async () => {
+      try {
+        run.add(deps.addWindowKeyupListener(handleKeyUp))
+        await run.listen(
+          deps.listen,
+          DESKTOP_EVENTS.PARAMS_CHANGED,
+          async (params) => {
+            await applyParams(params)
+          }
+        )
+        if (run.stopped) return
+        await run.listen(
+          deps.listen,
+          DESKTOP_EVENTS.CONTEXT_CAPTURED,
+          (context) => {
+            deps.setParams(context)
+          }
+        )
+        if (run.stopped) return
+        const initialParams = await deps.loadInitialParams()
+        if (run.stopped) return
+        await applyParams(initialParams, { forceNavigate: true })
+        if (run.stopped) return
+        await deps.initPlugins()
+        if (!run.stopped) deps.emitGlobal(GlobalEvents.INITED)
+      } catch (error) {
+        run.stop()
+        throw error
       }
-    )
-
-    removeContextListener = await deps.listen(
-      DESKTOP_EVENTS.CONTEXT_CAPTURED,
-      (context) => {
-        deps.setParams(context as CapturedContext)
-      }
-    )
-
-    const initialParams = await deps.loadInitialParams()
-    await applyParams(initialParams, { forceNavigate: true })
-    await deps.initPlugins()
-    deps.emitGlobal(GlobalEvents.INITED)
+    }
+    starting = work().finally(() => {
+      starting = undefined
+    })
+    return starting
   }
 
-  const stop = () => {
-    removeWindowKeyupListener?.()
-    removeParamsListener?.()
-    removeContextListener?.()
-  }
+  const stop = () => scope?.stop()
 
   return { applyParams, handleKeyUp, start, stop }
 }

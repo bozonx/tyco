@@ -16,7 +16,7 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       labelKey: 'plugin.alpha.label',
       defaultConfig: {
         fields: [{ type: 'text', name: 'apiKey', defaultValue: 'default-key' }],
@@ -30,7 +30,7 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en_US',
-      locales: { en_US: {} },
+      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
       label: 'Beta Plugin',
       description: 'Beta description',
       init: () => {},

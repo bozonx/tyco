@@ -47,21 +47,21 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
+import Button from '../components/common/Button.vue'
+import SearchInput from '../components/common/SearchInput.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
-} from '../components/HistoryList.vue'
-import Button from '../components/common/Button.vue'
-import SearchInput from '../components/common/SearchInput.vue'
-import { useCopyText } from '../composables/useCopyText'
-import { useI18n } from '../composables/useI18n'
-import useToast from '../composables/useToast'
+} from '../components/history/HistoryList.vue'
+import { useCopyText } from '../composables/use-copy-text'
+import { useI18n } from '../composables/use-i18n'
+import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
-import { useNavPanelStore } from '../stores/navPanel'
-import { useRouteParams } from '../stores/routeParams'
+import { useNavPanelStore } from '../stores/nav-panel'
+import { useRouteParams } from '../stores/route-params'
 import { Icon } from '@iconify/vue'
 import type { EditorHistoryItem } from '@tyco/shared'
 

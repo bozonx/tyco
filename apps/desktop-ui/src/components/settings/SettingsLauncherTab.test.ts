@@ -5,7 +5,7 @@ import { createCommand } from '../../lib/commands/command-config'
 import SettingsLauncherTab from './SettingsLauncherTab.vue'
 import type { UserConfig } from '@tyco/shared'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

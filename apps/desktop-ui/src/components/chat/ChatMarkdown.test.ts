@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { i18n, setI18nLocale } from '../../lib/i18n'
+import { i18n, setI18nLocale } from '../../lib/i18n/index'
 import ChatMarkdown from './ChatMarkdown.vue'
 
 const mocks = vi.hoisted(() => ({

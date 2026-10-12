@@ -14,11 +14,11 @@ import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
 import { defineStore } from 'pinia'
 import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
-import { useChatInputStore } from './chatInput'
+import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
+import { useChatInputStore } from './chat-input'
 
-import { useCallAi } from '../composables/useCallAi'
-import useToast from '../composables/useToast'
+import { useCallAi } from '../composables/use-call-ai'
+import useToast from '../composables/use-toast'
 import {
   chatModelOptions,
   contextBudgetCharacters,
@@ -37,11 +37,11 @@ import {
 import { translate } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { appNavigation } from '../lib/navigation/navigation'
-import { useEditorInputStore } from './editorInput'
+import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
-import { useMenuModalsStore } from './menuModals'
+import { useMenuModalsStore } from './menu-modals'
 import { makeUniqId } from '@/lib/squidlet-lib-local'
 import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
 

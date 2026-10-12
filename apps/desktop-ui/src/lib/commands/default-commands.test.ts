@@ -166,7 +166,8 @@ describe('createDefaultCommandsSync', () => {
       expect.objectContaining({
         theme: 'dark',
         seededCommands: ['default:core.correct:fix', 'default:core.correct'],
-      })
+      }),
+      saved
     )
   })
 

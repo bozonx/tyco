@@ -118,7 +118,7 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
         .get(&manifest.default_locale)
         .is_some_and(serde_json::Value::is_object)
     {
-        return Err(error("Missing plugin fallback locale"));
+        return Err(error("Missing plugin default locale"));
     }
     fn validate_messages(value: &serde_json::Value, depth: usize) -> Result<(), AppError> {
         let object = value
@@ -152,6 +152,36 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
             return Err(error("Invalid plugin locale"));
         }
         validate_messages(dictionary, 0)?;
+    }
+    for locale in ["en_US", "ru_RU", "es_AR", "tr_TR"] {
+        if !dictionaries.contains_key(locale) {
+            return Err(error(format!("Missing plugin locale: {locale}")));
+        }
+    }
+    fn signature(value: &serde_json::Value) -> serde_json::Value {
+        if let Some(text) = value.as_str() {
+            let placeholders = regex::Regex::new(r"\{([A-Za-z0-9_]+)\}")
+                .expect("valid placeholder pattern")
+                .captures_iter(text)
+                .map(|capture| capture[1].to_string())
+                .collect::<std::collections::BTreeSet<_>>();
+            return serde_json::json!(placeholders);
+        }
+        serde_json::Value::Object(
+            value
+                .as_object()
+                .expect("validated dictionary")
+                .iter()
+                .map(|(key, entry)| (key.clone(), signature(entry)))
+                .collect(),
+        )
+    }
+    let expected = signature(&dictionaries["en_US"]);
+    if dictionaries
+        .values()
+        .any(|dictionary| signature(dictionary) != expected)
+    {
+        return Err(error("Plugin locale structure or placeholders differ"));
     }
     if let Some(icons) = &manifest.icons {
         let map = icons
@@ -543,8 +573,23 @@ impl PluginStore {
 mod tests {
     use super::*;
     fn manifest() -> PluginManifest {
-        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{}}})).unwrap()
+        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
     }
+    #[test]
+    fn rejects_incomplete_or_mismatched_plugin_locales() {
+        let mut missing = manifest();
+        missing.locales.as_object_mut().unwrap().remove("tr_TR");
+        assert!(validate_manifest(&missing).is_err());
+        let mut mismatched = manifest();
+        mismatched.locales = serde_json::json!({
+            "en_US":{"label":"Hello {name}"}, "ru_RU":{"label":"Hello {user}"},
+            "es_AR":{"label":"Hello {name}"}, "tr_TR":{"label":"Hello {name}"}
+        });
+        assert!(validate_manifest(&mismatched).is_err());
+        mismatched.locales["ru_RU"] = serde_json::json!({"label":"{name}, hello {name}"});
+        assert!(validate_manifest(&mismatched).is_ok());
+    }
+
     #[test]
     fn rejects_incompatible_and_unsafe_manifests() {
         for id in ["../escape", "core", "x.y", "", "/tmp/plugin"] {

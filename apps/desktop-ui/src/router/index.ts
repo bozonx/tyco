@@ -1,21 +1,20 @@
 import { createRouter, createMemoryHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import HistoryView from '../views/HistoryView.vue'
-import ConfigView from '../views/ConfigView.vue'
-import ChatView from '../views/ChatView.vue'
-import WriteModeView from '../views/WriteModeView.vue'
-import VoiceView from '../views/VoiceView.vue'
-import SelectModeView from '../views/SelectModeView.vue'
-import AiTaskView from '../views/AiTaskView.vue'
-import CommandLauncherView from '../views/CommandLauncherView.vue'
-import CorrectionModeView from '../views/CorrectionModeView.vue'
-import TranslateModeView from '../views/TranslateModeView.vue'
-import EditorView from '../views/EditorView.vue'
+const HomeView = () => import('../views/HomeView.vue')
+const HistoryView = () => import('../views/HistoryView.vue')
+const ConfigView = () => import('../views/ConfigView.vue')
+const ChatView = () => import('../views/ChatView.vue')
+const WriteModeView = () => import('../views/WriteModeView.vue')
+const VoiceView = () => import('../views/VoiceView.vue')
+const SelectModeView = () => import('../views/SelectModeView.vue')
+const AiTaskView = () => import('../views/AiTaskView.vue')
+const CommandLauncherView = () => import('../views/CommandLauncherView.vue')
+const CorrectionModeView = () => import('../views/CorrectionModeView.vue')
+const TranslateModeView = () => import('../views/TranslateModeView.vue')
+const EditorView = () => import('../views/EditorView.vue')
 import { APP_ROUTES } from '../lib/navigation/routes'
 
 const router = createRouter({
   history: createMemoryHistory(),
-  // history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: APP_ROUTES.HOME.path,

@@ -374,11 +374,11 @@ pub fn open_main_chat(
         app,
         StartMode::Chat,
         OPEN_MAIN_CHAT_EVENT,
-        serde_json::json!({
-            "attachment": attachment,
-            "question": question,
-            "autoSend": auto_send.unwrap_or(false),
-        }),
+        serde_json::to_value(crate::models::OpenMainChatEvent {
+            attachment,
+            question,
+            auto_send: auto_send.unwrap_or(false),
+        })?,
     )
 }
 

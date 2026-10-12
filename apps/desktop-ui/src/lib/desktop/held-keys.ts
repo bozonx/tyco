@@ -1,4 +1,5 @@
 export interface KeyEventSource {
+  removeEventListener: KeyEventSource['addEventListener']
   addEventListener: (
     type: 'keydown' | 'keyup' | 'blur',
     listener: (event: Event) => void,
@@ -24,20 +25,27 @@ export function createHeldKeys(source: KeyEventSource) {
     return code || key
   }
 
-  source.addEventListener('keydown', (event) => held.add(keyOf(event)), true)
-  source.addEventListener(
-    'keyup',
-    (event) => {
-      held.delete(keyOf(event))
-      settle()
-    },
-    true
-  )
-  // key releases outside the window never arrive
-  source.addEventListener('blur', () => {
+  const onKeydown = (event: Event) => {
+    held.add(keyOf(event))
+  }
+  const onKeyup = (event: Event) => {
+    held.delete(keyOf(event))
+    settle()
+  }
+  const onBlur = () => {
     held.clear()
     settle()
-  })
+  }
+  source.addEventListener('keydown', onKeydown, true)
+  source.addEventListener('keyup', onKeyup, true)
+  source.addEventListener('blur', onBlur)
+  const dispose = () => {
+    source.removeEventListener('keydown', onKeydown, true)
+    source.removeEventListener('keyup', onKeyup, true)
+    source.removeEventListener('blur', onBlur)
+    held.clear()
+    settle()
+  }
 
   /** Resolves once no key is held, or after `timeoutMs` for a lost release. */
   function waitForRelease(timeoutMs: number): Promise<void> {
@@ -53,5 +61,5 @@ export function createHeldKeys(source: KeyEventSource) {
     })
   }
 
-  return { waitForRelease }
+  return { waitForRelease, dispose }
 }

@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { Icon } from '@iconify/vue'
 
 const BAR_COUNT = 32

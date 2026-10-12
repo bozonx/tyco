@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { useOverlayNav } from '../../composables/useOverlayNav'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
 import KeyButton from './KeyButton.vue'
 
 const props = withDefaults(

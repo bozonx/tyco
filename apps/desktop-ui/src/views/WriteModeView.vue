@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useI18n } from '../composables/useI18n'
+import { useI18n } from '../composables/use-i18n'
 import {
   newlineShortcut,
   resolveInputKeyAction,
@@ -61,9 +61,9 @@ import {
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionStore } from '../stores/correction'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
-import { useWriterInputStore } from '../stores/writerInput'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
+import { useWriterInputStore } from '../stores/writer-input'
 
 const navPanelStore = useNavPanelStore()
 const writerInputStore = useWriterInputStore()

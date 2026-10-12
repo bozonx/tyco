@@ -16,7 +16,7 @@ const { callFunction, params } = vi.hoisted(() => ({
 }))
 const reactiveParams = reactive(params)
 
-vi.mock('../composables/useI18n', () => ({
+vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({
     t: (key: string, values?: Record<string, string>) =>
       values?.name ? `${key}:${values.name}` : key,
@@ -25,10 +25,10 @@ vi.mock('../composables/useI18n', () => ({
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ callFunction, params: reactiveParams }),
 }))
-vi.mock('../stores/navPanel', () => ({
+vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavParams: vi.fn() }),
 }))
-vi.mock('../composables/useOverlayNav', () => ({
+vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: (
     options: () => { escLabel?: string; onEsc?: () => void }
   ) => ({ escLabel: options().escLabel, handleEsc: () => options().onEsc?.() }),

@@ -41,12 +41,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import AiChat from '../components/AiChat.vue'
+import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
-import { useI18n } from '../composables/useI18n'
+import { useI18n } from '../composables/use-i18n'
 import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
-import { useNavPanelStore } from '../stores/navPanel'
+import { useNavPanelStore } from '../stores/nav-panel'
 import { Icon } from '@iconify/vue'
 
 const navPanelStore = useNavPanelStore()

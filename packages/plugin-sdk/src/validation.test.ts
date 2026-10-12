@@ -6,7 +6,12 @@ const manifest = {
   apiVersion: 2,
   capabilities: ['editor'],
   defaultLocale: 'en_US',
-  locales: { en_US: { label: 'Example' } },
+  locales: Object.fromEntries(
+    ['en_US', 'ru_RU', 'es_AR', 'tr_TR'].map((locale) => [
+      locale,
+      { label: 'Example' },
+    ])
+  ),
 }
 describe('plugin manifest validation', () => {
   it('requires a complete current contract', () => {
@@ -40,5 +45,40 @@ describe('plugin manifest validation', () => {
         },
       })
     ).toThrow()
+  })
+})
+
+describe('plugin locale completeness', () => {
+  it('rejects missing locales, keys, changed types and interpolation arguments', () => {
+    const dictionaries = Object.fromEntries(
+      ['en_US', 'ru_RU', 'es_AR', 'tr_TR'].map((locale) => [
+        locale,
+        { nested: { label: 'Hello {name}' } },
+      ])
+    )
+    for (const invalid of [
+      { ...dictionaries, tr_TR: undefined },
+      {
+        en_US: { label: 'Text' },
+        ru_RU: { label: {} },
+        es_AR: { label: 'Text' },
+        tr_TR: { label: 'Text' },
+      },
+      { ...dictionaries, ru_RU: { nested: {} } },
+      { ...dictionaries, ru_RU: { nested: 'Hello {name}' } },
+      { ...dictionaries, ru_RU: { nested: { label: 'Hello {user}' } } },
+    ])
+      expect(() =>
+        validatePluginManifest({ ...manifest, locales: invalid })
+      ).toThrow()
+    expect(() =>
+      validatePluginManifest({
+        ...manifest,
+        locales: {
+          ...dictionaries,
+          ru_RU: { nested: { label: '{name}, welcome {name}' } },
+        },
+      })
+    ).not.toThrow()
   })
 })

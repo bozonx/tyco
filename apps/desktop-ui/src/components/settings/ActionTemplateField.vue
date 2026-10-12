@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import Button from '../common/Button.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import { Icon } from '@iconify/vue'

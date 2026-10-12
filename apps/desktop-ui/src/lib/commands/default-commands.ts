@@ -125,7 +125,10 @@ export interface DefaultCommandsSyncDependencies {
   tools: () => readonly RegisteredTool[]
   /** The config as saved now: this window may have missed changes */
   loadUserConfig: () => Promise<UserConfig | null>
-  saveUserConfig: (userConfig: UserConfig) => Promise<boolean>
+  saveUserConfig: (
+    userConfig: UserConfig,
+    baseConfig: UserConfig
+  ) => Promise<boolean>
   t: DefaultCommandsContext['t']
 }
 
@@ -146,7 +149,8 @@ export function createDefaultCommandsSync(
     const userConfig = await deps.loadUserConfig()
     if (!userConfig) return
     const seeded = seedDefaultCommands(userConfig, tools, deps.t)
-    if (seeded) await deps.saveUserConfig({ ...userConfig, ...seeded })
+    if (seeded)
+      await deps.saveUserConfig({ ...userConfig, ...seeded }, userConfig)
   }
 
   const check = async (): Promise<void> => {

@@ -58,7 +58,7 @@
 <script setup lang="ts" generic="T">
 import { ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { PRESETS_KEYS } from '../../types'
 import Button from './Button.vue'
 import KeyButton from './KeyButton.vue'

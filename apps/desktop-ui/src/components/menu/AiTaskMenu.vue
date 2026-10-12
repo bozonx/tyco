@@ -33,19 +33,20 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
+import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
-import { type ActionItem } from '../../stores/actionMenu'
+import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
-import { useChatInputStore } from '../../stores/chatInput'
+import { useChatInputStore } from '../../stores/chat-input'
 import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../../stores/menuModals'
-import { useRouteParams } from '../../stores/routeParams'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useRouteParams } from '../../stores/route-params'
 import { PRESETS_KEYS } from '../../types'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -55,7 +56,6 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 
 const props = withDefaults(
   defineProps<{

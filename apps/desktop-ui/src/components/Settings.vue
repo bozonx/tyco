@@ -395,18 +395,14 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { useI18n } from '../composables/useI18n'
-import useToast from '../composables/useToast'
-import { withAiTaskIds } from '../lib/ai-tasks/custom-prompt'
+import { useI18n } from '../composables/use-i18n'
+import useToast from '../composables/use-toast'
 import {
   createCommand,
   normalizeCommands,
   normalizeLauncherCommands,
 } from '../lib/commands/command-config'
-import { normalizeEditorConfig } from '../lib/history/editor-history-storage'
 import { syncI18nLocale } from '../lib/i18n'
-import { resolveSubmitKey } from '../lib/input-keys/input-keys'
-import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import {
   AUTO_LANGUAGE_VALUE,
   SUPPORTED_UI_LANGUAGE_OPTIONS,
@@ -415,25 +411,18 @@ import {
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
-import {
-  applyPluginDefaults,
-  applyPluginPreset,
-} from '../lib/plugins/plugin-config'
+import { applyPluginPreset } from '../lib/plugins/plugin-config'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
-import { normalizeShortcutSlots } from '../lib/shortcut-slots/shortcut-slots'
+import { createSettingsConfig } from '../lib/settings/settings-config'
+import { createSettingsSession } from '../lib/settings/settings-session'
 import {
   DICTATION_LANGUAGE_MULTI,
   DICTATION_LANGUAGE_USER,
 } from '../lib/stt/dictation-language'
 import { secretId, sttProviderNeedsKey } from '../lib/stt/stt-client'
-import {
-  activeSttModel,
-  normalizeSttConfig,
-  selectSttProvider,
-} from '../lib/stt/stt-config'
-import { normalizeTranslationConfig } from '../lib/translation/translation-config'
+import { activeSttModel, selectSttProvider } from '../lib/stt/stt-config'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
-import { useActionMenuStore } from '../stores/actionMenu'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
@@ -450,19 +439,14 @@ import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import { Icon } from '@iconify/vue'
-import {
-  normalizeMarkdownCleanSettings,
-  normalizeMarkdownSettings,
-} from '@tyco/shared'
+import type { UserConfig } from '@tyco/shared'
 import {
   type BuiltinToolId,
   CONFIG_VERSION,
   type CommandConfig,
   type ContrastMode,
-  DEFAULT_USER_CONFIG,
   type MainActionConfig,
   type MotionMode,
-  PASTE_SHORTCUTS,
   SELECTION_HOTKEY_PREFIX,
   type StorageInfo,
   type StorageKind,
@@ -470,7 +454,6 @@ import {
   type ThemeMode,
   UI_SCALES,
   isUiScale,
-  normalizeAppearance,
 } from '@tyco/shared'
 
 const actionMenuStore = useActionMenuStore()
@@ -489,14 +472,24 @@ const currentTab = ref(
   typeof requestedTab === 'string' && requestedTab ? requestedTab : 'general'
 )
 
-const userConfig = ref(createPreparedUserConfig(ipcStore.params.userConfig))
-const lastPersistedConfig = ref(serializeUserConfig(userConfig.value))
+const { prepare: createPreparedUserConfig } = createSettingsConfig({
+  resolveMainActions: actionMenuStore.resolveMainActions,
+  getRegisteredActions: actionMenuStore.getRegisteredActions,
+  pluginIndexes: () => pluginIndexes,
+  appearance: () => themeStore.settings,
+})
+const session = createSettingsSession({
+  initialConfig: ipcStore.params.userConfig,
+  prepare: createPreparedUserConfig,
+  save: (next, base) => ipcStore.saveUserConfig(next, base),
+  canSave: () => !configIsNewer.value,
+  notifyError: (error) =>
+    toastText(error || t('toast.settingsSaveFailed'), 'error'),
+  debounceMs: SAVE_DEBOUNCE_MS,
+})
+const userConfig = session.draft
 const storageInfo = ref<StorageInfo | null>(null)
 const sttKeyDraft = ref('')
-let isComponentActive = true
-let skipNextAutosave = false
-let saveTimer: ReturnType<typeof setTimeout> | null = null
-let saveQueue: Promise<void> = Promise.resolve()
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
@@ -612,35 +605,8 @@ const windowInsertionTabs = computed(() => [
   { text: 'ydotool', key: 'ydotool' },
 ])
 
-watch(
-  () => ipcStore.params.userConfig,
-  (incomingConfig) => {
-    const preparedConfig = createPreparedUserConfig(incomingConfig)
-    const serializedConfig = serializeUserConfig(preparedConfig)
-
-    if (serializedConfig === lastPersistedConfig.value) {
-      return
-    }
-
-    skipNextAutosave = true
-    userConfig.value = preparedConfig
-    lastPersistedConfig.value = serializedConfig
-  },
-  { immediate: true }
-)
-
-watch(
-  userConfig,
-  () => {
-    if (skipNextAutosave) {
-      skipNextAutosave = false
-      return
-    }
-
-    scheduleAutosave()
-  },
-  { deep: true }
-)
+watch(() => ipcStore.params.userConfig, session.applyIncoming)
+watch(userConfig, session.schedule, { deep: true })
 
 const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
   config: 'settings.storageConfig',
@@ -687,147 +653,6 @@ async function openStorageLocation(kind: StorageKind) {
   await ipcStore.callFunction('openStorageLocation', [kind])
 }
 
-function cloneUserConfig(config: unknown) {
-  return JSON.parse(JSON.stringify(config || DEFAULT_USER_CONFIG))
-}
-
-function createPreparedUserConfig(config: unknown) {
-  const nextConfig = cloneUserConfig(config)
-
-  ensurePluginDefaults(nextConfig)
-  normalizeAppearanceConfig(nextConfig)
-  normalizeLanguageConfig(nextConfig)
-  nextConfig.mainActions = actionMenuStore.resolveMainActions(
-    nextConfig.mainActions,
-    nextConfig.mainActionRegistrations ?? []
-  )
-  nextConfig.commands = normalizeCommands(nextConfig.commands)
-  nextConfig.mainActionRegistrations = [
-    ...new Set([
-      ...(nextConfig.mainActionRegistrations ?? []),
-      ...actionMenuStore
-        .getRegisteredActions()
-        .flatMap((action) => (action.id ? [action.id] : [])),
-    ]),
-  ]
-  normalizeWindowInsertionConfig(nextConfig)
-  normalizeEditorConfig(nextConfig)
-  nextConfig.markdown = normalizeMarkdownSettings(nextConfig.markdown)
-  nextConfig.markdownClean = normalizeMarkdownCleanSettings(
-    nextConfig.markdownClean
-  )
-  normalizeHotkeysConfig(nextConfig)
-  Object.assign(nextConfig, normalizeSttConfig(nextConfig))
-  normalizeLlmConfigSection(nextConfig)
-  nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
-  delete nextConfig.chatRoles
-  delete nextConfig.chatHistoryMaxItems
-  nextConfig.launcherCommands = normalizeLauncherCommands(
-    nextConfig.launcherCommands,
-    nextConfig.commands
-  )
-  nextConfig.launcherPages = (nextConfig.launcherPages ?? []).map(
-    (page: (string | null)[]) =>
-      normalizeLauncherCommands(page, nextConfig.commands)
-  )
-  normalizeAiTasks(nextConfig)
-  nextConfig.aiRules = {
-    ...DEFAULT_USER_CONFIG.aiRules,
-    ...(nextConfig.aiRules || {}),
-  }
-  // the common rule was replaced by per-task rules
-  delete nextConfig.aiRules.base
-
-  return nextConfig
-}
-
-function normalizeHotkeysConfig(config: Record<string, any>) {
-  config.hotkeys = { ...DEFAULT_USER_CONFIG.hotkeys, ...(config.hotkeys || {}) }
-  delete config.hotkeys?.history
-  delete config.hotkeys?.config
-  config.submitKey = resolveSubmitKey(config.submitKey)
-  delete config.quickInputHotkeys
-  delete config.quickInputSubmit
-  delete config.quickCorrection
-  delete config.hotkeys?.correction
-  // only the correction replaces the selection from a hotkey
-  config.selectionHotkeys = {
-    correction:
-      config.selectionHotkeys?.correction ??
-      DEFAULT_USER_CONFIG.selectionHotkeys.correction,
-  }
-  delete config.selectionReplace
-  config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
-  config.quickHideOnBlur = config.quickHideOnBlur !== false
-}
-
-function serializeUserConfig(config: unknown) {
-  return JSON.stringify(config)
-}
-
-function ensurePluginDefaults(config: Record<string, any>) {
-  config.plugins = applyPluginDefaults(pluginIndexes, config.plugins)
-}
-
-// configs created before the accessibility settings come without these keys;
-// the theme falls back to what the pre-render bootstrap applied
-function normalizeAppearanceConfig(config: Record<string, any>) {
-  Object.assign(
-    config,
-    normalizeAppearance({ ...themeStore.settings, ...config })
-  )
-}
-
-function normalizeLanguageConfig(config: Record<string, any>) {
-  config.appLanguage = config.appLanguage || AUTO_LANGUAGE_VALUE
-  config.userLanguage = config.userLanguage || AUTO_LANGUAGE_VALUE
-  config.toTranslateLanguages = normalizeShortcutSlots<string>(
-    config.toTranslateLanguages
-  ).map((lang) => (typeof lang === 'string' ? lang : null))
-}
-
-function normalizeWindowInsertionConfig(config: Record<string, any>) {
-  const defaultWindowInsertion = DEFAULT_USER_CONFIG.windowInsertion
-  const windowInsertion = config.windowInsertion || {}
-  const xdotoolBin =
-    windowInsertion.xdotoolBin ||
-    config.xdotoolBin ||
-    defaultWindowInsertion.xdotoolBin
-
-  config.windowInsertion = {
-    method:
-      windowInsertion.method === 'ydotool' ||
-      windowInsertion.method === 'xdotool'
-        ? windowInsertion.method
-        : defaultWindowInsertion.method,
-    xdotoolBin,
-    ydotoolBin: windowInsertion.ydotoolBin || defaultWindowInsertion.ydotoolBin,
-    pasteShortcut: PASTE_SHORTCUTS.includes(windowInsertion.pasteShortcut)
-      ? windowInsertion.pasteShortcut
-      : defaultWindowInsertion.pasteShortcut,
-  }
-  config.xdotoolBin = xdotoolBin
-}
-
-function normalizeLlmConfigSection(config: Record<string, any>) {
-  config.llm = normalizeLlmConfig(config.llm)
-  delete config.llmModels
-}
-
-function normalizeAiTasks(config: Record<string, any>) {
-  if (!Array.isArray(config.aiTasks)) {
-    config.aiTasks = []
-  }
-
-  config.aiTasks = withAiTaskIds(
-    normalizeShortcutSlots<Record<string, any>>(config.aiTasks).map((task) =>
-      task && (task.name?.trim() || task.rule?.trim())
-        ? { id: task.id, name: task.name || '', rule: task.rule || '' }
-        : null
-    )
-  )
-}
-
 const navigatorLanguages = computed(() => getNavigatorLanguages())
 
 const isAppLanguageManual = computed(
@@ -842,34 +667,11 @@ const effectiveAppLanguage = computed(() =>
   )
 )
 
-async function persistUserConfig() {
-  if (configIsNewer.value) return
-  const preparedConfig = createPreparedUserConfig(userConfig.value)
-  const serializedConfig = serializeUserConfig(preparedConfig)
-  saveQueue = saveQueue.then(async () => {
-    if (serializedConfig === lastPersistedConfig.value) return
-    const previousPersistedConfig = lastPersistedConfig.value
-
-    // Serialize writes so a slower old save can never overwrite a newer edit.
-    lastPersistedConfig.value = serializedConfig
-    const result = await ipcStore.saveUserConfig(preparedConfig)
-
-    if (!result.success) {
-      lastPersistedConfig.value = previousPersistedConfig
-      if (isComponentActive) {
-        toastText(result.error || t('toast.settingsSaveFailed'), 'error')
-      }
-    }
-  })
-  await saveQueue
-}
+const persistUserConfig = session.persist
 
 async function finishProviderRemoval(id: string) {
   await persistUserConfig()
-  if (
-    serializeUserConfig(createPreparedUserConfig(userConfig.value)) !==
-    lastPersistedConfig.value
-  ) {
+  if (!session.isSaved()) {
     return
   }
   if (Object.hasOwn(llmStore.secrets, id)) {
@@ -879,27 +681,6 @@ async function finishProviderRemoval(id: string) {
       toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
     }
   }
-}
-
-function scheduleAutosave() {
-  if (saveTimer) {
-    clearTimeout(saveTimer)
-  }
-
-  saveTimer = setTimeout(() => {
-    saveTimer = null
-    void persistUserConfig()
-  }, SAVE_DEBOUNCE_MS)
-}
-
-function flushPendingAutosave() {
-  if (!saveTimer) {
-    return
-  }
-
-  clearTimeout(saveTimer)
-  saveTimer = null
-  void persistUserConfig()
 }
 
 const pasteShortcutOptions = computed(() => {
@@ -1147,22 +928,27 @@ async function loadStorageInfo() {
     : null
 }
 
-const updateAiTasks = (items: any[]) => {
+const updateAiTasks = (items: UserConfig['aiTasks']) => {
   userConfig.value.aiTasks = items
 }
 
 const updatePluginEnabled = (pluginName: string, enabled: boolean) => {
-  if (!userConfig.value.plugins[pluginName]) {
-    userConfig.value.plugins[pluginName] = {}
+  const current = userConfig.value.plugins[pluginName]
+  userConfig.value.plugins[pluginName] = {
+    ...(current && typeof current === 'object' ? current : {}),
+    enabled,
   }
-  userConfig.value.plugins[pluginName].enabled = enabled
 }
 
 const updatePluginConfig = (
   pluginName: string,
-  values: Record<string, any>
+  values: Record<string, unknown>
 ) => {
-  const previous = userConfig.value.plugins[pluginName] ?? {}
+  const current = userConfig.value.plugins[pluginName]
+  const previous: Record<string, unknown> =
+    current && typeof current === 'object'
+      ? (current as Record<string, unknown>)
+      : {}
   const definition = pluginIndexes.find(
     (factory) => factory().id === pluginName
   )?.()
@@ -1178,8 +964,7 @@ onUnmounted(() => {
   if (copyStorageTimeout) {
     clearTimeout(copyStorageTimeout)
   }
-  isComponentActive = false
-  flushPendingAutosave()
+  session.dispose()
 })
 </script>
 

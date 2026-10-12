@@ -9,7 +9,11 @@
     ".env"
   ],
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**"] },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["TAURI_ENV_PLATFORM", "TAURI_ENV_DEBUG"]
+    },
     "lint": { "dependsOn": ["^build"], "outputs": [] },
     "type-check": { "dependsOn": ["^build"], "outputs": [] },
     "test": {

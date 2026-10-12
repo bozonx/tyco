@@ -73,8 +73,9 @@ pub fn open_main_editor(
 pub fn save_user_config(
     app: AppHandle,
     state: State<'_, AppState>,
-    mut user_config: Value,
-) -> Result<(), AppError> {
+    user_config: Value,
+    base_config: Value,
+) -> Result<Value, AppError> {
     if !user_config.is_object() {
         return Err(AppError::Message(String::from(
             "The user config must be an object",
@@ -86,6 +87,11 @@ pub fn save_user_config(
     if config_migration::is_newer_than_supported(&state.params().user_config) {
         return Err(storage::newer_config_error());
     }
+    let mut user_config = crate::services::config_update::merge_config(
+        &state.params().user_config,
+        &base_config,
+        &user_config,
+    )?;
     // a config sent without its version would be migrated again at the next
     // start
     if config_migration::config_version(&user_config) == 0 {
@@ -106,12 +112,12 @@ pub fn save_user_config(
             log::error!("Could not apply the history settings: {error}");
         }
         state.update_params(|params| {
-            params.user_config = user_config;
+            params.user_config = user_config.clone();
         });
     }
     runtime::emit_params(&app, &state)?;
 
-    Ok(())
+    Ok(user_config)
 }
 
 #[tauri::command(async)]

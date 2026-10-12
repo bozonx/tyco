@@ -2,6 +2,7 @@ import {
   PLUGIN_API_VERSION,
   type PluginDefinition,
   type PluginManifest,
+  type PluginMessages,
 } from './plugin.js'
 
 export const PLUGIN_PACKAGE_FORMAT_VERSION = 1
@@ -9,6 +10,58 @@ const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 function fail(message: string): never {
   throw new Error(message)
+}
+
+export const SUPPORTED_PLUGIN_LOCALES = [
+  'en_US',
+  'ru_RU',
+  'es_AR',
+  'tr_TR',
+] as const
+
+/** Requires identical dictionary structure and interpolation arguments. */
+export function validatePluginLocales(
+  value: unknown
+): asserts value is Record<string, PluginMessages> {
+  if (!record(value)) fail('Invalid plugin locales')
+  const signature = (dictionary: unknown, depth = 0): unknown => {
+    if (!record(dictionary) || depth > 16) fail('Invalid plugin dictionary')
+    return Object.keys(dictionary)
+      .sort()
+      .map((key) => {
+        if (
+          !/^[A-Za-z][A-Za-z0-9_-]*$/.test(key) ||
+          ['__proto__', 'constructor', 'prototype'].includes(key)
+        )
+          fail('Invalid plugin dictionary key')
+        const entry = dictionary[key]
+        return [
+          key,
+          typeof entry === 'string'
+            ? [
+                'string',
+                [
+                  ...new Set(
+                    Array.from(
+                      entry.matchAll(/\{([\w]+)\}/g),
+                      (match) => match[1]
+                    )
+                  ),
+                ].sort(),
+              ]
+            : signature(entry, depth + 1),
+        ]
+      })
+  }
+  for (const locale of SUPPORTED_PLUGIN_LOCALES) {
+    if (!record(value[locale])) fail(`Missing plugin locale: ${locale}`)
+  }
+  const expected = JSON.stringify(signature(value.en_US))
+  for (const [locale, dictionary] of Object.entries(value)) {
+    if (!/^[a-z]{2}_[A-Z]{2}$/.test(locale)) fail('Invalid plugin locale')
+    if (JSON.stringify(signature(dictionary)) !== expected)
+      fail(`Plugin locale structure or placeholders differ: ${locale}`)
+  }
 }
 
 /** Validates data before it reaches settings, dictionaries or registries. */
@@ -64,22 +117,8 @@ export function validatePluginManifest(
     !record(value.locales) ||
     !record(value.locales[value.defaultLocale])
   )
-    fail('Missing plugin fallback locale')
-  function messages(dictionary: unknown, depth = 0): void {
-    if (!record(dictionary) || depth > 16) fail('Invalid plugin dictionary')
-    for (const [key, entry] of Object.entries(dictionary)) {
-      if (
-        !/^[A-Za-z][A-Za-z0-9_-]*$/.test(key) ||
-        ['__proto__', 'constructor', 'prototype'].includes(key)
-      )
-        fail('Invalid plugin dictionary key')
-      if (typeof entry !== 'string') messages(entry, depth + 1)
-    }
-  }
-  for (const [locale, dictionary] of Object.entries(value.locales)) {
-    if (!/^[a-z]{2}_[A-Z]{2}$/.test(locale)) fail('Invalid plugin locale')
-    messages(dictionary)
-  }
+    fail('Missing plugin default locale')
+  validatePluginLocales(value.locales)
   if (value.defaultConfig !== undefined) {
     if (!record(value.defaultConfig)) fail('Invalid plugin config')
     validatePluginFields(value.defaultConfig.fields)

@@ -52,7 +52,10 @@
               nested
             >
               <FieldCheckbox
-                v-model:value="userConfig.sanitizeSecretsInEditorHistory"
+                :value="userConfig.sanitizeSecretsInEditorHistory ?? false"
+                @update:value="
+                  userConfig.sanitizeSecretsInEditorHistory = $event
+                "
               />
             </FieldRow>
           </template>
@@ -133,8 +136,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import {
   chatHistoryRetentionChoices,
   isChatHistoryEnabled,
@@ -153,9 +156,19 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import type { UserConfig } from '@tyco/shared'
 
 const props = defineProps<{
-  userConfig: Record<string, any>
+  userConfig: Pick<
+    UserConfig,
+    | 'editorHistoryStorage'
+    | 'editorHistoryMaxItems'
+    | 'editorHistoryRetentionDays'
+    | 'sanitizeSecretsInEditorHistory'
+    | 'chatHistoryEnabled'
+    | 'chatHistoryRetentionDays'
+  > &
+    Partial<Pick<UserConfig, 'appLanguage' | 'userLanguage'>>
   effectiveAppLanguage?: string
 }>()
 

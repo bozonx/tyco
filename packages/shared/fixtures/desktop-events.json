@@ -1,0 +1,13 @@
+{
+  "openMainChat": {
+    "attachment": {
+      "text": "Captured text",
+      "source": "selection",
+      "name": "selection.txt",
+      "mediaType": "text/plain"
+    },
+    "question": "Explain this text",
+    "autoSend": true
+  },
+  "editorTransfer": { "text": "Edited text", "sourceText": "Original text" }
+}

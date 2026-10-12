@@ -70,7 +70,7 @@ export function createCommandMap(): CommandMap {
     },
     saveUserConfig: {
       command: DESKTOP_COMMANDS.SAVE_USER_CONFIG,
-      buildArgs: ([userConfig]) => ({ userConfig }),
+      buildArgs: ([userConfig, baseConfig]) => ({ userConfig, baseConfig }),
     },
     patchLocalState: {
       command: DESKTOP_COMMANDS.PATCH_LOCAL_STATE,
@@ -348,13 +348,21 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     error: 'The app params are not loaded yet',
   })
 
-  const saveUserConfig = async (userConfig: UserConfig) => {
+  const saveUserConfig = async (
+    userConfig: UserConfig,
+    baseConfig: UserConfig = params.value.userConfig
+  ) => {
     if (!paramsLoaded) return notLoaded()
 
-    const result = await callFunction('saveUserConfig', [userConfig])
+    const previousConfig = params.value.userConfig
+    const result = await callFunction('saveUserConfig', [
+      userConfig,
+      baseConfig,
+    ])
 
-    if (result.success) {
-      params.value.userConfig = userConfig
+    // A newer params event may have arrived while this save was in flight.
+    if (result.success && params.value.userConfig === previousConfig) {
+      params.value.userConfig = result.result ?? userConfig
     }
 
     return result

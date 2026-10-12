@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import {
   type MainActionChoice,
   type MainActionGroup,
@@ -55,7 +55,7 @@ import { getLanguageLabel } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { pluginIndexes } from '../../plugins'
-import { useActionMenuStore } from '../../stores/actionMenu'
+import { useActionMenuStore } from '../../stores/action-menu'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'

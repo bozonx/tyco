@@ -95,3 +95,30 @@ describe('activation metrics client', () => {
     textarea.remove()
   })
 })
+
+it('cleans a subscription resolved after stopping without registering DOM listeners', async () => {
+  let finish!: (remove: () => void) => void
+  const remove = vi.fn()
+  const eventTarget = {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }
+  const client = createActivationMetricsClient({
+    listen: () =>
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    mark: vi.fn(),
+    submitValue: vi.fn(),
+    prepareTrial: vi.fn(),
+    activeElement: () => null,
+    requestFrame: vi.fn(),
+    eventTarget,
+  })
+  const start = client.start()
+  client.stop()
+  finish(remove)
+  await start
+  expect(remove).toHaveBeenCalledOnce()
+  expect(eventTarget.addEventListener).not.toHaveBeenCalled()
+})

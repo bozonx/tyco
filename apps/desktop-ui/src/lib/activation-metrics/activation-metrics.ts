@@ -1,3 +1,5 @@
+import { createCleanupScope } from '../app/cleanup-scope'
+
 export interface ActivationMetricsDeps {
   listen: (
     event: 'start' | 'collect',
@@ -14,7 +16,8 @@ export interface ActivationMetricsDeps {
 export function createActivationMetricsClient(deps: ActivationMetricsDeps) {
   let activeId: number | null = null
   let firstCharacterMarked = false
-  const stops: (() => void)[] = []
+  let scope = createCleanupScope()
+  let starting: Promise<void> | undefined
 
   // the main window edits in CodeMirror, the quick window in a textarea
   const isEditorTarget = (target: EventTarget | null) =>
@@ -43,26 +46,52 @@ export function createActivationMetricsClient(deps: ActivationMetricsDeps) {
   }
 
   return {
-    async start() {
-      stops.push(
-        await deps.listen('start', ({ id }) => {
-          deps.prepareTrial()
-          activeId = id
-          firstCharacterMarked = false
-          if (isEditorTarget(deps.activeElement())) {
-            deps.mark(id, 'dom-focus')
-          }
-          deps.requestFrame(() => deps.mark(id, 'frame'))
-        }),
-        await deps.listen('collect', ({ id }) => deps.submitValue(id))
-      )
-      deps.eventTarget.addEventListener('focusin', onFocus)
-      deps.eventTarget.addEventListener('keydown', onKeydown, true)
+    start(): Promise<void> {
+      if (starting) return starting
+      if (scope.stopped) scope = createCleanupScope()
+      const run = scope
+      const work = async () => {
+        try {
+          run.add(
+            await deps.listen('start', ({ id }) => {
+              if (run.stopped) return
+              deps.prepareTrial()
+              activeId = id
+              firstCharacterMarked = false
+              if (isEditorTarget(deps.activeElement()))
+                deps.mark(id, 'dom-focus')
+              deps.requestFrame(() => {
+                if (!run.stopped) deps.mark(id, 'frame')
+              })
+            })
+          )
+          if (run.stopped) return
+          run.add(
+            await deps.listen('collect', ({ id }) => {
+              if (!run.stopped) deps.submitValue(id)
+            })
+          )
+          if (run.stopped) return
+          deps.eventTarget.addEventListener('focusin', onFocus)
+          deps.eventTarget.addEventListener('keydown', onKeydown, true)
+          run.add(() => {
+            deps.eventTarget.removeEventListener('focusin', onFocus)
+            deps.eventTarget.removeEventListener('keydown', onKeydown, true)
+          })
+        } catch (error) {
+          run.stop()
+          throw error
+        }
+      }
+      starting = work().catch((error: unknown) => {
+        starting = undefined
+        throw error
+      })
+      return starting
     },
     stop() {
-      stops.splice(0).forEach((stop) => stop())
-      deps.eventTarget.removeEventListener('focusin', onFocus)
-      deps.eventTarget.removeEventListener('keydown', onKeydown, true)
+      scope.stop()
+      starting = undefined
       activeId = null
     },
   }

@@ -44,8 +44,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import { useSortableList } from '../../composables/useSortableList'
+import { useI18n } from '../../composables/use-i18n'
+import { useSortableList } from '../../composables/use-sortable-list'
 import {
   type SortableChecklistItem,
   resolveSortableChecklist,

@@ -59,10 +59,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
-import { useI18n } from '../composables/useI18n'
-import { useOverlayNav } from '../composables/useOverlayNav'
-import { type ActionItem } from '../stores/actionMenu'
-import { useRouteParams } from '../stores/routeParams'
+import { useI18n } from '../composables/use-i18n'
+import { useOverlayNav } from '../composables/use-overlay-nav'
+import { type ActionItem } from '../stores/action-menu'
+import { useRouteParams } from '../stores/route-params'
 import { PRESETS_KEYS } from '../types'
 import ShortcutButton from './common/ShortcutButton.vue'
 

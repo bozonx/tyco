@@ -176,8 +176,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
-import useToast from '../../composables/useToast'
+import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import {
   scriptToolConfig,
   validateCommand,

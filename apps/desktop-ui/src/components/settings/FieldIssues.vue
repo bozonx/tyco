@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import type { CommandIssue } from '../../lib/commands/command-config'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 

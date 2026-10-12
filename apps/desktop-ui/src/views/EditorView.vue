@@ -9,13 +9,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 
-import Editor from '../components/Editor.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
+import Editor from '../components/editor/Editor.vue'
 import { isCtrlEnter } from '../lib/input-keys/input-keys'
-import { useEditorInputStore } from '../stores/editorInput'
+import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
-import { MenuModals, useMenuModalsStore } from '../stores/menuModals'
-import { useNavPanelStore } from '../stores/navPanel'
+import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 const navPanelStore = useNavPanelStore()

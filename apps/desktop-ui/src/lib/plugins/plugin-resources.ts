@@ -1,3 +1,4 @@
+import { validatePluginLocales } from '@tyco/plugin-sdk'
 import type {
   InputConfigItem,
   PluginMessages,
@@ -48,24 +49,6 @@ export interface PluginResourceHost {
   addIcons?(icons: NonNullable<PluginDefinition['icons']>): void
 }
 
-function mergeMessages(
-  base: PluginMessages,
-  translated: PluginMessages
-): PluginMessages {
-  const result = { ...base }
-  for (const [key, value] of Object.entries(translated)) {
-    const fallback = result[key]
-    result[key] =
-      typeof value === 'object' &&
-      value !== null &&
-      typeof fallback === 'object' &&
-      fallback !== null
-        ? mergeMessages(fallback as PluginMessages, value as PluginMessages)
-        : value
-  }
-  return result
-}
-
 export function createPluginResources(
   host: PluginResourceHost,
   supportedLocales: readonly string[]
@@ -82,15 +65,13 @@ export function createPluginResources(
     defaultLocale = 'en_US',
     icons?: PluginDefinition['icons']
   ) {
+    validatePluginLocales(locales)
+    if (!locales[defaultLocale])
+      throw new Error(`Missing plugin default locale: ${defaultLocale}`)
     remove(id)
-    const fallback = locales[defaultLocale] ?? {}
     const targets = [...new Set([...supportedLocales, ...Object.keys(locales)])]
     for (const locale of targets)
-      host.setMessages(
-        locale,
-        pluginNamespace(id),
-        mergeMessages(fallback, locales[locale] ?? {})
-      )
+      host.setMessages(locale, pluginNamespace(id), locales[locale])
     installed.set(id, targets)
     if (icons) host.addIcons?.({ ...icons, prefix: pluginIconPrefix(id) })
   }

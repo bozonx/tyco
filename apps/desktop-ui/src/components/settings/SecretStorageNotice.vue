@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useI18n } from '../../composables/useI18n'
+import { useI18n } from '../../composables/use-i18n'
 import { useLlmStore } from '../../stores/llm'
 import { Icon } from '@iconify/vue'
 

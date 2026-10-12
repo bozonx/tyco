@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => ({
   launcher: { stage: { kind: 'list' } },
 }))
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
@@ -35,13 +35,13 @@ vi.mock('../../stores/ipc', () => ({
     callFunction: mocks.callFunction,
   }),
 }))
-vi.mock('../../stores/writerInput', () => ({
+vi.mock('../../stores/writer-input', () => ({
   useWriterInputStore: () => ({
     focus: mocks.focus,
     markDismissed: mocks.markDismissed,
   }),
 }))
-vi.mock('../../stores/menuModals', () => ({
+vi.mock('../../stores/menu-modals', () => ({
   MenuModals: { NONE: 'none' },
   useMenuModalsStore: () =>
     Object.assign(reactive(mocks.modals), {
@@ -49,10 +49,10 @@ vi.mock('../../stores/menuModals', () => ({
       closeAll: vi.fn(),
     }),
 }))
-vi.mock('../../stores/commandLauncher', () => ({
+vi.mock('../../stores/command-launcher', () => ({
   useCommandLauncherStore: () => reactive(mocks.launcher),
 }))
-vi.mock('../../stores/quickDismiss', () => ({
+vi.mock('../../stores/quick-dismiss', () => ({
   useQuickDismissStore: () => ({ isHeld: false }),
 }))
 vi.mock('@tauri-apps/api/window', () => ({

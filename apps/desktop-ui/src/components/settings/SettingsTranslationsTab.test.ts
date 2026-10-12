@@ -1,15 +1,16 @@
+import type { UserConfig } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
 
-vi.mock('../../composables/useI18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
 const mockToastText = vi.fn()
 
-vi.mock('../../composables/useToast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: vi.fn(), toastText: mockToastText }),
 }))
 
@@ -25,7 +26,9 @@ vi.mock('../../stores/llm', () => ({
 }))
 
 describe('SettingsTranslationsTab.vue', () => {
-  const createConfig = (overrides = {}) => ({
+  const createConfig = (
+    overrides = {}
+  ): Pick<UserConfig, 'toTranslateLanguages' | 'aiRules' | 'translation'> => ({
     toTranslateLanguages: ['en', 'es', null, null, null],
     aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
     translation: {
