@@ -494,5 +494,3 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     selectionArrived,
   }
 }
-
-export type CommandLauncherModel = ReturnType<typeof createCommandLauncherModel>

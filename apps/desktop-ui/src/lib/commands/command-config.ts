@@ -33,8 +33,8 @@ const afterRunOf = (value: unknown): CustomActionAfterRun =>
     ? (value as CustomActionAfterRun)
     : 'none'
 
-/** Preserves legacy output settings in the two quick-command contexts. */
-export function launcherAfterRunFromLegacy(
+/** Maps a tool output default to the two quick-command contexts. */
+export function launcherAfterRunFromOutput(
   value: unknown
 ): CommandLauncherAfterRun {
   const afterRun = afterRunOf(value)
@@ -44,22 +44,11 @@ export function launcherAfterRunFromLegacy(
   }
 }
 
-function normalizeLauncherAfterRun(
-  value: unknown,
-  legacy: unknown
-): CommandLauncherAfterRun {
-  const defaults = launcherAfterRunFromLegacy(legacy)
-  if (!isRecord(value)) return defaults
-  const withSelection =
-    value.withSelection === undefined
-      ? defaults.withSelection
-      : afterRunOf(value.withSelection)
-  const withoutSelection =
-    value.withoutSelection === undefined
-      ? defaults.withoutSelection
-      : afterRunOf(value.withoutSelection)
+function normalizeLauncherAfterRun(value: unknown): CommandLauncherAfterRun {
+  const settings = isRecord(value) ? value : {}
+  const withoutSelection = afterRunOf(settings.withoutSelection)
   return {
-    withSelection,
+    withSelection: afterRunOf(settings.withSelection),
     withoutSelection:
       withoutSelection === 'replaceSelection' ? 'showMenu' : withoutSelection,
   }
@@ -146,10 +135,7 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     toolId,
     toolConfig: isRecord(value.toolConfig) ? value.toolConfig : {},
     llmArgumentParsing: value.llmArgumentParsing === true,
-    launcherAfterRun: normalizeLauncherAfterRun(
-      value.launcherAfterRun,
-      value.afterRun
-    ),
+    launcherAfterRun: normalizeLauncherAfterRun(value.launcherAfterRun),
     logOutput: value.logOutput === true,
     availableIn: {
       external: availableIn.external === true,
@@ -176,24 +162,12 @@ export function normalizeCommands(value: unknown): CommandConfig[] {
   })
 }
 
-/**
- * Normalizes the 15 slots of the command overlay. Migrates from legacy
- * `availableIn.launcher` when `value` is not an array.
- */
+/** Normalizes the 15 slots of the command overlay. */
 export function normalizeLauncherCommands(
   value: unknown,
   commands: readonly CommandConfig[] = []
 ): (string | null)[] {
-  let source: readonly unknown[] | undefined
-  if (Array.isArray(value)) {
-    source = value
-  } else {
-    // Migration: populate slots with commands that had legacy `availableIn.launcher`
-    const rawCommands = commands as (CommandConfig & {
-      availableIn?: { launcher?: boolean }
-    })[]
-    source = rawCommands.filter((c) => c.availableIn?.launcher).map((c) => c.id)
-  }
+  const source: readonly unknown[] = Array.isArray(value) ? value : []
   const existingIds = new Set(commands.map((c) => c.id))
   return normalizeShortcutSlots<string>(
     source.map((item) =>
@@ -247,7 +221,7 @@ export function createCommand(
     toolId,
     toolConfig: defaultToolConfig(toolId),
     llmArgumentParsing: false,
-    launcherAfterRun: launcherAfterRunFromLegacy(tool?.defaultAfterRun),
+    launcherAfterRun: launcherAfterRunFromOutput(tool?.defaultAfterRun),
     logOutput: false,
     availableIn: { external: false, chat: false },
     enabled: true,

@@ -8,7 +8,6 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
 - `packages/shared` — shared config, domain types, desktop contracts (`@tyco/shared`)
 - `src-tauri` — Rust backend and Tauri shell
 - `scripts` — development and verification scripts
-- `prototypes` — throwaway experiments, not part of the workspace
 
 ## Requirements
 

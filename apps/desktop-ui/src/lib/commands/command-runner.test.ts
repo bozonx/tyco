@@ -9,7 +9,7 @@ import type {
 import type { BuiltinToolDependencies } from '../tools/builtin-tools'
 import { testCopyTool, testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
-import { createCommand, launcherAfterRunFromLegacy } from './command-config'
+import { createCommand, launcherAfterRunFromOutput } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
 import type { InvocationOptions } from '../invocation/invocation-types'
 import { createCommandRunner } from './command-runner'
@@ -180,7 +180,7 @@ describe('script commands', () => {
       .mockResolvedValue(result({ stdout: 'UPPER\n' }))
     const { deps, runner } = setup({ executeScriptAction })
     await runner.run(
-      script({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      script({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
       'upper'
     )
     expect(executeScriptAction.mock.calls[0][0].captureOutput).toBe(true)
@@ -194,7 +194,7 @@ describe('script commands', () => {
       .mockResolvedValue(result({ stdout: '\n' }))
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(
-      script({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      script({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
       'x'
     )
     expect(outcome.success).toBe(false)
@@ -256,7 +256,7 @@ describe('webhook commands', () => {
     const executeWebhook = vi.fn().mockResolvedValue('{"text":"done"}')
     const { deps, runner } = setup({ executeWebhook })
     await runner.run(
-      webhook({}, { launcherAfterRun: launcherAfterRunFromLegacy('showMenu') }),
+      webhook({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
       'x'
     )
     expect(deps.showResultMenu).toHaveBeenCalledWith('done', 'x')
@@ -472,7 +472,7 @@ describe('the output of a command', () => {
   const command = (afterRun: CustomActionAfterRun): CommandConfig => ({
     ...createCommand('Test.echo', 'e-1'),
     name: 'Echo',
-    launcherAfterRun: launcherAfterRunFromLegacy(afterRun),
+    launcherAfterRun: launcherAfterRunFromOutput(afterRun),
   })
 
   it.each(['none', 'copy', 'replaceSelection'] as const)(

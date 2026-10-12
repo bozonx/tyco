@@ -67,27 +67,18 @@ describe('normalizeCommand', () => {
     })
   })
 
-  it.each([
-    ['none', 'none', 'none'],
-    ['showMenu', 'showMenu', 'showMenu'],
-    ['copy', 'copy', 'copy'],
-    ['replaceSelection', 'replaceSelection', 'showMenu'],
-  ])(
-    'migrates legacy %s output settings',
-    (legacy, withSelection, withoutSelection) => {
-      const command = normalizeCommand({
-        id: 'old',
-        toolId: 'script',
-        afterRun: legacy,
-      })!
-      expect(command.launcherAfterRun).toEqual({
-        withSelection,
-        withoutSelection,
-      })
-      expect(command).not.toHaveProperty('afterRun')
-      expect(normalizeCommand(command)).toEqual(command)
-    }
-  )
+  it('ignores removed output settings', () => {
+    const command = normalizeCommand({
+      id: 'command',
+      toolId: 'script',
+      afterRun: 'copy',
+    })!
+    expect(command.launcherAfterRun).toEqual({
+      withSelection: 'none',
+      withoutSelection: 'none',
+    })
+    expect(command).not.toHaveProperty('afterRun')
+  })
 
   it('preserves separate settings and rejects replacement without a selection', () => {
     expect(
@@ -108,7 +99,7 @@ describe('normalizeCommand', () => {
         afterRun: 'copy',
         launcherAfterRun: { withSelection: 'invalid' },
       })?.launcherAfterRun
-    ).toEqual({ withSelection: 'none', withoutSelection: 'copy' })
+    ).toEqual({ withSelection: 'none', withoutSelection: 'none' })
   })
 
   it('normalizes the settings of a webhook', () => {
@@ -386,14 +377,14 @@ describe('normalizeLauncherCommands', () => {
     expect(slots[14]).toBeNull()
   })
 
-  it('migrates legacy commands with availableIn.launcher when value is undefined', () => {
+  it('leaves missing slots empty instead of reading removed launcher flags', () => {
     const legacyCmd = {
       ...createCommand('script', 'leg1'),
       availableIn: { launcher: true, external: true, chat: false },
     }
-    const slots = normalizeLauncherCommands(undefined, [legacyCmd as any])
+    const slots = normalizeLauncherCommands(undefined, [legacyCmd])
     expect(slots).toHaveLength(15)
-    expect(slots[0]).toBe('leg1')
+    expect(slots.every((slot) => slot === null)).toBe(true)
     expect(slots[1]).toBeNull()
   })
 })

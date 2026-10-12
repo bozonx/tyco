@@ -81,5 +81,3 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
     clearPluginTools,
   }
 }
-
-export type ToolRegistry = ReturnType<typeof createToolRegistry>

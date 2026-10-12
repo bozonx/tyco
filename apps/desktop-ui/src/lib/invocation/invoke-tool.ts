@@ -147,5 +147,3 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
     }
   }
 }
-
-export type ToolInvoker = ReturnType<typeof createToolInvoker>

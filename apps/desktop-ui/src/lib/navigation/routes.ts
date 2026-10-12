@@ -33,8 +33,6 @@ export const APP_ROUTES = {
   TRANSLATE: { name: APP_ROUTE_NAMES.TRANSLATE, path: '/translate' },
 } as const
 
-export type AppRouteName =
-  (typeof APP_ROUTE_NAMES)[keyof typeof APP_ROUTE_NAMES]
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 
 export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {

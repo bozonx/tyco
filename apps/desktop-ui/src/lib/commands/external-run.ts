@@ -158,5 +158,3 @@ export function createExternalRun(deps: ExternalRunDependencies) {
 
   return { handleRun, handleCancel }
 }
-
-export type ExternalRun = ReturnType<typeof createExternalRun>

@@ -1,12 +1,3 @@
-import type { InitParams, IpcResult } from '@tyco/shared'
-
-export type { InitParams, IpcResult }
-
-// TODO: оже есть в composables/useGlobalEvents.ts
-export enum GlobalEvents {
-  KEY_UP,
-}
-
 export enum AI_TASKS {
   TRANSLATE = 'translate',
   VOICE_CORRECTION = 'voiceCorrection',
@@ -35,8 +26,4 @@ export const PRESETS_KEYS = [
   'b',
 ]
 
-export type {
-  InputConfigOption,
-  InputConfigItem,
-  SortableChecklistItem,
-} from '@tyco/plugin-sdk'
+export type { InputConfigOption, InputConfigItem } from '@tyco/plugin-sdk'

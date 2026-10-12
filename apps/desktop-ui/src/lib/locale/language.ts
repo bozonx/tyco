@@ -33,11 +33,6 @@ export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
   { id: 'ms_MY', name: 'Bahasa Melayu' },
 ] as const
 
-export const USER_LANGUAGE_OPTIONS = [
-  { id: AUTO_LANGUAGE_VALUE, name: 'Auto' },
-  ...SUPPORTED_USER_LANGUAGE_OPTIONS,
-] as const
-
 export const SUPPORTED_UI_LANGUAGE_OPTIONS = [
   { id: 'ru_RU', name: 'Русский' },
   { id: 'en_US', name: 'English (US)' },

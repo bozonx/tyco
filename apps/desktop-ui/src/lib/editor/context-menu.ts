@@ -48,26 +48,6 @@ export interface EditorMenusOptions {
   onContextMenu?: (request: ContextMenuRequest) => void
 }
 
-/**
- * Screen coordinates of a document offset: the anchor point of a menu.
- *
- * If the position cannot be measured (the document is not laid out yet), falls
- * back to the editor corner — the menu has to open either way
- */
-export const anchorAtPos = (view: EditorView, pos: number): MenuAnchor => {
-  try {
-    const coords = view.coordsAtPos(pos)
-
-    if (coords) return { x: coords.left, y: coords.top, bottom: coords.bottom }
-  } catch {
-    // no measurable geometry
-  }
-
-  const rect = view.dom.getBoundingClientRect()
-
-  return { x: rect.left, y: rect.top, bottom: rect.top }
-}
-
 /** Document offset under a screen point; null when it cannot be measured */
 const posAtPoint = (view: EditorView, x: number, y: number): number | null => {
   try {

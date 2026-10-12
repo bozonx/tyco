@@ -25,19 +25,6 @@ describe('document-appearance storage', () => {
     expect(readStoredAppearance(window.localStorage)).toEqual(settings)
   })
 
-  it('migrates the legacy theme key', () => {
-    window.localStorage.setItem('theme', 'dark')
-
-    expect(readStoredAppearance(window.localStorage)).toEqual({
-      ...DEFAULT_APPEARANCE,
-      theme: 'dark',
-    })
-
-    writeStoredAppearance(window.localStorage, DEFAULT_APPEARANCE)
-
-    expect(window.localStorage.getItem('theme')).toBeNull()
-  })
-
   it('survives malformed JSON', () => {
     window.localStorage.setItem(APPEARANCE_STORAGE_KEY, '{oops')
 

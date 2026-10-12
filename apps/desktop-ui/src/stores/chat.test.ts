@@ -13,7 +13,7 @@ import { useIpcStore } from './ipc'
 const ai = vi.hoisted(() => ({
   sendChatMessage: vi.fn(async () => 'answer'),
   generateChatTitle: vi.fn(async () => ''),
-  saveLocalState: vi.fn(async () => {}),
+  saveLocalState: vi.fn(async () => ({ success: true })),
 }))
 
 vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ai }))

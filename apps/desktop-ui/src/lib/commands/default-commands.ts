@@ -9,7 +9,7 @@ import type {
 } from '../tools/tool-types'
 import {
   createCommand,
-  launcherAfterRunFromLegacy,
+  launcherAfterRunFromOutput,
   normalizeCommands,
 } from './command-config'
 
@@ -50,7 +50,7 @@ function toCommand(
     launcherAfterRun:
       preset.afterRun === undefined
         ? base.launcherAfterRun
-        : launcherAfterRunFromLegacy(preset.afterRun),
+        : launcherAfterRunFromOutput(preset.afterRun),
     availableIn: { external: false, chat: false },
   }
   if (preset.description) command.description = preset.description

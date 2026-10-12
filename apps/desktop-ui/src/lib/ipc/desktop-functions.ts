@@ -177,6 +177,3 @@ export const PLUGIN_DESKTOP_FUNCTIONS = [
   'saveNote',
   'appendNote',
 ] as const satisfies readonly DesktopFunctionName[]
-
-export type PluginDesktopFunctionName =
-  (typeof PLUGIN_DESKTOP_FUNCTIONS)[number]

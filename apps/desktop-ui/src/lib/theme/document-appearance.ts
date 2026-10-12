@@ -4,7 +4,6 @@
  */
 import {
   isDarkTheme,
-  isThemeMode,
   normalizeAppearance,
   type AppearanceSettings,
   type ResolvedAppearance,
@@ -12,8 +11,6 @@ import {
 } from '@tyco/shared/appearance'
 
 export const APPEARANCE_STORAGE_KEY = 'appearance'
-/** Key used before contrast, motion and scale settings existed */
-const LEGACY_THEME_STORAGE_KEY = 'theme'
 
 const SYSTEM_QUERIES = {
   prefersDark: '(prefers-color-scheme: dark)',
@@ -31,11 +28,7 @@ export function readStoredAppearance(
       return normalizeAppearance(JSON.parse(stored))
     }
 
-    const legacyTheme = storage.getItem(LEGACY_THEME_STORAGE_KEY)
-
-    return isThemeMode(legacyTheme)
-      ? normalizeAppearance({ theme: legacyTheme })
-      : null
+    return null
   } catch {
     // Storage can be unavailable (private mode, blocked site data) or hold
     // malformed JSON; either way fall back to defaults.
@@ -49,7 +42,6 @@ export function writeStoredAppearance(
 ) {
   try {
     storage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings))
-    storage.removeItem(LEGACY_THEME_STORAGE_KEY)
   } catch {
     // Persisting is only an optimisation against a flash of the wrong theme.
   }

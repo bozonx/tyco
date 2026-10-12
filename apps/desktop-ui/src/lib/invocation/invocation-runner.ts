@@ -153,5 +153,3 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
 
   return { run, transform }
 }
-
-export type InvocationRunner = ReturnType<typeof createInvocationRunner>

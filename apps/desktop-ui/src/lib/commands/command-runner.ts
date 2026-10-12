@@ -45,5 +45,3 @@ export function createCommandRunner(deps: InvocationRunnerDependencies) {
 
   return { run, transform }
 }
-
-export type CommandRunner = ReturnType<typeof createCommandRunner>
