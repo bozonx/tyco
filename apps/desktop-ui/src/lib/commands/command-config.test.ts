@@ -66,7 +66,7 @@ describe('normalizeCommand', () => {
       toolId: 'script',
       toolConfig: { command: 'echo', workingDir: '' },
       llmArgumentParsing: false,
-      launcherAfterRun: { withSelection: 'none', withoutSelection: 'none' },
+      launcherAfterRun: { action: 'none', fallback: 'none' },
       logOutput: false,
       availableIn: { external: false, chat: false },
       enabled: true,
@@ -80,32 +80,32 @@ describe('normalizeCommand', () => {
       afterRun: 'copy',
     })!
     expect(command.launcherAfterRun).toEqual({
-      withSelection: 'none',
-      withoutSelection: 'none',
+      action: 'none',
+      fallback: 'none',
     })
     expect(command).not.toHaveProperty('afterRun')
   })
 
-  it('preserves separate settings and rejects replacement without a selection', () => {
+  it('keeps the action and rejects replacement as its fallback', () => {
     expect(
       normalizeCommand({
         id: 'new',
         toolId: 'script',
         afterRun: 'copy',
         launcherAfterRun: {
-          withSelection: 'none',
-          withoutSelection: 'replaceSelection',
+          action: 'replaceSelection',
+          fallback: 'replaceSelection',
         },
       })?.launcherAfterRun
-    ).toEqual({ withSelection: 'none', withoutSelection: 'showMenu' })
+    ).toEqual({ action: 'replaceSelection', fallback: 'showMenu' })
     expect(
       normalizeCommand({
         id: 'partial',
         toolId: 'script',
         afterRun: 'copy',
-        launcherAfterRun: { withSelection: 'invalid' },
+        launcherAfterRun: { action: 'invalid' },
       })?.launcherAfterRun
-    ).toEqual({ withSelection: 'none', withoutSelection: 'none' })
+    ).toEqual({ action: 'none', fallback: 'none' })
   })
 
   it('normalizes the settings of a webhook', () => {
@@ -341,8 +341,8 @@ describe('commands of the core tools', () => {
     })
     expect(translate.toolConfig).toEqual({ language: '' })
     expect(translate.launcherAfterRun).toEqual({
-      withSelection: 'replaceSelection',
-      withoutSelection: 'showMenu',
+      action: 'replaceSelection',
+      fallback: 'showMenu',
     })
     expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
@@ -461,11 +461,11 @@ describe('commandAfterRun', () => {
     const command = {
       ...createCommand('script'),
       launcherAfterRun: {
-        withSelection: 'copy' as const,
-        withoutSelection: 'none' as const,
+        action: 'replaceSelection' as const,
+        fallback: 'none' as const,
       },
     }
-    expect(commandAfterRun(command, 'launcher', true)).toBe('copy')
+    expect(commandAfterRun(command, 'launcher', true)).toBe('replaceSelection')
     expect(commandAfterRun(command, 'launcher', false)).toBe('none')
     expect(commandAfterRun(command, 'menu', true)).toBe('showMenu')
     expect(commandAfterRun(command, 'menu', false)).toBe('showMenu')

@@ -161,9 +161,8 @@
     "languageInfo": "Dil komutta saklanır: ayarlardaki çeviri dillerinin sırasını değiştirmek onu etkilemez.",
     "languageLabel": "Şu dile çevir",
     "languagePlaceholder": "Bir dil seçin",
-    "launcherWithSelection": "Seçimle",
-    "launcherWithoutSelection": "Seçim olmadan",
-    "launcherResult": "Sonuç",
+    "launcherResult": "Eylem",
+    "launcherFallback": "Seçim yoksa",
     "moreActions": "Diğer",
     "nameLabel": "Ad",
     "namePlaceholder": "Komutun menüdeki adı",
@@ -203,7 +202,7 @@
     "logEmpty": "Henüz günlüğe kaydedilmiş komut yok",
     "openLogFailed": "Günlük açılamadı",
     "badgeInLauncher": "Komutlar: sayfa {page} ({key})",
-    "launcherSelectionHint": "Seçim varsa sonuç özgün metnin yerini alabilir. Seçim yoksa sonuç gösterilebilir veya kopyalanabilir.",
+    "launcherSelectionHint": "Sonuç seçili metnin yerini alabilir. Seçim yoksa metin hızlı komut penceresine yazılır ve değiştirilecek bir şey olmaz; bu durumda “Seçim yoksa” ayarı uygulanır.",
     "launcherResultGroup": "Hızlı komut sonucu"
   },
   "common": {

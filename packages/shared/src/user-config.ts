@@ -13,7 +13,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 5
+export const CONFIG_VERSION = 6
 
 export type ModelTag =
   | 'voice'
@@ -315,10 +315,14 @@ export interface CommandAvailability {
   chat: boolean
 }
 
-/** Output handling for quick commands, based on the input source. */
+/**
+ * Output handling for quick commands. Without a selection the text is typed in
+ * the launcher and there is nothing to replace: `replaceSelection` falls back
+ * to `fallback` then
+ */
 export interface CommandLauncherAfterRun {
-  withSelection: CustomActionAfterRun
-  withoutSelection: Exclude<CustomActionAfterRun, 'replaceSelection'>
+  action: CustomActionAfterRun
+  fallback: Exclude<CustomActionAfterRun, 'replaceSelection'>
 }
 
 /**

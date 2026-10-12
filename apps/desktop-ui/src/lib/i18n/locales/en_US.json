@@ -161,9 +161,8 @@
     "languageInfo": "The language is kept in the command: reordering the translation languages in the settings does not change it.",
     "languageLabel": "Translate into",
     "languagePlaceholder": "Choose a language",
-    "launcherWithSelection": "With selection",
-    "launcherWithoutSelection": "Without selection",
-    "launcherResult": "Result",
+    "launcherResult": "Action",
+    "launcherFallback": "Without a selection",
     "moreActions": "More",
     "nameLabel": "Name",
     "namePlaceholder": "How the command is called in the menu",
@@ -203,7 +202,7 @@
     "logEmpty": "No command has been logged yet",
     "openLogFailed": "Could not open the log",
     "badgeInLauncher": "Commands: page {page} ({key})",
-    "launcherSelectionHint": "With a selection, the result can replace the original text. Without a selection, the result can be shown or copied.",
+    "launcherSelectionHint": "The result can replace the selected text. Without a selection, the text is typed in the quick command window and there is nothing to replace, so the “Without a selection” setting applies.",
     "launcherResultGroup": "Quick command result"
   },
   "common": {

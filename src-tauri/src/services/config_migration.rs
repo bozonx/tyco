@@ -6,7 +6,7 @@ use serde_json::{json, Map, Value};
 
 /// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
 /// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 5;
+pub const CONFIG_VERSION: u64 = 6;
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -46,6 +46,9 @@ pub fn migrate(user_config: &mut Value) -> bool {
     }
     if from < 5 {
         split_command_output_settings(user_config);
+    }
+    if from < 6 {
+        merge_launcher_output_settings(user_config);
     }
     stamp_current_version(user_config);
     true
@@ -262,6 +265,33 @@ fn split_command_output_settings(user_config: &mut Value) {
     }
 }
 
+/// Version 6: a quick command has one output action; the setting for runs
+/// without a selection is only the fallback of `replaceSelection`, since a
+/// typed text has nothing to replace.
+fn merge_launcher_output_settings(user_config: &mut Value) {
+    let Some(commands) = user_config
+        .get_mut("commands")
+        .and_then(Value::as_array_mut)
+    else {
+        return;
+    };
+    for command in commands {
+        let Some(command) = command.as_object_mut() else {
+            continue;
+        };
+        let current = command.get("launcherAfterRun");
+        let action = output_action(current.and_then(|value| value.get("withSelection")));
+        let fallback = output_action(current.and_then(|value| value.get("withoutSelection")));
+        command.insert(
+            "launcherAfterRun".into(),
+            json!({
+                "action": action,
+                "fallback": if fallback == "replaceSelection" { "showMenu" } else { fallback },
+            }),
+        );
+    }
+}
+
 fn output_action(value: Option<&Value>) -> &str {
     match value.and_then(Value::as_str) {
         Some(action @ ("none" | "showMenu" | "replaceSelection" | "copy")) => action,
@@ -338,7 +368,7 @@ mod tests {
                         "workingDir": "~/work"
                     },
                     "llmArgumentParsing": false,
-                    "launcherAfterRun": { "withSelection": "showMenu", "withoutSelection": "showMenu" },
+                    "launcherAfterRun": { "action": "showMenu", "fallback": "showMenu" },
                     "logOutput": true,
                     "availableIn": { "launcher": false, "external": false, "chat": false },
                     "enabled": true
@@ -356,7 +386,7 @@ mod tests {
                         "authSecret": true
                     },
                     "llmArgumentParsing": false,
-                    "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" },
+                    "launcherAfterRun": { "action": "none", "fallback": "none" },
                     "logOutput": false,
                     "availableIn": { "launcher": false, "external": false, "chat": false },
                     "enabled": true
@@ -383,7 +413,7 @@ mod tests {
         migrate(&mut config);
         assert_eq!(
             config["commands"],
-            json!([{ "id": "sc1", "name": "Kept", "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" } }])
+            json!([{ "id": "sc1", "name": "Kept", "launcherAfterRun": { "action": "none", "fallback": "none" } }])
         );
         assert_eq!(
             config["mainActions"],
@@ -429,7 +459,7 @@ mod tests {
         );
         assert_eq!(
             config["commands"][0]["launcherAfterRun"],
-            json!({ "withSelection": "none", "withoutSelection": "none" })
+            json!({ "action": "none", "fallback": "none" })
         );
     }
 
@@ -470,9 +500,9 @@ mod tests {
         assert_eq!(
             config["commands"],
             json!([
-                { "id": "a", "availableIn": { "external": false, "chat": false }, "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" } },
-                { "id": "b", "availableIn": { "external": false }, "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" } },
-                { "id": "c", "launcherAfterRun": { "withSelection": "none", "withoutSelection": "none" } }
+                { "id": "a", "availableIn": { "external": false, "chat": false }, "launcherAfterRun": { "action": "none", "fallback": "none" } },
+                { "id": "b", "availableIn": { "external": false }, "launcherAfterRun": { "action": "none", "fallback": "none" } },
+                { "id": "c", "launcherAfterRun": { "action": "none", "fallback": "none" } }
             ])
         );
     }
@@ -510,7 +540,7 @@ mod tests {
             let command = &config["commands"][0];
             assert_eq!(
                 command["launcherAfterRun"],
-                json!({ "withSelection": legacy, "withoutSelection": without_selection })
+                json!({ "action": legacy, "fallback": without_selection })
             );
             assert!(command.get("afterRun").is_none());
             assert_eq!(command["toolConfig"], json!({ "command": "echo" }));
@@ -531,17 +561,48 @@ mod tests {
         assert!(migrate(&mut config));
         assert_eq!(
             config["commands"][0]["launcherAfterRun"],
-            json!({ "withSelection": "none", "withoutSelection": "showMenu" })
+            json!({ "action": "none", "fallback": "showMenu" })
         );
         assert_eq!(
             config["commands"][1]["launcherAfterRun"],
-            json!({ "withSelection": "none", "withoutSelection": "copy" })
+            json!({ "action": "none", "fallback": "copy" })
         );
         assert_eq!(
             config["commands"][2]["launcherAfterRun"],
-            json!({ "withSelection": "none", "withoutSelection": "none" })
+            json!({ "action": "none", "fallback": "none" })
         );
         assert_eq!(config["commands"][3], Value::Null);
+    }
+
+    #[test]
+    fn merges_quick_command_outputs_into_an_action_and_its_fallback() {
+        let mut config = json!({ "configVersion": 5, "commands": [
+            { "id": "replace", "launcherAfterRun": { "withSelection": "replaceSelection", "withoutSelection": "copy" } },
+            { "id": "same", "launcherAfterRun": { "withSelection": "showMenu", "withoutSelection": "showMenu" } },
+            { "id": "mixed", "launcherAfterRun": { "withSelection": "none", "withoutSelection": "copy" }, "logOutput": true },
+            { "id": "bad", "launcherAfterRun": { "withoutSelection": "replaceSelection" } },
+            null
+        ] });
+        assert!(migrate(&mut config));
+        let outputs: Vec<&Value> = config["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .take(4)
+            .map(|command| &command["launcherAfterRun"])
+            .collect();
+        assert_eq!(
+            outputs,
+            [
+                &json!({ "action": "replaceSelection", "fallback": "copy" }),
+                &json!({ "action": "showMenu", "fallback": "showMenu" }),
+                &json!({ "action": "none", "fallback": "copy" }),
+                &json!({ "action": "none", "fallback": "showMenu" }),
+            ]
+        );
+        assert_eq!(config["commands"][2]["logOutput"], json!(true));
+        assert_eq!(config["commands"][4], Value::Null);
+        assert!(!migrate(&mut config));
     }
 
     #[test]

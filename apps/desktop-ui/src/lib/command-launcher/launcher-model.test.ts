@@ -423,12 +423,7 @@ describe('commands that replace the selection', () => {
   const replacing = command(
     'translate',
     'Translate',
-    {
-      launcherAfterRun: {
-        withSelection: 'replaceSelection',
-        withoutSelection: 'showMenu',
-      },
-    },
+    { launcherAfterRun: { action: 'replaceSelection', fallback: 'showMenu' } },
     {}
   )
 
@@ -472,8 +467,8 @@ describe('commands that replace the selection', () => {
     const configured = {
       ...replacing,
       launcherAfterRun: {
-        withSelection: 'copy' as const,
-        withoutSelection: 'showMenu' as const,
+        action: 'copy' as const,
+        fallback: 'showMenu' as const,
       },
     }
     const { deps, model } = setup([configured], {

@@ -26,7 +26,7 @@ describe('command editor model', () => {
     expect(command.toolConfig).not.toHaveProperty('timeoutSec')
     expect(command.toolConfig.command).toBe('echo test')
   })
-  it('rejects replacing a selection in a context that has no selection', () => {
+  it('rejects replacing a selection as the fallback for no selection', () => {
     let command = createCommand('script', 'test')
     const model = createCommandEditorModel({
       getCommand: () => command,
@@ -34,10 +34,10 @@ describe('command editor model', () => {
         command = value
       },
     })
-    const previous = command.launcherAfterRun.withoutSelection
-    model.updateLauncherAfterRun('withoutSelection', 'replaceSelection')
-    expect(command.launcherAfterRun.withoutSelection).toBe(previous)
-    model.updateLauncherAfterRun('withSelection', 'replaceSelection')
-    expect(command.launcherAfterRun.withSelection).toBe('replaceSelection')
+    const previous = command.launcherAfterRun.fallback
+    model.updateLauncherAfterRun('fallback', 'replaceSelection')
+    expect(command.launcherAfterRun.fallback).toBe(previous)
+    model.updateLauncherAfterRun('action', 'replaceSelection')
+    expect(command.launcherAfterRun.action).toBe('replaceSelection')
   })
 })

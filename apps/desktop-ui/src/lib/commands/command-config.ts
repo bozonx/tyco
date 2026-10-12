@@ -21,24 +21,25 @@ const afterRunOf = (value: unknown): CustomActionAfterRun =>
     ? (value as CustomActionAfterRun)
     : 'none'
 
-/** Maps a tool output default to the two quick-command contexts. */
+/** What a quick command without a selection does instead of `afterRun` */
+const fallbackOf = (
+  afterRun: CustomActionAfterRun
+): CommandLauncherAfterRun['fallback'] =>
+  afterRun === 'replaceSelection' ? 'showMenu' : afterRun
+
+/** Maps a tool output default to the quick-command output settings */
 export function launcherAfterRunFromOutput(
   value: unknown
 ): CommandLauncherAfterRun {
-  const afterRun = afterRunOf(value)
-  return {
-    withSelection: afterRun,
-    withoutSelection: afterRun === 'replaceSelection' ? 'showMenu' : afterRun,
-  }
+  const action = afterRunOf(value)
+  return { action, fallback: fallbackOf(action) }
 }
 
 function normalizeLauncherAfterRun(value: unknown): CommandLauncherAfterRun {
   const settings = isRecord(value) ? value : {}
-  const withoutSelection = afterRunOf(settings.withoutSelection)
   return {
-    withSelection: afterRunOf(settings.withSelection),
-    withoutSelection:
-      withoutSelection === 'replaceSelection' ? 'showMenu' : withoutSelection,
+    action: afterRunOf(settings.action),
+    fallback: fallbackOf(afterRunOf(settings.fallback)),
   }
 }
 

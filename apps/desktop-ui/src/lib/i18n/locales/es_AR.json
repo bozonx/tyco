@@ -161,9 +161,8 @@
     "languageInfo": "El idioma se guarda en el comando: reordenar los idiomas de traducción en los ajustes no lo cambia.",
     "languageLabel": "Traducir al",
     "languagePlaceholder": "Elegí un idioma",
-    "launcherWithSelection": "Con selección",
-    "launcherWithoutSelection": "Sin selección",
-    "launcherResult": "Resultado",
+    "launcherResult": "Acción",
+    "launcherFallback": "Sin selección",
     "moreActions": "Más",
     "nameLabel": "Nombre",
     "namePlaceholder": "Cómo se llama el comando en el menú",
@@ -203,7 +202,7 @@
     "logEmpty": "Todavía no se registró ningún comando",
     "openLogFailed": "No se pudo abrir el registro",
     "badgeInLauncher": "Comandos: pág. {page} ({key})",
-    "launcherSelectionHint": "Con una selección, el resultado puede reemplazar el texto original. Sin selección, el resultado se puede mostrar o copiar.",
+    "launcherSelectionHint": "El resultado puede reemplazar el texto seleccionado. Sin selección, el texto se escribe en la ventana de comandos rápidos y no hay nada que reemplazar, así que se aplica el ajuste «Sin selección».",
     "launcherResultGroup": "Resultado de comandos rápidos"
   },
   "common": {

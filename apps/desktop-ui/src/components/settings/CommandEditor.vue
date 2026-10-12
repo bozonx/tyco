@@ -62,42 +62,33 @@
               :text="t('commands.launcherSelectionHint')"
             />
           </h4>
-          <label
-            v-if="takesText"
-            class="command-place-detail command-place-result"
-          >
+          <label class="command-place-detail command-place-result">
             <span class="command-place-result-label">{{
-              t('commands.launcherWithSelection')
+              t('commands.launcherResult')
             }}</span>
             <FieldSelect
-              :value="command.launcherAfterRun.withSelection"
-              :title="t('commands.launcherWithSelection')"
-              :options="selectionAfterRunOptions"
+              :value="launcherAction"
+              :title="t('commands.launcherResult')"
+              :options="takesText ? selectionAfterRunOptions : afterRunOptions"
               @update:value="
-                updateLauncherAfterRun(
-                  'withSelection',
-                  $event as CustomActionAfterRun
-                )
+                updateLauncherAfterRun('action', $event as CustomActionAfterRun)
               "
             />
           </label>
-          <label class="command-place-detail command-place-result">
+          <label
+            v-if="replacesSelection"
+            class="command-place-detail command-place-result"
+          >
             <span class="command-place-result-label">{{
-              takesText
-                ? t('commands.launcherWithoutSelection')
-                : t('commands.launcherResult')
+              t('commands.launcherFallback')
             }}</span>
             <FieldSelect
-              :value="command.launcherAfterRun.withoutSelection"
-              :title="
-                takesText
-                  ? t('commands.launcherWithoutSelection')
-                  : t('commands.launcherResult')
-              "
+              :value="command.launcherAfterRun.fallback"
+              :title="t('commands.launcherFallback')"
               :options="afterRunOptions"
               @update:value="
                 updateLauncherAfterRun(
-                  'withoutSelection',
+                  'fallback',
                   $event as CustomActionAfterRun
                 )
               "
@@ -314,15 +305,28 @@ const selectionAfterRunOptions = computed(() => [
 ])
 
 /**
+ * What quick commands do with the output. A command without text never has a
+ * selection to replace, so it shows the fallback of a replacement instead
+ */
+const launcherAction = computed(() => {
+  const { action, fallback } = props.command.launcherAfterRun
+  return !takesText.value && action === 'replaceSelection' ? fallback : action
+})
+/** Only then does a run without a selection need an action of its own */
+const replacesSelection = computed(
+  () => launcherAction.value === 'replaceSelection'
+)
+
+/**
  * Only quick-command runs configured to ignore output may stay in the
  * background.
  */
 const backgroundScript = computed(
   () =>
     props.command.toolId === 'script' &&
-    (props.command.launcherAfterRun.withoutSelection === 'none' ||
-      (takesText.value &&
-        props.command.launcherAfterRun.withSelection === 'none'))
+    (launcherAction.value === 'none' ||
+      (replacesSelection.value &&
+        props.command.launcherAfterRun.fallback === 'none'))
 )
 
 /** Who added a default command and which tool it runs */

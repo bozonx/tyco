@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { type DOMWrapper, flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
@@ -71,51 +71,46 @@ describe('CommandEditor.vue', () => {
     expect(noText.text()).not.toContain('commands.afterRunReplaceSelection')
   })
 
-  it('edits each quick-command context independently and shows fixed behavior elsewhere', async () => {
+  const optionValue = (select: DOMWrapper<Element>, text: string) =>
+    select
+      .findAll('option')
+      .find((option) => option.text() === text)!
+      .attributes('value')
+
+  it('asks what to do without a selection only for a replacement', async () => {
     const command = script(
       { command: 'echo {{TEXT}}' },
       {
         name: 'Echo',
-        launcherAfterRun: {
-          withSelection: 'replaceSelection',
-          withoutSelection: 'showMenu',
-        },
+        launcherAfterRun: { action: 'replaceSelection', fallback: 'showMenu' },
       }
     )
     const wrapper = mountEditor(command)
-    const selects = wrapper.findAll('select')
+    let selects = wrapper.findAll('select')
     expect(selects).toHaveLength(2)
-    expect(
-      selects[0]
-        .findAll('option')
-        .some((option) => option.text() === 'commands.afterRunReplaceSelection')
-    ).toBe(true)
+    expect(wrapper.text()).toContain('commands.launcherFallback')
     expect(
       selects[1]
         .findAll('option')
         .some((option) => option.text() === 'commands.afterRunReplaceSelection')
     ).toBe(false)
-    await selects[0].setValue(
-      selects[0]
-        .findAll('option')
-        .find((option) => option.text() === 'commands.afterRunCopy')!
-        .attributes('value')
+    await selects[1].setValue(
+      optionValue(selects[1], 'settings.actionAfterRunNone')
     )
     expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
-      withSelection: 'copy',
-      withoutSelection: 'showMenu',
+      action: 'replaceSelection',
+      fallback: 'none',
     })
     await wrapper.setProps({ command: lastUpdate(wrapper) })
-    await selects[1].setValue(
-      selects[1]
-        .findAll('option')
-        .find((option) => option.text() === 'settings.actionAfterRunNone')!
-        .attributes('value')
-    )
+    await selects[0].setValue(optionValue(selects[0], 'commands.afterRunCopy'))
     expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
-      withSelection: 'copy',
-      withoutSelection: 'none',
+      action: 'copy',
+      fallback: 'none',
     })
+    await wrapper.setProps({ command: lastUpdate(wrapper) })
+    selects = wrapper.findAll('select')
+    expect(selects).toHaveLength(1)
+    expect(wrapper.text()).not.toContain('commands.launcherFallback')
   })
 
   it('shows the call from outside only for a command allowed there', () => {
@@ -136,11 +131,22 @@ describe('CommandEditor.vue', () => {
     ).toBe('tyco-ctl run sc1')
   })
 
-  it('labels the only quick-command select of a command without text', () => {
-    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
-    expect(wrapper.findAll('select')).toHaveLength(1)
-    expect(wrapper.text()).toContain('commands.launcherResult')
-    expect(wrapper.text()).not.toContain('commands.launcherWithoutSelection')
+  it('shows the fallback of a replacement for a command without text', () => {
+    const wrapper = mountEditor(
+      script(
+        { command: 'ls' },
+        {
+          name: 'ls',
+          launcherAfterRun: { action: 'replaceSelection', fallback: 'copy' },
+        }
+      )
+    )
+    const selects = wrapper.findAll('select')
+    expect(selects).toHaveLength(1)
+    expect((selects[0].element as HTMLSelectElement).value).toBe(
+      optionValue(selects[0], 'commands.afterRunCopy')
+    )
+    expect(wrapper.text()).not.toContain('commands.launcherFallback')
   })
 
   it('keeps placement settings inside advanced and uses one external toggle', () => {
@@ -161,7 +167,6 @@ describe('CommandEditor.vue', () => {
     const tooltip = section.findComponent(InfoTooltip)
     expect(tooltip.exists()).toBe(true)
     expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
-    expect(withText.findAll('select')).toHaveLength(2)
 
     const noText = mountEditor(script({ command: 'echo hello' }))
     const noTextSection = noText.findAll('details').at(-1)!.find('section')

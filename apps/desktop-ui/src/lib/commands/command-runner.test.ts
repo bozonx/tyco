@@ -515,22 +515,19 @@ describe('the output of a command', () => {
     }
   )
 
-  it('applies independent quick-command output settings', async () => {
+  it('falls back from a replacement for a typed text', async () => {
     const copyText = vi.fn(async () => {})
     const { deps, runner } = setup({ copyText }, [echo('result')])
     const config = {
       ...command('none'),
       launcherAfterRun: {
-        withSelection: 'copy' as const,
-        withoutSelection: 'showMenu' as const,
+        action: 'replaceSelection' as const,
+        fallback: 'copy' as const,
       },
     }
-    await runner.run(config, 'selected', { hasSelection: true })
+    await runner.run(config, 'typed', { hasSelection: false })
     expect(copyText).toHaveBeenCalledWith('result')
     expect(deps.showResultMenu).not.toHaveBeenCalled()
-    await runner.run(config, 'typed', { hasSelection: false })
-    expect(deps.showResultMenu).toHaveBeenCalledWith('result', 'typed')
-    expect(copyText).toHaveBeenCalledTimes(1)
   })
 
   it('captures output for explicit selection transformations even if quick commands ignore it', async () => {
