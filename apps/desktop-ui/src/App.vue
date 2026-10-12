@@ -56,6 +56,7 @@ import { DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
 const ipcStore = useIpcStore()
+const pluginRuntime = usePlugins()
 const { locale, t } = useI18n()
 const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
@@ -119,8 +120,8 @@ const bootstrap = createAppBootstrap({
   listen: desktopClient.listen,
   emitGlobal: (event, payload) => globalEvents.emit(event, payload),
   initPlugins: async () => {
-    await usePlugins().refreshInstalledPlugins()
-    await usePlugins().reloadPlugins()
+    await pluginRuntime.refreshInstalledPlugins()
+    await pluginRuntime.reloadPlugins()
     // external calls find the commands of plugin tools by this catalog
     if (isQuickWindow) useToolCatalogStore().start()
   },
@@ -141,7 +142,7 @@ const bootstrap = createAppBootstrap({
 watch(
   () => ipcStore.params?.userConfig?.plugins,
   (plugins) => {
-    void usePlugins().reloadPlugins({ ...ipcStore.params.userConfig, plugins })
+    void pluginRuntime.reloadPlugins({ ...ipcStore.params.userConfig, plugins })
   },
   { deep: true }
 )
@@ -225,7 +226,7 @@ watch(
 
 onMounted(() => {
   void listenDesktop(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
-    void usePlugins().refreshInstalledPlugins()
+    void pluginRuntime.refreshInstalledPlugins()
   })
   // a failure has been reported already; the window keeps the defaults, and
   // the store refuses to save them over the user's files
@@ -302,7 +303,7 @@ onMounted(() => {
 onUnmounted(() => {
   bootstrap.stop()
   runtimeScope.stop()
-  void usePlugins().manager.dispose()
+  void pluginRuntime.dispose()
   activationMetrics.stop()
 })
 </script>

@@ -205,3 +205,98 @@ it('reports a failed replacement instead of publishing the tool success', async 
     expect.objectContaining({ success: false, message: 'Focus changed' })
   )
 })
+
+describe('external run disposal', () => {
+  it('finishes a claimed job once and suppresses late reports', async () => {
+    let resolve!: (outcome: InvocationOutcome) => void
+    let report!: RunReport
+    let signal: AbortSignal | undefined
+    const finishJob = vi.fn(async () => {})
+    const showOverlay = vi.fn()
+    const logRun = vi.fn()
+    const model = createExternalRun({
+      run: async (_command, _text, reporting, options) => {
+        report = reporting
+        signal = options?.signal
+        return new Promise((done) => {
+          resolve = done
+        })
+      },
+      claimJob: async () => true,
+      finishJob,
+      showOverlay,
+      logRun,
+      notify: vi.fn(),
+      t: (key) => key,
+    })
+    const pending = model.handleRun(event({ jobId: 'job' }))
+    await vi.waitFor(() => expect(signal).toBeDefined())
+    model.dispose()
+    model.dispose()
+    expect(signal?.aborted).toBe(true)
+    expect(finishJob).toHaveBeenCalledExactlyOnceWith('job', {
+      success: false,
+      cancelled: true,
+    })
+    showOverlay.mockClear()
+    report('success', 'late report')
+    resolve({ success: true })
+    expect(await pending).toMatchObject({ cancelled: true })
+    expect(finishJob).toHaveBeenCalledOnce()
+    expect(showOverlay).not.toHaveBeenCalled()
+    expect(logRun).not.toHaveBeenCalled()
+  })
+
+  it('returns a job claimed after disposal without executing it', async () => {
+    let claim!: (value: boolean) => void
+    const finishJob = vi.fn(async () => {})
+    const run = vi.fn(async () => ({ success: true }))
+    const model = createExternalRun({
+      run,
+      claimJob: () =>
+        new Promise((resolve) => {
+          claim = resolve
+        }),
+      finishJob,
+      showOverlay: vi.fn(),
+      notify: vi.fn(),
+      t: (key) => key,
+    })
+    const pending = model.handleRun(event({ jobId: 'job' }))
+    model.dispose()
+    claim(true)
+    expect(await pending).toMatchObject({ cancelled: true })
+    expect(run).not.toHaveBeenCalled()
+    expect(finishJob).toHaveBeenCalledOnce()
+  })
+})
+
+describe('cancellation before external execution', () => {
+  it('clears the pending overlay if cancelled while history is being saved', async () => {
+    let saved!: () => void
+    const run = vi.fn(async () => ({ success: true }))
+    const showOverlay = vi.fn()
+    const finishJob = vi.fn(async () => {})
+    const model = createExternalRun({
+      run,
+      showOverlay,
+      finishJob,
+      claimJob: async () => true,
+      saveOutput: () =>
+        new Promise<void>((resolve) => {
+          saved = resolve
+        }),
+      notify: vi.fn(),
+      t: (key) => key,
+    })
+    const pending = model.handleRun(event({ jobId: 'job', text: 'Input' }))
+    await vi.waitFor(() => expect(saved).toBeDefined())
+    model.handleCancel('job')
+    saved()
+    expect(await pending).toMatchObject({ cancelled: true })
+    expect(showOverlay).toHaveBeenLastCalledWith(null)
+    expect(run).not.toHaveBeenCalled()
+    expect(finishJob).toHaveBeenCalledOnce()
+    model.dispose()
+  })
+})

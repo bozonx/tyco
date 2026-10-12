@@ -57,6 +57,8 @@ ashpd = { version = "0.13.13", features = ["global_shortcuts"] }
 gtk = "0.18"
 gtk-sys = "0.18"
 x11rb = "0.13"
+# the webview settings tao and wry do not expose
+webkit2gtk = "2.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

@@ -1,12 +1,8 @@
 import { translate } from '../lib/i18n/index'
-import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
-import useToast from './use-toast'
 
-export const useCallApi = () => {
+export const useDesktopInsertion = () => {
   const ipcStore = useIpcStore()
-  const editorInputStore = useEditorInputStore()
-  const { toastText } = useToast()
 
   async function pasteIntoTargetAndHide(text: string) {
     if (!text?.trim()) return
@@ -18,15 +14,8 @@ export const useCallApi = () => {
     const body = result.error || ''
     // the window may be hidden by now, where a toast would go unseen
     void ipcStore.callFunction('notifyDesktop', [summary, body])
-    toastText(body ? `${summary}\n${body}` : summary, 'error')
+    throw new Error(body ? `${summary}: ${body}` : summary)
   }
 
-  function resolveText(text?: string): string {
-    if (text) {
-      return text
-    }
-    return editorInputStore.actionText()
-  }
-
-  return { resolveText, pasteIntoTargetAndHide }
+  return { pasteIntoTargetAndHide }
 }

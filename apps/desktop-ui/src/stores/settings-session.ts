@@ -6,7 +6,7 @@ import useToast from '../composables/use-toast'
 import { translate } from '../lib/i18n'
 import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
-import { pluginIndexes } from '../plugins'
+import { usePlugins } from '../plugins'
 import { useActionMenuStore } from './action-menu'
 import { useIpcStore } from './ipc'
 import { useThemeStore } from './theme'
@@ -14,6 +14,7 @@ import { useThemeStore } from './theme'
 /** Owns the draft across settings navigation, including failed final saves. */
 export const useSettingsSessionStore = defineStore('settingsSession', () => {
   const ipc = useIpcStore()
+  const { pluginIndexes } = usePlugins()
   const actions = useActionMenuStore()
   const theme = useThemeStore()
   const { toastText } = useToast()

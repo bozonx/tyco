@@ -34,6 +34,7 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
     ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>))
   const speculateDelayMs = deps.speculateDelayMs ?? 1000
 
+  let disposed = false
   let run: Run | null = null
   let done: { text: string; result: string } | null = null
   let timer: unknown = null
@@ -51,6 +52,7 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
 
   /** Resolves to the corrected text; rejects when aborted or failed. */
   const request = (text: string): Promise<string> => {
+    if (disposed) return Promise.reject(new CorrectionAbortedError())
     stopTimer()
     if (done?.text === text) return Promise.resolve(done.result)
     if (run?.text === text) return run.promise
@@ -109,6 +111,7 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
    * the user pauses. Pass null when the text should not be corrected
    */
   const speculate = (text: string | null) => {
+    if (disposed) return
     stopTimer()
     if (run && run.text !== text) abort()
     if (text === null || done?.text === text || run?.text === text) return
@@ -126,5 +129,15 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
     abort()
   }
 
-  return { request, correct, peek, speculate, cancel }
+  const invalidate = () => {
+    cancel()
+    done = null
+  }
+
+  const dispose = () => {
+    disposed = true
+    invalidate()
+  }
+
+  return { request, correct, peek, speculate, cancel, invalidate, dispose }
 }

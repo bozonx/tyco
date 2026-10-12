@@ -5137,6 +5137,7 @@ dependencies = [
  "tokio-tungstenite",
  "tyco-activation-protocol",
  "url",
+ "webkit2gtk",
  "webp",
  "windows-sys 0.61.2",
  "x11rb",

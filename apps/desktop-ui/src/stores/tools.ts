@@ -1,9 +1,10 @@
-import { defineStore } from 'pinia'
+import { defineStore, getActivePinia } from 'pinia'
 
 import type { LlmTask } from '@tyco/shared'
 
-import { useCallAi } from '../composables/use-call-ai'
-import { useCallApi } from '../composables/use-call-api'
+import { useLlmActions } from '../composables/use-llm-actions'
+import { useTranslationActions } from '../composables/use-translation-actions'
+import { useDesktopInsertion } from '../composables/use-desktop-insertion'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -25,10 +26,13 @@ import { useMenuModalsStore } from './menu-modals'
  */
 
 export const useToolsStore = defineStore('tools', () => {
+  const pinia = getActivePinia()
+  const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
-  const { translateTo, aiCustomPrompt } = useCallAi()
+  const { aiCustomPrompt } = useLlmActions()
+  const { translateTo } = useTranslationActions()
   const correctorStore = useCorrectorStore()
-  const { pasteIntoTargetAndHide } = useCallApi()
+  const { pasteIntoTargetAndHide } = useDesktopInsertion()
 
   const llmUnavailable = (task: LlmTask) =>
     normalizeLlmConfig(ipcStore.params.userConfig?.llm).tasks[task]?.length
@@ -43,8 +47,8 @@ export const useToolsStore = defineStore('tools', () => {
     },
     askInChat: async (text) => {
       // the chat takes the place of whatever step the menu was on
-      useMenuModalsStore().closeAll()
-      await useChatStore().attachToChat(text)
+      menuModalsStore.closeAll()
+      await useChatStore(pinia).attachToChat(text)
     },
     correctText: correctorStore.correct,
     translateTo: async (language, text, options) => {

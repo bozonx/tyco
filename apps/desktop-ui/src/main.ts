@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { disposePinia } from 'pinia'
 
 import App from './App.vue'
 import './assets/main.css'
@@ -17,4 +18,5 @@ app.use(router)
 app.use(pinia)
 app.use(i18n)
 
+app.onUnmount(() => disposePinia(pinia))
 app.mount('#app')

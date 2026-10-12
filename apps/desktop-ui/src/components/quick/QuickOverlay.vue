@@ -147,8 +147,7 @@ const keepsOnFocusLoss = computed(
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
 const dismiss = () => {
   if (currentMode.value === 'write') writerInputStore.markDismissed()
-  menuModalsStore.cancelPending()
-  menuModalsStore.closeAll()
+  menuModalsStore.cancelAndCloseAll()
   // a failed dismissal leaves the window shown, which tells enough
   void ipcStore.callFunction('dismissQuickWindow')
 }
@@ -278,9 +277,8 @@ watch(
   () => ipcStore.params.isWindowShown,
   (isShown) => {
     if (isShown) return
-    menuModalsStore.cancelPending()
     // a correction must not finish into an insert nobody sees
-    menuModalsStore.closeAll()
+    menuModalsStore.cancelAndCloseAll()
   }
 )
 

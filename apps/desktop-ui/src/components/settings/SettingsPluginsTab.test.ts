@@ -16,48 +16,51 @@ vi.mock('../../composables/use-toast', () => ({
 
 vi.mock('../../plugins', () => ({
   builtinPluginIds: ['PluginWithConfig'],
-  usePlugins: () => ({ refreshInstalledPlugins: vi.fn(async () => {}) }),
-  pluginRuntimeStates: {},
-  pluginIndexes: [
-    () => ({
-      id: 'PluginWithConfig',
-      name: 'PluginWithConfig',
-      version: '1.0.0',
-      apiVersion: 2,
-      capabilities: [],
-      defaultLocale: 'en_US',
-      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
-      labelKey: 'plugin.withConfig.label',
-      defaultConfig: {
-        fields: [
-          {
-            type: 'text',
-            id: 'apiKey',
-            name: 'apiKey',
-            version: '1.0.0',
-            apiVersion: 2,
-            capabilities: [],
-            defaultLocale: 'en_US',
-            locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
-            labelKey: 'key',
-            defaultValue: 'default-key',
-          },
-        ],
-      },
-      init: vi.fn(),
-    }),
-    () => ({
-      id: 'PluginWithoutConfig',
-      name: 'PluginWithoutConfig',
-      version: '1.0.0',
-      apiVersion: 2,
-      capabilities: [],
-      defaultLocale: 'en_US',
-      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
-      labelKey: 'plugin.withoutConfig.label',
-      init: vi.fn(),
-    }),
-  ],
+  usePlugins: () => ({
+    pluginRuntimeStates: {},
+    pluginIndexes: [
+      () => ({
+        id: 'PluginWithConfig',
+        name: 'PluginWithConfig',
+        version: '1.0.0',
+        apiVersion: 2,
+        capabilities: [],
+        defaultLocale: 'en_US',
+        locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+        labelKey: 'plugin.withConfig.label',
+        defaultConfig: {
+          fields: [
+            {
+              type: 'text',
+              id: 'apiKey',
+              name: 'apiKey',
+              version: '1.0.0',
+              apiVersion: 2,
+              capabilities: [],
+              defaultLocale: 'en_US',
+              locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+              labelKey: 'key',
+              defaultValue: 'default-key',
+            },
+          ],
+        },
+        init: vi.fn(),
+      }),
+      () => ({
+        id: 'PluginWithoutConfig',
+        name: 'PluginWithoutConfig',
+        version: '1.0.0',
+        apiVersion: 2,
+        capabilities: [],
+        defaultLocale: 'en_US',
+        locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+        labelKey: 'plugin.withoutConfig.label',
+        init: vi.fn(),
+      }),
+    ],
+    reloadPlugins: vi.fn(),
+    refreshInstalledPlugins: vi.fn(async () => {}),
+  }),
 }))
 
 describe('SettingsPluginsTab.vue', () => {

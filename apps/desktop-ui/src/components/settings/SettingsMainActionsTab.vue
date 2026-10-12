@@ -49,7 +49,7 @@ import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
 import { getLanguageLabel } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
-import { pluginIndexes } from '../../plugins'
+import { usePlugins } from '../../plugins'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useToolsStore } from '../../stores/tools'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -62,6 +62,8 @@ import {
   type StandardActionId,
   type UserConfig,
 } from '@tyco/shared'
+
+const { pluginIndexes } = usePlugins()
 
 const props = defineProps<{ userConfig: UserConfig }>()
 

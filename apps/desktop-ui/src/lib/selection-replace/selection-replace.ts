@@ -57,6 +57,7 @@ export function keepSurroundingWhitespace(
  * going on once it takes longer, and failures also go to desktop notifications
  */
 export function createSelectionReplace(deps: SelectionReplaceDeps) {
+  let disposed = false
   let active: { runId: number; controller: AbortController } | null = null
 
   const finishQuietly = async (runId: number) => {
@@ -68,6 +69,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
   }
 
   const fail = (action: SelectionAction | null, message: string) => {
+    if (disposed) return
     deps.showOverlay({
       kind: 'error',
       text: message,
@@ -80,6 +82,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
   }
 
   const notice = (text: string, hideAfterMs = INFO_HIDE_MS) => {
+    if (disposed) return
     deps.showOverlay({ kind: 'info', text, hideAfterMs })
   }
 
@@ -100,6 +103,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
   }
 
   const handleRun = async (event: SelectionRunEvent): Promise<void> => {
+    if (disposed) return
     deps.applyUserConfig?.(event.userConfig)
     const action = parseSelectionAction(event.action)
     if (event.error) {
@@ -130,7 +134,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
       // the backend has given back what a cancelled or replaced run held; a
       // finish of it is told apart as stale
       if (!isCurrent()) {
-        await finishQuietly(event.runId)
+        if (!disposed) await finishQuietly(event.runId)
         return
       }
       active = null
@@ -146,7 +150,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
     }
     // a request layer may resolve with a partial text on abort
     if (!isCurrent()) {
-      await finishQuietly(event.runId)
+      if (!disposed) await finishQuietly(event.runId)
       return
     }
     active = null
@@ -170,7 +174,7 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
       fail(action, deps.describeError(error))
       return
     }
-    if (status === 'stale') return
+    if (disposed || status === 'stale') return
     void deps.saveResult?.(action, event.text, replacement)
 
     if (status === 'clipboard') {
@@ -196,5 +200,15 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
     notice(deps.t('selection.cancelled'))
   }
 
-  return { handleRun, handleCancel }
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    const run = active
+    active = null
+    if (run) {
+      run.controller.abort()
+      void finishQuietly(run.runId)
+    }
+  }
+  return { handleRun, handleCancel, dispose }
 }

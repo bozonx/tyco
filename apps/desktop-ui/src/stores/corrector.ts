@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { onScopeDispose } from 'vue'
+import { onScopeDispose, watch } from 'vue'
+import { useIpcStore } from './ipc'
 
-import { useCallAi } from '../composables/use-call-ai'
+import { useLlmActions } from '../composables/use-llm-actions'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
 
 /**
@@ -10,7 +11,7 @@ import { createQuickCorrection } from '../lib/quick-input/quick-correction'
  * reused by whatever asks for the same text
  */
 export const useCorrectorStore = defineStore('corrector', () => {
-  const { correctText } = useCallAi()
+  const { correctText } = useLlmActions()
 
   const corrector = createQuickCorrection({
     // errors are shown by whoever needed the result
@@ -18,7 +19,19 @@ export const useCorrectorStore = defineStore('corrector', () => {
       correctText(text, { signal, notifyError: false }),
   })
 
-  onScopeDispose(corrector.cancel)
+  const ipc = useIpcStore()
+  watch(
+    () =>
+      JSON.stringify([
+        ipc.params.userConfig.llm,
+        ipc.params.userConfig.aiRules?.correction,
+        ipc.params.appConfig.aiInstructions.correction,
+        ipc.params.appConfig.rulePrefix,
+      ]),
+    corrector.invalidate,
+    { flush: 'sync' }
+  )
+  onScopeDispose(corrector.dispose)
 
   return {
     correct: corrector.correct,

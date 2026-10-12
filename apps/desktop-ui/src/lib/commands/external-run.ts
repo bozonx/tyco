@@ -47,6 +47,13 @@ export interface ExternalRunDependencies {
   t: (key: string, params?: Record<string, string>) => string
 }
 
+interface ActiveExternalRun {
+  controller: AbortController
+  jobId?: string
+  claimed: boolean
+  finished: boolean
+}
+
 /**
  * Runs the commands of external calls that need no window: no text to ask for,
  * no confirmation, no result menu. Nothing is shown while a command is quick;
@@ -54,6 +61,8 @@ export interface ExternalRunDependencies {
  * notifications, since nothing else may be in view
  */
 export function createExternalRun(deps: ExternalRunDependencies) {
+  let disposed = false
+  const runs = new Set<ActiveExternalRun>()
   const controllers = new Map<string, AbortController>()
   const handleCancel = (id: string) => controllers.get(id)?.abort()
   // a job the backend failed to hand over or take back is not ours to run;
@@ -63,7 +72,18 @@ export function createExternalRun(deps: ExternalRunDependencies) {
   const finishJob = (id: string, outcome: InvocationOutcome) =>
     Promise.resolve(deps.finishJob?.(id, outcome)).catch(() => undefined)
 
+  const complete = async (
+    run: ActiveExternalRun,
+    outcome: InvocationOutcome
+  ) => {
+    if (!run.jobId || !run.claimed || run.finished) return outcome
+    run.finished = true
+    return (await finishJob(run.jobId, outcome)) ?? outcome
+  }
+  const cancelled: InvocationOutcome = { success: false, cancelled: true }
+
   const failed = (name: string, message: string) => {
+    if (disposed) return
     deps.showOverlay({
       kind: 'error',
       text: `${name}: ${message}`,
@@ -72,10 +92,11 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     deps.notify(deps.t('externalCommand.failed', { name }), message)
   }
 
-  const handleRun = async (
-    event: CommandRunEvent
+  const perform = async (
+    event: CommandRunEvent,
+    run: ActiveExternalRun
   ): Promise<InvocationOutcome> => {
-    const controller = new AbortController()
+    const { controller } = run
     if (event.jobId) {
       controllers.set(event.jobId, controller)
       if (!(await claimJob(event.jobId))) {
@@ -83,6 +104,8 @@ export function createExternalRun(deps: ExternalRunDependencies) {
         return { success: false, cancelled: true }
       }
     }
+    run.claimed = Boolean(event.jobId)
+    if (disposed || controller.signal.aborted) return complete(run, cancelled)
     deps.applyUserConfig?.(event.userConfig)
     const command = normalizeCommands(event.userConfig.commands).find(
       (item) => item.id === event.commandId
@@ -93,7 +116,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       const outcome = { success: false, message }
       if (event.jobId) {
         controllers.delete(event.jobId)
-        await finishJob(event.jobId, outcome)
+        await complete(run, outcome)
       }
       return outcome
     }
@@ -101,6 +124,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     const name = commandLabel(command)
     let reported = false
     const report: RunReport = (kind, message) => {
+      if (disposed || controller.signal.aborted) return
       reported = true
       if (kind === 'error' || kind === 'warn') {
         failed(name, message)
@@ -121,6 +145,10 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     const input = event.text ?? null
     if (input !== null) await deps.saveOutput?.(input).catch(() => {})
 
+    if (disposed || controller.signal.aborted) {
+      if (!disposed) deps.showOverlay(null)
+      return complete(run, cancelled)
+    }
     let outcome: InvocationOutcome
     try {
       outcome = await deps.run(command, input ?? '', report, {
@@ -138,8 +166,9 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       outcome = { success: false, cancelled: true, message: 'Cancelled' }
     if (event.jobId) {
       controllers.delete(event.jobId)
-      outcome = (await finishJob(event.jobId, outcome)) ?? outcome
+      outcome = await complete(run, outcome)
     }
+    if (disposed) return cancelled
     if (!reported) {
       if (outcome.success || outcome.cancelled) deps.showOverlay(null)
       else failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
@@ -157,5 +186,34 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     return outcome
   }
 
-  return { handleRun, handleCancel }
+  const handleRun = async (
+    event: CommandRunEvent
+  ): Promise<InvocationOutcome> => {
+    if (disposed) return cancelled
+    const run = {
+      controller: new AbortController(),
+      jobId: event.jobId,
+      claimed: false,
+      finished: false,
+    }
+    runs.add(run)
+    try {
+      return await perform(event, run)
+    } finally {
+      runs.delete(run)
+      if (event.jobId && controllers.get(event.jobId) === run.controller)
+        controllers.delete(event.jobId)
+    }
+  }
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    for (const run of runs) {
+      run.controller.abort()
+      void complete(run, cancelled)
+    }
+    controllers.clear()
+    runs.clear()
+  }
+  return { handleRun, handleCancel, dispose }
 }

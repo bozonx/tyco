@@ -17,7 +17,7 @@ import { computed, nextTick, onScopeDispose, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { useChatInputStore } from './chat-input'
 
-import { useCallAi } from '../composables/use-call-ai'
+import { useLlmActions } from '../composables/use-llm-actions'
 import useToast from '../composables/use-toast'
 import {
   chatModelOptions,
@@ -38,8 +38,9 @@ import { makeUniqId } from '@/lib/squidlet-lib-local'
 
 export const useChatStore = defineStore('chat', () => {
   const { toast, toastText } = useToast()
-  const { sendChatMessage, generateChatTitle, saveLocalState } = useCallAi()
+  const { sendChatMessage, generateChatTitle } = useLlmActions()
   const ipcStore = useIpcStore()
+  const saveLocalState = ipcStore.patchLocalState
   const llmStore = useLlmStore()
   const historyStore = useHistoryStore()
   const editorInputStore = useEditorInputStore()

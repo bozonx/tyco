@@ -95,6 +95,12 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     if (typeof onCancel === 'function') onCancel()
   }
 
+  /** Cancels pending work before removing its UI; closeAll alone only hides it. */
+  const cancelAndCloseAll = () => {
+    cancelPending()
+    closeAll()
+  }
+
   /** Changes the params of a step; false when it is no longer on the stack. */
   const updateStep = (id: number, params: Record<string, any>): boolean => {
     const index = steps.value.findIndex((step) => step.id === id)
@@ -123,6 +129,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     nextModal,
     back,
     closeAll,
+    cancelAndCloseAll,
     setPendingModal,
     clearPendingModal,
     isPendingModal: (owner: number) =>

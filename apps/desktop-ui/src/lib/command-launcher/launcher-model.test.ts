@@ -647,3 +647,55 @@ describe('launcher pages', () => {
     )
   })
 })
+
+describe('launcher disposal', () => {
+  it('aborts the command and suppresses late logging', async () => {
+    let resolve!: (outcome: { success: boolean }) => void
+    let signal: AbortSignal | undefined
+    const { model, deps } = setup([backup], {
+      run: async (_command, _text, options) => {
+        signal = options?.signal
+        return new Promise((done) => {
+          resolve = done
+        })
+      },
+    })
+    const pending = model.pick(backup)
+    await vi.waitFor(() => expect(signal).toBeDefined())
+    model.dispose()
+    expect(signal?.aborted).toBe(true)
+    resolve({ success: true })
+    await pending
+    expect(deps.logRun).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).toBe('list')
+  })
+})
+
+describe('launcher completion ownership', () => {
+  it('does not log a job completion that arrives after disposal', async () => {
+    let finish!: (outcome: { success: boolean }) => void
+    const logRun = vi.fn()
+    const finishJob = vi.fn(
+      () =>
+        new Promise<{ success: boolean }>((resolve) => {
+          finish = resolve
+        })
+    )
+    const model = createCommandLauncherModel({
+      tools,
+      commands: () => [backup],
+      selectedText: () => null,
+      run: async () => ({ success: true }),
+      claimJob: async () => true,
+      finishJob,
+      logRun,
+    })
+    const pending = model.request({ commandId: backup.id, jobId: 'job' })
+    await vi.waitFor(() => expect(finishJob).toHaveBeenCalledOnce())
+    model.dispose()
+    finish({ success: true })
+    await pending
+    expect(logRun).not.toHaveBeenCalled()
+    expect(finishJob).toHaveBeenCalledOnce()
+  })
+})

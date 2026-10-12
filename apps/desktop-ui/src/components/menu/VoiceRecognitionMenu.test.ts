@@ -14,8 +14,12 @@ const mocks = vi.hoisted(() => ({
   toastText: vi.fn(),
 }))
 
-vi.mock('../../composables/use-call-ai', () => ({
-  useCallAi: () => ({
+vi.mock('../../composables/use-llm-actions', () => ({
+  useLlmActions: () => ({ voiceCorrection: mocks.voiceCorrection }),
+}))
+
+vi.mock('../../composables/use-dictation-actions', () => ({
+  useDictationActions: () => ({
     startDictation: mocks.startDictation,
     finishDictation: mocks.finishDictation,
     cancelDictation: mocks.cancelDictation,

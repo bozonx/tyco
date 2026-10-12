@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import { useHelpers } from '../composables/use-helpers'
 import {
@@ -10,5 +11,7 @@ export { MenuModals }
 
 export const useMenuModalsStore = defineStore('menuModals', () => {
   const { resetGlobalFocus } = useHelpers()
-  return createMenuModalsStoreModel({ resetGlobalFocus })
+  const model = createMenuModalsStoreModel({ resetGlobalFocus })
+  onScopeDispose(model.cancelAndCloseAll)
+  return model
 })

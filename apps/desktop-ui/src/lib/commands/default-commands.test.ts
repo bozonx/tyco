@@ -194,3 +194,79 @@ describe('createDefaultCommandsSync', () => {
     expect(loadUserConfig).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('default command sync recovery', () => {
+  it('retries failed writes with a bounded backoff', async () => {
+    vi.useFakeTimers()
+    const save = vi.fn(async () => false)
+    const reportError = vi.fn()
+    const sync = createDefaultCommandsSync({
+      tools: () => registry(),
+      loadUserConfig: async () => config(),
+      saveUserConfig: save,
+      reportError,
+      t,
+      maxRetries: 2,
+    })
+    try {
+      await sync.check()
+      expect(reportError).toHaveBeenCalledOnce()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(save).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(save).toHaveBeenCalledTimes(3)
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      sync.dispose()
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not save a config loaded after disposal', async () => {
+    let resolve!: (config: UserConfig) => void
+    const save = vi.fn(async () => true)
+    const sync = createDefaultCommandsSync({
+      tools: () => registry(),
+      loadUserConfig: () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+      saveUserConfig: save,
+      t,
+    })
+    const pending = sync.check()
+    sync.dispose()
+    resolve(config())
+    await pending
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('recovers from a failed load and clears retry timers on disposal', async () => {
+    vi.useFakeTimers()
+    const load = vi
+      .fn<() => Promise<UserConfig | null>>()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue(config())
+    const save = vi.fn(async () => true)
+    const sync = createDefaultCommandsSync({
+      tools: () => registry(),
+      loadUserConfig: load,
+      saveUserConfig: save,
+      t,
+    })
+    try {
+      await sync.check()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(save).toHaveBeenCalledOnce()
+      load.mockResolvedValue(null)
+      await sync.check()
+      sync.dispose()
+      expect(vi.getTimerCount()).toBe(0)
+      await vi.advanceTimersByTimeAsync(10000)
+      expect(load).toHaveBeenCalledTimes(3)
+    } finally {
+      sync.dispose()
+      vi.useRealTimers()
+    }
+  })
+})

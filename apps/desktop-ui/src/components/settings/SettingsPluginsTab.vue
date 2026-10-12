@@ -142,16 +142,14 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import {
-  builtinPluginIds,
-  pluginIndexes,
-  pluginRuntimeStates,
-  usePlugins,
-} from '../../plugins'
+import { builtinPluginIds, usePlugins } from '../../plugins'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
+
+const plugins = usePlugins()
+const { pluginIndexes, pluginRuntimeStates } = plugins
 
 const props = defineProps<{
   userConfig: { plugins?: Record<string, unknown> }
@@ -186,7 +184,7 @@ const installation = createPluginInstallation({
   remove: async (id) => {
     requireResult(await ipc.callFunction('removePluginPackage', [id]))
   },
-  refresh: () => usePlugins().refreshInstalledPlugins(),
+  refresh: plugins.refreshInstalledPlugins,
   reservedIds: builtinPluginIds ?? [],
   reportError: (error) =>
     toast('settings.pluginPackageFailed', 'error', {

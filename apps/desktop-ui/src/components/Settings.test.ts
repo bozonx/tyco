@@ -74,34 +74,37 @@ vi.mock('../stores/history', () => ({
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
 
 vi.mock('../plugins', () => ({
-  pluginRuntimeStates: {},
-  pluginIndexes: [
-    () => ({
-      id: 'PluginA',
-      name: 'PluginA',
-      version: '1.0.0',
-      apiVersion: 2,
-      capabilities: [],
-      defaultLocale: 'en_US',
-      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
-      labelKey: 'plugin.a.label',
-      defaultConfig: { fields: [] },
-      init: vi.fn(),
-    }),
-    () => ({
-      id: 'PluginB',
-      name: 'PluginB',
-      version: '1.0.0',
-      apiVersion: 2,
-      capabilities: [],
-      defaultLocale: 'en_US',
-      locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
-      label: 'Plugin B',
-      defaultConfig: { fields: [] },
-      init: vi.fn(),
-    }),
-  ],
-  usePlugins: () => ({ reloadPlugins: vi.fn() }),
+  usePlugins: () => ({
+    pluginRuntimeStates: {},
+    pluginIndexes: [
+      () => ({
+        id: 'PluginA',
+        name: 'PluginA',
+        version: '1.0.0',
+        apiVersion: 2,
+        capabilities: [],
+        defaultLocale: 'en_US',
+        locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+        labelKey: 'plugin.a.label',
+        defaultConfig: { fields: [] },
+        init: vi.fn(),
+      }),
+      () => ({
+        id: 'PluginB',
+        name: 'PluginB',
+        version: '1.0.0',
+        apiVersion: 2,
+        capabilities: [],
+        defaultLocale: 'en_US',
+        locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+        label: 'Plugin B',
+        defaultConfig: { fields: [] },
+        init: vi.fn(),
+      }),
+    ],
+    reloadPlugins: vi.fn(),
+    refreshInstalledPlugins: vi.fn(async () => {}),
+  }),
 }))
 
 describe('Settings.vue', () => {

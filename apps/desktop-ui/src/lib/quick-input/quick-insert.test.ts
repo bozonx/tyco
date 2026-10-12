@@ -103,3 +103,22 @@ describe('quick correction and insertion', () => {
     expect(deps.reportError).toHaveBeenCalledOnce()
   })
 })
+
+describe('quick insertion disposal', () => {
+  it('blocks insertion even when disposal happens during a history write', async () => {
+    const { deps, model } = setup()
+    const history = deferred<void>()
+    deps.saveOutput.mockReturnValue(history.promise)
+    const pending = model.start('Original')
+    await vi.waitFor(() => expect(deps.saveOutput).toHaveBeenCalledOnce())
+    model.dispose()
+    model.dispose()
+    history.resolve()
+    await pending
+    await model.start('Another')
+    expect(deps.cancelCorrection).toHaveBeenCalledOnce()
+    expect(deps.correct).toHaveBeenCalledOnce()
+    expect(deps.insert).not.toHaveBeenCalled()
+    expect(deps.reportError).not.toHaveBeenCalled()
+  })
+})

@@ -129,3 +129,27 @@ describe('createMenuModalsStoreModel', () => {
     expect(store.pendingModal.value).toBeNull()
   })
 })
+
+describe('modal visibility and cancellation', () => {
+  it('keeps pending work running when only its UI is closed', () => {
+    const store = createMenuModalsStoreModel()
+    const onCancel = vi.fn()
+    store.setPendingModal({ onCancel })
+    store.closeAll()
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(store.pendingModal.value).toBeNull()
+  })
+
+  it('explicitly cancels and closes once', () => {
+    const store = createMenuModalsStoreModel()
+    const onCancel = vi.fn()
+    const onLeave = vi.fn()
+    store.nextModal(MenuModals.INSERT, { onLeave })
+    store.setPendingModal({ onCancel })
+    store.cancelAndCloseAll()
+    store.cancelAndCloseAll()
+    expect(onCancel).toHaveBeenCalledOnce()
+    expect(onLeave).toHaveBeenCalledOnce()
+    expect(store.steps.value).toEqual([])
+  })
+})

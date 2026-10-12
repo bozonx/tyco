@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import { translate } from '../lib/i18n/index'
 import { describeError } from '../lib/llm/llm-errors'
@@ -67,5 +68,6 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     isAborted: action.isAborted,
   })
 
+  onScopeDispose(model.dispose)
   return model
 })

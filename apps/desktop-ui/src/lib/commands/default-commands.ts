@@ -130,6 +130,9 @@ export interface DefaultCommandsSyncDependencies {
     baseConfig: UserConfig
   ) => Promise<boolean>
   t: DefaultCommandsContext['t']
+  reportError?: (error: unknown) => void
+  retryMs?: number
+  maxRetries?: number
 }
 
 /**
@@ -142,18 +145,29 @@ export function createDefaultCommandsSync(
 ) {
   let running: Promise<void> | null = null
   let again = false
+  let disposed = false
+  let failures = 0
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
 
   const seed = async () => {
     const tools = deps.tools()
     if (!tools.some((tool) => tool.defaultCommands)) return
     const userConfig = await deps.loadUserConfig()
-    if (!userConfig) return
+    if (disposed) return
+    if (!userConfig)
+      throw new Error('Could not load the config for default commands')
     const seeded = seedDefaultCommands(userConfig, tools, deps.t)
-    if (seeded)
-      await deps.saveUserConfig({ ...userConfig, ...seeded }, userConfig)
+    if (
+      seeded &&
+      !(await deps.saveUserConfig({ ...userConfig, ...seeded }, userConfig))
+    )
+      throw new Error('Could not save default commands')
   }
 
   const check = async (): Promise<void> => {
+    if (disposed) return
+    clearTimeout(retryTimer)
+    retryTimer = undefined
     if (running) {
       again = true
       return running
@@ -163,10 +177,24 @@ export function createDefaultCommandsSync(
         again = false
         try {
           await seed()
-        } catch {
-          // the next change of the tools tries again
+          failures = 0
+          clearTimeout(retryTimer)
+          retryTimer = undefined
+        } catch (error) {
+          if (disposed) return
+          deps.reportError?.(error)
+          if (failures < (deps.maxRetries ?? 3)) {
+            const delay = Math.min(
+              (deps.retryMs ?? 1000) * 2 ** failures++,
+              30000
+            )
+            retryTimer = setTimeout(() => {
+              retryTimer = undefined
+              void check()
+            }, delay)
+          }
         }
-      } while (again)
+      } while (again && !disposed)
     })()
     try {
       await running
@@ -175,5 +203,11 @@ export function createDefaultCommandsSync(
     }
   }
 
-  return { check }
+  const dispose = () => {
+    disposed = true
+    again = false
+    clearTimeout(retryTimer)
+    retryTimer = undefined
+  }
+  return { check, dispose }
 }

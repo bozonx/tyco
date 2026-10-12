@@ -39,7 +39,7 @@ vi.mock('./use-toast', () => ({
 }))
 
 import { setI18nLocale } from '../lib/i18n/index'
-import { useCallAi } from './use-call-ai'
+import { useDictationActions } from './use-dictation-actions'
 
 describe('dictation credential preflight', () => {
   let pinia: ReturnType<typeof createPinia>
@@ -57,31 +57,31 @@ describe('dictation credential preflight', () => {
   })
 
   it('explains how to configure a missing key before starting capture', async () => {
-    await expect(useCallAi().startDictation(handlers)).rejects.toThrow(
-      'Open Settings → STT'
-    )
+    await expect(
+      useDictationActions().startDictation(handlers)
+    ).rejects.toThrow('Open Settings → STT')
     expect(mocks.start).not.toHaveBeenCalled()
   })
 
   it('explains how to unlock an inaccessible saved key', async () => {
     mocks.secrets = { deepgram: { origins: [], available: false } }
-    await expect(useCallAi().startDictation(handlers)).rejects.toThrow(
-      'Unlock the system keychain'
-    )
+    await expect(
+      useDictationActions().startDictation(handlers)
+    ).rejects.toThrow('Unlock the system keychain')
     expect(mocks.start).not.toHaveBeenCalled()
   })
 
   it('explains a failed key status lookup', async () => {
     mocks.refreshSecrets.mockRejectedValue('Command undefined not found')
-    await expect(useCallAi().startDictation(handlers)).rejects.toThrow(
-      'Could not check the API key'
-    )
+    await expect(
+      useDictationActions().startDictation(handlers)
+    ).rejects.toThrow('Could not check the API key')
     expect(mocks.start).not.toHaveBeenCalled()
   })
 
   it('starts capture with a usable key', async () => {
     mocks.secrets = { deepgram: { origins: [], available: true } }
-    await useCallAi().startDictation(handlers)
+    await useDictationActions().startDictation(handlers)
     expect(mocks.start).toHaveBeenCalledWith(
       expect.objectContaining({ hasApiKey: true })
     )
@@ -89,7 +89,7 @@ describe('dictation credential preflight', () => {
 
   it('starts a self-hosted provider without checking keys', async () => {
     mocks.provider = 'sherpa-onnx'
-    await useCallAi().startDictation(handlers)
+    await useDictationActions().startDictation(handlers)
     expect(mocks.refreshSecrets).not.toHaveBeenCalled()
     expect(mocks.start).toHaveBeenCalledWith(
       expect.objectContaining({ hasApiKey: false })

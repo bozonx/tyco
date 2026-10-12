@@ -1,0 +1,91 @@
+import { markRaw, shallowReactive } from 'vue'
+import type { UserConfig } from '@tyco/shared'
+
+import type { PluginIndex } from '../../types/plugins'
+import {
+  createPluginManager,
+  type PluginManagerDependencies,
+  type PluginRuntimeState,
+} from './plugin-manager'
+import { pluginId } from './plugin-config'
+
+export interface PluginRuntimeDependencies extends Omit<
+  PluginManagerDependencies,
+  'pluginIndexes' | 'onStateChange'
+> {
+  builtinPlugins: readonly PluginIndex[]
+  getConfig: () => UserConfig
+  loadInstalled: () => Promise<PluginIndex[]>
+  removeResources: (id: string) => void
+}
+
+/** Owns the catalog, manager, and refresh queue for one application instance. */
+export function createPluginRuntime(deps: PluginRuntimeDependencies) {
+  const pluginIndexes = shallowReactive<PluginIndex[]>([...deps.builtinPlugins])
+  const pluginRuntimeStates = shallowReactive<
+    Record<string, PluginRuntimeState>
+  >({})
+  let disposed = false
+  let refreshing: Promise<void> | undefined
+  let refreshQueued = false
+  let disposal: Promise<void> | undefined
+  const manager = markRaw(
+    createPluginManager({
+      ...deps,
+      pluginIndexes,
+      onStateChange: (id, state) => {
+        if (!disposed) pluginRuntimeStates[id] = state
+      },
+    })
+  )
+  const reloadPlugins = (config = deps.getConfig()) =>
+    disposed ? Promise.resolve() : manager.loadPlugins(config)
+
+  const refreshInstalledPlugins = (): Promise<void> => {
+    if (disposed) return Promise.resolve()
+    if (refreshing) {
+      refreshQueued = true
+      return refreshing
+    }
+    refreshing = (async () => {
+      do {
+        refreshQueued = false
+        const installed = await deps.loadInstalled()
+        if (disposed) return
+        const removed = new Set(
+          pluginIndexes.map((factory) => pluginId(factory()))
+        )
+        pluginIndexes.splice(
+          0,
+          pluginIndexes.length,
+          ...deps.builtinPlugins,
+          ...installed
+        )
+        for (const factory of pluginIndexes) removed.delete(pluginId(factory()))
+        await reloadPlugins()
+        if (disposed) return
+        for (const id of removed) {
+          deps.removeResources(id)
+          delete pluginRuntimeStates[id]
+        }
+      } while (refreshQueued && !disposed)
+    })().finally(() => {
+      refreshing = undefined
+    })
+    return refreshing
+  }
+  const dispose = () => {
+    disposed = true
+    refreshQueued = false
+    disposal ??= manager.dispose()
+    return disposal
+  }
+  return {
+    pluginIndexes,
+    pluginRuntimeStates,
+    manager,
+    reloadPlugins,
+    refreshInstalledPlugins,
+    dispose,
+  }
+}

@@ -22,6 +22,8 @@ session that belongs to an application instance.
 | Markdown display                         | markup-mode                                                         | Editor markup visibility                                                                    |
 | Notifications                            | toast                                                               | Toast state and timer lifetime                                                              |
 | Plugin registrations                     | tools, action-menu, edit-menu, toolbar                              | Reactive tool and menu registries; callback-bearing registrations use shallow refs          |
+| Plugin runtime                           | plugin-runtime                                                      | Per-instance catalog, activation manager, runtime statuses and refresh queue                |
+| Settings editing                         | settings-session                                                    | Shared settings draft, debounced saves and recovery after failed navigation saves           |
 | Provider services                        | llm, translation                                                    | Non-reactive clients and provider wiring; llm also owns reactive key availability           |
 | Correction                               | corrector, correction                                               | Shared speculative correction and UI insertion/correction flows respectively                |
 | Execution                                | invocations, command-launcher, external-commands, selection-replace | Shared dependencies and distinct interactive/background execution lifetimes                 |
@@ -40,8 +42,9 @@ Models may use Vue reactivity but do not resolve Pinia stores themselves.
 Stores wire those dependencies and register cleanup with onScopeDispose.
 
 Keep lightweight UI-only state in its component or composable: DOM references,
-temporary search queries, dropdown visibility, drag positions and settings
-form drafts do not need global stores. Promote state to Pinia when independent
+temporary search queries, dropdown visibility and drag positions do not need
+global stores. The settings draft is an exception: settings-session keeps failed
+saves available after navigation. Promote state to Pinia when independent
 consumers must share it or it must outlive the component that created it.
 
 The useEditorNavigation composable is stateless. Transferred text is applied
@@ -81,3 +84,38 @@ Frontend request ordering does not provide a transaction across webviews.
 Run pnpm check, pnpm test and pnpm build after changing state boundaries.
 Focused model tests cover transitions and response ordering; store integration
 tests cover dependency wiring, instance isolation and disposal.
+
+## Service dependencies
+
+- `useLlmActions` wires LLM requests, chat, and text correction.
+- `useTranslationActions` wires translation and its error reporting.
+- `useDictationActions` wires the microphone session and credential checks.
+- `useDesktopInsertion` propagates native paste failures to the invocation layer.
+  The invocation reports the toast; native notifications remain available when
+  the application is hidden behind the target window.
+
+Capture stores during setup. Bind lazily acquired dependencies to the owner's
+Pinia instance rather than whichever Pinia is active when the callback runs.
+The invocations, translation, defaultCommands, and toolCatalog stores also own
+services without public reactive state. This keeps their dependencies and
+lifetimes scoped to the application instead of a module singleton.
+
+## Disposal versus window visibility
+
+Models that own asynchronous work expose an idempotent `dispose()`. Stores connect
+it with `onScopeDispose`; the application disposes Pinia on unmount. Disposal
+aborts requests, ends claimed external jobs, releases captured selections,
+stops retries, and suppresses late UI updates. Native side effects already sent
+to the backend cannot be undone by disposing a frontend model.
+
+- `menuModals.closeAll()` removes the menu UI. Pending work may still finish into
+  history, as required when closing the main window.
+- `menuModals.cancelAndCloseAll()` explicitly cancels pending work before removing
+  the UI. Quick-window dismissal and store disposal use this method.
+- Hiding a window does not dispose its Pinia instance or background services.
+
+Changing LLM settings, correction rules, instructions, or rule prefix invalidates
+both cached corrections and in-flight work. Cancelling speculation alone retains
+completed results. Default command synchronization reports failed loads and
+writes and retries at most three times with exponential backoff. Disposal stops
+the retry queue.

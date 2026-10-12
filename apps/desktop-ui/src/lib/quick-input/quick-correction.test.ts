@@ -176,3 +176,27 @@ describe('correction caller cancellation', () => {
     await expect(second).resolves.toBe('current')
   })
 })
+
+describe('correction cache invalidation', () => {
+  it('drops cached results and aborts an in-flight request', async () => {
+    const { model, calls, correct } = setup()
+    const first = model.request('text')
+    calls[0].result.resolve('old rules')
+    await first
+    model.cancel()
+    expect(model.peek('text')).toBe('old rules')
+    model.invalidate()
+    expect(model.peek('text')).toBeUndefined()
+    const pending = model.request('text')
+    const rejected = expect(pending).rejects.toThrow('Correction aborted')
+    model.invalidate()
+    expect(calls[1].signal.aborted).toBe(true)
+    calls[1].result.resolve('late result')
+    await rejected
+    expect(model.peek('text')).toBeUndefined()
+    const fresh = model.request('text')
+    calls[2].result.resolve('new rules')
+    expect(await fresh).toBe('new rules')
+    expect(correct).toHaveBeenCalledTimes(3)
+  })
+})

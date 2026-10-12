@@ -133,6 +133,7 @@ export interface CommandLauncherDependencies {
 
 /** The command overlay opened from the keyboard: list, search, keys, input */
 export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
+  let disposed = false
   const page = ref(0)
   const pageCount = computed(() => 1 + (deps.launcherPages?.()?.length ?? 0))
   const setPage = (index: number) => {
@@ -283,10 +284,14 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       reset()
       return { success: false, cancelled: true }
     }
+    if (disposed || runController.signal.aborted)
+      return { success: false, cancelled: true }
     if (input !== null) {
       // the history keeps the text even when the command fails
       await deps.saveOutput?.(input).catch(() => {})
     }
+    if (disposed || runController.signal.aborted)
+      return { success: false, cancelled: true }
     let outcome: InvocationOutcome
     try {
       outcome = await deps.run(command, input ?? '', {
@@ -304,6 +309,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
             message: error instanceof Error ? error.message : String(error),
           }
     }
+    if (disposed) return { success: false, cancelled: true }
     if (controller === runController) controller = null
     if (call?.jobId) {
       // a reset meanwhile has finished the job as cancelled already
@@ -313,6 +319,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       } else {
         outcome = { success: false, cancelled: true, message: 'Cancelled' }
       }
+      if (disposed) return { success: false, cancelled: true }
       log(command, input, outcome)
       if (stage.value === running) reset()
       return outcome
@@ -352,7 +359,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   /** Runs a command of the list on the selection */
   const pick = async (command: CommandConfig): Promise<void> => {
-    if (stage.value.kind === 'running') return
+    if (disposed || stage.value.kind === 'running') return
     source = 'launcher'
     await start(command, currentSelection(), true)
   }
@@ -362,6 +369,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
    * input. Selection capture and replacement belong to the caller
    */
   const request = async (call: LauncherRequest): Promise<void> => {
+    if (disposed) return
     reset()
     const command = (deps.commands() ?? []).find(
       (item) => item.id === call.commandId
@@ -372,7 +380,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
           success: false,
           message: 'Command no longer exists',
         })
-      deps.commandMissing?.(call.commandId)
+      if (!disposed) deps.commandMissing?.(call.commandId)
       return
     }
     source = 'external'
@@ -415,7 +423,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   const submit = async (): Promise<void> => {
     const current = stage.value
-    if (current.kind !== 'prepare' || !canSubmit.value) return
+    if (disposed || current.kind !== 'prepare' || !canSubmit.value) return
     await execute(
       current.command,
       commandTakesText(current.command, deps.tools) ? text.value : null
@@ -458,7 +466,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     }
   }
 
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    reset()
+  }
   return {
+    dispose,
     page,
     pageCount,
     setPage,

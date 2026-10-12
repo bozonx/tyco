@@ -69,12 +69,7 @@ export default defineConfig(
   },
 
   {
-    files: [
-      '**/workers/**',
-      '**/plugins/**',
-      '**/stores/ipc.ts',
-      '**/composables/use-call-ai.ts',
-    ],
+    files: ['**/workers/**', '**/plugins/**', '**/stores/ipc.ts'],
     rules: { 'no-console': 'off' },
   },
 

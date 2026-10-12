@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import useToast from '../composables/use-toast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
@@ -76,6 +77,11 @@ export const useCorrectionStore = defineStore('correction', () => {
     clearPending: (owner) =>
       menuModalsStore.clearPendingModal(owner ?? undefined),
     reportError: (error) => toastText(describeError(error, translate), 'error'),
+  })
+
+  onScopeDispose(() => {
+    step.dispose()
+    quickInsert.dispose()
   })
 
   return {

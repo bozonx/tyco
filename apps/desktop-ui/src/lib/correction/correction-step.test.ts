@@ -267,3 +267,18 @@ describe('createCorrectionStep', () => {
     })
   })
 })
+
+describe('correction step disposal', () => {
+  it('aborts work and ignores a late result after disposal', async () => {
+    const { step, request, deps, menu, signal } = setup()
+    const pending = step.start('helo')
+    step.dispose()
+    expect(signal()?.aborted).toBe(true)
+    request.resolve('hello')
+    await pending
+    expect(deps.saveResult).not.toHaveBeenCalled()
+    expect(menu.currentModalParams.value.text).toBe('helo')
+    await step.start('again')
+    expect(deps.correct).toHaveBeenCalledOnce()
+  })
+})

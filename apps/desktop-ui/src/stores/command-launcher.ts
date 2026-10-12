@@ -1,6 +1,6 @@
 import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
-import { watch } from 'vue'
+import { onScopeDispose, watch } from 'vue'
 
 import { START_MODES } from '@tyco/shared'
 
@@ -86,5 +86,6 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     }
   )
 
+  onScopeDispose(model.dispose)
   return model
 })

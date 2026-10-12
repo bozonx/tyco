@@ -13,10 +13,9 @@ import { useIpcStore } from './ipc'
 const ai = vi.hoisted(() => ({
   sendChatMessage: vi.fn(async () => 'answer'),
   generateChatTitle: vi.fn(async () => ''),
-  saveLocalState: vi.fn(async () => ({ success: true, result: undefined })),
 }))
 
-vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ai }))
+vi.mock('../composables/use-llm-actions', () => ({ useLlmActions: () => ai }))
 vi.mock(import('../lib/chat/chat-image-storage'), async (importOriginal) => ({
   ...(await importOriginal()),
   syncChatImages: vi.fn(async () => {}),
@@ -30,6 +29,10 @@ beforeEach(() => {
   vi.spyOn(appNavigation, 'push').mockResolvedValue()
   vi.spyOn(useHistoryStore(), 'saveChat').mockResolvedValue()
   const ipc = useIpcStore()
+  vi.spyOn(ipc, 'patchLocalState').mockResolvedValue({
+    success: true,
+    result: ipc.params.localState,
+  })
   ipc.setParams({
     ...ipc.params,
     userConfig: {

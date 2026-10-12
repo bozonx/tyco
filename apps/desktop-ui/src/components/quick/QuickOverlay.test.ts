@@ -46,6 +46,7 @@ vi.mock('../../stores/menu-modals', () => ({
   useMenuModalsStore: () =>
     Object.assign(reactive(mocks.modals), {
       cancelPending: vi.fn(),
+      cancelAndCloseAll: vi.fn(),
       closeAll: vi.fn(),
     }),
 }))

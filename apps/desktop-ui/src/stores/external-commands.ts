@@ -1,5 +1,6 @@
 import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { createExternalRun } from '../lib/commands/external-run'
@@ -17,7 +18,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const historyStore = useHistoryStore()
   const runnerDeps = useInvocationRunnerDependencies()
 
-  return createExternalRun({
+  const model = createExternalRun({
     ...createExternalJobAdapter({ callFunction: ipcStore.callFunction }),
     run: (command, text, report, options) =>
       createCommandRunner({
@@ -55,4 +56,6 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     },
     t: (key, params) => translate(key, params),
   })
+  onScopeDispose(model.dispose)
+  return model
 })

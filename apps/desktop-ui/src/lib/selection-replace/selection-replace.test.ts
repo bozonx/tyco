@@ -264,3 +264,22 @@ describe('createSelectionReplace', () => {
     expect(deps.finish).toHaveBeenCalledWith(1, null)
   })
 })
+
+describe('selection replacement disposal', () => {
+  it('releases the capture and never pastes a late result', async () => {
+    const { model, request, deps, signal } = setup()
+    const pending = model.handleRun(event())
+    model.dispose()
+    model.dispose()
+    expect(signal()?.aborted).toBe(true)
+    expect(deps.finish).toHaveBeenCalledExactlyOnceWith(1, null)
+    deps.showOverlay.mockClear()
+    request.resolve('hello world')
+    await pending
+    expect(deps.finish).toHaveBeenCalledOnce()
+    expect(deps.showOverlay).not.toHaveBeenCalled()
+    expect(deps.saveResult).not.toHaveBeenCalled()
+    await model.handleRun(event({ runId: 2 }))
+    expect(deps.run).toHaveBeenCalledOnce()
+  })
+})

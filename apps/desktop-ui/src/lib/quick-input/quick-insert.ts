@@ -10,6 +10,7 @@ export interface QuickInsertDeps {
 
 /** Owns a submission until insertion starts; abandoned results cannot paste. */
 export function createQuickInsert(deps: QuickInsertDeps) {
+  let disposed = false
   let active: { owner?: number | void } | null = null
 
   const cancel = () => {
@@ -21,7 +22,7 @@ export function createQuickInsert(deps: QuickInsertDeps) {
   }
 
   const start = async (text: string): Promise<void> => {
-    if (active || !text.trim()) return
+    if (disposed || active || !text.trim()) return
     const run: { owner?: number | void } = {}
     active = run
     run.owner = deps.setPending(cancel)
@@ -42,5 +43,9 @@ export function createQuickInsert(deps: QuickInsertDeps) {
     }
   }
 
-  return { start, cancel }
+  const dispose = () => {
+    disposed = true
+    cancel()
+  }
+  return { start, cancel, dispose }
 }

@@ -22,12 +22,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue'
 
-import { useCallAi } from '../../composables/use-call-ai'
+import { useDictationActions } from '../../composables/use-dictation-actions'
 import {
   GlobalEvents,
   useGlobalEvents,
 } from '../../composables/use-global-events'
 import { useI18n } from '../../composables/use-i18n'
+import { useLlmActions } from '../../composables/use-llm-actions'
 import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
@@ -92,8 +93,8 @@ const {
   finishDictation,
   shouldFormatRecognizedText,
   startDictation,
-  voiceCorrection,
-} = useCallAi()
+} = useDictationActions()
+const { voiceCorrection } = useLlmActions()
 const { globalEvents } = useGlobalEvents()
 const { toast, toastText } = useToast()
 const { t } = useI18n()

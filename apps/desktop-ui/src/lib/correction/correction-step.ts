@@ -50,10 +50,13 @@ const resultParams = (text: string, result: string) => ({
  * text as it was. Leaving the step aborts the correction
  */
 export function createCorrectionStep(deps: CorrectionStepDeps) {
+  let disposed = false
+  const controllers = new Map<AbortController, number | void>()
   /** Resolves once the correction is shown, failed, or abandoned. */
-  const start = async (
+  const perform = async (
     text: string,
-    extra: Record<string, unknown> = {}
+    extra: Record<string, unknown>,
+    controller: AbortController
   ): Promise<void> => {
     const base = { ...extra, correction: true as const, originalText: text }
 
@@ -64,8 +67,6 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
       return
     }
 
-    const controller = new AbortController()
-
     if (deps.setPending) {
       const onCancel = () => {
         controller.abort()
@@ -74,6 +75,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
         }
       }
       const owner = deps.setPending({ ...extra, correction: true, onCancel })
+      controllers.set(controller, owner)
 
       let result: string
       let showResult: boolean
@@ -133,5 +135,24 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
     await deps.saveResult(text, result)
   }
 
-  return { start }
+  const start = async (text: string, extra: Record<string, unknown> = {}) => {
+    if (disposed) return
+    const controller = new AbortController()
+    controllers.set(controller, undefined)
+    try {
+      await perform(text, extra, controller)
+    } finally {
+      controllers.delete(controller)
+    }
+  }
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    for (const [controller, owner] of controllers) {
+      controller.abort()
+      if (owner !== undefined) deps.clearPending?.(owner)
+    }
+    controllers.clear()
+  }
+  return { start, dispose }
 }

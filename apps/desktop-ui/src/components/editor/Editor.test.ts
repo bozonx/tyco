@@ -10,8 +10,10 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 const mockPasteIntoTargetAndHide = vi.fn()
-vi.mock('../../composables/use-call-api', () => ({
-  useCallApi: () => ({ pasteIntoTargetAndHide: mockPasteIntoTargetAndHide }),
+vi.mock('../../composables/use-desktop-insertion', () => ({
+  useDesktopInsertion: () => ({
+    pasteIntoTargetAndHide: mockPasteIntoTargetAndHide,
+  }),
 }))
 
 describe('Editor.vue toolbar', () => {
