@@ -4,8 +4,7 @@ import useToast from '../composables/use-toast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
 import { translate } from '../lib/i18n'
 import { toolResultMessage } from '../lib/invocation/invocation-result'
-import { LlmError } from '../lib/llm/llm-client'
-import { formatLlmError } from '../lib/llm/llm-errors'
+import { describeError } from '../lib/llm/llm-errors'
 import {
   CorrectionAbortedError,
   isCorrectionAborted,
@@ -15,11 +14,6 @@ import { useCorrectorStore } from './corrector'
 import { useHistoryStore } from './history'
 import { useInvocationsStore } from './invocations'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
-
-function describeError(error: unknown): string {
-  if (error instanceof LlmError) return formatLlmError(error, translate)
-  return error instanceof Error ? error.message : String(error)
-}
 
 export const useCorrectionStore = defineStore('correction', () => {
   const { toast, toastText } = useToast()
@@ -56,7 +50,7 @@ export const useCorrectionStore = defineStore('correction', () => {
       }
     },
     reportError: (error) => {
-      const message = describeError(error)
+      const message = describeError(error, translate)
       toastText(message, 'error')
       return message
     },
@@ -81,7 +75,7 @@ export const useCorrectionStore = defineStore('correction', () => {
       menuModalsStore.setPendingModal({ correction: true, onCancel }),
     clearPending: (owner) =>
       menuModalsStore.clearPendingModal(owner ?? undefined),
-    reportError: (error) => toastText(describeError(error), 'error'),
+    reportError: (error) => toastText(describeError(error, translate), 'error'),
   })
 
   return {

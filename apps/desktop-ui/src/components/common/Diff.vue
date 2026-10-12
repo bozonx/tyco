@@ -66,10 +66,10 @@ import { useI18n } from '../../composables/use-i18n'
 import {
   type DiffPart,
   type DiffViewMode,
-  computeSplitDiff,
   computeWordDiff,
   hasDifferences,
   readStoredDiffMode,
+  splitDiffParts,
 } from '../../lib/diff/diff-model'
 import SplitPanePreview from './SplitPanePreview.vue'
 
@@ -91,6 +91,9 @@ const diffData = computed<{
   error: string | null
 }>(() => {
   try {
+    if (effectiveMode.value === 'result') {
+      return { unified: [], split: { oldParts: [], newParts: [] }, error: null }
+    }
     if (
       typeof props.oldText !== 'string' ||
       typeof props.newText !== 'string'
@@ -98,7 +101,7 @@ const diffData = computed<{
       throw new Error('Both oldText and newText must be strings')
     }
     const unified = computeWordDiff(props.oldText, props.newText)
-    const split = computeSplitDiff(props.oldText, props.newText)
+    const split = splitDiffParts(unified)
     return { unified, split, error: null }
   } catch (err) {
     return {

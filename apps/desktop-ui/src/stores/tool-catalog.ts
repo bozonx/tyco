@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
 import { createToolCatalogSync } from '../lib/tools/tool-catalog'
+import { clientLogger } from '../lib/logger'
 import { translate } from '../lib/i18n'
 import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
@@ -17,7 +18,13 @@ export const useToolCatalogStore = defineStore('toolCatalog', () => {
   const model = createToolCatalogSync({
     tools: () => toolsStore.list(),
     t: (key) => translate(key),
-    send: (catalog) => ipcStore.callFunction('setToolCatalog', [catalog]),
+    send: async (catalog) => {
+      const result = await ipcStore.callFunction('setToolCatalog', [catalog])
+      if (!result.success)
+        throw new Error(result.error ?? 'Tool catalog sync failed')
+    },
+    reportError: (error) =>
+      clientLogger.error('Tool catalog sync failed', error),
   })
   onScopeDispose(model.dispose)
   return model

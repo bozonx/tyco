@@ -206,5 +206,34 @@ export default defineConfig(
     rules: { 'vue/no-mutating-props': 'off' },
   },
 
+  {
+    files: [
+      'apps/desktop-ui/src/lib/history/removal-undo.ts',
+      'apps/desktop-ui/src/lib/tools/tool-catalog.ts',
+      'apps/desktop-ui/src/lib/settings/settings-session.ts',
+      'apps/desktop-ui/src/lib/selection-replace/selection-action.ts',
+      'apps/desktop-ui/src/lib/commands/external-job-adapter.ts',
+      'apps/desktop-ui/src/lib/llm/llm-errors.ts',
+      'apps/desktop-ui/src/lib/diff/diff-model.ts',
+      'apps/desktop-ui/src/composables/use-helpers.ts',
+      'apps/desktop-ui/src/stores/*.ts',
+      'apps/desktop-ui/src/components/Settings.vue',
+      'apps/desktop-ui/src/components/chat/ChatSidebar.vue',
+      'apps/desktop-ui/src/components/common/Diff.vue',
+      'apps/desktop-ui/src/views/HistoryView.vue',
+    ],
+    ignores: ['**/*.test.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+    },
+  },
+
   prettierConfig
 )

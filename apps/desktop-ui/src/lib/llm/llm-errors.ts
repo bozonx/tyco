@@ -1,4 +1,4 @@
-import type { LlmError, LlmErrorKind } from './llm-client'
+import { LlmError, type LlmErrorKind } from './llm-client'
 
 /** The i18n key that tells the user what went wrong and what to do about it */
 export function llmErrorKey(kind: LlmErrorKind): string {
@@ -38,4 +38,13 @@ export function formatLlmError(
     rawDetail.length > 500 ? `${rawDetail.slice(0, 500).trimEnd()}…` : rawDetail
 
   return detail ? `${summary}\n${detail}` : summary
+}
+
+/** Formats provider errors consistently while preserving other error details. */
+export function describeError(
+  error: unknown,
+  translate: (key: string) => string
+): string {
+  if (error instanceof LlmError) return formatLlmError(error, translate)
+  return error instanceof Error ? error.message : String(error)
 }

@@ -1,5 +1,6 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Settings from './Settings.vue'
 
@@ -104,6 +105,7 @@ vi.mock('../plugins', () => ({
 }))
 
 describe('Settings.vue', () => {
+  beforeEach(() => setActivePinia(createPinia()))
   it('places accessibility tab right above plugins tab', () => {
     const wrapper = mount(Settings, {
       global: {

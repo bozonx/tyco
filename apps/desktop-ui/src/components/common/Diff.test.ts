@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import Diff from './Diff.vue'
+import * as diffModel from '../../lib/diff/diff-model'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -74,5 +75,17 @@ describe('Diff', () => {
     })
 
     expect(wrapper.find('.no-diff').exists()).toBe(true)
+  })
+  it('skips diff computation in result mode and computes once when switching modes', async () => {
+    const compute = vi.spyOn(diffModel, 'computeWordDiff')
+    const wrapper = mount(Diff, {
+      props: { oldText: 'Old text', newText: 'New text', mode: 'result' },
+    })
+    expect(compute).not.toHaveBeenCalled()
+    await wrapper.setProps({ mode: 'split' })
+    expect(compute).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('.removed').text()).toBe('Old')
+    expect(wrapper.find('.added').text()).toBe('New')
+    wrapper.unmount()
   })
 })

@@ -63,7 +63,7 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
         const rebased = deps.prepare(rebase(baseline, base, submitted))
         const result = await deps.save(rebased, clone(baseline))
         if (!result.success) {
-          if (active) deps.notifyError(result.error ?? 'Settings save failed')
+          deps.notifyError(result.error ?? 'Settings save failed')
           return
         }
         const saved = result.result ?? submitted
@@ -72,10 +72,7 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
         savedDraft = deps.prepare(saved)
         draft.value = deps.prepare(rebase(saved, submitted, currentDraft))
       } catch (error) {
-        if (active)
-          deps.notifyError(
-            error instanceof Error ? error.message : String(error)
-          )
+        deps.notifyError(error instanceof Error ? error.message : String(error))
       } finally {
         pending--
       }
@@ -92,8 +89,9 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
   }
   const dispose = () => {
     active = false
-    void persist()
+    const pendingSave = persist()
     clearTimeout(timer)
+    return pendingSave
   }
   return { draft, applyIncoming, persist, schedule, dispose, isSaved }
 }

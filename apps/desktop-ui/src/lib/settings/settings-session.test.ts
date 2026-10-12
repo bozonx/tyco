@@ -101,3 +101,24 @@ describe('settings session', () => {
     expect(model.isSaved()).toBe(true)
   })
 })
+
+describe('settings disposal failures', () => {
+  it.each(['result', 'exception'])(
+    'reports a failed final save (%s) and retains the draft',
+    async (kind) => {
+      const save = vi.fn<SettingsSessionDeps['save']>()
+      if (kind === 'result')
+        save.mockResolvedValueOnce({ success: false, error: 'Unavailable' })
+      else save.mockRejectedValueOnce(new Error('Unavailable'))
+      save.mockImplementation(async (next) => ({ success: true, result: next }))
+      const { model, deps } = setup({ save })
+      model.draft.value.theme = 'dark'
+      await model.dispose()
+      expect(deps.notifyError).toHaveBeenCalledWith('Unavailable')
+      expect(model.draft.value.theme).toBe('dark')
+      expect(model.isSaved()).toBe(false)
+      await model.persist()
+      expect(model.isSaved()).toBe(true)
+    }
+  )
+})

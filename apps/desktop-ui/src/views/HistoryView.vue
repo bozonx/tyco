@@ -64,13 +64,12 @@ import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
+import { createRemovalUndo } from '../lib/history/removal-undo'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { Icon } from '@iconify/vue'
 import type { EditorHistoryItem } from '@tyco/shared'
-
-const UNDO_TIMEOUT_MS = 8000
 
 const toast = useToast()
 const { t } = useI18n()
@@ -81,9 +80,16 @@ const ipcStore = useIpcStore()
 const copyText = useCopyText({ saveOutput: false })
 const routeParams = useEditorNavigation()
 
-const removedItem = ref<EditorHistoryItem | null>(null)
+const removal = createRemovalUndo<EditorHistoryItem>({
+  remove: historyStore.removeFromEditorHistory,
+  restore: historyStore.restoreEditorItem,
+  clear: historyStore.clearEditorHistory,
+  reportError: () => toast.toast('history.operationFailed', 'error'),
+})
+const removedItem = removal.removed
+const undoRemove = removal.undo
+const clearEditorHistory = removal.clear
 const editorLoadError = ref(false)
-let undoTimer: ReturnType<typeof setTimeout> | undefined
 
 const editorHistoryDisabled = computed(() =>
   isEditorHistoryOff({ ...ipcStore.params.userConfig })
@@ -149,7 +155,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearTimeout(undoTimer)
+  void removal.dispose()
 })
 
 navPanelStore.resetNavParams({})
@@ -163,54 +169,7 @@ const loadEditorHistory = async () => {
   }
 }
 
-const reportOperationError = () => {
-  toast.toast('history.operationFailed', 'error')
-}
-
-const clearEditorHistory = async () => {
-  hideUndo()
-  try {
-    await historyStore.clearEditorHistory()
-  } catch {
-    reportOperationError()
-  }
-}
-
-const hideUndo = () => {
-  clearTimeout(undoTimer)
-  removedItem.value = null
-}
-
-const removeEditorItem = async (item: HistoryListItem) => {
-  let removed: EditorHistoryItem | null
-
-  try {
-    removed = await historyStore.removeFromEditorHistory(item.id)
-  } catch {
-    reportOperationError()
-    return
-  }
-
-  if (!removed) return
-
-  clearTimeout(undoTimer)
-  removedItem.value = removed
-  undoTimer = setTimeout(hideUndo, UNDO_TIMEOUT_MS)
-}
-
-const undoRemove = async () => {
-  const item = removedItem.value
-
-  hideUndo()
-
-  if (!item) return
-
-  try {
-    await historyStore.restoreEditorItem(item)
-  } catch {
-    reportOperationError()
-  }
-}
+const removeEditorItem = (item: HistoryListItem) => removal.remove(item.id)
 
 const onEditorAction = async (actionId: string, item: HistoryListItem) => {
   switch (actionId) {

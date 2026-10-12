@@ -198,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -212,14 +213,10 @@ import {
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
-import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsOperations } from '../lib/settings/settings-operations'
-import { createSettingsSession } from '../lib/settings/settings-session'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
-import { useActionMenuStore } from '../stores/action-menu'
-import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
-import { useThemeStore } from '../stores/theme'
+import { useSettingsSessionStore } from '../stores/settings-session'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGeneralTab from './settings/SettingsGeneralTab.vue'
@@ -248,14 +245,9 @@ import {
   isUiScale,
 } from '@tyco/shared'
 
-const actionMenuStore = useActionMenuStore()
-const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
-const themeStore = useThemeStore()
 const { t } = useI18n()
 const { toastText } = useToast()
-
-const SAVE_DEBOUNCE_MS = 500
 
 const route = useRoute()
 // another page may open the settings on a tab of its own
@@ -264,28 +256,8 @@ const currentTab = ref(
   typeof requestedTab === 'string' && requestedTab ? requestedTab : 'general'
 )
 
-const { prepare: createPreparedUserConfig } = createSettingsConfig({
-  resolveMainActions: actionMenuStore.resolveMainActions,
-  getRegisteredActions: actionMenuStore.getRegisteredActions,
-  pluginIndexes: () => pluginIndexes,
-  appearance: () => themeStore.settings,
-})
-const session = createSettingsSession({
-  initialConfig: ipcStore.params.userConfig,
-  prepare: createPreparedUserConfig,
-  save: (next, base) => ipcStore.saveUserConfig(next, base),
-  canSave: () => !configIsNewer.value,
-  // the detail comes from the backend as it is: the summary is the user's
-  notifyError: (error) =>
-    toastText(
-      error
-        ? `${t('toast.settingsSaveFailed')}: ${error}`
-        : t('toast.settingsSaveFailed'),
-      'error'
-    ),
-  debounceMs: SAVE_DEBOUNCE_MS,
-})
-const userConfig = session.draft
+const session = useSettingsSessionStore()
+const { draft: userConfig } = storeToRefs(session)
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
@@ -386,9 +358,6 @@ const uiScaleOptions = UI_SCALES.map((scale) => ({
 }))
 
 const isEInkTheme = computed(() => userConfig.value.theme === 'e-ink')
-
-watch(() => ipcStore.params.userConfig, session.applyIncoming)
-watch(userConfig, session.schedule, { deep: true })
 
 const navigatorLanguages = computed(() => getNavigatorLanguages())
 
@@ -502,7 +471,7 @@ onMounted(() => {
   void llmStore.refreshSecrets()
 })
 onUnmounted(() => {
-  session.dispose()
+  void session.persist()
 })
 </script>
 

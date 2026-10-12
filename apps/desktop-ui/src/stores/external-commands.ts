@@ -1,3 +1,4 @@
+import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 
 import { createCommandRunner } from '../lib/commands/command-runner'
@@ -17,26 +18,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const runnerDeps = useInvocationRunnerDependencies()
 
   return createExternalRun({
-    claimJob: async (id) => {
-      const result = await ipcStore.callFunction('claimExternalJob', [id])
-      return result.success && result.result === true
-    },
-    finishJob: async (id, completion) => {
-      const result = await ipcStore.callFunction('finishExternalJob', [
-        id,
-        completion,
-      ])
-      if (!result.success) return { success: false, message: result.error }
-      const job = result.result
-      if (!job) return completion
-      return {
-        success: job.state === 'succeeded',
-        cancelled: job.state === 'cancelled',
-        output: job.output,
-        message: job.error,
-        code: job.code,
-      }
-    },
+    ...createExternalJobAdapter({ callFunction: ipcStore.callFunction }),
     run: (command, text, report, options) =>
       createCommandRunner({
         ...runnerDeps,

@@ -6,9 +6,8 @@ import { useCallAi } from '../composables/use-call-ai'
 import { useCallApi } from '../composables/use-call-api'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
-import { LlmError } from '../lib/llm/llm-client'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
-import { formatLlmError } from '../lib/llm/llm-errors'
+import { describeError } from '../lib/llm/llm-errors'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createBuiltinTools } from '../lib/tools/builtin-tools'
@@ -24,10 +23,6 @@ import { useMenuModalsStore } from './menu-modals'
  * The tool registry of the window: the built-in tools of the app and those the
  * enabled plugins register
  */
-function describeError(error: unknown): string {
-  if (error instanceof LlmError) return formatLlmError(error, translate)
-  return error instanceof Error ? error.message : String(error)
-}
 
 export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
@@ -71,7 +66,7 @@ export const useToolsStore = defineStore('tools', () => {
       ipcStore.params.userConfig?.translation?.provider === 'llm'
         ? llmUnavailable('translate')
         : undefined,
-    describeError,
+    describeError: (error) => describeError(error, translate),
   })
 
   return createToolRegistry([

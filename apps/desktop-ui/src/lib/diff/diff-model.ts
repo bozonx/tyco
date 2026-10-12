@@ -90,8 +90,8 @@ export function computeWordDiff(oldText: string, newText: string): DiffPart[] {
     return oldText.length > 0 ? [{ value: oldText }] : []
   }
 
-  const rawChanges = (unicodeWordsWithSpaceDiff as any).diff(oldText, newText)
-  return rawChanges.map((change: any) => {
+  const rawChanges = unicodeWordsWithSpaceDiff.diff(oldText, newText)
+  return rawChanges.map((change) => {
     const part: DiffPart = { value: change.value }
     if (change.added) part.added = true
     if (change.removed) part.removed = true
@@ -108,7 +108,10 @@ export function computeSplitDiff(
   oldText: string,
   newText: string
 ): SplitDiffResult {
-  const parts = computeWordDiff(oldText, newText)
+  return splitDiffParts(computeWordDiff(oldText, newText))
+}
+
+export function splitDiffParts(parts: readonly DiffPart[]): SplitDiffResult {
   const oldParts: DiffPart[] = []
   const newParts: DiffPart[] = []
 

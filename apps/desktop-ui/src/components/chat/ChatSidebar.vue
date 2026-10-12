@@ -131,6 +131,7 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
+import { createRemovalUndo } from '../../lib/history/removal-undo'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -171,8 +172,26 @@ const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
 const chatToDelete = ref<string | null>(null)
-const removedChat = ref<ChatHistoryItem | null>(null)
-let undoTimer: ReturnType<typeof setTimeout> | undefined
+const removal = createRemovalUndo<ChatHistoryItem>({
+  remove: async (id) => {
+    const wasOpen = chatStore.newChatParams.id === id
+    if (wasOpen) {
+      chatStore.abandonChat()
+      await chatStore.whenSaved()
+    }
+    try {
+      return await historyStore.removeFromChatHistory(id)
+    } catch (error) {
+      if (wasOpen) await chatStore.openChat(id, { silent: true })
+      throw error
+    }
+  },
+  restore: historyStore.restoreChatItem,
+  release: (item) => releaseChatImageUndo(item.id),
+  reportError: () => toast('history.operationFailed', 'error'),
+})
+const removedChat = removal.removed
+const undoRemoveChat = removal.undo
 
 const chatHistoryDisabled = computed(
   () => !isChatHistoryEnabled(ipcStore.params.userConfig)
@@ -295,58 +314,11 @@ async function confirmDeleteChat() {
   const id = chatToDelete.value
   chatToDelete.value = null
   if (!id) return
-  await removeChat(id)
-}
-
-function releaseRemovedChat() {
-  const id = removedChat.value?.id
-  removedChat.value = null
-  if (id) void releaseChatImageUndo(id).catch(() => undefined)
-}
-
-async function removeChat(id: string) {
-  clearTimeout(undoTimer)
-  releaseRemovedChat()
-  // leave the chat first, or its pending write would bring it back
-  const wasOpen = chatStore.newChatParams.id === id
-  if (wasOpen) {
-    chatStore.abandonChat()
-    await chatStore.whenSaved()
-  }
-  let removed: ChatHistoryItem | null
-  try {
-    removed = await historyStore.removeFromChatHistory(id)
-  } catch {
-    toast('history.operationFailed', 'error')
-    // the chat is still stored: it comes back into view
-    if (wasOpen) await chatStore.openChat(id, { silent: true })
-    return
-  }
-  // the list keeps no messages: only a chat read whole can be put back
-  if (removed) {
-    removedChat.value = removed
-    undoTimer = setTimeout(releaseRemovedChat, 8000)
-  }
-}
-
-async function undoRemoveChat() {
-  clearTimeout(undoTimer)
-  const item = removedChat.value
-  removedChat.value = null
-  if (item) {
-    try {
-      await historyStore.restoreChatItem(item)
-    } catch {
-      toast('history.operationFailed', 'error')
-    } finally {
-      await releaseChatImageUndo(item.id).catch(() => undefined)
-    }
-  }
+  await removal.remove(id)
 }
 
 onUnmounted(() => {
-  clearTimeout(undoTimer)
-  releaseRemovedChat()
+  void removal.dispose()
   clearTimeout(searchTimer)
 })
 </script>

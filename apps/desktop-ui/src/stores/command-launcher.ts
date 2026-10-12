@@ -1,3 +1,4 @@
+import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
 
@@ -27,28 +28,11 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       ipcStore.params.userConfig?.launcherPagesWithoutText,
     selectedText: () => ipcStore.params.selectedText,
     run: runner.run,
-    claimJob: async (id) => {
-      const result = await ipcStore.callFunction('claimExternalJob', [id])
-      return result.success && result.result === true
-    },
-    finishJob: async (id, completion) => {
-      const result = await ipcStore.callFunction('finishExternalJob', [
-        id,
-        completion,
-      ])
-      if (!result.success) return { success: false, message: result.error }
-      const job = result.result
-      if (!job) return completion
-      if (job.state === 'failed' && job.code === 'SelectionFailed')
-        toastText(job.error ?? translate('toast.commandFailed'), 'error')
-      return {
-        success: job.state === 'succeeded',
-        cancelled: job.state === 'cancelled',
-        output: job.output,
-        message: job.error,
-        code: job.code,
-      }
-    },
+    ...createExternalJobAdapter({
+      callFunction: ipcStore.callFunction,
+      selectionFailed: (message) =>
+        toastText(message ?? translate('toast.commandFailed'), 'error'),
+    }),
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)
     },

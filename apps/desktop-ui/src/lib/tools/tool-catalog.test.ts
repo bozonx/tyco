@@ -1,5 +1,5 @@
 import { nextTick, ref } from 'vue'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { buildToolCatalog, createToolCatalogSync } from './tool-catalog'
 import { createToolRegistry } from './tool-registry'
@@ -76,6 +76,7 @@ describe('buildToolCatalog', () => {
 })
 
 describe('createToolCatalogSync', () => {
+  afterEach(() => vi.useRealTimers())
   it('sends the catalog on start and again only when it changes', async () => {
     const registry = createToolRegistry([tool('script')])
     const llmReady = ref(false)
@@ -89,6 +90,7 @@ describe('createToolCatalogSync', () => {
       tools: () => registry.list(),
       t: (key) => key,
       send,
+      reportError: vi.fn(),
     })
     sync.start()
     expect(send).toHaveBeenCalledTimes(1)
@@ -121,5 +123,86 @@ describe('createToolCatalogSync', () => {
     registry.clearPluginTools()
     await nextTick()
     expect(send).toHaveBeenCalledTimes(3)
+  })
+})
+
+describe('catalog delivery failures', () => {
+  afterEach(() => vi.useRealTimers())
+  it('retries an unchanged catalog after a failure and cancels retries on disposal', async () => {
+    vi.useFakeTimers()
+    const send = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Unavailable'))
+      .mockResolvedValue(undefined)
+    const reportError = vi.fn()
+    const sync = createToolCatalogSync({
+      tools: () => [],
+      t: (key) => key,
+      send,
+      reportError,
+      retryMs: 100,
+    })
+    sync.start()
+    await Promise.resolve()
+    expect(reportError).toHaveBeenCalledOnce()
+    await vi.advanceTimersByTimeAsync(100)
+    expect(send).toHaveBeenCalledTimes(2)
+    sync.dispose()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('serializes sends and delivers the latest catalog after an in-flight send', async () => {
+    const registry = createToolRegistry([tool('first')])
+    let finish!: () => void
+    const send = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve
+          })
+      )
+      .mockResolvedValue(undefined)
+    const sync = createToolCatalogSync({
+      tools: () => registry.list(),
+      t: (key) => key,
+      send,
+      reportError: vi.fn(),
+    })
+    sync.start()
+    registry.registerCoreTools([tool('second')])
+    await nextTick()
+    expect(send).toHaveBeenCalledTimes(1)
+    finish()
+    await Promise.resolve()
+    expect(send).toHaveBeenCalledTimes(2)
+    expect(
+      send.mock.calls[1][0].map((entry: { id: string }) => entry.id)
+    ).toEqual(['first', 'second'])
+    sync.dispose()
+  })
+
+  it('does not retry a pending send that fails after disposal', async () => {
+    vi.useFakeTimers()
+    let fail!: (error: Error) => void
+    const send = vi.fn(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          fail = reject
+        })
+    )
+    const reportError = vi.fn()
+    const sync = createToolCatalogSync({
+      tools: () => [],
+      t: (key) => key,
+      send,
+      reportError,
+    })
+    sync.start()
+    sync.dispose()
+    fail(new Error('Unavailable'))
+    await Promise.resolve()
+    expect(vi.getTimerCount()).toBe(0)
+    expect(reportError).not.toHaveBeenCalled()
   })
 })
