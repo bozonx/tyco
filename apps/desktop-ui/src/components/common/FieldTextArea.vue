@@ -14,19 +14,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
+
+import { useTextareaAutosize } from '../../composables/use-textarea-autosize'
 
 const props = defineProps<{
   value?: string
   placeholder?: string
-  selected?: string
   autoResize?: boolean
   maxAutoHeight?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'update:value', value: string): void
-  (e: 'update:selected', selected: string): void
   (e: 'select', value: string, start: number, end: number): void
 }>()
 
@@ -34,20 +34,14 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const value = computed(() => props.value || '')
 
-const selection = ref<string>('')
-
-function adjustHeight() {
-  if (!props.autoResize || !textareaRef.value) return
-  const el = textareaRef.value
-  el.style.height = 'auto'
-  const maxHeight = props.maxAutoHeight ?? 200
-  const targetHeight = Math.min(el.scrollHeight, maxHeight)
-  el.style.height = `${targetHeight}px`
-  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden'
-  if (el.scrollHeight <= maxHeight) {
-    el.scrollTop = 0
-  }
-}
+const { resize: adjustHeight } = useTextareaAutosize(
+  textareaRef,
+  () => props.value,
+  () => ({
+    enabled: Boolean(props.autoResize),
+    maxHeight: props.maxAutoHeight ?? 200,
+  })
+)
 
 function handleInput(event: Event) {
   emit('update:value', (event.target as HTMLTextAreaElement).value)
@@ -63,43 +57,10 @@ const handleSelect = () => {
   const start = textarea.selectionStart
   const end = textarea.selectionEnd
 
-  if (start === end) {
-    // Нет выделения
-    selection.value = ''
-
-    emit('select', '', start, end)
-  } else {
-    // Есть выделение
-    const selectedText = textarea.value.substring(start, end)
-    selection.value = selectedText
-
-    emit('select', selection.value, start, end)
-  }
+  emit('select', textarea.value.substring(start, end), start, end)
 }
 
-watch(
-  () => props.value,
-  async () => {
-    if (props.autoResize) {
-      await nextTick()
-      adjustHeight()
-    }
-  }
-)
-
-watch(
-  () => props.maxAutoHeight,
-  () => adjustHeight()
-)
-
-onMounted(async () => {
-  if (props.autoResize) {
-    await nextTick()
-    adjustHeight()
-  }
-})
-
-// Экспортируем функцию focus для внешнего использования
+// Expose focus and selection for input adapters.
 defineExpose({
   focus: () => textareaRef.value?.focus(),
   select: (start?: number, end?: number) => {

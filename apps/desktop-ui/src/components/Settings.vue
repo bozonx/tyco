@@ -50,141 +50,10 @@
           <span>{{ t('settings.configNewerWarning') }}</span>
         </p>
 
-        <template v-if="currentTab === 'general'">
-          <SettingsSection :title="t('settings.sectionAppearance')">
-            <FieldRow :label="t('settings.theme')">
-              <SegmentedControl
-                v-model:value="userConfig.theme"
-                :label="t('settings.theme')"
-                :options="themeOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.userLanguage')">
-              <FieldSelect
-                v-model:value="userConfig.userLanguage"
-                :options="userLanguageOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.appLanguage')">
-              <div class="flex items-center gap-2 w-full">
-                <FieldSelect
-                  v-if="isAppLanguageManual"
-                  class="flex-1"
-                  :value="effectiveAppLanguage"
-                  :options="appLanguageOptions"
-                  @update:value="updateAppLanguage"
-                />
-                <span v-else class="flex-1 text-sm text-muted">
-                  {{ getLanguageName(effectiveAppLanguage) }}
-                </span>
-                <Button sm ghost @click="toggleAppLanguageMode">
-                  {{
-                    isAppLanguageManual
-                      ? t('settings.appLanguageAuto')
-                      : t('settings.appLanguageManual')
-                  }}
-                </Button>
-              </div>
-            </FieldRow>
-          </SettingsSection>
-
-          <SettingsSection :title="t('settings.sectionWindowInsertion')">
-            <FieldRow
-              :label="t('settings.windowInsertion')"
-              :info="t('settings.windowInsertionHint')"
-            >
-              <div class="flex flex-col gap-2 w-full">
-                <Tabs
-                  variant="segmented"
-                  :tabs="windowInsertionTabs"
-                  :value="userConfig.windowInsertion.method"
-                  @update:value="updateWindowInsertionMethod"
-                />
-                <FieldInput
-                  v-if="userConfig.windowInsertion.method === 'xdotool'"
-                  v-model:value="userConfig.windowInsertion.xdotoolBin"
-                />
-                <FieldInput
-                  v-if="userConfig.windowInsertion.method === 'ydotool'"
-                  v-model:value="userConfig.windowInsertion.ydotoolBin"
-                />
-              </div>
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.pasteShortcut')"
-              :info="t('settings.pasteShortcutHint')"
-            >
-              <FieldSelect
-                v-model:value="userConfig.windowInsertion.pasteShortcut"
-                :options="pasteShortcutOptions"
-              />
-            </FieldRow>
-          </SettingsSection>
-
-          <details class="storage-details">
-            <summary class="storage-summary">
-              {{ t('settings.storageLocations') }}
-            </summary>
-            <div v-if="!storageInfo" class="text-sm text-muted">
-              {{ t('settings.storageLocationsUnavailable') }}
-            </div>
-            <div v-else class="storage-list">
-              <div
-                v-for="item in storageInfoItems"
-                :key="item.key"
-                class="storage-item"
-              >
-                <span class="storage-item-label">
-                  {{ item.label }}
-                  <span v-if="item.hint" class="storage-item-hint">{{
-                    item.hint
-                  }}</span>
-                </span>
-                <div class="storage-path-box">
-                  <code class="storage-path" :title="item.value">{{
-                    item.value
-                  }}</code>
-                  <div class="storage-path-actions">
-                    <button
-                      type="button"
-                      class="storage-copy-btn"
-                      :title="
-                        copiedStorageKey === item.key
-                          ? t('settings.storagePathCopied')
-                          : t('settings.storageCopyPath')
-                      "
-                      :aria-label="t('settings.storageCopyPath')"
-                      @click="copyStoragePath(item.value, item.key)"
-                    >
-                      <Icon
-                        :icon="
-                          copiedStorageKey === item.key
-                            ? 'mdi:check'
-                            : 'mdi:content-copy'
-                        "
-                        height="14"
-                        class="shrink-0"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      class="storage-copy-btn"
-                      :title="t('settings.storageOpenFolder')"
-                      :aria-label="t('settings.storageOpenFolder')"
-                      @click="openStorageLocation(item.kind)"
-                    >
-                      <Icon
-                        icon="mdi:folder-open-outline"
-                        height="14"
-                        class="shrink-0"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
-        </template>
+        <SettingsGeneralTab
+          v-if="currentTab === 'general'"
+          :user-config="userConfig"
+        />
 
         <SettingsEditorTab
           v-else-if="currentTab === 'editor'"
@@ -278,85 +147,10 @@
           @navigate="currentTab = $event"
         />
 
-        <div v-else-if="currentTab === 'stt'">
-          <SettingsSection>
-            <FieldRow :label="t('settings.sttProvider')">
-              <FieldSelect
-                :value="currentSttModel.provider"
-                :options="sttProviderOptions"
-                @update:value="setSttProvider"
-              />
-            </FieldRow>
-            <FieldRow
-              v-if="!sttNeedsKey"
-              :label="t('settings.sttServerUrl')"
-              :hint="t('settings.sttServerUrlHint')"
-            >
-              <FieldInput
-                :value="currentSttModel.baseUrl || ''"
-                placeholder="ws://localhost:6006"
-                @update:value="setSttServerUrl"
-              />
-            </FieldRow>
-            <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
-              <FieldInput
-                :value="currentSttModel.model || ''"
-                placeholder="nova-3"
-                @update:value="setSttModelName"
-              />
-            </FieldRow>
-            <FieldRow
-              v-if="sttNeedsKey"
-              :label="t('settings.sttLanguage')"
-              :hint="t('settings.sttLanguageHint')"
-            >
-              <FieldSelect
-                :value="currentSttModel.language || DICTATION_LANGUAGE_USER"
-                :options="sttLanguageOptions"
-                @update:value="setSttLanguage"
-              />
-            </FieldRow>
-            <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
-              <div class="flex items-center gap-2 w-full">
-                <FieldInput
-                  class="flex-1"
-                  type="password"
-                  :value="sttKeyDraft"
-                  :placeholder="
-                    hasSttKey
-                      ? t('settings.apiKeyReplacePlaceholder')
-                      : t('settings.apiKeyPlaceholder')
-                  "
-                  @update:value="sttKeyDraft = $event"
-                />
-                <Button sm :disabled="!sttKeyDraft.trim()" @click="saveSttKey">
-                  {{ t('settings.saveKey') }}
-                </Button>
-                <Button v-if="hasSttKey" sm ghost @click="removeSttKey">
-                  {{ t('settings.removeKey') }}
-                </Button>
-              </div>
-            </FieldRow>
-          </SettingsSection>
-
-          <SettingsSection :title="t('settings.sttLlmFormatting')">
-            <FieldRow :label="t('settings.formatWithLlm')">
-              <FieldCheckbox
-                :value="Boolean(currentSttModel.formatWithLlm)"
-                @update:value="setSttFormatWithLlm"
-              />
-            </FieldRow>
-            <FieldRow
-              v-if="Boolean(currentSttModel.formatWithLlm)"
-              :label="t('settings.sttLlmRules')"
-              vertical
-            >
-              <FieldTextArea
-                v-model:value="userConfig.aiRules.voiceCorrection"
-              />
-            </FieldRow>
-          </SettingsSection>
-        </div>
+        <SettingsVoiceTab
+          v-else-if="currentTab === 'stt'"
+          :user-config="userConfig"
+        />
 
         <SettingsLlmTab
           v-else-if="currentTab === 'llm'"
@@ -405,8 +199,6 @@ import {
 import { syncI18nLocale } from '../lib/i18n'
 import {
   AUTO_LANGUAGE_VALUE,
-  SUPPORTED_UI_LANGUAGE_OPTIONS,
-  buildLanguageOptions,
   getNavigatorLanguages,
   normalizeLocale,
   resolveUiLanguagePreference,
@@ -415,12 +207,6 @@ import { applyPluginPreset } from '../lib/plugins/plugin-config'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
-import {
-  DICTATION_LANGUAGE_MULTI,
-  DICTATION_LANGUAGE_USER,
-} from '../lib/stt/dictation-language'
-import { secretId, sttProviderNeedsKey } from '../lib/stt/stt-client'
-import { activeSttModel, selectSttProvider } from '../lib/stt/stt-config'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useIpcStore } from '../stores/ipc'
@@ -428,6 +214,7 @@ import { useLlmStore } from '../stores/llm'
 import { useThemeStore } from '../stores/theme'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
+import SettingsGeneralTab from './settings/SettingsGeneralTab.vue'
 import SettingsGlobalActionsTab from './settings/SettingsGlobalActionsTab.vue'
 import SettingsHistoryTab from './settings/SettingsHistoryTab.vue'
 import SettingsLanguagesTab from './settings/SettingsLanguagesTab.vue'
@@ -438,6 +225,7 @@ import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
+import SettingsVoiceTab from './settings/SettingsVoiceTab.vue'
 import { Icon } from '@iconify/vue'
 import type { UserConfig } from '@tyco/shared'
 import {
@@ -448,10 +236,6 @@ import {
   type MainActionConfig,
   type MotionMode,
   SELECTION_HOTKEY_PREFIX,
-  type StorageInfo,
-  type StorageKind,
-  type SttProvider,
-  type ThemeMode,
   UI_SCALES,
   isUiScale,
 } from '@tyco/shared'
@@ -494,8 +278,6 @@ const session = createSettingsSession({
   debounceMs: SAVE_DEBOUNCE_MS,
 })
 const userConfig = session.draft
-const storageInfo = ref<StorageInfo | null>(null)
-const sttKeyDraft = ref('')
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
@@ -578,15 +360,6 @@ const currentTabTitle = computed(() => {
   )
 })
 
-const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
-  () => [
-    { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
-    { id: 'light', name: t('theme.light'), icon: 'mdi:white-balance-sunny' },
-    { id: 'dark', name: t('theme.dark'), icon: 'mdi:weather-night' },
-    { id: 'e-ink', name: t('theme.eInk'), icon: 'mdi:book-open-page-variant' },
-  ]
-)
-
 const contrastOptions = computed<{ id: ContrastMode; name: string }[]>(() => [
   { id: 'auto', name: t('settings.contrastAuto') },
   { id: 'normal', name: t('settings.contrastNormal') },
@@ -606,64 +379,10 @@ const uiScaleOptions = UI_SCALES.map((scale) => ({
 
 const isEInkTheme = computed(() => userConfig.value.theme === 'e-ink')
 
-const windowInsertionTabs = computed(() => [
-  { text: 'xdotool', key: 'xdotool' },
-  { text: 'ydotool', key: 'ydotool' },
-])
-
 watch(() => ipcStore.params.userConfig, session.applyIncoming)
 watch(userConfig, session.schedule, { deep: true })
 
-const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
-  config: 'settings.storageConfig',
-  data: 'settings.storageData',
-  cache: 'settings.storageCache',
-  logs: 'settings.storageLogs',
-}
-
-const copiedStorageKey = ref<string | null>(null)
-let copyStorageTimeout: ReturnType<typeof setTimeout> | null = null
-
-async function copyStoragePath(path: string, key: string) {
-  try {
-    await navigator.clipboard.writeText(path)
-    copiedStorageKey.value = key
-    if (copyStorageTimeout) {
-      clearTimeout(copyStorageTimeout)
-    }
-    copyStorageTimeout = setTimeout(() => {
-      copiedStorageKey.value = null
-    }, 2000)
-  } catch {
-    // Clipboard access might be denied
-  }
-}
-
-/** One row per root directory, named after everything it holds. */
-const storageInfoItems = computed(() =>
-  (storageInfo.value?.locations ?? []).map((location) => ({
-    key: location.kinds.join('-'),
-    kind: location.kinds[0],
-    label: location.kinds
-      .map((kind) => t(STORAGE_KIND_LABELS[kind]))
-      .join(' · '),
-    hint: location.kinds.includes('data')
-      ? t('settings.storageDataHint')
-      : undefined,
-    value: location.path,
-  }))
-)
-
-async function openStorageLocation(kind: StorageKind) {
-  // a failure leaves nothing open, which tells enough
-  await ipcStore.callFunction('openStorageLocation', [kind])
-}
-
 const navigatorLanguages = computed(() => getNavigatorLanguages())
-
-const isAppLanguageManual = computed(
-  () => userConfig.value.appLanguage !== AUTO_LANGUAGE_VALUE
-)
 
 const effectiveAppLanguage = computed(() =>
   resolveUiLanguagePreference(
@@ -689,62 +408,12 @@ async function finishProviderRemoval(id: string) {
   }
 }
 
-const pasteShortcutOptions = computed(() => {
-  return [
-    { id: 'ctrl+v', name: `Ctrl+V — ${t('settings.pasteShortcutRegular')}` },
-    {
-      id: 'ctrl+shift+v',
-      name: `Ctrl+Shift+V — ${t('settings.pasteShortcutTerminals')}`,
-    },
-    {
-      id: 'shift+insert',
-      name: `Shift+Insert — ${t('settings.pasteShortcutAnyLayout')}`,
-    },
-  ]
-})
-
-const appLanguageOptions = computed(() => {
-  return buildLanguageOptions(
-    [effectiveAppLanguage.value, userConfig.value.appLanguage],
-    false,
-    t,
-    SUPPORTED_UI_LANGUAGE_OPTIONS
-  )
-})
-
-const userLanguageOptions = computed(() => {
-  return buildLanguageOptions([userConfig.value.userLanguage], true, t)
-})
-
-const getLanguageName = (language: string) =>
-  appLanguageOptions.value.find((option) => option.id === language)?.name ||
-  language
-
 watch(
   () => [userConfig.value.appLanguage, userConfig.value.userLanguage],
   ([appLanguage, userLanguage]) => {
     syncI18nLocale(appLanguage, userLanguage)
   }
 )
-
-const currentSttModel = computed(() => activeSttModel(userConfig.value))
-
-const sttNeedsKey = computed(() =>
-  sttProviderNeedsKey(currentSttModel.value.provider)
-)
-
-const sttProviderOptions = computed(() => [
-  { id: 'deepgram', name: 'Deepgram' },
-  { id: 'sherpa-onnx', name: t('settings.sttProviderSherpaOnnx') },
-])
-
-const setSttProvider = (value: string | number | undefined) => {
-  selectSttProvider(userConfig.value, value as SttProvider)
-}
-
-const setSttServerUrl = (value: string) => {
-  currentSttModel.value.baseUrl = value.trim()
-}
 
 const updateTranslateLanguages = (languages: string[]) => {
   userConfig.value.toTranslateLanguages = languages
@@ -833,14 +502,6 @@ const updateHotkey = (mode: string, shortcut: string) => {
   userConfig.value.hotkeys[mode] = shortcut
 }
 
-const updateWindowInsertionMethod = (value: string | number) => {
-  if (value !== 'xdotool' && value !== 'ydotool') {
-    return
-  }
-
-  userConfig.value.windowInsertion.method = value
-}
-
 // <select> reports option values as strings
 const updateUiScale = (value: string | number | undefined) => {
   const scale = Number(value)
@@ -859,80 +520,6 @@ watch(
     }
   }
 )
-
-const updateAppLanguage = (value: number | string | undefined) => {
-  if (typeof value !== 'string') {
-    return
-  }
-
-  userConfig.value.appLanguage = value
-}
-
-const toggleAppLanguageMode = () => {
-  if (isAppLanguageManual.value) {
-    userConfig.value.appLanguage = AUTO_LANGUAGE_VALUE
-    return
-  }
-
-  userConfig.value.appLanguage = effectiveAppLanguage.value
-}
-
-const setSttModelName = (value: string) => {
-  currentSttModel.value.model = value
-}
-
-const hasSttKey = computed(() =>
-  Boolean(
-    currentSttModel.value &&
-    Object.hasOwn(llmStore.secrets, secretId(currentSttModel.value))
-  )
-)
-
-async function saveSttKey() {
-  try {
-    await llmStore.setSecret(
-      secretId(currentSttModel.value),
-      sttKeyDraft.value.trim()
-    )
-    sttKeyDraft.value = ''
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
-
-async function removeSttKey() {
-  try {
-    await llmStore.removeSecret(secretId(currentSttModel.value))
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
-
-const setSttFormatWithLlm = (value: boolean) => {
-  currentSttModel.value.formatWithLlm = value
-  for (const model of userConfig.value.sttModels ?? []) {
-    model.formatWithLlm = value
-  }
-}
-
-const setSttLanguage = (value: string | number | undefined) => {
-  currentSttModel.value.language = String(value || DICTATION_LANGUAGE_USER)
-}
-
-const sttLanguageOptions = computed(() => {
-  return [
-    { id: DICTATION_LANGUAGE_USER, name: t('settings.sttLanguageUser') },
-    { id: DICTATION_LANGUAGE_MULTI, name: t('settings.sttLanguageMulti') },
-    ...buildLanguageOptions([], false, t),
-  ]
-})
-
-async function loadStorageInfo() {
-  const result = await ipcStore.callFunction('getStorageInfo')
-  storageInfo.value = result.success
-    ? (result.result as StorageInfo | null) || null
-    : null
-}
 
 const updateAiTasks = (items: UserConfig['aiTasks']) => {
   userConfig.value.aiTasks = items
@@ -963,13 +550,9 @@ const updatePluginConfig = (
     : { ...previous, ...values }
 }
 onMounted(() => {
-  void loadStorageInfo()
   void llmStore.refreshSecrets()
 })
 onUnmounted(() => {
-  if (copyStorageTimeout) {
-    clearTimeout(copyStorageTimeout)
-  }
   session.dispose()
 })
 </script>
@@ -1039,116 +622,6 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xl);
   font-size: 0.875rem;
   color: var(--color-warning);
-}
-
-.storage-details {
-  margin-top: var(--space-2xl);
-  padding: 0 var(--space-xs);
-}
-
-.storage-summary {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--app-text-muted);
-  cursor: pointer;
-  user-select: none;
-  transition: color var(--transition-fast);
-}
-
-.storage-summary:hover {
-  color: var(--color-base-content);
-}
-
-.storage-details > :not(summary) {
-  margin-top: var(--space-md);
-}
-
-.storage-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.storage-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.storage-item-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--app-text-muted);
-}
-
-.storage-item-hint {
-  display: block;
-  font-weight: 400;
-  color: var(--app-text-muted);
-}
-
-.storage-path-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.375rem 0.5rem 0.375rem 0.75rem;
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-  border: 1px solid var(--app-border-subtle);
-  min-width: 0;
-}
-
-.storage-path {
-  flex: 1 1 auto;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-base-content);
-  word-break: break-all;
-  user-select: all;
-  min-width: 0;
-}
-
-.storage-path-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.storage-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  opacity: 0.8;
-  cursor: pointer;
-  outline: none;
-  flex-shrink: 0;
-  transition:
-    opacity var(--transition-fast),
-    background-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.storage-copy-btn:hover,
-.storage-copy-btn:focus-visible {
-  opacity: 1;
-  background-color: var(--app-hover);
-  color: var(--color-base-content);
-}
-
-.storage-copy-btn:focus-visible {
-  box-shadow: var(--app-focus-ring);
 }
 
 .settings-subnav {

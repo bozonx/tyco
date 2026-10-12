@@ -92,35 +92,13 @@
             :hint="keyHint(provider)"
             vertical
           >
-            <div class="flex items-center gap-2 w-full">
-              <FieldInput
-                class="flex-1"
-                type="password"
-                :value="keyDrafts[provider.id] || ''"
-                :placeholder="
-                  hasKey(provider.id)
-                    ? t('settings.apiKeyReplacePlaceholder')
-                    : t('settings.apiKeyPlaceholder')
-                "
-                @update:value="keyDrafts[provider.id] = $event"
-              />
-              <Button
-                sm
-                :disabled="!keyDrafts[provider.id]?.trim()"
-                @click="saveKey(provider)"
-              >
-                {{ t('settings.saveKey') }}
-              </Button>
-              <Button
-                v-if="hasKey(provider.id)"
-                sm
-                ghost
-                class="danger-ghost"
-                @click="removeKey(provider.id)"
-              >
-                {{ t('settings.removeKey') }}
-              </Button>
-            </div>
+            <SecretKeyField
+              :value="keyDrafts[provider.id] || ''"
+              :has-key="hasKey(provider.id)"
+              :save="() => saveKey(provider)"
+              :remove="() => removeKey(provider.id)"
+              @update:value="keyDrafts[provider.id] = $event"
+            />
           </FieldRow>
 
           <div class="models-block">
@@ -378,6 +356,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import { Icon } from '@iconify/vue'
 import {

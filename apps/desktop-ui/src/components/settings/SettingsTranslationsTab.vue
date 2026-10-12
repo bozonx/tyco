@@ -27,32 +27,13 @@
         :label="t('settings.apiKey')"
         vertical
       >
-        <div class="flex gap-2">
-          <FieldInput
-            :value="keyDraft"
-            type="password"
-            :placeholder="
-              hasProviderKey
-                ? t('settings.apiKeyReplacePlaceholder')
-                : t('settings.apiKeyPlaceholder')
-            "
-            @update:value="keyDraft = $event"
-          />
-          <button
-            class="btn btn-primary"
-            :disabled="!keyDraft.trim()"
-            @click="saveProviderKey"
-          >
-            {{ t('common.save') }}
-          </button>
-          <button
-            v-if="hasProviderKey"
-            class="btn btn-ghost"
-            @click="removeProviderKey"
-          >
-            {{ t('common.remove') }}
-          </button>
-        </div>
+        <SecretKeyField
+          :key="providerSecretId"
+          v-model:value="keyDraft"
+          :has-key="hasProviderKey"
+          :save="saveProviderKey"
+          :remove="removeProviderKey"
+        />
         <SecretStorageNotice class="mt-2" />
       </FieldRow>
 
@@ -122,11 +103,11 @@ import useToast from '../../composables/use-toast'
 import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
 import { useLlmStore } from '../../stores/llm'
 import Button from '../common/Button.vue'
-import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import type { UserConfig } from '@tyco/shared'
 

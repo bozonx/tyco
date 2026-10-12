@@ -16,45 +16,29 @@
       <div v-if="!hasDiff" class="no-diff">
         {{ t('diff.noDiff') }}
       </div>
-      <div v-else class="diff-split-panes">
-        <div class="diff-split-column">
-          <div class="diff-column-header">
-            <span class="diff-column-title">{{ t('diff.original') }}</span>
-          </div>
-          <div
-            ref="leftPaneRef"
-            class="diff-column-body"
-            @scroll="handleLeftScroll"
+      <SplitPanePreview
+        v-else
+        class="diff-panes"
+        :left-title="t('diff.original')"
+        :right-title="t('diff.modified')"
+      >
+        <template #left>
+          <span
+            v-for="(part, index) in splitResult.oldParts"
+            :key="`old-${index}`"
+            :class="part.removed ? 'removed' : 'unchanged'"
+            >{{ part.value }}</span
           >
-            <span
-              v-for="(part, index) in splitResult.oldParts"
-              :key="`old-${index}`"
-              :class="part.removed ? 'removed' : 'unchanged'"
-            >
-              {{ part.value }}
-            </span>
-          </div>
-        </div>
-
-        <div class="diff-split-column">
-          <div class="diff-column-header">
-            <span class="diff-column-title">{{ t('diff.modified') }}</span>
-          </div>
-          <div
-            ref="rightPaneRef"
-            class="diff-column-body"
-            @scroll="handleRightScroll"
+        </template>
+        <template #right>
+          <span
+            v-for="(part, index) in splitResult.newParts"
+            :key="`new-${index}`"
+            :class="part.added ? 'added' : 'unchanged'"
+            >{{ part.value }}</span
           >
-            <span
-              v-for="(part, index) in splitResult.newParts"
-              :key="`new-${index}`"
-              :class="part.added ? 'added' : 'unchanged'"
-            >
-              {{ part.value }}
-            </span>
-          </div>
-        </div>
-      </div>
+        </template>
+      </SplitPanePreview>
     </div>
 
     <!-- Mode: Unified (Inline) -->
@@ -76,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -87,6 +71,7 @@ import {
   hasDifferences,
   readStoredDiffMode,
 } from '../../lib/diff/diff-model'
+import SplitPanePreview from './SplitPanePreview.vue'
 
 const props = defineProps<{
   oldText: string
@@ -99,28 +84,6 @@ const { t } = useI18n()
 const effectiveMode = computed<DiffViewMode>(() => {
   return props.mode ?? readStoredDiffMode()
 })
-
-const leftPaneRef = ref<HTMLElement | null>(null)
-const rightPaneRef = ref<HTMLElement | null>(null)
-let isSyncingScroll = false
-
-function handleLeftScroll() {
-  if (isSyncingScroll || !leftPaneRef.value || !rightPaneRef.value) return
-  isSyncingScroll = true
-  rightPaneRef.value.scrollTop = leftPaneRef.value.scrollTop
-  requestAnimationFrame(() => {
-    isSyncingScroll = false
-  })
-}
-
-function handleRightScroll() {
-  if (isSyncingScroll || !leftPaneRef.value || !rightPaneRef.value) return
-  isSyncingScroll = true
-  leftPaneRef.value.scrollTop = rightPaneRef.value.scrollTop
-  requestAnimationFrame(() => {
-    isSyncingScroll = false
-  })
-}
 
 const diffData = computed<{
   unified: DiffPart[]
@@ -187,61 +150,16 @@ function getPartClass(part: DiffPart): string {
   display: inline;
 }
 
+.diff-panes {
+  padding: var(--space-xs);
+}
+
 .diff-split-view {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   height: 100%;
-}
-
-.diff-split-panes {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-xs);
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  padding: var(--space-xs);
-  box-sizing: border-box;
-}
-
-.diff-split-column {
-  flex: 1 1 50%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
-  overflow: hidden;
-}
-
-.diff-column-header {
-  padding: var(--space-xs) var(--space-md);
-  background-color: var(--app-surface-sunken);
-  border-bottom: 1px solid var(--app-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.diff-column-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--app-text-muted);
-}
-
-.diff-column-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--space-sm) var(--space-md);
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .error-message {
@@ -281,11 +199,5 @@ function getPartClass(part: DiffPart): string {
 
 .unchanged {
   color: var(--color-base-content);
-}
-
-@media (max-width: 640px) {
-  .diff-split-panes {
-    flex-direction: column;
-  }
 }
 </style>

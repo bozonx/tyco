@@ -1,215 +1,26 @@
 <template>
-  <!-- The bar leaves the rest of the screen, or the editor, in view while the
-       user speaks; the keys are the same as in the full layout -->
-  <div v-if="props.variant === 'bar'" class="voice-bar" role="region">
-    <LiveTranscript
-      class="voice-bar-transcript"
-      :committed="transcript.committed"
-      :draft="transcript.draft"
-      :prefix="props.prefix"
-      :suffix="props.suffix"
-    />
-    <div class="voice-bar-footer">
-      <div class="voice-bar-wave">
-        <AudioWaveform
-          :level="audioLevel"
-          :peak="audioPeak"
-          :duration-ms="recordingDurationMs"
-          :is-transcribing="isTranscribing"
-        />
-      </div>
-      <div class="voice-bar-actions">
-        <template v-if="props.chat">
-          <ShortcutButton
-            sm
-            :keys="['Space', 'Enter']"
-            :icon="insertIcon"
-            primary
-            :disabled="isFinishing"
-            @click="() => finish('insert')"
-          >
-            {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
-          </ShortcutButton>
-          <Button
-            sm
-            ghost
-            square
-            :title="t('chat.voiceCancelHint')"
-            :disabled="isFinishing"
-            @click="cancel"
-          >
-            <Icon icon="mdi:close" height="18" />
-          </Button>
-          <Button
-            sm
-            square
-            :title="t('chat.voiceSendHint')"
-            :disabled="isFinishing"
-            @click="() => finish('submit')"
-          >
-            <Icon icon="mdi:arrow-up" height="19" />
-          </Button>
-        </template>
-        <template v-else>
-          <template v-if="quickSend">
-            <ShortcutButton
-              sm
-              :keys="submitKeys"
-              icon="mdi:send"
-              primary
-              :disabled="isFinishing"
-              @click="() => finish('submit')"
-            >
-              {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
-            </ShortcutButton>
-            <ShortcutButton
-              sm
-              :keys="['Shift', 'Enter']"
-              icon="mdi:form-textbox"
-              :disabled="isFinishing"
-              @click="() => finish('insert')"
-            >
-              {{ t('menu.voiceToInput') }}
-            </ShortcutButton>
-            <ShortcutButton
-              sm
-              :keys="['Tab']"
-              icon="mdi:arrow-right"
-              :disabled="isFinishing"
-              @click="() => finish('next')"
-            >
-              {{ t('write.next') }}
-            </ShortcutButton>
-          </template>
-          <template v-else>
-            <ShortcutButton
-              sm
-              :keys="['Space', 'Enter']"
-              :icon="insertIcon"
-              primary
-              :disabled="isFinishing"
-              @click="() => finish('insert')"
-            >
-              {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
-            </ShortcutButton>
-            <ShortcutButton
-              v-if="withNext"
-              sm
-              :keys="['Tab']"
-              icon="mdi:arrow-right"
-              :disabled="isFinishing"
-              @click="() => finish('next')"
-            >
-              {{ t('write.next') }}
-            </ShortcutButton>
-          </template>
-          <ShortcutButton sm :keys="['Esc']" icon="mdi:close" @click="cancel">
-            {{ t('common.cancel') }}
-          </ShortcutButton>
-        </template>
-      </div>
-    </div>
-  </div>
-
-  <ActionOverlayLayout
-    v-else
-    :title="quickSend ? t('menu.voiceChat') : t('menu.voiceInput')"
-    :onEsc="cancel"
-  >
-    <template #preview>
-      <!-- the question goes to the chat with this text: the user sees what
-           the answer will be about -->
-      <div v-if="props.context" class="voice-context">
-        <div class="voice-context-header">
-          <Icon
-            icon="mdi:selection-drag"
-            height="14"
-            class="shrink-0 text-primary"
-          />
-          <span class="voice-context-title">{{ t('chat.voiceContext') }}</span>
-          <button
-            type="button"
-            class="voice-context-remove"
-            :title="t('chat.removeAttachment')"
-            :aria-label="t('chat.removeAttachment')"
-            @click="emit('removeContext')"
-          >
-            <Icon icon="mdi:close" height="14" />
-          </button>
-        </div>
-        <TextPreview :text="props.context" />
-      </div>
-      <AudioWaveform
-        :level="audioLevel"
-        :peak="audioPeak"
-        :duration-ms="recordingDurationMs"
-        :is-transcribing="isTranscribing"
-      />
-      <LiveTranscript
-        :committed="transcript.committed"
-        :draft="transcript.draft"
-        :prefix="props.prefix"
-        :suffix="props.suffix"
-      />
-    </template>
-
-    <template #actions>
-      <div class="voice-shortcuts">
-        <ShortcutButton
-          v-if="quickSend"
-          :keys="submitKeys"
-          icon="mdi:send"
-          primary
-          :disabled="isFinishing"
-          @click="() => finish('submit')"
-        >
-          {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
-        </ShortcutButton>
-        <ShortcutButton
-          v-if="quickSend"
-          :keys="['Shift', 'Enter']"
-          icon="mdi:form-textbox"
-          :disabled="isFinishing"
-          @click="() => finish('insert')"
-        >
-          {{ t('menu.voiceToInput') }}
-        </ShortcutButton>
-        <ShortcutButton
-          v-if="quickSend"
-          :keys="['Tab']"
-          icon="mdi:arrow-right"
-          :disabled="isFinishing"
-          @click="() => finish('next')"
-        >
-          {{ t('write.next') }}
-        </ShortcutButton>
-        <template v-else>
-          <ShortcutButton
-            :keys="['Space', 'Enter']"
-            :icon="insertIcon"
-            primary
-            :disabled="isFinishing"
-            @click="() => finish('insert')"
-          >
-            {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
-          </ShortcutButton>
-          <ShortcutButton
-            v-if="withNext"
-            :keys="['Tab']"
-            icon="mdi:arrow-right"
-            :disabled="isFinishing"
-            @click="() => finish('next')"
-          >
-            {{ t('write.next') }}
-          </ShortcutButton>
-        </template>
-      </div>
-    </template>
-  </ActionOverlayLayout>
+  <component
+    :is="props.variant === 'bar' ? VoiceRecordingBar : VoiceRecordingSheet"
+    :transcript="transcript"
+    :audio-level="audioLevel"
+    :audio-peak="audioPeak"
+    :recording-duration-ms="recordingDurationMs"
+    :is-transcribing="isTranscribing"
+    :is-finishing="isFinishing"
+    :quick-send="props.quickSend"
+    :with-next="props.withNext"
+    :chat="props.chat"
+    :prefix="props.prefix"
+    :suffix="props.suffix"
+    :context="props.context"
+    :finish="finish"
+    :cancel="cancel"
+    @remove-context="emit('removeContext')"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 
 import { useCallAi } from '../../composables/use-call-ai'
 import {
@@ -219,23 +30,14 @@ import {
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
-import { DictationError } from '../../lib/stt/live-dictation'
-import {
-  createLiveTranscriptState,
-  liveTranscriptText,
-} from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
-import { createVoiceSession } from '../../lib/stt/voice-session'
+import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import Button from '../common/Button.vue'
-import TextPreview from '../common/TextPreview.vue'
-import AudioWaveform from '../voice/AudioWaveform.vue'
-import LiveTranscript from '../voice/LiveTranscript.vue'
-import { Icon } from '@iconify/vue'
+import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
+import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 type CorrectedHandler = (
@@ -301,242 +103,50 @@ const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
 const releaseDismissHold = useQuickDismissStore().hold()
 
-const transcript = ref(createLiveTranscriptState())
-const hasText = computed(() => Boolean(liveTranscriptText(transcript.value)))
-const isFinishing = ref(false)
-const isCancelling = ref(false)
-const isStarted = ref(false)
-const isTranscribing = ref(false)
-const audioLevel = ref(0)
-const audioPeak = ref(0)
-const recordingDurationMs = ref(0)
-const insertLabelKey = computed(() =>
-  props.withNext ? 'action.insertIntoWindow' : 'menu.finish'
-)
-const insertIcon = computed(() =>
-  props.withNext ? 'mdi:application-export' : 'mdi:check'
-)
-const submitKeys = ['Space', 'Enter']
-
-let recordingTimer: ReturnType<typeof setInterval> | undefined
-let unlistenAudioLevel: (() => void) | undefined
-let keyUpHandlerIndex = -1
-let submitHandlerIndex = -1
-let sessionGeneration = 0
-let starting: Promise<void> | undefined
-let unmounted = false
-/** Set once a dictation started; it stays finishable after a failure */
-let hasSession = false
-// Silence is billed too: a forgotten dictation must not run all day
-const MAX_RECORDING_MS = 3_600_000
-
-function startRecordingTimer() {
-  recordingDurationMs.value = 0
-  const startTime = Date.now()
-  if (recordingTimer !== undefined) {
-    clearInterval(recordingTimer)
-  }
-  recordingTimer = setInterval(() => {
-    recordingDurationMs.value = Date.now() - startTime
-  }, 100)
-}
-
-function stopRecordingTimer() {
-  if (recordingTimer !== undefined) {
-    clearInterval(recordingTimer)
-    recordingTimer = undefined
-  }
-  audioLevel.value = 0
-  audioPeak.value = 0
-}
-
-const voiceSession = createVoiceSession({
-  maxRecordingMs: MAX_RECORDING_MS,
-  onLimit: () => {
-    toast('toast.recordingLimitReached', 'warn')
-    void finish()
-  },
-})
-
 function invokeCallback<Args extends unknown[]>(
   callback: ((...args: Args) => void) | ((...args: Args) => void)[] | undefined,
   ...args: Args
 ) {
-  if (typeof callback === 'function') {
-    callback(...args)
-  } else if (Array.isArray(callback)) {
-    for (const fn of callback) {
-      if (typeof fn === 'function') {
-        fn(...args)
-      }
-    }
-  }
+  if (typeof callback === 'function') callback(...args)
+  else if (Array.isArray(callback)) callback.forEach((fn) => fn(...args))
 }
-
-const DICTATION_ERROR_KEYS = {
-  closed: 'toast.dictationClosed',
-  timeout: 'toast.dictationTimeout',
-} as const
-
-/** What went wrong, in the words of the user's language where they are ours */
-function describeVoiceError(error: unknown): string {
-  if (error instanceof DictationError)
-    return t(DICTATION_ERROR_KEYS[error.kind])
-  return error instanceof Error ? error.message : String(error)
-}
-
-function notifyCancelled() {
-  invokeCallback(props.onCancel)
-  emit('cancelled')
-}
-
-const cancel = async () => {
-  if (isCancelling.value) return
-  isCancelling.value = true
-  sessionGeneration += 1
-  hasSession = false
-  stopRecordingTimer()
-  voiceSession.abort()
-
-  try {
-    await starting
-    await cancelDictation()
-  } catch (error) {
-    const message = describeVoiceError(error)
-    if (message) toastText(message, 'error')
-    else toast('toast.voiceRecognitionFailed', 'error')
-  } finally {
-    isStarted.value = false
-    isTranscribing.value = false
-    isFinishing.value = false
-    isCancelling.value = false
-    notifyCancelled()
-  }
-}
-
-const finish = async (intent: VoiceFinishIntent = 'insert') => {
-  if (isFinishing.value || isCancelling.value) {
-    return
-  }
-
-  const generation = sessionGeneration
-  let signal = voiceSession.signal
-  const isCurrent = () => generation === sessionGeneration && !signal?.aborted
-  isFinishing.value = true
-  stopRecordingTimer()
-  voiceSession.stopTimer()
-
-  try {
-    await starting
-    signal = voiceSession.signal
-    if (!isCurrent()) return
-    if (!hasSession || signal?.aborted) {
-      notifyCancelled()
-      return
-    }
-    hasSession = false
-    isTranscribing.value = true
-    // the provider's last words arrive after the microphone is off
-    const recognizedText = await finishDictation()
-    if (!isCurrent()) return
-    isStarted.value = false
-    isTranscribing.value = false
-
-    if (!recognizedText.trim()) {
-      if (props.chat && intent === 'submit' && props.prefix?.trim()) {
-        emit('corrected', '', '', undefined, 'submit')
-        return
-      }
-      toast('toast.nothingRecognized', 'warn')
-      notifyCancelled()
-      return
-    }
-
-    let resultText = recognizedText
-    let correctedText: string | undefined
-
-    if (shouldFormatRecognizedText()) {
-      // the raw transcript is the only copy of what was said: the LLM may
-      // distort it, and it cannot be dictated the same way twice
-      let sourceId: string | null = null
-      try {
-        sourceId = await historyStore.saveSource(
-          recognizedText,
-          'voice-correction'
-        )
-      } catch {
-        // the text is still here; only its copy in the history is missing
-        toast('history.operationFailed', 'error')
-      }
-      if (!isCurrent()) return
-      const owner = menuModalsStore.setPendingModal({
-        correction: true,
-        onCancel: () => voiceSession.abort(),
-      })
-
-      try {
-        const formattedText = await voiceCorrection(recognizedText, signal)
-
-        if (!isCurrent()) return
-        if (formattedText.trim()) {
-          resultText = formattedText
-          correctedText = formattedText
-          await historyStore
-            .saveSourceResult(sourceId, formattedText)
-            .catch(() => {
-              toast('history.operationFailed', 'error')
-            })
-        }
-      } catch {
-        // the request has told the failure; the raw text goes on
-        if (!isCurrent()) return
-      } finally {
-        menuModalsStore.clearPendingModal(owner)
-      }
-    }
-
-    if (!isCurrent()) return
-    emit('corrected', resultText, recognizedText, correctedText, intent)
-  } catch (error) {
-    if (!isCurrent()) return
-    if (!signal?.aborted) {
-      const message = describeVoiceError(error)
-      if (message) toastText(message, 'error')
-      else toast('toast.voiceRecognitionFailed', 'error')
-    }
-    notifyCancelled()
-  } finally {
-    if (generation === sessionGeneration) {
-      isStarted.value = false
-      isTranscribing.value = false
-      isFinishing.value = false
-      if (signal?.aborted) notifyCancelled()
-    }
-  }
-}
-
-/** The microphone or the provider failed mid-dictation; the text so far is kept */
-function handleSessionError(error: Error) {
-  if (voiceSession.signal?.aborted) return
-  stopRecordingTimer()
-  voiceSession.stopTimer()
-  isStarted.value = false
-
-  if (!hasText.value) {
-    hasSession = false
-    const message = describeVoiceError(error)
-    if (message) toastText(message, 'error')
-    else toast('toast.voiceRecognitionFailed', 'error')
-    voiceSession.abort()
-    notifyCancelled()
-    return
-  }
-
-  toastText(
-    `${describeVoiceError(error)}\n${t('menu.dictationInterrupted')}`,
-    'error'
-  )
-}
+const model = createVoiceRecognition({
+  startDictation,
+  finishDictation,
+  cancelDictation,
+  shouldFormatRecognizedText,
+  voiceCorrection,
+  saveSource: (text, action) => historyStore.saveSource(text, action),
+  saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
+  setPendingModal: (options) => menuModalsStore.setPendingModal(options),
+  clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
+  options: () => props,
+  onCancelled: () => {
+    invokeCallback(props.onCancel)
+    emit('cancelled')
+  },
+  onCorrected: (result, recognized, corrected, intent) =>
+    emit('corrected', result, recognized, corrected, intent),
+  t,
+  toast,
+  toastText,
+})
+const {
+  transcript,
+  isFinishing,
+  isStarted,
+  isTranscribing,
+  audioLevel,
+  audioPeak,
+  recordingDurationMs,
+  cancel,
+  finish,
+  startSession,
+} = model
+let unlistenAudioLevel: (() => void) | undefined
+let keyUpHandlerIndex = -1
+let submitHandlerIndex = -1
+let unmounted = false
 
 function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
@@ -585,52 +195,13 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-async function startSession() {
-  if (isStarted.value || isFinishing.value || starting) return
-  transcript.value = createLiveTranscriptState()
-  const generation = ++sessionGeneration
-  starting = (async () => {
-    try {
-      await startDictation({
-        onText: (state) => {
-          if (generation === sessionGeneration) transcript.value = state
-        },
-        // a fast failure must not overtake the start it belongs to
-        onError: (error) => {
-          void Promise.resolve(starting).then(() => {
-            if (generation === sessionGeneration) handleSessionError(error)
-          })
-        },
-      })
-      if (generation !== sessionGeneration) {
-        await cancelDictation()
-        return
-      }
-      voiceSession.begin()
-      startRecordingTimer()
-      hasSession = true
-      isStarted.value = true
-    } catch (error) {
-      if (generation !== sessionGeneration) return
-      const message = describeVoiceError(error)
-      if (message) toastText(message, 'error')
-      else toast('toast.voiceRecognitionFailed', 'error')
-      voiceSession.abort()
-      notifyCancelled()
-    }
-  })().finally(() => {
-    starting = undefined
-  })
-  await starting
-}
-
 watch(
   () => ipcStore.params?.isWindowShown,
   (isShown) => {
     if (isShown) {
       void startSession()
     } else {
-      if ((isStarted.value || starting) && !isFinishing.value) {
+      if ((isStarted.value || model.isStarting()) && !isFinishing.value) {
         void cancel()
       }
     }
@@ -668,9 +239,7 @@ onMounted(async () => {
 onUnmounted(() => {
   unmounted = true
   releaseDismissHold()
-  sessionGeneration += 1
-  stopRecordingTimer()
-  voiceSession.dispose()
+  model.dispose()
 
   unlistenAudioLevel?.()
 
@@ -683,138 +252,5 @@ onUnmounted(() => {
     submitHandlerIndex = -1
   }
   window.removeEventListener('keydown', handleKeyDown)
-
-  void (async () => {
-    await starting
-    await cancelDictation()
-  })().catch(() => undefined)
 })
 </script>
-
-<style scoped>
-.voice-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  width: 100%;
-  height: 7.5rem;
-  padding: var(--space-sm);
-  box-sizing: border-box;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-md);
-}
-
-.voice-bar .voice-bar-transcript {
-  flex: 1 1 0%;
-  min-height: 0;
-  padding: var(--space-xs) var(--space-sm);
-}
-
-.voice-bar-footer {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex-shrink: 0;
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--app-border-subtle);
-}
-
-/* The waveform, the status and the timer share one line */
-.voice-bar-wave {
-  flex: 0 1 18rem;
-  min-width: 0;
-}
-
-.voice-bar-wave :deep(.audio-waveform-container) {
-  padding: 0;
-  border-bottom: none;
-  background-color: transparent;
-}
-
-.voice-bar-wave :deep(.listening-state) {
-  flex-direction: row;
-  gap: var(--space-sm);
-}
-
-.voice-bar-wave :deep(.waveform-visualizer) {
-  flex: 1 1 0%;
-  min-width: 0;
-  height: 28px;
-  gap: 2px;
-}
-
-.voice-bar-wave :deep(.waveform-meta) {
-  width: auto;
-  flex-shrink: 0;
-  gap: var(--space-sm);
-}
-
-.voice-bar-wave :deep(.transcribing-state) {
-  min-height: 0;
-  padding: 0;
-}
-
-.voice-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-/* In a row the buttons take their content width, not an equal share */
-.voice-bar-actions :deep(.shortcut) {
-  flex: 0 0 auto;
-  width: auto;
-}
-
-.voice-context-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
-  color: var(--app-text-muted);
-  font-size: 0.75rem;
-}
-.voice-context-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.voice-context-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0.15rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.voice-context-remove:hover {
-  background: var(--app-hover);
-  color: var(--color-error);
-}
-.voice-context {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
-  max-height: 40%;
-  min-height: 0;
-  gap: var(--space-xs);
-  overflow-y: auto;
-  border-bottom: 1px solid var(--app-border-subtle);
-  padding-bottom: var(--space-xs);
-}
-
-.voice-shortcuts {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-</style>

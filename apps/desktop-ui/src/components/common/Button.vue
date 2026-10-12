@@ -1,6 +1,7 @@
 <template>
   <button
-    :class="['btn', buttonClass, props.class]"
+    :class="['btn', buttonClass]"
+    :type="props.type ?? 'button'"
     :disabled="props.disabled"
     @click="onClick"
   >
@@ -15,7 +16,9 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
-  class?: string
+  type?: 'button' | 'submit' | 'reset'
+  variant?: 'primary' | 'neutral' | 'ghost' | 'danger'
+  size?: 'sm' | 'xs'
   icon?: string
   sm?: boolean
   xs?: boolean
@@ -27,21 +30,37 @@ const props = defineProps<{
 }>()
 
 const buttonClass = computed(() => {
+  const variant =
+    props.variant ??
+    (props.ghost ? 'ghost' : props.neutral ? 'neutral' : 'primary')
+  const size = props.size ?? (props.xs ? 'xs' : props.sm ? 'sm' : undefined)
   return {
-    'btn-neutral': props.neutral && !props.ghost,
-    'btn-primary': !props.neutral && !props.ghost,
-    'btn-xs': props.xs,
-    'btn-sm': props.sm,
+    'btn-neutral': variant === 'neutral',
+    'btn-primary': variant === 'primary',
+    'btn-ghost': variant === 'ghost',
+    'btn-error': variant === 'danger',
+    'btn-xs': size === 'xs',
+    'btn-sm': size === 'sm',
     'btn-active': props.active,
     'btn-disabled': props.disabled,
     'btn-square': props.square,
-    'btn-ghost': props.ghost,
   }
 })
 
-const emit = defineEmits<{ (e: 'click'): void }>()
+const emit = defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
-const onClick = () => {
-  emit('click')
+const onClick = (event: MouseEvent) => {
+  emit('click', event)
 }
 </script>
+
+<style scoped>
+.btn-error {
+  background-color: var(--color-error);
+  color: var(--color-error-content, #fff);
+  border: 1px solid transparent;
+}
+.btn-error:hover {
+  filter: brightness(0.9);
+}
+</style>

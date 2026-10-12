@@ -220,9 +220,17 @@ describe('SettingsTranslationsTab.vue', () => {
       wrapper.find('[data-label="settings.translationCorrectionPrompt"]')
 
     expect(promptRow().exists()).toBe(false)
-    await wrapper.findComponent({ name: 'Button' }).trigger('click')
+    await wrapper
+      .find('[data-label="settings.translationCorrection"]')
+      .findComponent({ name: 'Button' })
+      .trigger('click')
     expect(promptRow().exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'Button' }).exists()).toBe(false)
+    expect(
+      wrapper
+        .find('[data-label="settings.translationCorrection"]')
+        .findComponent({ name: 'Button' })
+        .exists()
+    ).toBe(false)
   })
 
   it('links to the languages page from the page description', async () => {

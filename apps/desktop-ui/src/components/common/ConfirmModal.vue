@@ -29,14 +29,13 @@
           <Button sm ghost @click="onCancel">
             {{ cancelText || t('common.cancel') }}
           </Button>
-          <button
-            type="button"
-            class="btn btn-sm"
-            :class="danger ? 'btn-error' : 'btn-primary'"
+          <Button
+            size="sm"
+            :variant="danger ? 'danger' : 'primary'"
             @click="onConfirm"
           >
             {{ confirmText || t('common.confirm') }}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -153,16 +152,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-xs);
-}
-
-.btn-error {
-  background-color: var(--color-error);
-  color: var(--color-error-content, #fff);
-  border: 1px solid transparent;
-}
-
-.btn-error:hover {
-  filter: brightness(0.9);
 }
 
 @keyframes modal-fade-in {

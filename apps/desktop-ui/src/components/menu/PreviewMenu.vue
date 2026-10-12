@@ -47,10 +47,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
+import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
+import { useResultActions } from '../../composables/use-result-actions'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -116,26 +117,8 @@ function cycleMode() {
   viewMode.value = viewMode.value === 'split' ? 'result' : 'split'
 }
 
-function handleKeyDown(event: KeyboardEvent) {
-  if (
-    event.key.toLowerCase() === 'd' &&
-    (event.ctrlKey || event.altKey) &&
-    !event.shiftKey
-  ) {
-    event.preventDefault()
-    cycleMode()
-  }
-}
+usePreviewModeShortcut(cycleMode)
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-})
-
-const actionMenuStore = useActionMenuStore()
 const { t } = useI18n()
 
 const providerLabel = computed(() => {
@@ -198,28 +181,7 @@ const qualityStatusClass = computed(() => {
   return 'is-success'
 })
 
-const defaultActions = computed(() => actionMenuStore.getDefaultActions())
-const hasTargetWindow = computed(() => Boolean(ipcStore.params?.windowId))
-
-const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
-  return actionMenuStore.getShortcutActions().map((action) => {
-    if (!action) return undefined
-    if (action.id === 'insertIntoWindow' && !hasTargetWindow.value) {
-      return { ...action, disabled: true, hint: t('selection.noTarget') }
-    }
-    return action
-  })
-})
-
-const spaceKey = computed<ActionItem | undefined>(() => {
-  const primary = defaultActions.value[0]
-  if (!primary) return undefined
-  return {
-    ...primary,
-    disabled: !hasTargetWindow.value,
-    hint: !hasTargetWindow.value ? t('selection.noTarget') : primary.hint,
-  }
-})
+const { leftLetterKeys, spaceKey } = useResultActions()
 </script>
 
 <style scoped>

@@ -20,4 +20,13 @@ describe('Button', () => {
 
     expect(wrapper.emitted('click')).toHaveLength(1)
   })
+  it('defaults to a non-submit button and forwards the native click event', async () => {
+    const wrapper = mount(Button, { props: { variant: 'danger', size: 'xs' } })
+    expect(wrapper.attributes('type')).toBe('button')
+    expect(wrapper.classes()).toContain('btn-error')
+    expect(wrapper.classes()).toContain('btn-xs')
+    await wrapper.trigger('click', { shiftKey: true })
+    expect(wrapper.emitted('click')?.[0][0]).toBeInstanceOf(MouseEvent)
+    expect((wrapper.emitted('click')?.[0][0] as MouseEvent).shiftKey).toBe(true)
+  })
 })

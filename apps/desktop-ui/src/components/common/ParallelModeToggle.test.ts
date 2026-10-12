@@ -14,15 +14,15 @@ describe('ParallelModeToggle', () => {
       global: { stubs: { Icon: true } },
     })
 
-    const buttons = wrapper.findAll('.mode-button')
+    const buttons = wrapper.findAll('input[type=radio]')
     expect(buttons).toHaveLength(2)
 
     // First button (split) should be active
-    expect(buttons[0].classes()).toContain('is-active')
-    expect(buttons[1].classes()).not.toContain('is-active')
+    expect((buttons[0].element as HTMLInputElement).checked).toBe(true)
+    expect((buttons[1].element as HTMLInputElement).checked).toBe(false)
 
     // Click result button
-    await buttons[1].trigger('click')
+    await buttons[1].setValue(true)
     expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
     expect(wrapper.emitted('update:modelValue')![0]).toEqual(['result'])
   })

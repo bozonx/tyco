@@ -25,15 +25,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
+import { useResultActions } from '../../composables/use-result-actions'
 import {
   type DiffViewMode,
   readStoredDiffMode,
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
-import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -43,9 +44,7 @@ import DiffModeToggle from '../common/DiffModeToggle.vue'
 const props = defineProps<{ oldText: string; newText: string }>()
 
 const ipcStore = useIpcStore()
-const actionMenuStore = useActionMenuStore()
 const { t } = useI18n()
-const defaultActions = computed(() => actionMenuStore.getDefaultActions())
 
 const diffMode = ref<DiffViewMode>(
   readStoredDiffMode(undefined, ipcStore.params.localState?.diffMode)
@@ -62,44 +61,7 @@ function cycleMode() {
   diffMode.value = modes[nextIdx]
 }
 
-function handleKeyDown(event: KeyboardEvent) {
-  if (
-    event.key.toLowerCase() === 'd' &&
-    (event.ctrlKey || event.altKey) &&
-    !event.shiftKey
-  ) {
-    event.preventDefault()
-    cycleMode()
-  }
-}
+usePreviewModeShortcut(cycleMode)
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-})
-
-const hasTargetWindow = computed(() => Boolean(ipcStore.params?.windowId))
-
-const leftLetterKeys = computed<(ActionItem | undefined)[]>(() => {
-  return actionMenuStore.getShortcutActions().map((action) => {
-    if (!action) return undefined
-    if (action.id === 'insertIntoWindow' && !hasTargetWindow.value) {
-      return { ...action, disabled: true, hint: t('selection.noTarget') }
-    }
-    return action
-  })
-})
-
-const spaceKey = computed<ActionItem | undefined>(() => {
-  const primary = defaultActions.value[0]
-  if (!primary) return undefined
-  return {
-    ...primary,
-    disabled: !hasTargetWindow.value,
-    hint: !hasTargetWindow.value ? t('selection.noTarget') : primary.hint,
-  }
-})
+const { leftLetterKeys, spaceKey } = useResultActions()
 </script>

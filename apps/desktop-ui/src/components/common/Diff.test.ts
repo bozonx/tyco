@@ -37,7 +37,7 @@ describe('Diff', () => {
     })
 
     expect(wrapper.find('.diff-split-view').exists()).toBe(true)
-    const columns = wrapper.findAll('.diff-split-column')
+    const columns = wrapper.findAll('.split-column')
     expect(columns).toHaveLength(2)
 
     // Left pane has removed

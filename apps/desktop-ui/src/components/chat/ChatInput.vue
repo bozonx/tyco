@@ -16,6 +16,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useTextareaAutosize } from '../../composables/use-textarea-autosize'
 import {
   resolveInputKeyAction,
   resolveSubmitKey,
@@ -37,12 +38,11 @@ const placeholder = computed(() =>
     : t('input.textPlaceholder')
 )
 
-function resize() {
-  const textarea = textareaRef.value
-  if (!textarea) return
-  textarea.style.height = 'auto'
-  textarea.style.height = `${Math.min(textarea.scrollHeight, 192)}px`
-}
+const { resize } = useTextareaAutosize(
+  textareaRef,
+  () => chatInputStore.value,
+  () => ({ enabled: true, maxHeight: 192 })
+)
 
 onMounted(async () => {
   await nextTick()
@@ -62,14 +62,6 @@ watch(
       // the value watcher has not updated the textarea yet
       void nextTick(() => textarea.setSelectionRange(caret, caret))
     }
-  }
-)
-
-watch(
-  () => chatInputStore.value,
-  async () => {
-    await nextTick()
-    resize()
   }
 )
 

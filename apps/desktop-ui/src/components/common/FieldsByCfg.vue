@@ -3,7 +3,7 @@
     <FieldRow
       v-for="item in config"
       :key="item.name"
-      :label="item.labelKey ? t(item.labelKey) : item.label || item.name"
+      :label="configFieldLabel(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
       <FieldInput
@@ -20,7 +20,7 @@
         v-else-if="item.type === 'select'"
         class="w-full"
         :value="values[item.name]"
-        :options="mapOptions(item)"
+        :options="configFieldOptions(item, t)"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldCheckbox
@@ -43,6 +43,10 @@
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import {
+  configFieldLabel,
+  configFieldOptions,
+} from '../../lib/config-fields/config-field-labels'
 import FieldCheckbox from './FieldCheckbox.vue'
 import FieldInput from './FieldInput.vue'
 import FieldRow from './FieldRow.vue'
@@ -74,13 +78,6 @@ watch(
   },
   { immediate: true, deep: true }
 )
-
-function mapOptions(item: InputConfigItem) {
-  return (item.options || []).map((opt) => ({
-    id: opt.id,
-    name: opt.labelKey ? t(opt.labelKey) : opt.name || String(opt.id),
-  }))
-}
 
 function updateValue(name: string, value: any) {
   values.value[name] = value

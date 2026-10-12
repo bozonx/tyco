@@ -90,6 +90,10 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { validateCommand } from '../../lib/commands/command-config'
+import {
+  configFieldLabel,
+  configOptionLabel,
+} from '../../lib/config-fields/config-field-labels'
 import { buildLanguageOptions } from '../../lib/locale/language'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import { useToolsStore } from '../../stores/tools'
@@ -163,15 +167,14 @@ function takeTaskRule(value: string | number | undefined) {
   if (value !== '' && task) emit('update', 'prompt', task.rule)
 }
 
-const fieldLabel = (field: InputConfigItem) =>
-  field.labelKey ? t(field.labelKey) : field.label || field.name
+const fieldLabel = (field: InputConfigItem) => configFieldLabel(field, t)
 
 const pluginSetting = (name: string): unknown => props.tool.baseConfig?.()[name]
 
 const optionName = (field: InputConfigItem, id: unknown): string => {
   const option = field.options?.find((item) => item.id === id)
   if (!option) return String(id ?? '')
-  return option.labelKey ? t(option.labelKey) : option.name || String(option.id)
+  return configOptionLabel(option, t)
 }
 
 /** What the plugin settings give for an empty field */

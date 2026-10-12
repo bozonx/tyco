@@ -1,56 +1,32 @@
 <template>
-  <div class="parallel-preview">
-    <div class="parallel-panes">
-      <!-- Left column: Original / Source -->
-      <div class="parallel-column">
-        <div class="column-header">
-          <span class="column-title">
-            {{ leftTitle || t('diff.original') }}
-          </span>
-        </div>
-        <div
-          ref="leftPaneRef"
-          class="column-body selectable"
-          @scroll="handleLeftScroll"
-        >
-          <div class="column-text">{{ props.leftText }}</div>
-        </div>
+  <SplitPanePreview
+    :left-title="leftTitle || t('diff.original')"
+    :right-title="rightTitle || t('diff.modified')"
+    flush-right
+  >
+    <template #left
+      ><div class="column-text selectable">{{ leftText }}</div></template
+    >
+    <template #right>
+      <textarea
+        v-if="editable"
+        class="column-textarea"
+        :value="rightText"
+        :aria-label="rightTitle || t('diff.modified')"
+        :placeholder="t('diff.modified')"
+        @input="handleInput"
+      />
+      <div v-else class="column-text readonly-text selectable">
+        {{ rightText }}
       </div>
-
-      <!-- Right column: Translation / Result -->
-      <div class="parallel-column">
-        <div class="column-header">
-          <span class="column-title">
-            {{ rightTitle || t('diff.modified') }}
-          </span>
-        </div>
-        <div
-          ref="rightPaneRef"
-          class="column-body right-body"
-          @scroll="handleRightScroll"
-        >
-          <textarea
-            v-if="props.editable"
-            class="column-textarea"
-            :value="props.rightText"
-            :placeholder="t('diff.modified')"
-            @input="handleInput"
-          />
-          <div v-else class="column-text selectable">
-            {{ props.rightText }}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </template>
+  </SplitPanePreview>
 </template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import { useI18n } from '../../composables/use-i18n'
+import SplitPanePreview from './SplitPanePreview.vue'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     leftText: string
     rightText: string
@@ -58,110 +34,19 @@ const props = withDefaults(
     rightTitle?: string
     editable?: boolean
   }>(),
-  { leftTitle: undefined, rightTitle: undefined, editable: true }
+  { editable: true }
 )
-
 const emit = defineEmits<{ (e: 'update:rightText', value: string): void }>()
-
 const { t } = useI18n()
-
-const leftPaneRef = ref<HTMLElement | null>(null)
-const rightPaneRef = ref<HTMLElement | null>(null)
-let isSyncingScroll = false
-
-function handleLeftScroll() {
-  if (isSyncingScroll || !leftPaneRef.value || !rightPaneRef.value) return
-  isSyncingScroll = true
-  rightPaneRef.value.scrollTop = leftPaneRef.value.scrollTop
-  requestAnimationFrame(() => {
-    isSyncingScroll = false
-  })
-}
-
-function handleRightScroll() {
-  if (isSyncingScroll || !leftPaneRef.value || !rightPaneRef.value) return
-  isSyncingScroll = true
-  leftPaneRef.value.scrollTop = rightPaneRef.value.scrollTop
-  requestAnimationFrame(() => {
-    isSyncingScroll = false
-  })
-}
-
 function handleInput(event: Event) {
-  const target = event.target as HTMLTextAreaElement
-  emit('update:rightText', target.value)
+  emit('update:rightText', (event.target as HTMLTextAreaElement).value)
 }
 </script>
-
 <style scoped>
-.parallel-preview {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.parallel-panes {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-xs);
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.parallel-column {
-  flex: 1 1 50%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
-  overflow: hidden;
-}
-
-.column-header {
-  padding: var(--space-xs) var(--space-md);
-  background-color: var(--app-surface-sunken);
-  border-bottom: 1px solid var(--app-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.column-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--app-text-muted);
-}
-
-.column-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  padding: var(--space-sm) var(--space-md);
-}
-
 .column-text {
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--color-base-content);
-}
-
-.right-body {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
 }
 
 .column-textarea {
@@ -185,9 +70,7 @@ function handleInput(event: Event) {
   outline: none;
 }
 
-@media (max-width: 640px) {
-  .parallel-panes {
-    flex-direction: column;
-  }
+.readonly-text {
+  padding: var(--space-sm) var(--space-md);
 }
 </style>
