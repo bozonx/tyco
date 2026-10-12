@@ -5,7 +5,10 @@ import {
   type ScriptExecutionResult,
 } from '@tyco/shared'
 
-import { buildScriptRequest } from '../custom-actions/script-executor'
+import {
+  buildScriptRequest,
+  cancelScriptRun,
+} from '../custom-actions/script-executor'
 import type { ToolLookup } from '../tools/tool-types'
 import {
   commandLabel,
@@ -18,7 +21,8 @@ export interface CommandTestDependencies {
   executeScriptAction: (
     request: ScriptActionRequest
   ) => Promise<ScriptExecutionResult>
-  cancelScriptAction?: (runId: string) => Promise<unknown>
+  /** False when no such run is going */
+  cancelScriptAction?: (runId: string) => Promise<boolean>
   newRunId: () => string
 }
 
@@ -58,8 +62,9 @@ export async function runCommandTest(
       return { kind: 'error', messageKey: 'commands.errorNoCommand' }
     }
     const runId = deps.newRunId()
+    let over = false
     const cancel = () => {
-      void deps.cancelScriptAction?.(runId).catch(() => {})
+      cancelScriptRun(deps.cancelScriptAction, runId, () => over)
     }
     signal.addEventListener('abort', cancel, { once: true })
     try {
@@ -78,6 +83,7 @@ export async function runCommandTest(
       }
       return { kind: 'error', message }
     } finally {
+      over = true
       signal.removeEventListener('abort', cancel)
     }
   }

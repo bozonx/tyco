@@ -30,23 +30,46 @@ const root = ref<HTMLElement | null>(null)
 const { t, locale } = useI18n()
 const ipc = useIpcStore()
 const scope = useId()
-const html = computed(() =>
-  renderChatMarkdown(
-    props.content,
-    {
-      reasoning: t('chat.reasoning'),
-      footnotes: t('chat.footnotes'),
-      footnoteBack: t('chat.footnoteBack'),
-      loadImage: t('chat.loadImage'),
-      note: t('chat.alertNote'),
-      tip: t('chat.alertTip'),
-      important: t('chat.alertImportant'),
-      warning: t('chat.alertWarning'),
-      caution: t('chat.alertCaution'),
-    },
-    scope
-  )
-)
+const markdownLabels = computed(() => ({
+  reasoning: t('chat.reasoning'),
+  footnotes: t('chat.footnotes'),
+  footnoteBack: t('chat.footnoteBack'),
+  loadImage: t('chat.loadImage'),
+  note: t('chat.alertNote'),
+  tip: t('chat.alertTip'),
+  important: t('chat.alertImportant'),
+  warning: t('chat.alertWarning'),
+  caution: t('chat.alertCaution'),
+}))
+/** A streamed answer is rendered at most this often, not on every piece */
+const STREAM_RENDER_MS = 120
+function render(): string {
+  try {
+    return renderChatMarkdown(props.content, markdownLabels.value, scope)
+  } catch {
+    // a text the renderer chokes on is still shown, as it is
+    const text = props.content.replace(
+      /[&<>]/g,
+      (character) => `&#${character.charCodeAt(0)};`
+    )
+    return `<p class="chat-plain">${text}</p>`
+  }
+}
+const html = ref(render())
+let renderTimer: ReturnType<typeof setTimeout> | undefined
+watch([() => props.content, () => props.streaming, markdownLabels], () => {
+  if (props.streaming) {
+    if (renderTimer !== undefined) return
+    renderTimer = setTimeout(() => {
+      renderTimer = undefined
+      html.value = render()
+    }, STREAM_RENDER_MS)
+    return
+  }
+  clearTimeout(renderTimer)
+  renderTimer = undefined
+  html.value = render()
+})
 const fetchImage = createTauriFetch(tauriNetIpc)
 const view = createChatMarkdownView({
   async highlight(source, language) {
@@ -114,6 +137,7 @@ function handleAuxClick(event: MouseEvent) {
 onBeforeUnmount(() => {
   revision += 1
   clearTimeout(timer)
+  clearTimeout(renderTimer)
   view.dispose()
 })
 </script>
@@ -124,6 +148,9 @@ onBeforeUnmount(() => {
   font-size: 0.9375rem;
   line-height: 1.65;
   overflow-wrap: anywhere;
+}
+.chat-markdown :deep(.chat-plain) {
+  white-space: pre-wrap;
 }
 .chat-markdown :deep(> :first-child) {
   margin-top: 0;

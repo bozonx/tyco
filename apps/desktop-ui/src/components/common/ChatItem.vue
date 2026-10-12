@@ -67,6 +67,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import ChatAttachment from '../chat/ChatAttachment.vue'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import ChatMarkdown from '../chat/ChatMarkdown.vue'
@@ -81,6 +82,7 @@ const emit = defineEmits<{
   (e: 'content-resized'): void
 }>()
 const { t } = useI18n()
+const { toast } = useToast()
 const copied = ref(false)
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
@@ -96,7 +98,12 @@ const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   },
 ])
 async function copyText(value: string) {
-  await navigator.clipboard.writeText(value)
+  try {
+    await navigator.clipboard.writeText(value)
+  } catch {
+    toast('editor.menu.clipboardUnavailable', 'error')
+    return
+  }
   copied.value = true
   window.setTimeout(() => (copied.value = false), 1500)
 }

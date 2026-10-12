@@ -95,4 +95,21 @@ describe('ChatMarkdown.vue', () => {
       'https://example.com',
     ])
   })
+
+  it('renders a streamed answer in batches, and at once when it ends', async () => {
+    const wrapper = render('**One**', true)
+    await settle()
+    expect(wrapper.find('strong').text()).toBe('One')
+
+    await wrapper.setProps({ content: '**Two**' })
+    await flushPromises()
+    expect(wrapper.find('strong').text()).toBe('One')
+    await vi.advanceTimersByTimeAsync(150)
+    await settle()
+    expect(wrapper.find('strong').text()).toBe('Two')
+
+    await wrapper.setProps({ content: '**Three**', streaming: false })
+    await flushPromises()
+    expect(wrapper.find('strong').text()).toBe('Three')
+  })
 })

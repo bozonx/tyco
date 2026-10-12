@@ -342,16 +342,20 @@ async function retry() {
 
 async function branch(index: number) {
   pinnedToBottom.value = true
-  await chatStore.branchChat(index)
-  toast(t('chat.branchCreated'), 'info')
+  if (await chatStore.branchChat(index)) toast('chat.branchCreated', 'info')
 }
 
 async function copyMarkdownToPoint(index: number) {
   const slice = chatStore.messages.slice(0, index + 1)
   const title = chatStore.newChatParams.title || ''
   const md = formatChatToMarkdown(slice, title ? { title } : undefined)
-  await navigator.clipboard.writeText(md)
-  toast(t('chat.markdownCopied'), 'info')
+  try {
+    await navigator.clipboard.writeText(md)
+  } catch {
+    toast('editor.menu.clipboardUnavailable', 'error')
+    return
+  }
+  toast('chat.markdownCopied', 'info')
 }
 
 function voiceInput() {
@@ -406,7 +410,8 @@ onMounted(() => {
 })
 
 watch(
-  () => chatStore.messages.map((message) => message.content).join('\u0000'),
+  // the stream only grows the last message: no need to read every one
+  () => [chatStore.messages.length, chatStore.messages.at(-1)?.content.length],
   () => {
     if (pinnedToBottom.value) void scrollToBottom()
   }

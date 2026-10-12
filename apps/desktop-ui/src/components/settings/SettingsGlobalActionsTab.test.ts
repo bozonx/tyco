@@ -8,6 +8,10 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
+}))
+
 vi.mock('../../lib/desktop/client', () => ({
   desktopClient: { listen: vi.fn().mockResolvedValue(() => {}) },
 }))

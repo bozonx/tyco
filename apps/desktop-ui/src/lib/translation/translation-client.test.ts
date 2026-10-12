@@ -172,4 +172,25 @@ describe('createTranslationClient', () => {
     expect(result.provider).toBe('openai')
     expect(result.model).toBe('gpt-4o-mini')
   })
+
+  it('keeps the breaks between the pieces of a long text', async () => {
+    const runLlm = vi
+      .fn()
+      .mockResolvedValueOnce('First part.')
+      .mockResolvedValueOnce('Second part.')
+    const client = createTranslationClient({
+      getConfig: () => config(),
+      keys: { get: vi.fn() },
+      transport: { fetch: vi.fn(), openSocket: vi.fn() },
+      runLlm,
+    })
+
+    const result = await client.translate(
+      `${'a'.repeat(30_000)}\n\n${'b'.repeat(30_000)}`,
+      { targetLanguage: 'ru' }
+    )
+
+    expect(runLlm).toHaveBeenCalledTimes(2)
+    expect(result.text).toBe('First part.\n\nSecond part.')
+  })
 })

@@ -50,14 +50,14 @@ export function openPluginTransport(id: string): Promise<PluginTransport> {
         close,
       })
     }
-    frame.onload = () =>
+    // the port goes once: a later load of the frame finds it transferred
+    let connected = false
+    frame.onload = () => {
+      if (connected) return
+      connected = true
       frame.contentWindow?.postMessage('tyco-plugin-connect', '*', [
         channel.port2,
       ])
-    frame.onerror = () => {
-      clearTimeout(timer)
-      close()
-      reject(new Error('Plugin sandbox failed to load'))
     }
     document.body.append(frame)
   })
@@ -115,23 +115,33 @@ export async function activatePluginSandbox(
           const signal = args.find(
             (arg) => arg && typeof arg === 'object' && 'signal' in arg
           ) as { signal?: AbortSignal } | undefined
+          const firstCallback = sequence + 1
           const serialized = args.map((arg) =>
             arg && typeof arg === 'object' && 'signal' in arg
               ? { ...(encode(arg) as object), $signal: true }
               : encode(arg)
           )
-          return decode(
-            await rpc.request(
-              'invoke',
-              {
-                callback: entry.$callback,
-                args: serialized,
-                messages: snapshot(manifest),
-              },
-              signal?.signal ?? ctx.signal,
-              120000
+          // the callbacks handed over with this call live as long as it
+          const lastCallback = sequence
+          try {
+            return decode(
+              await rpc.request(
+                'invoke',
+                {
+                  callback: entry.$callback,
+                  args: serialized,
+                  messages: snapshot(manifest),
+                },
+                signal?.signal ?? ctx.signal,
+                120000,
+                // one slow call fails alone; the plugin stays
+                { fatalTimeout: false }
+              )
             )
-          )
+          } finally {
+            for (let id = firstCallback; id <= lastCallback; id += 1)
+              hostCallbacks.delete(id)
+          }
         }
       }
       return Object.fromEntries(

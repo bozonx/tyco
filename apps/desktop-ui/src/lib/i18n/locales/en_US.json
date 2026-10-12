@@ -821,7 +821,10 @@
     "webhookSuccess": "Webhook sent successfully",
     "voiceKeyMissing": "Voice input requires an API key for {provider}. Open Settings → STT, select this provider and save the key.",
     "voiceKeyUnavailable": "The API key for {provider} is saved but unavailable. Unlock the system keychain (GNOME Keyring, KWallet or KeePassXC) and try voice input again.",
-    "voiceKeyCheckFailed": "Could not check the API key for voice input. Check the system keychain and restart the app."
+    "voiceKeyCheckFailed": "Could not check the API key for voice input. Check the system keychain and restart the app.",
+    "dictationClosed": "The speech recognition service ended the session while recording",
+    "dictationTimeout": "The speech recognition service did not send the result in time",
+    "sttModelIncomplete": "The speech recognition model is not fully set up: check its name and server address in Settings → STT"
   },
   "tools": {
     "aiTask": "AI task",

@@ -483,8 +483,14 @@ const session = createSettingsSession({
   prepare: createPreparedUserConfig,
   save: (next, base) => ipcStore.saveUserConfig(next, base),
   canSave: () => !configIsNewer.value,
+  // the detail comes from the backend as it is: the summary is the user's
   notifyError: (error) =>
-    toastText(error || t('toast.settingsSaveFailed'), 'error'),
+    toastText(
+      error
+        ? `${t('toast.settingsSaveFailed')}: ${error}`
+        : t('toast.settingsSaveFailed'),
+      'error'
+    ),
   debounceMs: SAVE_DEBOUNCE_MS,
 })
 const userConfig = session.draft

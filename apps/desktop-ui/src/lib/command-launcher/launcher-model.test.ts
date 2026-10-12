@@ -556,6 +556,49 @@ describe('external job requests', () => {
       expect.objectContaining({ success: false, cancelled: true })
     )
   })
+  it('leaves a job it could not claim to its owner', async () => {
+    const { deps } = setup([note])
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({
+      ...deps,
+      claimJob: vi.fn(async () => false),
+      finishJob,
+    })
+    await model.request({ commandId: note.id, jobId: 'job-taken', text: 'x' })
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(finishJob).not.toHaveBeenCalled()
+  })
+
+  it('finishes a job cancelled while running only once', async () => {
+    const { deps } = setup([note])
+    let finishRun!: () => void
+    vi.mocked(deps.run).mockImplementation(
+      () =>
+        new Promise<{ success: boolean }>((resolve) => {
+          finishRun = () => resolve({ success: true })
+        })
+    )
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({
+      ...deps,
+      claimJob: vi.fn(async () => true),
+      finishJob,
+    })
+    const running = model.request({
+      commandId: note.id,
+      jobId: 'job-once',
+      text: 'x',
+    })
+    await vi.waitFor(() => expect(deps.run).toHaveBeenCalled())
+    model.reset()
+    finishRun()
+    await running
+    expect(finishJob).toHaveBeenCalledOnce()
+    expect(finishJob).toHaveBeenCalledWith(
+      'job-once',
+      expect.objectContaining({ cancelled: true })
+    )
+  })
 })
 
 describe('launcher pages', () => {

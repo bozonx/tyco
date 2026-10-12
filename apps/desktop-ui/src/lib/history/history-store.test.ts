@@ -275,4 +275,50 @@ describe('history-store', () => {
 
     expect(store.editorHistory.value).toEqual([editorItem('1', 'one')])
   })
+
+  it('keeps a stored chat stored when only the list fails to reload', async () => {
+    const api = {
+      callFunction: vi.fn(async (functionName: string) =>
+        functionName === 'getChatHistory'
+          ? { success: false, error: 'broken' }
+          : { success: true }
+      ),
+    }
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
+
+    await expect(
+      store.saveChatHistory({
+        id: 'chat-1',
+        description: 'Hello',
+        lastMsgDate: '',
+        messages: [],
+      })
+    ).resolves.toBeUndefined()
+  })
+
+  it('does not bring back a removed chat with a list read before the removal', async () => {
+    let finishLoad!: (value: unknown) => void
+    const api = {
+      callFunction: vi.fn(async (functionName: string) => {
+        if (functionName === 'getChatHistory')
+          return new Promise((resolve) => {
+            finishLoad = resolve
+          })
+        if (functionName === 'getChat') return { result: null }
+        return {}
+      }),
+    }
+    const store = createHistoryStoreModel(api as unknown as HistoryApi)
+
+    const load = store.loadChatHistory()
+    await store.removeFromChatHistory('chat-1')
+    finishLoad({
+      result: [
+        { id: 'chat-1', description: '', lastMsgDate: '', messages: [] },
+      ],
+    })
+    await load
+
+    expect(store.chatHistory.value).toEqual([])
+  })
 })

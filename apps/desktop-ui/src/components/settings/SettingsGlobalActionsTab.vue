@@ -148,6 +148,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
 import {
   applyProviderInfo,
@@ -222,6 +223,7 @@ interface HotkeyRow {
 }
 
 const ipcStore = useIpcStore()
+const { toast } = useToast()
 const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
 const editable = computed(() => isEditable(providerState))
@@ -302,7 +304,11 @@ function suspendHotkeys(suspended: boolean) {
 }
 
 async function copyText(text: string) {
-  await navigator.clipboard.writeText(text)
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    toast('editor.menu.clipboardUnavailable', 'error')
+  }
 }
 
 async function checkInjection() {

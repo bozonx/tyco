@@ -11,7 +11,10 @@ import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import { resolveLanguagePreference } from '../lib/locale/language'
 import { assertSttKeyAvailable } from '../lib/stt/stt-readiness'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import { createLiveDictation } from '../lib/stt/live-dictation'
+import {
+  createLiveDictation,
+  type LiveDictation,
+} from '../lib/stt/live-dictation'
 import { dictationLanguageFor } from '../lib/stt/dictation-language'
 import type { LiveTranscriptState } from '../lib/stt/live-transcript'
 import {
@@ -39,12 +42,19 @@ export interface DictationHandlers {
   onError: (error: Error) => void
 }
 
-export const useCallAi = () => {
-  /** The microphone streams from Rust, and the provider socket leaves from it */
-  const dictation = createLiveDictation({
+/**
+ * One dictation for the window, whichever caller starts, finishes or cancels
+ * it. The microphone streams from Rust, and the provider socket leaves from it
+ */
+let sharedDictation: LiveDictation | undefined
+const windowDictation = () =>
+  (sharedDictation ??= createLiveDictation({
     capture: createVoiceCaptureControl(tauriNetIpc),
     stt: createSttClient({ transport: createTauriTransport(tauriNetIpc) }),
-  })
+  }))
+
+export const useCallAi = () => {
+  const dictation = windowDictation()
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
   const translationStore = useTranslationStore()
@@ -143,7 +153,11 @@ export const useCallAi = () => {
 
   const startDictation = async (handlers: DictationHandlers) => {
     const model = currentVoiceModel()
-    buildSttCatalog(model)
+    try {
+      buildSttCatalog(model)
+    } catch {
+      throw new Error(translate('toast.sttModelIncomplete'))
+    }
     const needsKey = sttProviderNeedsKey(model.provider)
     if (needsKey) {
       try {

@@ -134,7 +134,10 @@ describe('createLiveDictation', () => {
 
     expect(t.capture.stop).toHaveBeenCalledOnce()
     expect(t.onError).toHaveBeenCalledWith(
-      new Error('The speech recognition session closed while recording')
+      expect.objectContaining({
+        kind: 'closed',
+        message: 'The speech recognition session closed while recording',
+      })
     )
     await expect(t.dictation.finish()).rejects.toThrow('closed while recording')
   })
@@ -147,5 +150,60 @@ describe('createLiveDictation', () => {
       'Timed out waiting for the speech recognition result'
     )
     expect(t.requests[0].signal?.aborted).toBe(true)
+  })
+
+  it('returns the text even when the microphone fails to stop', async () => {
+    const t = setup(20)
+    vi.mocked(t.capture.stop).mockRejectedValue(new Error('ipc'))
+    await t.start()
+    t.parts.push({
+      type: 'final',
+      segment: { index: 0, startMs: 0, endMs: 900, text: 'Kept.' },
+    })
+    await tick()
+
+    expect(await t.dictation.finish()).toBe('Kept.')
+  })
+
+  it('turns the microphone off when the transcription cannot start', async () => {
+    const t = setup()
+    const dictation = createLiveDictation({
+      capture: t.capture,
+      stt: {
+        transcribeLive: () => {
+          throw new Error('bad model')
+        },
+      },
+    })
+
+    await expect(
+      dictation.start({
+        model,
+        hasApiKey: true,
+        onText: () => {},
+        onError: () => {},
+      })
+    ).rejects.toThrow('bad model')
+    expect(t.capture.stop).toHaveBeenCalledOnce()
+  })
+
+  it('turns the microphone off when cancelled while it was starting', async () => {
+    const t = setup()
+    let started!: () => void
+    vi.mocked(t.capture.start).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          started = () => resolve({ sampleRate: 16_000, audio: t.audio.values })
+        })
+    )
+    const starting = t.start()
+    await tick()
+    const cancelled = t.dictation.cancel()
+    started()
+    await starting
+    await cancelled
+
+    expect(t.requests).toHaveLength(0)
+    expect(t.capture.stop).toHaveBeenCalled()
   })
 })

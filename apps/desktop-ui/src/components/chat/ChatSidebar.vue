@@ -225,22 +225,34 @@ function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
 }
 
 async function copyChatMarkdown(id: string) {
-  let targetChat = await historyStore.loadChat(id)
-  if (!targetChat && chatStore.newChatParams?.id === id) {
+  let targetChat: ChatHistoryItem | null
+  // the open chat is newer in memory than in storage
+  if (chatStore.newChatParams?.id === id) {
     targetChat = {
       id,
       description: chatStore.newChatParams.title || '',
       lastMsgDate: '',
       messages: chatStore.messages,
     }
+  } else {
+    try {
+      targetChat = await historyStore.loadChat(id)
+    } catch {
+      toast('history.operationFailed', 'error')
+      return
+    }
   }
-  if (targetChat) {
-    const md = formatChatToMarkdown(targetChat.messages, {
-      title: targetChat.description,
-    })
+  if (!targetChat) return
+  const md = formatChatToMarkdown(targetChat.messages, {
+    title: targetChat.description,
+  })
+  try {
     await navigator.clipboard.writeText(md)
-    toast(t('chat.markdownCopied'), 'info')
+  } catch {
+    toast('editor.menu.clipboardUnavailable', 'error')
+    return
   }
+  toast('chat.markdownCopied', 'info')
 }
 
 async function startChat() {
@@ -273,7 +285,7 @@ async function finishRename(item: ChatHistoryItem) {
     await historyStore.renameChat(item.id, description)
     chatStore.setTitle(item.id, description)
   } catch {
-    toast(t('history.operationFailed'), 'error')
+    toast('history.operationFailed', 'error')
   }
 }
 
@@ -294,14 +306,23 @@ async function removeChat(id: string) {
   clearTimeout(undoTimer)
   releaseRemovedChat()
   // leave the chat first, or its pending write would bring it back
-  if (chatStore.newChatParams.id === id) {
+  const wasOpen = chatStore.newChatParams.id === id
+  if (wasOpen) {
     chatStore.abandonChat()
     await chatStore.whenSaved()
   }
-  const item = historyStore.chatHistory.find((c) => c.id === id)
-  const removed = await historyStore.removeFromChatHistory(id)
-  if (removed || item) {
-    removedChat.value = removed || item || null
+  let removed: ChatHistoryItem | null
+  try {
+    removed = await historyStore.removeFromChatHistory(id)
+  } catch {
+    toast('history.operationFailed', 'error')
+    // the chat is still stored: it comes back into view
+    if (wasOpen) await chatStore.openChat(id, { silent: true })
+    return
+  }
+  // the list keeps no messages: only a chat read whole can be put back
+  if (removed) {
+    removedChat.value = removed
     undoTimer = setTimeout(releaseRemovedChat, 8000)
   }
 }
@@ -313,6 +334,8 @@ async function undoRemoveChat() {
   if (item) {
     try {
       await historyStore.restoreChatItem(item)
+    } catch {
+      toast('history.operationFailed', 'error')
     } finally {
       await releaseChatImageUndo(item.id).catch(() => undefined)
     }

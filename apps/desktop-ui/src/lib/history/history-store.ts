@@ -30,6 +30,9 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   // writes still on their way: a load must not overtake them, otherwise the
   // text saved on the way to the history page would be missing from it
   const pendingWrites = new Set<Promise<unknown>>()
+  // bumped by every load and change of the chat list, so that a list read
+  // before a change never lands after it
+  let chatListVersion = 0
 
   const track = <T>(write: Promise<T>): Promise<T> => {
     pendingWrites.add(write)
@@ -59,9 +62,13 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   }
 
   const loadChatHistory = async (): Promise<void> => {
+    const version = ++chatListVersion
     const loadedHistory = await call('getChatHistory')
-    chatHistory.value = loadedHistory || []
+    if (version === chatListVersion) chatHistory.value = loadedHistory || []
   }
+
+  /** The chat is stored; a list that failed to reload is refreshed next time */
+  const refreshChatHistory = () => loadChatHistory().catch(() => {})
 
   const loadChat = async (id: string): Promise<ChatHistoryItem | null> => {
     const loadedChat = await call('getChat', [id])
@@ -108,12 +115,13 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   const saveChatHistory = async (chatHistoryItem: ChatHistoryItem) => {
     await call('saveChatHistory', [chatHistoryItem])
-    await loadChatHistory()
+    await refreshChatHistory()
   }
 
   /** Gives a chat another title, keeping its messages and its place */
   const renameChat = async (id: string, description: string) => {
     await call('renameChat', [id, description])
+    chatListVersion += 1
     chatHistory.value = chatHistory.value.map((item) =>
       item.id === id ? { ...item, description } : item
     )
@@ -148,6 +156,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
     const removed = await loadChat(id)
 
     await call('removeFromChatHistory', [id])
+    chatListVersion += 1
     chatHistory.value = chatHistory.value.filter((item) => item.id !== id)
 
     return removed
@@ -155,7 +164,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   const restoreChatItem = async (item: ChatHistoryItem): Promise<void> => {
     await call('saveChatHistory', [item])
-    await loadChatHistory()
+    await refreshChatHistory()
   }
 
   const clearEditorHistory = async (): Promise<void> => {
@@ -165,6 +174,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
 
   const clearChatHistory = async (): Promise<void> => {
     await call('clearChatHistory')
+    chatListVersion += 1
     chatHistory.value = []
   }
 

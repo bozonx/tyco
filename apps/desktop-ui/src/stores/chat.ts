@@ -8,6 +8,7 @@ import {
 import { type ChatFileErrorKind } from '../lib/chat/chat-file-input'
 import { createChatFileController } from '../lib/chat/chat-file-controller'
 import { createChatFileReader } from '../lib/chat/chat-file-reader'
+import { isChatHistoryEnabled } from '../lib/chat/chat-history-settings'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
@@ -25,6 +26,7 @@ import {
 } from '../lib/chat/chat-model'
 import { createChatStoreModel } from '../lib/chat/chat-store'
 import { translate } from '../lib/i18n'
+import { clientLogger } from '../lib/logger'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { appNavigation } from '../lib/navigation/navigation'
 import { useEditorInputStore } from './editor-input'
@@ -35,7 +37,7 @@ import { useMenuModalsStore } from './menu-modals'
 import { makeUniqId } from '@/lib/squidlet-lib-local'
 
 export const useChatStore = defineStore('chat', () => {
-  const { toast } = useToast()
+  const { toast, toastText } = useToast()
   const { sendChatMessage, generateChatTitle, saveLocalState } = useCallAi()
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
@@ -64,7 +66,7 @@ export const useChatStore = defineStore('chat', () => {
       try {
         await historyStore.saveChatHistory(item)
       } catch (error) {
-        toast(translate('history.operationFailed'), 'error')
+        toast('history.operationFailed', 'error')
         throw error
       }
     },
@@ -72,17 +74,18 @@ export const useChatStore = defineStore('chat', () => {
       try {
         await historyStore.renameChat(id, title)
       } catch (error) {
-        toast(translate('history.operationFailed'), 'error')
+        toast('history.operationFailed', 'error')
         throw error
       }
     },
     loadChatHistoryItem: loadChatWithImages,
     navigateTo: (path) => appNavigation.push(path),
     notifyError: (message) => {
-      toast(message, 'error')
+      toastText(message, 'error')
     },
     emptyMessageError: () => translate('toast.textNotSelected'),
     chatNotFoundError: () => translate('history.empty'),
+    chatLoadError: () => translate('history.operationFailed'),
     messageTooLongError: () => translate('llmErrors.contextLength'),
     noModelError: () => translate('chat.noModels'),
     imageModelError: () => translate('chat.imageModelRequired'),
@@ -94,10 +97,17 @@ export const useChatStore = defineStore('chat', () => {
         : String(error instanceof Error ? error.message : error),
     createId: () => makeUniqId(8),
     nowIso: () => new Date().toISOString(),
+    // which chat to reopen is a convenience: a failure is only logged
     saveLocalState: async (patch) => {
-      await saveLocalState(patch)
+      const result = await saveLocalState(patch)
+      if (!result.success)
+        clientLogger.warn(
+          `Could not save the last chat: ${result.error}`,
+          'chat'
+        )
     },
     getLastChatId: () => ipcStore.params.localState?.lastChatId,
+    isHistoryEnabled: () => isChatHistoryEnabled(ipcStore.params.userConfig),
     getChatModel: () => {
       const picked = selectedModel.value
       return picked
@@ -135,9 +145,9 @@ export const useChatStore = defineStore('chat', () => {
     readDroppedFile: readDroppedChatFile,
     syncImages: syncChatImages,
     report: (name, kind) =>
-      toast(`${name}: ${translate(fileErrorKeys[kind])}`, 'error'),
+      toastText(`${name}: ${translate(fileErrorKeys[kind])}`, 'error'),
     notify: (name, notice) =>
-      toast(
+      toastText(
         `${name}: ${
           notice.kind === 'secrets'
             ? translate('chat.fileSecretsWarning')
@@ -145,7 +155,7 @@ export const useChatStore = defineStore('chat', () => {
         }`,
         'warn'
       ),
-    reportSyncError: () => toast(translate('chat.imageUnavailable'), 'error'),
+    reportSyncError: () => toast('chat.imageUnavailable', 'error'),
   })
   onScopeDispose(files.dispose)
   const controller = createChatController({
@@ -160,7 +170,15 @@ export const useChatStore = defineStore('chat', () => {
       ipcStore.callFunctionOrNotify('openMainChat', [attachment]),
     closeModals: menuModalsStore.closeAll,
     afterRender: nextTick,
-    selectModel: (id) => saveLocalState({ lastChatModelId: id }),
+    // the picked model is read back from the state: unsaved, it is not picked
+    selectModel: async (id) => {
+      const result = await saveLocalState({ lastChatModelId: id })
+      if (!result.success)
+        toastText(
+          `${translate('toast.desktopCommandFailed')}: ${result.error ?? ''}`,
+          'error'
+        )
+    },
   })
   watch(
     () => ipcStore.params.isWindowShown,

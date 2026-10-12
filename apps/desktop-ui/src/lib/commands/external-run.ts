@@ -55,6 +55,12 @@ export interface ExternalRunDependencies {
 export function createExternalRun(deps: ExternalRunDependencies) {
   const controllers = new Map<string, AbortController>()
   const handleCancel = (id: string) => controllers.get(id)?.abort()
+  // a job the backend failed to hand over or take back is not ours to run;
+  // the run itself is reported either way
+  const claimJob = (id: string) =>
+    deps.claimJob ? deps.claimJob(id).catch(() => false) : Promise.resolve(true)
+  const finishJob = (id: string, outcome: InvocationOutcome) =>
+    Promise.resolve(deps.finishJob?.(id, outcome)).catch(() => undefined)
 
   const failed = (name: string, message: string) => {
     deps.showOverlay({
@@ -71,7 +77,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     const controller = new AbortController()
     if (event.jobId) {
       controllers.set(event.jobId, controller)
-      if (deps.claimJob && !(await deps.claimJob(event.jobId))) {
+      if (!(await claimJob(event.jobId))) {
         controllers.delete(event.jobId)
         return { success: false, cancelled: true }
       }
@@ -86,7 +92,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       const outcome = { success: false, message }
       if (event.jobId) {
         controllers.delete(event.jobId)
-        await deps.finishJob?.(event.jobId, outcome)
+        await finishJob(event.jobId, outcome)
       }
       return outcome
     }
@@ -131,7 +137,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       outcome = { success: false, cancelled: true, message: 'Cancelled' }
     if (event.jobId) {
       controllers.delete(event.jobId)
-      outcome = (await deps.finishJob?.(event.jobId, outcome)) ?? outcome
+      outcome = (await finishJob(event.jobId, outcome)) ?? outcome
     }
     if (!reported) {
       if (outcome.success || outcome.cancelled) deps.showOverlay(null)

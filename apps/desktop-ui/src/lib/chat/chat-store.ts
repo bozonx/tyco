@@ -54,6 +54,8 @@ export interface ChatStoreDeps {
   notifyError: (message: string) => void
   emptyMessageError: () => string
   chatNotFoundError: () => string
+  /** The stored chat could not be read */
+  chatLoadError?: () => string
   messageTooLongError: () => string
   noModelError: () => string
   imageModelError?: () => string
@@ -66,6 +68,8 @@ export interface ChatStoreDeps {
   getLastChatId: () => string | null | undefined
   /** The model picked in the chat; null when none is available */
   getChatModel: () => ChatRequestModel | null
+  /** Whether chats are stored; a title is generated only for a stored chat */
+  isHistoryEnabled?: () => boolean
 }
 
 /** The same text attached twice goes once, with the source it came first */
@@ -96,6 +100,8 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   } | null>(null)
   const abortController = ref<AbortController | null>(null)
   let generationId = 0
+  /** Bumped by every switch of the chat, so that a slow open lands nowhere */
+  let openRequest = 0
   let titleController: AbortController | undefined
 
   const currentTitle = () => newChatParams.value.title || ''
@@ -175,6 +181,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const maybeGenerateTitle = async (modelId: string) => {
     const id = newChatParams.value.id
     const title = currentTitle()
+    if (deps.isHistoryEnabled?.() === false) return
     if (!id || !needsGeneratedTitle(messages.value, title)) return
 
     const [question, answer] = messages.value
@@ -215,11 +222,11 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   ) => {
     if (!message?.trim() && !images.length && !attachments.length) {
       deps.notifyError(deps.emptyMessageError())
-      return
+      return ''
     }
 
     if (isGenerating.value) {
-      return
+      return ''
     }
 
     const model = deps.getChatModel()
@@ -409,6 +416,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   }
 
   const clearChat = () => {
+    openRequest += 1
     stopGeneration()
     reset()
   }
@@ -462,22 +470,32 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     const currentGenerationId = generationId
     const result = await pending
     if (!result && currentGenerationId === generationId) {
+      // the old answer comes back; a retry would ask the question once more
+      // after it, so the failure is only told
+      const failure = error.value
       messages.value = previousMessages
+      lastFailedTurn.value = null
+      error.value = ''
+      if (failure) deps.notifyError(failure)
       await persist(messages.value)
     }
     return result
   }
 
   const branchChat = async (messageIndex: number): Promise<boolean> => {
+    // an answer still coming is stopped first: the branch takes it as it was
+    // left, or without it when nothing of it came
     if (messageIndex < 0 || messageIndex >= messages.value.length) return false
+    openRequest += 1
+    stopGeneration()
     const slice = messages.value
       .slice(0, messageIndex + 1)
       .map((m) => ({ ...m }))
+    if (!slice.length) return false
     const originalTitle = newChatParams.value.title || ''
     const title = originalTitle ? `${originalTitle} (branch)` : ''
     const id = deps.createId()
 
-    stopGeneration()
     reset({ id, title, attachments: [] })
     messages.value = slice
     await persist(slice)
@@ -526,12 +544,26 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
    * being removed from the history
    */
   const abandonChat = () => {
+    openRequest += 1
     halt(false)
     reset({ id: deps.createId() })
   }
 
   const openChat = async (id: string, options: { silent?: boolean } = {}) => {
-    const chat = await deps.loadChatHistoryItem(id)
+    const request = ++openRequest
+    let chat: ChatHistoryItem | null
+    try {
+      chat = await deps.loadChatHistoryItem(id)
+    } catch (loadError) {
+      if (request === openRequest && !options.silent)
+        deps.notifyError(
+          deps.chatLoadError?.() ||
+            (loadError instanceof Error ? loadError.message : String(loadError))
+        )
+      return false
+    }
+    // a chat opened later wins, whichever loads first
+    if (request !== openRequest) return false
 
     if (!chat) {
       if (!options.silent) deps.notifyError(deps.chatNotFoundError())

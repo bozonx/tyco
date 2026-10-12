@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { ScriptExecutionResult } from '@tyco/shared'
 
-import { buildScriptRequest, scriptFailureDetail } from './script-executor'
+import {
+  buildScriptRequest,
+  cancelScriptRun,
+  scriptFailureDetail,
+} from './script-executor'
 
 const result = (
   extra: Partial<ScriptExecutionResult> = {}
@@ -81,5 +85,30 @@ describe('scriptFailureDetail', () => {
     expect(scriptFailureDetail(result({ success: false, exitCode: 2 }))).toBe(
       'exit code 2'
     )
+  })
+})
+
+describe('cancelScriptRun', () => {
+  it('asks again while the run is not registered yet, and stops once it is over', async () => {
+    vi.useFakeTimers()
+    try {
+      const cancel = vi
+        .fn<(runId: string) => Promise<boolean>>()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true)
+      cancelScriptRun(cancel, 'run-1', () => false)
+      await vi.advanceTimersByTimeAsync(500)
+      expect(cancel).toHaveBeenCalledTimes(2)
+
+      const late = vi.fn(async () => false)
+      let over = false
+      cancelScriptRun(late, 'run-2', () => over)
+      await vi.advanceTimersByTimeAsync(0)
+      over = true
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(late).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

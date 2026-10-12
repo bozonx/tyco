@@ -127,14 +127,28 @@ export function createSelectionReplace(deps: SelectionReplaceDeps) {
     try {
       result = await deps.run(action, event.text, controller.signal)
     } catch (error) {
-      if (!isCurrent() || deps.isAborted?.(error)) return
+      // the backend has given back what a cancelled or replaced run held; a
+      // finish of it is told apart as stale
+      if (!isCurrent()) {
+        await finishQuietly(event.runId)
+        return
+      }
       active = null
+      if (deps.isAborted?.(error)) {
+        // cancelled from within the tool: nothing else ends the run
+        await finishQuietly(event.runId)
+        deps.showOverlay(null)
+        return
+      }
       await finishQuietly(event.runId)
       fail(action, deps.describeError(error))
       return
     }
     // a request layer may resolve with a partial text on abort
-    if (!isCurrent()) return
+    if (!isCurrent()) {
+      await finishQuietly(event.runId)
+      return
+    }
     active = null
 
     if (!result.trim()) {

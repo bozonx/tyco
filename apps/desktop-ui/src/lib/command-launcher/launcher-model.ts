@@ -278,6 +278,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const runController = new AbortController()
     controller = runController
     if (call?.jobId && deps.claimJob && !(await deps.claimJob(call.jobId))) {
+      // another window has the job, or it is over: not ours to finish
+      if (externalCall === call) externalCall = null
       reset()
       return { success: false, cancelled: true }
     }
@@ -304,8 +306,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     }
     if (controller === runController) controller = null
     if (call?.jobId) {
-      if (externalCall === call) externalCall = null
-      outcome = (await deps.finishJob?.(call.jobId, outcome)) ?? outcome
+      // a reset meanwhile has finished the job as cancelled already
+      if (externalCall === call) {
+        externalCall = null
+        outcome = (await deps.finishJob?.(call.jobId, outcome)) ?? outcome
+      } else {
+        outcome = { success: false, cancelled: true, message: 'Cancelled' }
+      }
       log(command, input, outcome)
       if (stage.value === running) reset()
       return outcome

@@ -127,8 +127,12 @@ async function run() {
           }
           return res.result
         },
-        cancelScriptAction: (runId) =>
-          ipcStore.callFunction('cancelScriptAction', [runId]),
+        cancelScriptAction: async (runId) => {
+          const result = await ipcStore.callFunction('cancelScriptAction', [
+            runId,
+          ])
+          return result.success && result.result === true
+        },
         newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
       },
       current.signal

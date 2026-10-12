@@ -166,7 +166,7 @@ describe('external jobs', () => {
     const pending = external.handleRun(
       event({ jobId: 'running', output: 'return' })
     )
-    await Promise.resolve()
+    await vi.waitFor(() => expect(run).toHaveBeenCalled())
     external.handleCancel('running')
     finishRun()
     expect((await pending).cancelled).toBe(true)

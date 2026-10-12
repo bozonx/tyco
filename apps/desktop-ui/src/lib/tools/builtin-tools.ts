@@ -8,6 +8,7 @@ import {
 
 import {
   buildScriptRequest,
+  cancelScriptRun,
   scriptFailureDetail,
 } from '../custom-actions/script-executor'
 import {
@@ -29,8 +30,11 @@ export interface BuiltinToolDependencies {
   executeScriptAction?: (
     request: ScriptActionRequest
   ) => Promise<ScriptExecutionResult>
-  /** Stops the script of the run, see `ScriptActionRequest.runId` */
-  cancelScriptAction?: (runId: string) => Promise<unknown>
+  /**
+   * Stops the script of the run, see `ScriptActionRequest.runId`; false when no
+   * such run is going
+   */
+  cancelScriptAction?: (runId: string) => Promise<boolean>
   /** Resolves with the response body; rejects once `signal` aborts */
   executeWebhook?: (
     target: WebhookTarget,
@@ -79,8 +83,9 @@ export function createScriptTool(
         }
       }
       const runId = (deps.newRunId ?? defaultRunId)()
+      let over = false
       const cancel = () => {
-        void deps.cancelScriptAction?.(runId).catch(() => {})
+        cancelScriptRun(deps.cancelScriptAction, runId, () => over)
       }
       call.signal.addEventListener('abort', cancel, { once: true })
       let result: ScriptExecutionResult | undefined
@@ -103,6 +108,7 @@ export function createScriptTool(
         if (message === SCRIPT_CANCELLED_ERROR) return cancelled
         return { ok: false, messageKey: 'toast.scriptFailed', message }
       } finally {
+        over = true
         call.signal.removeEventListener('abort', cancel)
       }
       // finished before the cancellation reached it

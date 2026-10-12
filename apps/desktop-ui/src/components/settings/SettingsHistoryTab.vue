@@ -181,7 +181,7 @@ const showClearEditorHistoryModal = ref(false)
 async function onClearEditorHistory() {
   showClearEditorHistoryModal.value = false
   await historyStore.clearEditorHistory()
-  toast(t('history.cleared'), 'info')
+  toast('history.cleared', 'info')
 }
 
 const showClearChatHistoryModal = ref(false)
@@ -189,7 +189,7 @@ const showClearChatHistoryModal = ref(false)
 async function onClearChatHistory() {
   showClearChatHistoryModal.value = false
   await historyStore.clearChatHistory()
-  toast(t('history.cleared'), 'info')
+  toast('history.cleared', 'info')
 }
 
 const showDisableChatHistoryModal = ref(false)

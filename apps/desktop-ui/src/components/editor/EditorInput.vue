@@ -90,7 +90,7 @@ const withClipboard = async (run: () => Promise<void>): Promise<void> => {
   try {
     await run()
   } catch {
-    toast(t('editor.menu.clipboardUnavailable'), 'error')
+    toast('editor.menu.clipboardUnavailable', 'error')
   }
 }
 

@@ -219,6 +219,7 @@ import {
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
+import { DictationError } from '../../lib/stt/live-dictation'
 import {
   createLiveTranscriptState,
   liveTranscriptText,
@@ -323,6 +324,7 @@ let keyUpHandlerIndex = -1
 let submitHandlerIndex = -1
 let sessionGeneration = 0
 let starting: Promise<void> | undefined
+let unmounted = false
 /** Set once a dictation started; it stays finishable after a failure */
 let hasSession = false
 // Silence is billed too: a forgotten dictation must not run all day
@@ -371,6 +373,18 @@ function invokeCallback<Args extends unknown[]>(
   }
 }
 
+const DICTATION_ERROR_KEYS = {
+  closed: 'toast.dictationClosed',
+  timeout: 'toast.dictationTimeout',
+} as const
+
+/** What went wrong, in the words of the user's language where they are ours */
+function describeVoiceError(error: unknown): string {
+  if (error instanceof DictationError)
+    return t(DICTATION_ERROR_KEYS[error.kind])
+  return error instanceof Error ? error.message : String(error)
+}
+
 function notifyCancelled() {
   invokeCallback(props.onCancel)
   emit('cancelled')
@@ -388,7 +402,7 @@ const cancel = async () => {
     await starting
     await cancelDictation()
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = describeVoiceError(error)
     if (message) toastText(message, 'error')
     else toast('toast.voiceRecognitionFailed', 'error')
   } finally {
@@ -444,10 +458,16 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
     if (shouldFormatRecognizedText()) {
       // the raw transcript is the only copy of what was said: the LLM may
       // distort it, and it cannot be dictated the same way twice
-      const sourceId = await historyStore.saveSource(
-        recognizedText,
-        'voice-correction'
-      )
+      let sourceId: string | null = null
+      try {
+        sourceId = await historyStore.saveSource(
+          recognizedText,
+          'voice-correction'
+        )
+      } catch {
+        // the text is still here; only its copy in the history is missing
+        toast('history.operationFailed', 'error')
+      }
       if (!isCurrent()) return
       const owner = menuModalsStore.setPendingModal({
         correction: true,
@@ -467,11 +487,9 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
               toast('history.operationFailed', 'error')
             })
         }
-      } catch (error) {
+      } catch {
+        // the request has told the failure; the raw text goes on
         if (!isCurrent()) return
-        const message = error instanceof Error ? error.message : String(error)
-        if (message) toastText(message, 'error')
-        else toast('menu.correction', 'error')
       } finally {
         menuModalsStore.clearPendingModal(owner)
       }
@@ -482,7 +500,7 @@ const finish = async (intent: VoiceFinishIntent = 'insert') => {
   } catch (error) {
     if (!isCurrent()) return
     if (!signal?.aborted) {
-      const message = error instanceof Error ? error.message : String(error)
+      const message = describeVoiceError(error)
       if (message) toastText(message, 'error')
       else toast('toast.voiceRecognitionFailed', 'error')
     }
@@ -506,14 +524,18 @@ function handleSessionError(error: Error) {
 
   if (!hasText.value) {
     hasSession = false
-    if (error.message) toastText(error.message, 'error')
+    const message = describeVoiceError(error)
+    if (message) toastText(message, 'error')
     else toast('toast.voiceRecognitionFailed', 'error')
     voiceSession.abort()
     notifyCancelled()
     return
   }
 
-  toastText(`${error.message}\n${t('menu.dictationInterrupted')}`, 'error')
+  toastText(
+    `${describeVoiceError(error)}\n${t('menu.dictationInterrupted')}`,
+    'error'
+  )
 }
 
 function handleKeyUp(event: KeyboardEvent) {
@@ -590,7 +612,7 @@ async function startSession() {
       isStarted.value = true
     } catch (error) {
       if (generation !== sessionGeneration) return
-      const message = error instanceof Error ? error.message : String(error)
+      const message = describeVoiceError(error)
       if (message) toastText(message, 'error')
       else toast('toast.voiceRecognitionFailed', 'error')
       voiceSession.abort()
@@ -625,13 +647,18 @@ onMounted(async () => {
   )
   window.addEventListener('keydown', handleKeyDown)
 
-  unlistenAudioLevel = await desktopClient.listen(
-    DESKTOP_EVENTS.VOICE_AUDIO_LEVEL,
-    (payload) => {
+  // the level meter is decoration: the dictation must not wait for it, nor
+  // fail with it
+  void desktopClient
+    .listen(DESKTOP_EVENTS.VOICE_AUDIO_LEVEL, (payload) => {
       audioLevel.value = payload.level
       audioPeak.value = payload.peak
-    }
-  )
+    })
+    .then((unlisten) => {
+      if (unmounted) unlisten()
+      else unlistenAudioLevel = unlisten
+    })
+    .catch(() => undefined)
 
   if (ipcStore.params?.isWindowShown !== false) {
     await startSession()
@@ -639,6 +666,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  unmounted = true
   releaseDismissHold()
   sessionGeneration += 1
   stopRecordingTimer()

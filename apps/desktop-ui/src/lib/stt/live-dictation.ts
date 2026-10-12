@@ -1,3 +1,4 @@
+import type { TranscriptPart } from '@bozonx/ai-kit'
 import type { SttModel } from '@tyco/shared'
 
 import {
@@ -8,6 +9,17 @@ import {
 } from './live-transcript'
 import type { SttClient } from './stt-client'
 import type { VoiceCaptureControl } from './voice-capture'
+
+/** A failure of the dictation itself, told to the user by `kind` */
+export class DictationError extends Error {
+  constructor(
+    readonly kind: 'closed' | 'timeout',
+    message: string
+  ) {
+    super(message)
+    this.name = 'DictationError'
+  }
+}
 
 /** How long the provider may take for its last words once the audio ends */
 const FINISH_TIMEOUT_MS = 10_000
@@ -61,14 +73,25 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
       finishing = false
 
       const { sampleRate, audio } = await deps.capture.start()
-      const parts = deps.stt.transcribeLive({
-        model: request.model,
-        audio,
-        sampleRate,
-        language: request.language,
-        hasApiKey: request.hasApiKey,
-        signal: current.signal,
-      })
+      // cancelled while the microphone was starting: it must not stay on
+      if (current.signal.aborted) {
+        await stopCapture()
+        return
+      }
+      let parts: AsyncIterable<TranscriptPart>
+      try {
+        parts = deps.stt.transcribeLive({
+          model: request.model,
+          audio,
+          sampleRate,
+          language: request.language,
+          hasApiKey: request.hasApiKey,
+          signal: current.signal,
+        })
+      } catch (error) {
+        await stopCapture()
+        throw error
+      }
 
       session = (async () => {
         try {
@@ -83,7 +106,8 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
             }
           }
           if (!finishing && !current.signal.aborted) {
-            throw new Error(
+            throw new DictationError(
+              'closed',
               'The speech recognition session closed while recording'
             )
           }
@@ -98,12 +122,15 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
 
     async finish() {
       finishing = true
-      await deps.capture.stop()
+      // a microphone that failed to stop must not cost the text: the wait
+      // below is bounded
+      await stopCapture()
       // a provider that never closes must not hold the text hostage
       let timer: ReturnType<typeof setTimeout> | undefined
       const timedOut = new Promise<void>((resolve) => {
         timer = setTimeout(() => {
-          failure ??= new Error(
+          failure ??= new DictationError(
+            'timeout',
             'Timed out waiting for the speech recognition result'
           )
           controller?.abort()

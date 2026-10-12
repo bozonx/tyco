@@ -32,7 +32,7 @@ describe('chat-store', () => {
 
     const result = await store.sendMessage('   ')
 
-    expect(result).toBeUndefined()
+    expect(result).toBe('')
     expect(deps.notifyError).toHaveBeenCalledWith('No text selected')
     expect(deps.sendChatMessage).not.toHaveBeenCalled()
   })
@@ -787,5 +787,113 @@ describe('file and image context policies', () => {
     finish()
     await store.whenSaved()
     expect(store.savingImages.value).toHaveLength(0)
+  })
+
+  it('keeps the old answer when a regeneration fails, without a retry that repeats the question', async () => {
+    const deps = createDeps({
+      sendChatMessage: vi.fn(async () => {
+        throw new Error('Provider down')
+      }),
+    })
+    const store = createChatStoreModel(deps)
+    store.messages.value = [
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Old answer' },
+    ]
+
+    await store.regenerateMessage(1)
+
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Old answer' },
+    ])
+    expect(store.error.value).toBe('')
+    expect(deps.notifyError).toHaveBeenCalledWith('Provider down')
+    expect(await store.retryLastTurn()).toBe('')
+    expect(store.messages.value).toHaveLength(2)
+  })
+
+  it('generates no title while the chat history is off', async () => {
+    const deps = createDeps({
+      generateChatTitle: vi.fn(async () => 'Generated'),
+      isHistoryEnabled: () => false,
+    })
+    const store = createChatStoreModel(deps)
+
+    await store.sendMessage('First question')
+
+    expect(deps.generateChatTitle).not.toHaveBeenCalled()
+    expect(deps.renameChat).not.toHaveBeenCalled()
+  })
+
+  it('reports a chat that cannot be loaded and opens a new one instead of the last', async () => {
+    const deps = createDeps({
+      loadChatHistoryItem: vi.fn(async () => {
+        throw new Error('io')
+      }),
+      chatLoadError: () => 'Load failed',
+      getLastChatId: () => 'chat-1',
+      createId: vi.fn(() => 'new-chat'),
+    })
+    const store = createChatStoreModel(deps)
+
+    expect(await store.openChat('chat-1')).toBe(false)
+    expect(deps.notifyError).toHaveBeenCalledWith('Load failed')
+
+    await store.openLastOrNewChat()
+    expect(store.newChatParams.value.id).toBe('new-chat')
+    expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
+  })
+
+  it('opens the chat picked last, whichever loads first', async () => {
+    const loads = new Map<string, (chat: unknown) => void>()
+    const deps = createDeps({
+      loadChatHistoryItem: vi.fn(
+        (id: string) =>
+          new Promise((resolve) => {
+            loads.set(id, resolve as (chat: unknown) => void)
+          })
+      ) as ChatStoreDeps['loadChatHistoryItem'],
+    })
+    const store = createChatStoreModel(deps)
+    const chat = (id: string) => ({
+      id,
+      description: id,
+      lastMsgDate: '',
+      messages: [{ role: 'user' as const, content: id }],
+    })
+
+    const first = store.openChat('a')
+    const second = store.openChat('b')
+    loads.get('b')!(chat('b'))
+    await second
+    loads.get('a')!(chat('a'))
+
+    expect(await first).toBe(false)
+    expect(store.newChatParams.value.id).toBe('b')
+  })
+
+  it('branches from an answer still coming as it was stopped', async () => {
+    const deps = createDeps({
+      sendChatMessage: vi.fn(
+        (_message, _previous, _instructions, options) =>
+          new Promise<string>((resolve) => {
+            options.onChunk?.('Partial')
+            options.signal?.addEventListener('abort', () => resolve('Partial'))
+          })
+      ),
+      createId: vi.fn(() => 'chat-id-1'),
+    })
+    const store = createChatStoreModel(deps)
+    const pending = store.sendMessage('Question')
+    vi.mocked(deps.createId).mockReturnValue('branch-id')
+
+    expect(await store.branchChat(1)).toBe(true)
+    await pending
+
+    expect(store.messages.value).toEqual([
+      { role: 'user', content: 'Question' },
+      { role: 'assistant', content: 'Partial', status: 'stopped' },
+    ])
   })
 })

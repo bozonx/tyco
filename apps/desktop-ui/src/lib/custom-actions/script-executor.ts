@@ -27,6 +27,29 @@ export function buildScriptRequest(
   }
 }
 
+const CANCEL_RETRY_MS = 100
+const CANCEL_ATTEMPTS = 50
+
+/**
+ * Asks the backend to stop the script of `runId` until it agrees or the run is
+ * over: a cancel that overtakes the start of the run finds nothing to stop
+ */
+export function cancelScriptRun(
+  cancel: ((runId: string) => Promise<boolean>) | undefined,
+  runId: string,
+  isOver: () => boolean
+): void {
+  if (!cancel) return
+  void (async () => {
+    for (let attempt = 0; attempt < CANCEL_ATTEMPTS; attempt += 1) {
+      if (isOver()) return
+      const stopped = await cancel(runId).catch(() => false)
+      if (stopped || isOver()) return
+      await new Promise((resolve) => setTimeout(resolve, CANCEL_RETRY_MS))
+    }
+  })()
+}
+
 /** Why a command failed, short enough for a toast */
 export function scriptFailureDetail(result: ScriptExecutionResult): string {
   const line = result.stderr

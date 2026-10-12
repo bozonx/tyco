@@ -108,6 +108,9 @@ describe('createSelectionReplace', () => {
     request.reject('cancelled')
     await running
     expect(deps.notify).not.toHaveBeenCalled()
+    // the clipboard comes back and the pending bubble goes
+    expect(deps.finish).toHaveBeenCalledWith(1, null)
+    expect(deps.showOverlay).toHaveBeenLastCalledWith(null)
   })
 
   it('shows the pending bubble with a delay and pastes the result', async () => {
@@ -220,7 +223,12 @@ describe('createSelectionReplace', () => {
     )
     request.resolve('partial')
     await done
-    expect(deps.finish).not.toHaveBeenCalled()
+    // only a stale finish: the backend has restored the run already
+    expect(deps.finish).toHaveBeenCalledWith(1, null)
+    expect(deps.finish).not.toHaveBeenCalledWith(1, 'partial')
+    expect(deps.showOverlay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: 'info', text: 'selection.cancelled' })
+    )
   })
 
   it('tells a missing selection apart from a failure', async () => {

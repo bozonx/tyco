@@ -92,31 +92,40 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
       )
     }
   })
+  /**
+   * `fatalTimeout: false` lets a slow call fail alone; otherwise a request that
+   * never answers means a stuck worker, and the runtime is closed
+   */
   function request(
     method: string,
     args: unknown,
     signal?: AbortSignal,
-    timeoutMs = deps.timeoutMs ?? 10000
+    timeoutMs = deps.timeoutMs ?? 10000,
+    options: { fatalTimeout?: boolean } = {}
   ): Promise<unknown> {
     if (closed || signal?.aborted)
       return Promise.reject(new PluginCancellation('Plugin request cancelled'))
     return new Promise((resolve, reject) => {
       const id = ++sequence
-      const abort = () => {
+      const drop = (error: Error) => {
         const task = pending.get(id)
         if (!task) return
         pending.delete(id)
         clearTimeout(task.timer)
         task.removeAbort()
         deps.transport.send({ type: 'cancel', id })
-        reject(new PluginCancellation('Plugin request cancelled'))
+        reject(error)
       }
+      const abort = () =>
+        drop(new PluginCancellation('Plugin request cancelled'))
+      const timedOut = new Error(`Plugin ${method} timed out`)
       pending.set(id, {
         resolve,
         reject,
         method,
         timer: setTimeout(
-          () => fail(new Error(`Plugin ${method} timed out`)),
+          () =>
+            options.fatalTimeout === false ? drop(timedOut) : fail(timedOut),
           timeoutMs
         ),
         removeAbort: () => signal?.removeEventListener('abort', abort),

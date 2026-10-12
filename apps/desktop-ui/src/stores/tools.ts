@@ -86,8 +86,12 @@ export const useToolsStore = defineStore('tools', () => {
         }
         return res.result
       },
-      cancelScriptAction: (runId) =>
-        ipcStore.callFunction('cancelScriptAction', [runId]),
+      cancelScriptAction: async (runId) => {
+        const result = await ipcStore.callFunction('cancelScriptAction', [
+          runId,
+        ])
+        return result.success && result.result === true
+      },
       executeWebhook: (target, text, signal) =>
         executeWebhook(
           target,

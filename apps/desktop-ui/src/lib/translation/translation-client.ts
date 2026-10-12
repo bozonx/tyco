@@ -179,7 +179,9 @@ async function translateWithMachine(
       ...(options.signal ? { abortSignal: options.signal } : {}),
     })
     options.signal?.throwIfAborted()
-    translated.push(result.translations[0] ?? '')
+    translated.push(
+      joinablePiece(chunks.length, chunk, result.translations[0] ?? '')
+    )
     detectedSourceLanguage ??= result.detectedSourceLanguage
     resultProvider = result.provider
     resultModel = result.model
@@ -202,7 +204,8 @@ async function translateWithLlm(
   const translated: string[] = []
   let detectedProvider = 'llm'
   let detectedModel: string | undefined
-  for (const chunk of chunkText(text, LLM_CHUNK_LIMIT)) {
+  const chunks = chunkText(text, LLM_CHUNK_LIMIT)
+  for (const chunk of chunks) {
     options.signal?.throwIfAborted()
     const applicable = selectGlossaryForText(glossary, chunk)
     const prompt = buildPrompt({
@@ -230,11 +233,15 @@ async function translateWithLlm(
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, chunk)
     translated.push(
-      restoreKeptTerms({
-        source: chunk,
-        translated: result,
-        entries: applicable,
-      }).text
+      joinablePiece(
+        chunks.length,
+        chunk,
+        restoreKeptTerms({
+          source: chunk,
+          translated: result,
+          entries: applicable,
+        }).text
+      )
     )
   }
   return {
@@ -256,11 +263,12 @@ async function repairWithLlm(
   const repaired: string[] = []
   let detectedProvider = 'llm'
   let detectedModel: string | undefined
-  for (const pair of splitParallelText(
+  const pairs = splitParallelText(
     source,
     translation,
     LLM_REPAIR_COMBINED_LIMIT
-  )) {
+  )
+  for (const pair of pairs) {
     options.signal?.throwIfAborted()
     const applicable = selectGlossaryForText(glossary, pair.source)
     const prompt = buildPrompt({
@@ -299,11 +307,15 @@ async function repairWithLlm(
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, pair.source)
     repaired.push(
-      restoreKeptTerms({
-        source: pair.source,
-        translated: result,
-        entries: applicable,
-      }).text
+      joinablePiece(
+        pairs.length,
+        pair.source,
+        restoreKeptTerms({
+          source: pair.source,
+          translated: result,
+          entries: applicable,
+        }).text
+      )
     )
   }
   return {
@@ -327,6 +339,23 @@ function translationSystem(
   ]
     .filter(Boolean)
     .join('\n\n')
+}
+
+/**
+ * A translated piece of a text cut into `count` pieces. A cut falls after a
+ * line break or a space, which the pieces keep; providers drop it from their
+ * output, and the joined pieces would run together
+ */
+export function joinablePiece(
+  count: number,
+  source: string,
+  translated: string
+) {
+  if (count < 2) return translated
+  if (!source.trim()) return source
+  const leading = /^\s*/.exec(source)?.[0] ?? ''
+  const trailing = /\s*$/.exec(source)?.[0] ?? ''
+  return `${leading}${translated.trim()}${trailing}`
 }
 
 function normalizeLanguage(language: string): string {

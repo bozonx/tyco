@@ -111,4 +111,21 @@ describe('plugin RPC', () => {
       vi.useRealTimers()
     }
   })
+  it('fails a slow call alone when its timeout is not fatal', async () => {
+    vi.useFakeTimers()
+    try {
+      const { rpc, close, onFailure, send } = setup(100)
+      const slow = expect(
+        rpc.request('invoke', {}, undefined, 100, { fatalTimeout: false })
+      ).rejects.toThrow('timed out')
+      await vi.advanceTimersByTimeAsync(100)
+      await slow
+      expect(send).toHaveBeenCalledWith({ type: 'cancel', id: 1 })
+      expect(close).not.toHaveBeenCalled()
+      expect(onFailure).not.toHaveBeenCalled()
+      rpc.close()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
