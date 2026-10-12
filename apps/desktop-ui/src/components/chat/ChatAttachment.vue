@@ -167,7 +167,7 @@ onMounted(() => {
   background: var(--app-surface-raised);
   color: var(--app-text-muted);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   text-align: left;
   white-space: pre-wrap;
   overflow-wrap: anywhere;

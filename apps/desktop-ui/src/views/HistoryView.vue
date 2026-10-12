@@ -24,14 +24,19 @@
         <div v-if="editorLoadError" class="history-notice is-error">
           <Icon icon="mdi:alert-circle-outline" height="16" />
           <span>{{ t('history.loadFailed') }}</span>
-          <Button xs ghost icon="mdi:reload" @click="loadEditorHistory">
+          <Button
+            size="xs"
+            variant="ghost"
+            icon="mdi:reload"
+            @click="loadEditorHistory"
+          >
             {{ t('history.retry') }}
           </Button>
         </div>
         <div v-if="removedItem" class="history-notice">
           <Icon icon="mdi:trash-can-outline" height="16" />
           <span>{{ t('history.itemRemoved') }}</span>
-          <Button xs ghost icon="mdi:undo" @click="undoRemove">
+          <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
             {{ t('history.undo') }}
           </Button>
         </div>
@@ -54,6 +59,7 @@ import HistoryList, {
   type HistoryListItem,
 } from '../components/history/HistoryList.vue'
 import { useCopyText } from '../composables/use-copy-text'
+import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
@@ -61,7 +67,6 @@ import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { useRouteParams } from '../stores/route-params'
 import { Icon } from '@iconify/vue'
 import type { EditorHistoryItem } from '@tyco/shared'
 
@@ -74,7 +79,7 @@ const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
-const routeParams = useRouteParams()
+const routeParams = useEditorNavigation()
 
 const removedItem = ref<EditorHistoryItem | null>(null)
 const editorLoadError = ref(false)

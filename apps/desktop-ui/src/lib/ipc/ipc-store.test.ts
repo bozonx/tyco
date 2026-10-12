@@ -327,6 +327,62 @@ describe('ipc-store', () => {
       expect(store.params.value.userConfig).toEqual(initialConfig)
     })
 
+    it('serializes local state patches and retains both updates', async () => {
+      let finish!: (value: unknown) => void
+      let calls = 0
+      const { store } = await loadedStore(() => {
+        calls += 1
+        if (calls === 1)
+          return new Promise((resolve) => {
+            finish = resolve
+          })
+        return Promise.resolve({
+          success: true,
+          result: { lastChatId: 'chat-1', lastMode: START_MODES.WRITE },
+        })
+      })
+      const first = store.patchLocalState({ lastChatId: 'chat-1' })
+      const second = store.patchLocalState({ lastMode: START_MODES.WRITE })
+      await Promise.resolve()
+      expect(calls).toBe(1)
+      finish({ success: true, result: { lastChatId: 'chat-1' } })
+      await Promise.all([first, second])
+      expect(store.params.value.localState).toEqual({
+        lastChatId: 'chat-1',
+        lastMode: START_MODES.WRITE,
+      })
+    })
+
+    it('preserves a newer local state event while a patch is pending', async () => {
+      let finish!: (value: unknown) => void
+      const { store } = await loadedStore(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          })
+      )
+      const pending = store.patchLocalState({ lastChatId: 'old' })
+      await Promise.resolve()
+      store.setParams({ localState: { lastChatId: 'new' } })
+      finish({ success: true, result: { lastChatId: 'old' } })
+      await pending
+      expect(store.params.value.localState.lastChatId).toBe('new')
+    })
+
+    it('continues processing patches after a failed write', async () => {
+      let calls = 0
+      const { store } = await loadedStore(async () =>
+        ++calls === 1
+          ? { success: false, error: 'failed' }
+          : { success: true, result: { lastChatId: 'saved' } }
+      )
+      expect(
+        (await store.patchLocalState({ lastChatId: 'failed' })).success
+      ).toBe(false)
+      await store.patchLocalState({ lastChatId: 'saved' })
+      expect(store.params.value.localState.lastChatId).toBe('saved')
+    })
+
     it('takes the local state merged by the backend', async () => {
       const merged = { lastChatId: 'chat-1', lastMode: START_MODES.WRITE }
       const { deps, store } = await loadedStore(async () => ({

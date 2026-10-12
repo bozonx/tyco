@@ -150,8 +150,8 @@
           </template>
           <Button
             class="command-open-log"
-            xs
-            ghost
+            size="xs"
+            variant="ghost"
             icon="mdi:file-document-outline"
             @click="openLog"
           >
@@ -175,9 +175,9 @@
             }}</code>
             <Button
               type="button"
-              ghost
+              variant="ghost"
               square
-              sm
+              size="sm"
               :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
               :aria-label="t('commands.copyCli')"
               @click="copyCli"
@@ -422,7 +422,7 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs, 0.25rem);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--app-text-muted);
 }
@@ -448,7 +448,7 @@ onUnmounted(() => {
 
 .command-group-title {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--app-text-muted);
 }
@@ -492,7 +492,7 @@ details[open] > .command-group-toggle svg {
 
 .command-place-result-label {
   flex: 0 0 9rem;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
@@ -522,13 +522,13 @@ details[open] > .command-group-toggle svg {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   user-select: all;
 }
 
 .command-hint {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
@@ -538,7 +538,7 @@ details[open] > .command-group-toggle svg {
 }
 
 .command-warning {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--color-warning);
 }
 </style>

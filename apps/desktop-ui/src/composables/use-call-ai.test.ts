@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn().mockResolvedValue(undefined),
@@ -28,7 +29,10 @@ vi.mock('../stores/ipc', () => ({
 vi.mock('../stores/llm', () => ({ useLlmStore: () => mocks }))
 vi.mock('../stores/translation', () => ({ useTranslationStore: () => ({}) }))
 vi.mock('../lib/stt/live-dictation', () => ({
-  createLiveDictation: () => ({ start: mocks.start }),
+  createLiveDictation: () => ({
+    start: mocks.start,
+    cancel: vi.fn(async () => {}),
+  }),
 }))
 vi.mock('./use-toast', () => ({
   default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
@@ -38,9 +42,14 @@ import { setI18nLocale } from '../lib/i18n/index'
 import { useCallAi } from './use-call-ai'
 
 describe('dictation credential preflight', () => {
+  let pinia: ReturnType<typeof createPinia>
+  afterEach(() => disposePinia(pinia))
   const handlers = { onText: vi.fn(), onError: vi.fn() }
 
   beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.clearAllMocks()
     mocks.provider = 'deepgram'
     mocks.secrets = {}
     mocks.refreshSecrets.mockResolvedValue(undefined)

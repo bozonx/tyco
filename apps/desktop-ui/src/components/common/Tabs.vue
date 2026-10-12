@@ -60,7 +60,7 @@ const onTabClick = (key: string | number) => {
   align-items: center;
   gap: 0.4375rem;
   min-width: 0;
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   font-weight: 500;
   line-height: 1.25;
   color: var(--app-text-muted);
@@ -116,8 +116,8 @@ const onTabClick = (key: string | number) => {
 .app-tabs--segmented {
   display: inline-flex;
   align-self: flex-start;
-  gap: 2px;
-  padding: 3px;
+  gap: var(--segment-gap);
+  padding: var(--segment-padding);
   max-width: 100%;
   border-radius: var(--radius-md);
   background-color: var(--app-surface-sunken);
@@ -127,9 +127,9 @@ const onTabClick = (key: string | number) => {
 
 .app-tabs--segmented :deep(.app-tab) {
   justify-content: center;
-  padding: 0.3125rem 0.75rem;
+  padding: var(--segment-option-padding);
   border-radius: calc(var(--radius-md) - 2px);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 
 .app-tabs--segmented :deep(.app-tab.is-active) {
@@ -141,7 +141,7 @@ const onTabClick = (key: string | number) => {
 
 .app-tabs--vertical {
   flex-direction: column;
-  gap: 2px;
+  gap: var(--segment-gap);
 }
 
 .app-tabs--vertical :deep(.app-tab) {

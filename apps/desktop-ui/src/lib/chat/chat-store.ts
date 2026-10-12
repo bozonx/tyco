@@ -98,7 +98,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     attachments?: ChatAttachment[]
     images?: ChatImage[]
   } | null>(null)
-  const abortController = ref<AbortController | null>(null)
+  let abortController: AbortController | null = null
   let generationId = 0
   /** Bumped by every switch of the chat, so that a slow open lands nowhere */
   let openRequest = 0
@@ -144,9 +144,9 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     generationId += 1
     titleController?.abort()
     titleController = undefined
-    if (abortController.value) {
-      abortController.value.abort()
-      abortController.value = null
+    if (abortController) {
+      abortController.abort()
+      abortController = null
     }
     if (!isGenerating.value) return
     isGenerating.value = false
@@ -330,7 +330,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     messages.value.push(assistantMessage)
 
     isGenerating.value = true
-    abortController.value = new AbortController()
+    abortController = new AbortController()
     const currentGenerationId = ++generationId
 
     // the question is kept even when no answer comes
@@ -352,7 +352,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
         devInstructions,
         {
           modelId: model.id,
-          signal: abortController.value.signal,
+          signal: abortController.signal,
           onChunk: (chunk) => {
             if (currentGenerationId === generationId) {
               assistantMessage.content += chunk
@@ -375,7 +375,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
           messages.value.splice(userMessageIndex + 1, 1)
           lastFailedTurn.value = { message, attachments, images }
           isGenerating.value = false
-          abortController.value = null
+          abortController = null
           return ''
         }
         assistantMessage.status = 'stopped'
@@ -384,7 +384,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     } finally {
       if (currentGenerationId === generationId) {
         isGenerating.value = false
-        abortController.value = null
+        abortController = null
       }
     }
 
@@ -589,6 +589,7 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     error,
     dismissedEditorContext,
     acceptedEditorContext,
+    lastFailedTurn,
     sendMessage,
     stopGeneration,
     retryLastTurn,

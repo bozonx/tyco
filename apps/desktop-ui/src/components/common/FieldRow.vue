@@ -80,7 +80,7 @@ const labelSuffix = computed(() =>
    The last word and the info icon are bound into an inline-flex group to prevent
    the icon from being orphaned on a new line alone. */
 .field-row-title {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   font-weight: 500;
   line-height: 1.3;
 }
@@ -93,7 +93,7 @@ const labelSuffix = computed(() =>
 }
 
 .field-row-hint {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   line-height: 1.35;
   color: var(--app-text-muted);
 }
@@ -115,7 +115,7 @@ const labelSuffix = computed(() =>
 }
 
 .vertical .field-row-title {
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 
 @media (max-width: 640px) {

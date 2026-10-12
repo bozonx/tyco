@@ -4,7 +4,7 @@
       <Button
         v-for="(_, index) in pagesCount"
         :key="index"
-        sm
+        size="sm"
         :variant="page === index ? 'primary' : 'neutral'"
         class="min-w-8"
         :title="t('settings.launcherPage', { page: index + 1 })"
@@ -13,7 +13,7 @@
       >
         {{ index + 1 }}
       </Button>
-      <Button sm @click="addPage">
+      <Button size="sm" @click="addPage">
         {{ t('settings.addLauncherPage') }}
       </Button>
     </div>
@@ -26,7 +26,7 @@
         />
         <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
       </div>
-      <Button :disabled="page === 0" sm @click="removePage">{{
+      <Button :disabled="page === 0" size="sm" @click="removePage">{{
         t('settings.removeLauncherPage')
       }}</Button>
     </div>
@@ -47,9 +47,9 @@
           <Button
             v-if="item"
             type="button"
-            ghost
+            variant="ghost"
             square
-            sm
+            size="sm"
             :title="t('commands.editCommand')"
             @click="emit('editCommand', item)"
           >

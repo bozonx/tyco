@@ -33,6 +33,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
@@ -46,7 +47,6 @@ import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useRouteParams } from '../../stores/route-params'
 import { PRESETS_KEYS } from '../../types'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -67,7 +67,7 @@ const props = withDefaults(
   { text: '', stopListening: false, taskId: undefined }
 )
 
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const invocations = useInvocationsStore()

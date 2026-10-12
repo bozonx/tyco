@@ -89,7 +89,7 @@ const { t } = useI18n()
   gap: var(--space-xs);
   margin-bottom: var(--space-xs);
   color: var(--app-text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 .voice-context-title {
   flex: 1;

@@ -27,7 +27,7 @@ const unavailable = computed(
   display: flex;
   gap: var(--space-sm);
   color: var(--color-warning);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   line-height: 1.45;
 }
 

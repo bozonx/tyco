@@ -26,7 +26,7 @@
           <span v-else class="flex-1 text-sm text-muted">
             {{ getLanguageName(effectiveAppLanguage) }}
           </span>
-          <Button sm ghost @click="toggleAppLanguageMode">
+          <Button size="sm" variant="ghost" @click="toggleAppLanguageMode">
             {{
               isAppLanguageManual
                 ? t('settings.appLanguageAuto')

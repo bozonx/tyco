@@ -579,7 +579,7 @@ onUnmounted(() => {
 
 .settings-nav-title {
   padding: 0 var(--space-sm) var(--space-xs);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -620,7 +620,7 @@ onUnmounted(() => {
   align-items: flex-start;
   gap: var(--space-sm);
   margin: 0 0 var(--space-xl);
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   color: var(--color-warning);
 }
 
@@ -641,7 +641,7 @@ onUnmounted(() => {
   width: 100%;
   padding: 0.375rem 0.5rem;
   border-radius: var(--radius-md);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   font-weight: 500;
   line-height: 1.25;
   color: var(--app-text-muted);

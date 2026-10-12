@@ -5,7 +5,7 @@
         <Button
           v-for="action in actions"
           :key="action.id"
-          neutral
+          variant="neutral"
           class="justify-start text-left w-full"
           @click="selectAction(action.id)"
         >

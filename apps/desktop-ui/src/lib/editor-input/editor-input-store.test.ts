@@ -171,3 +171,20 @@ describe('createEditorInputStoreModel', () => {
     expect(store.actionText()).toBe('Hello foo world')
   })
 })
+
+describe('whole document replacement', () => {
+  it.each(['replaceValue', 'applyResult'] as const)(
+    'drops a stale selection after %s',
+    (operation) => {
+      const { store } = createStore()
+      store.setValue('old document')
+      store.setSelection('old', 0, 3)
+      if (operation === 'replaceValue') store.replaceValue('new')
+      else store.applyResult('new', 'external source')
+      expect(store.selectedText.value).toBe('')
+      expect(store.selectionStart.value).toBe(0)
+      expect(store.selectionEnd.value).toBe(0)
+      expect(store.actionText()).toBe('new')
+    }
+  )
+})

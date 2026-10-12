@@ -37,14 +37,14 @@
           role="status"
         >
           <span>{{ t('chat.stopped') }}</span>
-          <Button xs ghost icon="mdi:reload" @click="retry">
+          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">
             {{ t('chat.retry') }}
           </Button>
         </div>
         <div v-if="chatStore.error" class="chat-error" role="alert">
           <Icon icon="mdi:alert-circle-outline" height="18" />
           <span>{{ chatStore.error }}</span>
-          <Button xs ghost icon="mdi:reload" @click="retry">
+          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">
             {{ t('chat.retry') }}
           </Button>
         </div>
@@ -78,7 +78,7 @@
       <div v-else-if="!chatStore.selectedModel" class="chat-no-models">
         <Icon icon="mdi:key-alert-outline" height="18" class="shrink-0" />
         <span>{{ t('chat.noModelsHint') }}</span>
-        <Button xs icon="mdi:cog-outline" @click="openModelSettings">
+        <Button size="xs" icon="mdi:cog-outline" @click="openModelSettings">
           {{ t('chat.configureModels') }}
         </Button>
       </div>
@@ -117,9 +117,12 @@
           role="status"
         >
           {{ t('chat.historyImagesOmitted') }}
-          <Button xs ghost @click="chatStore.omitHistoryImages = false">{{
-            t('chat.restoreHistoryImages')
-          }}</Button>
+          <Button
+            size="xs"
+            variant="ghost"
+            @click="chatStore.omitHistoryImages = false"
+            >{{ t('chat.restoreHistoryImages') }}</Button
+          >
         </div>
         <div
           v-if="chatStore.trimmedTurns"
@@ -151,8 +154,8 @@
 
         <div class="chat-composer-bar">
           <Button
-            sm
-            ghost
+            size="sm"
+            variant="ghost"
             square
             :disabled="
               chatStore.isGenerating || Boolean(chatStore.importingImages)
@@ -174,8 +177,8 @@
           <span class="composer-hint">{{ inputHint }}</span>
           <div class="composer-actions">
             <Button
-              sm
-              ghost
+              size="sm"
+              variant="ghost"
               square
               :title="t('chat.voiceInput')"
               @click="voiceInput"
@@ -184,7 +187,7 @@
             </Button>
             <Button
               v-if="!chatStore.isGenerating"
-              sm
+              size="sm"
               square
               :disabled="!canSend"
               :title="t('chat.sendMessage')"
@@ -194,7 +197,7 @@
             </Button>
             <Button
               v-else
-              sm
+              size="sm"
               square
               :title="t('chat.stop')"
               @click="chatStore.stopGeneration()"
@@ -505,7 +508,7 @@ watch(
   border-radius: var(--radius-md);
   background: color-mix(in oklab, var(--color-error) 8%, transparent);
   color: var(--color-error);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 .chat-error span {
   flex: 1;
@@ -586,7 +589,7 @@ watch(
   border: 1px dashed var(--app-border);
   border-radius: 1rem;
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 .chat-no-models span {
   flex: 1;

@@ -322,3 +322,48 @@ describe('history-store', () => {
     expect(store.chatHistory.value).toEqual([])
   })
 })
+
+describe('editor history response ordering', () => {
+  it('keeps the newest load when responses arrive out of order', async () => {
+    const api = createApi()
+    let resolveOld!: (value: { result: EditorHistoryItem[] }) => void
+    api.callFunction.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveOld = resolve
+        })
+    )
+    const model = createHistoryStoreModel(api as unknown as HistoryApi)
+    const oldLoad = model.loadEditorHistory()
+    await Promise.resolve()
+    await model.loadEditorHistory()
+    resolveOld({ result: [editorItem('old', 'obsolete')] })
+    await oldLoad
+    expect(model.editorHistory.value.map((item) => item.id)).toEqual(['1', '2'])
+  })
+
+  it.each(['removeFromEditorHistory', 'clearEditorHistory'] as const)(
+    'does not resurrect items when a load finishes after %s',
+    async (operation) => {
+      const api = createApi()
+      const model = createHistoryStoreModel(api as unknown as HistoryApi)
+      await model.loadEditorHistory()
+      let resolveLoad!: (value: { result: EditorHistoryItem[] }) => void
+      api.callFunction.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveLoad = resolve
+          })
+      )
+      const loading = model.loadEditorHistory()
+      await Promise.resolve()
+      if (operation === 'clearEditorHistory') await model.clearEditorHistory()
+      else await model.removeFromEditorHistory('1')
+      resolveLoad({ result: [editorItem('1', 'one'), editorItem('2', 'two')] })
+      await loading
+      expect(model.editorHistory.value.map((item) => item.id)).toEqual(
+        operation === 'clearEditorHistory' ? [] : ['2']
+      )
+    }
+  )
+})

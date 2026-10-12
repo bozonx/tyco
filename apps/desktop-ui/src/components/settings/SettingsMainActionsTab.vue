@@ -17,9 +17,9 @@
           <Button
             v-if="item.type === 'command'"
             type="button"
-            ghost
+            variant="ghost"
             square
-            sm
+            size="sm"
             :title="t('commands.editCommand')"
             @click="emit('editCommand', item.commandId)"
           >

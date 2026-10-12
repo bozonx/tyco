@@ -120,6 +120,8 @@ export const useChatStore = defineStore('chat', () => {
     },
   })
 
+  onScopeDispose(model.stopGeneration)
+
   const fileErrorKeys: Record<ChatFileErrorKind, string> = {
     unsupported: 'chat.fileUnsupported',
     size: 'chat.fileSizeLimit',

@@ -86,7 +86,7 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 .column-title {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;

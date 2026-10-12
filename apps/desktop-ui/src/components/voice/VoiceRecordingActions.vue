@@ -12,8 +12,8 @@
         {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
       </ShortcutButton>
       <Button
-        :sm="compact"
-        ghost
+        :size="compact ? 'sm' : undefined"
+        variant="ghost"
         square
         :title="t('chat.voiceCancelHint')"
         :disabled="isFinishing"
@@ -22,7 +22,7 @@
         <Icon icon="mdi:close" height="18" />
       </Button>
       <Button
-        :sm="compact"
+        :size="compact ? 'sm' : undefined"
         square
         :title="t('chat.voiceSendHint')"
         :disabled="isFinishing"

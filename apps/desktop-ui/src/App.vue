@@ -20,6 +20,7 @@ import { useRoute } from 'vue-router'
 
 import ToastContainer from './components/common/ToastContainer.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
+import { useEditorNavigation } from './composables/use-editor-navigation'
 import { useGlobalEvents } from './composables/use-global-events'
 import { useI18n } from './composables/use-i18n'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
@@ -45,10 +46,9 @@ import { useExternalCommandsStore } from './stores/external-commands'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menu-modals'
 import { useNavPanelStore } from './stores/nav-panel'
-import { useRouteParams } from './stores/route-params'
 import { useSelectionReplaceStore } from './stores/selection-replace'
 import { useThemeStore } from './stores/theme'
-import { useToolCatalogStore } from './stores/tools'
+import { useToolCatalogStore } from './stores/tool-catalog'
 import { useWriterInputStore } from './stores/writer-input'
 import { type START_MODES } from '@tyco/shared'
 import { type AppEventPayloads } from '@tyco/shared'
@@ -64,7 +64,7 @@ const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
 const writerInputStore = useWriterInputStore()
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
 // The benchmark activates the write mode only. Tauri delivers its events to

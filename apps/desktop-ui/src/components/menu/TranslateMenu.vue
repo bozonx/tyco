@@ -62,6 +62,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
@@ -83,7 +84,6 @@ import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useRouteParams } from '../../stores/route-params'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import TextPreview from '../common/TextPreview.vue'
@@ -106,7 +106,7 @@ const props = withDefaults(
 )
 
 const ipcStore = useIpcStore()
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()

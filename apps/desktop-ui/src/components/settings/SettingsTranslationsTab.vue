@@ -50,8 +50,8 @@
           />
           <Button
             v-if="translation.qualityGate === 'always' && !correctionPromptOpen"
-            xs
-            ghost
+            size="xs"
+            variant="ghost"
             icon="mdi:plus"
             @click="correctionPromptOpen = true"
           >

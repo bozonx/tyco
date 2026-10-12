@@ -82,6 +82,9 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
   }
 
   return {
+    registeredCaseMenu,
+    registeredFormatMenu,
+    registeredOtherEditMenu,
     unregisterPlugin,
     getDefaultCaseItems,
     getDefaultFormatItems,

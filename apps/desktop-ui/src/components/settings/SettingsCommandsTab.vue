@@ -3,7 +3,7 @@
     <template #actions>
       <Button
         class="add-btn"
-        sm
+        size="sm"
         icon="mdi:plus"
         :aria-expanded="pickingTool"
         @click="pickingTool = !pickingTool"
@@ -44,7 +44,7 @@
         <span class="commands-notice-text">
           {{ t('commands.removed', { name: removedName }) }}
         </span>
-        <Button xs ghost icon="mdi:undo" @click="undoRemove">
+        <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
           {{ t('commands.undo') }}
         </Button>
       </div>
@@ -509,7 +509,7 @@ onBeforeUnmount(finishRemoval)
 }
 
 .tool-picker-hint {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
@@ -538,12 +538,12 @@ onBeforeUnmount(finishRemoval)
 }
 
 .tool-option-name {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
 }
 
 .tool-option-description,
 .tool-option-reason {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
@@ -558,7 +558,7 @@ onBeforeUnmount(finishRemoval)
 }
 
 .commands-empty {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   color: var(--app-text-muted);
 }
 
@@ -569,7 +569,7 @@ onBeforeUnmount(finishRemoval)
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-md, var(--radius-sm));
   background-color: var(--app-surface);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--app-text-muted);
 }
 

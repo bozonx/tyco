@@ -79,6 +79,27 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
     return current.promise
   }
 
+  /** A completed caller must never cancel a newer correction. */
+  const correct = async (
+    text: string,
+    signal: AbortSignal
+  ): Promise<string> => {
+    if (signal.aborted) throw new CorrectionAbortedError()
+    const promise = request(text)
+    const ownedRun = run
+    const onAbort = () => {
+      if (ownedRun && run === ownedRun) cancel()
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+    try {
+      const result = await promise
+      if (signal.aborted) throw new CorrectionAbortedError()
+      return result
+    } finally {
+      signal.removeEventListener('abort', onAbort)
+    }
+  }
+
   /** The finished correction of exactly this text, if there is one. */
   const peek = (text: string): string | undefined =>
     done?.text === text ? done.result : undefined
@@ -105,5 +126,5 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
     abort()
   }
 
-  return { request, peek, speculate, cancel }
+  return { request, correct, peek, speculate, cancel }
 }

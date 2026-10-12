@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import { useCallAi } from '../composables/use-call-ai'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
@@ -17,14 +18,10 @@ export const useCorrectorStore = defineStore('corrector', () => {
       correctText(text, { signal, notifyError: false }),
   })
 
-  /** The correction of `text`; aborting `signal` stops the running one */
-  const correct = (text: string, signal: AbortSignal): Promise<string> => {
-    signal.addEventListener('abort', () => corrector.cancel(), { once: true })
-    return corrector.request(text)
-  }
+  onScopeDispose(corrector.cancel)
 
   return {
-    correct,
+    correct: corrector.correct,
     peek: corrector.peek,
     speculate: corrector.speculate,
     cancel: corrector.cancel,

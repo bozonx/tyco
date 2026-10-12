@@ -22,9 +22,9 @@
     <!-- mousedown.prevent: the field keeps its focus and caret -->
     <Button
       type="button"
-      ghost
+      variant="ghost"
       square
-      sm
+      size="sm"
       :title="t('settings.actionInsertText', { placeholder: TEXT })"
       @mousedown.prevent
       @click="insert(TEXT)"
@@ -93,7 +93,7 @@ defineExpose({ insert })
   flex: 1;
   min-width: 0;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 
 textarea.template-field-control {

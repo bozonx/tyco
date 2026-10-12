@@ -48,12 +48,10 @@ import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import { useRouteParams } from '../../stores/route-params'
 import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
 
 const editorInputStore = useEditorInputStore()
-const routeParamsStore = useRouteParams()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const editMenuStore = useEditMenuStore()
@@ -185,10 +183,6 @@ const openContextMenu = (request: ContextMenuRequest): void => {
 }
 
 onMounted(() => {
-  if (routeParamsStore.params.text) {
-    editorInputStore.setValue(routeParamsStore.params.text)
-  }
-
   if (!hostRef.value) return
 
   view = new EditorView({

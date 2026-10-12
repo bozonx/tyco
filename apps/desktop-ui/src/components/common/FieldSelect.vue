@@ -59,6 +59,8 @@ const sections = computed(() => {
 })
 
 function handleChange(event: Event) {
-  emit('update:value', (event.target as HTMLSelectElement).value)
+  const select = event.target as HTMLSelectElement
+  const option = props.options[select.selectedIndex]
+  emit('update:value', option?.id)
 }
 </script>

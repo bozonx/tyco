@@ -53,6 +53,7 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
   ): void => {
     discardCurrent(newText)
     setValue(newText, source)
+    setSelection('', 0, 0)
   }
 
   const replaceSelection = (
@@ -87,6 +88,7 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
     if (!selected.trim() || selected.trim() !== trimmedSource) {
       discardCurrent(sourceText, result)
       setValue(result, source)
+      setSelection('', 0, 0)
       return
     }
 

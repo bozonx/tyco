@@ -243,13 +243,13 @@ function updateCheckbox(name: string, value: string | number | undefined) {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs, 0.25rem);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--app-text-muted);
 }
 
 .tool-field-hint {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 </style>

@@ -27,7 +27,7 @@ function handleChange() {
   align-items: center;
   gap: 0.625rem;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--text-body);
 }
 
 .field-checkbox-label {

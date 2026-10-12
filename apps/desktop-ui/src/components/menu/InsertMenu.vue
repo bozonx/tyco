@@ -67,6 +67,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import {
   type DiffViewMode,
@@ -77,7 +78,6 @@ import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import { useRouteParams } from '../../stores/route-params'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
@@ -86,7 +86,7 @@ import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import { Icon } from '@iconify/vue'
 
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 
 const props = withDefaults(
   defineProps<{
@@ -292,7 +292,7 @@ const spaceKey = computed<ActionItem | undefined>(() => {
   gap: 0.375rem;
   max-width: 16rem;
   overflow: hidden;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -40,12 +40,12 @@
           </Button>
           <Button
             class="access-allow-always"
-            neutral
+            variant="neutral"
             @click="respond('always')"
           >
             {{ t('externalAccess.allowAlways') }}
           </Button>
-          <Button class="access-deny" ghost @click="deny">
+          <Button class="access-deny" variant="ghost" @click="deny">
             {{ t('externalAccess.deny') }}
           </Button>
         </div>

@@ -33,6 +33,7 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   // bumped by every load and change of the chat list, so that a list read
   // before a change never lands after it
   let chatListVersion = 0
+  let editorListVersion = 0
 
   const track = <T>(write: Promise<T>): Promise<T> => {
     pendingWrites.add(write)
@@ -55,10 +56,11 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   }
 
   const loadEditorHistory = async (): Promise<void> => {
+    const version = ++editorListVersion
     await Promise.allSettled([...pendingWrites])
 
     const loadedHistory = await call('getEditorHistory')
-    editorHistory.value = loadedHistory || []
+    if (version === editorListVersion) editorHistory.value = loadedHistory || []
   }
 
   const loadChatHistory = async (): Promise<void> => {
@@ -138,7 +140,8 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   ): Promise<EditorHistoryItem | null> => {
     const removed = editorHistory.value.find((item) => item.id === id) ?? null
 
-    await call('removeFromEditorHistory', [id])
+    await track(call('removeFromEditorHistory', [id]))
+    editorListVersion += 1
     editorHistory.value = editorHistory.value.filter((item) => item.id !== id)
 
     return removed
@@ -168,7 +171,8 @@ export function createHistoryStoreModel(historyApi: HistoryApi) {
   }
 
   const clearEditorHistory = async (): Promise<void> => {
-    await call('clearEditorHistory')
+    await track(call('clearEditorHistory'))
+    editorListVersion += 1
     editorHistory.value = []
   }
 

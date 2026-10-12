@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 
 .hotkey-plus {
   color: var(--app-text-faint);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 
 .hotkey-separator {
@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
 .hotkey-hint {
   flex-shrink: 0;
   color: var(--app-text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   white-space: nowrap;
 }
 

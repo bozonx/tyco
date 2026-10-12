@@ -50,8 +50,8 @@ const name = useId()
 .segmented-control {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 2px;
-  padding: 3px;
+  gap: var(--segment-gap);
+  padding: var(--segment-padding);
   border-radius: var(--radius-md);
   background-color: var(--app-surface-sunken);
 }
@@ -65,10 +65,10 @@ const name = useId()
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.3125rem 0.75rem;
+  padding: var(--segment-option-padding);
   border-radius: calc(var(--radius-md) - 2px);
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   font-weight: 500;
   line-height: 1.25;
   cursor: pointer;
@@ -98,7 +98,7 @@ const name = useId()
 }
 .compact .segmented-option {
   padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   line-height: 1;
 }
 @media (max-width: 640px) {

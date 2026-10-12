@@ -16,7 +16,7 @@ const { t } = useI18n()
 
 <style scoped>
 .field-issue {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--color-warning);
 }
 </style>

@@ -468,6 +468,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     stage,
     text,
     selection,
+    selectionDropped,
     dropSelection,
     commands,
     visible,

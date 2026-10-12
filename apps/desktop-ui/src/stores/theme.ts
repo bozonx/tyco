@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watchEffect } from 'vue'
+import { onScopeDispose, ref, watchEffect } from 'vue'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
 import { createThemeController } from '../lib/theme/theme-controller'
 import { useIpcStore } from './ipc'
@@ -23,10 +23,11 @@ export const useThemeStore = defineStore('theme', () => {
     resolved.value = controller.setSettings(settings.value)
   })
 
-  // The store lives as long as the app, so the subscription is never removed.
-  controller.onSystemAppearanceChange(() => {
+  const stopSystemAppearance = controller.onSystemAppearanceChange(() => {
     resolved.value = controller.applySettings(settings.value)
   })
+
+  onScopeDispose(stopSystemAppearance)
 
   return { settings, resolved }
 })

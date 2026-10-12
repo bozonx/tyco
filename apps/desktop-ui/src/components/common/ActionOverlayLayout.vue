@@ -114,7 +114,7 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 
 .action-overlay-esc {
@@ -123,7 +123,7 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
   gap: var(--space-sm);
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   border-radius: var(--radius-md);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--app-text-muted);
   cursor: pointer;
   background: transparent;

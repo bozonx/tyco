@@ -109,7 +109,7 @@ function closeBackdrop(event: MouseEvent) {
 .image-attachment span {
   display: block;
   padding: var(--space-sm);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 .remove-image {
   position: absolute;

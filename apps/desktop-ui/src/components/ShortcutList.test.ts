@@ -22,8 +22,8 @@ vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../stores/route-params', () => ({
-  useRouteParams: () => ({ toEditor: mocks.toEditor }),
+vi.mock('../composables/use-editor-navigation', () => ({
+  useEditorNavigation: () => ({ toEditor: mocks.toEditor }),
 }))
 
 vi.mock('../stores/writer-input', () => ({

@@ -133,3 +133,46 @@ describe('createQuickCorrection', () => {
     expect(correct).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('correction caller cancellation', () => {
+  it('does not start a correction for an already aborted signal', async () => {
+    const { model, correct } = setup()
+    const controller = new AbortController()
+    controller.abort()
+    await expect(
+      model.correct('text', controller.signal)
+    ).rejects.toMatchObject({ name: 'CorrectionAbortedError' })
+    expect(correct).not.toHaveBeenCalled()
+  })
+
+  it('removes the abort listener after completion', async () => {
+    const { model, calls } = setup()
+    const controller = new AbortController()
+    const remove = vi.spyOn(controller.signal, 'removeEventListener')
+    const first = model.correct('first', controller.signal)
+    calls[0].result.resolve('fixed')
+    await first
+    const second = model.request('second')
+    controller.abort()
+    expect(calls[1].signal.aborted).toBe(false)
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function))
+    calls[1].result.resolve('second fixed')
+    await second
+  })
+
+  it('does not let an obsolete caller abort the replacement request', async () => {
+    const { model, calls } = setup()
+    const controller = new AbortController()
+    const first = model.correct('first', controller.signal)
+    const rejected = expect(first).rejects.toMatchObject({
+      name: 'CorrectionAbortedError',
+    })
+    const second = model.request('second')
+    controller.abort()
+    expect(calls[1].signal.aborted).toBe(false)
+    calls[0].result.resolve('obsolete')
+    calls[1].result.resolve('current')
+    await rejected
+    await expect(second).resolves.toBe('current')
+  })
+})

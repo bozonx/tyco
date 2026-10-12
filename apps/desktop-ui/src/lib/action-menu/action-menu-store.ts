@@ -269,6 +269,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   }
 
   return {
+    registeredActionsMenu,
     unregisterPlugin,
     getRegisteredActions,
     resolveMainActions,

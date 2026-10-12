@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { watch } from 'vue'
+import { onScopeDispose, watch } from 'vue'
 
 import { createDefaultCommandsSync } from '../lib/commands/default-commands'
 import { translate } from '../lib/i18n'
@@ -42,5 +42,11 @@ export const useDefaultCommandsStore = defineStore('defaultCommands', () => {
     )
   }
 
-  return { start, check: sync.check }
+  const dispose = () => {
+    stop?.()
+    stop = null
+  }
+  onScopeDispose(dispose)
+
+  return { start, dispose, check: sync.check }
 })

@@ -26,7 +26,7 @@
         </div>
         <p class="confirm-modal-message">{{ message }}</p>
         <div class="confirm-modal-actions">
-          <Button sm ghost @click="onCancel">
+          <Button size="sm" variant="ghost" @click="onCancel">
             {{ cancelText || t('common.cancel') }}
           </Button>
           <Button

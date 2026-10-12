@@ -3,8 +3,8 @@
     <SettingsSection :title="t('settings.sectionEditorHistory')">
       <template #actions>
         <Button
-          xs
-          ghost
+          size="xs"
+          variant="ghost"
           icon="mdi:trash-can-outline"
           @click="showClearEditorHistoryModal = true"
         >
@@ -66,8 +66,8 @@
     <SettingsSection :title="t('settings.sectionChatHistory')">
       <template #actions>
         <Button
-          xs
-          ghost
+          size="xs"
+          variant="ghost"
           icon="mdi:trash-can-outline"
           @click="showClearChatHistoryModal = true"
         >

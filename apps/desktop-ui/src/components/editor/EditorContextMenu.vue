@@ -367,7 +367,7 @@ onUnmounted(() => {
   gap: var(--space-sm);
   align-items: center;
   padding: 0.375rem var(--space-sm);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--color-base-content);
   text-align: left;
   background: none;
@@ -413,7 +413,7 @@ onUnmounted(() => {
 .editor-context-menu__shortcut {
   flex-shrink: 0;
   padding-left: 1rem;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-faint);
 }
 

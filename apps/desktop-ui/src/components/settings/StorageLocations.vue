@@ -138,7 +138,7 @@ onUnmounted(() => {
 }
 
 .storage-summary {
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   font-weight: 500;
   color: var(--app-text-muted);
   cursor: pointer;
@@ -168,7 +168,7 @@ onUnmounted(() => {
 }
 
 .storage-item-label {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--app-text-muted);
 }
@@ -194,7 +194,7 @@ onUnmounted(() => {
 .storage-path {
   flex: 1 1 auto;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--color-base-content);
   word-break: break-all;
   user-select: all;

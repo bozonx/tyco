@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { markRaw } from 'vue'
 
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { createTranslationClient } from '../lib/translation/translation-client'
@@ -23,5 +24,5 @@ export const useTranslationStore = defineStore('translation', () => {
       llmStore.client.run('translate', prompt, { signal, ...options }),
   })
 
-  return { client }
+  return { client: markRaw(client) }
 })

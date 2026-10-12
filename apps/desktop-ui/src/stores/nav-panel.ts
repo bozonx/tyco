@@ -12,12 +12,8 @@ export const DEFAULT_PARAMS = {
 }
 
 export const useNavPanelStore = defineStore('navPanel', () => {
-  const params = ref(DEFAULT_PARAMS)
+  const params = ref({ ...DEFAULT_PARAMS })
   const menuModalsStore = useMenuModalsStore()
-
-  function upateNavParams(newParams: Partial<typeof DEFAULT_PARAMS>) {
-    params.value = { ...params.value, ...newParams }
-  }
 
   function resetNavParams(newParams: Partial<typeof DEFAULT_PARAMS> = {}) {
     params.value = { ...DEFAULT_PARAMS, ...newParams }
@@ -33,5 +29,5 @@ export const useNavPanelStore = defineStore('navPanel', () => {
     }
   }
 
-  return { params, upateNavParams, resetNavParams, handleKeyUp }
+  return { params, resetNavParams, handleKeyUp }
 })

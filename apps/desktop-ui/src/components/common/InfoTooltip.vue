@@ -308,7 +308,7 @@ defineExpose({ isOpen, isPinned, close, updatePosition })
 
 .info-tooltip-popover {
   position: absolute;
-  z-index: 60;
+  z-index: var(--z-tooltip);
   width: max-content;
   max-width: 18rem;
   padding: 0.5rem 0.75rem;
@@ -316,7 +316,7 @@ defineExpose({ isOpen, isPinned, close, updatePosition })
   background-color: var(--app-surface-raised);
   border: 1px solid var(--app-border);
   box-shadow: var(--app-shadow-lg);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 400;
   line-height: 1.45;
   color: var(--color-base-content);
@@ -329,7 +329,7 @@ defineExpose({ isOpen, isPinned, close, updatePosition })
 
 .info-tooltip-popover.is-teleported {
   position: fixed;
-  z-index: 9999;
+  z-index: var(--z-tooltip);
 }
 
 .info-tooltip-popover.is-inline.placement-top {

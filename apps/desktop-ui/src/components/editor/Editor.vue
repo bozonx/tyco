@@ -9,9 +9,9 @@
         <!-- Left column: view mode, Case and Format dropdowns, then plugin items -->
         <div data-testid="editor-toolbar-left" class="flex items-center gap-1">
           <Button
-            sm
+            size="sm"
             square
-            ghost
+            variant="ghost"
             class="view-mode-toggle"
             :active="showMarkup"
             :aria-pressed="showMarkup"
@@ -33,11 +33,11 @@
           <Button
             v-for="item in leftToolbarItems"
             :key="item.id"
-            sm
+            size="sm"
             :square="
               !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
             "
-            ghost
+            variant="ghost"
             :disabled="
               item.disabled ||
               (item.selectionOnly && !editorInputStore.hasSelection)
@@ -59,11 +59,11 @@
           <Button
             v-for="item in rightToolbarItems"
             :key="item.id"
-            sm
+            size="sm"
             :square="
               !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
             "
-            ghost
+            variant="ghost"
             :disabled="
               item.disabled ||
               (item.selectionOnly && !editorInputStore.hasSelection)
@@ -79,27 +79,27 @@
             >
           </Button>
           <Button
-            sm
+            size="sm"
             square
-            ghost
+            variant="ghost"
             @click="handleAiTask"
             :title="scoped(t('action.aiTask'))"
           >
             <Icon icon="mdi:robot-outline" height="18" />
           </Button>
           <Button
-            sm
+            size="sm"
             square
-            ghost
+            variant="ghost"
             @click="handleTranslation"
             :title="scoped(t('action.translation'))"
           >
             <Icon icon="mdi:translate" height="18" />
           </Button>
           <Button
-            sm
+            size="sm"
             square
-            ghost
+            variant="ghost"
             :disabled="!ipcStore.params.windowId"
             @click="handleInsertToWindow"
             :title="scoped(t('action.insertIntoWindow'))"
@@ -131,9 +131,9 @@
         <div class="editor-rail">
           <template v-if="compact">
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               class="rail-danger"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
@@ -143,9 +143,9 @@
           </template>
           <template v-else>
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               class="rail-accent"
               @click="voiceRecognition"
               :title="t('editor.voiceInput')"
@@ -153,9 +153,9 @@
               <Icon icon="mdi:microphone-outline" height="20" />
             </Button>
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               class="rail-accent"
               @click="handleCorrection"
               :title="scoped(t('action.correction'))"
@@ -164,27 +164,27 @@
             </Button>
             <div class="rail-divider" />
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               @click="handleCopy"
               :title="scoped(t('action.copy'))"
             >
               <Icon icon="mdi:content-copy" height="18" />
             </Button>
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               @click="editorInputStore.selectAll"
               :title="t('editor.selectAll')"
             >
               <Icon icon="mdi:select-all" height="18" />
             </Button>
             <Button
-              sm
+              size="sm"
               square
-              ghost
+              variant="ghost"
               class="rail-danger"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
@@ -218,8 +218,8 @@
         <Button
           v-for="item in otherEditItems"
           :key="item.labelKey || item.name"
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           :icon="item.icon"
           :disabled="item.selectionOnly && !editorInputStore.hasSelection"
           @click="doEdit(item)"
@@ -232,13 +232,18 @@
         class="dev-quick-panel flex items-center gap-1.5 w-full flex-wrap pt-2 border-t border-[var(--app-border-subtle)] text-xs text-[var(--app-text-muted)]"
       >
         <span class="font-mono font-medium">DEV Quick:</span>
-        <Button sm neutral @click="openQuick('write')" title="Open Quick Write">
+        <Button
+          size="sm"
+          variant="neutral"
+          @click="openQuick('write')"
+          title="Open Quick Write"
+        >
           <Icon icon="mdi:pencil-outline" height="15" />
           Write
         </Button>
         <Button
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           @click="openQuick('aiTasks')"
           title="Open Quick AI Tasks"
         >
@@ -246,21 +251,26 @@
           AI Tasks
         </Button>
         <Button
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           @click="openQuick('select')"
           title="Open Quick Select"
         >
           <Icon icon="mdi:format-list-checks" height="15" />
           Select
         </Button>
-        <Button sm neutral @click="openQuick('voice')" title="Open Quick Voice">
+        <Button
+          size="sm"
+          variant="neutral"
+          @click="openQuick('voice')"
+          title="Open Quick Voice"
+        >
           <Icon icon="mdi:microphone-outline" height="15" />
           Voice
         </Button>
         <Button
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           @click="openQuick('commandLauncher')"
           title="Open Quick Commands"
         >
@@ -268,8 +278,8 @@
           Commands
         </Button>
         <Button
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           @click="openQuick('translate')"
           title="Open Quick Translate"
         >
@@ -277,8 +287,8 @@
           Translate
         </Button>
         <Button
-          sm
-          neutral
+          size="sm"
+          variant="neutral"
           @click="openQuick('correction')"
           title="Open Quick Correction"
         >
@@ -560,7 +570,7 @@ const handleCopy = async () => {
   border-radius: var(--radius-md);
   background-color: var(--app-accent-soft);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   /* the text below stays clickable and selectable */
   pointer-events: none;
 }

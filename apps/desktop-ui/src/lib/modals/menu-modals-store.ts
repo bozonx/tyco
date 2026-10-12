@@ -114,6 +114,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   })
 
   return {
+    steps,
     pendingModal,
     currentModal,
     currentModalParams,

@@ -421,7 +421,7 @@ watch(hasModal, (open) => {
   border-radius: var(--radius-lg);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-md);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--color-base-content);
   /* the click goes to the window below the hint and gives it the focus */
   pointer-events: none;

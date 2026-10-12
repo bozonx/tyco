@@ -210,7 +210,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--app-text-muted);
 }
 
@@ -243,7 +243,7 @@ onUnmounted(() => {
 }
 
 .transcribing-label {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   font-weight: 500;
   color: var(--app-text-muted);
   margin: 0;

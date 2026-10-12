@@ -59,10 +59,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
+import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
 import { type ActionItem } from '../stores/action-menu'
-import { useRouteParams } from '../stores/route-params'
 import { PRESETS_KEYS } from '../types'
 import ShortcutButton from './common/ShortcutButton.vue'
 
@@ -112,7 +112,7 @@ const props = withDefaults(
   }
 )
 
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 const { t } = useI18n()
 const { handleEsc } = useOverlayNav(() => ({
   escMode: props.escMode,

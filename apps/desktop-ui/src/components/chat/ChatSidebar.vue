@@ -3,7 +3,7 @@
     <div class="sidebar-header">
       <Button
         class="flex-1"
-        sm
+        size="sm"
         icon="mdi:plus"
         :disabled="chatStore.isGenerating"
         @click="startChat"
@@ -11,8 +11,8 @@
         {{ t('chat.newChat') }}
       </Button>
       <Button
-        sm
-        ghost
+        size="sm"
+        variant="ghost"
         square
         :active="isSearchOpen"
         :title="t('chat.searchChats')"
@@ -21,8 +21,8 @@
         <Icon icon="mdi:magnify" height="18" />
       </Button>
       <Button
-        sm
-        ghost
+        size="sm"
+        variant="ghost"
         square
         :title="t('chat.collapseSidebar')"
         @click="emit('collapse')"
@@ -34,7 +34,7 @@
     <div v-if="removedChat" class="sidebar-notice">
       <Icon icon="mdi:trash-can-outline" height="15" class="shrink-0" />
       <span class="truncate flex-1">{{ t('history.itemRemoved') }}</span>
-      <Button xs ghost icon="mdi:undo" @click="undoRemoveChat">
+      <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemoveChat">
         {{ t('history.undo') }}
       </Button>
     </div>
@@ -384,7 +384,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   border: 1px solid var(--app-border);
   border-radius: var(--radius-md);
@@ -435,7 +435,7 @@ onUnmounted(() => {
   padding: 0.5rem 2rem 0.5rem 0.625rem;
   border-radius: var(--radius-md);
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   text-align: left;
   cursor: pointer;
 }
@@ -468,12 +468,12 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   background: var(--app-surface);
   outline: 0;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 .chat-list-empty {
   padding: var(--space-lg) var(--space-sm);
   color: var(--app-text-faint);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   text-align: center;
 }
 </style>

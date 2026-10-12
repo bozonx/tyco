@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
 }
 .chat-markdown :deep(pre code) {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 .chat-markdown :deep(.code-copy) {
   position: absolute;
@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
   font-size: 0.9375rem;
 }
 .chat-markdown :deep(h6) {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   color: var(--app-text-muted);
 }
 .chat-markdown :deep(th[align='center']),

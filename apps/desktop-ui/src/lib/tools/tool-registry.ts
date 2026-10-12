@@ -73,6 +73,7 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
   }
 
   return {
+    tools,
     unregisterPlugin,
     get,
     list,

@@ -36,6 +36,7 @@ export function createToolbarStoreModel() {
   }
 
   return {
+    registeredToolbarItems,
     unregisterPlugin,
     getToolbarItems,
     getLeftToolbarItems,

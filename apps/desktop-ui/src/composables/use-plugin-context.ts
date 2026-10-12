@@ -7,7 +7,7 @@ import { useActionMenuStore } from '../stores/action-menu'
 import { useEditMenuStore } from '../stores/edit-menu'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
-import { useRouteParams } from '../stores/route-params'
+import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useToolbarStore } from '../stores/toolbar'
 import { useToolsStore } from '../stores/tools'
 import useToast from './use-toast'
@@ -19,7 +19,7 @@ export default function usePluginContext() {
   const tools = useToolsStore()
   const editor = useEditorInputStore()
   const ipc = useIpcStore()
-  const routes = useRouteParams()
+  const routes = useEditorNavigation()
   const { toast, toastText } = useToast()
 
   function createContext(

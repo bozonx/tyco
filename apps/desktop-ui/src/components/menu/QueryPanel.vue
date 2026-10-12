@@ -316,7 +316,7 @@ defineExpose({ focus })
   min-height: 1.875rem;
   padding: 0 0.5rem;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   cursor: pointer;
 }
 
@@ -372,14 +372,14 @@ defineExpose({ focus })
 
 .query-panel-option-hint {
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-faint);
 }
 
 .query-panel-empty {
   margin: 0;
   padding: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--app-text-muted);
 }
 
@@ -401,7 +401,7 @@ defineExpose({ focus })
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   cursor: pointer;
 }
 

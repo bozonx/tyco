@@ -383,7 +383,7 @@ onUnmounted(() => {
 
 .launcher-pages-label {
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   margin-right: 0.125rem;
 }
 
@@ -421,7 +421,7 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   background-color: var(--app-surface-sunken);
   color: var(--app-text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -447,7 +447,7 @@ onUnmounted(() => {
 .launcher-command-desc {
   margin: 0;
   overflow: hidden;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -485,7 +485,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   color: var(--app-text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 
 .launcher-selection-title {
@@ -530,7 +530,7 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
 }
 
 button.launcher-hint {

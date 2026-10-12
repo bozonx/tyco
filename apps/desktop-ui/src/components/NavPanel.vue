@@ -35,8 +35,8 @@
     >
       <Button
         v-if="navPanelStore.params.escBtnAction"
-        sm
-        neutral
+        size="sm"
+        variant="neutral"
         icon="mdi:lightning-bolt-outline"
         class="mr-1"
         @click="navPanelStore.params.escBtnAction"
@@ -48,8 +48,8 @@
         ></Button
       >
       <Button
-        sm
-        ghost
+        size="sm"
+        variant="ghost"
         square
         :active="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"
         @click="openHistory"
@@ -58,8 +58,8 @@
         <Icon icon="mdi:history" height="20" />
       </Button>
       <Button
-        sm
-        ghost
+        size="sm"
+        variant="ghost"
         square
         :active="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
         @click="openSettings"
@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
 import { appNavigation } from '../lib/navigation/navigation'
@@ -81,10 +82,9 @@ import { APP_ROUTES } from '../lib/navigation/routes'
 import { useChatStore } from '../stores/chat'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { useRouteParams } from '../stores/route-params'
 import { Icon } from '@iconify/vue'
 
-const routeParamsStore = useRouteParams()
+const routeParamsStore = useEditorNavigation()
 const chatStore = useChatStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
@@ -140,7 +140,7 @@ function openHistory() {
   height: 2rem;
   padding: 0 0.75rem;
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   font-weight: 500;
   color: var(--app-text-muted);
   cursor: pointer;

@@ -20,20 +20,14 @@ const props = defineProps<{
   variant?: 'primary' | 'neutral' | 'ghost' | 'danger'
   size?: 'sm' | 'xs'
   icon?: string
-  sm?: boolean
-  xs?: boolean
-  neutral?: boolean
   active?: boolean
   disabled?: boolean
   square?: boolean
-  ghost?: boolean
 }>()
 
 const buttonClass = computed(() => {
-  const variant =
-    props.variant ??
-    (props.ghost ? 'ghost' : props.neutral ? 'neutral' : 'primary')
-  const size = props.size ?? (props.xs ? 'xs' : props.sm ? 'sm' : undefined)
+  const variant = props.variant ?? 'primary'
+  const size = props.size
   return {
     'btn-neutral': variant === 'neutral',
     'btn-primary': variant === 'primary',
@@ -57,7 +51,7 @@ const onClick = (event: MouseEvent) => {
 <style scoped>
 .btn-error {
   background-color: var(--color-error);
-  color: var(--color-error-content, #fff);
+  color: var(--color-error-content);
   border: 1px solid transparent;
 }
 .btn-error:hover {

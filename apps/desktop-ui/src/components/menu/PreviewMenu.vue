@@ -206,13 +206,13 @@ const { leftLetterKeys, spaceKey } = useResultActions()
   border-radius: var(--radius-sm);
   background-color: var(--app-surface-raised);
   border: 1px solid var(--app-border-subtle);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
 .translation-quality-alert {
   padding: var(--space-xs) var(--space-md);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   border-bottom: 1px solid var(--app-border-subtle);
 }
 

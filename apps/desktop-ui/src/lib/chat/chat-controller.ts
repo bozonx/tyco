@@ -129,6 +129,7 @@ export function createChatController(deps: ChatControllerDeps) {
   let inputSubmission = 0
 
   return {
+    staleEditorSelection,
     editorContext,
     attachedContext,
     contextBudget,

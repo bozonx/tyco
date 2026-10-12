@@ -10,14 +10,14 @@
     <div class="test-run-actions">
       <Button
         v-if="!running"
-        sm
+        size="sm"
         icon="mdi:play"
         :disabled="hasIssues"
         @click="run"
       >
         {{ t('commands.testRun') }}
       </Button>
-      <Button v-else sm icon="mdi:stop" @click="stop">
+      <Button v-else size="sm" icon="mdi:stop" @click="stop">
         {{ t('commands.testStop') }}
       </Button>
       <span v-if="running" class="test-run-status">
@@ -178,7 +178,7 @@ onUnmounted(stop)
 }
 
 .test-run-status {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
 }
 
@@ -212,7 +212,7 @@ onUnmounted(stop)
   border-radius: var(--radius-sm);
   background-color: var(--app-surface-sunken);
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   white-space: pre-wrap;
   word-break: break-word;
 }

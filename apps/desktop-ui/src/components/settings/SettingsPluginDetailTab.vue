@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <div>
-      <Button sm ghost class="gap-1.5" @click="emit('back')">
+      <Button size="sm" variant="ghost" class="gap-1.5" @click="emit('back')">
         <Icon icon="mdi:arrow-left" height="16" />
         {{ t('settings.backToPlugins') }}
       </Button>

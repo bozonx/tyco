@@ -31,8 +31,8 @@
         </div>
         <Button
           class="delete-btn"
-          xs
-          ghost
+          size="xs"
+          variant="ghost"
           square
           :title="t('common.delete')"
           @click="$emit('remove', index)"

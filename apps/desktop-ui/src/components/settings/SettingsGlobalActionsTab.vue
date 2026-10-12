@@ -6,8 +6,8 @@
     >
       <template v-if="systemManaged" #actions>
         <Button
-          sm
-          :ghost="missing.length === 0"
+          size="sm"
+          :variant="missing.length === 0 ? 'ghost' : 'primary'"
           icon="mdi:refresh"
           :disabled="rebinding"
           :title="t('settings.rebindHotkeysHint')"
@@ -17,7 +17,7 @@
         </Button>
         <Button
           v-if="canConfigure"
-          sm
+          size="sm"
           icon="mdi:keyboard-settings"
           @click="configureHotkeys"
         >
@@ -51,8 +51,8 @@
               <div class="external-command">
                 <code>{{ row.command }}</code>
                 <Button
-                  sm
-                  ghost
+                  size="sm"
+                  variant="ghost"
                   square
                   icon="mdi:content-copy"
                   :title="t('settings.copyActivationCommand')"
@@ -75,8 +75,8 @@
           />
           <Button
             v-if="editable && row.value"
-            sm
-            ghost
+            size="sm"
+            variant="ghost"
             square
             icon="mdi:close"
             :title="t('settings.unassignHotkey')"
@@ -87,8 +87,8 @@
             v-if="
               editable && row.defaultValue && row.value !== row.defaultValue
             "
-            sm
-            ghost
+            size="sm"
+            variant="ghost"
             square
             icon="mdi:restore"
             :title="t('settings.resetToDefault')"
@@ -104,7 +104,12 @@
                 error: injection.error,
               })
             }}
-            <Button sm ghost icon="mdi:refresh" @click="checkInjection">
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="mdi:refresh"
+              @click="checkInjection"
+            >
               {{ t('settings.textInjection.recheck') }}
             </Button>
           </p>
@@ -114,8 +119,8 @@
           >
             <code>{{ providerState.statuses[row.id].externalCommand }}</code>
             <Button
-              sm
-              ghost
+              size="sm"
+              variant="ghost"
               square
               icon="mdi:content-copy"
               :title="t('settings.copyHotkeyCommand')"
@@ -378,7 +383,7 @@ onBeforeUnmount(() => {
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--app-border-subtle);
   color: var(--app-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   line-height: 1.45;
 }
 
@@ -413,7 +418,7 @@ onBeforeUnmount(() => {
   flex-basis: 100%;
   margin: 0;
   color: var(--app-error);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 
 .hotkey-info {
@@ -444,7 +449,7 @@ onBeforeUnmount(() => {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--app-surface-raised);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 
 .hotkey-info .external-command code {

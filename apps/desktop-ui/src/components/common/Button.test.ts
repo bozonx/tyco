@@ -6,7 +6,7 @@ import Button from './Button.vue'
 describe('Button', () => {
   it('renders slot content, classes, and emits click', async () => {
     const wrapper = mount(Button, {
-      props: { neutral: true, sm: true },
+      props: { variant: 'neutral', size: 'sm' },
       slots: { default: 'Press me' },
       global: { stubs: { Icon: true } },
     })

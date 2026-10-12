@@ -71,7 +71,7 @@ withDefaults(
 
 .settings-section-description {
   margin: 2px 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   line-height: 1.45;
   color: var(--app-text-muted);
   white-space: pre-line;

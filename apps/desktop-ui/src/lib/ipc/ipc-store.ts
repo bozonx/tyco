@@ -259,6 +259,7 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
   // would overwrite what the user has
   let paramsLoaded = !deps.desktopClient.isAvailable()
   const commandMap = createCommandMap()
+  let localStateWrites: Promise<unknown> = Promise.resolve()
 
   /**
    * Calls a desktop function. It never throws: a failure comes back as
@@ -368,20 +369,25 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     return result
   }
 
-  /** The backend merges the patch, so concurrent patches never undo each other */
-  const patchLocalState = async (patch: Partial<LocalState>) => {
-    if (!paramsLoaded) return notLoaded()
+  /** Serializes patches so an older full response cannot undo a newer one. */
+  const patchLocalState = (patch: Partial<LocalState>) => {
+    if (!paramsLoaded) return Promise.resolve(notLoaded())
+    const queuedPatch = { ...patch }
+    const write = localStateWrites.then(async () => {
+      const previousState = params.value.localState
+      const result = await callFunction('patchLocalState', [queuedPatch])
 
-    const result = await callFunction('patchLocalState', [patch])
-
-    if (result.success) {
-      params.value.localState = result.result ?? {
-        ...params.value.localState,
-        ...patch,
+      // A cross-window state event may already carry a newer snapshot.
+      if (result.success && params.value.localState === previousState) {
+        params.value.localState = result.result ?? {
+          ...params.value.localState,
+          ...queuedPatch,
+        }
       }
-    }
-
-    return result
+      return result
+    })
+    localStateWrites = write.catch(() => undefined)
+    return write
   }
 
   return {

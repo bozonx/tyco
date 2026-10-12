@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import {
   type ToastItem,
@@ -10,5 +11,7 @@ import {
 export type { ToastItem, ToastOptions, ToastType }
 
 export const useToastStore = defineStore('toast', () => {
-  return createToastStoreModel()
+  const model = createToastStoreModel()
+  onScopeDispose(model.clearToasts)
+  return model
 })

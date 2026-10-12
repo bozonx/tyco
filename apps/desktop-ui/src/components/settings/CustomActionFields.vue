@@ -19,9 +19,9 @@
         >
           <Button
             type="button"
-            ghost
+            variant="ghost"
             square
-            sm
+            size="sm"
             :title="t('settings.actionInsertScript')"
             @click="browseScript"
           >
@@ -45,9 +45,9 @@
           />
           <Button
             type="button"
-            ghost
+            variant="ghost"
             square
-            sm
+            size="sm"
             :title="t('settings.browseWorkingDir')"
             @click="browseWorkingDir"
           >
@@ -119,9 +119,9 @@
           />
           <Button
             type="button"
-            ghost
+            variant="ghost"
             square
-            sm
+            size="sm"
             :title="t('common.remove')"
             @click="removeHeader(headerIndex)"
           >
@@ -129,7 +129,13 @@
           </Button>
         </div>
         <div>
-          <Button type="button" ghost sm icon="mdi:plus" @click="addHeader">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon="mdi:plus"
+            @click="addHeader"
+          >
             {{ t('common.add') }}
           </Button>
         </div>
@@ -152,13 +158,13 @@
             "
             @update:value="authDraft = $event"
           />
-          <Button sm :disabled="!authDraft.trim()" @click="saveAuth">
+          <Button size="sm" :disabled="!authDraft.trim()" @click="saveAuth">
             {{ t('common.save') }}
           </Button>
           <Button
             v-if="hasAuth"
-            sm
-            ghost
+            size="sm"
+            variant="ghost"
             class="danger-ghost"
             @click="removeAuth"
           >
@@ -332,7 +338,7 @@ if (props.command.toolId === 'webhook' && webhook.value.authSecret) {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs, 0.25rem);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--app-text-muted);
 }
@@ -345,7 +351,7 @@ if (props.command.toolId === 'webhook' && webhook.value.authSecret) {
 }
 
 .action-field-warning {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--color-warning);
 }
 

@@ -12,11 +12,11 @@
             {{ t('history.clearConfirm', { count: totalCount }) }}
           </span>
           <span class="history-toolbar-buttons">
-            <Button xs ghost @click="confirmingClear = false">
+            <Button size="xs" variant="ghost" @click="confirmingClear = false">
               {{ t('common.cancel') }}
             </Button>
             <Button
-              xs
+              size="xs"
               icon="mdi:trash-can-outline"
               class="confirm-clear-btn"
               @click="confirmClear"
@@ -27,8 +27,8 @@
         </template>
         <template v-else>
           <Button
-            xs
-            ghost
+            size="xs"
+            variant="ghost"
             icon="mdi:trash-can-outline"
             class="clear-btn"
             @click="confirmingClear = true"
@@ -105,8 +105,8 @@
                   <Button
                     v-for="action in visibleActions(item)"
                     :key="action.id"
-                    xs
-                    ghost
+                    size="xs"
+                    variant="ghost"
                     square
                     :title="action.title"
                     :class="action.danger ? 'danger-action' : undefined"
@@ -180,8 +180,8 @@
                       <Button
                         v-for="action in originalActions"
                         :key="action.id"
-                        xs
-                        ghost
+                        size="xs"
+                        variant="ghost"
                         square
                         :title="action.title"
                         @click="emit('action', action.id, item)"
@@ -388,7 +388,7 @@ function confirmClear() {
 .history-group-title {
   margin: 0 0 var(--space-xs);
   padding: 0 var(--space-xs);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--app-text-muted);
   letter-spacing: 0.02em;
@@ -434,7 +434,7 @@ function confirmClear() {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-xs);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   user-select: none;
 }
@@ -472,7 +472,7 @@ function confirmClear() {
 }
 
 .history-text-value {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   line-height: 1.5;
   color: var(--color-base-content);
   white-space: pre-line;
@@ -499,7 +499,7 @@ function confirmClear() {
   gap: 0.25rem;
   margin-top: var(--space-xs);
   padding: 2px 6px;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 500;
   color: var(--color-primary);
   border: none;
@@ -524,7 +524,7 @@ function confirmClear() {
   align-items: center;
   gap: 0.25rem;
   padding: 2px 6px 2px 2px;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   border: none;
   border-radius: var(--radius-sm);
@@ -553,7 +553,7 @@ function confirmClear() {
 .history-original-text {
   flex: 1;
   min-width: 0;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   line-height: 1.5;
   color: var(--app-text-muted);
   white-space: pre-wrap;

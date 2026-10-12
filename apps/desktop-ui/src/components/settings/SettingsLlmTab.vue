@@ -24,7 +24,7 @@
     bare
   >
     <template #actions>
-      <Button sm icon="mdi:plus" @click="addProvider">
+      <Button size="sm" icon="mdi:plus" @click="addProvider">
         {{ t('settings.addConnection') }}
       </Button>
     </template>
@@ -112,8 +112,8 @@
                 </div>
               </div>
               <Button
-                sm
-                neutral
+                size="sm"
+                variant="neutral"
                 icon="mdi:plus"
                 @click="addModelTo(provider.id)"
               >
@@ -143,8 +143,8 @@
                   }}</span>
                 </div>
                 <Button
-                  sm
-                  ghost
+                  size="sm"
+                  variant="ghost"
                   square
                   icon="mdi:trash-can-outline"
                   class="danger-ghost"
@@ -167,8 +167,8 @@
               </FieldRow>
               <div class="advanced-toggle">
                 <Button
-                  xs
-                  ghost
+                  size="xs"
+                  variant="ghost"
                   :icon="
                     expandedModels.has(model.id)
                       ? 'mdi:chevron-up'
@@ -222,8 +222,8 @@
           <div class="connection-actions">
             <Button
               v-if="provider.type === 'openai-compatible'"
-              sm
-              neutral
+              size="sm"
+              variant="neutral"
               icon="mdi:connection"
               :disabled="connectionState[provider.id] === 'checking'"
               @click="checkConnection(provider)"
@@ -248,8 +248,8 @@
             </span>
             <Button
               v-if="provider.type === 'openai-compatible'"
-              sm
-              ghost
+              size="sm"
+              variant="ghost"
               icon="mdi:trash-can-outline"
               class="danger-ghost ml-auto"
               @click="removeProviderById(provider.id)"
@@ -292,8 +292,8 @@
             @update:value="llm.tasks[task][index] = String($event)"
           />
           <Button
-            sm
-            ghost
+            size="sm"
+            variant="ghost"
             square
             icon="mdi:close"
             :title="t('settings.removeFallback')"
@@ -302,8 +302,8 @@
         </div>
         <div>
           <Button
-            xs
-            ghost
+            size="xs"
+            variant="ghost"
             icon="mdi:plus"
             :disabled="!nextFallback(task)"
             @click="addFallback(task)"
@@ -590,7 +590,7 @@ onMounted(() => {
 }
 .connection-meta,
 .models-hint {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   line-height: 1.35;
 }
 .connection-body {
@@ -609,12 +609,12 @@ onMounted(() => {
   gap: var(--space-md);
 }
 .models-title {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   font-weight: 600;
 }
 .empty-models {
   padding: var(--space-xl) 0 var(--space-sm);
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   text-align: center;
 }
 .model-row {
@@ -639,7 +639,7 @@ onMounted(() => {
 }
 .connection-result,
 .assignment-label {
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
 }
 .success-text {
   color: var(--color-success);

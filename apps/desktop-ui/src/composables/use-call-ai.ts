@@ -10,22 +10,16 @@ import {
 import { buildLlmPrompt } from '../lib/llm/llm-prompt'
 import { resolveLanguagePreference } from '../lib/locale/language'
 import { assertSttKeyAvailable } from '../lib/stt/stt-readiness'
-import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import {
-  createLiveDictation,
-  type LiveDictation,
-} from '../lib/stt/live-dictation'
 import { dictationLanguageFor } from '../lib/stt/dictation-language'
 import type { LiveTranscriptState } from '../lib/stt/live-transcript'
 import {
   buildSttCatalog,
-  createSttClient,
   secretId,
   sttProviderNeedsKey,
 } from '../lib/stt/stt-client'
-import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 import { clientLogger } from '../lib/logger/index'
 import { useIpcStore } from '../stores/ipc'
+import { useDictationStore } from '../stores/dictation'
 import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
 import { AI_TASKS } from '../types/index'
@@ -42,19 +36,8 @@ export interface DictationHandlers {
   onError: (error: Error) => void
 }
 
-/**
- * One dictation for the window, whichever caller starts, finishes or cancels
- * it. The microphone streams from Rust, and the provider socket leaves from it
- */
-let sharedDictation: LiveDictation | undefined
-const windowDictation = () =>
-  (sharedDictation ??= createLiveDictation({
-    capture: createVoiceCaptureControl(tauriNetIpc),
-    stt: createSttClient({ transport: createTauriTransport(tauriNetIpc) }),
-  }))
-
 export const useCallAi = () => {
-  const dictation = windowDictation()
+  const dictation = useDictationStore()
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
   const translationStore = useTranslationStore()
