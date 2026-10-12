@@ -1,0 +1,234 @@
+import { computed, ref } from 'vue'
+import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
+
+import { imageBudgetCharacters } from './chat-image-input'
+import { attachmentTexts, inferAttachmentSource } from './chat-attachment'
+import { resolveEditorContext, resolveVoiceChatContext } from './editor-context'
+import { resolveContextBudget } from './context-budget'
+import { contextBudgetCharacters, type ChatModelOption } from './chat-model'
+import { trimChatContext } from './chat-helpers'
+import type { createChatStoreModel } from './chat-store'
+import type { createChatFileController } from './chat-file-controller'
+
+export interface ChatControllerDeps {
+  model: ReturnType<typeof createChatStoreModel>
+  files: Pick<
+    ReturnType<typeof createChatFileController>,
+    'pendingImages' | 'importing' | 'whileOpening'
+  >
+  editor: { value: string; selectedText: string }
+  input: {
+    value: string
+    clear: () => void
+    setValue: (text: string) => void
+    focus: () => void
+  }
+  selectedModel: () => ChatModelOption | null
+  externalSelection: () => string | null | undefined
+  windowLabel: () => string
+  openMainChat: (attachment: ChatAttachment | undefined) => Promise<unknown>
+  closeModals: () => void
+  afterRender: () => Promise<unknown>
+  selectModel: (id: string) => Promise<unknown>
+}
+
+/** Coordinates chat input, editor context, and window transitions. */
+export function createChatController(deps: ChatControllerDeps) {
+  const { model, files, editor: editorInputStore, input: chatInputStore } = deps
+  const selectedModel = computed(deps.selectedModel)
+  const pendingImages = files.pendingImages
+  const importingImages = files.importing
+  /**
+   * The editor selection made before the chat came into view: it is only
+   * suggested, see `resolveEditorContext`
+   */
+  const staleEditorSelection = ref<string | null>(null)
+  const markEditorSelectionStale = () => {
+    staleEditorSelection.value = editorInputStore.selectedText.trim() || null
+  }
+  /** What the editor offers to the next message */
+  const editorContext = computed(() =>
+    model.newChatParams.value.withoutEditorContext
+      ? null
+      : resolveEditorContext({
+          editorText: editorInputStore.value,
+          selectedText: editorInputStore.selectedText,
+          messages: model.messages.value,
+          pendingAttachments: model.newChatParams.value.attachments || [],
+          dismissed: model.dismissedEditorContext.value,
+          accepted: model.acceptedEditorContext.value,
+          staleSelection: staleEditorSelection.value,
+        })
+  )
+
+  /** What goes with the next message besides the input */
+  const attachedContext = computed<ChatAttachment[]>(() => {
+    const context = editorContext.value
+    return [
+      ...(model.newChatParams.value.attachments || []),
+      ...(context?.mode === 'attached'
+        ? [{ text: context.text, source: context.source }]
+        : []),
+    ]
+  })
+
+  /** How much of the model the next message takes; null without a model */
+  const contextBudget = computed(() => {
+    const picked = selectedModel.value
+    if (!picked) return null
+    return resolveContextBudget(
+      [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
+      contextBudgetCharacters(picked.contextSize),
+      (model.newChatParams.value.images || []).reduce(
+        (sum, image) => sum + imageBudgetCharacters(image),
+        0
+      )
+    )
+  })
+
+  /** What a question asked by voice from the quick window is about */
+  const voiceChatContext = computed(() =>
+    resolveVoiceChatContext({
+      externalSelection: deps.externalSelection(),
+      editorSelection: editorInputStore.selectedText,
+      staleSelection: staleEditorSelection.value,
+    })
+  )
+
+  const historyImagesRequired = computed(() => {
+    if (model.omitHistoryImages.value || !selectedModel.value) return false
+    const inputSize = contextBudget.value?.used || 0
+    return trimChatContext(
+      model.messages.value,
+      Math.max(
+        0,
+        contextBudgetCharacters(selectedModel.value.contextSize) - inputSize
+      )
+    ).some((message) => message.images?.length)
+  })
+  const imageModelRequired = computed(
+    () =>
+      !selectedModel.value?.vision &&
+      (pendingImages.value.length > 0 || historyImagesRequired.value)
+  )
+  /** Runs in the main window; the quick window hands the text over to it */
+  const inMainWindow = async (attachment: ChatAttachment | undefined) => {
+    if (deps.windowLabel() !== 'quick') return true
+    await deps.openMainChat(attachment)
+    return false
+  }
+
+  const startChat = async (params: Parameters<typeof model.startChat>[0]) => {
+    deps.closeModals()
+    if (!(await inMainWindow(params.attachments?.[0]))) return
+    await model.startChat(params)
+    await deps.afterRender()
+    chatInputStore.focus()
+  }
+
+  let inputSubmission = 0
+
+  return {
+    editorContext,
+    attachedContext,
+    contextBudget,
+    voiceChatContext,
+    imageModelRequired,
+    markEditorSelectionStale,
+    async selectModel(id: string) {
+      await deps.selectModel(id)
+    },
+    startChat,
+    /**
+     * Gives a text to the chat; without a source, it is told by the text, see
+     * `inferAttachmentSource`
+     */
+    async attachToChat(text: string, source?: ChatAttachmentSource) {
+      const attachment: ChatAttachment = {
+        text,
+        source:
+          source ??
+          inferAttachmentSource(text, {
+            externalSelection: deps.externalSelection(),
+            editorSelection: editorInputStore.selectedText,
+            editorText: editorInputStore.value,
+          }),
+      }
+      deps.closeModals()
+      if (!(await inMainWindow(attachment))) return
+      await model.attachToChat(attachment)
+      await deps.afterRender()
+      chatInputStore.focus()
+    },
+    async openLastOrNewChat() {
+      deps.closeModals()
+      await files.whileOpening(() => model.openLastOrNewChat())
+      await deps.afterRender()
+      chatInputStore.focus()
+    },
+    /** A new empty chat started from the chat itself */
+    async startNewChat() {
+      await startChat({})
+      markEditorSelectionStale()
+    },
+    async openChat(id: string, options?: { silent?: boolean }) {
+      deps.closeModals()
+      const result = await files.whileOpening(() => model.openChat(id, options))
+      // the editor selection has nothing to do with the opened conversation
+      markEditorSelectionStale()
+      await deps.afterRender()
+      chatInputStore.focus()
+      return result
+    },
+    async branchChat(index: number) {
+      deps.closeModals()
+      const result = await model.branchChat(index)
+      markEditorSelectionStale()
+      await deps.afterRender()
+      chatInputStore.focus()
+      return result
+    },
+    /** Sends the input; false when there is nothing to send or a reply runs */
+    async sendInput(): Promise<boolean> {
+      const message = chatInputStore.value.trim()
+      if (
+        (!message &&
+          !pendingImages.value.length &&
+          !attachedContext.value.length) ||
+        model.isGenerating.value ||
+        importingImages.value
+      )
+        return false
+      const attachments = [...attachedContext.value]
+      const submission = ++inputSubmission
+      const initialMessageCount = model.messages.value.length
+      const pending = model.sendMessage(message, attachments, [
+        ...pendingImages.value,
+      ])
+      const chatId = model.newChatParams.value.id
+      const messages = model.messages.value
+      chatInputStore.clear()
+
+      // Restore only if the request could not be sent (e.g. no model or exceeded budget).
+      // Once the request is dispatched to the chat, it stays in the conversation and must not
+      // be restored into the input upon completion or failure of the assistant turn.
+      const dispatched =
+        model.messages.value.length > initialMessageCount ||
+        model.isGenerating.value
+
+      if (!dispatched) {
+        await pending
+        if (
+          submission === inputSubmission &&
+          model.newChatParams.value.id === chatId &&
+          model.messages.value === messages &&
+          !chatInputStore.value
+        ) {
+          chatInputStore.setValue(message)
+        }
+        return false
+      }
+      return true
+    },
+  }
+}

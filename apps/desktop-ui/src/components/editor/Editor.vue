@@ -7,7 +7,7 @@
         class="editor-toolbar flex items-center justify-between gap-2"
       >
         <!-- Left column: view mode, Case and Format dropdowns, then plugin items -->
-        <div class="flex items-center gap-1">
+        <div data-testid="editor-toolbar-left" class="flex items-center gap-1">
           <Button
             sm
             square
@@ -55,7 +55,7 @@
         </div>
 
         <!-- Right column: plugin items, then AI task, Translation & Insert to window -->
-        <div class="flex items-center gap-1">
+        <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
           <Button
             v-for="item in rightToolbarItems"
             :key="item.id"
@@ -298,10 +298,7 @@ import { computed, onBeforeUnmount } from 'vue'
 import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
-import {
-  resetShowMarkup,
-  useShowMarkup,
-} from '../../composables/use-show-markup'
+import { useShowMarkup } from '../../composables/use-show-markup'
 import { desktopClient } from '../../lib/desktop/client'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveModeRoute } from '../../lib/navigation/routes'
@@ -330,7 +327,7 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
-const { showMarkup, toggleShowMarkup } = useShowMarkup()
+const { showMarkup, toggleShowMarkup, resetShowMarkup } = useShowMarkup()
 // the Markdown view lasts only while the page is open
 onBeforeUnmount(resetShowMarkup)
 

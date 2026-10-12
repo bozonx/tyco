@@ -1,203 +1,85 @@
-import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
+import { DEFAULT_LLM_CONFIG } from '@tyco/shared'
 
+import { appNavigation } from '../lib/navigation/navigation'
 import { useChatStore } from './chat'
+import { useChatInputStore } from './chat-input'
+import { useEditorInputStore } from './editor-input'
+import { useHistoryStore } from './history'
+import { useIpcStore } from './ipc'
 
-const mocks = vi.hoisted(() => ({
-  label: 'main',
-  callFunction: vi.fn().mockResolvedValue({ success: true }),
-  startChat: vi.fn().mockResolvedValue(undefined),
-  attachToChat: vi.fn().mockResolvedValue(undefined),
-  sendMessage: vi.fn().mockResolvedValue('answer'),
-  focus: vi.fn(),
-  clear: vi.fn(),
-  setValue: vi.fn(),
-  closeAll: vi.fn(),
-  input: { value: '' },
-  editor: { value: '', selectedText: '' },
+const ai = vi.hoisted(() => ({
+  sendChatMessage: vi.fn(async () => 'answer'),
+  generateChatTitle: vi.fn(async () => ''),
+  saveLocalState: vi.fn(async () => {}),
 }))
-const chatModelMessages = ref<unknown[]>([])
-const chatModelIsGenerating = ref(false)
 
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: mocks.label }),
+vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ai }))
+vi.mock(import('../lib/chat/chat-image-storage'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  syncChatImages: vi.fn(async () => {}),
 }))
-vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ({}) }))
-vi.mock('../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn() }),
-}))
-vi.mock('../lib/chat/chat-image-storage', () => ({
-  storeChatImage: vi.fn(),
-  loadChatWithImages: vi.fn(),
-  readDroppedChatFile: vi.fn(),
-  syncChatImages: vi.fn(async () => undefined),
-}))
-vi.mock('../lib/navigation/navigation', () => ({ appNavigation: {} }))
-vi.mock('../lib/chat/chat-store', () => ({
-  createChatStoreModel: () => ({
-    startChat: mocks.startChat,
-    attachToChat: mocks.attachToChat,
-    sendMessage: mocks.sendMessage,
-    messages: chatModelMessages,
-    newChatParams: ref({ attachments: [{ text: 'pending' }] }),
-    isGenerating: chatModelIsGenerating,
-    isStopped: ref(false),
-    savingImages: ref([]),
-    omitHistoryImages: ref(false),
-    dismissedEditorContext: ref(null),
-    acceptedEditorContext: ref(null),
-  }),
-}))
-vi.mock('./ipc', () => ({
-  useIpcStore: () => ({
-    params: { userConfig: {}, localState: {} },
-    callFunction: mocks.callFunction,
-    callFunctionOrNotify: mocks.callFunction,
-  }),
-}))
-vi.mock('./llm', () => ({ useLlmStore: () => ({ secrets: {} }) }))
-vi.mock('./history', () => ({ useHistoryStore: () => ({}) }))
-vi.mock('./menu-modals', () => ({
-  useMenuModalsStore: () => ({ closeAll: mocks.closeAll }),
-}))
-vi.mock('./editor-input', () => ({ useEditorInputStore: () => mocks.editor }))
-vi.mock('./chat-input', () => ({
-  useChatInputStore: () => ({
-    get value() {
-      return mocks.input.value
+
+let pinia: ReturnType<typeof createPinia>
+beforeEach(() => {
+  pinia = createPinia()
+  setActivePinia(pinia)
+  vi.clearAllMocks()
+  vi.spyOn(appNavigation, 'push').mockResolvedValue()
+  vi.spyOn(useHistoryStore(), 'saveChatHistory').mockResolvedValue()
+  const ipc = useIpcStore()
+  ipc.setParams({
+    userConfig: {
+      ...ipc.params.userConfig,
+      llm: structuredClone(DEFAULT_LLM_CONFIG),
     },
-    focus: mocks.focus,
-    clear: mocks.clear,
-    setValue: mocks.setValue,
-  }),
-}))
-
-describe('chat window navigation', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-    mocks.label = 'main'
-    mocks.input.value = ''
-    mocks.clear.mockImplementation(() => {
-      mocks.input.value = ''
-    })
-    chatModelMessages.value = []
-    chatModelIsGenerating.value = false
-    mocks.sendMessage.mockImplementation(async (msg: string) => {
-      chatModelMessages.value.push({ role: 'user', content: msg })
-      return 'answer'
-    })
-    mocks.editor.value = ''
-    mocks.editor.selectedText = ''
+    isWindowShown: true,
   })
+})
+afterEach(() => disposePinia(pinia))
 
-  it('opens the chat with context and focuses its input', async () => {
-    await useChatStore().startChat({ attachments: [{ text: '  context  ' }] })
-    expect(mocks.closeAll).toHaveBeenCalledOnce()
-    expect(mocks.startChat).toHaveBeenCalledWith({
-      attachments: [{ text: '  context  ' }],
-    })
-    expect(mocks.focus).toHaveBeenCalledOnce()
-    expect(mocks.callFunction).not.toHaveBeenCalled()
-  })
-
-  it('transfers context from the quick window to the main window', async () => {
-    mocks.label = 'quick'
-    await useChatStore().startChat({ attachments: [{ text: '  context  ' }] })
-    expect(mocks.closeAll).toHaveBeenCalledOnce()
-    expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      { text: '  context  ' },
-    ])
-    expect(mocks.startChat).not.toHaveBeenCalled()
-    expect(mocks.focus).not.toHaveBeenCalled()
-  })
-
-  it('hands a selection over from the quick window as well', async () => {
-    mocks.label = 'quick'
-    await useChatStore().attachToChat('selection')
-    expect(mocks.closeAll).toHaveBeenCalledOnce()
-    expect(mocks.callFunction).toHaveBeenCalledWith('openMainChat', [
-      { text: 'selection', source: undefined },
-    ])
-    expect(mocks.attachToChat).not.toHaveBeenCalled()
-  })
-
-  it('sends the input with the attachments and the editor selection', async () => {
-    mocks.input.value = ' Question '
-    mocks.editor.value = 'Draft with a part'
-    mocks.editor.selectedText = 'a part'
-
-    await useChatStore().sendInput()
-
-    expect(mocks.sendMessage).toHaveBeenCalledWith(
-      'Question',
-      [{ text: 'pending' }, { text: 'a part', source: 'editor-selection' }],
-      []
-    )
-    expect(mocks.clear).toHaveBeenCalled()
-  })
-
-  it('tells the source of a text an action gives to the chat', async () => {
-    mocks.editor.value = 'Draft with a part'
-    mocks.editor.selectedText = 'a part'
-
-    await useChatStore().attachToChat('Draft with a part')
-
-    expect(mocks.attachToChat).toHaveBeenCalledWith({
-      text: 'Draft with a part',
-      source: 'editor-text',
-    })
-  })
-
-  it('only suggests the whole editor text', async () => {
-    mocks.input.value = 'Question'
-    mocks.editor.value = 'Draft'
-
+describe('chat store dependency wiring', () => {
+  it('connects the real chat model and controller to input, editor, and AI services', async () => {
     const store = useChatStore()
-    expect(store.editorContext).toMatchObject({
-      text: 'Draft',
-      mode: 'suggested',
+    const input = useChatInputStore()
+    const editor = useEditorInputStore()
+    editor.setValue('Draft with a part')
+    editor.setSelection('a part', 13, 19)
+    await store.startChat({ attachments: [{ text: 'pending' }] })
+    expect(input.focusCount).toBe(1)
+    input.setValue(' Question ')
+    expect(await store.sendInput()).toBe(true)
+    await vi.waitFor(() => expect(store.isGenerating).toBe(false))
+    expect(input.value).toBe('')
+    expect(store.messages[0]).toMatchObject({
+      content: 'Question',
+      attachments: [
+        { text: 'pending' },
+        { text: 'a part', source: 'editor-selection' },
+      ],
     })
-    await store.sendInput()
-
-    expect(mocks.sendMessage).toHaveBeenCalledWith(
-      'Question',
-      [{ text: 'pending' }],
-      []
-    )
-  })
-  it('does not overwrite a draft when a previous request completes after cancellation', async () => {
-    let resolve!: (text: string) => void
-    mocks.sendMessage.mockReturnValue(
-      new Promise<string>((done) => {
-        resolve = done
-      })
-    )
-    mocks.input.value = 'First question'
-    const store = useChatStore()
-    const pending = store.sendInput()
-    mocks.input.value = 'New draft'
-    resolve('')
-    await pending
-    expect(mocks.setValue).not.toHaveBeenCalled()
-    expect(mocks.input.value).toBe('New draft')
+    expect(store.messages[1]?.content).toBe('answer')
+    expect(ai.sendChatMessage).toHaveBeenCalledOnce()
+    expect(useHistoryStore().saveChatHistory).toHaveBeenCalled()
   })
 
-  it('restores input when request could not be dispatched', async () => {
-    mocks.sendMessage.mockImplementation(async () => '')
-    mocks.input.value = 'Failed question'
+  it('forwards window visibility changes to the controller without leaking into another Pinia', async () => {
+    const editor = useEditorInputStore()
+    editor.setValue('Draft')
+    editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
-    const sent = await store.sendInput()
-    expect(sent).toBe(false)
-    expect(mocks.setValue).toHaveBeenCalledWith('Failed question')
-  })
-
-  it('does not restore input when request was dispatched to chat', async () => {
-    mocks.input.value = 'Dispatched question'
-    const store = useChatStore()
-    const sent = await store.sendInput()
-    expect(sent).toBe(true)
-    expect(mocks.setValue).not.toHaveBeenCalled()
+    expect(store.editorContext?.mode).toBe('attached')
+    useIpcStore().setParams({ isWindowShown: false })
+    await nextTick()
+    expect(store.editorContext?.mode).toBe('suggested')
+    const otherPinia = createPinia()
+    try {
+      expect(useChatStore(otherPinia).editorContext).toBeNull()
+      expect(store.editorContext?.mode).toBe('suggested')
+    } finally {
+      disposePinia(otherPinia)
+    }
   })
 })

@@ -56,9 +56,7 @@ describe('Editor.vue toolbar', () => {
     const insertBtn = wrapper.find('button[title="action.insertIntoWindow"]')
     expect(insertBtn.exists()).toBe(true)
 
-    const rightColumn = wrapper.findAll(
-      '.flex.items-center.justify-between > .flex.items-center'
-    )[1]
+    const rightColumn = wrapper.find('[data-testid="editor-toolbar-right"]')
     const rightButtons = rightColumn.findAll('.btn-stub')
     const titles = rightButtons.map((btn) => btn.attributes('title'))
     expect(titles).toEqual([
@@ -142,9 +140,8 @@ describe('Editor.vue toolbar', () => {
     const rightBtn = wrapper.find('button[title="tool.right"]')
     expect(rightBtn.exists()).toBe(true)
 
-    const [leftColumn, rightColumn] = wrapper.findAll(
-      '.flex.items-center.justify-between > .flex.items-center'
-    )
+    const leftColumn = wrapper.find('[data-testid="editor-toolbar-left"]')
+    const rightColumn = wrapper.find('[data-testid="editor-toolbar-right"]')
     expect(
       leftColumn
         .findAll('.btn-stub:not(.view-mode-toggle)')

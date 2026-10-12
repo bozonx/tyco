@@ -1,0 +1,302 @@
+import { describe, expect, it, vi } from 'vitest'
+import { computed, reactive, ref } from 'vue'
+import type { ChatHistoryItem } from '@tyco/shared'
+
+import { createChatController } from './chat-controller'
+import { createChatStoreModel } from './chat-store'
+import type { ChatModelOption } from './chat-model'
+
+function setup() {
+  const selectedModel = ref<ChatModelOption | null>({
+    id: 'model',
+    name: 'Model',
+    provider: 'local',
+    vision: true,
+    contextSize: 100_000,
+  })
+  const state = reactive({ label: 'main', externalSelection: '' })
+  const editor = reactive({ value: '', selectedText: '' })
+  const input = reactive({
+    value: '',
+    clear: vi.fn(() => {
+      input.value = ''
+    }),
+    setValue: vi.fn((text: string) => {
+      input.value = text
+    }),
+    focus: vi.fn(),
+  })
+  const sendChatMessage = vi.fn(async () => 'answer')
+  const loadChatHistoryItem = vi.fn<
+    (id: string) => Promise<ChatHistoryItem | null>
+  >(async () => null)
+  let id = 0
+  const model = createChatStoreModel({
+    sendChatMessage,
+    generateChatTitle: async () => '',
+    saveChatHistory: vi.fn(),
+    renameChat: vi.fn(),
+    loadChatHistoryItem,
+    navigateTo: vi.fn(),
+    notifyError: vi.fn(),
+    emptyMessageError: () => 'Empty input',
+    chatNotFoundError: () => 'Chat not found',
+    messageTooLongError: () => 'Message too long',
+    noModelError: () => 'No model',
+    createId: () => `chat-${++id}`,
+    nowIso: () => '2026-10-11T00:00:00.000Z',
+    saveLocalState: vi.fn(),
+    getLastChatId: () => null,
+    getChatModel: () =>
+      selectedModel.value
+        ? {
+            id: selectedModel.value.id,
+            vision: selectedModel.value.vision,
+            budgetCharacters: 100_000,
+          }
+        : null,
+  })
+  const files = {
+    pendingImages: computed(() => model.newChatParams.value.images || []),
+    importing: ref(0),
+    async whileOpening<T>(open: () => Promise<T>): Promise<T> {
+      return open()
+    },
+  }
+  vi.spyOn(files, 'whileOpening')
+  const deps = {
+    model,
+    files,
+    editor,
+    input,
+    selectedModel: () => selectedModel.value,
+    externalSelection: () => state.externalSelection,
+    windowLabel: () => state.label,
+    openMainChat: vi.fn(async () => {}),
+    closeModals: vi.fn(),
+    afterRender: vi.fn(async () => {}),
+    selectModel: vi.fn(async () => {}),
+  }
+  return {
+    controller: createChatController(deps),
+    deps,
+    model,
+    input,
+    editor,
+    state,
+    selectedModel,
+    sendChatMessage,
+    loadChatHistoryItem,
+  }
+}
+
+describe('chat controller', () => {
+  it('starts a chat and waits for rendering before focusing input', async () => {
+    const { controller, deps, model } = setup()
+    const events: string[] = []
+    deps.afterRender.mockImplementation(async () => {
+      events.push('render')
+    })
+    deps.input.focus.mockImplementation(() => {
+      events.push('focus')
+    })
+    await controller.startChat({ attachments: [{ text: ' context ' }] })
+    expect(model.newChatParams.value.attachments).toEqual([
+      { text: ' context ' },
+    ])
+    expect(deps.closeModals).toHaveBeenCalledOnce()
+    expect(deps.openMainChat).not.toHaveBeenCalled()
+    expect(events).toEqual(['render', 'focus'])
+  })
+
+  it('hands a quick-window request to the main window without starting locally', async () => {
+    const { controller, deps, model, state } = setup()
+    state.label = 'quick'
+    await controller.startChat({ attachments: [{ text: 'context' }] })
+    expect(deps.openMainChat).toHaveBeenCalledWith({ text: 'context' })
+    expect(model.newChatParams.value.id).toBeUndefined()
+    expect(deps.input.focus).not.toHaveBeenCalled()
+    expect(deps.closeModals).toHaveBeenCalledOnce()
+  })
+
+  it('hands inferred selection context to the main window', async () => {
+    const { controller, deps, state } = setup()
+    state.label = 'quick'
+    state.externalSelection = 'selection'
+    await controller.attachToChat('selection')
+    expect(deps.openMainChat).toHaveBeenCalledWith({
+      text: 'selection',
+      source: 'selection',
+    })
+    expect(deps.input.focus).not.toHaveBeenCalled()
+  })
+
+  it('infers attachment sources and preserves an explicit source', async () => {
+    const { controller, editor, model } = setup()
+    editor.value = 'Draft'
+    await controller.attachToChat('Draft')
+    expect(model.newChatParams.value.attachments).toEqual([
+      { text: 'Draft', source: 'editor-text' },
+    ])
+    await controller.attachToChat('Another', 'selection')
+    expect(model.newChatParams.value.attachments).toContainEqual({
+      text: 'Another',
+      source: 'selection',
+    })
+  })
+
+  it('sends pending attachments and fresh editor selection together', async () => {
+    const { controller, model, input, editor } = setup()
+    input.value = ' Question '
+    editor.value = 'Draft with a part'
+    editor.selectedText = 'a part'
+    model.newChatParams.value.attachments = [{ text: 'pending' }]
+    expect(await controller.sendInput()).toBe(true)
+    expect(model.messages.value[0]).toMatchObject({
+      content: 'Question',
+      attachments: [
+        { text: 'pending' },
+        { text: 'a part', source: 'editor-selection' },
+      ],
+    })
+    expect(input.value).toBe('')
+  })
+
+  it('suggests whole editor text without silently attaching it', async () => {
+    const { controller, input, editor, model } = setup()
+    input.value = 'Question'
+    editor.value = 'Draft'
+    expect(controller.editorContext.value).toMatchObject({
+      text: 'Draft',
+      mode: 'suggested',
+    })
+    await controller.sendInput()
+    expect(model.messages.value[0]?.attachments || []).toEqual([])
+  })
+
+  it('marks an old selection as suggested and keeps instances independent', () => {
+    const first = setup()
+    const second = setup()
+    first.editor.selectedText = 'selection'
+    second.editor.selectedText = 'selection'
+    first.controller.markEditorSelectionStale()
+    expect(first.controller.editorContext.value?.mode).toBe('suggested')
+    expect(first.controller.voiceChatContext.value).toBeNull()
+    expect(second.controller.editorContext.value?.mode).toBe('attached')
+  })
+
+  it.each(['empty', 'generating', 'importing'] as const)(
+    'keeps input intact when blocked by %s',
+    async (reason) => {
+      const { controller, model, input, deps } = setup()
+      if (reason !== 'empty') input.value = 'Draft'
+      if (reason === 'generating') model.isGenerating.value = true
+      if (reason === 'importing') deps.files.importing.value = 1
+      expect(await controller.sendInput()).toBe(false)
+      expect(input.clear).not.toHaveBeenCalled()
+    }
+  )
+
+  it('restores input when no model can dispatch the request', async () => {
+    const { controller, selectedModel, input } = setup()
+    selectedModel.value = null
+    input.value = ' Failed question '
+    expect(await controller.sendInput()).toBe(false)
+    expect(input.value).toBe('Failed question')
+  })
+
+  it('does not overwrite a newer draft after a rejected dispatch completes', async () => {
+    const { controller, model, input } = setup()
+    let resolve!: (text: string) => void
+    vi.spyOn(model, 'sendMessage').mockImplementation(
+      () =>
+        new Promise<string>((done) => {
+          resolve = done
+        })
+    )
+    input.value = 'First question'
+    const pending = controller.sendInput()
+    input.value = 'New draft'
+    resolve('')
+    await pending
+    expect(input.value).toBe('New draft')
+    expect(input.setValue).not.toHaveBeenCalled()
+  })
+
+  it('does not restore input into a different conversation', async () => {
+    const { controller, model, input } = setup()
+    let resolve!: (text: string) => void
+    vi.spyOn(model, 'sendMessage').mockImplementation(
+      () =>
+        new Promise<string>((done) => {
+          resolve = done
+        })
+    )
+    input.value = 'Old question'
+    const pending = controller.sendInput()
+    await controller.startNewChat()
+    resolve('')
+    await pending
+    expect(input.setValue).not.toHaveBeenCalled()
+  })
+
+  it('restores only the latest rejected submission', async () => {
+    const { controller, model, input } = setup()
+    const resolvers: ((text: string) => void)[] = []
+    vi.spyOn(model, 'sendMessage').mockImplementation(
+      () =>
+        new Promise<string>((done) => {
+          resolvers.push(done)
+        })
+    )
+    input.value = 'First'
+    const first = controller.sendInput()
+    input.value = 'Second'
+    const second = controller.sendInput()
+    resolvers[0]!('')
+    await first
+    expect(input.setValue).not.toHaveBeenCalled()
+    resolvers[1]!('')
+    await second
+    expect(input.value).toBe('Second')
+  })
+
+  it('does not restore dispatched input when an answer fails later', async () => {
+    const { controller, input, sendChatMessage, model } = setup()
+    sendChatMessage.mockRejectedValue(new Error('failed'))
+    input.value = 'Question'
+    expect(await controller.sendInput()).toBe(true)
+    await vi.waitFor(() => expect(model.isGenerating.value).toBe(false))
+    expect(input.setValue).not.toHaveBeenCalled()
+    expect(model.messages.value[0]?.content).toBe('Question')
+  })
+
+  it('opens history through the file controller and stales editor selection', async () => {
+    const { controller, deps, loadChatHistoryItem, editor } = setup()
+    editor.selectedText = 'selection'
+    loadChatHistoryItem.mockResolvedValue({
+      id: 'stored',
+      description: 'Stored',
+      lastMsgDate: '2026-10-11',
+      messages: [{ role: 'user', content: 'question' }],
+    })
+    await controller.openChat('stored')
+    expect(deps.files.whileOpening).toHaveBeenCalledOnce()
+    expect(deps.input.focus).toHaveBeenCalledOnce()
+    expect(controller.editorContext.value?.mode).toBe('suggested')
+  })
+
+  it('opens the last or a new chat through file lifecycle coordination', async () => {
+    const { controller, deps, model } = setup()
+    await controller.openLastOrNewChat()
+    expect(deps.files.whileOpening).toHaveBeenCalledOnce()
+    expect(model.newChatParams.value.id).toBe('chat-1')
+    expect(deps.input.focus).toHaveBeenCalledOnce()
+  })
+
+  it('delegates model selection', async () => {
+    const { controller, deps } = setup()
+    await controller.selectModel('other-model')
+    expect(deps.selectModel).toHaveBeenCalledWith('other-model')
+  })
+})
