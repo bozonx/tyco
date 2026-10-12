@@ -3,6 +3,7 @@ use std::time::Duration;
 use serde::Deserialize;
 use tauri::{AppHandle, State};
 
+use super::blocking;
 use crate::errors::AppError;
 use crate::services::custom_actions::{
     self, CommandRunRecord, ScriptExecutionResult, ScriptRequest,
@@ -28,25 +29,29 @@ pub struct ScriptActionRequest {
     run_id: Option<String>,
 }
 
-#[tauri::command(async)]
-pub fn execute_script_action(
+/// Waits for the command, up to an hour, on the blocking pool.
+#[tauri::command]
+pub async fn execute_script_action(
     app: AppHandle,
     request: ScriptActionRequest,
 ) -> Result<ScriptExecutionResult, AppError> {
-    let log_dir = storage::app_log_dir(&app).ok();
-    custom_actions::execute_script(
-        &ScriptRequest {
-            name: &request.name,
-            command: &request.command,
-            working_dir: request.working_dir.as_deref(),
-            text: &request.text,
-            capture_output: request.capture_output,
-            output_timeout: request.timeout_sec.map(Duration::from_secs),
-            log_output: request.log_output,
-            run_id: request.run_id.as_deref(),
-        },
-        log_dir.as_deref(),
-    )
+    blocking(move || {
+        let log_dir = storage::app_log_dir(&app).ok();
+        custom_actions::execute_script(
+            &ScriptRequest {
+                name: &request.name,
+                command: &request.command,
+                working_dir: request.working_dir.as_deref(),
+                text: &request.text,
+                capture_output: request.capture_output,
+                output_timeout: request.timeout_sec.map(Duration::from_secs),
+                log_output: request.log_output,
+                run_id: request.run_id.as_deref(),
+            },
+            log_dir.as_deref(),
+        )
+    })
+    .await?
 }
 
 /// Stops a command started with `run_id` that is still waited for.
@@ -55,43 +60,62 @@ pub fn cancel_script_action(run_id: String) -> bool {
     custom_actions::cancel_script(&run_id)
 }
 
-/// A script file picked by the user, as a shell command that runs it.
-#[tauri::command(async)]
-pub fn pick_script_file(app: AppHandle) -> Option<String> {
-    custom_actions::pick_script_file(&app)
+/// A script file picked by the user, as a shell command that runs it. The
+/// dialog waits for the user, so it waits on the blocking pool.
+#[tauri::command]
+pub async fn pick_script_file(app: AppHandle) -> Result<Option<String>, AppError> {
+    blocking(move || custom_actions::pick_script_file(&app)).await
 }
 
-#[tauri::command(async)]
-pub fn pick_directory(app: AppHandle) -> Option<String> {
-    custom_actions::pick_directory(&app)
+#[tauri::command]
+pub async fn pick_directory(app: AppHandle) -> Result<Option<String>, AppError> {
+    blocking(move || custom_actions::pick_directory(&app)).await
 }
 
-#[tauri::command(async)]
-pub fn log_custom_action(app: AppHandle, name: String, action_type: String, details: String) {
-    if let Ok(log_dir) = storage::app_log_dir(&app) {
-        let _ = custom_actions::log_custom_action(&log_dir, &name, &action_type, &details);
-    }
-}
-
-#[tauri::command(async)]
-pub fn log_command_run(app: AppHandle, record: CommandRunRecord) {
-    if let Ok(log_dir) = storage::app_log_dir(&app) {
-        if let Err(error) = custom_actions::log_command_run(&log_dir, &record) {
-            log::warn!("Could not log the command run: {error}");
+#[tauri::command]
+pub async fn log_custom_action(
+    app: AppHandle,
+    name: String,
+    action_type: String,
+    details: String,
+) -> Result<(), AppError> {
+    blocking(move || {
+        if let Ok(log_dir) = storage::app_log_dir(&app) {
+            if let Err(error) =
+                custom_actions::log_custom_action(&log_dir, &name, &action_type, &details)
+            {
+                log::warn!("Could not log the custom action: {error}");
+            }
         }
-    }
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn log_command_run(app: AppHandle, record: CommandRunRecord) -> Result<(), AppError> {
+    blocking(move || {
+        if let Ok(log_dir) = storage::app_log_dir(&app) {
+            if let Err(error) = custom_actions::log_command_run(&log_dir, &record) {
+                log::warn!("Could not log the command run: {error}");
+            }
+        }
+    })
+    .await
 }
 
 /// Opens `actions.log` in the text viewer of the desktop; `false` while no
 /// command has been logged yet.
-#[tauri::command(async)]
-pub fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
-    let path = custom_actions::action_log_path(&storage::app_log_dir(&app)?);
-    if !path.is_file() {
-        return Ok(false);
-    }
-    crate::services::platform::open_file(&path)?;
-    Ok(true)
+#[tauri::command]
+pub async fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
+    blocking(move || {
+        let path = custom_actions::action_log_path(&storage::app_log_dir(&app)?);
+        if !path.is_file() {
+            return Ok(false);
+        }
+        crate::services::platform::open_file(&path)?;
+        Ok(true)
+    })
+    .await?
 }
 
 #[tauri::command(async)]
@@ -141,19 +165,23 @@ pub async fn answer_external_access(
     .map_err(|error| AppError::Message(error.to_string()))?
 }
 
-#[tauri::command(async)]
-pub fn finish_external_job(
+/// Completing may paste over the selection and wait for the focus, so it runs
+/// on the blocking pool.
+#[tauri::command]
+pub async fn finish_external_job(
     app: AppHandle,
     window: tauri::WebviewWindow,
     id: String,
     completion: crate::services::external_api::JobCompletion,
-) -> Option<tyco_activation_protocol::Job> {
-    if window.label() == crate::services::runtime::QUICK_WINDOW_LABEL {
+) -> Result<Option<tyco_activation_protocol::Job>, AppError> {
+    if window.label() != crate::services::runtime::QUICK_WINDOW_LABEL {
+        return Ok(None);
+    }
+    blocking(move || {
         crate::services::external_api::complete(&app, &id, completion);
         use tauri::Manager;
-        return app
-            .state::<crate::services::external_jobs::ExternalJobs>()
-            .get(&id);
-    }
-    None
+        app.state::<crate::services::external_jobs::ExternalJobs>()
+            .get(&id)
+    })
+    .await
 }

@@ -75,9 +75,7 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
 }
 
 fn home_dir() -> Option<PathBuf> {
-    std::env::var_os("HOME")
-        .or_else(|| std::env::var_os("USERPROFILE"))
-        .map(PathBuf::from)
+    crate::services::platform::shell::home_dir()
 }
 
 /// Expands a leading `~` and requires the result to be an absolute path, so that
@@ -93,7 +91,10 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
 
     let resolved = if dir == "~" {
         home_required(home)?.to_path_buf()
-    } else if let Some(rest) = dir.strip_prefix("~/") {
+    } else if let Some(rest) = dir
+        .strip_prefix("~/")
+        .or_else(|| dir.strip_prefix("~\\").filter(|_| cfg!(windows)))
+    {
         home_required(home)?.join(rest)
     } else {
         PathBuf::from(dir)
@@ -116,7 +117,8 @@ fn validate_file_name(file_name: &str) -> Result<(), AppError> {
     let is_invalid = file_name.trim().is_empty()
         || file_name == "."
         || file_name == ".."
-        || file_name.contains(['/', '\\', '\0']);
+        || file_name.contains(['/', '\\', '\0'])
+        || (cfg!(windows) && !is_windows_file_name(file_name));
 
     if is_invalid {
         return Err(AppError::Message(format!(
@@ -125,6 +127,22 @@ fn validate_file_name(file_name: &str) -> Result<(), AppError> {
     }
 
     Ok(())
+}
+
+/// What Windows takes as a plain file name: `:` would name a stream of
+/// another file, a device name like `CON` opens the device, and a trailing
+/// dot or space is dropped.
+fn is_windows_file_name(file_name: &str) -> bool {
+    const RESERVED: [&str; 22] = [
+        "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
+        "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    ];
+    let stem = file_name.split('.').next().unwrap_or_default().trim_end();
+    !file_name
+        .chars()
+        .any(|c| c.is_control() || "<>:\"|?*".contains(c))
+        && !file_name.ends_with(['.', ' '])
+        && !RESERVED.iter().any(|name| stem.eq_ignore_ascii_case(name))
 }
 
 fn numbered_file_name(file_name: &str, attempt: u32) -> String {
@@ -141,6 +159,24 @@ fn numbered_file_name(file_name: &str, attempt: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rejects_names_windows_does_not_take_as_files() {
+        for name in [
+            "a:stream.md",
+            "CON",
+            "nul.txt",
+            "note.",
+            "note ",
+            "a?b",
+            "a\u{1}b",
+        ] {
+            assert!(!is_windows_file_name(name), "{name}");
+        }
+        for name in ["note.md", "console.md", "2026-10-11.md"] {
+            assert!(is_windows_file_name(name), "{name}");
+        }
+    }
     use std::sync::atomic::{AtomicU32, Ordering};
 
     /// Returns a unique, not yet existing path under the system temp dir.

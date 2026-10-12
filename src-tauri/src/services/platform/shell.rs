@@ -2,9 +2,14 @@
 //! PowerShell on Windows, with quoting rules to match.
 
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Child, Command};
 
-/// A command that runs `script` in the platform shell.
+/// The environment variable that carries the text into a command, see
+/// [`substitute`].
+pub const TEXT_ENV: &str = "TYCO_TEXT";
+
+/// A command that runs `script` in the platform shell, in a process group of
+/// its own, so that [`kill_tree`] stops whatever the script started.
 pub fn command(script: &str) -> Command {
     #[cfg(target_os = "windows")]
     {
@@ -16,17 +21,53 @@ pub fn command(script: &str) -> Command {
 
     #[cfg(target_os = "macos")]
     {
+        use std::os::unix::process::CommandExt;
         let mut command = Command::new("/bin/zsh");
-        command.args(["-c", script]);
+        command.args(["-c", script]).process_group(0);
         command
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
+        use std::os::unix::process::CommandExt;
         let mut command = Command::new("/bin/sh");
-        command.args(["-c", script]);
+        command.args(["-c", script]).process_group(0);
         command
     }
+}
+
+/// A command that runs `script` with every `placeholder` standing for `text`,
+/// see [`substitute`].
+pub fn command_with_text(script: &str, placeholder: &str, text: &str) -> Command {
+    let mut command = command(&substitute(script, placeholder, text));
+    command.env(TEXT_ENV, text);
+    command
+}
+
+/// Stops the shell of `child` and every process it started. Killing the
+/// shell alone would leave a pipeline or a background job running, and
+/// holding the pipes the output is read from.
+pub fn kill_tree(child: &mut Child) {
+    #[cfg(unix)]
+    {
+        // the shell leads its own group, see `command`
+        if let Ok(group) = i32::try_from(child.id()) {
+            // SAFETY: plain system call on a process group id
+            unsafe {
+                libc::kill(-group, libc::SIGKILL);
+            }
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let mut taskkill = Command::new("taskkill");
+        taskkill.args(["/PID", &child.id().to_string(), "/T", "/F"]);
+        crate::services::clipboard::hide_console_window(&mut taskkill);
+        if let Err(error) = taskkill.output() {
+            log::warn!("Could not stop the processes of a command: {error}");
+        }
+    }
+    let _ = child.kill();
 }
 
 /// `text` as a single literal argument of the platform shell.
@@ -66,18 +107,23 @@ enum Context {
     Double,
 }
 
-/// Replaces every `placeholder` in `script` with `text` as a literal, escaped
-/// for the quotes the placeholder stands in: `{{TEXT}}`, `"{{TEXT}}"` and
-/// `'{{TEXT}}'` all give the text as it is, never anything the shell expands.
+/// Replaces every `placeholder` in `script` with a reference to [`TEXT_ENV`],
+/// written for the quotes the placeholder stands in: `{{TEXT}}`, `"{{TEXT}}"`
+/// and `'{{TEXT}}'` all give the text as it is. The text itself never becomes
+/// part of the script, so nothing the parser here does not follow (a here
+/// document, a comment, a command substitution) can make the shell run it.
+/// Only a PowerShell single-quoted string, which expands nothing, gets the
+/// text escaped in place. The command must have `TEXT_ENV` set, see
+/// [`command_with_text`].
 pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
     let windows = cfg!(target_os = "windows");
-    let mut result = String::with_capacity(script.len() + text.len() + 8);
+    let mut result = String::with_capacity(script.len() + 16);
     let mut context = Context::Bare;
     let mut rest = script;
 
     while !rest.is_empty() {
         if !placeholder.is_empty() && rest.starts_with(placeholder) {
-            result.push_str(&literal(context, text, windows));
+            result.push_str(&reference(context, text, windows));
             rest = &rest[placeholder.len()..];
             continue;
         }
@@ -114,26 +160,17 @@ pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
     result
 }
 
-fn literal(context: Context, text: &str, windows: bool) -> String {
+/// What stands for the text in `context`. The braces keep a character right
+/// after the placeholder out of the variable name.
+fn reference(context: Context, text: &str, windows: bool) -> String {
     match (context, windows) {
-        (Context::Bare, _) => quote(text),
-        // close the quotes, add the text quoted on its own, reopen them
-        (Context::Single, false) => format!("'{}'", quote(text)),
+        (Context::Bare, false) => format!("\"${{{TEXT_ENV}}}\""),
+        // close the quotes, add the variable quoted on its own, reopen them
+        (Context::Single, false) => format!("'\"${{{TEXT_ENV}}}\"'"),
+        (Context::Double, false) => format!("${{{TEXT_ENV}}}"),
+        (Context::Bare | Context::Double, true) => format!("${{env:{TEXT_ENV}}}"),
+        // a single-quoted string cannot hold a variable, and expands nothing
         (Context::Single, true) => escape_powershell_single(text),
-        (Context::Double, false) => text
-            .chars()
-            .flat_map(|c| match c {
-                '\\' | '$' | '`' | '"' => vec!['\\', c],
-                c => vec![c],
-            })
-            .collect(),
-        (Context::Double, true) => text
-            .chars()
-            .flat_map(|c| match c {
-                '`' | '$' | '"' | '\u{201C}' | '\u{201D}' | '\u{201E}' => vec!['`', c],
-                c => vec![c],
-            })
-            .collect(),
     }
 }
 
@@ -154,8 +191,12 @@ mod tests {
     const PLACEHOLDER: &str = "{{TEXT}}";
     const NASTY: &str = "it's \"quoted\" $HOME `id` \\ ; exit 3 ‘’“”";
 
-    fn run(script: &str) -> String {
-        let output = command(script).output().unwrap();
+    /// Runs `template` with `text` in place of the placeholders.
+    fn run(template: &str, text: &str) -> String {
+        let script = substitute(template, PLACEHOLDER, text);
+        let output = command_with_text(template, PLACEHOLDER, text)
+            .output()
+            .unwrap();
         assert!(
             output.status.success(),
             "{script}: {}",
@@ -190,26 +231,40 @@ mod tests {
 
     #[test]
     fn substitutes_a_bare_placeholder() {
-        let script = substitute(&print(PLACEHOLDER), PLACEHOLDER, NASTY);
-        assert_eq!(run(&script), NASTY);
+        assert_eq!(run(&print(PLACEHOLDER), NASTY), NASTY);
     }
 
     #[test]
     fn substitutes_a_placeholder_in_double_quotes() {
-        let script = substitute(&print("\"<{{TEXT}}>\""), PLACEHOLDER, NASTY);
-        assert_eq!(run(&script), format!("<{NASTY}>"));
+        assert_eq!(run(&print("\"<{{TEXT}}>\""), NASTY), format!("<{NASTY}>"));
     }
 
     #[test]
     fn substitutes_a_placeholder_in_single_quotes() {
-        let script = substitute(&print("'<{{TEXT}}>'"), PLACEHOLDER, NASTY);
-        assert_eq!(run(&script), format!("<{NASTY}>"));
+        assert_eq!(run(&print("'<{{TEXT}}>'"), NASTY), format!("<{NASTY}>"));
     }
 
     #[test]
     fn substitutes_every_placeholder_once() {
-        let script = substitute(&print("{{TEXT}}-{{TEXT}}"), PLACEHOLDER, PLACEHOLDER);
-        assert_eq!(run(&script), "{{TEXT}}-{{TEXT}}");
+        assert_eq!(
+            run(&print("{{TEXT}}-{{TEXT}}"), PLACEHOLDER),
+            "{{TEXT}}-{{TEXT}}"
+        );
+    }
+
+    /// The parser follows quotes only: in a here document or a comment the
+    /// placeholder stands outside of them, where an inlined text would run.
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn a_placeholder_in_a_here_document_or_a_comment_runs_nothing() {
+        let marker = std::env::temp_dir().join(format!("tyco-shell-{}", std::process::id()));
+        let _ = std::fs::remove_file(&marker);
+        let text = format!("$(touch {0})`touch {0}`\ntouch {0} #", marker.display());
+
+        run(&format!("cat <<EOF\n{PLACEHOLDER}\nEOF"), &text);
+        run(&format!("true # {PLACEHOLDER}"), &text);
+
+        assert!(!marker.exists(), "the text ran as a command");
     }
 
     #[test]

@@ -5,7 +5,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use tyco_activation_protocol::{Job, JobState, Request, Response, RunRequest, API_VERSION};
 
 use super::activation::{Activation, ActivationSource, StartMode};
-use super::external_access::{self, AccessPrompt, AccessRequest};
+use super::external_access::{self, AccessPrompt, AccessRequest, AskError};
 use super::external_commands::{self, ExternalCommand, LookupError};
 use super::external_jobs::ExternalJobs;
 use super::{runtime, selection_replace};
@@ -14,6 +14,8 @@ use crate::state::AppState;
 pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
 
 type ApiResult<T> = Result<T, Response>;
+
+const PROMPT_BUSY: &str = "Another request for the selection is waiting for an answer";
 
 /// Selection capture is opt-in; which commands run from
 /// outside is decided by each command's own grant.
@@ -157,11 +159,9 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     let config = app.state::<AppState>().params().user_config;
     // without the permission the user is asked, see `external_access`
     let ask = request.selection && !access_allowed(&config, "selection");
+    // checked again when the prompt is taken; this saves the capture
     if ask && app.state::<AccessPrompt>().is_pending() {
-        return Err(Response::coded_error(
-            "AccessDenied",
-            "Another request for the selection is waiting for an answer",
-        ));
+        return Err(Response::coded_error("AccessDenied", PROMPT_BUSY));
     }
     let selection = if request.selection {
         // taken before the prompt, which moves the focus away from it
@@ -192,12 +192,14 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
             command_name: command_name(&config, &command.id),
             replace: request.replace,
         };
-        if let Err(error) = external_access::ask(app, prompt, source) {
-            let message = error.to_string();
-            fail(app, &job.id, message.clone(), "Unavailable");
-            return Err(Response::coded_error("Unavailable", message));
-        }
-        return Ok(job);
+        let (code, message) = match external_access::ask(app, prompt, source) {
+            Ok(()) => return Ok(job),
+            Err(AskError::Busy) => ("AccessDenied", String::from(PROMPT_BUSY)),
+            Err(AskError::Failed(error)) => ("Unavailable", error.to_string()),
+        };
+        // also gives the selection run its clipboard back
+        fail(app, &job.id, message.clone(), code);
+        return Err(Response::coded_error(code, message));
     }
     hand_off(app, &job.id, &command, &request, source)?;
     Ok(job)
@@ -372,7 +374,10 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
 
 fn keep_selection_whitespace(input: &str, output: &str) -> String {
     let leading = &input[..input.len() - input.trim_start().len()];
-    let trailing = &input[input.trim_end().len()..];
+    // taken from what follows the leading part: an input of blanks alone
+    // would otherwise give them twice
+    let rest = &input[leading.len()..];
+    let trailing = &rest[rest.trim_end().len()..];
     format!("{leading}{}{trailing}", output.trim())
 }
 
@@ -638,5 +643,6 @@ mod tests {
             keep_selection_whitespace("\u{2003}source\t", "changed"),
             "\u{2003}changed\t"
         );
+        assert_eq!(keep_selection_whitespace("  \n", "text"), "  \ntext");
     }
 }

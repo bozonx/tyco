@@ -1,5 +1,7 @@
 //! Clipboard snapshots preserve every available HGLOBAL-backed format.
-//! Handle-backed formats are rejected before any clipboard mutation.
+//! Formats backed by GDI or metafile handles are left out: Windows
+//! synthesizes most of them again from the formats that are kept, e.g. a
+//! bitmap from its DIB.
 use crate::errors::AppError;
 use std::time::{Duration, Instant};
 use windows_sys::Win32::Foundation::{GlobalFree, HWND};
@@ -77,21 +79,26 @@ pub fn snapshot() -> Result<Snapshot, AppError> {
         }
         // These formats use GDI/metafile handles rather than global memory.
         if matches!(format, 2 | 3 | 9 | 14 | 0x80..=0x8e | 0x300..=0x3ff) {
-            return Err(AppError::Message(
-                "Clipboard contains an unsupported handle-backed format".into(),
-            ));
+            continue;
         }
         let handle = unsafe { GetClipboardData(format) };
+        if handle.is_null() {
+            // a delayed rendering the owner did not provide
+            continue;
+        }
         let size = unsafe { GlobalSize(handle) };
+        if size == 0 {
+            continue;
+        }
         total += size;
-        if size == 0 || total > MAX_SNAPSHOT_BYTES {
+        if total > MAX_SNAPSHOT_BYTES {
             return Err(AppError::Message(
-                "Clipboard cannot be safely preserved".into(),
+                "Clipboard content is too large to be preserved".into(),
             ));
         }
         let pointer = unsafe { GlobalLock(handle) };
         if pointer.is_null() {
-            return Err(std::io::Error::last_os_error().into());
+            continue;
         }
         let bytes = unsafe { std::slice::from_raw_parts(pointer.cast::<u8>(), size).to_vec() };
         unsafe {
@@ -100,7 +107,9 @@ pub fn snapshot() -> Result<Snapshot, AppError> {
         formats.push((format, bytes));
     }
     if formats.is_empty() && unsafe { CountClipboardFormats() } != 0 {
-        return Err(AppError::Message("Clipboard enumeration failed".into()));
+        return Err(AppError::Message(
+            "Clipboard holds no format that can be preserved".into(),
+        ));
     }
     Ok(Snapshot(formats))
 }
@@ -138,6 +147,14 @@ pub fn restore(snapshot: &Snapshot) -> Result<(), AppError> {
     }
     for (format, bytes) in &snapshot.0 {
         set_bytes(*format, bytes)?;
+    }
+    Ok(())
+}
+
+pub fn clear() -> Result<(), AppError> {
+    let _clipboard = Clipboard::open()?;
+    if unsafe { EmptyClipboard() } == 0 {
+        return Err(std::io::Error::last_os_error().into());
     }
     Ok(())
 }

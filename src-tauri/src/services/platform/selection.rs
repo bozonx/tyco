@@ -61,12 +61,13 @@ fn active_target() -> Option<Target> {
     if !session::current().is_x11() {
         return None;
     }
-    let output = std::process::Command::new("xdotool")
-        .arg("getactivewindow")
-        .output()
-        .ok()?;
-    let id = String::from_utf8(output.stdout).ok()?.trim().to_owned();
-    (output.status.success() && !id.is_empty()).then_some(Target {
+    let output = super::linux::command::output_with_timeout(
+        "xdotool",
+        &["getactivewindow"],
+        Duration::from_secs(2),
+    )?;
+    let id = String::from_utf8(output).ok()?.trim().to_owned();
+    (!id.is_empty()).then_some(Target {
         id,
         terminal: false,
     })
@@ -132,8 +133,11 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
     use super::{windows, windows_clipboard};
     let id = windows::capture_source()
         .ok_or_else(|| RunError::new(RunErrorCode::NoTarget, "No foreground window"))?;
+    // without a snapshot the selection is still replaced; the clipboard
+    // keeps the result instead of getting its old content back
     let snapshot = windows_clipboard::snapshot()
-        .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+        .inspect_err(|error| log::warn!("The clipboard will not be restored: {error}"))
+        .ok();
     let run = Run {
         id: 0,
         external: false,
@@ -143,7 +147,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
             terminal: windows::foreground_is_terminal(),
         },
         started: Instant::now(),
-        snapshot: Some(snapshot),
+        snapshot,
     };
     let probe = format!("tyco-selection-probe-{}", std::process::id());
     let result = (|| {
@@ -191,8 +195,23 @@ pub(crate) fn restore_clipboard(run: Run) {
     {
         return;
     }
-    if let Some(snapshot) = run.snapshot {
-        let _ = super::windows_clipboard::restore(&snapshot);
+    match run.snapshot {
+        Some(snapshot) => {
+            if let Err(error) = super::windows_clipboard::restore(&snapshot) {
+                log::warn!("Could not restore the clipboard: {error}");
+            }
+        }
+        // only the probe is taken away: a copied selection is what the user
+        // had selected anyway
+        None => {
+            if super::windows_clipboard::read_text()
+                .is_some_and(|text| text.starts_with("tyco-selection-probe-"))
+            {
+                if let Err(error) = super::windows_clipboard::clear() {
+                    log::warn!("Could not clear the clipboard: {error}");
+                }
+            }
+        }
     }
 }
 

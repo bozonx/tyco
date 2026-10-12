@@ -1,8 +1,10 @@
-use std::process::{Command, Stdio};
+use std::time::Duration;
 
 use super::primary_selection;
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::window_tracker::tracker;
+
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[allow(async_fn_in_trait)]
 pub trait ForegroundContext {
@@ -24,17 +26,11 @@ impl SystemForegroundContext {
         }
     }
 
+    /// A selection owner that does not answer would hold the capture, and
+    /// with it the activation, for good.
     fn command_output(program: &str, args: &[&str]) -> Option<String> {
-        let output = Command::new(program)
-            .args(args)
-            .stdin(Stdio::null())
-            .stderr(Stdio::null())
-            .output()
-            .ok()?;
-        if !output.status.success() {
-            return None;
-        }
-        let value = String::from_utf8(output.stdout).ok()?;
+        let output = super::command::output_with_timeout(program, args, COMMAND_TIMEOUT)?;
+        let value = String::from_utf8(output).ok()?;
         let value = value.trim_end_matches(['\r', '\n']);
         (!value.is_empty()).then(|| value.to_owned())
     }

@@ -197,7 +197,16 @@ impl ChatImageStore {
         });
     }
 
-    fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), ChatFileError> {
+    /// Normalizes an image without touching the store, so that the slow
+    /// encoding does not hold its lock; [`Self::remember`] keeps the result.
+    pub fn prepare(
+        bytes: &[u8],
+        name: Option<String>,
+    ) -> Result<(ChatImage, Vec<u8>), ChatFileError> {
+        normalize(bytes, name)
+    }
+
+    pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), ChatFileError> {
         self.expire_owners();
         if self.images.contains_key(&image.id) {
             return Ok(());
@@ -269,6 +278,7 @@ impl ChatImageStore {
         self.owners.remove(owner);
     }
 
+    #[cfg(test)]
     pub fn insert(
         &mut self,
         bytes: &[u8],

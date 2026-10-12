@@ -462,9 +462,7 @@ pub fn execute_script(
 
     let cwd =
         resolve_working_dir(request.working_dir).map_err(|error| fail(&log, error.to_string()))?;
-    let script = shell::substitute(request.command, TEXT_PLACEHOLDER, request.text);
-
-    let mut command = shell::command(&script);
+    let mut command = shell::command_with_text(request.command, TEXT_PLACEHOLDER, request.text);
     if let Some(cwd) = &cwd {
         command.current_dir(cwd);
         log.cwd = cwd.to_string_lossy().into_owned();
@@ -503,7 +501,7 @@ pub fn execute_script(
             return Ok(result);
         }
         Wait::Cancelled => {
-            let _ = running.child.kill();
+            shell::kill_tree(&mut running.child);
             let _ = running.child.wait();
             return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
         }
@@ -511,7 +509,7 @@ pub fn execute_script(
     }
 
     if request.capture_output {
-        let _ = running.child.kill();
+        shell::kill_tree(&mut running.child);
         let _ = running.child.wait();
         return Err(fail(
             &log,
@@ -621,6 +619,32 @@ mod tests {
         pub const ECHO_PLACEHOLDER: &str = "[Console]::Out.Write({{TEXT}})";
         pub const PWD: &str = "(Get-Location).Path";
         pub const SLEEP: &str = "Start-Sleep 30";
+    }
+
+    /// A timeout stops the processes the command started too: they would run
+    /// on and keep the output pipes open.
+    #[cfg(unix)]
+    #[test]
+    fn a_timeout_stops_the_whole_process_tree() {
+        let pid_file = std::env::temp_dir().join(format!("tyco-tree-{}", std::process::id()));
+        let _ = fs::remove_file(&pid_file);
+        let command = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
+        let mut timed = request(&command, "");
+        timed.output_timeout = Some(Duration::from_millis(500));
+
+        let started = Instant::now();
+        assert!(execute_script(&timed, None).is_err());
+        assert!(started.elapsed() < Duration::from_secs(5));
+
+        let pid: i32 = fs::read_to_string(&pid_file)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        let _ = fs::remove_file(&pid_file);
+        thread::sleep(Duration::from_millis(100));
+        // SAFETY: signal 0 only probes whether the process exists
+        assert_ne!(unsafe { libc::kill(pid, 0) }, 0, "the child still runs");
     }
 
     #[test]

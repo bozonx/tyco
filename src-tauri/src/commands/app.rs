@@ -1,6 +1,7 @@
 use serde_json::Value;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
+use super::blocking;
 use crate::errors::AppError;
 use crate::models::{InitParams, LocalState, StorageInfo, StorageKind};
 use crate::services::{config_migration, runtime, storage};
@@ -67,12 +68,19 @@ pub fn open_main_editor(
     runtime::open_main_editor(&app, text, source_text)
 }
 
-/// Off the main thread, as are the other commands that write files: a write
-/// waits for the disk.
-#[tauri::command(async)]
-pub fn save_user_config(
+/// On the blocking pool, as are the other commands that write files: a write
+/// waits for the disk, see `blocking`.
+#[tauri::command]
+pub async fn save_user_config(
     app: AppHandle,
-    state: State<'_, AppState>,
+    user_config: Value,
+    base_config: Value,
+) -> Result<Value, AppError> {
+    blocking(move || save_user_config_blocking(&app, user_config, base_config)).await?
+}
+
+fn save_user_config_blocking(
+    app: &AppHandle,
     user_config: Value,
     base_config: Value,
 ) -> Result<Value, AppError> {
@@ -81,6 +89,7 @@ pub fn save_user_config(
             "The user config must be an object",
         )));
     }
+    let state = app.state::<AppState>();
     let _guard = state.lock_config_storage();
     // the stored config came from a newer build; whatever the webview sends,
     // it is not written over
@@ -97,39 +106,37 @@ pub fn save_user_config(
     if config_migration::config_version(&user_config) == 0 {
         config_migration::stamp_current_version(&mut user_config);
     }
-    storage::save_user_config(&app, &user_config)?;
+    storage::save_user_config(app, &user_config)?;
     let previous_config = state.params().user_config;
     {
         let mut memory = state.lock_history_storage();
         // the config is saved already; history that could not follow the new
         // settings yet does at the next start
-        if let Err(error) = storage::apply_history_settings_change(
-            &app,
-            &previous_config,
-            &user_config,
-            &mut memory,
-        ) {
+        if let Err(error) =
+            storage::apply_history_settings_change(app, &previous_config, &user_config, &mut memory)
+        {
             log::error!("Could not apply the history settings: {error}");
         }
         state.update_params(|params| {
             params.user_config = user_config.clone();
         });
     }
-    runtime::emit_params(&app, &state)?;
+    runtime::emit_params(app, &state)?;
 
     Ok(user_config)
 }
 
-#[tauri::command(async)]
-pub fn get_storage_info(app: AppHandle) -> Result<StorageInfo, AppError> {
-    storage::get_storage_info(&app)
+#[tauri::command]
+pub async fn get_storage_info(app: AppHandle) -> Result<StorageInfo, AppError> {
+    blocking(move || storage::get_storage_info(&app)).await?
 }
 
 /// Takes the kind, not a path: the webview only opens the app's own
 /// directories.
-#[tauri::command(async)]
-pub fn open_storage_location(app: AppHandle, kind: StorageKind) -> Result<(), AppError> {
-    crate::services::platform::open_dir(&storage::storage_dir(&app, kind)?)
+#[tauri::command]
+pub async fn open_storage_location(app: AppHandle, kind: StorageKind) -> Result<(), AppError> {
+    blocking(move || crate::services::platform::open_dir(&storage::storage_dir(&app, kind)?))
+        .await?
 }
 
 #[tauri::command]
@@ -144,21 +151,24 @@ pub fn submit_activation_metric_value(app: AppHandle, id: u64, value: String) {
 /// Merges `patch` into the stored local state. Merging here rather than in
 /// a window keeps concurrent patches, also from both windows, from undoing
 /// each other.
-#[tauri::command(async)]
-pub fn patch_local_state(
+#[tauri::command]
+pub async fn patch_local_state(
     app: AppHandle,
-    state: State<'_, AppState>,
     patch: serde_json::Map<String, Value>,
 ) -> Result<LocalState, AppError> {
-    let _guard = state.lock_config_storage();
-    let local_state = storage::merge_local_state(&state.params().local_state, patch)?;
-    storage::save_local_state(&app, &local_state)?;
-    state.update_params(|params| {
-        params.local_state = local_state.clone();
-    });
-    runtime::emit_params(&app, &state)?;
+    blocking(move || {
+        let state = app.state::<AppState>();
+        let _guard = state.lock_config_storage();
+        let local_state = storage::merge_local_state(&state.params().local_state, patch)?;
+        storage::save_local_state(&app, &local_state)?;
+        state.update_params(|params| {
+            params.local_state = local_state.clone();
+        });
+        runtime::emit_params(&app, &state)?;
 
-    Ok(local_state)
+        Ok(local_state)
+    })
+    .await?
 }
 
 #[tauri::command]

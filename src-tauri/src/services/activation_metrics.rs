@@ -17,10 +17,10 @@ const ENABLE_ENV: &str = "TYCO_ACTIVATION_BENCH";
 const CSV_ENV: &str = "TYCO_METRICS_CSV";
 
 pub fn now_ns() -> u128 {
+    // a clock set before 1970 gives zeros rather than an abort
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("clock before Unix epoch")
-        .as_nanos()
+        .map_or(0, |duration| duration.as_nanos())
 }
 
 #[derive(Clone, Default, Serialize)]
@@ -209,11 +209,17 @@ pub fn submit_value(app: &AppHandle, id: u64, value: String) {
     }
 }
 
+/// In `XDG_RUNTIME_DIR` only: the socket starts activations and returns
+/// what was typed, so it must not sit where other users can reach it.
 #[cfg(unix)]
-fn socket_path() -> std::path::PathBuf {
-    let directory = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| String::from("/tmp"));
+fn socket_path() -> Result<std::path::PathBuf, AppError> {
+    let directory = std::env::var_os("XDG_RUNTIME_DIR").ok_or_else(|| {
+        AppError::Message(String::from(
+            "The activation benchmark socket needs XDG_RUNTIME_DIR",
+        ))
+    })?;
     let suffix = std::env::var("TYCO_METRICS_SOCKET_SUFFIX").unwrap_or_default();
-    std::path::PathBuf::from(directory).join(format!("tyco-activation-metrics{suffix}.sock"))
+    Ok(std::path::PathBuf::from(directory).join(format!("tyco-activation-metrics{suffix}.sock")))
 }
 
 #[cfg(unix)]
@@ -221,11 +227,14 @@ fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
     use std::io::{BufRead, BufReader};
     use std::os::unix::net::UnixListener;
 
-    let path = socket_path();
+    use std::os::unix::fs::PermissionsExt;
+
+    let path = socket_path()?;
     if path.exists() {
         std::fs::remove_file(&path)?;
     }
     let listener = UnixListener::bind(&path)?;
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
     std::thread::spawn(move || {
         for stream in listener.incoming() {
             let Ok(stream) = stream else { continue };

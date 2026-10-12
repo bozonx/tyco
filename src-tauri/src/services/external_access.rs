@@ -52,8 +52,15 @@ impl AccessPrompt {
             .is_some()
     }
 
-    fn set(&self, pending: Pending) {
-        *self.0.lock().unwrap_or_else(|error| error.into_inner()) = Some(pending);
+    /// Takes the prompt for `pending`; false while another request waits.
+    /// One step, so that two requests at once cannot both take it.
+    fn claim(&self, pending: Pending) -> bool {
+        let mut slot = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        if slot.is_some() {
+            return false;
+        }
+        *slot = Some(pending);
+        true
     }
 
     fn take(&self, job_id: &str) -> Option<Pending> {
@@ -66,23 +73,35 @@ impl AccessPrompt {
     }
 }
 
+/// Why the prompt was not shown.
+#[derive(Debug)]
+pub enum AskError {
+    /// Another request is waiting for an answer.
+    Busy,
+    Failed(AppError),
+}
+
 /// Shows the prompt for the job; it runs once the user allows it.
 pub fn ask(
     app: &AppHandle,
     request: AccessRequest,
     source: ActivationSource,
-) -> Result<(), AppError> {
-    app.state::<AccessPrompt>().set(Pending {
+) -> Result<(), AskError> {
+    let claimed = app.state::<AccessPrompt>().claim(Pending {
         job_id: request.job_id.clone(),
         source,
     });
+    if !claimed {
+        return Err(AskError::Busy);
+    }
     let mut activation = Activation::new(StartMode::ExternalAccess, source);
     // the selection is taken already; the prompt must not capture another
     activation.selected_text = Some(String::new());
     let job_id = request.job_id.clone();
     activation.access_request = Some(request);
-    runtime::activate(app, activation).inspect_err(|_| {
+    runtime::activate(app, activation).map_err(|error| {
         app.state::<AccessPrompt>().take(&job_id);
+        AskError::Failed(error)
     })
 }
 
@@ -182,11 +201,16 @@ mod tests {
     fn only_the_waiting_job_takes_the_prompt() {
         let prompt = AccessPrompt::default();
         assert!(!prompt.is_pending());
-        prompt.set(Pending {
+        assert!(prompt.claim(Pending {
             job_id: "job-1".into(),
             source: ActivationSource::Cli,
-        });
+        }));
         assert!(prompt.is_pending());
+        // a second request does not take the prompt of the first
+        assert!(!prompt.claim(Pending {
+            job_id: "job-2".into(),
+            source: ActivationSource::Cli,
+        }));
         assert!(prompt.take("job-2").is_none());
         assert!(prompt.take("job-1").is_some());
         assert!(!prompt.is_pending());

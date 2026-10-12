@@ -129,6 +129,13 @@ pub(crate) struct Run {
     pub snapshot: Option<super::platform::windows_clipboard::Snapshot>,
 }
 
+/// The run a trigger found, see `SelectionRuns::take_active_at`.
+enum Taken {
+    Nothing,
+    Active(Run),
+    Abandoned(Run),
+}
+
 #[derive(Default)]
 pub struct SelectionRuns {
     next_id: AtomicU64,
@@ -141,17 +148,19 @@ impl SelectionRuns {
         self.current.lock().expect("selection run lock poisoned")
     }
 
-    /// Takes the run in progress, unless it was abandoned.
-    fn take_active_at(&self, now: Instant) -> Option<Run> {
-        let run = self.lock().take()?;
+    /// Takes the run in progress, telling one the webview abandoned.
+    fn take_active_at(&self, now: Instant) -> Taken {
+        let Some(run) = self.lock().take() else {
+            return Taken::Nothing;
+        };
         if now.saturating_duration_since(run.started) < ABANDONED_RUN_AGE {
-            Some(run)
+            Taken::Active(run)
         } else {
             log::warn!(
                 "Dropping selection run {} the webview never finished",
                 run.id
             );
-            None
+            Taken::Abandoned(run)
         }
     }
 
@@ -224,7 +233,8 @@ impl Drop for CapturingGuard {
 enum TriggerDecision {
     Busy,
     Cancel(Run, CapturingGuard),
-    Capture(CapturingGuard),
+    /// With a run the webview abandoned, whose clipboard goes back first.
+    Capture(CapturingGuard, Option<Run>),
 }
 
 impl SelectionRuns {
@@ -248,10 +258,11 @@ impl SelectionRuns {
                 "An external selection job is running".into(),
             ));
         }
-        if let Some(run) = self.take_active_at(now) {
-            return Ok(TriggerDecision::Cancel(run, guard));
+        match self.take_active_at(now) {
+            Taken::Active(run) => Ok(TriggerDecision::Cancel(run, guard)),
+            Taken::Nothing => Ok(TriggerDecision::Capture(guard, None)),
+            Taken::Abandoned(run) => Ok(TriggerDecision::Capture(guard, Some(run))),
         }
-        Ok(TriggerDecision::Capture(guard))
     }
 
     fn capture_and_publish(
@@ -260,7 +271,13 @@ impl SelectionRuns {
         action: String,
         wait: TriggerWait,
         guard: CapturingGuard,
+        abandoned: Option<Run>,
     ) {
+        // the clipboard of the abandoned run would otherwise keep its
+        // selection, and the new snapshot would take that for the user's
+        if let Some(run) = abandoned {
+            backend.restore(run);
+        }
         backend.wait(wait);
         let run_id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
         let user_config = backend.user_config();
@@ -359,7 +376,7 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
             log::debug!("Ignoring the {action} trigger: a selection is being captured")
         }
         TriggerDecision::Cancel(run, _guard) => cancel_with(&SystemSelectionBackend(app), run),
-        TriggerDecision::Capture(guard) => {
+        TriggerDecision::Capture(guard, abandoned) => {
             let app = app.clone();
             let action = action.to_owned();
             thread::spawn(move || {
@@ -368,6 +385,7 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
                     action,
                     wait,
                     guard,
+                    abandoned,
                 );
             });
         }
@@ -555,14 +573,34 @@ mod tests {
         let runs = SelectionRuns::default();
         let now = Instant::now();
         runs.lock().replace(run_at(1, now));
-        assert_eq!(
-            runs.take_active_at(now + ABANDONED_RUN_AGE - Duration::from_nanos(1))
-                .map(|run| run.id),
-            Some(1)
-        );
+        assert!(matches!(
+            runs.take_active_at(now + ABANDONED_RUN_AGE - Duration::from_nanos(1)),
+            Taken::Active(Run { id: 1, .. })
+        ));
         runs.lock().replace(run_at(2, now));
-        assert!(runs.take_active_at(now + ABANDONED_RUN_AGE).is_none());
+        assert!(matches!(
+            runs.take_active_at(now + ABANDONED_RUN_AGE),
+            Taken::Abandoned(Run { id: 2, .. })
+        ));
         assert!(runs.lock().is_none());
+    }
+
+    #[test]
+    fn an_abandoned_run_gets_its_clipboard_back_before_the_next_capture() {
+        let runs = SelectionRuns::default();
+        let backend = Backend::default();
+        let guard = runs.reserve().unwrap();
+        runs.capture_and_publish(
+            &backend,
+            "correction".into(),
+            TriggerWait::Now,
+            guard,
+            Some(run_at(9, Instant::now())),
+        );
+        assert_eq!(
+            backend.operations.lock().unwrap()[..3],
+            ["restore:9", "wait", "capture"]
+        );
     }
 
     #[derive(Default)]
@@ -623,12 +661,12 @@ mod tests {
     }
 
     fn start(runs: &SelectionRuns, backend: &Backend) -> u64 {
-        let TriggerDecision::Capture(guard) =
+        let TriggerDecision::Capture(guard, None) =
             runs.begin_trigger("correction", Instant::now()).unwrap()
         else {
             panic!("capture expected");
         };
-        runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard);
+        runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard, None);
         backend.events.lock().unwrap().last().unwrap().run_id
     }
 
@@ -676,7 +714,7 @@ mod tests {
         );
         assert!(matches!(
             runs.begin_trigger("correction", Instant::now()).unwrap(),
-            TriggerDecision::Capture(_)
+            TriggerDecision::Capture(..)
         ));
     }
 

@@ -9,6 +9,8 @@ use crate::{Request, Response, MAX_MESSAGE_BYTES};
 
 const IO_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_CLIENTS: usize = 32;
+/// How long the server waits after a failed accept before the next one.
+const ACCEPT_RETRY_DELAY: Duration = Duration::from_millis(100);
 
 async fn read<T: serde::de::DeserializeOwned>(
     stream: &mut (impl AsyncRead + Unpin),
@@ -174,8 +176,19 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
     let clients = Arc::new(tokio::sync::Semaphore::new(MAX_CLIENTS));
     loop {
-        let (stream, _) = listener.accept().await?;
-        if stream.peer_cred()?.uid() != unsafe { libc::geteuid() } {
+        // a failed connection, or a moment without free descriptors, must not
+        // end the server for the rest of the session
+        let stream = match listener.accept().await {
+            Ok((stream, _)) => stream,
+            Err(_) => {
+                tokio::time::sleep(ACCEPT_RETRY_DELAY).await;
+                continue;
+            }
+        };
+        if !stream
+            .peer_cred()
+            .is_ok_and(|credentials| credentials.uid() == unsafe { libc::geteuid() })
+        {
             continue;
         }
         let Ok(permit) = clients.clone().try_acquire_owned() else {
@@ -322,9 +335,20 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
             .acquire_owned()
             .await
             .map_err(io::Error::other)?;
-        server.connect().await?;
-        let next = create(&options)?;
-        let connected = std::mem::replace(&mut server, next);
+        // a client that went away before the connection was made leaves the
+        // instance unusable; a new one takes its place
+        let connected = server.connect().await;
+        let next = loop {
+            match create(&options) {
+                Ok(next) => break next,
+                Err(_) => tokio::time::sleep(ACCEPT_RETRY_DELAY).await,
+            }
+        };
+        let accepted = std::mem::replace(&mut server, next);
+        if connected.is_err() {
+            continue;
+        }
+        let connected = accepted;
         let handler = handler.clone();
         tokio::spawn(async move {
             let _permit = permit;

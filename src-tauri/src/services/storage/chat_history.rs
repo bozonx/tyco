@@ -1,10 +1,66 @@
 use super::*;
 
+const CHAT_INDEX_FILE: &str = "index.json";
+
 pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
-    read_json(
-        &app_data_sub_dir(app, "chats")?.join("index.json"),
-        Vec::<ChatHistoryItem>::new(),
-    )
+    load_chat_index(&app_data_sub_dir(app, "chats")?)
+}
+
+/// The index of the chats in `chats_dir`. An index that is missing or cannot
+/// be read is built anew from the chat files: the chats are all there, and
+/// an empty index would have the next save remove them as orphans.
+fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
+    let index_path = chats_dir.join(CHAT_INDEX_FILE);
+    if let Some(history) = read_or_quarantine(&index_path, |raw| Ok(serde_json::from_str(raw)?))? {
+        return Ok(history);
+    }
+    let history = rebuild_chat_index(chats_dir)?;
+    if !history.is_empty() {
+        log::warn!(
+            "Rebuilt the chat index of {} from {} chat files",
+            chats_dir.display(),
+            history.len()
+        );
+        write_json(&index_path, &history)?;
+    }
+    Ok(history)
+}
+
+/// The index entries of the chat files in `chats_dir`, the most recent first.
+/// A chat file that cannot be read is set aside rather than lost to the
+/// orphan cleanup.
+fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
+    let mut history = Vec::new();
+    for entry in fs::read_dir(chats_dir)?.flatten() {
+        let path = entry.path();
+        if chat_file_id(&path).is_none() || !path.is_file() {
+            continue;
+        }
+        let parsed = fs::read_to_string(&path)
+            .map_err(AppError::from)
+            .and_then(|raw| Ok(serde_json::from_str::<ChatHistoryItem>(&raw)?));
+        match parsed {
+            Ok(mut chat) => {
+                chat.messages = Vec::new();
+                history.push(chat);
+            }
+            Err(error) => {
+                log::warn!("Chat file {} is unreadable: {error}", path.display());
+                if let Err(error) = crate::services::atomic_file::quarantine(&path) {
+                    log::warn!("Could not set {} aside: {error}", path.display());
+                }
+            }
+        }
+    }
+    history.sort_by(|left, right| right.last_msg_date.cmp(&left.last_msg_date));
+    Ok(history)
+}
+
+/// The chat id of a chat file: `<id>.json` with a valid id.
+fn chat_file_id(path: &Path) -> Option<&str> {
+    let name = path.file_name()?.to_str()?;
+    let id = name.strip_suffix(".json")?;
+    sanitize_chat_id(id).ok().map(|_| id)
 }
 
 pub fn chat_image_directory(app: &AppHandle) -> Result<PathBuf, AppError> {
@@ -269,7 +325,9 @@ pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
 }
 
 fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
+    // "index" would name the index file
     let is_safe = !id.is_empty()
+        && id != "index"
         && id
             .chars()
             .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_');
@@ -281,23 +339,19 @@ fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
     Ok(id.to_string())
 }
 
-fn remove_orphan_chat_files(
-    chats_dir: &PathBuf,
-    history: &[ChatHistoryItem],
-) -> Result<(), AppError> {
+/// Removes the chat files the index no longer lists. Only chat files: the
+/// index, a file set aside as unreadable and anything else stay.
+fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatHistoryItem]) -> Result<(), AppError> {
     let active_ids = history
         .iter()
-        .map(|item| format!("{}.json", item.id))
+        .map(|item| item.id.as_str())
         .collect::<std::collections::HashSet<_>>();
 
     if let Ok(entries) = fs::read_dir(chats_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            let Some(file_name) = path.file_name().and_then(|value| value.to_str()) else {
-                continue;
-            };
-
-            if path.is_file() && file_name != "index.json" && !active_ids.contains(file_name) {
+            let orphan = chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
+            if orphan && path.is_file() {
                 fs::remove_file(path)?;
             }
         }
@@ -446,10 +500,39 @@ mod tests {
     }
 
     #[test]
+    fn a_lost_or_broken_index_is_rebuilt_from_the_chat_files() {
+        let dir = temp_dir("rebuild");
+        let mut older = chat_item("older");
+        older.last_msg_date = String::from("2026-01-01T00:00:00.000Z");
+        let mut newer = chat_item("newer");
+        newer.last_msg_date = String::from("2026-02-01T00:00:00.000Z");
+        for chat in [&older, &newer] {
+            write_json(&dir.join(format!("{}.json", chat.id)), chat).unwrap();
+        }
+        fs::write(dir.join("broken.json"), "{").unwrap();
+
+        let ids = |history: Vec<ChatHistoryItem>| {
+            history.into_iter().map(|item| item.id).collect::<Vec<_>>()
+        };
+        assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
+        assert!(
+            !dir.join("broken.json").exists(),
+            "set aside, not left as an orphan"
+        );
+
+        fs::write(dir.join(CHAT_INDEX_FILE), "[{").unwrap();
+        assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
+        assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
     fn sanitize_chat_id_rejects_path_traversal() {
         assert!(sanitize_chat_id("../../etc/passwd").is_err());
         assert!(sanitize_chat_id("chat/id").is_err());
         assert!(sanitize_chat_id("").is_err());
+        assert!(sanitize_chat_id("index").is_err());
         assert_eq!(sanitize_chat_id("chat-1_A").unwrap(), "chat-1_A");
     }
 
@@ -459,12 +542,14 @@ mod tests {
         fs::write(dir.join("index.json"), "[]").unwrap();
         fs::write(dir.join("kept.json"), "{}").unwrap();
         fs::write(dir.join("orphan.json"), "{}").unwrap();
+        fs::write(dir.join("index.json.broken-1"), "[").unwrap();
 
         remove_orphan_chat_files(&dir, &[chat_item("kept")]).unwrap();
 
         assert!(dir.join("index.json").exists());
         assert!(dir.join("kept.json").exists());
         assert!(!dir.join("orphan.json").exists());
+        assert!(dir.join("index.json.broken-1").exists());
 
         fs::remove_dir_all(&dir).unwrap();
     }

@@ -35,6 +35,14 @@ pub fn spawn_signal_watcher(app: AppHandle) {
                     log::info!("Received SIGINT; initiating graceful shutdown");
                 }
             }
+            request_exit(&app);
+
+            // the handlers stay installed: a second signal is the user's way
+            // out of a shutdown that hangs
+            tokio::select! {
+                _ = sigterm.recv() => {}
+                _ = sigint.recv() => {}
+            }
         }
 
         #[cfg(not(unix))]
@@ -44,11 +52,20 @@ pub fn spawn_signal_watcher(app: AppHandle) {
                 return;
             }
             log::info!("Received Ctrl+C; initiating graceful shutdown");
+            request_exit(&app);
+            if tokio::signal::ctrl_c().await.is_err() {
+                return;
+            }
         }
 
-        if let Some(state) = app.try_state::<AppState>() {
-            state.set_quitting(true);
-        }
-        app.exit(0);
+        log::warn!("Received a second termination signal; exiting at once");
+        std::process::exit(130);
     });
+}
+
+fn request_exit(app: &AppHandle) {
+    if let Some(state) = app.try_state::<AppState>() {
+        state.set_quitting(true);
+    }
+    app.exit(0);
 }

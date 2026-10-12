@@ -3,6 +3,7 @@
 //! window, while on Wayland only KDE Plasma lets Tyco do that, via KWin scripts.
 
 pub mod clipboard_restore;
+pub(crate) mod command;
 mod foreground_context;
 pub mod kwin;
 pub mod layer_shell;

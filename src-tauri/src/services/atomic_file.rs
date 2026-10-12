@@ -47,13 +47,21 @@ pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
 
 /// Creates one of Tyco's own directories, closed to other users: the files in
 /// it may hold user texts or keys. An existing directory is closed too, so
-/// that one made by an older version gets the same permissions.
+/// that one made by an older version gets the same permissions. A directory
+/// whose permissions cannot be changed, e.g. one created by another user or on
+/// a file system without them, is used as it is: the app must start either
+/// way.
 pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
     fs::create_dir_all(path)?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+        let private = fs::metadata(path).is_ok_and(|meta| meta.permissions().mode() & 0o077 == 0);
+        if !private {
+            if let Err(error) = fs::set_permissions(path, fs::Permissions::from_mode(0o700)) {
+                log::warn!("Could not close {} to other users: {error}", path.display());
+            }
+        }
     }
     Ok(())
 }
@@ -73,18 +81,22 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     Ok(target)
 }
 
-/// Parses the file at `path`; `None` when there is none or it was unreadable
-/// and has been moved aside.
+/// Parses the file at `path`; `None` when there is none or its content was
+/// broken and it has been moved aside. A file that cannot be read at all, e.g.
+/// for its permissions, is an error and stays where it is: its content may be
+/// fine.
 pub fn read_or_quarantine<T>(
     path: &Path,
     parse: impl FnOnce(&str) -> Result<T, AppError>,
 ) -> Result<Option<T>, AppError> {
-    if !path.exists() {
-        return Ok(None);
-    }
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error.into()),
+    };
 
-    let parsed = fs::read_to_string(path)
-        .map_err(AppError::from)
+    let parsed = String::from_utf8(bytes)
+        .map_err(|error| AppError::Message(format!("not UTF-8: {error}")))
         .and_then(|raw| parse(&raw));
     match parsed {
         Ok(value) => Ok(Some(value)),

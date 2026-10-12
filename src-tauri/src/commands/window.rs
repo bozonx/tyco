@@ -2,6 +2,7 @@ use std::process::Command;
 use std::time::Duration;
 use tauri::{AppHandle, State};
 
+use super::blocking;
 use crate::errors::AppError;
 use crate::services::clipboard::{copy_to_clipboard, hide_console_window};
 use crate::services::platform::InputRegion;
@@ -25,18 +26,21 @@ pub fn set_quick_input_region(app: AppHandle, region: Option<InputRegion>) -> Re
     runtime::set_quick_input_region(&app, region)
 }
 
-/// Off the main thread: the opener and the clipboard tools are separate
-/// processes, which must not stall the UI.
-#[tauri::command(async)]
-pub fn open_in_browser_and_close(app: AppHandle, url: String) -> Result<(), AppError> {
-    open_url(&url)?;
-    runtime::hide_active_window(&app)
+/// On the blocking pool: the opener and the clipboard tools are separate
+/// processes, which must stall neither the UI nor an async worker.
+#[tauri::command]
+pub async fn open_in_browser_and_close(app: AppHandle, url: String) -> Result<(), AppError> {
+    blocking(move || {
+        open_url(&url)?;
+        runtime::hide_active_window(&app)
+    })
+    .await?
 }
 
 /// Opens a chat citation without hiding the conversation.
-#[tauri::command(async)]
-pub fn open_in_browser(url: String) -> Result<(), AppError> {
-    open_url(&url)
+#[tauri::command]
+pub async fn open_in_browser(url: String) -> Result<(), AppError> {
+    blocking(move || open_url(&url)).await?
 }
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
@@ -50,13 +54,14 @@ pub async fn type_into_window_and_close(
     text: String,
 ) -> Result<(), AppError> {
     let params = state.params();
-    #[cfg(target_os = "linux")]
-    let previous_clipboard = crate::services::platform::linux::clipboard_restore::snapshot();
-    copy_to_clipboard(&text)?;
-    runtime::hide_active_window(&app)?;
     let focus_app = app.clone();
-    // Waiting for focus and insertion must not hold an async worker.
-    tauri::async_runtime::spawn_blocking(move || {
+    // The clipboard tools, waiting for focus and insertion must not hold an
+    // async worker.
+    blocking(move || {
+        #[cfg(target_os = "linux")]
+        let previous_clipboard = crate::services::platform::linux::clipboard_restore::snapshot();
+        copy_to_clipboard(&text)?;
+        runtime::hide_active_window(&focus_app)?;
         crate::services::platform::paste_after_focus(
             &crate::services::platform::SystemTextInjector,
             &params.user_config,
@@ -72,17 +77,16 @@ pub async fn type_into_window_and_close(
             },
         )
     })
-    .await
-    .map_err(|error| AppError::Message(error.to_string()))?
+    .await?
     .inspect_err(|error| log::error!("Text insertion failed: {error}"))?;
     Ok(())
 }
 
 /// Leaves the windows as they are: a command run in the background copies
 /// its output while another Tyco window may be in use.
-#[tauri::command(async)]
-pub fn copy_text(text: String) -> Result<(), AppError> {
-    copy_to_clipboard(&text)
+#[tauri::command]
+pub async fn copy_text(text: String) -> Result<(), AppError> {
+    blocking(move || copy_to_clipboard(&text)).await?
 }
 
 /// Only web pages are opened: the URL comes from the webview, and the system
@@ -136,7 +140,7 @@ mod tests {
     #[test]
     fn chat_opener_rejects_non_web_urls_without_launching_a_process() {
         for url in ["file:///etc/passwd", "javascript:alert(1)", "not a url"] {
-            assert!(open_in_browser(url.to_string()).is_err());
+            assert!(tauri::async_runtime::block_on(open_in_browser(url.to_string())).is_err());
         }
     }
 

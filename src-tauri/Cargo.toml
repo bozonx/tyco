@@ -56,8 +56,10 @@ keyring = { version = "3", features = ["async-secret-service", "async-io", "cryp
 ashpd = { version = "0.13.13", features = ["global_shortcuts"] }
 gtk = "0.18"
 gtk-sys = "0.18"
-libc = "0.2"
 x11rb = "0.13"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 [target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
 tauri-plugin-global-shortcut = "2.3.2"

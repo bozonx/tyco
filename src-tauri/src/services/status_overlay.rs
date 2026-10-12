@@ -53,6 +53,8 @@ mod imp {
     use super::{OverlayKind, OverlayRequest};
 
     const MARGIN_BOTTOM: i32 = 72;
+    /// GLib keeps timer intervals in 32-bit milliseconds.
+    const MAX_TIMER_MS: u64 = u32::MAX as u64;
     const KIND_CLASSES: [&str; 4] = ["pending", "success", "info", "error"];
     const CSS: &str = "
         window.tyco-status-window { background-color: transparent; }
@@ -112,7 +114,11 @@ mod imp {
             }
 
             overlay.set_content(&request);
-            let delay = if overlay.visible { 0 } else { request.delay_ms };
+            let delay = if overlay.visible {
+                0
+            } else {
+                request.delay_ms.min(MAX_TIMER_MS)
+            };
             if delay == 0 {
                 overlay.present();
             } else {
@@ -122,7 +128,7 @@ mod imp {
             }
             if let Some(hide_after) = request.hide_after_ms {
                 glib::timeout_add_local_once(
-                    Duration::from_millis(delay + hide_after),
+                    Duration::from_millis(delay.saturating_add(hide_after).min(MAX_TIMER_MS)),
                     move || {
                         with_generation(generation, Overlay::hide);
                     },

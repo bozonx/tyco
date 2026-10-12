@@ -1036,6 +1036,13 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     // the settings may already show the shortcuts the desktop had not bound
     notify_hotkeys_changed(&app);
 
+    let watched_app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(error) = rebind_when_portal_restarts(&watched_app).await {
+            log::warn!("Could not watch the hotkey portal for restarts: {error}");
+        }
+    });
+
     // selection actions press keys of their own, and wait for the hotkey
     // to be released first
     tauri::async_runtime::spawn(async move {
@@ -1058,6 +1065,33 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
         };
         if let Err(error) = target.trigger(&app, event.shortcut_id()) {
             log::error!("Portal hotkey activation failed: {error}");
+        }
+    }
+    log::warn!("The hotkey portal stopped reporting hotkeys");
+    Ok(())
+}
+
+/// The shortcuts live in a session of the portal service: when the service
+/// restarts, after an update or a crash, the session is gone and the hotkeys
+/// stop without a word. A new owner of the portal name gets them bound again.
+#[cfg(target_os = "linux")]
+async fn rebind_when_portal_restarts(app: &AppHandle) -> zbus::Result<()> {
+    let connection = zbus::Connection::session().await?;
+    let proxy = zbus::Proxy::new(
+        &connection,
+        "org.freedesktop.portal.Desktop",
+        "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.GlobalShortcuts",
+    )
+    .await?;
+    let mut owners = proxy.receive_owner_changed().await?;
+    while let Some(owner) = owners.next().await {
+        if owner.is_none() {
+            continue;
+        }
+        log::info!("The desktop portal restarted; binding the hotkeys again");
+        if let Err(error) = rebind_portal(app).await {
+            log::warn!("Could not bind the hotkeys again: {error}");
         }
     }
     Ok(())

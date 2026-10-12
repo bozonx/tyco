@@ -2,15 +2,13 @@
 //! is put back once the target window has pasted: with `wl-clipboard` on
 //! Wayland and `xclip` on X11.
 
-use std::io::Read;
 use std::process::{Command, Stdio};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::services::platform::session;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_millis(500);
-const POLL_INTERVAL: Duration = Duration::from_millis(10);
 /// The target reads the clipboard when it handles the paste keys; restoring
 /// earlier would make it paste the old content.
 const RESTORE_DELAY: Duration = Duration::from_secs(1);
@@ -187,32 +185,7 @@ fn write(snapshot: &ClipboardSnapshot) -> std::io::Result<()> {
 /// `wl-paste` and `xclip` block while the clipboard owner does not answer,
 /// so they get a timeout.
 fn command_output(binary: &str, args: &[&str]) -> Option<Vec<u8>> {
-    let mut child = Command::new(binary)
-        .args(args)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .ok()?;
-    let mut stdout = child.stdout.take()?;
-    let reader = thread::spawn(move || {
-        let mut output = Vec::new();
-        stdout.read_to_end(&mut output).map(|_| output)
-    });
-    let deadline = Instant::now() + COMMAND_TIMEOUT;
-    let status = loop {
-        if let Some(status) = child.try_wait().ok()? {
-            break status;
-        }
-        if Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            return None;
-        }
-        thread::sleep(POLL_INTERVAL);
-    };
-    let output = reader.join().ok()?.ok()?;
-    status.success().then_some(output)
+    super::command::output_with_timeout(binary, args, COMMAND_TIMEOUT)
 }
 
 #[cfg(test)]

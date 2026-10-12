@@ -228,11 +228,36 @@ fn dbus_error(error: zbus::Error) -> AppError {
     AppError::Message(format!("KWin D-Bus call failed: {error}"))
 }
 
-fn scripts_dir() -> PathBuf {
-    std::env::var_os("XDG_RUNTIME_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(std::env::temp_dir)
-        .join("tyco")
+/// A directory only this user can write to: KWin runs whatever script file
+/// it finds there, and reads it only some time after `run`. Without
+/// `XDG_RUNTIME_DIR` it is a directory of this user in the shared temporary
+/// one, checked to be theirs alone.
+fn scripts_dir() -> Result<PathBuf, AppError> {
+    use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
+
+    // SAFETY: plain system call without arguments
+    let uid = unsafe { libc::geteuid() };
+    let directory = match std::env::var_os("XDG_RUNTIME_DIR") {
+        Some(runtime) => PathBuf::from(runtime).join("tyco"),
+        None => std::env::temp_dir().join(format!("tyco-{uid}")),
+    };
+    match std::fs::DirBuilder::new()
+        .recursive(false)
+        .mode(0o700)
+        .create(&directory)
+    {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(error) => return Err(error.into()),
+    }
+    let metadata = std::fs::symlink_metadata(&directory)?;
+    if !metadata.is_dir() || metadata.uid() != uid || metadata.permissions().mode() & 0o022 != 0 {
+        return Err(AppError::Message(format!(
+            "{} must be a directory of the current user that others cannot write to",
+            directory.display()
+        )));
+    }
+    Ok(directory)
 }
 
 fn is_script_loaded(connection: &zbus::blocking::Connection, name: &str) -> Result<bool, AppError> {
@@ -263,12 +288,29 @@ fn unload_script(connection: &zbus::blocking::Connection, name: &str) -> Result<
     Ok(())
 }
 
+/// Writes a new file, never through a link left in the place of an old one.
+fn write_script(path: &std::path::Path, source: &str) -> Result<(), AppError> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+
+    match std::fs::remove_file(path) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)?;
+    file.write_all(source.as_bytes())?;
+    Ok(())
+}
+
 /// KWin reads the file asynchronously after `run`, so it is left in place.
 fn run_script(name: &str, source: &str) -> Result<(), AppError> {
-    let directory = scripts_dir();
-    std::fs::create_dir_all(&directory)?;
-    let path = directory.join(format!("{name}.js"));
-    std::fs::write(&path, source)?;
+    let path = scripts_dir()?.join(format!("{name}.js"));
+    write_script(&path, source)?;
     let path = path
         .to_str()
         .ok_or_else(|| AppError::Message(String::from("Script path is not valid UTF-8")))?;

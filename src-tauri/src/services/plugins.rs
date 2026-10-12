@@ -416,12 +416,16 @@ fn storage_key(id: &str) -> String {
     id.bytes().map(|byte| format!("{byte:02x}")).collect()
 }
 impl PluginStore {
-    pub fn new(root: PathBuf) -> Result<Self, AppError> {
-        fs::create_dir_all(&root)?;
-        Ok(Self {
+    /// A directory that cannot be created leaves the app without installed
+    /// plugins, which is reported when they are listed, not without a start.
+    pub fn new(root: PathBuf) -> Self {
+        if let Err(error) = fs::create_dir_all(&root) {
+            log::error!("Could not create {}: {error}", root.display());
+        }
+        Self {
             root,
             lock: Mutex::new(()),
-        })
+        }
     }
     pub fn install(
         &self,
@@ -616,7 +620,7 @@ mod tests {
             module: "export default () => ({})".into(),
         };
         fs::write(&file, serde_json::to_string(&package).unwrap()).unwrap();
-        let store = PluginStore::new(dir.join("installed")).unwrap();
+        let store = PluginStore::new(dir.join("installed"));
         let installed = store
             .install(&file, &manifest(), &package_digest(&file).unwrap())
             .unwrap();
@@ -647,7 +651,7 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let file = dir.join("example.tyco-plugin");
-        let store = PluginStore::new(dir.join("installed")).unwrap();
+        let store = PluginStore::new(dir.join("installed"));
         let write = |module: &str| {
             let package = PluginPackage {
                 format_version: FORMAT_VERSION,
@@ -688,7 +692,7 @@ mod tests {
         }));
         assert!(validate_manifest(&value).is_err());
         let dir = std::env::temp_dir().join(format!("tyco-plugin-id-{}", std::process::id()));
-        let store = PluginStore::new(dir.clone()).unwrap();
+        let store = PluginStore::new(dir.clone());
         assert!(store.remove("../unsafe").is_err());
         assert!(store.restore("bundled").is_err());
         fs::remove_dir_all(dir).unwrap();
@@ -701,7 +705,7 @@ mod tests {
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&dir);
-        let store = PluginStore::new(dir.clone()).unwrap();
+        let store = PluginStore::new(dir.clone());
         let mut future = manifest();
         future.api_version = API_VERSION + 1;
         let installed = InstalledPackage {

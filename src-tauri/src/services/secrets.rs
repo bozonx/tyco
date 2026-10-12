@@ -162,7 +162,11 @@ impl SecretStore {
         #[cfg(unix)]
         if path.exists() {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+            if let Err(error) =
+                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))
+            {
+                log::warn!("Could not close {} to other users: {error}", path.display());
+            }
         }
         let file = read_or_quarantine(&path, |raw| Ok(serde_json::from_str::<SecretsFile>(raw)?))?
             .unwrap_or_default();
@@ -177,8 +181,8 @@ impl SecretStore {
         })
     }
 
-    /// Asks the vault again when it was unreachable, e.g. it has been
-    /// unlocked or installed since.
+    /// Asks the vault again: it may have been installed or unlocked since,
+    /// or a key may have stayed locked the last time.
     pub fn vault_state(&self) -> VaultState {
         let mut state = self.lock();
         self.open_locked(&mut state, true)
@@ -215,19 +219,33 @@ impl SecretStore {
             (VaultState::Available, Some(vault)) => vault,
             _ => return Err(vault_unavailable()),
         };
-        vault.set(id, value).map_err(|error| {
-            AppError::Message(format!("Could not save secret \"{id}\": {error}"))
-        })?;
 
-        state.vault_values.insert(id.to_string(), value.to_string());
-        state.stored.insert(
+        // the list is written first: a key the vault took but the list does
+        // not name would stay in the vault unseen
+        let previous = state.stored.insert(
             id.to_string(),
             StoredSecret {
                 origins,
                 value: None,
             },
         );
-        self.persist(&state)
+        let saved = self.persist(&state).and_then(|()| {
+            vault.set(id, value).map_err(|error| {
+                AppError::Message(format!("Could not save secret \"{id}\": {error}"))
+            })
+        });
+        if let Err(error) = saved {
+            match previous {
+                Some(previous) => state.stored.insert(id.to_string(), previous),
+                None => state.stored.remove(id),
+            };
+            if let Err(error) = self.persist(&state) {
+                log::error!("Could not restore {SECRETS_FILE_NAME}: {error}");
+            }
+            return Err(error);
+        }
+        state.vault_values.insert(id.to_string(), value.to_string());
+        Ok(())
     }
 
     /// Keeps a key taken out of an old config in the file, without reaching
@@ -303,14 +321,14 @@ impl SecretStore {
     }
 
     /// Reaches the vault: reads the values it holds and moves into it the
-    /// ones the file holds. Asked once, or again with `retry` while it was
-    /// unreachable; a request does not retry, as a missing vault may take a
-    /// D-Bus timeout to answer.
+    /// ones the file holds. Asked once, or again with `retry`; a request does
+    /// not retry, as a missing vault may take a D-Bus timeout to answer.
     fn open_locked(&self, state: &mut StoreState, retry: bool) -> VaultState {
-        if let Some(known) = state.vault {
-            if !(retry && known == VaultState::Unavailable) {
-                return known;
-            }
+        // a retry opens the vault again also when it answered before: a key
+        // may have stayed locked, e.g. when the user dismissed the unlock
+        // prompt, or may not have been moved into it
+        if let (Some(known), false) = (state.vault, retry) {
+            return known;
         }
         let Some(vault) = self
             .vault
@@ -330,26 +348,21 @@ impl SecretStore {
 
         let mut moved = false;
         for (id, stored) in state.stored.iter_mut() {
-            match stored.value.take() {
-                Some(value) => match move_to_vault(vault, id, &value) {
-                    Ok(()) => {
-                        state.vault_values.insert(id.clone(), value);
-                        moved = true;
-                    }
-                    Err(error) => {
-                        log::warn!("Secret \"{id}\" stays in {SECRETS_FILE_NAME}: {error}");
-                        stored.value = Some(value);
-                    }
-                },
-                None => match vault.get(id) {
-                    Ok(Some(value)) => {
-                        state.vault_values.insert(id.clone(), value);
-                    }
-                    Ok(None) => log::warn!("Secret \"{id}\" is missing from the vault"),
-                    Err(error) => log::warn!("Secret \"{id}\" could not be read: {error}"),
-                },
+            let Some(value) = stored.value.take() else {
+                continue;
+            };
+            match move_to_vault(vault, id, &value) {
+                Ok(()) => {
+                    state.vault_values.insert(id.clone(), value);
+                    moved = true;
+                }
+                Err(error) => {
+                    log::warn!("Secret \"{id}\" stays in {SECRETS_FILE_NAME}: {error}");
+                    stored.value = Some(value);
+                }
             }
         }
+        read_missing(vault, state);
         // the values are in the vault either way, and the file is rewritten
         // on the next try
         if moved {
@@ -372,6 +385,25 @@ impl SecretStore {
             secrets: state.stored.clone(),
         })?;
         crate::services::atomic_file::write_private(path, &raw)
+    }
+}
+
+/// Reads from the vault the values of the secrets that have none at hand.
+fn read_missing(vault: &dyn SecretVault, state: &mut StoreState) {
+    let missing: Vec<String> = state
+        .stored
+        .iter()
+        .filter(|(id, stored)| stored.value.is_none() && !state.vault_values.contains_key(*id))
+        .map(|(id, _)| id.clone())
+        .collect();
+    for id in missing {
+        match vault.get(&id) {
+            Ok(Some(value)) => {
+                state.vault_values.insert(id, value);
+            }
+            Ok(None) => log::warn!("Secret \"{id}\" is missing from the vault"),
+            Err(error) => log::warn!("Secret \"{id}\" could not be read: {error}"),
+        }
     }
 }
 
@@ -521,12 +553,17 @@ mod tests {
         values: Mutex<BTreeMap<String, String>>,
         unreachable: AtomicBool,
         read_only: AtomicBool,
+        /// Ids whose reads fail, like an item the user did not unlock.
+        locked: Mutex<std::collections::BTreeSet<String>>,
     }
 
     impl SecretVault for Arc<FakeVault> {
         fn get(&self, id: &str) -> Result<Option<String>, String> {
             if self.unreachable.load(Ordering::SeqCst) {
                 return Err(String::from("no vault"));
+            }
+            if self.locked.lock().unwrap().contains(id) {
+                return Err(String::from("prompt dismissed"));
             }
             Ok(self.values.lock().unwrap().get(id).cloned())
         }
@@ -582,6 +619,27 @@ mod tests {
 
     fn load_with(path: &std::path::Path, vault: &Arc<FakeVault>) -> SecretStore {
         SecretStore::load(path.to_path_buf(), Some(Box::new(vault.clone()))).unwrap()
+    }
+
+    #[test]
+    fn a_key_left_locked_is_read_on_the_next_retry() {
+        let path = temp_secrets_path("locked");
+        let vault = Arc::new(FakeVault::default());
+        load_with(&path, &vault).set("google", "key", None).unwrap();
+        vault.locked.lock().unwrap().insert(String::from("google"));
+
+        let store = load_with(&path, &vault);
+        assert_eq!(store.vault_state(), VaultState::Available);
+        assert!(!store.status()["google"].available);
+
+        vault.locked.lock().unwrap().clear();
+        assert!(
+            !store.status()["google"].available,
+            "a request does not retry"
+        );
+        store.vault_state();
+        assert!(store.status()["google"].available);
+        let _ = fs::remove_dir_all(path.parent().unwrap());
     }
 
     #[test]
@@ -701,7 +759,8 @@ mod tests {
         assert!(store.set("groq", "gq-key", None).is_err());
         assert_eq!(store.vault_state(), VaultState::Unavailable);
         assert!(store.status().is_empty());
-        assert!(!path.exists());
+        // the listing written before the vault refused is taken back
+        assert!(load_with(&path, &vault).status().is_empty());
 
         // the vault is asked again, e.g. once the user has unlocked it
         vault.unreachable.store(false, Ordering::SeqCst);
@@ -721,7 +780,8 @@ mod tests {
 
         assert_eq!(store.vault_state(), VaultState::Available);
         assert!(store.status().is_empty());
-        assert!(!path.exists());
+        // the listing written before the vault refused is taken back
+        assert!(load_with(&path, &vault).status().is_empty());
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
