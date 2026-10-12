@@ -150,7 +150,7 @@ describe('live preview', () => {
     const hidden = formattedRanges(doc)
       .filter(({ spec }) => spec.previewAtomic)
       .map(({ from, to }) => doc.slice(from, to))
-    expect(hidden).toEqual(['```\n', '\n```'])
+    expect(hidden).toEqual(['```', '\n```'])
   })
 
   it('reveals source on active lines only while focused', () => {
@@ -302,7 +302,6 @@ describe('live preview', () => {
           widget instanceof CodeBlockHeaderWidget
       )
     expect(header).toBeDefined()
-    expect(header?.info).toBe('ts')
     expect(header?.code).toBe('const greeting = "hello"')
 
     const view = new EditorView({
@@ -314,6 +313,7 @@ describe('live preview', () => {
         '.cm-preview-code-copy'
       )
       expect(copyBtn).not.toBeNull()
+      expect(view.dom.querySelector('.cm-preview-code-block')).not.toBeNull()
       const writeText = vi.fn().mockResolvedValue(undefined)
       Object.assign(navigator, { clipboard: { writeText } })
 

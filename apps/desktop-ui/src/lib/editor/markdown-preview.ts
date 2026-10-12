@@ -241,7 +241,7 @@ export const previewDecorations = (
 
             replace(
               first.from,
-              first.to + 1,
+              first.to,
               new CodeBlockHeaderWidget(info, code, node.from),
               true
             )
@@ -383,8 +383,11 @@ const formattedAppearance = EditorView.theme({
     borderBottom: '1px solid var(--app-border)',
     borderTopLeftRadius: 'var(--radius-md)',
     borderTopRightRadius: 'var(--radius-md)',
+    borderBottomLeftRadius: '0',
+    borderBottomRightRadius: '0',
     padding: '0.25rem 0.6rem 0.25rem 0.75rem',
     marginTop: '0.6em',
+    marginBottom: '0',
     userSelect: 'none',
   },
   '.cm-preview-code-info': {
