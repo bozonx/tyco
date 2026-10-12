@@ -145,7 +145,7 @@ describe('chat controller', () => {
     })
   })
 
-  it('sends pending attachments and fresh editor selection together', async () => {
+  it('sends the attachments the user added and nothing from the editor', async () => {
     const { controller, model, input, editor } = setup()
     input.value = ' Question '
     editor.value = 'Draft with a part'
@@ -154,35 +154,22 @@ describe('chat controller', () => {
     expect(await controller.sendInput()).toBe(true)
     expect(model.messages.value[0]).toMatchObject({
       content: 'Question',
-      attachments: [
-        { text: 'pending' },
-        { text: 'a part', source: 'editor-selection' },
-      ],
+      attachments: [{ text: 'pending' }],
     })
     expect(input.value).toBe('')
   })
 
-  it('suggests whole editor text without silently attaching it', async () => {
-    const { controller, input, editor, model } = setup()
-    input.value = 'Question'
-    editor.value = 'Draft'
-    expect(controller.editorContext.value).toMatchObject({
-      text: 'Draft',
-      mode: 'suggested',
-    })
-    await controller.sendInput()
-    expect(model.messages.value[0]?.attachments || []).toEqual([])
-  })
-
-  it('marks an old selection as suggested and keeps instances independent', () => {
+  it('leaves an old selection out of a voice question and keeps instances independent', () => {
     const first = setup()
     const second = setup()
     first.editor.selectedText = 'selection'
     second.editor.selectedText = 'selection'
     first.controller.markEditorSelectionStale()
-    expect(first.controller.editorContext.value?.mode).toBe('suggested')
     expect(first.controller.voiceChatContext.value).toBeNull()
-    expect(second.controller.editorContext.value?.mode).toBe('attached')
+    expect(second.controller.voiceChatContext.value).toEqual({
+      text: 'selection',
+      source: 'editor-selection',
+    })
   })
 
   it.each(['empty', 'generating', 'importing'] as const)(
@@ -283,7 +270,7 @@ describe('chat controller', () => {
     await controller.openChat('stored')
     expect(deps.files.whileOpening).toHaveBeenCalledOnce()
     expect(deps.input.focus).toHaveBeenCalledOnce()
-    expect(controller.editorContext.value?.mode).toBe('suggested')
+    expect(controller.voiceChatContext.value).toBeNull()
   })
 
   it('opens the last or a new chat through file lifecycle coordination', async () => {

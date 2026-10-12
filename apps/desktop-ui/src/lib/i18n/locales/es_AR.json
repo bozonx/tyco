@@ -34,7 +34,6 @@
     "configureModels": "Configurar modelos",
     "contextBudgetHigh": "El mensaje con su contexto ocupa el {percent}% del límite del modelo",
     "contextBudgetOver": "El texto no entra en el modelo: {used} de {budget} caracteres. Quitá parte del contexto",
-    "contextUpdated": "modificado",
     "copied": "Copiado",
     "copy": "Copiar",
     "copyCode": "Copiar código",
@@ -55,7 +54,6 @@
       "today": "Hoy",
       "yesterday": "Ayer"
     },
-    "hideSuggestion": "Ocultar",
     "inputHint": "{send} para enviar · {newline} para nueva línea",
     "markdownCopied": "Markdown copiado",
     "newChat": "Nuevo chat",
@@ -74,9 +72,6 @@
     "showAttachment": "Mostrar el texto",
     "stop": "Detener",
     "stopped": "Detenido",
-    "suggestEditorSelection": "Adjuntar la selección del editor",
-    "suggestEditorText": "Adjuntar el texto del editor",
-    "suggestEditorUpdated": "Adjuntar el texto actualizado del editor",
     "voiceCancelHint": "Presione Escape para cancelar",
     "voiceContext": "La pregunta va a ser sobre este texto",
     "voiceInput": "Entrada por voz",
@@ -242,6 +237,7 @@
   },
   "editor": {
     "appliesToSelection": "{action} (solo la selección)",
+    "askAi": "Preguntarle a la IA sobre el texto",
     "case": "Mayúsculas y minúsculas",
     "clear": "Limpiar",
     "format": "Formato",

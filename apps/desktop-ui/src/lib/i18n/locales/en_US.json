@@ -34,7 +34,6 @@
     "configureModels": "Configure models",
     "contextBudgetHigh": "The message with its context takes {percent}% of the model limit",
     "contextBudgetOver": "The text does not fit the model: {used} of {budget} chars. Remove some of the context",
-    "contextUpdated": "updated",
     "copied": "Copied",
     "copy": "Copy",
     "copyCode": "Copy code",
@@ -55,7 +54,6 @@
       "today": "Today",
       "yesterday": "Yesterday"
     },
-    "hideSuggestion": "Hide",
     "inputHint": "{send} to send · {newline} for a new line",
     "markdownCopied": "Markdown copied",
     "newChat": "New chat",
@@ -74,9 +72,6 @@
     "showAttachment": "Show the text",
     "stop": "Stop",
     "stopped": "Stopped",
-    "suggestEditorSelection": "Attach editor selection",
-    "suggestEditorText": "Attach editor text",
-    "suggestEditorUpdated": "Attach updated editor text",
     "voiceCancelHint": "Press Escape to cancel",
     "voiceContext": "The question will be about this text",
     "voiceInput": "Voice input",
@@ -242,6 +237,7 @@
   },
   "editor": {
     "appliesToSelection": "{action} (selection only)",
+    "askAi": "Ask AI about the text",
     "case": "Case",
     "clear": "Clear",
     "format": "Format",

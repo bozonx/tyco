@@ -108,7 +108,7 @@ function openSettings() {
 
 function openChat() {
   menuModalsStore.closeAll()
-  // the editor text and selection go along as the chat's editor context
+  // the editor text stays out: the editor toolbar sends it to the chat
   void chatStore.openLastOrNewChat()
 }
 

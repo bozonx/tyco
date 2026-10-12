@@ -13,10 +13,6 @@ export function createChatState() {
   const isStopped = ref(false)
   const omitHistoryImages = ref(false)
   const trimmedTurns = ref(0)
-  /** The editor text the user removed from the current chat */
-  const dismissedEditorContext = ref<string | null>(null)
-  /** The suggested editor text the user took into the next message */
-  const acceptedEditorContext = ref<string | null>(null)
   const lastFailedTurn = ref<{
     message: string
     attachments?: ChatAttachment[]
@@ -30,8 +26,6 @@ export function createChatState() {
     isStopped,
     omitHistoryImages,
     trimmedTurns,
-    dismissedEditorContext,
-    acceptedEditorContext,
     lastFailedTurn,
   }
 }

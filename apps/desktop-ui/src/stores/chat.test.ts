@@ -55,10 +55,7 @@ describe('chat store dependency wiring', () => {
     expect(input.value).toBe('')
     expect(store.messages[0]).toMatchObject({
       content: 'Question',
-      attachments: [
-        { text: 'pending' },
-        { text: 'a part', source: 'editor-selection' },
-      ],
+      attachments: [{ text: 'pending' }],
     })
     expect(store.messages[1]?.content).toBe('answer')
     expect(ai.sendChatMessage).toHaveBeenCalledOnce()
@@ -70,14 +67,14 @@ describe('chat store dependency wiring', () => {
     editor.setValue('Draft')
     editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
-    expect(store.editorContext?.mode).toBe('attached')
+    expect(store.voiceChatContext?.source).toBe('editor-selection')
     useIpcStore().setParams({ isWindowShown: false })
     await nextTick()
-    expect(store.editorContext?.mode).toBe('suggested')
+    expect(store.voiceChatContext).toBeNull()
     const otherPinia = createPinia()
     try {
-      expect(useChatStore(otherPinia).editorContext).toBeNull()
-      expect(store.editorContext?.mode).toBe('suggested')
+      expect(useChatStore(otherPinia).voiceChatContext).toBeNull()
+      expect(store.voiceChatContext).toBeNull()
     } finally {
       disposePinia(otherPinia)
     }

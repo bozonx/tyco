@@ -31,8 +31,6 @@ export function createChatSessionModel(
     isStopped,
     omitHistoryImages,
     trimmedTurns,
-    dismissedEditorContext,
-    acceptedEditorContext,
     lastFailedTurn,
   } = state
   let openRequest = 0
@@ -44,8 +42,6 @@ export function createChatSessionModel(
     isStopped.value = false
     omitHistoryImages.value = false
     trimmedTurns.value = 0
-    dismissedEditorContext.value = null
-    acceptedEditorContext.value = null
     lastFailedTurn.value = null
   }
 

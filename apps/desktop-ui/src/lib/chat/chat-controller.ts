@@ -3,7 +3,7 @@ import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
 
 import { imageBudgetCharacters } from './chat-image-input'
 import { attachmentTexts, inferAttachmentSource } from './chat-attachment'
-import { resolveEditorContext, resolveVoiceChatContext } from './editor-context'
+import { resolveVoiceChatContext } from './editor-context'
 import { resolveContextBudget } from './context-budget'
 import { contextBudgetCharacters, type ChatModelOption } from './chat-model'
 import { trimChatContext } from './chat-helpers'
@@ -32,45 +32,25 @@ export interface ChatControllerDeps {
   selectModel: (id: string) => Promise<unknown>
 }
 
-/** Coordinates chat input, editor context, and window transitions. */
+/** Coordinates chat input, attached context, and window transitions. */
 export function createChatController(deps: ChatControllerDeps) {
   const { model, files, editor: editorInputStore, input: chatInputStore } = deps
   const selectedModel = computed(deps.selectedModel)
   const pendingImages = files.pendingImages
   const importingImages = files.importing
   /**
-   * The editor selection made before the chat came into view: it is only
-   * suggested, see `resolveEditorContext`
+   * The editor selection made before the chat came into view: a question asked
+   * by voice is not about it, see `resolveVoiceChatContext`
    */
   const staleEditorSelection = ref<string | null>(null)
   const markEditorSelectionStale = () => {
     staleEditorSelection.value = editorInputStore.selectedText.trim() || null
   }
-  /** What the editor offers to the next message */
-  const editorContext = computed(() =>
-    model.newChatParams.value.withoutEditorContext
-      ? null
-      : resolveEditorContext({
-          editorText: editorInputStore.value,
-          selectedText: editorInputStore.selectedText,
-          messages: model.messages.value,
-          pendingAttachments: model.newChatParams.value.attachments || [],
-          dismissed: model.dismissedEditorContext.value,
-          accepted: model.acceptedEditorContext.value,
-          staleSelection: staleEditorSelection.value,
-        })
-  )
 
   /** What goes with the next message besides the input */
-  const attachedContext = computed<ChatAttachment[]>(() => {
-    const context = editorContext.value
-    return [
-      ...(model.newChatParams.value.attachments || []),
-      ...(context?.mode === 'attached'
-        ? [{ text: context.text, source: context.source }]
-        : []),
-    ]
-  })
+  const attachedContext = computed<ChatAttachment[]>(
+    () => model.newChatParams.value.attachments || []
+  )
 
   /** How much of the model the next message takes; null without a model */
   const contextBudget = computed(() => {
@@ -130,7 +110,6 @@ export function createChatController(deps: ChatControllerDeps) {
 
   return {
     staleEditorSelection,
-    editorContext,
     attachedContext,
     contextBudget,
     voiceChatContext,

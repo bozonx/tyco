@@ -84,11 +84,6 @@ export interface ChatParams {
   title?: string
   images?: ChatImage[]
   attachments?: ChatAttachment[]
-  /**
-   * The chat takes nothing from the editor: it was started for a question about
-   * a text selected in another application
-   */
-  withoutEditorContext?: boolean
 }
 
 export interface ChatHistoryItem {

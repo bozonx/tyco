@@ -34,7 +34,6 @@
     "configureModels": "Modelleri yapılandır",
     "contextBudgetHigh": "Bağlamıyla birlikte mesaj, model sınırının %{percent} kadarını kullanıyor",
     "contextBudgetOver": "Metin modele sığmıyor: {used} / {budget} karakter. Bağlamın bir kısmını kaldırın",
-    "contextUpdated": "değişti",
     "copied": "Kopyalandı",
     "copy": "Kopyala",
     "copyCode": "Kodu kopyala",
@@ -55,7 +54,6 @@
       "today": "Bugün",
       "yesterday": "Dün"
     },
-    "hideSuggestion": "Gizle",
     "inputHint": "Göndermek için {send} · yeni satır için {newline}",
     "markdownCopied": "Markdown kopyalandı",
     "newChat": "Yeni sohbet",
@@ -74,9 +72,6 @@
     "showAttachment": "Metni göster",
     "stop": "Durdur",
     "stopped": "Durduruldu",
-    "suggestEditorSelection": "Düzenleyicideki seçimi ekle",
-    "suggestEditorText": "Düzenleyici metnini ekle",
-    "suggestEditorUpdated": "Güncellenen düzenleyici metnini ekle",
     "voiceCancelHint": "İptal etmek için Escape tuşuna basın",
     "voiceContext": "Soru bu metin hakkında sorulacak",
     "voiceInput": "Ses girişi",
@@ -242,6 +237,7 @@
   },
   "editor": {
     "appliesToSelection": "{action} (yalnızca seçim)",
+    "askAi": "Metin hakkında yapay zekâya sor",
     "case": "Harf biçimi",
     "clear": "Temizle",
     "format": "Biçim",

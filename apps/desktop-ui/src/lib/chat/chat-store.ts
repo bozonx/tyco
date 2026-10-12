@@ -8,7 +8,7 @@ export type { ChatStoreDeps, ChatRequestModel } from './chat-store-contracts'
 
 export function createChatStoreModel(deps: ChatStoreDeps) {
   const state = createChatState()
-  const { newChatParams, dismissedEditorContext, acceptedEditorContext } = state
+  const { newChatParams } = state
   const persistence = createChatPersistenceQueue(deps, state)
   const title = createChatTitleController(deps, state)
   const generation = createChatGenerationModel(
@@ -40,19 +40,6 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     },
     /** Resolves once the writes started so far are done */
     whenSaved: persistence.whenSaved,
-    dismissEditorContext: (text: string) => {
-      dismissedEditorContext.value = text
-      if (acceptedEditorContext.value === text) {
-        acceptedEditorContext.value = null
-      }
-    },
-    /** Takes the suggested editor text into the next message */
-    acceptEditorContext: (text: string) => {
-      acceptedEditorContext.value = text
-      if (dismissedEditorContext.value === text) {
-        dismissedEditorContext.value = null
-      }
-    },
     /** Renames the current chat in memory, after it was renamed in storage */
     setTitle: (id: string, title: string) => {
       if (newChatParams.value.id === id) newChatParams.value.title = title

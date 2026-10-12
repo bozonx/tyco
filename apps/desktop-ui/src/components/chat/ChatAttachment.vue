@@ -55,8 +55,6 @@ const props = defineProps<{
   source?: ChatAttachmentSource
   name?: string
   mediaType?: string
-  /** Follows the label, e.g. that the text changed */
-  note?: string
   removable?: boolean
   /** Draws attention when it appears: it may arrive after the chat opened */
   announce?: boolean
@@ -66,10 +64,7 @@ const { t } = useI18n()
 const open = ref(false)
 const arriving = ref(false)
 
-const label = computed(() => {
-  const base = props.name || t(attachmentLabelKey(props.source))
-  return props.note ? `${base} · ${props.note}` : base
-})
+const label = computed(() => props.name || t(attachmentLabelKey(props.source)))
 const excerpt = computed(() => attachmentExcerpt(props.text))
 const size = computed(() =>
   t('chat.attachmentSize', { count: props.text.length.toLocaleString() })

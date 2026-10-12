@@ -1,31 +1,5 @@
 <template>
   <div v-if="visible" class="context-list">
-    <!-- the editor is not in view of the chat: its text is only offered,
-         and the whole row is the action that attaches it -->
-    <div v-if="suggestion" class="context-suggestion" role="status">
-      <button
-        type="button"
-        class="context-suggestion-attach"
-        :title="suggestion.title"
-        @click="acceptContext(suggestion.text)"
-      >
-        <Icon icon="mdi:text-box-outline" height="14" class="shrink-0" />
-        <span class="context-suggestion-text">
-          {{ suggestion.label }}
-          <span class="context-suggestion-excerpt">{{
-            suggestion.excerpt
-          }}</span>
-        </span>
-      </button>
-      <IconButton
-        class="context-suggestion-icon"
-        :title="t('chat.hideSuggestion')"
-        @click="chatStore.dismissEditorContext(suggestion.text)"
-        :label="t('chat.hideSuggestion')"
-        icon="mdi:close"
-      />
-    </div>
-
     <div v-if="attached.length || images.length" class="context-attached">
       <ChatImageAttachment
         v-for="image in images"
@@ -46,16 +20,6 @@
         announce
         @remove="chatStore.removeAttachment(index)"
       />
-      <ChatAttachment
-        v-if="editorContext?.mode === 'attached'"
-        :key="`editor-${editorContext.text}`"
-        :text="editorContext.text"
-        :source="editorContext.source"
-        :note="editorContext.updated ? t('chat.contextUpdated') : undefined"
-        removable
-        announce
-        @remove="chatStore.dismissEditorContext(editorContext.text)"
-      />
     </div>
 
     <div
@@ -74,53 +38,18 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import {
-  attachmentExcerpt,
-  attachmentTitle,
-} from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
-import { useChatInputStore } from '../../stores/chat-input'
-import IconButton from '../common/IconButton.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import { Icon } from '@iconify/vue'
 
-/**
- * What goes to the next chat message along with it, and what may go: images and
- * texts in one row
- */
+/** What goes to the next chat message along with it: images and texts in one row */
 const chatStore = useChatStore()
-const chatInputStore = useChatInputStore()
 const { t } = useI18n()
 
-function acceptContext(text: string) {
-  chatStore.acceptEditorContext(text)
-  chatInputStore.focus()
-}
-
 const attachments = computed(() => chatStore.newChatParams?.attachments || [])
-const editorContext = computed(() => chatStore.editorContext)
 const attached = computed(() => chatStore.attachedContext)
 const images = computed(() => chatStore.pendingImages)
-
-const suggestion = computed(() => {
-  const context = editorContext.value
-  if (context?.mode !== 'suggested') return null
-  const key = context.updated
-    ? 'chat.suggestEditorUpdated'
-    : context.source === 'editor-selection'
-      ? 'chat.suggestEditorSelection'
-      : 'chat.suggestEditorText'
-  return {
-    text: context.text,
-    label: t(key),
-    excerpt: attachmentExcerpt(context.text),
-    title: attachmentTitle(
-      t('chat.attachmentSize', { count: context.text.length.toLocaleString() }),
-      context.text
-    ),
-  }
-})
 
 const budgetWarning = computed(() => {
   const budget = chatStore.contextBudget
@@ -141,7 +70,6 @@ const visible = computed(
   () =>
     attached.value.length > 0 ||
     images.value.length > 0 ||
-    Boolean(suggestion.value) ||
     Boolean(budgetWarning.value)
 )
 </script>
@@ -157,59 +85,6 @@ const visible = computed(
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
-}
-.context-suggestion {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-  min-width: 0;
-  max-width: 100%;
-  align-self: flex-start;
-  color: var(--app-text-faint);
-  font-size: 0.72rem;
-}
-.context-suggestion-attach {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 0;
-  padding: 0.2rem 0.5rem;
-  border: 1px dashed var(--app-border);
-  border-radius: var(--radius-md);
-  color: inherit;
-  cursor: pointer;
-}
-.context-suggestion-attach:hover {
-  border-style: solid;
-  background: var(--app-hover);
-  color: var(--color-base-content);
-}
-.context-suggestion-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.context-suggestion-excerpt {
-  opacity: 0.75;
-}
-.context-suggestion-excerpt::before {
-  content: ' «';
-}
-.context-suggestion-excerpt::after {
-  content: '»';
-}
-.context-suggestion-icon {
-  display: inline-flex;
-  flex-shrink: 0;
-  padding: 0.2rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-faint);
-  cursor: pointer;
-}
-.context-suggestion-icon:hover {
-  background: var(--app-hover);
-  color: var(--color-base-content);
 }
 .context-budget {
   display: flex;

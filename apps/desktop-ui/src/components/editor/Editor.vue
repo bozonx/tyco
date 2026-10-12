@@ -50,7 +50,7 @@
           </Button>
         </div>
 
-        <!-- Right column: plugin items, then AI task, Translation & Insert to window -->
+        <!-- Right column: plugin items, then Ask AI, AI task, Translation & Insert to window -->
         <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
           <Button
             v-for="item in rightToolbarItems"
@@ -74,6 +74,16 @@
               >{{ getToolbarLabel(item) }}</span
             >
           </Button>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            class="ask-ai"
+            :disabled="!editorInputStore.value.trim()"
+            @click="handleAskAi"
+            :title="scoped(t('editor.askAi'))"
+            :label="scoped(t('editor.askAi'))"
+            icon="mdi:chat-question-outline"
+          />
           <IconButton
             size="sm"
             variant="ghost"
@@ -301,6 +311,7 @@ import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveModeRoute } from '../../lib/navigation/routes'
 import type { ActionItem } from '../../stores/action-menu'
 import { useActionMenuStore } from '../../stores/action-menu'
+import { useChatStore } from '../../stores/chat'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -319,6 +330,7 @@ withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
 const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
+const chatStore = useChatStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const ipcStore = useIpcStore()
@@ -427,6 +439,18 @@ const handleAiTask = async () => {
   if (aiTaskAction) {
     await doAction(aiTaskAction)
   }
+}
+
+/** Opens the chat with the selection, or the whole text, attached */
+const handleAskAi = async () => {
+  const selection = editorInputStore.selectedText.trim()
+  const text = selection || editorInputStore.value.trim()
+  if (!text) return
+  menuModalsStore.closeAll()
+  await chatStore.attachToChat(
+    text,
+    selection ? 'editor-selection' : 'editor-text'
+  )
 }
 
 const handleInsertToWindow = async () => {

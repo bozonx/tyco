@@ -46,7 +46,7 @@ describe('Editor.vue toolbar', () => {
     expect(dropdowns[0].attributes('data-label')).toBe('editor.case')
     expect(dropdowns[1].attributes('data-label')).toBe('editor.format')
 
-    // Check top right buttons: AI task, translation and insertIntoWindow
+    // Check top right buttons: Ask AI, AI task, translation and insertIntoWindow
     const aiTaskBtn = wrapper.find('button[title="action.aiTask"]')
     expect(aiTaskBtn.exists()).toBe(true)
 
@@ -60,6 +60,7 @@ describe('Editor.vue toolbar', () => {
     const rightButtons = rightColumn.findAll('.btn-stub')
     const titles = rightButtons.map((btn) => btn.attributes('title'))
     expect(titles).toEqual([
+      'editor.askAi',
       'action.aiTask',
       'action.translation',
       'action.insertIntoWindow',
@@ -151,6 +152,7 @@ describe('Editor.vue toolbar', () => {
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
     ).toEqual([
       'tool.right',
+      'editor.askAi',
       'action.aiTask',
       'action.translation',
       'action.insertIntoWindow',
@@ -358,6 +360,45 @@ describe('Editor.vue toolbar', () => {
         },
       },
     })
+
+  it('sends the selection, or the whole text, to the chat with Ask AI', async () => {
+    const { useEditorInputStore } = await import('../../stores/editor-input')
+    const { useChatStore } = await import('../../stores/chat')
+    const editorInputStore = useEditorInputStore()
+    const attachToChat = vi
+      .spyOn(useChatStore(), 'attachToChat')
+      .mockResolvedValue()
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title', 'disabled'],
+            template:
+              '<button class="btn-stub" :title="title" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+    const askAi = () => wrapper.find('.ask-ai')
+
+    expect(askAi().attributes('disabled')).toBeDefined()
+
+    editorInputStore.setValue('Hello foo world')
+    await wrapper.vm.$nextTick()
+    await askAi().trigger('click')
+    expect(attachToChat).toHaveBeenLastCalledWith(
+      'Hello foo world',
+      'editor-text'
+    )
+
+    editorInputStore.setSelection('foo', 6, 9)
+    await wrapper.vm.$nextTick()
+    await askAi().trigger('click')
+    expect(attachToChat).toHaveBeenLastCalledWith('foo', 'editor-selection')
+  })
 
   it('tells that the buttons act on the selection while there is one', async () => {
     const { useEditorInputStore } = await import('../../stores/editor-input')

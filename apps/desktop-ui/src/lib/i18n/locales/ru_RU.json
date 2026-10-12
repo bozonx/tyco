@@ -34,7 +34,6 @@
     "configureModels": "Настроить модели",
     "contextBudgetHigh": "Сообщение с контекстом занимает {percent}% лимита модели",
     "contextBudgetOver": "Текст не помещается в модель: {used} из {budget} симв. Уберите часть контекста",
-    "contextUpdated": "изменён",
     "copied": "Скопировано",
     "copy": "Копировать",
     "copyCode": "Копировать код",
@@ -55,7 +54,6 @@
       "today": "Сегодня",
       "yesterday": "Вчера"
     },
-    "hideSuggestion": "Скрыть",
     "inputHint": "{send} — отправить · {newline} — новая строка",
     "markdownCopied": "Markdown скопирован",
     "newChat": "Новый чат",
@@ -74,9 +72,6 @@
     "showAttachment": "Показать текст",
     "stop": "Остановить",
     "stopped": "Остановлено",
-    "suggestEditorSelection": "Приложить выделение из редактора",
-    "suggestEditorText": "Приложить текст редактора",
-    "suggestEditorUpdated": "Приложить изменённый текст редактора",
     "voiceCancelHint": "Нажмите Escape для отмены",
     "voiceContext": "Вопрос будет задан об этом тексте",
     "voiceInput": "Голосовой ввод",
@@ -242,6 +237,7 @@
   },
   "editor": {
     "appliesToSelection": "{action} (только выделение)",
+    "askAi": "Спросить ИИ о тексте",
     "case": "Регистр",
     "clear": "Очистить",
     "format": "Формат",

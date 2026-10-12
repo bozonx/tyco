@@ -39,8 +39,6 @@ export function createChatGenerationModel(
     error,
     isStopped,
     trimmedTurns,
-    dismissedEditorContext,
-    acceptedEditorContext,
     lastFailedTurn,
   } = state
   let abortController: AbortController | null = null
@@ -136,8 +134,6 @@ export function createChatGenerationModel(
     }
     newChatParams.value.attachments = []
     newChatParams.value.images = []
-    dismissedEditorContext.value = null
-    acceptedEditorContext.value = null
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)

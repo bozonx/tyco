@@ -188,10 +188,7 @@ const capturedSelection = createCapturedSelection({
 // the text selected elsewhere when chat was called goes into chat attachments
 const capturedChatSelection = createCapturedChatSelection({
   startChatWithAttachment: (attachment) =>
-    chatStore.startChat({
-      attachments: [attachment],
-      withoutEditorContext: true,
-    }),
+    chatStore.startChat({ attachments: [attachment] }),
   getSelectedText: () => editorInputStore.selectedText,
 })
 watch(
@@ -267,10 +264,9 @@ onMounted(() => {
     if (attachment && trimmedText) {
       await chatStore.startChat({
         attachments: [{ ...attachment, text: trimmedText }],
-        withoutEditorContext: true,
       })
     } else if (trimmedQuestion) {
-      await chatStore.startChat({ withoutEditorContext: true })
+      await chatStore.startChat({})
     } else {
       await chatStore.openLastOrNewChat()
     }
