@@ -2,18 +2,22 @@ mod chat_history;
 mod config;
 mod editor_history;
 mod history_store;
+mod local_state;
 
 pub use chat_history::ChatHistoryPolicy;
 pub use config::*;
 pub use editor_history::{apply_history_settings_on_startup, EditorHistoryStorage};
 pub use history_store::*;
+pub use local_state::*;
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+#[cfg(test)]
+use serde_json::json;
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
