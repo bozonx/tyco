@@ -1,9 +1,10 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
-use super::{
-    bindings_from_config, global_target, to_portal_trigger, HotkeyBinding, PortalProvider,
-    ProviderKind, ProviderState, SystemTriggers, HOTKEYS_CHANGED_EVENT,
-};
 use crate::errors::AppError;
+use crate::services::hotkeys::{
+    bindings_from_config, global_target, HotkeyBinding, PortalProvider, ProviderState,
+    SystemTriggers, HOTKEYS_CHANGED_EVENT,
+};
+use crate::services::platform::hotkeys::ProviderKind;
 use crate::services::selection_replace;
 use crate::state::AppState;
 use std::sync::RwLock;
@@ -28,7 +29,7 @@ use futures_util::StreamExt;
 /// session, so binding again only replaces the session.
 #[cfg(target_os = "linux")]
 #[derive(Default)]
-pub(super) struct PortalState {
+pub(crate) struct PortalState {
     portal: OnceLock<Arc<GlobalShortcuts>>,
     session: RwLock<Option<Arc<Session<GlobalShortcuts>>>>,
     /// Binding again closes the session that listing and binding use
@@ -37,7 +38,7 @@ pub(super) struct PortalState {
 
 #[cfg(target_os = "linux")]
 impl PortalState {
-    pub(super) fn registration(
+    pub(crate) fn registration(
         &self,
     ) -> Option<(Arc<GlobalShortcuts>, Arc<Session<GlobalShortcuts>>)> {
         let portal = self.portal.get()?.clone();
@@ -51,7 +52,7 @@ impl PortalState {
 }
 
 #[cfg(target_os = "linux")]
-pub(super) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
+pub(crate) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
     let (portal, session) = app
         .state::<PortalState>()
         .registration()
@@ -63,7 +64,7 @@ pub(super) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
 }
 
 #[cfg(target_os = "linux")]
-pub(super) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
+pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<PortalState>();
     let _binding = state.binding.lock().await;
     let portal = state
@@ -99,7 +100,7 @@ pub(super) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
 /// Asks the desktop for the shortcuts it binds now: the user may have
 /// removed them in its settings, which the portal does not report.
 #[cfg(target_os = "linux")]
-pub(super) async fn refresh_system_triggers(app: &AppHandle) {
+pub(crate) async fn refresh_system_triggers(app: &AppHandle) {
     let state = app.state::<PortalState>();
     let _binding = state.binding.lock().await;
     let Some((portal, session)) = state.registration() else {
@@ -120,7 +121,7 @@ pub(super) async fn refresh_system_triggers(app: &AppHandle) {
 
 #[cfg(target_os = "linux")]
 impl PortalProvider {
-    pub(super) fn register(
+    pub(crate) fn register(
         self,
         app: &mut App,
         bindings: Vec<HotkeyBinding>,
@@ -269,7 +270,7 @@ async fn bind_session(
 }
 
 #[cfg(target_os = "linux")]
-pub(super) fn notify_hotkeys_changed(app: &AppHandle) {
+pub(crate) fn notify_hotkeys_changed(app: &AppHandle) {
     if let Err(error) = app.emit(HOTKEYS_CHANGED_EVENT, ()) {
         log::warn!("Could not report changed hotkeys: {error}");
     }
@@ -294,11 +295,42 @@ fn store_system_triggers(
 /// The portal shortcuts can be changed in the portal's own dialog (version
 /// 2) or in the settings of a desktop Tyco knows.
 #[cfg(target_os = "linux")]
-pub(super) fn can_configure_portal(app: &AppHandle) -> bool {
+pub(crate) fn can_configure_portal(app: &AppHandle) -> bool {
     let has_dialog = app
         .state::<PortalState>()
         .portal
         .get()
         .is_some_and(|portal| portal.version() >= 2);
     has_dialog || crate::services::platform::has_shortcut_settings()
+}
+
+fn to_portal_trigger(shortcut: &str) -> String {
+    let mut parts = shortcut.split('+').collect::<Vec<_>>();
+    let key = parts.pop().unwrap_or_default();
+    let modifiers = parts
+        .into_iter()
+        .map(|modifier| match modifier.to_ascii_lowercase().as_str() {
+            "ctrl" | "control" => "CTRL+",
+            "alt" => "ALT+",
+            "shift" => "SHIFT+",
+            "super" | "meta" | "cmd" | "command" => "LOGO+",
+            _ => "",
+        })
+        .collect::<String>();
+    let key = match key.to_ascii_lowercase().as_str() {
+        "comma" => "comma".to_owned(),
+        value => value.to_owned(),
+    };
+    format!("{modifiers}{key}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn converts_shortcuts_to_xdg_trigger_syntax() {
+        assert_eq!(to_portal_trigger("Ctrl+Alt+E"), "CTRL+ALT+e");
+        assert_eq!(to_portal_trigger("Super+Shift+Comma"), "LOGO+SHIFT+comma");
+    }
 }

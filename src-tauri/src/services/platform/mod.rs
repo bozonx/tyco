@@ -5,6 +5,7 @@
 pub(crate) mod audio;
 mod file_manager;
 mod foreground_context;
+pub(crate) mod hotkeys;
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 pub mod keychain;
 mod panel_surface;

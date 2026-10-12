@@ -5,6 +5,7 @@
 pub mod clipboard_restore;
 pub(crate) mod command;
 mod foreground_context;
+pub(crate) mod hotkeys_portal;
 pub mod kwin;
 pub mod layer_shell;
 pub mod primary_selection;
