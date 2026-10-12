@@ -34,7 +34,7 @@ export default defineConfig(
         ecmaVersion: 'latest',
         extraFileExtensions: ['.vue'],
       },
-      globals: { ...globals.browser, ...globals.node },
+      globals: globals.browser,
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
@@ -83,17 +83,13 @@ export default defineConfig(
     rules: { 'no-console': 'off' },
   },
 
-  {
-    files: [
-      'src-tauri/plugin-runtime/*.js',
-      'scripts/plugin-runtime-browser.js',
-    ],
-    languageOptions: { globals: globals.browser },
-  },
-
   // Plain Node scripts and config files: no TS parser, Node globals only.
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    ignores: [
+      'src-tauri/plugin-runtime/*.js',
+      'scripts/plugin-runtime-browser.js',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -104,11 +100,22 @@ export default defineConfig(
 
   {
     files: [
+      'src-tauri/plugin-runtime/*.js',
+      'scripts/plugin-runtime-browser.js',
+    ],
+    languageOptions: { globals: globals.browser },
+  },
+
+  {
+    files: [
       'scripts/**/*.ts',
       '**/build/**/*.ts',
       '*.config.js',
-      '*.config.ts',
+      '**/*.config.ts',
+      '**/*.test.ts',
+      '**/test/**/*.ts',
     ],
+    languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
   },
 

@@ -1,71 +1,23 @@
 import { resolve } from 'node:path'
 
 import tailwindcss from '@tailwindcss/vite'
-import vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite'
+import { defineConfig, loadEnv, mergeConfig } from 'vite'
 
-import { resolveLocalAiKit } from './build/local-ai-kit.ts'
+import { parseDevPort } from '../../scripts/lib/dev-config.js'
 import { offlinePdfAssetsPlugin } from './build/offline-pdf-assets-plugin.ts'
-import { offlineIconsPlugin } from './build/offline-icons-plugin.ts'
+import { createUiConfig, envDir, rootDir } from './build/ui-config.ts'
 
-const rootDir = import.meta.dirname
-const srcDir = resolve(rootDir, 'src')
-
-// Tauri ships a fixed webview per platform, so the build can target it directly.
-const webviewTarget =
-  process.env.TAURI_ENV_PLATFORM === 'darwin' ? 'safari13' : 'chrome105'
-
-// https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  const envDir = resolve(rootDir, '../..')
   const env = loadEnv(mode, envDir, '')
-  const port = parseInt(env.PORT || '3000')
-  const isDebugBuild = Boolean(process.env.TAURI_ENV_DEBUG)
-  // dev server and tests only: a bundle always ships the published kit
-  const localAiKit =
-    command === 'serve'
-      ? resolveLocalAiKit(env.TYCO_LOCAL_AI_KIT, envDir)
-      : undefined
-  if (localAiKit) {
-    // eslint-disable-next-line no-console
-    console.info(`Using @bozonx/ai-kit sources from ${localAiKit.dir}`)
-  }
+  const isDebugBuild = process.env.TAURI_ENV_DEBUG === 'true'
+  // WebKit is supplied by the OS on Linux/macOS. Keep its syntax baseline
+  // conservative; Windows uses Chromium-based WebView2.
+  const webviewTarget =
+    process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13'
 
-  return {
-    plugins: [
-      {
-        name: 'watch-shared-contracts',
-        configureServer(server) {
-          // Shared sources sit outside Vite's root and must invalidate IPC contracts.
-          server.watcher.add(resolve(rootDir, '../../packages/shared/src'))
-        },
-      },
-      vue(),
-      tailwindcss(),
-      Components({}),
-      offlineIconsPlugin(srcDir),
-      offlinePdfAssetsPlugin(),
-    ],
-    resolve: {
-      alias: [
-        { find: '@', replacement: srcDir },
-        {
-          find: /^@tyco\/shared$/,
-          replacement: resolve(rootDir, '../../packages/shared/src/index.ts'),
-        },
-        {
-          find: /^@tyco\/shared\/appearance$/,
-          replacement: resolve(
-            rootDir,
-            '../../packages/shared/src/appearance.ts'
-          ),
-        },
-        ...(localAiKit?.aliases ?? []),
-      ],
-    },
+  return mergeConfig(createUiConfig(mode, command === 'serve'), {
+    plugins: [tailwindcss(), offlinePdfAssetsPlugin()],
     base: './',
-    // Keep the Tauri CLI output readable.
     clearScreen: false,
     envPrefix: ['VITE_', 'TAURI_ENV_'],
     build: {
@@ -75,15 +27,12 @@ export default defineConfig(({ command, mode }) => {
       target: webviewTarget,
       minify: !isDebugBuild,
       sourcemap: isDebugBuild,
-      rollupOptions: { input: { main: resolve(rootDir, 'index.html') } },
+      rolldownOptions: { input: { main: resolve(rootDir, 'index.html') } },
     },
     server: {
-      port,
+      port: parseDevPort(env.PORT),
       strictPort: true,
       watch: { ignored: ['**/src-tauri/**'] },
-      ...(localAiKit
-        ? { fs: { allow: [searchForWorkspaceRoot(rootDir), localAiKit.dir] } }
-        : {}),
     },
-  }
+  })
 })

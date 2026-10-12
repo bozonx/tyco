@@ -68,7 +68,7 @@ jobs:
           sudo apt-get install -y ${{ env.LINUX_TAURI_DEPS }}
 
       # Installs the toolchain and components pinned by
-      # src-tauri/rust-toolchain.toml, so CI and local runs agree.
+      # rust-toolchain.toml, so CI and local runs agree.
       - name: Setup Rust toolchain
         run: rustup toolchain install
         working-directory: src-tauri
@@ -83,11 +83,11 @@ jobs:
         working-directory: src-tauri
 
       - name: Run Clippy
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
         working-directory: src-tauri
 
       - name: Run Rust tests
-        run: cargo test --workspace
+        run: cargo test --locked --workspace
         working-directory: src-tauri
 
   # Keeps the Windows and macOS backends compiling. Linux is covered by the
@@ -113,11 +113,11 @@ jobs:
           workspaces: src-tauri -> target
 
       - name: Run Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
         working-directory: src-tauri
 
       - name: Run Rust tests
-        run: cargo test --workspace
+        run: cargo test --locked --workspace
         working-directory: src-tauri
 
   external-control:
@@ -138,10 +138,10 @@ jobs:
         with:
           workspaces: src-tauri -> target
       - name: Check local control clients and transports
-        run: cargo clippy -p tyco-activation-protocol -p tyco-ctl --all-targets -- -D warnings
+        run: cargo clippy --locked -p tyco-activation-protocol -p tyco-ctl --all-targets -- -D warnings
         working-directory: src-tauri
       - name: Test local control end to end
-        run: cargo test -p tyco-activation-protocol -p tyco-ctl
+        run: cargo test --locked -p tyco-activation-protocol -p tyco-ctl
         working-directory: src-tauri
 
   bundle:
@@ -167,7 +167,7 @@ jobs:
           cache: 'pnpm'
 
       # Installs the toolchain and components pinned by
-      # src-tauri/rust-toolchain.toml, so CI and local runs agree.
+      # rust-toolchain.toml, so CI and local runs agree.
       - name: Setup Rust toolchain
         run: rustup toolchain install
         working-directory: src-tauri
@@ -216,7 +216,7 @@ jobs:
           workspaces: src-tauri -> target
       - run: pnpm install --frozen-lockfile
       - name: Install Tauri WebDriver
-        run: cargo install tauri-driver --locked
+        run: cargo install tauri-driver --version 2.0.5 --locked
       - name: Build an embedded debug app
         run: pnpm tauri:build --debug --no-bundle
       - name: Verify the actual desktop runtime

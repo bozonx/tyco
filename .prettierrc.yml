@@ -1,4 +1,4 @@
-# Основные настройки форматирования
+# Formatting
 printWidth: 80
 tabWidth: 2
 useTabs: false
@@ -11,19 +11,19 @@ bracketSameLine: false
 arrowParens: always
 objectWrap: collapse
 
-# Плагины
+# Plugins
 plugins:
   - '@trivago/prettier-plugin-sort-imports'
   - prettier-plugin-jsdoc
 
-# Конфигурация сортировки импортов
+# Import order
 importOrder:
   - '^[a-zA-Z]'
   - '^[@./]'
 importOrderSeparation: true
 importOrderSortSpecifiers: true
 
-# Настройки для JSDoc
+# JSDoc
 jsdocSpaces: 1
 jsdocDescriptionWithDot: false
 jsdocDescriptionTag: false

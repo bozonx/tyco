@@ -13,7 +13,7 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
 ## Requirements
 
 - Node.js 24+ and pnpm 11 (`corepack enable`)
-- Rust toolchain pinned by `src-tauri/rust-toolchain.toml`
+- Rust toolchain pinned by `rust-toolchain.toml`
 - Linux system packages for Tauri, including `gtk-layer-shell`: see the
   `bundle` job in `.github/workflows/ci.yml`
 - `xdotool` (X11) or `ydotool` (Wayland) for typing into other windows.
@@ -22,8 +22,8 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
   must be running; it writes to `/dev/uinput`, so it can send any input to
   any window, and access to it should be granted with that in mind
 
-Development is supported on Linux and macOS. Windows development is not
-supported, but production builds are expected to run on Windows.
+The development launcher supports Linux, macOS, and Windows. Desktop runtime
+smoke tests currently run on Linux; Rust checks run on all three platforms.
 
 ## Setup
 
@@ -38,18 +38,26 @@ cp .env.example .env
 | ------------------ | ------------------------------------------------- |
 | `pnpm tauri:dev`   | Full desktop app (use this, not `pnpm tauri dev`) |
 | `pnpm dev`         | Frontend only, in a browser                       |
-| `pnpm tauri:build` | Production bundle (AppImage + deb)                |
+| `pnpm tauri:build` | Platform bundle: AppImage/deb, NSIS, or app/DMG   |
 
-`pnpm tauri:dev` goes through `scripts/tauri-dev.sh`, which overrides only the
+`pnpm tauri:dev` goes through `scripts/tauri-dev.mjs`, which overrides only the
 dev server URL and the CSP entries that allow talking to it. Running
 `pnpm tauri dev` directly points the app at the production `devUrl` instead.
+
+The repository root is the only environment directory. `TYCO_DEV_HOME` can
+override the default development storage directory. UI tests bypass Turbo
+caching because `TYCO_LOCAL_AI_KIT` can point to changing external sources.
+
+Tauri automatically merges the Windows/macOS configuration for the target OS.
+The macOS bundle requires macOS 11 or newer and declares microphone access.
+Release signing and notarization still require platform credentials.
 
 ## Verification
 
 | Command             | What it covers                                   |
 | ------------------- | ------------------------------------------------ |
 | `pnpm check`        | version sync, i18n, lint, type-check, formatting |
-| `pnpm test`         | Vitest suites                                    |
+| `pnpm test`         | Tooling tests + Vitest suites                    |
 | `pnpm validate`     | `check` + `test` + `build`                       |
 | `pnpm check:rust`   | `cargo fmt --check` + `cargo clippy -D warnings` |
 | `pnpm test:rust`    | `cargo test`                                     |

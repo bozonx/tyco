@@ -11,7 +11,7 @@
 - `apps/desktop-ui/` — Vue 3 + Vite + Tailwind CSS + CodeMirror 6 frontend (`@tyco/desktop-ui`).
 - `packages/shared/` — shared TypeScript contracts and data structures (`@tyco/shared`).
 - `src-tauri/` — Rust backend (Tauri 2, local storage, D-Bus IPC, Whisper/LLM models management).
-- `scripts/` — development, automation, and verification scripts (`check-i18n.js`, `tauri-dev.sh`).
+- `scripts/` — development, automation, and verification scripts (`check-i18n.js`, `tauri-dev.mjs`).
 
 The root workspace uses Node.js 24+, pnpm 11, TypeScript, Turborepo, ESLint (flat config), and Prettier.
 Always use `pnpm`; do not introduce npm or Yarn lockfiles.
@@ -57,7 +57,7 @@ which scans the sources for `mdi:*` names; referencing a new icon is enough.
 
 ## CSP
 
-`src-tauri/tauri.conf.json` holds the production CSP. `scripts/tauri-dev.sh`
+`src-tauri/tauri.conf.json` holds the production CSP. `scripts/tauri-dev.mjs`
 overrides only `devUrl` and the CSP entries needed to reach the dev server —
 keep it that way, so that anything working in dev also works in a bundle. In
 particular, never rely on inline scripts: `script-src` does not allow them.

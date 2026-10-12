@@ -6,16 +6,14 @@
     "jsx": "preserve",
     "allowImportingTsExtensions": true,
     "paths": { "@/*": ["./src/*"] },
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "components.d.ts",
-    "build/**/*.ts",
-    "vite.config.ts",
-    "vitest.config.ts"
-  ]
+    "components.d.ts"
+  ],
+  "exclude": ["src/**/*.test.ts", "src/test/**"]
 }

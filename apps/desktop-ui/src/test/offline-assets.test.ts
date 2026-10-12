@@ -16,7 +16,10 @@ function collectSourceFiles(dir: string): string[] {
       return collectSourceFiles(entryPath)
     }
 
-    return ['.vue', '.ts'].includes(extname(entry.name)) ? [entryPath] : []
+    return !entry.name.endsWith('.test.ts') &&
+      ['.vue', '.ts'].includes(extname(entry.name))
+      ? [entryPath]
+      : []
   })
 }
 

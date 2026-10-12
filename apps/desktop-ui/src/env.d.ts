@@ -10,15 +10,6 @@ declare module '*.vue' {
   export default component
 }
 
-interface ImportMetaEnv {
-  readonly VITE_APP_TITLE: string
-  // more env variables...
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-
 declare module 'virtual:offline-icons' {
   import type { IconifyJSON } from '@iconify/types'
 

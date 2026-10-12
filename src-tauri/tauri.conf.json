@@ -53,7 +53,7 @@
         "font-src": "'self' data:",
         "object-src": "'none'",
         "base-uri": "'self'",
-        "frame-src": "tyco-plugin: http://*.localhost https://*.localhost http://*.tyco-plugin.localhost https://*.tyco-plugin.localhost"
+        "frame-src": "tyco-plugin: http://*.localhost https://*.localhost"
       }
     }
   },

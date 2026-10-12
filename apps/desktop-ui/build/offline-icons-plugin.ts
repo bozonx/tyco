@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
-import { extname, resolve } from 'node:path'
+import { extname, isAbsolute, relative, resolve } from 'node:path'
 
 import { getIcons } from '@iconify/utils'
 import type { IconifyJSON } from '@iconify/types'
@@ -23,7 +23,10 @@ async function collectSourceFiles(dir: string): Promise<string[]> {
       continue
     }
 
-    if (SCANNED_EXTENSIONS.has(extname(entry.name))) {
+    if (
+      !entry.name.endsWith('.test.ts') &&
+      SCANNED_EXTENSIONS.has(extname(entry.name))
+    ) {
       files.push(entryPath)
     }
   }
@@ -46,7 +49,7 @@ async function collectUsedIconNames(srcDir: string): Promise<string[]> {
   return [...names].sort()
 }
 
-async function buildCollection(srcDir: string): Promise<IconifyJSON> {
+export async function buildCollection(srcDir: string): Promise<IconifyJSON> {
   const mdi = (
     (await import('@iconify-json/mdi/icons.json', {
       with: { type: 'json' },
@@ -56,14 +59,15 @@ async function buildCollection(srcDir: string): Promise<IconifyJSON> {
   const used = await collectUsedIconNames(srcDir)
   const subset = getIcons(
     mdi,
-    used.map((name) => name.slice('mdi:'.length))
+    used.map((name) => name.slice('mdi:'.length)),
+    true
   )
 
   if (!subset) {
     throw new Error('offline-icons: failed to build the mdi subset')
   }
 
-  const missing = Object.keys(subset.not_found ?? {})
+  const missing = subset.not_found ?? []
 
   if (missing.length > 0) {
     throw new Error(
@@ -97,18 +101,25 @@ export function offlineIconsPlugin(srcDir: string): Plugin {
       return `export default ${JSON.stringify(collection)}`
     },
     configureServer(server) {
-      server.watcher.on('change', (file) => {
-        if (!SCANNED_EXTENSIONS.has(extname(file))) {
+      const reload = (file: string) => {
+        const sourcePath = relative(srcDir, file)
+        if (
+          sourcePath.startsWith('..') ||
+          isAbsolute(sourcePath) ||
+          file.endsWith('.test.ts') ||
+          !SCANNED_EXTENSIONS.has(extname(file))
+        )
           return
-        }
 
         const module = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_ID)
-
         if (module) {
           server.moduleGraph.invalidateModule(module)
           server.ws.send({ type: 'full-reload' })
         }
-      })
+      }
+      server.watcher.on('change', reload)
+      server.watcher.on('add', reload)
+      server.watcher.on('unlink', reload)
     },
   }
 }

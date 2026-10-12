@@ -1,10 +1,10 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 
-import viteConfig from './vite.config.ts'
+import { createUiConfig } from './build/ui-config.ts'
 
 export default defineConfig((configEnv) =>
   mergeConfig(
-    viteConfig(configEnv),
+    createUiConfig(configEnv.mode, true),
     defineConfig({
       test: {
         environment: 'jsdom',
@@ -13,7 +13,7 @@ export default defineConfig((configEnv) =>
         restoreMocks: true,
         testTimeout: 10000,
         setupFiles: ['./src/test/setup.ts'],
-        include: ['src/**/*.test.ts'],
+        include: ['src/**/*.test.ts', 'build/**/*.test.ts'],
         coverage: {
           provider: 'v8',
           reporter: ['text', 'json', 'html'],

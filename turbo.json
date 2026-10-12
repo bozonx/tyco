@@ -6,7 +6,7 @@
     "eslint.config.js",
     ".prettierrc.yml",
     "pnpm-lock.yaml",
-    ".env"
+    ".env*"
   ],
   "tasks": {
     "build": {
@@ -32,6 +32,8 @@
       "persistent": true,
       "env": ["NODE_ENV", "PORT", "TYCO_LOCAL_AI_KIT"],
       "dependsOn": ["^build"]
-    }
+    },
+    "@tyco/desktop-ui#test": { "cache": false },
+    "@tyco/desktop-ui#test:cov": { "cache": false }
   }
 }
