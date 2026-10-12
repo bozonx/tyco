@@ -9,7 +9,11 @@ import {
   setMarkdownPreview,
 } from './markdown-preview'
 import { createEditorState } from './create-editor-state'
-import { MarkerWidget, PreviewWidget } from './preview-widget'
+import {
+  CodeBlockHeaderWidget,
+  MarkerWidget,
+  PreviewWidget,
+} from './preview-widget'
 import { EditorView } from '@codemirror/view'
 import { undo } from '@codemirror/commands'
 
@@ -286,5 +290,62 @@ describe('live preview', () => {
     } finally {
       view.destroy()
     }
+  })
+
+  it('renders a code block header widget with language and a copy button', async () => {
+    const doc = '```ts\nconst greeting = "hello"\n```'
+    const ranges = formattedRanges(doc)
+    const header = ranges
+      .map(({ spec }) => spec.widget)
+      .find(
+        (widget): widget is CodeBlockHeaderWidget =>
+          widget instanceof CodeBlockHeaderWidget
+      )
+    expect(header).toBeDefined()
+    expect(header?.info).toBe('ts')
+    expect(header?.code).toBe('const greeting = "hello"')
+
+    const view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc, markdownPreview: true }),
+    })
+    try {
+      const copyBtn = view.dom.querySelector<HTMLButtonElement>(
+        '.cm-preview-code-copy'
+      )
+      expect(copyBtn).not.toBeNull()
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      copyBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      await Promise.resolve()
+      expect(writeText).toHaveBeenCalledWith('const greeting = "hello"')
+      expect(copyBtn?.classList.contains('copied')).toBe(true)
+    } finally {
+      view.destroy()
+    }
+  })
+
+  it('decorates code block lines with border classes in preview and active modes', () => {
+    const doc = '```\nline 1\nline 2\n```'
+    const previewDecorationsList = formattedRanges(doc, false)
+    const previewLineClasses = previewDecorationsList
+      .filter(({ spec }) => typeof spec.class === 'string')
+      .map(({ spec }) => spec.class)
+    expect(previewLineClasses).toContain('cm-preview-code-block')
+    expect(previewLineClasses).toContain(
+      'cm-preview-code-block cm-preview-code-block-last'
+    )
+
+    const activeDecorationsList = formattedRanges(doc, true, 10)
+    const activeLineClasses = activeDecorationsList
+      .filter(({ spec }) => typeof spec.class === 'string')
+      .map(({ spec }) => spec.class)
+    expect(activeLineClasses).toContain(
+      'cm-preview-code-block cm-preview-code-block-first'
+    )
+    expect(activeLineClasses).toContain(
+      'cm-preview-code-block cm-preview-code-block-last'
+    )
   })
 })

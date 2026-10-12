@@ -53,7 +53,6 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.link, color: 'var(--app-syntax-link)' },
   { tag: tags.url, color: 'var(--app-syntax-link)' },
   { tag: tags.quote, color: 'var(--app-syntax-quote)', fontStyle: 'italic' },
-  { tag: tags.list, color: 'var(--app-syntax-meta)' },
   { tag: tags.meta, color: 'var(--app-syntax-meta)' },
   { tag: tags.processingInstruction, color: 'var(--app-syntax-meta)' },
   {

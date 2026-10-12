@@ -73,6 +73,87 @@ export class PreviewWidget extends WidgetType {
   }
 }
 
+const COPY_ICON_SVG =
+  '<svg class="cm-preview-copy-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>'
+
+const CHECK_ICON_SVG =
+  '<svg class="cm-preview-check-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M21 7L9 19l-5.5-5.5l1.41-1.41L9 16.17L19.59 5.59z"/></svg>'
+
+export class CodeBlockHeaderWidget extends WidgetType {
+  constructor(
+    readonly info: string,
+    readonly code: string,
+    readonly from: number
+  ) {
+    super()
+  }
+
+  override eq(other: CodeBlockHeaderWidget): boolean {
+    return (
+      this.info === other.info &&
+      this.code === other.code &&
+      this.from === other.from
+    )
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const dom = view.dom.ownerDocument.createElement('div')
+    dom.className = 'cm-preview-code-header'
+
+    const infoSpan = view.dom.ownerDocument.createElement('span')
+    infoSpan.className = 'cm-preview-code-info'
+    infoSpan.textContent = this.info
+    dom.appendChild(infoSpan)
+
+    const copyBtn = view.dom.ownerDocument.createElement('button')
+    copyBtn.type = 'button'
+    copyBtn.className = 'cm-preview-code-copy'
+    copyBtn.title = 'Copy code'
+    copyBtn.setAttribute('aria-label', 'Copy code')
+    copyBtn.innerHTML = COPY_ICON_SVG
+
+    copyBtn.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    })
+
+    copyBtn.addEventListener('click', async (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(this.code)
+        }
+        copyBtn.innerHTML = CHECK_ICON_SVG
+        copyBtn.classList.add('copied')
+        setTimeout(() => {
+          copyBtn.innerHTML = COPY_ICON_SVG
+          copyBtn.classList.remove('copied')
+        }, 1500)
+      } catch {
+        // clipboard unavailable
+      }
+    })
+
+    dom.appendChild(copyBtn)
+
+    dom.addEventListener('mousedown', (event) => {
+      if (event.target === copyBtn || copyBtn.contains(event.target as Node)) {
+        return
+      }
+      event.preventDefault()
+      view.dispatch({ selection: { anchor: this.from }, scrollIntoView: true })
+      view.focus()
+    })
+
+    return dom
+  }
+
+  override ignoreEvent(): boolean {
+    return true
+  }
+}
+
 export class MarkerWidget extends WidgetType {
   constructor(
     readonly text: string,

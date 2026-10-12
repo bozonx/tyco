@@ -4,7 +4,11 @@ import { Compartment, StateEffect, StateField } from '@codemirror/state'
 import type { DecorationSet } from '@codemirror/view'
 import { Decoration, EditorView } from '@codemirror/view'
 
-import { MarkerWidget, PreviewWidget } from './preview-widget'
+import {
+  CodeBlockHeaderWidget,
+  MarkerWidget,
+  PreviewWidget,
+} from './preview-widget'
 import { editorHighlightStyle } from './theme'
 
 /** A span of the document hidden while the caret is elsewhere */
@@ -105,7 +109,7 @@ export const previewDecorations = (
   const replace = (
     from: number,
     to: number,
-    widget?: PreviewWidget | MarkerWidget,
+    widget?: PreviewWidget | MarkerWidget | CodeBlockHeaderWidget,
     block = false
   ) => {
     if (to <= from) return
@@ -212,19 +216,67 @@ export const previewDecorations = (
           )
           break
         case 'FencedCode':
-        case 'CodeBlock':
-          lines(node.from, node.to, 'cm-preview-code-block')
-          if (node.name === 'FencedCode' && !active) {
-            const first = state.doc.lineAt(node.from)
-            const last = state.doc.lineAt(node.to)
-            // Only collapse fence lines when a body remains editable.
-            if (last.number > first.number + 1) {
-              replace(first.from, first.to + 1)
-              if (node.node.getChildren('CodeMark').length > 1)
-                replace(last.from - 1, last.to)
+        case 'CodeBlock': {
+          const first = state.doc.lineAt(node.from)
+          const last = state.doc.lineAt(node.to)
+          const isFenced = node.name === 'FencedCode'
+          const canCollapse =
+            isFenced && !active && last.number > first.number + 1
+
+          if (canCollapse) {
+            const marks = node.node.getChildren('CodeMark')
+            const hasClosing = marks.length > 1
+            const codeStart = first.to + 1
+            const codeEnd =
+              hasClosing && last.from > codeStart
+                ? last.from - 1
+                : hasClosing
+                  ? codeStart
+                  : last.to
+            const code = state.sliceDoc(codeStart, codeEnd)
+            const infoNode = node.node.getChild('CodeInfo')
+            const info = infoNode
+              ? state.sliceDoc(infoNode.from, infoNode.to).trim()
+              : ''
+
+            replace(
+              first.from,
+              first.to + 1,
+              new CodeBlockHeaderWidget(info, code, node.from),
+              true
+            )
+            if (hasClosing) {
+              replace(last.from - 1, last.to)
+            }
+
+            const startLine = first.number + 1
+            const endLine = hasClosing ? last.number - 1 : last.number
+            for (let num = startLine; num <= endLine; num++) {
+              const cls =
+                num === endLine
+                  ? 'cm-preview-code-block cm-preview-code-block-last'
+                  : 'cm-preview-code-block'
+              decorations.push(
+                Decoration.line({ class: cls }).range(state.doc.line(num).from)
+              )
+            }
+          } else {
+            for (let num = first.number; num <= last.number; num++) {
+              let cls = 'cm-preview-code-block'
+              if (num === first.number && num === last.number) {
+                cls += ' cm-preview-code-block-single'
+              } else if (num === first.number) {
+                cls += ' cm-preview-code-block-first'
+              } else if (num === last.number) {
+                cls += ' cm-preview-code-block-last'
+              }
+              decorations.push(
+                Decoration.line({ class: cls }).range(state.doc.line(num).from)
+              )
             }
           }
           return false
+        }
       }
       return undefined
     },
@@ -322,11 +374,74 @@ const formattedAppearance = EditorView.theme({
     borderRadius: '4px',
     padding: '0.1em 0.2em',
   },
+  '.cm-preview-code-header': {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'var(--app-surface-raised)',
+    border: '1px solid var(--app-border)',
+    borderBottom: '1px solid var(--app-border)',
+    borderTopLeftRadius: 'var(--radius-md)',
+    borderTopRightRadius: 'var(--radius-md)',
+    padding: '0.25rem 0.6rem 0.25rem 0.75rem',
+    marginTop: '0.6em',
+    userSelect: 'none',
+  },
+  '.cm-preview-code-info': {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    color: 'var(--app-text-muted)',
+    textTransform: 'lowercase',
+    letterSpacing: '0.02em',
+  },
+  '.cm-preview-code-copy': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--app-text-muted)',
+    padding: '0.25rem',
+    cursor: 'pointer',
+    lineHeight: '1',
+    transition: 'color 0.15s, background-color 0.15s',
+  },
+  '.cm-preview-code-copy:hover': {
+    background: 'var(--app-hover)',
+    color: 'var(--color-base-content)',
+  },
+  '.cm-preview-code-copy.copied': { color: 'var(--color-success)' },
   '.cm-preview-code-block': {
     fontFamily: 'var(--font-mono)',
     background: 'var(--app-surface-raised)',
-    padding: '0 0.75em',
+    padding: '0.15em 0.75em',
     textIndent: '0',
+    borderLeft: '1px solid var(--app-border)',
+    borderRight: '1px solid var(--app-border)',
+  },
+  '.cm-preview-code-block-first': {
+    borderTop: '1px solid var(--app-border)',
+    borderTopLeftRadius: 'var(--radius-md)',
+    borderTopRightRadius: 'var(--radius-md)',
+    paddingTop: '0.45em',
+    marginTop: '0.6em',
+  },
+  '.cm-preview-code-block-last': {
+    borderBottom: '1px solid var(--app-border)',
+    borderBottomLeftRadius: 'var(--radius-md)',
+    borderBottomRightRadius: 'var(--radius-md)',
+    paddingBottom: '0.45em',
+    marginBottom: '0.6em',
+  },
+  '.cm-preview-code-block-single': {
+    border: '1px solid var(--app-border)',
+    borderRadius: 'var(--radius-md)',
+    paddingTop: '0.45em',
+    paddingBottom: '0.45em',
+    marginTop: '0.6em',
+    marginBottom: '0.6em',
   },
   '.cm-preview-widget': { cursor: 'text', maxWidth: '100%' },
   '.cm-preview-table': { overflowX: 'auto', padding: '0.5em 0' },
