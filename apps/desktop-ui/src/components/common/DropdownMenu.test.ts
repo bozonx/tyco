@@ -59,4 +59,41 @@ describe('DropdownMenu', () => {
     expect(panel.classes()).toContain('bottom-full')
     expect(panel.classes()).toContain('right-0')
   })
+  it('opens from the keyboard, navigates items, and restores focus on Escape', async () => {
+    const wrapper = mount(DropdownMenu, {
+      attachTo: document.body,
+      props: {
+        label: 'Actions',
+        items: [
+          { label: 'First', action: vi.fn() },
+          { label: 'Last', action: vi.fn() },
+        ],
+      },
+    })
+    const trigger = wrapper.get('button')
+    ;(trigger.element as HTMLElement).focus()
+    await trigger.trigger('keydown', { key: 'ArrowDown' })
+    const items = wrapper.findAll('[role="menuitem"]')
+    expect(document.activeElement).toBe(items[0].element)
+    await items[0].trigger('keydown', { key: 'End' })
+    expect(document.activeElement).toBe(items[1].element)
+    await items[1].trigger('keydown', { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(items[0].element)
+    await items[0].trigger('keydown', { key: 'Escape' })
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(trigger.element)
+  })
+  it('closes when focus moves outside the popover', async () => {
+    const wrapper = mount(DropdownMenu, {
+      attachTo: document.body,
+      props: { label: 'Actions', items: [{ label: 'First', action: vi.fn() }] },
+    })
+    await wrapper.get('button').trigger('click')
+    const outside = document.createElement('button')
+    document.body.append(outside)
+    outside.focus()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(outside)
+  })
 })

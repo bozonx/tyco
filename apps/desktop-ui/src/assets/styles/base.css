@@ -91,12 +91,12 @@
     gap: var(--space-sm);
     min-height: 2rem;
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--text-title);
   }
 
   /* Section caption: small, muted, uppercase */
   h2 {
-    font-size: 0.75rem;
+    font-size: var(--text-caption);
     margin: var(--space-xl) 0 var(--space-sm);
     color: var(--app-text-muted);
     text-transform: uppercase;

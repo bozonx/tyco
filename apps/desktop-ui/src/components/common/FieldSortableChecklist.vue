@@ -1,5 +1,8 @@
 <template>
-  <div class="field-sortable-checklist flex flex-col gap-1.5 w-full">
+  <fieldset
+    v-bind="controlAttrs()"
+    class="field-sortable-checklist flex flex-col gap-1.5 w-full"
+  >
     <div ref="listRef" class="flex flex-col gap-1.5 w-full">
       <div
         v-for="(item, index) in localItems"
@@ -38,12 +41,13 @@
         </label>
       </div>
     </div>
-  </div>
+  </fieldset>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import {
@@ -54,6 +58,8 @@ import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
 import { Icon } from '@iconify/vue'
 
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl({ register: false })
 const props = defineProps<{
   value?: unknown
   options?: InputConfigOption[]

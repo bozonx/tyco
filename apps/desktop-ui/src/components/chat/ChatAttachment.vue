@@ -23,15 +23,14 @@
       <span class="chat-attachment-excerpt">{{ excerpt }}</span>
       <span class="chat-attachment-size">{{ size }}</span>
     </button>
-    <button
+    <IconButton
       v-if="removable"
-      type="button"
       class="chat-attachment-remove"
       :title="t('chat.removeAttachment')"
       @click="emit('remove')"
-    >
-      <Icon icon="mdi:close" height="14" />
-    </button>
+      :label="t('chat.removeAttachment')"
+      icon="mdi:close"
+    />
   </span>
   <pre v-if="open" class="chat-attachment-preview selectable">{{ text }}</pre>
 </template>
@@ -46,6 +45,7 @@ import {
   attachmentLabelKey,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
+import IconButton from '../common/IconButton.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatAttachmentSource } from '@tyco/shared'
 

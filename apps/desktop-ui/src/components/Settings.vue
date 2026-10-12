@@ -2,7 +2,13 @@
   <div class="settings-panel">
     <aside class="settings-nav">
       <div class="settings-nav-title">{{ t('nav.settings') }}</div>
-      <Tabs :tabs="primaryTabs" v-model:value="currentTab" variant="vertical" />
+      <Tabs
+        kind="navigation"
+        :label="t('nav.settings')"
+        :tabs="primaryTabs"
+        v-model:value="currentTab"
+        variant="vertical"
+      />
       <div v-if="installedPlugins.length > 0" class="settings-subnav">
         <button
           v-for="plugin in installedPlugins"
@@ -36,7 +42,13 @@
       <div class="settings-nav-category">
         {{ t('settings.actionsCategory') }}
       </div>
-      <Tabs :tabs="actionTabs" v-model:value="currentTab" variant="vertical" />
+      <Tabs
+        kind="navigation"
+        :label="t('settings.actionsCategory')"
+        :tabs="actionTabs"
+        v-model:value="currentTab"
+        variant="vertical"
+      />
     </aside>
 
     <div class="settings-content">

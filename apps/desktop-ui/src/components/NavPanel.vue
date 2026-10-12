@@ -3,12 +3,14 @@
     <nav
       v-if="navPanelStore.params.rightPanelVisible"
       class="topbar-nav"
-      role="tablist"
+      :aria-label="t('app.title')"
     >
       <button
         type="button"
-        role="tab"
         class="topbar-tab"
+        :aria-current="
+          appNavigation.isCurrent(APP_ROUTES.EDITOR.path) ? 'page' : undefined
+        "
         :class="{
           'is-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
         }"
@@ -19,8 +21,10 @@
       </button>
       <button
         type="button"
-        role="tab"
         class="topbar-tab"
+        :aria-current="
+          appNavigation.isCurrent(APP_ROUTES.CHAT.path) ? 'page' : undefined
+        "
         :class="{ 'is-active': appNavigation.isCurrent(APP_ROUTES.CHAT.path) }"
         @click="openChat"
       >
@@ -47,26 +51,24 @@
           ({{ actionsShortcut }})</template
         ></Button
       >
-      <Button
+      <IconButton
         size="sm"
         variant="ghost"
-        square
         :active="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"
         @click="openHistory"
         :title="t('nav.history')"
-      >
-        <Icon icon="mdi:history" height="20" />
-      </Button>
-      <Button
+        :label="t('nav.history')"
+        icon="mdi:history"
+      />
+      <IconButton
         size="sm"
         variant="ghost"
-        square
         :active="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
         @click="openSettings"
         :title="t('nav.settings')"
-      >
-        <Icon icon="mdi:cog-outline" height="20" />
-      </Button>
+        :label="t('nav.settings')"
+        icon="mdi:cog-outline"
+      />
     </div>
   </header>
 </template>
@@ -82,6 +84,7 @@ import { APP_ROUTES } from '../lib/navigation/routes'
 import { useChatStore } from '../stores/chat'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import IconButton from './common/IconButton.vue'
 import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useEditorNavigation()

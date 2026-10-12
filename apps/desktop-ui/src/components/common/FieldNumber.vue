@@ -1,5 +1,6 @@
 <template>
   <input
+    v-bind="controlAttrs()"
     type="number"
     :value="String(value ?? '')"
     :placeholder="placeholder"
@@ -16,6 +17,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+
+import { useFieldControl } from '../../composables/use-field-control'
+
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl()
 
 withDefaults(
   defineProps<{

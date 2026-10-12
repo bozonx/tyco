@@ -1,6 +1,6 @@
 <template>
   <SegmentedControl
-    :value="modelValue"
+    :value="value"
     :label="t('menu.reviewResult')"
     :options="options"
     compact
@@ -15,9 +15,9 @@ import { useI18n } from '../../composables/use-i18n'
 import SegmentedControl from './SegmentedControl.vue'
 
 export type ParallelViewMode = 'split' | 'result'
-const props = defineProps<{ modelValue: ParallelViewMode }>()
+const props = defineProps<{ value: ParallelViewMode }>()
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: ParallelViewMode): void
+  (e: 'update:value', value: ParallelViewMode): void
 }>()
 const { t } = useI18n()
 const options = computed<
@@ -31,6 +31,6 @@ const options = computed<
   },
 ])
 function selectMode(mode: ParallelViewMode) {
-  if (props.modelValue !== mode) emit('update:modelValue', mode)
+  if (props.value !== mode) emit('update:value', mode)
 }
 </script>

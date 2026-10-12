@@ -20,7 +20,7 @@ describe('InfoTooltip', () => {
 
     const trigger = wrapper.find('.info-tooltip-trigger')
     expect(trigger.exists()).toBe(true)
-    expect(trigger.attributes('aria-label')).toBe('Info')
+    expect(trigger.attributes('aria-label')).toBe('Information')
     expect(trigger.attributes('aria-expanded')).toBe('false')
     expect(wrapper.find('.info-tooltip-popover').exists()).toBe(false)
   })

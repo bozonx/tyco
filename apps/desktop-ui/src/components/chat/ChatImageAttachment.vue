@@ -4,7 +4,7 @@
       type="button"
       :title="failed ? t('chat.imageError') : t('chat.viewImage')"
       :disabled="!url && !failed"
-      @click="failed ? load() : viewer?.showModal()"
+      @click="failed ? load() : (viewerOpen = true)"
     >
       <img
         v-if="url"
@@ -16,25 +16,27 @@
         failed ? t('chat.imageUnavailable') : t('chat.imageProcessing')
       }}</span>
     </button>
-    <button
+    <IconButton
       v-if="removable"
-      type="button"
       class="remove-image"
-      :aria-label="t('chat.removeImage')"
       @click="emit('remove')"
+      :label="t('chat.removeImage')"
+      icon="mdi:close"
+    />
+    <BaseDialog
+      size="content"
+      :open="viewerOpen"
+      :label="image.name || t('chat.imageTitle')"
+      class="image-viewer"
+      @close="viewerOpen = false"
     >
-      <Icon icon="mdi:close" height="16" />
-    </button>
-    <dialog ref="viewer" class="image-viewer" @click="closeBackdrop">
-      <button
-        type="button"
-        :aria-label="t('chat.closeImage')"
-        @click="viewer?.close()"
-      >
-        <Icon icon="mdi:close" height="24" />
-      </button>
+      <IconButton
+        @click="viewerOpen = false"
+        :label="t('chat.closeImage')"
+        icon="mdi:close"
+      />
       <img v-if="url" :src="url" :alt="image.name || t('chat.imageTitle')" />
-    </dialog>
+    </BaseDialog>
   </div>
 </template>
 
@@ -43,7 +45,8 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
-import { Icon } from '@iconify/vue'
+import BaseDialog from '../common/BaseDialog.vue'
+import IconButton from '../common/IconButton.vue'
 import type { ChatImage } from '@tyco/shared'
 
 const props = defineProps<{
@@ -56,7 +59,7 @@ const emit = defineEmits<{ remove: []; loaded: [] }>()
 const { t } = useI18n()
 const url = ref('')
 const failed = ref(false)
-const viewer = ref<HTMLDialogElement | null>(null)
+const viewerOpen = ref(false)
 let version = 0
 function release() {
   if (url.value) URL.revokeObjectURL(url.value)
@@ -81,9 +84,6 @@ onBeforeUnmount(() => {
   version++
   release()
 })
-function closeBackdrop(event: MouseEvent) {
-  if (event.target === viewer.value) viewer.value?.close()
-}
 </script>
 
 <style scoped>
@@ -118,17 +118,6 @@ function closeBackdrop(event: MouseEvent) {
   background: var(--app-surface);
   border-radius: 50%;
   padding: 0.2rem;
-}
-.image-viewer {
-  max-width: 95vw;
-  max-height: 95vh;
-  padding: var(--space-md);
-  background: var(--app-surface);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-}
-.image-viewer::backdrop {
-  background: rgb(0 0 0 / 70%);
 }
 .image-viewer > button {
   display: block;

@@ -21,40 +21,30 @@
         <div class="storage-path-box">
           <code class="storage-path" :title="item.value">{{ item.value }}</code>
           <div class="storage-path-actions">
-            <button
-              type="button"
+            <IconButton
               class="storage-copy-btn"
               :title="
                 copiedStorageKey === item.key
                   ? t('settings.storagePathCopied')
                   : t('settings.storageCopyPath')
               "
-              :aria-label="t('settings.storageCopyPath')"
               @click="copyStoragePath(item.value, item.key)"
-            >
-              <Icon
-                :icon="
-                  copiedStorageKey === item.key
-                    ? 'mdi:check'
-                    : 'mdi:content-copy'
-                "
-                height="14"
-                class="shrink-0"
-              />
-            </button>
-            <button
-              type="button"
+              :label="
+                copiedStorageKey === item.key
+                  ? t('settings.storagePathCopied')
+                  : t('settings.storageCopyPath')
+              "
+              :icon="
+                copiedStorageKey === item.key ? 'mdi:check' : 'mdi:content-copy'
+              "
+            />
+            <IconButton
               class="storage-copy-btn"
               :title="t('settings.storageOpenFolder')"
-              :aria-label="t('settings.storageOpenFolder')"
               @click="openStorageLocation(item.kind)"
-            >
-              <Icon
-                icon="mdi:folder-open-outline"
-                height="14"
-                class="shrink-0"
-              />
-            </button>
+              :label="t('settings.storageOpenFolder')"
+              icon="mdi:folder-open-outline"
+            />
           </div>
         </div>
       </div>
@@ -66,7 +56,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
-import { Icon } from '@iconify/vue'
+import IconButton from '../common/IconButton.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
 const { t } = useI18n()

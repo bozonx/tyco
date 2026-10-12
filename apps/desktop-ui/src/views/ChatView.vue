@@ -1,23 +1,21 @@
 <template>
   <div class="chat-view">
     <div v-if="!sidebarOpen" class="sidebar-closed-tools">
-      <button
-        type="button"
+      <IconButton
         class="sidebar-tool"
         :title="t('chat.openSidebar')"
         @click="sidebarOpen = true"
-      >
-        <Icon icon="mdi:dock-left" height="19" />
-      </button>
-      <button
-        type="button"
+        :label="t('chat.openSidebar')"
+        icon="mdi:dock-left"
+      />
+      <IconButton
         class="sidebar-tool"
         :title="t('chat.newChat')"
         :disabled="chatStore.isGenerating"
         @click="chatStore.startNewChat()"
-      >
-        <Icon icon="mdi:plus" height="19" />
-      </button>
+        :label="t('chat.newChat')"
+        icon="mdi:plus"
+      />
     </div>
     <button
       v-if="sidebarOpen"
@@ -43,11 +41,11 @@ import { onMounted, ref } from 'vue'
 
 import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
+import IconButton from '../components/common/IconButton.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { Icon } from '@iconify/vue'
 
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
@@ -112,15 +110,15 @@ onMounted(async () => {
   .chat-sidebar-panel {
     position: absolute;
     inset: 0 auto 0 0;
-    z-index: 20;
+    z-index: var(--z-sidebar);
     box-shadow: var(--app-shadow-lg);
   }
   .sidebar-backdrop {
     position: absolute;
     inset: 0;
-    z-index: 19;
+    z-index: calc(var(--z-sidebar) - 1);
     display: block;
-    background: rgb(0 0 0 / 0.28);
+    background: var(--app-sidebar-backdrop);
   }
 }
 </style>

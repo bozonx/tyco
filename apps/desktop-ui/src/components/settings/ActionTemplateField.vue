@@ -1,6 +1,7 @@
 <template>
-  <div class="template-field">
+  <div :class="$attrs.class" :style="$attrs.style" class="template-field">
     <textarea
+      v-bind="controlAttrs()"
       v-if="multiline"
       ref="fieldRef"
       class="textarea template-field-control"
@@ -11,6 +12,7 @@
       @input="emitValue"
     />
     <input
+      v-bind="controlAttrs()"
       v-else
       ref="fieldRef"
       class="input template-field-control"
@@ -20,17 +22,15 @@
       @input="emitValue"
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
-    <Button
-      type="button"
+    <IconButton
       variant="ghost"
-      square
       size="sm"
       :title="t('settings.actionInsertText', { placeholder: TEXT })"
       @mousedown.prevent
       @click="insert(TEXT)"
-    >
-      <Icon icon="mdi:code-braces" width="18" height="18" />
-    </Button>
+      :label="t('settings.actionInsertText', { placeholder: TEXT })"
+      icon="mdi:code-braces"
+    />
     <slot />
     <InfoTooltip v-if="info" :text="info" align="end" />
   </div>
@@ -39,12 +39,14 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
-import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
-import { Icon } from '@iconify/vue'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl({ wrapped: true })
 const props = defineProps<{
   value?: string
   placeholder?: string

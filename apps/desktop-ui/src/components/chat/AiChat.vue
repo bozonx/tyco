@@ -2,13 +2,13 @@
   <div class="ai-chat">
     <div ref="scroller" class="chat-messages" @scroll="handleScroll">
       <div class="chat-column">
-        <div v-if="chatStore.messages.length === 0" class="chat-empty">
-          <div class="chat-empty-icon">
-            <Icon icon="mdi:creation-outline" height="26" />
-          </div>
-          <div class="font-medium">{{ t('chat.emptyTitle') }}</div>
-          <div class="text-sm text-muted">{{ emptyHint }}</div>
-        </div>
+        <UiState
+          v-if="chatStore.messages.length === 0"
+          class="chat-empty"
+          :title="t('chat.emptyTitle')"
+          :message="emptyHint"
+          icon="mdi:creation-outline"
+        />
 
         <ChatItem
           v-for="(message, index) in chatStore.messages"
@@ -25,41 +25,47 @@
         <div
           v-if="chatStore.isGenerating && !streamHasContent"
           class="typing-indicator"
+          role="status"
           :aria-label="t('chat.generating')"
         >
           <span /><span /><span />
         </div>
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
-        <div
+        <UiState
           v-if="chatStore.isStopped && !chatStore.error"
           class="chat-error"
-          role="status"
+          kind="info"
+          inline
+          :message="t('chat.stopped')"
         >
-          <span>{{ t('chat.stopped') }}</span>
-          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">
-            {{ t('chat.retry') }}
-          </Button>
-        </div>
-        <div v-if="chatStore.error" class="chat-error" role="alert">
-          <Icon icon="mdi:alert-circle-outline" height="18" />
-          <span>{{ chatStore.error }}</span>
-          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">
-            {{ t('chat.retry') }}
-          </Button>
-        </div>
+          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
+            t('chat.retry')
+          }}</Button>
+        </UiState>
+        <UiState
+          v-if="chatStore.error"
+          class="chat-error"
+          kind="error"
+          inline
+          :message="chatStore.error"
+          icon="mdi:alert-circle-outline"
+        >
+          <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
+            t('chat.retry')
+          }}</Button>
+        </UiState>
       </div>
     </div>
 
-    <button
+    <IconButton
       v-if="showScrollButton"
-      type="button"
       class="scroll-to-bottom"
       :title="t('chat.scrollToBottom')"
       @click="scrollToBottom('smooth')"
-    >
-      <Icon icon="mdi:arrow-down" height="18" />
-    </button>
+      :label="t('chat.scrollToBottom')"
+      icon="mdi:arrow-down"
+    />
 
     <!-- files arrive through the native drag-and-drop event of the webview -->
     <div class="composer-wrap" :class="{ 'is-dragging': draggingFiles }">
@@ -153,18 +159,17 @@
         />
 
         <div class="chat-composer-bar">
-          <Button
+          <IconButton
             size="sm"
             variant="ghost"
-            square
             :disabled="
               chatStore.isGenerating || Boolean(chatStore.importingImages)
             "
             :title="t('chat.addFile')"
             @click="filePicker?.click()"
-          >
-            <Icon icon="mdi:paperclip" height="18" />
-          </Button>
+            :label="t('chat.addFile')"
+            icon="mdi:paperclip"
+          />
           <DropdownMenu
             xs
             class="model-picker"
@@ -176,34 +181,31 @@
           />
           <span class="composer-hint">{{ inputHint }}</span>
           <div class="composer-actions">
-            <Button
+            <IconButton
               size="sm"
               variant="ghost"
-              square
               :title="t('chat.voiceInput')"
               @click="voiceInput"
-            >
-              <Icon icon="mdi:microphone-outline" height="18" />
-            </Button>
-            <Button
+              :label="t('chat.voiceInput')"
+              icon="mdi:microphone-outline"
+            />
+            <IconButton
               v-if="!chatStore.isGenerating"
               size="sm"
-              square
               :disabled="!canSend"
               :title="t('chat.sendMessage')"
               @click="sendMessage"
-            >
-              <Icon icon="mdi:arrow-up" height="19" />
-            </Button>
-            <Button
+              :label="t('chat.sendMessage')"
+              icon="mdi:arrow-up"
+            />
+            <IconButton
               v-else
               size="sm"
-              square
               :title="t('chat.stop')"
               @click="chatStore.stopGeneration()"
-            >
-              <Icon icon="mdi:stop" height="18" />
-            </Button>
+              :label="t('chat.stop')"
+              icon="mdi:stop"
+            />
           </div>
         </div>
       </div>
@@ -239,6 +241,8 @@ import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import type { DropdownMenuItem } from '../common/DropdownMenu.vue'
+import IconButton from '../common/IconButton.vue'
+import UiState from '../common/UiState.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import ChatContextList from './ChatContextList.vue'
 import { Icon } from '@iconify/vue'
@@ -452,27 +456,6 @@ watch(
   margin: 0 auto;
   padding: var(--space-2xl) var(--space-lg);
 }
-.chat-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  margin: auto;
-  padding: var(--space-3xl) 0;
-  text-align: center;
-}
-.chat-empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: var(--space-sm);
-  border-radius: 999px;
-  background: var(--app-accent-soft);
-  color: var(--color-primary);
-}
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -498,17 +481,6 @@ watch(
   margin-top: -2.55rem;
   background: var(--color-primary);
   animation: chat-blink 1s step-end infinite;
-}
-.chat-error {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid color-mix(in oklab, var(--color-error) 35%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in oklab, var(--color-error) 8%, transparent);
-  color: var(--color-error);
-  font-size: var(--text-control);
 }
 .chat-error span {
   flex: 1;

@@ -2,7 +2,7 @@
   <ActionOverlayLayout :title="t('menu.reviewResult')" escMode="back">
     <template #header-extra>
       <div class="translation-header-tools">
-        <ParallelModeToggle v-if="props.sourceText" v-model="viewMode" />
+        <ParallelModeToggle v-if="props.sourceText" v-model:value="viewMode" />
         <div v-if="props.translationMeta" class="translation-provider-badge">
           <Icon icon="mdi:translate" height="14" class="opacity-70" />
           <span>{{ providerLabel }}</span>

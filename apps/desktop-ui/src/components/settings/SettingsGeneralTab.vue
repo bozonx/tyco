@@ -43,9 +43,14 @@
         :info="t('settings.windowInsertionHint')"
       >
         <div class="flex flex-col gap-2 w-full">
-          <Tabs
-            variant="segmented"
-            :tabs="windowInsertionTabs"
+          <SegmentedControl
+            :label="t('settings.windowInsertion')"
+            :options="
+              windowInsertionTabs.map((tab) => ({
+                id: tab.key,
+                name: tab.text,
+              }))
+            "
             :value="userConfig.windowInsertion.method"
             @update:value="updateWindowInsertionMethod"
           />

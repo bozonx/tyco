@@ -38,16 +38,14 @@
         <span v-if="message.status === 'stopped'" class="message-status">
           {{ t('chat.stopped') }}
         </span>
-        <button
+        <IconButton
           v-if="message.content"
-          type="button"
           class="message-action"
           :title="copied ? t('chat.copied') : t('chat.copy')"
-          :aria-label="copied ? t('chat.copied') : t('chat.copy')"
           @click="copyMessage"
-        >
-          <Icon :icon="copied ? 'mdi:check' : 'mdi:content-copy'" height="14" />
-        </button>
+          :label="copied ? t('chat.copied') : t('chat.copy')"
+          :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+        />
         <DropdownMenu
           xs
           square
@@ -72,7 +70,7 @@ import ChatAttachment from '../chat/ChatAttachment.vue'
 import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
 import ChatMarkdown from '../chat/ChatMarkdown.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import { Icon } from '@iconify/vue'
+import IconButton from './IconButton.vue'
 import type { ChatMessage } from '@tyco/shared'
 
 const props = defineProps<{ message: ChatMessage; streaming?: boolean }>()

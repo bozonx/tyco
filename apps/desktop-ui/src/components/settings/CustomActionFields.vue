@@ -17,16 +17,14 @@
           "
           @update:value="update('command', $event)"
         >
-          <Button
-            type="button"
+          <IconButton
             variant="ghost"
-            square
             size="sm"
             :title="t('settings.actionInsertScript')"
             @click="browseScript"
-          >
-            <Icon icon="mdi:file-code-outline" width="18" height="18" />
-          </Button>
+            :label="t('settings.actionInsertScript')"
+            icon="mdi:file-code-outline"
+          />
         </ActionTemplateField>
         <FieldIssues :issues="issuesOf('command')" />
       </div>
@@ -43,16 +41,14 @@
             :placeholder="t('settings.actionWorkingDirPlaceholder')"
             @update:value="update('workingDir', $event)"
           />
-          <Button
-            type="button"
+          <IconButton
             variant="ghost"
-            square
             size="sm"
             :title="t('settings.browseWorkingDir')"
             @click="browseWorkingDir"
-          >
-            <Icon icon="mdi:folder-open-outline" width="18" height="18" />
-          </Button>
+            :label="t('settings.browseWorkingDir')"
+            icon="mdi:folder-open-outline"
+          />
         </div>
       </div>
     </template>
@@ -117,16 +113,14 @@
             :placeholder="t('settings.actionWebhookHeaderValue')"
             @update:value="updateHeader(headerIndex, 1, $event)"
           />
-          <Button
-            type="button"
+          <IconButton
             variant="ghost"
-            square
             size="sm"
             :title="t('common.remove')"
             @click="removeHeader(headerIndex)"
-          >
-            <Icon icon="mdi:close" width="16" height="16" />
-          </Button>
+            :label="t('common.remove')"
+            icon="mdi:close"
+          />
         </div>
         <div>
           <Button
@@ -195,11 +189,11 @@ import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
 import FieldIssues from './FieldIssues.vue'
-import { Icon } from '@iconify/vue'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,

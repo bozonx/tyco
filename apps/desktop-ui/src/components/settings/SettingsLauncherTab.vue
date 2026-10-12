@@ -44,17 +44,15 @@
             :options="commandOptions"
             @update:value="updateSlot(index, $event)"
           />
-          <Button
+          <IconButton
             v-if="item"
-            type="button"
             variant="ghost"
-            square
             size="sm"
             :title="t('commands.editCommand')"
             @click="emit('editCommand', item)"
-          >
-            <Icon icon="mdi:pencil-outline" width="16" height="16" />
-          </Button>
+            :label="t('commands.editCommand')"
+            icon="mdi:pencil-outline"
+          />
         </div>
       </template>
     </ShortcutSlots>
@@ -76,9 +74,9 @@ import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import { Icon } from '@iconify/vue'
 import type { BuiltinToolId, UserConfig } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()

@@ -2,7 +2,7 @@
   <div
     class="fixed bottom-4 right-4 z-[var(--z-toast)] pointer-events-none flex flex-col gap-2 items-end max-w-sm w-full px-4 sm:px-0"
     role="region"
-    aria-label="Notifications"
+    :aria-label="translate('common.notifications')"
   >
     <TransitionGroup
       name="toast"
@@ -16,7 +16,9 @@
         class="toast-card pointer-events-auto w-full max-w-[340px] flex items-start gap-2.5 px-3 py-2.5 rounded-lg border shadow-lg bg-[var(--app-surface)] text-[var(--color-base-content)] select-text"
         :class="getToastClasses(item.type)"
         @mouseenter="toastStore.pauseToast(item.id)"
-        @mouseleave="toastStore.resumeToast(item.id)"
+        @mouseleave="onMouseLeave($event, item.id)"
+        @focusin="toastStore.pauseToast(item.id)"
+        @focusout="onFocusout($event, item.id)"
       >
         <Icon
           :icon="getToastIcon(item.type)"
@@ -39,26 +41,38 @@
           </div>
         </div>
 
-        <button
-          type="button"
-          tabindex="-1"
+        <IconButton
           class="shrink-0 p-1 rounded hover:bg-[var(--app-hover)] text-[var(--app-text-faint)] hover:text-[var(--color-base-content)] transition-colors -mr-1 -mt-0.5 cursor-pointer"
-          aria-label="Close"
           @mousedown.prevent
           @click="toastStore.removeToast(item.id)"
-        >
-          <Icon icon="mdi:close" height="14" />
-        </button>
+          :label="translate('common.close')"
+          icon="mdi:close"
+        />
       </div>
     </TransitionGroup>
   </div>
 </template>
 
 <script setup lang="ts">
+import { translate } from '../../lib/i18n'
 import { type ToastType, useToastStore } from '../../stores/toast'
+import IconButton from './IconButton.vue'
 import { Icon } from '@iconify/vue'
 
 const toastStore = useToastStore()
+
+function onMouseLeave(event: MouseEvent, id: string) {
+  if (!(event.currentTarget as HTMLElement).contains(document.activeElement))
+    toastStore.resumeToast(id)
+}
+function onFocusout(event: FocusEvent, id: string) {
+  const card = event.currentTarget as HTMLElement
+  if (
+    !card.contains(event.relatedTarget as Node | null) &&
+    !card.matches(':hover')
+  )
+    toastStore.resumeToast(id)
+}
 
 function getToastClasses(type: ToastType): string {
   switch (type) {

@@ -10,7 +10,7 @@ vi.mock('../../composables/use-i18n', () => ({
 describe('DiffModeToggle', () => {
   it('highlights the active mode and emits update when clicked', async () => {
     const wrapper = mount(DiffModeToggle, {
-      props: { modelValue: 'unified' },
+      props: { value: 'unified' },
       global: { stubs: { Icon: true } },
     })
 
@@ -24,12 +24,12 @@ describe('DiffModeToggle', () => {
 
     // Click second button (split)
     await buttons[1].setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
-    expect(wrapper.emitted('update:modelValue')![0]).toEqual(['split'])
+    expect(wrapper.emitted('update:value')).toHaveLength(1)
+    expect(wrapper.emitted('update:value')![0]).toEqual(['split'])
 
     // Click third button (result)
     await buttons[2].setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toHaveLength(2)
-    expect(wrapper.emitted('update:modelValue')![1]).toEqual(['result'])
+    expect(wrapper.emitted('update:value')).toHaveLength(2)
+    expect(wrapper.emitted('update:value')![1]).toEqual(['result'])
   })
 })

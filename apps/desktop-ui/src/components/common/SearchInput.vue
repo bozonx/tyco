@@ -1,11 +1,13 @@
 <template>
-  <label class="input search-input">
+  <label :class="$attrs.class" :style="$attrs.style" class="input search-input">
     <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
     <input
-      :value="modelValue"
+      v-bind="controlAttrs()"
+      :value="value"
       ref="searchInput"
       type="search"
       :placeholder="props.placeholder"
+      :aria-label="controlAttrs()['aria-label'] ?? props.placeholder"
       @input="onInput"
     />
   </label>
@@ -14,11 +16,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { Icon } from '@iconify/vue'
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl({ wrapped: true })
 
-const props = defineProps<{ placeholder?: string; modelValue?: string }>()
+const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
+
+const props = defineProps<{ placeholder?: string; value?: string }>()
 
 const searchInput = ref<HTMLInputElement | null>(null)
 
@@ -32,7 +38,7 @@ defineExpose({ focus })
 
 const onInput = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).value
-  emit('update:modelValue', newValue)
+  emit('update:value', newValue)
 }
 </script>
 

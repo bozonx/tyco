@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout :title="t('menu.compareResult')" escMode="back">
     <template #header-extra>
-      <DiffModeToggle v-model="diffMode" />
+      <DiffModeToggle v-model:value="diffMode" />
     </template>
 
     <template #preview>

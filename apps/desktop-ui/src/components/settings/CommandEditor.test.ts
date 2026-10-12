@@ -84,19 +84,33 @@ describe('CommandEditor.vue', () => {
     const wrapper = mountEditor(command)
     const selects = wrapper.findAll('select')
     expect(selects).toHaveLength(2)
-    expect(selects[0].find('option[value="replaceSelection"]').exists()).toBe(
-      true
+    expect(
+      selects[0]
+        .findAll('option')
+        .some((option) => option.text() === 'commands.afterRunReplaceSelection')
+    ).toBe(true)
+    expect(
+      selects[1]
+        .findAll('option')
+        .some((option) => option.text() === 'commands.afterRunReplaceSelection')
+    ).toBe(false)
+    await selects[0].setValue(
+      selects[0]
+        .findAll('option')
+        .find((option) => option.text() === 'commands.afterRunCopy')!
+        .attributes('value')
     )
-    expect(selects[1].find('option[value="replaceSelection"]').exists()).toBe(
-      false
-    )
-    await selects[0].setValue('copy')
     expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
       withSelection: 'copy',
       withoutSelection: 'showMenu',
     })
     await wrapper.setProps({ command: lastUpdate(wrapper) })
-    await selects[1].setValue('none')
+    await selects[1].setValue(
+      selects[1]
+        .findAll('option')
+        .find((option) => option.text() === 'settings.actionAfterRunNone')!
+        .attributes('value')
+    )
     expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
       withSelection: 'copy',
       withoutSelection: 'none',

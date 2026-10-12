@@ -14,15 +14,13 @@
             class="shrink-0 text-primary"
           />
           <span class="voice-context-title">{{ t('chat.voiceContext') }}</span>
-          <button
-            type="button"
+          <IconButton
             class="voice-context-remove"
             :title="t('chat.removeAttachment')"
-            :aria-label="t('chat.removeAttachment')"
             @click="emit('removeContext')"
-          >
-            <Icon icon="mdi:close" height="14" />
-          </button>
+            :label="t('chat.removeAttachment')"
+            icon="mdi:close"
+          />
         </div>
         <TextPreview :text="context" />
       </div>
@@ -57,6 +55,7 @@ import { useI18n } from '../../composables/use-i18n'
 import type { LiveTranscriptState } from '../../lib/stt/live-transcript'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import IconButton from '../common/IconButton.vue'
 import TextPreview from '../common/TextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'

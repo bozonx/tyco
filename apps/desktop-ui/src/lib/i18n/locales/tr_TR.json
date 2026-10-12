@@ -223,7 +223,9 @@
     "inProgress": "İşleniyor",
     "more": "Daha fazla",
     "remove": "Kaldır",
-    "save": "Kaydet"
+    "save": "Kaydet",
+    "info": "Bilgi",
+    "notifications": "Bildirimler"
   },
   "diff": {
     "modeResult": "Yalnızca sonuç",

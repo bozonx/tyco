@@ -10,25 +10,23 @@
       >
         {{ t('chat.newChat') }}
       </Button>
-      <Button
+      <IconButton
         size="sm"
         variant="ghost"
-        square
         :active="isSearchOpen"
         :title="t('chat.searchChats')"
         @click="toggleSearch"
-      >
-        <Icon icon="mdi:magnify" height="18" />
-      </Button>
-      <Button
+        :label="t('chat.searchChats')"
+        icon="mdi:magnify"
+      />
+      <IconButton
         size="sm"
         variant="ghost"
-        square
         :title="t('chat.collapseSidebar')"
         @click="emit('collapse')"
-      >
-        <Icon icon="mdi:dock-left" height="18" />
-      </Button>
+        :label="t('chat.collapseSidebar')"
+        icon="mdi:dock-left"
+      />
     </div>
 
     <div v-if="removedChat" class="sidebar-notice">
@@ -42,16 +40,18 @@
     <SearchInput
       v-if="isSearchOpen"
       ref="searchInputRef"
-      v-model="query"
+      v-model:value="query"
       class="sidebar-search"
       :placeholder="t('chat.searchChats')"
       @keydown.esc="closeSearch"
     />
 
     <div class="chat-list-scroll">
-      <div v-if="groups.length === 0" class="chat-list-empty">
-        {{ query ? t('history.nothingFound') : t('history.empty') }}
-      </div>
+      <UiState
+        v-if="groups.length === 0"
+        class="chat-list-empty"
+        :message="query ? t('history.nothingFound') : t('history.empty')"
+      />
       <section v-for="group in groups" :key="group.key" class="chat-group">
         <h2>{{ t(`chat.group.${group.key}`) }}</h2>
         <ul class="chat-list">
@@ -137,7 +137,9 @@ import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import IconButton from '../common/IconButton.vue'
 import SearchInput from '../common/SearchInput.vue'
+import UiState from '../common/UiState.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatHistoryItem } from '@tyco/shared'
 
@@ -469,11 +471,5 @@ onUnmounted(() => {
   background: var(--app-surface);
   outline: 0;
   font-size: var(--text-control);
-}
-.chat-list-empty {
-  padding: var(--space-lg) var(--space-sm);
-  color: var(--app-text-faint);
-  font-size: var(--text-control);
-  text-align: center;
 }
 </style>

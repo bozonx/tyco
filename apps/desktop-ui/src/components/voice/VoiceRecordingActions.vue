@@ -11,16 +11,15 @@
       >
         {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
       </ShortcutButton>
-      <Button
+      <IconButton
         :size="compact ? 'sm' : undefined"
         variant="ghost"
-        square
         :title="t('chat.voiceCancelHint')"
         :disabled="isFinishing"
         @click="cancel"
-      >
-        <Icon icon="mdi:close" height="18" />
-      </Button>
+        :label="t('chat.voiceCancelHint')"
+        icon="mdi:close"
+      />
       <Button
         :size="compact ? 'sm' : undefined"
         square
@@ -102,6 +101,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 import ShortcutButton from '../common/ShortcutButton.vue'
 import { Icon } from '@iconify/vue'
 

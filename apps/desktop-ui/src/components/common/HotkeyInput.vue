@@ -1,5 +1,6 @@
 <template>
   <button
+    v-bind="controlAttrs()"
     ref="buttonRef"
     type="button"
     class="input hotkey-input"
@@ -63,6 +64,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
 import {
   heldModifiers,
@@ -75,6 +77,8 @@ import KeyButton from './KeyButton.vue'
 import { Icon } from '@iconify/vue'
 import type { HotkeyPlatform } from '@tyco/shared'
 
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl()
 const props = withDefaults(
   defineProps<{
     value: string

@@ -39,20 +39,13 @@
       </div>
     </div>
 
-    <div v-if="filtered.length === 0" class="history-empty">
-      <div class="history-empty-icon">
-        <Icon
-          :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
-          height="28"
-        />
-      </div>
-      <div class="font-medium">
-        {{ searchQuery ? t('history.nothingFound') : t('history.empty') }}
-      </div>
-      <div v-if="!searchQuery && emptyHint" class="text-sm text-muted">
-        {{ emptyHint }}
-      </div>
-    </div>
+    <UiState
+      v-if="filtered.length === 0"
+      class="history-empty"
+      :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
+      :title="searchQuery ? t('history.nothingFound') : t('history.empty')"
+      :message="!searchQuery ? emptyHint : undefined"
+    />
 
     <template v-else>
       <div ref="scroller" class="history-items">
@@ -102,18 +95,17 @@
                   v-if="visibleActions(item).length"
                   class="history-item-actions"
                 >
-                  <Button
+                  <IconButton
                     v-for="action in visibleActions(item)"
                     :key="action.id"
                     size="xs"
                     variant="ghost"
-                    square
                     :title="action.title"
                     :class="action.danger ? 'danger-action' : undefined"
                     @click="emit('action', action.id, item)"
-                  >
-                    <Icon :icon="action.icon" height="16" />
-                  </Button>
+                    :label="action.title"
+                    :icon="action.icon"
+                  />
                 </div>
               </div>
 
@@ -177,17 +169,16 @@
                       {{ item.original.text }}
                     </div>
                     <div class="history-original-actions">
-                      <Button
+                      <IconButton
                         v-for="action in originalActions"
                         :key="action.id"
                         size="xs"
                         variant="ghost"
-                        square
                         :title="action.title"
                         @click="emit('action', action.id, item)"
-                      >
-                        <Icon :icon="action.icon" height="16" />
-                      </Button>
+                        :label="action.title"
+                        :icon="action.icon"
+                      />
                     </div>
                   </div>
                 </div>
@@ -210,6 +201,8 @@ import {
   groupByDay,
 } from '../../lib/history/history-list'
 import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
+import UiState from '../common/UiState.vue'
 import { Icon } from '@iconify/vue'
 
 const { t, locale } = useI18n()
@@ -610,30 +603,5 @@ function confirmClear() {
     opacity: 1;
     pointer-events: auto;
   }
-}
-
-.history-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-3xl) var(--space-lg);
-  margin-top: var(--space-lg);
-  text-align: center;
-  border: 1px dashed var(--app-border);
-  border-radius: var(--radius-lg);
-}
-
-.history-empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: var(--space-sm);
-  border-radius: 999px;
-  background-color: var(--app-hover);
-  color: var(--app-text-muted);
 }
 </style>

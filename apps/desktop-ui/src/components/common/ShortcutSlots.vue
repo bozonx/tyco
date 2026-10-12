@@ -16,29 +16,27 @@
       <KeyButton>{{ key }}</KeyButton>
 
       <template v-if="items[index]">
-        <button
+        <IconButton
           class="drag-handle"
-          type="button"
           draggable="true"
           :title="t('settings.dragToReorder')"
           @dragstart="startDrag(index, $event)"
           @dragend="finishDrag"
-        >
-          <Icon icon="mdi:drag-vertical" width="18" height="18" />
-        </button>
+          :label="t('settings.dragToReorder')"
+          icon="mdi:drag-vertical"
+        />
         <div class="slot-content">
           <slot name="item" :item="items[index]" :index="index" />
         </div>
-        <Button
+        <IconButton
           class="delete-btn"
           size="xs"
           variant="ghost"
-          square
           :title="t('common.delete')"
           @click="$emit('remove', index)"
-        >
-          <Icon icon="mdi:trash-can-outline" width="16" height="16" />
-        </Button>
+          :label="t('common.delete')"
+          icon="mdi:trash-can-outline"
+        />
       </template>
 
       <button
@@ -60,7 +58,6 @@ import { ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { PRESETS_KEYS } from '../../types'
-import Button from './Button.vue'
 import KeyButton from './KeyButton.vue'
 import { Icon } from '@iconify/vue'
 

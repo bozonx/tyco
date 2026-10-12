@@ -48,9 +48,11 @@
           {{ t('commands.undo') }}
         </Button>
       </div>
-      <p v-if="!commands.length" class="commands-empty">
-        {{ t('commands.empty') }}
-      </p>
+      <UiState
+        v-if="!commands.length"
+        class="commands-empty"
+        :message="t('commands.empty')"
+      />
 
       <div ref="listRef" class="commands-list">
         <div
@@ -230,12 +232,9 @@ import {
   createCommand,
   externalNameTwins,
   normalizeCommands,
-  removeCommandReferences,
-  restoreCommand,
-  restoreCommandReferences,
   validateCommand,
-  webhookToolConfig,
 } from '../../lib/commands/command-config'
+import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
@@ -246,6 +245,7 @@ import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import UiState from '../common/UiState.vue'
 import CommandEditor from './CommandEditor.vue'
 import { Icon } from '@iconify/vue'
 import {
@@ -254,7 +254,6 @@ import {
   type ExternalAccess,
   type MainActionConfig,
   type UserConfig,
-  webhookSecretId,
 } from '@tyco/shared'
 
 const props = defineProps<{
@@ -428,70 +427,17 @@ function updateCommand(index: number, command: CommandConfig) {
   emit('update:commands', next)
 }
 
-/** A removed command the user can still bring back */
-interface RemovedCommand {
-  command: CommandConfig
-  index: number
-  /** The menu before the removal, when the command was in it */
-  mainActions?: (MainActionConfig | null)[]
-}
-
-const removed = ref<RemovedCommand | null>(null)
+const { removed, removeCommand, undoRemove, finishRemoval } =
+  createCommandRemovalModel({
+    getCommands: () => commands.value,
+    getMainActions: () => props.userConfig.mainActions ?? [],
+    updateCommands: (commands) => emit('update:commands', commands),
+    updateMainActions: (actions) => emit('update:mainActions', actions),
+    removeSecret: (id) => llmStore.removeSecret(id),
+  })
 const removedName = computed(
   () => removed.value?.command.name.trim() || t('commands.unnamed')
 )
-
-/** The command leaves the menu at once; its webhook token once undo is gone */
-function removeCommand(command: CommandConfig) {
-  finishRemoval()
-  const index = commands.value.findIndex((item) => item.id === command.id)
-  const mainActions = props.userConfig.mainActions ?? []
-  removed.value = {
-    command,
-    index,
-    mainActions: menuSlots.value.has(command.id) ? [...mainActions] : undefined,
-  }
-  emit(
-    'update:commands',
-    commands.value.filter((item) => item.id !== command.id)
-  )
-  if (removed.value.mainActions) {
-    emit('update:mainActions', removeCommandReferences(mainActions, command.id))
-  }
-}
-
-function undoRemove() {
-  const entry = removed.value
-  if (!entry) return
-  removed.value = null
-  emit(
-    'update:commands',
-    restoreCommand(commands.value, entry.command, entry.index)
-  )
-  if (entry.mainActions) {
-    emit(
-      'update:mainActions',
-      restoreCommandReferences(
-        props.userConfig.mainActions ?? [],
-        entry.mainActions,
-        entry.command.id
-      )
-    )
-  }
-}
-
-/** Undo is no longer offered: the token of a removed webhook goes too */
-function finishRemoval() {
-  const entry = removed.value
-  removed.value = null
-  if (!entry) return
-  const { command } = entry
-  if (command.toolId === 'webhook' && webhookToolConfig(command).authSecret) {
-    llmStore.removeSecret(webhookSecretId(command.id)).catch(() => {
-      // a leftover token is bound to its origin and harmless
-    })
-  }
-}
 
 onBeforeUnmount(finishRemoval)
 </script>
@@ -555,11 +501,6 @@ onBeforeUnmount(finishRemoval)
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-}
-
-.commands-empty {
-  font-size: var(--text-body);
-  color: var(--app-text-muted);
 }
 
 .commands-notice {

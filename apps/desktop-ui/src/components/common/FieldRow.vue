@@ -2,17 +2,14 @@
   <div class="field-row" :class="{ vertical: vertical, nested: nested }">
     <div class="field-row-label">
       <div class="field-row-title">
-        <template v-if="info || $slots.info">
-          <span v-if="labelPrefix">{{ labelPrefix }}</span>
-          <span class="field-row-last-word">
-            {{ labelSuffix }}
-            <InfoTooltip v-if="info" :text="info" />
-            <slot name="info" />
-          </span>
-        </template>
-        <span v-else>{{ label }}</span>
+        <label :id="labelId" :for="controlId">{{ label }}</label>
+        <InfoTooltip v-if="info" :text="info" />
+        <slot name="info" />
       </div>
-      <div v-if="hint" class="field-row-hint">{{ hint }}</div>
+      <div v-if="hint" :id="hintId" class="field-row-hint">{{ hint }}</div>
+      <div v-if="error" :id="errorId" class="field-row-error" role="alert">
+        {{ error }}
+      </div>
     </div>
     <div class="field-row-control">
       <slot />
@@ -21,29 +18,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, provide, ref, useId } from 'vue'
 
+import { fieldContextKey } from '../../lib/ui/field-context'
 import InfoTooltip from './InfoTooltip.vue'
 
 const props = defineProps<{
   label: string
   hint?: string
+  error?: string
+  disabled?: boolean
+  required?: boolean
   info?: string
   vertical?: boolean
   nested?: boolean
 }>()
 
-const lastWordIndex = computed(() => props.label.lastIndexOf(' '))
-const labelPrefix = computed(() =>
-  lastWordIndex.value !== -1
-    ? props.label.slice(0, lastWordIndex.value + 1)
-    : ''
-)
-const labelSuffix = computed(() =>
-  lastWordIndex.value !== -1
-    ? props.label.slice(lastWordIndex.value + 1)
-    : props.label
-)
+const labelId = useId()
+const hintId = useId()
+const errorId = useId()
+const controlId = ref<string>()
+const controls = new Set<string>()
+provide(fieldContextKey, {
+  labelId,
+  descriptionIds: computed(() =>
+    [props.hint ? hintId : '', props.error ? errorId : '']
+      .filter(Boolean)
+      .join(' ')
+  ),
+  invalid: computed(() => Boolean(props.error)),
+  disabled: computed(() => Boolean(props.disabled)),
+  required: computed(() => Boolean(props.required)),
+  register(id) {
+    controls.add(id)
+    controlId.value = controls.values().next().value
+    return () => {
+      controls.delete(id)
+      controlId.value = controls.values().next().value
+    }
+  },
+})
 </script>
 
 <style scoped>
@@ -75,27 +89,24 @@ const labelSuffix = computed(() =>
   justify-content: center;
 }
 
-/* Inline, so that the info icon follows the last word of a wrapped label
-   instead of being pushed to the end of the column.
-   The last word and the info icon are bound into an inline-flex group to prevent
-   the icon from being orphaned on a new line alone. */
 .field-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-body);
   font-weight: 500;
   line-height: 1.3;
-}
-
-.field-row-last-word {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  white-space: nowrap;
 }
 
 .field-row-hint {
   font-size: var(--text-caption);
   line-height: 1.35;
   color: var(--app-text-muted);
+}
+
+.field-row-error {
+  color: var(--color-error);
+  font-size: var(--text-caption);
 }
 
 .field-row-control {
@@ -115,6 +126,9 @@ const labelSuffix = computed(() =>
 }
 
 .vertical .field-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-control);
 }
 

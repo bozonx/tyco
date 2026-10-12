@@ -123,8 +123,8 @@ describe('ChatSidebar.vue', () => {
           },
           Icon: true,
           SearchInput: {
-            props: ['modelValue'],
-            template: '<input class="sidebar-search" :value="modelValue" />',
+            props: ['value'],
+            template: '<input class="sidebar-search" :value="value" />',
             methods: { focus: vi.fn() },
           },
           DropdownMenu: true,

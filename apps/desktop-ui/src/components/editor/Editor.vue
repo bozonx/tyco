@@ -8,23 +8,19 @@
       >
         <!-- Left column: view mode, Case and Format dropdowns, then plugin items -->
         <div data-testid="editor-toolbar-left" class="flex items-center gap-1">
-          <Button
+          <IconButton
             size="sm"
-            square
             variant="ghost"
             class="view-mode-toggle"
             :active="showMarkup"
             :aria-pressed="showMarkup"
             :title="viewModeTitle"
             @click="toggleShowMarkup"
-          >
-            <Icon
-              :icon="
-                showMarkup ? 'mdi:language-markdown-outline' : 'mdi:format-text'
-              "
-              height="18"
-            />
-          </Button>
+            :label="viewModeTitle"
+            :icon="
+              showMarkup ? 'mdi:language-markdown-outline' : 'mdi:format-text'
+            "
+          />
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
           <DropdownMenu
             :label="t('editor.format')"
@@ -78,34 +74,31 @@
               >{{ getToolbarLabel(item) }}</span
             >
           </Button>
-          <Button
+          <IconButton
             size="sm"
-            square
             variant="ghost"
             @click="handleAiTask"
             :title="scoped(t('action.aiTask'))"
-          >
-            <Icon icon="mdi:robot-outline" height="18" />
-          </Button>
-          <Button
+            :label="scoped(t('action.aiTask'))"
+            icon="mdi:robot-outline"
+          />
+          <IconButton
             size="sm"
-            square
             variant="ghost"
             @click="handleTranslation"
             :title="scoped(t('action.translation'))"
-          >
-            <Icon icon="mdi:translate" height="18" />
-          </Button>
-          <Button
+            :label="scoped(t('action.translation'))"
+            icon="mdi:translate"
+          />
+          <IconButton
             size="sm"
-            square
             variant="ghost"
             :disabled="!ipcStore.params.windowId"
             @click="handleInsertToWindow"
             :title="scoped(t('action.insertIntoWindow'))"
-          >
-            <Icon icon="mdi:application-export" height="18" />
-          </Button>
+            :label="scoped(t('action.insertIntoWindow'))"
+            icon="mdi:application-export"
+          />
         </div>
       </div>
 
@@ -130,67 +123,61 @@
         </div>
         <div class="editor-rail">
           <template v-if="compact">
-            <Button
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               class="rail-danger"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
-            >
-              <Icon icon="mdi:eraser" height="18" />
-            </Button>
+              :label="t('editor.clear')"
+              icon="mdi:eraser"
+            />
           </template>
           <template v-else>
-            <Button
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               class="rail-accent"
               @click="voiceRecognition"
               :title="t('editor.voiceInput')"
-            >
-              <Icon icon="mdi:microphone-outline" height="20" />
-            </Button>
-            <Button
+              :label="t('editor.voiceInput')"
+              icon="mdi:microphone-outline"
+            />
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               class="rail-accent"
               @click="handleCorrection"
               :title="scoped(t('action.correction'))"
-            >
-              <Icon icon="mdi:auto-fix" height="20" />
-            </Button>
+              :label="scoped(t('action.correction'))"
+              icon="mdi:auto-fix"
+            />
             <div class="rail-divider" />
-            <Button
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               @click="handleCopy"
               :title="scoped(t('action.copy'))"
-            >
-              <Icon icon="mdi:content-copy" height="18" />
-            </Button>
-            <Button
+              :label="scoped(t('action.copy'))"
+              icon="mdi:content-copy"
+            />
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               @click="editorInputStore.selectAll"
               :title="t('editor.selectAll')"
-            >
-              <Icon icon="mdi:select-all" height="18" />
-            </Button>
-            <Button
+              :label="t('editor.selectAll')"
+              icon="mdi:select-all"
+            />
+            <IconButton
               size="sm"
-              square
               variant="ghost"
               class="rail-danger"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
-            >
-              <Icon icon="mdi:eraser" height="18" />
-            </Button>
+              :label="t('editor.clear')"
+              icon="mdi:eraser"
+            />
             <div class="rail-divider" />
             <InfoTooltip
               :text="t('editor.selectionHint')"
@@ -322,6 +309,7 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolbarStore } from '../../stores/toolbar'
 import type { ToolbarItem } from '../../types/plugins'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'

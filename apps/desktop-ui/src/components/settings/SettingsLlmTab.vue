@@ -252,7 +252,7 @@
               variant="ghost"
               icon="mdi:trash-can-outline"
               class="danger-ghost ml-auto"
-              @click="removeProviderById(provider.id)"
+              @click="pendingProviderId = provider.id"
             >
               {{ t('settings.removeProvider') }}
             </Button>
@@ -327,28 +327,29 @@
       <FieldTextArea v-model:value="aiRules.correction" />
     </FieldRow>
   </SettingsSection>
+  <ConfirmModal
+    :open="pendingProviderId !== null"
+    :title="t('common.delete')"
+    :message="t('settings.removeProviderConfirm')"
+    danger
+    @confirm="confirmProviderRemoval"
+    @cancel="pendingProviderId = null"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { supportsImages } from '../../lib/llm/llm-catalog'
-import {
-  addCompatibleProvider,
-  addModel,
-  modelLabel,
-  removeModel,
-  removeProvider,
-} from '../../lib/llm/llm-config'
-import {
-  InvalidLlmBaseUrlError,
-  createLlmConnectionChecker,
-} from '../../lib/llm/llm-connection'
+import { modelLabel, removeModel } from '../../lib/llm/llm-config'
+import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
+import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useLlmStore } from '../../stores/llm'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
@@ -362,13 +363,10 @@ import { Icon } from '@iconify/vue'
 import {
   LLM_TASKS,
   type LlmConfig,
-  type LlmModel,
   type LlmProvider,
-  type LlmTask,
   type UserConfig,
 } from '@tyco/shared'
 
-type ConnectionState = 'checking' | 'success' | 'error'
 const props = defineProps<{
   llm: LlmConfig
   aiRules?: UserConfig['aiRules']
@@ -381,15 +379,45 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { toast, toastText } = useToast()
 const llmStore = useLlmStore()
-const keyDrafts = reactive<Record<string, string>>({})
-const expandedProviders = reactive(new Set<string>())
-const expandedModels = reactive(new Set<string>())
-const connectionState = reactive<Partial<Record<string, ConnectionState>>>({})
-const connectionErrors = reactive<Record<string, string>>({})
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
   hasKey,
 })
+const {
+  keyDrafts,
+  expandedProviders,
+  expandedModels,
+  connectionState,
+  connectionErrors,
+  saveKey,
+  removeKey,
+  addProvider,
+  removeProviderById,
+  addModelTo,
+  checkConnection,
+  setNumber,
+  nextFallback,
+  addFallback,
+  dispose,
+} = createLlmSettingsModel({
+  getConfig: () => props.llm,
+  getUsableModelIds: () => modelOptions.value.map((option) => option.id),
+  setSecret: (id, value, origins) => llmStore.setSecret(id, value, origins),
+  removeSecret: (id) => llmStore.removeSecret(id),
+  checkConnection: checkLlmConnection,
+  notifyKeyError: (error) =>
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  notifyInvalidUrl: () => toast('settings.invalidBaseUrl', 'error'),
+  formatConnectionError: (error) =>
+    `${t('settings.connectionFailed')}: ${String(error)}`,
+  providerRemoved: (id) => emit('providerRemoved', id),
+})
+onBeforeUnmount(dispose)
+const pendingProviderId = ref<string | null>(null)
+function confirmProviderRemoval() {
+  if (pendingProviderId.value) removeProviderById(pendingProviderId.value)
+  pendingProviderId.value = null
+}
 
 const MODEL_PLACEHOLDERS: Record<string, string> = {
   google: 'gemini-2.5-flash',
@@ -472,89 +500,9 @@ function keyHint(provider: LlmProvider) {
     ? t('settings.apiKeyBoundTo', { origin: origins.join(', ') })
     : t('settings.apiKeyOptional')
 }
-async function saveKey(provider: LlmProvider) {
-  const value = keyDrafts[provider.id]?.trim()
-  if (!value) return
-  const origin =
-    provider.type === 'openai-compatible' ? httpOrigin(provider.baseUrl) : null
-  if (provider.type === 'openai-compatible' && !origin) {
-    toast('settings.invalidBaseUrl', 'error')
-    return
-  }
-  try {
-    await llmStore.setSecret(provider.id, value, origin ? [origin] : undefined)
-    keyDrafts[provider.id] = ''
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
-async function removeKey(id: string) {
-  try {
-    await llmStore.removeSecret(id)
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
-function addProvider() {
-  const provider = addCompatibleProvider(props.llm)
-  expandedProviders.add(provider.id)
-}
-function removeProviderById(id: string) {
-  if (!window.confirm(t('settings.removeProviderConfirm'))) return
-  removeProvider(props.llm, id)
-  expandedProviders.delete(id)
-  emit('providerRemoved', id)
-}
-function addModelTo(id: string) {
-  const model = addModel(props.llm, id)
-  expandedModels.add(model.id)
-}
 function toggle(set: Set<string>, id: string) {
   if (set.has(id)) set.delete(id)
   else set.add(id)
-}
-async function checkConnection(provider: LlmProvider) {
-  connectionState[provider.id] = 'checking'
-  try {
-    await checkLlmConnection(provider)
-    connectionState[provider.id] = 'success'
-  } catch (error) {
-    if (error instanceof InvalidLlmBaseUrlError) {
-      delete connectionState[provider.id]
-      toast('settings.invalidBaseUrl', 'error')
-      return
-    }
-    connectionState[provider.id] = 'error'
-    connectionErrors[provider.id] =
-      `${t('settings.connectionFailed')}: ${String(error)}`
-  }
-}
-function setNumber(
-  model: LlmModel,
-  field: 'temperature' | 'maxOutputTokens' | 'contextSize',
-  value: string
-) {
-  const parsed = Number(value)
-  const invalid =
-    value.trim() === '' ||
-    !Number.isFinite(parsed) ||
-    (field === 'temperature' ? parsed < 0 || parsed > 2 : parsed < 1)
-  if (invalid) {
-    delete model[field]
-    return
-  }
-  model[field] = field === 'temperature' ? parsed : Math.round(parsed)
-}
-function nextFallback(task: LlmTask) {
-  const usableIds = new Set(modelOptions.value.map((option) => option.id))
-  return props.llm.models.find(
-    (model) =>
-      usableIds.has(model.id) && !props.llm.tasks[task].includes(model.id)
-  )
-}
-function addFallback(task: LlmTask) {
-  const model = nextFallback(task)
-  if (model) props.llm.tasks[task].push(model.id)
 }
 onMounted(() => {
   llmStore.refreshSecrets().catch((error: unknown) => {

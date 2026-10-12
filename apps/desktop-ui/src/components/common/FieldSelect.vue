@@ -1,8 +1,8 @@
 <template>
   <select
-    :value="props.value"
+    v-bind="controlAttrs()"
+    :value="props.options.findIndex((option) => option.id === props.value)"
     :title="title"
-    :disabled="props.disabled"
     class="select"
     @change="handleChange"
   >
@@ -11,8 +11,7 @@
         <option
           v-for="option in section.options"
           :key="option.id"
-          :value="option.id"
-          :selected="option.id === props.value"
+          :value="props.options.indexOf(option)"
         >
           {{ option.name }}
         </option>
@@ -21,8 +20,7 @@
         <option
           v-for="option in section.options"
           :key="option.id"
-          :value="option.id"
-          :selected="option.id === props.value"
+          :value="props.options.indexOf(option)"
         >
           {{ option.name }}
         </option>
@@ -34,12 +32,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
+
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl()
+
 type Option = { id: number | string; name: string; group?: string }
 
 const props = defineProps<{
   value?: number | string
   title?: string
-  disabled?: boolean
   /** Options of one `group` go under its heading; keep them next to each other */
   options: Option[]
 }>()

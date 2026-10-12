@@ -1,6 +1,6 @@
 <template>
   <SegmentedControl
-    :value="modelValue"
+    :value="value"
     :label="t('menu.compareResult')"
     :options="options"
     compact
@@ -15,10 +15,8 @@ import { useI18n } from '../../composables/use-i18n'
 import type { DiffViewMode } from '../../lib/diff/diff-model'
 import SegmentedControl from './SegmentedControl.vue'
 
-const props = defineProps<{ modelValue: DiffViewMode }>()
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: DiffViewMode): void
-}>()
+const props = defineProps<{ value: DiffViewMode }>()
+const emit = defineEmits<{ (e: 'update:value', value: DiffViewMode): void }>()
 const { t } = useI18n()
 const options = computed<{ id: DiffViewMode; name: string; icon: string }[]>(
   () => [
@@ -36,6 +34,6 @@ const options = computed<{ id: DiffViewMode; name: string; icon: string }[]>(
   ]
 )
 function selectMode(mode: DiffViewMode) {
-  if (props.modelValue !== mode) emit('update:modelValue', mode)
+  if (props.value !== mode) emit('update:value', mode)
 }
 </script>

@@ -10,28 +10,32 @@
       type="button"
       class="info-tooltip-trigger"
       :class="{ 'info-tooltip-active': isOpen }"
-      :aria-label="ariaLabel"
+      :aria-label="ariaLabel ?? translate('common.info')"
+      :aria-describedby="isOpen ? tooltipId : undefined"
+      @focus="onMouseEnter"
+      @blur="close"
       :aria-expanded="isOpen"
       @click="toggleClick"
-      @keydown.escape="close"
+      @keydown.escape.stop.prevent="close"
     >
       <Icon icon="mdi:information-outline" :height="iconSize" />
     </button>
 
-    <Teleport to="body" :disabled="!teleport">
+    <Teleport to="body" :disabled="!shouldTeleport">
       <Transition name="tooltip-fade">
         <div
           v-if="isOpen"
           ref="popoverRef"
           class="info-tooltip-popover"
           :class="[
-            teleport ? 'is-teleported' : 'is-inline',
+            shouldTeleport ? 'is-teleported' : 'is-inline',
             currentPlacement === 'bottom'
               ? 'placement-bottom'
               : 'placement-top',
             alignClass,
           ]"
           :style="popoverStyle"
+          :id="tooltipId"
           role="tooltip"
           @mouseenter="onPopoverMouseEnter"
           @mouseleave="onPopoverMouseLeave"
@@ -51,8 +55,10 @@ import {
   onMounted,
   onUnmounted,
   ref,
+  useId,
 } from 'vue'
 
+import { translate } from '../../lib/i18n'
 import { Icon } from '@iconify/vue'
 
 const props = withDefaults(
@@ -64,16 +70,10 @@ const props = withDefaults(
     size?: 'sm' | 'md'
     teleport?: boolean
   }>(),
-  {
-    text: '',
-    ariaLabel: 'Info',
-    placement: 'top',
-    align: 'start',
-    size: 'sm',
-    teleport: true,
-  }
+  { text: '', placement: 'top', align: 'start', size: 'sm', teleport: true }
 )
 
+const tooltipId = useId()
 const isOpen = ref(false)
 const isPinned = ref(false)
 const currentPlacement = ref<'top' | 'bottom'>('top')
@@ -81,6 +81,10 @@ const containerRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const popoverRef = ref<HTMLElement | null>(null)
 const popoverStyle = ref<CSSProperties>({})
+
+const shouldTeleport = computed(
+  () => props.teleport && !containerRef.value?.closest('dialog')
+)
 
 let closeTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -102,7 +106,7 @@ function clearCloseTimeout() {
 function updatePosition() {
   if (!triggerRef.value) return
 
-  if (!props.teleport) {
+  if (!shouldTeleport.value) {
     currentPlacement.value = props.placement
     popoverStyle.value = {}
     return
@@ -186,7 +190,7 @@ function onMouseEnter() {
 }
 
 function onMouseLeave() {
-  if (!isPinned.value) {
+  if (!isPinned.value && document.activeElement !== triggerRef.value) {
     closeTimeout = setTimeout(() => {
       isOpen.value = false
     }, 150)
@@ -198,7 +202,7 @@ function onPopoverMouseEnter() {
 }
 
 function onPopoverMouseLeave() {
-  if (!isPinned.value) {
+  if (!isPinned.value && document.activeElement !== triggerRef.value) {
     closeTimeout = setTimeout(() => {
       isOpen.value = false
     }, 150)
@@ -236,7 +240,12 @@ function onDocumentClick(event: MouseEvent) {
 }
 
 function onDocumentKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOpen.value) {
+  if (
+    event.key === 'Escape' &&
+    isOpen.value &&
+    containerRef.value?.contains(document.activeElement)
+  ) {
+    event.preventDefault()
     close()
   }
 }

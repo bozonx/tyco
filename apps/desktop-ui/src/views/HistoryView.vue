@@ -15,7 +15,7 @@
       <template #search>
         <SearchInput
           ref="searchInput"
-          v-model="searchQuery"
+          v-model:value="searchQuery"
           :placeholder="t('input.historySearchPlaceholder')"
         />
       </template>

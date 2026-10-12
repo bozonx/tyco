@@ -1,12 +1,14 @@
 <template>
   <div class="flex flex-col gap-3">
-    <button
-      class="btn btn-sm self-start"
+    <Button
+      class="self-start"
       :disabled="installation.busy.value"
       @click="installation.inspect()"
+      variant="neutral"
+      size="sm"
     >
       {{ t('settings.installPluginPackage') }}
-    </button>
+    </Button>
     <div
       v-if="installation.preview.value"
       class="surface p-3 flex flex-col gap-2"
@@ -28,20 +30,22 @@
         }}
       </p>
       <div class="flex gap-2">
-        <button
-          class="btn btn-sm btn-primary"
+        <Button
           :disabled="installation.busy.value"
           @click="installation.install()"
+          variant="primary"
+          size="sm"
         >
           {{ t('settings.installTrustedPlugin') }}
-        </button>
-        <button
-          class="btn btn-sm"
+        </Button>
+        <Button
           :disabled="installation.busy.value"
           @click="installation.cancel()"
+          variant="neutral"
+          size="sm"
         >
           {{ t('common.cancel') }}
-        </button>
+        </Button>
       </div>
     </div>
     <div v-if="installedPlugins.length === 0" class="text-sm text-muted">
@@ -91,22 +95,24 @@
           </p>
         </div>
 
-        <button
+        <Button
           v-if="plugin.canRestore"
-          class="btn btn-sm"
           :disabled="installation.busy.value"
           @click.stop="installation.restore(plugin.name)"
+          variant="neutral"
+          size="sm"
         >
           {{ t('settings.restorePluginPackage') }}
-        </button>
-        <button
+        </Button>
+        <Button
           v-if="!builtinPluginIds?.includes(plugin.name)"
-          class="btn btn-sm"
           :disabled="installation.busy.value"
           @click.stop="installation.remove(plugin.name)"
+          variant="neutral"
+          size="sm"
         >
           {{ t('settings.removePluginPackage') }}
-        </button>
+        </Button>
         <div class="plugin-toggle" @click.stop>
           <FieldCheckbox
             :value="plugin.enabled"
@@ -143,6 +149,7 @@ import {
   usePlugins,
 } from '../../plugins'
 import { useIpcStore } from '../../stores/ipc'
+import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
 

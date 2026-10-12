@@ -8,7 +8,7 @@
     >
       <DiffModeToggle
         v-if="hasDiff && !props.correctionError"
-        v-model="diffMode"
+        v-model:value="diffMode"
       />
       <span
         v-if="statusVisible"

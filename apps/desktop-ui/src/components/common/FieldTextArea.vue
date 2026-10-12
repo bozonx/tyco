@@ -1,5 +1,6 @@
 <template>
   <textarea
+    v-bind="controlAttrs()"
     class="textarea"
     :class="{ 'is-auto-resize': autoResize }"
     :rows="autoResize ? 1 : undefined"
@@ -16,7 +17,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { useTextareaAutosize } from '../../composables/use-textarea-autosize'
+
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl()
 
 const props = defineProps<{
   value?: string

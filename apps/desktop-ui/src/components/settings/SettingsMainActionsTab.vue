@@ -14,17 +14,15 @@
             :options="actionOptions"
             @update:value="updateAction(index, $event)"
           />
-          <Button
+          <IconButton
             v-if="item.type === 'command'"
-            type="button"
             variant="ghost"
-            square
             size="sm"
             :title="t('commands.editCommand')"
             @click="emit('editCommand', item.commandId)"
-          >
-            <Icon icon="mdi:pencil-outline" width="16" height="16" />
-          </Button>
+            :label="t('commands.editCommand')"
+            icon="mdi:pencil-outline"
+          />
         </div>
       </template>
     </ShortcutSlots>
@@ -57,10 +55,9 @@ import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { pluginIndexes } from '../../plugins'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useToolsStore } from '../../stores/tools'
-import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import IconButton from '../common/IconButton.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import { Icon } from '@iconify/vue'
 import {
   type CommandConfig,
   type MainActionConfig,

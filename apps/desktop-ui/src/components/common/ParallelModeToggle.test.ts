@@ -10,7 +10,7 @@ vi.mock('../../composables/use-i18n', () => ({
 describe('ParallelModeToggle', () => {
   it('highlights active mode and emits update on click', async () => {
     const wrapper = mount(ParallelModeToggle, {
-      props: { modelValue: 'split' },
+      props: { value: 'split' },
       global: { stubs: { Icon: true } },
     })
 
@@ -23,7 +23,7 @@ describe('ParallelModeToggle', () => {
 
     // Click result button
     await buttons[1].setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
-    expect(wrapper.emitted('update:modelValue')![0]).toEqual(['result'])
+    expect(wrapper.emitted('update:value')).toHaveLength(1)
+    expect(wrapper.emitted('update:value')![0]).toEqual(['result'])
   })
 })

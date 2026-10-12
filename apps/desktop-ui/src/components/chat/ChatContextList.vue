@@ -17,14 +17,13 @@
           }}</span>
         </span>
       </button>
-      <button
-        type="button"
+      <IconButton
         class="context-suggestion-icon"
         :title="t('chat.hideSuggestion')"
         @click="chatStore.dismissEditorContext(suggestion.text)"
-      >
-        <Icon icon="mdi:close" height="14" />
-      </button>
+        :label="t('chat.hideSuggestion')"
+        icon="mdi:close"
+      />
     </div>
 
     <div v-if="attached.length || images.length" class="context-attached">
@@ -81,6 +80,7 @@ import {
 } from '../../lib/chat/chat-attachment'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
+import IconButton from '../common/IconButton.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import { Icon } from '@iconify/vue'

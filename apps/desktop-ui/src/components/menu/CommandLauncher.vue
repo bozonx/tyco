@@ -61,16 +61,14 @@
           <span class="launcher-selection-title">
             {{ t('commandLauncher.selection', { count: selectedText.length }) }}
           </span>
-          <button
-            type="button"
+          <IconButton
             class="launcher-selection-drop"
             :title="t('commandLauncher.dropSelection')"
-            :aria-label="t('commandLauncher.dropSelection')"
             @mousedown.prevent
             @click="launcher.dropSelection"
-          >
-            <Icon icon="mdi:close" height="14" />
-          </button>
+            :label="t('commandLauncher.dropSelection')"
+            icon="mdi:close"
+          />
         </div>
         <TextPreview :text="selectedText" />
       </div>
@@ -168,6 +166,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import IconButton from '../common/IconButton.vue'
 import KeyButton from '../common/KeyButton.vue'
 import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'

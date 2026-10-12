@@ -7,9 +7,9 @@
       <span v-else-if="props.correction">{{ t('menu.correction') }}</span>
       <span v-else>{{ t('common.inProgress') }}</span>
     </div>
-    <button type="button" class="btn btn-ghost btn-sm" @click="handleCancel">
+    <Button type="button" @click="handleCancel" variant="ghost" size="sm">
       {{ t('common.cancel') }}
-    </button>
+    </Button>
   </div>
 </template>
 
@@ -18,6 +18,7 @@ import { onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import Button from '../common/Button.vue'
 
 const props = withDefaults(
   defineProps<{

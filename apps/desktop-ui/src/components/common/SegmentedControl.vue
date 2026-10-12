@@ -1,5 +1,6 @@
 <template>
   <div
+    v-bind="controlAttrs()"
     class="segmented-control"
     :class="{ compact, 'hide-labels': hideLabelsOnSmallScreens }"
     role="radiogroup"
@@ -15,6 +16,8 @@
       <input
         class="sr-only"
         type="radio"
+        :disabled="controlAttrs().disabled"
+        :required="controlAttrs().required"
         :name="name"
         :value="option.id"
         :aria-label="option.name"
@@ -30,8 +33,11 @@
 <script setup lang="ts" generic="T extends string | number">
 import { useId } from 'vue'
 
+import { useFieldControl } from '../../composables/use-field-control'
 import { Icon } from '@iconify/vue'
 
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl({ register: false })
 const props = defineProps<{
   value: T
   label: string
@@ -78,7 +84,12 @@ const name = useId()
     box-shadow var(--transition-fast);
 }
 
-.segmented-option:hover {
+.segmented-option:has(:disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.segmented-option:not(:has(:disabled)):hover {
   color: var(--color-base-content);
 }
 

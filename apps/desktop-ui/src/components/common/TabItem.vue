@@ -1,15 +1,16 @@
 <template>
   <button
     type="button"
-    role="tab"
+    :role="navigation ? undefined : 'tab'"
     class="app-tab"
     :class="{ 'is-active': active }"
-    :aria-selected="active ? 'true' : 'false'"
+    :aria-selected="navigation ? undefined : active"
+    :aria-current="navigation && active ? 'page' : undefined"
   >
     <slot></slot>
   </button>
 </template>
 
 <script setup lang="ts">
-defineProps<{ active?: boolean }>()
+defineProps<{ active?: boolean; navigation?: boolean }>()
 </script>

@@ -1,6 +1,12 @@
 <template>
-  <label class="field-checkbox" :title="title">
+  <label
+    :class="$attrs.class"
+    :style="$attrs.style"
+    class="field-checkbox"
+    :title="title"
+  >
     <input
+      v-bind="controlAttrs()"
       type="checkbox"
       :checked="value"
       :title="title"
@@ -12,6 +18,11 @@
 </template>
 
 <script setup lang="ts">
+import { useFieldControl } from '../../composables/use-field-control'
+
+defineOptions({ inheritAttrs: false })
+const controlAttrs = useFieldControl({ wrapped: true })
+
 const props = defineProps<{ value: boolean; label?: string; title?: string }>()
 
 const emit = defineEmits<{ (e: 'update:value', value: boolean): void }>()
@@ -24,6 +35,7 @@ function handleChange() {
 <style scoped>
 .field-checkbox {
   display: inline-flex;
+  min-height: var(--control-size-sm);
   align-items: center;
   gap: 0.625rem;
   cursor: pointer;

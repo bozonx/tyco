@@ -1,6 +1,12 @@
 <template>
-  <div ref="containerRef" class="relative inline-block text-left">
+  <div
+    ref="containerRef"
+    class="relative inline-block text-left"
+    @focusout="onFocusout"
+    @keydown.esc="onEscape"
+  >
     <button
+      ref="triggerRef"
       type="button"
       class="btn btn-ghost dropdown-trigger flex items-center gap-1"
       :class="{
@@ -11,7 +17,12 @@
       }"
       :title="title"
       :aria-expanded="isOpen"
-      @click="toggle"
+      aria-haspopup="menu"
+      :aria-controls="isOpen ? menuId : undefined"
+      :aria-label="label ?? title ?? translate('common.more')"
+      @keydown.down.stop.prevent="openAndFocus(0)"
+      @keydown.up.stop.prevent="openAndFocus(items.length - 1)"
+      @click="toggleMenu"
     >
       <Icon v-if="icon" :icon="icon" height="16" />
       <span v-if="label" class="truncate max-w-44 sm:max-w-64">{{
@@ -28,7 +39,11 @@
 
     <div
       v-if="isOpen"
-      class="dropdown-panel absolute z-50 min-w-44 max-w-80 max-h-72 overflow-y-auto"
+      class="dropdown-panel absolute min-w-44 max-w-80 max-h-72 overflow-y-auto"
+      :id="menuId"
+      role="menu"
+      :aria-label="label ?? title ?? translate('common.more')"
+      @keydown="onMenuKeydown"
       :class="[
         placement === 'top' ? 'bottom-full top-auto mb-1' : 'top-full mt-1',
         align === 'right' ? 'right-0 left-auto' : 'left-0',
@@ -39,6 +54,8 @@
         :key="idx"
         type="button"
         class="dropdown-item"
+        role="menuitem"
+        tabindex="-1"
         :class="{ 'is-danger': item.danger }"
         @click="selectItem(item)"
       >
@@ -55,8 +72,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, useId } from 'vue'
 
+import { usePopover } from '../../composables/use-popover'
+import { translate } from '../../lib/i18n'
 import { Icon } from '@iconify/vue'
 
 export interface DropdownMenuItem {
@@ -78,47 +97,45 @@ defineProps<{
   items: DropdownMenuItem[]
 }>()
 
-const isOpen = ref(false)
-const containerRef = ref<HTMLElement | null>(null)
+const menuId = useId()
+const { isOpen, containerRef, triggerRef, close, onFocusout, onEscape } =
+  usePopover()
 
-const toggle = () => {
-  isOpen.value = !isOpen.value
+async function openAndFocus(index: number) {
+  isOpen.value = true
+  await nextTick()
+  const items =
+    containerRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+  items?.[index]?.focus()
 }
-
-const close = () => {
-  isOpen.value = false
+function toggleMenu() {
+  if (isOpen.value) close(true)
+  else void openAndFocus(0)
 }
-
+function onMenuKeydown(event: KeyboardEvent) {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault()
+  event.stopPropagation()
+  const items = [
+    ...(containerRef.value?.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitem"]'
+    ) ?? []),
+  ]
+  if (!items.length) return
+  const current = items.indexOf(document.activeElement as HTMLButtonElement)
+  const index =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? items.length - 1
+        : (current + (event.key === 'ArrowUp' ? -1 : 1) + items.length) %
+          items.length
+  items[index].focus()
+}
 const selectItem = async (item: DropdownMenuItem) => {
-  close()
+  close(true)
   await item.action()
 }
-
-const onDocumentClick = (event: MouseEvent) => {
-  if (
-    isOpen.value &&
-    containerRef.value &&
-    !containerRef.value.contains(event.target as Node)
-  ) {
-    close()
-  }
-}
-
-const onKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && isOpen.value) {
-    close()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', onDocumentClick, true)
-  document.addEventListener('keydown', onKeyDown)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', onDocumentClick, true)
-  document.removeEventListener('keydown', onKeyDown)
-})
 </script>
 
 <style scoped>
@@ -127,6 +144,7 @@ onUnmounted(() => {
 }
 
 .dropdown-panel {
+  z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
   padding: var(--space-xs);
@@ -134,7 +152,8 @@ onUnmounted(() => {
   border-radius: var(--radius-lg);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-lg);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .dropdown-item {
@@ -154,7 +173,6 @@ onUnmounted(() => {
 .dropdown-item:hover,
 .dropdown-item:focus-visible {
   background-color: var(--app-hover);
-  outline: none;
 }
 
 .dropdown-item.is-danger {
@@ -164,6 +182,6 @@ onUnmounted(() => {
 .dropdown-item.is-danger:hover,
 .dropdown-item.is-danger:focus-visible {
   background-color: var(--color-error);
-  color: var(--color-error-content, #fff);
+  color: var(--color-error-content);
 }
 </style>

@@ -223,7 +223,9 @@
     "inProgress": "In progress",
     "more": "More",
     "remove": "Remove",
-    "save": "Save"
+    "save": "Save",
+    "info": "Information",
+    "notifications": "Notifications"
   },
   "diff": {
     "modeResult": "Result only",

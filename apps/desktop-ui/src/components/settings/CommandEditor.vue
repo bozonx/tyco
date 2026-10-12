@@ -173,21 +173,14 @@
             <code class="command-cli" :title="cliCommand">{{
               cliCommand
             }}</code>
-            <Button
-              type="button"
+            <IconButton
               variant="ghost"
-              square
               size="sm"
               :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
-              :aria-label="t('commands.copyCli')"
               @click="copyCli"
-            >
-              <Icon
-                :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
-                width="16"
-                height="16"
-              />
-            </Button>
+              :label="copied ? t('commands.idCopied') : t('commands.copyCli')"
+              :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+            />
           </span>
         </div>
         <p
@@ -223,6 +216,7 @@ import {
   suggestCommandName,
   validateCommand,
 } from '../../lib/commands/command-config'
+import { createCommandEditorModel } from '../../lib/commands/command-editor-model'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useIpcStore } from '../../stores/ipc'
@@ -233,6 +227,7 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CustomActionFields from './CustomActionFields.vue'
@@ -287,46 +282,21 @@ const nameIssues = computed(() =>
   )
 )
 
-function update(patch: Partial<CommandConfig>) {
-  emit('update', { ...props.command, ...patch })
-}
-
-function updateDescription(value: string) {
-  const { description: _previous, ...rest } = props.command
-  emit('update', value.trim() ? { ...rest, description: value } : rest)
-}
-
-function updateToolConfig(field: string, value: unknown) {
-  const { [field]: _previous, ...rest } = props.command.toolConfig
-  update({
-    toolConfig: value === undefined ? rest : { ...rest, [field]: value },
-  })
-}
-
-function updateTimeout(value: string) {
-  const seconds = Number.parseInt(value, 10)
-  updateToolConfig(
-    'timeoutSec',
-    Number.isFinite(seconds) && seconds > 0
-      ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC)
-      : undefined
-  )
-}
+const {
+  update,
+  updateDescription,
+  updateToolConfig,
+  updateTimeout,
+  updateLauncherAfterRun,
+} = createCommandEditorModel({
+  getCommand: () => props.command,
+  update: (command) => emit('update', command),
+})
 
 function suggestName() {
   if (props.command.name.trim()) return
   const name = suggestCommandName(props.command)
   if (name) update({ name })
-}
-
-function updateLauncherAfterRun(
-  context: keyof CommandConfig['launcherAfterRun'],
-  value: CustomActionAfterRun
-) {
-  if (context === 'withoutSelection' && value === 'replaceSelection') return
-  update({
-    launcherAfterRun: { ...props.command.launcherAfterRun, [context]: value },
-  })
 }
 
 const afterRunOptions = computed(() => [

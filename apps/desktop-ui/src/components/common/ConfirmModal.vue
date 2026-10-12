@@ -1,55 +1,52 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open"
-      class="confirm-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      @keydown.esc="onCancel"
-      @click.self="onCancel"
-    >
-      <div class="confirm-modal-box">
-        <div class="confirm-modal-header">
-          <Icon
-            v-if="danger"
-            icon="mdi:alert-circle-outline"
-            class="confirm-icon danger"
-            height="22"
-          />
-          <Icon
-            v-else
-            icon="mdi:help-circle-outline"
-            class="confirm-icon"
-            height="22"
-          />
-          <h3 class="confirm-modal-title">{{ title }}</h3>
-        </div>
-        <p class="confirm-modal-message">{{ message }}</p>
-        <div class="confirm-modal-actions">
-          <Button size="sm" variant="ghost" @click="onCancel">
-            {{ cancelText || t('common.cancel') }}
-          </Button>
-          <Button
-            size="sm"
-            :variant="danger ? 'danger' : 'primary'"
-            @click="onConfirm"
-          >
-            {{ confirmText || t('common.confirm') }}
-          </Button>
-        </div>
+  <BaseDialog
+    :open="open"
+    :labelledby="titleId"
+    :describedby="messageId"
+    @close="onCancel"
+  >
+    <div class="confirm-modal-box">
+      <div class="confirm-modal-header">
+        <Icon
+          v-if="danger"
+          icon="mdi:alert-circle-outline"
+          class="confirm-icon danger"
+          height="22"
+        />
+        <Icon
+          v-else
+          icon="mdi:help-circle-outline"
+          class="confirm-icon"
+          height="22"
+        />
+        <h3 :id="titleId" class="confirm-modal-title">{{ title }}</h3>
+      </div>
+      <p :id="messageId" class="confirm-modal-message">{{ message }}</p>
+      <div class="confirm-modal-actions">
+        <Button size="sm" variant="ghost" autofocus @click="onCancel">
+          {{ cancelText || t('common.cancel') }}
+        </Button>
+        <Button
+          size="sm"
+          :variant="danger ? 'danger' : 'primary'"
+          @click="onConfirm"
+        >
+          {{ confirmText || t('common.confirm') }}
+        </Button>
       </div>
     </div>
-  </Teleport>
+  </BaseDialog>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, watch } from 'vue'
+import { useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import BaseDialog from './BaseDialog.vue'
 import Button from './Button.vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
+defineProps<{
   open: boolean
   title: string
   message: string
@@ -61,6 +58,8 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'confirm'): void; (e: 'cancel'): void }>()
 
 const { t } = useI18n()
+const titleId = useId()
+const messageId = useId()
 
 function onConfirm() {
   emit('confirm')
@@ -69,55 +68,9 @@ function onConfirm() {
 function onCancel() {
   emit('cancel')
 }
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && props.open) {
-    onCancel()
-  }
-}
-
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      window.addEventListener('keydown', onKeydown)
-    } else {
-      window.removeEventListener('keydown', onKeydown)
-    }
-  },
-  { immediate: true }
-)
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <style scoped>
-.confirm-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--z-overlay) + 10);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md);
-  background-color: var(--app-overlay-bg);
-  backdrop-filter: var(--app-overlay-backdrop);
-  animation: modal-fade-in 120ms ease-out;
-}
-
-.confirm-modal-box {
-  width: 100%;
-  max-width: 380px;
-  padding: var(--space-lg);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface-raised);
-  box-shadow: var(--shadow-lg, 0 10px 25px -5px rgba(0, 0, 0, 0.4));
-  animation: modal-scale-in 140ms ease-out;
-}
-
 .confirm-modal-header {
   display: flex;
   align-items: center;
@@ -152,18 +105,5 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-xs);
-}
-
-@keyframes modal-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes modal-scale-in {
-  from {
-    transform: scale(0.96);
-    opacity: 0;
-  }
 }
 </style>

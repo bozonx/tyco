@@ -11,7 +11,7 @@
 .input,
 .select,
 .textarea {
-  font-size: 0.875rem;
+  font-size: var(--text-body);
   border-color: var(--app-border);
   background-color: var(--app-surface);
   color: var(--color-base-content);
@@ -60,6 +60,17 @@
   border-color: var(--app-border-strong);
 }
 
+.input,
+.select {
+  min-height: var(--control-size-md);
+}
+
+.input[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
 /* ── buttons ───────────────────────────────────
    `btn-neutral` in this app is a quiet bordered button on the surface
    color, not daisyUI's filled dark one. */
@@ -67,6 +78,21 @@
 .btn {
   font-weight: 500;
   letter-spacing: 0;
+}
+
+.btn-xs {
+  min-height: var(--control-size-xs);
+  height: var(--control-size-xs);
+}
+.btn-sm {
+  min-height: var(--control-size-sm);
+  height: var(--control-size-sm);
+}
+.btn-square.btn-xs {
+  width: var(--control-size-xs);
+}
+.btn-square.btn-sm {
+  width: var(--control-size-sm);
 }
 
 .btn-neutral {
@@ -117,7 +143,7 @@
 
 .kbd {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   min-width: 1.5rem;
   height: 1.5rem;
