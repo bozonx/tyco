@@ -12,7 +12,7 @@ import {
   commandLabel,
   commandTakesText,
   isCommandAvailable,
-} from '../commands/command-config'
+} from '../commands/command-runtime'
 import type {
   InvocationOptions,
   InvocationOutcome,

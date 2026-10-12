@@ -68,7 +68,7 @@ import { useI18n } from '../../composables/use-i18n'
 import {
   commandTakesText,
   validateCommand,
-} from '../../lib/commands/command-config'
+} from '../../lib/commands/command-runtime'
 import {
   type CommandTestResult,
   runCommandTest,

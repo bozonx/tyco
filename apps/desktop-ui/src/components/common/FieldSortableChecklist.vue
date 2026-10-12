@@ -50,13 +50,13 @@ import { ref, watch } from 'vue'
 import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
-import {
-  type SortableChecklistItem,
-  resolveSortableChecklist,
-} from '../../lib/plugins/sortable-checklist'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
 import { Icon } from '@iconify/vue'
+import {
+  type SortableChecklistItem,
+  resolveSortableChecklist,
+} from '@tyco/plugin-sdk'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ register: false })

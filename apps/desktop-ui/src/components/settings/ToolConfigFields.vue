@@ -89,7 +89,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { validateCommand } from '../../lib/commands/command-config'
+import { validateCommand } from '../../lib/commands/command-runtime'
 import {
   configFieldLabel,
   configOptionLabel,

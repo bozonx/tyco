@@ -6,12 +6,7 @@ import {
   webhookSecretId,
 } from '@tyco/shared'
 
-import {
-  removeCommandReferences,
-  restoreCommand,
-  restoreCommandReferences,
-  webhookToolConfig,
-} from './command-config'
+import { webhookToolConfig } from './command-config'
 
 interface RemovedCommand {
   command: CommandConfig
@@ -71,4 +66,45 @@ export function createCommandRemovalModel(deps: {
       )
   }
   return { removed, removeCommand, undoRemove, finishRemoval }
+}
+
+/** The library with a removed command put back where it was */
+export function restoreCommand(
+  commands: readonly CommandConfig[],
+  command: CommandConfig,
+  index: number
+): CommandConfig[] {
+  if (commands.some((item) => item.id === command.id)) return [...commands]
+  const next = [...commands]
+  next.splice(Math.min(Math.max(index, 0), next.length), 0, command)
+  return next
+}
+
+/**
+ * The menu with the items of a removed command put back: the slots that held it
+ * before and are still empty
+ */
+export function restoreCommandReferences(
+  slots: readonly (MainActionConfig | null)[],
+  previous: readonly (MainActionConfig | null)[],
+  commandId: string
+): (MainActionConfig | null)[] {
+  return slots.map((slot, index) => {
+    const before = previous[index]
+    return slot === null &&
+      before?.type === 'command' &&
+      before.commandId === commandId
+      ? before
+      : slot
+  })
+}
+
+/** The menu without the items that refer to the command */
+export function removeCommandReferences(
+  slots: readonly (MainActionConfig | null)[],
+  commandId: string
+): (MainActionConfig | null)[] {
+  return slots.map((slot) =>
+    slot?.type === 'command' && slot.commandId === commandId ? null : slot
+  )
 }

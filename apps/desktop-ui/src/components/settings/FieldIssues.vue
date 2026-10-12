@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import type { CommandIssue } from '../../lib/commands/command-config'
+import type { CommandIssue } from '../../lib/commands/command-runtime'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 
 defineProps<{ issues: CommandIssue[] }>()

@@ -6,7 +6,8 @@ import type {
   UserConfig,
 } from '@tyco/shared'
 
-import { commandLabel, normalizeCommands } from './command-config'
+import { commandLabel } from './command-runtime'
+import { normalizeCommands } from './command-config'
 import type {
   InvocationOptions,
   InvocationOutcome,

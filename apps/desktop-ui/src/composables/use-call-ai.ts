@@ -1,22 +1,14 @@
 import { getChatImage } from '../lib/chat/chat-image-storage'
 import { translate } from '../lib/i18n/index'
-import { LlmError, toLlmError, type LlmRunName } from '../lib/llm/llm-client'
+import { LlmError, toLlmError } from '../lib/llm/llm-client'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import {
   CHAT_TITLE_INSTRUCTIONS,
   chatTitleSource,
   cleanGeneratedTitle,
 } from '../lib/chat/chat-title'
-import { buildLlmPrompt } from '../lib/llm/llm-prompt'
-import { resolveLanguagePreference } from '../lib/locale/language'
-import { assertSttKeyAvailable } from '../lib/stt/stt-readiness'
-import { dictationLanguageFor } from '../lib/stt/dictation-language'
-import type { LiveTranscriptState } from '../lib/stt/live-transcript'
-import {
-  buildSttCatalog,
-  secretId,
-  sttProviderNeedsKey,
-} from '../lib/stt/stt-client'
+import { createLlmRequest, type AiRequestOptions } from '../lib/llm/llm-request'
+import { createDictationController } from '../lib/stt/dictation-controller'
 import { clientLogger } from '../lib/logger/index'
 import { useIpcStore } from '../stores/ipc'
 import { useDictationStore } from '../stores/dictation'
@@ -24,17 +16,9 @@ import { useLlmStore } from '../stores/llm'
 import { useTranslationStore } from '../stores/translation'
 import { AI_TASKS } from '../types/index'
 import useToast from './use-toast'
-import {
-  APP_CONFIG,
-  type ChatMessage,
-  type LocalState,
-  type SttModel,
-} from '@tyco/shared'
+import { APP_CONFIG, type ChatMessage, type LocalState } from '@tyco/shared'
 
-export interface DictationHandlers {
-  onText: (state: LiveTranscriptState) => void
-  onError: (error: Error) => void
-}
+export type { DictationHandlers } from '../lib/stt/dictation-controller'
 
 export const useCallAi = () => {
   const dictation = useDictationStore()
@@ -45,127 +29,30 @@ export const useCallAi = () => {
   const currentUserConfig = () => ipcStore.params.userConfig
   const currentAppConfig = () => ipcStore.params?.appConfig ?? APP_CONFIG
 
-  const currentSttModel = () => {
-    const userConfig = currentUserConfig()
-    const modelId = userConfig.aiModelUsage.stt
-
-    return userConfig.sttModels.find((model: SttModel) => model.id === modelId)
-  }
-
-  const shouldFormatRecognizedText = () => {
-    return Boolean(currentSttModel()?.formatWithLlm)
-  }
-
-  const currentVoiceModel = () => {
-    const sttModel = currentSttModel()
-
-    if (!sttModel) {
-      throw new Error(translate('toast.modelNotFound'))
-    }
-
-    return sttModel
-  }
-
-  // naming the language matters: the multilingual model takes Russian for
-  // Spanish and the like, so it is used only when chosen explicitly
-  const currentDictationLanguage = (model: SttModel) =>
-    dictationLanguageFor(
-      model.language,
-      resolveLanguagePreference(currentUserConfig().userLanguage)
-    )
-
-  interface AiRequestOptions {
-    onChunk?: (chunk: string) => void
-    signal?: AbortSignal
-    onModel?: (model: { provider: string; model: string }) => void
-    notifyError?: boolean
-    /** Models to run on instead of the task's chain */
-    models?: string[]
-  }
-
-  /** Runs a task on the configured model chain and preserves typed failures. */
-  async function aiRequest(
-    taskName: LlmRunName,
-    messages: string | ChatMessage[],
-    options: AiRequestOptions & { instructions?: string; rules?: string } = {}
-  ) {
-    try {
-      const imageBytes = new Map<string, Uint8Array<ArrayBuffer>>()
-      if (typeof messages !== 'string') {
-        for (const message of messages) {
-          for (const image of message.images || []) {
-            if (options.signal?.aborted) return ''
-            if (!imageBytes.has(image.id))
-              imageBytes.set(
-                image.id,
-                await getChatImage(image.id).catch(() => {
-                  throw new LlmError(
-                    'unknown',
-                    translate('chat.imageUnavailable')
-                  )
-                })
-              )
-          }
-        }
-      }
-      if (options.signal?.aborted) return ''
-      const prompt = buildLlmPrompt(messages, {
-        imageBytes,
-        instructions: options.instructions,
-        rules: options.rules,
-        rulePrefix: currentAppConfig().rulePrefix,
-      })
-
-      return await llmStore.client.run(taskName, prompt, {
-        models: options.models,
-        onChunk: options.onChunk,
-        signal: options.signal,
-        onModel: options.onModel,
-      })
-    } catch (error) {
-      if (options.signal?.aborted) return ''
-      const llmError = error instanceof LlmError ? error : toLlmError(error)
-      console.error(`LLM request "${taskName}" failed`, llmError)
-      clientLogger.error(`LLM request "${taskName}" failed`, llmError, 'llm')
-      if (options.notifyError !== false) {
-        toastText(formatLlmError(llmError, translate), 'error')
-      }
-      throw llmError
-    }
-  }
-
-  const startDictation = async (handlers: DictationHandlers) => {
-    const model = currentVoiceModel()
-    try {
-      buildSttCatalog(model)
-    } catch {
-      throw new Error(translate('toast.sttModelIncomplete'))
-    }
-    const needsKey = sttProviderNeedsKey(model.provider)
-    if (needsKey) {
-      try {
-        await llmStore.refreshSecrets()
-      } catch {
-        throw new Error(translate('toast.voiceKeyCheckFailed'))
-      }
-      assertSttKeyAvailable(llmStore.secrets, secretId(model), translate)
-    }
-
-    await dictation.start({
-      model,
-      language: currentDictationLanguage(model),
-      hasApiKey: needsKey,
-      ...handlers,
-      onError: (error) => {
-        clientLogger.error('Speech recognition session failed', error, 'stt')
-        handlers.onError(error)
-      },
-    })
-  }
-
-  const finishDictation = () => dictation.finish()
-
-  const cancelDictation = () => dictation.cancel()
+  const aiRequest = createLlmRequest({
+    client: llmStore.client,
+    getImage: getChatImage,
+    rulePrefix: () => currentAppConfig().rulePrefix,
+    translate,
+    logError: (message, error) => {
+      console.error(message, error)
+      clientLogger.error(message, error, 'llm')
+    },
+    notifyError: (message) => toastText(message, 'error'),
+  })
+  const {
+    shouldFormatRecognizedText,
+    startDictation,
+    finishDictation,
+    cancelDictation,
+  } = createDictationController({
+    getConfig: currentUserConfig,
+    dictation,
+    refreshSecrets: () => llmStore.refreshSecrets(),
+    getSecrets: () => llmStore.secrets,
+    translate,
+    logError: (message, error) => clientLogger.error(message, error, 'stt'),
+  })
 
   const voiceCorrection = async (text: string, signal?: AbortSignal) => {
     const userConfig = currentUserConfig()

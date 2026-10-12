@@ -36,3 +36,10 @@ export function createTextEditModel(deps: TextEditDependencies) {
   }
   return { run }
 }
+
+/** Applies a supported case transform without changing whitespace. */
+export function doCaseTransform(text: string, caseType: string): string {
+  if (caseType === 'uppercase') return text.toUpperCase()
+  if (caseType === 'lowercase') return text.toLowerCase()
+  return text
+}

@@ -13,7 +13,7 @@ import {
   commandLabel,
   commandTakesText,
   isMenuCommand,
-} from '../commands/command-config'
+} from '../commands/command-runtime'
 import { createCommandRunner } from '../commands/command-runner'
 import { translate } from '../i18n'
 import {

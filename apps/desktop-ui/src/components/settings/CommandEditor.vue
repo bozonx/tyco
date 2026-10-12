@@ -204,19 +204,21 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
+import { scriptToolConfig } from '../../lib/commands/command-config'
+import { createCommandEditorModel } from '../../lib/commands/command-editor-model'
+import {
+  commandCliCall,
+  normalizeCommandName,
+} from '../../lib/commands/command-external'
 import {
   commandAddedBy,
-  commandCliCall,
   commandLabel,
   commandTakesText,
   commandTool,
   commandUnavailableReason,
-  normalizeCommandName,
-  scriptToolConfig,
   suggestCommandName,
   validateCommand,
-} from '../../lib/commands/command-config'
-import { createCommandEditorModel } from '../../lib/commands/command-editor-model'
+} from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useIpcStore } from '../../stores/ipc'

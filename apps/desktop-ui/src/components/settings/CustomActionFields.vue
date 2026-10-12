@@ -180,9 +180,9 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import {
   scriptToolConfig,
-  validateCommand,
   webhookToolConfig,
 } from '../../lib/commands/command-config'
+import { validateCommand } from '../../lib/commands/command-runtime'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'

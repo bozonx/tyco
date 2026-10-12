@@ -159,7 +159,7 @@ import {
   commandLabel,
   commandTarget,
   isCommandAvailable,
-} from '../../lib/commands/command-config'
+} from '../../lib/commands/command-runtime'
 import { type ActionItem } from '../../stores/action-menu'
 import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'

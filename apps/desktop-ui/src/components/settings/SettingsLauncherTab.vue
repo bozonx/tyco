@@ -64,11 +64,13 @@ import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
-  commandLabel,
-  isCommandAvailable,
   normalizeCommands,
   normalizeLauncherCommands,
 } from '../../lib/commands/command-config'
+import {
+  commandLabel,
+  isCommandAvailable,
+} from '../../lib/commands/command-runtime'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'

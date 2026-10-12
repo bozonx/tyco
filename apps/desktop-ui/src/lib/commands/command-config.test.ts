@@ -7,24 +7,30 @@ import { testTools } from '../tools/testing'
 import {
   commandAddedBy,
   commandAfterRun,
-  commandCliCall,
   commandLabel,
   commandTakesText,
   commandTarget,
-  createCommand,
-  externalNameTwins,
   isMenuCommand,
-  normalizeCommand,
+  suggestCommandName,
+  validateCommand,
+} from './command-runtime'
+import {
+  commandCliCall,
+  externalNameTwins,
   normalizeCommandName,
+} from './command-external'
+import {
+  createCommand,
+  normalizeCommand,
   normalizeCommands,
   normalizeLauncherCommands,
+  scriptToolConfigOf,
+} from './command-config'
+import {
   removeCommandReferences,
   restoreCommand,
   restoreCommandReferences,
-  scriptToolConfigOf,
-  suggestCommandName,
-  validateCommand,
-} from './command-config'
+} from './command-removal-model'
 
 const tools = testTools()
 

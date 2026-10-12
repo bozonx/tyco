@@ -4,7 +4,7 @@ import type {
   StandardActionId,
 } from '@tyco/shared'
 
-import { commandTool } from '../commands/command-config'
+import { commandTool } from '../commands/command-runtime'
 import type { ToolLookup } from '../tools/tool-types'
 
 /**

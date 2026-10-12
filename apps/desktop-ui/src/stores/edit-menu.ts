@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import { formatMarkdown } from '../lib/editor/format-markdown'
 import { useIpcStore } from './ipc'
-import { useTextTransform } from '../composables/use-text-transform'
+import { doCaseTransform } from '../lib/edit-menu/text-edit'
 import {
   type EditItem,
   createEditMenuStoreModel,
@@ -12,7 +12,6 @@ import { stripMarkdown } from '../lib/editor/strip-markdown'
 export type { EditItem }
 
 export const useEditMenuStore = defineStore('editMenu', () => {
-  const { doCaseTransform } = useTextTransform()
   const ipcStore = useIpcStore()
 
   return createEditMenuStoreModel({

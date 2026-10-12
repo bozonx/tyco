@@ -44,11 +44,8 @@ import {
   standardActionGroup,
 } from '../../lib/action-menu/main-action-options'
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
-import {
-  commandLabel,
-  isMenuCommand,
-  normalizeCommands,
-} from '../../lib/commands/command-config'
+import { normalizeCommands } from '../../lib/commands/command-config'
+import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
 import { getLanguageLabel } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'

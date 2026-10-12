@@ -10,12 +10,8 @@ import {
   cancelScriptRun,
 } from '../custom-actions/script-executor'
 import type { ToolLookup } from '../tools/tool-types'
-import {
-  commandLabel,
-  commandTakesText,
-  commandTool,
-  scriptToolConfig,
-} from './command-config'
+import { commandLabel, commandTakesText, commandTool } from './command-runtime'
+import { scriptToolConfig } from './command-config'
 
 export interface CommandTestDependencies {
   executeScriptAction: (

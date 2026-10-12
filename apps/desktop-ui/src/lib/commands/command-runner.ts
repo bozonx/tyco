@@ -9,7 +9,7 @@ import type {
   InvocationOutcome,
 } from '../invocation/invocation-types'
 import type { ToolResult } from '../tools/tool-types'
-import { commandInvocation } from './command-config'
+import { commandInvocation } from './command-runtime'
 
 const disabled: ToolResult = {
   ok: false,

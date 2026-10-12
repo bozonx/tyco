@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createTextEditModel, type TextEditSnapshot } from './text-edit'
+import {
+  createTextEditModel,
+  type TextEditSnapshot,
+  doCaseTransform,
+} from './text-edit'
 
 describe('text edit', () => {
   function setup(snapshot: TextEditSnapshot) {
@@ -66,5 +70,27 @@ describe('text edit', () => {
     expect(await running).toBe('stale')
     expect(deps.replaceSelection).not.toHaveBeenCalled()
     expect(deps.replaceText).not.toHaveBeenCalled()
+  })
+})
+
+describe('doCaseTransform', () => {
+  it.each([
+    ['uppercase', 'HELLO WORLD'],
+    ['lowercase', 'hello world'],
+  ])('dispatches %s to the real implementation', (type, expected) => {
+    expect(doCaseTransform('hello world', type)).toBe(expected)
+  })
+
+  it('preserves whitespace for upper and lower case', () => {
+    expect(doCaseTransform(' Hello\nWorld ', 'uppercase')).toBe(
+      ' HELLO\nWORLD '
+    )
+    expect(doCaseTransform(' Hello\nWorld ', 'lowercase')).toBe(
+      ' hello\nworld '
+    )
+  })
+
+  it('preserves input for unknown transforms', () => {
+    expect(doCaseTransform('helloWorld', 'unknown')).toBe('helloWorld')
   })
 })

@@ -2,7 +2,7 @@ import { clonePluginValue } from '@tyco/plugin-sdk'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
 import type { PluginIndex } from '../../types/plugins'
-import { resolveSortableChecklist } from './sortable-checklist'
+import { resolveSortableChecklist } from '@tyco/plugin-sdk'
 
 export function pluginId(plugin: ReturnType<PluginIndex>): string {
   return plugin.id
