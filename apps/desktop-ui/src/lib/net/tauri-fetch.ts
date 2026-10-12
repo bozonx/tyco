@@ -126,7 +126,7 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
       signal?.addEventListener('abort', onAbort, { once: true })
 
       ipc
-        .invoke<number>(DESKTOP_COMMANDS.NET_FETCH, {
+        .invoke(DESKTOP_COMMANDS.NET_FETCH, {
           request: {
             method: request.method,
             url: request.url,

@@ -28,7 +28,7 @@ export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
   const { translateTo, aiCustomPrompt } = useCallAi()
   const correctorStore = useCorrectorStore()
-  const { typeIntoWindowAndClose } = useCallApi()
+  const { pasteIntoTargetAndHide } = useCallApi()
 
   const llmUnavailable = (task: LlmTask) =>
     normalizeLlmConfig(ipcStore.params.userConfig?.llm).tasks[task]?.length
@@ -36,7 +36,7 @@ export const useToolsStore = defineStore('tools', () => {
       : 'tools.noLlm'
 
   const coreTools = createCoreTools({
-    insertText: typeIntoWindowAndClose,
+    insertText: pasteIntoTargetAndHide,
     copyText: async (text) => {
       const result = await ipcStore.callFunction('copyText', [text])
       if (!result.success) throw new Error(result.error ?? 'copyText')

@@ -1,3 +1,4 @@
+import type { SecretsStatus, VaultState } from '@tyco/shared'
 import type { KeyProvider } from '@bozonx/ai-kit'
 import { DESKTOP_COMMANDS } from '@tyco/shared'
 
@@ -13,17 +14,7 @@ export const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
  * What the webview may know about a secret: that it exists, where it goes, and
  * whether its value can be read now
  */
-export interface SecretStatus {
-  origins: string[]
-  /** False while the system keychain holding the value is locked or missing */
-  available: boolean
-}
-
-export type SecretsStatus = Record<string, SecretStatus>
-
-/** Whether the system keychain can be reached; without it no key is saved */
-export type VaultState = 'available' | 'unavailable'
-
+export type { SecretStatus, SecretsStatus, VaultState } from '@tyco/shared'
 /** Whether a stored secret can be used for a request now */
 export function isSecretUsable(secrets: SecretsStatus, id: string): boolean {
   return Object.hasOwn(secrets, id) && secrets[id].available
@@ -58,9 +49,8 @@ export interface SecretsClient {
 
 export function createSecretsClient(ipc: NetIpc): SecretsClient {
   return {
-    status: () => ipc.invoke<SecretsStatus>(DESKTOP_COMMANDS.SECRETS_STATUS),
-    vaultState: () =>
-      ipc.invoke<VaultState>(DESKTOP_COMMANDS.SECRETS_VAULT_STATE),
+    status: () => ipc.invoke(DESKTOP_COMMANDS.SECRETS_STATUS),
+    vaultState: () => ipc.invoke(DESKTOP_COMMANDS.SECRETS_VAULT_STATE),
     set: (id, value, origins) =>
       ipc.invoke(DESKTOP_COMMANDS.SECRETS_SET, {
         id,

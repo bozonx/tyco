@@ -50,11 +50,11 @@ describe('createExternalRun', () => {
   it('runs the command of the event and shows how it went', async () => {
     const { deps, external } = setup(async (_command, _text, report) => {
       report('success', 'done')
-      return { success: true }
+      return { success: true, result: undefined }
     })
     const outcome = await external.handleRun(event())
 
-    expect(outcome).toEqual({ success: true })
+    expect(outcome).toEqual({ success: true, result: undefined })
     expect(deps.applyUserConfig).toHaveBeenCalled()
     expect(deps.run).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'lamp' }),
@@ -76,7 +76,10 @@ describe('createExternalRun', () => {
   })
 
   it('passes the text on and keeps it in the history', async () => {
-    const { deps, external } = setup(async () => ({ success: true }))
+    const { deps, external } = setup(async () => ({
+      success: true,
+      result: undefined,
+    }))
     await external.handleRun(event({ text: 'buy milk' }))
     expect(deps.run).toHaveBeenCalledWith(
       expect.anything(),
@@ -118,7 +121,10 @@ describe('createExternalRun', () => {
   })
 
   it('reports a command gone from the library', async () => {
-    const { deps, external } = setup(async () => ({ success: true }))
+    const { deps, external } = setup(async () => ({
+      success: true,
+      result: undefined,
+    }))
     const outcome = await external.handleRun(event({ commandId: 'gone' }))
     expect(outcome.success).toBe(false)
     expect(deps.run).not.toHaveBeenCalled()
@@ -131,7 +137,7 @@ describe('createExternalRun', () => {
 
 describe('external jobs', () => {
   it('does not execute a cancelled or denied job', async () => {
-    const { deps } = setup(async () => ({ success: true }))
+    const { deps } = setup(async () => ({ success: true, result: undefined }))
     const finishJob = vi.fn(async () => {})
     const external = createExternalRun({
       ...deps,
@@ -145,7 +151,7 @@ describe('external jobs', () => {
   })
 
   it('aborts a running job and cannot publish its late success', async () => {
-    const { deps } = setup(async () => ({ success: true }))
+    const { deps } = setup(async () => ({ success: true, result: undefined }))
     let finishRun!: () => void
     const finishJob = vi.fn(async () => {})
     const run = vi.fn<ExternalRunDependencies['run']>(

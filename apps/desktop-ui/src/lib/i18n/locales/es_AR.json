@@ -509,7 +509,7 @@
     "chatRules": "Chat",
     "checkConnection": "Probar conexión",
     "checkingConnection": "Probando…",
-    "clearChatHistoryConfirmDialog": "¿Seguro que querés eliminar todos los chats guardados? Esta acción no se puede deshacer.",
+    "clearChatsConfirmDialog": "¿Seguro que querés eliminar todos los chats guardados? Esta acción no se puede deshacer.",
     "clearEditorHistoryConfirmDialog": "¿Seguro que querés eliminar todo el historial del editor? Esta acción no se puede deshacer.",
     "clearEditorHistoryConfirmTitle": "¿Limpiar historial del editor?",
     "commandsTab": "Comandos",

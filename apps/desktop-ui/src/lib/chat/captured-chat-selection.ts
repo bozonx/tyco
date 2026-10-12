@@ -1,7 +1,11 @@
-import { START_MODES, type ChatAttachment, type InitParams } from '@tyco/shared'
+import {
+  START_MODES,
+  type ChatAttachment,
+  type DesktopViewState,
+} from '@tyco/shared'
 
 export type SelectionActivation = Pick<
-  InitParams,
+  DesktopViewState,
   'activationId' | 'mode' | 'isWindowShown' | 'selectedText'
 >
 

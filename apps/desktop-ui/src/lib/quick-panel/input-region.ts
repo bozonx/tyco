@@ -1,10 +1,6 @@
 /** Rectangle in CSS pixels from the top left corner of the window. */
-export interface InputRect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+export type { InputRect } from '@tyco/shared'
+import type { InputRect } from '@tyco/shared'
 
 export interface ViewportSize {
   width: number

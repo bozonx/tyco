@@ -39,13 +39,13 @@ describe('chat-helpers', () => {
     expect(
       createChatHistoryEntry({
         id: 'chat-1',
-        description: 'Question',
+        title: 'Question',
         lastMsgDate: '2026-04-22T00:00:00.000Z',
         messages: [userMessage, assistantMessage],
       })
     ).toEqual({
       id: 'chat-1',
-      description: 'Question',
+      title: 'Question',
       lastMsgDate: '2026-04-22T00:00:00.000Z',
       messages: [userMessage, assistantMessage],
     })

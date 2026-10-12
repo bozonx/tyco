@@ -1,4 +1,4 @@
-import type { ChatHistoryItem } from '@tyco/shared'
+import type { ChatSummary } from '@tyco/shared'
 
 export type ChatHistoryGroup = 'today' | 'yesterday' | 'previousWeek' | 'older'
 
@@ -8,7 +8,7 @@ export type ChatHistoryGroup = 'today' | 'yesterday' | 'previousWeek' | 'older'
  * answers, only the titles are matched
  */
 export function filterChatHistory(
-  items: ChatHistoryItem[],
+  items: ChatSummary[],
   query: string,
   matchedIds?: ReadonlySet<string> | null
 ) {
@@ -17,15 +17,15 @@ export function filterChatHistory(
   return items.filter(
     (item) =>
       matchedIds?.has(item.id) ||
-      item.description.toLocaleLowerCase().includes(normalized)
+      item.title.toLocaleLowerCase().includes(normalized)
   )
 }
 
 /** Groups by calendar day of the last message, newest first */
 export function groupChatHistory(
-  items: ChatHistoryItem[],
+  items: ChatSummary[],
   now = Date.now()
-): Array<{ key: ChatHistoryGroup; items: ChatHistoryItem[] }> {
+): Array<{ key: ChatHistoryGroup; items: ChatSummary[] }> {
   const startToday = new Date(now)
   startToday.setHours(0, 0, 0, 0)
   const startYesterday = new Date(startToday)
@@ -33,7 +33,7 @@ export function groupChatHistory(
   const startWeek = new Date(startToday)
   startWeek.setDate(startWeek.getDate() - 7)
 
-  const groups = new Map<ChatHistoryGroup, ChatHistoryItem[]>()
+  const groups = new Map<ChatHistoryGroup, ChatSummary[]>()
   const sorted = [...items].sort(
     (a, b) => timeOf(b.lastMsgDate) - timeOf(a.lastMsgDate)
   )

@@ -9,17 +9,16 @@ use commands::actions::{
     log_custom_action, open_action_log, pick_directory, pick_script_file, set_tool_catalog,
 };
 use commands::app::{
-    activate_mode, apply_hotkey, configure_hotkeys, get_hotkey_provider_info, get_init_params,
+    activate_mode, apply_hotkey, configure_hotkeys, get_desktop_state, get_hotkey_provider_info,
     get_storage_info, get_user_config, mark_activation_metric, open_main_chat, open_main_editor,
     open_storage_location, patch_local_state, rebind_hotkeys, save_user_config,
     submit_activation_metric_value, suspend_hotkeys,
 };
 use commands::history::{
-    clear_chat_history, clear_editor_history, get_chat, get_chat_history, get_chat_image,
-    get_editor_history, read_chat_file, release_chat_image_undo, remove_from_chat_history,
-    remove_from_editor_history, rename_chat, restore_editor_history_item, save_chat_history,
-    save_editor_history, search_chat_history, set_editor_history_result, store_chat_image,
-    sync_chat_images,
+    clear_chats, clear_editor_history, delete_chat, get_chat, get_chat_image, get_editor_history,
+    list_chats, read_chat_file, release_chat_image_undo, remove_from_editor_history, rename_chat,
+    restore_editor_history_item, save_chat, save_editor_history, search_chats,
+    set_editor_history_result, store_chat_image, sync_chat_images,
 };
 use commands::net::{
     net_cancel, net_fetch, net_socket_close, net_socket_open, net_socket_send_binary,
@@ -33,10 +32,10 @@ use commands::selection::{
 };
 use commands::voice::{start_voice_capture, stop_voice_capture};
 use commands::window::{
-    close_window, copy_text, dismiss_quick_window, open_in_browser, open_in_browser_and_close,
-    set_quick_input_region, type_into_window_and_close,
+    copy_text, dismiss_quick_window, hide_window, open_in_browser, open_in_browser_and_hide,
+    paste_into_target_and_hide, set_quick_input_region,
 };
-use models::default_init_params;
+use models::default_desktop_state;
 #[cfg(target_os = "linux")]
 use services::dbus;
 use services::{runtime, storage};
@@ -223,7 +222,10 @@ pub fn run() {
                 log::error!("Could not apply the history settings: {error}");
             }
             let local_state = storage::read_or_create_local_state(app.handle())?;
-            app.manage(AppState::new(default_init_params(user_config, local_state)));
+            app.manage(AppState::new(default_desktop_state(
+                user_config,
+                local_state,
+            )));
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             // reaching the system store may wait for an unlock prompt, which
             // must not hold up the start
@@ -269,7 +271,7 @@ pub fn run() {
             commands::actions::answer_external_access,
             commands::actions::claim_external_job,
             commands::actions::finish_external_job,
-            get_init_params,
+            get_desktop_state,
             get_user_config,
             get_storage_info,
             open_storage_location,
@@ -285,11 +287,11 @@ pub fn run() {
             submit_activation_metric_value,
             save_user_config,
             patch_local_state,
-            close_window,
+            hide_window,
             dismiss_quick_window,
             set_quick_input_region,
             get_editor_history,
-            get_chat_history,
+            list_chats,
             get_chat,
             store_chat_image,
             get_chat_image,
@@ -299,18 +301,18 @@ pub fn run() {
             save_editor_history,
             set_editor_history_result,
             restore_editor_history_item,
-            save_chat_history,
+            save_chat,
             rename_chat,
-            search_chat_history,
+            search_chats,
             remove_from_editor_history,
-            remove_from_chat_history,
+            delete_chat,
             clear_editor_history,
-            clear_chat_history,
+            clear_chats,
             start_voice_capture,
             stop_voice_capture,
             open_in_browser,
-            open_in_browser_and_close,
-            type_into_window_and_close,
+            open_in_browser_and_hide,
+            paste_into_target_and_hide,
             copy_text,
             commands::plugins::inspect_plugin_package,
             commands::plugins::list_installed_plugins,

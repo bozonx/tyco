@@ -1,4 +1,4 @@
-import type { ChatHistoryItem, ChatMessage, LocalState } from '@tyco/shared'
+import type { Chat, ChatMessage, LocalState } from '@tyco/shared'
 import type { AppRoutePath } from '../navigation/routes'
 
 /** The model a chat request runs on */
@@ -27,9 +27,9 @@ export interface ChatStoreDeps {
     modelId: string,
     signal?: AbortSignal
   ) => Promise<string>
-  saveChatHistory: (item: ChatHistoryItem) => void | Promise<void>
+  saveChat: (item: Chat) => void | Promise<void>
   renameChat: (id: string, title: string) => void | Promise<void>
-  loadChatHistoryItem: (id: string) => Promise<ChatHistoryItem | null>
+  loadChat: (id: string) => Promise<Chat | null>
   navigateTo: (path: AppRoutePath) => void | Promise<void>
   notifyError: (message: string) => void
   emptyMessageError: () => string

@@ -49,7 +49,7 @@ describe('editor navigation', () => {
     windowState.label = 'quick'
     const call = vi
       .spyOn(useIpcStore(), 'callFunctionOrNotify')
-      .mockResolvedValue({ success: true })
+      .mockResolvedValue({ success: true, result: undefined })
     useEditorNavigation().toEditor('new', 'old')
     expect(call).toHaveBeenCalledWith('openMainEditor', ['new', 'old'])
     expect(useEditorInputStore().value).toBe('')

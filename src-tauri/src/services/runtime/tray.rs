@@ -81,8 +81,8 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
             {
                 let app = tray.app_handle();
                 if let Some(state) = app.try_state::<AppState>() {
-                    let params = state.params();
-                    let result = match tray_click_action(params.is_window_shown) {
+                    let params = state.snapshot();
+                    let result = match tray_click_action(params.window.is_window_shown) {
                         TrayClickAction::HideActiveWindow => hide_active_window(app),
                         TrayClickAction::ShowApplication => show_application(app),
                     };

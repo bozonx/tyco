@@ -12,7 +12,7 @@ import CommandLauncher from './CommandLauncher.vue'
 
 const mocks = vi.hoisted(() => ({
   params: { activationId: 1, selectedText: null as string | null },
-  run: vi.fn(async () => ({ success: true })),
+  run: vi.fn(async () => ({ success: true, result: undefined })),
   handleEsc: vi.fn(),
   store: null as unknown,
 }))

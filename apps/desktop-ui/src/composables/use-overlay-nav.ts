@@ -30,7 +30,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     }
   }
 
-  const closeWindow = () => {
+  const hideWindow = () => {
     menuModalsStore.cancelPending()
     menuModalsStore.closeAll()
     try {
@@ -38,7 +38,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
         if (ipcStore.params?.mode === 'write') {
           writerInputStore.discard()
         }
-        void ipcStore.callFunctionOrNotify('closeWindow')
+        void ipcStore.callFunctionOrNotify('hideWindow')
       } else {
         void appNavigation.goToEditor()
       }
@@ -56,7 +56,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
       isQuickWindow,
       t,
       goBack,
-      closeWindow,
+      hideWindow,
     },
     options
   )

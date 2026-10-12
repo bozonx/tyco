@@ -90,7 +90,10 @@ describe('Editor actions shortcut', () => {
     editor.setValue('Unsaved text', 'plain')
     const snapshotSpy = vi.spyOn(editor, 'snapshotDraft')
     const ipc = useIpcStore()
-    vi.spyOn(ipc, 'callFunction').mockResolvedValue({ success: true })
+    vi.spyOn(ipc, 'callFunction').mockResolvedValue({
+      success: true,
+      result: undefined,
+    })
     const callFunctionSpy = vi.spyOn(ipc, 'callFunctionOrNotify')
 
     const wrapper = mount(EditorView, {
@@ -103,7 +106,7 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
 
     expect(snapshotSpy).toHaveBeenCalled()
-    expect(callFunctionSpy).toHaveBeenCalledWith('closeWindow')
+    expect(callFunctionSpy).toHaveBeenCalledWith('hideWindow')
     wrapper.unmount()
   })
 

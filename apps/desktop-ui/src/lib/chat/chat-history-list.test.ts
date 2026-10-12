@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ChatHistoryItem } from '@tyco/shared'
+import type { Chat } from '@tyco/shared'
 import { filterChatHistory, groupChatHistory } from './chat-history-list'
 
-const item = (id: string, date: string, description = id): ChatHistoryItem => ({
+const item = (id: string, date: string, title = id): Chat => ({
   id,
-  description,
+  title,
   lastMsgDate: date,
   messages: [],
 })

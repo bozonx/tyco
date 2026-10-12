@@ -7,9 +7,9 @@ function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
   return {
     sendChatMessage: vi.fn(async () => 'Assistant reply'),
     generateChatTitle: vi.fn(async () => ''),
-    saveChatHistory: vi.fn(),
+    saveChat: vi.fn(),
     renameChat: vi.fn(),
-    loadChatHistoryItem: vi.fn(async () => null),
+    loadChat: vi.fn(async () => null),
     navigateTo: vi.fn(),
     notifyError: vi.fn(),
     emptyMessageError: () => 'No text selected',
@@ -54,10 +54,10 @@ describe('chat-store', () => {
     expect(store.messages.value[1]?.role).toBe('assistant')
     expect(deps.sendChatMessage).toHaveBeenCalledOnce()
     // the question first, then the whole turn
-    expect(deps.saveChatHistory).toHaveBeenCalledTimes(2)
-    expect(deps.saveChatHistory).toHaveBeenLastCalledWith(
+    expect(deps.saveChat).toHaveBeenCalledTimes(2)
+    expect(deps.saveChat).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        description: 'Hello',
+        title: 'Hello',
         messages: [
           { role: 'user', content: 'Hello', attachments: [{ text: 'file-a' }] },
           { role: 'assistant', content: 'Assistant reply' },
@@ -96,7 +96,7 @@ describe('chat-store', () => {
 
     await store.sendMessage('Second question')
 
-    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+    expect(deps.saveChat).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'chat-id-1',
         messages: [
@@ -213,9 +213,9 @@ describe('chat-store', () => {
 
   it('opens a stored chat and navigates to chat page', async () => {
     const deps = createDeps({
-      loadChatHistoryItem: vi.fn(async () => ({
+      loadChat: vi.fn(async () => ({
         id: 'chat-7',
-        description: 'Saved prompt',
+        title: 'Saved prompt',
         lastMsgDate: '2026-04-22T00:00:00.000Z',
         messages: [
           { role: 'user' as const, content: 'Saved prompt' },
@@ -279,8 +279,8 @@ describe('chat-store', () => {
 
     expect(store.messages.value).toEqual([])
     // only the question was written, before the answer came
-    expect(deps.saveChatHistory).toHaveBeenCalledOnce()
-    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+    expect(deps.saveChat).toHaveBeenCalledOnce()
+    expect(deps.saveChat).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: [{ role: 'user', content: 'Old chat' }],
       })
@@ -309,7 +309,7 @@ describe('chat-store', () => {
 
   it('keeps an in-memory answer when persistence fails', async () => {
     const deps = createDeps({
-      saveChatHistory: vi.fn().mockRejectedValue(new Error('Disk full')),
+      saveChat: vi.fn().mockRejectedValue(new Error('Disk full')),
     })
     const store = createChatStoreModel(deps)
 
@@ -335,8 +335,8 @@ describe('chat-store', () => {
     const store = createChatStoreModel(deps)
 
     await store.sendMessage('Hello there')
-    expect(deps.saveChatHistory).toHaveBeenCalledWith(
-      expect.objectContaining({ description: 'Hello there' })
+    expect(deps.saveChat).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Hello there' })
     )
     await vi.waitFor(() =>
       expect(deps.renameChat).toHaveBeenCalledWith('chat-id-1', 'Greeting')
@@ -381,9 +381,9 @@ describe('chat-store', () => {
     await store.sendMessage('Hello')
     await store.whenSaved()
 
-    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+    expect(deps.saveChat).toHaveBeenCalledWith(
       expect.objectContaining({
-        description: 'Hello',
+        title: 'Hello',
         messages: [{ role: 'user', content: 'Hello' }],
       })
     )
@@ -412,11 +412,11 @@ describe('chat-store', () => {
     const store = createChatStoreModel(deps)
     await store.sendMessage('Hello')
     await store.whenSaved()
-    vi.mocked(deps.saveChatHistory).mockClear()
+    vi.mocked(deps.saveChat).mockClear()
 
     await store.startChat({})
 
-    expect(deps.saveChatHistory).not.toHaveBeenCalled()
+    expect(deps.saveChat).not.toHaveBeenCalled()
   })
 
   it('gives a text to the empty current chat, to a new one otherwise', async () => {
@@ -453,7 +453,7 @@ describe('chat-store', () => {
     const store = createChatStoreModel(deps)
     const pending = store.sendMessage('Hello')
     await store.whenSaved()
-    vi.mocked(deps.saveChatHistory).mockClear()
+    vi.mocked(deps.saveChat).mockClear()
 
     store.abandonChat()
     resolveRequest('Part and more')
@@ -461,7 +461,7 @@ describe('chat-store', () => {
     await store.whenSaved()
 
     expect(store.messages.value).toEqual([])
-    expect(deps.saveChatHistory).not.toHaveBeenCalled()
+    expect(deps.saveChat).not.toHaveBeenCalled()
   })
 
   it('opens a new chat when the last one is gone', async () => {
@@ -498,10 +498,10 @@ describe('chat-store', () => {
     expect(store.messages.value).toHaveLength(2)
     expect(store.messages.value[0]?.content).toBe('Turn 1')
     expect(store.messages.value[1]?.content).toBe('Reply 1')
-    expect(deps.saveChatHistory).toHaveBeenCalledWith(
+    expect(deps.saveChat).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'branch-id-1',
-        description: 'Original Title (branch)',
+        title: 'Original Title (branch)',
         messages: expect.arrayContaining([
           expect.objectContaining({ content: 'Turn 1' }),
           expect.objectContaining({ content: 'Reply 1' }),
@@ -626,7 +626,7 @@ describe('image turns', () => {
     expect(send.mock.calls[2][0].images).toEqual([image])
     await store.branchChat(1)
     expect(store.messages.value[0].images).toEqual([image])
-    expect(deps.saveChatHistory).toHaveBeenLastCalledWith(
+    expect(deps.saveChat).toHaveBeenLastCalledWith(
       expect.objectContaining({
         messages: expect.arrayContaining([
           expect.objectContaining({ images: [image] }),
@@ -755,7 +755,7 @@ describe('file and image context policies', () => {
         vision: true,
         budgetCharacters: 100_000,
       }),
-      saveChatHistory: () =>
+      saveChat: () =>
         new Promise<void>((resolve) => {
           finish = resolve
         }),
@@ -811,7 +811,7 @@ describe('file and image context policies', () => {
 
   it('reports a chat that cannot be loaded and opens a new one instead of the last', async () => {
     const deps = createDeps({
-      loadChatHistoryItem: vi.fn(async () => {
+      loadChat: vi.fn(async () => {
         throw new Error('io')
       }),
       chatLoadError: () => 'Load failed',
@@ -831,17 +831,17 @@ describe('file and image context policies', () => {
   it('opens the chat picked last, whichever loads first', async () => {
     const loads = new Map<string, (chat: unknown) => void>()
     const deps = createDeps({
-      loadChatHistoryItem: vi.fn(
+      loadChat: vi.fn(
         (id: string) =>
           new Promise((resolve) => {
             loads.set(id, resolve as (chat: unknown) => void)
           })
-      ) as ChatStoreDeps['loadChatHistoryItem'],
+      ) as ChatStoreDeps['loadChat'],
     })
     const store = createChatStoreModel(deps)
     const chat = (id: string) => ({
       id,
-      description: id,
+      title: id,
       lastMsgDate: '',
       messages: [{ role: 'user' as const, content: id }],
     })

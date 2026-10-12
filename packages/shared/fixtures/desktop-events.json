@@ -9,5 +9,36 @@
     "question": "Explain this text",
     "autoSend": true
   },
-  "editorTransfer": { "text": "Edited text", "sourceText": "Original text" }
+  "editorTransfer": { "text": "Edited text", "sourceText": "Original text" },
+  "desktopState": {
+    "revision": 7,
+    "activation": {
+      "activationId": 2,
+      "windowId": "target",
+      "selectedText": "Captured text",
+      "mode": "editor",
+      "launcherPage": 0,
+      "launcherRequest": null,
+      "accessRequest": null
+    },
+    "window": { "isWindowShown": true, "windowProfile": "sheet" },
+    "settings": {
+      "userConfig": {},
+      "localState": {
+        "lastChatId": null,
+        "lastMode": null,
+        "lastChatModelId": null,
+        "recentAiPrompts": [],
+        "recentTranslateLanguages": [],
+        "diffMode": null,
+        "translationViewMode": null
+      },
+      "appConfig": {}
+    }
+  },
+  "chatSummary": {
+    "id": "chat-1",
+    "title": "Chat title",
+    "lastMsgDate": "2026-10-12T10:00:00.000Z"
+  }
 }

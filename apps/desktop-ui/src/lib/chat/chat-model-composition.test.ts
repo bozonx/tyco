@@ -13,9 +13,9 @@ function fixture() {
   const deps: ChatStoreDeps = {
     sendChatMessage: vi.fn(async () => 'Answer'),
     generateChatTitle: vi.fn(async () => 'Generated title'),
-    saveChatHistory: vi.fn(),
+    saveChat: vi.fn(),
     renameChat: vi.fn(),
-    loadChatHistoryItem: vi.fn(async () => null),
+    loadChat: vi.fn(async () => null),
     navigateTo: vi.fn(),
     notifyError: vi.fn(),
     emptyMessageError: () => 'Empty',
@@ -39,7 +39,7 @@ describe('chat model boundaries', () => {
     const blocked = new Promise<void>((resolve) => {
       release = resolve
     })
-    deps.saveChatHistory = vi
+    deps.saveChat = vi
       .fn()
       .mockImplementationOnce(() =>
         blocked.then(() => {
@@ -51,12 +51,12 @@ describe('chat model boundaries', () => {
     const first = queue.persist([{ role: 'user', content: 'First' }])
     const second = queue.persist([{ role: 'user', content: 'Second' }])
     await Promise.resolve()
-    expect(deps.saveChatHistory).toHaveBeenCalledTimes(1)
+    expect(deps.saveChat).toHaveBeenCalledTimes(1)
     release()
     expect(await first).toBe(false)
     expect(await second).toBe(true)
     await queue.whenSaved()
-    expect(deps.saveChatHistory).toHaveBeenCalledTimes(2)
+    expect(deps.saveChat).toHaveBeenCalledTimes(2)
   })
 
   it('does not apply a title after cancellation even if the provider resolves', async () => {
@@ -133,7 +133,7 @@ describe('chat model boundaries', () => {
   it('invalidates a pending open when a new session starts', async () => {
     const { state, deps } = fixture()
     let release!: (chat: null) => void
-    deps.loadChatHistoryItem = vi.fn(
+    deps.loadChat = vi.fn(
       () =>
         new Promise<null>((resolve) => {
           release = resolve

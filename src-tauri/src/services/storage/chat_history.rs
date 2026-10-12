@@ -7,8 +7,8 @@ const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
 /// remains until cleanup finishes, so interrupted saves and deletes are replayed.
 #[derive(Serialize, Deserialize)]
 struct ChatTransaction {
-    history: Vec<ChatHistoryItem>,
-    chat: Option<ChatHistoryItem>,
+    history: Vec<ChatSummary>,
+    chat: Option<Chat>,
 }
 
 fn commit_chat_transaction(chats_dir: &Path, transaction: ChatTransaction) -> Result<(), AppError> {
@@ -47,14 +47,14 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     crate::services::atomic_file::sync_parent(&journal)
 }
 
-pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
+pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
     load_chat_index(&app_data_sub_dir(app, "chats")?)
 }
 
 /// The index of the chats in `chats_dir`. An index that is missing or cannot
 /// be read is built anew from the chat files: the chats are all there, and
 /// an empty index would have the next save remove them as orphans.
-fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
+fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
     recover_chat_transaction(chats_dir)?;
     let index_path = chats_dir.join(CHAT_INDEX_FILE);
     if let Some(history) = read_or_quarantine(&index_path, |raw| Ok(serde_json::from_str(raw)?))? {
@@ -75,7 +75,7 @@ fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
 /// The index entries of the chat files in `chats_dir`, the most recent first.
 /// A chat file that cannot be read is set aside rather than lost to the
 /// orphan cleanup.
-fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError> {
+fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
     let mut history = Vec::new();
     for entry in fs::read_dir(chats_dir)? {
         let path = entry?.path();
@@ -84,11 +84,10 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatHistoryItem>, AppError
         }
         let parsed = fs::read_to_string(&path)
             .map_err(AppError::from)
-            .and_then(|raw| Ok(serde_json::from_str::<ChatHistoryItem>(&raw)?));
+            .and_then(|raw| Ok(serde_json::from_str::<Chat>(&raw)?));
         match parsed {
-            Ok(mut chat) => {
-                chat.messages = Vec::new();
-                history.push(chat);
+            Ok(chat) => {
+                history.push(ChatSummary::from(&chat));
             }
             Err(error) => {
                 log::warn!("Chat file {} is unreadable: {error}", path.display());
@@ -113,77 +112,25 @@ pub fn chat_image_directory(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(app_data_sub_dir(app, "chats")?.join("images"))
 }
 
-pub fn save_chat_history(
-    app: &AppHandle,
-    user_config: &Value,
-    chat_history_item: ChatHistoryItem,
-) -> Result<(), AppError> {
+pub fn save_chat(app: &AppHandle, user_config: &Value, chat: Chat) -> Result<(), AppError> {
     let policy = ChatHistoryPolicy::from_config(user_config);
 
     if !policy.enabled {
         return Ok(());
     }
 
-    sanitize_chat_id(&chat_history_item.id)?;
+    sanitize_chat_id(&chat.id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = get_chat_history(app)?;
+    let mut history = list_chats(app)?;
 
     app.state::<crate::state::AppState>()
         .chat_images
         .lock()
         .expect("chat image lock poisoned")
-        .persist(&chats_dir.join("images"), &chat_history_item)?;
+        .persist(&chats_dir.join("images"), &chat)?;
 
-    upsert_chat_index(&mut history, &chat_history_item);
+    upsert_chat_index(&mut history, &chat);
     policy.drop_expired(&mut history, now_ms());
-    commit_chat_transaction(
-        &chats_dir,
-        ChatTransaction {
-            history,
-            chat: Some(chat_history_item),
-        },
-    )
-}
-
-/// Puts the chat on top of the index, without its messages to keep the index
-/// small. The chat just written is the most recent one, also when it existed
-/// before.
-fn upsert_chat_index(history: &mut Vec<ChatHistoryItem>, chat: &ChatHistoryItem) {
-    let mut index_item = chat.clone();
-    index_item.messages = Vec::new();
-    history.retain(|item| item.id != index_item.id);
-    history.insert(0, index_item);
-}
-
-pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<ChatHistoryItem>, AppError> {
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let chat_file_path = chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?));
-
-    if !chat_file_path.exists() {
-        return Ok(None);
-    }
-
-    Ok(Some(read_json(
-        &chat_file_path,
-        ChatHistoryItem {
-            id,
-            description: String::new(),
-            last_msg_date: String::new(),
-            messages: Vec::new(),
-        },
-    )?))
-}
-
-/// Gives a stored chat another title. Neither its messages nor its place in
-/// the index change: a rename is not activity in the chat.
-pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(), AppError> {
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = get_chat_history(app)?;
-    let Some(mut chat) = get_chat(app, id.clone())? else {
-        return Err(AppError::Message(String::from("Chat not found")));
-    };
-    chat.description = description;
-    rename_in_chat_index(&mut history, &id, &chat.description);
     commit_chat_transaction(
         &chats_dir,
         ChatTransaction {
@@ -193,9 +140,56 @@ pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(
     )
 }
 
-fn rename_in_chat_index(history: &mut [ChatHistoryItem], id: &str, description: &str) {
+/// Puts the chat on top of the index, without its messages to keep the index
+/// small. The chat just written is the most recent one, also when it existed
+/// before.
+fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
+    let index_item = ChatSummary::from(chat);
+    history.retain(|item| item.id != index_item.id);
+    history.insert(0, index_item);
+}
+
+pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
+    let chats_dir = app_data_sub_dir(app, "chats")?;
+    let chat_file_path = chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?));
+
+    if !chat_file_path.exists() {
+        return Ok(None);
+    }
+
+    Ok(Some(read_json(
+        &chat_file_path,
+        Chat {
+            id,
+            title: String::new(),
+            last_msg_date: String::new(),
+            messages: Vec::new(),
+        },
+    )?))
+}
+
+/// Gives a stored chat another title. Neither its messages nor its place in
+/// the index change: a rename is not activity in the chat.
+pub fn rename_chat(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
+    let chats_dir = app_data_sub_dir(app, "chats")?;
+    let mut history = list_chats(app)?;
+    let Some(mut chat) = get_chat(app, id.clone())? else {
+        return Err(AppError::Message(String::from("Chat not found")));
+    };
+    chat.title = title;
+    rename_in_chat_index(&mut history, &id, &chat.title);
+    commit_chat_transaction(
+        &chats_dir,
+        ChatTransaction {
+            history,
+            chat: Some(chat),
+        },
+    )
+}
+
+fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
     if let Some(item) = history.iter_mut().find(|item| item.id == id) {
-        item.description = description.to_string();
+        item.title = title.to_string();
     }
 }
 
@@ -203,7 +197,7 @@ fn rename_in_chat_index(history: &mut [ChatHistoryItem], id: &str, description: 
 /// The index holds no messages, so each chat file is read.
 pub(super) fn search_chats(
     app: &AppHandle,
-    history: Vec<ChatHistoryItem>,
+    history: Vec<ChatSummary>,
     query: String,
 ) -> Result<Vec<String>, AppError> {
     let mut found = Vec::new();
@@ -211,7 +205,10 @@ pub(super) fn search_chats(
     for item in history {
         let matches = match get_chat(app, item.id.clone()) {
             Ok(Some(chat)) => chat_matches(&chat, &query),
-            _ => chat_matches(&item, &query),
+            _ => item
+                .title
+                .to_lowercase()
+                .contains(&query.trim().to_lowercase()),
         };
         if matches {
             found.push(item.id);
@@ -221,23 +218,23 @@ pub(super) fn search_chats(
     Ok(found)
 }
 
-fn chat_matches(chat: &ChatHistoryItem, query: &str) -> bool {
+fn chat_matches(chat: &Chat, query: &str) -> bool {
     let query = query.trim().to_lowercase();
     if query.is_empty() {
         return true;
     }
 
-    chat.description.to_lowercase().contains(&query)
+    chat.title.to_lowercase().contains(&query)
         || chat
             .messages
             .iter()
             .any(|message| message.content.to_lowercase().contains(&query))
 }
 
-pub fn remove_from_chat_history(app: &AppHandle, id: String) -> Result<(), AppError> {
+pub fn delete_chat(app: &AppHandle, id: String) -> Result<(), AppError> {
     sanitize_chat_id(&id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = get_chat_history(app)?;
+    let mut history = list_chats(app)?;
     history.retain(|item| item.id != id);
     commit_chat_transaction(
         &chats_dir,
@@ -274,7 +271,7 @@ impl ChatHistoryPolicy {
 
     /// Drops the chats whose last message is older than the retention period.
     /// A chat with a date that cannot be read is kept: nothing says it is old.
-    fn drop_expired(&self, history: &mut Vec<ChatHistoryItem>, now_ms: u64) {
+    fn drop_expired(&self, history: &mut Vec<ChatSummary>, now_ms: u64) {
         if self.retention_days == 0 {
             return;
         }
@@ -339,10 +336,10 @@ pub(super) fn enforce_chat_history_policy(
     policy: ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     if !policy.enabled {
-        return clear_chat_history(app);
+        return clear_chats(app);
     }
 
-    let mut history = get_chat_history(app)?;
+    let mut history = list_chats(app)?;
     let count = history.len();
     policy.drop_expired(&mut history, now_ms());
     if history.len() == count {
@@ -360,7 +357,7 @@ pub(super) fn enforce_chat_history_policy(
 }
 
 /// Removes the index, chat files, and persisted image bytes.
-pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
+pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
     recover_chat_transaction(&chats_dir)?;
     commit_chat_transaction(
@@ -402,7 +399,7 @@ fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
 
 /// Removes the chat files the index no longer lists. Only chat files: the
 /// index, a file set aside as unreadable and anything else stay.
-fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatHistoryItem]) -> Result<(), AppError> {
+fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result<(), AppError> {
     let active_ids = history
         .iter()
         .map(|item| item.id.as_str())
@@ -441,10 +438,10 @@ mod tests {
         dir
     }
 
-    fn chat_item(id: &str) -> ChatHistoryItem {
-        ChatHistoryItem {
+    fn chat_item(id: &str) -> Chat {
+        Chat {
             id: id.to_string(),
-            description: String::from("chat"),
+            title: String::from("chat"),
             last_msg_date: String::from("0"),
             messages: Vec::new(),
         }
@@ -458,7 +455,7 @@ mod tests {
         write_json(&dir.join(CHAT_INDEX_FILE), &vec![old.clone()]).unwrap();
         write_json(&dir.join("old.json"), &old).unwrap();
         let journal = ChatTransaction {
-            history: vec![new.clone(), old],
+            history: vec![ChatSummary::from(&new), ChatSummary::from(&old)],
             chat: Some(new.clone()),
         };
         write_json(&dir.join(CHAT_TRANSACTION_FILE), &journal).unwrap();
@@ -500,7 +497,7 @@ mod tests {
     fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
         let dir = temp_dir("invalid-save");
         let transaction = ChatTransaction {
-            history: vec![chat_item("../invalid")],
+            history: vec![ChatSummary::from(&chat_item("../invalid"))],
             chat: None,
         };
         assert!(commit_chat_transaction(&dir, transaction).is_err());
@@ -516,7 +513,7 @@ mod tests {
         write_json(
             &dir.join(CHAT_TRANSACTION_FILE),
             &ChatTransaction {
-                history: vec![chat.clone()],
+                history: vec![ChatSummary::from(&chat)],
                 chat: Some(chat),
             },
         )
@@ -538,21 +535,24 @@ mod tests {
 
     #[test]
     fn rename_in_chat_index_keeps_the_order() {
-        let mut history = vec![chat_item("a"), chat_item("b")];
+        let mut history = vec![
+            ChatSummary::from(&chat_item("a")),
+            ChatSummary::from(&chat_item("b")),
+        ];
 
         rename_in_chat_index(&mut history, "b", "renamed");
 
         assert_eq!(history[0].id, "a");
         assert_eq!(history[1].id, "b");
-        assert_eq!(history[1].description, "renamed");
+        assert_eq!(history[1].title, "renamed");
     }
 
     #[test]
     fn chat_matches_the_title_and_the_messages_ignoring_case() {
         let mut chat = chat_item("a");
-        chat.description = String::from("Trip plan");
+        chat.title = String::from("Trip plan");
         chat.messages = vec![crate::models::ChatMessage {
-            role: String::from("user"),
+            role: crate::models::ChatRole::User,
             content: String::from("Где купить БИЛЕТЫ?"),
             attachments: Vec::new(),
             images: Vec::new(),
@@ -566,16 +566,23 @@ mod tests {
 
     #[test]
     fn upsert_chat_index_moves_an_updated_chat_to_the_top() {
-        let mut history = vec![chat_item("a"), chat_item("b"), chat_item("c")];
+        let mut history = vec![
+            ChatSummary::from(&chat_item("a")),
+            ChatSummary::from(&chat_item("b")),
+            ChatSummary::from(&chat_item("c")),
+        ];
         let mut updated = chat_item("c");
-        updated.description = String::from("updated");
+        updated.title = String::from("updated");
 
         upsert_chat_index(&mut history, &updated);
 
         let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
         assert_eq!(ids, ["c", "a", "b"]);
-        assert_eq!(history[0].description, "updated");
-        assert!(history[0].messages.is_empty());
+        assert_eq!(history[0].title, "updated");
+        assert!(serde_json::to_value(&history[0])
+            .unwrap()
+            .get("messages")
+            .is_none());
     }
 
     #[test]
@@ -627,9 +634,9 @@ mod tests {
             chat
         };
         let mut history = vec![
-            dated("fresh", "2026-10-08T00:00:00.000Z"),
-            dated("old", "2026-09-01T00:00:00.000Z"),
-            dated("undated", "unknown"),
+            ChatSummary::from(&dated("fresh", "2026-10-08T00:00:00.000Z")),
+            ChatSummary::from(&dated("old", "2026-09-01T00:00:00.000Z")),
+            ChatSummary::from(&dated("undated", "unknown")),
         ];
         let now = parse_iso_utc_ms("2026-10-09T00:00:00.000Z").unwrap();
         let policy = |retention_days| ChatHistoryPolicy {
@@ -657,9 +664,8 @@ mod tests {
         }
         fs::write(dir.join("broken.json"), "{").unwrap();
 
-        let ids = |history: Vec<ChatHistoryItem>| {
-            history.into_iter().map(|item| item.id).collect::<Vec<_>>()
-        };
+        let ids =
+            |history: Vec<ChatSummary>| history.into_iter().map(|item| item.id).collect::<Vec<_>>();
         assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
         assert!(
             !dir.join("broken.json").exists(),
@@ -690,7 +696,7 @@ mod tests {
         fs::write(dir.join("orphan.json"), "{}").unwrap();
         fs::write(dir.join("index.json.broken-1"), "[").unwrap();
 
-        remove_orphan_chat_files(&dir, &[chat_item("kept")]).unwrap();
+        remove_orphan_chat_files(&dir, &[ChatSummary::from(&chat_item("kept"))]).unwrap();
 
         assert!(dir.join("index.json").exists());
         assert!(dir.join("kept.json").exists());

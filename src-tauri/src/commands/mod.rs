@@ -22,3 +22,18 @@ pub async fn blocking<T: Send + 'static>(
         .await
         .map_err(|error| AppError::Message(error.to_string()))
 }
+
+pub mod activation;
+pub mod desktop_state;
+pub mod diagnostics;
+pub mod hotkeys;
+pub mod settings;
+pub mod storage;
+
+pub mod chat_images;
+pub mod chats;
+pub mod editor_history;
+
+pub mod action_logs;
+pub mod external_jobs;
+pub mod script_actions;

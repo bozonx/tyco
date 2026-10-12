@@ -16,7 +16,7 @@ use crate::state::AppState;
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
-/// What the prompt shows, see `InitParams::access_request`.
+/// What the prompt shows, see `DesktopSnapshot::access_request`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccessRequest {
@@ -142,9 +142,8 @@ pub fn withdraw(app: &AppHandle, job_id: &str) {
 /// Hides the quick window while it still shows the prompt, not a mode the
 /// user has switched to since.
 fn hide_prompt(app: &AppHandle) {
-    let params = app.state::<AppState>().params();
-    if params.is_window_shown && params.mode.as_deref() == Some(StartMode::ExternalAccess.as_str())
-    {
+    let params = app.state::<AppState>().snapshot();
+    if params.window.is_window_shown && params.activation.mode == Some(StartMode::ExternalAccess) {
         if let Err(error) = runtime::hide_active_window(app) {
             log::warn!("Could not hide the access prompt: {error}");
         }
@@ -154,16 +153,16 @@ fn hide_prompt(app: &AppHandle) {
 fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<AppState>();
     let _guard = state.lock_config_storage();
-    let mut user_config = state.params().user_config;
+    let mut user_config = state.snapshot().settings.user_config;
     if config_migration::is_newer_than_supported(&user_config) {
         return Err(storage::newer_config_error());
     }
     grant_selection(&mut user_config);
     storage::save_user_config(app, &user_config)?;
-    state.update_params(|params| {
-        params.user_config = user_config;
+    state.update_state(|params| {
+        params.settings.user_config = user_config;
     });
-    runtime::emit_params(app, &state)
+    runtime::emit_state(app, &state)
 }
 
 fn grant_selection(user_config: &mut Value) {

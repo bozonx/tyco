@@ -1,7 +1,8 @@
 import {
   DESKTOP_EVENTS,
+  desktopSnapshotToView,
   type DesktopListen,
-  type InitParams,
+  type DesktopViewState,
 } from '@tyco/shared'
 
 import { createCleanupScope } from './cleanup-scope'
@@ -10,8 +11,10 @@ import { GlobalEvents } from './global-events'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
 export interface AppBootstrapDeps {
-  loadInitialParams: () => Promise<InitParams>
-  setParams: (params: Partial<InitParams>) => void
+  onError?: (error: unknown) => void
+  addWindowFocusListener?: (handler: () => void) => () => void
+  loadDesktopState: () => Promise<DesktopViewState>
+  setParams: (params: DesktopViewState) => void
   closeAllModals: () => void
   navigateTo: (path: AppRoutePath) => Promise<void>
   /**
@@ -19,7 +22,7 @@ export interface AppBootstrapDeps {
    * a screen opened for the other window's mode would run there unseen: a
    * dictation would take the microphone from the window the user looks at
    */
-  ownsMode?: (mode: InitParams['mode']) => boolean
+  ownsMode?: (mode: DesktopViewState['mode']) => boolean
   listen: DesktopListen
   emitGlobal: (event: GlobalEvents, payload?: unknown) => void
   initPlugins: () => void | Promise<void>
@@ -32,12 +35,15 @@ export interface AppBootstrapDeps {
 export function createAppBootstrap(deps: AppBootstrapDeps) {
   let scope: ReturnType<typeof createCleanupScope> | undefined
   let starting: Promise<void> | undefined
-  let lastAppliedMode: InitParams['mode'] | undefined
+  let lastRevision = -1
+  let lastAppliedMode: DesktopViewState['mode'] | undefined
 
   const applyParams = async (
-    params: InitParams,
+    params: DesktopViewState,
     options: { forceNavigate?: boolean } = {}
   ) => {
+    if (params.revision <= lastRevision) return
+    lastRevision = params.revision
     deps.setParams(params)
 
     if (deps.ownsMode && !deps.ownsMode(params.mode)) {
@@ -73,30 +79,41 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     const run = createCleanupScope()
     scope = run
     lastAppliedMode = undefined
+    lastRevision = -1
     const work = async () => {
       try {
         run.add(deps.addWindowKeyupListener(handleKeyUp))
         await run.listen(
           deps.listen,
-          DESKTOP_EVENTS.PARAMS_CHANGED,
+          DESKTOP_EVENTS.STATE_CHANGED,
           async (params) => {
-            await applyParams(params)
+            await applyParams(desktopSnapshotToView(params))
           }
         )
         if (run.stopped) return
-        await run.listen(
-          deps.listen,
-          DESKTOP_EVENTS.CONTEXT_CAPTURED,
-          (context) => {
-            deps.setParams(context)
-          }
-        )
-        if (run.stopped) return
-        const initialParams = await deps.loadInitialParams()
+        const initialParams = await deps.loadDesktopState()
         if (run.stopped) return
         await applyParams(initialParams, { forceNavigate: true })
         if (run.stopped) return
         await deps.initPlugins()
+        if (run.stopped) return
+        let refreshing = false
+        if (deps.addWindowFocusListener)
+          run.add(
+            deps.addWindowFocusListener(() => {
+              if (refreshing || run.stopped) return
+              refreshing = true
+              void deps
+                .loadDesktopState()
+                .then(async (params) => {
+                  if (!run.stopped) await applyParams(params)
+                })
+                .catch((error: unknown) => deps.onError?.(error))
+                .finally(() => {
+                  refreshing = false
+                })
+            })
+          )
         if (!run.stopped) deps.emitGlobal(GlobalEvents.INITED)
       } catch (error) {
         run.stop()

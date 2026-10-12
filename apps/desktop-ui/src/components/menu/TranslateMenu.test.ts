@@ -59,7 +59,7 @@ describe('TranslateMenu', () => {
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
     vi.spyOn(useIpcStore(), 'patchLocalState').mockResolvedValue({
       success: true,
-      result: undefined,
+      result: useIpcStore().params.localState,
     })
     useMenuModalsStore().nextModal(MenuModals.TRANSLATE)
   })

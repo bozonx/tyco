@@ -18,7 +18,7 @@ vi.mock('../../composables/use-toast', () => ({
 
 vi.mock('../../stores/history', () => ({
   useHistoryStore: () => ({
-    clearChatHistory: mockClearChatHistory,
+    clearChats: mockClearChatHistory,
     clearEditorHistory: mockClearEditorHistory,
   }),
 }))

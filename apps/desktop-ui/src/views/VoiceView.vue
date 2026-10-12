@@ -92,7 +92,7 @@ function handleCancelled() {
   if (!ipcStore.params.isWindowShown || ipcStore.params.mode !== 'voice') return
 
   if (getCurrentWindow().label === 'quick') {
-    void ipcStore.callFunctionOrNotify('closeWindow')
+    void ipcStore.callFunctionOrNotify('hideWindow')
   } else {
     void appNavigation.push(APP_ROUTES.EDITOR.path)
   }

@@ -75,7 +75,7 @@ export default function pluginIndex(): PluginDefinition {
               messageKey: 'local.noSearchBaseUrl',
             }
           }
-          const result = await ctx.callApiFunction('openInBrowserAndClose', [
+          const result = await ctx.callApiFunction('openInBrowserAndHide', [
             baseUrl.trim() + encodeURIComponent(text),
           ])
           return result.success

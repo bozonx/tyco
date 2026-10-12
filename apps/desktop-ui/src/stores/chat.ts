@@ -62,9 +62,9 @@ export const useChatStore = defineStore('chat', () => {
   const model = createChatStoreModel({
     sendChatMessage,
     generateChatTitle,
-    saveChatHistory: async (item) => {
+    saveChat: async (item) => {
       try {
-        await historyStore.saveChatHistory(item)
+        await historyStore.saveChat(item)
       } catch (error) {
         toast('history.operationFailed', 'error')
         throw error
@@ -78,7 +78,7 @@ export const useChatStore = defineStore('chat', () => {
         throw error
       }
     },
-    loadChatHistoryItem: loadChatWithImages,
+    loadChat: loadChatWithImages,
     navigateTo: (path) => appNavigation.push(path),
     notifyError: (message) => {
       toastText(message, 'error')

@@ -6,18 +6,14 @@ import ChatSidebar from './ChatSidebar.vue'
 
 const mocks = vi.hoisted(() => ({
   userConfig: { chatHistoryEnabled: true },
-  chatHistory: [] as Array<{
-    id: string
-    description: string
-    lastMsgDate: string
-  }>,
+  chatHistory: [] as Array<{ id: string; title: string; lastMsgDate: string }>,
   newChatParams: { id: null as string | null, title: '' },
   isGenerating: false,
   messages: [] as any[],
   startNewChat: vi.fn(),
   openChat: vi.fn(),
-  clearChatHistory: vi.fn(),
-  removeFromChatHistory: vi.fn(),
+  clearChats: vi.fn(),
+  deleteChat: vi.fn(),
   restoreChatItem: vi.fn(),
   releaseUndo: vi.fn(async () => undefined),
 }))
@@ -54,8 +50,8 @@ vi.mock('../../stores/history', () => ({
   useHistoryStore: () => ({
     chatHistory: reactive(mocks.chatHistory),
     searchChats: vi.fn().mockResolvedValue([]),
-    clearChatHistory: mocks.clearChatHistory,
-    removeFromChatHistory: mocks.removeFromChatHistory,
+    clearChats: mocks.clearChats,
+    deleteChat: mocks.deleteChat,
     restoreChatItem: mocks.restoreChatItem,
   }),
 }))
@@ -154,12 +150,12 @@ describe('ChatSidebar.vue', () => {
   async function deleteImageChat() {
     const item = {
       id: 'image-chat',
-      description: 'Image chat',
+      title: 'Image chat',
       lastMsgDate: new Date().toISOString(),
       messages: [],
     }
     mocks.chatHistory.push(item)
-    mocks.removeFromChatHistory.mockResolvedValueOnce(item)
+    mocks.deleteChat.mockResolvedValueOnce(item)
     const wrapper = mount(ChatSidebar, {
       global: {
         stubs: {

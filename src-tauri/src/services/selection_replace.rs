@@ -193,7 +193,7 @@ struct SystemSelectionBackend<'a>(&'a AppHandle);
 
 impl SelectionBackend for SystemSelectionBackend<'_> {
     fn user_config(&self) -> Value {
-        self.0.state::<AppState>().params().user_config
+        self.0.state::<AppState>().snapshot().settings.user_config
     }
     fn wait(&self, wait: TriggerWait) {
         match wait {

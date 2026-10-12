@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 
 use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
-use crate::models::{ChatHistoryItem, ChatImage};
+use crate::models::{Chat, ChatImage};
 
 /// The lossless PNG the webview hands over before it becomes a WebP.
 pub const MAX_SOURCE_BYTES: usize = 64 * 1024 * 1024;
@@ -132,7 +132,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         }
         let image = ChatImage {
             id: format!("{:x}", Sha256::digest(&*encoded)),
-            media_type: "image/webp".into(),
+            media_type: crate::models::ChatImageMediaType::Webp,
             width: output.width,
             height: output.height,
             size: encoded.len(),
@@ -306,7 +306,7 @@ impl ChatImageStore {
         let (width, height) = stored_dimensions(&bytes, media_type)?;
         let image = ChatImage {
             id: id.to_string(),
-            media_type: media_type.into(),
+            media_type: media_type.parse()?,
             width,
             height,
             size: bytes.len(),
@@ -316,10 +316,10 @@ impl ChatImageStore {
         Ok(bytes)
     }
 
-    pub fn persist(&mut self, directory: &Path, chat: &ChatHistoryItem) -> Result<(), AppError> {
+    pub fn persist(&mut self, directory: &Path, chat: &Chat) -> Result<(), AppError> {
         for message in &chat.messages {
             if message.images.len() > MAX_MESSAGE_IMAGES
-                || (!message.images.is_empty() && message.role != "user")
+                || (!message.images.is_empty() && message.role != crate::models::ChatRole::User)
             {
                 return Err(AppError::Message("Unsupported chat image message".into()));
             }
@@ -333,7 +333,7 @@ impl ChatImageStore {
                 {
                     return Err(AppError::Message("Invalid chat image metadata".into()));
                 }
-                let extension = extension(&canonical.media_type)
+                let extension = extension(canonical.media_type.as_str())
                     .ok_or_else(|| AppError::Message("Unsupported chat image type".into()))?;
                 fs::create_dir_all(directory)?;
                 let path = directory.join(format!("{}.{extension}", image.id));
@@ -355,7 +355,7 @@ pub fn collect_orphans(chats_dir: &Path) -> Result<(), AppError> {
         if path.extension().is_some_and(|ext| ext == "json")
             && path.file_name().is_some_and(|name| name != "index.json")
         {
-            let chat: ChatHistoryItem = match serde_json::from_slice(&fs::read(&path)?) {
+            let chat: Chat = match serde_json::from_slice(&fs::read(&path)?) {
                 Ok(chat) => chat,
                 Err(_) => return Ok(()),
             };
@@ -492,12 +492,12 @@ mod tests {
         fs::create_dir_all(&directory).unwrap();
         let mut store = ChatImageStore::default();
         let image = store.insert(&png(), None).unwrap();
-        let chat = ChatHistoryItem {
+        let chat = Chat {
             id: "test".into(),
-            description: "Image".into(),
+            title: "Image".into(),
             last_msg_date: String::new(),
             messages: vec![crate::models::ChatMessage {
-                role: "user".into(),
+                role: crate::models::ChatRole::User,
                 content: String::new(),
                 attachments: vec![],
                 images: vec![image.clone()],
@@ -530,12 +530,12 @@ mod tests {
         let mut store = ChatImageStore::default();
         let mut image = store.insert(&png(), None).unwrap();
         image.width = 2;
-        let chat = ChatHistoryItem {
+        let chat = Chat {
             id: "test".into(),
-            description: String::new(),
+            title: String::new(),
             last_msg_date: String::new(),
             messages: vec![crate::models::ChatMessage {
-                role: "user".into(),
+                role: crate::models::ChatRole::User,
                 content: String::new(),
                 attachments: vec![],
                 images: vec![image],
@@ -575,7 +575,7 @@ mod tests {
                 .unwrap();
         }
         let (image, clean) = normalize(&bytes, None).unwrap();
-        assert_eq!(image.media_type, "image/webp");
+        assert_eq!(image.media_type, crate::models::ChatImageMediaType::Webp);
         assert_eq!(&clean[..4], b"RIFF");
         assert_eq!(&clean[8..12], b"WEBP");
         assert!(!clean
@@ -600,7 +600,10 @@ mod tests {
         fs::write(directory.join(format!("{id}.png")), &bytes).unwrap();
         let mut store = ChatImageStore::default();
         assert_eq!(store.get(&directory, &id).unwrap(), bytes);
-        assert_eq!(store.images[&id].0.media_type, "image/png");
+        assert_eq!(
+            store.images[&id].0.media_type,
+            crate::models::ChatImageMediaType::Png
+        );
         fs::write(directory.join(format!("{id}.png")), b"tampered").unwrap();
         assert!(ChatImageStore::default().get(&directory, &id).is_err());
         fs::remove_dir_all(directory).unwrap();

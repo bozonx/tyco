@@ -1,19 +1,25 @@
 import {
   APP_CONFIG,
+  desktopViewToSnapshot,
   parseOpenMainChatEvent,
   type AppEventPayloads,
-  DEFAULT_INIT_PARAMS,
+  DEFAULT_DESKTOP_VIEW_STATE,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
-  type InitParams,
+  type DesktopViewState,
+  type DesktopInvoke,
+  type DesktopCommandName,
+  type DesktopCommandResult,
+  type DesktopInvokeArgs,
   type IpcResult,
 } from '@tyco/shared'
 
 import { desktopErrorMessage, isDesktopError } from './ipc-error'
 
 export interface DesktopClientDeps {
+  onEventError: (event: string, error: unknown) => void
   isAvailable: () => boolean
-  invoke: <T>(command: string, args?: Record<string, unknown>) => Promise<T>
+  invoke: DesktopInvoke
   listen: <EventName extends keyof AppEventPayloads>(
     event: EventName,
     handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
@@ -23,11 +29,15 @@ export interface DesktopClientDeps {
 export function createDesktopClient(deps: DesktopClientDeps) {
   const localListeners = new Map<string, Set<(payload: unknown) => void>>()
 
-  let localParams: InitParams = structuredClone({
-    ...DEFAULT_INIT_PARAMS,
+  let localParams: DesktopViewState = structuredClone({
+    ...DEFAULT_DESKTOP_VIEW_STATE,
     appConfig: APP_CONFIG,
     userConfig: DEFAULT_USER_CONFIG,
   })
+
+  function reportEventError(event: string, error: unknown) {
+    deps.onEventError(event, error)
+  }
 
   function emitLocal(event: string, payload: unknown) {
     const listeners = localListeners.get(event)
@@ -44,20 +54,18 @@ export function createDesktopClient(deps: DesktopClientDeps) {
     return deps.isAvailable()
   }
 
-  async function invoke<T>(
-    command: string,
-    args?: Record<string, unknown>
-  ): Promise<IpcResult<T>> {
-    if (!isAvailable()) {
+  async function invoke<K extends DesktopCommandName>(
+    command: K,
+    ...args: DesktopInvokeArgs<K>
+  ): Promise<IpcResult<DesktopCommandResult<K>>> {
+    if (!isAvailable())
       return {
         success: false,
         error: `Desktop runtime is not available for command: ${command}`,
       }
-    }
-
     try {
-      const result = await deps.invoke<T>(command, args)
-      return { success: true, result }
+      const result = await deps.invoke(command, ...args)
+      return { success: true, result } as IpcResult<DesktopCommandResult<K>>
     } catch (error) {
       return {
         success: false,
@@ -71,35 +79,47 @@ export function createDesktopClient(deps: DesktopClientDeps) {
     event: EventName,
     handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
   ): Promise<() => void> {
-    if (isAvailable()) {
-      return await deps.listen(event, (payload) => {
+    const deliver = (payload: AppEventPayloads[EventName]) => {
+      try {
         if (event === DESKTOP_EVENTS.OPEN_MAIN_CHAT)
           parseOpenMainChatEvent(payload)
-        return handler(payload)
-      })
+        Promise.resolve(handler(payload)).catch((error) =>
+          reportEventError(event, error)
+        )
+      } catch (error) {
+        reportEventError(event, error)
+      }
     }
+    if (isAvailable()) return await deps.listen(event, deliver)
 
     // without the runtime the events come from `setLocalParams`
     const listeners =
       localListeners.get(event) || new Set<(payload: unknown) => void>()
-    listeners.add(handler as (payload: unknown) => void)
+    listeners.add(deliver as (payload: unknown) => void)
     localListeners.set(event, listeners)
 
     return () => {
       const currentListeners = localListeners.get(event)
-      currentListeners?.delete(handler as (payload: unknown) => void)
+      currentListeners?.delete(deliver as (payload: unknown) => void)
     }
   }
 
-  function getInitParams(): InitParams {
+  function getDesktopViewState(): DesktopViewState {
     return structuredClone(localParams)
   }
 
-  function setLocalParams(nextParams: Partial<InitParams>) {
-    localParams = { ...localParams, ...nextParams }
+  function setLocalParams(nextParams: Partial<DesktopViewState>) {
+    localParams = {
+      ...localParams,
+      ...nextParams,
+      revision: localParams.revision + 1,
+    }
 
-    emitLocal(DESKTOP_EVENTS.PARAMS_CHANGED, getInitParams())
+    emitLocal(
+      DESKTOP_EVENTS.STATE_CHANGED,
+      desktopViewToSnapshot(getDesktopViewState())
+    )
   }
 
-  return { getInitParams, invoke, isAvailable, listen, setLocalParams }
+  return { getDesktopViewState, invoke, isAvailable, listen, setLocalParams }
 }

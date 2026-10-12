@@ -7,8 +7,7 @@ import { createTauriFetch } from './tauri-fetch'
 import { createTauriSocketOpener } from './tauri-socket'
 
 export const tauriNetIpc: NetIpc = {
-  invoke: (command, args, options) =>
-    invoke(command, args, options?.headers && { headers: options.headers }),
+  invoke,
   createChannel(onMessage) {
     const channel = new Channel<unknown>()
     channel.onmessage = onMessage

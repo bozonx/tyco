@@ -20,7 +20,7 @@ describe('tool catalog IPC delivery', () => {
     setActivePinia(pinia)
     mocks.callFunction
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
-      .mockResolvedValue({ success: true })
+      .mockResolvedValue({ success: true, result: undefined })
     const store = useToolCatalogStore()
     store.start()
     await vi.advanceTimersByTimeAsync(0)

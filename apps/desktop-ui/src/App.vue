@@ -104,7 +104,13 @@ const mainWindowReset = createMainWindowReset({
   goToEditor: () => appNavigation.goToEditor(),
 })
 const bootstrap = createAppBootstrap({
-  loadInitialParams: () => ipcStore.loadInitialParams(),
+  loadDesktopState: () => ipcStore.loadDesktopState(),
+  onError: (error) =>
+    clientLogger.error('Could not refresh desktop state', error, 'bootstrap'),
+  addWindowFocusListener: (handler) => {
+    window.addEventListener('focus', handler)
+    return () => window.removeEventListener('focus', handler)
+  },
   setParams: (params) => ipcStore.setParams(params),
   closeAllModals: () => menuModalsStore.closeAll(),
   navigateTo: (path) => appNavigation.push(path),

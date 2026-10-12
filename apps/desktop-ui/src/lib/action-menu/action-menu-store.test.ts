@@ -37,7 +37,7 @@ describe('createActionMenuStoreModel', () => {
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
-      closeWindow: vi.fn(),
+      hideWindow: vi.fn(),
       minCorrectionLength: () => 10,
       tools,
     }
@@ -95,7 +95,7 @@ describe('createActionMenuStoreModel', () => {
 
     expect(services.copyText).toHaveBeenCalledWith('copied')
     expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('saves the text to history before it leaves the app', async () => {

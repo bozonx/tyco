@@ -22,7 +22,7 @@ navPanelStore.resetNavParams({ panelVisible: false })
 
 function handleCancel() {
   isStarting.value = false
-  void ipcStore.callFunctionOrNotify('closeWindow')
+  void ipcStore.callFunctionOrNotify('hideWindow')
 }
 
 const correctionMode = createCorrectionMode({

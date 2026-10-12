@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { computed, reactive, ref } from 'vue'
-import type { ChatHistoryItem } from '@tyco/shared'
+import type { Chat } from '@tyco/shared'
 
 import { createChatController } from './chat-controller'
 import { createChatStoreModel } from './chat-store'
@@ -27,16 +27,14 @@ function setup() {
     focus: vi.fn(),
   })
   const sendChatMessage = vi.fn(async () => 'answer')
-  const loadChatHistoryItem = vi.fn<
-    (id: string) => Promise<ChatHistoryItem | null>
-  >(async () => null)
+  const loadChat = vi.fn<(id: string) => Promise<Chat | null>>(async () => null)
   let id = 0
   const model = createChatStoreModel({
     sendChatMessage,
     generateChatTitle: async () => '',
-    saveChatHistory: vi.fn(),
+    saveChat: vi.fn(),
     renameChat: vi.fn(),
-    loadChatHistoryItem,
+    loadChat,
     navigateTo: vi.fn(),
     notifyError: vi.fn(),
     emptyMessageError: () => 'Empty input',
@@ -86,7 +84,7 @@ function setup() {
     state,
     selectedModel,
     sendChatMessage,
-    loadChatHistoryItem,
+    loadChat,
   }
 }
 
@@ -259,11 +257,11 @@ describe('chat controller', () => {
   })
 
   it('opens history through the file controller and stales editor selection', async () => {
-    const { controller, deps, loadChatHistoryItem, editor } = setup()
+    const { controller, deps, loadChat, editor } = setup()
     editor.selectedText = 'selection'
-    loadChatHistoryItem.mockResolvedValue({
+    loadChat.mockResolvedValue({
       id: 'stored',
-      description: 'Stored',
+      title: 'Stored',
       lastMsgDate: '2026-10-11',
       messages: [{ role: 'user', content: 'question' }],
     })

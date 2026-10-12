@@ -5,7 +5,7 @@ import { reactive } from 'vue'
 import ExternalAccessView from './ExternalAccessView.vue'
 
 const { callFunction, params } = vi.hoisted(() => ({
-  callFunction: vi.fn(async () => ({ success: true })),
+  callFunction: vi.fn(async () => ({ success: true, result: undefined })),
   params: {
     accessRequest: null as null | {
       jobId: string

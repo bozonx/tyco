@@ -11,12 +11,14 @@ function setup(available = false) {
     handlers.set(event, handler as (payload: unknown) => void | Promise<void>)
     return remove
   }
+  const onEventError = vi.fn()
   const client = createDesktopClient({
     isAvailable: () => available,
     invoke: invoke as DesktopClientDeps['invoke'],
     listen,
+    onEventError,
   })
-  return { client, invoke, handlers, remove }
+  return { client, invoke, handlers, remove, onEventError }
 }
 
 describe('desktop client', () => {
@@ -26,14 +28,14 @@ describe('desktop client', () => {
     const firstHandler = vi.fn()
     const secondHandler = vi.fn()
     const remove = await first.listen(
-      DESKTOP_EVENTS.PARAMS_CHANGED,
+      DESKTOP_EVENTS.STATE_CHANGED,
       firstHandler
     )
-    await second.listen(DESKTOP_EVENTS.PARAMS_CHANGED, secondHandler)
-    const initial = second.getInitParams().isWindowShown
+    await second.listen(DESKTOP_EVENTS.STATE_CHANGED, secondHandler)
+    const initial = second.getDesktopViewState().isWindowShown
     first.setLocalParams({ isWindowShown: !initial })
-    expect(first.getInitParams().isWindowShown).toBe(!initial)
-    expect(second.getInitParams().isWindowShown).toBe(initial)
+    expect(first.getDesktopViewState().isWindowShown).toBe(!initial)
+    expect(second.getDesktopViewState().isWindowShown).toBe(initial)
     expect(firstHandler).toHaveBeenCalledOnce()
     expect(secondHandler).not.toHaveBeenCalled()
     remove()
@@ -43,28 +45,30 @@ describe('desktop client', () => {
 
   it('returns detached copies of initial parameters', () => {
     const { client } = setup()
-    const params = client.getInitParams()
+    const params = client.getDesktopViewState()
     params.userConfig.userLanguage = 'tr_TR'
-    expect(client.getInitParams().userConfig.userLanguage).not.toBe('tr_TR')
+    expect(client.getDesktopViewState().userConfig.userLanguage).not.toBe(
+      'tr_TR'
+    )
   })
 
   it('does not invoke the native runtime when unavailable', async () => {
     const { client, invoke } = setup()
-    expect(await client.invoke('example')).toEqual({
+    expect(await client.invoke('get_storage_info')).toEqual({
       success: false,
-      error: 'Desktop runtime is not available for command: example',
+      error: 'Desktop runtime is not available for command: get_storage_info',
     })
     expect(invoke).not.toHaveBeenCalled()
   })
 
   it('forwards native arguments and wraps successful responses', async () => {
     const { client, invoke } = setup(true)
-    invoke.mockResolvedValue({ value: 1 })
-    expect(await client.invoke('example', { id: 4 })).toEqual({
+    invoke.mockResolvedValue(null)
+    expect(await client.invoke('get_chat', { id: 'chat-4' })).toEqual({
       success: true,
-      result: { value: 1 },
+      result: null,
     })
-    expect(invoke).toHaveBeenCalledWith('example', { id: 4 })
+    expect(invoke).toHaveBeenCalledWith('get_chat', { id: 'chat-4' })
   })
 
   it.each([new Error('failed'), 'failed'])(
@@ -72,7 +76,7 @@ describe('desktop client', () => {
     async (error) => {
       const { client, invoke } = setup(true)
       invoke.mockRejectedValue(error)
-      expect(await client.invoke('example')).toEqual({
+      expect(await client.invoke('get_storage_info')).toEqual({
         success: false,
         error: 'failed',
       })
@@ -82,7 +86,7 @@ describe('desktop client', () => {
   it('exposes native error codes without changing the message contract', async () => {
     const { client, invoke } = setup(true)
     invoke.mockRejectedValue({ code: 'ioError', message: 'Permission denied' })
-    expect(await client.invoke('example')).toEqual({
+    expect(await client.invoke('get_storage_info')).toEqual({
       success: false,
       error: 'Permission denied',
       errorCode: 'ioError',
@@ -90,11 +94,12 @@ describe('desktop client', () => {
   })
 
   it('validates native chat events before delivering them', async () => {
-    const { client, handlers, remove } = setup(true)
+    const { client, handlers, remove, onEventError } = setup(true)
     const handler = vi.fn()
     const unlisten = await client.listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, handler)
     const deliver = handlers.get(DESKTOP_EVENTS.OPEN_MAIN_CHAT)!
-    expect(() => deliver({ autoSend: 'invalid' })).toThrow()
+    deliver({ autoSend: 'invalid' })
+    expect(onEventError).toHaveBeenCalledOnce()
     expect(handler).not.toHaveBeenCalled()
     const payload: AppEventPayloads[typeof DESKTOP_EVENTS.OPEN_MAIN_CHAT] = {
       autoSend: true,
@@ -104,4 +109,18 @@ describe('desktop client', () => {
     unlisten()
     expect(remove).toHaveBeenCalledOnce()
   })
+})
+
+it('contains asynchronous event failures and continues delivering events', async () => {
+  const { client, handlers, onEventError } = setup(true)
+  const handler = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('Navigation failed'))
+    .mockResolvedValueOnce(undefined)
+  await client.listen(DESKTOP_EVENTS.OPEN_MAIN_CHAT, handler)
+  const deliver = handlers.get(DESKTOP_EVENTS.OPEN_MAIN_CHAT)!
+  deliver({ autoSend: true })
+  await vi.waitFor(() => expect(onEventError).toHaveBeenCalledOnce())
+  deliver({ autoSend: false })
+  expect(handler).toHaveBeenCalledTimes(2)
 })

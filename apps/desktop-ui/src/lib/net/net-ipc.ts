@@ -1,3 +1,4 @@
+import type { DesktopInvoke, DesktopChannel } from '@tyco/shared'
 import { desktopErrorMessage } from '../desktop/ipc-error'
 /**
  * The IPC surface the network adapters need, injected so they run in tests
@@ -7,33 +8,15 @@ import { desktopErrorMessage } from '../desktop/ipc-error'
  * and provider keys are filled in there, so the webview never holds one.
  */
 export interface NetIpc {
-  invoke: <T>(
-    command: string,
-    args?: Record<string, unknown> | Uint8Array,
-    options?: { headers?: Record<string, string> }
-  ) => Promise<T>
+  invoke: DesktopInvoke
   /**
    * A channel object to pass as a command argument. JSON messages arrive
    * parsed, raw byte messages as an `ArrayBuffer`.
    */
-  createChannel: (onMessage: (message: unknown) => void) => unknown
+  createChannel: (onMessage: (message: unknown) => void) => DesktopChannel
 }
 
-export type FetchEvent =
-  | {
-      type: 'head'
-      status: number
-      statusText: string
-      headers: [string, string][]
-    }
-  | { type: 'end' }
-  | { type: 'error'; message: string }
-
-export type SocketEvent =
-  | { type: 'open' }
-  | { type: 'message'; data: string }
-  | { type: 'close'; code: number; reason: string }
-  | { type: 'error'; message: string }
+export type { FetchEvent, SocketEvent } from '@tyco/shared'
 
 /** Names the socket a raw binary frame is for; see `commands/net.rs`. */
 export const SOCKET_ID_HEADER = 'x-tyco-socket-id'

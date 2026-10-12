@@ -1,7 +1,7 @@
 import {
-  DEFAULT_INIT_PARAMS,
+  DEFAULT_DESKTOP_VIEW_STATE,
+  desktopViewToSnapshot,
   DESKTOP_COMMANDS,
-  START_MODES,
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -15,7 +15,7 @@ function createDeps(overrides: Partial<IpcStoreDeps> = {}): IpcStoreDeps {
   return {
     desktopClient: {
       invoke: invokeMock,
-      getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+      getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
       isAvailable: () => true,
     },
     notifyError: vi.fn(),
@@ -118,17 +118,17 @@ describe('ipc-store', () => {
     })
     vi.mocked(deps.desktopClient.invoke).mockImplementation(async () => {
       order.push('invoked')
-      return { success: true }
+      return { success: true, result: undefined }
     })
     const store = createIpcStoreModel(deps)
 
-    await store.callFunction('typeIntoWindowAndClose', ['text'])
+    await store.callFunction('pasteIntoTargetAndHide', ['text'])
     await store.callFunction('copyText', ['text'])
 
     expect(order).toEqual(['released', 'invoked', 'invoked'])
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.TYPE_INTO_WINDOW_AND_CLOSE,
-      { text: 'text' }
+      DESKTOP_COMMANDS.PASTE_INTO_TARGET_AND_HIDE,
+      { text: 'text', activationId: 0 }
     )
   })
 
@@ -175,8 +175,8 @@ describe('ipc-store', () => {
     const deps = createDeps({
       desktopClient: {
         invoke: vi.fn(),
-        getInitParams: vi.fn(() => ({
-          ...DEFAULT_INIT_PARAMS,
+        getDesktopViewState: vi.fn(() => ({
+          ...DEFAULT_DESKTOP_VIEW_STATE,
           windowId: 'fallback-window',
         })),
         isAvailable: () => false,
@@ -184,7 +184,7 @@ describe('ipc-store', () => {
     })
     const store = createIpcStoreModel(deps)
 
-    const result = await store.loadInitialParams()
+    const result = await store.loadDesktopState()
 
     expect(result.windowId).toBe('fallback-window')
     expect(store.params.value.windowId).toBe('fallback-window')
@@ -194,18 +194,21 @@ describe('ipc-store', () => {
   it('fails loudly when the desktop runtime cannot give the params', async () => {
     const deps = createDeps({
       desktopClient: {
-        invoke: vi.fn(async () => ({ success: false, error: 'failed' })),
-        getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        invoke: vi.fn(async () => ({
+          success: false as const,
+          error: 'failed',
+        })),
+        getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
         isAvailable: () => true,
       },
     })
     const store = createIpcStoreModel(deps)
 
-    await expect(store.loadInitialParams()).rejects.toThrow('failed')
+    await expect(store.loadDesktopState()).rejects.toThrow('failed')
     expect(deps.notifyError).toHaveBeenCalled()
     // the defaults must not overwrite the config of the user
     await expect(
-      store.saveUserConfig(DEFAULT_INIT_PARAMS.userConfig)
+      store.saveUserConfig(DEFAULT_DESKTOP_VIEW_STATE.userConfig)
     ).resolves.toMatchObject({ success: false })
     expect(deps.desktopClient.invoke).toHaveBeenCalledTimes(1)
   })
@@ -216,7 +219,7 @@ describe('ipc-store', () => {
         invoke: vi.fn(async () => {
           throw new Error('boom')
         }),
-        getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
         isAvailable: () => true,
       },
     })
@@ -224,7 +227,7 @@ describe('ipc-store', () => {
 
     const result = await store.callFunction('getEditorHistory')
 
-    expect(result).toEqual({ success: false, error: 'Error: boom' })
+    expect(result).toEqual({ success: false as const, error: 'Error: boom' })
     expect(deps.logError).toHaveBeenCalled()
     expect(deps.notifyError).not.toHaveBeenCalled()
   })
@@ -232,15 +235,18 @@ describe('ipc-store', () => {
   it('notifies about a failure when asked to', async () => {
     const deps = createDeps({
       desktopClient: {
-        invoke: vi.fn(async () => ({ success: false, error: 'no xdotool' })),
-        getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+        invoke: vi.fn(async () => ({
+          success: false as const,
+          error: 'no xdotool',
+        })),
+        getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
         isAvailable: () => true,
       },
       errorTitle: () => 'Action failed',
     })
     const store = createIpcStoreModel(deps)
 
-    const result = await store.callFunctionOrNotify('typeIntoWindowAndClose', [
+    const result = await store.callFunctionOrNotify('pasteIntoTargetAndHide', [
       'text',
     ])
 
@@ -254,149 +260,69 @@ describe('ipc-store', () => {
     ) => {
       const deps = createDeps({
         desktopClient: {
-          invoke: vi.fn(async (command: string) =>
-            command === DESKTOP_COMMANDS.GET_INIT_PARAMS
-              ? { success: true, result: structuredClone(DEFAULT_INIT_PARAMS) }
+          invoke: vi.fn(async (command: string, _args?: unknown) =>
+            command === DESKTOP_COMMANDS.GET_DESKTOP_STATE
+              ? {
+                  success: true,
+                  result: desktopViewToSnapshot(
+                    structuredClone(DEFAULT_DESKTOP_VIEW_STATE)
+                  ),
+                }
               : invoke(command)
           ) as IpcStoreDeps['desktopClient']['invoke'],
-          getInitParams: vi.fn(() => DEFAULT_INIT_PARAMS),
+          getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
           isAvailable: () => true,
         },
       })
       const store = createIpcStoreModel(deps)
-      await store.loadInitialParams()
+      await store.loadDesktopState()
       return { deps, store }
     }
 
-    it('updates stored user config only after a successful save', async () => {
-      const { deps, store } = await loadedStore(async () => ({ success: true }))
+    it('applies the saved authoritative snapshot', async () => {
       const nextConfig = {
-        ...DEFAULT_INIT_PARAMS.userConfig,
-        xdotoolBin: '/custom/xdotool',
+        ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
+        theme: 'dark' as const,
       }
-
-      const result = await store.saveUserConfig(nextConfig)
-
-      expect(result).toEqual({ success: true })
-      expect(store.params.value.userConfig).toEqual(nextConfig)
-      expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
-        DESKTOP_COMMANDS.SAVE_USER_CONFIG,
-        { userConfig: nextConfig, baseConfig: DEFAULT_INIT_PARAMS.userConfig }
-      )
-    })
-
-    it('preserves a newer params event when an older save completes', async () => {
-      let finish!: (value: unknown) => void
-      const { store } = await loadedStore(
-        () =>
-          new Promise((resolve) => {
-            finish = resolve
-          })
-      )
-      const pending = store.saveUserConfig({
-        ...DEFAULT_INIT_PARAMS.userConfig,
-        theme: 'dark',
+      const snapshot = desktopViewToSnapshot({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
+        revision: 1,
+        userConfig: nextConfig,
       })
-      const newer = {
-        ...DEFAULT_INIT_PARAMS.userConfig,
-        theme: 'light' as const,
-      }
-      store.setParams({ userConfig: newer })
-      finish({
-        success: true,
-        result: { ...DEFAULT_INIT_PARAMS.userConfig, theme: 'dark' },
-      })
-      await pending
-      expect(store.params.value.userConfig).toEqual(newer)
-    })
-
-    it('does not replace stored user config when save fails', async () => {
       const { store } = await loadedStore(async () => ({
-        success: false,
-        error: 'save failed',
-      }))
-      const initialConfig = store.params.value.userConfig
-      const nextConfig = {
-        ...DEFAULT_INIT_PARAMS.userConfig,
-        xdotoolBin: '/custom/xdotool',
-      }
-
-      const result = await store.saveUserConfig(nextConfig)
-
-      expect(result).toEqual({ success: false, error: 'save failed' })
-      expect(store.params.value.userConfig).toEqual(initialConfig)
-    })
-
-    it('serializes local state patches and retains both updates', async () => {
-      let finish!: (value: unknown) => void
-      let calls = 0
-      const { store } = await loadedStore(() => {
-        calls += 1
-        if (calls === 1)
-          return new Promise((resolve) => {
-            finish = resolve
-          })
-        return Promise.resolve({
-          success: true,
-          result: { lastChatId: 'chat-1', lastMode: START_MODES.WRITE },
-        })
-      })
-      const first = store.patchLocalState({ lastChatId: 'chat-1' })
-      const second = store.patchLocalState({ lastMode: START_MODES.WRITE })
-      await Promise.resolve()
-      expect(calls).toBe(1)
-      finish({ success: true, result: { lastChatId: 'chat-1' } })
-      await Promise.all([first, second])
-      expect(store.params.value.localState).toEqual({
-        lastChatId: 'chat-1',
-        lastMode: START_MODES.WRITE,
-      })
-    })
-
-    it('preserves a newer local state event while a patch is pending', async () => {
-      let finish!: (value: unknown) => void
-      const { store } = await loadedStore(
-        () =>
-          new Promise((resolve) => {
-            finish = resolve
-          })
-      )
-      const pending = store.patchLocalState({ lastChatId: 'old' })
-      await Promise.resolve()
-      store.setParams({ localState: { lastChatId: 'new' } })
-      finish({ success: true, result: { lastChatId: 'old' } })
-      await pending
-      expect(store.params.value.localState.lastChatId).toBe('new')
-    })
-
-    it('continues processing patches after a failed write', async () => {
-      let calls = 0
-      const { store } = await loadedStore(async () =>
-        ++calls === 1
-          ? { success: false, error: 'failed' }
-          : { success: true, result: { lastChatId: 'saved' } }
-      )
-      expect(
-        (await store.patchLocalState({ lastChatId: 'failed' })).success
-      ).toBe(false)
-      await store.patchLocalState({ lastChatId: 'saved' })
-      expect(store.params.value.localState.lastChatId).toBe('saved')
-    })
-
-    it('takes the local state merged by the backend', async () => {
-      const merged = { lastChatId: 'chat-1', lastMode: START_MODES.WRITE }
-      const { deps, store } = await loadedStore(async () => ({
         success: true,
-        result: merged,
+        result: snapshot,
       }))
-
-      await store.patchLocalState({ lastMode: START_MODES.WRITE })
-
-      expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
-        DESKTOP_COMMANDS.PATCH_LOCAL_STATE,
-        { patch: { lastMode: START_MODES.WRITE } }
-      )
-      expect(store.params.value.localState).toEqual(merged)
+      expect((await store.saveUserConfig(nextConfig)).success).toBe(true)
+      expect(store.params.value.userConfig).toEqual(nextConfig)
     })
   })
+})
+
+it('keeps the invoking activation while waiting for held keys to release', async () => {
+  let release!: () => void
+  const deps = createDeps({
+    waitForKeysReleased: () =>
+      new Promise((resolve) => {
+        release = resolve
+      }),
+  })
+  const store = createIpcStoreModel(deps)
+  store.setParams({
+    ...DEFAULT_DESKTOP_VIEW_STATE,
+    revision: 1,
+    activationId: 10,
+  })
+  const pending = store.callFunction('pasteIntoTargetAndHide', ['Result'])
+  store.setParams({
+    ...DEFAULT_DESKTOP_VIEW_STATE,
+    revision: 2,
+    activationId: 11,
+  })
+  release()
+  await pending
+  expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+    DESKTOP_COMMANDS.PASTE_INTO_TARGET_AND_HIDE,
+    { text: 'Result', activationId: 10 }
+  )
 })

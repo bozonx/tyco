@@ -11,7 +11,7 @@ function setup(extra: Partial<SettingsSessionDeps> = {}) {
   const deps: SettingsSessionDeps = {
     initialConfig: config(),
     prepare: (value) => JSON.parse(JSON.stringify(value)),
-    save: vi.fn(async (next) => ({ success: true, result: next })),
+    save: vi.fn(async (next) => ({ success: true as const, result: next })),
     canSave: () => true,
     notifyError: vi.fn(),
     debounceMs: 100,
@@ -51,7 +51,7 @@ describe('settings session', () => {
   })
 
   it('serializes saves and retains edits made while saving over merged fields', async () => {
-    let finish!: (result: { success: boolean; result: UserConfig }) => void
+    let finish!: (result: { success: true; result: UserConfig }) => void
     const save = vi
       .fn<SettingsSessionDeps['save']>()
       .mockImplementationOnce(
@@ -60,7 +60,10 @@ describe('settings session', () => {
             finish = resolve
           })
       )
-      .mockImplementation(async (next) => ({ success: true, result: next }))
+      .mockImplementation(async (next) => ({
+        success: true as const,
+        result: next,
+      }))
     const { model } = setup({ save })
     model.draft.value.theme = 'dark'
     const first = model.persist()
@@ -91,7 +94,10 @@ describe('settings session', () => {
     const save = vi
       .fn<SettingsSessionDeps['save']>()
       .mockRejectedValueOnce(new Error('Unavailable'))
-      .mockImplementation(async (next) => ({ success: true, result: next }))
+      .mockImplementation(async (next) => ({
+        success: true as const,
+        result: next,
+      }))
     const { model, deps } = setup({ save })
     model.draft.value.theme = 'dark'
     await model.persist()
@@ -110,7 +116,10 @@ describe('settings disposal failures', () => {
       if (kind === 'result')
         save.mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       else save.mockRejectedValueOnce(new Error('Unavailable'))
-      save.mockImplementation(async (next) => ({ success: true, result: next }))
+      save.mockImplementation(async (next) => ({
+        success: true as const,
+        result: next,
+      }))
       const { model, deps } = setup({ save })
       model.draft.value.theme = 'dark'
       await model.dispose()

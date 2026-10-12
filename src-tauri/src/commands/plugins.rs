@@ -58,7 +58,7 @@ pub async fn install_plugin_package(
         let result = app
             .state::<PluginStore>()
             .install(Path::new(&path), &manifest, &digest)?;
-        app.emit("plugins-changed", ())?;
+        publish_plugins_changed(&app);
         Ok(result)
     })
     .await?
@@ -68,7 +68,7 @@ pub async fn install_plugin_package(
 pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
     blocking(move || {
         app.state::<PluginStore>().remove(&id)?;
-        app.emit("plugins-changed", ())?;
+        publish_plugins_changed(&app);
         Ok(())
     })
     .await?
@@ -78,8 +78,14 @@ pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), App
 pub async fn restore_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
     blocking(move || {
         app.state::<PluginStore>().restore(&id)?;
-        app.emit("plugins-changed", ())?;
+        publish_plugins_changed(&app);
         Ok(())
     })
     .await?
+}
+
+fn publish_plugins_changed(app: &AppHandle) {
+    if let Err(error) = app.emit("app://plugins-changed", ()) {
+        log::warn!("Could not publish plugin changes: {error}");
+    }
 }

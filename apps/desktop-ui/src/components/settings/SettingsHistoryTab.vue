@@ -124,7 +124,7 @@
     <ConfirmModal
       :open="showClearChatHistoryModal"
       :title="t('history.clearConfirmTitle')"
-      :message="t('settings.clearChatHistoryConfirmDialog')"
+      :message="t('settings.clearChatsConfirmDialog')"
       :confirm-text="t('history.clearConfirmButton')"
       danger
       @confirm="onClearChatHistory"
@@ -188,7 +188,7 @@ const showClearChatHistoryModal = ref(false)
 
 async function onClearChatHistory() {
   showClearChatHistoryModal.value = false
-  await historyStore.clearChatHistory()
+  await historyStore.clearChats()
   toast('history.cleared', 'info')
 }
 

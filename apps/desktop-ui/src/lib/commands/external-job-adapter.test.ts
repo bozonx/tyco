@@ -7,7 +7,7 @@ describe('external job adapter', () => {
   it('claims only confirmed jobs', async () => {
     const callFunction = vi
       .fn<DesktopCall>()
-      .mockResolvedValueOnce({ success: false })
+      .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       .mockResolvedValueOnce({ success: true, result: false })
       .mockResolvedValueOnce({ success: true, result: true })
     const adapter = createExternalJobAdapter({
@@ -22,7 +22,7 @@ describe('external job adapter', () => {
   it('preserves completion when no job is returned and propagates IPC failures', async () => {
     const callFunction = vi
       .fn<DesktopCall>()
-      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: true, result: null })
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
     const adapter = createExternalJobAdapter({
       callFunction: callFunction as DesktopCall,
@@ -39,6 +39,8 @@ describe('external job adapter', () => {
     'maps %s jobs and reports selection failures',
     async (state) => {
       const job = {
+        id: 'job',
+        commandId: 'command',
         state,
         output: 'Output',
         error: 'Insertion failed',

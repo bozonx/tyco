@@ -37,7 +37,7 @@ function setup(tool: ToolDefinition = echoTool()) {
     showError: vi.fn(),
     showText: vi.fn(),
     showResultMenu: vi.fn(),
-    closeWindow: vi.fn(),
+    hideWindow: vi.fn(),
   }
   return { deps, tool, copyText, runner: createInvocationRunner(deps) }
 }
@@ -46,7 +46,7 @@ describe('built-in invocations', () => {
   it('runs a tool with no command behind it', async () => {
     const { tool, runner, deps } = setup()
     const outcome = await runner.run(builtin, 'hello')
-    expect(outcome).toEqual({ success: true })
+    expect(outcome).toEqual({ success: true, result: undefined })
     expect(tool.run).toHaveBeenCalledWith(
       expect.objectContaining({ input: { text: 'hello' }, source: 'menu' })
     )
@@ -98,10 +98,10 @@ describe('built-in invocations', () => {
       'hello',
       { source: 'launcher' }
     )
-    expect(outcome).toEqual({ success: true })
+    expect(outcome).toEqual({ success: true, result: undefined })
     expect(copyText).toHaveBeenCalledWith('ECHO')
     expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('reports a clipboard that fails and keeps the window', async () => {
@@ -114,6 +114,6 @@ describe('built-in invocations', () => {
     )
     expect(outcome).toEqual({ success: false, message: 'No clipboard' })
     expect(deps.showText).toHaveBeenCalledWith('No clipboard', 'error')
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 })

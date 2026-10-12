@@ -1,7 +1,7 @@
-import { START_MODES, type InitParams } from '@tyco/shared'
+import { START_MODES, type DesktopViewState } from '@tyco/shared'
 
 export type SelectionActivation = Pick<
-  InitParams,
+  DesktopViewState,
   'activationId' | 'mode' | 'isWindowShown' | 'selectedText'
 >
 

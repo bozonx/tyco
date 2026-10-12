@@ -5,7 +5,7 @@ use tauri::{AppHandle, Manager};
 
 use super::{chat_history as chats, editor_history as editor};
 use crate::errors::AppError;
-use crate::models::{ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem};
+use crate::models::{Chat, ChatSummary, EditorHistoryEntry, EditorHistoryItem};
 use crate::state::AppState;
 
 #[derive(Default)]
@@ -36,7 +36,7 @@ impl HistoryStorage {
         let _chats = self.chats();
         editor::apply_history_settings_change(app, previous, next, &mut memory)?;
         app.state::<AppState>()
-            .update_params(|params| params.user_config = next.clone());
+            .update_state(|params| params.settings.user_config = next.clone());
         Ok(())
     }
 }
@@ -47,7 +47,7 @@ fn with_editor<T>(
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let mut memory = state.history.editor();
-    operation(&state.params().user_config, &mut memory)
+    operation(&state.snapshot().settings.user_config, &mut memory)
 }
 
 fn with_chats<T>(
@@ -103,8 +103,8 @@ pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
     with_editor(app, |_, memory| editor::clear_editor_history(app, memory))
 }
 
-pub fn get_chat_history(app: &AppHandle) -> Result<Vec<ChatHistoryItem>, AppError> {
-    with_chats(app, |_| chats::get_chat_history(app))
+pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
+    with_chats(app, |_| chats::list_chats(app))
 }
 
 /// Import leases and image loading are protected against concurrent cleanup.
@@ -112,7 +112,7 @@ pub fn get_chat(
     app: &AppHandle,
     id: String,
     owner: Option<String>,
-) -> Result<Option<ChatHistoryItem>, AppError> {
+) -> Result<Option<Chat>, AppError> {
     with_chats(app, |state| {
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
         let chat = chats::get_chat(app, id)?;
@@ -130,9 +130,9 @@ pub fn get_chat(
     })
 }
 
-pub fn save_chat_history(app: &AppHandle, item: ChatHistoryItem) -> Result<(), AppError> {
+pub fn save_chat(app: &AppHandle, item: Chat) -> Result<(), AppError> {
     with_chats(app, |state| {
-        chats::save_chat_history(app, &state.params().user_config, item)
+        chats::save_chat(app, &state.snapshot().settings.user_config, item)
     })
 }
 
@@ -140,18 +140,14 @@ pub fn rename_chat(app: &AppHandle, id: String, description: String) -> Result<(
     with_chats(app, |_| chats::rename_chat(app, id, description))
 }
 
-pub fn search_chat_history(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
+pub fn search_chats(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
     // The index is a snapshot. Atomic file replacements allow searching each
     // chat without holding up unrelated saves or editor history operations.
-    let history = get_chat_history(app)?;
+    let history = list_chats(app)?;
     chats::search_chats(app, history, query)
 }
 
-pub fn remove_from_chat_history(
-    app: &AppHandle,
-    id: String,
-    owner: String,
-) -> Result<(), AppError> {
+pub fn delete_chat(app: &AppHandle, id: String, owner: String) -> Result<(), AppError> {
     with_chats(app, |state| {
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
         match chats::get_chat(app, id.clone()) {
@@ -168,12 +164,12 @@ pub fn remove_from_chat_history(
             Ok(None) => {}
             Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
         }
-        chats::remove_from_chat_history(app, id)
+        chats::delete_chat(app, id)
     })
 }
 
-pub fn clear_chat_history(app: &AppHandle) -> Result<(), AppError> {
-    with_chats(app, |_| chats::clear_chat_history(app))
+pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
+    with_chats(app, |_| chats::clear_chats(app))
 }
 
 pub fn get_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {

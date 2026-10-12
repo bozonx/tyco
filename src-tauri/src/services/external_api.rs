@@ -39,7 +39,7 @@ fn permission(config: &Value, capability: &str) -> ApiResult<()> {
 
 fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<ExternalCommand> {
     let state = app.state::<AppState>();
-    let config = state.params().user_config;
+    let config = state.snapshot().settings.user_config;
     let catalog = state.tool_catalog();
     if by_name {
         external_commands::find_by_name(&config, catalog.as_ref(), target)
@@ -59,7 +59,7 @@ fn raw_command<'a>(config: &'a Value, id: &str) -> Option<&'a Value> {
 fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
     let command = lookup(app, target, by_name)?;
     let state = app.state::<AppState>();
-    let config = state.params().user_config;
+    let config = state.snapshot().settings.user_config;
     let raw = raw_command(&config, &command.id);
     let input_schema = raw
         .and_then(|raw| raw["toolId"].as_str())
@@ -156,7 +156,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     // Keep accepting legacy configured output requests, but external calls
     // always return output; only the caller can request a selection replacement.
     request.output = tyco_activation_protocol::OutputMode::Return;
-    let config = app.state::<AppState>().params().user_config;
+    let config = app.state::<AppState>().snapshot().settings.user_config;
     // without the permission the user is asked, see `external_access`
     let ask = request.selection && !access_allowed(&config, "selection");
     // checked again when the prompt is taken; this saves the capture
@@ -238,7 +238,7 @@ fn hand_off(
     request: &RunRequest,
     source: ActivationSource,
 ) -> ApiResult<()> {
-    let config = app.state::<AppState>().params().user_config;
+    let config = app.state::<AppState>().snapshot().settings.user_config;
     let needs_ui = command.takes_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
         let mut activation = Activation::new(StartMode::CommandLauncher, source);
@@ -429,7 +429,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
         );
         return false;
     }
-    let config = app.state::<AppState>().params().user_config;
+    let config = app.state::<AppState>().snapshot().settings.user_config;
     if request.selection && !jobs.selection_approved(id) {
         if let Err(error) = permission(&config, "selection") {
             complete(
@@ -493,7 +493,7 @@ fn open(
             "Choose text or selection",
         ));
     }
-    let config = app.state::<AppState>().params().user_config;
+    let config = app.state::<AppState>().snapshot().settings.user_config;
     if selection {
         permission(&config, "selection")?;
     }
@@ -531,7 +531,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     }
     match request {
         Request::Status => {
-            let config = app.state::<AppState>().params().user_config;
+            let config = app.state::<AppState>().snapshot().settings.user_config;
             Response::json(&json!({
                 "apiVersion": API_VERSION,
                 "version": app.package_info().version.to_string(),
@@ -544,7 +544,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         // Each command carries its own grant, so the list holds the granted ones.
         Request::ListCommands => {
             let state = app.state::<AppState>();
-            let config = state.params().user_config;
+            let config = state.snapshot().settings.user_config;
             Response::json(&external_commands::list(
                 &config,
                 state.tool_catalog().as_ref(),

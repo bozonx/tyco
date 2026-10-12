@@ -15,7 +15,7 @@ describe('createOverlayNavModel', () => {
     isQuickWindow: () => true,
     t: (key: string) => key,
     goBack: vi.fn(),
-    closeWindow: vi.fn(),
+    hideWindow: vi.fn(),
     ...overrides,
   })
 
@@ -31,7 +31,7 @@ describe('createOverlayNavModel', () => {
     expect(nav.escLabel.value).toBe('common.cancel')
 
     nav.handleEsc()
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
     expect(deps.goBack).not.toHaveBeenCalled()
   })
 
@@ -59,7 +59,7 @@ describe('createOverlayNavModel', () => {
 
     nav.handleEsc()
     expect(deps.goBack).toHaveBeenCalled()
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 
   it('resolves to back for intermediate modals even without breadcrumbs', () => {
@@ -79,7 +79,7 @@ describe('createOverlayNavModel', () => {
 
     expect(nav.resolvedEscMode.value).toBe('close')
     nav.handleEsc()
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('respects custom escLabel and onEsc options', () => {
@@ -93,7 +93,7 @@ describe('createOverlayNavModel', () => {
     expect(nav.escLabel.value).toBe('Custom Label')
     nav.handleEsc()
     expect(customOnEsc).toHaveBeenCalled()
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
     expect(deps.goBack).not.toHaveBeenCalled()
   })
 })

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   breadcrumbs: [] as string[],
   closeAll: vi.fn(),
   back: vi.fn(),
-  closeWindow: vi.fn(),
+  hideWindow: vi.fn(),
   discardWriterInput: vi.fn(),
 }))
 
@@ -31,7 +31,7 @@ vi.mock('../../stores/menu-modals', () => ({
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
     params: { mode: 'write' },
-    callFunctionOrNotify: mocks.closeWindow,
+    callFunctionOrNotify: mocks.hideWindow,
   }),
 }))
 
@@ -88,10 +88,10 @@ describe('ActionOverlayLayout', () => {
 
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(onEsc).toHaveBeenCalled()
-    expect(mocks.closeWindow).not.toHaveBeenCalled()
+    expect(mocks.hideWindow).not.toHaveBeenCalled()
   })
 
-  it('triggers closeWindow when clicked in quick window without breadcrumbs', async () => {
+  it('triggers hideWindow when clicked in quick window without breadcrumbs', async () => {
     const wrapper = mount(ActionOverlayLayout, {
       props: { title: 'Test Title' },
     })
@@ -99,10 +99,10 @@ describe('ActionOverlayLayout', () => {
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
   })
 
-  it('triggers closeWindow when only current modal is in breadcrumbs', async () => {
+  it('triggers hideWindow when only current modal is in breadcrumbs', async () => {
     mocks.breadcrumbs = ['insert']
     const wrapper = mount(ActionOverlayLayout, {
       props: { title: 'Test Title' },
@@ -112,6 +112,6 @@ describe('ActionOverlayLayout', () => {
       'common.cancel'
     )
     await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
   })
 })

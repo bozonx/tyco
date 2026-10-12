@@ -4,7 +4,7 @@ import { createChatHistoryEntry } from './chat-helpers'
 import type { ChatStoreDeps } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
-  deps: Pick<ChatStoreDeps, 'saveChatHistory' | 'nowIso'>,
+  deps: Pick<ChatStoreDeps, 'saveChat' | 'nowIso'>,
   state: Pick<ChatState, 'newChatParams'>
 ) {
   const { newChatParams } = state
@@ -19,7 +19,7 @@ export function createChatPersistenceQueue(
     if (!id || chatMessages.length === 0) return Promise.resolve(false)
     const entry = createChatHistoryEntry({
       id,
-      description: currentTitle(),
+      title: currentTitle(),
       lastMsgDate: deps.nowIso(),
       messages: [...chatMessages],
     })
@@ -27,7 +27,7 @@ export function createChatPersistenceQueue(
     savingImages.value.push(...held)
     const write = lastWrite.then(async () => {
       try {
-        await deps.saveChatHistory(entry)
+        await deps.saveChat(entry)
         return true
       } catch {
         return false

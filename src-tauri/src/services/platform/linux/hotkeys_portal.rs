@@ -84,7 +84,7 @@ pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
             log::warn!("Could not close the hotkey portal session: {error}");
         }
     }
-    let bindings = bindings_from_config(&app.state::<AppState>().params().user_config);
+    let bindings = bindings_from_config(&app.state::<AppState>().snapshot().settings.user_config);
     let result = bind_session(app, &portal, &bindings).await;
     if result.is_err() {
         app.state::<SystemTriggers>()

@@ -73,7 +73,7 @@ function setup(
     showError: vi.fn(),
     showText: vi.fn(),
     showResultMenu: vi.fn(),
-    closeWindow: vi.fn(),
+    hideWindow: vi.fn(),
     ...rest,
   }
   const runner = createCommandRunner(deps)
@@ -110,7 +110,7 @@ describe('script commands', () => {
       'input'
     )
 
-    expect(outcome).toEqual({ success: true })
+    expect(outcome).toEqual({ success: true, result: undefined })
 
     expect(executeScriptAction).toHaveBeenCalledWith({
       name: 'Echo',
@@ -125,7 +125,7 @@ describe('script commands', () => {
       'toast.scriptSuccess',
       'success'
     )
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('gives no text to a command that takes none', async () => {
@@ -145,7 +145,7 @@ describe('script commands', () => {
       'toast.scriptRunning',
       'success'
     )
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('shows why the command failed and keeps the window', async () => {
@@ -159,7 +159,7 @@ describe('script commands', () => {
       'toast.scriptFailed',
       'bad thing'
     )
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 
   it('shows an error the backend returned', async () => {
@@ -185,7 +185,7 @@ describe('script commands', () => {
     )
     expect(executeScriptAction.mock.calls[0][0].captureOutput).toBe(true)
     expect(deps.showResultMenu).toHaveBeenCalledWith('UPPER', 'upper')
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 
   it('warns when there is no output to show', async () => {
@@ -239,7 +239,7 @@ describe('webhook commands', () => {
       'toast.webhookSuccess',
       'success'
     )
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('sends no text for a webhook that takes none', async () => {
@@ -271,7 +271,7 @@ describe('webhook commands', () => {
       'toast.webhookFailed',
       'HTTP 404'
     )
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 })
 
@@ -380,7 +380,7 @@ describe('plugin tools', () => {
     const tool = noteTool()
     const { deps, runner } = setup({}, [tool])
     const outcome = await runner.run(note(), 'buy milk', { source: 'launcher' })
-    expect(outcome).toEqual({ success: true })
+    expect(outcome).toEqual({ success: true, result: undefined })
     expect(tool.run).toHaveBeenCalledWith({
       input: { text: 'buy milk' },
       config: { dir: '~/work' },
@@ -390,14 +390,14 @@ describe('plugin tools', () => {
       wantsOutput: false,
     })
     expect(deps.showToast).toHaveBeenCalledWith('toast.noteSaved', 'success')
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('keeps the window when the tool asks for it', async () => {
     const tool = noteTool({ run: async () => ({ ok: true, keepWindow: true }) })
     const { deps, runner } = setup({}, [tool])
     await runner.run(note(), 'x')
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
     expect(deps.showToast).not.toHaveBeenCalled()
   })
 
@@ -483,10 +483,10 @@ describe('the output of a command', () => {
       const { deps, runner } = setup({ copyText }, [tool])
       expect(
         await runner.run(command(setting), 'source', { source: 'menu' })
-      ).toEqual({ success: true })
+      ).toEqual({ success: true, result: undefined })
       expect(deps.showResultMenu).toHaveBeenCalledWith('result', 'source')
       expect(copyText).not.toHaveBeenCalled()
-      expect(deps.closeWindow).not.toHaveBeenCalled()
+      expect(deps.hideWindow).not.toHaveBeenCalled()
       expect(tool.run).toHaveBeenCalledWith(
         expect.objectContaining({ wantsOutput: true })
       )
@@ -509,7 +509,7 @@ describe('the output of a command', () => {
         expect.objectContaining({ wantsOutput: true })
       )
       expect(deps.showResultMenu).not.toHaveBeenCalled()
-      expect(deps.closeWindow).not.toHaveBeenCalled()
+      expect(deps.hideWindow).not.toHaveBeenCalled()
       expect(copyText).not.toHaveBeenCalled()
       expect(deps.showToast).not.toHaveBeenCalled()
     }
@@ -544,10 +544,13 @@ describe('the output of a command', () => {
   it('copies the output and closes the window', async () => {
     const copyText = vi.fn(async () => {})
     const { deps, runner } = setup({ copyText }, [echo('result\n')])
-    expect(await runner.run(command('copy'), 'x')).toEqual({ success: true })
+    expect(await runner.run(command('copy'), 'x')).toEqual({
+      success: true,
+      result: undefined,
+    })
     expect(copyText).toHaveBeenCalledWith('result')
     expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
-    expect(deps.closeWindow).toHaveBeenCalled()
+    expect(deps.hideWindow).toHaveBeenCalled()
   })
 
   it('warns when there is no output to copy', async () => {
@@ -585,7 +588,7 @@ describe('the output of a command', () => {
     ).toMatchObject({ ok: false, messageKey: 'toast.commandDisabled' })
     expect(deps.showToast).not.toHaveBeenCalled()
     expect(deps.showResultMenu).not.toHaveBeenCalled()
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
 })
 
@@ -601,7 +604,7 @@ describe('external returned output', () => {
       expect.objectContaining({ captureOutput: true })
     )
     expect(outcome).toEqual({ success: true, output: 'raw\n\n' })
-    expect(deps.closeWindow).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
   })
   it('validates explicit JSON and bypasses text parsing', async () => {
     const run = vi.fn(async () => ({ ok: true, content: 'done' }))

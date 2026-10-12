@@ -1,4 +1,9 @@
-import { DEFAULT_INIT_PARAMS, START_MODES, type InitParams } from '@tyco/shared'
+import {
+  DEFAULT_DESKTOP_VIEW_STATE,
+  desktopViewToSnapshot,
+  START_MODES,
+  type DesktopViewState,
+} from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { GlobalEvents } from './global-events'
@@ -12,8 +17,8 @@ function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
   >()
 
   const deps: AppBootstrapDeps = {
-    loadInitialParams: vi.fn(async () => ({
-      ...DEFAULT_INIT_PARAMS,
+    loadDesktopState: vi.fn(async () => ({
+      ...DEFAULT_DESKTOP_VIEW_STATE,
       mode: START_MODES.EDITOR,
     })),
     setParams: vi.fn(),
@@ -45,8 +50,8 @@ describe('app-bootstrap', () => {
   it('applies params and navigates using mode', async () => {
     const { deps } = createDeps()
     const bootstrap = createAppBootstrap(deps)
-    const params: InitParams = {
-      ...DEFAULT_INIT_PARAMS,
+    const params: DesktopViewState = {
+      ...DEFAULT_DESKTOP_VIEW_STATE,
       mode: START_MODES.AI_TASKS,
     }
 
@@ -59,8 +64,8 @@ describe('app-bootstrap', () => {
 
   it('starts runtime listeners and emits init event', async () => {
     const { deps, listeners } = createDeps({
-      loadInitialParams: vi.fn(async () => ({
-        ...DEFAULT_INIT_PARAMS,
+      loadDesktopState: vi.fn(async () => ({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
         mode: START_MODES.WRITE,
       })),
     })
@@ -70,16 +75,16 @@ describe('app-bootstrap', () => {
 
     expect(deps.initPlugins).toHaveBeenCalledOnce()
     expect(deps.addWindowKeyupListener).toHaveBeenCalledOnce()
-    expect(deps.listen).toHaveBeenCalledTimes(2)
+    expect(deps.listen).toHaveBeenCalledTimes(1)
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.WRITE.path)
     expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
-    expect(listeners.size).toBe(2)
+    expect(listeners.size).toBe(1)
   })
 
   it('does not navigate again when params change without mode change', async () => {
     const { deps, listeners } = createDeps({
-      loadInitialParams: vi.fn(async () => ({
-        ...DEFAULT_INIT_PARAMS,
+      loadDesktopState: vi.fn(async () => ({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
         mode: START_MODES.EDITOR,
       })),
     })
@@ -88,25 +93,28 @@ describe('app-bootstrap', () => {
     await bootstrap.start()
     expect(deps.navigateTo).toHaveBeenCalledTimes(1)
 
-    const paramsChangedHandler = listeners.get('app://params-changed')
+    const paramsChangedHandler = listeners.get('app://state-changed')
     expect(paramsChangedHandler).toBeTypeOf('function')
 
-    await paramsChangedHandler?.({
-      ...DEFAULT_INIT_PARAMS,
-      mode: START_MODES.EDITOR,
-      userConfig: {
-        ...DEFAULT_INIT_PARAMS.userConfig,
-        xdotoolBin: '/custom/xdotool',
-      },
-    })
+    await paramsChangedHandler?.(
+      desktopViewToSnapshot({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
+        mode: START_MODES.EDITOR,
+        revision: 1,
+        userConfig: {
+          ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
+          xdotoolBin: '/custom/xdotool',
+        },
+      })
+    )
 
     expect(deps.navigateTo).toHaveBeenCalledTimes(1)
   })
 
   it('navigates when params change with a new mode', async () => {
     const { deps, listeners } = createDeps({
-      loadInitialParams: vi.fn(async () => ({
-        ...DEFAULT_INIT_PARAMS,
+      loadDesktopState: vi.fn(async () => ({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
         mode: START_MODES.EDITOR,
       })),
     })
@@ -114,13 +122,16 @@ describe('app-bootstrap', () => {
 
     await bootstrap.start()
 
-    const paramsChangedHandler = listeners.get('app://params-changed')
+    const paramsChangedHandler = listeners.get('app://state-changed')
     expect(paramsChangedHandler).toBeTypeOf('function')
 
-    await paramsChangedHandler?.({
-      ...DEFAULT_INIT_PARAMS,
-      mode: START_MODES.WRITE,
-    })
+    await paramsChangedHandler?.(
+      desktopViewToSnapshot({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
+        mode: START_MODES.WRITE,
+        revision: 1,
+      })
+    )
 
     expect(deps.navigateTo).toHaveBeenNthCalledWith(2, APP_ROUTES.WRITE.path)
   })
@@ -132,26 +143,33 @@ describe('app-bootstrap', () => {
     const bootstrap = createAppBootstrap(deps)
 
     await bootstrap.start()
-    const paramsChangedHandler = listeners.get('app://params-changed')
-    const voice = { ...DEFAULT_INIT_PARAMS, mode: START_MODES.VOICE }
-    await paramsChangedHandler?.(voice)
+    const paramsChangedHandler = listeners.get('app://state-changed')
+    const voice = {
+      ...DEFAULT_DESKTOP_VIEW_STATE,
+      revision: 1,
+      mode: START_MODES.VOICE,
+    }
+    await paramsChangedHandler?.(desktopViewToSnapshot(voice))
 
     expect(deps.setParams).toHaveBeenLastCalledWith(voice)
     expect(deps.navigateTo).toHaveBeenCalledTimes(1)
     expect(deps.closeAllModals).toHaveBeenCalledTimes(1)
 
     // back to the screen it already shows: nothing to redo
-    await paramsChangedHandler?.({
-      ...DEFAULT_INIT_PARAMS,
-      mode: START_MODES.EDITOR,
-    })
+    await paramsChangedHandler?.(
+      desktopViewToSnapshot({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
+        mode: START_MODES.EDITOR,
+        revision: 2,
+      })
+    )
     expect(deps.navigateTo).toHaveBeenCalledTimes(1)
   })
 
   it('starts on the home screen with a mode of the other window', async () => {
     const { deps } = createDeps({
-      loadInitialParams: vi.fn(async () => ({
-        ...DEFAULT_INIT_PARAMS,
+      loadDesktopState: vi.fn(async () => ({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
         mode: START_MODES.VOICE,
       })),
       ownsMode: (mode) => mode !== START_MODES.VOICE,
@@ -162,26 +180,6 @@ describe('app-bootstrap', () => {
     expect(deps.navigateTo).toHaveBeenCalledExactlyOnceWith(
       APP_ROUTES.HOME.path
     )
-  })
-
-  it('merges captured context without navigation or modal side effects', async () => {
-    const { deps, listeners } = createDeps()
-    const bootstrap = createAppBootstrap(deps)
-
-    await bootstrap.start()
-    vi.mocked(deps.setParams).mockClear()
-    vi.mocked(deps.closeAllModals).mockClear()
-    vi.mocked(deps.navigateTo).mockClear()
-
-    await listeners.get('app://context-captured')?.({
-      selectedText: 'captured text',
-    })
-
-    expect(deps.setParams).toHaveBeenCalledWith({
-      selectedText: 'captured text',
-    })
-    expect(deps.closeAllModals).not.toHaveBeenCalled()
-    expect(deps.navigateTo).not.toHaveBeenCalled()
   })
 
   it('forwards keyup events to global events and nav handler', () => {
@@ -203,23 +201,23 @@ describe('bootstrap lifetime', () => {
     const { deps } = createDeps({
       addWindowKeyupListener: () => removeKey,
       listen: async () => removeEvent,
-      loadInitialParams: vi
+      loadDesktopState: vi
         .fn()
         .mockRejectedValueOnce(new Error('Failed'))
-        .mockResolvedValue(DEFAULT_INIT_PARAMS),
+        .mockResolvedValue(DEFAULT_DESKTOP_VIEW_STATE),
     })
     const bootstrap = createAppBootstrap(deps)
     await expect(bootstrap.start()).rejects.toThrow('Failed')
     expect(removeKey).toHaveBeenCalledOnce()
-    expect(removeEvent).toHaveBeenCalledTimes(2)
+    expect(removeEvent).toHaveBeenCalledTimes(1)
     await bootstrap.start()
     expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
   })
 
   it('does not initialize after a pending load finishes following stop', async () => {
-    let resolve!: (params: InitParams) => void
+    let resolve!: (params: DesktopViewState) => void
     const { deps } = createDeps({
-      loadInitialParams: () =>
+      loadDesktopState: () =>
         new Promise((done) => {
           resolve = done
         }),
@@ -228,9 +226,65 @@ describe('bootstrap lifetime', () => {
     const pending = bootstrap.start()
     await vi.waitFor(() => expect(resolve).toBeTypeOf('function'))
     bootstrap.stop()
-    resolve(DEFAULT_INIT_PARAMS)
+    resolve(DEFAULT_DESKTOP_VIEW_STATE)
     await pending
     expect(deps.initPlugins).not.toHaveBeenCalled()
     expect(deps.setParams).not.toHaveBeenCalled()
   })
+})
+
+describe('bootstrap snapshot ordering', () => {
+  it('does not navigate to an older initial mode after a newer activation', async () => {
+    let finish!: (params: DesktopViewState) => void
+    const { deps, listeners } = createDeps({
+      loadDesktopState: () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    })
+    const bootstrap = createAppBootstrap(deps)
+    const pending = bootstrap.start()
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+    await listeners.get('app://state-changed')?.(
+      desktopViewToSnapshot({
+        ...DEFAULT_DESKTOP_VIEW_STATE,
+        revision: 2,
+        mode: START_MODES.VOICE,
+      })
+    )
+    finish({
+      ...DEFAULT_DESKTOP_VIEW_STATE,
+      revision: 1,
+      mode: START_MODES.EDITOR,
+    })
+    await pending
+    expect(deps.navigateTo).toHaveBeenCalledExactlyOnceWith(
+      APP_ROUTES.VOICE.path
+    )
+    expect(deps.setParams).toHaveBeenCalledTimes(1)
+  })
+})
+
+it('resynchronizes snapshots on focus and disposes the focus listener', async () => {
+  let focus!: () => void
+  const remove = vi.fn()
+  const { deps } = createDeps({
+    addWindowFocusListener: (handler) => {
+      focus = handler
+      return remove
+    },
+  })
+  const bootstrap = createAppBootstrap(deps)
+  await bootstrap.start()
+  vi.mocked(deps.loadDesktopState).mockResolvedValueOnce({
+    ...DEFAULT_DESKTOP_VIEW_STATE,
+    revision: 3,
+    mode: START_MODES.WRITE,
+  })
+  focus()
+  await vi.waitFor(() =>
+    expect(deps.navigateTo).toHaveBeenLastCalledWith(APP_ROUTES.WRITE.path)
+  )
+  bootstrap.stop()
+  expect(remove).toHaveBeenCalledOnce()
 })

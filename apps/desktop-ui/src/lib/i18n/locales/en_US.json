@@ -509,7 +509,7 @@
     "chatRules": "Chat",
     "checkConnection": "Check connection",
     "checkingConnection": "Checking…",
-    "clearChatHistoryConfirmDialog": "Are you sure you want to delete all saved chats? This cannot be undone.",
+    "clearChatsConfirmDialog": "Are you sure you want to delete all saved chats? This cannot be undone.",
     "clearEditorHistoryConfirmDialog": "Are you sure you want to delete all editor history? This cannot be undone.",
     "clearEditorHistoryConfirmTitle": "Clear editor history?",
     "commandsTab": "Commands",

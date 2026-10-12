@@ -19,7 +19,7 @@ export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
   showText?: (text: string, type?: ToastKind) => void
   /** Opens the action menu on `text`, the result of a run on `sourceText` */
   showResultMenu?: (text: string, sourceText: string) => void
-  closeWindow?: () => void
+  hideWindow?: () => void
 }
 
 /** The clipboard sink puts the output there with the tool the copy action runs */
@@ -90,14 +90,14 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     if (!result.ok) {
       return failed(result.failure ?? result.message ?? 'Copy failed')
     }
-    if (!keepWindow) deps.closeWindow?.()
+    if (!keepWindow) deps.hideWindow?.()
     return succeeded
   }
 
   /** Reports a run that ended without output to hand on */
   const finish = (result: ToolResult): InvocationOutcome => {
     report(result)
-    if (!result.keepWindow) deps.closeWindow?.()
+    if (!result.keepWindow) deps.hideWindow?.()
     return succeeded
   }
 

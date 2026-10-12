@@ -608,7 +608,7 @@ mod tests {
 
     #[tokio::test]
     async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
-        let state = AppState::new(crate::models::default_init_params(
+        let state = AppState::new(crate::models::default_desktop_state(
             serde_json::Value::Null,
             Default::default(),
         ));

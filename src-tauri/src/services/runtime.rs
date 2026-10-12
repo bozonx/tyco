@@ -22,26 +22,17 @@ use gtk::prelude::WidgetExt;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
-pub const PARAMS_CHANGED_EVENT: &str = "app://params-changed";
-pub const CONTEXT_CAPTURED_EVENT: &str = "app://context-captured";
+pub const STATE_CHANGED_EVENT: &str = "app://state-changed";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
 /// The user closed the main window, as opposed to hiding it with a hotkey or
 /// the tray: what was open in it is done with.
 pub const MAIN_WINDOW_CLOSED_EVENT: &str = "app://main-window-closed";
 
-pub fn emit_params(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
-    let params = state.params();
-    app.emit(PARAMS_CHANGED_EVENT, params)?;
+pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
+    let snapshot = state.snapshot();
+    app.emit(STATE_CHANGED_EVENT, snapshot)?;
 
-    Ok(())
-}
-
-fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Result<(), AppError> {
-    app.emit(
-        CONTEXT_CAPTURED_EVENT,
-        serde_json::json!({ "selectedText": selected_text }),
-    )?;
     Ok(())
 }
 
@@ -123,7 +114,7 @@ impl ActivationHost for RuntimeActivationHost<'_> {
     }
 
     fn user_config(&self) -> serde_json::Value {
-        self.0.state::<AppState>().params().user_config
+        self.0.state::<AppState>().snapshot().settings.user_config
     }
 
     fn activate(&self, activation: Activation) -> Result<(), AppError> {
@@ -144,9 +135,10 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             if let Err(error) = on_main_thread(&handle, move |app| {
                 app.state::<ActivationCoordinator>().publish(&request, || {
                     let state = app.state::<AppState>();
-                    state.update_params(|params| params.selected_text.clone_from(&selected_text));
-                    emit_captured_context(app, selected_text)?;
-                    emit_params(app, &state)
+                    state.update_state(|params| {
+                        params.activation.selected_text.clone_from(&selected_text)
+                    });
+                    emit_state(app, &state)
                 })
             }) {
                 log::warn!("Could not publish captured foreground context: {error}");
@@ -189,15 +181,15 @@ fn has_focused_window(app: &AppHandle) -> bool {
 /// The target window was closed: nothing can be inserted into it any more.
 pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppError> {
     let state = app.state::<AppState>();
-    if state.params().window_id.as_deref() != Some(window_id) {
+    if state.snapshot().activation.window_id.as_deref() != Some(window_id) {
         return Ok(());
     }
-    state.update_params(|params| {
-        if params.window_id.as_deref() == Some(window_id) {
-            params.window_id = None;
+    state.update_state(|params| {
+        if params.activation.window_id.as_deref() == Some(window_id) {
+            params.activation.window_id = None;
         }
     });
-    emit_params(app, &state)
+    emit_state(app, &state)
 }
 
 /// While the main window is shown, text goes to the application window the
@@ -211,16 +203,16 @@ pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
     let active_label = app.state::<RuntimeWindows>().active_label();
     let state = app.state::<AppState>();
     let mut changed = false;
-    state.update_params(|params| {
-        if is_main_window_shown(active_label, params.is_window_shown)
-            && params.window_id.as_ref() != Some(&target)
+    state.update_state(|params| {
+        if is_main_window_shown(active_label, params.window.is_window_shown)
+            && params.activation.window_id.as_ref() != Some(&target)
         {
-            params.window_id = Some(target);
+            params.activation.window_id = Some(target);
             changed = true;
         }
     });
     if changed {
-        emit_params(app, &state)?;
+        emit_state(app, &state)?;
     }
     Ok(())
 }
@@ -271,23 +263,23 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_params(|params| {
-        params.activation_id = params.activation_id.wrapping_add(1);
-        params.mode = Some(activation.mode.as_str().into());
-        params.window_id = activation.window_id;
-        params.selected_text = activation.selected_text;
-        params.launcher_page = activation.launcher_page;
-        params.launcher_request = activation.launcher_request;
-        params.access_request = activation.access_request;
-        params.is_window_shown = true;
-        params.window_profile = activation.mode.profile();
+    state.update_state(|params| {
+        params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
+        params.activation.mode = Some(activation.mode);
+        params.activation.window_id = activation.window_id;
+        params.activation.selected_text = activation.selected_text;
+        params.activation.launcher_page = activation.launcher_page;
+        params.activation.launcher_request = activation.launcher_request;
+        params.activation.access_request = activation.access_request;
+        params.window.is_window_shown = true;
+        params.window.window_profile = activation.mode.profile();
     });
     log::debug!(
         "Activated {:?} from {:?}",
         activation.mode,
         activation.source
     );
-    emit_params(app, &state)
+    emit_state(app, &state)
 }
 
 fn window_label_for_mode(mode: StartMode) -> &'static str {
@@ -333,7 +325,7 @@ pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
     let window_id = super::platform::capture_source();
     on_main_thread(app, move |app| {
         app.state::<AppState>()
-            .update_params(|params| params.window_id = window_id);
+            .update_state(|params| params.activation.window_id = window_id);
         show_application_on_main_thread(app)
     })
 }
@@ -394,7 +386,7 @@ pub fn set_quick_input_region(
     region: Option<InputRegion>,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        let is_shown = app.state::<AppState>().params().is_window_shown;
+        let is_shown = app.state::<AppState>().snapshot().window.is_window_shown;
         let active_label = app.state::<RuntimeWindows>().active_label();
         // a late request must not narrow the window of the next session
         if region.is_some() && !is_quick_window_shown(active_label, is_shown) {
@@ -436,20 +428,20 @@ fn show_application_mode_on_main_thread(app: &AppHandle, mode: StartMode) -> Res
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_params(|params| {
-        params.activation_id = params.activation_id.wrapping_add(1);
-        params.selected_text = None;
-        params.mode = Some(mode.as_str().into());
-        params.is_window_shown = true;
-        params.window_profile = WindowProfile::Sheet;
+    state.update_state(|params| {
+        params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
+        params.activation.selected_text = None;
+        params.activation.mode = Some(mode);
+        params.window.is_window_shown = true;
+        params.window.window_profile = WindowProfile::Sheet;
     });
     log::debug!("Showed main application with mode {}", mode.as_str());
-    emit_params(app, &state)
+    emit_state(app, &state)
 }
 
 pub fn dismiss_quick_window(app: &AppHandle) -> Result<(), AppError> {
     on_main_thread(app, |app| {
-        let is_shown = app.state::<AppState>().params().is_window_shown;
+        let is_shown = app.state::<AppState>().snapshot().window.is_window_shown;
         let active_label = app.state::<RuntimeWindows>().active_label();
         if !is_quick_window_shown(active_label, is_shown) {
             return Ok(());
@@ -475,12 +467,12 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         super::platform::disable_panel_keyboard(&window)?;
     }
 
-    state.update_params(|params| {
-        params.is_window_shown = false;
+    state.update_state(|params| {
+        params.window.is_window_shown = false;
     });
 
     window.hide()?;
-    emit_params(app, &state)
+    emit_state(app, &state)
 }
 
 pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEvent) {
@@ -613,5 +605,52 @@ mod tests {
         assert!(is_quick_window_shown(QUICK_WINDOW_LABEL, true));
         assert!(!is_quick_window_shown(QUICK_WINDOW_LABEL, false));
         assert!(!is_quick_window_shown(MAIN_WINDOW_LABEL, true));
+    }
+}
+
+/// A committed state change stays successful even if its notification fails.
+pub fn publish_state(app: &AppHandle, state: &AppState) {
+    if let Err(error) = emit_state(app, state) {
+        log::warn!("Could not publish desktop state: {error}");
+    }
+}
+
+/// Hides only the requesting window, never a window activated while waiting.
+pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let state = app.state::<AppState>();
+        let params = state.snapshot();
+        if !matches_window_activation(
+            app.state::<RuntimeWindows>().active_label(),
+            params.activation.activation_id,
+            &label,
+            activation_id,
+        ) {
+            return Err(AppError::InvalidInput(
+                "The window activation is no longer current".into(),
+            ));
+        }
+        hide_on_main_thread(app)
+    })
+}
+
+fn matches_window_activation(
+    active_label: &str,
+    current_id: u64,
+    label: &str,
+    activation_id: u64,
+) -> bool {
+    active_label == label && current_id == activation_id
+}
+
+#[cfg(test)]
+mod window_command_tests {
+    use super::matches_window_activation;
+
+    #[test]
+    fn delayed_operations_cannot_hide_a_different_window_or_activation() {
+        assert!(matches_window_activation("quick", 4, "quick", 4));
+        assert!(!matches_window_activation("main", 4, "quick", 4));
+        assert!(!matches_window_activation("quick", 5, "quick", 4));
     }
 }

@@ -38,8 +38,9 @@
     "build:plugins": "turbo run build --filter=\"./packages/plugin-*\"",
     "test:plugin-runtime": "node scripts/check-plugin-runtime.mjs",
     "test:desktop": "node scripts/check-desktop-runtime.mjs",
-    "check:architecture": "node scripts/check-desktop-contracts.mjs",
-    "test:tooling": "node --test scripts/*.test.js"
+    "check:architecture": "node scripts/generate-desktop-commands.mjs --check && node scripts/check-desktop-contracts.mjs",
+    "test:tooling": "node --test scripts/*.test.js",
+    "generate:desktop": "node scripts/generate-desktop-commands.mjs"
   },
   "author": "Ivan K",
   "license": "MIT",

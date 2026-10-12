@@ -506,7 +506,7 @@
     "chatRules": "Чат",
     "checkConnection": "Проверить подключение",
     "checkingConnection": "Проверяем…",
-    "clearChatHistoryConfirmDialog": "Вы уверены, что хотите удалить все сохранённые чаты? Это действие нельзя отменить.",
+    "clearChatsConfirmDialog": "Вы уверены, что хотите удалить все сохранённые чаты? Это действие нельзя отменить.",
     "clearEditorHistoryConfirmDialog": "Вы уверены, что хотите удалить всю историю редактора? Это действие нельзя отменить.",
     "clearEditorHistoryConfirmTitle": "Очистить историю редактора?",
     "commandsTab": "Команды",

@@ -51,7 +51,7 @@ pub(super) fn spawn_quick_warmup(app: AppHandle) {
 fn quick_window_in_use(app: &AppHandle) -> bool {
     is_quick_window_shown(
         app.state::<RuntimeWindows>().active_label(),
-        app.state::<AppState>().params().is_window_shown,
+        app.state::<AppState>().snapshot().window.is_window_shown,
     )
 }
 
@@ -93,7 +93,7 @@ fn warmup_hide(app: &AppHandle) -> Result<(), AppError> {
     }
     window.hide()?;
     // the main window shown at startup gets back the focus the warmup took
-    if app.state::<AppState>().params().is_window_shown {
+    if app.state::<AppState>().snapshot().window.is_window_shown {
         if let Some(main) = app.get_webview_window(MAIN_WINDOW_LABEL) {
             if let Err(error) = main.set_focus() {
                 log::warn!("Could not return focus after warmup: {error}");

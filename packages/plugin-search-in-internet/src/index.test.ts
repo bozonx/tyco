@@ -35,10 +35,9 @@ describe('SearchInInternet plugin', () => {
 
     await toolbarItems[0].action()
 
-    expect(mocks.callApiFunction).toHaveBeenCalledWith(
-      'openInBrowserAndClose',
-      ['https://example.com/?s=a%26b']
-    )
+    expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
+      'https://example.com/?s=a%26b',
+    ])
   })
 
   it('falls back to the whole text and the default URL', async () => {
@@ -46,10 +45,9 @@ describe('SearchInInternet plugin', () => {
 
     await toolbarItems[0].action()
 
-    expect(mocks.callApiFunction).toHaveBeenCalledWith(
-      'openInBrowserAndClose',
-      [`${DEFAULT_SEARCH_URL}hello`]
-    )
+    expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
+      `${DEFAULT_SEARCH_URL}hello`,
+    ])
   })
 
   it('warns when the URL was cleared in the settings', async () => {
@@ -98,7 +96,7 @@ it('searches the text of a command with the URL of the command', async () => {
     wantsOutput: false,
   })
   expect(result).toEqual({ ok: true, keepWindow: true })
-  expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndClose', [
+  expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
     'https://example.com/?q=menu%20text',
   ])
   expect(mocks.toast).not.toHaveBeenCalled()

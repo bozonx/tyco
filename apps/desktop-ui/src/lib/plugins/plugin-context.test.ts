@@ -32,7 +32,7 @@ function setup(
     toastText: vi.fn(),
     t: vi.fn((key) => key),
     log: vi.fn(),
-    callApiFunction: vi.fn(async () => ({ success: true })),
+    callApiFunction: vi.fn(async () => ({ success: true, result: undefined })),
   }
   const context = createPluginContext(
     'Example',
@@ -168,4 +168,23 @@ describe('plugin context boundary', () => {
     )
     expect(deps.toastText).toHaveBeenCalledWith('Provider detail', 'error')
   })
+})
+
+it('translates the previous SDK browser name without extending capabilities', async () => {
+  const { context, deps } = setup(['browser'])
+  await context.callApiFunction(
+    'openInBrowserAndClose' as 'openInBrowserAndHide',
+    ['https://example.com']
+  )
+  expect(deps.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
+    'https://example.com',
+  ])
+  const denied = setup()
+  await expect(
+    denied.context.callApiFunction(
+      'openInBrowserAndClose' as 'openInBrowserAndHide',
+      ['https://example.com']
+    )
+  ).rejects.toThrow()
+  expect(denied.deps.callApiFunction).not.toHaveBeenCalled()
 })

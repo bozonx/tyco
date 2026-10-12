@@ -26,7 +26,7 @@ async function closeEditor() {
   if (editorInputStore.value.trim()) {
     await editorInputStore.snapshotDraft()
   }
-  await ipcStore.callFunctionOrNotify('closeWindow')
+  await ipcStore.callFunctionOrNotify('hideWindow')
 }
 
 function openInsertMenu() {

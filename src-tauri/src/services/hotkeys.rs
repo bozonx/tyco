@@ -78,7 +78,7 @@ impl PortalProvider {
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
-    let user_config = app.state::<AppState>().params().user_config;
+    let user_config = app.state::<AppState>().snapshot().settings.user_config;
     let bindings = bindings_from_config(&user_config);
 
     let kind = provider_kind(session::current());

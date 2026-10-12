@@ -5,7 +5,7 @@ import { i18n, setI18nLocale } from '../../lib/i18n/index'
 import ChatMarkdown from './ChatMarkdown.vue'
 
 const mocks = vi.hoisted(() => ({
-  openLink: vi.fn(async () => ({ success: true })),
+  openLink: vi.fn(async () => ({ success: true, result: undefined })),
   diagram: vi.fn(async () => new Blob(['<svg/>'], { type: 'image/svg+xml' })),
 }))
 vi.mock('../../stores/ipc', () => ({

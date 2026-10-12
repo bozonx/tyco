@@ -61,7 +61,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
       void ipcStore.callFunction('notifyDesktop', [summary, body])
     },
     saveResult: action.saveResult,
-    applyUserConfig: (userConfig) => ipcStore.setParams({ userConfig }),
+    applyUserConfig: (userConfig) => ipcStore.setExecutionConfig(userConfig),
     t: (key) => translate(key),
     describeError: (error) => describeError(error, translate),
     isAborted: action.isAborted,

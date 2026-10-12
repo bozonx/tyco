@@ -506,7 +506,7 @@
     "chatRules": "Sohbet",
     "checkConnection": "Bağlantıyı denetle",
     "checkingConnection": "Denetleniyor…",
-    "clearChatHistoryConfirmDialog": "Kaydedilen tüm sohbetleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "clearChatsConfirmDialog": "Kaydedilen tüm sohbetleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "clearEditorHistoryConfirmDialog": "Kaydedilen tüm editör geçmişini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "clearEditorHistoryConfirmTitle": "Editör geçmişi temizlensin mi?",
     "commandsTab": "Komutlar",

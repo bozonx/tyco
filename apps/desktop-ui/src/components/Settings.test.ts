@@ -68,7 +68,7 @@ vi.mock('../stores/llm', () => ({
 }))
 
 vi.mock('../stores/history', () => ({
-  useHistoryStore: () => ({ clearChatHistory: vi.fn() }),
+  useHistoryStore: () => ({ clearChats: vi.fn() }),
 }))
 
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))

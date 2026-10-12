@@ -1,4 +1,4 @@
-import type { ChatAttachment, ChatHistoryItem, ChatMessage } from '@tyco/shared'
+import type { ChatAttachment, Chat, ChatMessage } from '@tyco/shared'
 
 import { imageBudgetCharacters } from './chat-image-input'
 
@@ -82,13 +82,13 @@ export function trimChatContext(
 
 export function createChatHistoryEntry(params: {
   id: string
-  description: string
+  title: string
   lastMsgDate: string
   messages: ChatMessage[]
-}): ChatHistoryItem {
+}): Chat {
   return {
     id: params.id,
-    description: params.description,
+    title: params.title,
     lastMsgDate: params.lastMsgDate,
     messages: params.messages,
   }

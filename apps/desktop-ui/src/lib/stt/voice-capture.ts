@@ -1,5 +1,5 @@
 import type { AudioChunk } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS } from '@tyco/shared'
+import { DESKTOP_COMMANDS, type VoiceCaptureEvent } from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
@@ -17,8 +17,6 @@ export interface VoiceCaptureControl {
   stop: () => Promise<void>
 }
 
-type CaptureEvent = { type: 'end' } | { type: 'error'; message: string }
-
 /** The microphone in Rust, streamed as it records; see `services/voice.rs`. */
 export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   // the microphone is shared by the windows: a stop names the capture it ends,
@@ -33,16 +31,13 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           queue.push({ data: new Uint8Array(message) })
           return
         }
-        const event = message as CaptureEvent
+        const event = message as VoiceCaptureEvent
         if (event.type === 'end') queue.end()
         else if (event.type === 'error') queue.fail(new Error(event.message))
       }
 
       try {
-        const started = await ipc.invoke<{
-          sampleRate: number
-          sessionId: number
-        }>(DESKTOP_COMMANDS.START_VOICE_CAPTURE, {
+        const started = await ipc.invoke(DESKTOP_COMMANDS.START_VOICE_CAPTURE, {
           onAudio: ipc.createChannel(onMessage),
         })
         sessionId = started.sessionId

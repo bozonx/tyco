@@ -1,3 +1,4 @@
+import type { DesktopInvoke } from '@tyco/shared'
 import type { NetIpc } from './net-ipc'
 
 export interface FakeInvokeCall {
@@ -20,19 +21,19 @@ export function createFakeNetIpc(handlers: Record<string, Handler> = {}) {
   let lastEmit: Emit = () => undefined
 
   const ipc: NetIpc = {
-    async invoke<T>(
+    invoke: (async (
       command: string,
       args?: Record<string, unknown> | Uint8Array,
       options?: { headers?: Record<string, string> }
-    ) {
+    ) => {
       const call = { command, args, headers: options?.headers }
       calls.push(call)
       const channel =
         args && !(args instanceof Uint8Array) ? args.onEvent : undefined
       const emit = channels.get(channel) ?? (() => undefined)
       const handler = handlers[command]
-      return (await handler?.(call, emit)) as T
-    },
+      return await handler?.(call, emit)
+    }) as DesktopInvoke,
     createChannel(onMessage) {
       const channel = { id: channels.size + 1 }
       channels.set(channel, onMessage)

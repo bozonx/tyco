@@ -1,27 +1,27 @@
 import { createCommandMap, type CommandEntry } from './command-map'
 import {
-  DEFAULT_INIT_PARAMS,
-  DESKTOP_COMMANDS,
-  type InitParams,
+  type DesktopViewState,
+  type DesktopCommandName,
+  type DesktopInvokeArgs,
+  type DesktopCommandResult,
   type IpcResult,
-  type UserConfig,
-  type LocalState,
 } from '@tyco/shared'
-import { ref } from 'vue'
+import { createDesktopStateModel } from './desktop-state'
 
 import type {
   DesktopCallArgs,
   DesktopFunctionArgs,
   DesktopFunctionName,
   DesktopFunctionResult,
+  NativeCommand,
 } from './desktop-functions'
 
 export interface DesktopInvoker {
-  invoke: <T>(
-    command: string,
-    args?: Record<string, unknown>
-  ) => Promise<IpcResult<T>>
-  getInitParams: () => InitParams
+  invoke: <K extends DesktopCommandName>(
+    command: K,
+    ...args: DesktopInvokeArgs<K>
+  ) => Promise<IpcResult<DesktopCommandResult<K>>>
+  getDesktopViewState: () => DesktopViewState
   /** Whether the Tauri runtime is there, i.e. not a plain browser */
   isAvailable: () => boolean
 }
@@ -37,12 +37,7 @@ export interface IpcStoreDeps {
 }
 
 export function createIpcStoreModel(deps: IpcStoreDeps) {
-  const params = ref<InitParams>(structuredClone(DEFAULT_INIT_PARAMS))
-  // writes are refused until the real params arrive: saving the defaults
-  // would overwrite what the user has
-  let paramsLoaded = !deps.desktopClient.isAvailable()
   const commandMap = createCommandMap()
-  let localStateWrites: Promise<unknown> = Promise.resolve()
 
   /**
    * Calls a desktop function. It never throws: a failure comes back as
@@ -55,7 +50,10 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     try {
       // the name may come from untyped code, e.g. a plugin
       const mappedCommand = Object.hasOwn(commandMap, functionName)
-        ? (commandMap[functionName] as CommandEntry<DesktopFunctionArgs<K>>)
+        ? (commandMap[functionName] as CommandEntry<
+            DesktopFunctionArgs<K>,
+            NativeCommand<K>
+          >)
         : undefined
 
       if (!mappedCommand) {
@@ -65,13 +63,18 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
         }
       }
 
+      const activationId = state.params.value.activationId
       if (mappedCommand.waitForKeysReleased) {
         await deps.waitForKeysReleased?.()
       }
 
-      return await deps.desktopClient.invoke<DesktopFunctionResult<K>>(
+      return await deps.desktopClient.invoke(
         mappedCommand.command,
-        mappedCommand.buildArgs?.((args ?? []) as DesktopFunctionArgs<K>)
+        ...([
+          mappedCommand.buildArgs?.((args ?? []) as DesktopFunctionArgs<K>, {
+            activationId,
+          }),
+        ] as DesktopInvokeArgs<NativeCommand<K>>)
       )
     } catch (error) {
       deps.logError('Error calling function:', error)
@@ -81,7 +84,7 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
   }
 
   const reportFailure = (functionName: string, result: IpcResult) => {
-    const message = result.error || functionName
+    const message = result.success ? functionName : result.error
     deps.notifyError(message, deps.errorTitle?.() ?? 'Desktop action failed')
     deps.logError(`Desktop function "${functionName}" failed:`, message)
   }
@@ -99,87 +102,12 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
     return result
   }
 
-  const loadInitialParams = async (): Promise<InitParams> => {
-    if (!deps.desktopClient.isAvailable()) {
-      const fallback = deps.desktopClient.getInitParams()
-      params.value = fallback
-      return fallback
-    }
-
-    const result = await deps.desktopClient.invoke<InitParams>(
-      DESKTOP_COMMANDS.GET_INIT_PARAMS
-    )
-
-    if (!result.success || !result.result) {
-      const error = new Error(
-        `Could not load the app params: ${result.error ?? 'empty response'}`
-      )
-      reportFailure('getInitParams', { success: false, error: error.message })
-      throw error
-    }
-
-    params.value = result.result
-    paramsLoaded = true
-    return result.result
-  }
-
-  const setParams = (incomingData: Partial<InitParams>) => {
-    params.value = { ...params.value, ...incomingData }
-  }
-
-  const notLoaded = (): IpcResult<never> => ({
-    success: false,
-    error: 'The app params are not loaded yet',
+  const state = createDesktopStateModel({
+    desktopClient: deps.desktopClient,
+    callFunction,
+    reportFailure: (name, message) =>
+      reportFailure(name, { success: false, error: message }),
   })
 
-  const saveUserConfig = async (
-    userConfig: UserConfig,
-    baseConfig: UserConfig = params.value.userConfig
-  ) => {
-    if (!paramsLoaded) return notLoaded()
-
-    const previousConfig = params.value.userConfig
-    const result = await callFunction('saveUserConfig', [
-      userConfig,
-      baseConfig,
-    ])
-
-    // A newer params event may have arrived while this save was in flight.
-    if (result.success && params.value.userConfig === previousConfig) {
-      params.value.userConfig = result.result ?? userConfig
-    }
-
-    return result
-  }
-
-  /** Serializes patches so an older full response cannot undo a newer one. */
-  const patchLocalState = (patch: Partial<LocalState>) => {
-    if (!paramsLoaded) return Promise.resolve(notLoaded())
-    const queuedPatch = { ...patch }
-    const write = localStateWrites.then(async () => {
-      const previousState = params.value.localState
-      const result = await callFunction('patchLocalState', [queuedPatch])
-
-      // A cross-window state event may already carry a newer snapshot.
-      if (result.success && params.value.localState === previousState) {
-        params.value.localState = result.result ?? {
-          ...params.value.localState,
-          ...queuedPatch,
-        }
-      }
-      return result
-    })
-    localStateWrites = write.catch(() => undefined)
-    return write
-  }
-
-  return {
-    params,
-    callFunction,
-    callFunctionOrNotify,
-    loadInitialParams,
-    setParams,
-    saveUserConfig,
-    patchLocalState,
-  }
+  return { ...state, callFunction, callFunctionOrNotify }
 }

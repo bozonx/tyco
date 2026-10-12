@@ -36,7 +36,7 @@ pub fn merge_local_state(
 ) -> Result<LocalState, AppError> {
     for key in patch.keys() {
         if !VALID_LOCAL_STATE_KEYS.contains(&key.as_str()) {
-            return Err(AppError::Message(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Unknown field in local state patch: {key}"
             )));
         }
@@ -116,7 +116,7 @@ mod tests {
     fn merge_local_state_replaces_only_the_patched_fields() {
         let current = LocalState {
             last_chat_id: Some(String::from("chat")),
-            last_mode: Some(String::from("editor")),
+            last_mode: Some(crate::services::activation::StartMode::Editor),
             ..LocalState::default()
         };
         let patch = json!({ "lastMode": "write" });
@@ -124,7 +124,10 @@ mod tests {
         let merged = merge_local_state(&current, patch.as_object().unwrap().clone()).unwrap();
 
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
-        assert_eq!(merged.last_mode.as_deref(), Some("write"));
+        assert_eq!(
+            merged.last_mode,
+            Some(crate::services::activation::StartMode::Write)
+        );
 
         let cleared = merge_local_state(
             &merged,

@@ -17,12 +17,12 @@ function createApi() {
         if (functionName === 'getEditorHistory') {
           return { result: [editorItem('1', 'one'), editorItem('2', 'two')] }
         }
-        if (functionName === 'getChatHistory') {
+        if (functionName === 'listChats') {
           return {
             result: [
               {
                 id: 'chat-1',
-                description: 'Hello',
+                title: 'Hello',
                 lastMsgDate: '2026-04-22T00:00:00.000Z',
                 messages: [],
               },
@@ -33,7 +33,7 @@ function createApi() {
           return {
             result: {
               id: 'chat-1',
-              description: 'Hello',
+              title: 'Hello',
               lastMsgDate: '2026-04-22T00:00:00.000Z',
               messages: [{ role: 'user', content: 'Hello' }],
             },
@@ -71,10 +71,10 @@ describe('history-store', () => {
       'Renamed',
     ])
     expect(api.callFunction).not.toHaveBeenCalledWith(
-      'saveChatHistory',
+      'saveChat',
       expect.anything()
     )
-    expect(store.chatHistory.value[0]?.description).toBe('Renamed')
+    expect(store.chatHistory.value[0]?.title).toBe('Renamed')
   })
 
   it('loads chat history into state', async () => {
@@ -185,12 +185,12 @@ describe('history-store', () => {
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
     store.chatHistory.value = [
-      { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
-      { id: 'chat-2', description: 'B', lastMsgDate: 'y', messages: [] },
+      { id: 'chat-1', title: 'A', lastMsgDate: 'x' },
+      { id: 'chat-2', title: 'B', lastMsgDate: 'y' },
     ]
 
     const removed = await store.removeFromEditorHistory('1')
-    await store.removeFromChatHistory('chat-1')
+    await store.deleteChat('chat-1')
 
     expect(removed).toEqual(editorItem('1', 'one'))
     expect(api.callFunction).toHaveBeenCalledWith('removeFromEditorHistory', [
@@ -218,14 +218,14 @@ describe('history-store', () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.chatHistory.value = [
-      { id: 'chat-1', description: 'Hello', lastMsgDate: 'x', messages: [] },
+      { id: 'chat-1', title: 'Hello', lastMsgDate: 'x' },
     ]
 
-    const removed = await store.removeFromChatHistory('chat-1')
+    const removed = await store.deleteChat('chat-1')
     expect(removed?.messages).toEqual([{ role: 'user', content: 'Hello' }])
 
     await store.restoreChatItem(removed!)
-    expect(api.callFunction).toHaveBeenCalledWith('saveChatHistory', [removed])
+    expect(api.callFunction).toHaveBeenCalledWith('saveChat', [removed])
     expect(store.chatHistory.value).toHaveLength(1)
   })
 
@@ -233,12 +233,10 @@ describe('history-store', () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
-    store.chatHistory.value = [
-      { id: 'chat-1', description: 'A', lastMsgDate: 'x', messages: [] },
-    ]
+    store.chatHistory.value = [{ id: 'chat-1', title: 'A', lastMsgDate: 'x' }]
 
     await store.clearEditorHistory()
-    await store.clearChatHistory()
+    await store.clearChats()
 
     expect(store.editorHistory.value).toEqual([])
     expect(store.chatHistory.value).toEqual([])
@@ -279,17 +277,17 @@ describe('history-store', () => {
   it('keeps a stored chat stored when only the list fails to reload', async () => {
     const api = {
       callFunction: vi.fn(async (functionName: string) =>
-        functionName === 'getChatHistory'
+        functionName === 'listChats'
           ? { success: false, error: 'broken' }
-          : { success: true }
+          : { success: true, result: undefined }
       ),
     }
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await expect(
-      store.saveChatHistory({
+      store.saveChat({
         id: 'chat-1',
-        description: 'Hello',
+        title: 'Hello',
         lastMsgDate: '',
         messages: [],
       })
@@ -300,7 +298,7 @@ describe('history-store', () => {
     let finishLoad!: (value: unknown) => void
     const api = {
       callFunction: vi.fn(async (functionName: string) => {
-        if (functionName === 'getChatHistory')
+        if (functionName === 'listChats')
           return new Promise((resolve) => {
             finishLoad = resolve
           })
@@ -311,12 +309,8 @@ describe('history-store', () => {
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     const load = store.loadChatHistory()
-    await store.removeFromChatHistory('chat-1')
-    finishLoad({
-      result: [
-        { id: 'chat-1', description: '', lastMsgDate: '', messages: [] },
-      ],
-    })
+    await store.deleteChat('chat-1')
+    finishLoad({ result: [{ id: 'chat-1', title: '', lastMsgDate: '' }] })
     await load
 
     expect(store.chatHistory.value).toEqual([])

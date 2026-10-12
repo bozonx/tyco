@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { parseOpenMainChatEvent, type EditorTransfer } from '@tyco/shared'
+import {
+  parseOpenMainChatEvent,
+  type EditorTransfer,
+  type DesktopInvoke,
+  type Chat,
+  type ChatSummary,
+} from '@tyco/shared'
 import fixtures from '../../../../../packages/shared/fixtures/desktop-events.json'
 
 const editor = fixtures.editorTransfer satisfies EditorTransfer
@@ -20,4 +26,28 @@ describe('desktop wire contracts', () => {
     ])
       expect(() => parseOpenMainChatEvent(payload)).toThrow()
   })
+})
+
+it('keeps generated command arguments and results tied to their names', () => {
+  const checkTypes = (invoke: DesktopInvoke) => {
+    invoke('get_chat', { id: 'chat-1' })
+    // @ts-expect-error A chat id is mandatory.
+    invoke('get_chat', {})
+    // @ts-expect-error The wire argument is title, never description.
+    invoke('rename_chat', { id: 'chat-1', description: 'Title' })
+    // @ts-expect-error Window actions require an activation guard.
+    invoke('paste_into_target_and_hide', { text: 'Result' })
+    // @ts-expect-error Removed command names are not part of the API.
+    invoke('close_window')
+    // @ts-expect-error A list summary cannot be used as a complete chat.
+    const chat: Promise<Chat[]> = invoke('list_chats')
+    return chat
+  }
+  expect(typeof checkTypes).toBe('function')
+})
+
+it('keeps the shared chat summary fixture free of full messages', () => {
+  const summary = fixtures.chatSummary satisfies ChatSummary
+  expect(summary.title).toBe('Chat title')
+  expect(summary).not.toHaveProperty('messages')
 })

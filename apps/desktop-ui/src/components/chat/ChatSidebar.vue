@@ -77,12 +77,12 @@
                 :class="{
                   'is-active': chatStore.newChatParams?.id === item.id,
                 }"
-                :title="item.description"
+                :title="item.title"
                 @click="openChat(item.id)"
               >
                 <Icon icon="mdi:message-outline" height="15" class="shrink-0" />
                 <span class="truncate">{{
-                  item.description || t('common.empty')
+                  item.title || t('common.empty')
                 }}</span>
               </button>
               <DropdownMenu
@@ -142,7 +142,7 @@ import IconButton from '../common/IconButton.vue'
 import SearchInput from '../common/SearchInput.vue'
 import UiState from '../common/UiState.vue'
 import { Icon } from '@iconify/vue'
-import type { ChatHistoryItem } from '@tyco/shared'
+import type { Chat, ChatSummary } from '@tyco/shared'
 
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
@@ -172,7 +172,7 @@ const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
 const chatToDelete = ref<string | null>(null)
-const removal = createRemovalUndo<ChatHistoryItem>({
+const removal = createRemovalUndo<Chat>({
   remove: async (id) => {
     const wasOpen = chatStore.newChatParams.id === id
     if (wasOpen) {
@@ -180,7 +180,7 @@ const removal = createRemovalUndo<ChatHistoryItem>({
       await chatStore.whenSaved()
     }
     try {
-      return await historyStore.removeFromChatHistory(id)
+      return await historyStore.deleteChat(id)
     } catch (error) {
       if (wasOpen) await chatStore.openChat(id, { silent: true })
       throw error
@@ -223,7 +223,7 @@ const groups = computed(() =>
   )
 )
 
-function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
+function getRowMenuItems(item: ChatSummary): DropdownMenuItem[] {
   return [
     {
       label: t('chat.renameChat'),
@@ -246,12 +246,12 @@ function getRowMenuItems(item: ChatHistoryItem): DropdownMenuItem[] {
 }
 
 async function copyChatMarkdown(id: string) {
-  let targetChat: ChatHistoryItem | null
+  let targetChat: Chat | null
   // the open chat is newer in memory than in storage
   if (chatStore.newChatParams?.id === id) {
     targetChat = {
       id,
-      description: chatStore.newChatParams.title || '',
+      title: chatStore.newChatParams.title || '',
       lastMsgDate: '',
       messages: chatStore.messages,
     }
@@ -265,7 +265,7 @@ async function copyChatMarkdown(id: string) {
   }
   if (!targetChat) return
   const md = formatChatToMarkdown(targetChat.messages, {
-    title: targetChat.description,
+    title: targetChat.title,
   })
   try {
     await navigator.clipboard.writeText(md)
@@ -286,9 +286,9 @@ async function openChat(id: string) {
   emit('navigate')
 }
 
-async function beginRename(item: ChatHistoryItem) {
+async function beginRename(item: ChatSummary) {
   renamingId.value = item.id
-  renameValue.value = item.description
+  renameValue.value = item.title
   await nextTick()
   renameInputs.value.at(-1)?.select()
 }
@@ -297,14 +297,14 @@ function cancelRename() {
   renamingId.value = null
 }
 
-async function finishRename(item: ChatHistoryItem) {
+async function finishRename(item: ChatSummary) {
   if (renamingId.value !== item.id) return
-  const description = renameValue.value.trim()
+  const title = renameValue.value.trim()
   renamingId.value = null
-  if (!description || description === item.description) return
+  if (!title || title === item.title) return
   try {
-    await historyStore.renameChat(item.id, description)
-    chatStore.setTitle(item.id, description)
+    await historyStore.renameChat(item.id, title)
+    chatStore.setTitle(item.id, title)
   } catch {
     toast('history.operationFailed', 'error')
   }

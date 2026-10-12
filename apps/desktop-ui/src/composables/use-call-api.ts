@@ -8,10 +8,10 @@ export const useCallApi = () => {
   const editorInputStore = useEditorInputStore()
   const { toastText } = useToast()
 
-  async function typeIntoWindowAndClose(text: string) {
+  async function pasteIntoTargetAndHide(text: string) {
     if (!text?.trim()) return
 
-    const result = await ipcStore.callFunction('typeIntoWindowAndClose', [text])
+    const result = await ipcStore.callFunction('pasteIntoTargetAndHide', [text])
     if (result.success) return
 
     const summary = translate('toast.insertFailed')
@@ -28,5 +28,5 @@ export const useCallApi = () => {
     return editorInputStore.actionText()
   }
 
-  return { resolveText, typeIntoWindowAndClose }
+  return { resolveText, pasteIntoTargetAndHide }
 }

@@ -27,7 +27,7 @@ assert.deepEqual(
   registered,
   'Every registered command must be covered by AppManifest'
 )
-const shared = await read('packages/shared/src/desktop.ts')
+const shared = await read('packages/shared/src/desktop-commands.ts')
 const frontend = Array.from(
   shared
     .split('export const DESKTOP_COMMANDS =')[1]
@@ -35,8 +35,11 @@ const frontend = Array.from(
     .matchAll(/'([a-z_]+)'/g),
   (match) => match[1]
 )
-for (const command of frontend)
-  assert.ok(registered.includes(command), `Missing Rust command: ${command}`)
+assert.deepEqual(
+  frontend.sort(),
+  registered,
+  'Generated bindings must cover every registered Rust command'
+)
 const granted = new Set()
 for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
   if (!file.endsWith('.json')) continue

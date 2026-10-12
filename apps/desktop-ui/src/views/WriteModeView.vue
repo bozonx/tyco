@@ -159,7 +159,7 @@ function cancelAndClose() {
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   resetNav()
-  void ipcStore.callFunctionOrNotify('closeWindow')
+  void ipcStore.callFunctionOrNotify('hideWindow')
 }
 
 /** Whether the input takes commands: not while a modal is over it. */

@@ -62,7 +62,7 @@ export interface PluginConfig {
   presets?: Record<string, Record<string, object>>
 }
 export interface PluginDesktopFunctions {
-  openInBrowserAndClose: { args: [url: string]; result: void }
+  openInBrowserAndHide: { args: [url: string]; result: void }
   saveNote: {
     args: [dir: string, fileName: string, text: string]
     result: string

@@ -9,9 +9,9 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const mockTypeIntoWindowAndClose = vi.fn()
+const mockPasteIntoTargetAndHide = vi.fn()
 vi.mock('../../composables/use-call-api', () => ({
-  useCallApi: () => ({ typeIntoWindowAndClose: mockTypeIntoWindowAndClose }),
+  useCallApi: () => ({ pasteIntoTargetAndHide: mockPasteIntoTargetAndHide }),
 }))
 
 describe('Editor.vue toolbar', () => {

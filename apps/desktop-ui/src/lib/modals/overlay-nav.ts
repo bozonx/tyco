@@ -8,7 +8,7 @@ export interface OverlayNavDependencies {
   isQuickWindow: () => boolean
   t: (key: string) => string
   goBack: () => void
-  closeWindow: () => void
+  hideWindow: () => void
 }
 
 export interface OverlayNavOptions {
@@ -72,7 +72,7 @@ export function createOverlayNavModel(
     if (resolvedEscMode.value === 'back') {
       deps.goBack()
     } else {
-      deps.closeWindow()
+      deps.hideWindow()
     }
   }
 

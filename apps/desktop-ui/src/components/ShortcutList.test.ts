@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   closeAll: vi.fn(),
   cancelPending: vi.fn(),
   currentModalParams: {} as Record<string, unknown>,
-  closeWindow: vi.fn(),
+  hideWindow: vi.fn(),
   goToEditor: vi.fn(),
   discardWriterInput: vi.fn(),
   currentWindowLabel: 'main',
@@ -59,8 +59,8 @@ vi.mock('../stores/menu-modals', () => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    callFunction: mocks.closeWindow,
-    callFunctionOrNotify: mocks.closeWindow,
+    callFunction: mocks.hideWindow,
+    callFunctionOrNotify: mocks.hideWindow,
     get params() {
       return { mode: mocks.mode, userConfig: {} }
     },
@@ -185,7 +185,7 @@ describe('ShortcutList', () => {
 
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardWriterInput).toHaveBeenCalled()
-    expect(mocks.closeWindow).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
     wrapper.unmount()
   })
 

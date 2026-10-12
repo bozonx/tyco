@@ -74,7 +74,7 @@ describe('AiTaskMenu', () => {
     const ipcStore = useIpcStore()
     const patchLocalState = vi
       .spyOn(ipcStore, 'patchLocalState')
-      .mockResolvedValue({ success: true, result: undefined })
+      .mockResolvedValue({ success: true, result: ipcStore.params.localState })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
@@ -117,7 +117,7 @@ describe('AiTaskMenu', () => {
     ]
     const saveUserConfig = vi
       .spyOn(ipcStore, 'saveUserConfig')
-      .mockResolvedValue({ success: true, result: undefined })
+      .mockResolvedValue({ success: true, result: ipcStore.params.userConfig })
     let shortcutListProps: Record<string, any> = {}
 
     const wrapper = mount(AiTaskMenu, {

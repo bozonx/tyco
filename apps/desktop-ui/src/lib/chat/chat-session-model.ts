@@ -1,7 +1,7 @@
 import type {
   ChatParams,
   ChatAttachment,
-  ChatHistoryItem,
+  Chat,
   ChatMessage,
 } from '@tyco/shared'
 import { APP_ROUTES } from '../navigation/routes'
@@ -13,7 +13,7 @@ export function createChatSessionModel(
     | 'createId'
     | 'saveLocalState'
     | 'navigateTo'
-    | 'loadChatHistoryItem'
+    | 'loadChat'
     | 'notifyError'
     | 'chatLoadError'
     | 'chatNotFoundError'
@@ -120,9 +120,9 @@ export function createChatSessionModel(
 
   const openChat = async (id: string, options: { silent?: boolean } = {}) => {
     const request = ++openRequest
-    let chat: ChatHistoryItem | null
+    let chat: Chat | null
     try {
-      chat = await deps.loadChatHistoryItem(id)
+      chat = await deps.loadChat(id)
     } catch (loadError) {
       if (request === openRequest && !options.silent)
         deps.notifyError(
@@ -140,7 +140,7 @@ export function createChatSessionModel(
     }
 
     stopGeneration()
-    reset({ id: chat.id, title: chat.description, attachments: [] })
+    reset({ id: chat.id, title: chat.title, attachments: [] })
     messages.value = [...chat.messages]
     await deps.saveLocalState({ lastChatId: chat.id })
     await deps.navigateTo(APP_ROUTES.CHAT.path)

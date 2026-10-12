@@ -22,8 +22,9 @@ use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::models::{
-    default_user_config, ChatHistoryItem, EditorHistoryEntry, EditorHistoryItem, EditorHistoryKind,
-    LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME, STATE_FILE_NAME,
+    default_user_config, Chat, ChatSummary, EditorHistoryEntry, EditorHistoryItem,
+    EditorHistoryKind, LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
+    STATE_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
 use crate::services::{app_paths::AppPaths, config_migration, llm_config};

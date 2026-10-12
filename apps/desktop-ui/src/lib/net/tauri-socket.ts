@@ -105,7 +105,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     }
 
     const opening = ipc
-      .invoke<number>(DESKTOP_COMMANDS.NET_SOCKET_OPEN, {
+      .invoke(DESKTOP_COMMANDS.NET_SOCKET_OPEN, {
         request: {
           url,
           headers: Object.entries(options.headers ?? {}),
@@ -194,7 +194,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
       enqueue(
         () =>
           ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_CLOSE, {
-            id,
+            id: id!,
             payload: payload ?? null,
           }),
         payload === undefined ? 0 : encoder.encode(payload).byteLength,
@@ -210,7 +210,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
           enqueue(
             () =>
               ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT, {
-                id,
+                id: id!,
                 text: data,
               }),
             encoder.encode(data).byteLength

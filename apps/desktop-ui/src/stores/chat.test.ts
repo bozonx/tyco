@@ -13,7 +13,7 @@ import { useIpcStore } from './ipc'
 const ai = vi.hoisted(() => ({
   sendChatMessage: vi.fn(async () => 'answer'),
   generateChatTitle: vi.fn(async () => ''),
-  saveLocalState: vi.fn(async () => ({ success: true })),
+  saveLocalState: vi.fn(async () => ({ success: true, result: undefined })),
 }))
 
 vi.mock('../composables/use-call-ai', () => ({ useCallAi: () => ai }))
@@ -28,9 +28,10 @@ beforeEach(() => {
   setActivePinia(pinia)
   vi.clearAllMocks()
   vi.spyOn(appNavigation, 'push').mockResolvedValue()
-  vi.spyOn(useHistoryStore(), 'saveChatHistory').mockResolvedValue()
+  vi.spyOn(useHistoryStore(), 'saveChat').mockResolvedValue()
   const ipc = useIpcStore()
   ipc.setParams({
+    ...ipc.params,
     userConfig: {
       ...ipc.params.userConfig,
       llm: structuredClone(DEFAULT_LLM_CONFIG),
@@ -59,7 +60,7 @@ describe('chat store dependency wiring', () => {
     })
     expect(store.messages[1]?.content).toBe('answer')
     expect(ai.sendChatMessage).toHaveBeenCalledOnce()
-    expect(useHistoryStore().saveChatHistory).toHaveBeenCalled()
+    expect(useHistoryStore().saveChat).toHaveBeenCalled()
   })
 
   it('forwards window visibility changes to the controller without leaking into another Pinia', async () => {
@@ -68,7 +69,7 @@ describe('chat store dependency wiring', () => {
     editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
     expect(store.voiceChatContext?.source).toBe('editor-selection')
-    useIpcStore().setParams({ isWindowShown: false })
+    useIpcStore().setParams({ ...useIpcStore().params, isWindowShown: false })
     await nextTick()
     expect(store.voiceChatContext).toBeNull()
     const otherPinia = createPinia()

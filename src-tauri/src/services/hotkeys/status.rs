@@ -51,7 +51,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     if kind == ProviderKind::Portal {
         refresh_system_triggers(app).await;
     }
-    let config = app.state::<AppState>().params().user_config;
+    let config = app.state::<AppState>().snapshot().settings.user_config;
     // only an external binding needs something per action: its command
     let actions = match kind {
         ProviderKind::External => bindings_from_config(&config)

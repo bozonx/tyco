@@ -37,7 +37,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
           )
         },
         // no window is shown, so there is nothing to close or show a menu in
-        closeWindow: undefined,
+        hideWindow: undefined,
         showResultMenu: undefined,
       }).run(command, text, { ...options, source: 'external' }),
     showOverlay: (request) => {
@@ -46,7 +46,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     notify: (summary, body) => {
       void ipcStore.callFunction('notifyDesktop', [summary, body])
     },
-    applyUserConfig: (userConfig) => ipcStore.setParams({ userConfig }),
+    applyUserConfig: (userConfig) => ipcStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
       await ipcStore.callFunction('logCommandRun', [record])
     },

@@ -135,3 +135,8 @@ export interface HotkeyProviderInfo {
   defaults: Record<string, string>
   platform: HotkeyPlatform
 }
+
+export interface HotkeyApplyRequest {
+  mode: string
+  shortcut: string
+}

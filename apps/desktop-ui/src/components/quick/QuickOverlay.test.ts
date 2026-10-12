@@ -13,9 +13,9 @@ import QuickOverlay from './QuickOverlay.vue'
 
 const mocks = vi.hoisted(() => ({
   params: { mode: 'write', isWindowShown: true, activationId: 1 },
-  callFunction: vi.fn(async () => ({ success: true })),
+  callFunction: vi.fn(async () => ({ success: true, result: undefined })),
   focus: vi.fn(),
-  closeWindow: vi.fn(),
+  hideWindow: vi.fn(),
   markDismissed: vi.fn(),
   modals: { currentModal: 'none', pendingModal: null as string | null },
   windowFocused: true,
@@ -97,7 +97,7 @@ vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
     setup() {
       const onKey = (event: KeyboardEvent) => {
-        if (event.code === 'Escape') mocks.closeWindow()
+        if (event.code === 'Escape') mocks.hideWindow()
       }
       onMounted(() => window.addEventListener('keyup', onKey))
       onUnmounted(() => window.removeEventListener('keyup', onKey))
@@ -131,18 +131,18 @@ describe('quick overlay keyboard ownership', () => {
     const wrapper = mount(QuickOverlay)
     try {
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
-      expect(mocks.closeWindow).not.toHaveBeenCalled()
+      expect(mocks.hideWindow).not.toHaveBeenCalled()
 
       params.mode = 'voice'
       await nextTick()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
-      expect(mocks.closeWindow).toHaveBeenCalledOnce()
+      expect(mocks.hideWindow).toHaveBeenCalledOnce()
 
       params.mode = 'write'
       await nextTick()
-      mocks.closeWindow.mockClear()
+      mocks.hideWindow.mockClear()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
-      expect(mocks.closeWindow).not.toHaveBeenCalled()
+      expect(mocks.hideWindow).not.toHaveBeenCalled()
       expect(wrapper.find('textarea').exists()).toBe(true)
     } finally {
       wrapper.unmount()

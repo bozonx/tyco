@@ -51,7 +51,7 @@ function setup(
     tools,
     commands: () => commands,
     selectedText: vi.fn<() => string | null>(() => null),
-    run: vi.fn(async () => ({ success: true })),
+    run: vi.fn(async () => ({ success: true, result: undefined })),
     saveOutput: vi.fn(async () => {}),
     logRun: vi.fn(),
     ...extra,
@@ -71,7 +71,7 @@ describe('isLauncherCommand', () => {
 
 describe('slotCommands and pickSlot', () => {
   it('maps slots by launcherCommands and runs picked slot', async () => {
-    const run = vi.fn(async () => ({ success: true }))
+    const run = vi.fn(async () => ({ success: true, result: undefined }))
     const deps = {
       tools,
       commands: () => [backup, note],
@@ -529,7 +529,10 @@ describe('external job requests', () => {
       'explicit text',
       expect.objectContaining({ source: 'external', output: 'return' })
     )
-    expect(finishJob).toHaveBeenCalledWith('job-input', { success: true })
+    expect(finishJob).toHaveBeenCalledWith('job-input', {
+      success: true,
+      result: undefined,
+    })
   })
 
   it('does not claim a job until the text is given and cancels an abandoned prompt', async () => {

@@ -67,7 +67,7 @@ describe('CorrectionModeView', () => {
     expect(options?.onCancel).toBeTypeOf('function')
 
     options.onCancel()
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
   })
 
   it('closes window when cancel button in InProgressMessage is clicked', async () => {
@@ -84,11 +84,11 @@ describe('CorrectionModeView', () => {
     expect(cancelBtn.exists()).toBe(true)
 
     await cancelBtn.trigger('click')
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('closeWindow')
+    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
 
     if (capturedOnCancel) {
       capturedOnCancel()
-      expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('closeWindow')
+      expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
     }
   })
 })

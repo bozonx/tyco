@@ -4,7 +4,8 @@ use crate::errors::AppError;
 use crate::services::external_access::AccessRequest;
 use crate::services::external_commands::LauncherRequest;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum StartMode {
     Editor,
     Write,

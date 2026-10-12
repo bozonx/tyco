@@ -30,7 +30,7 @@ pub async fn net_fetch(
     ensure_allowed_origin(
         Protocol::Http,
         &request.url,
-        &app_state.params().user_config,
+        &app_state.snapshot().settings.user_config,
         &secret_snapshot,
     )?;
     let prepared = prepare(
@@ -39,9 +39,9 @@ pub async fn net_fetch(
         &request.headers,
         &secret_snapshot,
     )
-    .map_err(AppError::Message)?;
-    let method = http::parse_method(&request.method).map_err(AppError::Message)?;
-    let body = http::decode_body(request.body.as_deref()).map_err(AppError::Message)?;
+    .map_err(AppError::InvalidInput)?;
+    let method = http::parse_method(&request.method).map_err(AppError::InvalidInput)?;
+    let body = http::decode_body(request.body.as_deref()).map_err(AppError::InvalidInput)?;
 
     let (task, registration) = net.register_task();
     let id = task.id();
@@ -74,7 +74,7 @@ pub async fn net_socket_open(
     ensure_allowed_origin(
         Protocol::WebSocket,
         &request.url,
-        &app_state.params().user_config,
+        &app_state.snapshot().settings.user_config,
         &secret_snapshot,
     )?;
     let prepared = prepare(
@@ -83,7 +83,7 @@ pub async fn net_socket_open(
         &request.headers,
         &secret_snapshot,
     )
-    .map_err(AppError::Message)?;
+    .map_err(AppError::InvalidInput)?;
     let (task, registration) = net.register_task();
     let id = task.id();
 
@@ -115,8 +115,8 @@ fn ensure_allowed_origin(
     user_config: &serde_json::Value,
     secrets: &crate::services::secrets::Secrets,
 ) -> Result<(), AppError> {
-    let origin =
-        crate::services::net::request::request_origin(protocol, url).map_err(AppError::Message)?;
+    let origin = crate::services::net::request::request_origin(protocol, url)
+        .map_err(AppError::InvalidInput)?;
     let secret_allows = secrets
         .values()
         .any(|entry| entry.origins.contains(&origin));
@@ -128,7 +128,7 @@ fn ensure_allowed_origin(
     if secret_allows || config_allows {
         Ok(())
     } else {
-        Err(AppError::Message(format!(
+        Err(AppError::InvalidInput(format!(
             "Network origin \"{origin}\" is not configured"
         )))
     }
@@ -176,9 +176,9 @@ pub fn net_socket_send_binary(
         .get(SOCKET_ID_HEADER)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.parse::<u64>().ok())
-        .ok_or_else(|| AppError::Message(format!("Missing {SOCKET_ID_HEADER} header")))?;
+        .ok_or_else(|| AppError::InvalidInput(format!("Missing {SOCKET_ID_HEADER} header")))?;
     let InvokeBody::Raw(bytes) = request.body() else {
-        return Err(AppError::Message(String::from(
+        return Err(AppError::InvalidInput(String::from(
             "Expected a raw binary body",
         )));
     };
