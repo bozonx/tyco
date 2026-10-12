@@ -1,8 +1,9 @@
 //! The shell that runs user commands: `/bin/sh` on Linux, zsh on macOS and
 //! PowerShell on Windows, with quoting rules to match.
 
+pub use super::process::kill_tree;
 use std::path::PathBuf;
-use std::process::{Child, Command};
+use std::process::Command;
 
 /// The environment variable that carries the text into a command, see
 /// [`substitute`].
@@ -15,7 +16,7 @@ pub fn command(script: &str) -> Command {
     {
         let mut command = Command::new("powershell.exe");
         command.args(["-NoProfile", "-NonInteractive", "-Command", script]);
-        crate::services::clipboard::hide_console_window(&mut command);
+        crate::services::platform::process::hide_console_window(&mut command);
         command
     }
 
@@ -42,32 +43,6 @@ pub fn command_with_text(script: &str, placeholder: &str, text: &str) -> Command
     let mut command = command(&substitute(script, placeholder, text));
     command.env(TEXT_ENV, text);
     command
-}
-
-/// Stops the shell of `child` and every process it started. Killing the
-/// shell alone would leave a pipeline or a background job running, and
-/// holding the pipes the output is read from.
-pub fn kill_tree(child: &mut Child) {
-    #[cfg(unix)]
-    {
-        // the shell leads its own group, see `command`
-        if let Ok(group) = i32::try_from(child.id()) {
-            // SAFETY: plain system call on a process group id
-            unsafe {
-                libc::kill(-group, libc::SIGKILL);
-            }
-        }
-    }
-    #[cfg(target_os = "windows")]
-    {
-        let mut taskkill = Command::new("taskkill");
-        taskkill.args(["/PID", &child.id().to_string(), "/T", "/F"]);
-        crate::services::clipboard::hide_console_window(&mut taskkill);
-        if let Err(error) = taskkill.output() {
-            log::warn!("Could not stop the processes of a command: {error}");
-        }
-    }
-    let _ = child.kill();
 }
 
 /// `text` as a single literal argument of the platform shell.

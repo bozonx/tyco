@@ -49,10 +49,15 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
 
     let path = dir.join(file_name);
 
-    let needs_newline = if path.exists() {
-        let meta = fs::metadata(&path)?;
+    let mut file = OpenOptions::new()
+        .read(true)
+        .create(true)
+        .append(true)
+        .open(&path)?;
+    file.lock()?;
+    let needs_newline = {
+        let meta = file.metadata()?;
         if meta.len() > 0 {
-            let mut file = fs::File::open(&path)?;
             file.seek(SeekFrom::End(-1))?;
             let mut byte = [0u8; 1];
             file.read_exact(&mut byte)?;
@@ -60,11 +65,7 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
         } else {
             false
         }
-    } else {
-        false
     };
-
-    let mut file = OpenOptions::new().create(true).append(true).open(&path)?;
 
     if needs_newline {
         file.write_all(b"\n")?;
@@ -159,6 +160,37 @@ fn numbered_file_name(file_name: &str, attempt: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn concurrent_appends_preserve_lines() {
+        let dir =
+            std::env::temp_dir().join(format!("tyco-concurrent-notes-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("entries.md");
+        fs::write(&file, "initial").unwrap();
+        std::thread::scope(|scope| {
+            for index in 0..32 {
+                let dir = &dir;
+                scope.spawn(move || {
+                    append_note(
+                        dir.to_str().unwrap(),
+                        "entries.md",
+                        &format!("entry-{index}"),
+                    )
+                    .unwrap()
+                });
+            }
+        });
+        let raw = fs::read_to_string(file).unwrap();
+        let lines = raw.lines().collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(raw.lines().count(), 33);
+        assert_eq!(lines.len(), 33);
+        assert!(lines.contains("initial"));
+        for index in 0..32 {
+            assert!(lines.contains(format!("entry-{index}").as_str()));
+        }
+        fs::remove_dir_all(dir).unwrap();
+    }
 
     #[test]
     fn rejects_names_windows_does_not_take_as_files() {

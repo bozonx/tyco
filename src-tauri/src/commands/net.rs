@@ -1,4 +1,4 @@
-use futures_util::future::{AbortHandle, Abortable};
+use futures_util::future::Abortable;
 use tauri::ipc::{Channel, InvokeBody, InvokeResponseBody, Request};
 use tauri::{AppHandle, State};
 use tokio::sync::mpsc;
@@ -43,16 +43,14 @@ pub async fn net_fetch(
     let method = http::parse_method(&request.method).map_err(AppError::Message)?;
     let body = http::decode_body(request.body.as_deref()).map_err(AppError::Message)?;
 
-    let id = net.next_id();
+    let (task, registration) = net.register_task();
+    let id = task.id();
     let client = net.client().clone();
-    let fetches = net.fetches();
-    let (handle, registration) = AbortHandle::new_pair();
-    fetches.lock().expect("fetches lock").insert(id, handle);
 
     tauri::async_runtime::spawn(async move {
         let run = http::run_fetch(&client, method, prepared, body, &on_event);
         let _ = Abortable::new(run, registration).await;
-        fetches.lock().expect("fetches lock").remove(&id);
+        drop(task);
     });
 
     Ok(id)
@@ -86,11 +84,8 @@ pub async fn net_socket_open(
         &secret_snapshot,
     )
     .map_err(AppError::Message)?;
-    let id = net.next_id();
-    let sockets = net.sockets();
-    let fetches = net.fetches();
-    let (handle, registration) = AbortHandle::new_pair();
-    fetches.lock().expect("fetches lock").insert(id, handle);
+    let (task, registration) = net.register_task();
+    let id = task.id();
 
     tauri::async_runtime::spawn(async move {
         let run = async {
@@ -102,14 +97,13 @@ pub async fn net_socket_open(
                 }
             };
             let (sender, receiver) = mpsc::channel(socket::SOCKET_QUEUE_CAPACITY);
-            sockets.lock().expect("sockets lock").insert(id, sender);
+            task.register_socket(sender);
             if on_event.event(&socket::SocketEvent::Open) {
                 socket::run_socket(connection, receiver, &on_event).await;
             }
         };
         let _ = Abortable::new(run, registration).await;
-        sockets.lock().expect("sockets lock").remove(&id);
-        fetches.lock().expect("fetches lock").remove(&id);
+        drop(task);
     });
 
     Ok(id)

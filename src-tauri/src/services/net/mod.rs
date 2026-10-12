@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use futures_util::future::AbortHandle;
+use futures_util::future::{AbortHandle, AbortRegistration};
 use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tokio::sync::mpsc::Sender;
@@ -79,16 +79,26 @@ impl NetState {
         &self.client
     }
 
-    pub fn next_id(&self) -> u64 {
+    fn next_id(&self) -> u64 {
         self.next_id.fetch_add(1, Ordering::Relaxed)
     }
 
-    pub fn fetches(&self) -> Arc<Mutex<HashMap<u64, AbortHandle>>> {
-        Arc::clone(&self.fetches)
-    }
-
-    pub fn sockets(&self) -> Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>> {
-        Arc::clone(&self.sockets)
+    /// Registration owns cleanup even when a task is cancelled or panics.
+    pub fn register_task(&self) -> (NetTask, AbortRegistration) {
+        let id = self.next_id();
+        let (handle, registration) = AbortHandle::new_pair();
+        self.fetches
+            .lock()
+            .expect("fetches lock")
+            .insert(id, handle);
+        (
+            NetTask {
+                id,
+                fetches: Arc::clone(&self.fetches),
+                sockets: Arc::clone(&self.sockets),
+            },
+            registration,
+        )
     }
 
     /// Stops a request. Unknown ids are fine: the request may have finished.
@@ -136,6 +146,32 @@ impl NetState {
     }
 }
 
+/// A task lease keeps registry mutation inside the network service.
+pub struct NetTask {
+    id: u64,
+    fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
+    sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
+}
+impl NetTask {
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+    pub fn register_socket(&self, sender: Sender<SocketCommand>) {
+        self.sockets
+            .lock()
+            .expect("sockets lock")
+            .insert(self.id, sender);
+    }
+}
+impl Drop for NetTask {
+    fn drop(&mut self) {
+        self.sockets.lock().expect("sockets lock").remove(&self.id);
+        if let Some(handle) = self.fetches.lock().expect("fetches lock").remove(&self.id) {
+            handle.abort();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use futures_util::future::Abortable;
@@ -145,6 +181,19 @@ mod tests {
     use super::*;
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::Secrets;
+
+    #[test]
+    fn task_drop_cleans_both_registries() {
+        let net = NetState::new().unwrap();
+        let (task, _) = net.register_task();
+        let (sender, _) = tokio::sync::mpsc::channel(1);
+        task.register_socket(sender);
+        assert_eq!(net.fetches.lock().unwrap().len(), 1);
+        assert_eq!(net.sockets.lock().unwrap().len(), 1);
+        drop(task);
+        assert!(net.fetches.lock().unwrap().is_empty());
+        assert!(net.sockets.lock().unwrap().is_empty());
+    }
 
     #[test]
     fn outgoing_frames_and_queue_memory_are_bounded() {

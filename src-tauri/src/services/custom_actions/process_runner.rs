@@ -1,9 +1,7 @@
 use std::collections::HashMap;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdout, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -12,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use super::command_logging::LogContext;
 use crate::errors::AppError;
+use crate::services::platform::process::{Pipe, PipeReader};
 use crate::services::platform::shell;
 
 /// Stands in for the text in a command; see `shell::substitute`.
@@ -75,18 +74,23 @@ struct CancelRegistration {
 }
 
 impl CancelRegistration {
-    fn new(run_id: Option<&str>) -> Self {
+    fn new(run_id: Option<&str>) -> Result<Self, AppError> {
         let flag = CancelFlag::default();
         if let Some(run_id) = run_id {
-            cancellable_runs()
+            let mut runs = cancellable_runs()
                 .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .insert(run_id.to_owned(), flag.clone());
+                .unwrap_or_else(|error| error.into_inner());
+            if runs.contains_key(run_id) {
+                return Err(AppError::InvalidInput(format!(
+                    "Run ID {run_id} is already active"
+                )));
+            }
+            runs.insert(run_id.to_owned(), flag.clone());
         }
-        Self {
+        Ok(Self {
             run_id: run_id.map(str::to_owned),
             flag,
-        }
+        })
     }
 }
 
@@ -96,7 +100,7 @@ impl Drop for CancelRegistration {
             cancellable_runs()
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
-                .remove(run_id);
+                .remove_entry(run_id);
         }
     }
 }
@@ -161,22 +165,13 @@ type Buffer = Arc<Mutex<Vec<u8>>>;
 
 /// Reads a pipe into a buffer of bounded size; the receiver gets a message
 /// once the pipe is closed.
-fn spawn_reader(mut pipe: impl Read + Send + 'static, buffer: Buffer) -> Receiver<()> {
-    let (done, finished) = mpsc::channel();
-    thread::spawn(move || {
-        let mut chunk = [0u8; 8192];
-        while let Ok(read) = pipe.read(&mut chunk) {
-            if read == 0 {
-                break;
-            }
-            if let Ok(mut buffer) = buffer.lock() {
-                let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
-                buffer.extend_from_slice(&chunk[..read.min(room)]);
-            }
+fn spawn_reader(pipe: impl Pipe, buffer: Buffer) -> std::io::Result<PipeReader> {
+    PipeReader::start(pipe, move |bytes| {
+        if let Ok(mut buffer) = buffer.lock() {
+            let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
+            buffer.extend_from_slice(&bytes[..bytes.len().min(room)]);
         }
-        let _ = done.send(());
-    });
-    finished
+    })
 }
 
 fn read_buffer(buffer: &Buffer) -> String {
@@ -190,26 +185,36 @@ struct Running {
     child: Child,
     stdout: Buffer,
     stderr: Buffer,
-    readers: Vec<Receiver<()>>,
+    readers: Vec<PipeReader>,
+    reap_on_drop: bool,
 }
 
 impl Running {
-    fn start(child: Child, stdout: Option<ChildStdout>, stderr: Option<ChildStderr>) -> Self {
+    fn start(
+        child: Child,
+        stdout: Option<ChildStdout>,
+        stderr: Option<ChildStderr>,
+    ) -> std::io::Result<Self> {
         let stdout_buffer = Buffer::default();
         let stderr_buffer = Buffer::default();
-        let mut readers = Vec::new();
-        if let Some(pipe) = stdout {
-            readers.push(spawn_reader(pipe, stdout_buffer.clone()));
-        }
-        if let Some(pipe) = stderr {
-            readers.push(spawn_reader(pipe, stderr_buffer.clone()));
-        }
-        Self {
+        let mut running = Self {
             child,
             stdout: stdout_buffer,
             stderr: stderr_buffer,
-            readers,
+            readers: Vec::new(),
+            reap_on_drop: true,
+        };
+        if let Some(pipe) = stdout {
+            running
+                .readers
+                .push(spawn_reader(pipe, running.stdout.clone())?);
         }
+        if let Some(pipe) = stderr {
+            running
+                .readers
+                .push(spawn_reader(pipe, running.stderr.clone())?);
+        }
+        Ok(running)
     }
 
     /// Waits until the command exits, the deadline passes or the run is
@@ -229,20 +234,28 @@ impl Running {
         }
     }
 
-    fn finish(self, status: std::process::ExitStatus) -> ScriptExecutionResult {
+    fn finish(mut self, status: std::process::ExitStatus) -> ScriptExecutionResult {
         let deadline = Instant::now() + PIPE_GRACE;
         for reader in &self.readers {
-            let left = deadline.saturating_duration_since(Instant::now());
-            if let Err(RecvTimeoutError::Timeout) = reader.recv_timeout(left) {
-                break;
-            }
+            reader.drain_until(deadline);
         }
+        self.readers.clear();
+        self.reap_on_drop = false;
         ScriptExecutionResult {
             success: status.success(),
             exit_code: status.code(),
             stdout: read_buffer(&self.stdout),
             stderr: read_buffer(&self.stderr),
             running: false,
+        }
+    }
+}
+
+impl Drop for Running {
+    fn drop(&mut self) {
+        if self.reap_on_drop {
+            shell::kill_tree(&mut self.child);
+            let _ = self.child.wait();
         }
     }
 }
@@ -282,13 +295,13 @@ pub fn execute_script(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    let registration = CancelRegistration::new(request.run_id);
+    let registration = CancelRegistration::new(request.run_id)?;
     let mut child = command
         .spawn()
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
-    let mut running = Running::start(child, stdout, stderr);
+    let mut running = Running::start(child, stdout, stderr)?;
 
     let output_timeout = request
         .output_timeout
@@ -311,16 +324,12 @@ pub fn execute_script(
             return Ok(result);
         }
         Wait::Cancelled => {
-            shell::kill_tree(&mut running.child);
-            let _ = running.child.wait();
             return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
         }
         Wait::TimedOut => {}
     }
 
     if request.capture_output {
-        shell::kill_tree(&mut running.child);
-        let _ = running.child.wait();
         return Err(fail(
             &log,
             format!(
@@ -554,9 +563,19 @@ mod tests {
     }
 
     #[test]
+    fn rejects_duplicate_run_ids_without_losing_registration() {
+        let registration = CancelRegistration::new(Some("duplicate-test")).unwrap();
+        assert!(CancelRegistration::new(Some("duplicate-test")).is_err());
+        assert!(cancel_script("duplicate-test"));
+        assert!(registration.flag.load(Ordering::SeqCst));
+        drop(registration);
+        assert!(!cancel_script("duplicate-test"));
+    }
+
+    #[test]
     fn cancels_all_running_scripts() {
-        let reg1 = CancelRegistration::new(Some("run-1"));
-        let reg2 = CancelRegistration::new(Some("run-2"));
+        let reg1 = CancelRegistration::new(Some("run-1")).unwrap();
+        let reg2 = CancelRegistration::new(Some("run-2")).unwrap();
         assert!(!reg1.flag.load(Ordering::SeqCst));
         assert!(!reg2.flag.load(Ordering::SeqCst));
 

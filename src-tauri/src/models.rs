@@ -1,5 +1,3 @@
-use std::fs;
-
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -7,6 +5,7 @@ use crate::services::activation::WindowProfile;
 use crate::services::external_access::AccessRequest;
 use crate::services::external_commands::LauncherRequest;
 use crate::services::hotkeys;
+use crate::services::platform::default_binary_path;
 
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
 pub const STATE_FILE_NAME: &str = "localState.json";
@@ -320,30 +319,6 @@ pub fn default_user_config() -> Value {
         }
       ],
       "plugins": {}
-    })
-}
-
-fn default_binary_path(binary_name: &str) -> String {
-    let prefix = match linux_distribution_id().as_deref() {
-        Some("nixos") => "/run/current-system/sw/bin",
-        Some("guix") | Some("guixsd") => "/run/current-system/profile/bin",
-        _ => "/usr/bin",
-    };
-
-    format!("{prefix}/{binary_name}")
-}
-
-fn linux_distribution_id() -> Option<String> {
-    let os_release = fs::read_to_string("/etc/os-release").ok()?;
-
-    os_release.lines().find_map(|line| {
-        let (key, value) = line.split_once('=')?;
-
-        if key != "ID" {
-            return None;
-        }
-
-        Some(value.trim_matches('"').to_lowercase())
     })
 }
 

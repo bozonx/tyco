@@ -3,6 +3,10 @@
 //! itself; backends for a single platform live in its submodule.
 
 pub(crate) mod audio;
+mod binary_paths;
+pub(crate) mod clipboard;
+pub(crate) mod process;
+pub use binary_paths::default_binary_path;
 mod file_manager;
 mod foreground_context;
 pub(crate) mod hotkeys;
@@ -27,7 +31,7 @@ pub mod windows;
 #[path = "windows-clipboard.rs"]
 pub mod windows_clipboard;
 
-pub use file_manager::{open_dir, open_file};
+pub use file_manager::{open_dir, open_file, open_web_url};
 pub use foreground_context::{capture_selection, capture_source};
 #[cfg(target_os = "linux")]
 pub use panel_surface::settle_panel_keyboard;

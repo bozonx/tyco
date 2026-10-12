@@ -28,11 +28,9 @@ pub fn open_file(file: &Path) -> Result<(), AppError> {
 fn open_path(path: &Path) -> Result<(), AppError> {
     let mut command = Command::new(opener());
     command.arg(path);
-    crate::services::clipboard::hide_console_window(&mut command);
-    // `explorer.exe` exits with 1 even when it opened the path, so only a
-    // failure to start counts; the child is reaped to leave no zombie
-    let mut child = command.spawn()?;
-    std::thread::spawn(move || child.wait());
+    // Explorer may exit with 1 even when the path opened successfully.
+    // Ignore its exit code, but still bound execution and reap the child.
+    super::process::status(command, None, std::time::Duration::from_secs(10))?;
     Ok(())
 }
 
@@ -44,4 +42,23 @@ fn opener() -> &'static str {
     } else {
         "xdg-open"
     }
+}
+
+/// Opens a validated web URL using the desktop handler.
+pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
+    let mut command = if cfg!(target_os = "windows") {
+        let mut command = Command::new("rundll32");
+        command.arg("url.dll,FileProtocolHandler");
+        command
+    } else {
+        Command::new(opener())
+    };
+    command.arg(url.as_str());
+    let status = super::process::status(command, None, std::time::Duration::from_secs(10))?;
+    if !status.success() {
+        return Err(AppError::Message(format!(
+            "URL opener failed with status {status}"
+        )));
+    }
+    Ok(())
 }

@@ -1,10 +1,9 @@
-use std::process::Command;
 use std::time::Duration;
 use tauri::{AppHandle, State};
 
 use super::blocking;
 use crate::errors::AppError;
-use crate::services::clipboard::{copy_to_clipboard, hide_console_window};
+use crate::services::clipboard::copy_to_clipboard;
 use crate::services::platform::InputRegion;
 use crate::services::runtime;
 use crate::state::AppState;
@@ -104,33 +103,7 @@ fn web_url(value: &str) -> Result<url::Url, AppError> {
 
 fn open_url(value: &str) -> Result<(), AppError> {
     let url = web_url(value)?;
-    let url = url.as_str();
-
-    if cfg!(target_os = "macos") {
-        return run_command("open", &[url]);
-    }
-
-    if cfg!(target_os = "windows") {
-        // unlike `cmd /C start`, this does not parse `&` and the like in the URL
-        return run_command("rundll32", &["url.dll,FileProtocolHandler", url]);
-    }
-
-    run_command("xdg-open", &[url])
-}
-
-fn run_command(binary: &str, args: &[&str]) -> Result<(), AppError> {
-    let mut command = Command::new(binary);
-    command.args(args);
-    hide_console_window(&mut command);
-    let status = command.status()?;
-
-    if !status.success() {
-        return Err(AppError::Message(format!(
-            "Command `{binary}` failed with status {status}",
-        )));
-    }
-
-    Ok(())
+    crate::services::platform::open_web_url(&url)
 }
 
 #[cfg(test)]

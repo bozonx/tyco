@@ -2,7 +2,6 @@
 //! is put back once the target window has pasted: with `wl-clipboard` on
 //! Wayland and `xclip` on X11.
 
-use std::process::{Command, Stdio};
 use std::thread;
 use std::time::Duration;
 
@@ -121,11 +120,13 @@ pub fn read_text() -> Option<String> {
 /// Empties the clipboard; used when there is no snapshot to put back.
 pub fn clear() {
     let result = match Backend::current() {
-        Some(Backend::WlClipboard) => Command::new("wl-copy")
-            .arg("--clear")
-            .status()
-            .map(drop)
-            .map_err(Into::into),
+        Some(Backend::WlClipboard) => super::super::process::status(
+            super::super::process::command("wl-copy", &["--clear"]),
+            None,
+            Duration::from_secs(5),
+        )
+        .map(drop)
+        .map_err(Into::into),
         _ => crate::services::clipboard::copy_to_clipboard(""),
     };
     if let Err(error) = result {
@@ -156,23 +157,14 @@ fn preferred_type<'a>(types: impl Iterator<Item = &'a str>) -> Option<String> {
 }
 
 fn write(snapshot: &ClipboardSnapshot) -> std::io::Result<()> {
-    use std::io::Write;
-
     let backend =
         Backend::current().ok_or_else(|| std::io::Error::other("No clipboard in this session"))?;
     let (binary, args) = backend.write_command(&snapshot.mime_type);
-    // xclip stays in the background to serve the clipboard, so it must not
-    // hold on to the output of this process
-    let mut child = Command::new(binary)
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()?;
-    if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(&snapshot.data)?;
-    }
-    let status = child.wait()?;
+    let status = super::super::process::status(
+        super::super::process::command(binary, &args),
+        Some(&snapshot.data),
+        Duration::from_secs(5),
+    )?;
     if status.success() {
         Ok(())
     } else {

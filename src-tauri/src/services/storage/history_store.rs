@@ -31,15 +31,13 @@ impl HistoryStorage {
         app: &AppHandle,
         previous: &serde_json::Value,
         next: &serde_json::Value,
-    ) {
+    ) -> Result<(), AppError> {
         let mut memory = self.editor();
         let _chats = self.chats();
-        if let Err(error) = editor::apply_history_settings_change(app, previous, next, &mut memory)
-        {
-            log::error!("Could not apply the history settings: {error}");
-        }
+        editor::apply_history_settings_change(app, previous, next, &mut memory)?;
         app.state::<AppState>()
             .update_params(|params| params.user_config = next.clone());
+        Ok(())
     }
 }
 

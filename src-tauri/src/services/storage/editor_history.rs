@@ -291,14 +291,48 @@ pub fn apply_history_settings_change(
     let after = EditorHistoryPolicy::from_config(user_config);
     let path = editor_history_path(app)?;
 
-    switch_editor_history_store(&path, &before, &after, memory, now_ms())?;
+    apply_history_transition(&path, &before, &after, memory, || {
+        let chat_before = ChatHistoryPolicy::from_config(previous_config);
+        let chat_after = ChatHistoryPolicy::from_config(user_config);
+        if chat_after != chat_before {
+            enforce_chat_history_policy(app, chat_after)?;
+        }
+        Ok(())
+    })
+}
 
-    let chat_before = ChatHistoryPolicy::from_config(previous_config);
-    let chat_after = ChatHistoryPolicy::from_config(user_config);
-    if chat_after != chat_before {
-        enforce_chat_history_policy(app, chat_after)?;
+/// Retains the editor snapshot until every part of the settings change succeeds.
+fn apply_history_transition(
+    path: &Path,
+    before: &EditorHistoryPolicy,
+    after: &EditorHistoryPolicy,
+    memory: &mut Vec<EditorHistoryItem>,
+    apply_chats: impl FnOnce() -> Result<(), AppError>,
+) -> Result<(), AppError> {
+    if before == after {
+        return apply_chats();
     }
-
+    let disk = match fs::read(path) {
+        Ok(bytes) => Some(bytes),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    let original_memory = memory.clone();
+    let result = switch_editor_history_store(path, before, after, memory, now_ms())
+        .and_then(|()| apply_chats());
+    if let Err(error) = result {
+        *memory = original_memory;
+        let rollback = match disk {
+            Some(bytes) => crate::services::atomic_file::write_private_bytes(path, &bytes),
+            None => remove_file_if_exists(path),
+        };
+        if let Err(rollback_error) = rollback {
+            return Err(AppError::Message(format!(
+                "Could not apply history settings: {error}; could not restore editor history: {rollback_error}"
+            )));
+        }
+        return Err(error);
+    }
     Ok(())
 }
 
@@ -316,15 +350,18 @@ fn switch_editor_history_store(
         let mut items = if after.memory_only {
             file.read()?
         } else {
-            std::mem::take(memory)
+            memory.clone()
         };
         after.enforce(&mut items, now_ms);
 
         if after.memory_only {
+            remove_file_if_exists(path)?;
             *memory = items;
-            return remove_file_if_exists(path);
+            return Ok(());
         }
-        return file.write(items);
+        file.write(items)?;
+        memory.clear();
+        return Ok(());
     }
 
     let turned_off = after.limit == 0 && before.limit != 0;
@@ -393,6 +430,63 @@ mod tests {
 
     fn entry(text: &str) -> EditorHistoryEntry {
         serde_json::from_value(json!({ "text": text, "kind": "draft" })).unwrap()
+    }
+
+    #[test]
+    fn failed_chat_transition_restores_editor_disk_and_memory() {
+        let dir = temp_dir("failed-chat-transition");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let items = vec![history_item("a", "private", EditorHistoryKind::Draft)];
+        write_jsonl(&path, &items).unwrap();
+        let original = fs::read(&path).unwrap();
+        let mut memory = Vec::new();
+        let after = EditorHistoryPolicy {
+            memory_only: true,
+            ..policy()
+        };
+        let result = apply_history_transition(&path, &policy(), &after, &mut memory, || {
+            Err(AppError::Message("Chat storage failed".into()))
+        });
+        assert!(result.is_err());
+        assert!(memory.is_empty());
+        assert_eq!(fs::read(&path).unwrap(), original);
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn failed_chat_transition_restores_memory_after_disk_write() {
+        let dir = temp_dir("failed-chat-after-write");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
+        let original = memory.clone();
+        let before = EditorHistoryPolicy {
+            memory_only: true,
+            ..policy()
+        };
+        let result = apply_history_transition(&path, &before, &policy(), &mut memory, || {
+            Err(AppError::Message("Chat storage failed".into()))
+        });
+        assert!(result.is_err());
+        assert_eq!(memory, original);
+        assert!(!path.exists());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn failed_store_transition_preserves_memory() {
+        let dir = temp_dir("failed-transition");
+        let path = dir.join("missing").join(EDITOR_HISTORY_FILE);
+        let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
+        let original = memory.clone();
+        let before = EditorHistoryPolicy {
+            memory_only: true,
+            ..policy()
+        };
+        assert!(
+            switch_editor_history_store(&path, &before, &policy(), &mut memory, now_ms()).is_err()
+        );
+        assert_eq!(memory, original);
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

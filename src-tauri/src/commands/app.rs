@@ -108,9 +108,17 @@ fn save_user_config_blocking(
     }
     storage::save_user_config(app, &user_config)?;
     let previous_config = state.params().user_config;
-    state
+    if let Err(error) = state
         .history
-        .apply_settings(app, &previous_config, &user_config);
+        .apply_settings(app, &previous_config, &user_config)
+    {
+        if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
+            return Err(AppError::Message(format!(
+                "Could not apply history settings: {error}; could not restore config: {rollback_error}"
+            )));
+        }
+        return Err(error);
+    }
     runtime::emit_params(app, &state)?;
 
     Ok(user_config)

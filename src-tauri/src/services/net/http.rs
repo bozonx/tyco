@@ -36,11 +36,19 @@ pub enum FetchEvent {
 }
 
 pub fn decode_body(body: Option<&str>) -> Result<Option<Vec<u8>>, String> {
+    decode_body_with_limit(body, MAX_REQUEST_BODY_BYTES)
+}
+
+fn decode_body_with_limit(body: Option<&str>, limit: usize) -> Result<Option<Vec<u8>>, String> {
     body.map(|body| {
+        let max_encoded_bytes = limit.div_ceil(3) * 4;
+        if body.len() > max_encoded_bytes {
+            return Err(String::from("Request body exceeds the 128 MiB limit"));
+        }
         let decoded = base64::engine::general_purpose::STANDARD
             .decode(body)
             .map_err(|error| format!("Invalid request body: {error}"))?;
-        if decoded.len() > MAX_REQUEST_BODY_BYTES {
+        if decoded.len() > limit {
             return Err(String::from("Request body exceeds the 128 MiB limit"));
         }
         Ok(decoded)
@@ -158,6 +166,20 @@ mod tests {
     use super::*;
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::{SecretEntry, Secrets};
+
+    #[test]
+    fn rejects_encoded_size_before_decoding_and_checks_padding_boundary() {
+        assert!(decode_body_with_limit(Some("!!!!!!!!!"), 4)
+            .unwrap_err()
+            .contains("exceeds"));
+        assert!(decode_body_with_limit(Some("YWJjZGU="), 4)
+            .unwrap_err()
+            .contains("exceeds"));
+        assert_eq!(
+            decode_body_with_limit(Some("YWJjZA=="), 4).unwrap(),
+            Some(b"abcd".to_vec())
+        );
+    }
 
     #[derive(Debug, Clone, PartialEq)]
     enum Recorded {
