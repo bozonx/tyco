@@ -2,7 +2,6 @@
 mod bindings;
 #[path = "hotkeys/global-shortcut.rs"]
 mod global_shortcut;
-mod providers;
 mod status;
 pub use status::{provider_info, ApplyHotkeyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
@@ -61,6 +60,22 @@ pub struct ApplyHotkeyRequest {
 
 pub(crate) struct PortalProvider;
 struct ExternalProvider;
+
+impl ExternalProvider {
+    fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+        log::info!("No in-process hotkey provider is available; use tyco-ctl or D-Bus");
+        Ok(())
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+impl PortalProvider {
+    fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+        Err(AppError::Message(String::from(
+            "The global shortcuts portal is only available on Linux",
+        )))
+    }
+}
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     let user_config = app.state::<AppState>().params().user_config;

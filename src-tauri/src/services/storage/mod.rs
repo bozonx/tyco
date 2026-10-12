@@ -26,7 +26,6 @@ use crate::models::{
     LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME, STATE_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
-use crate::services::secret_detector::redact_secrets;
 use crate::services::{app_paths::AppPaths, config_migration, llm_config};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
