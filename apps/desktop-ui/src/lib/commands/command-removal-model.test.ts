@@ -36,6 +36,9 @@ describe('command removal model', () => {
       removeSecret,
       getCommands: () => commands,
       getActions: () => actions,
+      setActions: (value: (MainActionConfig | null)[]) => {
+        actions = value
+      },
     }
   }
   it('undo restores the command and references without deleting its secret', () => {
@@ -59,5 +62,50 @@ describe('command removal model', () => {
     expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
       webhookSecretId(f.command.id)
     )
+  })
+  it('finalizes the previous deletion when another command is removed', () => {
+    const f = fixture()
+    f.model.removeCommand(f.command)
+    f.model.removeCommand(createCommand('script', 'second'))
+    expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
+      webhookSecretId(f.command.id)
+    )
+    f.model.undoRemove()
+    f.model.finishRemoval()
+    expect(f.removeSecret).toHaveBeenCalledTimes(1)
+  })
+
+  it('undo of the next deletion does not restore a finalized command', () => {
+    const f = fixture()
+    f.model.removeCommand(f.command)
+    const second = createCommand('script', 'second')
+    f.model.removeCommand(second)
+    f.model.undoRemove()
+    expect(f.getCommands()).toEqual([second])
+    expect(f.getActions()).toEqual([null])
+  })
+
+  it('handles secret cleanup failure without retaining the pending deletion', async () => {
+    const f = fixture()
+    f.removeSecret.mockRejectedValue(new Error('Secret removal failed'))
+    f.model.removeCommand(f.command)
+    f.model.finishRemoval()
+    await Promise.resolve()
+    expect(f.model.removed.value).toBeNull()
+    f.model.undoRemove()
+    expect(f.getCommands()).toEqual([])
+  })
+  it('undo preserves references assigned while deletion is pending', () => {
+    const f = fixture()
+    f.model.removeCommand(f.command)
+    const replacement: MainActionConfig = {
+      type: 'command',
+      commandId: 'replacement',
+    }
+    f.setActions([replacement])
+    f.model.undoRemove()
+    expect(f.getCommands()).toEqual([f.command])
+    expect(f.getActions()).toEqual([replacement])
+    expect(f.removeSecret).not.toHaveBeenCalled()
   })
 })

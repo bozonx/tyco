@@ -203,11 +203,7 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
-import {
-  createCommand,
-  normalizeCommands,
-  normalizeLauncherCommands,
-} from '../lib/commands/command-config'
+import { createCommand } from '../lib/commands/command-config'
 import { syncI18nLocale } from '../lib/i18n'
 import {
   AUTO_LANGUAGE_VALUE,
@@ -215,9 +211,9 @@ import {
   normalizeLocale,
   resolveUiLanguagePreference,
 } from '../lib/locale/language'
-import { applyPluginPreset } from '../lib/plugins/plugin-config'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { createSettingsConfig } from '../lib/settings/settings-config'
+import { createSettingsOperations } from '../lib/settings/settings-operations'
 import { createSettingsSession } from '../lib/settings/settings-session'
 import { pluginIndexes, pluginRuntimeStates } from '../plugins'
 import { useActionMenuStore } from '../stores/action-menu'
@@ -406,20 +402,23 @@ const effectiveAppLanguage = computed(() =>
 
 const persistUserConfig = session.persist
 
-async function finishProviderRemoval(id: string) {
-  await persistUserConfig()
-  if (!session.isSaved()) {
-    return
-  }
-  if (Object.hasOwn(llmStore.secrets, id)) {
-    try {
-      await llmStore.removeSecret(id)
-    } catch (error) {
-      toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-    }
-  }
-}
-
+const operations = createSettingsOperations({
+  getConfig: () => userConfig.value,
+  pluginIndexes: () => pluginIndexes,
+  createCommand,
+  persist: persistUserConfig,
+  isSaved: session.isSaved,
+  hasSecret: (id) => Object.hasOwn(llmStore.secrets, id),
+  removeSecret: (id) => llmStore.removeSecret(id),
+  notifySecretError: (error) =>
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+})
+const {
+  finishProviderRemoval,
+  updateLauncherPages,
+  updatePluginEnabled,
+  updatePluginConfig,
+} = operations
 watch(
   () => [userConfig.value.appLanguage, userConfig.value.userLanguage],
   ([appLanguage, userLanguage]) => {
@@ -433,26 +432,6 @@ const updateTranslateLanguages = (languages: string[]) => {
 
 const updateMainActions = (actions: (MainActionConfig | null)[]) => {
   userConfig.value.mainActions = actions
-}
-
-const updateLauncherPages = (pages: (string | null)[][]) => {
-  const previous = userConfig.value.launcherPages ?? []
-  if (pages.length < previous.length) {
-    const removed =
-      previous.findIndex((page: (string | null)[]) => !pages.includes(page)) + 1
-    userConfig.value.mainActions = userConfig.value.mainActions.map(
-      (item: MainActionConfig | null) => {
-        if (item?.type !== 'launcherPage' || item.page < removed) return item
-        return item.page === removed ? null : { ...item, page: item.page - 1 }
-      }
-    )
-    userConfig.value.launcherPagesWithoutText = (
-      userConfig.value.launcherPagesWithoutText ?? []
-    )
-      .filter((page: number) => page !== removed)
-      .map((page: number) => (page > removed ? page - 1 : page))
-  }
-  userConfig.value.launcherPages = pages
 }
 
 const updateCommands = (commands: CommandConfig[]) => {
@@ -476,25 +455,7 @@ const createLauncherCommand = (
   toolId: BuiltinToolId,
   page = 0
 ) => {
-  const command = createCommand(toolId)
-  const nextCommands = [
-    ...normalizeCommands(userConfig.value.commands),
-    command,
-  ]
-  const slots = normalizeLauncherCommands(
-    page
-      ? userConfig.value.launcherPages?.[page - 1]
-      : userConfig.value.launcherCommands,
-    nextCommands
-  )
-  slots[index] = command.id
-  userConfig.value.commands = nextCommands
-  if (page) {
-    const pages = [...(userConfig.value.launcherPages ?? [])]
-    pages[page - 1] = slots
-    userConfig.value.launcherPages = pages
-  } else userConfig.value.launcherCommands = slots
-  editCommand(command.id)
+  editCommand(operations.createLauncherCommand(index, toolId, page))
 }
 
 /** A newer build wrote the config: it is shown but never written over */
@@ -537,30 +498,6 @@ const updateAiTasks = (items: UserConfig['aiTasks']) => {
   userConfig.value.aiTasks = items
 }
 
-const updatePluginEnabled = (pluginName: string, enabled: boolean) => {
-  const current = userConfig.value.plugins[pluginName]
-  userConfig.value.plugins[pluginName] = {
-    ...(current && typeof current === 'object' ? current : {}),
-    enabled,
-  }
-}
-
-const updatePluginConfig = (
-  pluginName: string,
-  values: Record<string, unknown>
-) => {
-  const current = userConfig.value.plugins[pluginName]
-  const previous: Record<string, unknown> =
-    current && typeof current === 'object'
-      ? (current as Record<string, unknown>)
-      : {}
-  const definition = pluginIndexes.find(
-    (factory) => factory().id === pluginName
-  )?.()
-  userConfig.value.plugins[pluginName] = definition
-    ? applyPluginPreset(definition, previous, values)
-    : { ...previous, ...values }
-}
 onMounted(() => {
   void llmStore.refreshSecrets()
 })

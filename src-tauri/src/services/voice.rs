@@ -16,7 +16,8 @@ use tauri::{AppHandle, Emitter};
 
 use crate::errors::AppError;
 use crate::services::net::EventSink;
-use crate::state::{AppState, VoiceCaptureSession};
+use crate::services::voice_session::VoiceCaptureSession;
+use crate::state::AppState;
 
 pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
 
@@ -118,16 +119,16 @@ where
     L: AudioLevels + Send + 'static,
     S: EventSink,
 {
-    let _operation = state.lock_voice_capture().await;
+    let _operation = state.voice_session.lock().await;
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
-    let session_id = state.next_voice_capture_id();
+    let session_id = state.voice_session.next_id();
     let (session, sample_rate) = tokio::task::spawn_blocking(move || {
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
     })
     .await
     .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
-    state.replace_voice_capture_session(Some(session));
+    state.voice_session.replace(Some(session));
     Ok(VoiceCaptureInfo {
         sample_rate,
         session_id,
@@ -137,12 +138,12 @@ where
 /// Stops the microphone; returns once the last chunk and `end` are sent.
 /// With `session_id`, only that capture is stopped: a newer one goes on.
 pub async fn stop_capture(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
-    let _operation = state.lock_voice_capture().await;
+    let _operation = state.voice_session.lock().await;
     stop_capture_unlocked(state, session_id).await
 }
 
 async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
-    let Some(session) = state.take_voice_capture_session(session_id) else {
+    let Some(session) = state.voice_session.take(session_id) else {
         return Ok(());
     };
     tokio::task::spawn_blocking(move || {
@@ -158,7 +159,7 @@ async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Res
 
 /// Signals the active voice capture thread to stop on shutdown.
 pub fn stop_capture_on_shutdown(state: &AppState) {
-    if let Some(session) = state.replace_voice_capture_session(None) {
+    if let Some(session) = state.voice_session.replace(None) {
         session.stop_flag.store(true, Ordering::SeqCst);
         let _ = session.thread.join();
     }
@@ -713,11 +714,12 @@ mod tests {
         assert_ne!(first.session_id, second.session_id);
         stop_capture(&state, Some(first.session_id)).await.unwrap();
         let session = state
-            .take_voice_capture_session(Some(second.session_id))
+            .voice_session
+            .take(Some(second.session_id))
             .expect("new capture was stopped");
-        state.replace_voice_capture_session(Some(session));
+        state.voice_session.replace(Some(session));
         stop_capture(&state, Some(second.session_id)).await.unwrap();
-        assert!(state.take_voice_capture_session(None).is_none());
+        assert!(state.voice_session.take(None).is_none());
         let values = trace.values();
         let second_open = values
             .iter()

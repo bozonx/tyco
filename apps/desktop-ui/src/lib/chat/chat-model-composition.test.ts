@@ -135,7 +135,7 @@ describe('chat model boundaries', () => {
     let release!: (chat: null) => void
     deps.loadChatHistoryItem = vi.fn(
       () =>
-        new Promise((resolve) => {
+        new Promise<null>((resolve) => {
           release = resolve
         })
     )

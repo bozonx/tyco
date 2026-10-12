@@ -1,0 +1,568 @@
+use std::collections::HashMap;
+use std::io::Read;
+use std::path::{Path, PathBuf};
+use std::process::{Child, ChildStderr, ChildStdout, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::thread;
+use std::time::{Duration, Instant};
+
+use serde::{Deserialize, Serialize};
+
+use super::command_logging::LogContext;
+use crate::errors::AppError;
+use crate::services::platform::shell;
+
+/// Stands in for the text in a command; see `shell::substitute`.
+pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
+
+/// How long a command whose output is needed may run before it is killed,
+/// unless the command sets its own time; see `SCRIPT_OUTPUT_TIMEOUT_SEC`.
+const OUTPUT_TIMEOUT: Duration = Duration::from_secs(60);
+/// The longest time a command may set; see `SCRIPT_MAX_TIMEOUT_SEC`.
+const MAX_OUTPUT_TIMEOUT: Duration = Duration::from_secs(3600);
+/// How long a command whose output is not needed is waited for. One still
+/// running by then, e.g. a GUI app it started, is left in the background.
+const STATUS_WAIT: Duration = Duration::from_secs(3);
+/// How long the output is read after the command exits. A process it started
+/// in the background may hold the pipes open for good.
+const PIPE_GRACE: Duration = Duration::from_millis(500);
+const POLL_INTERVAL: Duration = Duration::from_millis(20);
+/// The error of a command stopped by `cancel_script`.
+pub const SCRIPT_CANCELLED: &str = "Cancelled";
+
+const MAX_OUTPUT_BYTES: usize = 1 << 20;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ScriptExecutionResult {
+    pub success: bool,
+    pub exit_code: Option<i32>,
+    pub stdout: String,
+    pub stderr: String,
+    /// The command did not finish while waited for and keeps running.
+    pub running: bool,
+}
+
+pub struct ScriptRequest<'a> {
+    pub name: &'a str,
+    pub command: &'a str,
+    pub working_dir: Option<&'a str>,
+    pub text: &'a str,
+    /// The caller uses the output: the command is waited for longer and
+    /// killed if it does not finish in time.
+    pub capture_output: bool,
+    /// Replaces `OUTPUT_TIMEOUT`, up to `MAX_OUTPUT_TIMEOUT`.
+    pub output_timeout: Option<Duration>,
+    pub log_output: bool,
+    /// Lets `cancel_script` stop the command while it is waited for.
+    pub run_id: Option<&'a str>,
+}
+
+type CancelFlag = Arc<AtomicBool>;
+
+/// The commands being waited for that the caller may cancel, by run id.
+fn cancellable_runs() -> &'static Mutex<HashMap<String, CancelFlag>> {
+    static RUNS: OnceLock<Mutex<HashMap<String, CancelFlag>>> = OnceLock::new();
+    RUNS.get_or_init(Mutex::default)
+}
+
+/// Keeps the run cancellable while it is alive.
+struct CancelRegistration {
+    run_id: Option<String>,
+    flag: CancelFlag,
+}
+
+impl CancelRegistration {
+    fn new(run_id: Option<&str>) -> Self {
+        let flag = CancelFlag::default();
+        if let Some(run_id) = run_id {
+            cancellable_runs()
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .insert(run_id.to_owned(), flag.clone());
+        }
+        Self {
+            run_id: run_id.map(str::to_owned),
+            flag,
+        }
+    }
+}
+
+impl Drop for CancelRegistration {
+    fn drop(&mut self) {
+        if let Some(run_id) = &self.run_id {
+            cancellable_runs()
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .remove(run_id);
+        }
+    }
+}
+
+/// Kills the command of run `run_id` if it is still waited for; returns
+/// whether there was one. A command left running in the background is not
+/// waited for any more and keeps running.
+pub fn cancel_script(run_id: &str) -> bool {
+    let runs = cancellable_runs()
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    match runs.get(run_id) {
+        Some(flag) => {
+            flag.store(true, Ordering::SeqCst);
+            true
+        }
+        None => false,
+    }
+}
+
+/// Cancels all script runs that are currently waited for.
+pub fn cancel_all_scripts() {
+    let runs = cancellable_runs()
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    for flag in runs.values() {
+        flag.store(true, Ordering::SeqCst);
+    }
+}
+
+pub fn expand_home_dir(path: &str) -> PathBuf {
+    let home = || shell::home_dir();
+    if path == "~" {
+        if let Some(home) = home() {
+            return home;
+        }
+    } else if let Some(stripped) = path.strip_prefix("~/").or_else(|| path.strip_prefix("~\\")) {
+        if let Some(home) = home() {
+            return home.join(stripped);
+        }
+    }
+    PathBuf::from(path)
+}
+
+/// The directory a command runs in: the given one, or the home directory.
+pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>, AppError> {
+    let trimmed = working_dir.map(str::trim).unwrap_or_default();
+    if trimmed.is_empty() {
+        return Ok(shell::home_dir());
+    }
+    let path = expand_home_dir(trimmed);
+    if path.is_dir() {
+        Ok(Some(path))
+    } else {
+        Err(AppError::Message(format!(
+            "Working directory `{trimmed}` does not exist"
+        )))
+    }
+}
+
+type Buffer = Arc<Mutex<Vec<u8>>>;
+
+/// Reads a pipe into a buffer of bounded size; the receiver gets a message
+/// once the pipe is closed.
+fn spawn_reader(mut pipe: impl Read + Send + 'static, buffer: Buffer) -> Receiver<()> {
+    let (done, finished) = mpsc::channel();
+    thread::spawn(move || {
+        let mut chunk = [0u8; 8192];
+        while let Ok(read) = pipe.read(&mut chunk) {
+            if read == 0 {
+                break;
+            }
+            if let Ok(mut buffer) = buffer.lock() {
+                let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
+                buffer.extend_from_slice(&chunk[..read.min(room)]);
+            }
+        }
+        let _ = done.send(());
+    });
+    finished
+}
+
+fn read_buffer(buffer: &Buffer) -> String {
+    buffer
+        .lock()
+        .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+        .unwrap_or_default()
+}
+
+struct Running {
+    child: Child,
+    stdout: Buffer,
+    stderr: Buffer,
+    readers: Vec<Receiver<()>>,
+}
+
+impl Running {
+    fn start(child: Child, stdout: Option<ChildStdout>, stderr: Option<ChildStderr>) -> Self {
+        let stdout_buffer = Buffer::default();
+        let stderr_buffer = Buffer::default();
+        let mut readers = Vec::new();
+        if let Some(pipe) = stdout {
+            readers.push(spawn_reader(pipe, stdout_buffer.clone()));
+        }
+        if let Some(pipe) = stderr {
+            readers.push(spawn_reader(pipe, stderr_buffer.clone()));
+        }
+        Self {
+            child,
+            stdout: stdout_buffer,
+            stderr: stderr_buffer,
+            readers,
+        }
+    }
+
+    /// Waits until the command exits, the deadline passes or the run is
+    /// cancelled.
+    fn wait_until(&mut self, deadline: Instant, cancelled: &AtomicBool) -> std::io::Result<Wait> {
+        loop {
+            if let Some(status) = self.child.try_wait()? {
+                return Ok(Wait::Exited(status));
+            }
+            if cancelled.load(Ordering::SeqCst) {
+                return Ok(Wait::Cancelled);
+            }
+            if Instant::now() >= deadline {
+                return Ok(Wait::TimedOut);
+            }
+            thread::sleep(POLL_INTERVAL);
+        }
+    }
+
+    fn finish(self, status: std::process::ExitStatus) -> ScriptExecutionResult {
+        let deadline = Instant::now() + PIPE_GRACE;
+        for reader in &self.readers {
+            let left = deadline.saturating_duration_since(Instant::now());
+            if let Err(RecvTimeoutError::Timeout) = reader.recv_timeout(left) {
+                break;
+            }
+        }
+        ScriptExecutionResult {
+            success: status.success(),
+            exit_code: status.code(),
+            stdout: read_buffer(&self.stdout),
+            stderr: read_buffer(&self.stderr),
+            running: false,
+        }
+    }
+}
+
+enum Wait {
+    Exited(std::process::ExitStatus),
+    TimedOut,
+    Cancelled,
+}
+
+pub fn execute_script(
+    request: &ScriptRequest,
+    log_dir: Option<&Path>,
+) -> Result<ScriptExecutionResult, AppError> {
+    let mut log = LogContext {
+        dir: log_dir.map(Path::to_path_buf),
+        name: request.name.to_string(),
+        command: request.command.to_string(),
+        cwd: String::from("(default)"),
+        log_output: request.log_output,
+        started: Instant::now(),
+    };
+    let fail = |log: &LogContext, message: String| {
+        log.write(&empty_result(), Some(&message));
+        AppError::Message(message)
+    };
+
+    let cwd =
+        resolve_working_dir(request.working_dir).map_err(|error| fail(&log, error.to_string()))?;
+    let mut command = shell::command_with_text(request.command, TEXT_PLACEHOLDER, request.text);
+    if let Some(cwd) = &cwd {
+        command.current_dir(cwd);
+        log.cwd = cwd.to_string_lossy().into_owned();
+    }
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    let registration = CancelRegistration::new(request.run_id);
+    let mut child = command
+        .spawn()
+        .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+    let mut running = Running::start(child, stdout, stderr);
+
+    let output_timeout = request
+        .output_timeout
+        .filter(|timeout| !timeout.is_zero())
+        .map_or(OUTPUT_TIMEOUT, |timeout| timeout.min(MAX_OUTPUT_TIMEOUT));
+    let wait = if request.capture_output {
+        output_timeout
+    } else {
+        STATUS_WAIT
+    };
+    let status = running
+        .wait_until(Instant::now() + wait, &registration.flag)
+        .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
+    drop(registration);
+
+    match status {
+        Wait::Exited(status) => {
+            let result = running.finish(status);
+            log.write(&result, None);
+            return Ok(result);
+        }
+        Wait::Cancelled => {
+            shell::kill_tree(&mut running.child);
+            let _ = running.child.wait();
+            return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
+        }
+        Wait::TimedOut => {}
+    }
+
+    if request.capture_output {
+        shell::kill_tree(&mut running.child);
+        let _ = running.child.wait();
+        return Err(fail(
+            &log,
+            format!(
+                "The command did not finish in {} s",
+                output_timeout.as_secs()
+            ),
+        ));
+    }
+
+    // left running, e.g. a GUI app; the outcome only goes to the log
+    thread::spawn(move || {
+        let status = running.child.wait();
+        match status {
+            Ok(status) => log.write(&running.finish(status), None),
+            Err(error) => log.write(&empty_result(), Some(&error.to_string())),
+        }
+    });
+    Ok(ScriptExecutionResult {
+        running: true,
+        ..empty_result()
+    })
+}
+
+fn empty_result() -> ScriptExecutionResult {
+    ScriptExecutionResult {
+        success: false,
+        exit_code: None,
+        stdout: String::new(),
+        stderr: String::new(),
+        running: false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn request<'a>(command: &'a str, text: &'a str) -> ScriptRequest<'a> {
+        ScriptRequest {
+            name: "Test",
+            command,
+            working_dir: None,
+            text,
+            capture_output: true,
+            output_timeout: None,
+            log_output: false,
+            run_id: None,
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    mod commands {
+        pub const CAT: &str = "cat";
+        pub const ECHO_PLACEHOLDER: &str = "printf %s {{TEXT}}";
+        pub const PWD: &str = "pwd";
+        pub const SLEEP: &str = "sleep 30";
+    }
+
+    #[cfg(target_os = "windows")]
+    mod commands {
+        pub const CAT: &str = "[Console]::Out.Write([Console]::In.ReadToEnd())";
+        pub const ECHO_PLACEHOLDER: &str = "[Console]::Out.Write({{TEXT}})";
+        pub const PWD: &str = "(Get-Location).Path";
+        pub const SLEEP: &str = "Start-Sleep 30";
+    }
+
+    /// A timeout stops the processes the command started too: they would run
+    /// on and keep the output pipes open.
+    #[cfg(unix)]
+    #[test]
+    fn a_timeout_stops_the_whole_process_tree() {
+        let pid_file = std::env::temp_dir().join(format!("tyco-tree-{}", std::process::id()));
+        let _ = fs::remove_file(&pid_file);
+        let command = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
+        let mut timed = request(&command, "");
+        timed.output_timeout = Some(Duration::from_millis(500));
+
+        let started = Instant::now();
+        assert!(execute_script(&timed, None).is_err());
+        assert!(started.elapsed() < Duration::from_secs(5));
+
+        let pid: i32 = fs::read_to_string(&pid_file)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
+        let _ = fs::remove_file(&pid_file);
+        thread::sleep(Duration::from_millis(100));
+        // SAFETY: signal 0 only probes whether the process exists
+        assert_ne!(unsafe { libc::kill(pid, 0) }, 0, "the child still runs");
+    }
+
+    #[test]
+    fn passes_the_text_through_the_placeholder() {
+        let text = "don't \"stop\" $HOME";
+        let result = execute_script(&request(commands::ECHO_PLACEHOLDER, text), None).unwrap();
+        assert!(result.success, "{}", result.stderr);
+        assert_eq!(result.stdout, text);
+    }
+
+    #[test]
+    fn does_not_pass_text_to_stdin() {
+        let result = execute_script(&request(commands::CAT, "input text"), None).unwrap();
+        assert!(result.success, "{}", result.stderr);
+        assert_eq!(result.stdout, "");
+    }
+
+    #[test]
+    fn runs_in_the_home_directory_by_default() {
+        let result = execute_script(&request(commands::PWD, ""), None).unwrap();
+        let home = shell::home_dir().unwrap();
+        assert_eq!(
+            PathBuf::from(result.stdout.trim()).canonicalize().unwrap(),
+            home.canonicalize().unwrap()
+        );
+    }
+
+    #[test]
+    fn runs_in_the_given_directory() {
+        let dir = std::env::temp_dir().canonicalize().unwrap();
+        let dir_str = dir.to_string_lossy().into_owned();
+        let result = execute_script(
+            &ScriptRequest {
+                working_dir: Some(&dir_str),
+                ..request(commands::PWD, "")
+            },
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            PathBuf::from(result.stdout.trim()).canonicalize().unwrap(),
+            dir
+        );
+    }
+
+    #[test]
+    fn refuses_a_missing_working_directory() {
+        let result = execute_script(
+            &ScriptRequest {
+                working_dir: Some("/no/such/tyco/dir"),
+                ..request(commands::PWD, "")
+            },
+            None,
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn leaves_a_long_command_running_when_its_output_is_not_needed() {
+        let started = Instant::now();
+        let result = execute_script(
+            &ScriptRequest {
+                capture_output: false,
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        )
+        .unwrap();
+        assert!(result.running);
+        assert!(started.elapsed() < Duration::from_secs(10));
+    }
+
+    #[test]
+    fn kills_a_command_that_outlives_its_own_timeout() {
+        let started = Instant::now();
+        let error = execute_script(
+            &ScriptRequest {
+                output_timeout: Some(Duration::from_secs(1)),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        )
+        .unwrap_err();
+        assert_eq!(error.to_string(), "The command did not finish in 1 s");
+        assert!(started.elapsed() < Duration::from_secs(10));
+    }
+
+    #[test]
+    fn kills_a_cancelled_command() {
+        let run_id = format!("cancel-test-{}", std::process::id());
+        let canceller = {
+            let run_id = run_id.clone();
+            thread::spawn(move || {
+                let deadline = Instant::now() + Duration::from_secs(5);
+                while !cancel_script(&run_id) && Instant::now() < deadline {
+                    thread::sleep(Duration::from_millis(10));
+                }
+            })
+        };
+        let started = Instant::now();
+        let result = execute_script(
+            &ScriptRequest {
+                run_id: Some(&run_id),
+                ..request(commands::SLEEP, "")
+            },
+            None,
+        );
+        canceller.join().unwrap();
+        assert_eq!(result.unwrap_err().to_string(), SCRIPT_CANCELLED);
+        assert!(started.elapsed() < Duration::from_secs(10));
+        assert!(!cancel_script(&run_id), "the run is forgotten once done");
+    }
+
+    #[test]
+    fn reports_a_failure() {
+        let result = execute_script(&request("exit 3", ""), None).unwrap();
+        assert!(!result.success);
+        assert_eq!(result.exit_code, Some(3));
+    }
+
+    #[test]
+    fn logs_the_command_without_the_text() {
+        let dir = std::env::temp_dir().join(format!("tyco_test_log_{}", std::process::id()));
+        let result = execute_script(
+            &ScriptRequest {
+                log_output: true,
+                ..request(commands::ECHO_PLACEHOLDER, "private_text")
+            },
+            Some(&dir),
+        )
+        .unwrap();
+        assert!(result.success);
+
+        let content = fs::read_to_string(dir.join("actions.log")).unwrap();
+        assert!(content.contains("[Action: \"Test\"]"));
+        assert!(content.contains(&format!("Command: {}", commands::ECHO_PLACEHOLDER)));
+        assert!(!content.contains("Command: printf %s 'private_text'"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn cancels_all_running_scripts() {
+        let reg1 = CancelRegistration::new(Some("run-1"));
+        let reg2 = CancelRegistration::new(Some("run-2"));
+        assert!(!reg1.flag.load(Ordering::SeqCst));
+        assert!(!reg2.flag.load(Ordering::SeqCst));
+
+        cancel_all_scripts();
+
+        assert!(reg1.flag.load(Ordering::SeqCst));
+        assert!(reg2.flag.load(Ordering::SeqCst));
+    }
+}
