@@ -193,6 +193,7 @@ onMounted(() => {
       ariaLabel: t('editor.inputLabel'),
       paste: true,
       getMarkdownSettings: () => ipcStore.params?.userConfig.markdown,
+      onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !showMarkup.value,
       onToggleMarkup: toggleShowMarkup,
       onContextMenu: openContextMenu,

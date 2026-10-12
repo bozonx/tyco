@@ -45,6 +45,8 @@ export interface CreateEditorStateOptions
   /** Convert pasted HTML into Markdown; if omitted, paste remains native */
   paste?: boolean
   getMarkdownSettings?: () => unknown
+  /** Paste the clipboard as plain text (Mod-Shift-v) */
+  onPastePlain?: () => void
   /** Accessible name of the input, announced by screen readers */
   ariaLabel?: string
   /**
@@ -93,7 +95,9 @@ export const createEditorExtensions = (
   markdown({ base: markdownLanguage, codeLanguages: languages }),
   markdownPreview(options.markdownPreview ?? false),
   editorAppearance,
-  ...(options.paste ? [pasteExtension(options.getMarkdownSettings)] : []),
+  ...(options.paste
+    ? [pasteExtension(options.getMarkdownSettings, options.onPastePlain)]
+    : []),
   editorMenusExtension({ onContextMenu: options.onContextMenu }),
   EditorView.updateListener.of((update) => {
     // do not emit updates originating from the store

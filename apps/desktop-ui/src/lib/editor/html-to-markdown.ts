@@ -27,6 +27,7 @@ const CLIPBOARD_NOISE = [
 interface HastNode {
   type: string
   tagName?: string
+  value?: unknown
   properties?: Record<string, unknown>
   children?: HastNode[]
 }
@@ -101,6 +102,38 @@ const rehypeNormalizeClipboard = () => (tree: HastNode) => {
   tree.children = normalizeNodes(tree.children ?? [])
 }
 
+const PRESERVED_WHITESPACE = /white-space:\s*(pre|pre-wrap|break-spaces)\b/i
+
+const removeClipboardNoise = (html: string): string =>
+  CLIPBOARD_NOISE.reduce((acc, pattern) => acc.replace(pattern, ''), html)
+
+/**
+ * Whether the clipboard HTML came from a code editor. VS Code and other
+ * Monaco-based editors put one `<div>` per line into a block styled
+ * `white-space: pre`; as Markdown it would gain a blank line after every line,
+ * lose its indentation and get its `*` and `_` escaped. Such HTML adds nothing
+ * to `text/plain`
+ */
+export const isCodeEditorHtml = (html: string): boolean => {
+  const tree = unified()
+    .use(rehypeParse, { fragment: true })
+    .parse(removeClipboardNoise(html)) as HastNode
+  const content = (tree.children ?? []).filter(
+    (node) =>
+      node.type === 'element' ||
+      (node.type === 'text' && /\S/.test(String(node.value ?? '')))
+  )
+
+  return (
+    content.length > 0 &&
+    content.every(
+      (node) =>
+        node.type === 'element' &&
+        PRESERVED_WHITESPACE.test(attr(node, 'style'))
+    )
+  )
+}
+
 const processor = (settings?: unknown) =>
   unified()
     .use(rehypeParse, { fragment: true })
@@ -117,10 +150,7 @@ const processor = (settings?: unknown) =>
  * cannot await a promise without losing the caret position
  */
 export const htmlToMarkdown = (html: string, settings?: unknown): string => {
-  const cleaned = CLIPBOARD_NOISE.reduce(
-    (acc, pattern) => acc.replace(pattern, ''),
-    html
-  )
-
-  return String(processor(settings).processSync(cleaned)).trim()
+  return String(
+    processor(settings).processSync(removeClipboardNoise(html))
+  ).trim()
 }

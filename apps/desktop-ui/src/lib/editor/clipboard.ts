@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view'
 
-import { htmlToMarkdown } from './html-to-markdown'
+import { htmlToMarkdown, isCodeEditorHtml } from './html-to-markdown'
 import { insertFormattedText, insertPastedText } from './paste'
 
 /** Есть ли в документе что копировать */
@@ -69,7 +69,8 @@ export const pasteFromClipboard = async (
   settings?: unknown
 ): Promise<void> => {
   const { html, plain } = await readClipboard()
-  const markdown = html.trim() ? htmlToMarkdown(html, settings) : ''
+  const markdown =
+    html.trim() && !isCodeEditorHtml(html) ? htmlToMarkdown(html, settings) : ''
 
   if (markdown) {
     insertFormattedText(view, plain, markdown)

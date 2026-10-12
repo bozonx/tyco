@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { htmlToMarkdown } from './html-to-markdown'
+import { htmlToMarkdown, isCodeEditorHtml } from './html-to-markdown'
 
 describe('htmlToMarkdown', () => {
   it('converts headings', () => {
@@ -114,5 +114,31 @@ describe('htmlToMarkdown', () => {
 
   it('returns an empty string for empty markup', () => {
     expect(htmlToMarkdown('<div></div>')).toBe('')
+  })
+})
+
+describe('isCodeEditorHtml', () => {
+  it('recognizes a VS Code fragment', () => {
+    expect(
+      isCodeEditorHtml(
+        '<meta charset=\'utf-8\'><div style="color: #ccc;white-space: pre;">' +
+          '<div><span>const a = 1</span></div><br><div><span>a</span></div></div>'
+      )
+    ).toBe(true)
+  })
+
+  it('recognizes pre-wrap blocks', () => {
+    expect(isCodeEditorHtml('<div style="white-space: pre-wrap">x</div>')).toBe(
+      true
+    )
+  })
+
+  it('leaves formatted text and pre/code blocks to Markdown', () => {
+    expect(isCodeEditorHtml('<p><strong>bold</strong></p>')).toBe(false)
+    expect(isCodeEditorHtml('<pre><code>const a = 1</code></pre>')).toBe(false)
+    expect(
+      isCodeEditorHtml('<div style="white-space: pre">x</div><p>text</p>')
+    ).toBe(false)
+    expect(isCodeEditorHtml('')).toBe(false)
   })
 })

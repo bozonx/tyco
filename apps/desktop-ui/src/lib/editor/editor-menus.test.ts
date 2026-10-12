@@ -1,7 +1,7 @@
 import { undo } from '@codemirror/commands'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { ContextMenuRequest } from './context-menu'
 import { wordAt } from './context-menu'
@@ -117,9 +117,18 @@ describe('paste', () => {
     view.destroy()
   })
 
-  it('pastes plain text after Ctrl+Shift+V', () => {
-    const { view } = mount('')
+  it('runs the plain paste command on Ctrl+Shift+V', () => {
+    const parent = document.createElement('div')
+    const onPastePlain = vi.fn()
 
+    document.body.appendChild(parent)
+
+    const view = new EditorView({
+      parent,
+      state: EditorState.create({
+        extensions: createEditorExtensions({ paste: true, onPastePlain }),
+      }),
+    })
     const keydown = new KeyboardEvent('keydown', {
       key: 'V',
       ctrlKey: true,
@@ -131,11 +140,30 @@ describe('paste', () => {
     // CodeMirror resolves a shifted letter by its key code, which jsdom omits
     Object.defineProperty(keydown, 'keyCode', { value: 86 })
     view.contentDOM.dispatchEvent(keydown)
+
+    expect(onPastePlain).toHaveBeenCalledOnce()
+    expect(keydown.defaultPrevented).toBe(true)
+
+    view.destroy()
+    parent.remove()
+  })
+
+  it('pastes code copied from a code editor as plain text', () => {
+    const { view } = mount('')
+    const plain = 'function f() {\n  return a_b /* c */\n}'
+
     view.contentDOM.dispatchEvent(
-      pasteEvent({ 'text/html': '<h1>Title</h1>', 'text/plain': 'Title' })
+      pasteEvent({
+        'text/html':
+          '<meta charset="utf-8"><div style="font-family: monospace; white-space: pre;">' +
+          '<div><span>function f() {</span></div>' +
+          '<div><span>  return a_b /* c */</span></div>' +
+          '<div><span>}</span></div></div>',
+        'text/plain': plain,
+      })
     )
 
-    expect(view.state.doc.toString()).toBe('Title')
+    expect(view.state.doc.toString()).toBe(plain)
 
     view.destroy()
   })

@@ -3,14 +3,7 @@ import type { Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 
 import { EDIT_USER_EVENT } from './edit-source'
-import { htmlToMarkdown } from './html-to-markdown'
-
-/**
- * How many milliseconds after Ctrl+Shift+V the next paste is treated as plain
- * text. The clipboard cannot be read directly in the key handler, so we record
- * the intent and wait for the native `paste` event.
- */
-const PLAIN_PASTE_WINDOW_MS = 500
+import { htmlToMarkdown, isCodeEditorHtml } from './html-to-markdown'
 
 /** Insert text into current selection as a regular paste */
 export const insertPastedText = (view: EditorView, text: string): void => {
@@ -55,84 +48,50 @@ export const insertFormattedText = (
 
 /**
  * Paste handling: if the clipboard has `text/html`, convert it to Markdown;
- * otherwise paste `text/plain` as is. Ctrl+Shift+V always pastes plain text.
+ * otherwise paste `text/plain` as is. HTML copied from a code editor is code,
+ * not formatted text, so it is pasted as plain text too.
+ *
+ * Ctrl+Shift+V runs `onPastePlain`: WebKitGTK does not bind that shortcut to a
+ * paste, so no `paste` event would follow it.
  */
 export const pasteExtension = (
-  getSettings: () => unknown = () => undefined
-): Extension => {
-  let plainPasteRequested = false
-  let plainPasteTimer: ReturnType<typeof setTimeout> | null = null
+  getSettings: () => unknown = () => undefined,
+  onPastePlain?: () => void
+): Extension => [
+  ...(onPastePlain
+    ? [
+        keymap.of([
+          {
+            key: 'Mod-Shift-v',
+            run: () => {
+              onPastePlain()
 
-  // the flag has to expire on its own: if the webview swallowed Ctrl+Shift+V
-  // and no paste followed, the next plain Ctrl+V must not be downgraded
-  const forgetPlainRequest = (): void => {
-    plainPasteRequested = false
+              return true
+            },
+          },
+        ]),
+      ]
+    : []),
+  EditorView.domEventHandlers({
+    paste: (event, view) => {
+      const data = event.clipboardData
 
-    if (plainPasteTimer === null) return
+      if (!data) return false
 
-    clearTimeout(plainPasteTimer)
-    plainPasteTimer = null
-  }
+      const html = data.getData('text/html')
 
-  const requestPlainPaste = (): void => {
-    forgetPlainRequest()
-    plainPasteRequested = true
-    plainPasteTimer = setTimeout(forgetPlainRequest, PLAIN_PASTE_WINDOW_MS)
-  }
+      // without HTML there is nothing to convert — let CodeMirror handle the
+      // paste itself; it takes `text/plain`
+      if (!html.trim() || isCodeEditorHtml(html)) return false
 
-  const consumePlainRequest = (): boolean => {
-    const requested = plainPasteRequested
+      const markdown = htmlToMarkdown(html, getSettings())
 
-    forgetPlainRequest()
+      if (!markdown) return false
 
-    return requested
-  }
+      event.preventDefault()
+      insertFormattedText(view, data.getData('text/plain'), markdown)
 
-  return [
-    keymap.of([
-      {
-        key: 'Mod-Shift-v',
-        run: () => {
-          requestPlainPaste()
-
-          // do not intercept: native paste should still occur,
-          // the handler below will notice the flag and paste plain text
-          return false
-        },
-      },
-    ]),
-    EditorView.domEventHandlers({
-      paste: (event, view) => {
-        const data = event.clipboardData
-
-        if (!data) return false
-
-        const plain = data.getData('text/plain')
-        const html = data.getData('text/html')
-        const forcePlain = consumePlainRequest()
-
-        // without HTML there is nothing to convert — let CodeMirror
-        // handle the paste itself
-        if (!html.trim()) return false
-
-        if (forcePlain) {
-          if (!plain) return false
-
-          event.preventDefault()
-          insertPastedText(view, plain)
-
-          return true
-        }
-
-        const markdown = htmlToMarkdown(html, getSettings())
-
-        if (!markdown) return false
-
-        event.preventDefault()
-        insertFormattedText(view, plain, markdown)
-
-        return true
-      },
-    }),
-  ]
-}
+      return true
+    },
+  }),
+]
