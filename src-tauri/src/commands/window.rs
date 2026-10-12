@@ -55,19 +55,26 @@ pub async fn type_into_window_and_close(
     copy_to_clipboard(&text)?;
     runtime::hide_active_window(&app)?;
     let focus_app = app.clone();
-    // waits for the focus change, which must not hold an async worker
+    // Waiting for focus and insertion must not hold an async worker.
     tauri::async_runtime::spawn_blocking(move || {
-        runtime::wait_until_unfocused(&focus_app, FOCUS_RELEASE_TIMEOUT);
-        crate::services::platform::inject_paste(&params.user_config, params.window_id.as_deref())
+        crate::services::platform::paste_after_focus(
+            &crate::services::platform::SystemTextInjector,
+            &params.user_config,
+            params.window_id.as_deref(),
+            || runtime::wait_until_unfocused(&focus_app, FOCUS_RELEASE_TIMEOUT),
+            || {
+                #[cfg(target_os = "linux")]
+                if let Some(snapshot) = previous_clipboard {
+                    crate::services::platform::linux::clipboard_restore::restore_later(
+                        snapshot, text,
+                    );
+                }
+            },
+        )
     })
     .await
     .map_err(|error| AppError::Message(error.to_string()))?
     .inspect_err(|error| log::error!("Text insertion failed: {error}"))?;
-    // after a failure the text stays in the clipboard to be pasted by hand
-    #[cfg(target_os = "linux")]
-    if let Some(snapshot) = previous_clipboard {
-        crate::services::platform::linux::clipboard_restore::restore_later(snapshot, text);
-    }
     Ok(())
 }
 

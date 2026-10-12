@@ -9,7 +9,7 @@ use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::traits::DeviceTrait;
 use cpal::Sample;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -21,7 +21,7 @@ use crate::state::{AppState, VoiceCaptureSession};
 pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
 
 /// What speech models are trained on; a higher device rate is averaged down.
-const TARGET_SAMPLE_RATE: u32 = 16_000;
+pub(crate) const TARGET_SAMPLE_RATE: u32 = 16_000;
 /// Chunks of about 100 ms: what Deepgram recommends, and few enough IPC calls.
 const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
@@ -55,23 +55,79 @@ enum CaptureEvent {
     },
 }
 
+/// Device setup is separate from the capture lifecycle and its outputs.
+pub(crate) trait AudioSource {
+    type Stream;
+    fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<Self::Stream>, AppError>;
+}
+
+pub(crate) struct OpenedCapture<T> {
+    pub stream: T,
+    pub context: StreamContext,
+    pub sample_rate: u32,
+}
+
+trait AudioLevels {
+    fn publish(&self, payload: VoiceAudioLevelPayload);
+}
+
+impl AudioLevels for AppHandle {
+    fn publish(&self, payload: VoiceAudioLevelPayload) {
+        let _ = self.emit(VOICE_AUDIO_LEVEL_EVENT, payload);
+    }
+}
+
+trait CaptureRuntime {
+    fn now(&self) -> Instant;
+    fn wait(&self);
+}
+
+struct SystemCaptureRuntime;
+
+impl CaptureRuntime for SystemCaptureRuntime {
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+    fn wait(&self) {
+        thread::sleep(POLL_INTERVAL);
+    }
+}
+
 pub async fn start_capture<S: EventSink>(
     app: &AppHandle,
     state: &AppState,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
+    start_capture_with(
+        super::platform::audio::SystemAudioSource,
+        app.clone(),
+        state,
+        sink,
+    )
+    .await
+}
+
+async fn start_capture_with<A, L, S>(
+    source: A,
+    levels: L,
+    state: &AppState,
+    sink: S,
+) -> Result<VoiceCaptureInfo, AppError>
+where
+    A: AudioSource + Send + 'static,
+    L: AudioLevels + Send + 'static,
+    S: EventSink,
+{
     let _operation = state.lock_voice_capture().await;
-    // one microphone: a new dictation ends the previous one
+    // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
-
-    let app_handle = app.clone();
     let session_id = state.next_voice_capture_id();
-    let (session, sample_rate) =
-        tokio::task::spawn_blocking(move || create_capture_session(app_handle, sink, session_id))
-            .await
-            .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
+    let (session, sample_rate) = tokio::task::spawn_blocking(move || {
+        create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
+    })
+    .await
+    .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
     state.replace_voice_capture_session(Some(session));
-
     Ok(VoiceCaptureInfo {
         sample_rate,
         session_id,
@@ -108,23 +164,37 @@ pub fn stop_capture_on_shutdown(state: &AppState) {
     }
 }
 
-fn create_capture_session<S: EventSink>(
-    app: AppHandle,
+fn create_capture_session<A, L, S>(
+    source: A,
+    levels: L,
     sink: S,
     id: u64,
-) -> Result<(VoiceCaptureSession, u32), AppError> {
+    setup_timeout: Duration,
+) -> Result<(VoiceCaptureSession, u32), AppError>
+where
+    A: AudioSource + Send + 'static,
+    L: AudioLevels + Send + 'static,
+    S: EventSink,
+{
     let stop_flag = Arc::new(AtomicBool::new(false));
     let thread_stop_flag = Arc::clone(&stop_flag);
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, String>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
-        if let Err(error) = run_capture_thread(&app, &sink, &thread_stop_flag, &setup_tx) {
+        if let Err(error) = run_capture_thread(
+            &source,
+            &levels,
+            &SystemCaptureRuntime,
+            &sink,
+            &thread_stop_flag,
+            &setup_tx,
+        ) {
             log::error!("Voice capture error: {error}");
             let _ = setup_tx.send(Err(error.to_string()));
         }
     });
 
-    match setup_rx.recv_timeout(SETUP_TIMEOUT) {
+    match setup_rx.recv_timeout(setup_timeout) {
         Ok(Ok(sample_rate)) => Ok((
             VoiceCaptureSession {
                 id,
@@ -150,56 +220,28 @@ fn create_capture_session<S: EventSink>(
     }
 }
 
-fn run_capture_thread<S: EventSink>(
-    app: &AppHandle,
+fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
+    source: &A,
+    levels: &L,
+    runtime: &impl CaptureRuntime,
     sink: &S,
     stop_flag: &Arc<AtomicBool>,
     setup_tx: &std_mpsc::SyncSender<Result<u32, String>>,
 ) -> Result<(), AppError> {
-    let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .ok_or_else(|| AppError::Message(String::from("No default input device found")))?;
-    let supported_config = device
-        .default_input_config()
-        .map_err(|error| AppError::Message(error.to_string()))?;
-    let device_rate = supported_config.sample_rate().0;
-    let sample_rate = device_rate.min(TARGET_SAMPLE_RATE);
-    let stream_config = supported_config.config();
-
-    let context = StreamContext {
-        pending: Arc::new(Mutex::new(Vec::new())),
-        stream_error: Arc::new(Mutex::new(None)),
-        current_level: Arc::new(Mutex::new((0.0, 0.0))),
-        stop_flag: Arc::clone(stop_flag),
-        device_rate,
+    let OpenedCapture {
+        stream,
+        context,
         sample_rate,
-    };
-
-    let stream = match supported_config.sample_format() {
-        cpal::SampleFormat::F32 => build_input_stream::<f32>(&device, &stream_config, &context)?,
-        cpal::SampleFormat::I16 => build_input_stream::<i16>(&device, &stream_config, &context)?,
-        cpal::SampleFormat::U16 => build_input_stream::<u16>(&device, &stream_config, &context)?,
-        cpal::SampleFormat::I32 => build_input_stream::<i32>(&device, &stream_config, &context)?,
-        sample_format => {
-            return Err(AppError::Message(format!(
-                "Unsupported sample format: {sample_format:?}"
-            )))
-        }
-    };
-
-    stream
-        .play()
-        .map_err(|error| AppError::Message(error.to_string()))?;
+    } = source.open(stop_flag)?;
 
     setup_tx
         .send(Ok(sample_rate))
         .map_err(|error| AppError::Message(error.to_string()))?;
 
     let chunk_samples = sample_rate as usize * CHUNK_MS / 1_000;
-    let mut last_level = Instant::now();
+    let mut last_level = runtime.now();
     while !stop_flag.load(Ordering::SeqCst) {
-        thread::sleep(POLL_INTERVAL);
+        runtime.wait();
 
         if !flush_pending(&context.pending, sink, chunk_samples) {
             // nobody is listening any more: the webview went away
@@ -207,29 +249,23 @@ fn run_capture_thread<S: EventSink>(
             break;
         }
 
-        if last_level.elapsed() >= LEVEL_INTERVAL {
-            last_level = Instant::now();
+        if runtime.now().saturating_duration_since(last_level) >= LEVEL_INTERVAL {
+            last_level = runtime.now();
             let (level, peak) = context
                 .current_level
                 .lock()
                 .map(|level| *level)
                 .unwrap_or((0.0, 0.0));
-            let _ = app.emit(
-                VOICE_AUDIO_LEVEL_EVENT,
-                VoiceAudioLevelPayload { level, peak },
-            );
+            levels.publish(VoiceAudioLevelPayload { level, peak });
         }
     }
 
     // no sample may arrive after the final flush
     drop(stream);
-    let _ = app.emit(
-        VOICE_AUDIO_LEVEL_EVENT,
-        VoiceAudioLevelPayload {
-            level: 0.0,
-            peak: 0.0,
-        },
-    );
+    levels.publish(VoiceAudioLevelPayload {
+        level: 0.0,
+        peak: 0.0,
+    });
 
     let stream_error = context
         .stream_error
@@ -257,16 +293,16 @@ fn flush_pending<S: EventSink>(pending: &Mutex<Vec<i16>>, sink: &S, min_samples:
     sink.bytes(pcm16_to_bytes(&samples))
 }
 
-struct StreamContext {
-    pending: Arc<Mutex<Vec<i16>>>,
-    stream_error: Arc<Mutex<Option<String>>>,
-    current_level: Arc<Mutex<(f32, f32)>>,
-    stop_flag: Arc<AtomicBool>,
-    device_rate: u32,
-    sample_rate: u32,
+pub(crate) struct StreamContext {
+    pub pending: Arc<Mutex<Vec<i16>>>,
+    pub stream_error: Arc<Mutex<Option<String>>>,
+    pub current_level: Arc<Mutex<(f32, f32)>>,
+    pub stop_flag: Arc<AtomicBool>,
+    pub device_rate: u32,
+    pub sample_rate: u32,
 }
 
-fn build_input_stream<T>(
+pub(crate) fn build_input_stream<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
     context: &StreamContext,
@@ -418,6 +454,286 @@ mod tests {
             self.chunks.lock().unwrap().push(bytes);
             !self.closed
         }
+    }
+
+    #[derive(Clone, Default)]
+    struct Trace(Arc<Mutex<Vec<String>>>);
+
+    impl Trace {
+        fn push(&self, value: impl Into<String>) {
+            self.0.lock().unwrap().push(value.into());
+        }
+        fn values(&self) -> Vec<String> {
+            self.0.lock().unwrap().clone()
+        }
+    }
+
+    impl AudioLevels for Trace {
+        fn publish(&self, payload: VoiceAudioLevelPayload) {
+            self.push(format!("level:{}", payload.level));
+        }
+    }
+
+    impl EventSink for Trace {
+        fn event<T: Serialize>(&self, event: &T) -> bool {
+            self.push(serde_json::to_string(event).unwrap());
+            true
+        }
+        fn bytes(&self, bytes: Vec<u8>) -> bool {
+            self.push(format!("bytes:{}", bytes.len()));
+            true
+        }
+    }
+
+    struct TestStream {
+        pending: Arc<Mutex<Vec<i16>>>,
+        trace: Trace,
+    }
+
+    impl Drop for TestStream {
+        fn drop(&mut self) {
+            self.trace.push("drop-stream");
+            // Simulate the last callback completing when the stream shuts down.
+            self.pending.lock().unwrap().push(7);
+        }
+    }
+
+    #[derive(Default)]
+    struct TestSource {
+        trace: Trace,
+        fail: bool,
+        stop_on_open: bool,
+        stream_error: Option<String>,
+    }
+
+    impl AudioSource for TestSource {
+        type Stream = TestStream;
+        fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+            self.trace.push("open");
+            if self.fail {
+                return Err(AppError::Message("device unavailable".into()));
+            }
+            stop_flag.store(self.stop_on_open, Ordering::SeqCst);
+            let pending = Arc::new(Mutex::new(vec![1; 1600]));
+            Ok(OpenedCapture {
+                stream: TestStream {
+                    pending: Arc::clone(&pending),
+                    trace: self.trace.clone(),
+                },
+                sample_rate: TARGET_SAMPLE_RATE,
+                context: StreamContext {
+                    pending,
+                    stream_error: Arc::new(Mutex::new(self.stream_error.clone())),
+                    current_level: Arc::new(Mutex::new((0.5, 0.75))),
+                    stop_flag: Arc::clone(stop_flag),
+                    device_rate: TARGET_SAMPLE_RATE,
+                    sample_rate: TARGET_SAMPLE_RATE,
+                },
+            })
+        }
+    }
+
+    struct TestRuntime {
+        now: std::cell::Cell<Instant>,
+        stop: Arc<AtomicBool>,
+    }
+
+    impl CaptureRuntime for TestRuntime {
+        fn now(&self) -> Instant {
+            self.now.get()
+        }
+        fn wait(&self) {
+            self.now.set(self.now.get() + LEVEL_INTERVAL);
+            self.stop.store(true, Ordering::SeqCst);
+        }
+    }
+
+    #[test]
+    fn stream_stops_before_final_samples_and_end_and_resets_the_audio_level() {
+        let trace = Trace::default();
+        let source = TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        };
+        let stop = Arc::new(AtomicBool::new(false));
+        let runtime = TestRuntime {
+            now: std::cell::Cell::new(Instant::now()),
+            stop: Arc::clone(&stop),
+        };
+        let (tx, rx) = std_mpsc::sync_channel(1);
+        run_capture_thread(&source, &trace, &runtime, &trace, &stop, &tx).unwrap();
+        assert_eq!(rx.try_recv().unwrap().unwrap(), TARGET_SAMPLE_RATE);
+        assert_eq!(
+            trace.values(),
+            [
+                "open",
+                "bytes:3200",
+                "level:0.5",
+                "drop-stream",
+                "level:0",
+                "bytes:2",
+                r#"{"type":"end"}"#
+            ]
+        );
+    }
+
+    #[test]
+    fn stream_failure_emits_error_instead_of_final_audio_and_end() {
+        let trace = Trace::default();
+        let source = TestSource {
+            trace: trace.clone(),
+            stop_on_open: true,
+            stream_error: Some("stream failed".into()),
+            ..TestSource::default()
+        };
+        let stop = Arc::new(AtomicBool::new(false));
+        let runtime = TestRuntime {
+            now: std::cell::Cell::new(Instant::now()),
+            stop: Arc::clone(&stop),
+        };
+        let (tx, _rx) = std_mpsc::sync_channel(1);
+        run_capture_thread(&source, &trace, &runtime, &trace, &stop, &tx).unwrap();
+        assert_eq!(
+            trace.values(),
+            [
+                "open",
+                "drop-stream",
+                "level:0",
+                r#"{"type":"error","message":"stream failed"}"#
+            ]
+        );
+    }
+
+    #[test]
+    fn a_closed_listener_stops_capture_without_sending_end() {
+        let trace = Trace::default();
+        let source = TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        };
+        let sink = RecordingSink {
+            closed: true,
+            ..RecordingSink::default()
+        };
+        let stop = Arc::new(AtomicBool::new(false));
+        let runtime = TestRuntime {
+            now: std::cell::Cell::new(Instant::now()),
+            stop: Arc::clone(&stop),
+        };
+        let (tx, _rx) = std_mpsc::sync_channel(1);
+        run_capture_thread(&source, &trace, &runtime, &sink, &stop, &tx).unwrap();
+        assert!(stop.load(Ordering::SeqCst));
+        assert!(sink.events.lock().unwrap().is_empty());
+        assert_eq!(trace.values(), ["open", "drop-stream", "level:0"]);
+    }
+
+    #[test]
+    fn device_setup_errors_are_returned_without_a_tauri_runtime() {
+        let source = TestSource {
+            fail: true,
+            ..TestSource::default()
+        };
+        let error = create_capture_session(
+            source,
+            Trace::default(),
+            Trace::default(),
+            1,
+            Duration::from_secs(1),
+        )
+        .err()
+        .unwrap();
+        assert_eq!(error.to_string(), "device unavailable");
+    }
+
+    #[test]
+    fn setup_timeout_signals_stop_without_joining_a_blocked_device() {
+        struct BlockedSource {
+            release: Mutex<std_mpsc::Receiver<()>>,
+            done: std_mpsc::Sender<bool>,
+        }
+        impl AudioSource for BlockedSource {
+            type Stream = ();
+            fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<()>, AppError> {
+                self.release.lock().unwrap().recv().unwrap();
+                self.done.send(stop.load(Ordering::SeqCst)).unwrap();
+                Err(AppError::Message("device released".into()))
+            }
+        }
+        let (release_tx, release_rx) = std_mpsc::channel();
+        let (done_tx, done_rx) = std_mpsc::channel();
+        let source = BlockedSource {
+            release: Mutex::new(release_rx),
+            done: done_tx,
+        };
+        let error = create_capture_session(
+            source,
+            Trace::default(),
+            Trace::default(),
+            1,
+            Duration::ZERO,
+        )
+        .err()
+        .unwrap();
+        assert!(error.to_string().contains("did not start in time"));
+        release_tx.send(()).unwrap();
+        assert!(done_rx.recv_timeout(Duration::from_secs(1)).unwrap());
+    }
+
+    #[tokio::test]
+    async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
+        let state = AppState::new(crate::models::default_init_params(
+            serde_json::Value::Null,
+            Default::default(),
+        ));
+        let trace = Trace::default();
+        let first = start_capture_with(
+            TestSource {
+                stop_on_open: true,
+                trace: trace.clone(),
+                ..TestSource::default()
+            },
+            trace.clone(),
+            &state,
+            trace.clone(),
+        )
+        .await
+        .unwrap();
+        let second = start_capture_with(
+            TestSource {
+                stop_on_open: true,
+                trace: trace.clone(),
+                ..TestSource::default()
+            },
+            trace.clone(),
+            &state,
+            trace.clone(),
+        )
+        .await
+        .unwrap();
+        assert_ne!(first.session_id, second.session_id);
+        stop_capture(&state, Some(first.session_id)).await.unwrap();
+        let session = state
+            .take_voice_capture_session(Some(second.session_id))
+            .expect("new capture was stopped");
+        state.replace_voice_capture_session(Some(session));
+        stop_capture(&state, Some(second.session_id)).await.unwrap();
+        assert!(state.take_voice_capture_session(None).is_none());
+        let values = trace.values();
+        let second_open = values
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| *value == "open")
+            .nth(1)
+            .unwrap()
+            .0;
+        let first_end = values
+            .iter()
+            .position(|value| value == r#"{"type":"end"}"#)
+            .unwrap();
+        assert!(
+            first_end < second_open,
+            "old capture must finish before the new device opens"
+        );
     }
 
     #[test]

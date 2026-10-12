@@ -33,6 +33,18 @@ loads the current config. New edits during a save are rebased onto its result.
 `services/storage/` separates config migration and local state, editor history,
 chat history and shared file primitives; existing callers use its public facade.
 
+Activation policy lives in `services/activation_coordinator.rs`, with a supplied
+window host and generation checks that discard late context captures.
+`SelectionRuns` coordinates capture, cancellation, publication and completion
+through a supplied backend; clipboard and focused-window effects live in
+`platform/selection.rs`. Paste and hotkey policies accept substitutable input
+and registration adapters, including rollback after a shortcut conflict.
+Voice capture accepts an audio source, level output and polling runtime;
+`platform/audio.rs` opens the CPAL device. Lifecycle tests use fake streams and
+outputs to check setup failure, timeout, final audio ordering and stale stops.
+Retention and polling tests supply timestamps or virtual time instead of sleeping.
+The remaining device and compositor behavior belongs to desktop smoke tests.
+
 `build.rs` declares every app command in `AppManifest`. Capability files grant
 explicit command permissions to `main`, `quick`, or both, without remote or
 wildcard window access. The core event listener permissions are shared; native

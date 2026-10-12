@@ -264,8 +264,31 @@ pub struct HotkeyProviderInfo {
     platform: &'static str,
 }
 
-pub(crate) trait HotkeyProvider {
-    fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError>;
+/// Registration effects, supplied to policy instead of an application handle.
+trait HotkeyProvider {
+    fn is_registered(&self, shortcut: Shortcut) -> bool;
+    fn register(&self, shortcut: Shortcut) -> Result<(), AppError>;
+    fn unregister(&self, shortcut: Shortcut) -> Result<(), AppError>;
+}
+
+struct SystemHotkeyProvider<'a>(&'a AppHandle);
+
+impl HotkeyProvider for SystemHotkeyProvider<'_> {
+    fn is_registered(&self, shortcut: Shortcut) -> bool {
+        self.0.global_shortcut().is_registered(shortcut)
+    }
+    fn register(&self, shortcut: Shortcut) -> Result<(), AppError> {
+        self.0
+            .global_shortcut()
+            .register(shortcut)
+            .map_err(|error| AppError::Message(error.to_string()))
+    }
+    fn unregister(&self, shortcut: Shortcut) -> Result<(), AppError> {
+        self.0
+            .global_shortcut()
+            .unregister(shortcut)
+            .map_err(|error| AppError::Message(error.to_string()))
+    }
 }
 
 struct PortalProvider;
@@ -397,24 +420,37 @@ async fn refresh_system_triggers(app: &AppHandle) {
 /// Only Tyco's own registrations can be suspended: the desktop keeps portal
 /// shortcuts and compositor bindings.
 pub fn set_suspended(app: &AppHandle, suspended: bool) -> Result<(), AppError> {
-    if app.state::<ProviderState>().get() != ProviderKind::GlobalShortcut {
-        return Ok(());
+    suspend_with(
+        app.state::<ProviderState>().get(),
+        &app.state::<HotkeyRegistry>(),
+        &SystemHotkeyProvider(app),
+        suspended,
+    );
+    Ok(())
+}
+
+fn suspend_with(
+    kind: ProviderKind,
+    registry: &HotkeyRegistry,
+    provider: &impl HotkeyProvider,
+    suspended: bool,
+) {
+    if kind != ProviderKind::GlobalShortcut {
+        return;
     }
-    let shortcuts = app
-        .state::<HotkeyRegistry>()
+    let shortcuts = registry
         .shortcuts
         .read()
         .expect("hotkey shortcuts lock poisoned")
         .values()
         .copied()
         .collect::<Vec<_>>();
-    let global_shortcut = app.global_shortcut();
     for shortcut in shortcuts {
-        let registered = global_shortcut.is_registered(shortcut);
+        let registered = provider.is_registered(shortcut);
         let result = if suspended && registered {
-            global_shortcut.unregister(shortcut)
+            provider.unregister(shortcut)
         } else if !suspended && !registered {
-            global_shortcut.register(shortcut)
+            provider.register(shortcut)
         } else {
             Ok(())
         };
@@ -425,7 +461,6 @@ pub fn set_suspended(app: &AppHandle, suspended: bool) -> Result<(), AppError> {
             );
         }
     }
-    Ok(())
 }
 
 pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
@@ -531,12 +566,25 @@ fn apply_global_shortcut(
     target: &HotkeyTarget,
     shortcut: Option<Shortcut>,
 ) -> Result<ApplyHotkeyResult, AppError> {
+    apply_global_shortcut_with(
+        &app.state::<HotkeyRegistry>(),
+        &SystemHotkeyProvider(app),
+        target,
+        shortcut,
+    )
+}
+
+fn apply_global_shortcut_with(
+    registry: &HotkeyRegistry,
+    provider: &impl HotkeyProvider,
+    target: &HotkeyTarget,
+    shortcut: Option<Shortcut>,
+) -> Result<ApplyHotkeyResult, AppError> {
     let ready = ApplyHotkeyResult {
         status: HotkeyApplyStatus::Ready,
         external_command: None,
         message: None,
     };
-    let registry = app.state::<HotkeyRegistry>();
     let previous = registry
         .shortcuts
         .read()
@@ -549,8 +597,8 @@ fn apply_global_shortcut(
     }
     if let Some(previous) = previous {
         // a shortcut suspended while the settings record is not registered
-        if app.global_shortcut().is_registered(previous) {
-            app.global_shortcut()
+        if provider.is_registered(previous) {
+            provider
                 .unregister(previous)
                 .map_err(|error| AppError::Message(error.to_string()))?;
         }
@@ -568,9 +616,9 @@ fn apply_global_shortcut(
             .remove(target);
         return Ok(ready);
     };
-    if let Err(error) = app.global_shortcut().register(shortcut) {
+    if let Err(error) = provider.register(shortcut) {
         if let Some(previous) = previous {
-            match app.global_shortcut().register(previous) {
+            match provider.register(previous) {
                 Ok(()) => {
                     registry
                         .targets
@@ -856,7 +904,7 @@ pub fn default_selection_hotkeys_config() -> Value {
     Value::Object(hotkeys)
 }
 
-impl HotkeyProvider for ExternalProvider {
+impl ExternalProvider {
     fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         log::info!("No in-process hotkey provider is available; use tyco-ctl or D-Bus");
         Ok(())
@@ -864,7 +912,7 @@ impl HotkeyProvider for ExternalProvider {
 }
 
 #[cfg(not(target_os = "linux"))]
-impl HotkeyProvider for PortalProvider {
+impl PortalProvider {
     fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         Err(AppError::Message(String::from(
             "The global shortcuts portal is only available on Linux",
@@ -872,7 +920,7 @@ impl HotkeyProvider for PortalProvider {
     }
 }
 
-impl HotkeyProvider for GlobalShortcutProvider {
+impl GlobalShortcutProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         app.handle().plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -911,7 +959,7 @@ impl HotkeyProvider for GlobalShortcutProvider {
                     continue;
                 }
             };
-            match app.global_shortcut().register(shortcut) {
+            match SystemHotkeyProvider(app.handle()).register(shortcut) {
                 Ok(()) => {
                     registry
                         .targets
@@ -938,7 +986,7 @@ impl HotkeyProvider for GlobalShortcutProvider {
 }
 
 #[cfg(target_os = "linux")]
-impl HotkeyProvider for PortalProvider {
+impl PortalProvider {
     fn register(self, app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
         let app = app.handle().clone();
         tauri::async_runtime::spawn(async move {
@@ -1112,6 +1160,153 @@ fn to_portal_trigger(shortcut: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[derive(Default)]
+    struct FakeProvider {
+        registered: std::cell::RefCell<std::collections::HashSet<u32>>,
+        rejected: std::cell::RefCell<std::collections::HashSet<u32>>,
+        unregister_fails: std::cell::Cell<bool>,
+        calls: std::cell::RefCell<Vec<(bool, u32)>>,
+    }
+
+    impl HotkeyProvider for FakeProvider {
+        fn is_registered(&self, shortcut: Shortcut) -> bool {
+            self.registered.borrow().contains(&shortcut.id())
+        }
+        fn register(&self, shortcut: Shortcut) -> Result<(), AppError> {
+            self.calls.borrow_mut().push((true, shortcut.id()));
+            if self.rejected.borrow().contains(&shortcut.id()) {
+                return Err(AppError::Message("shortcut conflict".into()));
+            }
+            self.registered.borrow_mut().insert(shortcut.id());
+            Ok(())
+        }
+        fn unregister(&self, shortcut: Shortcut) -> Result<(), AppError> {
+            self.calls.borrow_mut().push((false, shortcut.id()));
+            if self.unregister_fails.get() {
+                return Err(AppError::Message("unregister failed".into()));
+            }
+            self.registered.borrow_mut().remove(&shortcut.id());
+            Ok(())
+        }
+    }
+
+    fn shortcut_fixture() -> (
+        HotkeyRegistry,
+        FakeProvider,
+        HotkeyTarget,
+        Shortcut,
+        Shortcut,
+    ) {
+        let registry = HotkeyRegistry::default();
+        let provider = FakeProvider::default();
+        let target = HotkeyTarget::Mode(StartMode::Write);
+        let old: Shortcut = "Ctrl+Shift+W".parse().unwrap();
+        let new: Shortcut = "Ctrl+Shift+E".parse().unwrap();
+        registry
+            .shortcuts
+            .write()
+            .unwrap()
+            .insert(target.clone(), old);
+        registry
+            .targets
+            .write()
+            .unwrap()
+            .insert(old.id(), target.clone());
+        provider.registered.borrow_mut().insert(old.id());
+        (registry, provider, target, old, new)
+    }
+
+    #[test]
+    fn shortcut_replacement_and_unassignment_keep_registry_and_provider_in_sync() {
+        let (registry, provider, target, old, new) = shortcut_fixture();
+        assert_eq!(
+            apply_global_shortcut_with(&registry, &provider, &target, Some(old))
+                .unwrap()
+                .status,
+            HotkeyApplyStatus::Ready
+        );
+        assert!(provider.calls.borrow().is_empty());
+        assert_eq!(
+            apply_global_shortcut_with(&registry, &provider, &target, Some(new))
+                .unwrap()
+                .status,
+            HotkeyApplyStatus::Ready
+        );
+        assert!(!provider.is_registered(old));
+        assert!(provider.is_registered(new));
+        assert_eq!(registry.shortcuts.read().unwrap().get(&target), Some(&new));
+        assert!(!registry.targets.read().unwrap().contains_key(&old.id()));
+        apply_global_shortcut_with(&registry, &provider, &target, None).unwrap();
+        assert!(registry.shortcuts.read().unwrap().is_empty());
+        assert!(registry.targets.read().unwrap().is_empty());
+        assert!(provider.registered.borrow().is_empty());
+    }
+
+    #[test]
+    fn shortcut_conflict_restores_the_previous_registration() {
+        let (registry, provider, target, old, new) = shortcut_fixture();
+        provider.rejected.borrow_mut().insert(new.id());
+        let result = apply_global_shortcut_with(&registry, &provider, &target, Some(new)).unwrap();
+        assert_eq!(result.status, HotkeyApplyStatus::Conflict);
+        assert_eq!(result.message.as_deref(), Some("shortcut conflict"));
+        assert_eq!(registry.shortcuts.read().unwrap().get(&target), Some(&old));
+        assert_eq!(
+            registry.targets.read().unwrap().get(&old.id()),
+            Some(&target)
+        );
+        assert!(provider.is_registered(old));
+        assert_eq!(
+            *provider.calls.borrow(),
+            [(false, old.id()), (true, new.id()), (true, old.id())]
+        );
+    }
+
+    #[test]
+    fn failed_rollback_removes_the_stale_registry_entry() {
+        let (registry, provider, target, old, new) = shortcut_fixture();
+        provider.rejected.borrow_mut().extend([old.id(), new.id()]);
+        assert_eq!(
+            apply_global_shortcut_with(&registry, &provider, &target, Some(new))
+                .unwrap()
+                .status,
+            HotkeyApplyStatus::Conflict
+        );
+        assert!(registry.shortcuts.read().unwrap().is_empty());
+        assert!(registry.targets.read().unwrap().is_empty());
+        assert!(provider.registered.borrow().is_empty());
+    }
+
+    #[test]
+    fn unregister_failure_keeps_the_previous_binding_and_does_not_register_a_new_one() {
+        let (registry, provider, target, old, new) = shortcut_fixture();
+        provider.unregister_fails.set(true);
+        assert!(apply_global_shortcut_with(&registry, &provider, &target, Some(new)).is_err());
+        assert_eq!(registry.shortcuts.read().unwrap().get(&target), Some(&old));
+        assert_eq!(
+            registry.targets.read().unwrap().get(&old.id()),
+            Some(&target)
+        );
+        assert_eq!(*provider.calls.borrow(), [(false, old.id())]);
+    }
+
+    #[test]
+    fn suspension_is_idempotent_and_does_not_touch_desktop_managed_bindings() {
+        let (registry, provider, target, old, _) = shortcut_fixture();
+        suspend_with(ProviderKind::Portal, &registry, &provider, true);
+        suspend_with(ProviderKind::External, &registry, &provider, true);
+        assert!(provider.calls.borrow().is_empty());
+        suspend_with(ProviderKind::GlobalShortcut, &registry, &provider, true);
+        suspend_with(ProviderKind::GlobalShortcut, &registry, &provider, true);
+        assert!(!provider.is_registered(old));
+        assert_eq!(registry.shortcuts.read().unwrap().get(&target), Some(&old));
+        suspend_with(ProviderKind::GlobalShortcut, &registry, &provider, false);
+        suspend_with(ProviderKind::GlobalShortcut, &registry, &provider, false);
+        assert_eq!(
+            *provider.calls.borrow(),
+            [(false, old.id()), (true, old.id())]
+        );
+    }
+
     use serde_json::json;
 
     use super::*;

@@ -6,7 +6,7 @@ pub(crate) trait TextInjector {
     fn inject(&self, user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError>;
 }
 
-struct SystemTextInjector;
+pub(crate) struct SystemTextInjector;
 
 impl TextInjector for SystemTextInjector {
     fn inject(&self, user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError> {
@@ -14,8 +14,19 @@ impl TextInjector for SystemTextInjector {
     }
 }
 
-pub fn inject_paste(user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError> {
-    SystemTextInjector.inject(user_config, source_window_id)
+/// Insert only after focus was released; preserve the result in the clipboard
+/// on failure, and restore the previous clipboard only after a successful paste.
+pub(crate) fn paste_after_focus(
+    injector: &impl TextInjector,
+    user_config: &Value,
+    source_window_id: Option<&str>,
+    release_focus: impl FnOnce(),
+    restore_clipboard: impl FnOnce(),
+) -> Result<(), AppError> {
+    release_focus();
+    injector.inject(user_config, source_window_id)?;
+    restore_clipboard();
+    Ok(())
 }
 
 /// Fails with what is missing for pressing keys in other windows.
@@ -47,4 +58,56 @@ fn inject_paste_impl(
     _source_window_id: Option<&str>,
 ) -> Result<(), AppError> {
     super::macos::inject_paste()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::RefCell;
+
+    struct Injector<'a> {
+        calls: &'a RefCell<Vec<&'static str>>,
+        fail: bool,
+    }
+
+    impl TextInjector for Injector<'_> {
+        fn inject(&self, config: &Value, window: Option<&str>) -> Result<(), AppError> {
+            assert_eq!(
+                config,
+                &serde_json::json!({"pasteShortcut": "shift+insert"})
+            );
+            assert_eq!(window, Some("target"));
+            self.calls.borrow_mut().push("inject");
+            if self.fail {
+                Err(AppError::Message("injection failed".into()))
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[test]
+    fn focus_is_released_before_injection_and_clipboard_restored_only_on_success() {
+        for fail in [false, true] {
+            let calls = RefCell::new(Vec::new());
+            let injector = Injector {
+                calls: &calls,
+                fail,
+            };
+            let result = paste_after_focus(
+                &injector,
+                &serde_json::json!({"pasteShortcut": "shift+insert"}),
+                Some("target"),
+                || calls.borrow_mut().push("release-focus"),
+                || calls.borrow_mut().push("restore"),
+            );
+            assert_eq!(result.is_err(), fail);
+            let expected = if fail {
+                vec!["release-focus", "inject"]
+            } else {
+                vec!["release-focus", "inject", "restore"]
+            };
+            assert_eq!(*calls.borrow(), expected);
+        }
+    }
 }

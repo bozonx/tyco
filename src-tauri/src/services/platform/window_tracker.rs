@@ -455,14 +455,11 @@ mod tests {
     #[test]
     fn waits_for_the_first_report_of_the_backend() {
         let tracker = running_tracker();
-        let error = tracker
-            .wait_until_reported(Duration::from_millis(10))
-            .unwrap_err();
+        let error = tracker.wait_until_reported(Duration::ZERO).unwrap_err();
         assert!(error.to_string().contains("does not report"));
 
         let reporter = Arc::clone(&tracker);
         let handle = thread::spawn(move || {
-            thread::sleep(Duration::from_millis(20));
             reporter.window_activated(&seq(1), "", WindowKind::Other, "");
         });
         tracker.wait_until_reported(Duration::from_secs(2)).unwrap();
@@ -474,7 +471,6 @@ mod tests {
         let tracker = running_tracker();
         let reporter = Arc::clone(&tracker);
         let handle = thread::spawn(move || {
-            thread::sleep(Duration::from_millis(20));
             reporter.window_activated(&seq(1), "other", WindowKind::Foreign, "");
             reporter.window_activated(&seq(2), WINDOW, WindowKind::Foreign, "");
         });
@@ -494,7 +490,7 @@ mod tests {
         assert!(error.to_string().contains("closed"));
 
         let error = new_tracker()
-            .wait_until_active(WINDOW, Duration::from_millis(10))
+            .wait_until_active(WINDOW, Duration::ZERO)
             .unwrap_err();
         assert!(error.to_string().contains("Timed out"));
     }

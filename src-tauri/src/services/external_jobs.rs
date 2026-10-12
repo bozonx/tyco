@@ -35,6 +35,16 @@ impl ExternalJobs {
         request: RunRequest,
         selection: Option<u64>,
     ) -> Result<Job, &'static str> {
+        self.create_at(command_id, request, selection, Instant::now())
+    }
+
+    fn create_at(
+        &self,
+        command_id: String,
+        request: RunRequest,
+        selection: Option<u64>,
+        now: Instant,
+    ) -> Result<Job, &'static str> {
         let mut entries = self
             .entries
             .lock()
@@ -77,7 +87,7 @@ impl ExternalJobs {
             Entry {
                 job: job.clone(),
                 request,
-                created: Instant::now(),
+                created: now,
                 selection,
                 command_snapshot: None,
                 pending_completion: None,
@@ -243,12 +253,17 @@ impl ExternalJobs {
     }
 
     pub fn expired(&self) -> Vec<String> {
+        self.expired_at(Instant::now())
+    }
+
+    fn expired_at(&self, now: Instant) -> Vec<String> {
         self.entries
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .iter()
             .filter(|(_, entry)| {
-                !entry.job.state.is_terminal() && entry.created.elapsed() >= JOB_TIMEOUT
+                !entry.job.state.is_terminal()
+                    && now.saturating_duration_since(entry.created) >= JOB_TIMEOUT
             })
             .map(|(id, _)| id.clone())
             .collect()
@@ -357,16 +372,14 @@ mod tests {
     #[test]
     fn oversized_output_and_abandoned_jobs_have_bounded_lifetimes() {
         let jobs = ExternalJobs::default();
+        let now = Instant::now();
         let job = jobs
-            .create("test".into(), RunRequest::default(), None)
+            .create_at("test".into(), RunRequest::default(), None, now)
             .unwrap();
-        jobs.entries
-            .lock()
-            .unwrap()
-            .get_mut(&job.id)
-            .unwrap()
-            .created = Instant::now() - JOB_TIMEOUT;
-        assert_eq!(jobs.expired(), vec![job.id.clone()]);
+        assert!(jobs
+            .expired_at(now + JOB_TIMEOUT - Duration::from_nanos(1))
+            .is_empty());
+        assert_eq!(jobs.expired_at(now + JOB_TIMEOUT), vec![job.id.clone()]);
         jobs.finish(
             &job.id,
             JobState::Succeeded,
@@ -379,7 +392,7 @@ mod tests {
             jobs.get(&job.id).unwrap().code.as_deref(),
             Some("OutputTooLarge")
         );
-        assert!(jobs.expired().is_empty());
+        assert!(jobs.expired_at(now + JOB_TIMEOUT).is_empty());
     }
     #[test]
     fn escaped_output_must_fit_the_wire_envelope() {

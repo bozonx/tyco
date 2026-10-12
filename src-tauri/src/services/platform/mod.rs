@@ -2,11 +2,13 @@
 //! Code outside this module asks it rather than checking the OS or the session
 //! itself; backends for a single platform live in its submodule.
 
+pub(crate) mod audio;
 mod file_manager;
 mod foreground_context;
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 pub mod keychain;
 mod panel_surface;
+pub(crate) mod selection;
 pub mod session;
 pub mod shell;
 mod shortcut_settings;
@@ -33,5 +35,6 @@ pub use panel_surface::{
     set_panel_input_region, InputRegion, PanelKeyboard,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
-pub use text_injector::{check_text_injection, inject_paste};
+pub use text_injector::check_text_injection;
+pub(crate) use text_injector::{paste_after_focus, SystemTextInjector};
 pub use titlebar::enable_titlebar_buttons;

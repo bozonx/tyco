@@ -1,4 +1,5 @@
 pub mod activation;
+pub(crate) mod activation_coordinator;
 pub mod activation_metrics;
 pub mod activation_socket;
 pub mod app_paths;

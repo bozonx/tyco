@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Condvar, Mutex, OnceLock};
+use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -14,6 +14,9 @@ use serde::Serialize;
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
+#[cfg(test)]
+use super::platform::selection::is_terminal_class;
+use super::platform::selection::{capture, paste_result, restore_clipboard};
 use crate::errors::AppError;
 use crate::state::AppState;
 
@@ -72,7 +75,7 @@ pub struct RunError {
 }
 
 impl RunError {
-    fn new(code: RunErrorCode, message: impl Into<String>) -> Self {
+    pub(crate) fn new(code: RunErrorCode, message: impl Into<String>) -> Self {
         Self {
             code,
             message: message.into(),
@@ -109,27 +112,27 @@ pub enum FinishStatus {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Target {
-    id: String,
-    terminal: bool,
+pub(crate) struct Target {
+    pub id: String,
+    pub terminal: bool,
 }
 
-struct Run {
-    id: u64,
-    external: bool,
-    captured_text: Option<String>,
-    target: Target,
-    started: Instant,
+pub(crate) struct Run {
+    pub id: u64,
+    pub external: bool,
+    pub captured_text: Option<String>,
+    pub target: Target,
+    pub started: Instant,
     #[cfg(target_os = "linux")]
-    snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
+    pub snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
     #[cfg(target_os = "windows")]
-    snapshot: Option<super::platform::windows_clipboard::Snapshot>,
+    pub snapshot: Option<super::platform::windows_clipboard::Snapshot>,
 }
 
 #[derive(Default)]
 pub struct SelectionRuns {
     next_id: AtomicU64,
-    capturing: AtomicBool,
+    capturing: Arc<AtomicBool>,
     current: Mutex<Option<Run>>,
 }
 
@@ -139,9 +142,9 @@ impl SelectionRuns {
     }
 
     /// Takes the run in progress, unless it was abandoned.
-    fn take_active(&self) -> Option<Run> {
+    fn take_active_at(&self, now: Instant) -> Option<Run> {
         let run = self.lock().take()?;
-        if run.started.elapsed() < ABANDONED_RUN_AGE {
+        if now.saturating_duration_since(run.started) < ABANDONED_RUN_AGE {
             Some(run)
         } else {
             log::warn!(
@@ -162,48 +165,108 @@ impl SelectionRuns {
     }
 }
 
-/// Starts `action` on the selection of the focused window. A second trigger
-/// while a run is in progress cancels it instead.
-pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
-    if !is_selection_action(action) {
-        return Err(AppError::Message(format!(
-            "Unknown selection action: {action}"
-        )));
-    }
-    let runs = app.state::<SelectionRuns>();
-    // Reserve capture before inspecting active runs so a concurrent external
-    // capture cannot be mistaken for a hotkey run to cancel.
-    if runs.capturing.swap(true, Ordering::SeqCst) {
-        log::debug!("Ignoring the {action} trigger: a selection is being captured");
-        return Ok(());
-    }
-    let capturing = CapturingGuard(app.clone());
-    if runs.lock().as_ref().is_some_and(|run| run.external) {
-        return Err(AppError::Message(
-            "An external selection job is running".into(),
-        ));
-    }
-    if let Some(run) = runs.take_active() {
-        cancel(app, run);
-        return Ok(());
-    }
+/// System effects of a selection run. The coordinator never needs a webview
+/// or a real clipboard when these operations are substituted.
+trait SelectionBackend {
+    fn user_config(&self) -> Value;
+    fn wait(&self, wait: TriggerWait);
+    fn capture(&self, config: &Value) -> Result<(String, Run), RunError>;
+    fn restore(&self, run: Run);
+    fn paste(&self, config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError>;
+    fn publish(&self, event: RunEvent) -> Result<(), AppError>;
+    fn cancelled(&self, id: u64) -> Result<(), AppError>;
+}
 
-    let app = app.clone();
-    let action = action.to_owned();
-    thread::spawn(move || {
-        // released however the capture ends, a panic included, so that a
-        // failed capture never disables the selection hotkeys for good
+struct SystemSelectionBackend<'a>(&'a AppHandle);
+
+impl SelectionBackend for SystemSelectionBackend<'_> {
+    fn user_config(&self) -> Value {
+        self.0.state::<AppState>().params().user_config
+    }
+    fn wait(&self, wait: TriggerWait) {
         match wait {
             TriggerWait::Now => {}
             TriggerWait::Delay(delay) => thread::sleep(delay),
-            TriggerWait::HotkeyRelease(press) => press.wait(HOTKEY_RELEASE_TIMEOUT),
+            TriggerWait::HotkeyRelease(press) => {
+                press.wait(HOTKEY_RELEASE_TIMEOUT);
+            }
         }
-        let runs = app.state::<SelectionRuns>();
-        let run_id = runs.next_id.fetch_add(1, Ordering::SeqCst) + 1;
-        let user_config = app.state::<AppState>().params().user_config;
-        let event = match capture(&user_config) {
+    }
+    fn capture(&self, config: &Value) -> Result<(String, Run), RunError> {
+        capture(config)
+    }
+    fn restore(&self, run: Run) {
+        restore_clipboard(run);
+    }
+    fn paste(&self, config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
+        paste_result(config, run, text)
+    }
+    fn publish(&self, event: RunEvent) -> Result<(), AppError> {
+        emit_to_webview(self.0, SELECTION_RUN_EVENT, event)
+    }
+    fn cancelled(&self, id: u64) -> Result<(), AppError> {
+        emit_to_webview(
+            self.0,
+            SELECTION_CANCEL_EVENT,
+            serde_json::json!({ "runId": id }),
+        )
+    }
+}
+
+struct CapturingGuard(Arc<AtomicBool>);
+
+impl Drop for CapturingGuard {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::SeqCst);
+    }
+}
+
+enum TriggerDecision {
+    Busy,
+    Cancel(Run, CapturingGuard),
+    Capture(CapturingGuard),
+}
+
+impl SelectionRuns {
+    fn reserve(&self) -> Option<CapturingGuard> {
+        (!self.capturing.swap(true, Ordering::SeqCst))
+            .then(|| CapturingGuard(Arc::clone(&self.capturing)))
+    }
+
+    fn begin_trigger(&self, action: &str, now: Instant) -> Result<TriggerDecision, AppError> {
+        if !is_selection_action(action) {
+            return Err(AppError::Message(format!(
+                "Unknown selection action: {action}"
+            )));
+        }
+        // Reserve before inspecting runs: an external capture must not be cancelled.
+        let Some(guard) = self.reserve() else {
+            return Ok(TriggerDecision::Busy);
+        };
+        if self.lock().as_ref().is_some_and(|run| run.external) {
+            return Err(AppError::Message(
+                "An external selection job is running".into(),
+            ));
+        }
+        if let Some(run) = self.take_active_at(now) {
+            return Ok(TriggerDecision::Cancel(run, guard));
+        }
+        Ok(TriggerDecision::Capture(guard))
+    }
+
+    fn capture_and_publish(
+        &self,
+        backend: &impl SelectionBackend,
+        action: String,
+        wait: TriggerWait,
+        guard: CapturingGuard,
+    ) {
+        backend.wait(wait);
+        let run_id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
+        let user_config = backend.user_config();
+        let event = match backend.capture(&user_config) {
             Ok((text, run)) => {
-                runs.lock().replace(Run {
+                self.lock().replace(Run {
                     id: run_id,
                     captured_text: Some(text.clone()),
                     ..run
@@ -227,77 +290,103 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
                 }
             }
         };
-        drop(capturing);
-        if let Err(error) = emit_to_webview(&app, SELECTION_RUN_EVENT, event) {
+        drop(guard);
+        if let Err(error) = backend.publish(event) {
             log::error!("Could not hand the selection over to the webview: {error}");
-            if let Some(run) = runs.take_if(run_id) {
-                restore_clipboard(run);
+            if let Some(run) = self.take_if(run_id) {
+                backend.restore(run);
             }
         }
-    });
+    }
+
+    fn prepare_external_with(
+        &self,
+        backend: &impl SelectionBackend,
+    ) -> Result<(u64, String), AppError> {
+        let _guard = self
+            .reserve()
+            .ok_or_else(|| AppError::Message("A selection is being captured".into()))?;
+        if self.lock().is_some() {
+            return Err(AppError::Message(
+                "A selection run is already active".into(),
+            ));
+        }
+        let (text, mut run) = backend
+            .capture(&backend.user_config())
+            .map_err(|error| AppError::Message(error.message))?;
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
+        run.id = id;
+        run.external = true;
+        run.captured_text = Some(text.clone());
+        self.lock().replace(run);
+        Ok((id, text))
+    }
+
+    fn finish_with(
+        &self,
+        backend: &impl SelectionBackend,
+        run_id: u64,
+        text: Option<String>,
+    ) -> Result<FinishStatus, AppError> {
+        let Some(run) = self.take_if(run_id) else {
+            return Ok(FinishStatus::Stale);
+        };
+        match text {
+            None => {
+                backend.restore(run);
+                Ok(FinishStatus::Restored)
+            }
+            Some(text) => backend.paste(&backend.user_config(), run, text),
+        }
+    }
+}
+
+fn cancel_with(backend: &impl SelectionBackend, run: Run) {
+    let id = run.id;
+    backend.restore(run);
+    if let Err(error) = backend.cancelled(id) {
+        log::warn!("Could not report the cancelled selection run: {error}");
+    }
+}
+
+/// Starts an action, or cancels the current hotkey run on a second trigger.
+pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
+    let decision = app
+        .state::<SelectionRuns>()
+        .begin_trigger(action, Instant::now())?;
+    match decision {
+        TriggerDecision::Busy => {
+            log::debug!("Ignoring the {action} trigger: a selection is being captured")
+        }
+        TriggerDecision::Cancel(run, _guard) => cancel_with(&SystemSelectionBackend(app), run),
+        TriggerDecision::Capture(guard) => {
+            let app = app.clone();
+            let action = action.to_owned();
+            thread::spawn(move || {
+                app.state::<SelectionRuns>().capture_and_publish(
+                    &SystemSelectionBackend(&app),
+                    action,
+                    wait,
+                    guard,
+                );
+            });
+        }
+    }
     Ok(())
 }
 
-/// Captures an explicit external selection without toggling an existing run.
 pub fn prepare_external(app: &AppHandle) -> Result<(u64, String), AppError> {
-    let runs = app.state::<SelectionRuns>();
-    if runs.capturing.swap(true, Ordering::SeqCst) {
-        return Err(AppError::Message("A selection is being captured".into()));
-    }
-    let _guard = CapturingGuard(app.clone());
-    if runs.lock().is_some() {
-        return Err(AppError::Message(
-            "A selection run is already active".into(),
-        ));
-    }
-    let (text, mut run) = capture(&app.state::<AppState>().params().user_config)
-        .map_err(|error| AppError::Message(error.message))?;
-    let id = runs.next_id.fetch_add(1, Ordering::SeqCst) + 1;
-    run.id = id;
-    run.external = true;
-    run.captured_text = Some(text.clone());
-    runs.lock().replace(run);
-    Ok((id, text))
+    app.state::<SelectionRuns>()
+        .prepare_external_with(&SystemSelectionBackend(app))
 }
 
-struct CapturingGuard(AppHandle);
-
-impl Drop for CapturingGuard {
-    fn drop(&mut self) {
-        self.0
-            .state::<SelectionRuns>()
-            .capturing
-            .store(false, Ordering::SeqCst);
-    }
-}
-
-/// Takes the result of run `run_id`: `None` when there is nothing to insert.
 pub fn finish(
     app: &AppHandle,
     run_id: u64,
     text: Option<String>,
 ) -> Result<FinishStatus, AppError> {
-    let Some(run) = app.state::<SelectionRuns>().take_if(run_id) else {
-        return Ok(FinishStatus::Stale);
-    };
-    let Some(text) = text else {
-        restore_clipboard(run);
-        return Ok(FinishStatus::Restored);
-    };
-    let user_config = app.state::<AppState>().params().user_config;
-    paste_result(&user_config, run, text)
-}
-
-fn cancel(app: &AppHandle, run: Run) {
-    let run_id = run.id;
-    restore_clipboard(run);
-    if let Err(error) = emit_to_webview(
-        app,
-        SELECTION_CANCEL_EVENT,
-        serde_json::json!({ "runId": run_id }),
-    ) {
-        log::warn!("Could not report the cancelled selection run: {error}");
-    }
+    app.state::<SelectionRuns>()
+        .finish_with(&SystemSelectionBackend(app), run_id, text)
 }
 
 fn emit_to_webview(
@@ -313,326 +402,31 @@ fn emit_to_webview(
         .map_err(|error| AppError::Message(error.to_string()))
 }
 
-/// Application ids of terminals, where Ctrl+C interrupts the running
-/// program, so copying and pasting take Ctrl+Shift+C and Ctrl+Shift+V.
-#[cfg(any(target_os = "linux", test))]
-const TERMINALS: [&str; 22] = [
-    "konsole",
-    "yakuake",
-    "alacritty",
-    "kitty",
-    "foot",
-    "footclient",
-    "wezterm",
-    "wezterm-gui",
-    "xterm",
-    "urxvt",
-    "terminator",
-    "tilix",
-    "ghostty",
-    "ptyxis",
-    "kgx",
-    "contour",
-    "rio",
-    "st",
-    "terminology",
-    "cool-retro-term",
-    "qterminal",
-    "blackbox",
-];
-
-#[cfg(any(target_os = "linux", test))]
-fn is_terminal_class(class: &str) -> bool {
-    let class = class.to_ascii_lowercase();
-    let name = class.rsplit('.').next().unwrap_or_default();
-    TERMINALS.contains(&name) || class.contains("terminal")
-}
-
-/// The window that has the keyboard focus now. The tracker knows its class,
-/// which tells a terminal; without it X11 can still tell the window.
-#[cfg(target_os = "linux")]
-fn active_target() -> Option<Target> {
-    use super::platform::{session, window_tracker::tracker};
-
-    if tracker().is_running() {
-        return tracker().active_window().map(|window| Target {
-            terminal: is_terminal_class(&window.class),
-            id: window.id,
-        });
-    }
-    if !session::current().is_x11() {
-        return None;
-    }
-    let output = std::process::Command::new("xdotool")
-        .arg("getactivewindow")
-        .output()
-        .ok()?;
-    let id = String::from_utf8(output.stdout).ok()?.trim().to_owned();
-    (output.status.success() && !id.is_empty()).then_some(Target {
-        id,
-        terminal: false,
-    })
-}
-
-#[cfg(target_os = "linux")]
-fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
-    use super::platform::linux::clipboard_restore;
-    use super::platform::linux::text_injector::SystemTextInjector;
-
-    let target = active_target().ok_or_else(|| {
-        let message = if super::platform::session::current().is_kde_wayland()
-            && !super::platform::window_tracker::tracker().is_running()
-        {
-            "The KWin window tracker is not running; KDE Plasma 6 is required"
-        } else {
-            "No application window has the focus"
-        };
-        RunError::new(RunErrorCode::NoTarget, message)
-    })?;
-    let injector = SystemTextInjector::detect();
-    // the copy keys overwrite the clipboard, which gets its content back
-    // once the result is pasted
-    let snapshot = clipboard_restore::snapshot();
-    let mut run = Run {
-        id: 0,
-        external: false,
-        captured_text: None,
-        target,
-        started: Instant::now(),
-        snapshot,
-    };
-
-    match copy_selection(&injector, user_config, &run.target) {
-        Ok(Some(text)) => {
-            run.started = Instant::now();
-            Ok((text, run))
-        }
-        Ok(None) => {
-            restore_clipboard(run);
-            Err(RunError::new(
-                RunErrorCode::NoSelection,
-                "Nothing is selected in the focused window",
-            ))
-        }
-        Err(error) => {
-            restore_clipboard(run);
-            Err(RunError::new(RunErrorCode::Capture, error.to_string()))
-        }
-    }
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
-    Err(RunError::new(
-        RunErrorCode::Unsupported,
-        "Replacing the selection is only available on Linux and Windows",
-    ))
-}
-
-#[cfg(target_os = "windows")]
-fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
-    use super::platform::{windows, windows_clipboard};
-    let id = windows::capture_source()
-        .ok_or_else(|| RunError::new(RunErrorCode::NoTarget, "No foreground window"))?;
-    let snapshot = windows_clipboard::snapshot()
-        .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
-    let run = Run {
-        id: 0,
-        external: false,
-        captured_text: None,
-        target: Target {
-            id,
-            terminal: windows::foreground_is_terminal(),
-        },
-        started: Instant::now(),
-        snapshot: Some(snapshot),
-    };
-    let probe = format!("tyco-selection-probe-{}", std::process::id());
-    let result = (|| {
-        windows_clipboard::write_text(&probe)
-            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
-        if windows::capture_source().as_deref() != Some(run.target.id.as_str()) {
-            return Err(RunError::new(
-                RunErrorCode::NoTarget,
-                "Focus changed before capture",
-            ));
-        }
-        windows::press_copy_or_paste(true, run.target.terminal)
-            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
-        let deadline = Instant::now() + Duration::from_millis(700);
-        loop {
-            if let Some(text) = windows_clipboard::read_text() {
-                if text != probe && !text.trim().is_empty() {
-                    return Ok(text);
-                }
-            }
-            if Instant::now() >= deadline {
-                return Err(RunError::new(
-                    RunErrorCode::NoSelection,
-                    "Nothing is selected in the foreground window",
-                ));
-            }
-            thread::sleep(Duration::from_millis(25));
-        }
-    })();
-    match result {
-        Ok(text) => Ok((text, run)),
-        Err(error) => {
-            restore_clipboard(run);
-            Err(error)
-        }
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn restore_clipboard(run: Run) {
-    if run
-        .captured_text
-        .as_ref()
-        .is_some_and(|text| super::platform::windows_clipboard::read_text().as_ref() != Some(text))
-    {
-        return;
-    }
-    if let Some(snapshot) = run.snapshot {
-        let _ = super::platform::windows_clipboard::restore(&snapshot);
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn paste_result(_user_config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
-    use super::platform::{windows, windows_clipboard};
-    windows_clipboard::write_text(&text)?;
-    if windows::capture_source().as_deref() != Some(run.target.id.as_str()) {
-        return Ok(FinishStatus::Clipboard);
-    }
-    windows::press_copy_or_paste(false, run.target.terminal)?;
-    if let Some(snapshot) = run.snapshot {
-        windows_clipboard::restore_later(snapshot);
-    }
-    Ok(FinishStatus::Pasted)
-}
-
-/// Presses the copy keys and waits for the clipboard to change. A probe
-/// text put there first tells a copied selection from an unchanged clipboard,
-/// so `None` means nothing was selected.
-#[cfg(target_os = "linux")]
-fn copy_selection(
-    injector: &super::platform::linux::text_injector::SystemTextInjector,
-    user_config: &Value,
-    target: &Target,
-) -> Result<Option<String>, AppError> {
-    use super::platform::linux::text_injector::FocusedKeys;
-
-    const COPY_TIMEOUT: Duration = Duration::from_millis(700);
-    const POLL_INTERVAL: Duration = Duration::from_millis(25);
-
-    let probe = format!(
-        "tyco-selection-probe-{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|time| time.as_nanos())
-            .unwrap_or_default()
-    );
-    crate::services::clipboard::copy_to_clipboard(&probe)?;
-    injector.press_in_focused(user_config, FocusedKeys::Copy, target.terminal)?;
-
-    let deadline = Instant::now() + COPY_TIMEOUT;
-    loop {
-        let read = super::platform::linux::clipboard_restore::read_text();
-        match read {
-            Some(ref text) if *text == probe => {}
-            Some(ref text) if text.trim().is_empty() => return Ok(None),
-            Some(text) => return Ok(Some(text)),
-            // not text, e.g. an image, or not answered yet
-            None => {}
-        }
-        if Instant::now() >= deadline {
-            log::debug!(
-                "The copy keys changed nothing in the clipboard: {}",
-                match read {
-                    Some(_) => "the probe text is still there",
-                    None => "it holds no text",
-                }
-            );
-            return Ok(None);
-        }
-        thread::sleep(POLL_INTERVAL);
-    }
-}
-
-/// Gives the clipboard its content from before the run back. Without a
-/// snapshot only the probe text is removed: a copied selection is what the
-/// user had selected anyway.
-#[cfg(target_os = "linux")]
-fn restore_clipboard(run: Run) {
-    use super::platform::linux::clipboard_restore;
-    if run
-        .captured_text
-        .as_ref()
-        .is_some_and(|text| clipboard_restore::read_text().as_ref() != Some(text))
-    {
-        return;
-    }
-
-    match run.snapshot {
-        Some(snapshot) => clipboard_restore::restore_now(&snapshot),
-        None => {
-            if clipboard_restore::read_text()
-                .is_some_and(|text| text.starts_with("tyco-selection-probe-"))
-            {
-                clipboard_restore::clear();
-            }
-        }
-    }
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn restore_clipboard(_run: Run) {}
-
-#[cfg(target_os = "linux")]
-fn paste_result(user_config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
-    use super::platform::linux::text_injector::{FocusedKeys, SystemTextInjector};
-
-    crate::services::clipboard::copy_to_clipboard(&text)?;
-    if active_target().map(|target| target.id) != Some(run.target.id.clone()) {
-        return Ok(FinishStatus::Clipboard);
-    }
-    SystemTextInjector::detect()
-        .press_in_focused(user_config, FocusedKeys::Paste, run.target.terminal)
-        .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))?;
-    if let Some(snapshot) = run.snapshot {
-        super::platform::linux::clipboard_restore::restore_later(snapshot, text);
-    }
-    Ok(FinishStatus::Pasted)
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn paste_result(_user_config: &Value, _run: Run, _text: String) -> Result<FinishStatus, AppError> {
-    Err(AppError::Message(String::from(
-        "Replacing the selection is only available on Linux and Windows",
-    )))
-}
-
 #[derive(Default)]
 struct HotkeyReleases {
     counts: Mutex<HashMap<String, u64>>,
     changed: Condvar,
 }
 
-fn hotkey_releases() -> &'static HotkeyReleases {
-    static RELEASES: OnceLock<HotkeyReleases> = OnceLock::new();
-    RELEASES.get_or_init(HotkeyReleases::default)
+fn hotkey_releases() -> &'static Arc<HotkeyReleases> {
+    static RELEASES: OnceLock<Arc<HotkeyReleases>> = OnceLock::new();
+    RELEASES.get_or_init(|| Arc::new(HotkeyReleases::default()))
 }
 
 /// A press of the hotkey `id`, waiting for its release.
 pub struct HotkeyPress {
+    releases: Arc<HotkeyReleases>,
     id: String,
     seen: u64,
 }
 
 impl HotkeyPress {
     pub fn new(id: &str) -> Self {
-        let seen = hotkey_releases()
+        Self::with_releases(id, Arc::clone(hotkey_releases()))
+    }
+
+    fn with_releases(id: &str, releases: Arc<HotkeyReleases>) -> Self {
+        let seen = releases
             .counts
             .lock()
             .expect("hotkey release lock poisoned")
@@ -640,6 +434,7 @@ impl HotkeyPress {
             .copied()
             .unwrap_or_default();
         Self {
+            releases,
             id: id.to_owned(),
             seen,
         }
@@ -647,8 +442,8 @@ impl HotkeyPress {
 
     /// Returns once the hotkey was released, or after `timeout` for providers
     /// that do not report releases.
-    fn wait(&self, timeout: Duration) {
-        let releases = hotkey_releases();
+    fn wait(&self, timeout: Duration) -> bool {
+        let releases = &self.releases;
         let deadline = Instant::now() + timeout;
         let mut counts = releases
             .counts
@@ -659,7 +454,7 @@ impl HotkeyPress {
             let now = Instant::now();
             if now >= deadline {
                 log::debug!("Hotkey {} was not reported released in time", self.id);
-                return;
+                return false;
             }
             counts = releases
                 .changed
@@ -672,19 +467,25 @@ impl HotkeyPress {
             self.id,
             started.elapsed()
         );
+        true
     }
 }
 
 /// Reported by the hotkey providers when the keys of a hotkey go up.
 pub fn hotkey_released(id: &str) {
-    let releases = hotkey_releases();
-    *releases
-        .counts
-        .lock()
-        .expect("hotkey release lock poisoned")
-        .entry(id.to_owned())
-        .or_default() += 1;
-    releases.changed.notify_all();
+    hotkey_releases().released(id);
+}
+
+impl HotkeyReleases {
+    fn released(&self, id: &str) {
+        *self
+            .counts
+            .lock()
+            .expect("hotkey release lock poisoned")
+            .entry(id.to_owned())
+            .or_default() += 1;
+        self.changed.notify_all();
+    }
 }
 
 #[cfg(test)]
@@ -709,7 +510,7 @@ mod tests {
         }
     }
 
-    fn run(id: u64, age: Duration) -> Run {
+    fn run_at(id: u64, started: Instant) -> Run {
         Run {
             id,
             external: false,
@@ -718,7 +519,7 @@ mod tests {
                 id: String::from("window"),
                 terminal: false,
             },
-            started: Instant::now() - age,
+            started,
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             snapshot: None,
         }
@@ -743,7 +544,7 @@ mod tests {
     #[test]
     fn finishes_only_the_current_run() {
         let runs = SelectionRuns::default();
-        runs.lock().replace(run(2, Duration::ZERO));
+        runs.lock().replace(run_at(2, Instant::now()));
         assert!(runs.take_if(1).is_none());
         assert_eq!(runs.take_if(2).map(|run| run.id), Some(2));
         assert!(runs.take_if(2).is_none());
@@ -752,31 +553,228 @@ mod tests {
     #[test]
     fn an_abandoned_run_is_not_cancelled_but_dropped() {
         let runs = SelectionRuns::default();
-        runs.lock().replace(run(1, Duration::ZERO));
-        assert_eq!(runs.take_active().map(|run| run.id), Some(1));
-        runs.lock()
-            .replace(run(2, ABANDONED_RUN_AGE + Duration::from_secs(1)));
-        assert!(runs.take_active().is_none());
+        let now = Instant::now();
+        runs.lock().replace(run_at(1, now));
+        assert_eq!(
+            runs.take_active_at(now + ABANDONED_RUN_AGE - Duration::from_nanos(1))
+                .map(|run| run.id),
+            Some(1)
+        );
+        runs.lock().replace(run_at(2, now));
+        assert!(runs.take_active_at(now + ABANDONED_RUN_AGE).is_none());
+        assert!(runs.lock().is_none());
+    }
+
+    #[derive(Default)]
+    struct Backend {
+        operations: Mutex<Vec<String>>,
+        events: Mutex<Vec<RunEvent>>,
+        capture_error: bool,
+        publish_error: bool,
+        paste_error: bool,
+    }
+
+    impl SelectionBackend for Backend {
+        fn user_config(&self) -> Value {
+            serde_json::json!({"setting": true})
+        }
+        fn wait(&self, _wait: TriggerWait) {
+            self.operations.lock().unwrap().push("wait".into());
+        }
+        fn capture(&self, config: &Value) -> Result<(String, Run), RunError> {
+            assert_eq!(config, &self.user_config());
+            self.operations.lock().unwrap().push("capture".into());
+            if self.capture_error {
+                Err(RunError::new(RunErrorCode::NoSelection, "no selection"))
+            } else {
+                Ok(("selected".into(), run_at(0, Instant::now())))
+            }
+        }
+        fn restore(&self, run: Run) {
+            self.operations
+                .lock()
+                .unwrap()
+                .push(format!("restore:{}", run.id));
+        }
+        fn paste(&self, _config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
+            self.operations
+                .lock()
+                .unwrap()
+                .push(format!("paste:{}:{text}", run.id));
+            if self.paste_error {
+                Err(AppError::Message("paste failed".into()))
+            } else {
+                Ok(FinishStatus::Pasted)
+            }
+        }
+        fn publish(&self, event: RunEvent) -> Result<(), AppError> {
+            self.operations.lock().unwrap().push("publish".into());
+            self.events.lock().unwrap().push(event);
+            if self.publish_error {
+                Err(AppError::Message("webview gone".into()))
+            } else {
+                Ok(())
+            }
+        }
+        fn cancelled(&self, id: u64) -> Result<(), AppError> {
+            self.operations.lock().unwrap().push(format!("cancel:{id}"));
+            Ok(())
+        }
+    }
+
+    fn start(runs: &SelectionRuns, backend: &Backend) -> u64 {
+        let TriggerDecision::Capture(guard) =
+            runs.begin_trigger("correction", Instant::now()).unwrap()
+        else {
+            panic!("capture expected");
+        };
+        runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard);
+        backend.events.lock().unwrap().last().unwrap().run_id
+    }
+
+    #[test]
+    fn capture_publish_finish_and_stale_results_have_no_system_dependencies() {
+        let runs = SelectionRuns::default();
+        let backend = Backend::default();
+        let id = start(&runs, &backend);
+        assert_eq!(
+            backend.events.lock().unwrap()[0].text.as_deref(),
+            Some("selected")
+        );
+        assert_eq!(
+            runs.finish_with(&backend, id + 1, Some("wrong".into()))
+                .unwrap(),
+            FinishStatus::Stale
+        );
+        assert_eq!(
+            runs.finish_with(&backend, id, Some("result".into()))
+                .unwrap(),
+            FinishStatus::Pasted
+        );
+        assert_eq!(
+            runs.finish_with(&backend, id, None).unwrap(),
+            FinishStatus::Stale
+        );
+        assert_eq!(
+            *backend.operations.lock().unwrap(),
+            ["wait", "capture", "publish", "paste:1:result"]
+        );
+    }
+
+    #[test]
+    fn failed_publication_restores_only_its_capture_and_releases_the_reservation() {
+        let runs = SelectionRuns::default();
+        let backend = Backend {
+            publish_error: true,
+            ..Backend::default()
+        };
+        start(&runs, &backend);
+        assert!(runs.lock().is_none());
+        assert_eq!(
+            *backend.operations.lock().unwrap(),
+            ["wait", "capture", "publish", "restore:1"]
+        );
+        assert!(matches!(
+            runs.begin_trigger("correction", Instant::now()).unwrap(),
+            TriggerDecision::Capture(_)
+        ));
+    }
+
+    #[test]
+    fn capture_failure_is_published_without_creating_a_run() {
+        let runs = SelectionRuns::default();
+        let backend = Backend {
+            capture_error: true,
+            ..Backend::default()
+        };
+        start(&runs, &backend);
+        assert!(runs.lock().is_none());
+        let events = backend.events.lock().unwrap();
+        assert_eq!(
+            events[0].error.as_ref().unwrap().code,
+            RunErrorCode::NoSelection
+        );
+        assert!(events[0].text.is_none());
+        assert!(!runs.capturing.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn a_second_trigger_cancels_and_keeps_capture_reserved_until_restoration_finishes() {
+        let runs = SelectionRuns::default();
+        let backend = Backend::default();
+        start(&runs, &backend);
+        let TriggerDecision::Cancel(run, guard) =
+            runs.begin_trigger("correction", Instant::now()).unwrap()
+        else {
+            panic!("cancel expected");
+        };
+        assert!(matches!(
+            runs.begin_trigger("correction", Instant::now()).unwrap(),
+            TriggerDecision::Busy
+        ));
+        assert!(runs.prepare_external_with(&backend).is_err());
+        cancel_with(&backend, run);
+        drop(guard);
+        assert_eq!(
+            &backend.operations.lock().unwrap()[3..],
+            ["restore:1", "cancel:1"]
+        );
+        assert!(runs.prepare_external_with(&backend).is_ok());
+    }
+
+    #[test]
+    fn external_capture_is_never_cancelled_and_empty_results_restore_the_clipboard() {
+        let runs = SelectionRuns::default();
+        let backend = Backend::default();
+        let (id, text) = runs.prepare_external_with(&backend).unwrap();
+        assert_eq!(text, "selected");
+        assert!(runs.begin_trigger("correction", Instant::now()).is_err());
+        assert!(!runs.capturing.load(Ordering::SeqCst));
+        assert_eq!(
+            runs.finish_with(&backend, id, None).unwrap(),
+            FinishStatus::Restored
+        );
         assert!(runs.lock().is_none());
     }
 
     #[test]
-    fn waits_for_the_release_of_the_pressed_hotkey() {
-        let press = HotkeyPress::new("test.release");
-        let handle = thread::spawn(|| {
-            thread::sleep(Duration::from_millis(20));
-            hotkey_released("test.other");
-            hotkey_released("test.release");
-        });
-        let started = Instant::now();
-        press.wait(Duration::from_secs(2));
-        assert!(started.elapsed() < Duration::from_secs(2));
-        handle.join().unwrap();
+    fn paste_failure_consumes_the_run_and_is_returned_to_the_caller() {
+        let runs = SelectionRuns::default();
+        let backend = Backend {
+            paste_error: true,
+            ..Backend::default()
+        };
+        let id = start(&runs, &backend);
+        assert!(runs
+            .finish_with(&backend, id, Some("result".into()))
+            .is_err());
+        assert!(runs.lock().is_none());
+    }
 
-        // an earlier release does not count for a new press
-        let press = HotkeyPress::new("test.release");
-        let started = Instant::now();
-        press.wait(Duration::from_millis(30));
-        assert!(started.elapsed() >= Duration::from_millis(30));
+    #[test]
+    fn unwinding_releases_capture_and_invalid_actions_do_not_reserve_it() {
+        let runs = SelectionRuns::default();
+        assert!(runs.begin_trigger("invalid", Instant::now()).is_err());
+        let result = std::panic::catch_unwind(|| {
+            let _guard = runs.reserve().unwrap();
+            panic!("capture panic");
+        });
+        assert!(result.is_err());
+        assert!(runs.reserve().is_some());
+    }
+
+    #[test]
+    fn release_is_local_to_the_pressed_hotkey_and_new_presses_ignore_old_releases() {
+        let releases = Arc::new(HotkeyReleases::default());
+        let press = HotkeyPress::with_releases("release", Arc::clone(&releases));
+        releases.released("other");
+        assert_eq!(releases.counts.lock().unwrap().get("release"), None);
+        releases.released("release");
+        assert!(press.wait(Duration::ZERO));
+        let press = HotkeyPress::with_releases("release", Arc::clone(&releases));
+        assert_eq!(press.seen, 1);
+        // The timeout branch needs no wall-clock wait.
+        assert!(!press.wait(Duration::ZERO));
+        assert_eq!(releases.counts.lock().unwrap().get("release"), Some(&1));
     }
 }

@@ -1,10 +1,10 @@
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub use super::activation::Activation;
 use super::activation::{StartMode, WindowProfile, WINDOW_SIZE};
+use super::activation_coordinator::{ActivationCoordinator, ActivationHost};
 use super::platform::{InputRegion, PanelKeyboard};
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
@@ -46,13 +46,6 @@ fn emit_captured_context(app: &AppHandle, selected_text: Option<String>) -> Resu
         serde_json::json!({ "selectedText": selected_text }),
     )?;
     Ok(())
-}
-
-/// Numbers the activations, so that a capture finishing after a newer
-/// activation does not publish its outdated selection.
-#[derive(Default)]
-struct ContextCapture {
-    generation: AtomicU64,
 }
 
 #[cfg(target_os = "linux")]
@@ -121,46 +114,43 @@ fn on_main_thread(
         .map_err(|error| AppError::Message(error.to_string()))?
 }
 
-pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppError> {
-    let source = if activation.window_id.is_none() {
+struct RuntimeActivationHost<'a>(&'a AppHandle);
+
+impl ActivationHost for RuntimeActivationHost<'_> {
+    fn source_window(&self) -> Option<String> {
         super::platform::capture_source()
-    } else {
-        activation.window_id.clone()
-    };
-    if activation.window_id.is_none() {
-        activation.window_id.clone_from(&source);
     }
-    let editor_mode = activation.mode == StartMode::Editor;
-    // the editor must not take over a selection made in Tyco itself
-    let capture_selection = activation.selected_text.is_none()
-        && !(editor_mode && has_focused_window(app))
-        && activation.takes_selection(&app.state::<AppState>().params().user_config);
-    let generation = app
-        .state::<ContextCapture>()
-        .generation
-        .fetch_add(1, Ordering::SeqCst)
-        + 1;
 
-    on_main_thread(app, move |app| activate_on_main_thread(app, activation))?;
+    fn has_focused_window(&self) -> bool {
+        has_focused_window(self.0)
+    }
 
-    if capture_selection {
+    fn user_config(&self) -> serde_json::Value {
+        self.0.state::<AppState>().params().user_config
+    }
+
+    fn activate(&self, activation: Activation) -> Result<(), AppError> {
+        on_main_thread(self.0, move |app| activate_on_main_thread(app, activation))
+    }
+}
+
+pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+    let request = app
+        .state::<ActivationCoordinator>()
+        .begin(&RuntimeActivationHost(app), activation)?;
+    if let Some(request) = request {
         let handle = app.clone();
         thread::spawn(move || {
-            let selected_text =
-                tauri::async_runtime::block_on(super::platform::capture_selection(source));
+            let selected_text = tauri::async_runtime::block_on(super::platform::capture_selection(
+                request.source.clone(),
+            ));
             if let Err(error) = on_main_thread(&handle, move |app| {
-                if app
-                    .state::<ContextCapture>()
-                    .generation
-                    .load(Ordering::SeqCst)
-                    != generation
-                {
-                    return Ok(());
-                }
-                let state = app.state::<AppState>();
-                state.update_params(|params| params.selected_text.clone_from(&selected_text));
-                emit_captured_context(app, selected_text)?;
-                emit_params(app, &state)
+                app.state::<ActivationCoordinator>().publish(&request, || {
+                    let state = app.state::<AppState>();
+                    state.update_params(|params| params.selected_text.clone_from(&selected_text));
+                    emit_captured_context(app, selected_text)?;
+                    emit_params(app, &state)
+                })
             }) {
                 log::warn!("Could not publish captured foreground context: {error}");
             }
@@ -172,10 +162,24 @@ pub fn activate(app: &AppHandle, mut activation: Activation) -> Result<(), AppEr
 /// Waits until no Tyco window has keyboard focus. Once the compositor takes
 /// it away, it has handed it to another window, so input can follow. Gives up
 /// silently after `timeout`: the caller still waits for its target window.
-pub fn wait_until_unfocused(app: &AppHandle, timeout: std::time::Duration) {
-    let deadline = std::time::Instant::now() + timeout;
-    while has_focused_window(app) && std::time::Instant::now() < deadline {
-        thread::sleep(std::time::Duration::from_millis(10));
+pub fn wait_until_unfocused(app: &AppHandle, timeout: Duration) {
+    wait_until_unfocused_with(
+        timeout,
+        || has_focused_window(app),
+        Instant::now,
+        thread::sleep,
+    );
+}
+
+fn wait_until_unfocused_with(
+    timeout: Duration,
+    focused: impl Fn() -> bool,
+    now: impl Fn() -> Instant,
+    pause: impl Fn(Duration),
+) {
+    let deadline = now() + timeout;
+    while focused() && now() < deadline {
+        pause(Duration::from_millis(10));
     }
 }
 
@@ -600,7 +604,7 @@ pub fn create_windows(app: &App) -> Result<(), AppError> {
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
-    app.manage(ContextCapture::default());
+    app.manage(ActivationCoordinator::default());
     app.manage(super::selection_replace::SelectionRuns::default());
     app.manage(RuntimeWindows::default());
     let main_window = app
@@ -776,6 +780,38 @@ fn settle_quick_keyboard(app: &AppHandle) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn focus_wait_stops_when_focus_is_released_or_the_deadline_is_reached() {
+        use std::cell::Cell;
+        for release_after in [Some(2), None] {
+            let elapsed = Cell::new(Duration::ZERO);
+            let polls = Cell::new(0);
+            let start = Instant::now();
+            wait_until_unfocused_with(
+                Duration::from_millis(30),
+                || release_after.is_none_or(|limit| polls.get() < limit),
+                || start + elapsed.get(),
+                |duration| {
+                    elapsed.set(elapsed.get() + duration);
+                    polls.set(polls.get() + 1);
+                },
+            );
+            assert_eq!(polls.get(), release_after.unwrap_or(3));
+        }
+        wait_until_unfocused_with(
+            Duration::from_secs(1),
+            || false,
+            Instant::now,
+            |_| panic!("unfocused window must not wait"),
+        );
+        wait_until_unfocused_with(
+            Duration::ZERO,
+            || true,
+            Instant::now,
+            |_| panic!("expired deadline must not wait"),
+        );
+    }
+
     use super::*;
 
     #[test]
