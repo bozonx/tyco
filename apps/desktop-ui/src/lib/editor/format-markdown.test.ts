@@ -43,6 +43,25 @@ describe('shared Markdown formatting', () => {
     expect(output).toContain('[x] ~~done~~')
     expect(formatMarkdown(output)).toBe(output)
   })
+  it('collapses whitespace runs in prose', () => {
+    const input =
+      '# Big   title\n\nword   word\tend  *a  b*\n\n- item  \t two\n\n| a  b | c |\n| - | - |\n| x   y | z |\n'
+    const output = formatMarkdown(input)
+    expect(output).toContain('# Big title')
+    expect(output).toContain('word word end *a b*')
+    expect(output).toContain('- item two')
+    expect(output).toContain('| a b |')
+    expect(output).toContain('| x y |')
+  })
+  it('keeps whitespace in code, HTML and non-breaking spaces', () => {
+    const input =
+      'a  b `x   y`\n\n```\ncode   x\n```\n\n<div>  raw   html  </div>\n'
+    const output = formatMarkdown(input)
+    expect(output).toContain('a  b')
+    expect(output).toContain('`x   y`')
+    expect(output).toContain('code   x')
+    expect(output).toContain('<div>  raw   html  </div>')
+  })
   it('does not cache the previous paste settings', () => {
     const html = '<ul><li>one</li></ul>'
     expect(htmlToMarkdown(html, { bullet: '*' })).toBe('* one')
