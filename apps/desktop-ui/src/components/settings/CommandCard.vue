@@ -73,15 +73,6 @@
           })
         }}
       </button>
-      <button
-        v-if="!launcherSlots.length"
-        type="button"
-        class="command-badge"
-        :title="t('commands.placeConfigure')"
-        @click="emit('navigate', 'launcher-commands')"
-      >
-        {{ t('commands.badgeLauncherSearch') }}
-      </button>
     </div>
     <FieldCheckbox
       class="enabled-switch"

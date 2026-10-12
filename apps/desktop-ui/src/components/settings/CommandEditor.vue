@@ -57,10 +57,11 @@
         <section class="command-group">
           <h4 class="command-group-title">
             {{ t('commands.launcherResultGroup') }}
+            <InfoTooltip
+              v-if="takesText"
+              :text="t('commands.launcherSelectionHint')"
+            />
           </h4>
-          <p v-if="takesText" class="command-hint">
-            {{ t('commands.launcherSelectionHint') }}
-          </p>
           <label
             v-if="takesText"
             class="command-place-detail command-place-result"
@@ -419,6 +420,9 @@ onUnmounted(() => {
 }
 
 .command-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 0.25rem);
   margin: 0;
   font-size: var(--text-caption);
   font-weight: 600;

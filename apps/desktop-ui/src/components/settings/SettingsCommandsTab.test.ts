@@ -65,6 +65,7 @@ describe('SettingsCommandsTab.vue', () => {
     expect(cards[0].text()).toContain('Hook')
     expect(cards[0].text()).toContain('commands.badgeInMenu')
     expect(cards[1].text()).not.toContain('commands.badgeInMenu')
+    expect(cards[1].find('.command-placements').text()).toBe('')
   })
 
   it('shows action keys and assignments on every launcher page', async () => {

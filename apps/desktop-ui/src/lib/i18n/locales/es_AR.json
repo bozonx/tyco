@@ -208,7 +208,6 @@
     "logEmpty": "Todavía no se registró ningún comando",
     "openLogFailed": "No se pudo abrir el registro",
     "badgeInLauncher": "Comandos: pág. {page} ({key})",
-    "badgeLauncherSearch": "Comandos: búsqueda",
     "launcherSelectionHint": "Con una selección, el resultado puede reemplazar el texto original. Sin selección, el resultado se puede mostrar o copiar.",
     "launcherResultGroup": "Resultado de comandos rápidos"
   },

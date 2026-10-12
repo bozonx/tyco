@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandEditor from './CommandEditor.vue'
 import type { CommandConfig } from '@tyco/shared'
 
@@ -155,9 +156,16 @@ describe('CommandEditor.vue', () => {
   })
 
   it('explains selection-specific result behavior for text commands', () => {
-    const wrapper = mountEditor(script({ command: 'echo {{TEXT}}' }))
-    expect(wrapper.text()).toContain('commands.launcherSelectionHint')
-    expect(wrapper.findAll('select')).toHaveLength(2)
+    const withText = mountEditor(script({ command: 'echo {{TEXT}}' }))
+    const section = withText.findAll('details').at(-1)!.find('section')
+    const tooltip = section.findComponent(InfoTooltip)
+    expect(tooltip.exists()).toBe(true)
+    expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
+    expect(withText.findAll('select')).toHaveLength(2)
+
+    const noText = mountEditor(script({ command: 'echo hello' }))
+    const noTextSection = noText.findAll('details').at(-1)!.find('section')
+    expect(noTextSection.findComponent(InfoTooltip).exists()).toBe(false)
   })
 
   it('stores a whole timeout and drops an empty one', async () => {

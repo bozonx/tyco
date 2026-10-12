@@ -208,7 +208,6 @@
     "logEmpty": "Henüz günlüğe kaydedilmiş komut yok",
     "openLogFailed": "Günlük açılamadı",
     "badgeInLauncher": "Komutlar: sayfa {page} ({key})",
-    "badgeLauncherSearch": "Komutlar: arama",
     "launcherSelectionHint": "Seçim varsa sonuç özgün metnin yerini alabilir. Seçim yoksa sonuç gösterilebilir veya kopyalanabilir.",
     "launcherResultGroup": "Hızlı komut sonucu"
   },

@@ -208,7 +208,6 @@
     "logEmpty": "No command has been logged yet",
     "openLogFailed": "Could not open the log",
     "badgeInLauncher": "Commands: page {page} ({key})",
-    "badgeLauncherSearch": "Commands: search",
     "launcherSelectionHint": "With a selection, the result can replace the original text. Without a selection, the result can be shown or copied.",
     "launcherResultGroup": "Quick command result"
   },
