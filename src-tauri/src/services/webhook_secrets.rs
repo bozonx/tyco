@@ -230,10 +230,10 @@ pub fn migrate(app: &AppHandle, config: &mut Value) -> Result<bool, AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
     #[test]
     fn cleanup_preserves_references_shared_by_commands_and_undo_candidates() {
-        let directory =
-            std::env::temp_dir().join(format!("tyco-webhook-cleanup-{}", std::process::id()));
+        let directory = TestDir::new("tyco-webhook-cleanup-");
         crate::services::atomic_file::create_private_dir(&directory).unwrap();
         let store = SecretStore::load(directory.join("secrets.json"), None).unwrap();
         for id in [
@@ -262,7 +262,6 @@ mod tests {
         assert!(!store.ids().contains(&"webhook-header-obsolete".into()));
         cleanup(&store, &referenced_secrets(&config), true, None);
         assert_eq!(store.ids(), vec![String::from("webhook-header-shared")]);
-        std::fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]

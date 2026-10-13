@@ -615,11 +615,12 @@ mod tests {
         }
     }
 
-    fn temp_secrets_path(label: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("tyco-secrets-{label}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        dir.join(SECRETS_FILE_NAME)
+    use crate::services::test_support::TestDir;
+
+    fn temp_secrets_path(label: &str) -> (TestDir, PathBuf) {
+        let directory = TestDir::new(label);
+        let path = directory.join(SECRETS_FILE_NAME);
+        (directory, path)
     }
 
     fn load_with(path: &std::path::Path, vault: &Arc<FakeVault>) -> SecretStore {
@@ -628,7 +629,7 @@ mod tests {
 
     #[test]
     fn a_key_left_locked_is_read_on_the_next_retry() {
-        let path = temp_secrets_path("locked");
+        let (_directory, path) = temp_secrets_path("locked");
         let vault = Arc::new(FakeVault::default());
         load_with(&path, &vault).set("google", "key", None).unwrap();
         vault.locked.lock().unwrap().insert(String::from("google"));
@@ -644,7 +645,6 @@ mod tests {
         );
         store.vault_state();
         assert!(store.status()["google"].available);
-        let _ = fs::remove_dir_all(path.parent().unwrap());
     }
 
     #[test]
@@ -711,7 +711,7 @@ mod tests {
 
     #[test]
     fn values_go_to_the_vault_and_not_to_the_file() {
-        let path = temp_secrets_path("vault");
+        let (_directory, path) = temp_secrets_path("vault");
         let vault = Arc::new(FakeVault::default());
 
         let store = load_with(&path, &vault);
@@ -735,14 +735,11 @@ mod tests {
         reloaded.remove("deepseek").unwrap();
         assert_eq!(vault.value("deepseek"), None);
         assert!(load_with(&path, &vault).status().is_empty());
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn an_unreadable_file_is_moved_aside() {
-        let dir = std::env::temp_dir().join(format!("tyco-secrets-broken-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
+        let dir = TestDir::new("secrets-broken");
         let path = dir.join(SECRETS_FILE_NAME);
         fs::write(&path, "{ not json").unwrap();
 
@@ -751,12 +748,11 @@ mod tests {
         assert!(store.status().is_empty());
         assert!(!path.exists());
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn without_a_vault_no_key_is_saved() {
-        let path = temp_secrets_path("no-vault");
+        let (_directory, path) = temp_secrets_path("no-vault");
         let vault = Arc::new(FakeVault::default());
         vault.unreachable.store(true, Ordering::SeqCst);
 
@@ -771,12 +767,11 @@ mod tests {
         vault.unreachable.store(false, Ordering::SeqCst);
         store.set("groq", "gq-key", None).unwrap();
         assert_eq!(vault.value("groq").as_deref(), Some("gq-key"));
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn a_refused_write_is_an_error() {
-        let path = temp_secrets_path("read-only");
+        let (_directory, path) = temp_secrets_path("read-only");
         let vault = Arc::new(FakeVault::default());
         vault.read_only.store(true, Ordering::SeqCst);
 
@@ -787,12 +782,11 @@ mod tests {
         assert!(store.status().is_empty());
         // the listing written before the vault refused is taken back
         assert!(load_with(&path, &vault).status().is_empty());
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn a_secret_of_an_unreachable_vault_stays_listed() {
-        let path = temp_secrets_path("unreachable");
+        let (_directory, path) = temp_secrets_path("unreachable");
         let vault = Arc::new(FakeVault::default());
         load_with(&path, &vault)
             .set("google", "g-key", None)
@@ -816,12 +810,11 @@ mod tests {
         assert_eq!(offline.vault_state(), VaultState::Available);
         assert!(offline.status()["google"].available);
         assert_eq!(offline.snapshot()["google"].value, "g-key");
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn values_in_the_file_move_into_the_vault() {
-        let path = temp_secrets_path("move");
+        let (_directory, path) = temp_secrets_path("move");
         fs::write(
             &path,
             r#"{"secrets":{"openai":{"value":"sk-old","origins":["https://api.openai.com"]}}}"#,
@@ -836,12 +829,11 @@ mod tests {
         let raw = fs::read_to_string(&path).unwrap();
         assert!(!raw.contains("sk-old"));
         assert!(raw.contains("https://api.openai.com"));
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn a_value_in_the_file_is_used_until_the_vault_takes_it() {
-        let path = temp_secrets_path("staged");
+        let (_directory, path) = temp_secrets_path("staged");
         let vault = Arc::new(FakeVault::default());
         vault.unreachable.store(true, Ordering::SeqCst);
 
@@ -862,12 +854,11 @@ mod tests {
         assert_eq!(reloaded.vault_state(), VaultState::Available);
         assert_eq!(vault.value("openai").as_deref(), Some("sk-staged"));
         assert!(!fs::read_to_string(&path).unwrap().contains("sk-staged"));
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn removing_a_value_in_the_file_clears_an_older_copy_in_the_vault() {
-        let path = temp_secrets_path("stale");
+        let (_directory, path) = temp_secrets_path("stale");
         let vault = Arc::new(FakeVault::default());
         vault.put("deepl", "d-stale");
 
@@ -877,12 +868,11 @@ mod tests {
 
         assert_eq!(vault.value("deepl"), None);
         assert!(store.status().is_empty());
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn a_value_in_the_file_can_be_removed_without_a_vault() {
-        let path = temp_secrets_path("staged-offline");
+        let (_directory, path) = temp_secrets_path("staged-offline");
         let vault = Arc::new(FakeVault::default());
         vault.unreachable.store(true, Ordering::SeqCst);
 
@@ -892,7 +882,6 @@ mod tests {
 
         assert!(store.status().is_empty());
         assert!(!fs::read_to_string(&path).unwrap().contains("gq-key"));
-        fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]

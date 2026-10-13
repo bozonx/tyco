@@ -8,6 +8,12 @@ use serde_json::{json, Value};
 
 /// Shared portable defaults, followed by platform-specific hotkeys and binaries.
 pub fn default_user_config() -> Value {
+    default_user_config_for_session(crate::services::platform::session::current())
+}
+
+pub(crate) fn default_user_config_for_session(
+    session: crate::services::platform::session::Session,
+) -> Value {
     let mut config: Value = serde_json::from_str(include_str!(
         "../../../packages/shared/src/user-config-defaults.json"
     ))
@@ -17,9 +23,7 @@ pub fn default_user_config() -> Value {
     config["selectionHotkeys"] = hotkeys::default_selection_hotkeys_config();
     config["windowInsertion"]["xdotoolBin"] = json!(default_binary_path("xdotool"));
     config["windowInsertion"]["ydotoolBin"] = json!(default_binary_path("ydotool"));
-    config["windowInsertion"]["method"] = json!(if crate::services::platform::session::current()
-        .is_wayland()
-    {
+    config["windowInsertion"]["method"] = json!(if session.is_wayland() {
         "ydotool"
     } else {
         "xdotool"

@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
+import { config, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
@@ -49,7 +49,9 @@ const correctionStep = {
 
 describe('InsertMenu correction step', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    config.global.plugins = [pinia]
     localStorage.clear()
     mocks.editorPage = true
   })
@@ -93,4 +95,8 @@ describe('InsertMenu correction step', () => {
       correctionWrapper.find('[data-testid="layout"]').attributes('data-title')
     ).toBe('menu.correction')
   })
+})
+
+afterEach(() => {
+  config.global.plugins = []
 })

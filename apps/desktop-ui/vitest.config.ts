@@ -2,21 +2,62 @@ import { defineConfig, mergeConfig } from 'vitest/config'
 
 import { createUiConfig } from './build/ui-config.ts'
 
+// Only modules independent of DOM APIs belong in the Node project.
+const NODE_TEST_PATTERNS = [
+  'build/**/*.test.ts',
+  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,correction-mode,ai-tasks,logger}/**/*.test.ts',
+  'src/lib/net/{async-queue,base64,provider-fetch,secrets,secrets-state}.test.ts',
+  'src/lib/chat/{context-budget,chat-title,chat-helpers,chat-attachment,chat-export,chat-history-list,chat-history-settings}.test.ts',
+]
+
+const MODEL_COVERAGE_THRESHOLDS = {
+  lines: 85,
+  statements: 85,
+  functions: 90,
+  branches: 80,
+}
+
 export default defineConfig((configEnv) =>
   mergeConfig(
     createUiConfig(configEnv.mode, true),
     defineConfig({
       test: {
-        environment: 'jsdom',
+        maxWorkers: 4,
         globals: false,
         clearMocks: true,
         restoreMocks: true,
         testTimeout: 10000,
-        setupFiles: ['./src/test/setup.ts'],
-        include: ['src/**/*.test.ts', 'build/**/*.test.ts'],
+        unstubGlobals: true,
+        unstubEnvs: true,
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'unit-node',
+              environment: 'node',
+              setupFiles: ['./src/test/setup-node.ts'],
+              include: NODE_TEST_PATTERNS,
+            },
+          },
+          {
+            extends: true,
+            test: {
+              name: 'unit-dom',
+              environment: 'jsdom',
+              setupFiles: ['./src/test/setup.ts'],
+              include: ['src/**/*.test.ts'],
+              exclude: NODE_TEST_PATTERNS,
+            },
+          },
+        ],
         coverage: {
           provider: 'v8',
-          reporter: ['text', 'json', 'html'],
+          thresholds: {
+            'src/lib/history/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
+            'src/lib/llm/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
+            'src/lib/commands/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
+          },
+          reporter: ['text', 'json-summary', 'html', 'lcov'],
           include: ['src/**/*.ts', 'src/**/*.vue'],
           exclude: [
             'src/**/*.test.ts',

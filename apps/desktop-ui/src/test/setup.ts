@@ -1,10 +1,16 @@
-import { enableAutoUnmount } from '@vue/test-utils'
+import { config, enableAutoUnmount } from '@vue/test-utils'
 import { afterEach, vi } from 'vitest'
+
+config.global.config.warnHandler = (message) => {
+  throw new Error(`Unexpected Vue warning: ${message}`)
+}
 
 enableAutoUnmount(afterEach)
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  vi.useRealTimers()
+  window.localStorage.clear()
+  window.sessionStorage.clear()
   document.body.innerHTML = ''
 })
 

@@ -93,7 +93,9 @@ describe('Editor actions shortcut', () => {
       success: true,
       result: undefined,
     })
-    const callFunctionSpy = vi.spyOn(ipc, 'callFunctionOrNotify')
+    const callFunctionSpy = vi
+      .spyOn(ipc, 'callFunctionOrNotify')
+      .mockResolvedValue({ success: true, result: undefined })
 
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },

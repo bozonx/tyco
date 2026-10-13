@@ -243,11 +243,12 @@ fn numbered_file_name(file_name: &str, attempt: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
 
     #[test]
     fn plugin_notes_stay_inside_approved_roots() {
-        let root = std::env::temp_dir().join(format!("tyco-scoped-note-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&root);
+        let directory = TestDir::new("scoped-note");
+        let root = directory.join("notes");
         let roots = vec![root.to_string_lossy().into_owned()];
         let child = root.join("year/month");
         let path =
@@ -272,7 +273,7 @@ mod tests {
         .is_err());
         #[cfg(unix)]
         {
-            let outside = root.with_extension("outside");
+            let outside = directory.join("outside");
             fs::create_dir_all(&outside).unwrap();
             std::os::unix::fs::symlink(&outside, root.join("link")).unwrap();
             assert!(write_scoped_note(
@@ -293,14 +294,11 @@ mod tests {
                 fs::read_to_string(outside.join("target.md")).unwrap(),
                 "original"
             );
-            fs::remove_dir_all(outside).unwrap();
         }
-        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn concurrent_appends_preserve_lines() {
-        let dir =
-            std::env::temp_dir().join(format!("tyco-concurrent-notes-{}", std::process::id()));
+        let dir = TestDir::new("concurrent-notes");
         fs::create_dir_all(&dir).unwrap();
         let file = dir.join("entries.md");
         fs::write(&file, "initial").unwrap();
@@ -325,7 +323,6 @@ mod tests {
         for index in 0..32 {
             assert!(lines.contains(format!("entry-{index}").as_str()));
         }
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -345,40 +342,27 @@ mod tests {
             assert!(is_windows_file_name(name), "{name}");
         }
     }
-    use std::sync::atomic::{AtomicU32, Ordering};
-
-    /// Returns a unique, not yet existing path under the system temp dir.
-    fn temp_path(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-notes-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-
-        dir
+    /// Keep an owned parent while testing creation of a missing directory.
+    fn temp_path(label: &str) -> (TestDir, PathBuf) {
+        let directory = TestDir::new(label);
+        let path = directory.join("notes");
+        (directory, path)
     }
 
     #[test]
     fn creates_missing_directory_and_writes_text() {
-        let dir = temp_path("create").join("nested");
+        let (_directory, root) = temp_path("create");
+        let dir = root.join("nested");
 
         let path = save_note(dir.to_str().unwrap(), "note.md", "hello").unwrap();
 
         assert_eq!(path, dir.join("note.md"));
         assert_eq!(fs::read_to_string(&path).unwrap(), "hello");
-
-        let _ = fs::remove_dir_all(dir.parent().unwrap());
     }
 
     #[test]
     fn never_overwrites_existing_notes() {
-        let dir = temp_path("collision");
+        let (_directory, dir) = temp_path("collision");
         let dir_str = dir.to_str().unwrap();
 
         let first = save_note(dir_str, "note.md", "first").unwrap();
@@ -390,13 +374,11 @@ mod tests {
         assert_eq!(third, dir.join("note-2.md"));
         assert_eq!(fs::read_to_string(&first).unwrap(), "first");
         assert_eq!(fs::read_to_string(&second).unwrap(), "second");
-
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn rejects_file_names_that_escape_the_directory() {
-        let dir = temp_path("invalid-name");
+        let (_directory, dir) = temp_path("invalid-name");
         let dir_str = dir.to_str().unwrap();
 
         for name in ["", "  ", ".", "..", "../x.md", "a/b.md", "a\\b.md"] {
@@ -441,7 +423,7 @@ mod tests {
 
     #[test]
     fn appends_text_to_new_and_existing_files() {
-        let dir = temp_path("append");
+        let (_directory, dir) = temp_path("append");
         let dir_str = dir.to_str().unwrap();
 
         // When file doesn't exist, it is created
@@ -465,7 +447,5 @@ mod tests {
             fs::read_to_string(&path1).unwrap(),
             "no newline at end\nappended line"
         );
-
-        let _ = fs::remove_dir_all(&dir);
     }
 }

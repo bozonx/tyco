@@ -1,10 +1,18 @@
-use crate::models::default_user_config;
+use crate::models::default_user_config_for_session;
+use crate::services::platform::session::{self, Session};
 use serde_json::{json, Value};
 
 pub(in crate::services::storage::config) fn normalize_window_insertion_config(
     user_config: &mut Value,
 ) -> bool {
-    let defaults = default_user_config();
+    normalize_window_insertion_for_session(user_config, session::current())
+}
+
+pub(super) fn normalize_window_insertion_for_session(
+    user_config: &mut Value,
+    session: Session,
+) -> bool {
+    let defaults = default_user_config_for_session(session);
     let default_window_insertion = defaults
         .get("windowInsertion")
         .and_then(Value::as_object)

@@ -40,7 +40,13 @@
     "test:desktop": "node scripts/check-desktop-runtime.mjs",
     "check:architecture": "node scripts/generate-desktop-commands.mjs --check && node scripts/check-desktop-contracts.mjs",
     "test:tooling": "node --test scripts/*.test.js",
-    "generate:desktop": "node scripts/generate-desktop-commands.mjs"
+    "generate:desktop": "node scripts/generate-desktop-commands.mjs",
+    "test:unit": "pnpm test:tooling && turbo run test && pnpm test:unit:rust",
+    "test:unit:ui": "pnpm test:ui",
+    "test:unit:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins -- --skip integration_",
+    "test:integration:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins integration_ && cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --test '*'",
+    "test:cov:rust": "node -e \"require('node:fs').mkdirSync('coverage/rust', { recursive: true })\" && cargo llvm-cov --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins --lcov --output-path coverage/rust/lcov.info -- --skip integration_",
+    "test:unit:models": "pnpm build:plugins && pnpm --filter @tyco/desktop-ui exec vitest run --project unit-node"
   },
   "author": "Ivan K",
   "license": "MIT",

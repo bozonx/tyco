@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
+import { config, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import PreviewMenu from './PreviewMenu.vue'
 
@@ -14,7 +14,9 @@ vi.mock('@tauri-apps/api/window', () => ({
 
 describe('PreviewMenu', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    config.global.plugins = [pinia]
     localStorage.clear()
   })
 
@@ -131,4 +133,8 @@ describe('PreviewMenu', () => {
     ).toBe(false)
     expect(wrapper.findComponent({ name: 'TextPreview' }).exists()).toBe(true)
   })
+})
+
+afterEach(() => {
+  config.global.plugins = []
 })

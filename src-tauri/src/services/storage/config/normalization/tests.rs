@@ -3,38 +3,43 @@ use crate::models::default_user_config;
 use serde_json::{json, Value};
 
 #[test]
-fn normalize_window_insertion_migrates_the_legacy_key() {
-    let mut config = json!({ "xdotoolBin": "/opt/bin/xdotool" });
+fn window_insertion_defaults_follow_the_injected_session() {
+    use super::window_insertion::normalize_window_insertion_for_session;
+    use crate::services::platform::session::{Desktop, DisplayServer, Session};
 
-    assert!(normalize_window_insertion_config(&mut config));
-    let expected_method = if crate::services::platform::session::current().is_wayland() {
-        "ydotool"
-    } else {
-        "xdotool"
-    };
-    assert_eq!(
-        config["windowInsertion"],
-        json!({
-            "method": expected_method,
-            "xdotoolBin": "/opt/bin/xdotool",
-            "ydotoolBin": "/usr/bin/ydotool",
-            "pasteShortcut": "ctrl+v",
-        })
-    );
-}
-
-#[test]
-fn normalize_window_insertion_replaces_an_unknown_method() {
-    let mut config = json!({ "windowInsertion": { "method": "wtype" } });
-
-    assert!(normalize_window_insertion_config(&mut config));
-    let expected_method = if crate::services::platform::session::current().is_wayland() {
-        "ydotool"
-    } else {
-        "xdotool"
-    };
-    assert_eq!(config["windowInsertion"]["method"], json!(expected_method));
-    assert_eq!(config["windowInsertion"]["pasteShortcut"], json!("ctrl+v"));
+    for (display, expected_method) in [
+        (DisplayServer::X11, "xdotool"),
+        (DisplayServer::Wayland, "ydotool"),
+        (DisplayServer::Native, "xdotool"),
+        (DisplayServer::Unknown, "xdotool"),
+    ] {
+        let session = Session {
+            display,
+            desktop: Desktop::Other,
+        };
+        for mut config in [
+            json!({ "xdotoolBin": "/opt/bin/xdotool" }),
+            json!({ "windowInsertion": { "method": "wtype" } }),
+        ] {
+            assert!(normalize_window_insertion_for_session(&mut config, session));
+            assert_eq!(config["windowInsertion"]["method"], expected_method);
+            assert_eq!(config["windowInsertion"]["pasteShortcut"], "ctrl+v");
+            assert!(!config.as_object().unwrap().contains_key("xdotoolBin"));
+            assert!(!normalize_window_insertion_for_session(
+                &mut config,
+                session
+            ));
+        }
+        let mut legacy = json!({ "xdotoolBin": "/opt/bin/xdotool" });
+        normalize_window_insertion_for_session(&mut legacy, session);
+        assert_eq!(legacy["windowInsertion"]["xdotoolBin"], "/opt/bin/xdotool");
+        assert_eq!(legacy["windowInsertion"]["ydotoolBin"], "/usr/bin/ydotool");
+        for method in ["xdotool", "ydotool"] {
+            let mut config = json!({ "windowInsertion": { "method": method } });
+            normalize_window_insertion_for_session(&mut config, session);
+            assert_eq!(config["windowInsertion"]["method"], method);
+        }
+    }
 }
 
 #[test]

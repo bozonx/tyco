@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_peer_that_does_not_read_cannot_stall_the_socket_pump() {
+    async fn integration_a_peer_that_does_not_read_cannot_stall_the_socket_pump() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {
@@ -310,7 +310,7 @@ mod tests {
     // The handshake callback's error type is tungstenite's, not ours.
     #[allow(clippy::result_large_err)]
     #[tokio::test]
-    async fn close_with_payload_waits_for_the_server_to_finish() {
+    async fn integration_close_with_payload_waits_for_the_server_to_finish() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let authorization = Arc::new(Mutex::new(String::new()));
@@ -390,7 +390,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_disconnect_after_end_of_audio_is_not_a_successful_flush() {
+    async fn integration_a_disconnect_after_end_of_audio_is_not_a_successful_flush() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {
@@ -427,7 +427,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn close_without_payload_closes_now() {
+    async fn integration_close_without_payload_closes_now() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {

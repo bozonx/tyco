@@ -382,6 +382,9 @@ importers:
       '@tyco/plugin-build':
         specifier: workspace:^
         version: link:../plugin-build
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -398,6 +401,9 @@ importers:
       '@tyco/plugin-build':
         specifier: workspace:^
         version: link:../plugin-build
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -407,6 +413,9 @@ importers:
 
   packages/plugin-sdk:
     devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -423,6 +432,9 @@ importers:
       '@tyco/plugin-build':
         specifier: workspace:^
         version: link:../plugin-build
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -439,6 +451,9 @@ importers:
       '@tyco/plugin-build':
         specifier: workspace:^
         version: link:../plugin-build
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -464,6 +479,9 @@ importers:
       '@tyco/plugin-build':
         specifier: workspace:^
         version: link:../plugin-build
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

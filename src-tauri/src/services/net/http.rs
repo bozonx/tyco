@@ -235,31 +235,37 @@ mod tests {
     }
 
     #[derive(Clone, Default)]
-    struct RecordingSink(Arc<Mutex<Vec<Recorded>>>);
+    struct RecordingSink {
+        records: Arc<Mutex<Vec<Recorded>>>,
+        event_received: Arc<tokio::sync::Notify>,
+        bytes_received: Arc<tokio::sync::Notify>,
+    }
 
     impl EventSink for RecordingSink {
         fn event<T: Serialize>(&self, event: &T) -> bool {
-            self.0
+            self.records
                 .lock()
                 .unwrap()
                 .push(Recorded::Event(serde_json::to_value(event).unwrap()));
+            self.event_received.notify_one();
             true
         }
 
         fn bytes(&self, bytes: Vec<u8>) -> bool {
-            self.0.lock().unwrap().push(Recorded::Bytes(bytes));
+            self.records.lock().unwrap().push(Recorded::Bytes(bytes));
+            self.bytes_received.notify_one();
             true
         }
     }
 
     impl RecordingSink {
         fn take(&self) -> Vec<Recorded> {
-            std::mem::take(&mut self.0.lock().unwrap())
+            std::mem::take(&mut self.records.lock().unwrap())
         }
     }
 
     #[tokio::test]
-    async fn response_flow_waits_for_consumption_and_respects_the_limit() {
+    async fn integration_response_flow_waits_for_consumption_and_respects_the_limit() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {
@@ -295,10 +301,12 @@ mod tests {
             .await;
         });
         server.await.unwrap();
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        tokio::time::timeout(Duration::from_secs(5), sink.event_received.notified())
+            .await
+            .expect("response headers were not delivered");
         assert!(!task.is_finished());
         assert!(!sink
-            .0
+            .records
             .lock()
             .unwrap()
             .iter()
@@ -309,7 +317,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert!(sink
-            .0
+            .records
             .lock()
             .unwrap()
             .iter()
@@ -322,6 +330,7 @@ mod tests {
         let mut buffer = [0u8; 4096];
         let head_end = loop {
             let read = socket.read(&mut buffer).await.unwrap();
+            assert!(read > 0, "peer closed before the request was complete");
             raw.extend_from_slice(&buffer[..read]);
             if let Some(position) = raw.windows(4).position(|window| window == b"\r\n\r\n") {
                 break position + 4;
@@ -339,16 +348,19 @@ mod tests {
             .unwrap_or(0);
         while raw.len() < head_end + length {
             let read = socket.read(&mut buffer).await.unwrap();
+            assert!(read > 0, "peer closed before the request was complete");
             raw.extend_from_slice(&buffer[..read]);
         }
         (head, raw[head_end..head_end + length].to_vec())
     }
 
     #[tokio::test]
-    async fn streams_a_chunked_response_with_the_key_filled_in() {
+    async fn integration_streams_a_chunked_response_with_the_key_filled_in() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let origin = format!("http://{}", listener.local_addr().unwrap());
 
+        let sink = RecordingSink::default();
+        let bytes_received = sink.bytes_received.clone();
         let server = tokio::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();
             let request = read_request(&mut socket).await;
@@ -364,7 +376,9 @@ mod tests {
                     .await
                     .unwrap();
                 socket.flush().await.unwrap();
-                tokio::time::sleep(Duration::from_millis(20)).await;
+                tokio::time::timeout(Duration::from_secs(5), bytes_received.notified())
+                    .await
+                    .expect("response chunk was not delivered before the next chunk");
             }
             socket.write_all(b"0\r\n\r\n").await.unwrap();
             request
@@ -392,7 +406,6 @@ mod tests {
         )
         .unwrap();
 
-        let sink = RecordingSink::default();
         let client = reqwest::Client::new();
         run_fetch(
             &client,
@@ -438,7 +451,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn reports_a_connection_failure_as_an_error_event() {
+    async fn integration_reports_a_connection_failure_as_an_error_event() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         drop(listener);

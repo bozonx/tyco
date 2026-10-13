@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createVoiceSession } from './voice-session'
+
+afterEach(() => vi.useRealTimers())
 
 describe('createVoiceSession', () => {
   it('aborts the previous session and fires the recording limit once', () => {
@@ -17,7 +19,6 @@ describe('createVoiceSession', () => {
     expect(onLimit).toHaveBeenCalledOnce()
     vi.advanceTimersByTime(1_000)
     expect(onLimit).toHaveBeenCalledOnce()
-    vi.useRealTimers()
   })
 
   it('cancels both the request and deadline when disposed', () => {
@@ -32,6 +33,5 @@ describe('createVoiceSession', () => {
     expect(signal.aborted).toBe(true)
     expect(onLimit).not.toHaveBeenCalled()
     expect(session.signal).toBeUndefined()
-    vi.useRealTimers()
   })
 })

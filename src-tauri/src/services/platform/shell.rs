@@ -205,22 +205,22 @@ mod tests {
     }
 
     #[test]
-    fn substitutes_a_bare_placeholder() {
+    fn integration_substitutes_a_bare_placeholder() {
         assert_eq!(run(&print(PLACEHOLDER), NASTY), NASTY);
     }
 
     #[test]
-    fn substitutes_a_placeholder_in_double_quotes() {
+    fn integration_substitutes_a_placeholder_in_double_quotes() {
         assert_eq!(run(&print("\"<{{TEXT}}>\""), NASTY), format!("<{NASTY}>"));
     }
 
     #[test]
-    fn substitutes_a_placeholder_in_single_quotes() {
+    fn integration_substitutes_a_placeholder_in_single_quotes() {
         assert_eq!(run(&print("'<{{TEXT}}>'"), NASTY), format!("<{NASTY}>"));
     }
 
     #[test]
-    fn substitutes_every_placeholder_once() {
+    fn integration_substitutes_every_placeholder_once() {
         assert_eq!(
             run(&print("{{TEXT}}-{{TEXT}}"), PLACEHOLDER),
             "{{TEXT}}-{{TEXT}}"
@@ -231,9 +231,9 @@ mod tests {
     /// placeholder stands outside of them, where an inlined text would run.
     #[cfg(not(target_os = "windows"))]
     #[test]
-    fn a_placeholder_in_a_here_document_or_a_comment_runs_nothing() {
-        let marker = std::env::temp_dir().join(format!("tyco-shell-{}", std::process::id()));
-        let _ = std::fs::remove_file(&marker);
+    fn integration_a_placeholder_in_a_here_document_or_a_comment_runs_nothing() {
+        let directory = crate::services::test_support::TestDir::new("shell");
+        let marker = directory.join("marker");
         let text = format!("$(touch {0})`touch {0}`\ntouch {0} #", marker.display());
 
         run(&format!("cat <<EOF\n{PLACEHOLDER}\nEOF"), &text);

@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn cancellation_drops_an_unfinished_socket_handshake() {
+    async fn integration_cancellation_drops_an_unfinished_socket_handshake() {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let prepared = prepare(

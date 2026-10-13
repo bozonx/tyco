@@ -110,9 +110,11 @@ describe('FastNote plugin', () => {
     vi.setSystemTime(new Date(2026, 9, 3, 12, 0, 0))
 
     const { mocks, tools } = setup({ config: { pathToNotes: '/vault' } })
-    const daily = tools[0].defaultCommands.find(
+    const daily = tools[0].defaultCommands?.find(
       (preset) => preset.id === 'daily'
     )
+
+    expect(daily).toBeDefined()
 
     const result = await tools[0].run({
       input: { text: 'Quick thought' },

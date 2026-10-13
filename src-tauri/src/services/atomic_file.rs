@@ -182,19 +182,11 @@ pub fn read_or_quarantine<T>(
 mod tests {
     use super::*;
 
-    fn temp_dir(label: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-atomic-file-test-{label}-{}",
-            std::process::id()
-        ));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-        dir
-    }
+    use crate::services::test_support::TestDir;
 
     #[test]
     fn replaces_the_file_and_leaves_no_temp_file() {
-        let dir = temp_dir("replace");
+        let dir = TestDir::new("replace");
         let path = dir.join("file.json");
 
         write_private(&path, "old").unwrap();
@@ -208,12 +200,11 @@ mod tests {
             let mode = fs::metadata(&path).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o600);
         }
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn concurrent_writes_never_share_a_temporary_file() {
-        let dir = temp_dir("concurrent");
+        let dir = TestDir::new("concurrent");
         let path = dir.join("file.json");
         std::thread::scope(|scope| {
             for index in 0..16 {
@@ -224,17 +215,15 @@ mod tests {
         let value: u32 = fs::read_to_string(&path).unwrap().parse().unwrap();
         assert!(value < 16);
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn a_failed_rename_cleans_up_its_temporary_file() {
-        let dir = temp_dir("failed-rename");
+        let dir = TestDir::new("failed-rename");
         let target = dir.join("directory");
         fs::create_dir(&target).unwrap();
         assert!(write_private(&target, "data").is_err());
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[cfg(unix)]
@@ -242,7 +231,7 @@ mod tests {
     fn a_leftover_temp_file_does_not_pass_on_its_permissions() {
         use std::os::unix::fs::PermissionsExt;
 
-        let dir = temp_dir("leftover");
+        let dir = TestDir::new("leftover");
         let path = dir.join("file.json");
         let tmp_path = dir.join("file.json.tmp");
         fs::write(&tmp_path, "stale").unwrap();
@@ -252,7 +241,6 @@ mod tests {
 
         let mode = fs::metadata(&path).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o600);
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[cfg(unix)]
@@ -260,7 +248,7 @@ mod tests {
     fn private_dirs_are_closed_to_other_users() {
         use std::os::unix::fs::PermissionsExt;
 
-        let dir = temp_dir("private-dir");
+        let dir = TestDir::new("private-dir");
         let existing = dir.join("existing");
         fs::create_dir_all(&existing).unwrap();
         fs::set_permissions(&existing, fs::Permissions::from_mode(0o755)).unwrap();
@@ -273,12 +261,11 @@ mod tests {
             let mode = fs::metadata(path).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o700);
         }
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn read_or_quarantine_moves_an_unreadable_file_aside() {
-        let dir = temp_dir("read-or-quarantine");
+        let dir = TestDir::new("read-or-quarantine");
         let path = dir.join("secrets.json");
         fs::write(&path, "{ broken").unwrap();
 
@@ -289,12 +276,11 @@ mod tests {
 
         assert!(parsed.is_none());
         assert!(!path.exists());
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn quarantine_keeps_the_original_content() {
-        let dir = temp_dir("quarantine");
+        let dir = TestDir::new("quarantine");
         let path = dir.join("config.yaml");
         fs::write(&path, "broken: [").unwrap();
 
@@ -302,6 +288,5 @@ mod tests {
 
         assert!(!path.exists());
         assert_eq!(fs::read_to_string(target).unwrap(), "broken: [");
-        let _ = fs::remove_dir_all(&dir);
     }
 }

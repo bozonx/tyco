@@ -47,8 +47,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run validation (version, i18n, lint, type-check, format, test, build)
-        run: pnpm validate
+      - name: Run validation with unit test coverage
+        run: pnpm check && pnpm test:tooling && pnpm test:cov && pnpm build
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-unit-coverage
+          path: |
+            apps/desktop-ui/coverage/
+            packages/plugin-*/coverage/
+          if-no-files-found: error
 
       - name: Verify isolated plugins in Chromium
         run: pnpm test:plugin-runtime
@@ -89,6 +99,27 @@ jobs:
       - name: Run Rust tests
         run: cargo test --locked --workspace
         working-directory: src-tauri
+
+      - name: Install coverage tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.9.1
+
+      - name: Install LLVM tools for the pinned Rust toolchain
+        run: rustup component add llvm-tools-preview
+
+      - name: Collect Rust unit test coverage
+        run: |
+          mkdir -p coverage/rust
+          cargo llvm-cov --manifest-path src-tauri/Cargo.toml --locked --workspace --lib --bins --lcov --output-path coverage/rust/lcov.info -- --skip integration_
+
+      - name: Upload Rust coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-unit-coverage
+          path: coverage/rust/
+          if-no-files-found: error
 
   # Keeps the Windows and macOS backends compiling. Linux is covered by the
   # `rust` job above. Compilation and tests are required on every desktop OS.

@@ -360,6 +360,7 @@ pub fn approved_note_roots(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
     fn manifest() -> PluginManifest {
         serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
     }
@@ -379,8 +380,7 @@ mod tests {
     }
     #[test]
     fn installs_updates_serves_and_removes_only_owned_modules() {
-        let dir = std::env::temp_dir().join(format!("tyco-plugin-test-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
+        let dir = TestDir::new("tyco-plugin-test-");
         fs::create_dir_all(&dir).unwrap();
         let file = dir.join("example.tyco-plugin");
         let package = PluginPackage {
@@ -412,12 +412,10 @@ mod tests {
             .is_err());
         store.remove("example").unwrap();
         assert!(store.list().unwrap().is_empty());
-        fs::remove_dir_all(dir).unwrap();
     }
     #[test]
     fn installation_checks_the_reviewed_digest_and_restores_previous_revisions() {
-        let dir = std::env::temp_dir().join(format!("tyco-plugin-restore-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
+        let dir = TestDir::new("tyco-plugin-restore-");
         fs::create_dir_all(&dir).unwrap();
         let file = dir.join("example.tyco-plugin");
         let store = PluginStore::new(dir.join("installed"));
@@ -445,7 +443,6 @@ mod tests {
             .module(&restored[0].module_path)
             .unwrap()
             .contains("one"));
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -460,21 +457,16 @@ mod tests {
             "icons": {"bad": {"body": "<path onmouseover = \"alert(1)\"/>"}}
         }));
         assert!(validate_manifest(&value).is_err());
-        let dir = std::env::temp_dir().join(format!("tyco-plugin-id-{}", std::process::id()));
-        let store = PluginStore::new(dir.clone());
+        let dir = TestDir::new("tyco-plugin-id-");
+        let store = PluginStore::new(dir.to_path_buf());
         assert!(store.remove("../unsafe").is_err());
         assert!(store.restore("bundled").is_err());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn incompatible_installed_packages_remain_manageable_without_being_executed() {
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-plugin-incompatible-test-{}",
-            std::process::id()
-        ));
-        let _ = fs::remove_dir_all(&dir);
-        let store = PluginStore::new(dir.clone());
+        let dir = TestDir::new("tyco-plugin-incompatible-test-");
+        let store = PluginStore::new(dir.to_path_buf());
         let mut future = manifest();
         future.api_version = API_VERSION + 1;
         let installed = InstalledPackage {
@@ -495,6 +487,5 @@ mod tests {
         assert!(store.module(&catalog[0].module_path).is_err());
         store.remove("example").unwrap();
         assert!(store.list().unwrap().is_empty());
-        fs::remove_dir_all(dir).unwrap();
     }
 }

@@ -370,6 +370,7 @@ fn empty_result() -> ScriptExecutionResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
     use std::fs;
 
     fn request<'a>(command: &'a str, text: &'a str) -> ScriptRequest<'a> {
@@ -405,9 +406,9 @@ mod tests {
     /// on and keep the output pipes open.
     #[cfg(unix)]
     #[test]
-    fn a_timeout_stops_the_whole_process_tree() {
-        let pid_file = std::env::temp_dir().join(format!("tyco-tree-{}", std::process::id()));
-        let _ = fs::remove_file(&pid_file);
+    fn integration_a_timeout_stops_the_whole_process_tree() {
+        let directory = TestDir::new("process-tree");
+        let pid_file = directory.join("pid");
         let command = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
         let mut timed = request(&command, "");
         timed.output_timeout = Some(Duration::from_millis(500));
@@ -428,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn passes_the_text_through_the_placeholder() {
+    fn integration_passes_the_text_through_the_placeholder() {
         let text = "don't \"stop\" $HOME";
         let result = execute_script(&request(commands::ECHO_PLACEHOLDER, text), None).unwrap();
         assert!(result.success, "{}", result.stderr);
@@ -436,14 +437,14 @@ mod tests {
     }
 
     #[test]
-    fn does_not_pass_text_to_stdin() {
+    fn integration_does_not_pass_text_to_stdin() {
         let result = execute_script(&request(commands::CAT, "input text"), None).unwrap();
         assert!(result.success, "{}", result.stderr);
         assert_eq!(result.stdout, "");
     }
 
     #[test]
-    fn runs_in_the_home_directory_by_default() {
+    fn integration_runs_in_the_home_directory_by_default() {
         let result = execute_script(&request(commands::PWD, ""), None).unwrap();
         let home = shell::home_dir().unwrap();
         assert_eq!(
@@ -453,7 +454,7 @@ mod tests {
     }
 
     #[test]
-    fn runs_in_the_given_directory() {
+    fn integration_runs_in_the_given_directory() {
         let dir = std::env::temp_dir().canonicalize().unwrap();
         let dir_str = dir.to_string_lossy().into_owned();
         let result = execute_script(
@@ -471,7 +472,7 @@ mod tests {
     }
 
     #[test]
-    fn refuses_a_missing_working_directory() {
+    fn integration_refuses_a_missing_working_directory() {
         let result = execute_script(
             &ScriptRequest {
                 working_dir: Some("/no/such/tyco/dir"),
@@ -483,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn leaves_a_long_command_running_when_its_output_is_not_needed() {
+    fn integration_leaves_a_long_command_running_when_its_output_is_not_needed() {
         let started = Instant::now();
         let result = execute_script(
             &ScriptRequest {
@@ -498,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn kills_a_command_that_outlives_its_own_timeout() {
+    fn integration_kills_a_command_that_outlives_its_own_timeout() {
         let started = Instant::now();
         let error = execute_script(
             &ScriptRequest {
@@ -513,7 +514,7 @@ mod tests {
     }
 
     #[test]
-    fn kills_a_cancelled_command() {
+    fn integration_kills_a_cancelled_command() {
         let run_id = format!("cancel-test-{}", std::process::id());
         let canceller = {
             let run_id = run_id.clone();
@@ -539,15 +540,15 @@ mod tests {
     }
 
     #[test]
-    fn reports_a_failure() {
+    fn integration_reports_a_failure() {
         let result = execute_script(&request("exit 3", ""), None).unwrap();
         assert!(!result.success);
         assert_eq!(result.exit_code, Some(3));
     }
 
     #[test]
-    fn logs_the_command_without_the_text() {
-        let dir = std::env::temp_dir().join(format!("tyco_test_log_{}", std::process::id()));
+    fn integration_logs_the_command_without_the_text() {
+        let dir = TestDir::new("process-log");
         let result = execute_script(
             &ScriptRequest {
                 log_output: true,
@@ -562,8 +563,6 @@ mod tests {
         assert!(content.contains("[Action: \"Test\"]"));
         assert!(content.contains(&format!("Command: {}", commands::ECHO_PLACEHOLDER)));
         assert!(!content.contains("Command: printf %s 'private_text'"));
-
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]

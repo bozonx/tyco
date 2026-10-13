@@ -1,3 +1,6 @@
+#[cfg(test)]
+pub(crate) mod test_support;
+
 pub mod activation;
 pub(crate) mod activation_coordinator;
 pub mod activation_metrics;

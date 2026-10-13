@@ -21,13 +21,15 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "type-check": "tsc -p tsconfig.json --noEmit",
+    "type-check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
-    "dev": "tsc -p tsconfig.json --watch"
+    "dev": "tsc -p tsconfig.json --watch",
+    "test:cov": "vitest run --coverage"
   },
   "devDependencies": {
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:"
   }
 }

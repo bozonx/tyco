@@ -264,7 +264,7 @@ mod tests {
     use super::*;
     #[cfg(unix)]
     #[tokio::test]
-    async fn synchronous_utility_can_run_inside_an_async_caller() {
+    async fn integration_synchronous_utility_can_run_inside_an_async_caller() {
         let status = status(
             command("sh", &["-c", "exit 0"]),
             None,
@@ -275,7 +275,7 @@ mod tests {
     }
     #[cfg(unix)]
     #[test]
-    fn deadline_includes_descendants_holding_stdout() {
+    fn integration_deadline_includes_descendants_holding_stdout() {
         let started = Instant::now();
         let result = run(
             command("sh", &["-c", "sleep 30 & exit 0"]),
@@ -287,7 +287,7 @@ mod tests {
     }
     #[cfg(unix)]
     #[test]
-    fn deadline_includes_blocked_input() {
+    fn integration_deadline_includes_blocked_input() {
         let started = Instant::now();
         let input = vec![0; 1024 * 1024];
         let result = run(
@@ -300,7 +300,7 @@ mod tests {
     }
     #[cfg(unix)]
     #[test]
-    fn dropping_reader_closes_a_pipe_held_by_a_descendant() {
+    fn integration_dropping_reader_closes_a_pipe_held_by_a_descendant() {
         let mut child = Command::new("sh")
             .args(["-c", "sleep 1 & exit 0"])
             .stdout(Stdio::piped())

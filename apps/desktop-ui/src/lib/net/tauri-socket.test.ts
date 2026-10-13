@@ -13,6 +13,14 @@ async function collect(messages: AsyncIterable<string>) {
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
+function barrier() {
+  let resolve!: () => void
+  const promise = new Promise<void>((complete) => {
+    resolve = complete
+  })
+  return { promise, resolve }
+}
+
 describe('tauri-socket', () => {
   it('opens through the proxy with headers and protocols', async () => {
     const fake = createFakeNetIpc({
@@ -97,6 +105,9 @@ describe('tauri-socket', () => {
 
   it('sends frames in order, binary as a raw body', async () => {
     const order: string[] = []
+    const started = barrier()
+    const release = barrier()
+    const closed = barrier()
     const fake = createFakeNetIpc({
       [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
         emit({ type: 'open' })
@@ -104,11 +115,15 @@ describe('tauri-socket', () => {
       },
       [DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY]: async () => {
         // A slow first frame must not be overtaken by the next ones.
-        await new Promise((resolve) => setTimeout(resolve, 10))
+        started.resolve()
+        await release.promise
         order.push('binary')
       },
       [DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT]: () => order.push('text'),
-      [DESKTOP_COMMANDS.NET_SOCKET_CLOSE]: () => order.push('close'),
+      [DESKTOP_COMMANDS.NET_SOCKET_CLOSE]: () => {
+        order.push('close')
+        closed.resolve()
+      },
     })
     const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
       signal: new AbortController().signal,
@@ -119,7 +134,10 @@ describe('tauri-socket', () => {
     session.send('{"type":"KeepAlive"}')
     session.close('{"type":"CloseStream"}')
     session.send('ignored after close')
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await started.promise
+    expect(order).toEqual([])
+    release.resolve()
+    await closed.promise
 
     expect(order).toEqual(['binary', 'text', 'close'])
     const [binary] = fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY)

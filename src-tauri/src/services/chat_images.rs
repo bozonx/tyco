@@ -392,6 +392,7 @@ pub fn collect_orphans(chats_dir: &Path) -> Result<(), AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
 
     fn png() -> Vec<u8> {
         let mut bytes = Vec::new();
@@ -486,10 +487,7 @@ mod tests {
 
     #[test]
     fn disk_roundtrip_gc_and_session_survival() {
-        let directory =
-            std::env::temp_dir().join(format!("tyco-chat-images-test-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&directory);
-        fs::create_dir_all(&directory).unwrap();
+        let directory = TestDir::new("tyco-chat-images-test");
         let mut store = ChatImageStore::default();
         let image = store.insert(&png(), None).unwrap();
         let chat = Chat {
@@ -523,7 +521,6 @@ mod tests {
             .join(format!("{}.webp", image.id))
             .exists());
         assert!(store.get(&directory.join("images"), &image.id).is_ok());
-        fs::remove_dir_all(directory).unwrap();
     }
     #[test]
     fn rejects_mismatched_metadata_and_exhausted_session_memory() {
@@ -591,10 +588,7 @@ mod tests {
 
     #[test]
     fn reads_legacy_png_files_without_re_encoding_them() {
-        let directory =
-            std::env::temp_dir().join(format!("tyco-chat-legacy-test-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&directory);
-        fs::create_dir_all(&directory).unwrap();
+        let directory = TestDir::new("tyco-chat-legacy-test");
         let bytes = png();
         let id = format!("{:x}", Sha256::digest(&bytes));
         fs::write(directory.join(format!("{id}.png")), &bytes).unwrap();
@@ -606,6 +600,5 @@ mod tests {
         );
         fs::write(directory.join(format!("{id}.png")), b"tampered").unwrap();
         assert!(ChatImageStore::default().get(&directory, &id).is_err());
-        fs::remove_dir_all(directory).unwrap();
     }
 }

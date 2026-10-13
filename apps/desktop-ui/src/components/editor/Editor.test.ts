@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { config, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Editor from './Editor.vue'
 import Icon from '../common/AppIcon.vue'
@@ -18,7 +18,9 @@ vi.mock('../../composables/use-desktop-insertion', () => ({
 
 describe('Editor.vue toolbar', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    config.global.plugins = [pinia]
     vi.clearAllMocks()
   })
 
@@ -431,4 +433,8 @@ describe('Editor.vue toolbar', () => {
     expect(wrapper.find('.voice-stub').attributes('data-variant')).toBe('bar')
     expect(wrapper.find('.editor-input-area').attributes('inert')).toBeDefined()
   })
+})
+
+afterEach(() => {
+  config.global.plugins = []
 })

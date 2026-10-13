@@ -112,12 +112,11 @@ fn read_chat_file_bytes(path: &std::path::Path) -> Result<Vec<u8>, ChatFileError
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
 
     #[test]
     fn dropped_files_are_bounded_and_directories_are_rejected() {
-        let directory =
-            std::env::temp_dir().join(format!("tyco-chat-file-test-{}", std::process::id()));
-        std::fs::create_dir_all(&directory).unwrap();
+        let directory = TestDir::new("tyco-chat-file-test");
         let path = directory.join("sample.txt");
         std::fs::write(&path, b"contents").unwrap();
         assert_eq!(read_chat_file_bytes(&path).unwrap(), b"contents");
@@ -130,7 +129,6 @@ mod tests {
             read_chat_file_bytes(&path).unwrap_err().kind,
             ChatFileErrorKind::Size
         );
-        std::fs::remove_dir_all(directory).unwrap();
     }
 }
 

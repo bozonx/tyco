@@ -214,6 +214,7 @@ impl LogContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::test_support::TestDir;
     #[test]
     fn logs_a_command_run_with_secrets_masked() {
         let record = CommandRunRecord {
@@ -243,7 +244,7 @@ mod tests {
     }
     #[test]
     fn rotates_a_full_log() {
-        let dir = std::env::temp_dir().join(format!("tyco_test_rotate_{}", std::process::id()));
+        let dir = TestDir::new("tyco_test_rotate_");
         fs::create_dir_all(&dir).unwrap();
         let big = vec![b'x'; MAX_LOG_FILE_BYTES as usize + 1];
         fs::write(dir.join(LOG_FILE_NAME), big).unwrap();
@@ -255,7 +256,6 @@ mod tests {
             "fresh\n"
         );
         assert!(dir.join(format!("{LOG_FILE_NAME}.1")).exists());
-        let _ = fs::remove_dir_all(&dir);
     }
     #[test]
     fn truncates_on_a_char_boundary() {
@@ -264,13 +264,12 @@ mod tests {
     }
     #[test]
     fn custom_action_log_redacts_secrets() {
-        let dir = std::env::temp_dir().join(format!("tyco_test_action_log_{}", std::process::id()));
+        let dir = TestDir::new("tyco_test_action_log_");
         let secret = "sk-1234567890abcdef1234567890abcdef";
         log_custom_action(&dir, "test", "script", &format!("Token: {secret}")).unwrap();
 
         let contents = fs::read_to_string(dir.join(LOG_FILE_NAME)).unwrap();
         assert!(!contents.contains(secret));
         assert!(contents.contains("[REDACTED"));
-        let _ = fs::remove_dir_all(&dir);
     }
 }
