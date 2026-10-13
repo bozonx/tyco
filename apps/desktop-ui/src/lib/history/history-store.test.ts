@@ -92,17 +92,12 @@ describe('history-store', () => {
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.saveOutput('sent')
-    await store.saveDraft('left')
-    await store.saveDraft('left again', 'old-id')
+    await store.saveOutput('left')
     await store.saveSource('before', 'translate')
 
     expect(api.callFunction.mock.calls).toEqual([
       ['saveEditorHistory', [{ text: 'sent', kind: 'output' }]],
-      ['saveEditorHistory', [{ text: 'left', kind: 'draft' }]],
-      [
-        'saveEditorHistory',
-        [{ text: 'left again', kind: 'draft', replaceId: 'old-id' }],
-      ],
+      ['saveEditorHistory', [{ text: 'left', kind: 'output' }]],
       [
         'saveEditorHistory',
         [{ text: 'before', kind: 'source', operation: 'translate' }],
@@ -117,7 +112,7 @@ describe('history-store', () => {
     await expect(store.saveSource('before', 'correction')).resolves.toBe(
       'new-id'
     )
-    await expect(store.saveDraft(' ')).resolves.toBeNull()
+    await expect(store.saveOutput(' ')).resolves.toBeNull()
   })
 
   it('resolves to null when the history is turned off', async () => {
@@ -156,7 +151,7 @@ describe('history-store', () => {
     }
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
-    const save = store.saveDraft('text')
+    const save = store.saveOutput('text')
     const load = store.loadEditorHistory()
     await Promise.resolve()
     finishWrite()
@@ -175,7 +170,7 @@ describe('history-store', () => {
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
 
     await store.saveOutput('')
-    await store.saveDraft('  \n')
+    await store.saveOutput('  \n')
 
     expect(api.callFunction).not.toHaveBeenCalled()
   })

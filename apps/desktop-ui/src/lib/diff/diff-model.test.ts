@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_DIFF_VIEW_MODE,
-  DIFF_VIEW_MODE_STORAGE_KEY,
   splitDiffParts,
   computeWordDiff,
   hasDifferences,
   isDiffViewMode,
-  readStoredDiffMode,
-  writeStoredDiffMode,
+  resolveDiffMode,
 } from './diff-model'
 
 describe('diff-model', () => {
@@ -85,65 +83,11 @@ describe('diff-model', () => {
     })
   })
 
-  describe('storage persistence', () => {
-    class MockStorage implements Storage {
-      private store: Record<string, string> = {}
-      get length() {
-        return Object.keys(this.store).length
-      }
-      clear() {
-        this.store = {}
-      }
-      getItem(key: string) {
-        return this.store[key] ?? null
-      }
-      key(index: number) {
-        return Object.keys(this.store)[index] ?? null
-      }
-      removeItem(key: string) {
-        delete this.store[key]
-      }
-      setItem(key: string, value: string) {
-        this.store[key] = value
-      }
-    }
-
-    it('reads default mode when storage is empty or invalid', () => {
-      const storage = new MockStorage()
-      expect(readStoredDiffMode(storage)).toBe(DEFAULT_DIFF_VIEW_MODE)
-
-      storage.setItem(DIFF_VIEW_MODE_STORAGE_KEY, 'invalid-mode')
-      expect(readStoredDiffMode(storage)).toBe(DEFAULT_DIFF_VIEW_MODE)
-    })
-
-    it('reads and writes valid diff view modes', () => {
-      const storage = new MockStorage()
-
-      writeStoredDiffMode('split', storage)
-      expect(readStoredDiffMode(storage)).toBe('split')
-
-      writeStoredDiffMode('result', storage)
-      expect(readStoredDiffMode(storage)).toBe('result')
-
-      writeStoredDiffMode('unified', storage)
-      expect(readStoredDiffMode(storage)).toBe('unified')
-    })
-
-    it('prefers explicit mode over storage if valid', () => {
-      const storage = new MockStorage()
-      writeStoredDiffMode('unified', storage)
-
-      expect(readStoredDiffMode(storage, 'split')).toBe('split')
-      expect(readStoredDiffMode(storage, null)).toBe('unified')
-      expect(readStoredDiffMode(storage, undefined)).toBe('unified')
-    })
-
-    it('validates mode via isDiffViewMode', () => {
-      expect(isDiffViewMode('unified')).toBe(true)
-      expect(isDiffViewMode('split')).toBe(true)
-      expect(isDiffViewMode('result')).toBe(true)
-      expect(isDiffViewMode('other')).toBe(false)
-      expect(isDiffViewMode(null)).toBe(false)
-    })
+  it('resolves a session preference or the default mode', () => {
+    expect(resolveDiffMode()).toBe(DEFAULT_DIFF_VIEW_MODE)
+    expect(resolveDiffMode(null)).toBe(DEFAULT_DIFF_VIEW_MODE)
+    expect(resolveDiffMode('split')).toBe('split')
+    expect(resolveDiffMode('result')).toBe('result')
+    expect(isDiffViewMode('other')).toBe(false)
   })
 })

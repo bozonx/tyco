@@ -13,7 +13,6 @@ pub use settings::*;
 pub use storage::*;
 
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
-pub const STATE_FILE_NAME: &str = "localState.json";
 
 #[cfg(test)]
 mod tests {

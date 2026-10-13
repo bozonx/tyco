@@ -216,17 +216,6 @@ watch(
   }
 )
 
-// the texts outlive a hidden window, but not a quit or a crash
-watch(
-  () => ipcStore.desktopState.isWindowShown,
-  (isShown) => {
-    if (isShown) return
-
-    void editorInputStore.snapshotDraft()
-    void writeInputStore.snapshotDraft()
-  }
-)
-
 onMounted(() => {
   void listenDesktop(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
     void pluginRuntime.refreshInstalledPlugins()

@@ -48,15 +48,6 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
   const saveOutput = (text: string) =>
     saveEditorHistory({ text, kind: 'output' })
 
-  /**
-   * Unsent text that is leaving the editor or may not survive a quit.
-   * `replaceId` is the previous draft of the same editing session.
-   */
-  const saveDraft = (text: string, replaceId?: string) =>
-    saveEditorHistory(
-      replaceId ? { text, kind: 'draft', replaceId } : { text, kind: 'draft' }
-    )
-
   /** The text is about to be replaced by the result of an AI operation. */
   const saveSource = (text: string, operation: EditorHistoryOperation) =>
     saveEditorHistory({ text, kind: 'source', operation })
@@ -100,7 +91,6 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
     loadEditorHistory,
     saveEditorHistory,
     saveOutput,
-    saveDraft,
     saveSource,
     saveSourceResult,
     removeFromEditorHistory,

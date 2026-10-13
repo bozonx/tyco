@@ -76,7 +76,6 @@ pub async fn patch_local_state(
         let _guard = state.lock_config_storage();
         let local_state =
             storage::merge_local_state(&state.snapshot().settings.local_state, patch)?;
-        storage::save_local_state(&app, &local_state)?;
         state.update_state(|params| {
             params.settings.local_state = local_state.clone();
         });

@@ -27,7 +27,6 @@ use crate::errors::AppError;
 use crate::models::{
     default_user_config, Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryKind,
     EditorHistoryRecord, LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
-    STATE_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
 use crate::services::{app_paths::AppPaths, config_migration, llm_config};
@@ -62,12 +61,6 @@ pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
 
 pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.log_dir;
-    create_private_dir(&dir)?;
-    Ok(dir)
-}
-
-fn app_state_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = AppPaths::resolve(app)?.state_dir;
     create_private_dir(&dir)?;
     Ok(dir)
 }

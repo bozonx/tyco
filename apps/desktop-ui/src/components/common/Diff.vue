@@ -68,7 +68,7 @@ import {
   type DiffViewMode,
   computeWordDiff,
   hasDifferences,
-  readStoredDiffMode,
+  resolveDiffMode,
   splitDiffParts,
 } from '../../lib/diff/diff-model'
 import SplitPanePreview from './SplitPanePreview.vue'
@@ -82,7 +82,7 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const effectiveMode = computed<DiffViewMode>(() => {
-  return props.mode ?? readStoredDiffMode()
+  return props.mode ?? resolveDiffMode()
 })
 
 const diffData = computed<{

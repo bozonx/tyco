@@ -1,23 +1,19 @@
 import { ref } from 'vue'
 
-import {
-  createQuickInputSession,
-  type QuickInputDrafts,
-} from './quick-input-session'
+import { createQuickInputSession } from './quick-input-session'
 
 export interface WriteInputDependencies {
-  drafts: QuickInputDrafts
   now?: () => number
 }
 
-export function createWriteInputModel(deps: WriteInputDependencies) {
+export function createWriteInputModel(deps: WriteInputDependencies = {}) {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
   const selectAllCount = ref<number>(0)
   /** The last text sent on or cancelled, offered again on ArrowUp. */
   const recallText = ref<string>('')
 
-  const session = createQuickInputSession(deps.drafts, deps.now)
+  const session = createQuickInputSession(deps.now)
   const syncRecall = (): void => {
     recallText.value = session.recallText
   }
@@ -27,22 +23,19 @@ export function createWriteInputModel(deps: WriteInputDependencies) {
     value.value = newText
   }
 
-  /** Empties the input; the text it held goes to the history. */
+  /** Empties the input; the text stays recallable in memory. */
   const clear = (): void => {
     session.end(value.value)
     syncRecall()
     value.value = ''
   }
 
-  /** Drops a cancelled input (Esc) from the history; ArrowUp brings it back. */
+  /** Clears a cancelled input (Esc); ArrowUp brings it back. */
   const discard = (): void => {
     session.discard(value.value)
     syncRecall()
     value.value = ''
   }
-
-  /** The window is hidden: the text survives that, but not a quit. */
-  const snapshotDraft = (): Promise<void> => session.snapshot(value.value)
 
   /** The window lost focus: its text is offered again on the next opening. */
   const markDismissed = (): void => {
@@ -51,7 +44,7 @@ export function createWriteInputModel(deps: WriteInputDependencies) {
 
   /**
    * Prepares the input for a new opening: keeps the text of a recent dismissal,
-   * moves anything else to the history. Returns whether the text was kept
+   * clears anything else. Returns whether the text was kept
    */
   const startSession = (): boolean => {
     const kept = session.start(value.value)
@@ -82,7 +75,6 @@ export function createWriteInputModel(deps: WriteInputDependencies) {
     setValue,
     clear,
     discard,
-    snapshotDraft,
     markDismissed,
     startSession,
     rememberSubmitted,

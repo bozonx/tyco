@@ -30,11 +30,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
-import {
-  type DiffViewMode,
-  readStoredDiffMode,
-  writeStoredDiffMode,
-} from '../../lib/diff/diff-model'
+import { type DiffViewMode, resolveDiffMode } from '../../lib/diff/diff-model'
 import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
@@ -47,11 +43,10 @@ const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const diffMode = ref<DiffViewMode>(
-  readStoredDiffMode(undefined, ipcStore.desktopState.localState?.diffMode)
+  resolveDiffMode(ipcStore.desktopState.localState?.diffMode)
 )
 
 watch(diffMode, (newMode) => {
-  writeStoredDiffMode(newMode)
   void ipcStore.patchLocalState({ diffMode: newMode })
 })
 

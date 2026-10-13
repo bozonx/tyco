@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { appNavigation } from '../lib/navigation/navigation'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useEditorNavigation } from './use-editor-navigation'
 
@@ -18,7 +17,6 @@ beforeEach(() => {
   setActivePinia(pinia)
   windowState.label = 'main'
   vi.spyOn(appNavigation, 'goToEditor').mockResolvedValue()
-  vi.spyOn(useHistoryStore(), 'saveDraft').mockResolvedValue(null)
 })
 afterEach(() => {
   disposePinia(pinia)

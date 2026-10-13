@@ -29,8 +29,7 @@ impl AppState {
         }
     }
 
-    /// Serializes writes of the user config and the local state, so that the
-    /// file and `snapshot` always end up with the same, latest value.
+    /// Serializes config writes and session updates to keep snapshots coherent.
     pub fn lock_config_storage(&self) -> std::sync::MutexGuard<'_, ()> {
         self.config_storage
             .lock()
@@ -105,6 +104,32 @@ mod tests {
             snapshot.activation.selected_text.as_deref(),
             Some("New selection")
         );
+    }
+
+    #[test]
+    fn session_preferences_do_not_survive_a_new_app_state() {
+        let config = serde_json::json!({ "theme": "dark" });
+        let create_state =
+            || AppState::new(default_desktop_state(config.clone(), LocalState::default()));
+        let state = create_state();
+        state.update_state(|snapshot| {
+            snapshot.settings.local_state.last_chat_id = Some("chat".into());
+            snapshot.settings.local_state.recent_ai_prompts = vec!["Private prompt".into()];
+        });
+        assert_eq!(
+            state
+                .snapshot()
+                .settings
+                .local_state
+                .last_chat_id
+                .as_deref(),
+            Some("chat")
+        );
+
+        let restarted = create_state().snapshot();
+        assert!(restarted.settings.local_state.last_chat_id.is_none());
+        assert!(restarted.settings.local_state.recent_ai_prompts.is_empty());
+        assert_eq!(restarted.settings.user_config, config);
     }
 
     #[test]

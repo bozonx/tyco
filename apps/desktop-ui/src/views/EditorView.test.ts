@@ -85,10 +85,9 @@ describe('Editor actions shortcut', () => {
     wrapper.unmount()
   })
 
-  it('closes editor on Escape and snapshots draft if text exists', async () => {
+  it('closes editor on Escape while keeping unsaved text in memory', async () => {
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
-    const snapshotSpy = vi.spyOn(editor, 'snapshotDraft')
     const ipc = useIpcStore()
     vi.spyOn(ipc, 'callFunction').mockResolvedValue({
       success: true,
@@ -105,8 +104,12 @@ describe('Editor actions shortcut', () => {
     )
     await flushPromises()
 
-    expect(snapshotSpy).toHaveBeenCalled()
+    expect(editor.value).toBe('Unsaved text')
     expect(callFunctionSpy).toHaveBeenCalledWith('hideWindow')
+    expect(ipc.callFunction).not.toHaveBeenCalledWith(
+      'saveEditorHistory',
+      expect.anything()
+    )
     wrapper.unmount()
   })
 

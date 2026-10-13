@@ -69,11 +69,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
-import {
-  type DiffViewMode,
-  readStoredDiffMode,
-  writeStoredDiffMode,
-} from '../../lib/diff/diff-model'
+import { type DiffViewMode, resolveDiffMode } from '../../lib/diff/diff-model'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -143,7 +139,7 @@ const actionsMenu = computed(() => {
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const diffMode = ref<DiffViewMode>(
-  readStoredDiffMode(undefined, ipcStore.desktopState.localState?.diffMode)
+  resolveDiffMode(ipcStore.desktopState.localState?.diffMode)
 )
 
 /** Space was pressed while correcting: insert once the correction is in. */
@@ -159,7 +155,6 @@ const statusText = computed(() => {
 })
 
 watch(diffMode, (mode) => {
-  writeStoredDiffMode(mode)
   void ipcStore.patchLocalState({ diffMode: mode })
 })
 

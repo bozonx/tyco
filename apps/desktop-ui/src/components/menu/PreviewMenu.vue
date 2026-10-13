@@ -65,18 +65,11 @@ import { Icon } from '@iconify/vue'
 
 const props = defineProps<PreviewMenuParams>()
 const ipcStore = useIpcStore()
-const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
 
 function readStoredTranslationMode(): ParallelViewMode {
   const fromState = ipcStore.desktopState.localState?.translationViewMode
   if (fromState === 'split' || fromState === 'result') {
     return fromState
-  }
-  try {
-    const stored = localStorage.getItem(TRANSLATION_VIEW_MODE_KEY)
-    if (stored === 'split' || stored === 'result') return stored
-  } catch {
-    // Ignore storage access errors
   }
   return 'split'
 }
@@ -94,11 +87,6 @@ const viewMode = ref<ParallelViewMode>(
 )
 
 watch(viewMode, (newMode) => {
-  try {
-    localStorage.setItem(TRANSLATION_VIEW_MODE_KEY, newMode)
-  } catch {
-    // Ignore storage access errors
-  }
   void ipcStore.patchLocalState({ translationViewMode: newMode })
 })
 

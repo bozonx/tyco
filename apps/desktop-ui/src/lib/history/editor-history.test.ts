@@ -19,7 +19,7 @@ it('waits for pending writes before reading editor history', async () => {
   const model = createEditorHistoryModel({
     callFunction: callFunction as DesktopCall,
   })
-  const write = model.saveDraft('Draft')
+  const write = model.saveOutput('Draft')
   const read = model.loadEditorHistory()
   await Promise.resolve()
   expect(callFunction).toHaveBeenCalledTimes(1)

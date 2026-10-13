@@ -1,23 +1,4 @@
-use super::{
-    app_config_dir, app_state_dir, fs, read_or_quarantine, write_json, AppError, AppHandle,
-    LocalState, Path, Value, STATE_FILE_NAME,
-};
-
-pub fn read_or_create_local_state(app: &AppHandle) -> Result<LocalState, AppError> {
-    let path = app_state_dir(app)?.join(STATE_FILE_NAME);
-    move_legacy_file(&app_config_dir(app)?.join(STATE_FILE_NAME), &path);
-
-    if let Some(state) = read_or_quarantine(&path, |raw| Ok(serde_json::from_str(raw)?))? {
-        return Ok(state);
-    }
-
-    let default_state = LocalState::default();
-    if let Err(error) = save_local_state(app, &default_state) {
-        log::error!("Could not save the local state: {error}");
-    }
-
-    Ok(default_state)
-}
+use super::{AppError, LocalState, Value};
 
 pub const VALID_LOCAL_STATE_KEYS: &[&str] = &[
     "lastChatId",
@@ -48,31 +29,9 @@ pub fn merge_local_state(
     Ok(serde_json::from_value(merged)?)
 }
 
-/// Moves a file kept by an older version to its current place, unless that
-/// already has one. A failure only costs what the file remembered.
-fn move_legacy_file(legacy: &Path, path: &Path) {
-    if legacy == path || !legacy.exists() || path.exists() {
-        return;
-    }
-    if let Err(error) = fs::rename(legacy, path) {
-        log::warn!(
-            "Could not move {} to {}: {error}",
-            legacy.display(),
-            path.display()
-        );
-    }
-}
-
-pub fn save_local_state(app: &AppHandle, local_state: &LocalState) -> Result<(), AppError> {
-    let path = app_state_dir(app)?.join(STATE_FILE_NAME);
-    write_json(&path, local_state)?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::storage::test_support::TestDir;
     use serde_json::json;
 
     #[test]
@@ -134,22 +93,5 @@ mod tests {
         assert!(
             merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
         );
-    }
-
-    #[test]
-    fn moves_a_legacy_file_once() {
-        let dir = TestDir::new("legacy-file");
-        let legacy = dir.join("old.json");
-        let path = dir.join("new.json");
-
-        fs::write(&legacy, "old").unwrap();
-        move_legacy_file(&legacy, &path);
-        assert_eq!(fs::read_to_string(&path).unwrap(), "old");
-        assert!(!legacy.exists());
-
-        // the current file wins over a legacy one
-        fs::write(&legacy, "older").unwrap();
-        move_legacy_file(&legacy, &path);
-        assert_eq!(fs::read_to_string(&path).unwrap(), "old");
     }
 }

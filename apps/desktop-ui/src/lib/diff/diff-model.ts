@@ -13,7 +13,6 @@ export interface SplitDiffResult {
   newParts: DiffPart[]
 }
 
-export const DIFF_VIEW_MODE_STORAGE_KEY = 'tyco-diff-view-mode'
 export const DEFAULT_DIFF_VIEW_MODE: DiffViewMode = 'unified'
 
 const VALID_MODES = new Set<DiffViewMode>(['unified', 'split', 'result'])
@@ -22,45 +21,8 @@ export function isDiffViewMode(value: unknown): value is DiffViewMode {
   return typeof value === 'string' && VALID_MODES.has(value as DiffViewMode)
 }
 
-export function readStoredDiffMode(
-  storage?: Storage,
-  preferred?: DiffViewMode | null
-): DiffViewMode {
-  if (preferred && isDiffViewMode(preferred)) {
-    return preferred
-  }
-  try {
-    const targetStorage =
-      storage ??
-      (typeof window !== 'undefined' ? window.localStorage : undefined)
-    if (!targetStorage) {
-      return DEFAULT_DIFF_VIEW_MODE
-    }
-    const stored = targetStorage.getItem(DIFF_VIEW_MODE_STORAGE_KEY)
-    if (isDiffViewMode(stored)) {
-      return stored
-    }
-  } catch {
-    // Ignore storage access errors
-  }
-  return DEFAULT_DIFF_VIEW_MODE
-}
-
-export function writeStoredDiffMode(
-  mode: DiffViewMode,
-  storage?: Storage
-): void {
-  try {
-    const targetStorage =
-      storage ??
-      (typeof window !== 'undefined' ? window.localStorage : undefined)
-    if (!targetStorage) {
-      return
-    }
-    targetStorage.setItem(DIFF_VIEW_MODE_STORAGE_KEY, mode)
-  } catch {
-    // Ignore storage access errors
-  }
+export function resolveDiffMode(preferred?: DiffViewMode | null): DiffViewMode {
+  return isDiffViewMode(preferred) ? preferred : DEFAULT_DIFF_VIEW_MODE
 }
 
 class UnicodeWordsWithSpaceDiff extends Diff<string, string, string> {

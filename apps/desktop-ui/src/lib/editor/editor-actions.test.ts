@@ -11,9 +11,7 @@ import { createEditorInputStoreModel } from '../editor-input/editor-input-store'
 import { createEditorActions, type EditorActionsDeps } from './editor-actions'
 
 function setup() {
-  const editor = proxyRefs(
-    createEditorInputStoreModel({ saveDraft: async () => null })
-  )
+  const editor = proxyRefs(createEditorInputStoreModel())
   editor.setValue('before selected after')
   editor.setSelection('selected', 7, 15)
   const openVoice = vi.fn<EditorActionsDeps['openVoice']>()

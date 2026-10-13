@@ -1,14 +1,8 @@
 import { computed, ref } from 'vue'
 
 import type { EditSource } from '../editor/edit-source'
-import { createDraftSession, type SaveDraft } from '../history/draft-session'
 
-export interface EditorInputDeps {
-  /** Stores unsent text in the history, see `createDraftSession`. */
-  saveDraft: SaveDraft
-}
-
-export function createEditorInputStoreModel(deps: EditorInputDeps) {
+export function createEditorInputStoreModel() {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
   const selectAllCount = ref<number>(0)
@@ -16,7 +10,6 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
   const selectionStart = ref<number>(0)
   const selectionEnd = ref<number>(0)
   const lastEditSource = ref<EditSource>('plain')
-  const drafts = createDraftSession(deps.saveDraft)
 
   /** A selection of whitespace only does not count: actions take the whole text */
   const hasSelection = computed(() => selectedText.value.trim() !== '')
@@ -28,19 +21,6 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
   const actionText = (): string =>
     hasSelection.value ? selectedText.value : value.value
 
-  /**
-   * The current text is about to leave the editor: it goes to the history
-   * unless it is one of `keptTexts` (it lives on in the editor or was already
-   * stored as the source of an AI operation)
-   */
-  const discardCurrent = (...keptTexts: string[]): void => {
-    const current = value.value.trim()
-
-    if (!current || keptTexts.some((text) => text.trim() === current)) return
-
-    void drafts.end(value.value)
-  }
-
   const setValue = (newText: string, source: EditSource = 'plain'): void => {
     lastEditSource.value = source
     value.value = newText
@@ -51,7 +31,6 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
     newText: string,
     source: EditSource = 'plain'
   ): void => {
-    discardCurrent(newText)
     setValue(newText, source)
     setSelection('', 0, 0)
   }
@@ -86,7 +65,6 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
     const trimmedSource = sourceText.trim()
 
     if (!selected.trim() || selected.trim() !== trimmedSource) {
-      discardCurrent(sourceText, result)
       setValue(result, source)
       setSelection('', 0, 0)
       return
@@ -99,16 +77,12 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
   }
 
   const clear = (): void => {
-    discardCurrent()
     lastEditSource.value = 'clear'
     value.value = ''
     // the editor does not echo store edits back, so the old selection would
     // survive an empty document and leak into the next AI action
     setSelection('', 0, 0)
   }
-
-  /** The window is hidden: the text survives that, but not a quit. */
-  const snapshotDraft = (): Promise<void> => drafts.snapshot(value.value)
 
   const focus = (): void => {
     focusCount.value++
@@ -136,7 +110,6 @@ export function createEditorInputStoreModel(deps: EditorInputDeps) {
     actionText,
     setValue,
     replaceValue,
-    snapshotDraft,
     focus,
     selectAll,
     setSelection,

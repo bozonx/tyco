@@ -23,9 +23,6 @@ const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
 async function closeEditor() {
-  if (editorInputStore.value.trim()) {
-    await editorInputStore.snapshotDraft()
-  }
   await ipcStore.callFunctionOrNotify('hideWindow')
 }
 

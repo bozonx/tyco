@@ -221,7 +221,7 @@ pub fn run() {
             {
                 log::error!("Could not apply the history settings: {error}");
             }
-            let local_state = storage::read_or_create_local_state(app.handle())?;
+            let local_state = crate::models::LocalState::default();
             app.manage(AppState::new(default_desktop_state(
                 user_config,
                 local_state,
