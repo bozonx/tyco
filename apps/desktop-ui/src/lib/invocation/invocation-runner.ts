@@ -29,6 +29,13 @@ const copyInvocation: Invocation = {
   label: 'core.copy',
 }
 
+/** The paste sink types the output with the tool the insert action runs */
+const insertInvocation: Invocation = {
+  toolId: 'core.insert' satisfies CoreToolId,
+  toolConfig: {},
+  label: 'core.insert',
+}
+
 const succeeded: InvocationOutcome = { success: true }
 const failed = (message: string, code?: string): InvocationOutcome => ({
   success: false,
@@ -94,6 +101,25 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     return succeeded
   }
 
+  /**
+   * Pastes the output into the window the user works in, or warns that there is
+   * none
+   */
+  const insertOutput = async (output: string): Promise<InvocationOutcome> => {
+    const text = output.replace(/[\r\n]+$/, '')
+    if (!text.trim()) {
+      deps.showToast('toast.actionEmptyOutput', 'warn')
+      return failed('Empty output')
+    }
+    const result = await invoke(insertInvocation, text, { output: 'return' })
+    if (result.cancelled) return cancelled
+    // the insertion hides the window and reports a failure on the desktop
+    if (!result.ok) {
+      return failed(result.failure ?? result.message ?? 'Insert failed')
+    }
+    return succeeded
+  }
+
   /** Reports a run that ended without output to hand on */
   const finish = (result: ToolResult): InvocationOutcome => {
     report(result)
@@ -119,9 +145,12 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     switch (resolveSink(invocation, options)) {
       case 'return':
         return { success: true, output: result.content }
-      // the text did not come from a selection here: the overlay hands a
-      // selection over to a selection run, see `transform`
+      // a text taken from a selection is handed over to a selection run
+      // instead, see `transform`; here there is nothing to replace
       case 'replaceSelection':
+        return result.content === undefined
+          ? finish(result)
+          : insertOutput(result.content)
       case 'showMenu':
         return result.content === undefined
           ? finish(result)

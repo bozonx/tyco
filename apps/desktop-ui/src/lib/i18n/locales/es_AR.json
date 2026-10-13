@@ -126,7 +126,7 @@
     "advanced": "Avanzado",
     "afterRunCopy": "Al portapapeles",
     "afterRunNoneScriptHint": "Las ejecuciones de comandos rápidos configuradas en «Nada» no necesitan la salida del script: se lo espera solo 3 s y después puede seguir en segundo plano. El menú de acciones principales y las llamadas externas siempre esperan la salida.",
-    "afterRunReplaceSelection": "Reemplazar selección",
+    "afterRunInsert": "Insertar en la ventana",
     "afterRunShowResult": "Mostrar resultado",
     "badgeInMenu": "Acciones ({key})",
     "badgeIssuesHint": "El comando no está configurado por completo",
@@ -164,7 +164,6 @@
     "languageLabel": "Traducir al",
     "languagePlaceholder": "Elegí un idioma",
     "launcherResult": "Acción",
-    "launcherFallback": "Sin selección",
     "moreActions": "Más",
     "nameLabel": "Nombre",
     "namePlaceholder": "Cómo se llama el comando en el menú",
@@ -204,7 +203,7 @@
     "logEmpty": "Todavía no se registró ningún comando",
     "openLogFailed": "No se pudo abrir el registro",
     "badgeInLauncher": "Comandos: pág. {page} ({key})",
-    "launcherSelectionHint": "El resultado puede reemplazar el texto seleccionado. Sin selección, el texto se escribe en la ventana de comandos rápidos y no hay nada que reemplazar, así que se aplica el ajuste «Sin selección».",
+    "launcherSelectionHint": "«Insertar en la ventana» pega el resultado donde está el cursor en la ventana activa. Si hay texto seleccionado, el resultado lo reemplaza.",
     "launcherResultGroup": "Resultado de comandos rápidos"
   },
   "common": {

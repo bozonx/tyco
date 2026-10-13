@@ -226,8 +226,9 @@ export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
- * replacing the selection it got the text from (the result menu when the text
- * came from elsewhere), or the clipboard
+ * pasting it into the window the user works in (over the selection, if there is
+ * one), or the clipboard. `replaceSelection` is the serialized name of the
+ * paste
  */
 export const CUSTOM_ACTION_AFTER_RUN = [
   'none',
@@ -324,14 +325,9 @@ export interface CommandAvailability {
   chat: boolean
 }
 
-/**
- * Output handling for quick commands. Without a selection the text is typed in
- * the launcher and there is nothing to replace: `replaceSelection` falls back
- * to `fallback` then
- */
+/** Output handling for quick commands, with or without a selection */
 export interface CommandLauncherAfterRun {
   action: CustomActionAfterRun
-  fallback: Exclude<CustomActionAfterRun, 'replaceSelection'>
 }
 
 /**

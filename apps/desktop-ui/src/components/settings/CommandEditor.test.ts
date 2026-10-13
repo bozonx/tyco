@@ -62,55 +62,30 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.emitted('update')).toBeUndefined()
   })
 
-  it('offers no replacement for a command without text', () => {
-    const withText = mountEditor(
-      script({ command: 'wc {{TEXT}}' }, { name: 'wc' })
-    )
-    expect(withText.text()).toContain('commands.afterRunReplaceSelection')
-    const noText = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
-    expect(noText.text()).not.toContain('commands.afterRunReplaceSelection')
-  })
-
   const optionValue = (select: DOMWrapper<Element>, text: string) =>
     select
       .findAll('option')
       .find((option) => option.text() === text)!
       .attributes('value')
 
-  it('asks what to do without a selection only for a replacement', async () => {
+  it('has one output action, with or without a selection', async () => {
     const command = script(
       { command: 'echo {{TEXT}}' },
-      {
-        name: 'Echo',
-        launcherAfterRun: { action: 'replaceSelection', fallback: 'showMenu' },
-      }
+      { name: 'Echo', launcherAfterRun: { action: 'replaceSelection' } }
     )
     const wrapper = mountEditor(command)
-    let selects = wrapper.findAll('select')
-    expect(selects).toHaveLength(2)
-    expect(wrapper.text()).toContain('commands.launcherFallback')
-    expect(
-      selects[1]
-        .findAll('option')
-        .some((option) => option.text() === 'commands.afterRunReplaceSelection')
-    ).toBe(false)
-    await selects[1].setValue(
-      optionValue(selects[1], 'settings.actionAfterRunNone')
-    )
-    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
-      action: 'replaceSelection',
-      fallback: 'none',
-    })
-    await wrapper.setProps({ command: lastUpdate(wrapper) })
-    await selects[0].setValue(optionValue(selects[0], 'commands.afterRunCopy'))
-    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({
-      action: 'copy',
-      fallback: 'none',
-    })
-    await wrapper.setProps({ command: lastUpdate(wrapper) })
-    selects = wrapper.findAll('select')
+    const selects = wrapper.findAll('select')
     expect(selects).toHaveLength(1)
-    expect(wrapper.text()).not.toContain('commands.launcherFallback')
+    expect((selects[0].element as HTMLSelectElement).value).toBe(
+      optionValue(selects[0], 'commands.afterRunInsert')
+    )
+    await selects[0].setValue(optionValue(selects[0], 'commands.afterRunCopy'))
+    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({ action: 'copy' })
+  })
+
+  it('offers the insertion for a command without text too', () => {
+    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    expect(wrapper.text()).toContain('commands.afterRunInsert')
   })
 
   it('shows the call from outside only for a command allowed there', () => {
@@ -131,24 +106,6 @@ describe('CommandEditor.vue', () => {
     ).toBe('tyco-ctl run sc1')
   })
 
-  it('shows the fallback of a replacement for a command without text', () => {
-    const wrapper = mountEditor(
-      script(
-        { command: 'ls' },
-        {
-          name: 'ls',
-          launcherAfterRun: { action: 'replaceSelection', fallback: 'copy' },
-        }
-      )
-    )
-    const selects = wrapper.findAll('select')
-    expect(selects).toHaveLength(1)
-    expect((selects[0].element as HTMLSelectElement).value).toBe(
-      optionValue(selects[0], 'commands.afterRunCopy')
-    )
-    expect(wrapper.text()).not.toContain('commands.launcherFallback')
-  })
-
   it('keeps placement settings inside advanced and uses one external toggle', () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     const advanced = wrapper.findAll('details').at(-1)!
@@ -161,16 +118,11 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.findAll('.command-place')).toHaveLength(0)
   })
 
-  it('explains selection-specific result behavior for text commands', () => {
-    const withText = mountEditor(script({ command: 'echo {{TEXT}}' }))
-    const section = withText.findAll('details').at(-1)!.find('section')
+  it('explains how the insertion treats a selection', () => {
+    const wrapper = mountEditor(script({ command: 'echo hello' }))
+    const section = wrapper.findAll('details').at(-1)!.find('section')
     const tooltip = section.findComponent(InfoTooltip)
-    expect(tooltip.exists()).toBe(true)
     expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
-
-    const noText = mountEditor(script({ command: 'echo hello' }))
-    const noTextSection = noText.findAll('details').at(-1)!.find('section')
-    expect(noTextSection.findComponent(InfoTooltip).exists()).toBe(false)
   })
 
   it('stores a whole timeout and drops an empty one', async () => {

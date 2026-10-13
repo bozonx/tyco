@@ -7,7 +7,7 @@ import type {
 } from '@tyco/shared'
 
 import type { BuiltinToolDependencies } from '../tools/builtin-tools'
-import { testCopyTool, testTools } from '../tools/testing'
+import { testCopyTool, testInsertTool, testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand, launcherAfterRunFromOutput } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
@@ -53,6 +53,8 @@ function setup(
     BuiltinToolDependencies & {
       /** What `core.copy` does: the clipboard sink runs it */
       copyText?: (text: string) => Promise<void>
+      /** What `core.insert` does: the paste sink runs it */
+      insertText?: (text: string) => Promise<void>
     } = {},
   tools: readonly ToolDefinition[] = []
 ) {
@@ -62,12 +64,13 @@ function setup(
     executeWebhook,
     newRunId,
     copyText = async () => {},
+    insertText = async () => {},
     ...rest
   } = extra
   const deps = {
     tools: testTools(
       { executeScriptAction, cancelScriptAction, executeWebhook, newRunId },
-      [...tools, testCopyTool(copyText)]
+      [...tools, testCopyTool(copyText), testInsertTool(insertText)]
     ),
     showToast: vi.fn(),
     showError: vi.fn(),
@@ -515,19 +518,38 @@ describe('the output of a command', () => {
     }
   )
 
-  it('falls back from a replacement for a typed text', async () => {
-    const copyText = vi.fn(async () => {})
-    const { deps, runner } = setup({ copyText }, [echo('result')])
-    const config = {
-      ...command('none'),
-      launcherAfterRun: {
-        action: 'replaceSelection' as const,
-        fallback: 'copy' as const,
-      },
-    }
-    await runner.run(config, 'typed', { hasSelection: false })
-    expect(copyText).toHaveBeenCalledWith('result')
+  it('pastes the output into the window without a selection too', async () => {
+    const insertText = vi.fn(async () => {})
+    const { deps, runner } = setup({ insertText }, [echo('result\n')])
+    expect(await runner.run(command('replaceSelection'), 'typed')).toEqual({
+      success: true,
+    })
+    expect(insertText).toHaveBeenCalledWith('result')
     expect(deps.showResultMenu).not.toHaveBeenCalled()
+  })
+
+  it('warns when there is no output to paste', async () => {
+    const insertText = vi.fn(async () => {})
+    const { deps, runner } = setup({ insertText }, [echo(' ')])
+    const outcome = await runner.run(command('replaceSelection'), 'x')
+    expect(outcome.success).toBe(false)
+    expect(insertText).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith(
+      'toast.actionEmptyOutput',
+      'warn'
+    )
+  })
+
+  it('leaves a failed paste to the insertion, which reports it', async () => {
+    const insertText = vi.fn(async () => {
+      throw new Error('no target')
+    })
+    const { deps, runner } = setup({ insertText }, [echo('result')])
+    expect(await runner.run(command('replaceSelection'), 'x')).toEqual({
+      success: false,
+      message: 'no target',
+    })
+    expect(deps.showError).not.toHaveBeenCalled()
   })
 
   it('captures output for explicit selection transformations even if quick commands ignore it', async () => {
@@ -563,14 +585,6 @@ describe('the output of a command', () => {
       'toast.actionEmptyOutput',
       'warn'
     )
-  })
-
-  it('shows the output in the menu when there is no selection to replace', async () => {
-    const tool = echo('Hello')
-    const { deps, runner } = setup({}, [tool])
-    await runner.run(command('replaceSelection'), 'hola')
-    expect(deps.showResultMenu).toHaveBeenCalledWith('Hello', 'hola')
-    expect(vi.mocked(tool.run).mock.calls[0][0].wantsOutput).toBe(true)
   })
 
   it('returns the output for a selection run and reports nothing', async () => {

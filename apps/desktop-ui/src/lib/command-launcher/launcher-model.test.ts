@@ -159,7 +159,7 @@ describe('createCommandLauncherModel', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'buy milk',
-      expect.objectContaining({ source: 'launcher', hasSelection: true })
+      expect.objectContaining({ source: 'launcher' })
     )
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ commandId: 'note', text: 'buy milk' })
@@ -186,7 +186,7 @@ describe('createCommandLauncherModel', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'call mom',
-      expect.objectContaining({ source: 'launcher', hasSelection: false })
+      expect.objectContaining({ source: 'launcher' })
     )
     expect(model.stage.value.kind).toBe('list')
   })
@@ -198,7 +198,7 @@ describe('createCommandLauncherModel', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'late selection',
-      expect.objectContaining({ hasSelection: true })
+      expect.anything()
     )
     expect(model.stage.value.kind).toBe('list')
   })
@@ -366,7 +366,7 @@ describe('external calls', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'explicit',
-      expect.objectContaining({ source: 'external', hasSelection: false })
+      expect.objectContaining({ source: 'external' })
     )
   })
 
@@ -423,7 +423,7 @@ describe('commands that replace the selection', () => {
   const replacing = command(
     'translate',
     'Translate',
-    { launcherAfterRun: { action: 'replaceSelection', fallback: 'showMenu' } },
+    { launcherAfterRun: { action: 'replaceSelection' } },
     {}
   )
 
@@ -450,7 +450,7 @@ describe('commands that replace the selection', () => {
     expect(replaceSelection).toHaveBeenCalledWith(replacing)
   })
 
-  it('runs on a typed or edited text, for the result menu', async () => {
+  it('runs a typed or edited text itself, for the paste sink', async () => {
     const { deps, model, replaceSelection } = setupReplacing()
     await model.pickByKey(1)
     model.setText('hola amigo')
@@ -460,33 +460,6 @@ describe('commands that replace the selection', () => {
       expect.objectContaining({ id: 'translate' }),
       'hola amigo',
       expect.anything()
-    )
-  })
-
-  it('uses the no-selection setting after editing captured text on retry', async () => {
-    const configured = {
-      ...replacing,
-      launcherAfterRun: {
-        action: 'copy' as const,
-        fallback: 'showMenu' as const,
-      },
-    }
-    const { deps, model } = setup([configured], {
-      run: vi.fn(async () => ({ success: false })),
-    })
-    deps.selectedText.mockReturnValue('captured')
-    await model.pickByKey(1)
-    expect(deps.run).toHaveBeenLastCalledWith(
-      configured,
-      'captured',
-      expect.objectContaining({ hasSelection: true })
-    )
-    model.setText('edited')
-    await model.submit()
-    expect(deps.run).toHaveBeenLastCalledWith(
-      configured,
-      'edited',
-      expect.objectContaining({ hasSelection: false })
     )
   })
 
@@ -640,11 +613,7 @@ describe('launcher pages', () => {
     model.reset()
     expect(model.selection.value).toBe('leftover')
     await model.pickSlot(0)
-    expect(deps.run).toHaveBeenCalledWith(
-      note,
-      'leftover',
-      expect.objectContaining({ hasSelection: true })
-    )
+    expect(deps.run).toHaveBeenCalledWith(note, 'leftover', expect.anything())
   })
 })
 

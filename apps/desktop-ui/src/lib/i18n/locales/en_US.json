@@ -126,7 +126,7 @@
     "advanced": "Advanced",
     "afterRunCopy": "To clipboard",
     "afterRunNoneScriptHint": "Quick-command runs set to “Nothing” do not need script output: the script is waited for only 3 s and may then continue in the background. The main action menu and external calls always wait for output.",
-    "afterRunReplaceSelection": "Replace selection",
+    "afterRunInsert": "Insert into window",
     "afterRunShowResult": "Show result",
     "badgeInMenu": "Actions ({key})",
     "badgeIssuesHint": "The command is not set up completely",
@@ -164,7 +164,6 @@
     "languageLabel": "Translate into",
     "languagePlaceholder": "Choose a language",
     "launcherResult": "Action",
-    "launcherFallback": "Without a selection",
     "moreActions": "More",
     "nameLabel": "Name",
     "namePlaceholder": "How the command is called in the menu",
@@ -204,7 +203,7 @@
     "logEmpty": "No command has been logged yet",
     "openLogFailed": "Could not open the log",
     "badgeInLauncher": "Commands: page {page} ({key})",
-    "launcherSelectionHint": "The result can replace the selected text. Without a selection, the text is typed in the quick command window and there is nothing to replace, so the “Without a selection” setting applies.",
+    "launcherSelectionHint": "“Insert into window” pastes the result where the cursor is in the active window. If text is selected there, the result replaces it.",
     "launcherResultGroup": "Quick command result"
   },
   "common": {

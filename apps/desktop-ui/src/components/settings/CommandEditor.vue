@@ -57,40 +57,18 @@
         <section class="command-group">
           <h4 class="command-group-title">
             {{ t('commands.launcherResultGroup') }}
-            <InfoTooltip
-              v-if="takesText"
-              :text="t('commands.launcherSelectionHint')"
-            />
+            <InfoTooltip :text="t('commands.launcherSelectionHint')" />
           </h4>
           <label class="command-place-detail command-place-result">
             <span class="command-place-result-label">{{
               t('commands.launcherResult')
             }}</span>
             <FieldSelect
-              :value="launcherAction"
+              :value="command.launcherAfterRun.action"
               :title="t('commands.launcherResult')"
-              :options="takesText ? selectionAfterRunOptions : afterRunOptions"
-              @update:value="
-                updateLauncherAfterRun('action', $event as CustomActionAfterRun)
-              "
-            />
-          </label>
-          <label
-            v-if="replacesSelection"
-            class="command-place-detail command-place-result"
-          >
-            <span class="command-place-result-label">{{
-              t('commands.launcherFallback')
-            }}</span>
-            <FieldSelect
-              :value="command.launcherAfterRun.fallback"
-              :title="t('commands.launcherFallback')"
               :options="afterRunOptions"
               @update:value="
-                updateLauncherAfterRun(
-                  'fallback',
-                  $event as CustomActionAfterRun
-                )
+                updateLauncherAfterRun($event as CustomActionAfterRun)
               "
             />
           </label>
@@ -205,7 +183,6 @@ import {
 import {
   commandAddedBy,
   commandLabel,
-  commandTakesText,
   commandTool,
   commandUnavailableReason,
   suggestCommandName,
@@ -263,7 +240,6 @@ const tool = computed(() => commandTool(props.command, toolsStore))
 const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
-const takesText = computed(() => commandTakesText(props.command, toolsStore))
 const testable = computed(() => canTestCommand(props.command))
 const scriptConfig = computed(() => scriptToolConfig(props.command))
 /** Why the command cannot run, unless its tool is missing altogether */
@@ -295,27 +271,10 @@ function suggestName() {
 
 const afterRunOptions = computed(() => [
   { id: 'showMenu', name: t('commands.afterRunShowResult') },
+  { id: 'replaceSelection', name: t('commands.afterRunInsert') },
   { id: 'copy', name: t('commands.afterRunCopy') },
   { id: 'none', name: t('settings.actionAfterRunNone') },
 ])
-
-const selectionAfterRunOptions = computed(() => [
-  { id: 'replaceSelection', name: t('commands.afterRunReplaceSelection') },
-  ...afterRunOptions.value,
-])
-
-/**
- * What quick commands do with the output. A command without text never has a
- * selection to replace, so it shows the fallback of a replacement instead
- */
-const launcherAction = computed(() => {
-  const { action, fallback } = props.command.launcherAfterRun
-  return !takesText.value && action === 'replaceSelection' ? fallback : action
-})
-/** Only then does a run without a selection need an action of its own */
-const replacesSelection = computed(
-  () => launcherAction.value === 'replaceSelection'
-)
 
 /**
  * Only quick-command runs configured to ignore output may stay in the
@@ -324,9 +283,7 @@ const replacesSelection = computed(
 const backgroundScript = computed(
   () =>
     props.command.toolId === 'script' &&
-    (launcherAction.value === 'none' ||
-      (replacesSelection.value &&
-        props.command.launcherAfterRun.fallback === 'none'))
+    props.command.launcherAfterRun.action === 'none'
 )
 
 /** Who added a default command and which tool it runs */

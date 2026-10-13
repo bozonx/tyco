@@ -21,26 +21,16 @@ const afterRunOf = (value: unknown): CustomActionAfterRun =>
     ? (value as CustomActionAfterRun)
     : 'none'
 
-/** What a quick command without a selection does instead of `afterRun` */
-const fallbackOf = (
-  afterRun: CustomActionAfterRun
-): CommandLauncherAfterRun['fallback'] =>
-  afterRun === 'replaceSelection' ? 'showMenu' : afterRun
-
 /** Maps a tool output default to the quick-command output settings */
 export function launcherAfterRunFromOutput(
   value: unknown
 ): CommandLauncherAfterRun {
-  const action = afterRunOf(value)
-  return { action, fallback: fallbackOf(action) }
+  return { action: afterRunOf(value) }
 }
 
 function normalizeLauncherAfterRun(value: unknown): CommandLauncherAfterRun {
-  const settings = isRecord(value) ? value : {}
-  return {
-    action: afterRunOf(settings.action),
-    fallback: fallbackOf(afterRunOf(settings.fallback)),
-  }
+  // `fallback` of older configs is dropped: the paste works without a selection
+  return { action: afterRunOf(isRecord(value) ? value.action : undefined) }
 }
 
 function headersOf(value: unknown): Record<string, string> {

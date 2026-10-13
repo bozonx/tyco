@@ -126,7 +126,7 @@
     "advanced": "Gelişmiş",
     "afterRunCopy": "Panoya",
     "afterRunNoneScriptHint": "“Hiçbir şey” seçilen hızlı komut çalıştırmalarında betik çıktısı gerekmez: betik yalnızca 3 sn beklenir ve sonra arka planda devam edebilir. Ana eylem menüsü ve dış çağrılar çıktıyı her zaman bekler.",
-    "afterRunReplaceSelection": "Seçimi değiştir",
+    "afterRunInsert": "Pencereye ekle",
     "afterRunShowResult": "Sonucu göster",
     "badgeInMenu": "Eylemler ({key})",
     "badgeIssuesHint": "Komut tam olarak ayarlanmamış",
@@ -164,7 +164,6 @@
     "languageLabel": "Şu dile çevir",
     "languagePlaceholder": "Bir dil seçin",
     "launcherResult": "Eylem",
-    "launcherFallback": "Seçim yoksa",
     "moreActions": "Diğer",
     "nameLabel": "Ad",
     "namePlaceholder": "Komutun menüdeki adı",
@@ -204,7 +203,7 @@
     "logEmpty": "Henüz günlüğe kaydedilmiş komut yok",
     "openLogFailed": "Günlük açılamadı",
     "badgeInLauncher": "Komutlar: sayfa {page} ({key})",
-    "launcherSelectionHint": "Sonuç seçili metnin yerini alabilir. Seçim yoksa metin hızlı komut penceresine yazılır ve değiştirilecek bir şey olmaz; bu durumda “Seçim yoksa” ayarı uygulanır.",
+    "launcherSelectionHint": "“Pencereye ekle”, sonucu etkin pencerede imlecin bulunduğu yere yapıştırır. Orada seçili metin varsa sonuç onun yerini alır.",
     "launcherResultGroup": "Hızlı komut sonucu"
   },
   "common": {

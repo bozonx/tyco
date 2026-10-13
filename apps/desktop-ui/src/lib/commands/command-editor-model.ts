@@ -30,17 +30,8 @@ export function createCommandEditorModel(deps: {
         : undefined
     )
   }
-  function updateLauncherAfterRun(
-    context: keyof CommandConfig['launcherAfterRun'],
-    value: CustomActionAfterRun
-  ) {
-    if (context === 'fallback' && value === 'replaceSelection') return
-    update({
-      launcherAfterRun: {
-        ...deps.getCommand().launcherAfterRun,
-        [context]: value,
-      },
-    })
+  function updateLauncherAfterRun(action: CustomActionAfterRun) {
+    update({ launcherAfterRun: { action } })
   }
   return {
     update,

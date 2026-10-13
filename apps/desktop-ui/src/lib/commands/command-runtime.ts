@@ -14,10 +14,9 @@ import { scriptToolConfig, webhookToolConfig } from './command-config'
 /** Output handling belongs to the invocation context, not the tool. */
 export function commandAfterRun(
   command: CommandConfig,
-  source: CommandRunSource = 'menu',
-  hasSelection = false
+  source: CommandRunSource = 'menu'
 ): ResultSink {
-  return resolveSink(commandInvocation(command), { source, hasSelection })
+  return resolveSink(commandInvocation(command), { source })
 }
 
 /** The tool the command runs, if the registry has it */

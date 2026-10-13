@@ -94,7 +94,7 @@ describe('built-in invocations', () => {
   it('copies the output where the context asks for it', async () => {
     const { runner, deps, copyText } = setup()
     const outcome = await runner.run(
-      { ...builtin, launcherSink: { action: 'copy', fallback: 'copy' } },
+      { ...builtin, launcherSink: { action: 'copy' } },
       'hello',
       { source: 'launcher' }
     )
@@ -108,7 +108,7 @@ describe('built-in invocations', () => {
     const { runner, deps, copyText } = setup()
     copyText.mockRejectedValue(new Error('No clipboard'))
     const outcome = await runner.run(
-      { ...builtin, launcherSink: { action: 'copy', fallback: 'copy' } },
+      { ...builtin, launcherSink: { action: 'copy' } },
       'hello',
       { source: 'launcher' }
     )

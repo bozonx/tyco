@@ -72,7 +72,7 @@ describe('seedDefaultCommands', () => {
     expect(seeded.commands[0]).toMatchObject({
       name: 'Fix',
       toolId: 'core.correct',
-      launcherAfterRun: { action: 'replaceSelection', fallback: 'showMenu' },
+      launcherAfterRun: { action: 'replaceSelection' },
       availableIn: { external: false, chat: false },
       enabled: true,
     })

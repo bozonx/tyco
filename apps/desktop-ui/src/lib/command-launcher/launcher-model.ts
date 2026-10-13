@@ -263,7 +263,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   ): Promise<InvocationOutcome> => {
     if (
       source === 'launcher' &&
-      commandAfterRun(command, source, fromSelection) === 'replaceSelection' &&
+      commandAfterRun(command, source) === 'replaceSelection' &&
       input !== null &&
       fromSelection &&
       deps.replaceSelection
@@ -297,7 +297,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       outcome = await deps.run(command, input ?? '', {
         signal: runController.signal,
         source,
-        hasSelection: fromSelection,
         input: call?.input,
         output: call?.output,
       })
