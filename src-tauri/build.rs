@@ -39,6 +39,7 @@ fn main() {
             "mark_activation_metric",
             "net_cancel",
             "net_fetch",
+            "net_fetch_ack",
             "net_socket_close",
             "net_socket_open",
             "net_socket_send_binary",

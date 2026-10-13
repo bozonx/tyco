@@ -71,6 +71,7 @@ export const DESKTOP_COMMANDS = {
   MARK_ACTIVATION_METRIC: 'mark_activation_metric',
   NET_CANCEL: 'net_cancel',
   NET_FETCH: 'net_fetch',
+  NET_FETCH_ACK: 'net_fetch_ack',
   NET_SOCKET_CLOSE: 'net_socket_close',
   NET_SOCKET_OPEN: 'net_socket_open',
   NET_SOCKET_SEND_BINARY: 'net_socket_send_binary',
@@ -187,6 +188,7 @@ export interface DesktopCommands {
     args: { request: FetchRequest; onEvent: DesktopChannel }
     result: number
   }
+  net_fetch_ack: { args: { id: number }; result: void }
   net_socket_close: {
     args: { id: number; payload?: string | null }
     result: void

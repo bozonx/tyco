@@ -194,3 +194,21 @@ describe('createTranslationClient', () => {
     expect(result.text).toBe('First part.\n\nSecond part.')
   })
 })
+
+it('splits translation against the smallest context and output budget', async () => {
+  const runLlm = vi.fn().mockResolvedValue('Translated.')
+  const client = createTranslationClient({
+    getConfig: () => config(),
+    getLlmLimits: () => ({ contextWindowTokens: 4096, maxOutputTokens: 1024 }),
+    keys: { get: vi.fn() },
+    transport: { fetch: vi.fn(), openSocket: vi.fn() },
+    runLlm,
+  })
+  await client.translate('source '.repeat(200), { targetLanguage: 'ru' })
+  expect(runLlm.mock.calls.length).toBeGreaterThan(1)
+  expect(
+    runLlm.mock.calls.every(
+      ([prompt]) => prompt.messages[0].content.length < 1500
+    )
+  ).toBe(true)
+})

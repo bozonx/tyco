@@ -377,7 +377,8 @@
     "timeout": "Model yanıt vermekte çok gecikti",
     "unavailable": "Sağlayıcıya ulaşılamıyor",
     "unknown": "Yapay zekâ isteği başarısız oldu",
-    "imageUnsupported": "Sağlayıcı görsel içeren isteği reddetti. Vision desteğini ve model ayarlarını kontrol edin veya görselsiz devam edin. Sunucu ayrıntıları aşağıdadır."
+    "imageUnsupported": "Sağlayıcı görsel içeren isteği reddetti. Vision desteğini ve model ayarlarını kontrol edin veya görselsiz devam edin. Sunucu ayrıntıları aşağıdadır.",
+    "outputTruncated": "Yanıt token sınırına ulaştı. Çıktı sınırını artırın veya isteği kısaltın."
   },
   "menu": {
     "actions": "Eylemler",

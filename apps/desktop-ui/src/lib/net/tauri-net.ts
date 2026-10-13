@@ -3,6 +3,7 @@ import { Channel } from '@tauri-apps/api/core'
 
 import { invokeDesktop as invoke } from '../desktop/invoke'
 import type { NetIpc } from './net-ipc'
+import { createProviderFetch } from './provider-fetch'
 import { createTauriFetch } from './tauri-fetch'
 import { createTauriSocketOpener } from './tauri-socket'
 
@@ -18,7 +19,7 @@ export const tauriNetIpc: NetIpc = {
 /** The `transport` for `createAiKit`: every request leaves from Rust */
 export function createTauriTransport(ipc: NetIpc = tauriNetIpc): Transport {
   return {
-    fetch: createTauriFetch(ipc),
+    fetch: createProviderFetch(createTauriFetch(ipc)),
     openSocket: createTauriSocketOpener(ipc),
   }
 }

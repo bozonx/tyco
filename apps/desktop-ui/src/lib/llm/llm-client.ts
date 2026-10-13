@@ -12,7 +12,11 @@ import {
 } from '@bozonx/ai-kit'
 import type { LlmConfig, LlmTask } from '@tyco/shared'
 
-import { buildLlmCatalog, buildProviderFactories } from './llm-catalog'
+import {
+  buildLlmCatalog,
+  buildProviderFactories,
+  modelContextWindowTokens,
+} from './llm-catalog'
 import type { LlmPrompt } from './llm-prompt'
 
 /**
@@ -27,9 +31,11 @@ export type LlmErrorKind =
   | 'config'
   | 'unknown'
   | 'image_unsupported'
+  | 'output_truncated'
 
 export class LlmError extends Error {
   readonly kind: LlmErrorKind
+  partialText?: string
 
   constructor(kind: LlmErrorKind, message: string, options?: ErrorOptions) {
     super(message, options)
@@ -42,6 +48,7 @@ export interface LlmClientDeps {
   getConfig: () => LlmConfig
   transport: Transport
   keys: KeyProvider
+  timeoutMs?: number
 }
 
 /**
@@ -125,9 +132,17 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
         )
       }
 
+      const timeoutMs = deps.timeoutMs ?? CALL_TIMEOUT_MS
+      const deadline = Date.now() + timeoutMs
+      const timeoutSignal = AbortSignal.timeout(timeoutMs)
+      const signal = options.signal
+        ? AbortSignal.any([options.signal, timeoutSignal])
+        : timeoutSignal
       let firstError: LlmError | undefined
       for (const model of candidates) {
         if (options.signal?.aborted) return ''
+        if (signal.aborted || Date.now() >= deadline)
+          throw new LlmError('timeout', 'The language model request timed out')
         let emittedText = false
         let streamedText = ''
         // the catalog's task classes come from `tasks`; the chat is one too
@@ -137,17 +152,42 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
         } as LlmConfig
         try {
           const kit = kitFor(scopedConfig)
+          const isDeepSeek =
+            config.providers.find(
+              (provider) => provider.id === model.providerId
+            )?.type === 'deepseek'
+          const isThinkingEnabled =
+            model.isThinkingEnabled === true ||
+            model.providerModelId === 'deepseek-reasoner'
           const request: StreamRequest = {
             name: task,
             policy: { taskClass: task },
             ...prompt,
-            ...(model.temperature === undefined
+            ...(isDeepSeek
+              ? {
+                  providerOptions: {
+                    deepseek: {
+                      thinking: {
+                        type: isThinkingEnabled ? 'enabled' : 'disabled',
+                      },
+                    },
+                  },
+                }
+              : {}),
+            ...(model.temperature === undefined ||
+            (isDeepSeek && isThinkingEnabled)
               ? {}
               : { temperature: model.temperature }),
-            ...(model.maxOutputTokens === undefined
-              ? {}
-              : { maxOutputTokens: model.maxOutputTokens }),
-            ...(options.signal ? { abortSignal: options.signal } : {}),
+            maxOutputTokens:
+              model.maxOutputTokens ??
+              Math.min(
+                4096,
+                Math.floor(
+                  modelContextWindowTokens(model, config.providers) / 4
+                )
+              ),
+            abortSignal: signal,
+            totalTimeoutMs: Math.max(1, deadline - Date.now()),
           }
 
           if (!options.onChunk) {
@@ -156,9 +196,11 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
               provider: result.provider,
               model: result.model,
             })
+            ensureCompleteAnswer(result.finishReason, result.text)
             return result.text
           }
 
+          let completed = false
           for await (const part of kit.stream(request)) {
             if (part.type === 'model') {
               options.onModel?.({ provider: part.provider, model: part.model })
@@ -167,15 +209,27 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
               streamedText += part.text
               options.onChunk(part.text)
             } else if (part.type === 'error') {
-              if (part.kind === 'aborted') return streamedText
+              if (options.signal?.aborted) return streamedText
               throw new LlmError(errorKind(part.kind), part.message)
+            } else if (part.type === 'finish') {
+              ensureCompleteAnswer(part.finishReason, streamedText)
+              completed = true
             }
           }
+          if (!completed) ensureCompleteAnswer('unknown', streamedText)
           return streamedText
         } catch (error) {
           if (options.signal?.aborted) return streamedText
+          if (signal.aborted) {
+            const timeout = new LlmError(
+              'timeout',
+              'The language model request timed out'
+            )
+            timeout.partialText = streamedText
+            throw timeout
+          }
           const llmError = toLlmError(error)
-          if (emittedText) throw llmError
+          if (emittedText || llmError.partialText) throw llmError
           const hasImages = prompt.messages.some(
             (message) =>
               Array.isArray(message.content) &&
@@ -200,6 +254,24 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
       throw firstError ?? new LlmError('unknown', 'All language models failed')
     },
   }
+}
+
+function ensureCompleteAnswer(finishReason: string, text: string) {
+  if (finishReason === 'stop' && text.trim()) return
+  const kind =
+    finishReason === 'length'
+      ? 'output_truncated'
+      : finishReason === 'content-filter'
+        ? 'content_filter'
+        : 'invalid_output'
+  const error = new LlmError(
+    kind,
+    finishReason === 'length'
+      ? 'The answer reached its output token limit'
+      : `The model returned an incomplete answer (${finishReason})`
+  )
+  error.partialText = text
+  throw error
 }
 
 export function toLlmError(error: unknown): LlmError {

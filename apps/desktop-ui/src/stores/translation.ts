@@ -10,6 +10,8 @@ import {
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
+import { normalizeLlmConfig } from '../lib/llm/llm-config'
+import { taskModelLimits } from '../lib/llm/llm-limits'
 
 export const useTranslationStore = defineStore('translation', () => {
   const ipcStore = useIpcStore()
@@ -18,6 +20,11 @@ export const useTranslationStore = defineStore('translation', () => {
   const client = createTranslationClient({
     getConfig: () =>
       normalizeTranslationConfig(ipcStore.desktopState.userConfig?.translation),
+    getLlmLimits: () =>
+      taskModelLimits(
+        normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
+        'translate'
+      ),
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(() => secretsClient.status()),
     runLlm: (prompt, signal, options = {}) =>

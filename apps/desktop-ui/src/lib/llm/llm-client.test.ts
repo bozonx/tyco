@@ -414,3 +414,96 @@ describe('built-in vision adapters', () => {
     })
   })
 })
+
+it('rejects truncated streamed output without switching models and retains the text', async () => {
+  const fetch = vi.fn<FetchFunction>(async () =>
+    streamResponse(
+      sse(['partial']).map((part) =>
+        part.replace('"finish_reason":"stop"', '"finish_reason":"length"')
+      )
+    )
+  )
+  const config = structuredClone(DEFAULT_LLM_CONFIG)
+  config.tasks.aiTasks = ['local-qwen', 'gemini-flash']
+  const { client } = setup(fetch, config)
+  const chunks: string[] = []
+  await expect(
+    client.run('aiTasks', prompt, { onChunk: (chunk) => chunks.push(chunk) })
+  ).rejects.toMatchObject({ kind: 'output_truncated', partialText: 'partial' })
+  expect(chunks).toEqual(['partial'])
+  expect(fetch).toHaveBeenCalledOnce()
+})
+
+it('rejects truncated non-streamed output and preserves its partial text', async () => {
+  const fetch = vi.fn<FetchFunction>(async () =>
+    jsonResponse(200, {
+      id: '1',
+      object: 'chat.completion',
+      created: 1,
+      model: 'test',
+      choices: [
+        {
+          index: 0,
+          message: { role: 'assistant', content: 'partial' },
+          finish_reason: 'length',
+        },
+      ],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    })
+  )
+  const { client } = setup(fetch)
+  await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
+    kind: 'output_truncated',
+    partialText: 'partial',
+  })
+})
+
+it('shares one deadline across the entire fallback chain', async () => {
+  const config = structuredClone(DEFAULT_LLM_CONFIG)
+  config.models.push({
+    id: 'fallback',
+    providerId: 'local',
+    providerModelId: 'fallback',
+  })
+  config.tasks.aiTasks = ['local-qwen', 'fallback']
+  const fetch = vi.fn<FetchFunction>(
+    async (_url, options) =>
+      new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener(
+          'abort',
+          () => reject(options.signal?.reason),
+          { once: true }
+        )
+      })
+  )
+  const client = createLlmClient({
+    getConfig: () => config,
+    keys: { get: async () => '' },
+    timeoutMs: 30,
+    transport: { fetch, openSocket: vi.fn() },
+  })
+  await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
+    kind: 'timeout',
+  })
+  expect(fetch).toHaveBeenCalledOnce()
+})
+
+it('sends the preserved DeepSeek thinking mode to the provider', async () => {
+  const config = structuredClone(DEFAULT_LLM_CONFIG)
+  config.models.find(
+    (model) => model.id === 'deepseek-chat'
+  )!.isThinkingEnabled = true
+  const fetch = vi.fn<FetchFunction>(async () =>
+    streamResponse(sse(['answer']))
+  )
+  const { client } = setup(fetch, config, {
+    deepseek: { origins: ['https://api.deepseek.com'], available: true },
+  })
+  await client.run('chat', prompt, {
+    models: ['deepseek-chat'],
+    onChunk: () => undefined,
+  })
+  const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+  expect(body.model).toBe('deepseek-flash')
+  expect(body.thinking).toEqual({ type: 'enabled' })
+})

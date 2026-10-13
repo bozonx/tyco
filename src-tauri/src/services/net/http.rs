@@ -1,12 +1,14 @@
 use base64::Engine;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 use super::request::PreparedRequest;
 use super::EventSink;
 
 const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
-const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
+pub const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -17,6 +19,7 @@ pub struct FetchRequest {
     pub headers: Vec<(String, String)>,
     /// Base64: the IPC arguments are JSON, and the body may be audio.
     pub body: Option<String>,
+    pub purpose: Option<String>,
 }
 
 /// Control events. Body chunks travel as raw bytes between `Head` and `End`.
@@ -63,12 +66,34 @@ pub fn parse_method(method: &str) -> Result<reqwest::Method, String> {
 
 /// Sends one request and streams its response into `sink`. Every outcome ends
 /// with exactly one `End` or `Error`, unless the listener is gone first.
+#[cfg(test)]
 pub async fn run_fetch<S: EventSink>(
     client: &reqwest::Client,
     method: reqwest::Method,
     prepared: PreparedRequest,
     body: Option<Vec<u8>>,
     sink: &S,
+) {
+    run_fetch_controlled(
+        client,
+        method,
+        prepared,
+        body,
+        sink,
+        None,
+        MAX_RESPONSE_BODY_BYTES,
+    )
+    .await;
+}
+
+pub async fn run_fetch_controlled<S: EventSink>(
+    client: &reqwest::Client,
+    method: reqwest::Method,
+    prepared: PreparedRequest,
+    body: Option<Vec<u8>>,
+    sink: &S,
+    flow: Option<Arc<Semaphore>>,
+    response_limit_bytes: usize,
 ) {
     let mut builder = client.request(method, prepared.url);
     for (name, value) in &prepared.headers {
@@ -98,7 +123,11 @@ pub async fn run_fetch<S: EventSink>(
             .map(|(name, value)| {
                 (
                     name.as_str().to_string(),
-                    String::from_utf8_lossy(value.as_bytes()).into_owned(),
+                    value
+                        .as_bytes()
+                        .iter()
+                        .map(|byte| char::from(*byte))
+                        .collect(),
                 )
             })
             .collect(),
@@ -113,14 +142,32 @@ pub async fn run_fetch<S: EventSink>(
         match chunk {
             Ok(bytes) => {
                 received = received.saturating_add(bytes.len());
-                if received > MAX_RESPONSE_BODY_BYTES {
+                if received > response_limit_bytes {
                     sink.event(&FetchEvent::Error {
-                        message: String::from("Response body exceeds the 128 MiB limit"),
+                        message: format!(
+                            "Response body exceeds the {response_limit_bytes} byte limit"
+                        ),
                     });
                     return;
                 }
-                if !bytes.is_empty() && !sink.bytes(bytes.to_vec()) {
-                    return;
+                for chunk in bytes.chunks(64 * 1024) {
+                    if let Some(flow) = &flow {
+                        let Ok(Ok(permit)) = tokio::time::timeout(
+                            std::time::Duration::from_secs(180),
+                            flow.acquire(),
+                        )
+                        .await
+                        else {
+                            sink.event(&FetchEvent::Error {
+                                message: "HTTP response consumption timed out".into(),
+                            });
+                            return;
+                        };
+                        permit.forget();
+                    }
+                    if !sink.bytes(chunk.to_vec()) {
+                        return;
+                    }
                 }
             }
             Err(error) => {
@@ -209,6 +256,64 @@ mod tests {
         fn take(&self) -> Vec<Recorded> {
             std::mem::take(&mut self.0.lock().unwrap())
         }
+    }
+
+    #[tokio::test]
+    async fn response_flow_waits_for_consumption_and_respects_the_limit() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            assert!(socket.read(&mut request).await.unwrap() > 0);
+            socket
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nabc")
+                .await
+                .unwrap();
+        });
+        let prepared = prepare(
+            Protocol::Http,
+            &format!("http://{address}"),
+            &[],
+            &Secrets::new(),
+        )
+        .unwrap();
+        let sink = RecordingSink::default();
+        let flow = Arc::new(Semaphore::new(0));
+        let task_sink = sink.clone();
+        let task_flow = flow.clone();
+        let task = tokio::spawn(async move {
+            run_fetch_controlled(
+                &reqwest::Client::new(),
+                reqwest::Method::GET,
+                prepared,
+                None,
+                &task_sink,
+                Some(task_flow),
+                3,
+            )
+            .await;
+        });
+        server.await.unwrap();
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        assert!(!task.is_finished());
+        assert!(!sink
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|item| matches!(item, Recorded::Bytes(_))));
+        flow.add_permits(1);
+        tokio::time::timeout(Duration::from_secs(1), task)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(sink
+            .0
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|item| item == &Recorded::Bytes(b"abc".to_vec())));
     }
 
     /// Reads one HTTP/1.1 request, returns its head and body.

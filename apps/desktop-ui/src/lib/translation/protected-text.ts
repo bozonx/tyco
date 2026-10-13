@@ -14,9 +14,11 @@ export function protectTranslationText(
   keptTerms: readonly string[] = []
 ): ProtectedText {
   const values: string[] = []
+  let prefix = '__TYCO_PROTECTED_'
+  while (source.includes(prefix)) prefix = `_${prefix}`
   const protect = (value: string) => {
     const index = values.push(value) - 1
-    return `__TYCO_PROTECTED_${index}__`
+    return `${prefix}${index}__`
   }
   let text = source.replace(PROTECTED_PATTERN, protect)
 
@@ -34,18 +36,17 @@ export function protectTranslationText(
     text,
     restore(translated) {
       const missing = values
-        .map((_, index) => `__TYCO_PROTECTED_${index}__`)
-        .filter((token) => !translated.includes(token))
+        .map((_, index) => `${prefix}${index}__`)
+        .filter((token) => translated.split(token).length !== 2)
       if (missing.length > 0) {
         throw new AiError(
           'invalid_output',
           `Translation changed ${missing.length} protected token(s)`
         )
       }
-      return values.reduce(
-        (result, value, index) =>
-          result.replaceAll(`__TYCO_PROTECTED_${index}__`, value),
-        translated
+      return translated.replace(
+        new RegExp(`${escapeForRegExp(prefix)}(\\d+)__`, 'g'),
+        (token, index: string) => values[Number(index)] ?? token
       )
     },
   }

@@ -21,8 +21,8 @@ use commands::history::{
     set_editor_history_result, store_chat_image, sync_chat_images,
 };
 use commands::net::{
-    net_cancel, net_fetch, net_socket_close, net_socket_open, net_socket_send_binary,
-    net_socket_send_text,
+    net_cancel, net_fetch, net_fetch_ack, net_socket_close, net_socket_open,
+    net_socket_send_binary, net_socket_send_text,
 };
 use commands::notes::{append_note, save_note};
 use commands::secrets::{secrets_remove, secrets_set, secrets_status, secrets_vault_state};
@@ -322,6 +322,7 @@ pub fn run() {
             save_note,
             append_note,
             net_fetch,
+            net_fetch_ack,
             net_cancel,
             net_socket_open,
             net_socket_send_text,

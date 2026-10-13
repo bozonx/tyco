@@ -31,3 +31,4 @@ pub mod status_overlay;
 pub mod storage;
 pub mod voice;
 pub mod voice_session;
+pub mod webhook_secrets;

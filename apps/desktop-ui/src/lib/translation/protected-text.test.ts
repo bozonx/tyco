@@ -32,3 +32,16 @@ describe('protectTranslationText', () => {
     )
   })
 })
+
+it('round-trips source text that already contains a marker prefix', () => {
+  const source = '__TYCO_PROTECTED_0__ `code`'
+  const protectedText = protectTranslationText(source)
+  expect(protectedText.restore(protectedText.text)).toBe(source)
+})
+
+it('rejects duplicate protected tokens', () => {
+  const protectedText = protectTranslationText('Use `code`')
+  expect(() =>
+    protectedText.restore(`${protectedText.text} __TYCO_PROTECTED_0__`)
+  ).toThrow('Translation changed')
+})

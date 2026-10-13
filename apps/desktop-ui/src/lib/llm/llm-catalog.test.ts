@@ -21,11 +21,12 @@ describe('llm-catalog', () => {
 
     const gemini = catalog.require('gemini-flash')
     expect(gemini.provider).toBe('google')
-    expect(gemini.model).toBe('gemini-2.5-flash')
-    expect(gemini.contextSize).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
+    expect(gemini.model).toBe('gemini-3.8-flash')
+    expect(gemini.contextSize).toBe(128_000)
     expect(gemini.maxOutputTokens).toBe(OUTPUT_TOKENS_CEILING)
 
     const local = catalog.require('local-qwen')
+    expect(local.contextSize).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
     expect(local.provider).toBe('local')
     expect(local.baseUrl).toBe('http://localhost:11434/v1')
   })

@@ -6,7 +6,7 @@ use serde_json::{json, Map, Value};
 
 /// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
 /// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 6;
+pub const CONFIG_VERSION: u64 = 7;
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -50,8 +50,61 @@ pub fn migrate(user_config: &mut Value) -> bool {
     if from < 6 {
         merge_launcher_output_settings(user_config);
     }
+    if from < 7 {
+        update_provider_models(user_config);
+    }
     stamp_current_version(user_config);
     true
+}
+
+/// Keeps model entry ids and task references stable while replacing retired routes.
+pub fn update_provider_models(config: &mut Value) -> bool {
+    let Some(llm) = config.get_mut("llm") else {
+        return false;
+    };
+    let providers = llm
+        .get("providers")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let Some(models) = llm.get_mut("models").and_then(Value::as_array_mut) else {
+        return false;
+    };
+    let mut changed = false;
+    for model in models {
+        let provider_type = providers
+            .iter()
+            .find(|provider| provider["id"] == model["providerId"])
+            .and_then(|provider| provider["type"].as_str());
+        let replacement = match (provider_type, model["providerModelId"].as_str()) {
+            (Some("deepseek"), Some("deepseek-chat")) => {
+                Some(("deepseek-flash", "DeepSeek Chat", "DeepSeek Flash"))
+            }
+            (Some("deepseek"), Some("deepseek-reasoner")) => {
+                model["isThinkingEnabled"] = json!(true);
+                Some((
+                    "deepseek-flash",
+                    "DeepSeek Reasoner",
+                    "DeepSeek Flash (Thinking)",
+                ))
+            }
+            (Some("google"), Some("gemini-2.5-flash")) => {
+                Some(("gemini-3.8-flash", "Gemini 2.5 Flash", "Gemini 3.8 Flash"))
+            }
+            _ => None,
+        };
+        if let Some((route, old_label, new_label)) = replacement {
+            model["providerModelId"] = json!(route);
+            if model["name"] == old_label {
+                model["name"] = json!(new_label);
+            }
+            if provider_type == Some("google") && model.get("vision").is_none() {
+                model["vision"] = json!(true);
+            }
+            changed = true;
+        }
+    }
+    changed
 }
 
 /// Sets `configVersion` to the current one, unless it is there already.
@@ -602,6 +655,35 @@ mod tests {
         );
         assert_eq!(config["commands"][2]["logOutput"], json!(true));
         assert_eq!(config["commands"][4], Value::Null);
+        assert!(!migrate(&mut config));
+    }
+
+    #[test]
+    fn upgrades_retired_builtin_routes_without_changing_user_choices() {
+        let mut config = json!({"configVersion":6,"llm":{"providers":[{"id":"deepseek","type":"deepseek"},{"id":"google","type":"google"},{"id":"custom","type":"openai-compatible"}],"models":[
+            {"id":"chosen","providerId":"deepseek","providerModelId":"deepseek-chat","name":"My model","temperature":0.7,"maxOutputTokens":123},
+            {"id":"vision","providerId":"google","providerModelId":"gemini-2.5-flash","vision":false},
+            {"id":"private","providerId":"custom","providerModelId":"deepseek-chat"},
+            {"id":"reasoning","providerId":"deepseek","providerModelId":"deepseek-reasoner"}],"tasks":{"translate":["chosen"]}}});
+        assert!(migrate(&mut config));
+        assert_eq!(
+            config["llm"]["models"][0]["providerModelId"],
+            "deepseek-flash"
+        );
+        assert_eq!(config["llm"]["models"][0]["name"], "My model");
+        assert_eq!(config["llm"]["models"][0]["temperature"], 0.7);
+        assert_eq!(config["llm"]["models"][0]["maxOutputTokens"], 123);
+        assert_eq!(config["llm"]["models"][1]["vision"], false);
+        assert_eq!(
+            config["llm"]["models"][2]["providerModelId"],
+            "deepseek-chat"
+        );
+        assert_eq!(config["llm"]["tasks"]["translate"], json!(["chosen"]));
+        assert_eq!(
+            config["llm"]["models"][3]["providerModelId"],
+            "deepseek-flash"
+        );
+        assert_eq!(config["llm"]["models"][3]["isThinkingEnabled"], true);
         assert!(!migrate(&mut config));
     }
 

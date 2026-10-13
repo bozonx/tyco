@@ -48,6 +48,7 @@ fn save_user_config_blocking(
     if config_migration::config_version(&user_config) == 0 {
         config_migration::stamp_current_version(&mut user_config);
     }
+    crate::services::webhook_secrets::protect_for_save(app, &mut user_config)?;
     storage::save_user_config(app, &user_config)?;
     let previous_config = state.snapshot().settings.user_config;
     if let Err(error) = state

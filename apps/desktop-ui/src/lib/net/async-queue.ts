@@ -1,6 +1,6 @@
 /** Callback-delivered values read with `for await` */
 export interface AsyncQueue<T> {
-  push: (value: T) => void
+  push: (value: T) => boolean
   /** Ends normally: what is queued is still delivered */
   end: () => void
   /** Ends early: what is queued is delivered first, then this error */
@@ -8,11 +8,20 @@ export interface AsyncQueue<T> {
   readonly values: AsyncIterable<T>
 }
 
-export function createAsyncQueue<T>(): AsyncQueue<T> {
+export function createAsyncQueue<T>(
+  options: {
+    maxCount?: number
+    maxBytes?: number
+    sizeOf?: (value: T) => number
+    onOverflow?: (error: Error) => void
+  } = {}
+): AsyncQueue<T> {
   const queue: T[] = []
   let notify: (() => void) | undefined
   let done = false
   let failure: Error | undefined
+  let queuedBytes = 0
+  const sizeOf = options.sizeOf ?? (() => 1)
 
   const wake = () => {
     notify?.()
@@ -21,9 +30,22 @@ export function createAsyncQueue<T>(): AsyncQueue<T> {
 
   return {
     push(value) {
-      if (done) return
+      if (done) return false
+      const size = sizeOf(value)
+      if (
+        queue.length >= (options.maxCount ?? 1024) ||
+        queuedBytes + size > (options.maxBytes ?? 1024 * 1024)
+      ) {
+        failure = new Error('Receive queue limit exceeded')
+        done = true
+        wake()
+        options.onOverflow?.(failure)
+        return false
+      }
       queue.push(value)
+      queuedBytes += size
       wake()
+      return true
     },
     end() {
       done = true
@@ -37,18 +59,27 @@ export function createAsyncQueue<T>(): AsyncQueue<T> {
     },
     values: {
       async *[Symbol.asyncIterator]() {
-        for (;;) {
-          if (queue.length > 0) {
-            yield queue.shift() as T
-            continue
+        try {
+          for (;;) {
+            if (queue.length > 0) {
+              const value = queue.shift() as T
+              queuedBytes -= sizeOf(value)
+              yield value
+              continue
+            }
+            if (done) {
+              if (failure) throw failure
+              return
+            }
+            await new Promise<void>((resolve) => {
+              notify = resolve
+            })
           }
-          if (done) {
-            if (failure) throw failure
-            return
-          }
-          await new Promise<void>((resolve) => {
-            notify = resolve
-          })
+        } finally {
+          done = true
+          queue.length = 0
+          queuedBytes = 0
+          wake()
         }
       },
     },

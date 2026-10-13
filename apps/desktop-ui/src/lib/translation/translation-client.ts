@@ -22,6 +22,7 @@ import type { TranslationConfig } from '@tyco/shared'
 
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
+import { createDeepLProvider } from './machine-providers'
 
 const MT_CHUNK_LIMIT = 4_500
 const LLM_CHUNK_LIMIT = 36_000
@@ -29,6 +30,7 @@ const LLM_REPAIR_COMBINED_LIMIT = 48_000
 
 export interface TranslationClientDeps {
   getConfig: () => TranslationConfig
+  getLlmLimits?: () => { contextWindowTokens: number; maxOutputTokens: number }
   transport: Transport
   keys: KeyProvider
   runLlm: (
@@ -153,6 +155,7 @@ async function translateWithMachine(
     catalog,
     keys: deps.keys,
     transport: deps.transport,
+    mtProviders: { deepl: createDeepLProvider },
   })
   const applicableGlossary = selectGlossaryForText(config.glossary, text)
   const protectedText = protectTranslationText(
@@ -208,7 +211,7 @@ async function translateWithLlm(
   const translated: string[] = []
   let detectedProvider = 'llm'
   let detectedModel: string | undefined
-  const chunks = chunkText(text, LLM_CHUNK_LIMIT)
+  const chunks = chunkText(text, llmChunkLimit(deps, options, glossary))
   for (const chunk of chunks) {
     options.signal?.throwIfAborted()
     const applicable = selectGlossaryForText(glossary, chunk)
@@ -270,7 +273,7 @@ async function repairWithLlm(
   const pairs = splitParallelText(
     source,
     translation,
-    LLM_REPAIR_COMBINED_LIMIT
+    Math.min(LLM_REPAIR_COMBINED_LIMIT, llmChunkLimit(deps, options, glossary))
   )
   for (const pair of pairs) {
     options.signal?.throwIfAborted()
@@ -379,4 +382,27 @@ function repairInstruction(problems: TranslationProblem[]): string {
   return problems.length > 0
     ? 'Fix only the listed problems.'
     : 'Review it once and fix any translation errors you find.'
+}
+
+/** Reserve context for instructions and an expanded translation, conservatively. */
+function llmChunkLimit(
+  deps: TranslationClientDeps,
+  options: TranslationRunOptions,
+  glossary: GlossaryEntry[]
+): number {
+  if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT
+  const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
+  const instructions = translationSystem(options, glossary).length
+  const characters = Math.floor(context / 3) - instructions - 512
+  const limit = Math.min(
+    LLM_CHUNK_LIMIT,
+    characters,
+    Math.floor(maxOutputTokens / 2)
+  )
+  if (limit < 128)
+    throw new AiError(
+      'context_length',
+      'The translation instructions exceed the language model context'
+    )
+  return limit
 }

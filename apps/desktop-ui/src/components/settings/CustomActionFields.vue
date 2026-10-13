@@ -109,8 +109,13 @@
           />
           <FieldInput
             class="flex-1"
-            :value="header[1]"
-            :placeholder="t('settings.actionWebhookHeaderValue')"
+            :type="header[1].includes('tyco-secret:') ? 'password' : 'text'"
+            :value="header[1].includes('tyco-secret:') ? '' : header[1]"
+            :placeholder="
+              header[1].includes('tyco-secret:')
+                ? t('settings.actionWebhookAuthReplacePlaceholder')
+                : t('settings.actionWebhookHeaderValue')
+            "
             @update:value="updateHeader(headerIndex, 1, $event)"
           />
           <IconButton

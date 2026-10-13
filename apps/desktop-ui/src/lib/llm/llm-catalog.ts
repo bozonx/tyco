@@ -7,7 +7,18 @@ import {
 import type { LlmConfig, LlmModel, LlmProvider } from '@tyco/shared'
 
 /** Assumed when a model does not say; the provider refuses what does not fit */
-export const DEFAULT_CONTEXT_WINDOW_TOKENS = 128_000
+export const DEFAULT_CONTEXT_WINDOW_TOKENS = 4096
+
+export function modelContextWindowTokens(
+  model: LlmModel,
+  providers: LlmProvider[]
+): number {
+  if (model.contextWindowTokens !== undefined) return model.contextWindowTokens
+  return providers.find((provider) => provider.id === model.providerId)
+    ?.type === 'openai-compatible'
+    ? DEFAULT_CONTEXT_WINDOW_TOKENS
+    : 128_000
+}
 /**
  * The catalog's ceiling for a model's output. Only a cap: a request sends a
  * limit only when the model has one configured
@@ -84,7 +95,9 @@ export function supportsImages(model: LlmModel): boolean {
   return (
     model.vision ??
     ((model.providerId === 'google' &&
-      model.providerModelId === 'gemini-2.5-flash') ||
+      ['gemini-2.5-flash', 'gemini-3.8-flash'].includes(
+        model.providerModelId
+      )) ||
       (model.providerId === 'openrouter' &&
         model.providerModelId === 'openai/gpt-4.1-mini'))
   )
@@ -110,7 +123,7 @@ function toDefinition(
       input: supportsImages(model) ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
-    contextSize: model.contextWindowTokens ?? DEFAULT_CONTEXT_WINDOW_TOKENS,
+    contextSize: modelContextWindowTokens(model, [provider]),
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,
       OUTPUT_TOKENS_CEILING

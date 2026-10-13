@@ -40,7 +40,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         }
         scrub_config_backups(&path);
 
-        let changed = migrated
+        let normalized = migrated
             | normalize_window_insertion_config(&mut value)
             | normalize_hotkeys_config(&mut value)
             | normalize_appearance_config(&mut value)
@@ -49,8 +49,10 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
             | normalize_translation_config(&mut value)
             | normalize_main_actions_config(&mut value)
             | llm_config::migrate_user_config(app, &mut value)
+            | config_migration::update_provider_models(&mut value)
             | normalize_stt_config(&mut value)
             | normalize_ai_rules_and_tasks(&mut value);
+        let changed = crate::services::webhook_secrets::migrate(app, &mut value)? | normalized;
 
         // the app starts with the config in memory either way; the next
         // save writes it

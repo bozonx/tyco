@@ -59,6 +59,7 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
   let state = createLiveTranscriptState()
   let failure: Error | undefined
   let finishing = false
+  let onError: ((error: Error) => void) | undefined
 
   const stopCapture = () => deps.capture.stop().catch(() => undefined)
 
@@ -71,6 +72,7 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
       state = createLiveTranscriptState()
       failure = undefined
       finishing = false
+      onError = request.onError
 
       const { sampleRate, audio } = await deps.capture.start()
       // cancelled while the microphone was starting: it must not stay on
@@ -124,20 +126,22 @@ export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
       finishing = true
       // a microphone that failed to stop must not cost the text: the wait
       // below is bounded
-      await stopCapture()
       // a provider that never closes must not hold the text hostage
       let timer: ReturnType<typeof setTimeout> | undefined
       const timedOut = new Promise<void>((resolve) => {
         timer = setTimeout(() => {
-          failure ??= new DictationError(
-            'timeout',
-            'Timed out waiting for the speech recognition result'
-          )
+          if (!failure) {
+            failure = new DictationError(
+              'timeout',
+              'Timed out waiting for the speech recognition result'
+            )
+            onError?.(failure)
+          }
           controller?.abort()
           resolve()
         }, deps.finishTimeoutMs ?? FINISH_TIMEOUT_MS)
       })
-      await Promise.race([session, timedOut])
+      await Promise.race([stopCapture().then(() => session), timedOut])
       clearTimeout(timer)
       if (failure && !liveTranscriptText(state)) throw failure
       return liveTranscriptText(state)

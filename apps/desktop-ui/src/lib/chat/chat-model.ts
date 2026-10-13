@@ -1,7 +1,7 @@
 import type { LlmConfig } from '@tyco/shared'
 
 import {
-  DEFAULT_CONTEXT_WINDOW_TOKENS,
+  modelContextWindowTokens,
   supportsImages,
   usableModels,
 } from '../llm/llm-catalog'
@@ -32,8 +32,7 @@ export function chatModelOptions(
       name: model.name?.trim() || model.providerModelId.trim(),
       providerLabel: provider.name?.trim() || provider.type,
       vision: supportsImages(model),
-      contextWindowTokens:
-        model.contextWindowTokens ?? DEFAULT_CONTEXT_WINDOW_TOKENS,
+      contextWindowTokens: modelContextWindowTokens(model, config.providers),
     }))
 }
 
@@ -53,5 +52,5 @@ export function pickChatModel(
  * deliberately conservative for multilingual text
  */
 export function contextBudgetCharacters(contextWindowTokens: number): number {
-  return Math.max(4_000, Math.floor(contextWindowTokens * 3 * 0.75))
+  return Math.max(1, Math.floor(contextWindowTokens * 3 * 0.75))
 }

@@ -31,7 +31,10 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     if (signal.aborted) throw abortReason(signal)
     if (connectSignal?.aborted) throw abortReason(connectSignal)
 
-    const queue = createAsyncQueue<string>()
+    const queue = createAsyncQueue<string>({
+      sizeOf: (value) => new TextEncoder().encode(value).byteLength,
+      onOverflow: (error) => abortWith(error),
+    })
     const decoder = new TextDecoder()
     let closed = false
     let id: number | undefined
@@ -189,7 +192,16 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     }
 
     const close = (payload?: string) => {
-      if (closeRequested || closed) return
+      if (closed) return
+      if (closeRequested) {
+        if (payload !== undefined) return
+        // The protocol has finished flushing; release a server that stays open.
+        closed = true
+        detach()
+        queue.end()
+        cancelRemote()
+        return
+      }
       closeRequested = true
       enqueue(
         () =>

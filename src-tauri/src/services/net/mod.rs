@@ -6,6 +6,7 @@
 //! Tauri channel — JSON events for control, raw bytes for bodies.
 
 pub mod http;
+pub mod image;
 pub mod request;
 pub mod socket;
 
@@ -17,7 +18,9 @@ use std::time::Duration;
 use futures_util::future::{AbortHandle, AbortRegistration};
 use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody};
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, Semaphore};
+
+pub const FETCH_WINDOW_CHUNKS: usize = 8;
 
 use crate::errors::AppError;
 use socket::SocketCommand;
@@ -56,6 +59,7 @@ pub struct NetState {
     next_id: AtomicU64,
     fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
+    read_flows: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
 
 impl NetState {
@@ -72,6 +76,7 @@ impl NetState {
             next_id: AtomicU64::new(1),
             fetches: Arc::default(),
             sockets: Arc::default(),
+            read_flows: Arc::default(),
         })
     }
 
@@ -91,11 +96,18 @@ impl NetState {
             .lock()
             .expect("fetches lock")
             .insert(id, handle);
+        let flow = Arc::new(Semaphore::new(FETCH_WINDOW_CHUNKS));
+        self.read_flows
+            .lock()
+            .expect("read flows lock")
+            .insert(id, flow.clone());
         (
             NetTask {
                 id,
                 fetches: Arc::clone(&self.fetches),
                 sockets: Arc::clone(&self.sockets),
+                read_flows: Arc::clone(&self.read_flows),
+                flow,
             },
             registration,
         )
@@ -105,6 +117,14 @@ impl NetState {
     pub fn cancel_fetch(&self, id: u64) {
         if let Some(handle) = self.fetches.lock().expect("fetches lock").remove(&id) {
             handle.abort();
+        }
+    }
+
+    pub fn acknowledge_fetch(&self, id: u64) {
+        if let Some(flow) = self.read_flows.lock().expect("read flows lock").get(&id) {
+            if flow.available_permits() < FETCH_WINDOW_CHUNKS {
+                flow.add_permits(1);
+            }
         }
     }
 
@@ -148,13 +168,18 @@ impl NetState {
 
 /// A task lease keeps registry mutation inside the network service.
 pub struct NetTask {
+    flow: Arc<Semaphore>,
     id: u64,
     fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
+    read_flows: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
 impl NetTask {
     pub fn id(&self) -> u64 {
         self.id
+    }
+    pub fn read_flow(&self) -> Arc<Semaphore> {
+        self.flow.clone()
     }
     pub fn register_socket(&self, sender: Sender<SocketCommand>) {
         self.sockets
@@ -165,6 +190,10 @@ impl NetTask {
 }
 impl Drop for NetTask {
     fn drop(&mut self) {
+        self.read_flows
+            .lock()
+            .expect("read flows lock")
+            .remove(&self.id);
         self.sockets.lock().expect("sockets lock").remove(&self.id);
         if let Some(handle) = self.fetches.lock().expect("fetches lock").remove(&self.id) {
             handle.abort();

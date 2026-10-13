@@ -75,7 +75,9 @@ fn without_api_keys(value: &Value) -> Value {
         Value::Object(fields) => Value::Object(
             fields
                 .iter()
-                .filter(|(key, _)| !key.to_ascii_lowercase().ends_with("apikey"))
+                .filter(|(key, _)| {
+                    !key.to_ascii_lowercase().ends_with("apikey") && key.as_str() != "headers"
+                })
                 .map(|(key, field)| (key.clone(), without_api_keys(field)))
                 .collect(),
         ),

@@ -165,6 +165,19 @@ describe('createLiveDictation', () => {
     expect(await t.dictation.finish()).toBe('Kept.')
   })
 
+  it('bounds a stalled microphone stop and warns while keeping recognized text', async () => {
+    const t = setup(20)
+    await t.start()
+    t.parts.push({ type: 'partial', text: 'Kept.', startMs: 0 })
+    await tick()
+    vi.mocked(t.capture.stop).mockImplementation(() => new Promise(() => {}))
+    expect(await t.dictation.finish()).toBe('Kept.')
+    expect(t.onError).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'timeout' })
+    )
+    expect(t.requests[0].signal?.aborted).toBe(true)
+  })
+
   it('turns the microphone off when the transcription cannot start', async () => {
     const t = setup()
     const dictation = createLiveDictation({

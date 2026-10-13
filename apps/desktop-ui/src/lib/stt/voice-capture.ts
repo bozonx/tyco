@@ -25,7 +25,21 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
 
   return {
     async start() {
-      const queue = createAsyncQueue<AudioChunk>()
+      let overflowed = false
+      let captureSessionId: number | undefined
+      const queue = createAsyncQueue<AudioChunk>({
+        maxBytes: 4 * 1024 * 1024,
+        sizeOf: (chunk) => chunk.data.byteLength,
+        onOverflow: () => {
+          overflowed = true
+          if (captureSessionId !== undefined)
+            void ipc
+              .invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, {
+                sessionId: captureSessionId,
+              })
+              .catch(() => undefined)
+        },
+      })
       const onMessage = (message: unknown) => {
         if (isArrayBuffer(message)) {
           queue.push({ data: new Uint8Array(message) })
@@ -40,7 +54,10 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         const started = await ipc.invoke(DESKTOP_COMMANDS.START_VOICE_CAPTURE, {
           onAudio: ipc.createChannel(onMessage),
         })
-        sessionId = started.sessionId
+        captureSessionId = started.sessionId
+        sessionId = captureSessionId
+        if (overflowed)
+          await ipc.invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, { sessionId })
         const { sampleRate } = started
         return { sampleRate, audio: queue.values }
       } catch (error) {

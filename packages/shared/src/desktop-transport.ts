@@ -15,6 +15,7 @@ export interface FetchRequest {
   url: string
   headers: [string, string][]
   body?: string | null
+  purpose?: 'chat-image'
 }
 
 export interface SocketRequest {

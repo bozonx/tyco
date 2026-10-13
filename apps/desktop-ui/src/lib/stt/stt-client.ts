@@ -10,6 +10,8 @@ import {
 import type { SttModel, SttProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
+import { createDeepgramProvider } from './deepgram-provider'
+import { createSherpaProvider } from './sherpa-provider'
 
 const TRANSCRIPTION_TASK = 'transcription'
 /** Covers opening the provider socket only; the session itself has no limit */
@@ -103,6 +105,10 @@ export function createSttClient(deps: SttClientDeps): SttClient {
       catalog: buildSttCatalog(model),
       keys: deps.keys ?? defaultKeys,
       transport: deps.transport,
+      sttProviders: {
+        deepgram: createDeepgramProvider,
+        'sherpa-onnx': createSherpaProvider,
+      },
       retry: { totalTimeoutMs: CONNECT_TIMEOUT_MS },
     })
     if (kits.size >= 20) kits.clear()

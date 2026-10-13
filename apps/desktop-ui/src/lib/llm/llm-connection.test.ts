@@ -7,7 +7,7 @@ import {
 
 describe('LLM connection checker', () => {
   it('checks the models endpoint without credentials for a keyless server', async () => {
-    const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+    const fetch = vi.fn().mockResolvedValue(new Response('{"data":[]}'))
     const check = createLlmConnectionChecker({ fetch, hasKey: () => false })
 
     await check({
@@ -18,11 +18,12 @@ describe('LLM connection checker', () => {
 
     expect(fetch).toHaveBeenCalledWith('http://localhost:11434/v1/models', {
       headers: undefined,
+      signal: expect.any(AbortSignal),
     })
   })
 
   it('uses a secret reference instead of exposing the saved key', async () => {
-    const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+    const fetch = vi.fn().mockResolvedValue(new Response('{"data":[]}'))
     const check = createLlmConnectionChecker({ fetch, hasKey: () => true })
 
     await check({
@@ -33,6 +34,7 @@ describe('LLM connection checker', () => {
 
     expect(fetch).toHaveBeenCalledWith('https://llm.example/v1/models', {
       headers: { Authorization: 'Bearer tyco-secret:private-server' },
+      signal: expect.any(AbortSignal),
     })
   })
 
@@ -75,4 +77,43 @@ describe('LLM connection checker', () => {
       })
     ).rejects.toThrow('HTTP 404')
   })
+})
+
+it('checks actual generation and reports a configured model that cannot run', async () => {
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(new Response('{"data":[{"id":"model"}]}'))
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+  const check = createLlmConnectionChecker({
+    fetch,
+    hasKey: () => false,
+    getModelId: () => 'model',
+  })
+  await expect(
+    check({
+      id: 'local',
+      type: 'openai-compatible',
+      baseUrl: 'http://localhost:11434/v1',
+    })
+  ).rejects.toThrow('Model model: HTTP 404')
+  expect(fetch.mock.calls[1][0]).toBe(
+    'http://localhost:11434/v1/chat/completions'
+  )
+  expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({
+    model: 'model',
+    max_tokens: 8,
+    stream: false,
+  })
+})
+
+it('does not accept an arbitrary JSON response as a model list', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  const check = createLlmConnectionChecker({ fetch, hasKey: () => false })
+  await expect(
+    check({
+      id: 'local',
+      type: 'openai-compatible',
+      baseUrl: 'http://localhost:11434/v1',
+    })
+  ).rejects.toThrow('model list')
 })

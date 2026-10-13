@@ -40,6 +40,7 @@ function fakeDeepgram(replies: string[]) {
       close: (payload) => {
         if (payload) sent.push(payload)
         replies.forEach((reply) => messages.push(reply))
+        messages.push(JSON.stringify({ type: 'Metadata' }))
         messages.end()
       },
     }

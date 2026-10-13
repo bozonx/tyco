@@ -26,23 +26,46 @@ pub async fn net_fetch(
     request: FetchRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let prepared = prepare_authorized_request(
-        &app,
-        &app_state,
-        Protocol::Http,
-        &request.url,
-        &request.headers,
-    )
-    .await?;
+    let (prepared, client) = if request.purpose.as_deref() == Some("chat-image") {
+        crate::services::net::image::prepare_image(&request).await?
+    } else {
+        if request.purpose.is_some() {
+            return Err(AppError::InvalidInput(
+                "Unknown network request purpose".into(),
+            ));
+        }
+        let prepared = prepare_authorized_request(
+            &app,
+            &app_state,
+            Protocol::Http,
+            &request.url,
+            &request.headers,
+        )
+        .await?;
+        (prepared, net.client().clone())
+    };
     let method = http::parse_method(&request.method).map_err(AppError::InvalidInput)?;
     let body = http::decode_body(request.body.as_deref()).map_err(AppError::InvalidInput)?;
 
     let (task, registration) = net.register_task();
     let id = task.id();
-    let client = net.client().clone();
+    let flow = task.read_flow();
+    let response_limit_bytes = if request.purpose.is_some() {
+        10 * 1024 * 1024
+    } else {
+        http::MAX_RESPONSE_BODY_BYTES
+    };
 
     tauri::async_runtime::spawn(async move {
-        let run = http::run_fetch(&client, method, prepared, body, &on_event);
+        let run = http::run_fetch_controlled(
+            &client,
+            method,
+            prepared,
+            body,
+            &on_event,
+            Some(flow),
+            response_limit_bytes,
+        );
         let _ = Abortable::new(run, registration).await;
         drop(task);
     });
@@ -53,6 +76,11 @@ pub async fn net_fetch(
 #[tauri::command]
 pub fn net_cancel(net: State<'_, NetState>, id: u64) {
     net.cancel_fetch(id);
+}
+
+#[tauri::command]
+pub fn net_fetch_ack(net: State<'_, NetState>, id: u64) {
+    net.acknowledge_fetch(id);
 }
 
 /// Returns an id before connecting, so the handshake is cancellable too.
@@ -155,10 +183,26 @@ fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str
         .into_iter()
         .flatten();
 
+    let webhooks = config
+        .get("commands")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|command| {
+            command.get("toolId").and_then(serde_json::Value::as_str) == Some("webhook")
+        })
+        .filter_map(|command| {
+            command
+                .get("toolConfig")
+                .and_then(|config| config.get("url"))
+        })
+        .filter_map(serde_json::Value::as_str);
+
     llm_providers
         .chain(stt_models)
         .filter_map(|entry| entry.get("baseUrl"))
         .filter_map(serde_json::Value::as_str)
+        .chain(webhooks)
 }
 
 #[tauri::command]
@@ -207,6 +251,26 @@ pub fn net_socket_close(
 mod tests {
     use super::*;
     use crate::services::secrets::SecretEntry;
+
+    #[test]
+    fn allows_configured_webhooks_without_a_secret() {
+        let config = serde_json::json!({"commands":[{"id":"hook", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example/run?text={{TEXT}}"}}]});
+        let secrets = crate::services::secrets::Secrets::new();
+        assert!(ensure_allowed_origin(
+            Protocol::Http,
+            "https://hooks.example/run?text=value",
+            &config,
+            &secrets
+        )
+        .is_ok());
+        assert!(ensure_allowed_origin(
+            Protocol::Http,
+            "https://other.example/run",
+            &config,
+            &secrets
+        )
+        .is_err());
+    }
 
     #[test]
     fn allows_only_configured_or_secret_bound_origins() {

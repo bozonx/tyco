@@ -70,7 +70,7 @@ watch([() => props.content, () => props.streaming, markdownLabels], () => {
   renderTimer = undefined
   html.value = render()
 })
-const fetchImage = createTauriFetch(tauriNetIpc)
+const fetchImage = createTauriFetch(tauriNetIpc, 'chat-image')
 const view = createChatMarkdownView({
   async highlight(source, language) {
     const { default: hljs } = await import('highlight.js')

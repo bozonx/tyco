@@ -160,6 +160,9 @@ const llmStore = useLlmStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
   hasKey,
+  getModelId: (providerId) =>
+    props.llm.models.find((model) => model.providerId === providerId)
+      ?.providerModelId,
 })
 const settings = createLlmSettingsModel({
   getConfig: () => props.llm,

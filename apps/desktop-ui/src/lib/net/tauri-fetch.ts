@@ -22,7 +22,10 @@ const BODYLESS_METHODS = new Set(['GET', 'HEAD'])
  * response head, streams the body, rejects with a `TypeError` on a network
  * failure and with the signal's reason on abort.
  */
-export function createTauriFetch(ipc: NetIpc): FetchFunction {
+export function createTauriFetch(
+  ipc: NetIpc,
+  purpose?: 'chat-image'
+): FetchFunction {
   return async (input, init) => {
     // Normalizes every accepted input shape, and encodes `FormData` with the
     // boundary in `content-type`.
@@ -46,6 +49,39 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
       let finished = false
       let cancelRequested = false
       let controller: ReadableStreamDefaultController<Uint8Array> | undefined
+      const chunks: Uint8Array[] = []
+      let queuedBytes = 0
+      let ended = false
+      let pendingAcknowledgements = 0
+
+      const acknowledge = () => {
+        if (id === undefined) {
+          pendingAcknowledgements += 1
+          return
+        }
+        void ipc
+          .invoke(DESKTOP_COMMANDS.NET_FETCH_ACK, { id })
+          .catch((error: unknown) => {
+            if (finished) return
+            finish()
+            cancelRemote()
+            fail(new TypeError(errorMessage(error)))
+          })
+      }
+
+      const flush = () => {
+        if (finished || !headReceived) return
+        if ((controller?.desiredSize ?? 0) > 0 && chunks.length > 0) {
+          const chunk = chunks.shift()!
+          queuedBytes -= chunk.byteLength
+          controller!.enqueue(chunk)
+          acknowledge()
+        }
+        if (ended && chunks.length === 0) {
+          finish()
+          controller?.close()
+        }
+      }
 
       const cancelRemote = () => {
         if (id === undefined) {
@@ -81,6 +117,9 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
         start(streamController) {
           controller = streamController
         },
+        pull() {
+          flush()
+        },
         cancel() {
           if (finished) return
           finish()
@@ -92,7 +131,15 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
         if (finished) return
 
         if (isArrayBuffer(message)) {
-          controller?.enqueue(new Uint8Array(message))
+          queuedBytes += message.byteLength
+          if (queuedBytes > 1024 * 1024) {
+            finish()
+            cancelRemote()
+            fail(new TypeError('HTTP receive queue limit exceeded'))
+            return
+          }
+          chunks.push(new Uint8Array(message))
+          flush()
           return
         }
 
@@ -100,21 +147,37 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
 
         switch (event.type) {
           case 'head': {
-            headReceived = true
-            const nullBody = NULL_BODY_STATUSES.has(event.status)
-            resolve(
-              new Response(nullBody ? null : stream, {
+            if (event.status < 200 || event.status > 599) {
+              finish()
+              cancelRemote()
+              reject(new TypeError('Unsupported HTTP response status'))
+              break
+            }
+            const nullBody =
+              request.method === 'HEAD' || NULL_BODY_STATUSES.has(event.status)
+            try {
+              const response = new Response(nullBody ? null : stream, {
                 status: event.status,
                 statusText: event.statusText,
                 headers: event.headers,
               })
-            )
-            if (nullBody) finish()
+              headReceived = true
+              resolve(response)
+            } catch (error) {
+              finish()
+              cancelRemote()
+              reject(new TypeError(errorMessage(error)))
+              break
+            }
+            if (nullBody) {
+              finish()
+              cancelRemote()
+            } else flush()
             break
           }
           case 'end':
-            finish()
-            controller?.close()
+            ended = true
+            flush()
             break
           case 'error':
             finish()
@@ -132,6 +195,7 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
             url: request.url,
             headers: [...request.headers],
             body: body && bytesToBase64(body),
+            ...(purpose ? { purpose } : {}),
           },
           onEvent: ipc.createChannel(onMessage),
         })
@@ -139,11 +203,14 @@ export function createTauriFetch(ipc: NetIpc): FetchFunction {
           (value) => {
             id = value
             if (cancelRequested) cancelRemote()
+            const count = pendingAcknowledgements
+            pendingAcknowledgements = 0
+            for (let index = 0; index < count; index += 1) acknowledge()
           },
           (error: unknown) => {
             if (finished) return
             finish()
-            reject(new TypeError(errorMessage(error)))
+            fail(new TypeError(errorMessage(error)))
           }
         )
     })

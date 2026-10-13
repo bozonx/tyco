@@ -95,3 +95,41 @@ describe('createVoiceCaptureControl', () => {
     )
   })
 })
+
+it('bounds incoming audio and stops the overflowing capture before its id arrives', async () => {
+  const fake = createFakeNetIpc({
+    [DESKTOP_COMMANDS.START_VOICE_CAPTURE]: () => {
+      fake.emit(new Uint8Array(4 * 1024 * 1024 + 1).buffer)
+      return { sampleRate: 16000, sessionId: 7 }
+    },
+  })
+  const capture = await createVoiceCaptureControl(fake.ipc).start()
+  await expect(collect(capture.audio)).rejects.toThrow(
+    'Receive queue limit exceeded'
+  )
+  expect(
+    fake.callsOf(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE).map((call) => call.args)
+  ).toEqual([{ sessionId: 7 }])
+})
+
+it('keeps a newer capture running when an old audio queue overflows', async () => {
+  let nextId = 1
+  const channels: ((message: unknown) => void)[] = []
+  const fake = createFakeNetIpc({
+    [DESKTOP_COMMANDS.START_VOICE_CAPTURE]: () => {
+      return { sampleRate: 16000, sessionId: nextId++ }
+    },
+  })
+  const createChannel = fake.ipc.createChannel
+  fake.ipc.createChannel = (callback) => {
+    channels.push(callback)
+    return createChannel(callback)
+  }
+  const control = createVoiceCaptureControl(fake.ipc)
+  await control.start()
+  await control.start()
+  channels[0](new Uint8Array(4 * 1024 * 1024 + 1).buffer)
+  expect(
+    fake.callsOf(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE).map((call) => call.args)
+  ).toEqual([{ sessionId: 1 }])
+})

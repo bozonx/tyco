@@ -20,7 +20,7 @@ describe('chat-model', () => {
       'deepseek-chat',
     ])
     expect(options[1]).toMatchObject({
-      name: 'DeepSeek Chat',
+      name: 'DeepSeek Flash',
       providerLabel: 'DeepSeek',
     })
   })
@@ -44,7 +44,7 @@ describe('chat-model', () => {
 
   it('keeps a floor for the context budget', () => {
     expect(contextBudgetCharacters(128_000)).toBe(288_000)
-    expect(contextBudgetCharacters(100)).toBe(4_000)
+    expect(contextBudgetCharacters(100)).toBe(225)
   })
 })
 

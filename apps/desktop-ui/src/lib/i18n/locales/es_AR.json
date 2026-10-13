@@ -377,7 +377,8 @@
     "timeout": "El modelo tardó demasiado en responder",
     "unavailable": "No se puede conectar con el proveedor",
     "unknown": "La solicitud a la IA falló",
-    "imageUnsupported": "El proveedor rechazó una solicitud con imágenes. Revisá la compatibilidad con vision y la configuración del modelo, o continuá sin imágenes. A continuación se muestran los detalles del servidor."
+    "imageUnsupported": "El proveedor rechazó una solicitud con imágenes. Revisá la compatibilidad con vision y la configuración del modelo, o continuá sin imágenes. A continuación se muestran los detalles del servidor.",
+    "outputTruncated": "La respuesta alcanzó el límite de tokens. Aumentá el límite de salida o acortá la solicitud."
   },
   "menu": {
     "actions": "Acciones",

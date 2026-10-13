@@ -27,6 +27,7 @@
     "allow-log-custom-action",
     "allow-net-cancel",
     "allow-net-fetch",
+    "allow-net-fetch-ack",
     "allow-net-socket-close",
     "allow-net-socket-open",
     "allow-net-socket-send-binary",

@@ -215,3 +215,62 @@ describe('tauri-fetch', () => {
     expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)).toHaveLength(0)
   })
 })
+
+it('acknowledges body consumption and pauses acknowledgements while the consumer stalls', async () => {
+  const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 7 })
+  const pending = createTauriFetch(fake.ipc)('https://example.com')
+  await tick()
+  fake.emit(head())
+  const response = await pending
+  fake.emit(bytes('first'))
+  fake.emit(bytes('second'))
+  await tick()
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH_ACK)).toHaveLength(1)
+  const reader = response.body!.getReader()
+  expect(new TextDecoder().decode((await reader.read()).value)).toBe('first')
+  await tick()
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH_ACK)).toHaveLength(2)
+  await reader.cancel()
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+})
+
+it('cancels an overflowing receive queue', async () => {
+  const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 7 })
+  const pending = createTauriFetch(fake.ipc)('https://example.com')
+  await tick()
+  fake.emit(head())
+  const response = await pending
+  fake.emit(new ArrayBuffer(1024 * 1024 + 1))
+  await expect(response.text()).rejects.toThrow('receive queue limit')
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+})
+
+it('marks explicit image requests without adding provider credentials', async () => {
+  const fake = createFakeNetIpc({
+    [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      setTimeout(() => emit(head(204)))
+      return 1
+    },
+  })
+  await createTauriFetch(
+    fake.ipc,
+    'chat-image'
+  )('https://example.com/image.png')
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)[0].args).toMatchObject({
+    request: { purpose: 'chat-image', headers: [] },
+  })
+})
+
+it('rejects malformed response headers and releases the remote request', async () => {
+  const fake = createFakeNetIpc({
+    [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      emit(head(200, [['invalid\nname', 'value']]))
+      return 1
+    },
+  })
+  await expect(
+    createTauriFetch(fake.ipc)('https://example.com')
+  ).rejects.toBeInstanceOf(TypeError)
+  await tick()
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+})

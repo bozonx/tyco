@@ -311,3 +311,21 @@ describe('tauri-socket', () => {
     expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
   })
 })
+
+it('releases a socket after the provider confirms the flushed results', async () => {
+  const fake = createFakeNetIpc({
+    [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      emit({ type: 'open' })
+      return 2
+    },
+  })
+  const session = await createTauriSocketOpener(fake.ipc)('ws://x/', {
+    signal: new AbortController().signal,
+  })
+  session.close('Done')
+  await tick()
+  fake.emit({ type: 'message', data: 'Done!' })
+  session.close()
+  expect(await collect(session.messages)).toEqual(['Done!'])
+  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+})

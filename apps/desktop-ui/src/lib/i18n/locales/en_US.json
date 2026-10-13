@@ -377,7 +377,8 @@
     "timeout": "The model took too long to answer",
     "unavailable": "The provider is not reachable",
     "unknown": "The AI request failed",
-    "imageUnsupported": "The provider rejected a request with images. Check vision support and model settings, or continue without images. Server details follow."
+    "imageUnsupported": "The provider rejected a request with images. Check vision support and model settings, or continue without images. Server details follow.",
+    "outputTruncated": "The answer reached its token limit. Increase the output limit or shorten the request."
   },
   "menu": {
     "actions": "Actions",

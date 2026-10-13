@@ -13,7 +13,7 @@ export const CONFIG_FILE_NAME = 'userConfig.yaml'
  * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
  * `src-tauri/src/services/config_migration.rs`
  */
-export const CONFIG_VERSION = 6
+export const CONFIG_VERSION = 7
 
 export type ModelTag =
   | 'voice'
@@ -62,6 +62,8 @@ export interface LlmModel {
   maxOutputTokens?: number
   contextWindowTokens?: number
   vision?: boolean
+  /** DeepSeek thinking mode, including migrated reasoning models. */
+  isThinkingEnabled?: boolean
 }
 
 export const LLM_TASKS = [
@@ -137,20 +139,25 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
       providerModelId: 'qwen2.5:7b',
       name: 'Qwen 2.5 7B',
       temperature: 0.2,
+      contextWindowTokens: 4096,
+      maxOutputTokens: 1024,
     },
     {
       id: 'gemini-flash',
       providerId: 'google',
-      providerModelId: 'gemini-2.5-flash',
-      name: 'Gemini 2.5 Flash',
-      temperature: 0.2,
+      providerModelId: 'gemini-3.8-flash',
+      name: 'Gemini 3.8 Flash',
+      temperature: 1,
+      contextWindowTokens: 128_000,
+      vision: true,
     },
     {
       id: 'deepseek-chat',
       providerId: 'deepseek',
-      providerModelId: 'deepseek-chat',
-      name: 'DeepSeek Chat',
+      providerModelId: 'deepseek-flash',
+      name: 'DeepSeek Flash',
       temperature: 0.2,
+      contextWindowTokens: 128_000,
     },
     {
       id: 'openrouter-gpt-4-1-mini',
@@ -158,6 +165,8 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
       providerModelId: 'openai/gpt-4.1-mini',
       name: 'GPT-4.1 mini',
       temperature: 0.2,
+      contextWindowTokens: 128_000,
+      vision: true,
     },
   ],
   tasks: {

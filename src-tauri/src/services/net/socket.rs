@@ -9,8 +9,8 @@ use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
 use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
 use tokio_tungstenite::tungstenite::protocol::CloseFrame;
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::tungstenite::{protocol::WebSocketConfig, Message};
+use tokio_tungstenite::{connect_async_with_config, MaybeTlsStream, WebSocketStream};
 
 use super::request::PreparedRequest;
 use super::EventSink;
@@ -20,7 +20,7 @@ pub type Socket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(20);
 /// How long a server gets to flush and close after an end-of-stream message,
 /// the same grace `@bozonx/ai-kit` gives its own sockets.
-const CLOSE_GRACE: Duration = Duration::from_secs(5);
+const CLOSE_GRACE: Duration = Duration::from_secs(10);
 const WRITE_TIMEOUT: Duration = Duration::from_secs(20);
 pub const SOCKET_QUEUE_CAPACITY: usize = 32;
 pub const MAX_FRAME_BYTES: usize = 256 * 1024;
@@ -77,7 +77,17 @@ pub async fn connect(prepared: &PreparedRequest, protocols: &[String]) -> Result
         headers.insert("sec-websocket-protocol", value);
     }
 
-    match tokio::time::timeout(HANDSHAKE_TIMEOUT, connect_async(request)).await {
+    let config = WebSocketConfig {
+        max_message_size: Some(MAX_FRAME_BYTES),
+        max_frame_size: Some(MAX_FRAME_BYTES),
+        ..Default::default()
+    };
+    match tokio::time::timeout(
+        HANDSHAKE_TIMEOUT,
+        connect_async_with_config(request, Some(config), false),
+    )
+    .await
+    {
         Ok(Ok((socket, _))) => Ok(socket),
         Ok(Err(error)) => Err(error.to_string()),
         Err(_) => Err(String::from("WebSocket handshake timed out")),
@@ -98,6 +108,7 @@ async fn run_socket_with<S: EventSink>(
 ) {
     let (mut write, mut read) = socket.split();
     let mut closing_deadline: Option<Instant> = None;
+    let mut awaiting_results = false;
 
     loop {
         tokio::select! {
@@ -106,6 +117,7 @@ async fn run_socket_with<S: EventSink>(
                     Some(SocketCommand::Text(text)) => bounded_write(write.send(Message::Text(text)), write_timeout, closing_deadline).await,
                     Some(SocketCommand::Binary(bytes)) => bounded_write(write.send(Message::Binary(bytes)), write_timeout, closing_deadline).await,
                     Some(SocketCommand::Close(Some(payload))) => {
+                        awaiting_results = true;
                         closing_deadline = Some(Instant::now() + CLOSE_GRACE);
                         bounded_write(write.send(Message::Text(payload)), write_timeout, closing_deadline).await
                     }
@@ -151,7 +163,7 @@ async fn run_socket_with<S: EventSink>(
                     Some(Ok(_)) => {}
                     // We asked to close; a server that drops the connection
                     // instead of answering has still closed it.
-                    Some(Err(_)) | None if closing_deadline.is_some() => {
+                    Some(Err(_)) | None if closing_deadline.is_some() && !awaiting_results => {
                         sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
                         return;
                     }
@@ -169,7 +181,11 @@ async fn run_socket_with<S: EventSink>(
                 }
             }
             _ = sleep_until(closing_deadline.unwrap_or_else(Instant::now)), if closing_deadline.is_some() => {
-                sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                if awaiting_results {
+                    sink.event(&SocketEvent::Error { message: "Timed out waiting for the final speech recognition result".into() });
+                } else {
+                    sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                }
                 return;
             }
         }
@@ -371,6 +387,43 @@ mod tests {
                 serde_json::json!({ "type": "close", "code": 1005, "reason": "" }),
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn a_disconnect_after_end_of_audio_is_not_a_successful_flush() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            while let Some(Ok(message)) = socket.next().await {
+                if matches!(message, Message::Text(_)) {
+                    break;
+                }
+            }
+        });
+        let prepared = prepare(
+            Protocol::WebSocket,
+            &format!("ws://{address}"),
+            &[],
+            &Secrets::new(),
+        )
+        .unwrap();
+        let socket = connect(&prepared, &[]).await.unwrap();
+        let (sender, receiver) = mpsc::channel(SOCKET_QUEUE_CAPACITY);
+        sender
+            .try_send(SocketCommand::Close(Some("end-of-stream".into())))
+            .unwrap();
+        let sink = RecordingSink::default();
+        run_socket(socket, receiver, &sink).await;
+        server.await.unwrap();
+        let events = sink.0.lock().unwrap();
+        assert!(!events
+            .iter()
+            .any(|event| event["type"] == "close" && event["code"] == 1000));
+        assert!(events
+            .iter()
+            .any(|event| event["type"] == "error" || event["code"] == 1006));
     }
 
     #[tokio::test]

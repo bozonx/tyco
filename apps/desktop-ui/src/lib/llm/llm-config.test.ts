@@ -14,6 +14,12 @@ import {
 const clone = (config: LlmConfig): LlmConfig => structuredClone(config)
 
 describe('llm-config', () => {
+  it('preserves a migrated reasoning mode', () => {
+    const config = structuredClone(DEFAULT_LLM_CONFIG)
+    config.models[0].isThinkingEnabled = true
+    expect(normalizeLlmConfig(config).models[0].isThinkingEnabled).toBe(true)
+  })
+
   it('keeps the default config as it is', () => {
     expect(normalizeLlmConfig(DEFAULT_LLM_CONFIG)).toEqual(DEFAULT_LLM_CONFIG)
   })
