@@ -19,12 +19,12 @@ import type {
   InputRect,
   InstalledPluginPackage,
   JobCompletion,
-  LocalState,
   PluginPackagePreview,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
   SelectionFinishStatus,
+  SessionState,
   SocketRequest,
   StatusOverlayRequest,
   StorageInfo,
@@ -84,7 +84,7 @@ export const DESKTOP_COMMANDS = {
   OPEN_MAIN_EDITOR: 'open_main_editor',
   OPEN_STORAGE_LOCATION: 'open_storage_location',
   PASTE_INTO_TARGET_AND_HIDE: 'paste_into_target_and_hide',
-  PATCH_LOCAL_STATE: 'patch_local_state',
+  PATCH_SESSION_STATE: 'patch_session_state',
   PICK_DIRECTORY: 'pick_directory',
   PICK_SCRIPT_FILE: 'pick_script_file',
   READ_CHAT_FILE: 'read_chat_file',
@@ -229,8 +229,8 @@ export interface DesktopCommands {
     args: { activationId: number; text: string }
     result: void
   }
-  patch_local_state: {
-    args: { patch: Partial<LocalState> }
+  patch_session_state: {
+    args: { patch: Partial<SessionState> }
     result: DesktopSnapshot
   }
   pick_directory: { args: undefined; result: string | null }

@@ -22,6 +22,24 @@ fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(app_data_sub_dir(app, "history")?.join(EDITOR_HISTORY_FILE))
 }
 
+fn remove_editor_history_files(path: &Path) -> Result<(), AppError> {
+    remove_file_if_exists(path)?;
+    if let Some(parent) = path.parent() {
+        let prefix = format!("{EDITOR_HISTORY_FILE}.broken-");
+        for entry in fs::read_dir(parent)? {
+            let entry = entry?;
+            if entry
+                .file_name()
+                .to_str()
+                .is_some_and(|name| name.starts_with(&prefix))
+            {
+                remove_file_if_exists(&entry.path())?;
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Entries without a date (the legacy format) get the time the file was last
 /// written: the latest they can be from, so that the retention period applies
 /// to them too.
@@ -78,7 +96,7 @@ impl EditorHistoryStore<'_> {
     /// An empty history leaves no file behind.
     fn write(&mut self, items: Vec<EditorHistoryRecord>) -> Result<(), AppError> {
         match self {
-            Self::File(path) if items.is_empty() => remove_file_if_exists(path),
+            Self::File(path) if items.is_empty() => remove_editor_history_files(path),
             Self::File(path) => write_jsonl(path, &items),
             Self::Memory(memory) => {
                 **memory = items;
@@ -235,7 +253,7 @@ pub fn clear_editor_history(
     memory: &mut Vec<EditorHistoryRecord>,
 ) -> Result<(), AppError> {
     memory.clear();
-    remove_file_if_exists(&editor_history_path(app)?)
+    remove_editor_history_files(&editor_history_path(app)?)
 }
 
 /// Applies the history settings to what is stored. At startup the
@@ -249,7 +267,7 @@ pub fn apply_history_settings_on_startup(
     let path = editor_history_path(app)?;
 
     if policy.memory_only {
-        remove_file_if_exists(&path)?;
+        remove_editor_history_files(&path)?;
     } else {
         enforce_editor_history_file(&path, &policy, now_ms())?;
     }
@@ -355,7 +373,7 @@ fn switch_editor_history_store(
         after.enforce(&mut items, now_ms);
 
         if after.memory_only {
-            remove_file_if_exists(path)?;
+            remove_editor_history_files(path)?;
             *memory = items;
             return Ok(());
         }

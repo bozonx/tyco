@@ -1,3 +1,5 @@
+> Historical design notes. The current configuration contract and registration ledger are documented in [config-storage.md](config-storage.md).
+
 # Команды, оверлей команд и голосовой ввод — дизайн-документ
 
 Статус: этапы 1 (библиотека команд), 2 (внешний вызов), 3 (оверлей команд с

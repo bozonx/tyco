@@ -175,7 +175,7 @@ describe('history-store', () => {
     expect(api.callFunction).not.toHaveBeenCalled()
   })
 
-  it('removes items from local state after delete commands', async () => {
+  it('removes items from session state after delete commands', async () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
@@ -237,7 +237,7 @@ describe('history-store', () => {
     expect(store.chatHistory.value).toEqual([])
   })
 
-  it('keeps local state when a destructive command fails', async () => {
+  it('keeps session state when a destructive command fails', async () => {
     const api = {
       callFunction: vi.fn(async () => ({
         success: false,

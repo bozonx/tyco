@@ -22,67 +22,13 @@ const LEGACY_USAGE_KEYS: [&str; 5] = [
     "chat",
 ];
 
+#[cfg(test)]
 const DEFAULT_MODEL_ID: &str = "local-qwen";
 const DEFAULT_LOCAL_PROVIDER_ID: &str = "local";
 
-/// Keep in sync with `DEFAULT_LLM_CONFIG` in `packages/shared/src/user-config.ts`.
+/// The portable provider and model defaults shared with the webview.
 pub fn default_llm_config() -> Value {
-    json!({
-      "providers": [
-        { "id": "google", "type": "google", "name": "Google Gemini" },
-        { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-        { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
-        {
-          "id": DEFAULT_LOCAL_PROVIDER_ID,
-          "type": "openai-compatible",
-          "name": "Ollama",
-          "baseUrl": "http://localhost:11434/v1"
-        }
-      ],
-      "models": [
-        {
-          "id": DEFAULT_MODEL_ID,
-          "providerId": DEFAULT_LOCAL_PROVIDER_ID,
-          "providerModelId": "qwen2.5:7b",
-          "name": "Qwen 2.5 7B",
-          "temperature": 0.2,
-          "contextWindowTokens": 4096,
-          "maxOutputTokens": 1024
-        },
-        {
-          "id": "gemini-flash",
-          "providerId": "google",
-          "providerModelId": "gemini-3.8-flash",
-          "name": "Gemini 3.8 Flash",
-          "temperature": 1,
-          "contextWindowTokens": 128_000,
-          "vision": true
-        },
-        {
-          "id": "deepseek-chat",
-          "providerId": "deepseek",
-          "providerModelId": "deepseek-flash",
-          "name": "DeepSeek Flash",
-          "temperature": 0.2,
-          "contextWindowTokens": 128_000
-        },
-        {
-          "id": "openrouter-gpt-4-1-mini",
-          "providerId": "openrouter",
-          "providerModelId": "openai/gpt-4.1-mini",
-          "name": "GPT-4.1 mini",
-          "temperature": 0.2,
-          "contextWindowTokens": 128_000,
-          "vision": true
-        }
-      ],
-      "tasks": {
-        "translate": [DEFAULT_MODEL_ID],
-        "voiceCorrection": [DEFAULT_MODEL_ID],
-        "correction": [DEFAULT_MODEL_ID],
-        "aiTasks": [DEFAULT_MODEL_ID]
-      }
-    })
+    crate::models::default_user_config()["llm"].clone()
 }
 
 /// A key found in a legacy model, to be stored as a secret.
@@ -138,10 +84,13 @@ pub fn migrate_llm_config(config: &mut Value) -> Option<Vec<MigratedSecret>> {
 /// secret store, which moves them into the system keychain once that opens.
 /// Changes nothing when a key cannot be stored: dropping it from the config
 /// first would lose it.
-pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
+pub fn migrate_user_config(
+    app: &AppHandle,
+    config: &mut Value,
+) -> Result<bool, crate::errors::AppError> {
     let mut migrated = config.clone();
     let Some(secrets) = migrate_llm_config(&mut migrated) else {
-        return false;
+        return Ok(false);
     };
 
     if !secrets.is_empty() {
@@ -150,14 +99,11 @@ pub fn migrate_user_config(app: &AppHandle, config: &mut Value) -> bool {
                 store.stage(&secret.id, &secret.value, Some(vec![secret.origin.clone()]))
             })
         });
-        if let Err(error) = stored {
-            log::error!("LLM config migration postponed, keys could not be stored: {error}");
-            return false;
-        }
+        stored?;
     }
 
     *config = migrated;
-    true
+    Ok(true)
 }
 
 fn take_legacy_usage(object: &mut Map<String, Value>) -> Map<String, Value> {

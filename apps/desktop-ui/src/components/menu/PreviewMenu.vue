@@ -67,7 +67,7 @@ const props = defineProps<PreviewMenuParams>()
 const ipcStore = useIpcStore()
 
 function readStoredTranslationMode(): ParallelViewMode {
-  const fromState = ipcStore.desktopState.localState?.translationViewMode
+  const fromState = ipcStore.desktopState.userConfig.translationViewMode
   if (fromState === 'split' || fromState === 'result') {
     return fromState
   }
@@ -87,7 +87,10 @@ const viewMode = ref<ParallelViewMode>(
 )
 
 watch(viewMode, (newMode) => {
-  void ipcStore.patchLocalState({ translationViewMode: newMode })
+  void ipcStore.saveUserConfig({
+    ...ipcStore.desktopState.userConfig,
+    translationViewMode: newMode,
+  })
 })
 
 function cycleMode() {

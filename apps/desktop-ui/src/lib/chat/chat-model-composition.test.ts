@@ -24,7 +24,7 @@ function fixture() {
     noModelError: () => 'No model',
     createId: () => 'new-id',
     nowIso: () => '2026-04-22T00:00:00.000Z',
-    saveLocalState: vi.fn(),
+    saveSessionState: vi.fn(),
     getLastChatId: () => null,
     getChatModel: () => ({ id: 'model', budgetCharacters: 1000 }),
   }
@@ -208,7 +208,7 @@ it('keeps the original session when branch persistence fails', async () => {
   expect(await session.branchChat(0)).toBe(false)
   expect(state.currentChatState.value.id).toBe('original')
   expect(state.messages.value).toEqual([{ role: 'user', content: 'Question' }])
-  expect(deps.saveLocalState).not.toHaveBeenCalled()
+  expect(deps.saveSessionState).not.toHaveBeenCalled()
   expect(deps.navigateTo).not.toHaveBeenCalled()
 })
 
@@ -231,7 +231,7 @@ it('does not replace a newer session after a branch finishes saving', async () =
   release(true)
   expect(await pending).toBe(false)
   expect(state.currentChatState.value.title).toBe('New session')
-  expect(deps.saveLocalState).not.toHaveBeenCalled()
+  expect(deps.saveSessionState).not.toHaveBeenCalled()
 })
 
 it('uses the injected localized title when saving a branch', async () => {
@@ -281,5 +281,5 @@ it('keeps a new turn sent while a branch is being saved', async () => {
   expect(await pending).toBe(false)
   expect(state.currentChatState.value.id).toBe('original')
   expect(state.messages.value.at(-1)?.content).toBe('New question')
-  expect(deps.saveLocalState).not.toHaveBeenCalled()
+  expect(deps.saveSessionState).not.toHaveBeenCalled()
 })

@@ -54,17 +54,17 @@ describe('vision model options', () => {
     const llm = config()
     let options = chatModelOptions(llm, () => true)
     expect(
-      options.filter((model) => model.vision).map((model) => model.id)
+      options.filter((model) => model.canUseImages).map((model) => model.id)
     ).toEqual(['gemini-flash', 'openrouter-gpt-4-1-mini'])
-    llm.models[0].vision = true
-    llm.models[1].vision = false
+    llm.models[0].canUseImages = true
+    llm.models[1].canUseImages = false
     options = chatModelOptions(llm, () => true)
-    expect(options.find((model) => model.id === 'local-qwen')?.vision).toBe(
-      true
-    )
-    expect(options.find((model) => model.id === 'gemini-flash')?.vision).toBe(
-      false
-    )
+    expect(
+      options.find((model) => model.id === 'local-qwen')?.canUseImages
+    ).toBe(true)
+    expect(
+      options.find((model) => model.id === 'gemini-flash')?.canUseImages
+    ).toBe(false)
   })
 })
 
@@ -86,7 +86,7 @@ it('subtracts assembled instructions and rules from the chat input budget', () =
     id: 'model',
     name: 'Model',
     providerLabel: 'Provider',
-    vision: false,
+    canUseImages: false,
     contextWindowTokens: 4096,
     maxOutputTokens: 3000,
   }

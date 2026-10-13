@@ -18,15 +18,10 @@ export function defaultCommandId(toolId: string, localId: string): string {
   return `default:${toolId}:${localId}`
 }
 
-/** Marks a tool whose default commands were added */
-export function defaultToolMarker(toolId: string): string {
-  return `default:${toolId}`
-}
-
 /** The parts of the config the seeding changes */
 export type SeededConfig = Pick<
   UserConfig,
-  'commands' | 'seededCommands' | 'mainActions' | 'mainActionRegistrations'
+  'commands' | 'registrationState' | 'mainActions'
 >
 
 function isToolEnabled(tool: RegisteredTool, userConfig: UserConfig) {
@@ -92,15 +87,17 @@ export function seedDefaultCommands(
   tools: readonly RegisteredTool[],
   t: DefaultCommandsContext['t']
 ): SeededConfig | null {
-  const seeded = new Set(userConfig.seededCommands ?? [])
+  const seeded = new Set(userConfig.registrationState?.seededCommandIds ?? [])
+  const seededTools = new Set(userConfig.registrationState?.seededToolIds ?? [])
   const commands = normalizeCommands(userConfig.commands)
   const slots = normalizeMainActions(userConfig.mainActions)
-  const registrations = [...(userConfig.mainActionRegistrations ?? [])]
+  const registrations = [
+    ...(userConfig.registrationState?.reviewedMainActionIds ?? []),
+  ]
   let changed = false
 
   for (const tool of tools) {
-    const marker = defaultToolMarker(tool.id)
-    if (!tool.defaultCommands || seeded.has(marker)) continue
+    if (!tool.defaultCommands || seededTools.has(tool.id)) continue
     if (!isToolEnabled(tool, userConfig)) continue
     for (const preset of tool.defaultCommands({ userConfig, t })) {
       const id = defaultCommandId(tool.id, preset.id)
@@ -110,16 +107,19 @@ export function seedDefaultCommands(
       commands.push(toCommand(tool, id, preset))
       if (preset.menu) placeInMenu(slots, id, preset.menu)
     }
-    seeded.add(marker)
+    seededTools.add(tool.id)
     changed = true
   }
 
   if (!changed) return null
   return {
     commands,
-    seededCommands: [...seeded],
+    registrationState: {
+      seededCommandIds: [...seeded],
+      seededToolIds: [...seededTools],
+      reviewedMainActionIds: registrations,
+    },
     mainActions: slots,
-    mainActionRegistrations: registrations,
   }
 }
 

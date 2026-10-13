@@ -6,7 +6,7 @@ import {
   type DesktopSnapshot,
   type DesktopViewState,
   type UserConfig,
-  type LocalState,
+  type SessionState,
 } from '@tyco/shared'
 import { ref } from 'vue'
 import type { DesktopInvoker } from './ipc-store'
@@ -24,7 +24,7 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
     structuredClone(DEFAULT_DESKTOP_VIEW_STATE)
   )
   let loaded = !deps.desktopClient.isAvailable()
-  let localStateWrites: Promise<unknown> = Promise.resolve()
+  let sessionStateWrites: Promise<unknown> = Promise.resolve()
 
   const applyViewState = (incoming: DesktopViewState) => {
     if (incoming.revision < desktopState.value.revision) return false
@@ -80,23 +80,25 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
     }
   }
 
-  const patchLocalState = (patch: Partial<LocalState>) => {
+  const patchSessionState = (patch: Partial<SessionState>) => {
     if (!loaded) return Promise.resolve(notLoaded())
     const queuedPatch = { ...patch }
     if (patch.recentAiPrompts)
       queuedPatch.recentAiPrompts = [...patch.recentAiPrompts]
     if (patch.recentTranslateLanguages)
       queuedPatch.recentTranslateLanguages = [...patch.recentTranslateLanguages]
-    const write = localStateWrites.then(async () => {
-      const response = await deps.callFunction('patchLocalState', [queuedPatch])
+    const write = sessionStateWrites.then(async () => {
+      const response = await deps.callFunction('patchSessionState', [
+        queuedPatch,
+      ])
       if (!response.success) return response
       applySnapshot(response.result)
       return {
         success: true as const,
-        result: response.result.settings.localState,
+        result: response.result.settings.sessionState,
       }
     })
-    localStateWrites = write.catch(() => undefined)
+    sessionStateWrites = write.catch(() => undefined)
     return write
   }
 
@@ -110,6 +112,6 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
     applyViewState,
     loadDesktopState,
     saveUserConfig,
-    patchLocalState,
+    patchSessionState,
   }
 }

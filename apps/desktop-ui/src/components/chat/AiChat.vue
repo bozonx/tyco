@@ -318,7 +318,7 @@ const streamHasContent = computed(() => {
 
 const modelMenuItems = computed<DropdownMenuItem[]>(() => [
   ...chatStore.modelOptions.map((option) => ({
-    label: `${option.name} · ${option.providerLabel}${option.vision ? ` · ${t('settings.vision')}` : ''}`,
+    label: `${option.name} · ${option.providerLabel}${option.canUseImages ? ` · ${t('settings.vision')}` : ''}`,
     icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
     action: () => chatStore.selectModel(option.id),
   })),

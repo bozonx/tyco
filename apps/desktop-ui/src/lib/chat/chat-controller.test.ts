@@ -11,7 +11,7 @@ function setup() {
     id: 'model',
     name: 'Model',
     providerLabel: 'local',
-    vision: true,
+    canUseImages: true,
     contextWindowTokens: 100_000,
   })
   const state = reactive({ label: 'main', externalSelection: '' })
@@ -43,13 +43,13 @@ function setup() {
     noModelError: () => 'No model',
     createId: () => `chat-${++id}`,
     nowIso: () => '2026-10-11T00:00:00.000Z',
-    saveLocalState: vi.fn(),
+    saveSessionState: vi.fn(),
     getLastChatId: () => null,
     getChatModel: () =>
       selectedModel.value
         ? {
             id: selectedModel.value.id,
-            vision: selectedModel.value.vision,
+            canUseImages: selectedModel.value.canUseImages,
             budgetCharacters: 100_000,
           }
         : null,
@@ -288,7 +288,7 @@ describe('chat controller', () => {
 
 it('uses the request budget for both the composer and history image eligibility', () => {
   const { deps, model, input, selectedModel } = setup()
-  selectedModel.value!.vision = false
+  selectedModel.value!.canUseImages = false
   model.messages.value = [
     {
       role: 'user',

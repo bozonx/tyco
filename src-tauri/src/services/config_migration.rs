@@ -4,9 +4,24 @@
 
 use serde_json::{json, Map, Value};
 
-/// The schema version this build writes. Keep in sync with `CONFIG_VERSION`
-/// in `packages/shared/src/user-config.ts`.
-pub const CONFIG_VERSION: u64 = 7;
+/// Both runtimes read the same portable schema version.
+pub const CONFIG_VERSION: u64 = shared_config_version();
+
+const fn shared_config_version() -> u64 {
+    let bytes = include_bytes!("../../../packages/shared/src/config-version.json");
+    let mut version = 0;
+    let mut index = 0;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if byte >= b'0' && byte <= b'9' {
+            version = version * 10 + (byte - b'0') as u64;
+        } else {
+            assert!(byte == b'\n' || byte == b'\r' || byte == b' ');
+        }
+        index += 1;
+    }
+    version
+}
 
 pub const CONFIG_VERSION_KEY: &str = "configVersion";
 
@@ -53,8 +68,81 @@ pub fn migrate(user_config: &mut Value) -> bool {
     if from < 7 {
         update_provider_models(user_config);
     }
+    if from < 8 {
+        modernize_config_fields(user_config);
+    }
     stamp_current_version(user_config);
     true
+}
+
+/// Version 8 isolates portable registration metadata and removes legacy aliases.
+fn modernize_config_fields(config: &mut Value) {
+    let Some(fields) = config.as_object_mut() else {
+        return;
+    };
+    if let Some(binary) = fields.remove("xdotoolBin") {
+        let insertion = fields.entry("windowInsertion").or_insert_with(|| json!({}));
+        if let Some(insertion) = insertion.as_object_mut() {
+            insertion.entry("xdotoolBin").or_insert(binary);
+        }
+    }
+    // The older LLM migration still consumes its own usage entries.
+    if let Some(usage) = fields.get("aiModelUsage") {
+        let stt = usage["stt"].clone();
+        if !stt.is_null() {
+            fields.entry("selectedSttModelId").or_insert(stt);
+        }
+    }
+    if let Some(models) = fields.get_mut("sttModels").and_then(Value::as_array_mut) {
+        for model in models.iter_mut().filter_map(Value::as_object_mut) {
+            if let Some(route) = model.remove("model") {
+                model.entry("providerModelId").or_insert(route);
+            }
+        }
+    }
+    if let Some(models) = fields
+        .get_mut("llm")
+        .and_then(|llm| llm.get_mut("models"))
+        .and_then(Value::as_array_mut)
+    {
+        for model in models.iter_mut().filter_map(Value::as_object_mut) {
+            if let Some(vision) = model.remove("vision") {
+                model.entry("canUseImages").or_insert(vision);
+            }
+        }
+    }
+    if let Some(tasks) = fields.get_mut("aiTasks").and_then(Value::as_array_mut) {
+        for task in tasks.iter_mut().filter_map(Value::as_object_mut) {
+            task.remove("tapAction");
+            task.remove("holdAction");
+        }
+    }
+    let reviewed = fields
+        .remove("mainActionRegistrations")
+        .unwrap_or_else(|| json!([]));
+    let legacy = fields.remove("seededCommands").unwrap_or_else(|| json!([]));
+    let mut command_ids = Vec::new();
+    let mut tool_ids = Vec::new();
+    for marker in legacy
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+    {
+        let Some(rest) = marker.strip_prefix("default:") else {
+            command_ids.push(json!(marker));
+            continue;
+        };
+        let is_command = rest.strip_prefix("mcp:").unwrap_or(rest).contains(':');
+        if is_command {
+            command_ids.push(json!(marker));
+        } else {
+            tool_ids.push(json!(rest));
+        }
+    }
+    fields.entry("registrationState").or_insert_with(|| json!({
+        "reviewedMainActionIds": reviewed, "seededCommandIds": command_ids, "seededToolIds": tool_ids
+    }));
 }
 
 /// Keeps model entry ids and task references stable while replacing retired routes.
@@ -98,8 +186,11 @@ pub fn update_provider_models(config: &mut Value) -> bool {
             if model["name"] == old_label {
                 model["name"] = json!(new_label);
             }
-            if provider_type == Some("google") && model.get("vision").is_none() {
-                model["vision"] = json!(true);
+            if provider_type == Some("google")
+                && model.get("canUseImages").is_none()
+                && model.get("vision").is_none()
+            {
+                model["canUseImages"] = json!(true);
             }
             changed = true;
         }
@@ -386,6 +477,26 @@ mod tests {
     }
 
     #[test]
+    fn version_eight_preserves_choices_and_splits_registration_identities() {
+        let mut config = json!({"configVersion":7,"xdotoolBin":"/legacy","windowInsertion":{"xdotoolBin":"/chosen"},
+            "sttModels":[{"id":"deepgram-stt","provider":"deepgram","model":"custom"}],"aiModelUsage":{"stt":"deepgram-stt"},
+            "llm":{"models":[{"id":"image","vision":false}]},"aiTasks":[{"id":"task","name":"Task","rule":"Custom","tapAction":"old","holdAction":"old"}],
+            "mainActionRegistrations":["Notes:create"],"seededCommands":["default:core.correct","default:core.correct:fix","default:mcp:server.tool","default:mcp:server.tool:run"]});
+        assert!(migrate(&mut config));
+        assert!(config.get("xdotoolBin").is_none());
+        assert_eq!(config["windowInsertion"]["xdotoolBin"], "/chosen");
+        assert_eq!(config["sttModels"][0]["providerModelId"], "custom");
+        assert_eq!(config["selectedSttModelId"], "deepgram-stt");
+        assert_eq!(config["llm"]["models"][0]["canUseImages"], false);
+        assert!(config["aiTasks"][0].get("tapAction").is_none());
+        assert_eq!(
+            config["registrationState"],
+            json!({"reviewedMainActionIds":["Notes:create"],"seededCommandIds":["default:core.correct:fix","default:mcp:server.tool:run"],"seededToolIds":["core.correct","mcp:server.tool"]})
+        );
+        assert!(!migrate(&mut config));
+    }
+
+    #[test]
     fn a_config_without_a_version_is_version_zero() {
         assert_eq!(config_version(&json!({})), 0);
         assert_eq!(config_version(&json!({ "configVersion": 3 })), 3);
@@ -574,7 +685,10 @@ mod tests {
     fn a_chat_limit_above_zero_is_dropped() {
         let mut config = json!({ "configVersion": 3, "chatHistoryMaxItems": 50 });
         assert!(migrate(&mut config));
-        assert_eq!(config, json!({ "configVersion": CONFIG_VERSION }));
+        assert_eq!(
+            config,
+            json!({ "configVersion": CONFIG_VERSION, "registrationState": { "reviewedMainActionIds": [], "seededCommandIds": [], "seededToolIds": [] } })
+        );
     }
 
     #[test]
@@ -673,7 +787,7 @@ mod tests {
         assert_eq!(config["llm"]["models"][0]["name"], "My model");
         assert_eq!(config["llm"]["models"][0]["temperature"], 0.7);
         assert_eq!(config["llm"]["models"][0]["maxOutputTokens"], 123);
-        assert_eq!(config["llm"]["models"][1]["vision"], false);
+        assert_eq!(config["llm"]["models"][1]["canUseImages"], false);
         assert_eq!(
             config["llm"]["models"][2]["providerModelId"],
             "deepseek-chat"

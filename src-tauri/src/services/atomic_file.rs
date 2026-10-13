@@ -1,4 +1,4 @@
-//! Durable writes of the files Tyco owns: the config, the state, the history
+//! Durable writes of the files Tyco owns: the config, the history
 //! and the secrets.
 
 use std::fs;
@@ -94,15 +94,55 @@ pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
 /// defaults, keeping the original for the user to recover. Returns where it
 /// went.
 pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
+    static NEXT_QUARANTINE: AtomicU64 = AtomicU64::new(0);
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
+        .map(|duration| duration.as_nanos())
         .unwrap_or_default();
-    let mut name = path.file_name().unwrap_or_default().to_os_string();
-    name.push(format!(".broken-{stamp}"));
-    let target = path.with_file_name(name);
-    fs::rename(path, &target)?;
+    let target = loop {
+        let mut name = path.file_name().unwrap_or_default().to_os_string();
+        name.push(format!(
+            ".broken-{stamp}-{}-{}",
+            std::process::id(),
+            NEXT_QUARANTINE.fetch_add(1, Ordering::Relaxed)
+        ));
+        let target = path.with_file_name(name);
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&target)
+        {
+            Ok(file) => {
+                drop(file);
+                break target;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(error.into()),
+        }
+    };
+    if let Err(error) = fs::rename(path, &target) {
+        let _ = fs::remove_file(&target);
+        return Err(error.into());
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o600))?;
+    }
     sync_parent(path)?;
+    Ok(target)
+}
+
+/// Keeps the exact damaged bytes before a salvage operation rewrites a file.
+/// The content digest avoids making another copy on every read.
+pub fn preserve_broken_copy(path: &Path, raw: &[u8]) -> Result<PathBuf, AppError> {
+    use sha2::{Digest, Sha256};
+    let mut name = path.file_name().unwrap_or_default().to_os_string();
+    name.push(format!(".broken-{:x}", Sha256::digest(raw)));
+    let target = path.with_file_name(name);
+    if !target.exists() {
+        write_private_bytes(&target, raw)?;
+    }
     Ok(target)
 }
 

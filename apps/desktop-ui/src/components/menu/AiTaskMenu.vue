@@ -145,7 +145,7 @@ onMounted(() => {
 })
 
 const recentPrompts = computed(
-  () => ipcStore.desktopState.localState?.recentAiPrompts ?? []
+  () => ipcStore.desktopState.sessionState?.recentAiPrompts ?? []
 )
 
 const recentOptions = computed<QueryPanelOption[]>(() =>
@@ -184,7 +184,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
 ])
 
 const rememberPrompt = (value: string) => {
-  void ipcStore.patchLocalState({
+  void ipcStore.patchSessionState({
     recentAiPrompts: pushRecent(recentPrompts.value, value),
   })
 }

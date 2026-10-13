@@ -77,13 +77,15 @@ describe('seedDefaultCommands', () => {
       enabled: true,
     })
     expect(seeded.commands[2].toolConfig).toEqual({ saveMode: 'append' })
-    expect(seeded.seededCommands).toEqual([
-      'default:core.correct:fix',
-      'default:core.correct',
-      'default:Notes.write:note',
-      'default:Notes.write:daily',
-      'default:Notes.write',
-    ])
+    expect(seeded.registrationState).toEqual({
+      reviewedMainActionIds: [],
+      seededCommandIds: [
+        'default:core.correct:fix',
+        'default:Notes.write:note',
+        'default:Notes.write:daily',
+      ],
+      seededToolIds: ['core.correct', 'Notes.write'],
+    })
     expect(
       seedDefaultCommands({ ...config(), ...seeded }, registry(noteTool), t)
     ).toBeNull()
@@ -91,21 +93,33 @@ describe('seedDefaultCommands', () => {
 
   it('does not bring back a deleted default command', () => {
     const userConfig = config({
-      seededCommands: ['default:core.correct:fix', 'default:core.correct'],
+      registrationState: {
+        reviewedMainActionIds: [],
+        seededCommandIds: ['default:core.correct:fix'],
+        seededToolIds: ['core.correct'],
+      },
     })
     expect(seedDefaultCommands(userConfig, registry(), t)).toBeNull()
   })
 
   it('seeds no command a tool adds after its first seeding', () => {
     const userConfig = config({
-      seededCommands: ['default:core.correct', 'default:Notes.write'],
+      registrationState: {
+        reviewedMainActionIds: [],
+        seededCommandIds: [],
+        seededToolIds: ['core.correct', 'Notes.write'],
+      },
     })
     expect(seedDefaultCommands(userConfig, registry(noteTool), t)).toBeNull()
   })
 
   it('waits for a disabled plugin to be enabled', () => {
     const userConfig = config({
-      seededCommands: ['default:core.correct'],
+      registrationState: {
+        reviewedMainActionIds: [],
+        seededCommandIds: [],
+        seededToolIds: ['core.correct'],
+      },
       plugins: { Notes: { enabled: false } },
     })
     expect(seedDefaultCommands(userConfig, registry(noteTool), t)).toBeNull()
@@ -127,7 +141,11 @@ describe('seedDefaultCommands', () => {
   it('uses preferred free slots without replacing existing menu items', () => {
     const seeded = seedDefaultCommands(
       config({
-        seededCommands: ['default:core.correct'],
+        registrationState: {
+          reviewedMainActionIds: [],
+          seededCommandIds: [],
+          seededToolIds: ['core.correct'],
+        },
         mainActions: [{ type: 'standard', actionId: 'insertIntoWindow' }],
       }),
       registry(noteTool),
@@ -162,7 +180,11 @@ describe('createDefaultCommandsSync', () => {
     expect(saveUserConfig).toHaveBeenCalledWith(
       expect.objectContaining({
         theme: 'dark',
-        seededCommands: ['default:core.correct:fix', 'default:core.correct'],
+        registrationState: {
+          reviewedMainActionIds: [],
+          seededCommandIds: ['default:core.correct:fix'],
+          seededToolIds: ['core.correct'],
+        },
       }),
       saved
     )
@@ -174,7 +196,15 @@ describe('createDefaultCommandsSync', () => {
       () =>
         new Promise<UserConfig>((resolve) => {
           release = () =>
-            resolve(config({ seededCommands: ['default:core.correct'] }))
+            resolve(
+              config({
+                registrationState: {
+                  reviewedMainActionIds: [],
+                  seededCommandIds: [],
+                  seededToolIds: ['core.correct'],
+                },
+              })
+            )
         })
     )
     const sync = createDefaultCommandsSync({

@@ -11,7 +11,7 @@ use commands::actions::{
 use commands::app::{
     activate_mode, apply_hotkey, configure_hotkeys, get_desktop_state, get_hotkey_provider_info,
     get_storage_info, get_user_config, mark_activation_metric, open_main_chat, open_main_editor,
-    open_storage_location, patch_local_state, rebind_hotkeys, save_user_config,
+    open_storage_location, patch_session_state, rebind_hotkeys, save_user_config,
     submit_activation_metric_value, suspend_hotkeys,
 };
 use commands::history::{
@@ -225,10 +225,10 @@ pub fn run() {
             {
                 log::error!("Could not apply the history settings: {error}");
             }
-            let local_state = crate::models::LocalState::default();
+            let session_state = crate::models::SessionState::default();
             app.manage(AppState::new(default_desktop_state(
                 user_config,
-                local_state,
+                session_state,
             )));
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             // reaching the system store may wait for an unlock prompt, which
@@ -290,7 +290,7 @@ pub fn run() {
             mark_activation_metric,
             submit_activation_metric_value,
             save_user_config,
-            patch_local_state,
+            patch_session_state,
             hide_window,
             dismiss_quick_window,
             set_quick_input_region,

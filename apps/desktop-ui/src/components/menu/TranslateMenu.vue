@@ -157,7 +157,7 @@ const closePicker = () => {
 }
 
 const recentLanguages = computed(
-  () => ipcStore.desktopState.localState?.recentTranslateLanguages ?? []
+  () => ipcStore.desktopState.sessionState?.recentTranslateLanguages ?? []
 )
 
 const ALL_LANGUAGES = buildLanguageOptions([], false).map((option) => option.id)
@@ -266,7 +266,7 @@ async function submitLanguage({ option }: QueryPanelSubmit) {
     return
   }
 
-  void ipcStore.patchLocalState({
+  void ipcStore.patchSessionState({
     recentTranslateLanguages: pushRecent(recentLanguages.value, option.id),
   })
   await translate(

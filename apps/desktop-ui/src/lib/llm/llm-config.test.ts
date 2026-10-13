@@ -91,13 +91,7 @@ describe('llm-config', () => {
     })
 
     expect(config.models).toEqual([
-      {
-        id: 'a',
-        providerId: 'google',
-        providerModelId: 'gemini',
-        temperature: 0.5,
-        maxOutputTokens: 1000,
-      },
+      { id: 'a', providerId: 'google', providerModelId: 'gemini' },
       { id: 'c', providerId: 'deepseek', providerModelId: '' },
     ])
   })

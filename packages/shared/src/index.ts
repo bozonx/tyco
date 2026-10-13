@@ -8,3 +8,5 @@ export * from './user-config'
 export * from './plugin-packages'
 export * from './desktop-commands'
 export * from './desktop-transport'
+
+export * from './config-schema'

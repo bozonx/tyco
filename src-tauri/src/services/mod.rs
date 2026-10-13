@@ -7,6 +7,7 @@ pub mod atomic_file;
 pub mod chat_images;
 pub mod clipboard;
 pub mod config_migration;
+pub mod config_schema;
 pub mod config_update;
 pub mod custom_actions;
 #[cfg(target_os = "linux")]
@@ -26,6 +27,7 @@ pub mod runtime;
 pub mod secret_detector;
 pub mod secrets;
 pub mod selection_replace;
+pub mod session_state;
 pub mod signals;
 pub mod status_overlay;
 pub mod storage;

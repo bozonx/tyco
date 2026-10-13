@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::Instant;
 const MAX_LOGGED_OUTPUT_BYTES: usize = 4 << 10;
 const MAX_LOG_FILE_BYTES: u64 = 5 << 20;
@@ -40,15 +41,33 @@ pub fn action_log_path(log_dir: &Path) -> PathBuf {
 
 /// Appends to `actions.log`, moving a full one to `actions.log.1` first.
 pub fn append_action_log(log_dir: &Path, entry: &str) -> std::io::Result<()> {
-    fs::create_dir_all(log_dir)?;
+    static LOG_WRITE_LOCK: Mutex<()> = Mutex::new(());
+    let _guard = LOG_WRITE_LOCK
+        .lock()
+        .map_err(|_| std::io::Error::other("Action log lock poisoned"))?;
+    crate::services::atomic_file::create_private_dir(log_dir)
+        .map_err(|error| std::io::Error::other(error.to_string()))?;
     let log_path = action_log_path(log_dir);
     if fs::metadata(&log_path).is_ok_and(|meta| meta.len() > MAX_LOG_FILE_BYTES) {
-        fs::rename(&log_path, log_dir.join(format!("{LOG_FILE_NAME}.1")))?;
+        let rotated = log_dir.join(format!("{LOG_FILE_NAME}.1"));
+        if rotated.exists() {
+            fs::remove_file(&rotated)?;
+        }
+        fs::rename(&log_path, rotated)?;
     }
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_path)?;
+    let mut options = OpenOptions::new();
+    options.create(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(&log_path)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        file.set_permissions(fs::Permissions::from_mode(0o600))?;
+    }
     file.write_all(entry.as_bytes())
 }
 

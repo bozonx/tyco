@@ -12,10 +12,8 @@
 //! `data` on Linux and in `state` on Windows, where Tauri would put it
 //! anyway; WKWebView on macOS has no such setting.
 //!
-//! State is what the app remembers between runs but the user would not back
-//! up: the last mode, the last chat. Tauri has no state directory, and puts
-//! the logs into the data directory on Linux, while the XDG base directory
-//! specification keeps both in `$XDG_STATE_HOME`.
+//! The state directory holds logs and platform webview state. `SessionState`
+//! lives only in memory; persistent preview preferences belong to the config.
 
 use std::path::{Path, PathBuf};
 

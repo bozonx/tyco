@@ -35,7 +35,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
   startCorrection: (text: string, extra?: CorrectionStepExtra) => Promise<void>
   minCorrectionLength?: () => number
-  mainActionRegistrations?: () => readonly string[] | undefined
+  reviewedMainActionIds?: () => readonly string[] | undefined
   openLauncherPage?: (page: number, text: string) => Promise<void>
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
   /** The command library the menu items of the `command` type refer to */
@@ -196,7 +196,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
 
   const resolveMainActions = (
     config: unknown = deps.mainActions?.(),
-    registrations = deps.mainActionRegistrations?.()
+    registrations = deps.reviewedMainActionIds?.()
   ) => assignPluginActions(config, registeredActionsMenu.value, registrations)
 
   const getShortcutActions = (): (ActionItem | undefined)[] => {

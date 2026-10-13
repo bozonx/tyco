@@ -37,7 +37,7 @@ DesktopSnapshot
   revision
   activation: activationId, target window, selection, mode, external request
   window: visibility, profile
-  settings: userConfig, localState, appConfig
+  settings: userConfig, sessionState, appConfig
 ```
 
 The revision advances under the state mutex for every update. Initial reads,

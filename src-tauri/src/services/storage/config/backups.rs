@@ -5,26 +5,39 @@ use super::super::{config_migration, fs, write_private, AppError, Path, Value, C
 /// what it no longer understands. The copy holds no API keys: the migration
 /// moves them into the system keychain, and a copy in the clear would undo
 /// that.
-pub(super) fn back_up_config_before_migration(path: &Path, version: u64, original: &Value) {
+pub(super) fn back_up_config_before_migration(
+    path: &Path,
+    version: u64,
+    original: &Value,
+) -> Result<(), AppError> {
     let backup = path.with_file_name(config_migration::backup_file_name(
         CONFIG_FILE_NAME,
         version,
     ));
     if backup.exists() {
-        return;
+        return Ok(());
     }
     let copied = serde_yaml::to_string(&without_api_keys(original))
         .map_err(AppError::from)
         .and_then(|raw| write_private(&backup, &raw));
-    match copied {
-        Ok(()) => log::info!(
-            "Migrating the config from version {version}; the previous one is kept in {}",
-            backup.display()
-        ),
-        Err(error) => {
-            log::error!("Could not keep a copy of the config before migrating it: {error}")
-        }
-    }
+    copied?;
+    log::info!(
+        "Migrating the config from version {version}; the previous one is kept in {}",
+        backup.display()
+    );
+    Ok(())
+}
+
+/// A recoverable snapshot before repairing a current-version file.
+pub(super) fn back_up_config_before_repair(path: &Path, original: &Value) -> Result<(), AppError> {
+    let stem = CONFIG_FILE_NAME
+        .rsplit_once('.')
+        .map_or(CONFIG_FILE_NAME, |(stem, _)| stem);
+    let backup = path.with_file_name(format!("{stem}.repaired.bak"));
+    write_private(
+        &backup,
+        &serde_yaml::to_string(&without_api_keys(original))?,
+    )
 }
 
 /// Takes the API keys out of the backups that earlier versions wrote with
@@ -43,7 +56,10 @@ pub(super) fn scrub_config_backups(path: &Path) {
         let is_backup = backup
             .file_name()
             .and_then(|name| name.to_str())
-            .is_some_and(|name| name.starts_with(&format!("{stem}.v")) && name.ends_with(".bak"));
+            .is_some_and(|name| {
+                (name.starts_with(&format!("{stem}.v")) || name == format!("{stem}.repaired.bak"))
+                    && name.ends_with(".bak")
+            });
         if !is_backup {
             continue;
         }
@@ -101,7 +117,7 @@ mod tests {
             "llmModels": [{ "baseUrl": "https://x.example", "apiKey": "sk-secret" }],
         });
 
-        back_up_config_before_migration(&path, 0, &legacy);
+        back_up_config_before_migration(&path, 0, &legacy).unwrap();
         let backup = dir.join(config_migration::backup_file_name(CONFIG_FILE_NAME, 0));
         let raw = fs::read_to_string(&backup).unwrap();
         assert!(!raw.contains("sk-secret"));

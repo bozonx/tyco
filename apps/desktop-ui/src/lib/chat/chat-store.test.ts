@@ -19,7 +19,7 @@ function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
     noModelError: () => 'No model',
     createId: vi.fn(() => 'chat-id-1'),
     nowIso: vi.fn(() => '2026-04-22T00:00:00.000Z'),
-    saveLocalState: vi.fn(),
+    saveSessionState: vi.fn(),
     getLastChatId: vi.fn(() => null),
     getChatModel: vi.fn(() => ({ id: 'model-1', budgetCharacters: 100_000 })),
     ...overrides,
@@ -316,7 +316,7 @@ describe('chat-store', () => {
 
     await expect(store.sendMessage('Hello')).resolves.toBe('Assistant reply')
     expect(store.messages.value.at(-1)?.content).toBe('Assistant reply')
-    expect(deps.saveLocalState).not.toHaveBeenCalled()
+    expect(deps.saveSessionState).not.toHaveBeenCalled()
     expect(deps.generateChatTitle).not.toHaveBeenCalled()
   })
 
@@ -509,7 +509,7 @@ describe('chat-store', () => {
         ]),
       })
     )
-    expect(deps.saveLocalState).toHaveBeenCalledWith({
+    expect(deps.saveSessionState).toHaveBeenCalledWith({
       lastChatId: 'branch-id-1',
     })
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
@@ -610,7 +610,7 @@ describe('image turns', () => {
       imageTitle: () => 'Image',
       getChatModel: () => ({
         id: 'vision',
-        vision: true,
+        canUseImages: true,
         budgetCharacters: 100_000,
       }),
     })
@@ -648,7 +648,7 @@ describe('image turns', () => {
     const deps = createDeps({
       getChatModel: () => ({
         id: 'small',
-        vision: true,
+        canUseImages: true,
         budgetCharacters: 1000,
       }),
     })
@@ -661,10 +661,14 @@ describe('image turns', () => {
 
 describe('image retry validation', () => {
   it('keeps the failed turn when the selected model no longer accepts images', async () => {
-    let vision = true
+    let canUseImages = true
     const deps = createDeps({
       sendChatMessage: vi.fn().mockRejectedValue(new Error('Offline')),
-      getChatModel: () => ({ id: 'model', vision, budgetCharacters: 100_000 }),
+      getChatModel: () => ({
+        id: 'model',
+        canUseImages,
+        budgetCharacters: 100_000,
+      }),
     })
     const store = createChatStoreModel(deps)
     const image = {
@@ -675,7 +679,7 @@ describe('image retry validation', () => {
       size: 3,
     }
     await store.sendMessage('', [], [image])
-    vision = false
+    canUseImages = false
     await store.retryLastTurn()
     expect(store.messages.value).toEqual([
       { role: 'user', content: '', images: [image] },
@@ -707,7 +711,7 @@ describe('file and image context policies', () => {
     const deps = createDeps({
       getChatModel: () => ({
         id: 'text',
-        vision: false,
+        canUseImages: false,
         budgetCharacters: 4000,
       }),
     })
@@ -753,7 +757,7 @@ describe('file and image context policies', () => {
     const deps = createDeps({
       getChatModel: () => ({
         id: 'vision',
-        vision: true,
+        canUseImages: true,
         budgetCharacters: 100_000,
       }),
       saveChat: () =>

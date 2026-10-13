@@ -38,7 +38,7 @@
     "allow-open-in-browser-and-hide",
     "allow-open-main-chat",
     "allow-open-main-editor",
-    "allow-patch-local-state",
+    "allow-patch-session-state",
     "allow-read-chat-file",
     "allow-release-chat-image-undo",
     "allow-delete-chat",

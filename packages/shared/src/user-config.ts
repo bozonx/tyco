@@ -1,19 +1,15 @@
-import {
-  type MarkdownSettings,
-  type MarkdownCleanSettings,
-  DEFAULT_MARKDOWN_SETTINGS,
-  DEFAULT_MARKDOWN_CLEAN_SETTINGS,
-} from './markdown'
+import configDefaults from './user-config-defaults.json'
+import configVersion from './config-version.json'
+import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
 export const CONFIG_FILE_NAME = 'userConfig.yaml'
 
 /**
  * The schema version of the user config; the backend migrates older configs and
- * leaves newer ones untouched. Keep in sync with `CONFIG_VERSION` in
- * `src-tauri/src/services/config_migration.rs`
+ * leaves newer ones untouched. Both runtimes read `config-version.json`
  */
-export const CONFIG_VERSION = 7
+export const CONFIG_VERSION = configVersion
 
 export type ModelTag =
   | 'voice'
@@ -61,7 +57,7 @@ export interface LlmModel {
   temperature?: number
   maxOutputTokens?: number
   contextWindowTokens?: number
-  vision?: boolean
+  canUseImages?: boolean
   /** DeepSeek thinking mode, including migrated reasoning models. */
   isThinkingEnabled?: boolean
 }
@@ -110,76 +106,16 @@ export interface TranslationConfig {
   correctionPrompt: string
 }
 
-export const DEFAULT_TRANSLATION_CONFIG: TranslationConfig = {
-  provider: 'llm',
-  qualityGate: 'off',
-  deeplEndpoint: 'free',
-  glossary: [],
-  correctionPrompt: '',
-}
+export const DEFAULT_TRANSLATION_CONFIG =
+  configDefaults.translation as TranslationConfig
 
 export const DEFAULT_LLM_MODEL_ID = 'local-qwen'
 
-export const DEFAULT_LLM_CONFIG: LlmConfig = {
-  providers: [
-    { id: 'google', type: 'google', name: 'Google Gemini' },
-    { id: 'openrouter', type: 'openrouter', name: 'OpenRouter' },
-    { id: 'deepseek', type: 'deepseek', name: 'DeepSeek' },
-    {
-      id: 'local',
-      type: 'openai-compatible',
-      name: 'Ollama',
-      baseUrl: 'http://localhost:11434/v1',
-    },
-  ],
-  models: [
-    {
-      id: DEFAULT_LLM_MODEL_ID,
-      providerId: 'local',
-      providerModelId: 'qwen2.5:7b',
-      name: 'Qwen 2.5 7B',
-      temperature: 0.2,
-      contextWindowTokens: 4096,
-      maxOutputTokens: 1024,
-    },
-    {
-      id: 'gemini-flash',
-      providerId: 'google',
-      providerModelId: 'gemini-3.8-flash',
-      name: 'Gemini 3.8 Flash',
-      temperature: 1,
-      contextWindowTokens: 128_000,
-      vision: true,
-    },
-    {
-      id: 'deepseek-chat',
-      providerId: 'deepseek',
-      providerModelId: 'deepseek-flash',
-      name: 'DeepSeek Flash',
-      temperature: 0.2,
-      contextWindowTokens: 128_000,
-    },
-    {
-      id: 'openrouter-gpt-4-1-mini',
-      providerId: 'openrouter',
-      providerModelId: 'openai/gpt-4.1-mini',
-      name: 'GPT-4.1 mini',
-      temperature: 0.2,
-      contextWindowTokens: 128_000,
-      vision: true,
-    },
-  ],
-  tasks: {
-    translate: [DEFAULT_LLM_MODEL_ID],
-    voiceCorrection: [DEFAULT_LLM_MODEL_ID],
-    correction: [DEFAULT_LLM_MODEL_ID],
-    aiTasks: [DEFAULT_LLM_MODEL_ID],
-  },
-}
+export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
 
 export interface SttModel {
   id: string
-  model: string
+  providerModelId: string
   provider: SttProvider
   description?: string
   formatWithLlm?: boolean
@@ -293,10 +229,12 @@ export interface WebhookToolConfig {
   headers?: Record<string, string>
   payloadTemplate?: string
   /**
-   * The Authorization header is kept in the secret store under
-   * `webhookSecretId(commandId)`, bound to the origin of the URL
+   * The Authorization header is kept in the secret store under `authSecretId`,
+   * bound to the origin of the URL
    */
   authSecret?: boolean
+  /** Opaque secret identity, independent of the command display name and id. */
+  authSecretId?: string
 }
 
 /**
@@ -371,7 +309,8 @@ export interface CommandConfig {
   enabled: boolean
 }
 
-export function webhookSecretId(commandId: string): string {
+/** Compatibility boundary for credentials written before config version 8. */
+export function legacyWebhookSecretId(commandId: string): string {
   return `webhook-${commandId.toLowerCase().replace(/[^a-z0-9._-]/g, '-')}`.slice(
     0,
     64
@@ -441,6 +380,12 @@ export interface ExternalAccess {
 
 export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = { selection: false }
 
+export interface ConfigRegistrationState {
+  reviewedMainActionIds: string[]
+  seededCommandIds: string[]
+  seededToolIds: string[]
+}
+
 export interface UserConfig {
   externalAccess?: ExternalAccess
   /** See `CONFIG_VERSION`; absent in configs older than version 1 */
@@ -460,7 +405,6 @@ export interface UserConfig {
   contrast: ContrastMode
   motion: MotionMode
   uiScale: UiScale
-  xdotoolBin: string
   windowInsertion: {
     method: 'xdotool' | 'ydotool'
     xdotoolBin: string
@@ -483,14 +427,10 @@ export interface UserConfig {
   launcherPagesWithoutText?: number[]
   /** The command library; the action menu refers to commands by id */
   commands: CommandConfig[]
-  /** Plugin actions whose initial shortcut assignment has been reviewed. */
-  mainActionRegistrations?: string[]
-  /**
-   * Default commands of the tools added to the library once, and the tools
-   * whose defaults were added (`default:<toolId>`); a deleted one is not added
-   * again
-   */
-  seededCommands?: string[]
+  /** Portable registration ledger; keeps deleted defaults from returning. */
+  registrationState?: ConfigRegistrationState
+  diffViewMode: 'unified' | 'split' | 'result'
+  translationViewMode: 'split' | 'result'
   editorHistoryStorage: EditorHistoryStorage
   editorHistoryMaxItems: number
   /** Kept on the disk only; 0 keeps the entries forever */
@@ -504,7 +444,7 @@ export interface UserConfig {
   chatHistoryRetentionDays: number
   llm: LlmConfig
   sttModels: SttModel[]
-  aiModelUsage: { stt: string }
+  selectedSttModelId: string
   aiRules: {
     chat: string
     correction: string
@@ -516,8 +456,6 @@ export interface UserConfig {
     id: string
     name: string
     rule: string
-    tapAction?: string
-    holdAction?: string
   } | null)[]
   markdown?: MarkdownSettings
   markdownClean?: MarkdownCleanSettings
@@ -525,84 +463,6 @@ export interface UserConfig {
 }
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
-  externalAccess: { ...DEFAULT_EXTERNAL_ACCESS },
+  ...configDefaults,
   configVersion: CONFIG_VERSION,
-  // the Linux defaults: the backend owns the defaults of each platform and
-  // reports them in `HotkeyProviderInfo.defaults`; an empty one is unassigned
-  hotkeys: {
-    editor: '',
-    write: '',
-    chat: '',
-    voiceChat: '',
-    voice: 'Ctrl+Alt+V',
-    select: 'Ctrl+Alt+S',
-    aiTasks: '',
-    commandLauncher: '',
-    commandLauncher2: '',
-    commandLauncher3: '',
-    commandLauncher4: '',
-    commandLauncher5: '',
-    correction: '',
-    translate: '',
-  },
-  selectionHotkeys: { correction: 'Ctrl+Alt+F' },
-  submitKey: DEFAULT_SUBMIT_KEY,
-  quickCorrectionPrefetch: false,
-  quickHideOnBlur: true,
-  theme: 'auto',
-  contrast: 'auto',
-  motion: 'auto',
-  uiScale: 100,
-  xdotoolBin: '/usr/bin/xdotool',
-  windowInsertion: {
-    method: 'xdotool',
-    xdotoolBin: '/usr/bin/xdotool',
-    ydotoolBin: '/usr/bin/ydotool',
-    pasteShortcut: 'ctrl+v',
-  },
-  appLanguage: 'auto',
-  userLanguage: 'auto',
-  toTranslateLanguages: ['en_US', 'ru_RU', 'es_AR', 'tr_TR'],
-  translation: DEFAULT_TRANSLATION_CONFIG,
-  mainActions: DEFAULT_MAIN_ACTIONS,
-  launcherCommands: Array.from({ length: 15 }, () => null),
-  commands: [],
-  editorHistoryStorage: 'disk',
-  editorHistoryMaxItems: 1000,
-  editorHistoryRetentionDays: 30,
-  sanitizeSecretsInEditorHistory: true,
-  chatImageQuality: 'balanced',
-  chatHistoryEnabled: true,
-  chatHistoryRetentionDays: 0,
-  llm: DEFAULT_LLM_CONFIG,
-  sttModels: [
-    {
-      id: 'deepgram-stt',
-      model: 'nova-3',
-      provider: 'deepgram',
-      description: 'Deepgram speech recognition',
-      formatWithLlm: false,
-      language: 'auto',
-    },
-    {
-      id: 'sherpa-onnx-stt',
-      model: 'sherpa-onnx',
-      provider: 'sherpa-onnx',
-      description: 'Self-hosted sherpa-onnx streaming server',
-      formatWithLlm: false,
-      baseUrl: 'ws://localhost:6006',
-    },
-  ],
-  aiModelUsage: { stt: 'deepgram-stt' },
-  aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
-  aiTasks: [
-    {
-      id: 'deepEdit',
-      name: 'deepEdit',
-      rule: 'Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.',
-    },
-  ],
-  markdown: DEFAULT_MARKDOWN_SETTINGS,
-  markdownClean: DEFAULT_MARKDOWN_CLEAN_SETTINGS,
-  plugins: {},
-}
+} as UserConfig

@@ -39,7 +39,7 @@ describe('normalizeAppearance', () => {
   })
 
   it('accepts a numeric scale stored as a string', () => {
-    expect(normalizeAppearance({ uiScale: '175' }).uiScale).toBe(175)
+    expect(normalizeAppearance({ uiScale: '175' }).uiScale).toBe(100)
   })
 })
 

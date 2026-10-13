@@ -184,8 +184,8 @@ watch(
       ([_, p]) => p === path
     )?.[0] as StartMode | undefined
     // every write goes to disk, and most navigation stays in one mode
-    if (mode && mode !== ipcStore.desktopState.localState.lastMode) {
-      void ipcStore.patchLocalState({ lastMode: mode })
+    if (mode && mode !== ipcStore.desktopState.sessionState.lastMode) {
+      void ipcStore.patchSessionState({ lastMode: mode })
     }
   }
 )

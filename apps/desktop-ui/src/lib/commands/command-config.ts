@@ -1,5 +1,6 @@
 import {
   CUSTOM_ACTION_AFTER_RUN,
+  legacyWebhookSecretId,
   type CommandConfig,
   type CommandLauncherAfterRun,
   type CustomActionAfterRun,
@@ -68,7 +69,10 @@ export function webhookToolConfigOf(
     method: config.method === 'GET' ? 'GET' : 'POST',
     headers: headersOf(config.headers),
     payloadTemplate: stringOr(config.payloadTemplate),
-    authSecret: Boolean(config.authSecret),
+    authSecret: config.authSecret === true,
+    ...(typeof config.authSecretId === 'string'
+      ? { authSecretId: config.authSecretId }
+      : {}),
   }
 }
 
@@ -117,6 +121,13 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     command.description = value.description
   }
   command.toolConfig = normalizeToolConfig(toolId, command)
+  // Old serialized commands retain their existing vault entry explicitly.
+  if (
+    toolId === 'webhook' &&
+    command.toolConfig.authSecret &&
+    !command.toolConfig.authSecretId
+  )
+    command.toolConfig.authSecretId = legacyWebhookSecretId(id)
   return command
 }
 

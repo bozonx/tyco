@@ -19,7 +19,7 @@ export enum StartMode {
   EXTERNAL_ACCESS = 'externalAccess',
 }
 
-export interface LocalState {
+export interface SessionState {
   lastChatId?: string | null
   lastMode?: StartMode | null
   /** The model the chat was last used with */
@@ -28,13 +28,9 @@ export interface LocalState {
   recentAiPrompts?: string[]
   /** Languages picked from the full list in the translate menu, newest first */
   recentTranslateLanguages?: string[]
-  /** Preferred diff view mode: unified | split | result */
-  diffMode?: 'unified' | 'split' | 'result' | null
-  /** Preferred translation view mode in preview menu: split | result */
-  translationViewMode?: 'split' | 'result' | null
 }
 
-export const DEFAULT_LOCAL_STATE: LocalState = { lastChatId: null }
+export const DEFAULT_SESSION_STATE: SessionState = { lastChatId: null }
 
 export interface DesktopActivationState {
   activationId: number
@@ -53,7 +49,7 @@ export interface DesktopWindowState {
 
 export interface DesktopSettingsState {
   userConfig: UserConfig
-  localState: LocalState
+  sessionState: SessionState
   appConfig: AppConfig
 }
 
@@ -70,7 +66,7 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   selectedText: null,
   mode: StartMode.EDITOR,
   userConfig: DEFAULT_USER_CONFIG,
-  localState: DEFAULT_LOCAL_STATE,
+  sessionState: DEFAULT_SESSION_STATE,
   appConfig: APP_CONFIG,
   isWindowShown: false,
   windowProfile: 'sheet',
@@ -108,7 +104,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     isWindowShown,
     windowProfile,
     userConfig,
-    localState,
+    sessionState,
     appConfig,
   } = view
   return {
@@ -123,6 +119,6 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       accessRequest,
     },
     window: { isWindowShown, windowProfile },
-    settings: { userConfig, localState, appConfig },
+    settings: { userConfig, sessionState, appConfig },
   }
 }

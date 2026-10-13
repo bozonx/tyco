@@ -1,10 +1,6 @@
 import { ref } from 'vue'
 
-import {
-  type CommandConfig,
-  type MainActionConfig,
-  webhookSecretId,
-} from '@tyco/shared'
+import { type CommandConfig, type MainActionConfig } from '@tyco/shared'
 
 import { webhookToolConfig } from './command-config'
 
@@ -21,6 +17,9 @@ export function createCommandRemovalModel(deps: {
   updateCommands: (commands: CommandConfig[]) => void
   updateMainActions: (actions: (MainActionConfig | null)[]) => void
   removeSecret: (id: string) => Promise<void>
+  persist: () => Promise<unknown>
+  isSaved: () => boolean
+  notifyError: (error: unknown) => void
 }) {
   const removed = ref<RemovedCommand | null>(null)
   function finishRemoval() {
@@ -28,10 +27,27 @@ export function createCommandRemovalModel(deps: {
     removed.value = null
     if (!entry) return
     const { command } = entry
-    if (command.toolId === 'webhook' && webhookToolConfig(command).authSecret) {
-      // The remaining token is origin-bound if deletion fails.
-      void deps.removeSecret(webhookSecretId(command.id)).catch(() => {})
+    if (command.toolId === 'webhook') {
+      void cleanup(command).catch(deps.notifyError)
     }
+  }
+  async function cleanup(command: CommandConfig) {
+    await deps.persist()
+    if (
+      !deps.isSaved() ||
+      deps.getCommands().some((item) => item.id === command.id)
+    )
+      return
+    const tool = webhookToolConfig(command)
+    const ids = new Set(
+      Object.values(tool.headers ?? {}).flatMap((value) =>
+        value.startsWith('tyco-secret:')
+          ? [value.slice('tyco-secret:'.length)]
+          : []
+      )
+    )
+    if (tool.authSecretId) ids.add(tool.authSecretId)
+    for (const id of ids) await deps.removeSecret(id)
   }
   function removeCommand(command: CommandConfig) {
     finishRemoval()

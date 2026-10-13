@@ -1,4 +1,4 @@
-use super::{ActivationSnapshot, DesktopSnapshot, LocalState, SettingsSnapshot, WindowSnapshot};
+use super::{ActivationSnapshot, DesktopSnapshot, SessionState, SettingsSnapshot, WindowSnapshot};
 use crate::services::{
     activation::{ActivationMode, WindowProfile},
     hotkeys,
@@ -6,96 +6,25 @@ use crate::services::{
 };
 use serde_json::{json, Value};
 
+/// Shared portable defaults, followed by platform-specific hotkeys and binaries.
 pub fn default_user_config() -> Value {
-    let xdotool_bin = default_binary_path("xdotool");
-    let ydotool_bin = default_binary_path("ydotool");
-    let insertion_method = if crate::services::platform::session::current().is_wayland() {
+    let mut config: Value = serde_json::from_str(include_str!(
+        "../../../packages/shared/src/user-config-defaults.json"
+    ))
+    .expect("valid shared user config defaults");
+    config["configVersion"] = json!(crate::services::config_migration::CONFIG_VERSION);
+    config["hotkeys"] = hotkeys::default_hotkeys_config();
+    config["selectionHotkeys"] = hotkeys::default_selection_hotkeys_config();
+    config["windowInsertion"]["xdotoolBin"] = json!(default_binary_path("xdotool"));
+    config["windowInsertion"]["ydotoolBin"] = json!(default_binary_path("ydotool"));
+    config["windowInsertion"]["method"] = json!(if crate::services::platform::session::current()
+        .is_wayland()
+    {
         "ydotool"
     } else {
         "xdotool"
-    };
-
-    json!({
-      "externalAccess": { "selection": false },
-      "configVersion": crate::services::config_migration::CONFIG_VERSION,
-      "hotkeys": hotkeys::default_hotkeys_config(),
-      "selectionHotkeys": hotkeys::default_selection_hotkeys_config(),
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
-      "theme": "auto",
-      "contrast": "auto",
-      "motion": "auto",
-      "uiScale": 100,
-      "xdotoolBin": xdotool_bin,
-      "windowInsertion": {
-        "method": insertion_method,
-        "xdotoolBin": xdotool_bin,
-        "ydotoolBin": ydotool_bin,
-        "pasteShortcut": "ctrl+v"
-      },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
-      "toTranslateLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
-      "translation": {
-        "provider": "llm",
-        "qualityGate": "off",
-        "deeplEndpoint": "free",
-        "glossary": [],
-        "correctionPrompt": ""
-      },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
-      ],
-      "commands": [],
-      "editorHistoryStorage": "disk",
-      "editorHistoryMaxItems": 1000,
-      "editorHistoryRetentionDays": 30,
-      "sanitizeSecretsInEditorHistory": true,
-      "chatHistoryEnabled": true,
-      "chatHistoryRetentionDays": 0,
-      "llm": crate::services::llm_config::default_llm_config(),
-      "sttModels": [
-        {
-          "id": "deepgram-stt",
-          "model": "nova-3",
-          "provider": "deepgram",
-          "description": "Deepgram speech recognition",
-          "formatWithLlm": false,
-          "language": "auto"
-        },
-        {
-          "id": "sherpa-onnx-stt",
-          "model": "sherpa-onnx",
-          "provider": "sherpa-onnx",
-          "description": "Self-hosted sherpa-onnx streaming server",
-          "formatWithLlm": false,
-          "baseUrl": "ws://localhost:6006"
-        }
-      ],
-      "aiModelUsage": {
-        "stt": "deepgram-stt"
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
-      },
-      "aiTasks": [
-        {
-          "id": "deepEdit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "plugins": {}
-    })
+    });
+    config
 }
 
 pub fn app_config() -> Value {
@@ -112,14 +41,14 @@ pub fn app_config() -> Value {
     })
 }
 
-pub fn default_desktop_state(user_config: Value, local_state: LocalState) -> DesktopSnapshot {
+pub fn default_desktop_state(user_config: Value, session_state: SessionState) -> DesktopSnapshot {
     DesktopSnapshot {
         revision: 0,
         activation: ActivationSnapshot {
             activation_id: 0,
             window_id: None,
             selected_text: None,
-            mode: local_state.last_mode.or(Some(ActivationMode::Editor)),
+            mode: session_state.last_mode.or(Some(ActivationMode::Editor)),
             launcher_page: 0,
             launcher_request: None,
             access_request: None,
@@ -130,7 +59,7 @@ pub fn default_desktop_state(user_config: Value, local_state: LocalState) -> Des
         },
         settings: SettingsSnapshot {
             user_config,
-            local_state,
+            session_state,
             app_config: app_config(),
         },
     }

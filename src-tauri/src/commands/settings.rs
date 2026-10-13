@@ -48,37 +48,52 @@ fn save_user_config_blocking(
     if config_migration::config_version(&user_config) == 0 {
         config_migration::stamp_current_version(&mut user_config);
     }
-    crate::services::webhook_secrets::protect_for_save(app, &mut user_config)?;
-    storage::save_user_config(app, &user_config)?;
+    crate::services::config_schema::validate_user_config(&user_config)?;
+    let pending_secrets =
+        crate::services::webhook_secrets::protect_for_save(app, &mut user_config)?;
     let previous_config = state.snapshot().settings.user_config;
+    if let Err(error) = storage::save_user_config(app, &user_config) {
+        // A parent-directory sync can fail after the rename has succeeded.
+        if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
+            pending_secrets.retain();
+            return Err(AppError::Message(format!(
+                "Could not save config: {error}; could not restore config: {rollback_error}"
+            )));
+        }
+        return Err(error);
+    }
     if let Err(error) = state
         .history
         .apply_settings(app, &previous_config, &user_config)
     {
         if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
+            pending_secrets.retain();
             return Err(AppError::Message(format!(
                 "Could not apply history settings: {error}; could not restore config: {rollback_error}"
             )));
         }
         return Err(error);
     }
+    pending_secrets.commit(&previous_config, &user_config);
     runtime::publish_state(app, &state);
 
     Ok(state.snapshot())
 }
 
 #[tauri::command]
-pub async fn patch_local_state(
+pub async fn patch_session_state(
     app: AppHandle,
     patch: serde_json::Map<String, Value>,
 ) -> Result<DesktopSnapshot, AppError> {
     blocking(move || {
         let state = app.state::<AppState>();
         let _guard = state.lock_config_storage();
-        let local_state =
-            storage::merge_local_state(&state.snapshot().settings.local_state, patch)?;
+        let session_state = crate::services::session_state::merge_session_state(
+            &state.snapshot().settings.session_state,
+            patch,
+        )?;
         state.update_state(|params| {
-            params.settings.local_state = local_state.clone();
+            params.settings.session_state = session_state.clone();
         });
         runtime::publish_state(&app, &state);
 

@@ -34,8 +34,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       // the result replaces the text in the editor as well
       correctionWorkflowStore.start(text, { toEditorVisible: true, ...extra }),
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
-    mainActionRegistrations: () =>
-      ipcStore.desktopState.userConfig.mainActionRegistrations,
+    reviewedMainActionIds: () =>
+      ipcStore.desktopState.userConfig.registrationState?.reviewedMainActionIds,
     openLauncherPage: async (page, text) => {
       await ipcStore.callFunction('activateMode', [
         `commandLauncher${page + 1}`,

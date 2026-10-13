@@ -217,7 +217,7 @@ describe('createActionMenuStoreModel', () => {
     const store = createActionMenuStoreModel({
       ...deps,
       mainActions: () => [null, { type: 'plugin', actionId: 'Notes:create' }],
-      mainActionRegistrations: () => ['Notes:create'],
+      reviewedMainActionIds: () => ['Notes:create'],
     })
     const action = { id: 'Notes:create', preferredKey: 'c', action: vi.fn() }
     store.registerActionsItems([action])

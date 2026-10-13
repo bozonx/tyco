@@ -101,10 +101,10 @@ describe('PreviewMenu', () => {
     expect(alert.classes()).toContain('is-warning')
   })
 
-  it('reads translation view mode preference from localState', async () => {
+  it('reads translation view mode preference from sessionState', async () => {
     const { useIpcStore } = await import('../../stores/ipc')
     const ipcStore = useIpcStore()
-    ipcStore.desktopState.localState = { translationViewMode: 'result' }
+    ipcStore.desktopState.userConfig.translationViewMode = 'result'
 
     const wrapper = mount(PreviewMenu, {
       props: { text: 'Translation text', sourceText: 'Original text' },

@@ -139,7 +139,7 @@ const actionsMenu = computed(() => {
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const diffMode = ref<DiffViewMode>(
-  resolveDiffMode(ipcStore.desktopState.localState?.diffMode)
+  resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)
 )
 
 /** Space was pressed while correcting: insert once the correction is in. */
@@ -155,7 +155,10 @@ const statusText = computed(() => {
 })
 
 watch(diffMode, (mode) => {
-  void ipcStore.patchLocalState({ diffMode: mode })
+  void ipcStore.saveUserConfig({
+    ...ipcStore.desktopState.userConfig,
+    diffViewMode: mode,
+  })
 })
 
 watch(

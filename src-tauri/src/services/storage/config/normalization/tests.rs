@@ -49,11 +49,11 @@ fn normalize_window_insertion_is_idempotent() {
 fn normalize_stt_keeps_one_model_per_known_provider_with_its_settings() {
     let mut config = json!({
         "sttModels": [
-            { "id": "assemblyai-stt", "provider": "assemblyai", "model": "universal-3-pro" },
+            { "id": "assemblyai-stt", "provider": "assemblyai", "providerModelId": "universal-3-pro" },
             {
                 "id": "deepgram-stt",
                 "provider": "deepgram",
-                "model": "nova-3-general",
+                "providerModelId": "nova-3-general",
                 "formatWithLlm": false
             },
             {
@@ -63,7 +63,7 @@ fn normalize_stt_keeps_one_model_per_known_provider_with_its_settings() {
                 "formatWithLlm": true
             }
         ],
-        "aiModelUsage": { "stt": "assemblyai-stt" }
+        "selectedSttModelId": "assemblyai-stt"
     });
 
     assert!(normalize_stt_config(&mut config));
@@ -73,7 +73,7 @@ fn normalize_stt_keeps_one_model_per_known_provider_with_its_settings() {
             {
                 "id": "deepgram-stt",
                 "provider": "deepgram",
-                "model": "nova-3-general",
+                "providerModelId": "nova-3-general",
                 "description": "Deepgram speech recognition",
                 "formatWithLlm": false,
                 "language": "auto"
@@ -81,23 +81,23 @@ fn normalize_stt_keeps_one_model_per_known_provider_with_its_settings() {
             {
                 "id": "sherpa-onnx-stt",
                 "provider": "sherpa-onnx",
-                "model": "sherpa-onnx",
+                "providerModelId": "sherpa-onnx",
                 "description": "Self-hosted sherpa-onnx streaming server",
                 "formatWithLlm": true,
                 "baseUrl": "ws://speech.lan:6006"
             }
         ])
     );
-    assert_eq!(config["aiModelUsage"], json!({ "stt": "deepgram-stt" }));
+    assert_eq!(config["selectedSttModelId"], json!("deepgram-stt"));
     assert!(!normalize_stt_config(&mut config));
 }
 
 #[test]
 fn normalize_stt_keeps_the_chosen_provider() {
-    let mut config = json!({ "aiModelUsage": { "stt": "sherpa-onnx-stt" } });
+    let mut config = json!({ "selectedSttModelId": "sherpa-onnx-stt"  });
 
     assert!(normalize_stt_config(&mut config));
-    assert_eq!(config["aiModelUsage"]["stt"], json!("sherpa-onnx-stt"));
+    assert_eq!(config["selectedSttModelId"], json!("sherpa-onnx-stt"));
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn normalize_stt_fills_a_missing_section() {
 
     assert!(normalize_stt_config(&mut config));
     assert_eq!(config["sttModels"], default_user_config()["sttModels"]);
-    assert_eq!(config["aiModelUsage"]["stt"], json!("deepgram-stt"));
+    assert_eq!(config["selectedSttModelId"], json!("deepgram-stt"));
     assert!(!normalize_stt_config(&mut config));
 }
 
@@ -161,6 +161,14 @@ fn normalize_hotkeys_migrates_quick_input_bindings_to_submit_key() {
     let mut invalid = json!({ "submitKey": "Ctrl+Enter" });
     assert!(normalize_hotkeys_config(&mut invalid));
     assert_eq!(invalid["submitKey"], json!("enter"));
+}
+
+#[test]
+fn appearance_choices_survive_restart_with_shared_enum_names() {
+    let mut config = json!({"theme":"e-ink","motion":"reduce","contrast":"more","uiScale":175});
+    assert!(!normalize_appearance_config(&mut config));
+    assert_eq!(config["theme"], "e-ink");
+    assert_eq!(config["motion"], "reduce");
 }
 
 #[test]

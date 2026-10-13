@@ -21,7 +21,7 @@
       </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
         <FieldInput
-          :value="currentSttModel.model || ''"
+          :value="currentSttModel.providerModelId || ''"
           placeholder="nova-3"
           @update:value="setSttModelName"
         />
@@ -108,7 +108,7 @@ const setSttServerUrl = (value: string) => {
 }
 
 const setSttModelName = (value: string) => {
-  currentSttModel.value.model = value
+  currentSttModel.value.providerModelId = value
 }
 
 const hasSttKey = computed(() =>

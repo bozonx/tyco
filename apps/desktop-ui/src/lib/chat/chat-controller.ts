@@ -99,7 +99,7 @@ export function createChatController(deps: ChatControllerDeps) {
   })
   const imageModelRequired = computed(
     () =>
-      !selectedModel.value?.vision &&
+      !selectedModel.value?.canUseImages &&
       (pendingImages.value.length > 0 || historyImagesRequired.value)
   )
   /** Runs in the main window; the quick window hands the text over to it */

@@ -30,7 +30,7 @@ loads the current config. New edits during a save are rebased onto its result.
 ## Backend and trust boundaries
 
 `commands/` adapts IPC to services. `services/platform/` owns OS/session APIs.
-`services/storage/` separates config migration and local state, editor history,
+`services/storage/` separates config migration and session state, editor history,
 chat history and shared file primitives; existing callers use its public facade.
 
 Activation policy lives in `services/activation_coordinator.rs`, with a supplied

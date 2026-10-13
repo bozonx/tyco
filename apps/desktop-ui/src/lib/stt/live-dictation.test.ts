@@ -10,7 +10,7 @@ import type { VoiceCaptureControl } from './voice-capture'
 const model = {
   id: 'deepgram-stt',
   provider: 'deepgram' as const,
-  model: 'nova-3',
+  providerModelId: 'nova-3',
 }
 
 /** A microphone whose audio ends when stopped, and a provider driven by hand */

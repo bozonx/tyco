@@ -6,7 +6,7 @@ import {
 
 export interface SttConfig {
   sttModels: SttModel[]
-  aiModelUsage: { stt: string }
+  selectedSttModelId: string
 }
 
 /**
@@ -30,7 +30,8 @@ export function normalizeSttConfig(value: unknown): SttConfig {
     )
     const model = { ...defaults }
     if (!own) return model
-    if (typeof own.model === 'string') model.model = own.model
+    if (typeof own.providerModelId === 'string')
+      model.providerModelId = own.providerModelId
     if (typeof own.description === 'string') model.description = own.description
     if (typeof own.language === 'string') model.language = own.language
     if (typeof own.baseUrl === 'string') model.baseUrl = own.baseUrl
@@ -38,21 +39,20 @@ export function normalizeSttConfig(value: unknown): SttConfig {
       model.formatWithLlm = own.formatWithLlm
     return model
   })
-  const usage = isRecord(config.aiModelUsage) ? config.aiModelUsage : {}
-  const active = usage.stt
+  const active = config.selectedSttModelId
   const first = sttModels[0]
   if (!first) throw new Error('No default speech model is configured')
   const stt =
     typeof active === 'string' && sttModels.some((model) => model.id === active)
       ? active
       : first.id
-  return { sttModels, aiModelUsage: { stt } }
+  return { sttModels, selectedSttModelId: stt }
 }
 
 /** The model dictation uses, by the provider chosen in the settings */
 export function activeSttModel(config: SttConfig): SttModel {
   const model =
-    config.sttModels.find((item) => item.id === config.aiModelUsage.stt) ??
+    config.sttModels.find((item) => item.id === config.selectedSttModelId) ??
     config.sttModels[0]
   if (!model) throw new Error('No speech model is configured')
   return model
@@ -70,6 +70,6 @@ export function selectSttProvider(
     if (formatWithLlm !== undefined) {
       model.formatWithLlm = formatWithLlm
     }
-    config.aiModelUsage.stt = model.id
+    config.selectedSttModelId = model.id
   }
 }

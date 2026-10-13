@@ -3,7 +3,7 @@ import { createDictationOwnership } from './dictation-ownership'
 import type { LiveDictationStart } from './live-dictation'
 
 const request: LiveDictationStart = {
-  model: { id: 'speech', provider: 'deepgram', model: 'nova-3' },
+  model: { id: 'speech', provider: 'deepgram', providerModelId: 'nova-3' },
   hasApiKey: true,
   onText: vi.fn(),
   onError: vi.fn(),

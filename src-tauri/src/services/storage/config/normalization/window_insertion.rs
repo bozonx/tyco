@@ -60,16 +60,11 @@ pub(in crate::services::storage::config) fn normalize_window_insertion_config(
         "ydotoolBin": ydotool_bin,
         "pasteShortcut": paste_shortcut,
     });
-    let needs_update = config.get("windowInsertion") != Some(&normalized)
-        || config.get("xdotoolBin").and_then(Value::as_str).is_none();
-
+    let needs_update =
+        config.get("windowInsertion") != Some(&normalized) || config.contains_key("xdotoolBin");
+    config.remove("xdotoolBin");
     if needs_update {
-        config.insert(
-            String::from("xdotoolBin"),
-            Value::String(xdotool_bin.to_owned()),
-        );
         config.insert(String::from("windowInsertion"), normalized);
     }
-
     needs_update
 }

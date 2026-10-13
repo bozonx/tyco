@@ -13,7 +13,7 @@ const camelCase = (value) =>
 /** @type {Record<string, string>} */
 const aliases = {
   DesktopSnapshot: 'DesktopSnapshot',
-  LocalState: 'LocalState',
+  SessionState: 'SessionState',
   StorageInfo: 'StorageInfo',
   StorageKind: 'StorageKind',
   Chat: 'Chat',
@@ -133,9 +133,9 @@ for (const file of (await readdir(directory))
         used.add('UserConfig')
         fieldType = 'UserConfig'
       }
-      if (name === 'patch_local_state' && key === 'patch') {
-        used.add('LocalState')
-        fieldType = 'Partial<LocalState>'
+      if (name === 'patch_session_state' && key === 'patch') {
+        used.add('SessionState')
+        fieldType = 'Partial<SessionState>'
       }
       const optional = /^(?:[\w:]+::)?Option</.test(rustType) ? '?' : ''
       fields.push(`${camelCase(key.trim())}${optional}: ${fieldType}`)

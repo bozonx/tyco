@@ -1,11 +1,11 @@
-import type { Chat, ChatMessage, LocalState } from '@tyco/shared'
+import type { Chat, ChatMessage, SessionState } from '@tyco/shared'
 import type { AppRoutePath } from '../navigation/routes'
 
 /** The model a chat request runs on */
 export interface ChatRequestModel {
   id: string
   /** How many characters the request may carry */
-  vision?: boolean
+  canUseImages?: boolean
   budgetCharacters: number
 }
 
@@ -46,7 +46,7 @@ export interface ChatStoreDeps {
   formatError?: (error: unknown) => string
   createId: () => string
   nowIso: () => string
-  saveLocalState: (state: Partial<LocalState>) => void | Promise<void>
+  saveSessionState: (state: Partial<SessionState>) => void | Promise<void>
   getLastChatId: () => string | null | undefined
   /** The model picked in the chat; null when none is available */
   getChatModel: () => ChatRequestModel | null

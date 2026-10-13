@@ -103,7 +103,10 @@ describe('app-bootstrap', () => {
         revision: 1,
         userConfig: {
           ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
-          xdotoolBin: '/custom/xdotool',
+          windowInsertion: {
+            ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.windowInsertion,
+            xdotoolBin: '/custom/xdotool',
+          },
         },
       })
     )

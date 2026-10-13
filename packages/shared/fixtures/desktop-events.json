@@ -24,14 +24,12 @@
     "window": { "isWindowShown": true, "windowProfile": "sheet" },
     "settings": {
       "userConfig": {},
-      "localState": {
+      "sessionState": {
         "lastChatId": null,
         "lastMode": null,
         "lastChatModelId": null,
         "recentAiPrompts": [],
-        "recentTranslateLanguages": [],
-        "diffMode": null,
-        "translationViewMode": null
+        "recentTranslateLanguages": []
       },
       "appConfig": {}
     }

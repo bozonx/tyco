@@ -11,7 +11,7 @@ describe('normalizeSttConfig', () => {
   it('fills a missing section with the defaults', () => {
     expect(normalizeSttConfig({})).toEqual({
       sttModels: DEFAULT_USER_CONFIG.sttModels,
-      aiModelUsage: { stt: 'deepgram-stt' },
+      selectedSttModelId: 'deepgram-stt',
     })
   })
 
@@ -19,25 +19,33 @@ describe('normalizeSttConfig', () => {
     const config = normalizeSttConfig({
       sttModels: [
         { id: 'assemblyai-stt', provider: 'assemblyai' },
-        { id: 'deepgram-stt', provider: 'deepgram', model: 'nova-3-general' },
+        {
+          id: 'deepgram-stt',
+          provider: 'deepgram',
+          providerModelId: 'nova-3-general',
+        },
         {
           id: 'custom',
           provider: 'sherpa-onnx',
           baseUrl: 'ws://speech.lan:6006',
         },
       ],
-      aiModelUsage: { stt: 'assemblyai-stt' },
+      selectedSttModelId: 'assemblyai-stt',
     })
 
     expect(config.sttModels).toMatchObject([
-      { id: 'deepgram-stt', provider: 'deepgram', model: 'nova-3-general' },
+      {
+        id: 'deepgram-stt',
+        provider: 'deepgram',
+        providerModelId: 'nova-3-general',
+      },
       {
         id: 'sherpa-onnx-stt',
         provider: 'sherpa-onnx',
         baseUrl: 'ws://speech.lan:6006',
       },
     ])
-    expect(config.aiModelUsage.stt).toBe('deepgram-stt')
+    expect(config.selectedSttModelId).toBe('deepgram-stt')
   })
 
   it('rejects invalid field types without losing valid provider settings', () => {
@@ -47,7 +55,7 @@ describe('normalizeSttConfig', () => {
         [],
         {
           provider: 'deepgram',
-          model: null,
+          providerModelId: null,
           description: 7,
           language: {},
           formatWithLlm: 'false',
@@ -59,15 +67,15 @@ describe('normalizeSttConfig', () => {
           formatWithLlm: true,
         },
       ],
-      aiModelUsage: { stt: ['deepgram-stt'] },
+      selectedSttModelId: ['deepgram-stt'],
     })
     expect(config.sttModels[0]).toEqual(DEFAULT_USER_CONFIG.sttModels[0])
     expect(config.sttModels[1]).toMatchObject({
       baseUrl: 'ws://speech.lan:6006',
       formatWithLlm: true,
     })
-    expect(config.aiModelUsage.stt).toBe('deepgram-stt')
-    expect(activeSttModel(config).model.trim()).toBe('nova-3')
+    expect(config.selectedSttModelId).toBe('deepgram-stt')
+    expect(activeSttModel(config).providerModelId.trim()).toBe('nova-3')
   })
 
   it.each([null, [], 'invalid', 42])(
@@ -78,9 +86,7 @@ describe('normalizeSttConfig', () => {
   )
 
   it('keeps the chosen provider', () => {
-    const config = normalizeSttConfig({
-      aiModelUsage: { stt: 'sherpa-onnx-stt' },
-    })
+    const config = normalizeSttConfig({ selectedSttModelId: 'sherpa-onnx-stt' })
 
     expect(activeSttModel(config).provider).toBe('sherpa-onnx')
   })
@@ -92,7 +98,7 @@ describe('selectSttProvider', () => {
 
     selectSttProvider(config, 'sherpa-onnx')
 
-    expect(config.aiModelUsage.stt).toBe('sherpa-onnx-stt')
+    expect(config.selectedSttModelId).toBe('sherpa-onnx-stt')
     expect(activeSttModel(config).baseUrl).toBe('ws://localhost:6006')
   })
 
@@ -102,7 +108,7 @@ describe('selectSttProvider', () => {
 
     selectSttProvider(config, 'sherpa-onnx')
 
-    expect(config.aiModelUsage.stt).toBe('sherpa-onnx-stt')
+    expect(config.selectedSttModelId).toBe('sherpa-onnx-stt')
     expect(activeSttModel(config).formatWithLlm).toBe(true)
   })
 })

@@ -1,9 +1,5 @@
 import type { FetchFunction } from '@bozonx/ai-kit'
-import {
-  ACTION_TEXT_PLACEHOLDER,
-  type WebhookToolConfig,
-  webhookSecretId,
-} from '@tyco/shared'
+import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
@@ -84,7 +80,9 @@ export function buildWebhookRequest(
     if (name.trim()) headers[name.trim().toLowerCase()] = value
   }
   if (target.authSecret) {
-    headers.authorization = secretRef(webhookSecretId(target.id))
+    if (!target.authSecretId)
+      throw new Error('Missing webhook authorization secret id')
+    headers.authorization = secretRef(target.authSecretId)
   }
 
   return { url, init: { method, headers, body } }

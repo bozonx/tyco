@@ -7,11 +7,15 @@ import type { LiveDictationStart } from './live-dictation'
 import { createLiveTranscriptState } from './live-transcript'
 
 function setup(
-  model: SttModel = { id: 'voice', provider: 'deepgram', model: 'nova-3' }
+  model: SttModel = {
+    id: 'voice',
+    provider: 'deepgram',
+    providerModelId: 'nova-3',
+  }
 ) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
   config.sttModels = [model]
-  config.aiModelUsage.stt = model.id
+  config.selectedSttModelId = model.id
   config.userLanguage = 'es_AR'
   const secrets: SecretsStatus = { deepgram: { origins: [], available: true } }
   const deps = {
@@ -61,7 +65,7 @@ describe('dictation controller', () => {
     )
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: { id: 'voice', provider: 'deepgram', model: 'nova-3' },
+        model: { id: 'voice', provider: 'deepgram', providerModelId: 'nova-3' },
         language: 'es',
         hasApiKey: true,
         onText: handlers.onText,
@@ -95,7 +99,7 @@ describe('dictation controller', () => {
     const { deps, handlers, controller } = setup({
       id: 'local',
       provider: 'sherpa-onnx',
-      model: 'sherpa-onnx',
+      providerModelId: 'sherpa-onnx',
       baseUrl: 'ws://speech.lan:6006',
       language: 'tr_TR',
     })
@@ -116,7 +120,7 @@ describe('dictation controller', () => {
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en' })
     )
-    config.aiModelUsage.stt = 'missing'
+    config.selectedSttModelId = 'missing'
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.modelNotFound'
     )
@@ -127,7 +131,7 @@ describe('dictation controller', () => {
     const { deps, handlers, controller } = setup({
       id: 'voice',
       provider: 'deepgram',
-      model: '',
+      providerModelId: '',
     })
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.sttModelIncomplete'

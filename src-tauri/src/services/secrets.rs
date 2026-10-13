@@ -188,6 +188,11 @@ impl SecretStore {
         self.open_locked(&mut state, true)
     }
 
+    /// Metadata only: inspecting ownership must not unlock the vault.
+    pub fn ids(&self) -> Vec<String> {
+        self.lock().stored.keys().cloned().collect()
+    }
+
     /// Which secrets exist, where each may be sent, and whether it can be
     /// used now. Never the values.
     pub fn status(&self) -> BTreeMap<String, SecretStatus> {

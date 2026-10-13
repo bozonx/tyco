@@ -72,11 +72,11 @@ describe('AiTaskMenu', () => {
 
   it('runs an own request on the text and remembers it', async () => {
     const ipcStore = useIpcStore()
-    const patchLocalState = vi
-      .spyOn(ipcStore, 'patchLocalState')
+    const patchSessionState = vi
+      .spyOn(ipcStore, 'patchSessionState')
       .mockResolvedValue({
         success: true,
-        result: ipcStore.desktopState.localState,
+        result: ipcStore.desktopState.sessionState,
       })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
@@ -108,7 +108,7 @@ describe('AiTaskMenu', () => {
         toolConfig: { prompt: 'Make it shorter' },
       })
     )
-    expect(patchLocalState).toHaveBeenCalledWith({
+    expect(patchSessionState).toHaveBeenCalledWith({
       recentAiPrompts: ['Make it shorter'],
     })
   })

@@ -4,8 +4,6 @@ export interface AiTaskConfig {
   id: string
   name: string
   rule: string
-  tapAction?: string
-  holdAction?: string
 }
 
 export type AiTaskSlots = readonly (AiTaskConfig | null)[]

@@ -11,7 +11,7 @@ export function createChatSessionModel(
   deps: Pick<
     ChatStoreDeps,
     | 'createId'
-    | 'saveLocalState'
+    | 'saveSessionState'
     | 'navigateTo'
     | 'loadChat'
     | 'notifyError'
@@ -79,7 +79,7 @@ export function createChatSessionModel(
       return false
     reset(params)
     messages.value = slice
-    await deps.saveLocalState({ lastChatId: id })
+    await deps.saveSessionState({ lastChatId: id })
     await deps.navigateTo(APP_ROUTES.CHAT.path)
     return true
   }
@@ -153,7 +153,7 @@ export function createChatSessionModel(
     stopGeneration()
     reset({ id: chat.id, title: chat.title, attachments: [] })
     messages.value = [...chat.messages]
-    await deps.saveLocalState({ lastChatId: chat.id })
+    await deps.saveSessionState({ lastChatId: chat.id })
     await deps.navigateTo(APP_ROUTES.CHAT.path)
     return true
   }

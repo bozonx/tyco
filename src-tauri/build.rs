@@ -52,7 +52,7 @@ fn main() {
             "open_main_chat",
             "open_main_editor",
             "open_storage_location",
-            "patch_local_state",
+            "patch_session_state",
             "pick_directory",
             "pick_script_file",
             "read_chat_file",

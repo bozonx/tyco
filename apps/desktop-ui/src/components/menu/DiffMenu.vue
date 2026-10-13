@@ -43,11 +43,14 @@ const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const diffMode = ref<DiffViewMode>(
-  resolveDiffMode(ipcStore.desktopState.localState?.diffMode)
+  resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)
 )
 
 watch(diffMode, (newMode) => {
-  void ipcStore.patchLocalState({ diffMode: newMode })
+  void ipcStore.saveUserConfig({
+    ...ipcStore.desktopState.userConfig,
+    diffViewMode: newMode,
+  })
 })
 
 function cycleMode() {

@@ -82,13 +82,13 @@ impl AppState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{default_desktop_state, LocalState};
+    use crate::models::{default_desktop_state, SessionState};
 
     #[test]
     fn snapshots_order_settings_and_activation_changes_with_the_same_revision() {
         let state = AppState::new(default_desktop_state(
             serde_json::json!({}),
-            LocalState::default(),
+            SessionState::default(),
         ));
         state.update_state(|snapshot| {
             snapshot.settings.user_config = serde_json::json!({ "theme": "dark" })
@@ -109,26 +109,34 @@ mod tests {
     #[test]
     fn session_preferences_do_not_survive_a_new_app_state() {
         let config = serde_json::json!({ "theme": "dark" });
-        let create_state =
-            || AppState::new(default_desktop_state(config.clone(), LocalState::default()));
+        let create_state = || {
+            AppState::new(default_desktop_state(
+                config.clone(),
+                SessionState::default(),
+            ))
+        };
         let state = create_state();
         state.update_state(|snapshot| {
-            snapshot.settings.local_state.last_chat_id = Some("chat".into());
-            snapshot.settings.local_state.recent_ai_prompts = vec!["Private prompt".into()];
+            snapshot.settings.session_state.last_chat_id = Some("chat".into());
+            snapshot.settings.session_state.recent_ai_prompts = vec!["Private prompt".into()];
         });
         assert_eq!(
             state
                 .snapshot()
                 .settings
-                .local_state
+                .session_state
                 .last_chat_id
                 .as_deref(),
             Some("chat")
         );
 
         let restarted = create_state().snapshot();
-        assert!(restarted.settings.local_state.last_chat_id.is_none());
-        assert!(restarted.settings.local_state.recent_ai_prompts.is_empty());
+        assert!(restarted.settings.session_state.last_chat_id.is_none());
+        assert!(restarted
+            .settings
+            .session_state
+            .recent_ai_prompts
+            .is_empty());
         assert_eq!(restarted.settings.user_config, config);
     }
 
@@ -136,7 +144,7 @@ mod tests {
     fn concurrent_updates_get_unique_coherent_revisions() {
         let state = AppState::new(default_desktop_state(
             serde_json::json!({}),
-            LocalState::default(),
+            SessionState::default(),
         ));
         let revisions = std::sync::Mutex::new(Vec::new());
         std::thread::scope(|scope| {

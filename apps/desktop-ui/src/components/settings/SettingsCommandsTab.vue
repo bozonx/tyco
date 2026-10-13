@@ -131,9 +131,11 @@ import {
 import { findExternalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
+import { clientLogger } from '../../lib/logger'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
+import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -292,6 +294,7 @@ function updateCommand(index: number, command: CommandConfig) {
   emit('update:commands', next)
 }
 
+const settingsSession = useSettingsSessionStore()
 const { removed, removeCommand, undoRemove, finishRemoval } =
   createCommandRemovalModel({
     getCommands: () => commands.value,
@@ -299,6 +302,12 @@ const { removed, removeCommand, undoRemove, finishRemoval } =
     updateCommands: (commands) => emit('update:commands', commands),
     updateMainActions: (actions) => emit('update:mainActions', actions),
     removeSecret: (id) => llmStore.removeSecret(id),
+    persist: settingsSession.persist,
+    isSaved: settingsSession.isSaved,
+    notifyError: (error) =>
+      clientLogger.error('Could not remove command secrets', {
+        error: String(error),
+      }),
   })
 const removedName = computed(
   () => removed.value?.command.name.trim() || t('commands.unnamed')

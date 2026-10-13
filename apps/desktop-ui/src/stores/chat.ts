@@ -42,7 +42,7 @@ export const useChatStore = defineStore('chat', () => {
   const { toast, toastText } = useToast()
   const { sendChatMessage, generateChatTitle } = useLlmActions()
   const ipcStore = useIpcStore()
-  const saveLocalState = ipcStore.patchLocalState
+  const saveSessionState = ipcStore.patchSessionState
   const llmStore = useLlmStore()
   const historyStore = useHistoryStore()
   const editorInputStore = useEditorInputStore()
@@ -58,7 +58,7 @@ export const useChatStore = defineStore('chat', () => {
   const selectedModel = computed(() =>
     pickChatModel(
       modelOptions.value,
-      ipcStore.desktopState.localState?.lastChatModelId
+      ipcStore.desktopState.sessionState?.lastChatModelId
     )
   )
 
@@ -117,15 +117,15 @@ export const useChatStore = defineStore('chat', () => {
     createId: () => createRuntimeId(),
     nowIso: () => new Date().toISOString(),
     // which chat to reopen is a convenience: a failure is only logged
-    saveLocalState: async (patch) => {
-      const result = await saveLocalState(patch)
+    saveSessionState: async (patch) => {
+      const result = await saveSessionState(patch)
       if (!result.success)
         clientLogger.warn(
           `Could not save the last chat: ${result.error}`,
           'chat'
         )
     },
-    getLastChatId: () => ipcStore.desktopState.localState?.lastChatId,
+    getLastChatId: () => ipcStore.desktopState.sessionState?.lastChatId,
     isHistoryEnabled: () =>
       isChatHistoryEnabled(ipcStore.desktopState.userConfig),
     getChatModel: () => {
@@ -133,7 +133,7 @@ export const useChatStore = defineStore('chat', () => {
       return picked
         ? {
             id: picked.id,
-            vision: picked.vision,
+            canUseImages: picked.canUseImages,
             budgetCharacters: requestBudgetCharacters(),
           }
         : null
@@ -196,7 +196,7 @@ export const useChatStore = defineStore('chat', () => {
     afterRender: nextTick,
     // the picked model is read back from the state: unsaved, it is not picked
     selectModel: async (id) => {
-      const result = await saveLocalState({ lastChatModelId: id })
+      const result = await saveSessionState({ lastChatModelId: id })
       if (!result.success)
         toastText(
           `${translate('toast.desktopCommandFailed')}: ${result.error ?? ''}`,

@@ -76,9 +76,9 @@ describe('desktop state revision ordering', () => {
       (await model.saveUserConfig(DEFAULT_DESKTOP_VIEW_STATE.userConfig))
         .success
     ).toBe(false)
-    expect((await model.patchLocalState({ lastChatId: 'chat' })).success).toBe(
-      false
-    )
+    expect(
+      (await model.patchSessionState({ lastChatId: 'chat' })).success
+    ).toBe(false)
     expect(callFunction).not.toHaveBeenCalled()
   })
 
@@ -91,7 +91,7 @@ describe('desktop state revision ordering', () => {
     })
     await expect(model.loadDesktopState()).rejects.toThrow('Unavailable')
     expect(reportFailure).toHaveBeenCalledOnce()
-    await model.patchLocalState({ lastChatId: 'chat' })
+    await model.patchSessionState({ lastChatId: 'chat' })
     expect(callFunction).not.toHaveBeenCalled()
   })
 
@@ -153,21 +153,21 @@ describe('desktop state revision ordering', () => {
     )
     callFunction.mockResolvedValueOnce(
       response(2, {
-        localState: { lastChatId: 'chat', recentAiPrompts: ['original'] },
+        sessionState: { lastChatId: 'chat', recentAiPrompts: ['original'] },
       })
     )
-    const first = model.patchLocalState({ lastChatId: 'chat' })
+    const first = model.patchSessionState({ lastChatId: 'chat' })
     const prompts = ['original']
-    const second = model.patchLocalState({ recentAiPrompts: prompts })
+    const second = model.patchSessionState({ recentAiPrompts: prompts })
     prompts.push('later')
     await Promise.resolve()
     expect(callFunction).toHaveBeenCalledTimes(1)
-    finish(response(1, { localState: { lastChatId: 'chat' } }))
+    finish(response(1, { sessionState: { lastChatId: 'chat' } }))
     await Promise.all([first, second])
-    expect(callFunction).toHaveBeenLastCalledWith('patchLocalState', [
+    expect(callFunction).toHaveBeenLastCalledWith('patchSessionState', [
       { recentAiPrompts: ['original'] },
     ])
-    expect(model.desktopState.value.localState).toEqual({
+    expect(model.desktopState.value.sessionState).toEqual({
       lastChatId: 'chat',
       recentAiPrompts: ['original'],
     })
@@ -183,12 +183,12 @@ describe('desktop state revision ordering', () => {
           finish = resolve
         })
     )
-    const pending = model.patchLocalState({ lastChatId: 'old' })
+    const pending = model.patchSessionState({ lastChatId: 'old' })
     await Promise.resolve()
-    model.applyViewState(view(3, { localState: { lastChatId: 'new' } }))
-    finish(response(2, { localState: { lastChatId: 'old' } }))
+    model.applyViewState(view(3, { sessionState: { lastChatId: 'new' } }))
+    finish(response(2, { sessionState: { lastChatId: 'old' } }))
     await pending
-    expect(model.desktopState.value.localState.lastChatId).toBe('new')
+    expect(model.desktopState.value.sessionState.lastChatId).toBe('new')
   })
 
   it('continues processing queued patches after failure', async () => {
@@ -196,13 +196,13 @@ describe('desktop state revision ordering', () => {
     await model.loadDesktopState()
     callFunction.mockResolvedValueOnce({ success: false, error: 'Disk error' })
     callFunction.mockResolvedValueOnce(
-      response(1, { localState: { lastChatId: 'saved' } })
+      response(1, { sessionState: { lastChatId: 'saved' } })
     )
     expect(
-      (await model.patchLocalState({ lastChatId: 'failed' })).success
+      (await model.patchSessionState({ lastChatId: 'failed' })).success
     ).toBe(false)
-    await model.patchLocalState({ lastChatId: 'saved' })
-    expect(model.desktopState.value.localState.lastChatId).toBe('saved')
+    await model.patchSessionState({ lastChatId: 'saved' })
+    expect(model.desktopState.value.sessionState.lastChatId).toBe('saved')
     expect(invoke).toHaveBeenCalledWith(DESKTOP_COMMANDS.GET_DESKTOP_STATE)
   })
 })

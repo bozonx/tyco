@@ -103,7 +103,7 @@ export function usableModels(config: LlmConfig) {
 /** Defaults only for the vision models shipped with the app. */
 export function supportsImages(model: LlmModel): boolean {
   return (
-    model.vision ??
+    model.canUseImages ??
     ((model.providerId === 'google' &&
       ['gemini-2.5-flash', 'gemini-3.8-flash'].includes(
         model.providerModelId

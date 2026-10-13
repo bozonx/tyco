@@ -33,7 +33,14 @@ pub(in crate::services::storage::config) fn normalize_stt_config(user_config: &m
                 .iter()
                 .find(|model| provider.is_some() && model.get("provider") == provider)
             {
-                model.extend((*own).clone());
+                for key in ["providerModelId", "description", "language", "baseUrl"] {
+                    if let Some(value) = own.get(key).filter(|value| value.is_string()) {
+                        model.insert(key.into(), value.clone());
+                    }
+                }
+                if let Some(value) = own.get("formatWithLlm").filter(|value| value.is_boolean()) {
+                    model.insert("formatWithLlm".into(), value.clone());
+                }
             }
             if let Some(id) = default_model.get("id") {
                 model.insert(String::from("id"), id.clone());
@@ -42,29 +49,24 @@ pub(in crate::services::storage::config) fn normalize_stt_config(user_config: &m
         })
         .collect();
 
-    let mut usage = config
-        .get("aiModelUsage")
-        .and_then(Value::as_object)
+    let mut active = config
+        .get("selectedSttModelId")
         .cloned()
-        .unwrap_or_default();
-    let active_is_known = usage
-        .get("stt")
-        .is_some_and(|active| models.iter().any(|model| model.get("id") == Some(active)));
-    if !active_is_known {
-        let first_id = models
+        .unwrap_or(Value::Null);
+    if !models.iter().any(|model| model.get("id") == Some(&active)) {
+        active = models
             .first()
             .and_then(|model| model.get("id"))
             .cloned()
             .unwrap_or(Value::Null);
-        usage.insert(String::from("stt"), first_id);
     }
     let models = Value::Array(models);
-    let usage = Value::Object(usage);
 
-    if config.get("sttModels") == Some(&models) && config.get("aiModelUsage") == Some(&usage) {
+    if config.get("sttModels") == Some(&models) && config.get("selectedSttModelId") == Some(&active)
+    {
         return false;
     }
     config.insert(String::from("sttModels"), models);
-    config.insert(String::from("aiModelUsage"), usage);
+    config.insert(String::from("selectedSttModelId"), active);
     true
 }

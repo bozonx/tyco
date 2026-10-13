@@ -52,7 +52,7 @@ export interface SttClient {
 
 /** Builds a speech catalog for the one configured live model. */
 export function buildSttCatalog(model: SttModel): Catalog {
-  if (!model.model.trim()) {
+  if (!model.providerModelId.trim()) {
     throw new Error('The speech recognition model name is empty')
   }
   const baseUrl = model.baseUrl?.trim()
@@ -67,7 +67,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
         name: model.id,
         kind: 'stt',
         provider: model.provider,
-        model: model.model.trim(),
+        model: model.providerModelId.trim(),
         ...(baseUrl ? { baseUrl } : {}),
         tier: 'standard',
         modalities: { input: ['audio'], output: ['text'] },
@@ -95,7 +95,7 @@ export function createSttClient(deps: SttClientDeps): SttClient {
     const key = JSON.stringify({
       id: model.id,
       provider: model.provider,
-      model: model.model,
+      model: model.providerModelId,
       baseUrl: model.baseUrl,
     })
     const cached = kits.get(key)

@@ -178,7 +178,7 @@ impl SystemTextInjector {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
         let shortcut = PasteShortcut::from_config(insertion);
-        let mut command = command_spec(method, insertion, user_config, source_window_id, shortcut)?;
+        let mut command = command_spec(method, insertion, source_window_id, shortcut)?;
 
         if method == InjectionMethod::Ydotool {
             // the client knows a single default path, which differs between
@@ -221,7 +221,7 @@ impl SystemTextInjector {
                 env: vec![(String::from("YDOTOOL_SOCKET"), ydotool_socket()?)],
             },
             InjectionMethod::Xdotool => CommandSpec {
-                binary: xdotool_binary(insertion, user_config),
+                binary: xdotool_binary(insertion),
                 args: ["key", "--clearmodifiers", keys.xdotool_keys(shortcut)]
                     .into_iter()
                     .map(String::from)
@@ -244,7 +244,7 @@ impl SystemTextInjector {
                 ydotool_socket()?;
             }
             InjectionMethod::Xdotool => {
-                ensure_binary(&xdotool_binary(insertion, user_config), "xdotool")?;
+                ensure_binary(&xdotool_binary(insertion), "xdotool")?;
             }
         }
         if self.session == InjectionSessionKind::Wayland && !tracker().is_running() {
@@ -263,11 +263,10 @@ fn configured_method(insertion: Option<&Value>) -> &str {
         .unwrap_or("xdotool")
 }
 
-fn xdotool_binary(insertion: Option<&Value>, user_config: &Value) -> String {
+fn xdotool_binary(insertion: Option<&Value>) -> String {
     insertion
         .and_then(|value| value.get("xdotoolBin"))
         .and_then(Value::as_str)
-        .or_else(|| user_config.get("xdotoolBin").and_then(Value::as_str))
         .unwrap_or("/usr/bin/xdotool")
         .to_owned()
 }
@@ -307,7 +306,6 @@ fn select_method(
 fn command_spec(
     method: InjectionMethod,
     insertion: Option<&Value>,
-    user_config: &Value,
     source_window_id: Option<&str>,
     shortcut: PasteShortcut,
 ) -> Result<CommandSpec, AppError> {
@@ -326,7 +324,7 @@ fn command_spec(
                 ))
             })?;
             Ok(CommandSpec {
-                binary: xdotool_binary(insertion, user_config),
+                binary: xdotool_binary(insertion),
                 args: [
                     "windowactivate",
                     "--sync",
@@ -451,7 +449,6 @@ mod tests {
         let spec = command_spec(
             InjectionMethod::Xdotool,
             config.get("windowInsertion"),
-            &config,
             Some("42"),
             PasteShortcut::CtrlV,
         )
@@ -476,7 +473,6 @@ mod tests {
         let spec = command_spec(
             InjectionMethod::Ydotool,
             Some(&config),
-            &Value::Null,
             None,
             PasteShortcut::CtrlV,
         )

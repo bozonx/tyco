@@ -7,13 +7,13 @@ import { buildSttCatalog, createSttClient } from './stt-client'
 const model = {
   id: 'deepgram-stt',
   provider: 'deepgram' as const,
-  model: 'nova-3',
+  providerModelId: 'nova-3',
 }
 
 const sherpa = {
   id: 'sherpa-onnx-stt',
   provider: 'sherpa-onnx' as const,
-  model: 'sherpa-onnx',
+  providerModelId: 'sherpa-onnx',
   baseUrl: 'ws://speech.lan:6006',
 }
 
@@ -87,7 +87,7 @@ describe('buildSttCatalog', () => {
   })
 
   it('rejects an empty model name', () => {
-    expect(() => buildSttCatalog({ ...model, model: ' ' })).toThrow(
+    expect(() => buildSttCatalog({ ...model, providerModelId: ' ' })).toThrow(
       'model name is empty'
     )
   })

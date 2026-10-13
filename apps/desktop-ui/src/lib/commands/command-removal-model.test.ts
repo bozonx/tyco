@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type MainActionConfig, webhookSecretId } from '@tyco/shared'
+import { type MainActionConfig } from '@tyco/shared'
 
 import { createCommand } from './command-config'
 import { createCommandRemovalModel } from './command-removal-model'
@@ -11,7 +11,8 @@ describe('command removal model', () => {
       ...createCommand('webhook', 'test'),
       toolConfig: {
         url: 'https://example.com',
-        authSecret: 'tyco-secret:test',
+        authSecret: true,
+        authSecretId: 'webhook-auth-test',
       },
     }
     let commands = [command]
@@ -29,6 +30,9 @@ describe('command removal model', () => {
         actions = value
       },
       removeSecret,
+      persist: vi.fn().mockResolvedValue(undefined),
+      isSaved: () => true,
+      notifyError: vi.fn(),
     })
     return {
       command,
@@ -54,21 +58,25 @@ describe('command removal model', () => {
     f.model.finishRemoval()
     expect(f.removeSecret).not.toHaveBeenCalled()
   })
-  it('finalizes secret deletion only once after undo is no longer offered', () => {
+  it('finalizes secret deletion only once after undo is no longer offered', async () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     f.model.finishRemoval()
     f.model.finishRemoval()
-    expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-      webhookSecretId(f.command.id)
+    await vi.waitFor(() =>
+      expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
+        'webhook-auth-test'
+      )
     )
   })
-  it('finalizes the previous deletion when another command is removed', () => {
+  it('finalizes the previous deletion when another command is removed', async () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     f.model.removeCommand(createCommand('script', 'second'))
-    expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-      webhookSecretId(f.command.id)
+    await vi.waitFor(() =>
+      expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
+        'webhook-auth-test'
+      )
     )
     f.model.undoRemove()
     f.model.finishRemoval()

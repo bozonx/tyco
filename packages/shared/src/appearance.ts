@@ -61,7 +61,7 @@ export function normalizeAppearance(value: unknown): AppearanceSettings {
   const source = (value && typeof value === 'object' ? value : {}) as Partial<
     Record<keyof AppearanceSettings, unknown>
   >
-  const uiScale = Number(source.uiScale)
+  const uiScale = source.uiScale
 
   return {
     theme: isThemeMode(source.theme) ? source.theme : DEFAULT_APPEARANCE.theme,

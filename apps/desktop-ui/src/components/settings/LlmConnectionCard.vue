@@ -143,7 +143,7 @@
             <FieldRow :label="t('settings.vision')">
               <FieldCheckbox
                 :value="supportsImages(model)"
-                @update:value="model.vision = $event"
+                @update:value="model.canUseImages = $event"
               />
             </FieldRow>
             <FieldRow :label="t('settings.temperature')">

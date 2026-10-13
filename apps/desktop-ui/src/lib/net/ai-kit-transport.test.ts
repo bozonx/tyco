@@ -156,7 +156,11 @@ describe('ai-kit over the Tauri transport', () => {
     const stt = createSttClient({ transport: createTauriTransport(fake.ipc) })
     const pending = (async () => {
       for await (const _part of stt.transcribeLive({
-        model: { id: 'speech', provider: 'deepgram', model: 'nova-3' },
+        model: {
+          id: 'speech',
+          provider: 'deepgram',
+          providerModelId: 'nova-3',
+        },
         audio: audio.values,
         sampleRate: 16000,
         hasApiKey: true,

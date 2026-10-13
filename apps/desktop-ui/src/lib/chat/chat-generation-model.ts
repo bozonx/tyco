@@ -19,7 +19,7 @@ export function createChatGenerationModel(
     | 'emptyMessageError'
     | 'createId'
     | 'imageTitle'
-    | 'saveLocalState'
+    | 'saveSessionState'
     | 'formatError'
     | 'getChatModel'
     | 'noModelError'
@@ -150,7 +150,7 @@ export function createChatGenerationModel(
     void persist(messages.value.slice(0, userMessageIndex + 1)).then(
       (saved) => {
         if (saved && chatId && currentChatState.value.id === chatId) {
-          void deps.saveLocalState({ lastChatId: chatId })
+          void deps.saveSessionState({ lastChatId: chatId })
         }
       }
     )

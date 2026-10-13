@@ -15,7 +15,7 @@ export interface DictationHandlers {
 export interface DictationControllerDependencies {
   getConfig: () => Pick<
     UserConfig,
-    'aiModelUsage' | 'sttModels' | 'userLanguage'
+    'selectedSttModelId' | 'sttModels' | 'userLanguage'
   >
   dictation: LiveDictation
   refreshSecrets: () => Promise<unknown>
@@ -30,7 +30,7 @@ export function createDictationController(
   let generation = 0
   const currentSttModel = () => {
     const userConfig = deps.getConfig()
-    const modelId = userConfig.aiModelUsage.stt
+    const modelId = userConfig.selectedSttModelId
 
     return userConfig.sttModels.find((model: SttModel) => model.id === modelId)
   }

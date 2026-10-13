@@ -1,4 +1,5 @@
 import {
+  normalizeConfigField,
   DEFAULT_TRANSLATION_CONFIG,
   TRANSLATION_PROVIDERS,
   TRANSLATION_QUALITY_GATES,
@@ -7,7 +8,7 @@ import {
 } from '@tyco/shared'
 
 export function normalizeTranslationConfig(value: unknown): TranslationConfig {
-  const input = isRecord(value) ? value : {}
+  const input = normalizeConfigField('translation', value)
   const provider = TRANSLATION_PROVIDERS.includes(input.provider as never)
     ? (input.provider as TranslationConfig['provider'])
     : DEFAULT_TRANSLATION_CONFIG.provider
@@ -31,9 +32,9 @@ export function normalizeTranslationConfig(value: unknown): TranslationConfig {
 
 function normalizeGlossaryEntry(value: unknown): TranslationGlossaryEntry[] {
   if (!isRecord(value)) return []
-  const term = String(value.term || '').trim()
+  const term = typeof value.term === 'string' ? value.term.trim() : ''
   if (!term) return []
-  const use = String(value.use || '').trim()
+  const use = typeof value.use === 'string' ? value.use.trim() : ''
   return [{ term, use, doNotTranslate: value.doNotTranslate === true }]
 }
 

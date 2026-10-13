@@ -2,14 +2,14 @@ mod chat;
 mod defaults;
 mod desktop_state;
 mod editor_history;
-mod settings;
+mod session_state;
 mod storage;
 
 pub use chat::*;
 pub use defaults::*;
 pub use desktop_state::*;
 pub use editor_history::*;
-pub use settings::*;
+pub use session_state::*;
 pub use storage::*;
 
 pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";

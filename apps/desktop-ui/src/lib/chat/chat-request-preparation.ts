@@ -34,7 +34,10 @@ export function prepareGenerationRequest(
     return null
   }
 
-  if (images.length > MAX_CHAT_IMAGES || (images.length > 0 && !model.vision)) {
+  if (
+    images.length > MAX_CHAT_IMAGES ||
+    (images.length > 0 && !model.canUseImages)
+  ) {
     deps.notifyError(deps.imageModelError?.() || deps.noModelError())
     return null
   }
@@ -84,7 +87,7 @@ export function prepareGenerationRequest(
     requestHistory,
     Math.max(0, model.budgetCharacters - inputSize)
   )
-  if (!model.vision && prevMessages.some((item) => item.images?.length)) {
+  if (!model.canUseImages && prevMessages.some((item) => item.images?.length)) {
     deps.notifyError(deps.imageModelError?.() || deps.noModelError())
     return null
   }

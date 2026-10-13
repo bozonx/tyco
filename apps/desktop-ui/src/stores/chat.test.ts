@@ -29,9 +29,9 @@ beforeEach(() => {
   vi.spyOn(appNavigation, 'push').mockResolvedValue()
   vi.spyOn(useHistoryStore(), 'saveChat').mockResolvedValue()
   const ipc = useIpcStore()
-  vi.spyOn(ipc, 'patchLocalState').mockResolvedValue({
+  vi.spyOn(ipc, 'patchSessionState').mockResolvedValue({
     success: true,
-    result: ipc.desktopState.localState,
+    result: ipc.desktopState.sessionState,
   })
   ipc.applyViewState({
     ...ipc.desktopState,

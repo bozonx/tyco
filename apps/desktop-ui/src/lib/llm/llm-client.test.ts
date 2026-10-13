@@ -304,7 +304,7 @@ describe('vision transport', () => {
       streamResponse(sse(['Image reply']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.models[0].vision = true
+    llm.models[0].canUseImages = true
     const { client } = setup(fetch, llm)
     expect(
       await client.run('chat', imagePrompt, {
@@ -330,7 +330,7 @@ describe('vision transport', () => {
       })
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.models[0].vision = true
+    llm.models[0].canUseImages = true
     const { client } = setup(fetch, llm)
     await expect(
       client.run('chat', imagePrompt, { models: ['local-qwen'] })

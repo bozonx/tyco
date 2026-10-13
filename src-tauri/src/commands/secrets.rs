@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::services::secrets::{with_store, SecretStatus, SecretStore, VaultState};
@@ -32,5 +32,20 @@ pub async fn secrets_set(
 
 #[tauri::command]
 pub async fn secrets_remove(app: AppHandle, id: String) -> Result<(), AppError> {
-    with_store(&app, move |secrets| secrets.remove(&id)).await?
+    let handle = app.clone();
+    with_store(&app, move |secrets| {
+        let state = handle.state::<crate::state::AppState>();
+        let _guard = state.lock_config_storage();
+        if crate::services::webhook_secrets::referenced_secrets(
+            &state.snapshot().settings.user_config,
+        )
+        .contains(&id)
+        {
+            return Err(AppError::InvalidInput(
+                "The secret is still referenced by the saved configuration".into(),
+            ));
+        }
+        secrets.remove(&id)
+    })
+    .await?
 }

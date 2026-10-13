@@ -1,4 +1,4 @@
-use super::LocalState;
+use super::SessionState;
 use crate::services::{
     activation::{ActivationMode, WindowProfile},
     external_access::AccessRequest,
@@ -36,7 +36,7 @@ pub struct WindowSnapshot {
 #[serde(rename_all = "camelCase")]
 pub struct SettingsSnapshot {
     pub user_config: Value,
-    pub local_state: LocalState,
+    pub session_state: SessionState,
     pub app_config: Value,
 }
 #[cfg(test)]
@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn snapshot_matches_the_shared_domain_wire_fixture() {
         let mut params =
-            crate::models::default_desktop_state(serde_json::json!({}), LocalState::default());
+            crate::models::default_desktop_state(serde_json::json!({}), SessionState::default());
         params.revision = 7;
         params.activation.activation_id = 2;
         params.activation.window_id = Some("target".into());

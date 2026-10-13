@@ -1,24 +1,23 @@
-use super::{AppError, LocalState, Value};
+use crate::{errors::AppError, models::SessionState};
+use serde_json::Value;
 
-pub const VALID_LOCAL_STATE_KEYS: &[&str] = &[
+pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastChatId",
     "lastMode",
     "lastChatModelId",
     "recentAiPrompts",
     "recentTranslateLanguages",
-    "diffMode",
-    "translationViewMode",
 ];
 
 /// `current` with the fields of `patch` replaced; a `null` clears a field.
-pub fn merge_local_state(
-    current: &LocalState,
+pub fn merge_session_state(
+    current: &SessionState,
     patch: serde_json::Map<String, Value>,
-) -> Result<LocalState, AppError> {
+) -> Result<SessionState, AppError> {
     for key in patch.keys() {
-        if !VALID_LOCAL_STATE_KEYS.contains(&key.as_str()) {
+        if !VALID_SESSION_STATE_KEYS.contains(&key.as_str()) {
             return Err(AppError::InvalidInput(format!(
-                "Unknown field in local state patch: {key}"
+                "Unknown field in session state patch: {key}"
             )));
         }
     }
@@ -35,13 +34,13 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn local_state_without_the_menu_history_reads_with_defaults() {
-        let state: LocalState = serde_json::from_value(json!({ "lastChatId": "chat" })).unwrap();
+    fn session_state_without_the_menu_history_reads_with_defaults() {
+        let state: SessionState = serde_json::from_value(json!({ "lastChatId": "chat" })).unwrap();
 
         assert!(state.recent_ai_prompts.is_empty());
         assert!(state.recent_translate_languages.is_empty());
 
-        let merged = merge_local_state(
+        let merged = merge_session_state(
             &state,
             json!({ "recentAiPrompts": ["shorter"] })
                 .as_object()
@@ -55,15 +54,15 @@ mod tests {
     }
 
     #[test]
-    fn merge_local_state_replaces_only_the_patched_fields() {
-        let current = LocalState {
+    fn merge_session_state_replaces_only_the_patched_fields() {
+        let current = SessionState {
             last_chat_id: Some(String::from("chat")),
             last_mode: Some(crate::services::activation::ActivationMode::Editor),
-            ..LocalState::default()
+            ..SessionState::default()
         };
         let patch = json!({ "lastMode": "write" });
 
-        let merged = merge_local_state(&current, patch.as_object().unwrap().clone()).unwrap();
+        let merged = merge_session_state(&current, patch.as_object().unwrap().clone()).unwrap();
 
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
         assert_eq!(
@@ -71,7 +70,7 @@ mod tests {
             Some(crate::services::activation::ActivationMode::Write)
         );
 
-        let cleared = merge_local_state(
+        let cleared = merge_session_state(
             &merged,
             json!({ "lastChatId": null }).as_object().unwrap().clone(),
         )
@@ -80,18 +79,20 @@ mod tests {
     }
 
     #[test]
-    fn merge_local_state_rejects_a_mistyped_field() {
+    fn merge_session_state_rejects_a_mistyped_field() {
         let patch = json!({ "lastMode": 1 });
         assert!(
-            merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
+            merge_session_state(&SessionState::default(), patch.as_object().unwrap().clone())
+                .is_err()
         );
     }
 
     #[test]
-    fn merge_local_state_rejects_an_unknown_field() {
+    fn merge_session_state_rejects_an_unknown_field() {
         let patch = json!({ "nonExistentKey": "value" });
         assert!(
-            merge_local_state(&LocalState::default(), patch.as_object().unwrap().clone()).is_err()
+            merge_session_state(&SessionState::default(), patch.as_object().unwrap().clone())
+                .is_err()
         );
     }
 }

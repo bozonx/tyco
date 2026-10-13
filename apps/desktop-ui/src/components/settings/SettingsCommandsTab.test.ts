@@ -17,6 +17,13 @@ const toast = vi.fn()
 
 vi.mock('../../composables/use-toast', () => ({ default: () => ({ toast }) }))
 
+vi.mock('../../stores/settings-session', () => ({
+  useSettingsSessionStore: () => ({
+    persist: vi.fn().mockResolvedValue(undefined),
+    isSaved: () => true,
+  }),
+}))
+
 vi.mock('../../stores/llm', () => ({ useLlmStore: () => ({ removeSecret }) }))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
@@ -27,7 +34,11 @@ vi.mock('../../stores/tools', async () => {
 const webhook = {
   ...createCommand('webhook', 'wh1'),
   name: 'Hook',
-  toolConfig: { url: 'https://x.test', authSecret: true },
+  toolConfig: {
+    url: 'https://x.test',
+    authSecret: true,
+    authSecretId: 'webhook-auth-wh1',
+  },
 }
 const script = { ...createCommand('script', 'sc1'), name: 'Backup' }
 
@@ -213,8 +224,16 @@ describe('SettingsCommandsTab.vue', () => {
     removeSecret.mockClear()
     const wrapper = mountTab()
     await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
+    const emitted = wrapper
+      .emitted('update:commands')!
+      .at(-1)![0] as CommandConfig[]
+    await wrapper.setProps({
+      userConfig: { ...wrapper.props('userConfig'), commands: emitted },
+    })
     wrapper.unmount()
-    expect(removeSecret).toHaveBeenCalledWith('webhook-wh1')
+    await vi.waitFor(() =>
+      expect(removeSecret).toHaveBeenCalledWith('webhook-auth-wh1')
+    )
   })
 
   it('switches a command on and off with a matching title', async () => {

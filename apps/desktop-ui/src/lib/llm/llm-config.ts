@@ -99,7 +99,8 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
         typeof providerModelId === 'string' ? providerModelId : '',
     }
     if (typeof item.name === 'string') model.name = item.name
-    if (typeof item.vision === 'boolean') model.vision = item.vision
+    if (typeof item.canUseImages === 'boolean')
+      model.canUseImages = item.canUseImages
     if (typeof item.isThinkingEnabled === 'boolean')
       model.isThinkingEnabled = item.isThinkingEnabled
     const temperature = finiteNumber(item.temperature)
@@ -214,11 +215,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function finiteNumber(value: unknown): number | undefined {
   if (value === '' || value === null || value === undefined) return undefined
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : undefined
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
 }
 
 function positiveInteger(value: unknown): number | undefined {
   const parsed = finiteNumber(value)
-  return parsed !== undefined && parsed > 0 ? Math.round(parsed) : undefined
+  return parsed !== undefined && Number.isSafeInteger(parsed) && parsed > 0
+    ? parsed
+    : undefined
 }

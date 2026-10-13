@@ -1,6 +1,7 @@
 //! Custom webhook headers are persisted only as origin-bound secret references.
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
@@ -54,29 +55,228 @@ fn protect_headers(
     Ok(changed)
 }
 
-pub fn protect_for_save(app: &AppHandle, config: &mut Value) -> Result<(), AppError> {
+/// Rolls back freshly created header secrets if the config transaction fails.
+pub struct PendingHeaderSecrets {
+    app: AppHandle,
+    created: Vec<String>,
+    committed: bool,
+}
+
+impl PendingHeaderSecrets {
+    /// Preserve keys when a failed rollback leaves the disk state uncertain.
+    pub fn retain(mut self) {
+        self.committed = true;
+    }
+    pub fn commit(mut self, previous: &Value, next: &Value) {
+        self.committed = true;
+        let mut retained = referenced_secrets(next);
+        // A removed command can still be restored by the settings undo action.
+        let next_ids: HashSet<&str> = next["commands"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|command| command["id"].as_str())
+            .collect();
+        for command in previous["commands"].as_array().into_iter().flatten() {
+            if !next_ids.contains(command["id"].as_str().unwrap_or_default()) {
+                retained.extend(referenced_secrets(command));
+            }
+        }
+        let candidates = referenced_secrets(previous);
+        cleanup(
+            &self.app.state::<SecretStore>(),
+            &retained,
+            false,
+            Some(&candidates),
+        );
+    }
+}
+
+impl Drop for PendingHeaderSecrets {
+    fn drop(&mut self) {
+        if !self.committed {
+            for id in &self.created {
+                if let Err(error) = self.app.state::<SecretStore>().remove(id) {
+                    log::warn!("Could not roll back webhook header secret: {error}");
+                }
+            }
+        }
+    }
+}
+
+pub fn protect_for_save(
+    app: &AppHandle,
+    config: &mut Value,
+) -> Result<PendingHeaderSecrets, AppError> {
+    let store = app.state::<SecretStore>();
+    let known: HashSet<String> = store.ids().into_iter().collect();
+    let mut pending = PendingHeaderSecrets {
+        app: app.clone(),
+        created: Vec::new(),
+        committed: false,
+    };
     let mut protected = config.clone();
     protect_headers(&mut protected, |id, value, origin| {
-        app.state::<SecretStore>()
-            .set(id, value, Some(vec![origin.to_owned()]))
+        store.set(id, value, Some(vec![origin.to_owned()]))?;
+        if !known.contains(id) {
+            pending.created.push(id.to_owned());
+        }
+        Ok(())
     })?;
     *config = protected;
+    Ok(pending)
+}
+
+/// Explicit authorization identities replace lossy derivation for new commands.
+fn migrate_authorization_ids(config: &mut Value) -> bool {
+    let mut changed = false;
+    for command in config["commands"].as_array_mut().into_iter().flatten() {
+        if command["toolId"] != "webhook"
+            || command["toolConfig"]["authSecret"] != true
+            || command["toolConfig"]["authSecretId"].is_string()
+        {
+            continue;
+        }
+        let Some(id) = command["id"].as_str() else {
+            continue;
+        };
+        // Version 7 and earlier used this vault identity; keep it without opening the vault.
+        let legacy = id
+            .chars()
+            .flat_map(char::to_lowercase)
+            .map(|ch| {
+                if ch.is_ascii_lowercase() || ch.is_ascii_digit() || "._-".contains(ch) {
+                    ch
+                } else {
+                    '-'
+                }
+            })
+            .collect::<String>();
+        command["toolConfig"]["authSecretId"] =
+            Value::String(format!("webhook-{legacy}").chars().take(64).collect());
+        changed = true;
+    }
+    changed
+}
+
+/// References can be shared by copied commands and opaque plugin settings.
+pub fn referenced_secrets(config: &Value) -> HashSet<String> {
+    let mut result = HashSet::new();
+    collect_references(config, &mut result);
+    result
+}
+
+fn collect_references(value: &Value, result: &mut HashSet<String>) {
+    match value {
+        Value::String(text) => {
+            if let Some(id) = text.strip_prefix(SECRET_REF_PREFIX) {
+                result.insert(id.to_owned());
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_references(item, result);
+            }
+        }
+        Value::Object(fields) => {
+            if fields.get("authSecret").is_some_and(|value| value == true) {
+                if let Some(id) = fields.get("authSecretId").and_then(Value::as_str) {
+                    result.insert(id.to_owned());
+                }
+            }
+            for item in fields.values() {
+                collect_references(item, result);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn cleanup(
+    store: &SecretStore,
+    retained: &HashSet<String>,
+    include_authorization: bool,
+    candidates: Option<&HashSet<String>>,
+) {
+    for id in store.ids() {
+        let managed = id.starts_with("webhook-header-")
+            || (include_authorization && id.starts_with("webhook-auth-"));
+        if managed && !retained.contains(&id) && candidates.is_none_or(|ids| ids.contains(&id)) {
+            if let Err(error) = store.remove(&id) {
+                log::warn!("Could not remove unused webhook secret: {error}");
+            }
+        }
+    }
+}
+
+/// Startup has no outstanding drafts or undo actions.
+pub fn cleanup_after_startup(app: &AppHandle, config: &Value) -> Result<(), AppError> {
+    let store = SecretStore::load_for_app(app)?;
+    cleanup(&store, &referenced_secrets(config), true, None);
     Ok(())
 }
 
 /// Legacy values may be staged before a system keychain is available.
 pub fn migrate(app: &AppHandle, config: &mut Value) -> Result<bool, AppError> {
     let mut protected = config.clone();
+    let authorization_changed = migrate_authorization_ids(&mut protected);
     let changed = protect_headers(&mut protected, |id, value, origin| {
         SecretStore::load_for_app(app)?.stage(id, value, Some(vec![origin.to_owned()]))
     })?;
     *config = protected;
-    Ok(changed)
+    Ok(changed | authorization_changed)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cleanup_preserves_references_shared_by_commands_and_undo_candidates() {
+        let directory =
+            std::env::temp_dir().join(format!("tyco-webhook-cleanup-{}", std::process::id()));
+        crate::services::atomic_file::create_private_dir(&directory).unwrap();
+        let store = SecretStore::load(directory.join("secrets.json"), None).unwrap();
+        for id in [
+            "webhook-header-shared",
+            "webhook-header-obsolete",
+            "webhook-header-undo",
+            "webhook-auth-unused",
+        ] {
+            store
+                .stage(id, "value", Some(vec!["https://example.com".into()]))
+                .unwrap();
+        }
+        let config = serde_json::json!({"commands":[{"toolConfig":{"headers":{"a":"tyco-secret:webhook-header-shared"}}}]});
+        let candidates = HashSet::from([
+            "webhook-header-shared".into(),
+            "webhook-header-obsolete".into(),
+        ]);
+        cleanup(
+            &store,
+            &referenced_secrets(&config),
+            false,
+            Some(&candidates),
+        );
+        assert!(store.ids().contains(&"webhook-header-shared".into()));
+        assert!(store.ids().contains(&"webhook-header-undo".into()));
+        assert!(!store.ids().contains(&"webhook-header-obsolete".into()));
+        cleanup(&store, &referenced_secrets(&config), true, None);
+        assert_eq!(store.ids(), vec![String::from("webhook-header-shared")]);
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn legacy_authorization_keeps_an_explicit_identity_without_reading_the_key() {
+        let mut config = serde_json::json!({"commands":[{"id":"Legacy/ID","toolId":"webhook","toolConfig":{"authSecret":true}}]});
+        assert!(migrate_authorization_ids(&mut config));
+        assert_eq!(
+            config["commands"][0]["toolConfig"]["authSecretId"],
+            "webhook-legacy-id"
+        );
+        assert!(!migrate_authorization_ids(&mut config));
+        assert!(referenced_secrets(&config).contains("webhook-legacy-id"));
+    }
+
     #[test]
     fn replaces_headers_with_stable_origin_bound_references() {
         let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example/path", "headers":{"x-api-key":"private-key", "Authorization":"Bearer token"}}}]});

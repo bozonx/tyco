@@ -2,32 +2,37 @@
 
 Pinia stores are application-instance boundaries. Each Tauri webview has its
 own Pinia instance; IPC events synchronize backend-owned configuration and
-local state across windows. A module-level mutable singleton must not own a
+session state across windows. A module-level mutable singleton must not own a
 session that belongs to an application instance.
+
+SessionState is backend-owned memory shared across webviews and resets on app
+restart. Persistent preferences and portable registration metadata belong to
+UserConfig. See [Configuration storage](config-storage.md) for the versioned
+schema, file inventory, migration, recovery and credential lifetimes.
 
 ## Ownership map
 
-| Area                                     | Owner                                                               | Responsibility                                                                              |
-| ---------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Desktop configuration and window context | ipc                                                                 | Backend snapshots, typed desktop calls, configuration saves, serialized local-state patches |
-| Editor document and selection            | editor-input                                                        | Document, selection, edit source, draft persistence and focus requests                      |
-| Quick writing input                      | write-input                                                         | Draft lifetime, dismissal restoration, recall and focus requests                            |
-| Chat input                               | chat-input                                                          | Input text, remembered selection and one-shot caret restoration                             |
-| Chat session                             | chat                                                                | Conversation, generation, context, attachments and file ownership                           |
-| Microphone session                       | dictation                                                           | One live dictation per application instance; cancellation on disposal                       |
-| Theme                                    | theme                                                               | Appearance derived from configuration and system preferences                                |
-| Menu stack                               | menu-modals                                                         | Modal steps, pending operations and cancellation ownership                                  |
-| Navigation chrome                        | nav-panel                                                           | Page-specific visibility and Escape behavior                                                |
-| Quick window dismissal                   | quick-dismiss                                                       | Reference-counted holds while an operation needs the window                                 |
-| Markdown display                         | markup-mode                                                         | Editor markup visibility                                                                    |
-| Notifications                            | toast                                                               | Toast state and timer lifetime                                                              |
-| Plugin registrations                     | tools, action-menu, edit-menu, toolbar                              | Reactive tool and menu registries; callback-bearing registrations use shallow refs          |
-| Plugin runtime                           | plugin-runtime                                                      | Per-instance catalog, activation manager, runtime statuses and refresh queue                |
-| Settings editing                         | settings-session                                                    | Shared settings draft, debounced saves and recovery after failed navigation saves           |
-| Provider services                        | llm, translation                                                    | Non-reactive clients and provider wiring; llm also owns reactive key availability           |
-| Correction                               | text-correction, correction-workflow                                | Shared speculative correction and UI insertion/correction flows respectively                |
-| Execution                                | invocations, command-launcher, external-commands, selection-replace | Shared dependencies and distinct interactive/background execution lifetimes                 |
-| Synchronization services                 | commands, tool-catalog                                              | Default command synchronization and publication of available tools                          |
+| Area                                     | Owner                                                               | Responsibility                                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Desktop configuration and window context | ipc                                                                 | Backend snapshots, typed desktop calls, configuration saves, serialized session-state patches |
+| Editor document and selection            | editor-input                                                        | Document, selection, edit source, draft persistence and focus requests                        |
+| Quick writing input                      | write-input                                                         | Draft lifetime, dismissal restoration, recall and focus requests                              |
+| Chat input                               | chat-input                                                          | Input text, remembered selection and one-shot caret restoration                               |
+| Chat session                             | chat                                                                | Conversation, generation, context, attachments and file ownership                             |
+| Microphone session                       | dictation                                                           | One live dictation per application instance; cancellation on disposal                         |
+| Theme                                    | theme                                                               | Appearance derived from configuration and system preferences                                  |
+| Menu stack                               | menu-modals                                                         | Modal steps, pending operations and cancellation ownership                                    |
+| Navigation chrome                        | nav-panel                                                           | Page-specific visibility and Escape behavior                                                  |
+| Quick window dismissal                   | quick-dismiss                                                       | Reference-counted holds while an operation needs the window                                   |
+| Markdown display                         | markup-mode                                                         | Editor markup visibility                                                                      |
+| Notifications                            | toast                                                               | Toast state and timer lifetime                                                                |
+| Plugin registrations                     | tools, action-menu, edit-menu, toolbar                              | Reactive tool and menu registries; callback-bearing registrations use shallow refs            |
+| Plugin runtime                           | plugin-runtime                                                      | Per-instance catalog, activation manager, runtime statuses and refresh queue                  |
+| Settings editing                         | settings-session                                                    | Shared settings draft, debounced saves and recovery after failed navigation saves             |
+| Provider services                        | llm, translation                                                    | Non-reactive clients and provider wiring; llm also owns reactive key availability             |
+| Correction                               | text-correction, correction-workflow                                | Shared speculative correction and UI insertion/correction flows respectively                  |
+| Execution                                | invocations, command-launcher, external-commands, selection-replace | Shared dependencies and distinct interactive/background execution lifetimes                   |
+| Synchronization services                 | commands, tool-catalog                                              | Default command synchronization and publication of available tools                            |
 
 The text-correction and correction-workflow stores intentionally have different responsibilities.
 Background command execution and interactive command preparation also have
@@ -69,7 +74,7 @@ the editor component mounts again. Transfers from the quick window use IPC.
 - Editor and chat history loads use request versions. A response from before
   deletion or clearing cannot resurrect an item in the displayed list.
 - Editor history loads wait for writes already pending when loading starts.
-- Local-state patches are serialized within the window. A backend state event
+- Session-state patches are serialized within the window. A backend state event
   received while a patch is pending takes precedence over that patch response.
 - Secret availability refreshes commit status and vault state together; the
   latest refresh wins. Secret values never enter reactive application state.

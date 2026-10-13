@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
@@ -191,6 +191,7 @@ import { validateCommand } from '../../lib/commands/command-runtime'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
+import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -202,7 +203,6 @@ import FieldIssues from './FieldIssues.vue'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
-  webhookSecretId,
 } from '@tyco/shared'
 
 /** The settings of the `script` or `webhook` tool of a command */
@@ -269,7 +269,8 @@ function removeHeader(index: number) {
   setHeaders(headerRows.value.filter((_, i) => i !== index))
 }
 
-const secretId = computed(() => webhookSecretId(props.command.id))
+const session = useSettingsSessionStore()
+const secretId = computed(() => webhook.value.authSecretId ?? '')
 const hasAuth = computed(
   () =>
     props.command.toolId === 'webhook' &&
@@ -295,7 +296,11 @@ async function saveAuth() {
     return
   }
   try {
-    await llmStore.setSecret(secretId.value, value, [origin])
+    // Fresh authorization gets its own identity, even for legacy commands.
+    const newSecretId = `webhook-auth-${crypto.randomUUID()}`
+    await llmStore.setSecret(newSecretId, value, [origin])
+    update('authSecretId', newSecretId)
+    await nextTick()
     authDraft.value = ''
     update('authSecret', true)
   } catch (error) {
@@ -305,8 +310,12 @@ async function saveAuth() {
 
 async function removeAuth() {
   try {
-    await llmStore.removeSecret(secretId.value)
+    const previousSecretId = secretId.value
     update('authSecret', false)
+    await nextTick()
+    await session.persist()
+    if (session.isSaved() && previousSecretId)
+      await llmStore.removeSecret(previousSecretId)
   } catch (error) {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   }

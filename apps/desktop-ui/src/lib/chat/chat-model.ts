@@ -12,7 +12,7 @@ export interface ChatModelOption {
   id: string
   name: string
   providerLabel: string
-  vision: boolean
+  canUseImages: boolean
   contextWindowTokens: number
   maxOutputTokens?: number
 }
@@ -34,7 +34,7 @@ export function chatModelOptions(
       id: model.id,
       name: model.name?.trim() || model.providerModelId.trim(),
       providerLabel: provider.name?.trim() || provider.type,
-      vision: supportsImages(model),
+      canUseImages: supportsImages(model),
       contextWindowTokens: modelContextWindowTokens(model, config.providers),
       maxOutputTokens: modelMaxOutputTokens(model, config.providers),
     }))

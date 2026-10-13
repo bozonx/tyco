@@ -14,10 +14,10 @@ export function createSettingsCommandMap(): DomainCommandMap<
           baseConfig,
         }) satisfies DesktopCommandArgs<'save_user_config'>,
     },
-    patchLocalState: {
-      command: DESKTOP_COMMANDS.PATCH_LOCAL_STATE,
+    patchSessionState: {
+      command: DESKTOP_COMMANDS.PATCH_SESSION_STATE,
       buildArgs: ([patch]) =>
-        ({ patch }) satisfies DesktopCommandArgs<'patch_local_state'>,
+        ({ patch }) satisfies DesktopCommandArgs<'patch_session_state'>,
     },
     getUserConfig: { command: DESKTOP_COMMANDS.GET_USER_CONFIG },
   }

@@ -57,9 +57,9 @@ describe('TranslateMenu', () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
-    vi.spyOn(useIpcStore(), 'patchLocalState').mockResolvedValue({
+    vi.spyOn(useIpcStore(), 'patchSessionState').mockResolvedValue({
       success: true,
-      result: useIpcStore().desktopState.localState,
+      result: useIpcStore().desktopState.sessionState,
     })
     useMenuModalsStore().nextModal(MenuModals.TRANSLATE)
   })
@@ -121,7 +121,7 @@ describe('TranslateMenu', () => {
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
-    expect(ipcStore.patchLocalState).toHaveBeenCalledWith({
+    expect(ipcStore.patchSessionState).toHaveBeenCalledWith({
       recentTranslateLanguages: ['it_IT'],
     })
   })
@@ -150,7 +150,7 @@ describe('TranslateMenu', () => {
 
   it('translates nothing on Enter until a language is typed or chosen', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.desktopState.localState = { recentTranslateLanguages: ['it_IT'] }
+    ipcStore.desktopState.sessionState = { recentTranslateLanguages: ['it_IT'] }
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -179,7 +179,7 @@ describe('TranslateMenu', () => {
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
-    useIpcStore().desktopState.localState = {
+    useIpcStore().desktopState.sessionState = {
       recentTranslateLanguages: ['it_IT'],
     }
     const wrapper = mountMenu()

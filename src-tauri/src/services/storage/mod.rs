@@ -5,13 +5,11 @@ mod chat_history;
 mod config;
 mod editor_history;
 mod history_store;
-mod local_state;
 
 pub use chat_history::ChatHistoryPolicy;
 pub use config::*;
 pub use editor_history::{apply_history_settings_on_startup, EditorHistoryStorage};
 pub use history_store::*;
-pub use local_state::*;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,7 +24,7 @@ use tauri::{AppHandle, Manager};
 use crate::errors::AppError;
 use crate::models::{
     default_user_config, Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryKind,
-    EditorHistoryRecord, LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
+    EditorHistoryRecord, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
 use crate::services::{app_paths::AppPaths, config_migration, llm_config};
@@ -142,21 +140,27 @@ fn read_jsonl<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, AppError> {
         return Ok(Vec::new());
     }
 
-    let raw = fs::read_to_string(path)?;
+    let raw = fs::read(path)?;
     let mut items = Vec::new();
-    for (index, line) in raw.lines().enumerate() {
-        if line.trim().is_empty() {
+    let mut damaged = false;
+    for (index, line) in raw.split(|byte| *byte == b'\n').enumerate() {
+        if line.iter().all(u8::is_ascii_whitespace) {
             continue;
         }
-        match serde_json::from_str(line) {
+        match serde_json::from_slice(line) {
             Ok(parsed) => items.push(parsed),
-            // the next write drops the line, so the log is all that is left of it
-            Err(error) => log::warn!(
-                "Skipping unreadable line {} of {}: {error}",
-                index + 1,
-                path.display()
-            ),
+            Err(error) => {
+                damaged = true;
+                log::warn!(
+                    "Skipping unreadable line {} of {}: {error}",
+                    index + 1,
+                    path.display()
+                );
+            }
         }
+    }
+    if damaged {
+        crate::services::atomic_file::preserve_broken_copy(path, &raw)?;
     }
     Ok(items)
 }
@@ -260,6 +264,26 @@ mod tests {
         let items: Vec<String> = read_jsonl(&path).unwrap();
 
         assert_eq!(items, vec![String::from("first"), String::from("second")]);
+    }
+
+    #[test]
+    fn damaged_jsonl_keeps_exact_bytes_once_before_rewriting() {
+        let dir = TestDir::new("jsonl-preservation");
+        let path = dir.join("history.jsonl");
+        let bytes = b"\"valid\"\n{broken\n\xff\n";
+        fs::write(&path, bytes).unwrap();
+        let items: Vec<String> = read_jsonl(&path).unwrap();
+        assert_eq!(items, vec!["valid"]);
+        let _: Vec<String> = read_jsonl(&path).unwrap();
+        let backups: Vec<_> = fs::read_dir(path.parent().unwrap())
+            .unwrap()
+            .flatten()
+            .filter(|entry| entry.path() != path)
+            .collect();
+        assert_eq!(backups.len(), 1);
+        assert_eq!(fs::read(backups[0].path()).unwrap(), bytes);
+        write_jsonl(&path, &items).unwrap();
+        assert_eq!(fs::read(backups[0].path()).unwrap(), bytes);
     }
 
     #[test]

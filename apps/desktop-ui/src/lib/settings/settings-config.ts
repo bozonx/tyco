@@ -1,5 +1,6 @@
 import {
   DEFAULT_USER_CONFIG,
+  normalizeUserConfig,
   PASTE_SHORTCUTS,
   normalizeAppearance,
   normalizeMarkdownSettings,
@@ -43,7 +44,7 @@ const stringOf = (value: unknown, fallback = ''): string =>
 const booleanOf = (value: unknown, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback
 const numberOf = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0
+  typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
     ? value
     : fallback
 const stringsOf = (value: unknown): string[] =>
@@ -84,7 +85,8 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
     const rules = recordOf(input.aiRules)
     const selectionHotkeys = recordOf(input.selectionHotkeys)
     const externalAccess = recordOf(input.externalAccess)
-    const registrations = stringsOf(input.mainActionRegistrations)
+    const registrationState = recordOf(input.registrationState)
+    const registrations = stringsOf(registrationState.reviewedMainActionIds)
     const commands = normalizeCommands(input.commands)
     const xdotoolBin =
       stringOf(
@@ -106,7 +108,6 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
       submitKey: resolveSubmitKey(input.submitKey),
       quickCorrectionPrefetch: input.quickCorrectionPrefetch === true,
       quickHideOnBlur: input.quickHideOnBlur !== false,
-      xdotoolBin,
       windowInsertion: {
         method: insertion.method === 'ydotool' ? 'ydotool' : 'xdotool',
         xdotoolBin,
@@ -130,14 +131,24 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
         normalizeMainActions(input.mainActions),
         registrations
       ),
-      mainActionRegistrations: [
-        ...new Set([
-          ...registrations,
-          ...deps
-            .getRegisteredActions()
-            .flatMap((action) => (action.id ? [action.id] : [])),
-        ]),
-      ],
+      registrationState: {
+        seededCommandIds: stringsOf(registrationState.seededCommandIds),
+        seededToolIds: stringsOf(registrationState.seededToolIds),
+        reviewedMainActionIds: [
+          ...new Set([
+            ...registrations,
+            ...deps
+              .getRegisteredActions()
+              .flatMap((action) => (action.id ? [action.id] : [])),
+          ]),
+        ],
+      },
+      diffViewMode:
+        input.diffViewMode === 'split' || input.diffViewMode === 'result'
+          ? input.diffViewMode
+          : 'unified',
+      translationViewMode:
+        input.translationViewMode === 'result' ? 'result' : 'split',
       commands,
       launcherCommands: normalizeLauncherCommands(
         input.launcherCommands,
@@ -154,7 +165,6 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
               typeof page === 'number' && Number.isInteger(page) && page >= 0
           )
         : [],
-      seededCommands: stringsOf(input.seededCommands),
       editorHistoryStorage:
         input.editorHistoryStorage === 'off' ||
         input.editorHistoryStorage === 'session'
@@ -211,9 +221,13 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
       'quickCorrection',
       'selectionReplace',
       'llmModels',
+      'xdotoolBin',
+      'aiModelUsage',
+      'mainActionRegistrations',
+      'seededCommands',
     ])
       delete next[key]
-    return next
+    return normalizeUserConfig(next)
   }
   return { prepare }
 }

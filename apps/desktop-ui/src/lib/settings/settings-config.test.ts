@@ -24,7 +24,9 @@ describe('settings config preparation', () => {
     expect(result.submitKey).toBe('enter')
     expect(result).not.toHaveProperty('chatRoles')
     expect(result.aiRules).not.toHaveProperty('base')
-    expect(result.mainActionRegistrations).toContain('new-action')
+    expect(result.registrationState?.reviewedMainActionIds).toContain(
+      'new-action'
+    )
     expect(result.markdown).toBeDefined()
   })
   it('normalizes malformed nested settings and filters invalid task fields', () => {
@@ -43,7 +45,7 @@ describe('settings config preparation', () => {
       selectionHotkeys: { correction: false },
       launcherPages: 'invalid',
       launcherPagesWithoutText: [null, -1, '2', 1.5, 2],
-      mainActionRegistrations: 'invalid',
+      registrationState: { reviewedMainActionIds: 'invalid' },
       toTranslateLanguages: 'invalid',
       chatHistoryRetentionDays: -1,
       chatHistoryEnabled: 'false',
@@ -63,7 +65,7 @@ describe('settings config preparation', () => {
     expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)
     expect(result.hotkeys.write).toBe('Ctrl+W')
     expect(result.launcherPages).toEqual([])
-    expect(result.launcherPagesWithoutText).toEqual([2])
+    expect(result.launcherPagesWithoutText).toEqual([])
     expect(result.chatHistoryEnabled).toBe(
       DEFAULT_USER_CONFIG.chatHistoryEnabled
     )
