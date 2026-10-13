@@ -495,7 +495,7 @@ mod tests {
         let chat = Chat {
             id: "test".into(),
             title: "Image".into(),
-            last_msg_date: String::new(),
+            last_message_at: String::new(),
             messages: vec![crate::models::ChatMessage {
                 role: crate::models::ChatRole::User,
                 content: String::new(),
@@ -533,7 +533,7 @@ mod tests {
         let chat = Chat {
             id: "test".into(),
             title: String::new(),
-            last_msg_date: String::new(),
+            last_message_at: String::new(),
             messages: vec![crate::models::ChatMessage {
                 role: crate::models::ChatRole::User,
                 content: String::new(),

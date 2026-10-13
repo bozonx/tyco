@@ -6,17 +6,17 @@ export function createChatTitleController(
     ChatStoreDeps,
     'generateChatTitle' | 'renameChat' | 'isHistoryEnabled'
   >,
-  state: Pick<ChatState, 'messages' | 'newChatParams'>
+  state: Pick<ChatState, 'messages' | 'currentChatState'>
 ) {
-  const { messages, newChatParams } = state
+  const { messages, currentChatState } = state
   let titleController: AbortController | undefined
-  const currentTitle = () => newChatParams.value.title || ''
+  const currentTitle = () => currentChatState.value.title || ''
   const cancel = () => {
     titleController?.abort()
     titleController = undefined
   }
   const maybeGenerateTitle = async (modelId: string) => {
-    const id = newChatParams.value.id
+    const id = currentChatState.value.id
     const title = currentTitle()
     if (deps.isHistoryEnabled?.() === false) return
     if (!id || !needsGeneratedTitle(messages.value, title)) return
@@ -41,10 +41,10 @@ export function createChatTitleController(
     }
     if (!generated || controller.signal.aborted) return
 
-    const isCurrent = newChatParams.value.id === id
+    const isCurrent = currentChatState.value.id === id
     // renamed meanwhile, by the user or in another way
     if (isCurrent && currentTitle() !== title) return
-    if (isCurrent) newChatParams.value.title = generated
+    if (isCurrent) currentChatState.value.title = generated
     try {
       await deps.renameChat(id, generated)
     } catch {

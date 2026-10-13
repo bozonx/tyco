@@ -12,7 +12,7 @@ export const useThemeStore = defineStore('theme', () => {
   const resolved = ref(controller.applySettings(settings.value))
 
   watchEffect(() => {
-    const userConfig = ipcStore.params.userConfig
+    const userConfig = ipcStore.desktopState.userConfig
 
     // Until the config arrives keep what the bootstrap applied from storage.
     if (!userConfig) {

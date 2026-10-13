@@ -35,7 +35,7 @@ const correctionMode = createCorrectionMode({
 })
 
 watch(
-  () => ipcStore.params.selectedText,
+  () => ipcStore.desktopState.selectedText,
   (text) => void correctionMode.consume(text),
   { immediate: true }
 )

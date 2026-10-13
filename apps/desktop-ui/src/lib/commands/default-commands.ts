@@ -1,6 +1,6 @@
 import type { CommandConfig, MainActionConfig, UserConfig } from '@tyco/shared'
 
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import { normalizeMainActions } from '../action-menu/main-actions'
 import type {
   DefaultCommand,
@@ -71,7 +71,9 @@ function placeInMenu(
   ) {
     return
   }
-  const preferred = PRESETS_KEYS.indexOf(menu.preferredKey?.toLowerCase() ?? '')
+  const preferred = SHORTCUT_SLOT_KEYS.indexOf(
+    menu.preferredKey?.toLowerCase() ?? ''
+  )
   const index =
     preferred >= 0 && !slots[preferred]
       ? preferred

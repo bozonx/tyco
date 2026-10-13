@@ -10,7 +10,7 @@
           icon="mdi:creation-outline"
         />
 
-        <ChatItem
+        <ChatMessageItem
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
@@ -139,7 +139,7 @@
         </div>
         <div
           v-if="
-            chatStore.newChatParams.attachments?.some(
+            chatStore.currentChatState.attachments?.some(
               (item) =>
                 item.mediaType === 'application/pdf' ||
                 item.mediaType?.includes('wordprocessingml')
@@ -264,7 +264,9 @@ const isInlineVoice = computed(
 )
 
 const inputHint = computed(() => {
-  const submitKey = resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
+  const submitKey = resolveSubmitKey(
+    ipcStore.desktopState?.userConfig?.submitKey
+  )
   return t('chat.inputHint', {
     send: submitShortcut(submitKey),
     newline: newlineShortcut(submitKey),
@@ -301,7 +303,7 @@ const streamHasContent = computed(() => {
 
 const modelMenuItems = computed<DropdownMenuItem[]>(() => [
   ...chatStore.modelOptions.map((option) => ({
-    label: `${option.name} · ${option.provider}${option.vision ? ` · ${t('settings.vision')}` : ''}`,
+    label: `${option.name} · ${option.providerLabel}${option.vision ? ` · ${t('settings.vision')}` : ''}`,
     icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
     action: () => chatStore.selectModel(option.id),
   })),
@@ -337,11 +339,11 @@ async function sendMessage() {
 
 async function retry() {
   const draft = chatInputStore.value
-  const chatId = chatStore.newChatParams.id
+  const chatId = chatStore.currentChatState.id
   const result = await chatStore.retryLastTurn()
   if (
     result &&
-    chatStore.newChatParams.id === chatId &&
+    chatStore.currentChatState.id === chatId &&
     chatInputStore.value === draft
   )
     chatInputStore.clear()
@@ -354,7 +356,7 @@ async function branch(index: number) {
 
 async function copyMarkdownToPoint(index: number) {
   const slice = chatStore.messages.slice(0, index + 1)
-  const title = chatStore.newChatParams.title || ''
+  const title = chatStore.currentChatState.title || ''
   const md = formatChatToMarkdown(slice, title ? { title } : undefined)
   try {
     await navigator.clipboard.writeText(md)
@@ -425,7 +427,7 @@ watch(
 )
 
 watch(
-  () => chatStore.newChatParams?.id,
+  () => chatStore.currentChatState?.id,
   () => {
     chatInputStore.clear()
     pinnedToBottom.value = true

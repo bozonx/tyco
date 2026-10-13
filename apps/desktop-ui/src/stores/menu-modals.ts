@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
-import { useHelpers } from '../composables/use-helpers'
+import { blurActiveElement } from '../lib/ui/focus'
 import {
   MenuModals,
   createMenuModalsStoreModel,
@@ -10,8 +10,7 @@ import {
 export { MenuModals }
 
 export const useMenuModalsStore = defineStore('menuModals', () => {
-  const { resetGlobalFocus } = useHelpers()
-  const model = createMenuModalsStoreModel({ resetGlobalFocus })
+  const model = createMenuModalsStoreModel({ blurActiveElement })
   onScopeDispose(model.cancelAndCloseAll)
   return model
 })

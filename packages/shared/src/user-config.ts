@@ -54,13 +54,13 @@ export interface LlmProvider {
 export interface LlmModel {
   id: string
   /** Id of an `LlmProvider` */
-  provider: string
+  providerId: string
   /** The provider's own model id */
-  model: string
+  providerModelId: string
   name?: string
   temperature?: number
   maxOutputTokens?: number
-  contextSize?: number
+  contextWindowTokens?: number
   vision?: boolean
 }
 
@@ -133,29 +133,29 @@ export const DEFAULT_LLM_CONFIG: LlmConfig = {
   models: [
     {
       id: DEFAULT_LLM_MODEL_ID,
-      provider: 'local',
-      model: 'qwen2.5:7b',
+      providerId: 'local',
+      providerModelId: 'qwen2.5:7b',
       name: 'Qwen 2.5 7B',
       temperature: 0.2,
     },
     {
       id: 'gemini-flash',
-      provider: 'google',
-      model: 'gemini-2.5-flash',
+      providerId: 'google',
+      providerModelId: 'gemini-2.5-flash',
       name: 'Gemini 2.5 Flash',
       temperature: 0.2,
     },
     {
       id: 'deepseek-chat',
-      provider: 'deepseek',
-      model: 'deepseek-chat',
+      providerId: 'deepseek',
+      providerModelId: 'deepseek-chat',
       name: 'DeepSeek Chat',
       temperature: 0.2,
     },
     {
       id: 'openrouter-gpt-4-1-mini',
-      provider: 'openrouter',
-      model: 'openai/gpt-4.1-mini',
+      providerId: 'openrouter',
+      providerModelId: 'openai/gpt-4.1-mini',
       name: 'GPT-4.1 mini',
       temperature: 0.2,
     },

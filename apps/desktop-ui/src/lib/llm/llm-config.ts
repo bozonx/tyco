@@ -86,14 +86,17 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     if (!isRecord(item) || typeof item.id !== 'string') continue
     const id = item.id.trim()
     if (!id || seen.has(id)) continue
-    if (typeof item.provider !== 'string' || !providerIds.has(item.provider)) {
+    const providerId = item.providerId ?? item.provider
+    const providerModelId = item.providerModelId ?? item.model
+    if (typeof providerId !== 'string' || !providerIds.has(providerId)) {
       continue
     }
 
     const model: LlmModel = {
       id,
-      provider: item.provider,
-      model: typeof item.model === 'string' ? item.model : '',
+      providerId,
+      providerModelId:
+        typeof providerModelId === 'string' ? providerModelId : '',
     }
     if (typeof item.name === 'string') model.name = item.name
     if (typeof item.vision === 'boolean') model.vision = item.vision
@@ -103,8 +106,11 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     }
     const maxOutputTokens = positiveInteger(item.maxOutputTokens)
     if (maxOutputTokens !== undefined) model.maxOutputTokens = maxOutputTokens
-    const contextSize = positiveInteger(item.contextSize)
-    if (contextSize !== undefined) model.contextSize = contextSize
+    const contextWindowTokens = positiveInteger(
+      item.contextWindowTokens ?? item.contextSize
+    )
+    if (contextWindowTokens !== undefined)
+      model.contextWindowTokens = contextWindowTokens
 
     seen.add(id)
     result.push(model)
@@ -168,7 +174,7 @@ export function removeProvider(config: LlmConfig, providerId: string) {
     (provider) => provider.id !== providerId
   )
   const removed = config.models
-    .filter((model) => model.provider === providerId)
+    .filter((model) => model.providerId === providerId)
     .map((model) => model.id)
   removed.forEach((modelId) => removeModel(config, modelId))
 }
@@ -179,8 +185,8 @@ export function addModel(config: LlmConfig, providerId: string): LlmModel {
       `${providerId}-model`,
       config.models.map((item) => item.id)
     ),
-    provider: providerId,
-    model: '',
+    providerId: providerId,
+    providerModelId: '',
     name: '',
   }
   config.models.push(model)
@@ -197,7 +203,7 @@ export function removeModel(config: LlmConfig, modelId: string) {
 }
 
 export function modelLabel(model: LlmModel): string {
-  return model.name?.trim() || model.model.trim() || model.id
+  return model.name?.trim() || model.providerModelId.trim() || model.id
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

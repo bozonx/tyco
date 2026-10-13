@@ -14,7 +14,7 @@
       v-else
       :text="resText"
       :allowInsertButton="true"
-      :stopListening="menuModalsStore.anyModalOpen"
+      :shortcutsDisabled="menuModalsStore.anyModalOpen"
     />
   </ContentPadding>
 </template>
@@ -44,7 +44,7 @@ const contextRemoved = ref(false)
 const isInsertMenu = ref(false)
 const resText = ref('')
 watch(
-  () => ipcStore.params.activationId,
+  () => ipcStore.desktopState.activationId,
   () => {
     contextRemoved.value = false
     isInsertMenu.value = false

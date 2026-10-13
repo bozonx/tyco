@@ -9,7 +9,7 @@ import { createLlmRequest, type AiRequestOptions } from '../lib/llm/llm-request'
 import { clientLogger } from '../lib/logger/index'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
-import { AI_TASKS } from '../types/index'
+import { AiTaskKind } from '../types/index'
 import useToast from './use-toast'
 import { APP_CONFIG, type ChatMessage } from '@tyco/shared'
 
@@ -17,8 +17,8 @@ export const useLlmActions = () => {
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
   const { toast, toastText } = useToast()
-  const currentUserConfig = () => ipcStore.params.userConfig
-  const currentAppConfig = () => ipcStore.params?.appConfig ?? APP_CONFIG
+  const currentUserConfig = () => ipcStore.desktopState.userConfig
+  const currentAppConfig = () => ipcStore.desktopState?.appConfig ?? APP_CONFIG
 
   const aiRequest = createLlmRequest({
     client: llmStore.client,
@@ -33,9 +33,9 @@ export const useLlmActions = () => {
   const voiceCorrection = async (text: string, signal?: AbortSignal) => {
     const userConfig = currentUserConfig()
 
-    return await aiRequest(AI_TASKS.VOICE_CORRECTION, text, {
+    return await aiRequest(AiTaskKind.VOICE_CORRECTION, text, {
       instructions:
-        currentAppConfig().aiInstructions[AI_TASKS.VOICE_CORRECTION],
+        currentAppConfig().aiInstructions[AiTaskKind.VOICE_CORRECTION],
       rules: userConfig.aiRules?.voiceCorrection,
       signal,
     })
@@ -49,7 +49,7 @@ export const useLlmActions = () => {
   ) => {
     const { modelId, ...rest } = options
     return await aiRequest(
-      AI_TASKS.CHAT,
+      AiTaskKind.CHAT,
       [
         ...prevMessages,
         typeof message === 'string'
@@ -61,7 +61,7 @@ export const useLlmActions = () => {
         models: [modelId],
         notifyError: false,
         instructions:
-          devInstructions ?? currentAppConfig().aiInstructions[AI_TASKS.CHAT],
+          devInstructions ?? currentAppConfig().aiInstructions[AiTaskKind.CHAT],
         rules: currentUserConfig().aiRules?.chat,
       }
     )
@@ -75,7 +75,7 @@ export const useLlmActions = () => {
     signal?: AbortSignal
   ) => {
     const raw = await aiRequest(
-      AI_TASKS.CHAT,
+      AiTaskKind.CHAT,
       chatTitleSource(question, answer),
       {
         models: [modelId],
@@ -98,9 +98,9 @@ export const useLlmActions = () => {
 
     const userConfig = currentUserConfig()
 
-    return await aiRequest(AI_TASKS.CORRECTION, text, {
+    return await aiRequest(AiTaskKind.CORRECTION, text, {
       ...options,
-      instructions: currentAppConfig().aiInstructions[AI_TASKS.CORRECTION],
+      instructions: currentAppConfig().aiInstructions[AiTaskKind.CORRECTION],
       rules: userConfig.aiRules?.correction,
     })
   }
@@ -117,9 +117,9 @@ export const useLlmActions = () => {
     }
     if (!prompt.trim()) return ''
 
-    return await aiRequest(AI_TASKS.AI_TASKS, text, {
+    return await aiRequest(AiTaskKind.AI_TASKS, text, {
       ...options,
-      instructions: currentAppConfig().aiInstructions[AI_TASKS.AI_TASKS],
+      instructions: currentAppConfig().aiInstructions[AiTaskKind.AI_TASKS],
       rules: prompt.trim(),
     })
   }

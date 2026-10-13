@@ -10,7 +10,7 @@ export function useTranslationActions() {
   const ipcStore = useIpcStore()
   const translationStore = useTranslationStore()
   const { toast, toastText } = useToast()
-  const currentUserConfig = () => ipcStore.params.userConfig
+  const currentUserConfig = () => ipcStore.desktopState.userConfig
   interface TranslateOptions {
     signal?: AbortSignal
     onStage?: (stage: 'translating' | 'checking' | 'repairing') => void

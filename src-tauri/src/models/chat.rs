@@ -94,7 +94,8 @@ pub struct Chat {
     pub id: String,
     #[serde(alias = "description")]
     pub title: String,
-    pub last_msg_date: String,
+    #[serde(alias = "lastMsgDate")]
+    pub last_message_at: String,
     pub messages: Vec<ChatMessage>,
 }
 
@@ -104,7 +105,8 @@ pub struct ChatSummary {
     pub id: String,
     #[serde(alias = "description")]
     pub title: String,
-    pub last_msg_date: String,
+    #[serde(alias = "lastMsgDate")]
+    pub last_message_at: String,
 }
 
 impl From<&Chat> for ChatSummary {
@@ -112,7 +114,7 @@ impl From<&Chat> for ChatSummary {
         Self {
             id: chat.id.clone(),
             title: chat.title.clone(),
-            last_msg_date: chat.last_msg_date.clone(),
+            last_message_at: chat.last_message_at.clone(),
         }
     }
 }
@@ -183,6 +185,10 @@ mod tests {
         assert_eq!(summary, fixture["chatSummary"]);
         let serialized = serde_json::to_value(chat).unwrap();
         assert!(serialized.get("description").is_none());
+        assert!(serialized.get("lastMsgDate").is_none());
+        assert_eq!(serialized["lastMessageAt"], "2026-10-12T10:00:00.000Z");
+        let round_trip: Chat = serde_json::from_value(serialized.clone()).unwrap();
+        assert_eq!(round_trip.last_message_at, "2026-10-12T10:00:00.000Z");
         assert_eq!(serialized["title"], "Chat title");
     }
 }

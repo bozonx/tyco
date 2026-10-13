@@ -13,7 +13,9 @@ const mocks = vi.hoisted(() => ({
   }),
 }))
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ params: structuredClone(DEFAULT_DESKTOP_VIEW_STATE) }),
+  useIpcStore: () => ({
+    desktopState: structuredClone(DEFAULT_DESKTOP_VIEW_STATE),
+  }),
 }))
 vi.mock('../stores/llm', () => ({
   useLlmStore: () => ({ client: { run: mocks.run } }),

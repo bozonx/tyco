@@ -97,7 +97,7 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
             }
         }
     }
-    history.sort_by(|left, right| right.last_msg_date.cmp(&left.last_msg_date));
+    history.sort_by(|left, right| right.last_message_at.cmp(&left.last_message_at));
     Ok(history)
 }
 
@@ -162,7 +162,7 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
         Chat {
             id,
             title: String::new(),
-            last_msg_date: String::new(),
+            last_message_at: String::new(),
             messages: Vec::new(),
         },
     )?))
@@ -276,7 +276,8 @@ impl ChatHistoryPolicy {
             return;
         }
         let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
-        history.retain(|item| parse_iso_utc_ms(&item.last_msg_date).is_none_or(|ms| ms >= cutoff));
+        history
+            .retain(|item| parse_iso_utc_ms(&item.last_message_at).is_none_or(|ms| ms >= cutoff));
     }
 }
 
@@ -442,7 +443,7 @@ mod tests {
         Chat {
             id: id.to_string(),
             title: String::from("chat"),
-            last_msg_date: String::from("0"),
+            last_message_at: String::from("0"),
             messages: Vec::new(),
         }
     }
@@ -630,7 +631,7 @@ mod tests {
     fn chat_history_policy_drops_the_chats_past_the_retention_period() {
         let dated = |id: &str, date: &str| {
             let mut chat = chat_item(id);
-            chat.last_msg_date = date.to_string();
+            chat.last_message_at = date.to_string();
             chat
         };
         let mut history = vec![
@@ -656,9 +657,9 @@ mod tests {
     fn a_lost_or_broken_index_is_rebuilt_from_the_chat_files() {
         let dir = temp_dir("rebuild");
         let mut older = chat_item("older");
-        older.last_msg_date = String::from("2026-01-01T00:00:00.000Z");
+        older.last_message_at = String::from("2026-01-01T00:00:00.000Z");
         let mut newer = chat_item("newer");
-        newer.last_msg_date = String::from("2026-02-01T00:00:00.000Z");
+        newer.last_message_at = String::from("2026-02-01T00:00:00.000Z");
         for chat in [&older, &newer] {
             write_json(&dir.join(format!("{}.json", chat.id)), chat).unwrap();
         }

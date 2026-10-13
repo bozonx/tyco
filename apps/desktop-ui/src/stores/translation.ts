@@ -17,7 +17,7 @@ export const useTranslationStore = defineStore('translation', () => {
   const secretsClient = createSecretsClient(tauriNetIpc)
   const client = createTranslationClient({
     getConfig: () =>
-      normalizeTranslationConfig(ipcStore.params.userConfig?.translation),
+      normalizeTranslationConfig(ipcStore.desktopState.userConfig?.translation),
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(() => secretsClient.status()),
     runLlm: (prompt, signal, options = {}) =>

@@ -25,7 +25,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
     appearance: () => theme.settings,
   })
   const session = createSettingsSession({
-    initialConfig: ipc.params.userConfig,
+    initialConfig: ipc.desktopState.userConfig,
     prepare: config.prepare,
     save: (next, base) => ipc.saveUserConfig(next, base),
     canSave: () => (session.draft.value.configVersion ?? 0) <= CONFIG_VERSION,
@@ -38,7 +38,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
       ),
     debounceMs: 500,
   })
-  watch(() => ipc.params.userConfig, session.applyIncoming)
+  watch(() => ipc.desktopState.userConfig, session.applyIncoming)
   watch(session.draft, session.schedule, { deep: true })
   onScopeDispose(() => {
     void session.dispose()

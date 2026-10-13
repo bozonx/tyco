@@ -116,9 +116,9 @@
           </FieldRow>
           <FieldRow :label="t('settings.modelId')">
             <FieldInput
-              :value="model.model"
-              :placeholder="modelPlaceholder(model.provider)"
-              @update:value="model.model = $event"
+              :value="model.providerModelId"
+              :placeholder="modelPlaceholder(model.providerId)"
+              @update:value="model.providerModelId = $event"
             />
           </FieldRow>
           <div class="advanced-toggle">
@@ -166,9 +166,9 @@
             <FieldRow :label="t('settings.contextSize')">
               <FieldNumber
                 min="1"
-                :value="model.contextSize ?? ''"
+                :value="model.contextWindowTokens ?? ''"
                 :placeholder="t('settings.providerDefault')"
-                @update:value="setNumber(model, 'contextSize', $event)"
+                @update:value="setNumber(model, 'contextWindowTokens', $event)"
               />
             </FieldRow>
           </template>
@@ -269,7 +269,7 @@ function providerIcon(provider: LlmProvider) {
   return PROVIDER_ICONS[provider.type] ?? 'mdi:cube-outline'
 }
 function modelsFor(id: string) {
-  return props.llm.models.filter((model) => model.provider === id)
+  return props.llm.models.filter((model) => model.providerId === id)
 }
 function providerSummary(provider: LlmProvider) {
   const count = t('settings.modelsCount', {

@@ -72,7 +72,7 @@ const ipcStore = useIpcStore()
 
 useNavPanelStore().resetNavParams({ panelVisible: false })
 
-const request = computed(() => ipcStore.params.accessRequest ?? null)
+const request = computed(() => ipcStore.desktopState.accessRequest ?? null)
 
 const prompt = createAccessPrompt({
   answer: async (jobId, decision) => {

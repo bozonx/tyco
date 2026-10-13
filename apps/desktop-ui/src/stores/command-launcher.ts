@@ -2,7 +2,7 @@ import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 
-import { START_MODES } from '@tyco/shared'
+import { StartMode } from '@tyco/shared'
 
 import useToast from '../composables/use-toast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
@@ -21,12 +21,12 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
 
   const model = createCommandLauncherModel({
     tools: useToolsStore(),
-    commands: () => ipcStore.params.userConfig?.commands,
-    launcherPages: () => ipcStore.params.userConfig?.launcherPages,
-    launcherCommands: () => ipcStore.params.userConfig?.launcherCommands,
+    commands: () => ipcStore.desktopState.userConfig?.commands,
+    launcherPages: () => ipcStore.desktopState.userConfig?.launcherPages,
+    launcherCommands: () => ipcStore.desktopState.userConfig?.launcherCommands,
     launcherPagesWithoutText: () =>
-      ipcStore.params.userConfig?.launcherPagesWithoutText,
-    selectedText: () => ipcStore.params.selectedText,
+      ipcStore.desktopState.userConfig?.launcherPagesWithoutText,
+    selectedText: () => ipcStore.desktopState.selectedText,
     run: runner.run,
     ...createExternalJobAdapter({
       callFunction: ipcStore.callFunction,
@@ -59,27 +59,27 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   // every activation of the overlay starts at the full list, or at the
   // command of an external call
   watch(
-    () => ipcStore.params.activationId,
+    () => ipcStore.desktopState.activationId,
     () => {
-      if (ipcStore.params.mode !== START_MODES.COMMAND_LAUNCHER) return
-      const request = ipcStore.params.launcherRequest
+      if (ipcStore.desktopState.mode !== StartMode.COMMAND_LAUNCHER) return
+      const request = ipcStore.desktopState.launcherRequest
       if (request) void model.request(request)
       else {
         model.reset()
-        model.setPage(ipcStore.params.launcherPage ?? 0)
+        model.setPage(ipcStore.desktopState.launcherPage ?? 0)
       }
     }
   )
 
   watch(
-    () => ipcStore.params.selectedText,
+    () => ipcStore.desktopState.selectedText,
     (text) => {
       void model.selectionArrived(text)
     }
   )
 
   watch(
-    () => ipcStore.params.isWindowShown,
+    () => ipcStore.desktopState.isWindowShown,
     (shown) => {
       if (!shown && model.stage.value.kind === 'prepare')
         model.dismissExternal()

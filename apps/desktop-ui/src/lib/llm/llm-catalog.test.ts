@@ -2,7 +2,7 @@ import { DEFAULT_LLM_CONFIG, type LlmConfig } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
-  DEFAULT_CONTEXT_SIZE,
+  DEFAULT_CONTEXT_WINDOW_TOKENS,
   OUTPUT_TOKENS_CEILING,
   buildLlmCatalog,
   buildProviderFactories,
@@ -22,7 +22,7 @@ describe('llm-catalog', () => {
     const gemini = catalog.require('gemini-flash')
     expect(gemini.provider).toBe('google')
     expect(gemini.model).toBe('gemini-2.5-flash')
-    expect(gemini.contextSize).toBe(DEFAULT_CONTEXT_SIZE)
+    expect(gemini.contextSize).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
     expect(gemini.maxOutputTokens).toBe(OUTPUT_TOKENS_CEILING)
 
     const local = catalog.require('local-qwen')
@@ -58,7 +58,7 @@ describe('llm-catalog', () => {
       ),
       models: [
         ...base.models,
-        { id: 'blank', provider: 'google', model: '  ' },
+        { id: 'blank', providerId: 'google', providerModelId: '  ' },
       ],
       tasks: { ...base.tasks, aiTasks: ['blank', 'gemini-flash'] },
     })!
@@ -74,11 +74,16 @@ describe('llm-catalog', () => {
     const catalog = buildLlmCatalog({
       ...base,
       models: [
-        { id: 'a', provider: 'google', model: 'g', maxOutputTokens: 1024 },
+        {
+          id: 'a',
+          providerId: 'google',
+          providerModelId: 'g',
+          maxOutputTokens: 1024,
+        },
         {
           id: 'b',
-          provider: 'google',
-          model: 'g',
+          providerId: 'google',
+          providerModelId: 'g',
           maxOutputTokens: 10_000_000,
         },
       ],
@@ -95,7 +100,7 @@ describe('llm-catalog', () => {
     expect(
       buildLlmCatalog({
         ...base,
-        models: base.models.map((model) => ({ ...model, model: '' })),
+        models: base.models.map((model) => ({ ...model, providerModelId: '' })),
       })
     ).toBeNull()
   })

@@ -31,12 +31,12 @@ beforeEach(() => {
   const ipc = useIpcStore()
   vi.spyOn(ipc, 'patchLocalState').mockResolvedValue({
     success: true,
-    result: ipc.params.localState,
+    result: ipc.desktopState.localState,
   })
-  ipc.setParams({
-    ...ipc.params,
+  ipc.applyViewState({
+    ...ipc.desktopState,
     userConfig: {
-      ...ipc.params.userConfig,
+      ...ipc.desktopState.userConfig,
       llm: structuredClone(DEFAULT_LLM_CONFIG),
     },
     isWindowShown: true,
@@ -72,7 +72,10 @@ describe('chat store dependency wiring', () => {
     editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
     expect(store.voiceChatContext?.source).toBe('editor-selection')
-    useIpcStore().setParams({ ...useIpcStore().params, isWindowShown: false })
+    useIpcStore().applyViewState({
+      ...useIpcStore().desktopState,
+      isWindowShown: false,
+    })
     await nextTick()
     expect(store.voiceChatContext).toBeNull()
     const otherPinia = createPinia()

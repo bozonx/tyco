@@ -1,6 +1,6 @@
 <template>
   <ContentPadding>
-    <CommandLauncher :stopListening="stopListening" />
+    <CommandLauncher :shortcutsDisabled="shortcutsDisabled" />
   </ContentPadding>
 </template>
 
@@ -18,8 +18,8 @@ const navPanelStore = useNavPanelStore()
 
 // The view outlives a hidden window. Until the next activation reaches it, the
 // keys belong to whatever mode that activation opens
-const stopListening = computed(
-  () => menuModalsStore.anyModalOpen || !ipcStore.params.isWindowShown
+const shortcutsDisabled = computed(
+  () => menuModalsStore.anyModalOpen || !ipcStore.desktopState.isWindowShown
 )
 
 navPanelStore.resetNavParams({})

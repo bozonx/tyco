@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CorrectionModeView from './CorrectionModeView.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: {
+  desktopState: {
     selectedText: 'Selected text' as string | null,
     isWindowShown: true,
     mode: 'correction',
@@ -30,7 +30,7 @@ vi.mock('../components/menu/InProgressMessage.vue', () => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: reactive(mocks.params),
+    desktopState: reactive(mocks.desktopState),
     callFunctionOrNotify: mocks.callFunctionOrNotify,
   }),
 }))
@@ -46,7 +46,7 @@ vi.mock('../stores/action-menu', () => ({
 describe('CorrectionModeView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.params.selectedText = 'Selected text'
+    mocks.desktopState.selectedText = 'Selected text'
   })
 
   it('passes onCancel handler to actionMenuStore.correct', async () => {

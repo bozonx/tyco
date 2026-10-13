@@ -23,7 +23,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
   const invocations = useInvocationsStore()
 
   const action = createSelectionAction({
-    commands: () => ipcStore.params.userConfig.commands,
+    commands: () => ipcStore.desktopState.userConfig.commands,
     correct: (text, signal) =>
       invocations.call('core.correct', text, { signal, source: 'selection' }),
     transform: (command, text, signal) =>

@@ -1,4 +1,4 @@
-export enum AI_TASKS {
+export enum AiTaskKind {
   TRANSLATE = 'translate',
   VOICE_CORRECTION = 'voiceCorrection',
   CORRECTION = 'correction',
@@ -6,7 +6,7 @@ export enum AI_TASKS {
   CHAT = 'chat',
 }
 
-export const PRESETS_KEYS = [
+export const SHORTCUT_SLOT_KEYS = [
   'q',
   'w',
   'e',

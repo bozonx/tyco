@@ -11,7 +11,7 @@ import { testTools } from '../../lib/tools/testing'
 import CommandLauncher from './CommandLauncher.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: { activationId: 1, selectedText: null as string | null },
+  desktopState: { activationId: 1, selectedText: null as string | null },
   run: vi.fn(async () => ({ success: true, result: undefined })),
   handleEsc: vi.fn(),
   store: null as unknown,
@@ -32,7 +32,7 @@ vi.mock('../../composables/use-overlay-nav', () => ({
 }))
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: reactive(mocks.params),
+    desktopState: reactive(mocks.desktopState),
     callFunctionOrNotify: vi.fn(),
   }),
 }))
@@ -71,7 +71,7 @@ function mountLauncher(
       launcherPages: () => launcherPages,
       tools: testTools(),
       commands: () => commands,
-      selectedText: () => mocks.params.selectedText,
+      selectedText: () => mocks.desktopState.selectedText,
       run: mocks.run,
     })
   )
@@ -92,7 +92,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks()
-  mocks.params.selectedText = null
+  mocks.desktopState.selectedText = null
 })
 
 describe('CommandLauncher', () => {
@@ -136,7 +136,7 @@ describe('CommandLauncher', () => {
     const lights = webhook('lights')
     const wrapper = mountLauncher([backup, lights])
 
-    // Key 'w' is the second key in PRESETS_KEYS ('q', 'w', 'e'...)
+    // Key 'w' is the second key in SHORTCUT_SLOT_KEYS ('q', 'w', 'e'...)
     window.dispatchEvent(
       new KeyboardEvent('keydown', { code: 'KeyW', bubbles: true })
     )

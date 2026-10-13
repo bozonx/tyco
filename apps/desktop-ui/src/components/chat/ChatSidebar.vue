@@ -75,7 +75,7 @@
                 class="chat-list-item"
                 :disabled="chatStore.isGenerating"
                 :class="{
-                  'is-active': chatStore.newChatParams?.id === item.id,
+                  'is-active': chatStore.currentChatState?.id === item.id,
                 }"
                 :title="item.title"
                 @click="openChat(item.id)"
@@ -174,7 +174,7 @@ const renameInputs = ref<HTMLInputElement[]>([])
 const chatToDelete = ref<string | null>(null)
 const removal = createRemovalUndo<Chat>({
   remove: async (id) => {
-    const wasOpen = chatStore.newChatParams.id === id
+    const wasOpen = chatStore.currentChatState.id === id
     if (wasOpen) {
       chatStore.abandonChat()
       await chatStore.whenSaved()
@@ -194,7 +194,7 @@ const removedChat = removal.removed
 const undoRemoveChat = removal.undo
 
 const chatHistoryDisabled = computed(
-  () => !isChatHistoryEnabled(ipcStore.params.userConfig)
+  () => !isChatHistoryEnabled(ipcStore.desktopState.userConfig)
 )
 
 /** Chats whose messages match the query, found in storage */
@@ -248,11 +248,11 @@ function getRowMenuItems(item: ChatSummary): DropdownMenuItem[] {
 async function copyChatMarkdown(id: string) {
   let targetChat: Chat | null
   // the open chat is newer in memory than in storage
-  if (chatStore.newChatParams?.id === id) {
+  if (chatStore.currentChatState?.id === id) {
     targetChat = {
       id,
-      title: chatStore.newChatParams.title || '',
-      lastMsgDate: '',
+      title: chatStore.currentChatState.title || '',
+      lastMessageAt: '',
       messages: chatStore.messages,
     }
   } else {

@@ -49,7 +49,7 @@ export function createChatController(deps: ChatControllerDeps) {
 
   /** What goes with the next message besides the input */
   const attachedContext = computed<ChatAttachment[]>(
-    () => model.newChatParams.value.attachments || []
+    () => model.currentChatState.value.attachments || []
   )
 
   /** How much of the model the next message takes; null without a model */
@@ -58,8 +58,8 @@ export function createChatController(deps: ChatControllerDeps) {
     if (!picked) return null
     return resolveContextBudget(
       [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
-      contextBudgetCharacters(picked.contextSize),
-      (model.newChatParams.value.images || []).reduce(
+      contextBudgetCharacters(picked.contextWindowTokens),
+      (model.currentChatState.value.images || []).reduce(
         (sum, image) => sum + imageBudgetCharacters(image),
         0
       )
@@ -82,7 +82,8 @@ export function createChatController(deps: ChatControllerDeps) {
       model.messages.value,
       Math.max(
         0,
-        contextBudgetCharacters(selectedModel.value.contextSize) - inputSize
+        contextBudgetCharacters(selectedModel.value.contextWindowTokens) -
+          inputSize
       )
     ).some((message) => message.images?.length)
   })
@@ -185,7 +186,7 @@ export function createChatController(deps: ChatControllerDeps) {
       const pending = model.sendMessage(message, attachments, [
         ...pendingImages.value,
       ])
-      const chatId = model.newChatParams.value.id
+      const chatId = model.currentChatState.value.id
       const messages = model.messages.value
       chatInputStore.clear()
 
@@ -200,7 +201,7 @@ export function createChatController(deps: ChatControllerDeps) {
         await pending
         if (
           submission === inputSubmission &&
-          model.newChatParams.value.id === chatId &&
+          model.currentChatState.value.id === chatId &&
           model.messages.value === messages &&
           !chatInputStore.value
         ) {

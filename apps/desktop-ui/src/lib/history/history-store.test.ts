@@ -23,7 +23,7 @@ function createApi() {
               {
                 id: 'chat-1',
                 title: 'Hello',
-                lastMsgDate: '2026-04-22T00:00:00.000Z',
+                lastMessageAt: '2026-04-22T00:00:00.000Z',
                 messages: [],
               },
             ],
@@ -34,7 +34,7 @@ function createApi() {
             result: {
               id: 'chat-1',
               title: 'Hello',
-              lastMsgDate: '2026-04-22T00:00:00.000Z',
+              lastMessageAt: '2026-04-22T00:00:00.000Z',
               messages: [{ role: 'user', content: 'Hello' }],
             },
           }
@@ -185,8 +185,8 @@ describe('history-store', () => {
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
     store.chatHistory.value = [
-      { id: 'chat-1', title: 'A', lastMsgDate: 'x' },
-      { id: 'chat-2', title: 'B', lastMsgDate: 'y' },
+      { id: 'chat-1', title: 'A', lastMessageAt: 'x' },
+      { id: 'chat-2', title: 'B', lastMessageAt: 'y' },
     ]
 
     const removed = await store.removeFromEditorHistory('1')
@@ -218,7 +218,7 @@ describe('history-store', () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.chatHistory.value = [
-      { id: 'chat-1', title: 'Hello', lastMsgDate: 'x' },
+      { id: 'chat-1', title: 'Hello', lastMessageAt: 'x' },
     ]
 
     const removed = await store.deleteChat('chat-1')
@@ -233,7 +233,7 @@ describe('history-store', () => {
     const api = createApi()
     const store = createHistoryStoreModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
-    store.chatHistory.value = [{ id: 'chat-1', title: 'A', lastMsgDate: 'x' }]
+    store.chatHistory.value = [{ id: 'chat-1', title: 'A', lastMessageAt: 'x' }]
 
     await store.clearEditorHistory()
     await store.clearChats()
@@ -288,7 +288,7 @@ describe('history-store', () => {
       store.saveChat({
         id: 'chat-1',
         title: 'Hello',
-        lastMsgDate: '',
+        lastMessageAt: '',
         messages: [],
       })
     ).resolves.toBeUndefined()
@@ -310,7 +310,7 @@ describe('history-store', () => {
 
     const load = store.loadChatHistory()
     await store.deleteChat('chat-1')
-    finishLoad({ result: [{ id: 'chat-1', title: '', lastMsgDate: '' }] })
+    finishLoad({ result: [{ id: 'chat-1', title: '', lastMessageAt: '' }] })
     await load
 
     expect(store.chatHistory.value).toEqual([])

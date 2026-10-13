@@ -4,7 +4,7 @@ import {
   filterOptions,
   moveHighlight,
   pushRecent,
-  uniqueIds,
+  deduplicateById,
 } from './menu-query'
 
 const languages = [
@@ -47,10 +47,10 @@ describe('pushRecent', () => {
   })
 })
 
-describe('uniqueIds', () => {
+describe('deduplicateById', () => {
   it('keeps the first copy of each id', () => {
     expect(
-      uniqueIds([
+      deduplicateById([
         { id: 'a', n: 1 },
         { id: 'b', n: 2 },
         { id: 'a', n: 3 },

@@ -20,21 +20,21 @@ export interface DesktopStateDeps {
 
 /** Applies every snapshot through one revision gate, including write responses. */
 export function createDesktopStateModel(deps: DesktopStateDeps) {
-  const params = ref<DesktopViewState>(
+  const desktopState = ref<DesktopViewState>(
     structuredClone(DEFAULT_DESKTOP_VIEW_STATE)
   )
   let loaded = !deps.desktopClient.isAvailable()
   let localStateWrites: Promise<unknown> = Promise.resolve()
 
-  const setParams = (incoming: DesktopViewState) => {
-    if (incoming.revision < params.value.revision) return false
-    params.value = incoming
+  const applyViewState = (incoming: DesktopViewState) => {
+    if (incoming.revision < desktopState.value.revision) return false
+    desktopState.value = incoming
     loaded = true
     return true
   }
 
   const applySnapshot = (snapshot: DesktopSnapshot) => {
-    const accepted = setParams(desktopSnapshotToView(snapshot))
+    const accepted = applyViewState(desktopSnapshotToView(snapshot))
     loaded = true
     return accepted
   }
@@ -44,7 +44,7 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
       applySnapshot(
         desktopViewToSnapshot(deps.desktopClient.getDesktopViewState())
       )
-      return params.value
+      return desktopState.value
     }
     const response = await deps.desktopClient.invoke(
       DESKTOP_COMMANDS.GET_DESKTOP_STATE
@@ -55,7 +55,7 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
       throw error
     }
     applySnapshot(response.result)
-    return params.value
+    return desktopState.value
   }
 
   const notLoaded = () => ({
@@ -65,7 +65,7 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
 
   const saveUserConfig = async (
     userConfig: UserConfig,
-    baseConfig: UserConfig = params.value.userConfig
+    baseConfig: UserConfig = desktopState.value.userConfig
   ) => {
     if (!loaded) return notLoaded()
     const response = await deps.callFunction('saveUserConfig', [
@@ -101,13 +101,13 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
   }
 
   const setExecutionConfig = (userConfig: UserConfig) => {
-    params.value = { ...params.value, userConfig }
+    desktopState.value = { ...desktopState.value, userConfig }
   }
 
   return {
     setExecutionConfig,
-    params,
-    setParams,
+    desktopState,
+    applyViewState,
     loadDesktopState,
     saveUserConfig,
     patchLocalState,

@@ -21,13 +21,13 @@ describe('chat-model', () => {
     ])
     expect(options[1]).toMatchObject({
       name: 'DeepSeek Chat',
-      provider: 'DeepSeek',
+      providerLabel: 'DeepSeek',
     })
   })
 
   it('leaves out unfinished models', () => {
     const llm = config()
-    llm.models.push({ id: 'blank', provider: 'google', model: ' ' })
+    llm.models.push({ id: 'blank', providerId: 'google', providerModelId: ' ' })
 
     const options = chatModelOptions(llm, () => true)
 

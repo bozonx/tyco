@@ -40,7 +40,7 @@ describe('chat-store', () => {
   it('sends a message, appends assistant response, and saves history', async () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
-    store.newChatParams.value = {
+    store.currentChatState.value = {
       id: 'chat-id-1',
       title: 'Hello',
       attachments: [{ text: 'file-a' }],
@@ -64,7 +64,7 @@ describe('chat-store', () => {
         ],
       })
     )
-    expect(store.newChatParams.value.attachments).toEqual([])
+    expect(store.currentChatState.value.attachments).toEqual([])
   })
 
   it('adds developer instructions from the first message', async () => {
@@ -88,7 +88,7 @@ describe('chat-store', () => {
   it('persists the complete chat state after follow-up messages', async () => {
     const deps = createDeps()
     const store = createChatStoreModel(deps)
-    store.newChatParams.value = { id: 'chat-id-1', title: 'First question' }
+    store.currentChatState.value = { id: 'chat-id-1', title: 'First question' }
     store.messages.value = [
       { role: 'user', content: 'First question' },
       { role: 'assistant', content: 'First answer' },
@@ -134,7 +134,7 @@ describe('chat-store', () => {
 
     await store.startChat({ attachments: [{ text: 'context' }] })
 
-    expect(store.newChatParams.value).toEqual({
+    expect(store.currentChatState.value).toEqual({
       attachments: [{ text: 'context' }],
       id: 'chat-id-1',
     })
@@ -216,7 +216,7 @@ describe('chat-store', () => {
       loadChat: vi.fn(async () => ({
         id: 'chat-7',
         title: 'Saved prompt',
-        lastMsgDate: '2026-04-22T00:00:00.000Z',
+        lastMessageAt: '2026-04-22T00:00:00.000Z',
         messages: [
           { role: 'user' as const, content: 'Saved prompt' },
           { role: 'assistant' as const, content: 'Saved reply' },
@@ -227,7 +227,7 @@ describe('chat-store', () => {
 
     await store.openChat('chat-7')
 
-    expect(store.newChatParams.value).toEqual({
+    expect(store.currentChatState.value).toEqual({
       id: 'chat-7',
       title: 'Saved prompt',
       attachments: [],
@@ -248,18 +248,18 @@ describe('chat-store', () => {
     store.addAttachment({ text: 'attachment 1' }) // duplicate should not be added
     store.addAttachment({ text: '   ' }) // empty should be ignored
 
-    expect(store.newChatParams.value.attachments).toEqual([
+    expect(store.currentChatState.value.attachments).toEqual([
       { text: 'attachment 1' },
       { text: 'attachment 2' },
     ])
 
     store.removeAttachment(0)
-    expect(store.newChatParams.value.attachments).toEqual([
+    expect(store.currentChatState.value.attachments).toEqual([
       { text: 'attachment 2' },
     ])
 
     store.removeAttachment(5) // invalid index does nothing
-    expect(store.newChatParams.value.attachments).toEqual([
+    expect(store.currentChatState.value.attachments).toEqual([
       { text: 'attachment 2' },
     ])
   })
@@ -347,7 +347,7 @@ describe('chat-store', () => {
       'model-1',
       expect.any(AbortSignal)
     )
-    expect(store.newChatParams.value.title).toBe('Greeting')
+    expect(store.currentChatState.value.title).toBe('Greeting')
 
     await store.sendMessage('And more')
     expect(deps.generateChatTitle).toHaveBeenCalledOnce()
@@ -368,7 +368,7 @@ describe('chat-store', () => {
     resolveTitle('Greeting')
     await Promise.resolve()
 
-    expect(store.newChatParams.value.title).toBe('Mine')
+    expect(store.currentChatState.value.title).toBe('Mine')
     expect(deps.renameChat).not.toHaveBeenCalled()
   })
 
@@ -426,7 +426,7 @@ describe('chat-store', () => {
     await store.startChat({})
 
     await store.attachToChat({ text: 'first' })
-    expect(store.newChatParams.value).toMatchObject({
+    expect(store.currentChatState.value).toMatchObject({
       id: 'chat-1',
       attachments: [{ text: 'first' }],
     })
@@ -434,7 +434,7 @@ describe('chat-store', () => {
     await store.sendMessage('Question', [{ text: 'first' }])
     await store.attachToChat({ text: 'second' })
     expect(store.messages.value).toEqual([])
-    expect(store.newChatParams.value).toMatchObject({
+    expect(store.currentChatState.value).toMatchObject({
       id: 'chat-2',
       attachments: [{ text: 'second' }],
     })
@@ -471,14 +471,14 @@ describe('chat-store', () => {
     await store.openLastOrNewChat()
 
     expect(deps.notifyError).not.toHaveBeenCalled()
-    expect(store.newChatParams.value.id).toBe('chat-id-1')
+    expect(store.currentChatState.value.id).toBe('chat-id-1')
   })
 
   it('branches a dialogue from a selected message index', async () => {
     let idCounter = 1
     const deps = createDeps({ createId: () => `branch-id-${idCounter++}` })
     const store = createChatStoreModel(deps)
-    store.newChatParams.value = {
+    store.currentChatState.value = {
       id: 'original-id',
       title: 'Original Title',
       attachments: [],
@@ -493,8 +493,8 @@ describe('chat-store', () => {
     const branched = await store.branchChat(1)
 
     expect(branched).toBe(true)
-    expect(store.newChatParams.value.id).toBe('branch-id-1')
-    expect(store.newChatParams.value.title).toBe('Original Title (branch)')
+    expect(store.currentChatState.value.id).toBe('branch-id-1')
+    expect(store.currentChatState.value.title).toBe('Original Title (branch)')
     expect(store.messages.value).toHaveLength(2)
     expect(store.messages.value[0]?.content).toBe('Turn 1')
     expect(store.messages.value[1]?.content).toBe('Reply 1')
@@ -566,7 +566,7 @@ describe('chat-store', () => {
     resolve('Late answer')
     await pending
     expect(store.messages.value).toEqual([])
-    expect(store.newChatParams.value.title).toBe('New chat')
+    expect(store.currentChatState.value.title).toBe('New chat')
   })
   it('cancels a pending title when leaving the chat and ignores its result', async () => {
     let resolve!: (title: string) => void
@@ -587,7 +587,7 @@ describe('chat-store', () => {
     resolve('Late title')
     await Promise.resolve()
     expect(deps.renameChat).not.toHaveBeenCalled()
-    expect(store.newChatParams.value.title).toBe('New')
+    expect(store.currentChatState.value.title).toBe('New')
   })
 })
 
@@ -637,10 +637,10 @@ describe('image turns', () => {
   it('rejects text-only models without consuming the draft', async () => {
     const deps = createDeps({ imageModelError: () => 'Vision required' })
     const store = createChatStoreModel(deps)
-    store.newChatParams.value.images = [image]
+    store.currentChatState.value.images = [image]
     await store.sendMessage('', [], [image])
     expect(deps.notifyError).toHaveBeenCalledWith('Vision required')
-    expect(store.newChatParams.value.images).toEqual([image])
+    expect(store.currentChatState.value.images).toEqual([image])
     expect(store.messages.value).toEqual([])
   })
   it('accounts for image cost before dispatch', async () => {
@@ -824,7 +824,7 @@ describe('file and image context policies', () => {
     expect(deps.notifyError).toHaveBeenCalledWith('Load failed')
 
     await store.openLastOrNewChat()
-    expect(store.newChatParams.value.id).toBe('new-chat')
+    expect(store.currentChatState.value.id).toBe('new-chat')
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
   })
 
@@ -842,7 +842,7 @@ describe('file and image context policies', () => {
     const chat = (id: string) => ({
       id,
       title: id,
-      lastMsgDate: '',
+      lastMessageAt: '',
       messages: [{ role: 'user' as const, content: id }],
     })
 
@@ -853,7 +853,7 @@ describe('file and image context policies', () => {
     loads.get('a')!(chat('a'))
 
     expect(await first).toBe(false)
-    expect(store.newChatParams.value.id).toBe('b')
+    expect(store.currentChatState.value.id).toBe('b')
   })
 
   it('branches from an answer still coming as it was stopped', async () => {

@@ -7,7 +7,7 @@ import type {
 } from '@tyco/shared'
 export function createChatState() {
   const messages = ref<ChatMessage[]>([])
-  const newChatParams = ref<ChatParams>({})
+  const currentChatState = ref<ChatParams>({})
   const isGenerating = ref(false)
   const error = ref('')
   const isStopped = ref(false)
@@ -20,7 +20,7 @@ export function createChatState() {
   } | null>(null)
   return {
     messages,
-    newChatParams,
+    currentChatState,
     isGenerating,
     error,
     isStopped,

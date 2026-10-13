@@ -45,7 +45,7 @@ export interface ChatParams {
 export interface ChatSummary {
   id: string
   title: string
-  lastMsgDate: string
+  lastMessageAt: string
 }
 
 export interface Chat extends ChatSummary {

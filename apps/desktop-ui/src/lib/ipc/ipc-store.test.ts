@@ -171,7 +171,7 @@ describe('ipc-store', () => {
     })
   })
 
-  it('falls back to local init params without the desktop runtime', async () => {
+  it('falls back to local init desktopState without the desktop runtime', async () => {
     const deps = createDeps({
       desktopClient: {
         invoke: vi.fn(),
@@ -187,11 +187,11 @@ describe('ipc-store', () => {
     const result = await store.loadDesktopState()
 
     expect(result.windowId).toBe('fallback-window')
-    expect(store.params.value.windowId).toBe('fallback-window')
+    expect(store.desktopState.value.windowId).toBe('fallback-window')
     expect(deps.desktopClient.invoke).not.toHaveBeenCalled()
   })
 
-  it('fails loudly when the desktop runtime cannot give the params', async () => {
+  it('fails loudly when the desktop runtime cannot give the desktopState', async () => {
     const deps = createDeps({
       desktopClient: {
         invoke: vi.fn(async () => ({
@@ -254,7 +254,7 @@ describe('ipc-store', () => {
     expect(deps.notifyError).toHaveBeenCalledWith('no xdotool', 'Action failed')
   })
 
-  describe('after the params are loaded', () => {
+  describe('after the desktopState are loaded', () => {
     const loadedStore = async (
       invoke: (command: string) => Promise<unknown>
     ) => {
@@ -294,7 +294,7 @@ describe('ipc-store', () => {
         result: snapshot,
       }))
       expect((await store.saveUserConfig(nextConfig)).success).toBe(true)
-      expect(store.params.value.userConfig).toEqual(nextConfig)
+      expect(store.desktopState.value.userConfig).toEqual(nextConfig)
     })
   })
 })
@@ -308,13 +308,13 @@ it('keeps the invoking activation while waiting for held keys to release', async
       }),
   })
   const store = createIpcStoreModel(deps)
-  store.setParams({
+  store.applyViewState({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 1,
     activationId: 10,
   })
   const pending = store.callFunction('pasteIntoTargetAndHide', ['Result'])
-  store.setParams({
+  store.applyViewState({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 2,
     activationId: 11,

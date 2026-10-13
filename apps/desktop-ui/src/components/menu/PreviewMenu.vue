@@ -78,7 +78,7 @@ const ipcStore = useIpcStore()
 const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
 
 function readStoredTranslationMode(): ParallelViewMode {
-  const fromState = ipcStore.params.localState?.translationViewMode
+  const fromState = ipcStore.desktopState.localState?.translationViewMode
   if (fromState === 'split' || fromState === 'result') {
     return fromState
   }

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import VoiceChatView from './VoiceChatView.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: {
+  desktopState: {
     selectedText: 'Selected context' as string | null,
     isWindowShown: true,
     mode: 'voiceChat',
@@ -38,7 +38,7 @@ vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
     name: 'InsertMenu',
-    props: ['text', 'allowInsertButton', 'stopListening'],
+    props: ['text', 'allowInsertButton', 'shortcutsDisabled'],
     template: '<div class="insert-menu" />',
   },
 }))
@@ -49,7 +49,7 @@ vi.mock('../stores/menu-modals', () => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: reactive(mocks.params),
+    desktopState: reactive(mocks.desktopState),
     callFunction: mocks.callFunction,
   }),
 }))
@@ -63,7 +63,7 @@ vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chat }))
 describe('VoiceChatView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.params.selectedText = 'Selected context'
+    mocks.desktopState.selectedText = 'Selected context'
     mocks.chat.voiceChatContext = {
       text: 'Selected context',
       source: 'selection',

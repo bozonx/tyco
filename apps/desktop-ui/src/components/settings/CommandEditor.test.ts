@@ -125,7 +125,7 @@ describe('CommandEditor.vue', () => {
     )
     // a name another command shares would be refused: the id is used
     expect(
-      mountEditor(external, { nameTwins: [script()] })
+      mountEditor(external, { nameConflicts: [script()] })
         .find('.command-cli')
         .text()
     ).toBe('tyco-ctl run sc1')

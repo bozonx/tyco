@@ -54,7 +54,7 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 describe('VoiceRecognitionMenu', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useIpcStore().params.isWindowShown = true
+    useIpcStore().desktopState.isWindowShown = true
     vi.clearAllMocks()
     mocks.shouldFormatRecognizedText.mockReturnValue(false)
     mocks.finishDictation.mockResolvedValue('recognized voice')

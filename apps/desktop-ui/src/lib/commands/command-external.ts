@@ -16,7 +16,7 @@ export function normalizeCommandName(name: string): string {
 }
 
 /** Whether an external call may run the command */
-export function isExternalCommand(
+export function canRunCommandExternally(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {
@@ -31,17 +31,17 @@ export function isExternalCommand(
  * The other commands an external call by the name of `command` could mean as
  * well: such a call is refused as ambiguous
  */
-export function externalNameTwins(
+export function findExternalCommandNameConflicts(
   commands: readonly CommandConfig[],
   command: CommandConfig,
   tools: ToolLookup
 ): CommandConfig[] {
   const name = normalizeCommandName(command.name)
-  if (!name || !isExternalCommand(command, tools)) return []
+  if (!name || !canRunCommandExternally(command, tools)) return []
   return commands.filter(
     (other) =>
       other.id !== command.id &&
-      isExternalCommand(other, tools) &&
+      canRunCommandExternally(other, tools) &&
       normalizeCommandName(other.name) === name
   )
 }

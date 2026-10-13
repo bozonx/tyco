@@ -75,7 +75,9 @@
             :expanded="isExpanded(command.id)"
             :menu-slot="menuSlots.get(command.id)"
             :launcher-slots="launcherSlots.get(command.id) ?? []"
-            :name-twins="externalNameTwins(commands, command, toolsStore)"
+            :name-conflicts="
+              findExternalCommandNameConflicts(commands, command, toolsStore)
+            "
             @toggle="toggle(command.id)"
             @drag="startDrag(index, $event)"
             @update="updateCommand(index, $event)"
@@ -121,7 +123,7 @@ import {
   createCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
-import { externalNameTwins } from '../../lib/commands/command-external'
+import { findExternalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
 import { moveItem } from '../../lib/sortable/sortable-list'

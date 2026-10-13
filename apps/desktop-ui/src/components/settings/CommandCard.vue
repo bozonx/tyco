@@ -95,7 +95,7 @@
     <CommandEditor
       :command="command"
       :user-config="userConfig"
-      :name-twins="nameTwins"
+      :name-conflicts="nameConflicts"
       @update="emit('update', $event)"
       @navigate="emit('navigate', $event)"
     />
@@ -113,7 +113,7 @@ import {
 } from '../../lib/commands/command-runtime'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import CommandEditor from './CommandEditor.vue'
@@ -126,7 +126,7 @@ const props = defineProps<{
   expanded: boolean
   menuSlot?: number
   launcherSlots: { page: number; index: number }[]
-  nameTwins: CommandConfig[]
+  nameConflicts: CommandConfig[]
 }>()
 const emit = defineEmits<{
   (event: 'toggle'): void
@@ -138,14 +138,15 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 const toolsStore = useToolsStore()
-const slotKey = (index: number) => PRESETS_KEYS[index]?.toUpperCase() ?? ''
+const slotKey = (index: number) =>
+  SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
 const unavailableReason = computed(() =>
   commandUnavailableReason(props.command, toolsStore)
 )
 const hasIssues = computed(
   () =>
     validateCommand(props.command, toolsStore).length > 0 ||
-    props.nameTwins.length > 0
+    props.nameConflicts.length > 0
 )
 const toolName = computed(() => {
   const tool = toolsStore.get(props.command.toolId)

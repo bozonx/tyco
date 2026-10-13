@@ -5,22 +5,22 @@ import type { ChatStoreDeps } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
   deps: Pick<ChatStoreDeps, 'saveChat' | 'nowIso'>,
-  state: Pick<ChatState, 'newChatParams'>
+  state: Pick<ChatState, 'currentChatState'>
 ) {
-  const { newChatParams } = state
-  const currentTitle = () => newChatParams.value.title || ''
+  const { currentChatState } = state
+  const currentTitle = () => currentChatState.value.title || ''
   // writes go one after another, so that an older state never lands last
   let lastWrite: Promise<unknown> = Promise.resolve()
   const savingImages = ref<ChatImage[]>([])
 
   /** Writes the chat as it is; a failure is reported by the dependency */
   const persist = (chatMessages: ChatMessage[]): Promise<boolean> => {
-    const id = newChatParams.value.id
+    const id = currentChatState.value.id
     if (!id || chatMessages.length === 0) return Promise.resolve(false)
     const entry = createChatHistoryEntry({
       id,
       title: currentTitle(),
-      lastMsgDate: deps.nowIso(),
+      lastMessageAt: deps.nowIso(),
       messages: [...chatMessages],
     })
     const held = chatMessages.flatMap((message) => message.images || [])

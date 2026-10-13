@@ -34,7 +34,7 @@ import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
-import { makeUniqId } from '@/lib/squidlet-lib-local'
+import { createRuntimeId } from '@/lib/runtime-id'
 
 export const useChatStore = defineStore('chat', () => {
   const { toast, toastText } = useToast()
@@ -49,14 +49,14 @@ export const useChatStore = defineStore('chat', () => {
 
   const modelOptions = computed(() =>
     chatModelOptions(
-      normalizeLlmConfig(ipcStore.params.userConfig?.llm),
+      normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
       (id) => isSecretUsable(llmStore.secrets, id)
     )
   )
   const selectedModel = computed(() =>
     pickChatModel(
       modelOptions.value,
-      ipcStore.params.localState?.lastChatModelId
+      ipcStore.desktopState.localState?.lastChatModelId
     )
   )
 
@@ -96,7 +96,7 @@ export const useChatStore = defineStore('chat', () => {
       error instanceof LlmError
         ? formatLlmError(error, translate)
         : String(error instanceof Error ? error.message : error),
-    createId: () => makeUniqId(8),
+    createId: () => createRuntimeId(),
     nowIso: () => new Date().toISOString(),
     // which chat to reopen is a convenience: a failure is only logged
     saveLocalState: async (patch) => {
@@ -107,15 +107,18 @@ export const useChatStore = defineStore('chat', () => {
           'chat'
         )
     },
-    getLastChatId: () => ipcStore.params.localState?.lastChatId,
-    isHistoryEnabled: () => isChatHistoryEnabled(ipcStore.params.userConfig),
+    getLastChatId: () => ipcStore.desktopState.localState?.lastChatId,
+    isHistoryEnabled: () =>
+      isChatHistoryEnabled(ipcStore.desktopState.userConfig),
     getChatModel: () => {
       const picked = selectedModel.value
       return picked
         ? {
             id: picked.id,
             vision: picked.vision,
-            budgetCharacters: contextBudgetCharacters(picked.contextSize),
+            budgetCharacters: contextBudgetCharacters(
+              picked.contextWindowTokens
+            ),
           }
         : null
     },
@@ -136,12 +139,13 @@ export const useChatStore = defineStore('chat', () => {
     memory: 'chat.imageMemoryLimit',
   }
   const files = createChatFileController({
-    getDraft: () => model.newChatParams.value,
+    getDraft: () => model.currentChatState.value,
     getMessages: () => model.messages.value,
     getSavingImages: () => model.savingImages.value,
     isGenerating: () => model.isGenerating.value,
     prepare: createChatFileReader({
-      quality: () => ipcStore.params.userConfig?.chatImageQuality || 'balanced',
+      quality: () =>
+        ipcStore.desktopState.userConfig?.chatImageQuality || 'balanced',
       storeImage: storeChatImage,
     }),
     addAttachment: model.addAttachment,
@@ -167,7 +171,7 @@ export const useChatStore = defineStore('chat', () => {
     editor: editorInputStore,
     input: chatInputStore,
     selectedModel: () => selectedModel.value,
-    externalSelection: () => ipcStore.params.selectedText,
+    externalSelection: () => ipcStore.desktopState.selectedText,
     windowLabel: getDesktopWindowLabel,
     openMainChat: (attachment) =>
       ipcStore.callFunctionOrNotify('openMainChat', [attachment]),
@@ -184,7 +188,7 @@ export const useChatStore = defineStore('chat', () => {
     },
   })
   watch(
-    () => ipcStore.params.isWindowShown,
+    () => ipcStore.desktopState.isWindowShown,
     (isShown) => {
       if (!isShown) controller.markEditorSelectionStale()
     }

@@ -12,7 +12,7 @@ export enum MenuModals {
 }
 
 export interface MenuModalsDependencies {
-  resetGlobalFocus?: () => void
+  blurActiveElement?: () => void
 }
 
 /**
@@ -47,7 +47,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     modal: MenuModals,
     params: Record<string, any> = {}
   ): number => {
-    deps.resetGlobalFocus?.()
+    deps.blurActiveElement?.()
     const id = ++lastStepId
     steps.value = [...steps.value, { id, modal, params }]
     pendingModal.value = null

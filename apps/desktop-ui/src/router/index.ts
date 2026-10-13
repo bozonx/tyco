@@ -1,11 +1,11 @@
 import { createRouter, createMemoryHistory } from 'vue-router'
 const HomeView = () => import('../views/HomeView.vue')
 const HistoryView = () => import('../views/HistoryView.vue')
-const ConfigView = () => import('../views/ConfigView.vue')
+const SettingsView = () => import('../views/SettingsView.vue')
 const ChatView = () => import('../views/ChatView.vue')
 const WriteModeView = () => import('../views/WriteModeView.vue')
 const VoiceView = () => import('../views/VoiceView.vue')
-const SelectModeView = () => import('../views/SelectModeView.vue')
+const SelectionActionsView = () => import('../views/SelectionActionsView.vue')
 const AiTaskView = () => import('../views/AiTaskView.vue')
 const CommandLauncherView = () => import('../views/CommandLauncherView.vue')
 const CorrectionModeView = () => import('../views/CorrectionModeView.vue')
@@ -35,7 +35,7 @@ const router = createRouter({
     {
       path: APP_ROUTES.CONFIG.path,
       name: APP_ROUTES.CONFIG.name,
-      component: ConfigView,
+      component: SettingsView,
     },
     {
       path: APP_ROUTES.CHAT.path,
@@ -71,7 +71,7 @@ const router = createRouter({
     {
       path: APP_ROUTES.SELECT.path,
       name: APP_ROUTES.SELECT.name,
-      component: SelectModeView,
+      component: SelectionActionsView,
     },
     {
       path: APP_ROUTES.COMMAND_LAUNCHER.path,

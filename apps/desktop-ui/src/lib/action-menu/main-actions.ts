@@ -5,7 +5,7 @@ import {
   type StandardActionId,
 } from '@tyco/shared'
 
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 
 import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 
@@ -82,7 +82,7 @@ export function assignPluginActions(
       )
     )
       continue
-    const preferred = PRESETS_KEYS.indexOf(
+    const preferred = SHORTCUT_SLOT_KEYS.indexOf(
       action.preferredKey?.toLowerCase() ?? ''
     )
     const index =

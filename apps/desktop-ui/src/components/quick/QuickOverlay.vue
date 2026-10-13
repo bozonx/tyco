@@ -19,7 +19,7 @@
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
         <VoiceView
-          v-if="currentMode === 'voice' && ipcStore.params.isWindowShown"
+          v-if="currentMode === 'voice' && ipcStore.desktopState.isWindowShown"
           bar
           @result-shown="voiceResultShown = $event"
         />
@@ -31,7 +31,7 @@
         <AiTaskView v-if="currentMode === 'aiTasks'" />
       </div>
       <div v-show="currentMode === 'select'" class="quick-mode-layer">
-        <SelectModeView v-if="currentMode === 'select'" />
+        <SelectionActionsView v-if="currentMode === 'select'" />
       </div>
       <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
         <CommandLauncherView v-if="currentMode === 'commandLauncher'" />
@@ -49,7 +49,8 @@
       <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">
         <ExternalAccessView
           v-if="
-            currentMode === 'externalAccess' && ipcStore.params.isWindowShown
+            currentMode === 'externalAccess' &&
+            ipcStore.desktopState.isWindowShown
           "
         />
       </div>
@@ -74,12 +75,12 @@ import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import { useWriterInputStore } from '../../stores/writer-input'
+import { useWriteInputStore } from '../../stores/write-input'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
-import SelectModeView from '../../views/SelectModeView.vue'
+import SelectionActionsView from '../../views/SelectionActionsView.vue'
 import TranslateModeView from '../../views/TranslateModeView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceView from '../../views/VoiceView.vue'
@@ -87,13 +88,13 @@ import WriteModeView from '../../views/WriteModeView.vue'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const writerInputStore = useWriterInputStore()
+const writeInputStore = useWriteInputStore()
 const quickDismissStore = useQuickDismissStore()
 const commandLauncherStore = useCommandLauncherStore()
 const cardRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
-const currentMode = computed(() => ipcStore.params?.mode || 'write')
+const currentMode = computed(() => ipcStore.desktopState?.mode || 'write')
 const hasModal = computed(
   () => menuModalsStore.currentModal !== MenuModals.NONE
 )
@@ -146,7 +147,7 @@ const keepsOnFocusLoss = computed(
 
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
 const dismiss = () => {
-  if (currentMode.value === 'write') writerInputStore.markDismissed()
+  if (currentMode.value === 'write') writeInputStore.markDismissed()
   menuModalsStore.cancelAndCloseAll()
   // a failed dismissal leaves the window shown, which tells enough
   void ipcStore.callFunction('dismissQuickWindow')
@@ -170,9 +171,9 @@ const focusLoss = createFocusLossWatcher({
     return !(await window.isVisible()) || (await window.isFocused())
   },
   canDismiss: () =>
-    Boolean(ipcStore.params.isWindowShown) &&
+    Boolean(ipcStore.desktopState.isWindowShown) &&
     !keepsOnFocusLoss.value &&
-    ipcStore.params.userConfig?.quickHideOnBlur !== false &&
+    ipcStore.desktopState.userConfig?.quickHideOnBlur !== false &&
     !quickDismissStore.isHeld,
   onLost: dismiss,
 })
@@ -198,7 +199,7 @@ const showFocusHint = computed(
   () =>
     !isWindowFocused.value &&
     isSheet.value &&
-    Boolean(ipcStore.params.isWindowShown)
+    Boolean(ipcStore.desktopState.isWindowShown)
 )
 let unmounted = false
 
@@ -212,7 +213,7 @@ const regionSync = createInputRegionSync({
 })
 
 const measureInputRegion = (): InputRect | null => {
-  if (isSheet.value || !ipcStore.params.isWindowShown || !cardRef.value) {
+  if (isSheet.value || !ipcStore.desktopState.isWindowShown || !cardRef.value) {
     return null
   }
   const rects = Array.from(cardRef.value.querySelectorAll(INPUT_PARTS))
@@ -237,7 +238,7 @@ let inputResizeObserver: ResizeObserver | undefined
 
 const syncFocus = () => {
   if (currentMode.value === 'write') {
-    writerInputStore.focus()
+    writeInputStore.focus()
   }
 }
 
@@ -274,7 +275,7 @@ onUnmounted(() => {
 
 // whatever hid the window, work started for it has no one to show it to
 watch(
-  () => ipcStore.params.isWindowShown,
+  () => ipcStore.desktopState.isWindowShown,
   (isShown) => {
     if (isShown) return
     // a correction must not finish into an insert nobody sees
@@ -284,7 +285,7 @@ watch(
 
 // every activation starts with the whole window taking clicks
 watch(
-  () => ipcStore.params.activationId,
+  () => ipcStore.desktopState.activationId,
   () => regionSync.invalidate()
 )
 
@@ -293,15 +294,15 @@ watch(
     isSheet,
     // the input and the voice bar are both panels, of different sizes
     currentMode,
-    () => ipcStore.params.isWindowShown,
-    () => ipcStore.params.activationId,
+    () => ipcStore.desktopState.isWindowShown,
+    () => ipcStore.desktopState.activationId,
   ],
   updateInputRegionAfterRender
 )
 
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
 watch(
-  () => ipcStore.params.isWindowShown,
+  () => ipcStore.desktopState.isWindowShown,
   (isShown) => {
     syncFocus()
     if (isShown) void windowFocus.refresh()

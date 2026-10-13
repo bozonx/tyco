@@ -92,7 +92,9 @@ function handleBlur(event: FocusEvent) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  const submitKey = resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
+  const submitKey = resolveSubmitKey(
+    ipcStore.desktopState?.userConfig?.submitKey
+  )
   // a line break is left to the textarea itself
   if (resolveInputKeyAction(event, submitKey) === 'submit') {
     event.preventDefault()

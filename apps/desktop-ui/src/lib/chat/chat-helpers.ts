@@ -83,13 +83,13 @@ export function trimChatContext(
 export function createChatHistoryEntry(params: {
   id: string
   title: string
-  lastMsgDate: string
+  lastMessageAt: string
   messages: ChatMessage[]
 }): Chat {
   return {
     id: params.id,
     title: params.title,
-    lastMsgDate: params.lastMsgDate,
+    lastMessageAt: params.lastMessageAt,
     messages: params.messages,
   }
 }

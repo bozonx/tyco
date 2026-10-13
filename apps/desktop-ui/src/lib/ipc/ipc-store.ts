@@ -63,7 +63,7 @@ export function createIpcStoreModel(deps: IpcStoreDeps) {
         }
       }
 
-      const activationId = state.params.value.activationId
+      const activationId = state.desktopState.value.activationId
       if (mappedCommand.waitForKeysReleased) {
         await deps.waitForKeysReleased?.()
       }

@@ -52,7 +52,7 @@
         {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
       </p>
       <div v-if="plugin.enabled" class="plugin-card-body">
-        <FieldsByCfg
+        <ConfigFields
           v-if="plugin.fields.length > 0"
           :config="plugin.fields"
           @update:values="updatePluginConfig(plugin.name, $event)"
@@ -73,8 +73,8 @@
 import { useI18n } from '../../composables/use-i18n'
 import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
 import Button from '../common/Button.vue'
+import ConfigFields from '../common/ConfigFields.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldsByCfg from '../common/FieldsByCfg.vue'
 import { Icon } from '@iconify/vue'
 
 defineProps<{ plugin: InstalledPluginItem }>()

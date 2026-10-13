@@ -7,7 +7,7 @@ it('does not restore a removed chat from a delayed list response', async () => {
   const summary = {
     id: 'chat',
     title: 'Title',
-    lastMsgDate: '2026-10-12T10:00:00.000Z',
+    lastMessageAt: '2026-10-12T10:00:00.000Z',
   }
   let finish!: (value: { success: true; result: ChatSummary[] }) => void
   const callFunction = vi
@@ -46,7 +46,7 @@ it('keeps a persisted chat successful when refreshing its summary list fails', a
     model.saveChat({
       id: 'chat',
       title: 'Title',
-      lastMsgDate: '',
+      lastMessageAt: '',
       messages: [],
     })
   ).resolves.toBeUndefined()

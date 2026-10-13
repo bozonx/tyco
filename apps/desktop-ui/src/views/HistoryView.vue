@@ -92,7 +92,7 @@ const clearEditorHistory = removal.clear
 const editorLoadError = ref(false)
 
 const editorHistoryDisabled = computed(() =>
-  isEditorHistoryOff({ ...ipcStore.params.userConfig })
+  isEditorHistoryOff({ ...ipcStore.desktopState.userConfig })
 )
 
 const searchQuery = ref<string>('')

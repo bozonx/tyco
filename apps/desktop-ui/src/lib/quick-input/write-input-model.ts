@@ -5,12 +5,12 @@ import {
   type QuickInputDrafts,
 } from './quick-input-session'
 
-export interface WriterInputDependencies {
+export interface WriteInputDependencies {
   drafts: QuickInputDrafts
   now?: () => number
 }
 
-export function createWriterInputModel(deps: WriterInputDependencies) {
+export function createWriteInputModel(deps: WriteInputDependencies) {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
   const selectAllCount = ref<number>(0)

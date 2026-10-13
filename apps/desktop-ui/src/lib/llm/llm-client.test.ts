@@ -168,15 +168,15 @@ describe('llm-client', () => {
     llm.models = [
       {
         id: 'first',
-        provider: 'local',
-        model: 'first-model',
+        providerId: 'local',
+        providerModelId: 'first-model',
         temperature: 0.9,
         maxOutputTokens: 100,
       },
       {
         id: 'second',
-        provider: 'local',
-        model: 'second-model',
+        providerId: 'local',
+        providerModelId: 'second-model',
         temperature: 0.1,
         maxOutputTokens: 200,
       },
@@ -235,7 +235,7 @@ describe('llm-client', () => {
 
   it('reports a task with no usable model', async () => {
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.models = llm.models.map((model) => ({ ...model, model: '' }))
+    llm.models = llm.models.map((model) => ({ ...model, providerModelId: '' }))
     const { client } = setup(vi.fn<FetchFunction>(), llm)
 
     await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
@@ -275,7 +275,7 @@ describe('llm-client', () => {
     await client.run('aiTasks', prompt, { onChunk: () => undefined })
 
     const next = structuredClone(DEFAULT_LLM_CONFIG)
-    next.models[0].model = 'llama3'
+    next.models[0].providerModelId = 'llama3'
     config.current = next
     await client.run('aiTasks', prompt, { onChunk: () => undefined })
 

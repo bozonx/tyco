@@ -7,7 +7,7 @@ import {
 import type { LlmConfig, LlmModel, LlmProvider } from '@tyco/shared'
 
 /** Assumed when a model does not say; the provider refuses what does not fit */
-export const DEFAULT_CONTEXT_SIZE = 128_000
+export const DEFAULT_CONTEXT_WINDOW_TOKENS = 128_000
 /**
  * The catalog's ceiling for a model's output. Only a cap: a request sends a
  * limit only when the model has one configured
@@ -70,8 +70,8 @@ export function usableModels(config: LlmConfig) {
   )
 
   return config.models.flatMap((model) => {
-    const provider = providers.get(model.provider)
-    if (!provider || !model.model.trim()) return []
+    const provider = providers.get(model.providerId)
+    if (!provider || !model.providerModelId.trim()) return []
     if (provider.type === 'openai-compatible' && !isHttpUrl(provider.baseUrl)) {
       return []
     }
@@ -83,9 +83,10 @@ export function usableModels(config: LlmConfig) {
 export function supportsImages(model: LlmModel): boolean {
   return (
     model.vision ??
-    ((model.provider === 'google' && model.model === 'gemini-2.5-flash') ||
-      (model.provider === 'openrouter' &&
-        model.model === 'openai/gpt-4.1-mini'))
+    ((model.providerId === 'google' &&
+      model.providerModelId === 'gemini-2.5-flash') ||
+      (model.providerId === 'openrouter' &&
+        model.providerModelId === 'openai/gpt-4.1-mini'))
   )
 }
 
@@ -100,7 +101,7 @@ function toDefinition(
     // Built-in providers are ai-kit's own adapters; a custom endpoint gets
     // the adapter registered under its id
     provider: custom ? provider.id : provider.type,
-    model: model.model.trim(),
+    model: model.providerModelId.trim(),
     ...(custom ? { baseUrl: provider.baseUrl!.trim() } : {}),
     // One tier for all: a fallback never crosses tiers, and the user's chain
     // is the whole policy
@@ -109,7 +110,7 @@ function toDefinition(
       input: supportsImages(model) ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
-    contextSize: model.contextSize ?? DEFAULT_CONTEXT_SIZE,
+    contextSize: model.contextWindowTokens ?? DEFAULT_CONTEXT_WINDOW_TOKENS,
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,
       OUTPUT_TOKENS_CEILING

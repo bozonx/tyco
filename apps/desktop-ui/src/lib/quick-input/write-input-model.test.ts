@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { DRAFT_RESTORE_MS } from './draft-restore'
-import { createWriterInputModel } from './writer-input-model'
+import { createWriteInputModel } from './write-input-model'
 
 function setup() {
   let now = 100
@@ -10,7 +10,7 @@ function setup() {
     end: vi.fn(async () => {}),
     discard: vi.fn(async () => {}),
   }
-  const model = createWriterInputModel({ drafts, now: () => now })
+  const model = createWriteInputModel({ drafts, now: () => now })
   return {
     model,
     drafts,

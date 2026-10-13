@@ -83,7 +83,7 @@ describe('LLM settings cards', () => {
     const count = llm.models.length
     await card.get('.models-header button').trigger('click')
     expect(llm.models).toHaveLength(count + 1)
-    expect(llm.models.at(-1)?.provider).toBe('local')
+    expect(llm.models.at(-1)?.providerId).toBe('local')
     expect(card.findAll('.model-row')).toHaveLength(2)
     const remove = card
       .findAll('.connection-actions button')
@@ -101,7 +101,7 @@ describe('LLM settings cards', () => {
     expect(llm.providers.some((provider) => provider.id === 'local')).toBe(
       false
     )
-    expect(llm.models.some((model) => model.provider === 'local')).toBe(false)
+    expect(llm.models.some((model) => model.providerId === 'local')).toBe(false)
     expect(wrapper.emitted('providerRemoved')).toEqual([['local']])
   })
 })

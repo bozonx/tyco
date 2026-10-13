@@ -37,7 +37,7 @@ vi.mock('../stores/action-menu', () => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: {
+    desktopState: {
       userConfig: {
         theme: 'auto',
         contrast: 'normal',

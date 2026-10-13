@@ -47,7 +47,7 @@ const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const diffMode = ref<DiffViewMode>(
-  readStoredDiffMode(undefined, ipcStore.params.localState?.diffMode)
+  readStoredDiffMode(undefined, ipcStore.desktopState.localState?.diffMode)
 )
 
 watch(diffMode, (newMode) => {

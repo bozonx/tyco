@@ -59,14 +59,14 @@ describe('TranslateMenu', () => {
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
     vi.spyOn(useIpcStore(), 'patchLocalState').mockResolvedValue({
       success: true,
-      result: useIpcStore().params.localState,
+      result: useIpcStore().desktopState.localState,
     })
     useMenuModalsStore().nextModal(MenuModals.TRANSLATE)
   })
 
   it('translates into a configured language by its key', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.toTranslateLanguages = ['de_DE']
+    ipcStore.desktopState.userConfig.toTranslateLanguages = ['de_DE']
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -145,7 +145,7 @@ describe('TranslateMenu', () => {
 
   it('translates nothing on Enter until a language is typed or chosen', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.localState = { recentTranslateLanguages: ['it_IT'] }
+    ipcStore.desktopState.localState = { recentTranslateLanguages: ['it_IT'] }
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -179,7 +179,7 @@ describe('TranslateMenu', () => {
         resolve = done
       })
     )
-    useIpcStore().params.userConfig.toTranslateLanguages = ['de_DE']
+    useIpcStore().desktopState.userConfig.toTranslateLanguages = ['de_DE']
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())

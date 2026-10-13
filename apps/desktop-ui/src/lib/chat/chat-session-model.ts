@@ -25,7 +25,7 @@ export function createChatSessionModel(
 ) {
   const {
     messages,
-    newChatParams,
+    currentChatState,
     isGenerating,
     error,
     isStopped,
@@ -37,7 +37,7 @@ export function createChatSessionModel(
   const stopGeneration = () => halt(true)
   const reset = (chatParams: ChatParams = {}) => {
     messages.value = []
-    newChatParams.value = chatParams
+    currentChatState.value = chatParams
     error.value = ''
     isStopped.value = false
     omitHistoryImages.value = false
@@ -61,7 +61,7 @@ export function createChatSessionModel(
       .slice(0, messageIndex + 1)
       .map((m) => ({ ...m }))
     if (!slice.length) return false
-    const originalTitle = newChatParams.value.title || ''
+    const originalTitle = currentChatState.value.title || ''
     const title = originalTitle ? `${originalTitle} (branch)` : ''
     const id = deps.createId()
 
@@ -75,20 +75,20 @@ export function createChatSessionModel(
 
   const startChat = async (chatParams: ChatParams) => {
     clearChat()
-    newChatParams.value = { ...chatParams, id: deps.createId() }
+    currentChatState.value = { ...chatParams, id: deps.createId() }
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 
   const addAttachment = (attachment: ChatAttachment) => {
     const text = attachment.text?.trim()
     if (!text) return
-    const current = newChatParams.value.attachments || []
+    const current = currentChatState.value.attachments || []
     if (
       !current.some(
         (item) => item.text === text && item.name === attachment.name
       )
     ) {
-      newChatParams.value.attachments = [...current, { ...attachment, text }]
+      currentChatState.value.attachments = [...current, { ...attachment, text }]
     }
   }
 
@@ -103,7 +103,7 @@ export function createChatSessionModel(
       await startChat({ attachments: [{ ...attachment, text }] })
       return
     }
-    if (!newChatParams.value.id) newChatParams.value.id = deps.createId()
+    if (!currentChatState.value.id) currentChatState.value.id = deps.createId()
     addAttachment(attachment)
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
@@ -148,7 +148,7 @@ export function createChatSessionModel(
   }
 
   const openLastOrNewChat = async () => {
-    if (newChatParams.value.id) {
+    if (currentChatState.value.id) {
       await deps.navigateTo(APP_ROUTES.CHAT.path)
       return
     }

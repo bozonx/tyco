@@ -16,7 +16,8 @@ export const useLlmStore = defineStore('llm', () => {
   const secretsClient = createSecretsClient(tauriNetIpc)
   const state = createSecretsState(secretsClient)
 
-  const getConfig = () => normalizeLlmConfig(ipcStore.params.userConfig?.llm)
+  const getConfig = () =>
+    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm)
   const client = createLlmClient({
     getConfig,
     transport: createTauriTransport(tauriNetIpc),

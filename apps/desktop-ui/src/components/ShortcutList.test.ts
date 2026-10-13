@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   currentModalParams: {} as Record<string, unknown>,
   hideWindow: vi.fn(),
   goToEditor: vi.fn(),
-  discardWriterInput: vi.fn(),
+  discardWriteInput: vi.fn(),
   currentWindowLabel: 'main',
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
@@ -26,8 +26,8 @@ vi.mock('../composables/use-editor-navigation', () => ({
   useEditorNavigation: () => ({ toEditor: mocks.toEditor }),
 }))
 
-vi.mock('../stores/writer-input', () => ({
-  useWriterInputStore: () => ({ discard: mocks.discardWriterInput }),
+vi.mock('../stores/write-input', () => ({
+  useWriteInputStore: () => ({ discard: mocks.discardWriteInput }),
 }))
 
 vi.mock('../stores/menu-modals', () => ({
@@ -61,7 +61,7 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: mocks.hideWindow,
     callFunctionOrNotify: mocks.hideWindow,
-    get params() {
+    get desktopState() {
       return { mode: mocks.mode, userConfig: {} }
     },
   }),
@@ -184,7 +184,7 @@ describe('ShortcutList', () => {
     press('Escape')
 
     expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardWriterInput).toHaveBeenCalled()
+    expect(mocks.discardWriteInput).toHaveBeenCalled()
     expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
     wrapper.unmount()
   })

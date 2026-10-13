@@ -16,7 +16,7 @@ import {
 } from './command-runtime'
 import {
   commandCliCall,
-  externalNameTwins,
+  findExternalCommandNameConflicts,
   normalizeCommandName,
 } from './command-external'
 import {
@@ -327,10 +327,12 @@ describe('external names', () => {
     const c = named('c', 'Свет', false)
     const d = { ...named('d', 'свет'), enabled: false }
     const commands = [a, b, c, d, named('e', 'Other')]
-    expect(externalNameTwins(commands, a, tools)).toEqual([b])
+    expect(findExternalCommandNameConflicts(commands, a, tools)).toEqual([b])
     // a command that may not be called has no twins to warn about
-    expect(externalNameTwins(commands, c, tools)).toEqual([])
-    expect(externalNameTwins(commands, named('f', ''), tools)).toEqual([])
+    expect(findExternalCommandNameConflicts(commands, c, tools)).toEqual([])
+    expect(
+      findExternalCommandNameConflicts(commands, named('f', ''), tools)
+    ).toEqual([])
   })
 })
 

@@ -197,7 +197,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 watch(
-  () => ipcStore.params?.isWindowShown,
+  () => ipcStore.desktopState?.isWindowShown,
   (isShown) => {
     if (isShown) {
       void startSession()
@@ -232,7 +232,7 @@ onMounted(async () => {
     })
     .catch(() => undefined)
 
-  if (ipcStore.params?.isWindowShown !== false) {
+  if (ipcStore.desktopState?.isWindowShown !== false) {
     await startSession()
   }
 })

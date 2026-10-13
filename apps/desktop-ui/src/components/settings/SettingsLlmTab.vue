@@ -187,10 +187,10 @@ const modelOptions = computed(() =>
   props.llm.models
     .filter((model) => {
       const provider = props.llm.providers.find(
-        (item) => item.id === model.provider
+        (item) => item.id === model.providerId
       )
       return (
-        Boolean(model.model.trim()) &&
+        Boolean(model.providerModelId.trim()) &&
         Boolean(
           provider &&
           (provider.type !== 'openai-compatible' ||
@@ -200,7 +200,7 @@ const modelOptions = computed(() =>
     })
     .map((model) => ({
       id: model.id,
-      name: `${modelLabel(model)} · ${providerName(model.provider)}`,
+      name: `${modelLabel(model)} · ${providerName(model.providerId)}`,
     }))
 )
 

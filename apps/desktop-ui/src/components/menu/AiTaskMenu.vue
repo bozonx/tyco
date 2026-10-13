@@ -23,7 +23,7 @@
         :text="props.text"
         :spaceKey="customPromptAction"
         :leftLetterKeys="leftLetterKeys"
-        :stopListening="props.stopListening"
+        :shortcutsDisabled="props.shortcutsDisabled"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
       />
     </template>
@@ -47,7 +47,7 @@ import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import TextPreview from '../common/TextPreview.vue'
@@ -60,18 +60,18 @@ import QueryPanel, {
 const props = withDefaults(
   defineProps<{
     text?: string
-    stopListening?: boolean
+    shortcutsDisabled?: boolean
     /** An AI task to run at once, by its id: the main menu item of the task */
     taskId?: string
   }>(),
-  { text: '', stopListening: false, taskId: undefined }
+  { text: '', shortcutsDisabled: false, taskId: undefined }
 )
 
 const routeParamsStore = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const invocations = useInvocationsStore()
-const appConfig = computed(() => ipcStore.params.appConfig)
+const appConfig = computed(() => ipcStore.desktopState.appConfig)
 const { toast, toastText } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
@@ -104,9 +104,9 @@ const closePromptMode = () => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  (ipcStore.params.userConfig?.aiTasks ?? []).map(
+  (ipcStore.desktopState.userConfig?.aiTasks ?? []).map(
     (
-      item: (typeof ipcStore.params.userConfig.aiTasks)[number],
+      item: (typeof ipcStore.desktopState.userConfig.aiTasks)[number],
       index: number
     ) =>
       item && item.name
@@ -116,7 +116,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 async function runTask(index: number) {
-  const task = ipcStore.params.userConfig?.aiTasks?.[index]
+  const task = ipcStore.desktopState.userConfig?.aiTasks?.[index]
   if (!task || !task.rule?.trim()) {
     toast('toast.desktopCommandFailed', 'error')
     return
@@ -132,7 +132,7 @@ onMounted(() => {
   if (stepId !== undefined) {
     menuModalsStore.updateStep(stepId, { taskId: undefined })
   }
-  const index = (ipcStore.params.userConfig?.aiTasks ?? []).findIndex(
+  const index = (ipcStore.desktopState.userConfig?.aiTasks ?? []).findIndex(
     (task) => task?.id === taskId
   )
   if (index < 0) {
@@ -143,7 +143,7 @@ onMounted(() => {
 })
 
 const recentPrompts = computed(
-  () => ipcStore.params.localState?.recentAiPrompts ?? []
+  () => ipcStore.desktopState.localState?.recentAiPrompts ?? []
 )
 
 const recentOptions = computed<QueryPanelOption[]>(() =>
@@ -206,13 +206,13 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
 
 async function savePromptAsTask() {
   const value = prompt.value.trim()
-  const userConfig = ipcStore.params.userConfig
+  const userConfig = ipcStore.desktopState.userConfig
   if (!value || !userConfig) return
 
   const aiTasks = addTaskFromPrompt(
     userConfig.aiTasks ?? [],
     value,
-    PRESETS_KEYS.length
+    SHORTCUT_SLOT_KEYS.length
   )
   if (!aiTasks) {
     toast('menu.aiPromptSlotsFull', 'warn')

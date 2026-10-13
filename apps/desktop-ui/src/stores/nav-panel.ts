@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 import { useMenuModalsStore } from './menu-modals'
 
-export const DEFAULT_PARAMS = {
+export const DEFAULT_NAV_PANEL_STATE = {
   panelVisible: true,
   rightPanelVisible: true,
   escBtnText: undefined as string | undefined,
@@ -12,11 +12,13 @@ export const DEFAULT_PARAMS = {
 }
 
 export const useNavPanelStore = defineStore('navPanel', () => {
-  const params = ref({ ...DEFAULT_PARAMS })
+  const params = ref({ ...DEFAULT_NAV_PANEL_STATE })
   const menuModalsStore = useMenuModalsStore()
 
-  function resetNavParams(newParams: Partial<typeof DEFAULT_PARAMS> = {}) {
-    params.value = { ...DEFAULT_PARAMS, ...newParams }
+  function resetNavParams(
+    newParams: Partial<typeof DEFAULT_NAV_PANEL_STATE> = {}
+  ) {
+    params.value = { ...DEFAULT_NAV_PANEL_STATE, ...newParams }
   }
 
   function handleKeyUp(event: KeyboardEvent) {

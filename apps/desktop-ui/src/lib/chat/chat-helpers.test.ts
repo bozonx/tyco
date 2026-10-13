@@ -40,13 +40,13 @@ describe('chat-helpers', () => {
       createChatHistoryEntry({
         id: 'chat-1',
         title: 'Question',
-        lastMsgDate: '2026-04-22T00:00:00.000Z',
+        lastMessageAt: '2026-04-22T00:00:00.000Z',
         messages: [userMessage, assistantMessage],
       })
     ).toEqual({
       id: 'chat-1',
       title: 'Question',
-      lastMsgDate: '2026-04-22T00:00:00.000Z',
+      lastMessageAt: '2026-04-22T00:00:00.000Z',
       messages: [userMessage, assistantMessage],
     })
   })

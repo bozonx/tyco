@@ -5,7 +5,7 @@ import { createEditMenuStoreModel } from './edit-menu-store'
 describe('createEditMenuStoreModel', () => {
   const setup = () => {
     const deps = {
-      doCaseTransform: vi.fn(
+      transformTextCase: vi.fn(
         (text: string, caseType: string) => `${caseType}:${text}`
       ),
       formatMdAndStyle: vi.fn(async (text: string) => `md:${text}`),
@@ -37,7 +37,7 @@ describe('createEditMenuStoreModel', () => {
       .getCaseItems()
       .find((i) => i.labelKey === 'edit.uppercase')
     const result = await upperCaseItem?.action('hello')
-    expect(deps.doCaseTransform).toHaveBeenCalledWith('hello', 'uppercase')
+    expect(deps.transformTextCase).toHaveBeenCalledWith('hello', 'uppercase')
     expect(result).toBe('uppercase:hello')
 
     const mdItem = store

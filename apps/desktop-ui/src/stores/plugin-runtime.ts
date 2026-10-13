@@ -39,7 +39,7 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   })
   const model = createPluginRuntime({
     builtinPlugins,
-    getConfig: () => ipc.params.userConfig,
+    getConfig: () => ipc.desktopState.userConfig,
     loadInstalled: async () => {
       if (!desktopClient.isAvailable()) return []
       const result = await ipc.callFunction('listInstalledPlugins', [])

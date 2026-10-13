@@ -10,7 +10,7 @@ import { createQuickCorrection } from '../lib/quick-input/quick-correction'
  * correction steps alike: a correction made in advance for the quick input is
  * reused by whatever asks for the same text
  */
-export const useCorrectorStore = defineStore('corrector', () => {
+export const useTextCorrectionStore = defineStore('textCorrection', () => {
   const { correctText } = useLlmActions()
 
   const corrector = createQuickCorrection({
@@ -23,10 +23,10 @@ export const useCorrectorStore = defineStore('corrector', () => {
   watch(
     () =>
       JSON.stringify([
-        ipc.params.userConfig.llm,
-        ipc.params.userConfig.aiRules?.correction,
-        ipc.params.appConfig.aiInstructions.correction,
-        ipc.params.appConfig.rulePrefix,
+        ipc.desktopState.userConfig.llm,
+        ipc.desktopState.userConfig.aiRules?.correction,
+        ipc.desktopState.appConfig.aiInstructions.correction,
+        ipc.desktopState.appConfig.rulePrefix,
       ]),
     corrector.invalidate,
     { flush: 'sync' }

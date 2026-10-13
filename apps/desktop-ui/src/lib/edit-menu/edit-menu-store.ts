@@ -3,7 +3,7 @@ import { shallowRef } from 'vue'
 
 export type { EditItem } from '@tyco/plugin-sdk'
 export interface EditMenuDependencies {
-  doCaseTransform: (text: string, caseType: string) => string
+  transformTextCase: (text: string, caseType: string) => string
   formatMdAndStyle: (text: string) => Promise<string>
   stripMarkdown: (text: string) => string
 }
@@ -17,12 +17,12 @@ export function createEditMenuStoreModel(deps: EditMenuDependencies) {
     {
       id: 'case-uppercase',
       labelKey: 'edit.uppercase',
-      action: async (text: string) => deps.doCaseTransform(text, 'uppercase'),
+      action: async (text: string) => deps.transformTextCase(text, 'uppercase'),
     },
     {
       id: 'case-lowercase',
       labelKey: 'edit.lowercase',
-      action: async (text: string) => deps.doCaseTransform(text, 'lowercase'),
+      action: async (text: string) => deps.transformTextCase(text, 'lowercase'),
     },
   ]
 

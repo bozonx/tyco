@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_USER_CONFIG,
-  START_MODES,
+  StartMode,
   hotkeyFromKeyboardEvent,
   normalizeHotkey,
 } from '@tyco/shared'
@@ -10,11 +10,11 @@ import {
 describe('hotkeys', () => {
   it('defines a default binding for global activation modes', () => {
     const expectedModes = [
-      ...Object.values(START_MODES).filter(
+      ...Object.values(StartMode).filter(
         (mode) =>
-          mode !== START_MODES.HISTORY &&
-          mode !== START_MODES.CONFIG &&
-          mode !== START_MODES.EXTERNAL_ACCESS
+          mode !== StartMode.HISTORY &&
+          mode !== StartMode.CONFIG &&
+          mode !== StartMode.EXTERNAL_ACCESS
       ),
       ...[2, 3, 4, 5].map((page) => `commandLauncher${page}`),
     ]

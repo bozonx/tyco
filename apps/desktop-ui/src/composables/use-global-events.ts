@@ -1,4 +1,4 @@
-import { IndexedEventEmitter } from '@/lib/squidlet-lib-local'
+import { IndexedEventEmitter } from '@/lib/app/indexed-event-emitter'
 
 const globalEvents = new IndexedEventEmitter()
 

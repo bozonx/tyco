@@ -39,6 +39,6 @@
   "chatSummary": {
     "id": "chat-1",
     "title": "Chat title",
-    "lastMsgDate": "2026-10-12T10:00:00.000Z"
+    "lastMessageAt": "2026-10-12T10:00:00.000Z"
   }
 }

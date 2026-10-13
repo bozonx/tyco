@@ -52,7 +52,7 @@
         "
         :altAlwaysVisible="props.correcting"
         :altAction="primaryAction"
-        :stopListening="props.stopListening"
+        :shortcutsDisabled="props.shortcutsDisabled"
         :toEditorVisible="
           !props.correcting &&
           !editorTarget &&
@@ -94,7 +94,7 @@ const props = withDefaults(
     oldText?: string
     actions?: ActionItem[]
     allowInsertButton?: boolean
-    stopListening?: boolean
+    shortcutsDisabled?: boolean
     toEditorVisible?: boolean
     /** A correction step: in the main window Esc goes back to the text before it */
     correction?: boolean
@@ -114,7 +114,7 @@ const props = withDefaults(
     oldText: '',
     actions: undefined,
     allowInsertButton: true,
-    stopListening: false,
+    shortcutsDisabled: false,
     toEditorVisible: undefined,
     correction: false,
     originalText: undefined,
@@ -164,7 +164,7 @@ const actionsMenu = computed(() => {
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const diffMode = ref<DiffViewMode>(
-  readStoredDiffMode(undefined, ipcStore.params.localState?.diffMode)
+  readStoredDiffMode(undefined, ipcStore.desktopState.localState?.diffMode)
 )
 
 /** Space was pressed while correcting: insert once the correction is in. */
@@ -214,7 +214,7 @@ onMounted(() => window.addEventListener('keydown', handleKeyDown))
 onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
 
 const minCorrectionLength = computed(
-  () => ipcStore.params?.appConfig?.minCorrectionLength ?? 0
+  () => ipcStore.desktopState?.appConfig?.minCorrectionLength ?? 0
 )
 
 /** Why the correction action is off for this text, if it is. */
@@ -231,7 +231,11 @@ const correctionBlocker = computed(() => {
 function shouldDisableAction(item?: ActionItem) {
   if (!item) return false
   if (item.id === 'insertIntoWindow') {
-    return !(ipcStore.params?.windowId && props.text && props.allowInsertButton)
+    return !(
+      ipcStore.desktopState?.windowId &&
+      props.text &&
+      props.allowInsertButton
+    )
   }
   return false
 }
@@ -244,7 +248,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
-      if (item.id === 'insertIntoWindow' && !ipcStore.params?.windowId) {
+      if (item.id === 'insertIntoWindow' && !ipcStore.desktopState?.windowId) {
         return { ...item, disabled: true, hint: t('selection.noTarget') }
       }
       return { ...item, disabled: item.disabled || shouldDisableAction(item) }
@@ -263,7 +267,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   const disabled = firstItem.disabled || shouldDisableAction(firstItem)
   const hint =
-    firstItem.id === 'insertIntoWindow' && !ipcStore.params?.windowId
+    firstItem.id === 'insertIntoWindow' && !ipcStore.desktopState?.windowId
       ? t('selection.noTarget')
       : firstItem.hint
 

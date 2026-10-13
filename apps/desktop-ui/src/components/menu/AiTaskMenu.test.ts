@@ -43,7 +43,7 @@ describe('AiTaskMenu', () => {
         'altLabel',
         'altIcon',
         'leftLetterKeys',
-        'stopListening',
+        'shortcutsDisabled',
         'toEditorVisible',
       ],
       setup(props: any) {
@@ -74,7 +74,10 @@ describe('AiTaskMenu', () => {
     const ipcStore = useIpcStore()
     const patchLocalState = vi
       .spyOn(ipcStore, 'patchLocalState')
-      .mockResolvedValue({ success: true, result: ipcStore.params.localState })
+      .mockResolvedValue({
+        success: true,
+        result: ipcStore.desktopState.localState,
+      })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
@@ -112,12 +115,15 @@ describe('AiTaskMenu', () => {
 
   it('saves an own request as a task in a free key', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.aiTasks = [
+    ipcStore.desktopState.userConfig.aiTasks = [
       { id: 'task-1', name: 'edit', rule: 'Edit it' },
     ]
     const saveUserConfig = vi
       .spyOn(ipcStore, 'saveUserConfig')
-      .mockResolvedValue({ success: true, result: ipcStore.params.userConfig })
+      .mockResolvedValue({
+        success: true,
+        result: ipcStore.desktopState.userConfig,
+      })
     let shortcutListProps: Record<string, any> = {}
 
     const wrapper = mount(AiTaskMenu, {
@@ -154,7 +160,7 @@ describe('AiTaskMenu', () => {
               'spaceKey',
               'actionsKey',
               'leftLetterKeys',
-              'stopListening',
+              'shortcutsDisabled',
               'toEditorVisible',
             ],
             setup(props: any) {
@@ -174,7 +180,7 @@ describe('AiTaskMenu', () => {
 
   it('keeps the result of a menu closed meanwhile off the screen', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.aiTasks = [
+    ipcStore.desktopState.userConfig.aiTasks = [
       { id: 'task-1', name: 'edit', rule: 'Edit it' },
     ]
     const historyStore = useHistoryStore()
@@ -224,7 +230,7 @@ describe('AiTaskMenu', () => {
 
   it('runs the task of the main menu item once, by its id', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.params.userConfig.aiTasks = [
+    ipcStore.desktopState.userConfig.aiTasks = [
       null,
       { id: 'task-7', name: 'edit', rule: 'Edit it' },
     ]

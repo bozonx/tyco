@@ -19,7 +19,7 @@
       v-else
       :text="resText"
       :allowInsertButton="true"
-      :stopListening="menuModalsStore.anyModalOpen"
+      :shortcutsDisabled="menuModalsStore.anyModalOpen"
     />
   </ContentPadding>
 </template>
@@ -61,7 +61,7 @@ navPanelStore.resetNavParams({ panelVisible: false })
 watch(isInsertMenu, (shown) => emit('result-shown', shown), { immediate: true })
 
 watch(
-  () => [ipcStore.params?.isWindowShown, ipcStore.params?.mode],
+  () => [ipcStore.desktopState?.isWindowShown, ipcStore.desktopState?.mode],
   ([isShown, mode]) => {
     if (!isShown || mode !== 'voice') {
       isInsertMenu.value = false
@@ -80,7 +80,7 @@ function handleCorrected(
     .getDefaultActions()
     .find((action) => action.id === 'insertIntoWindow')
   // without a target window the text stays in the actions step, not lost
-  if (intent !== 'next' && insertAction && ipcStore.params?.windowId) {
+  if (intent !== 'next' && insertAction && ipcStore.desktopState?.windowId) {
     void insertAction.action(resultText)
     return
   }
@@ -89,7 +89,11 @@ function handleCorrected(
 }
 
 function handleCancelled() {
-  if (!ipcStore.params.isWindowShown || ipcStore.params.mode !== 'voice') return
+  if (
+    !ipcStore.desktopState.isWindowShown ||
+    ipcStore.desktopState.mode !== 'voice'
+  )
+    return
 
   if (getCurrentWindow().label === 'quick') {
     void ipcStore.callFunctionOrNotify('hideWindow')

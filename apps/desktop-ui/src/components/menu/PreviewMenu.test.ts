@@ -102,7 +102,7 @@ describe('PreviewMenu', () => {
   it('reads translation view mode preference from localState', async () => {
     const { useIpcStore } = await import('../../stores/ipc')
     const ipcStore = useIpcStore()
-    ipcStore.params.localState = { translationViewMode: 'result' }
+    ipcStore.desktopState.localState = { translationViewMode: 'result' }
 
     const wrapper = mount(PreviewMenu, {
       props: { text: 'Translation text', sourceText: 'Original text' },

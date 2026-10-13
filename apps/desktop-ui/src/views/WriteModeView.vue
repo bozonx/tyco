@@ -59,23 +59,23 @@ import {
   submitShortcut,
 } from '../lib/input-keys/input-keys'
 import { maxInputHeight } from '../lib/quick-panel/input-height'
-import { useCorrectionStore } from '../stores/correction'
+import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { useWriterInputStore } from '../stores/writer-input'
+import { useWriteInputStore } from '../stores/write-input'
 
 const navPanelStore = useNavPanelStore()
-const writerInputStore = useWriterInputStore()
+const writeInputStore = useWriteInputStore()
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const correctionStore = useCorrectionStore()
+const correctionWorkflowStore = useCorrectionWorkflowStore()
 const { t } = useI18n()
 const submitKey = computed(() =>
-  resolveSubmitKey(ipcStore.params?.userConfig?.submitKey)
+  resolveSubmitKey(ipcStore.desktopState?.userConfig?.submitKey)
 )
 const prefetch = computed(
-  () => ipcStore.params?.userConfig?.quickCorrectionPrefetch === true
+  () => ipcStore.desktopState?.userConfig?.quickCorrectionPrefetch === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
 const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
@@ -117,45 +117,47 @@ function resetNav() {
 resetNav()
 
 watch(
-  () => ipcStore.params?.activationId,
+  () => ipcStore.desktopState?.activationId,
   () => {
-    correctionStore.cancelInsert()
-    const { isWindowShown, mode } = ipcStore.params
+    correctionWorkflowStore.cancelInsert()
+    const { isWindowShown, mode } = ipcStore.desktopState
     if (isWindowShown && mode === 'write') {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
       // a kept text comes back selected: typing replaces it
-      if (writerInputStore.startSession()) writerInputStore.focusAndSelectAll()
-      else writerInputStore.focus()
+      if (writeInputStore.startSession()) writeInputStore.focusAndSelectAll()
+      else writeInputStore.focus()
     }
   },
   { immediate: true }
 )
 
 watch(
-  () => writerInputStore.value,
+  () => writeInputStore.value,
   (text) => {
-    if (menuModalsStore.pendingModal) correctionStore.cancelInsert()
-    correctionStore.speculate(prefetch.value && canCorrect(text) ? text : null)
+    if (menuModalsStore.pendingModal) correctionWorkflowStore.cancelInsert()
+    correctionWorkflowStore.speculate(
+      prefetch.value && canCorrect(text) ? text : null
+    )
   }
 )
 
 watch(
-  () => ipcStore.params?.isWindowShown,
+  () => ipcStore.desktopState?.isWindowShown,
   (isShown) => {
     if (!isShown) {
-      correctionStore.cancelInsert()
-      correctionStore.cancelSpeculation()
+      correctionWorkflowStore.cancelInsert()
+      correctionWorkflowStore.cancelSpeculation()
     }
   }
 )
 
 function cancelAndClose() {
-  correctionStore.cancelInsert()
-  correctionStore.cancelSpeculation()
+  correctionWorkflowStore.cancelInsert()
+  correctionWorkflowStore.cancelSpeculation()
   // Esc drops the text from the history; ArrowUp still brings it back
-  writerInputStore.discard()
+  writeInputStore.discard()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   resetNav()
@@ -164,8 +166,8 @@ function cancelAndClose() {
 
 /** Whether the input takes commands: not while a modal is over it. */
 const acceptsInput = () =>
-  ipcStore.params.isWindowShown &&
-  ipcStore.params.mode === 'write' &&
+  ipcStore.desktopState.isWindowShown &&
+  ipcStore.desktopState.mode === 'write' &&
   !menuModalsStore.anyModalOpen
 
 function submitFromHint() {
@@ -175,9 +177,9 @@ function submitFromHint() {
 
 function nextFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
-  const text = writerInputStore.value
+  const text = writeInputStore.value
   if (!text.trim()) return
-  writerInputStore.rememberSubmitted(text)
+  writeInputStore.rememberSubmitted(text)
   menuModalsStore.nextModal(MenuModals.INSERT, { text })
 }
 
@@ -190,10 +192,10 @@ function cancelFromHint() {
 async function insertNewline() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
   const textarea = frameRef.value?.querySelector('textarea')
-  const text = writerInputStore.value
+  const text = writeInputStore.value
   const start = textarea?.selectionStart ?? text.length
   const end = textarea?.selectionEnd ?? text.length
-  writerInputStore.setValue(`${text.slice(0, start)}\n${text.slice(end)}`)
+  writeInputStore.setValue(`${text.slice(0, start)}\n${text.slice(end)}`)
   await nextTick()
   textarea?.focus()
   textarea?.setSelectionRange(start + 1, start + 1)
@@ -230,11 +232,11 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (
     event.code === 'ArrowUp' &&
-    !writerInputStore.value &&
-    writerInputStore.recallText
+    !writeInputStore.value &&
+    writeInputStore.recallText
   ) {
     event.preventDefault()
-    writerInputStore.setValue(writerInputStore.recallText)
+    writeInputStore.setValue(writeInputStore.recallText)
   }
 }
 
@@ -249,14 +251,14 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   layoutObserver?.disconnect()
-  correctionStore.cancelInsert()
-  correctionStore.cancelSpeculation()
+  correctionWorkflowStore.cancelInsert()
+  correctionWorkflowStore.cancelSpeculation()
 })
 
 function submit() {
-  const text = writerInputStore.value
-  writerInputStore.rememberSubmitted(text)
-  void correctionStore.insert(text)
+  const text = writeInputStore.value
+  writeInputStore.rememberSubmitted(text)
+  void correctionWorkflowStore.insert(text)
 }
 </script>
 

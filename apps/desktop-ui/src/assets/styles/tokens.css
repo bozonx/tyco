@@ -66,7 +66,7 @@
   /* Interface scale, set from the appearance settings */
   --ui-scale: 1;
 
-  /* Field row label width — global token so FieldRow and FieldsByCfg stay in sync */
+  /* Field row label width — global token so FieldRow and ConfigFields stay in sync */
   --field-label-width: 250px;
 
   /* Editor (CodeMirror) typography and padding */

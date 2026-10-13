@@ -1,7 +1,7 @@
 <template>
   <div class="shortcut-slots">
     <div
-      v-for="(key, index) in PRESETS_KEYS"
+      v-for="(key, index) in SHORTCUT_SLOT_KEYS"
       :key="key"
       class="shortcut-slot"
       :class="{
@@ -57,7 +57,7 @@
 import { ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import KeyButton from './KeyButton.vue'
 import { Icon } from '@iconify/vue'
 

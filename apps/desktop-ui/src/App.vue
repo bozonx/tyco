@@ -49,8 +49,8 @@ import { useNavPanelStore } from './stores/nav-panel'
 import { useSelectionReplaceStore } from './stores/selection-replace'
 import { useThemeStore } from './stores/theme'
 import { useToolCatalogStore } from './stores/tool-catalog'
-import { useWriterInputStore } from './stores/writer-input'
-import { type START_MODES } from '@tyco/shared'
+import { useWriteInputStore } from './stores/write-input'
+import { type StartMode } from '@tyco/shared'
 import { type AppEventPayloads } from '@tyco/shared'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
@@ -64,7 +64,7 @@ const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
-const writerInputStore = useWriterInputStore()
+const writeInputStore = useWriteInputStore()
 const routeParamsStore = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
@@ -84,10 +84,10 @@ const activationMetrics = createActivationMetricsClient({
   submitValue: (id) => {
     void ipcStore.callFunction('submitActivationMetricValue', [
       id,
-      writerInputStore.value,
+      writeInputStore.value,
     ])
   },
-  prepareTrial: () => writerInputStore.clear(),
+  prepareTrial: () => writeInputStore.clear(),
   activeElement: () => document.activeElement,
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,
@@ -112,7 +112,7 @@ const bootstrap = createAppBootstrap({
     window.addEventListener('focus', handler)
     return () => window.removeEventListener('focus', handler)
   },
-  setParams: (params) => ipcStore.setParams(params),
+  applyViewState: (params) => ipcStore.applyViewState(params),
   closeAllModals: () => menuModalsStore.closeAll(),
   navigateTo: (path) => appNavigation.push(path),
   // the quick window has no routes of its own: it renders by the mode
@@ -140,17 +140,20 @@ const bootstrap = createAppBootstrap({
 })
 
 watch(
-  () => ipcStore.params?.userConfig?.plugins,
+  () => ipcStore.desktopState?.userConfig?.plugins,
   (plugins) => {
-    void pluginRuntime.reloadPlugins({ ...ipcStore.params.userConfig, plugins })
+    void pluginRuntime.reloadPlugins({
+      ...ipcStore.desktopState.userConfig,
+      plugins,
+    })
   },
   { deep: true }
 )
 
 watch(
   () => [
-    ipcStore.params.userConfig?.appLanguage,
-    ipcStore.params.userConfig?.userLanguage,
+    ipcStore.desktopState.userConfig?.appLanguage,
+    ipcStore.desktopState.userConfig?.userLanguage,
   ],
   ([appLanguage, userLanguage]) => {
     syncI18nLocale(appLanguage, userLanguage)
@@ -159,7 +162,7 @@ watch(
 )
 
 watch(
-  () => ipcStore.params.userConfig,
+  () => ipcStore.desktopState.userConfig,
   (userConfig) => {
     syncDocumentLanguageAttributes(userConfig)
   },
@@ -169,7 +172,7 @@ watch(
 watch(
   () => locale.value,
   () => {
-    syncDocumentLanguageAttributes(ipcStore.params.userConfig)
+    syncDocumentLanguageAttributes(ipcStore.desktopState.userConfig)
     document.title = t('app.title')
   },
   { immediate: true }
@@ -179,9 +182,9 @@ watch(
   (path) => {
     const mode = Object.entries(MODE_ROUTE_MAP).find(
       ([_, p]) => p === path
-    )?.[0] as START_MODES | undefined
+    )?.[0] as StartMode | undefined
     // every write goes to disk, and most navigation stays in one mode
-    if (mode && mode !== ipcStore.params.localState.lastMode) {
+    if (mode && mode !== ipcStore.desktopState.localState.lastMode) {
       void ipcStore.patchLocalState({ lastMode: mode })
     }
   }
@@ -200,27 +203,27 @@ const capturedChatSelection = createCapturedChatSelection({
 })
 watch(
   () => [
-    ipcStore.params.activationId,
-    ipcStore.params.mode,
-    ipcStore.params.isWindowShown,
-    ipcStore.params.selectedText,
+    ipcStore.desktopState.activationId,
+    ipcStore.desktopState.mode,
+    ipcStore.desktopState.isWindowShown,
+    ipcStore.desktopState.selectedText,
   ],
   () => {
     if (!isQuickWindow) {
-      capturedSelection.apply(ipcStore.params)
-      capturedChatSelection.apply(ipcStore.params)
+      capturedSelection.apply(ipcStore.desktopState)
+      capturedChatSelection.apply(ipcStore.desktopState)
     }
   }
 )
 
 // the texts outlive a hidden window, but not a quit or a crash
 watch(
-  () => ipcStore.params.isWindowShown,
+  () => ipcStore.desktopState.isWindowShown,
   (isShown) => {
     if (isShown) return
 
     void editorInputStore.snapshotDraft()
-    void writerInputStore.snapshotDraft()
+    void writeInputStore.snapshotDraft()
   }
 )
 

@@ -63,7 +63,7 @@ import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
 import { type ActionItem } from '../stores/action-menu'
-import { PRESETS_KEYS } from '../types'
+import { SHORTCUT_SLOT_KEYS } from '../types'
 import ShortcutButton from './common/ShortcutButton.vue'
 
 interface ShortcutSlotItem {
@@ -92,7 +92,7 @@ const props = withDefaults(
     escAction?: () => void
     escMode?: 'close' | 'back' | 'auto'
     leftLetterKeys?: (ActionItem | undefined)[]
-    stopListening?: boolean
+    shortcutsDisabled?: boolean
   }>(),
   {
     text: '',
@@ -108,7 +108,7 @@ const props = withDefaults(
     escAction: undefined,
     escMode: 'auto',
     leftLetterKeys: () => [],
-    stopListening: false,
+    shortcutsDisabled: false,
   }
 )
 
@@ -124,7 +124,7 @@ const { handleEsc } = useOverlayNav(() => ({
  * (5..9): A S D F G Row 3 (10..14): Z X C V B
  */
 const slots = computed<ShortcutSlotItem[]>(() =>
-  PRESETS_KEYS.map((key, index) => {
+  SHORTCUT_SLOT_KEYS.map((key, index) => {
     const action = props.leftLetterKeys[index]
     const label = action ? getActionLabel(action) : ''
     return {
@@ -173,7 +173,7 @@ onUnmounted(() => {
 })
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (props.stopListening) return
+  if (props.shortcutsDisabled) return
   if (!event.repeat) pressedKeys.set(event.code, props.text)
 
   // Prevent browser default tab focus movement and space scroll
@@ -191,7 +191,7 @@ function handleKeyDown(event: KeyboardEvent) {
 function handleShortCutKeyUp(event: KeyboardEvent) {
   const textAtKeyDown = pressedKeys.get(event.code)
   pressedKeys.delete(event.code)
-  if (props.stopListening || textAtKeyDown === undefined) return
+  if (props.shortcutsDisabled || textAtKeyDown === undefined) return
   if (textAtKeyDown !== props.text) return
   if (event.ctrlKey || event.altKey || event.metaKey) return
 
@@ -220,8 +220,8 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
       codeLetter = event.code.slice(3).toLowerCase()
     }
 
-    if (codeLetter && PRESETS_KEYS.includes(codeLetter)) {
-      const index = PRESETS_KEYS.indexOf(codeLetter)
+    if (codeLetter && SHORTCUT_SLOT_KEYS.includes(codeLetter)) {
+      const index = SHORTCUT_SLOT_KEYS.indexOf(codeLetter)
       const action = props.leftLetterKeys[index]
       if (action && !action.disabled) {
         action.action(props.text || '')

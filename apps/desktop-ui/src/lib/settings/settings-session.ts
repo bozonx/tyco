@@ -37,14 +37,14 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
   let savedDraft = deps.prepare(baseline)
   const draft = ref<UserConfig>(clone(savedDraft))
   let active = true
-  let pending = 0
+  let pendingSaveCount = 0
   let lastQueued: UserConfig | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let queue = Promise.resolve()
   const isSaved = () => equal(deps.prepare(draft.value), savedDraft)
   const applyIncoming = (incoming: UserConfig) => {
     // Keep the baseline of unsaved edits so the backend can detect conflicts.
-    if (pending || !isSaved()) return
+    if (pendingSaveCount || !isSaved()) return
     baseline = clone(incoming)
     savedDraft = deps.prepare(baseline)
     draft.value = clone(savedDraft)
@@ -54,10 +54,10 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
     timer = undefined
     if (!deps.canSave() || isSaved()) return queue
     const submitted = clone(deps.prepare(draft.value))
-    if (pending && equal(submitted, lastQueued)) return queue
+    if (pendingSaveCount && equal(submitted, lastQueued)) return queue
     lastQueued = submitted
     const base = clone(baseline)
-    pending++
+    pendingSaveCount++
     queue = queue.then(async () => {
       try {
         const rebased = deps.prepare(rebase(baseline, base, submitted))
@@ -74,7 +74,7 @@ export function createSettingsSession(deps: SettingsSessionDeps) {
       } catch (error) {
         deps.notifyError(error instanceof Error ? error.message : String(error))
       } finally {
-        pending--
+        pendingSaveCount--
       }
     })
     return queue

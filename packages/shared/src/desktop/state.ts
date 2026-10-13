@@ -2,7 +2,7 @@ import { APP_CONFIG, type AppConfig } from '../app-config'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '../user-config'
 import type { AccessRequest, LauncherRequest } from './actions'
 
-export enum START_MODES {
+export enum StartMode {
   SELECT = 'select',
   VOICE = 'voice',
   AI_TASKS = 'aiTasks',
@@ -21,7 +21,7 @@ export enum START_MODES {
 
 export interface LocalState {
   lastChatId?: string | null
-  lastMode?: START_MODES | null
+  lastMode?: StartMode | null
   /** The model the chat was last used with */
   lastChatModelId?: string | null
   /** Own AI requests typed in the AI task menu, the newest first */
@@ -40,7 +40,7 @@ export interface DesktopActivationState {
   activationId: number
   windowId: string | null
   selectedText: string | null
-  mode: START_MODES | null
+  mode: StartMode | null
   launcherPage?: number
   launcherRequest?: LauncherRequest | null
   accessRequest?: AccessRequest | null
@@ -68,7 +68,7 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   activationId: 0,
   windowId: null,
   selectedText: null,
-  mode: START_MODES.EDITOR,
+  mode: StartMode.EDITOR,
   userConfig: DEFAULT_USER_CONFIG,
   localState: DEFAULT_LOCAL_STATE,
   appConfig: APP_CONFIG,

@@ -34,7 +34,7 @@ function fixture() {
 describe('chat model boundaries', () => {
   it('serializes writes and continues after a failed save', async () => {
     const { state, deps } = fixture()
-    state.newChatParams.value = { id: 'chat' }
+    state.currentChatState.value = { id: 'chat' }
     let release!: () => void
     const blocked = new Promise<void>((resolve) => {
       release = resolve
@@ -61,7 +61,7 @@ describe('chat model boundaries', () => {
 
   it('does not apply a title after cancellation even if the provider resolves', async () => {
     const { state, deps } = fixture()
-    state.newChatParams.value = { id: 'chat', title: 'Question' }
+    state.currentChatState.value = { id: 'chat', title: 'Question' }
     state.messages.value = [
       { role: 'user', content: 'Question' },
       { role: 'assistant', content: 'Answer' },
@@ -78,7 +78,7 @@ describe('chat model boundaries', () => {
     title.cancel()
     release('Late title')
     await pending
-    expect(state.newChatParams.value.title).toBe('Question')
+    expect(state.currentChatState.value.title).toBe('Question')
     expect(deps.renameChat).not.toHaveBeenCalled()
   })
 
@@ -150,7 +150,7 @@ describe('chat model boundaries', () => {
     await session.startChat({ title: 'New' })
     release(null)
     expect(await pending).toBe(false)
-    expect(state.newChatParams.value).toEqual({ id: 'new-id', title: 'New' })
+    expect(state.currentChatState.value).toEqual({ id: 'new-id', title: 'New' })
     expect(deps.notifyError).not.toHaveBeenCalled()
     expect(halt).toHaveBeenCalledWith(true)
   })

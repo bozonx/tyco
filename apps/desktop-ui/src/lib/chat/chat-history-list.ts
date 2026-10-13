@@ -35,11 +35,11 @@ export function groupChatHistory(
 
   const groups = new Map<ChatHistoryGroup, ChatSummary[]>()
   const sorted = [...items].sort(
-    (a, b) => timeOf(b.lastMsgDate) - timeOf(a.lastMsgDate)
+    (a, b) => timeOf(b.lastMessageAt) - timeOf(a.lastMessageAt)
   )
 
   for (const item of sorted) {
-    const time = timeOf(item.lastMsgDate)
+    const time = timeOf(item.lastMessageAt)
     const key: ChatHistoryGroup =
       time >= startToday.getTime()
         ? 'today'

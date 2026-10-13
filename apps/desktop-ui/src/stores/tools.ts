@@ -16,7 +16,7 @@ import { createCoreTools } from '../lib/tools/core-tools'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useChatStore } from './chat'
-import { useCorrectorStore } from './corrector'
+import { useTextCorrectionStore } from './text-correction'
 import { useIpcStore } from './ipc'
 import { useMenuModalsStore } from './menu-modals'
 
@@ -31,11 +31,12 @@ export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
   const { aiCustomPrompt } = useLlmActions()
   const { translateTo } = useTranslationActions()
-  const correctorStore = useCorrectorStore()
+  const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = useDesktopInsertion()
 
   const llmUnavailable = (task: LlmTask) =>
-    normalizeLlmConfig(ipcStore.params.userConfig?.llm).tasks[task]?.length
+    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).tasks[task]
+      ?.length
       ? undefined
       : 'tools.noLlm'
 
@@ -50,7 +51,7 @@ export const useToolsStore = defineStore('tools', () => {
       menuModalsStore.closeAll()
       await useChatStore(pinia).attachToChat(text)
     },
-    correctText: correctorStore.correct,
+    correctText: textCorrectionStore.correct,
     translateTo: async (language, text, options) => {
       const result = await translateTo(language, text, {
         ...options,
@@ -67,7 +68,7 @@ export const useToolsStore = defineStore('tools', () => {
       aiCustomPrompt(prompt, text, { signal, notifyError: false }),
     llmUnavailable,
     translatorUnavailable: () =>
-      ipcStore.params.userConfig?.translation?.provider === 'llm'
+      ipcStore.desktopState.userConfig?.translation?.provider === 'llm'
         ? llmUnavailable('translate')
         : undefined,
     describeError: (error) => describeError(error, translate),

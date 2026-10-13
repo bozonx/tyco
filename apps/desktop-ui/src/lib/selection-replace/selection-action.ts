@@ -10,7 +10,7 @@ import type { createHistoryStoreModel } from '../history/history-store'
 import { toolResultMessage } from '../invocation/invocation-result'
 import type { ToolResult } from '../tools/tool-types'
 
-export class SelectionAbort extends Error {}
+export class SelectionActionAbortedError extends Error {}
 
 export interface SelectionActionDeps {
   commands: () => unknown
@@ -59,7 +59,7 @@ export function createSelectionAction(deps: SelectionActionDeps) {
       if (message) record.message = message
       void deps.logRun(record).catch(deps.reportError)
     }
-    if (result.cancelled) throw new SelectionAbort()
+    if (result.cancelled) throw new SelectionActionAbortedError()
     if (!result.ok)
       throw new Error(
         toolResultMessage(result, deps.t) || deps.t('toast.commandFailed')
@@ -87,6 +87,6 @@ export function createSelectionAction(deps: SelectionActionDeps) {
   return {
     run,
     saveResult,
-    isAborted: (error: unknown) => error instanceof SelectionAbort,
+    isAborted: (error: unknown) => error instanceof SelectionActionAbortedError,
   }
 }

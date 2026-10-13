@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock('./ipc', () => ({
   useIpcStore: () => ({
-    params: {
+    desktopState: {
       get userConfig() {
         return mocks.config
       },

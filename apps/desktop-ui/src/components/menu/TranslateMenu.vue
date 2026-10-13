@@ -52,7 +52,7 @@
         :text="props.text"
         :spaceKey="otherLanguageAction"
         :leftLetterKeys="leftLetterKeys"
-        :stopListening="props.stopListening"
+        :shortcutsDisabled="props.shortcutsDisabled"
         :toEditorVisible="!routeParamsStore.isEditorPage()"
       />
     </template>
@@ -98,11 +98,11 @@ import { Icon } from '@iconify/vue'
 const props = withDefaults(
   defineProps<{
     text?: string
-    stopListening?: boolean
+    shortcutsDisabled?: boolean
     /** A language to translate into at once: the main menu item of it */
     language?: string
   }>(),
-  { text: '', stopListening: false, language: undefined }
+  { text: '', shortcutsDisabled: false, language: undefined }
 )
 
 const ipcStore = useIpcStore()
@@ -130,15 +130,16 @@ const languageLabel = (id: string): string => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  ipcStore.params.userConfig.toTranslateLanguages.map((lang: string | null) =>
-    lang
-      ? {
-          name: languageLabel(lang),
-          action: async () => {
-            await translate(lang)
-          },
-        }
-      : undefined
+  ipcStore.desktopState.userConfig.toTranslateLanguages.map(
+    (lang: string | null) =>
+      lang
+        ? {
+            name: languageLabel(lang),
+            action: async () => {
+              await translate(lang)
+            },
+          }
+        : undefined
   )
 )
 
@@ -157,7 +158,7 @@ const closePicker = () => {
 }
 
 const recentLanguages = computed(
-  () => ipcStore.params.localState?.recentTranslateLanguages ?? []
+  () => ipcStore.desktopState.localState?.recentTranslateLanguages ?? []
 )
 
 const ALL_LANGUAGES = buildLanguageOptions([], false).map((option) => option.id)

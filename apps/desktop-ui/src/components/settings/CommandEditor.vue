@@ -176,12 +176,12 @@
           </span>
         </div>
         <p
-          v-if="command.availableIn.external && nameTwins.length"
+          v-if="command.availableIn.external && nameConflicts.length"
           class="command-warning"
         >
           {{
             t('commands.warningExternalNameTwins', {
-              names: nameTwins.map(commandLabel).join(', '),
+              names: nameConflicts.map(commandLabel).join(', '),
             })
           }}
         </p>
@@ -240,11 +240,11 @@ const props = withDefaults(
   defineProps<{
     command: CommandConfig
     /** Other commands an external call by this name could mean */
-    nameTwins?: CommandConfig[]
+    nameConflicts?: CommandConfig[]
     /** For the settings of the tool: translation languages, AI tasks */
     userConfig?: UserConfig
   }>(),
-  { nameTwins: () => [] }
+  { nameConflicts: () => [] }
 )
 
 const emit = defineEmits<{
@@ -349,7 +349,7 @@ const advancedOpen = ref(
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
 const cliCommand = computed(() =>
-  normalizeCommandName(props.command.name) && !props.nameTwins.length
+  normalizeCommandName(props.command.name) && !props.nameConflicts.length
     ? commandCliCall(props.command.name.trim(), true)
     : commandCliCall(props.command.id)
 )

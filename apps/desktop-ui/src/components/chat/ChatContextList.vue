@@ -47,7 +47,9 @@ import { Icon } from '@iconify/vue'
 const chatStore = useChatStore()
 const { t } = useI18n()
 
-const attachments = computed(() => chatStore.newChatParams?.attachments || [])
+const attachments = computed(
+  () => chatStore.currentChatState?.attachments || []
+)
 const attached = computed(() => chatStore.attachedContext)
 const images = computed(() => chatStore.pendingImages)
 

@@ -2,7 +2,7 @@ import {
   DEFAULT_DESKTOP_VIEW_STATE,
   DESKTOP_COMMANDS,
   desktopViewToSnapshot,
-  START_MODES,
+  StartMode,
   type DesktopViewState,
   type IpcResult,
   type DesktopSnapshot,
@@ -57,17 +57,17 @@ describe('desktop state revision ordering', () => {
         })
     )
     const pending = model.loadDesktopState()
-    model.setParams(view(2, { mode: START_MODES.VOICE }))
-    finish(response(1, { mode: START_MODES.EDITOR }))
-    expect((await pending).mode).toBe(START_MODES.VOICE)
-    expect(model.params.value.revision).toBe(2)
+    model.applyViewState(view(2, { mode: StartMode.VOICE }))
+    finish(response(1, { mode: StartMode.EDITOR }))
+    expect((await pending).mode).toBe(StartMode.VOICE)
+    expect(model.desktopState.value.revision).toBe(2)
   })
 
   it('rejects an out-of-order event without changing any domain', () => {
     const { model } = setup()
-    model.setParams(view(3, { selectedText: 'latest' }))
-    expect(model.setParams(view(2, { selectedText: 'stale' }))).toBe(false)
-    expect(model.params.value.selectedText).toBe('latest')
+    model.applyViewState(view(3, { selectedText: 'latest' }))
+    expect(model.applyViewState(view(2, { selectedText: 'stale' }))).toBe(false)
+    expect(model.desktopState.value.selectedText).toBe('latest')
   })
 
   it('refuses writes until authoritative state arrives', async () => {
@@ -117,10 +117,10 @@ describe('desktop state revision ordering', () => {
     }
     const pending = model.saveUserConfig(dark)
     const newer = view(3, { userConfig: { ...dark, theme: 'light' } })
-    model.setParams(newer)
+    model.applyViewState(newer)
     finish(response(2, { userConfig: dark }))
     await pending
-    expect(model.params.value.userConfig.theme).toBe('light')
+    expect(model.desktopState.value.userConfig.theme).toBe('light')
   })
 
   it('preserves state and error codes after a rejected save', async () => {
@@ -138,7 +138,7 @@ describe('desktop state revision ordering', () => {
         theme: 'dark',
       })
     ).toEqual(failure)
-    expect(model.params.value.revision).toBe(0)
+    expect(model.desktopState.value.revision).toBe(0)
   })
 
   it('serializes patches, detaches queued values and applies merged snapshots', async () => {
@@ -167,7 +167,7 @@ describe('desktop state revision ordering', () => {
     expect(callFunction).toHaveBeenLastCalledWith('patchLocalState', [
       { recentAiPrompts: ['original'] },
     ])
-    expect(model.params.value.localState).toEqual({
+    expect(model.desktopState.value.localState).toEqual({
       lastChatId: 'chat',
       recentAiPrompts: ['original'],
     })
@@ -185,10 +185,10 @@ describe('desktop state revision ordering', () => {
     )
     const pending = model.patchLocalState({ lastChatId: 'old' })
     await Promise.resolve()
-    model.setParams(view(3, { localState: { lastChatId: 'new' } }))
+    model.applyViewState(view(3, { localState: { lastChatId: 'new' } }))
     finish(response(2, { localState: { lastChatId: 'old' } }))
     await pending
-    expect(model.params.value.localState.lastChatId).toBe('new')
+    expect(model.desktopState.value.localState.lastChatId).toBe('new')
   })
 
   it('continues processing queued patches after failure', async () => {
@@ -202,7 +202,7 @@ describe('desktop state revision ordering', () => {
       (await model.patchLocalState({ lastChatId: 'failed' })).success
     ).toBe(false)
     await model.patchLocalState({ lastChatId: 'saved' })
-    expect(model.params.value.localState.lastChatId).toBe('saved')
+    expect(model.desktopState.value.localState.lastChatId).toBe('saved')
     expect(invoke).toHaveBeenCalledWith(DESKTOP_COMMANDS.GET_DESKTOP_STATE)
   })
 })

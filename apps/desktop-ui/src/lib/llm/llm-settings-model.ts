@@ -96,7 +96,7 @@ export function createLlmSettingsModel(deps: {
   }
   function setNumber(
     model: LlmModel,
-    field: 'temperature' | 'maxOutputTokens' | 'contextSize',
+    field: 'temperature' | 'maxOutputTokens' | 'contextWindowTokens',
     value: string
   ) {
     const parsed = Number(value)

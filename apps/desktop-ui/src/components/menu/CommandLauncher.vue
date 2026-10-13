@@ -140,7 +140,7 @@
             :text="selectedText"
             :spaceKey="searchAction"
             :leftLetterKeys="leftLetterKeys"
-            :stopListening="props.stopListening"
+            :shortcutsDisabled="props.shortcutsDisabled"
           />
         </div>
       </template>
@@ -177,8 +177,8 @@ import QueryPanel, {
 } from './QueryPanel.vue'
 import { Icon } from '@iconify/vue'
 
-const props = withDefaults(defineProps<{ stopListening?: boolean }>(), {
-  stopListening: false,
+const props = withDefaults(defineProps<{ shortcutsDisabled?: boolean }>(), {
+  shortcutsDisabled: false,
 })
 
 const { t } = useI18n()
@@ -225,7 +225,7 @@ const textRef = ref<HTMLTextAreaElement | null>(null)
 
 const focusStage = () => {
   void nextTick(() => {
-    if (props.stopListening) return
+    if (props.shortcutsDisabled) return
     if (stage.value.kind === 'prepare') textRef.value?.focus()
   })
 }
@@ -298,7 +298,7 @@ const onTextKeyDown = (event: KeyboardEvent) => {
 let escPressed = false
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (props.stopListening) return
+  if (props.shortcutsDisabled) return
   if (
     stage.value.kind === 'list' &&
     !searchMode.value &&
@@ -327,7 +327,7 @@ const handleKeyUp = (event: KeyboardEvent) => {
   if (event.code !== 'Escape') return
   const pressed = escPressed
   escPressed = false
-  if (!pressed || props.stopListening || stage.value.kind === 'running') {
+  if (!pressed || props.shortcutsDisabled || stage.value.kind === 'running') {
     return
   }
   event.preventDefault()
@@ -350,7 +350,7 @@ watch(
 )
 
 watch(
-  () => [ipcStore.params.activationId, props.stopListening],
+  () => [ipcStore.desktopState.activationId, props.shortcutsDisabled],
   () => {
     searchMode.value = false
     query.value = ''

@@ -25,6 +25,10 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
 - **Naming Conventions**:
   - Use kebab-case for filenames across all TypeScript and utility modules (e.g., `context-menu.ts`, `editor-sync.ts`).
   - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
+  - Types and enums use PascalCase; constant collections use SCREAMING_SNAKE_CASE.
+  - Distinguish identifiers, display labels, state, and call parameters in names (`providerId`, `providerLabel`, `desktopState`).
+  - Use `can*` for capabilities and `is*` / `has*` for state predicates; include units or counts where ambiguous (`contextWindowTokens`, `pendingSaveCount`).
+  - Prefer domain-specific modules over generic `helpers` collections; keep SDK and legacy serialized names at explicit compatibility boundaries.
 - **I18n & Locales**:
   - Core locale messages live in `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin messages live in their own `packages/plugin-*/src/locales/*.json`.
   - **No Fallbacks**: Translation fallbacks are prohibited (`fallbackLocale: false`). Every supported locale (`ru_RU`, `en_US`, `es_AR`, `tr_TR`) must provide 100% of all keys. A missing key is an error, never a silent fallback to English.

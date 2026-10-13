@@ -15,7 +15,7 @@ vi.mock('../../stores/chat-input', () => ({
   }),
 }))
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ params: { userConfig: {} } }),
+  useIpcStore: () => ({ desktopState: { userConfig: {} } }),
 }))
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),

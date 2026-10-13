@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 
-import { PRESETS_KEYS } from '../../types'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
 import { createToolRegistry } from '../tools/tool-registry'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import {
@@ -137,11 +137,11 @@ describe('seedDefaultCommands', () => {
       type: 'standard',
       actionId: 'insertIntoWindow',
     })
-    expect(seeded.mainActions[PRESETS_KEYS.indexOf('c')]).toEqual({
+    expect(seeded.mainActions[SHORTCUT_SLOT_KEYS.indexOf('c')]).toEqual({
       type: 'command',
       commandId: defaultCommandId('Notes.write', 'note'),
     })
-    expect(seeded.mainActions[PRESETS_KEYS.indexOf('d')]).toEqual({
+    expect(seeded.mainActions[SHORTCUT_SLOT_KEYS.indexOf('d')]).toEqual({
       type: 'command',
       commandId: defaultCommandId('Notes.write', 'daily'),
     })

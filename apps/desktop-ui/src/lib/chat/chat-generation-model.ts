@@ -5,7 +5,7 @@ import {
   type ChatAttachment,
   type ChatImage,
 } from '@tyco/shared'
-import { AI_TASKS } from '../../types'
+import { AiTaskKind } from '../../types'
 import { createAssistantMessage, prepareChatRequest } from './chat-helpers'
 import { draftChatTitle } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
@@ -34,7 +34,7 @@ export function createChatGenerationModel(
 ) {
   const {
     messages,
-    newChatParams,
+    currentChatState,
     isGenerating,
     error,
     isStopped,
@@ -111,7 +111,7 @@ export function createChatGenerationModel(
     isStopped.value = false
     lastFailedTurn.value = null
 
-    const devInstructions = APP_CONFIG.aiInstructions[AI_TASKS.CHAT]
+    const devInstructions = APP_CONFIG.aiInstructions[AiTaskKind.CHAT]
 
     const { preparedMessage, userMessage } = prepareChatRequest(
       message,
@@ -124,16 +124,16 @@ export function createChatGenerationModel(
     const userMessageIndex = messages.value.length
     messages.value.push(userMessage)
 
-    if (!newChatParams.value.id) {
-      newChatParams.value.id = deps.createId()
+    if (!currentChatState.value.id) {
+      currentChatState.value.id = deps.createId()
     }
-    if (!newChatParams.value.title) {
-      newChatParams.value.title = message.trim()
+    if (!currentChatState.value.title) {
+      currentChatState.value.title = message.trim()
         ? draftChatTitle(message)
         : attachments[0]?.name || deps.imageTitle?.() || 'Image'
     }
-    newChatParams.value.attachments = []
-    newChatParams.value.images = []
+    currentChatState.value.attachments = []
+    currentChatState.value.images = []
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)
@@ -143,10 +143,10 @@ export function createChatGenerationModel(
     const currentGenerationId = ++generationId
 
     // the question is kept even when no answer comes
-    const chatId = newChatParams.value.id
+    const chatId = currentChatState.value.id
     void persist(messages.value.slice(0, userMessageIndex + 1)).then(
       (saved) => {
-        if (saved && chatId && newChatParams.value.id === chatId) {
+        if (saved && chatId && currentChatState.value.id === chatId) {
           void deps.saveLocalState({ lastChatId: chatId })
         }
       }

@@ -1,4 +1,4 @@
-import { START_MODES } from '@tyco/shared'
+import { StartMode } from '@tyco/shared'
 
 export const APP_ROUTE_NAMES = {
   HOME: 'home',
@@ -35,43 +35,43 @@ export const APP_ROUTES = {
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 
-export const MODE_ROUTE_MAP: Record<START_MODES, AppRoutePath> = {
-  [START_MODES.SELECT]: APP_ROUTES.SELECT.path,
-  [START_MODES.VOICE]: APP_ROUTES.VOICE.path,
-  [START_MODES.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
-  [START_MODES.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
-  [START_MODES.CORRECTION]: APP_ROUTES.CORRECTION.path,
-  [START_MODES.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
-  [START_MODES.EDITOR]: APP_ROUTES.EDITOR.path,
-  [START_MODES.WRITE]: APP_ROUTES.WRITE.path,
-  [START_MODES.CHAT]: APP_ROUTES.CHAT.path,
-  [START_MODES.VOICE_CHAT]: APP_ROUTES.CHAT.path,
-  [START_MODES.HISTORY]: APP_ROUTES.HISTORY.path,
-  [START_MODES.CONFIG]: APP_ROUTES.CONFIG.path,
+export const MODE_ROUTE_MAP: Record<StartMode, AppRoutePath> = {
+  [StartMode.SELECT]: APP_ROUTES.SELECT.path,
+  [StartMode.VOICE]: APP_ROUTES.VOICE.path,
+  [StartMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
+  [StartMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
+  [StartMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
+  [StartMode.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
+  [StartMode.EDITOR]: APP_ROUTES.EDITOR.path,
+  [StartMode.WRITE]: APP_ROUTES.WRITE.path,
+  [StartMode.CHAT]: APP_ROUTES.CHAT.path,
+  [StartMode.VOICE_CHAT]: APP_ROUTES.CHAT.path,
+  [StartMode.HISTORY]: APP_ROUTES.HISTORY.path,
+  [StartMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
-  [START_MODES.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
+  [StartMode.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
 }
 
 /**
  * Modes shown by the quick window; the rest belong to the main window. Keep in
  * sync with `window_label_for_mode` in `src-tauri/src/services/runtime.rs`.
  */
-export const QUICK_WINDOW_MODES: ReadonlySet<START_MODES> = new Set([
-  START_MODES.WRITE,
-  START_MODES.VOICE,
-  START_MODES.SELECT,
-  START_MODES.AI_TASKS,
-  START_MODES.COMMAND_LAUNCHER,
-  START_MODES.CORRECTION,
-  START_MODES.VOICE_CHAT,
-  START_MODES.TRANSLATE,
-  START_MODES.EXTERNAL_ACCESS,
+export const QUICK_WINDOW_MODES: ReadonlySet<StartMode> = new Set([
+  StartMode.WRITE,
+  StartMode.VOICE,
+  StartMode.SELECT,
+  StartMode.AI_TASKS,
+  StartMode.COMMAND_LAUNCHER,
+  StartMode.CORRECTION,
+  StartMode.VOICE_CHAT,
+  StartMode.TRANSLATE,
+  StartMode.EXTERNAL_ACCESS,
 ])
 
-export function isQuickWindowMode(mode: START_MODES | null): boolean {
+export function isQuickWindowMode(mode: StartMode | null): boolean {
   return mode !== null && QUICK_WINDOW_MODES.has(mode)
 }
 
-export function resolveModeRoute(mode: START_MODES | null): AppRoutePath {
+export function resolveModeRoute(mode: StartMode | null): AppRoutePath {
   return mode ? MODE_ROUTE_MAP[mode] : APP_ROUTES.HOME.path
 }

@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import QuickOverlay from './QuickOverlay.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: { mode: 'write', isWindowShown: true, activationId: 1 },
+  desktopState: { mode: 'write', isWindowShown: true, activationId: 1 },
   callFunction: vi.fn(async () => ({ success: true, result: undefined })),
   focus: vi.fn(),
   hideWindow: vi.fn(),
@@ -31,12 +31,12 @@ vi.mock('../../composables/use-i18n', () => ({
 
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: reactive(mocks.params),
+    desktopState: reactive(mocks.desktopState),
     callFunction: mocks.callFunction,
   }),
 }))
-vi.mock('../../stores/writer-input', () => ({
-  useWriterInputStore: () => ({
+vi.mock('../../stores/write-input', () => ({
+  useWriteInputStore: () => ({
     focus: mocks.focus,
     markDismissed: mocks.markDismissed,
   }),
@@ -82,7 +82,7 @@ vi.mock('../../views/AiTaskView.vue', () => ({
     unmounted: () => mocks.aiTaskUnmounts++,
   },
 }))
-vi.mock('../../views/SelectModeView.vue', () => ({
+vi.mock('../../views/SelectionActionsView.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('../../views/CommandLauncherView.vue', () => ({
@@ -126,20 +126,20 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const params = reactive(mocks.params)
-    params.mode = 'write'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'write'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.hideWindow).not.toHaveBeenCalled()
 
-      params.mode = 'voice'
+      desktopState.mode = 'voice'
       await nextTick()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.hideWindow).toHaveBeenCalledOnce()
 
-      params.mode = 'write'
+      desktopState.mode = 'write'
       await nextTick()
       mocks.hideWindow.mockClear()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
@@ -158,9 +158,9 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const params = reactive(mocks.params)
-    params.mode = 'write'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'write'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       await wrapper.find('.write-hint').trigger('pointerdown')
@@ -182,9 +182,9 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const params = reactive(mocks.params)
-    params.mode = 'write'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'write'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
@@ -203,9 +203,9 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const params = reactive(mocks.params)
-    params.mode = 'write'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'write'
+    desktopState.isWindowShown = true
     const modals = reactive(mocks.modals)
     modals.currentModal = 'insert'
     const wrapper = mount(QuickOverlay)
@@ -250,9 +250,9 @@ describe('quick overlay input region', () => {
       .mockImplementation(function (this: Element) {
         return rects[this.className] ?? new DOMRect()
       })
-    const params = reactive(mocks.params)
-    params.mode = 'write'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'write'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       await vi.waitFor(() =>
@@ -263,7 +263,7 @@ describe('quick overlay input region', () => {
 
       // the dictation bar leaves the screen above it clickable too
       mocks.callFunction.mockClear()
-      params.mode = 'voice'
+      desktopState.mode = 'voice'
       await vi.waitFor(() =>
         expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
           { x: 0, y: 364, width: 800, height: 136 },
@@ -271,7 +271,7 @@ describe('quick overlay input region', () => {
       )
 
       mocks.callFunction.mockClear()
-      params.mode = 'aiTasks'
+      desktopState.mode = 'aiTasks'
       await vi.waitFor(() =>
         expect(mocks.callFunction).toHaveBeenCalledWith('setQuickInputRegion', [
           null,
@@ -280,7 +280,7 @@ describe('quick overlay input region', () => {
     } finally {
       wrapper.unmount()
       rectSpy.mockRestore()
-      params.mode = 'write'
+      desktopState.mode = 'write'
     }
   })
 })
@@ -297,9 +297,9 @@ describe('quick overlay menus', () => {
 
   it('keeps the menus of the other modes when clicking outside the card', async () => {
     stubResizeObserver()
-    const params = reactive(mocks.params)
-    params.mode = 'aiTasks'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'aiTasks'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
@@ -309,16 +309,16 @@ describe('quick overlay menus', () => {
       )
     } finally {
       wrapper.unmount()
-      params.mode = 'write'
+      desktopState.mode = 'write'
     }
   })
 
   const loseFocus = async (mode: string, modal = 'none') => {
     stubResizeObserver()
     vi.useFakeTimers()
-    const params = reactive(mocks.params)
-    params.mode = mode
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = mode
+    desktopState.isWindowShown = true
     mocks.modals.currentModal = modal
     const wrapper = mount(QuickOverlay)
     try {
@@ -329,7 +329,7 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      params.mode = 'write'
+      desktopState.mode = 'write'
       mocks.modals.currentModal = 'none'
     }
   }
@@ -364,9 +364,9 @@ describe('quick overlay menus', () => {
   it('tells when the window does not take the keys', async () => {
     stubResizeObserver()
     vi.useFakeTimers()
-    const params = reactive(mocks.params)
-    params.mode = 'aiTasks'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'aiTasks'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       await vi.waitFor(() => expect(mocks.focusHandlers).toHaveLength(1))
@@ -384,33 +384,33 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      params.mode = 'write'
+      desktopState.mode = 'write'
     }
   })
 
   it('keeps a menu mounted while hidden and drops it with its mode', async () => {
     stubResizeObserver()
-    const params = reactive(mocks.params)
-    params.mode = 'aiTasks'
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'aiTasks'
+    desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
       expect(mocks.aiTaskMounts).toBe(1)
 
-      params.isWindowShown = false
+      desktopState.isWindowShown = false
       await nextTick()
-      params.isWindowShown = true
-      params.activationId++
+      desktopState.isWindowShown = true
+      desktopState.activationId++
       await nextTick()
       expect(mocks.aiTaskMounts).toBe(1)
       expect(mocks.aiTaskUnmounts).toBe(0)
 
-      params.mode = 'write'
+      desktopState.mode = 'write'
       await nextTick()
       expect(mocks.aiTaskUnmounts).toBe(1)
     } finally {
       wrapper.unmount()
-      params.mode = 'write'
+      desktopState.mode = 'write'
     }
   })
 })

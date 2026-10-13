@@ -74,7 +74,9 @@ export function pushRecent(
  * `items` with duplicates removed, keeping the first copy: favorites listed in
  * several places show up once, where they are first met
  */
-export function uniqueIds<T extends { id: string }>(items: readonly T[]): T[] {
+export function deduplicateById<T extends { id: string }>(
+  items: readonly T[]
+): T[] {
   const seen = new Set<string>()
 
   return items.filter((item) => {

@@ -11,7 +11,7 @@ session that belongs to an application instance.
 | ---------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Desktop configuration and window context | ipc                                                                 | Backend snapshots, typed desktop calls, configuration saves, serialized local-state patches |
 | Editor document and selection            | editor-input                                                        | Document, selection, edit source, draft persistence and focus requests                      |
-| Quick writing input                      | writer-input                                                        | Draft lifetime, dismissal restoration, recall and focus requests                            |
+| Quick writing input                      | write-input                                                         | Draft lifetime, dismissal restoration, recall and focus requests                            |
 | Chat input                               | chat-input                                                          | Input text, remembered selection and one-shot caret restoration                             |
 | Chat session                             | chat                                                                | Conversation, generation, context, attachments and file ownership                           |
 | Microphone session                       | dictation                                                           | One live dictation per application instance; cancellation on disposal                       |
@@ -25,11 +25,11 @@ session that belongs to an application instance.
 | Plugin runtime                           | plugin-runtime                                                      | Per-instance catalog, activation manager, runtime statuses and refresh queue                |
 | Settings editing                         | settings-session                                                    | Shared settings draft, debounced saves and recovery after failed navigation saves           |
 | Provider services                        | llm, translation                                                    | Non-reactive clients and provider wiring; llm also owns reactive key availability           |
-| Correction                               | corrector, correction                                               | Shared speculative correction and UI insertion/correction flows respectively                |
+| Correction                               | text-correction, correction-workflow                                | Shared speculative correction and UI insertion/correction flows respectively                |
 | Execution                                | invocations, command-launcher, external-commands, selection-replace | Shared dependencies and distinct interactive/background execution lifetimes                 |
 | Synchronization services                 | commands, tool-catalog                                              | Default command synchronization and publication of available tools                          |
 
-The corrector and correction stores intentionally have different responsibilities.
+The text-correction and correction-workflow stores intentionally have different responsibilities.
 Background command execution and interactive command preparation also have
 different cancellation and presentation rules. Merging these stores would
 couple independent lifetimes.

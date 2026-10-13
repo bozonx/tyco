@@ -29,7 +29,7 @@ describe('SettingsPluginDetailTab.vue', () => {
             template:
               '<button class="checkbox-stub" :data-enabled="value" @click="$emit(\'update:value\', !value)">{{ label }}</button>',
           },
-          FieldsByCfg: {
+          ConfigFields: {
             props: ['config'],
             template: '<div class="fields-stub" />',
           },
@@ -51,7 +51,7 @@ describe('SettingsPluginDetailTab.vue', () => {
               '<button class="btn-back" @click="$emit(\'click\')"><slot /></button>',
           },
           FieldCheckbox: true,
-          FieldsByCfg: true,
+          ConfigFields: true,
         },
       },
     })
@@ -71,7 +71,7 @@ describe('SettingsPluginDetailTab.vue', () => {
             template:
               '<button class="checkbox-stub" @click="$emit(\'update:value\', false)">toggle</button>',
           },
-          FieldsByCfg: true,
+          ConfigFields: true,
         },
       },
     })
@@ -89,7 +89,7 @@ describe('SettingsPluginDetailTab.vue', () => {
         stubs: {
           Button: true,
           FieldCheckbox: true,
-          FieldsByCfg: {
+          ConfigFields: {
             props: ['config'],
             template:
               '<button class="cfg-stub" @click="$emit(\'update:values\', { token: \'new-token\' })">update</button>',
@@ -108,7 +108,7 @@ describe('SettingsPluginDetailTab.vue', () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: { ...pluginWithConfig, enabled: false } },
       global: {
-        stubs: { Button: true, FieldCheckbox: true, FieldsByCfg: true },
+        stubs: { Button: true, FieldCheckbox: true, ConfigFields: true },
       },
     })
 

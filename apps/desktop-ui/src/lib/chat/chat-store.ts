@@ -8,7 +8,7 @@ export type { ChatStoreDeps, ChatRequestModel } from './chat-store-contracts'
 
 export function createChatStoreModel(deps: ChatStoreDeps) {
   const state = createChatState()
-  const { newChatParams } = state
+  const { currentChatState } = state
   const persistence = createChatPersistenceQueue(deps, state)
   const title = createChatTitleController(deps, state)
   const generation = createChatGenerationModel(
@@ -33,16 +33,18 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
     regenerateMessage: generation.regenerateMessage,
     ...session,
     removeAttachment: (index: number) => {
-      const current = newChatParams.value.attachments || []
+      const current = currentChatState.value.attachments || []
       if (index >= 0 && index < current.length) {
-        newChatParams.value.attachments = current.filter((_, i) => i !== index)
+        currentChatState.value.attachments = current.filter(
+          (_, i) => i !== index
+        )
       }
     },
     /** Resolves once the writes started so far are done */
     whenSaved: persistence.whenSaved,
     /** Renames the current chat in memory, after it was renamed in storage */
     setTitle: (id: string, title: string) => {
-      if (newChatParams.value.id === id) newChatParams.value.title = title
+      if (currentChatState.value.id === id) currentChatState.value.title = title
     },
   }
 }

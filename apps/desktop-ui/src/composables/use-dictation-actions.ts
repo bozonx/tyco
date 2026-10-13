@@ -12,7 +12,7 @@ export function useDictationActions() {
   const ipc = useIpcStore()
   const llm = useLlmStore()
   return createDictationController({
-    getConfig: () => ipc.params.userConfig,
+    getConfig: () => ipc.desktopState.userConfig,
     dictation,
     refreshSecrets: llm.refreshSecrets,
     getSecrets: () => llm.secrets,

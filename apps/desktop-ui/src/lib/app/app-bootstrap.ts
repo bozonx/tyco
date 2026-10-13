@@ -14,7 +14,7 @@ export interface AppBootstrapDeps {
   onError?: (error: unknown) => void
   addWindowFocusListener?: (handler: () => void) => () => void
   loadDesktopState: () => Promise<DesktopViewState>
-  setParams: (params: DesktopViewState) => void
+  applyViewState: (params: DesktopViewState) => void
   closeAllModals: () => void
   navigateTo: (path: AppRoutePath) => Promise<void>
   /**
@@ -44,7 +44,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
   ) => {
     if (params.revision <= lastRevision) return
     lastRevision = params.revision
-    deps.setParams(params)
+    deps.applyViewState(params)
 
     if (deps.ownsMode && !deps.ownsMode(params.mode)) {
       // the screen stays as it was; at start there is none yet

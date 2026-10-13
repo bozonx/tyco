@@ -10,13 +10,13 @@ describe('createMenuModalsStoreModel', () => {
     expect(store.menuBreadcrumbs.value).toEqual([])
   })
 
-  it('navigates to next modal and calls resetGlobalFocus', () => {
-    const resetGlobalFocus = vi.fn()
-    const store = createMenuModalsStoreModel({ resetGlobalFocus })
+  it('navigates to next modal and calls blurActiveElement', () => {
+    const blurActiveElement = vi.fn()
+    const store = createMenuModalsStoreModel({ blurActiveElement })
 
     store.nextModal(MenuModals.TRANSLATE, { text: 'hello' })
 
-    expect(resetGlobalFocus).toHaveBeenCalled()
+    expect(blurActiveElement).toHaveBeenCalled()
     expect(store.currentModal.value).toBe(MenuModals.TRANSLATE)
     expect(store.currentModalParams.value).toEqual({ text: 'hello' })
     expect(store.anyModalOpen.value).toBe(true)

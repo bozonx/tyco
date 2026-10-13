@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: {
+    desktopState: {
       userConfig: {
         aiModelUsage: { stt: 'speech' },
         sttModels: [

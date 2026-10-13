@@ -11,7 +11,7 @@ export function useResultActions() {
   const model = createResultActions({
     getShortcutActions: () => actionMenuStore.getShortcutActions(),
     getDefaultActions: () => actionMenuStore.getDefaultActions(),
-    hasTargetWindow: () => Boolean(ipcStore.params?.windowId),
+    hasTargetWindow: () => Boolean(ipcStore.desktopState?.windowId),
     noTargetHint: () => t('selection.noTarget'),
   })
   return {

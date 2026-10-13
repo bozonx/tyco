@@ -103,7 +103,7 @@
           <IconButton
             size="sm"
             variant="ghost"
-            :disabled="!ipcStore.params.windowId"
+            :disabled="!ipcStore.desktopState.windowId"
             @click="handleInsertToWindow"
             :title="scoped(t('action.insertIntoWindow'))"
             :label="scoped(t('action.insertIntoWindow'))"
@@ -324,7 +324,7 @@ import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
-import type { START_MODES } from '@tyco/shared'
+import type { StartMode } from '@tyco/shared'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
@@ -374,11 +374,11 @@ const openQuick = async (
   const res = await ipcStore.callFunction('activateMode', [mode, text])
   if (!res?.success) {
     desktopClient.setLocalParams({
-      mode: mode as unknown as START_MODES,
+      mode: mode as unknown as StartMode,
       selectedText: text ?? '',
       isWindowShown: true,
     })
-    void appNavigation.push(resolveModeRoute(mode as unknown as START_MODES))
+    void appNavigation.push(resolveModeRoute(mode as unknown as StartMode))
   }
 }
 

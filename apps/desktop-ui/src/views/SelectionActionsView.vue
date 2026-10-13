@@ -3,7 +3,7 @@
     <InsertMenu
       :allowInsertButton="false"
       :text="text"
-      :stopListening="stopListening"
+      :shortcutsDisabled="shortcutsDisabled"
     />
   </ContentPadding>
 </template>
@@ -22,7 +22,7 @@ const ipcStore = useIpcStore()
 const editorInputStore = useEditorInputStore()
 const text = computed(
   () =>
-    ipcStore.params?.selectedText ||
+    ipcStore.desktopState?.selectedText ||
     editorInputStore.selectedText ||
     editorInputStore.value ||
     ''
@@ -30,8 +30,8 @@ const text = computed(
 
 // The view outlives a hidden window. Until the next activation reaches it, the
 // keys belong to whatever mode that activation opens
-const stopListening = computed(
-  () => menuModalsStore.anyModalOpen || !ipcStore.params.isWindowShown
+const shortcutsDisabled = computed(
+  () => menuModalsStore.anyModalOpen || !ipcStore.desktopState.isWindowShown
 )
 
 navPanelStore.resetNavParams({})

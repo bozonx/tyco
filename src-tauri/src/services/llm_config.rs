@@ -42,29 +42,29 @@ pub fn default_llm_config() -> Value {
       "models": [
         {
           "id": DEFAULT_MODEL_ID,
-          "provider": DEFAULT_LOCAL_PROVIDER_ID,
-          "model": "qwen2.5:7b",
+          "providerId": DEFAULT_LOCAL_PROVIDER_ID,
+          "providerModelId": "qwen2.5:7b",
           "name": "Qwen 2.5 7B",
           "temperature": 0.2
         },
         {
           "id": "gemini-flash",
-          "provider": "google",
-          "model": "gemini-2.5-flash",
+          "providerId": "google",
+          "providerModelId": "gemini-2.5-flash",
           "name": "Gemini 2.5 Flash",
           "temperature": 0.2
         },
         {
           "id": "deepseek-chat",
-          "provider": "deepseek",
-          "model": "deepseek-chat",
+          "providerId": "deepseek",
+          "providerModelId": "deepseek-chat",
           "name": "DeepSeek Chat",
           "temperature": 0.2
         },
         {
           "id": "openrouter-gpt-4-1-mini",
-          "provider": "openrouter",
-          "model": "openai/gpt-4.1-mini",
+          "providerId": "openrouter",
+          "providerModelId": "openai/gpt-4.1-mini",
           "name": "GPT-4.1 mini",
           "temperature": 0.2
         }
@@ -95,7 +95,28 @@ pub fn migrate_llm_config(config: &mut Value) -> Option<Vec<MigratedSecret>> {
     let legacy_usage = take_legacy_usage(object);
 
     if has_llm {
-        return (legacy_models.is_some() || !legacy_usage.is_empty()).then(Vec::new);
+        let mut renamed = false;
+        if let Some(models) = object
+            .get_mut("llm")
+            .and_then(|llm| llm.get_mut("models"))
+            .and_then(Value::as_array_mut)
+        {
+            for model in models {
+                if let Some(fields) = model.as_object_mut() {
+                    for (old, new) in [
+                        ("provider", "providerId"),
+                        ("model", "providerModelId"),
+                        ("contextSize", "contextWindowTokens"),
+                    ] {
+                        if let Some(value) = fields.remove(old) {
+                            fields.entry(new.to_string()).or_insert(value);
+                            renamed = true;
+                        }
+                    }
+                }
+            }
+        }
+        return (renamed || legacy_models.is_some() || !legacy_usage.is_empty()).then(Vec::new);
     }
 
     let (llm, secrets) = build_llm_config(
@@ -192,7 +213,7 @@ fn build_llm_config(
             .as_array()
             .into_iter()
             .flatten()
-            .filter(|model| model["provider"] != DEFAULT_LOCAL_PROVIDER_ID)
+            .filter(|model| model["providerId"] != DEFAULT_LOCAL_PROVIDER_ID)
             .cloned(),
     );
 
@@ -275,7 +296,7 @@ fn migrate_model(
             .expect("an unused id")
     };
 
-    let mut model = json!({ "id": id, "provider": provider_id, "model": model_name });
+    let mut model = json!({ "id": id, "providerId": provider_id, "providerModelId": model_name });
     let fields = model.as_object_mut().expect("model is an object");
     if let Some(name) = legacy["name"]
         .as_str()
@@ -368,15 +389,15 @@ mod tests {
             models[0],
             json!({
               "id": "openai-compatible-default",
-              "provider": "local",
-              "model": "qwen2.5:7b",
+              "providerId": "local",
+              "providerModelId": "qwen2.5:7b",
               "name": "Ollama",
               "temperature": 0.2,
               "maxOutputTokens": 512
             })
         );
         assert_eq!(models[1]["id"], "router");
-        assert_eq!(models[1]["provider"], "local-2");
+        assert_eq!(models[1]["providerId"], "local-2");
         assert!(models[1].get("name").is_none());
         assert_eq!(models[2]["id"], "model-1", "a duplicate id is replaced");
         assert!(
@@ -412,6 +433,24 @@ mod tests {
         assert!(secrets.is_empty());
         assert_eq!(config["llm"], default_llm_config());
         assert_eq!(config["aiModelUsage"], json!({ "stt": "x" }));
+    }
+
+    #[test]
+    fn renames_model_fields_without_losing_existing_configuration() {
+        let mut config = json!({ "llm": { "models": [
+            { "id": "custom", "provider": "local", "model": "custom-model", "temperature": 0.7 },
+            { "id": "mixed", "provider": "old", "providerId": "new", "model": "old-model", "providerModelId": "new-model" }
+        ] } });
+        assert_eq!(migrate_llm_config(&mut config), Some(Vec::new()));
+        assert_eq!(
+            config["llm"]["models"][0],
+            json!({ "id": "custom", "providerId": "local", "providerModelId": "custom-model", "temperature": 0.7 })
+        );
+        assert_eq!(
+            config["llm"]["models"][1],
+            json!({ "id": "mixed", "providerId": "new", "providerModelId": "new-model" })
+        );
+        assert_eq!(migrate_llm_config(&mut config), None);
     }
 
     #[test]

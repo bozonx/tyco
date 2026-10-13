@@ -5,7 +5,7 @@ import type { SubmitKey } from '@tyco/shared'
 import WriteModeView from './WriteModeView.vue'
 
 const mocks = vi.hoisted(() => ({
-  params: {
+  desktopState: {
     isWindowShown: true,
     mode: 'write',
     activationId: 1,
@@ -43,20 +43,20 @@ vi.mock('../composables/use-i18n', () => ({
 }))
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: reactive(mocks.params),
+    desktopState: reactive(mocks.desktopState),
     callFunction: mocks.callFunction,
     callFunctionOrNotify: mocks.callFunction,
   }),
 }))
-vi.mock('../stores/writer-input', () => ({
-  useWriterInputStore: () => reactive(mocks.writer),
+vi.mock('../stores/write-input', () => ({
+  useWriteInputStore: () => reactive(mocks.writer),
 }))
 vi.mock('../stores/menu-modals', () => ({
   MenuModals: { INSERT: 'insert' },
   useMenuModalsStore: () => reactive(mocks.modals),
 }))
-vi.mock('../stores/correction', () => ({
-  useCorrectionStore: () => mocks.correction,
+vi.mock('../stores/correction-workflow', () => ({
+  useCorrectionWorkflowStore: () => mocks.correction,
 }))
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavParams: vi.fn() }),
@@ -83,8 +83,8 @@ beforeEach(() => {
       disconnect() {}
     }
   )
-  mocks.params.isWindowShown = true
-  mocks.params.userConfig.submitKey = undefined
+  mocks.desktopState.isWindowShown = true
+  mocks.desktopState.userConfig.submitKey = undefined
   mocks.modals.pendingModal = null
   mocks.modals.anyModalOpen = false
   wrapper = mount(WriteModeView)
@@ -135,7 +135,7 @@ describe('quick input screen', () => {
   })
 
   it('sends with Ctrl+Enter in that mode and updates the hint', async () => {
-    reactive(mocks.params).userConfig.submitKey = 'ctrlEnter'
+    reactive(mocks.desktopState).userConfig.submitKey = 'ctrlEnter'
     await nextTick()
     press('Enter')
     expect(mocks.correction.insert).not.toHaveBeenCalled()
@@ -152,25 +152,25 @@ describe('quick input screen', () => {
   })
 
   it('cancels pending insertion when hidden or reactivated', async () => {
-    reactive(mocks.params).isWindowShown = false
+    reactive(mocks.desktopState).isWindowShown = false
     await nextTick()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
-    reactive(mocks.params).activationId++
+    reactive(mocks.desktopState).activationId++
     await nextTick()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledTimes(2)
   })
 
   it('selects a kept text on reopening and focuses an empty one', async () => {
-    const params = reactive(mocks.params)
-    params.isWindowShown = true
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.isWindowShown = true
     mocks.writer.startSession.mockReturnValueOnce(true)
-    params.activationId++
+    desktopState.activationId++
     await nextTick()
     expect(mocks.writer.focusAndSelectAll).toHaveBeenCalledOnce()
     expect(mocks.writer.focus).not.toHaveBeenCalled()
 
     mocks.writer.startSession.mockReturnValueOnce(false)
-    params.activationId++
+    desktopState.activationId++
     await nextTick()
     expect(mocks.writer.focus).toHaveBeenCalledOnce()
   })

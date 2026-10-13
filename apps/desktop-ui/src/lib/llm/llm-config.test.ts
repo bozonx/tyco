@@ -76,7 +76,7 @@ describe('llm-config', () => {
           model: 'gemini',
           temperature: '0.5',
           maxOutputTokens: '1000.4',
-          contextSize: -1,
+          contextWindowTokens: -1,
         },
         { id: 'a', provider: 'google', model: 'dup' },
         { id: 'b', provider: 'nowhere', model: 'x' },
@@ -87,13 +87,31 @@ describe('llm-config', () => {
     expect(config.models).toEqual([
       {
         id: 'a',
-        provider: 'google',
-        model: 'gemini',
+        providerId: 'google',
+        providerModelId: 'gemini',
         temperature: 0.5,
         maxOutputTokens: 1000,
       },
-      { id: 'c', provider: 'deepseek', model: '' },
+      { id: 'c', providerId: 'deepseek', providerModelId: '' },
     ])
+  })
+
+  it('prefers current model fields when legacy fields are also present', () => {
+    const config = normalizeLlmConfig({
+      models: [
+        {
+          id: 'custom',
+          provider: 'google',
+          providerId: 'deepseek',
+          model: 'old-model',
+          providerModelId: 'new-model',
+        },
+      ],
+    })
+    expect(config.models).toEqual([
+      { id: 'custom', providerId: 'deepseek', providerModelId: 'new-model' },
+    ])
+    expect(normalizeLlmConfig(config)).toEqual(config)
   })
 
   it('keeps task chains to known models without silently assigning defaults', () => {
@@ -148,11 +166,18 @@ describe('llm-config', () => {
 
   it('labels a model by name, then model id', () => {
     expect(
-      modelLabel({ id: 'x', provider: 'p', model: 'm', name: ' N ' })
+      modelLabel({
+        id: 'x',
+        providerId: 'p',
+        providerModelId: 'm',
+        name: ' N ',
+      })
     ).toBe('N')
-    expect(modelLabel({ id: 'x', provider: 'p', model: 'm', name: '' })).toBe(
-      'm'
+    expect(
+      modelLabel({ id: 'x', providerId: 'p', providerModelId: 'm', name: '' })
+    ).toBe('m')
+    expect(modelLabel({ id: 'x', providerId: 'p', providerModelId: '' })).toBe(
+      'x'
     )
-    expect(modelLabel({ id: 'x', provider: 'p', model: '' })).toBe('x')
   })
 })

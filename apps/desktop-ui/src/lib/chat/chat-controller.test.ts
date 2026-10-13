@@ -10,9 +10,9 @@ function setup() {
   const selectedModel = ref<ChatModelOption | null>({
     id: 'model',
     name: 'Model',
-    provider: 'local',
+    providerLabel: 'local',
     vision: true,
-    contextSize: 100_000,
+    contextWindowTokens: 100_000,
   })
   const state = reactive({ label: 'main', externalSelection: '' })
   const editor = reactive({ value: '', selectedText: '' })
@@ -55,7 +55,7 @@ function setup() {
         : null,
   })
   const files = {
-    pendingImages: computed(() => model.newChatParams.value.images || []),
+    pendingImages: computed(() => model.currentChatState.value.images || []),
     importing: ref(0),
     async whileOpening<T>(open: () => Promise<T>): Promise<T> {
       return open()
@@ -99,7 +99,7 @@ describe('chat controller', () => {
       events.push('focus')
     })
     await controller.startChat({ attachments: [{ text: ' context ' }] })
-    expect(model.newChatParams.value.attachments).toEqual([
+    expect(model.currentChatState.value.attachments).toEqual([
       { text: ' context ' },
     ])
     expect(deps.closeModals).toHaveBeenCalledOnce()
@@ -112,7 +112,7 @@ describe('chat controller', () => {
     state.label = 'quick'
     await controller.startChat({ attachments: [{ text: 'context' }] })
     expect(deps.openMainChat).toHaveBeenCalledWith({ text: 'context' })
-    expect(model.newChatParams.value.id).toBeUndefined()
+    expect(model.currentChatState.value.id).toBeUndefined()
     expect(deps.input.focus).not.toHaveBeenCalled()
     expect(deps.closeModals).toHaveBeenCalledOnce()
   })
@@ -133,11 +133,11 @@ describe('chat controller', () => {
     const { controller, editor, model } = setup()
     editor.value = 'Draft'
     await controller.attachToChat('Draft')
-    expect(model.newChatParams.value.attachments).toEqual([
+    expect(model.currentChatState.value.attachments).toEqual([
       { text: 'Draft', source: 'editor-text' },
     ])
     await controller.attachToChat('Another', 'selection')
-    expect(model.newChatParams.value.attachments).toContainEqual({
+    expect(model.currentChatState.value.attachments).toContainEqual({
       text: 'Another',
       source: 'selection',
     })
@@ -148,7 +148,7 @@ describe('chat controller', () => {
     input.value = ' Question '
     editor.value = 'Draft with a part'
     editor.selectedText = 'a part'
-    model.newChatParams.value.attachments = [{ text: 'pending' }]
+    model.currentChatState.value.attachments = [{ text: 'pending' }]
     expect(await controller.sendInput()).toBe(true)
     expect(model.messages.value[0]).toMatchObject({
       content: 'Question',
@@ -262,7 +262,7 @@ describe('chat controller', () => {
     loadChat.mockResolvedValue({
       id: 'stored',
       title: 'Stored',
-      lastMsgDate: '2026-10-11',
+      lastMessageAt: '2026-10-11',
       messages: [{ role: 'user', content: 'question' }],
     })
     await controller.openChat('stored')
@@ -275,7 +275,7 @@ describe('chat controller', () => {
     const { controller, deps, model } = setup()
     await controller.openLastOrNewChat()
     expect(deps.files.whileOpening).toHaveBeenCalledOnce()
-    expect(model.newChatParams.value.id).toBe('chat-1')
+    expect(model.currentChatState.value.id).toBe('chat-1')
     expect(deps.input.focus).toHaveBeenCalledOnce()
   })
 

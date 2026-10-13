@@ -4,9 +4,9 @@ import { reactive } from 'vue'
 
 import ExternalAccessView from './ExternalAccessView.vue'
 
-const { callFunction, params } = vi.hoisted(() => ({
+const { callFunction, desktopState } = vi.hoisted(() => ({
   callFunction: vi.fn(async () => ({ success: true, result: undefined })),
-  params: {
+  desktopState: {
     accessRequest: null as null | {
       jobId: string
       commandName: string
@@ -14,7 +14,7 @@ const { callFunction, params } = vi.hoisted(() => ({
     },
   },
 }))
-const reactiveParams = reactive(params)
+const reactiveParams = reactive(desktopState)
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({
@@ -23,7 +23,7 @@ vi.mock('../composables/use-i18n', () => ({
   }),
 }))
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunction, params: reactiveParams }),
+  useIpcStore: () => ({ callFunction, desktopState: reactiveParams }),
 }))
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavParams: vi.fn() }),

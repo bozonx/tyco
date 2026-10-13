@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   closeAll: vi.fn(),
   back: vi.fn(),
   hideWindow: vi.fn(),
-  discardWriterInput: vi.fn(),
+  discardWriteInput: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/window', () => ({
@@ -30,13 +30,13 @@ vi.mock('../../stores/menu-modals', () => ({
 
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
-    params: { mode: 'write' },
+    desktopState: { mode: 'write' },
     callFunctionOrNotify: mocks.hideWindow,
   }),
 }))
 
-vi.mock('../../stores/writer-input', () => ({
-  useWriterInputStore: () => ({ discard: mocks.discardWriterInput }),
+vi.mock('../../stores/write-input', () => ({
+  useWriteInputStore: () => ({ discard: mocks.discardWriteInput }),
 }))
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -98,7 +98,7 @@ describe('ActionOverlayLayout', () => {
 
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardWriterInput).toHaveBeenCalled()
+    expect(mocks.discardWriteInput).toHaveBeenCalled()
     expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
   })
 

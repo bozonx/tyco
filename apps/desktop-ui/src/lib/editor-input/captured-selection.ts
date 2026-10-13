@@ -1,4 +1,4 @@
-import { START_MODES, type DesktopViewState } from '@tyco/shared'
+import { StartMode, type DesktopViewState } from '@tyco/shared'
 
 export type SelectionActivation = Pick<
   DesktopViewState,
@@ -23,7 +23,7 @@ export function createCapturedSelection(deps: CapturedSelectionDeps) {
     const text = params.selectedText ?? ''
 
     if (
-      params.mode !== START_MODES.EDITOR ||
+      params.mode !== StartMode.EDITOR ||
       !params.isWindowShown ||
       !text.trim() ||
       params.activationId === lastAppliedActivation

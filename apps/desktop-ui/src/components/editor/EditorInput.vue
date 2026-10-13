@@ -109,7 +109,7 @@ const commands: EditorMenuCommands = {
   copy: () => withClipboard(() => copySelection(view!)),
   paste: () =>
     withClipboard(() =>
-      pasteFromClipboard(view!, ipcStore.params?.userConfig.markdown)
+      pasteFromClipboard(view!, ipcStore.desktopState?.userConfig.markdown)
     ),
   pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
   selectAll: () => {
@@ -192,7 +192,7 @@ onMounted(() => {
       placeholder: t('input.textPlaceholder'),
       ariaLabel: t('editor.inputLabel'),
       paste: true,
-      getMarkdownSettings: () => ipcStore.params?.userConfig.markdown,
+      getMarkdownSettings: () => ipcStore.desktopState?.userConfig.markdown,
       onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !showMarkup.value,
       onToggleMarkup: toggleShowMarkup,

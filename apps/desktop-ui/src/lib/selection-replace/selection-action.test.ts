@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../commands/command-config'
 import {
   createSelectionAction,
-  SelectionAbort,
+  SelectionActionAbortedError,
   type SelectionActionDeps,
 } from './selection-action'
 
@@ -79,11 +79,11 @@ describe('selection action', () => {
       .mockResolvedValueOnce({ ok: false, message: 'Unavailable' })
     await expect(
       model.run({ kind: 'correction' }, 'Text', signal)
-    ).rejects.toBeInstanceOf(SelectionAbort)
+    ).rejects.toBeInstanceOf(SelectionActionAbortedError)
     await expect(
       model.run({ kind: 'correction' }, 'Text', signal)
     ).rejects.toThrow('Unavailable')
-    expect(model.isAborted(new SelectionAbort())).toBe(true)
+    expect(model.isAborted(new SelectionActionAbortedError())).toBe(true)
     expect(model.isAborted(new Error())).toBe(false)
   })
 

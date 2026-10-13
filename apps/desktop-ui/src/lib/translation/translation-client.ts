@@ -180,7 +180,11 @@ async function translateWithMachine(
     })
     options.signal?.throwIfAborted()
     translated.push(
-      joinablePiece(chunks.length, chunk, result.translations[0] ?? '')
+      restoreTranslationChunkWhitespace(
+        chunks.length,
+        chunk,
+        result.translations[0] ?? ''
+      )
     )
     detectedSourceLanguage ??= result.detectedSourceLanguage
     resultProvider = result.provider
@@ -233,7 +237,7 @@ async function translateWithLlm(
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, chunk)
     translated.push(
-      joinablePiece(
+      restoreTranslationChunkWhitespace(
         chunks.length,
         chunk,
         restoreKeptTerms({
@@ -307,7 +311,7 @@ async function repairWithLlm(
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, pair.source)
     repaired.push(
-      joinablePiece(
+      restoreTranslationChunkWhitespace(
         pairs.length,
         pair.source,
         restoreKeptTerms({
@@ -346,7 +350,7 @@ function translationSystem(
  * line break or a space, which the pieces keep; providers drop it from their
  * output, and the joined pieces would run together
  */
-export function joinablePiece(
+export function restoreTranslationChunkWhitespace(
   count: number,
   source: string,
   translated: string

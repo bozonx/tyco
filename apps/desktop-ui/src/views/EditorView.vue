@@ -1,7 +1,7 @@
 <template>
   <ContentPadding>
     <div class="editor-view">
-      <Editor v-if="ipcStore.params" :compact="false" />
+      <Editor v-if="ipcStore.desktopState" :compact="false" />
     </div>
   </ContentPadding>
 </template>
