@@ -202,20 +202,24 @@ const matchedIds = ref<Set<string> | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchRun = 0
 
-watch(query, (value) => {
-  clearTimeout(searchTimer)
-  matchedIds.value = null
-  const run = ++searchRun
-  if (!value.trim()) return
-  searchTimer = setTimeout(async () => {
-    try {
-      const ids = await historyStore.searchChats(value)
-      if (run === searchRun) matchedIds.value = new Set(ids)
-    } catch {
-      // the titles are still matched
-    }
-  }, 200)
-})
+watch(
+  [query, () => historyStore.chatHistory],
+  ([value]) => {
+    clearTimeout(searchTimer)
+    matchedIds.value = null
+    const run = ++searchRun
+    if (!value.trim()) return
+    searchTimer = setTimeout(async () => {
+      try {
+        const ids = await historyStore.searchChats(value)
+        if (run === searchRun) matchedIds.value = new Set(ids)
+      } catch {
+        // the titles are still matched
+      }
+    }, 200)
+  },
+  { deep: true }
+)
 
 const groups = computed(() =>
   groupChatHistory(
@@ -303,10 +307,9 @@ async function finishRename(item: ChatSummary) {
   renamingId.value = null
   if (!title || title === item.title) return
   try {
-    await historyStore.renameChat(item.id, title)
-    chatStore.setTitle(item.id, title)
+    await chatStore.renameChat(item.id, title)
   } catch {
-    toast('history.operationFailed', 'error')
+    // The chat store reports rename failures.
   }
 }
 
@@ -425,11 +428,17 @@ onUnmounted(() => {
 .row-menu {
   position: absolute;
   right: 0.25rem;
-  display: none;
+  display: inline-block;
+  opacity: 0;
 }
 .chat-list-row:hover .row-menu,
-.row-menu:focus-within {
-  display: inline-block;
+.chat-list-row:focus-within .row-menu {
+  opacity: 1;
+}
+@media (hover: none) {
+  .row-menu {
+    opacity: 1;
+  }
 }
 .rename-form {
   width: 100%;

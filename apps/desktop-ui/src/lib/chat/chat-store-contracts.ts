@@ -40,6 +40,8 @@ export interface ChatStoreDeps {
   noModelError: () => string
   imageModelError?: () => string
   imageTitle?: () => string
+  branchTitle?: (title: string) => string
+  getChatInstructions?: () => string | undefined
   imageOmittedText?: () => string
   formatError?: (error: unknown) => string
   createId: () => string

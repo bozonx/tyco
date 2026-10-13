@@ -19,6 +19,16 @@ export function modelContextWindowTokens(
     ? DEFAULT_CONTEXT_WINDOW_TOKENS
     : 128_000
 }
+/** The output reservation shared by prompt budgeting and actual requests. */
+export function modelMaxOutputTokens(
+  model: LlmModel,
+  providers: LlmProvider[]
+): number {
+  return (
+    model.maxOutputTokens ??
+    Math.min(4096, Math.floor(modelContextWindowTokens(model, providers) / 4))
+  )
+}
 /**
  * The catalog's ceiling for a model's output. Only a cap: a request sends a
  * limit only when the model has one configured

@@ -14,6 +14,7 @@ function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
     notifyError: vi.fn(),
     emptyMessageError: () => 'No text selected',
     chatNotFoundError: () => 'Chat not found',
+    branchTitle: (title) => `${title} (branch)`,
     messageTooLongError: () => 'Message too long',
     noModelError: () => 'No model',
     createId: vi.fn(() => 'chat-id-1'),
@@ -879,4 +880,18 @@ describe('file and image context policies', () => {
       { role: 'assistant', content: 'Partial', status: 'stopped' },
     ])
   })
+})
+
+it('sends the configured chat instructions used by request budgeting', async () => {
+  const deps = createDeps({
+    getChatInstructions: () => 'Configured instructions',
+  })
+  const store = createChatStoreModel(deps)
+  await store.sendMessage('Question')
+  expect(deps.sendChatMessage).toHaveBeenCalledWith(
+    'Question',
+    [],
+    'Configured instructions',
+    expect.any(Object)
+  )
 })

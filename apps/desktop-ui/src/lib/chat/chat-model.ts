@@ -1,7 +1,9 @@
 import type { LlmConfig } from '@tyco/shared'
+import { buildLlmPrompt, type LlmPromptOptions } from '../llm/llm-prompt'
 
 import {
   modelContextWindowTokens,
+  modelMaxOutputTokens,
   supportsImages,
   usableModels,
 } from '../llm/llm-catalog'
@@ -12,6 +14,7 @@ export interface ChatModelOption {
   providerLabel: string
   vision: boolean
   contextWindowTokens: number
+  maxOutputTokens?: number
 }
 
 /**
@@ -33,6 +36,7 @@ export function chatModelOptions(
       providerLabel: provider.name?.trim() || provider.type,
       vision: supportsImages(model),
       contextWindowTokens: modelContextWindowTokens(model, config.providers),
+      maxOutputTokens: modelMaxOutputTokens(model, config.providers),
     }))
 }
 
@@ -47,10 +51,30 @@ export function pickChatModel(
 }
 
 /**
- * How much text, in characters, a request may carry: about 25% of the context
- * is left for instructions and output, and 3 characters per token is
- * deliberately conservative for multilingual text
+ * Approximate input budget, reserving at least a quarter of the context for
+ * output and subtracting the system prompt before admitting conversation text.
  */
-export function contextBudgetCharacters(contextWindowTokens: number): number {
-  return Math.max(1, Math.floor(contextWindowTokens * 3 * 0.75))
+export function contextBudgetCharacters(
+  contextWindowTokens: number,
+  maxOutputTokens = Math.floor(contextWindowTokens / 4),
+  systemCharacters = 0
+): number {
+  const reservedTokens = Math.max(contextWindowTokens / 4, maxOutputTokens)
+  return Math.max(
+    0,
+    Math.floor((contextWindowTokens - reservedTokens) * 3) - systemCharacters
+  )
+}
+
+/** Subtracts the exact system text assembled for the chat request. */
+export function chatRequestBudgetCharacters(
+  model: ChatModelOption,
+  promptOptions: Pick<LlmPromptOptions, 'instructions' | 'rules' | 'rulePrefix'>
+): number {
+  const system = buildLlmPrompt([], promptOptions).system || ''
+  return contextBudgetCharacters(
+    model.contextWindowTokens,
+    model.maxOutputTokens,
+    system.length
+  )
 }

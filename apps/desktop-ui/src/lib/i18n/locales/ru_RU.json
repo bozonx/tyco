@@ -30,6 +30,8 @@
     "attachmentSize": "{count} симв.",
     "branchChat": "Новый чат с этого места",
     "branchCreated": "Создан новый чат",
+    "branchTitle": "{title} (ветка)",
+    "regenerate": "Сгенерировать ответ заново",
     "collapseSidebar": "Свернуть боковую панель",
     "configureModels": "Настроить модели",
     "contextBudgetHigh": "Сообщение с контекстом занимает {percent}% лимита модели",

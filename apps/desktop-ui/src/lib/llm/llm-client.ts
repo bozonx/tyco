@@ -15,7 +15,7 @@ import type { LlmConfig, LlmTask } from '@tyco/shared'
 import {
   buildLlmCatalog,
   buildProviderFactories,
-  modelContextWindowTokens,
+  modelMaxOutputTokens,
 } from './llm-catalog'
 import type { LlmPrompt } from './llm-prompt'
 
@@ -178,14 +178,7 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
             (isDeepSeek && isThinkingEnabled)
               ? {}
               : { temperature: model.temperature }),
-            maxOutputTokens:
-              model.maxOutputTokens ??
-              Math.min(
-                4096,
-                Math.floor(
-                  modelContextWindowTokens(model, config.providers) / 4
-                )
-              ),
+            maxOutputTokens: modelMaxOutputTokens(model, config.providers),
             abortSignal: signal,
             totalTimeoutMs: Math.max(1, deadline - Date.now()),
           }

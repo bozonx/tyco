@@ -57,7 +57,17 @@ pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
 fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
     recover_chat_transaction(chats_dir)?;
     let index_path = chats_dir.join(CHAT_INDEX_FILE);
-    if let Some(history) = read_or_quarantine(&index_path, |raw| Ok(serde_json::from_str(raw)?))? {
+    if let Some(history) = read_or_quarantine(&index_path, |raw| {
+        let history: Vec<ChatSummary> = serde_json::from_str(raw)?;
+        let mut ids = std::collections::HashSet::new();
+        for item in &history {
+            sanitize_chat_id(&item.id)?;
+            if !ids.insert(&item.id) {
+                return Err(AppError::InvalidInput("Duplicate chat id in index".into()));
+            }
+        }
+        Ok(history)
+    })? {
         return Ok(history);
     }
     let history = rebuild_chat_index(chats_dir)?;
@@ -84,16 +94,18 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
         }
         let parsed = fs::read_to_string(&path)
             .map_err(AppError::from)
-            .and_then(|raw| Ok(serde_json::from_str::<Chat>(&raw)?));
+            .and_then(|raw| {
+                let chat: Chat = serde_json::from_str(&raw)?;
+                validate_stored_chat_id(&path, &chat)?;
+                Ok(chat)
+            });
         match parsed {
             Ok(chat) => {
                 history.push(ChatSummary::from(&chat));
             }
             Err(error) => {
                 log::warn!("Chat file {} is unreadable: {error}", path.display());
-                if let Err(error) = crate::services::atomic_file::quarantine(&path) {
-                    log::warn!("Could not set {} aside: {error}", path.display());
-                }
+                crate::services::atomic_file::quarantine(&path)?;
             }
         }
     }
@@ -106,6 +118,16 @@ fn chat_file_id(path: &Path) -> Option<&str> {
     let name = path.file_name()?.to_str()?;
     let id = name.strip_suffix(".json")?;
     sanitize_chat_id(id).ok().map(|_| id)
+}
+
+fn validate_stored_chat_id(path: &Path, chat: &Chat) -> Result<(), AppError> {
+    sanitize_chat_id(&chat.id)?;
+    if chat_file_id(path) != Some(chat.id.as_str()) {
+        return Err(AppError::InvalidInput(
+            "Chat id does not match its filename".into(),
+        ));
+    }
+    Ok(())
 }
 
 pub fn chat_image_directory(app: &AppHandle) -> Result<PathBuf, AppError> {
@@ -157,7 +179,7 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
         return Ok(None);
     }
 
-    Ok(Some(read_json(
+    let chat = read_json(
         &chat_file_path,
         Chat {
             id,
@@ -165,7 +187,9 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
             last_message_at: String::new(),
             messages: Vec::new(),
         },
-    )?))
+    )?;
+    validate_stored_chat_id(&chat_file_path, &chat)?;
+    Ok(Some(chat))
 }
 
 /// Gives a stored chat another title. Neither its messages nor its place in
@@ -655,6 +679,60 @@ mod tests {
         fs::write(dir.join(CHAT_INDEX_FILE), "[{").unwrap();
         assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
         assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
+    }
+
+    #[test]
+    fn rebuilding_quarantines_mismatched_ids_without_losing_their_bytes() {
+        let dir = TestDir::new("mismatched-ids");
+        let chat = chat_item("different-id");
+        write_json(&dir.join("original-id.json"), &chat).unwrap();
+        let original_bytes = fs::read(dir.join("original-id.json")).unwrap();
+        assert!(load_chat_index(&dir).unwrap().is_empty());
+        assert!(!dir.join("original-id.json").exists());
+        let quarantined = fs::read_dir(&dir)
+            .unwrap()
+            .find_map(|entry| {
+                let path = entry.unwrap().path();
+                path.file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .starts_with("original-id.json.broken-")
+                    .then_some(path)
+            })
+            .unwrap();
+        assert_eq!(fs::read(&quarantined).unwrap(), original_bytes);
+        let valid = chat_item("valid");
+        write_json(&dir.join("valid.json"), &valid).unwrap();
+        let history = load_chat_index(&dir).unwrap();
+        remove_orphan_chat_files(&dir, &history).unwrap();
+        assert_eq!(fs::read(quarantined).unwrap(), original_bytes);
+        assert_eq!(history[0].id, "valid");
+    }
+
+    #[test]
+    fn invalid_index_ids_trigger_recovery_from_valid_chat_files() {
+        let dir = TestDir::new("invalid-index-ids");
+        write_json(&dir.join("valid.json"), &chat_item("valid")).unwrap();
+        write_json(
+            &dir.join(CHAT_INDEX_FILE),
+            &vec![ChatSummary::from(&chat_item("../invalid"))],
+        )
+        .unwrap();
+        assert_eq!(load_chat_index(&dir).unwrap()[0].id, "valid");
+    }
+
+    #[test]
+    fn stored_chat_ids_must_match_their_filename() {
+        assert!(
+            validate_stored_chat_id(Path::new("original.json"), &chat_item("different")).is_err()
+        );
+        assert!(
+            validate_stored_chat_id(Path::new("original.json"), &chat_item("../invalid")).is_err()
+        );
+        assert!(
+            validate_stored_chat_id(Path::new("original.json"), &chat_item("original")).is_ok()
+        );
     }
 
     #[test]

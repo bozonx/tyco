@@ -26,6 +26,7 @@ export function createChatGenerationModel(
     | 'imageModelError'
     | 'messageTooLongError'
     | 'imageOmittedText'
+    | 'getChatInstructions'
   >,
   state: ChatState,
   persist: (messages: ChatMessage[]) => Promise<boolean>,
@@ -111,7 +112,9 @@ export function createChatGenerationModel(
     isStopped.value = false
     lastFailedTurn.value = null
 
-    const devInstructions = APP_CONFIG.aiInstructions[AiTaskKind.CHAT]
+    const devInstructions = deps.getChatInstructions
+      ? deps.getChatInstructions()
+      : APP_CONFIG.aiInstructions[AiTaskKind.CHAT]
 
     const { preparedMessage, userMessage } = prepareChatRequest(
       message,

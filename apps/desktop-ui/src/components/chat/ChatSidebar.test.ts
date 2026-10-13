@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   messages: [] as any[],
   startNewChat: vi.fn(),
   openChat: vi.fn(),
+  searchChats: vi.fn().mockResolvedValue([]),
   clearChats: vi.fn(),
   deleteChat: vi.fn(),
   restoreChatItem: vi.fn(),
@@ -55,7 +56,7 @@ vi.mock('../../stores/chat', () => ({
 vi.mock('../../stores/history', () => ({
   useHistoryStore: () => ({
     chatHistory: reactive(mocks.chatHistory),
-    searchChats: vi.fn().mockResolvedValue([]),
+    searchChats: mocks.searchChats,
     clearChats: mocks.clearChats,
     deleteChat: mocks.deleteChat,
     restoreChatItem: mocks.restoreChatItem,
@@ -237,4 +238,47 @@ describe('ChatSidebar.vue', () => {
     expect(wrapper.find('.sidebar-notice').exists()).toBe(false)
     wrapper.unmount()
   })
+})
+
+it('refreshes message search when chat history changes without changing the query', async () => {
+  vi.useFakeTimers()
+  mocks.chatHistory.length = 0
+  const history = reactive(mocks.chatHistory)
+  history.push({
+    id: 'chat',
+    title: 'Unrelated title',
+    lastMessageAt: new Date().toISOString(),
+  })
+  mocks.searchChats.mockResolvedValue([])
+  const wrapper = mount(ChatSidebar, {
+    global: {
+      stubs: {
+        Button: { template: '<button><slot /></button>' },
+        Icon: true,
+        SearchInput: {
+          name: 'SearchInput',
+          props: ['value'],
+          emits: ['update:value'],
+          template: '<input />',
+        },
+        DropdownMenu: true,
+        ConfirmModal: true,
+      },
+    },
+  })
+  await wrapper.get('button[title="chat.searchChats"]').trigger('click')
+  wrapper
+    .findComponent({ name: 'SearchInput' })
+    .vm.$emit('update:value', 'needle')
+  await flushPromises()
+  await vi.advanceTimersByTimeAsync(200)
+  expect(wrapper.find('.chat-list-item').exists()).toBe(false)
+  mocks.searchChats.mockResolvedValue(['chat'])
+  history[0].lastMessageAt = new Date(Date.now() + 1000).toISOString()
+  await flushPromises()
+  await vi.advanceTimersByTimeAsync(200)
+  expect(mocks.searchChats).toHaveBeenLastCalledWith('needle')
+  expect(wrapper.get('.chat-list-item').text()).toContain('Unrelated title')
+  wrapper.unmount()
+  vi.useRealTimers()
 })

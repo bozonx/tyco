@@ -10,7 +10,10 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   const state = createChatState()
   const { currentChatState } = state
   const persistence = createChatPersistenceQueue(deps, state)
-  const title = createChatTitleController(deps, state)
+  const title = createChatTitleController(
+    { ...deps, renameChat: persistence.renameChat },
+    state
+  )
   const generation = createChatGenerationModel(
     deps,
     state,
@@ -27,6 +30,10 @@ export function createChatStoreModel(deps: ChatStoreDeps) {
   return {
     ...state,
     savingImages: persistence.savingImages,
+    renameChat: (id: string, newTitle: string) => {
+      if (currentChatState.value.id === id) title.cancel()
+      return persistence.renameChat(id, newTitle)
+    },
     sendMessage: generation.sendMessage,
     stopGeneration: generation.stopGeneration,
     retryLastTurn: generation.retryLastTurn,

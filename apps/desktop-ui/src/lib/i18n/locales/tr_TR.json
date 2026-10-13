@@ -30,6 +30,8 @@
     "attachmentSize": "{count} karakter",
     "branchChat": "Buradan yeni sohbet",
     "branchCreated": "Yeni sohbet oluşturuldu",
+    "branchTitle": "{title} (dal)",
+    "regenerate": "Yanıtı yeniden oluştur",
     "collapseSidebar": "Kenar çubuğunu daralt",
     "configureModels": "Modelleri yapılandır",
     "contextBudgetHigh": "Bağlamıyla birlikte mesaj, model sınırının %{percent} kadarını kullanıyor",

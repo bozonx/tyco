@@ -30,6 +30,8 @@
     "attachmentSize": "{count} caract.",
     "branchChat": "Nuevo chat desde aquí",
     "branchCreated": "Nuevo chat creado",
+    "branchTitle": "{title} (rama)",
+    "regenerate": "Volver a generar la respuesta",
     "collapseSidebar": "Contraer barra lateral",
     "configureModels": "Configurar modelos",
     "contextBudgetHigh": "El mensaje con su contexto ocupa el {percent}% del límite del modelo",

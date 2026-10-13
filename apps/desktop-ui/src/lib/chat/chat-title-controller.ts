@@ -44,9 +44,10 @@ export function createChatTitleController(
     const isCurrent = currentChatState.value.id === id
     // renamed meanwhile, by the user or in another way
     if (isCurrent && currentTitle() !== title) return
-    if (isCurrent) currentChatState.value.title = generated
     try {
       await deps.renameChat(id, generated)
+      if (currentChatState.value.id === id && currentTitle() === title)
+        currentChatState.value.title = generated
     } catch {
       // the dependency reports it; the chat keeps working
     }

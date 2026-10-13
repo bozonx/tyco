@@ -87,3 +87,21 @@ describe('chat store dependency wiring', () => {
     }
   })
 })
+
+it('budgets the actual chat instructions, rules and configured output consistently', async () => {
+  const ipc = useIpcStore()
+  ipc.desktopState.userConfig.llm!.models[0].contextWindowTokens = 4096
+  ipc.desktopState.userConfig.llm!.models[0].maxOutputTokens = 3000
+  ipc.desktopState.userConfig.aiRules = {
+    ...ipc.desktopState.userConfig.aiRules,
+    chat: 'x'.repeat(4000),
+  }
+  const store = useChatStore()
+  const input = useChatInputStore()
+  input.setValue('Question')
+  expect(store.contextBudget?.budget).toBe(0)
+  expect(store.contextBudget?.level).toBe('over')
+  expect(await store.sendInput()).toBe(false)
+  expect(ai.sendChatMessage).not.toHaveBeenCalled()
+  expect(input.value).toBe('Question')
+})

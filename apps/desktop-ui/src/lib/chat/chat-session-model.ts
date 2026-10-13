@@ -18,10 +18,11 @@ export function createChatSessionModel(
     | 'chatLoadError'
     | 'chatNotFoundError'
     | 'getLastChatId'
+    | 'branchTitle'
   >,
   state: ChatState,
   halt: (save: boolean) => void,
-  persist: (messages: ChatMessage[]) => Promise<boolean>
+  persist: (messages: ChatMessage[], params?: ChatParams) => Promise<boolean>
 ) {
   const {
     messages,
@@ -55,19 +56,29 @@ export function createChatSessionModel(
     // an answer still coming is stopped first: the branch takes it as it was
     // left, or without it when nothing of it came
     if (messageIndex < 0 || messageIndex >= messages.value.length) return false
-    openRequest += 1
+    const request = ++openRequest
     stopGeneration()
-    const slice = messages.value
+    const originalMessages = messages.value
+    const originalMessageCount = originalMessages.length
+    const slice = originalMessages
       .slice(0, messageIndex + 1)
       .map((m) => ({ ...m }))
     if (!slice.length) return false
     const originalTitle = currentChatState.value.title || ''
-    const title = originalTitle ? `${originalTitle} (branch)` : ''
+    const title = deps.branchTitle?.(originalTitle) ?? originalTitle
     const id = deps.createId()
 
-    reset({ id, title, attachments: [] })
+    const params = { id, title, attachments: [] }
+    if (
+      !(await persist(slice, params)) ||
+      request !== openRequest ||
+      messages.value !== originalMessages ||
+      messages.value.length !== originalMessageCount ||
+      isGenerating.value
+    )
+      return false
+    reset(params)
     messages.value = slice
-    await persist(slice)
     await deps.saveLocalState({ lastChatId: id })
     await deps.navigateTo(APP_ROUTES.CHAT.path)
     return true

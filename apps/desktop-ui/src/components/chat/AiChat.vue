@@ -19,10 +19,12 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
+          :can-regenerate="!chatStore.isGenerating"
           :streaming="
             chatStore.isGenerating && index === chatStore.messages.length - 1
           "
           @branch="branch(index)"
+          @regenerate="regenerate(index)"
           @copy-markdown-to-point="copyMarkdownToPoint(index)"
           @content-resized="handleContentResized"
         />
@@ -351,15 +353,13 @@ async function sendMessage() {
 }
 
 async function retry() {
-  const draft = chatInputStore.value
-  const chatId = chatStore.currentChatState.id
-  const result = await chatStore.retryLastTurn()
-  if (
-    result &&
-    chatStore.currentChatState.id === chatId &&
-    chatInputStore.value === draft
-  )
-    chatInputStore.clear()
+  pinnedToBottom.value = true
+  await chatStore.retryLastTurn()
+}
+
+async function regenerate(index: number) {
+  pinnedToBottom.value = true
+  await chatStore.regenerateMessage(index)
 }
 
 async function branch(index: number) {

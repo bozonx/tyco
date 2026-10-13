@@ -12,6 +12,8 @@ import { isChatHistoryEnabled } from '../lib/chat/chat-history-settings'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
+import { APP_CONFIG } from '@tyco/shared'
+import { AiTaskKind } from '../types'
 import { defineStore } from 'pinia'
 import { computed, nextTick, onScopeDispose, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
@@ -21,7 +23,7 @@ import { useLlmActions } from '../composables/use-llm-actions'
 import useToast from '../composables/use-toast'
 import {
   chatModelOptions,
-  contextBudgetCharacters,
+  chatRequestBudgetCharacters,
   pickChatModel,
 } from '../lib/chat/chat-model'
 import { createChatStoreModel } from '../lib/chat/chat-store'
@@ -60,6 +62,20 @@ export const useChatStore = defineStore('chat', () => {
     )
   )
 
+  const getChatInstructions = () =>
+    (ipcStore.desktopState.appConfig ?? APP_CONFIG).aiInstructions[
+      AiTaskKind.CHAT
+    ]
+  const requestBudgetCharacters = () => {
+    const picked = selectedModel.value
+    if (!picked) return 0
+    return chatRequestBudgetCharacters(picked, {
+      instructions: getChatInstructions(),
+      rules: ipcStore.desktopState.userConfig.aiRules?.chat,
+      rulePrefix: (ipcStore.desktopState.appConfig ?? APP_CONFIG).rulePrefix,
+    })
+  }
+
   const model = createChatStoreModel({
     sendChatMessage,
     generateChatTitle,
@@ -91,6 +107,8 @@ export const useChatStore = defineStore('chat', () => {
     noModelError: () => translate('chat.noModels'),
     imageModelError: () => translate('chat.imageModelRequired'),
     imageTitle: () => translate('chat.imageTitle'),
+    branchTitle: (title) => translate('chat.branchTitle', { title }),
+    getChatInstructions,
     imageOmittedText: () => translate('chat.imageOmitted'),
     formatError: (error) =>
       error instanceof LlmError
@@ -116,9 +134,7 @@ export const useChatStore = defineStore('chat', () => {
         ? {
             id: picked.id,
             vision: picked.vision,
-            budgetCharacters: contextBudgetCharacters(
-              picked.contextWindowTokens
-            ),
+            budgetCharacters: requestBudgetCharacters(),
           }
         : null
     },
@@ -171,6 +187,7 @@ export const useChatStore = defineStore('chat', () => {
     editor: editorInputStore,
     input: chatInputStore,
     selectedModel: () => selectedModel.value,
+    requestBudgetCharacters,
     externalSelection: () => ipcStore.desktopState.selectedText,
     windowLabel: getDesktopWindowLabel,
     openMainChat: (attachment) =>

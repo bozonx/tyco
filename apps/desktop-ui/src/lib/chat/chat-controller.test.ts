@@ -285,3 +285,35 @@ describe('chat controller', () => {
     expect(deps.selectModel).toHaveBeenCalledWith('other-model')
   })
 })
+
+it('uses the request budget for both the composer and history image eligibility', () => {
+  const { deps, model, input, selectedModel } = setup()
+  selectedModel.value!.vision = false
+  model.messages.value = [
+    {
+      role: 'user',
+      content: 'Old',
+      images: [
+        {
+          id: 'image',
+          mediaType: 'image/png',
+          width: 10,
+          height: 10,
+          size: 100,
+        },
+      ],
+    },
+    { role: 'assistant', content: 'Answer' },
+  ]
+  input.value = 'x'.repeat(101)
+  const controller = createChatController({
+    ...deps,
+    requestBudgetCharacters: () => 100,
+  })
+  expect(controller.contextBudget.value).toMatchObject({
+    budget: 100,
+    used: 101,
+    level: 'over',
+  })
+  expect(controller.imageModelRequired.value).toBe(false)
+})

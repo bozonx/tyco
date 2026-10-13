@@ -73,9 +73,14 @@ import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from './IconButton.vue'
 import type { ChatMessage } from '@tyco/shared'
 
-const props = defineProps<{ message: ChatMessage; streaming?: boolean }>()
+const props = defineProps<{
+  message: ChatMessage
+  streaming?: boolean
+  canRegenerate?: boolean
+}>()
 const emit = defineEmits<{
   (e: 'branch'): void
+  (e: 'regenerate'): void
   (e: 'copy-markdown-to-point'): void
   (e: 'content-resized'): void
 }>()
@@ -84,6 +89,15 @@ const { toast } = useToast()
 const copied = ref(false)
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
+  ...(props.message.role === 'assistant' && props.canRegenerate
+    ? [
+        {
+          label: t('chat.regenerate'),
+          icon: 'mdi:reload',
+          action: () => emit('regenerate'),
+        },
+      ]
+    : []),
   {
     label: t('chat.copyMarkdownToPoint'),
     icon: 'mdi:language-markdown',

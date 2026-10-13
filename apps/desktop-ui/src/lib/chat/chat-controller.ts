@@ -24,6 +24,7 @@ export interface ChatControllerDeps {
     focus: () => void
   }
   selectedModel: () => ChatModelOption | null
+  requestBudgetCharacters?: () => number
   externalSelection: () => string | null | undefined
   windowLabel: () => string
   openMainChat: (attachment: ChatAttachment | undefined) => Promise<unknown>
@@ -52,13 +53,26 @@ export function createChatController(deps: ChatControllerDeps) {
     () => model.currentChatState.value.attachments || []
   )
 
+  const requestBudgetCharacters = () => {
+    const picked = selectedModel.value
+    return (
+      deps.requestBudgetCharacters?.() ??
+      (picked
+        ? contextBudgetCharacters(
+            picked.contextWindowTokens,
+            picked.maxOutputTokens
+          )
+        : 0)
+    )
+  }
+
   /** How much of the model the next message takes; null without a model */
   const contextBudget = computed(() => {
     const picked = selectedModel.value
     if (!picked) return null
     return resolveContextBudget(
       [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
-      contextBudgetCharacters(picked.contextWindowTokens),
+      requestBudgetCharacters(),
       (model.currentChatState.value.images || []).reduce(
         (sum, image) => sum + imageBudgetCharacters(image),
         0
@@ -80,11 +94,7 @@ export function createChatController(deps: ChatControllerDeps) {
     const inputSize = contextBudget.value?.used || 0
     return trimChatContext(
       model.messages.value,
-      Math.max(
-        0,
-        contextBudgetCharacters(selectedModel.value.contextWindowTokens) -
-          inputSize
-      )
+      Math.max(0, requestBudgetCharacters() - inputSize)
     ).some((message) => message.images?.length)
   })
   const imageModelRequired = computed(

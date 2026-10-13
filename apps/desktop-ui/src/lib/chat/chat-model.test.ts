@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   chatModelOptions,
+  chatRequestBudgetCharacters,
   contextBudgetCharacters,
   pickChatModel,
 } from './chat-model'
@@ -65,4 +66,35 @@ describe('vision model options', () => {
       false
     )
   })
+})
+
+it('reserves configured output and system text before admitting input', () => {
+  expect(contextBudgetCharacters(4096, 3000, 600)).toBe(2688)
+  expect(contextBudgetCharacters(4096, 4096, 600)).toBe(0)
+  expect(contextBudgetCharacters(4096, 1024, 10000)).toBe(0)
+})
+
+it('exposes the same output reservation used by LLM requests', () => {
+  const llm = config()
+  llm.models[0].maxOutputTokens = 3000
+  const options = chatModelOptions(llm, () => true)
+  expect(options[0].maxOutputTokens).toBe(3000)
+})
+
+it('subtracts assembled instructions and rules from the chat input budget', () => {
+  const model = {
+    id: 'model',
+    name: 'Model',
+    providerLabel: 'Provider',
+    vision: false,
+    contextWindowTokens: 4096,
+    maxOutputTokens: 3000,
+  }
+  expect(
+    chatRequestBudgetCharacters(model, {
+      instructions: ' Instructions ',
+      rules: ' Rules ',
+      rulePrefix: 'Policy',
+    })
+  ).toBe(3288 - 'Instructions\n\nPolicy:\n\nRules'.length)
 })
