@@ -87,29 +87,12 @@ fn without_api_keys(value: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::storage::test_support::TestDir;
     use serde_json::json;
-    use std::path::PathBuf;
-    use std::sync::atomic::{AtomicU32, Ordering};
-    fn temp_dir(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-storage-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-
-        dir
-    }
 
     #[test]
     fn config_backups_hold_no_api_keys() {
-        let dir = temp_dir("backup-scrub");
+        let dir = TestDir::new("backup-scrub");
         let path = dir.join(CONFIG_FILE_NAME);
         let legacy = json!({
             "theme": "dark",
@@ -127,7 +110,5 @@ mod tests {
         fs::write(&old, serde_yaml::to_string(&legacy).unwrap()).unwrap();
         scrub_config_backups(&path);
         assert!(!fs::read_to_string(&old).unwrap().contains("sk-secret"));
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -1,3 +1,4 @@
+use super::{ensure_enum_field, ensure_field};
 use crate::models::default_user_config;
 use serde_json::Value;
 
@@ -10,29 +11,30 @@ pub(in crate::services::storage::config) fn normalize_appearance_config(
     };
     let mut changed = false;
 
-    let theme = config.get("theme").and_then(Value::as_str);
-    if !matches!(theme, Some("auto" | "light" | "dark")) {
-        config.insert(String::from("theme"), defaults["theme"].clone());
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        config,
+        "theme",
+        &defaults["theme"],
+        &["auto", "light", "dark"],
+    );
 
-    let contrast = config.get("contrast").and_then(Value::as_str);
-    if !matches!(contrast, Some("auto" | "normal" | "more")) {
-        config.insert(String::from("contrast"), defaults["contrast"].clone());
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        config,
+        "contrast",
+        &defaults["contrast"],
+        &["auto", "normal", "more"],
+    );
 
-    let motion = config.get("motion").and_then(Value::as_str);
-    if !matches!(motion, Some("auto" | "normal" | "reduced")) {
-        config.insert(String::from("motion"), defaults["motion"].clone());
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        config,
+        "motion",
+        &defaults["motion"],
+        &["auto", "normal", "reduced"],
+    );
 
-    let ui_scale = config.get("uiScale").and_then(Value::as_u64);
-    if !matches!(ui_scale, Some(70..=200)) {
-        config.insert(String::from("uiScale"), defaults["uiScale"].clone());
-        changed = true;
-    }
+    changed |= ensure_field(config, "uiScale", &defaults["uiScale"], |value| {
+        matches!(value.as_u64(), Some(70..=200))
+    });
 
     changed
 }

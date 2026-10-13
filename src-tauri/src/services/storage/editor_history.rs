@@ -384,40 +384,7 @@ fn switch_editor_history_store(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn history_texts(history: &[EditorHistoryRecord]) -> Vec<&str> {
-        history.iter().map(|item| item.text.as_str()).collect()
-    }
-
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
-        EditorHistoryRecord {
-            id: id.to_string(),
-            text: text.to_string(),
-            kind,
-            operation: None,
-            created_at: 1,
-            result: None,
-            sent: false,
-        }
-    }
-
-    use std::sync::atomic::{AtomicU32, Ordering};
-    fn temp_dir(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-storage-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-
-        dir
-    }
+    use crate::services::storage::test_support::{history_item, history_texts, TestDir};
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {
@@ -434,7 +401,7 @@ mod tests {
 
     #[test]
     fn failed_chat_transition_restores_editor_disk_and_memory() {
-        let dir = temp_dir("failed-chat-transition");
+        let dir = TestDir::new("failed-chat-transition");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let items = vec![history_item("a", "private", EditorHistoryKind::Draft)];
         write_jsonl(&path, &items).unwrap();
@@ -450,12 +417,11 @@ mod tests {
         assert!(result.is_err());
         assert!(memory.is_empty());
         assert_eq!(fs::read(&path).unwrap(), original);
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn failed_chat_transition_restores_memory_after_disk_write() {
-        let dir = temp_dir("failed-chat-after-write");
+        let dir = TestDir::new("failed-chat-after-write");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
         let original = memory.clone();
@@ -469,12 +435,11 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(memory, original);
         assert!(!path.exists());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn failed_store_transition_preserves_memory() {
-        let dir = temp_dir("failed-transition");
+        let dir = TestDir::new("failed-transition");
         let path = dir.join("missing").join(EDITOR_HISTORY_FILE);
         let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
         let original = memory.clone();
@@ -486,12 +451,11 @@ mod tests {
             switch_editor_history_store(&path, &before, &policy(), &mut memory, now_ms()).is_err()
         );
         assert_eq!(memory, original);
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn read_editor_history_upgrades_legacy_lines() {
-        let dir = temp_dir("editor-history");
+        let dir = TestDir::new("editor-history");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let item = history_item("x", "new", EditorHistoryKind::Output);
         let raw = format!(
@@ -510,13 +474,11 @@ mod tests {
         assert!(history[0].created_at > 0);
         assert!(history[0].created_at <= now_ms());
         assert_eq!(history[1], item);
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn save_editor_history_entry_masks_secrets_when_enabled() {
-        let dir = temp_dir("save-secrets");
+        let dir = TestDir::new("save-secrets");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut history = EditorHistory {
             store: EditorHistoryStore::File(path.clone()),
@@ -535,13 +497,11 @@ mod tests {
         let raw = fs::read_to_string(&path).unwrap();
         assert!(raw.contains("[REDACTED API KEY]"));
         assert!(!raw.contains("sk-proj-"));
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
-        let dir = temp_dir("save-off");
+        let dir = TestDir::new("save-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut history = EditorHistory {
             store: EditorHistoryStore::File(path.clone()),
@@ -556,13 +516,11 @@ mod tests {
             None
         );
         assert!(!path.exists());
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn the_memory_store_never_touches_the_disk() {
-        let dir = temp_dir("memory-store");
+        let dir = TestDir::new("memory-store");
         let mut memory = Vec::new();
         let mut history = EditorHistory {
             store: EditorHistoryStore::Memory(&mut memory),
@@ -576,13 +534,11 @@ mod tests {
 
         assert_eq!(history_texts(&memory), ["kept in memory"]);
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn an_emptied_file_store_leaves_no_file() {
-        let dir = temp_dir("empty-store");
+        let dir = TestDir::new("empty-store");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut store = EditorHistoryStore::File(path.clone());
 
@@ -592,13 +548,11 @@ mod tests {
         assert!(path.exists());
         store.write(Vec::new()).unwrap();
         assert!(!path.exists());
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn switching_to_memory_only_moves_the_file_into_memory() {
-        let dir = temp_dir("switch-on");
+        let dir = TestDir::new("switch-on");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut item = history_item("a", "stored", EditorHistoryKind::Draft);
@@ -620,13 +574,11 @@ mod tests {
 
         assert!(!path.exists());
         assert_eq!(history_texts(&memory), ["stored"]);
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn switching_memory_only_off_writes_the_memory_to_the_file() {
-        let dir = temp_dir("switch-off");
+        let dir = TestDir::new("switch-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut item = history_item("a", "in memory", EditorHistoryKind::Draft);
@@ -650,13 +602,11 @@ mod tests {
             history_texts(&read_editor_history(&path).unwrap()),
             ["in memory"]
         );
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn turning_the_history_off_deletes_the_file() {
-        let dir = temp_dir("turn-off");
+        let dir = TestDir::new("turn-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
         write_jsonl(&path, &[history_item("a", "a", EditorHistoryKind::Draft)]).unwrap();
 
@@ -673,12 +623,11 @@ mod tests {
         .unwrap();
 
         assert!(!path.exists());
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn a_lower_limit_waits_for_the_next_write() {
-        let dir = temp_dir("lower-limit");
+        let dir = TestDir::new("lower-limit");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let items = vec![
             history_item("a", "a", EditorHistoryKind::Draft),
@@ -699,12 +648,11 @@ mod tests {
         .unwrap();
 
         assert_eq!(read_editor_history(&path).unwrap().len(), 2);
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn startup_drops_expired_entries_and_legacy_lines_expire_too() {
-        let dir = temp_dir("startup");
+        let dir = TestDir::new("startup");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
@@ -726,7 +674,5 @@ mod tests {
 
         enforce_editor_history_file(&path, &retention, now + 2 * DAY_MS).unwrap();
         assert!(!path.exists());
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -117,14 +117,7 @@ pub fn get_chat(
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
         let chat = chats::get_chat(app, id)?;
         if let Some(chat) = &chat {
-            let directory = chats::chat_image_directory(app)?;
-            let mut images = state.chat_images.lock().expect("chat image lock poisoned");
-            for image in chat.messages.iter().flat_map(|message| &message.images) {
-                if let Some(owner) = &owner {
-                    images.hold(owner, &image.id);
-                }
-                let _ = images.get(&directory, &image.id);
-            }
+            load_chat_images(app, state, chat, ImageRetention::Active(owner.as_deref()))?;
         }
         Ok(chat)
     })
@@ -152,14 +145,7 @@ pub fn delete_chat(app: &AppHandle, id: String, owner: String) -> Result<(), App
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
         match chats::get_chat(app, id.clone()) {
             Ok(Some(chat)) => {
-                let directory = chats::chat_image_directory(app)?;
-                let mut images = state.chat_images.lock().expect("chat image lock poisoned");
-                for image in chat.messages.iter().flat_map(|message| &message.images) {
-                    images.hold_undo(&owner, &image.id);
-                    if let Err(error) = images.get(&directory, &image.id) {
-                        log::warn!("Could not preserve chat image for undo: {error}");
-                    }
-                }
+                load_chat_images(app, state, &chat, ImageRetention::Undo(&owner))?;
             }
             Ok(None) => {}
             Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
@@ -170,6 +156,35 @@ pub fn delete_chat(app: &AppHandle, id: String, owner: String) -> Result<(), App
 
 pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
     with_chats(app, |_| chats::clear_chats(app))
+}
+
+enum ImageRetention<'a> {
+    Active(Option<&'a str>),
+    Undo(&'a str),
+}
+
+fn load_chat_images(
+    app: &AppHandle,
+    state: &AppState,
+    chat: &Chat,
+    retention: ImageRetention<'_>,
+) -> Result<(), AppError> {
+    let directory = chats::chat_image_directory(app)?;
+    let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+    for image in chat.messages.iter().flat_map(|message| &message.images) {
+        match retention {
+            ImageRetention::Active(Some(owner)) => images.hold(owner, &image.id),
+            ImageRetention::Active(None) => {}
+            ImageRetention::Undo(owner) => images.hold_undo(owner, &image.id),
+        }
+        let result = images.get(&directory, &image.id);
+        if let ImageRetention::Undo(_) = retention {
+            if let Err(error) = result {
+                log::warn!("Could not preserve chat image for undo: {error}");
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn get_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {

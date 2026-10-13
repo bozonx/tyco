@@ -72,25 +72,8 @@ pub fn save_local_state(app: &AppHandle, local_state: &LocalState) -> Result<(),
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::storage::test_support::TestDir;
     use serde_json::json;
-    use std::path::PathBuf;
-    use std::sync::atomic::{AtomicU32, Ordering};
-    fn temp_dir(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-storage-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-
-        dir
-    }
 
     #[test]
     fn local_state_without_the_menu_history_reads_with_defaults() {
@@ -155,7 +138,7 @@ mod tests {
 
     #[test]
     fn moves_a_legacy_file_once() {
-        let dir = temp_dir("legacy-file");
+        let dir = TestDir::new("legacy-file");
         let legacy = dir.join("old.json");
         let path = dir.join("new.json");
 
@@ -168,7 +151,5 @@ mod tests {
         fs::write(&legacy, "older").unwrap();
         move_legacy_file(&legacy, &path);
         assert_eq!(fs::read_to_string(&path).unwrap(), "old");
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 }

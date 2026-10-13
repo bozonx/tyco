@@ -1,3 +1,29 @@
+use serde_json::{Map, Value};
+
+fn ensure_field(
+    fields: &mut Map<String, Value>,
+    key: &str,
+    default: &Value,
+    is_valid: impl FnOnce(&Value) -> bool,
+) -> bool {
+    if fields.get(key).is_some_and(is_valid) {
+        return false;
+    }
+    fields.insert(key.to_owned(), default.clone());
+    true
+}
+
+fn ensure_enum_field(
+    fields: &mut Map<String, Value>,
+    key: &str,
+    default: &Value,
+    allowed: &[&str],
+) -> bool {
+    ensure_field(fields, key, default, |value| {
+        value.as_str().is_some_and(|value| allowed.contains(&value))
+    })
+}
+
 mod stt;
 pub(super) use stt::normalize_stt_config;
 

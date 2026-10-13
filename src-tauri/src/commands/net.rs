@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 
 use crate::errors::AppError;
 use crate::services::net::http::{self, FetchRequest};
-use crate::services::net::request::{prepare, Protocol};
+use crate::services::net::request::{prepare, PreparedRequest, Protocol};
 use crate::services::net::socket::{self, SocketCommand, SocketRequest};
 use crate::services::net::{EventSink, NetState};
 use crate::services::secrets::{with_store, SecretStore};
@@ -26,20 +26,14 @@ pub async fn net_fetch(
     request: FetchRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let secret_snapshot = with_store(&app, SecretStore::snapshot).await?;
-    ensure_allowed_origin(
-        Protocol::Http,
-        &request.url,
-        &app_state.snapshot().settings.user_config,
-        &secret_snapshot,
-    )?;
-    let prepared = prepare(
+    let prepared = prepare_authorized_request(
+        &app,
+        &app_state,
         Protocol::Http,
         &request.url,
         &request.headers,
-        &secret_snapshot,
     )
-    .map_err(AppError::InvalidInput)?;
+    .await?;
     let method = http::parse_method(&request.method).map_err(AppError::InvalidInput)?;
     let body = http::decode_body(request.body.as_deref()).map_err(AppError::InvalidInput)?;
 
@@ -70,20 +64,14 @@ pub async fn net_socket_open(
     request: SocketRequest,
     on_event: Channel<InvokeResponseBody>,
 ) -> Result<u64, AppError> {
-    let secret_snapshot = with_store(&app, SecretStore::snapshot).await?;
-    ensure_allowed_origin(
-        Protocol::WebSocket,
-        &request.url,
-        &app_state.snapshot().settings.user_config,
-        &secret_snapshot,
-    )?;
-    let prepared = prepare(
+    let prepared = prepare_authorized_request(
+        &app,
+        &app_state,
         Protocol::WebSocket,
         &request.url,
         &request.headers,
-        &secret_snapshot,
     )
-    .map_err(AppError::InvalidInput)?;
+    .await?;
     let (task, registration) = net.register_task();
     let id = task.id();
 
@@ -107,6 +95,23 @@ pub async fn net_socket_open(
     });
 
     Ok(id)
+}
+
+async fn prepare_authorized_request(
+    app: &AppHandle,
+    app_state: &AppState,
+    protocol: Protocol,
+    url: &str,
+    headers: &[(String, String)],
+) -> Result<PreparedRequest, AppError> {
+    let secrets = with_store(app, SecretStore::snapshot).await?;
+    ensure_allowed_origin(
+        protocol,
+        url,
+        &app_state.snapshot().settings.user_config,
+        &secrets,
+    )?;
+    prepare(protocol, url, headers, &secrets).map_err(AppError::InvalidInput)
 }
 
 fn ensure_allowed_origin(

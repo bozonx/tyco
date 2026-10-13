@@ -1,7 +1,7 @@
 //! Bounded, in-memory lifecycle of external command invocations.
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use tyco_activation_protocol::{Job, JobState, OutputMode, RunRequest};
@@ -29,6 +29,12 @@ pub struct ExternalJobs {
 }
 
 impl ExternalJobs {
+    fn lock_entries(&self) -> MutexGuard<'_, BTreeMap<String, ExternalJobEntry>> {
+        self.entries
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+    }
+
     pub fn create(
         &self,
         command_id: String,
@@ -45,10 +51,7 @@ impl ExternalJobs {
         selection_run_id: Option<u64>,
         now: Instant,
     ) -> Result<Job, &'static str> {
-        let mut entries = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut entries = self.lock_entries();
         if entries
             .values()
             .filter(|entry| !entry.job.state.is_terminal())
@@ -98,66 +101,43 @@ impl ExternalJobs {
     }
 
     pub fn remember_command(&self, id: &str, command: serde_json::Value) {
-        if let Some(entry) = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get_mut(id)
-        {
+        if let Some(entry) = self.lock_entries().get_mut(id) {
             entry.command_snapshot = Some(command);
         }
     }
 
     pub fn command_unchanged(&self, id: &str, command: Option<&serde_json::Value>) -> bool {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.command_snapshot.as_ref() == command)
     }
 
     pub fn approve_selection(&self, id: &str) {
-        if let Some(entry) = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get_mut(id)
-        {
+        if let Some(entry) = self.lock_entries().get_mut(id) {
             entry.selection_approved = true;
         }
     }
 
     pub fn selection_approved(&self, id: &str) -> bool {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.selection_approved)
     }
 
     /// The request of a job not claimed yet.
     pub fn accepted_request(&self, id: &str) -> Option<RunRequest> {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .get(id)
             .filter(|entry| entry.job.state == JobState::Accepted)
             .map(|entry| entry.request.clone())
     }
 
     pub fn get(&self, id: &str) -> Option<Job> {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(id)
-            .map(|entry| entry.job.clone())
+        self.lock_entries().get(id).map(|entry| entry.job.clone())
     }
 
     pub fn claim(&self, id: &str) -> Option<(String, RunRequest)> {
-        let mut entries = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state != JobState::Accepted {
             return None;
@@ -174,10 +154,7 @@ impl ExternalJobs {
         error: Option<String>,
         code: Option<String>,
     ) -> Option<(Job, Option<u64>, OutputMode)> {
-        let mut entries = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state.is_terminal() || entry.pending_completion.is_some() {
             return None;
@@ -219,10 +196,7 @@ impl ExternalJobs {
     }
 
     pub fn publish_selection(&self, id: &str, error: Option<String>) {
-        let mut entries = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut entries = self.lock_entries();
         if let Some(entry) = entries.get_mut(id) {
             if let Some(mut job) = entry.pending_completion.take() {
                 if let Some(error) = error {
@@ -236,18 +210,14 @@ impl ExternalJobs {
     }
 
     pub fn selection_input(&self, id: &str) -> Option<String> {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .get(id)
             .filter(|entry| entry.request.replace)
             .and_then(|entry| entry.request.text.clone())
     }
 
     pub fn replace_requested(&self, id: &str) -> bool {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.request.replace)
     }
@@ -257,9 +227,7 @@ impl ExternalJobs {
     }
 
     fn expired_at(&self, now: Instant) -> Vec<String> {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.lock_entries()
             .iter()
             .filter(|(_, entry)| {
                 !entry.job.state.is_terminal()

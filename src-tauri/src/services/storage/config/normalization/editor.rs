@@ -1,6 +1,7 @@
 use super::super::super::{
     editor_history::DEFAULT_EDITOR_HISTORY_LIMIT, history_limit, EditorHistoryStorage,
 };
+use super::ensure_field;
 use crate::models::default_user_config;
 use serde_json::Value;
 
@@ -44,65 +45,40 @@ pub(in crate::services::storage::config) fn normalize_editor_config(
         changed = true;
     }
 
-    if config
-        .get("editorHistoryMaxItems")
-        .and_then(Value::as_u64)
-        .is_none()
-    {
-        config.insert(
-            String::from("editorHistoryMaxItems"),
-            defaults["editorHistoryMaxItems"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "editorHistoryMaxItems",
+        &defaults["editorHistoryMaxItems"],
+        Value::is_u64,
+    );
 
-    if config
-        .get("editorHistoryRetentionDays")
-        .and_then(Value::as_u64)
-        .is_none()
-    {
-        config.insert(
-            String::from("editorHistoryRetentionDays"),
-            defaults["editorHistoryRetentionDays"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "editorHistoryRetentionDays",
+        &defaults["editorHistoryRetentionDays"],
+        Value::is_u64,
+    );
 
-    if config
-        .get("sanitizeSecretsInEditorHistory")
-        .and_then(Value::as_bool)
-        .is_none()
-    {
-        config.insert(
-            String::from("sanitizeSecretsInEditorHistory"),
-            defaults["sanitizeSecretsInEditorHistory"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "sanitizeSecretsInEditorHistory",
+        &defaults["sanitizeSecretsInEditorHistory"],
+        Value::is_boolean,
+    );
 
-    if config
-        .get("chatHistoryEnabled")
-        .and_then(Value::as_bool)
-        .is_none()
-    {
-        config.insert(
-            String::from("chatHistoryEnabled"),
-            defaults["chatHistoryEnabled"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "chatHistoryEnabled",
+        &defaults["chatHistoryEnabled"],
+        Value::is_boolean,
+    );
 
-    if config
-        .get("chatHistoryRetentionDays")
-        .and_then(Value::as_u64)
-        .is_none()
-    {
-        config.insert(
-            String::from("chatHistoryRetentionDays"),
-            defaults["chatHistoryRetentionDays"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "chatHistoryRetentionDays",
+        &defaults["chatHistoryRetentionDays"],
+        Value::is_u64,
+    );
 
     changed
 }

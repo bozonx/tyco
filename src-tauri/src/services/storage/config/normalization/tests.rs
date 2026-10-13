@@ -294,3 +294,65 @@ fn domain_normalizers_ignore_non_mapping_configs() {
         }
     }
 }
+
+#[test]
+fn normalization_repairs_invalid_fields_without_overwriting_valid_values() {
+    let defaults = default_user_config();
+    let mut config = json!({
+        "theme": "dark",
+        "contrast": null,
+        "motion": "unknown",
+        "uiScale": 201,
+        "appLanguage": "es_AR",
+        "userLanguage": false,
+        "toTranslateLanguages": [],
+        "editorHistoryMaxItems": -1,
+        "editorHistoryRetentionDays": 1.5,
+        "sanitizeSecretsInEditorHistory": "true",
+        "chatHistoryEnabled": false,
+        "chatHistoryRetentionDays": 0,
+        "translation": {
+            "provider": "google",
+            "qualityGate": "invalid",
+            "deeplEndpoint": 1,
+            "glossary": {},
+            "correctionPrompt": "custom prompt"
+        },
+        "customField": "preserved"
+    });
+    assert!(normalize_appearance_config(&mut config));
+    assert!(normalize_language_config(&mut config));
+    assert!(normalize_editor_config(&mut config));
+    assert!(normalize_translation_config(&mut config));
+
+    for key in [
+        "contrast",
+        "motion",
+        "uiScale",
+        "userLanguage",
+        "toTranslateLanguages",
+        "editorHistoryMaxItems",
+        "editorHistoryRetentionDays",
+        "sanitizeSecretsInEditorHistory",
+    ] {
+        assert_eq!(config[key], defaults[key], "{key}");
+    }
+    for key in ["qualityGate", "deeplEndpoint", "glossary"] {
+        assert_eq!(
+            config["translation"][key], defaults["translation"][key],
+            "{key}"
+        );
+    }
+    assert_eq!(config["theme"], "dark");
+    assert_eq!(config["appLanguage"], "es_AR");
+    assert_eq!(config["chatHistoryEnabled"], false);
+    assert_eq!(config["chatHistoryRetentionDays"], 0);
+    assert_eq!(config["translation"]["provider"], "google");
+    assert_eq!(config["translation"]["correctionPrompt"], "custom prompt");
+    assert_eq!(config["customField"], "preserved");
+
+    assert!(!normalize_appearance_config(&mut config));
+    assert!(!normalize_language_config(&mut config));
+    assert!(!normalize_editor_config(&mut config));
+    assert!(!normalize_translation_config(&mut config));
+}

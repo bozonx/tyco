@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test_support;
+
 mod chat_history;
 mod config;
 mod editor_history;
@@ -224,35 +227,7 @@ fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
 mod tests {
     use super::*;
     use crate::models::EditorHistoryOperation;
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
-        EditorHistoryRecord {
-            id: id.to_string(),
-            text: text.to_string(),
-            kind,
-            operation: None,
-            created_at: 1,
-            result: None,
-            sent: false,
-        }
-    }
-
-    use std::sync::atomic::{AtomicU32, Ordering};
-    fn temp_dir(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-storage-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-
-        dir
-    }
+    use crate::services::storage::test_support::{history_item, TestDir};
 
     #[test]
     fn history_limit_falls_back_to_the_default() {
@@ -281,7 +256,7 @@ mod tests {
 
     #[test]
     fn jsonl_round_trip_skips_blank_and_broken_lines() {
-        let dir = temp_dir("jsonl");
+        let dir = TestDir::new("jsonl");
         let path = dir.join("history.jsonl");
 
         write_jsonl(&path, &[String::from("first"), String::from("second")]).unwrap();
@@ -292,8 +267,6 @@ mod tests {
         let items: Vec<String> = read_jsonl(&path).unwrap();
 
         assert_eq!(items, vec![String::from("first"), String::from("second")]);
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

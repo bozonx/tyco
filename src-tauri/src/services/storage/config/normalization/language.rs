@@ -1,3 +1,4 @@
+use super::ensure_field;
 use crate::models::default_user_config;
 use serde_json::Value;
 
@@ -10,32 +11,30 @@ pub(in crate::services::storage::config) fn normalize_language_config(
     };
     let mut changed = false;
 
-    if config.get("appLanguage").and_then(Value::as_str).is_none() {
-        config.insert(String::from("appLanguage"), defaults["appLanguage"].clone());
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "appLanguage",
+        &defaults["appLanguage"],
+        Value::is_string,
+    );
 
-    if config.get("userLanguage").and_then(Value::as_str).is_none() {
-        config.insert(
-            String::from("userLanguage"),
-            defaults["userLanguage"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "userLanguage",
+        &defaults["userLanguage"],
+        Value::is_string,
+    );
 
-    let valid_to_translate = config
-        .get("toTranslateLanguages")
-        .and_then(Value::as_array)
-        .map(|arr| arr.len() == 4)
-        .unwrap_or(false);
-
-    if !valid_to_translate {
-        config.insert(
-            String::from("toTranslateLanguages"),
-            defaults["toTranslateLanguages"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_field(
+        config,
+        "toTranslateLanguages",
+        &defaults["toTranslateLanguages"],
+        |value| {
+            value
+                .as_array()
+                .is_some_and(|languages| languages.len() == 4)
+        },
+    );
 
     changed
 }

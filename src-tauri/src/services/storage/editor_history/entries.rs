@@ -140,22 +140,7 @@ pub(super) fn insert_restored_item(
 mod tests {
     use super::*;
     use crate::models::EditorHistoryOperation;
-
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
-        EditorHistoryRecord {
-            id: id.to_string(),
-            text: text.to_string(),
-            kind,
-            operation: None,
-            created_at: 1,
-            result: None,
-            sent: false,
-        }
-    }
-
-    fn history_texts(history: &[EditorHistoryRecord]) -> Vec<&str> {
-        history.iter().map(|item| item.text.as_str()).collect()
-    }
+    use crate::services::storage::test_support::{history_item, history_texts};
 
     #[test]
     fn push_editor_history_moves_a_duplicate_to_the_top() {

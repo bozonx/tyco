@@ -421,23 +421,7 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicU32, Ordering};
-    fn temp_dir(label: &str) -> PathBuf {
-        static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-        let unique = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "tyco-storage-test-{}-{}-{}",
-            label,
-            std::process::id(),
-            unique
-        ));
-
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).expect("failed to create the temp dir");
-
-        dir
-    }
+    use crate::services::storage::test_support::TestDir;
 
     fn chat_item(id: &str) -> Chat {
         Chat {
@@ -450,7 +434,7 @@ mod tests {
 
     #[test]
     fn an_interrupted_save_replays_before_orphan_cleanup() {
-        let dir = temp_dir("interrupted-save");
+        let dir = TestDir::new("interrupted-save");
         let old = chat_item("old");
         let new = chat_item("new");
         write_json(&dir.join(CHAT_INDEX_FILE), &vec![old.clone()]).unwrap();
@@ -473,12 +457,11 @@ mod tests {
         remove_orphan_chat_files(&dir, &history).unwrap();
         assert!(dir.join("new.json").exists());
         assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
-        let dir = temp_dir("interrupted-delete");
+        let dir = TestDir::new("interrupted-delete");
         let chat = chat_item("removed");
         write_json(&dir.join("removed.json"), &chat).unwrap();
         write_json(
@@ -491,12 +474,11 @@ mod tests {
         .unwrap();
         assert!(load_chat_index(&dir).unwrap().is_empty());
         assert!(!dir.join("removed.json").exists());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
-        let dir = temp_dir("invalid-save");
+        let dir = TestDir::new("invalid-save");
         let transaction = ChatTransaction {
             history: vec![ChatSummary::from(&chat_item("../invalid"))],
             chat: None,
@@ -504,12 +486,11 @@ mod tests {
         assert!(commit_chat_transaction(&dir, transaction).is_err());
         assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
         assert!(load_chat_index(&dir).unwrap().is_empty());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn a_journal_replays_even_if_no_chat_file_was_written_yet() {
-        let dir = temp_dir("journal-only");
+        let dir = TestDir::new("journal-only");
         let chat = chat_item("new");
         write_json(
             &dir.join(CHAT_TRANSACTION_FILE),
@@ -521,17 +502,15 @@ mod tests {
         .unwrap();
         assert_eq!(load_chat_index(&dir).unwrap()[0].id, "new");
         assert!(dir.join("new.json").exists());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn a_broken_transaction_never_runs_orphan_cleanup() {
-        let dir = temp_dir("broken-transaction");
+        let dir = TestDir::new("broken-transaction");
         write_json(&dir.join("kept.json"), &chat_item("kept")).unwrap();
         fs::write(dir.join(CHAT_TRANSACTION_FILE), "{").unwrap();
         assert!(load_chat_index(&dir).is_err());
         assert!(dir.join("kept.json").exists());
-        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -655,7 +634,7 @@ mod tests {
 
     #[test]
     fn a_lost_or_broken_index_is_rebuilt_from_the_chat_files() {
-        let dir = temp_dir("rebuild");
+        let dir = TestDir::new("rebuild");
         let mut older = chat_item("older");
         older.last_message_at = String::from("2026-01-01T00:00:00.000Z");
         let mut newer = chat_item("newer");
@@ -676,8 +655,6 @@ mod tests {
         fs::write(dir.join(CHAT_INDEX_FILE), "[{").unwrap();
         assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
         assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -691,7 +668,7 @@ mod tests {
 
     #[test]
     fn remove_orphan_chat_files_keeps_active_chats_and_the_index() {
-        let dir = temp_dir("orphans");
+        let dir = TestDir::new("orphans");
         fs::write(dir.join("index.json"), "[]").unwrap();
         fs::write(dir.join("kept.json"), "{}").unwrap();
         fs::write(dir.join("orphan.json"), "{}").unwrap();
@@ -703,7 +680,5 @@ mod tests {
         assert!(dir.join("kept.json").exists());
         assert!(!dir.join("orphan.json").exists());
         assert!(dir.join("index.json.broken-1").exists());
-
-        fs::remove_dir_all(&dir).unwrap();
     }
 }

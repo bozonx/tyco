@@ -1,3 +1,4 @@
+use super::{ensure_enum_field, ensure_field};
 use crate::models::default_user_config;
 use serde_json::{json, Value};
 
@@ -16,49 +17,35 @@ pub(in crate::services::storage::config) fn normalize_translation_config(
         return true;
     };
 
-    let provider = translation.get("provider").and_then(Value::as_str);
-    if !matches!(provider, Some("deepl" | "google" | "llm")) {
-        translation.insert(
-            String::from("provider"),
-            default_translation["provider"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        translation,
+        "provider",
+        &default_translation["provider"],
+        &["deepl", "google", "llm"],
+    );
 
-    let quality_gate = translation.get("qualityGate").and_then(Value::as_str);
-    if !matches!(quality_gate, Some("off" | "on_problems" | "always")) {
-        translation.insert(
-            String::from("qualityGate"),
-            default_translation["qualityGate"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        translation,
+        "qualityGate",
+        &default_translation["qualityGate"],
+        &["off", "on_problems", "always"],
+    );
 
-    let deepl_endpoint = translation.get("deeplEndpoint").and_then(Value::as_str);
-    if !matches!(deepl_endpoint, Some("free" | "pro")) {
-        translation.insert(
-            String::from("deeplEndpoint"),
-            default_translation["deeplEndpoint"].clone(),
-        );
-        changed = true;
-    }
+    changed |= ensure_enum_field(
+        translation,
+        "deeplEndpoint",
+        &default_translation["deeplEndpoint"],
+        &["free", "pro"],
+    );
 
-    if translation
-        .get("glossary")
-        .and_then(Value::as_array)
-        .is_none()
-    {
-        translation.insert(String::from("glossary"), json!([]));
-        changed = true;
-    }
+    changed |= ensure_field(translation, "glossary", &json!([]), Value::is_array);
 
-    if !translation
-        .get("correctionPrompt")
-        .is_some_and(Value::is_string)
-    {
-        translation.insert(String::from("correctionPrompt"), json!(""));
-        changed = true;
-    }
+    changed |= ensure_field(
+        translation,
+        "correctionPrompt",
+        &json!(""),
+        Value::is_string,
+    );
 
     changed
 }
