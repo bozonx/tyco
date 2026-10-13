@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_DIFF_VIEW_MODE,
   DIFF_VIEW_MODE_STORAGE_KEY,
-  computeSplitDiff,
+  splitDiffParts,
   computeWordDiff,
   hasDifferences,
   isDiffViewMode,
@@ -62,12 +62,14 @@ describe('diff-model', () => {
     })
   })
 
-  describe('computeSplitDiff', () => {
+  describe('splitDiffParts', () => {
     it('returns old and new parts that reconstruct their respective texts exactly', () => {
       const oldText = 'First line with typos and mistakes.\nSecond line.'
       const newText = 'First line with corrections and fixes.\nSecond line.'
 
-      const { oldParts, newParts } = computeSplitDiff(oldText, newText)
+      const { oldParts, newParts } = splitDiffParts(
+        computeWordDiff(oldText, newText)
+      )
 
       const fullOld = oldParts.map((p) => p.value).join('')
       const fullNew = newParts.map((p) => p.value).join('')

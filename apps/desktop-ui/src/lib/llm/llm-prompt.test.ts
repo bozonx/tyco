@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildLlmPrompt, fillTemplate } from './llm-prompt'
+import { buildLlmPrompt } from './llm-prompt'
 
 describe('llm-prompt', () => {
   it('puts instructions and rules into the system prompt', () => {
@@ -58,12 +58,6 @@ describe('llm-prompt', () => {
     )
     expect(prompt.messages[0]?.content).toContain('Source text')
     expect(prompt.messages[0]?.content).toContain('Explain it')
-  })
-
-  it('fills every placeholder occurrence', () => {
-    expect(
-      fillTemplate('to {{LANG}}, only {{LANG}}; {{OTHER}}', { LANG: 'en_US' })
-    ).toBe('to en_US, only en_US; {{OTHER}}')
   })
 })
 

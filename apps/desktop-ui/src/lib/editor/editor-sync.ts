@@ -109,34 +109,6 @@ export const applyStoreEdit = (view: EditorView, edit: StoreEdit): boolean => {
   return true
 }
 
-/**
- * Applies store value to editor via transaction.
- *
- * @returns True if document actually changed
- */
-export const applyStoreValue = (
-  view: EditorView,
-  value: string,
-  source: EditSource = 'plain'
-): boolean => applyStoreEdit(view, { value, source })
-
-/**
- * Applies store selection to editor. Offsets are clamped to document length in
- * case the store is one edit behind the editor.
- *
- * @returns True if selection actually changed
- */
-export const applyStoreSelection = (
-  view: EditorView,
-  start: number,
-  end: number
-): boolean =>
-  applyStoreEdit(view, {
-    value: view.state.doc.toString(),
-    selectionStart: start,
-    selectionEnd: end,
-  })
-
 /** Select entire document */
 export const selectAll = (view: EditorView): void => {
   view.dispatch({

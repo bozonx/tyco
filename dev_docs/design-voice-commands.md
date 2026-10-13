@@ -1163,9 +1163,10 @@ Rust:
   (`services/secrets.rs`) и привязаны к origin сервиса. Плагин видит только
   `tyco-secret:<id>`. Секреты MCP-серверов передаются в переменные окружения
   процесса из Rust и в webview не попадают.
-- Плагины получают только функции из `PLUGIN_DESKTOP_FUNCTIONS`. Новые
-  возможности (в том числе `llm.extract` в `ToolParseContext`) добавляются
-  явно.
+- Plugin desktop calls are restricted by `callApiFunction` in
+  `apps/desktop-ui/src/lib/plugins/plugin-context.ts` and checked against
+  declared capabilities. New capabilities (including `llm.extract` in
+  `ToolParseContext`) are added explicitly.
 
 ## 11. Этапы
 

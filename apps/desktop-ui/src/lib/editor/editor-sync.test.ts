@@ -8,8 +8,6 @@ import { createEditorExtensions } from './create-editor-state'
 import { EDIT_USER_EVENT } from './edit-source'
 import {
   applyStoreEdit,
-  applyStoreSelection,
-  applyStoreValue,
   computeMinimalChange,
   selectAll,
   setPlaceholder,
@@ -115,11 +113,11 @@ describe('computeMinimalChange', () => {
   })
 })
 
-describe('applyStoreValue', () => {
+describe('applyStoreEdit document updates', () => {
   it('writes the value into the document', () => {
     const { view } = mountView('one')
 
-    expect(applyStoreValue(view, 'one two')).toBe(true)
+    expect(applyStoreEdit(view, { value: 'one two' })).toBe(true)
     expect(view.state.doc.toString()).toBe('one two')
 
     view.destroy()
@@ -128,7 +126,7 @@ describe('applyStoreValue', () => {
   it('does nothing when the document already matches', () => {
     const { view } = mountView('same')
 
-    expect(applyStoreValue(view, 'same')).toBe(false)
+    expect(applyStoreEdit(view, { value: 'same' })).toBe(false)
 
     view.destroy()
   })
@@ -136,7 +134,7 @@ describe('applyStoreValue', () => {
   it('does not echo store edits back to the store', () => {
     const { view, spy } = mountView('one')
 
-    applyStoreValue(view, 'one two')
+    applyStoreEdit(view, { value: 'one two' })
 
     expect(spy.docChanges).toBe(0)
     expect(spy.selectionChanges).toBe(0)
@@ -147,7 +145,7 @@ describe('applyStoreValue', () => {
   it('goes through history, so a store edit can be undone', () => {
     const { view } = mountView('one')
 
-    applyStoreValue(view, 'one two')
+    applyStoreEdit(view, { value: 'one two' })
     expect(view.state.doc.toString()).toBe('one two')
 
     undo(view)
@@ -157,11 +155,17 @@ describe('applyStoreValue', () => {
   })
 })
 
-describe('applyStoreSelection', () => {
+describe('applyStoreEdit selection updates', () => {
   it('sets the selection range', () => {
     const { view } = mountView('hello world')
 
-    expect(applyStoreSelection(view, 6, 11)).toBe(true)
+    expect(
+      applyStoreEdit(view, {
+        value: view.state.doc.toString(),
+        selectionStart: 6,
+        selectionEnd: 11,
+      })
+    ).toBe(true)
     expect(view.state.selection.main.from).toBe(6)
     expect(view.state.selection.main.to).toBe(11)
 
@@ -171,7 +175,11 @@ describe('applyStoreSelection', () => {
   it('clamps offsets to the document length', () => {
     const { view } = mountView('abc')
 
-    applyStoreSelection(view, 0, 100)
+    applyStoreEdit(view, {
+      value: view.state.doc.toString(),
+      selectionStart: 0,
+      selectionEnd: 100,
+    })
 
     expect(view.state.selection.main.to).toBe(3)
 
@@ -181,9 +189,19 @@ describe('applyStoreSelection', () => {
   it('does nothing when the selection already matches', () => {
     const { view } = mountView('hello')
 
-    applyStoreSelection(view, 1, 3)
+    applyStoreEdit(view, {
+      value: view.state.doc.toString(),
+      selectionStart: 1,
+      selectionEnd: 3,
+    })
 
-    expect(applyStoreSelection(view, 1, 3)).toBe(false)
+    expect(
+      applyStoreEdit(view, {
+        value: view.state.doc.toString(),
+        selectionStart: 1,
+        selectionEnd: 3,
+      })
+    ).toBe(false)
 
     view.destroy()
   })
@@ -191,7 +209,11 @@ describe('applyStoreSelection', () => {
   it('does not echo back to the store', () => {
     const { view, spy } = mountView('hello world')
 
-    applyStoreSelection(view, 0, 5)
+    applyStoreEdit(view, {
+      value: view.state.doc.toString(),
+      selectionStart: 0,
+      selectionEnd: 5,
+    })
 
     expect(spy.selectionChanges).toBe(0)
 

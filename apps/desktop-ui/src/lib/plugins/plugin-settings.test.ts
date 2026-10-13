@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { PluginIndex } from '../../types/plugins'
-import {
-  getPluginTabKey,
-  parsePluginTabKey,
-  resolveInstalledPlugins,
-} from './plugin-settings'
+import { resolveInstalledPlugins } from './plugin-settings'
 
 describe('plugin-settings', () => {
   const samplePlugins: PluginIndex[] = [
@@ -98,11 +94,4 @@ describe('plugin-settings', () => {
       expect(plugins[0].status).toBe(status)
     }
   )
-
-  it('correctly constructs and parses plugin tab keys', () => {
-    expect(getPluginTabKey('AlphaPlugin')).toBe('plugin:AlphaPlugin')
-    expect(parsePluginTabKey('plugin:AlphaPlugin')).toBe('AlphaPlugin')
-    expect(parsePluginTabKey('plugins')).toBeNull()
-    expect(parsePluginTabKey('general')).toBeNull()
-  })
 })

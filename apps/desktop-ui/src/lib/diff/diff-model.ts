@@ -99,18 +99,6 @@ export function computeWordDiff(oldText: string, newText: string): DiffPart[] {
   })
 }
 
-/**
- * Splits diff parts into original and modified streams for side-by-side view.
- * The concatenation of oldParts values reproduces oldText. The concatenation of
- * newParts values reproduces newText.
- */
-export function computeSplitDiff(
-  oldText: string,
-  newText: string
-): SplitDiffResult {
-  return splitDiffParts(computeWordDiff(oldText, newText))
-}
-
 export function splitDiffParts(parts: readonly DiffPart[]): SplitDiffResult {
   const oldParts: DiffPart[] = []
   const newParts: DiffPart[] = []

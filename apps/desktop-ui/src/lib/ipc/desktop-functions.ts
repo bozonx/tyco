@@ -52,10 +52,3 @@ export type DesktopCall = <K extends DesktopFunctionName>(
   name: K,
   ...args: DesktopCallArgs<K>
 ) => Promise<IpcResult<DesktopFunctionResult<K>>>
-
-/** What plugins may call: they get no access to the rest of the backend */
-export const PLUGIN_DESKTOP_FUNCTIONS = [
-  'openInBrowserAndHide',
-  'saveNote',
-  'appendNote',
-] as const satisfies readonly DesktopFunctionName[]

@@ -5,7 +5,6 @@ import {
   formatHistoryDateTime,
   formatHistoryTime,
   groupByDay,
-  parseHistoryTime,
 } from './history-list'
 
 function item(
@@ -87,18 +86,5 @@ describe('formatHistoryDateTime', () => {
         timeStyle: 'medium',
       }).format(time)
     )
-  })
-})
-
-describe('parseHistoryTime', () => {
-  it('parses an ISO date', () => {
-    expect(parseHistoryTime('2026-04-22T00:00:00.000Z')).toBe(
-      Date.UTC(2026, 3, 22)
-    )
-  })
-
-  it('returns 0 for a missing or broken date', () => {
-    expect(parseHistoryTime(undefined)).toBe(0)
-    expect(parseHistoryTime('nope')).toBe(0)
   })
 })

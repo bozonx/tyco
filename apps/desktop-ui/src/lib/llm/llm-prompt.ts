@@ -73,14 +73,3 @@ export function buildLlmPrompt(
 
   return system ? { system, messages } : { messages }
 }
-
-/** Fills `{{KEY}}` placeholders of an instruction template */
-export function fillTemplate(
-  template: string,
-  values: Record<string, string> = {}
-): string {
-  return Object.entries(values).reduce(
-    (result, [key, value]) => result.replaceAll(`{{${key}}}`, value),
-    template
-  )
-}

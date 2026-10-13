@@ -80,10 +80,3 @@ export function formatHistoryDateTime(time: number, locale: string): string {
 
   return formatWith(time, locale, { dateStyle: 'long', timeStyle: 'medium' })
 }
-
-/** Unix time in milliseconds of an ISO date; 0 when it cannot be parsed. */
-export function parseHistoryTime(isoDate: string | undefined): number {
-  const time = isoDate ? Date.parse(isoDate) : NaN
-
-  return Number.isFinite(time) ? time : 0
-}

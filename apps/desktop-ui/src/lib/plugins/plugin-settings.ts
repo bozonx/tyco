@@ -55,11 +55,3 @@ export function resolveInstalledPlugins(
     }
   })
 }
-
-export function getPluginTabKey(pluginName: string): string {
-  return `plugin:${pluginName}`
-}
-
-export function parsePluginTabKey(tabKey: string): string | null {
-  return tabKey.startsWith('plugin:') ? tabKey.slice('plugin:'.length) : null
-}

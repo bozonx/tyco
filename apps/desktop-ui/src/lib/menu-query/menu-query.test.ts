@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  filterOptions,
-  moveHighlight,
-  pushRecent,
-  deduplicateById,
-} from './menu-query'
+import { filterOptions, moveHighlight, pushRecent } from './menu-query'
 
 const languages = [
   { id: 'en_US', label: 'English', keywords: ['English (US)'] },
@@ -44,20 +39,5 @@ describe('pushRecent', () => {
     expect(pushRecent(['a', 'b'], 'c', 2)).toEqual(['c', 'a'])
     expect(pushRecent(undefined, ' x ')).toEqual(['x'])
     expect(pushRecent(['a'], '  ')).toEqual(['a'])
-  })
-})
-
-describe('deduplicateById', () => {
-  it('keeps the first copy of each id', () => {
-    expect(
-      deduplicateById([
-        { id: 'a', n: 1 },
-        { id: 'b', n: 2 },
-        { id: 'a', n: 3 },
-      ])
-    ).toEqual([
-      { id: 'a', n: 1 },
-      { id: 'b', n: 2 },
-    ])
   })
 })
