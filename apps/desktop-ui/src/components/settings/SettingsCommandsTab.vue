@@ -269,7 +269,8 @@ const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   listRef,
   (from, to) => {
     emit('update:commands', moveItem(commands.value, from, to))
-  }
+  },
+  { getItemKeys: () => commands.value.map((command) => command.id) }
 )
 
 const itemStyle = (index: number) => {

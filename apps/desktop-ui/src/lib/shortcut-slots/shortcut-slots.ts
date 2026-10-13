@@ -16,7 +16,17 @@ export function moveShortcutSlot<T>(
 ): (T | null)[] {
   const result = normalizeShortcutSlots(items)
 
-  if (from === to || !result[from]) return result
+  if (
+    !Number.isInteger(from) ||
+    !Number.isInteger(to) ||
+    from < 0 ||
+    to < 0 ||
+    from >= result.length ||
+    to >= result.length ||
+    from === to ||
+    result[from] === null
+  )
+    return result
 
   ;[result[from], result[to]] = [result[to], result[from]]
   return result

@@ -1,29 +1,31 @@
 <template>
-  <div class="shortcut-slots">
+  <div ref="listRef" class="shortcut-slots">
     <div
       v-for="(key, index) in SHORTCUT_SLOT_KEYS"
       :key="key"
+      data-sortable-item
       class="shortcut-slot"
       :class="{
         'is-empty': !items[index],
         'is-dragged': draggedIndex === index,
-        'is-drop-target': dropIndex === index,
+        'is-drop-target': targetIndex === index,
       }"
-      @dragover.prevent="dropIndex = index"
-      @dragleave="clearDropTarget(index)"
-      @drop.prevent="drop(index)"
     >
       <KeyButton>{{ key }}</KeyButton>
 
       <template v-if="items[index]">
         <IconButton
           class="drag-handle"
-          draggable="true"
           :title="t('settings.dragToReorder')"
-          @dragstart="startDrag(index, $event)"
-          @dragend="finishDrag"
+          @pointerdown="startDrag(index, $event)"
           :label="t('settings.dragToReorder')"
           icon="mdi:drag-vertical"
+        />
+        <ReorderControls
+          :name="String(key)"
+          :can-move-up="index > 0"
+          :can-move-down="index < SHORTCUT_SLOT_KEYS.length - 1"
+          @move="moveSlot(index, index + $event, $event)"
         />
         <div class="slot-content">
           <slot name="item" :item="items[index]" :index="index" />
@@ -54,14 +56,16 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import KeyButton from './KeyButton.vue'
+import ReorderControls from './ReorderControls.vue'
 import { Icon } from '@iconify/vue'
 
-defineProps<{ items: readonly (T | null | undefined)[] }>()
+const props = defineProps<{ items: readonly (T | null | undefined)[] }>()
 
 const emit = defineEmits<{
   (event: 'move', from: number, to: number): void
@@ -70,27 +74,21 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const draggedIndex = ref<number | null>(null)
-const dropIndex = ref<number | null>(null)
-
-function startDrag(index: number, event: DragEvent) {
-  draggedIndex.value = index
-  event.dataTransfer?.setData('text/plain', String(index))
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
-}
-
-function drop(index: number) {
-  if (draggedIndex.value !== null) emit('move', draggedIndex.value, index)
-  finishDrag()
-}
-
-function clearDropTarget(index: number) {
-  if (dropIndex.value === index) dropIndex.value = null
-}
-
-function finishDrag() {
-  draggedIndex.value = null
-  dropIndex.value = null
+const listRef = ref<HTMLElement | null>(null)
+const { draggedIndex, targetIndex, startDrag } = useSortableList(
+  listRef,
+  (from, to) => emit('move', from, to),
+  { mode: 'swap', getItemKeys: () => props.items }
+)
+async function moveSlot(from: number, to: number, direction: number) {
+  emit('move', from, to)
+  await nextTick()
+  const slot = listRef.value?.querySelectorAll<HTMLElement>(
+    '[data-sortable-item]'
+  )[to]
+  slot
+    ?.querySelectorAll<HTMLButtonElement>('[aria-disabled]')
+    [direction < 0 ? 0 : 1]?.focus()
 }
 </script>
 
@@ -137,6 +135,7 @@ function finishDrag() {
   background: transparent;
   color: var(--app-text-faint);
   cursor: grab;
+  touch-action: none;
 }
 
 .drag-handle:active {

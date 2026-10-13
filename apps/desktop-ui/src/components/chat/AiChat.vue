@@ -73,7 +73,11 @@
     />
 
     <!-- files arrive through the native drag-and-drop event of the webview -->
-    <div class="composer-wrap" :class="{ 'is-dragging': draggingFiles }">
+    <div
+      ref="composerRef"
+      class="composer-wrap"
+      :class="{ 'is-dragging': draggingFiles }"
+    >
       <div v-if="draggingFiles" class="drop-hint" role="status">
         <Icon icon="mdi:paperclip" height="16" class="shrink-0" />
         {{ t('chat.dropFiles') }}
@@ -233,12 +237,14 @@ import { useChatVoiceInput } from '../../composables/use-chat-voice-input'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
+import { createChatFileDropTarget } from '../../lib/chat/chat-file-drop-target'
 import { getDesktopWebview as getCurrentWebview } from '../../lib/desktop/window'
 import {
   newlineShortcut,
   resolveSubmitKey,
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
+import { clientLogger } from '../../lib/logger'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveScrollBehavior } from '../../lib/ui/scroll-behavior'
 import { useChatStore } from '../../stores/chat'
@@ -407,25 +413,51 @@ async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
   })
 }
 
+const composerRef = ref<HTMLElement | null>(null)
 const draggingFiles = ref(false)
+const fileDropTarget = createChatFileDropTarget({
+  getBounds: () => composerRef.value?.getBoundingClientRect() ?? null,
+  getScale: () => window.devicePixelRatio,
+  canAccept: () =>
+    !chatStore.isGenerating &&
+    Boolean(chatStore.selectedModel) &&
+    !isInlineVoice.value,
+  setDragging: (value) => {
+    draggingFiles.value = value
+  },
+  accept: (paths) => chatStore.addDroppedFiles(paths),
+})
+watch(
+  () => [chatStore.isGenerating, chatStore.selectedModel, isInlineVoice.value],
+  () => {
+    draggingFiles.value = false
+  }
+)
 let unlistenDrop: (() => void) | undefined
 let disposed = false
 onBeforeUnmount(() => {
   disposed = true
+  fileDropTarget.dispose()
   unlistenDrop?.()
 })
 onMounted(() => {
   void getCurrentWebview()
-    .onDragDropEvent(async ({ payload }) => {
-      draggingFiles.value = payload.type === 'enter' || payload.type === 'over'
-      if (payload.type !== 'drop') return
-      if (!disposed) await chatStore.addDroppedFiles(payload.paths)
+    .onDragDropEvent(({ payload }) => {
+      void fileDropTarget.handle(payload).catch((error) => {
+        clientLogger.error('Failed to import dropped chat files', error, 'chat')
+      })
     })
     .then((unlisten) => {
       if (disposed) unlisten()
       else unlistenDrop = unlisten
     })
-    .catch(() => undefined)
+    .catch((error) => {
+      clientLogger.error(
+        'Failed to register chat file drop listener',
+        error,
+        'chat'
+      )
+    })
   // keys may have been added or removed while the chat was not shown
   // on failure the list stays as it was with the keys known before
   llmStore.refreshSecrets().catch(() => undefined)

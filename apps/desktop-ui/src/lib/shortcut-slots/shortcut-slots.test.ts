@@ -21,6 +21,18 @@ describe('shortcut slots', () => {
     expect(moveShortcutSlot(slots, 0, 7)[0]).toBeNull()
   })
 
+  it.each([
+    [-1, 1],
+    [0, -1],
+    [15, 0],
+    [0, 15],
+    [0.5, 1],
+    [0, Number.NaN],
+  ])('ignores invalid indices %s and %s', (from, to) => {
+    const slots = normalizeShortcutSlots(['first', 'second'])
+    expect(moveShortcutSlot(slots, from, to)).toEqual(slots)
+  })
+
   it('swaps two occupied slots without losing an action', () => {
     const slots = normalizeShortcutSlots(['first', 'second'])
 

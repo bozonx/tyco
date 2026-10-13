@@ -108,7 +108,8 @@ const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   listRef,
   (from, to) => {
     reorderItem(from, to)
-  }
+  },
+  { getItemKeys: () => localItems.value.map((item) => item.id) }
 )
 
 function reorderItem(from: number, to: number) {

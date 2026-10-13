@@ -98,7 +98,7 @@ describe('FieldSortableChecklist.vue', () => {
       wrapper.findAll('.drag-handle')[0].element
     )
     await wrapper.vm.$nextTick()
-    expect(document.body.classList.contains('is-sorting')).toBe(true)
+    expect(document.body.classList.contains('is-sorting')).toBe(false)
 
     dispatchPointer('pointermove', 70)
     await wrapper.vm.$nextTick()
