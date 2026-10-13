@@ -1,35 +1,29 @@
 //! Puts text into the system clipboard through the platform's command line
 //! tools, so that no clipboard owner has to stay alive in this process.
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 use std::time::Duration;
 
 use crate::errors::AppError;
 
 pub fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
-    if cfg!(target_os = "macos") {
-        return write_to_clipboard_command("pbcopy", &[], text);
+    #[cfg(target_os = "macos")]
+    {
+        write_to_clipboard_command("pbcopy", &[], text)
     }
 
-    if cfg!(target_os = "windows") {
-        // stdin is read as raw UTF-8 bytes: the console code page would garble
-        // any non-ASCII text
-        return write_to_clipboard_command(
-            "powershell",
-            &[
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "$buffer = New-Object System.IO.MemoryStream; \
-                 [Console]::OpenStandardInput().CopyTo($buffer); \
-                 Set-Clipboard -Value ([System.Text.Encoding]::UTF8.GetString($buffer.ToArray()))",
-            ],
-            text,
-        );
+    #[cfg(target_os = "windows")]
+    {
+        super::windows_clipboard::write_text(text)
     }
 
-    copy_to_clipboard_linux(text)
+    #[cfg(target_os = "linux")]
+    {
+        copy_to_clipboard_linux(text)
+    }
 }
 
+#[cfg(target_os = "linux")]
 fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
     let clipboard_commands: [(&str, &[&str]); 3] = [
         ("wl-copy", &["--type", "text/plain"]),
@@ -56,6 +50,7 @@ fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
     )))
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn write_to_clipboard_command(binary: &str, args: &[&str], text: &str) -> Result<(), AppError> {
     let status = super::process::status(
         super::process::command(binary, args),

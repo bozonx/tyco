@@ -39,6 +39,20 @@ function setup(
 }
 
 describe('dictation controller', () => {
+  it('does not open capture after cancellation during credential preflight', async () => {
+    const { deps, handlers, controller } = setup()
+    let resolve!: () => void
+    deps.refreshSecrets.mockReturnValue(
+      new Promise<void>((done) => {
+        resolve = done
+      })
+    )
+    const starting = controller.startDictation(handlers)
+    await controller.cancelDictation()
+    resolve()
+    await starting
+    expect(deps.dictation.start).not.toHaveBeenCalled()
+  })
   it('checks credentials before opening the microphone and resolves the user language', async () => {
     const { deps, handlers, controller } = setup()
     await controller.startDictation(handlers)

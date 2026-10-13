@@ -56,6 +56,8 @@ describe('VoiceRecognitionMenu', () => {
     setActivePinia(createPinia())
     useIpcStore().desktopState.isWindowShown = true
     vi.clearAllMocks()
+    mocks.startDictation.mockResolvedValue(undefined)
+    mocks.cancelDictation.mockResolvedValue(undefined)
     mocks.shouldFormatRecognizedText.mockReturnValue(false)
     mocks.finishDictation.mockResolvedValue('recognized voice')
   })
@@ -250,6 +252,37 @@ describe('VoiceRecognitionMenu', () => {
         },
       },
     })
+
+  it('restarts recording when the same voice mode is activated again', async () => {
+    const wrapper = mountChat()
+    await flushPromises()
+    expect(mocks.startDictation).toHaveBeenCalledOnce()
+    useIpcStore().desktopState.activationId++
+    await flushPromises()
+    expect(mocks.startDictation).toHaveBeenCalledTimes(2)
+    expect(wrapper.emitted('cancelled')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('does not emit a transcript from the preceding activation', async () => {
+    let resolve!: (text: string) => void
+    mocks.finishDictation.mockReturnValueOnce(
+      new Promise<string>((done) => {
+        resolve = done
+      })
+    )
+    const wrapper = mountChat()
+    await flushPromises()
+    await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
+    await flushPromises()
+    useIpcStore().desktopState.activationId++
+    await flushPromises()
+    resolve('Old transcript')
+    await flushPromises()
+    expect(wrapper.emitted('corrected')).toBeUndefined()
+    expect(wrapper.emitted('cancelled')).toBeUndefined()
+    wrapper.unmount()
+  })
 
   it('does not submit a transcript returned after the menu unmounts', async () => {
     let resolve!: (text: string) => void

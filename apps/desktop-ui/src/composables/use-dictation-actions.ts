@@ -13,7 +13,7 @@ export function useDictationActions() {
   const llm = useLlmStore()
   return createDictationController({
     getConfig: () => ipc.desktopState.userConfig,
-    dictation,
+    dictation: dictation.createSession(),
     refreshSecrets: llm.refreshSecrets,
     getSecrets: () => llm.secrets,
     translate,

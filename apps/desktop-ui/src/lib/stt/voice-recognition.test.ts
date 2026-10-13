@@ -29,6 +29,36 @@ function setup(overrides: Partial<VoiceRecognitionDeps> = {}) {
 afterEach(() => vi.useRealTimers())
 
 describe('voice recognition model', () => {
+  it('restarts for a new activation without emitting cancellation', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup()
+    await model.startSession()
+    await model.restartSession()
+    expect(deps.startDictation).toHaveBeenCalledTimes(2)
+    expect(deps.onCancelled).not.toHaveBeenCalled()
+    expect(model.isStarted.value).toBe(true)
+    model.dispose()
+  })
+
+  it('honors user cancellation while a restart is stopping the microphone', async () => {
+    vi.useFakeTimers()
+    let resolve!: () => void
+    const { deps, model } = setup()
+    await model.startSession()
+    vi.mocked(deps.cancelDictation).mockImplementationOnce(
+      () =>
+        new Promise<void>((done) => {
+          resolve = done
+        })
+    )
+    const restarting = model.restartSession()
+    const cancelling = model.cancel()
+    resolve()
+    await Promise.all([restarting, cancelling])
+    expect(deps.startDictation).toHaveBeenCalledOnce()
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+    model.dispose()
+  })
   it('saves raw text before formatting and emits the requested finish intent', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup()

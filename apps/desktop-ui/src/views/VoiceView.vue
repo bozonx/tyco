@@ -61,9 +61,13 @@ navPanelStore.resetNavParams({ panelVisible: false })
 watch(isInsertMenu, (shown) => emit('result-shown', shown), { immediate: true })
 
 watch(
-  () => [ipcStore.desktopState?.isWindowShown, ipcStore.desktopState?.mode],
-  ([isShown, mode]) => {
-    if (!isShown || mode !== 'voice') {
+  () => [
+    ipcStore.desktopState?.isWindowShown,
+    ipcStore.desktopState?.mode,
+    ipcStore.desktopState.activationId,
+  ],
+  ([isShown, mode, activationId], previous) => {
+    if (!isShown || mode !== 'voice' || activationId !== previous?.[2]) {
       isInsertMenu.value = false
       resText.value = ''
     }

@@ -140,7 +140,7 @@ export interface DesktopCommands {
   configure_hotkeys: { args: undefined; result: void }
   copy_text: { args: { text: string }; result: void }
   delete_chat: { args: { id: string }; result: void }
-  dismiss_quick_window: { args: undefined; result: void }
+  dismiss_quick_window: { args: { activationId: number }; result: void }
   execute_script_action: {
     args: { request: ScriptActionRequest }
     result: ScriptExecutionResult
@@ -212,11 +212,16 @@ export interface DesktopCommands {
       attachment?: ChatAttachment | null
       question?: string | null
       autoSend?: boolean | null
+      activationId: number
     }
     result: void
   }
   open_main_editor: {
-    args: { text?: string | null; sourceText?: string | null }
+    args: {
+      text?: string | null
+      sourceText?: string | null
+      activationId: number
+    }
     result: void
   }
   open_storage_location: { args: { kind: StorageKind }; result: void }
@@ -267,7 +272,10 @@ export interface DesktopCommands {
     args: { id: string; result: string }
     result: void
   }
-  set_quick_input_region: { args: { region?: InputRect | null }; result: void }
+  set_quick_input_region: {
+    args: { region?: InputRect | null; activationId: number }
+    result: void
+  }
   set_tool_catalog: { args: { tools: Array<ToolCatalogEntry> }; result: void }
   show_status_overlay: {
     args: { request?: StatusOverlayRequest | null }

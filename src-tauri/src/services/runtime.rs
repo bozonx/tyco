@@ -335,12 +335,14 @@ pub fn open_main_editor(
     app: &AppHandle,
     text: Option<String>,
     source_text: Option<String>,
+    activation_id: u64,
 ) -> Result<(), AppError> {
     show_main_with(
         app,
         ActivationMode::Editor,
         OPEN_MAIN_EDITOR_EVENT,
         serde_json::json!({ "text": text, "sourceText": source_text }),
+        activation_id,
     )
 }
 
@@ -349,6 +351,7 @@ pub fn open_main_chat(
     attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
+    activation_id: u64,
 ) -> Result<(), AppError> {
     show_main_with(
         app,
@@ -359,6 +362,7 @@ pub fn open_main_chat(
             question,
             auto_send: auto_send.unwrap_or(false),
         })?,
+        activation_id,
     )
 }
 
@@ -368,8 +372,14 @@ fn show_main_with(
     mode: ActivationMode,
     event: &'static str,
     payload: serde_json::Value,
+    activation_id: u64,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
+        if app.state::<AppState>().snapshot().activation.activation_id != activation_id {
+            return Err(AppError::InvalidInput(
+                "The window activation is no longer current".into(),
+            ));
+        }
         show_application_mode_on_main_thread(app, mode)?;
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
@@ -385,12 +395,18 @@ fn show_main_with(
 pub fn set_quick_input_region(
     app: &AppHandle,
     region: Option<InputRegion>,
+    activation_id: u64,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        let is_shown = app.state::<AppState>().snapshot().window.is_window_shown;
+        let params = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
         // a late request must not narrow the window of the next session
-        if region.is_some() && !is_quick_window_shown(active_label, is_shown) {
+        if !is_current_quick_activation(
+            active_label,
+            params.window.is_window_shown,
+            params.activation.activation_id,
+            activation_id,
+        ) {
             return Ok(());
         }
         let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) else {
@@ -402,6 +418,15 @@ pub fn set_quick_input_region(
 
 fn is_quick_window_shown(active_label: &str, is_window_shown: bool) -> bool {
     active_label == QUICK_WINDOW_LABEL && is_window_shown
+}
+
+fn is_current_quick_activation(
+    active_label: &str,
+    is_window_shown: bool,
+    current_id: u64,
+    requested_id: u64,
+) -> bool {
+    is_quick_window_shown(active_label, is_window_shown) && current_id == requested_id
 }
 
 fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
@@ -443,11 +468,16 @@ fn show_application_mode_on_main_thread(
     emit_state(app, &state)
 }
 
-pub fn dismiss_quick_window(app: &AppHandle) -> Result<(), AppError> {
-    on_main_thread(app, |app| {
-        let is_shown = app.state::<AppState>().snapshot().window.is_window_shown;
+pub fn dismiss_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let params = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
-        if !is_quick_window_shown(active_label, is_shown) {
+        if !is_current_quick_activation(
+            active_label,
+            params.window.is_window_shown,
+            params.activation.activation_id,
+            activation_id,
+        ) {
             return Ok(());
         }
         hide_on_main_thread(app)
@@ -609,6 +639,19 @@ mod tests {
         assert!(is_quick_window_shown(QUICK_WINDOW_LABEL, true));
         assert!(!is_quick_window_shown(QUICK_WINDOW_LABEL, false));
         assert!(!is_quick_window_shown(MAIN_WINDOW_LABEL, true));
+    }
+
+    #[test]
+    fn quick_window_updates_belong_to_the_visible_current_activation() {
+        assert!(is_current_quick_activation(QUICK_WINDOW_LABEL, true, 2, 2));
+        assert!(!is_current_quick_activation(QUICK_WINDOW_LABEL, true, 2, 1));
+        assert!(!is_current_quick_activation(
+            QUICK_WINDOW_LABEL,
+            false,
+            2,
+            2
+        ));
+        assert!(!is_current_quick_activation(MAIN_WINDOW_LABEL, true, 2, 2));
     }
 }
 

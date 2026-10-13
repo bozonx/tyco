@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { describe, expect, it } from 'vitest'
 
 import QueryPanel from './QueryPanel.vue'
@@ -9,6 +10,23 @@ const options = [
 ]
 
 describe('QueryPanel', () => {
+  it('blocks query submission while another operation is pending and restores focus afterwards', async () => {
+    const wrapper = mount(QueryPanel, {
+      attachTo: document.body,
+      props: { modelValue: 'request', disabled: true },
+    })
+    try {
+      await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+      expect(wrapper.emitted('submit')).toBeUndefined()
+      await wrapper.setProps({ disabled: false })
+      await nextTick()
+      expect(document.activeElement).toBe(wrapper.find('input').element)
+      await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+      expect(wrapper.emitted('submit')).toHaveLength(1)
+    } finally {
+      wrapper.unmount()
+    }
+  })
   it('preserves forward and backward tab navigation', () => {
     const wrapper = mount(QueryPanel, { props: { modelValue: '' } })
     for (const shiftKey of [false, true]) {

@@ -35,11 +35,14 @@ pub fn check_text_injection(user_config: &Value) -> Result<(), AppError> {
     super::linux::text_injector::SystemTextInjector::detect().check(user_config)
 }
 
-/// Nothing to install here; macOS asks for the Accessibility permission on
-/// the first attempt.
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "windows")]
 pub fn check_text_injection(_user_config: &Value) -> Result<(), AppError> {
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn check_text_injection(_user_config: &Value) -> Result<(), AppError> {
+    super::macos::check_text_injection()
 }
 
 #[cfg(target_os = "linux")]
@@ -53,11 +56,8 @@ fn inject_paste_impl(_user_config: &Value, source_window_id: Option<&str>) -> Re
 }
 
 #[cfg(target_os = "macos")]
-fn inject_paste_impl(
-    _user_config: &Value,
-    _source_window_id: Option<&str>,
-) -> Result<(), AppError> {
-    super::macos::inject_paste()
+fn inject_paste_impl(_user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError> {
+    super::macos::inject_paste(source_window_id)
 }
 
 #[cfg(test)]

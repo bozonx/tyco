@@ -37,6 +37,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
   let starting: Promise<void> | undefined
   let lastRevision = -1
   let lastAppliedMode: DesktopViewState['mode'] | undefined
+  let lastActivationId: number | undefined
 
   const applyParams = async (
     params: DesktopViewState,
@@ -59,11 +60,15 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
       options.forceNavigate ||
       lastAppliedMode === undefined ||
       lastAppliedMode !== params.mode
+    const activationChanged = lastActivationId !== params.activationId
 
     lastAppliedMode = params.mode
+    lastActivationId = params.activationId
 
-    if (shouldNavigate) {
+    if (shouldNavigate || activationChanged) {
       deps.closeAllModals()
+    }
+    if (shouldNavigate) {
       await deps.navigateTo(resolveModeRoute(params.mode))
     }
   }
@@ -79,6 +84,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     const run = createCleanupScope()
     scope = run
     lastAppliedMode = undefined
+    lastActivationId = undefined
     lastRevision = -1
     const work = async () => {
       try {

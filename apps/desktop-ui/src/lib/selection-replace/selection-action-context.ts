@@ -6,19 +6,19 @@ export interface SelectionActionContextDependencies {
   editorText: () => string | null | undefined
   isWindowShown: () => boolean
   hasOpenModal: () => boolean
+  canUseEditorText?: () => boolean
 }
 
 export function createSelectionActionContext(
   deps: SelectionActionContextDependencies
 ) {
   return {
-    text: computed(
-      () =>
-        deps.desktopSelectedText() ||
-        deps.editorSelectedText() ||
-        deps.editorText() ||
-        ''
-    ),
+    text: computed(() => {
+      const selected = deps.desktopSelectedText()
+      if (selected) return selected
+      if (deps.canUseEditorText?.() === false) return ''
+      return deps.editorSelectedText() || deps.editorText() || ''
+    }),
     // Hidden views must not consume keys intended for the next activation.
     shortcutsDisabled: computed(
       () => deps.hasOpenModal() || !deps.isWindowShown()

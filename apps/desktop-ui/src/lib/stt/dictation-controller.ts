@@ -27,6 +27,7 @@ export interface DictationControllerDependencies {
 export function createDictationController(
   deps: DictationControllerDependencies
 ) {
+  let generation = 0
   const currentSttModel = () => {
     const userConfig = deps.getConfig()
     const modelId = userConfig.aiModelUsage.stt
@@ -57,6 +58,7 @@ export function createDictationController(
     )
 
   const startDictation = async (handlers: DictationHandlers) => {
+    const runGeneration = ++generation
     const model = currentVoiceModel()
     try {
       buildSttCatalog(model)
@@ -73,6 +75,7 @@ export function createDictationController(
       assertSttKeyAvailable(deps.getSecrets(), secretId(model), deps.translate)
     }
 
+    if (runGeneration !== generation) return
     await deps.dictation.start({
       model,
       language: currentDictationLanguage(model),
@@ -87,7 +90,10 @@ export function createDictationController(
 
   const finishDictation = () => deps.dictation.finish()
 
-  const cancelDictation = () => deps.dictation.cancel()
+  const cancelDictation = () => {
+    generation += 1
+    return deps.dictation.cancel()
+  }
 
   return {
     shouldFormatRecognizedText,

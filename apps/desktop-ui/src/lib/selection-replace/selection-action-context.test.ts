@@ -21,6 +21,17 @@ function setup() {
 }
 
 describe('selection action context', () => {
+  it('does not process an old editor draft when a quick activation has no selection', () => {
+    const context = createSelectionActionContext({
+      desktopSelectedText: () => null,
+      editorSelectedText: () => 'Old selection',
+      editorText: () => 'Old draft',
+      isWindowShown: () => true,
+      hasOpenModal: () => false,
+      canUseEditorText: () => false,
+    })
+    expect(context.text.value).toBe('')
+  })
   it('reactively selects text in desktop, editor selection, editor order', () => {
     const { state, text } = setup()
     expect(text.value).toBe('desktop')

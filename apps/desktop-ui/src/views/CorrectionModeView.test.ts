@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     selectedText: 'Selected text' as string | null,
     isWindowShown: true,
     mode: 'correction',
+    activationId: 1,
   },
   navPanel: { resetNavParams: vi.fn() },
   callFunctionOrNotify: vi.fn(),
@@ -25,6 +26,20 @@ vi.mock('../components/menu/InProgressMessage.vue', () => ({
     props: ['correction', 'onCancel'],
     template:
       '<button class="cancel-btn" @click="onCancel?.()">Cancel</button>',
+  },
+}))
+
+vi.mock('../composables/use-i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+vi.mock('../composables/use-toast', () => ({
+  default: () => ({ toastText: vi.fn() }),
+}))
+vi.mock('../components/common/ActionOverlayLayout.vue', () => ({
+  default: {
+    props: ['title', 'onEsc'],
+    template:
+      '<div><slot /><button class="close-btn" @click="onEsc()">Close</button></div>',
   },
 }))
 
@@ -46,7 +61,29 @@ vi.mock('../stores/action-menu', () => ({
 describe('CorrectionModeView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.correct.mockReset().mockResolvedValue(undefined)
     mocks.desktopState.selectedText = 'Selected text'
+    mocks.desktopState.activationId = 1
+  })
+
+  it('shows an explanation and a close action when no selection was captured', async () => {
+    mocks.desktopState.selectedText = null
+    const wrapper = mount(CorrectionModeView)
+    expect(wrapper.text()).toContain('toast.textNotSelected')
+    expect(mocks.correct).not.toHaveBeenCalled()
+    await wrapper.find('.close-btn').trigger('click')
+    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+    wrapper.unmount()
+  })
+
+  it('does not let cancellation from an old correction hide a new activation', async () => {
+    const wrapper = mount(CorrectionModeView)
+    await flushPromises()
+    const onCancel = mocks.correct.mock.calls[0]![1].onCancel
+    reactive(mocks.desktopState).activationId++
+    onCancel()
+    expect(mocks.callFunctionOrNotify).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 
   it('passes onCancel handler to actionMenuStore.correct', async () => {

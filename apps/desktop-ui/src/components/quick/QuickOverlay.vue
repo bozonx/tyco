@@ -24,23 +24,34 @@
           @result-shown="voiceResultShown = $event"
         />
       </div>
-      <!-- The menus outlive a hidden window, so calling the same mode again
-           does not wait for a remount; switching the mode drops them, as their
-           key listeners must not act in another mode -->
+      <!-- Hiding preserves the view until its next activation. A new activation
+           remounts action menus to clear their previous query and language. -->
       <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
-        <AiTaskView v-if="currentMode === 'aiTasks'" />
+        <AiTaskView v-if="currentMode === 'aiTasks'" :key="activationId" />
       </div>
       <div v-show="currentMode === 'select'" class="quick-mode-layer">
-        <SelectionActionsView v-if="currentMode === 'select'" />
+        <SelectionActionsView
+          v-if="currentMode === 'select'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
-        <CommandLauncherView v-if="currentMode === 'commandLauncher'" />
+        <CommandLauncherView
+          v-if="currentMode === 'commandLauncher'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'correction'" class="quick-mode-layer">
-        <CorrectionModeView v-if="currentMode === 'correction'" />
+        <CorrectionModeView
+          v-if="currentMode === 'correction'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'translate'" class="quick-mode-layer">
-        <TranslateModeView v-if="currentMode === 'translate'" />
+        <TranslateModeView
+          v-if="currentMode === 'translate'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
@@ -95,6 +106,7 @@ const cardRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
 const currentMode = computed(() => ipcStore.desktopState?.mode || 'write')
+const activationId = computed(() => ipcStore.desktopState.activationId)
 const hasModal = computed(
   () => menuModalsStore.currentModal !== MenuModals.NONE
 )
@@ -236,6 +248,13 @@ const updateInputRegionAfterRender = () => {
 
 let inputResizeObserver: ResizeObserver | undefined
 
+function observeInputParts() {
+  inputResizeObserver?.disconnect()
+  cardRef.value
+    ?.querySelectorAll(INPUT_PARTS)
+    .forEach((element) => inputResizeObserver?.observe(element))
+}
+
 const syncFocus = () => {
   if (currentMode.value === 'write') {
     writeInputStore.focus()
@@ -245,9 +264,7 @@ const syncFocus = () => {
 onMounted(() => {
   syncFocus()
   inputResizeObserver = new ResizeObserver(updateInputRegion)
-  cardRef.value
-    ?.querySelectorAll(INPUT_PARTS)
-    .forEach((element) => inputResizeObserver?.observe(element))
+  observeInputParts()
   window.addEventListener('resize', updateInputRegion)
   updateInputRegionAfterRender()
   void getCurrentWindow()
@@ -283,11 +300,19 @@ watch(
   }
 )
 
-// every activation starts with the whole window taking clicks
+// A new activation owns its own operations and results.
 watch(
   () => ipcStore.desktopState.activationId,
-  () => regionSync.invalidate()
+  () => {
+    menuModalsStore.cancelAndCloseAll()
+    regionSync.invalidate()
+  },
+  { flush: 'sync' }
 )
+
+watch([currentMode, () => ipcStore.desktopState.isWindowShown], () => {
+  void nextTick(observeInputParts)
+})
 
 watch(
   [
@@ -317,11 +342,14 @@ watch(
   }
 )
 
-watch(hasModal, (open) => {
-  if (!open) {
-    void nextTick(() => syncFocus())
+watch(
+  [hasModal, () => Boolean(menuModalsStore.pendingModal)],
+  ([open, pending]) => {
+    if (!open && !pending) {
+      void nextTick(() => syncFocus())
+    }
   }
-})
+)
 </script>
 
 <style scoped>

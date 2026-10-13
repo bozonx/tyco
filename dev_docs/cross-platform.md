@@ -4,19 +4,21 @@
 > [External control API](../docs/external-control.md). External selection tests below
 > require the master selection permission and an individual command grant.
 
-Статус: платформенный слой перестроен, X11 доведён до уровня KDE Wayland;
-бэкенды Windows и macOS — заглушки, план ниже.
-Дата: 2026-10-03
+Native quick-window selection is implemented on Windows through UI Automation
+and on macOS through Accessibility. macOS captures the source application PID
+and verifies its activation before pasting. Both native backends still need
+verification on their operating systems; Linux checks do not exercise them.
+Updated: 2026-10-13.
 
 ## 1. Целевые платформы
 
-| Платформа                       | Статус         | Комментарий                                                                 |
-| ------------------------------- | -------------- | --------------------------------------------------------------------------- |
-| Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                |
-| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, xdotool, xclip                     |
-| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в чужое окно недоступна |
-| Windows 10 22H2+, 11            | заглушки       | запоминание окна и Ctrl+V через `SendInput`; замены выделения нет           |
-| macOS 13+                       | заглушки       | вставка через `osascript`; окно не запоминается                             |
+| Платформа                       | Статус         | Комментарий                                                                     |
+| ------------------------------- | -------------- | ------------------------------------------------------------------------------- |
+| Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                    |
+| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, xdotool, xclip                         |
+| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в чужое окно недоступна     |
+| Windows 10 22H2+, 11            | partial        | UI Automation selection capture, HWND target, native clipboard, `SendInput`     |
+| macOS 13+                       | partial        | Accessibility selection capture, PID target, verified paste through `osascript` |
 
 ARM64 (Windows on ARM, Apple Silicon, Linux aarch64) API не меняет: те же
 Win32, AppKit/Quartz, Wayland/X11/D-Bus. Отличаются только сборка и

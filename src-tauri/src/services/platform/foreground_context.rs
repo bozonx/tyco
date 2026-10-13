@@ -40,8 +40,8 @@ fn capture_source_impl() -> Option<String> {
 }
 
 #[cfg(target_os = "windows")]
-async fn capture_selection_impl(_source: Option<String>) -> Option<String> {
-    super::windows::capture_selection().await
+async fn capture_selection_impl(source: Option<String>) -> Option<String> {
+    super::windows::capture_selection(source).await
 }
 
 #[cfg(target_os = "macos")]
@@ -50,6 +50,6 @@ fn capture_source_impl() -> Option<String> {
 }
 
 #[cfg(target_os = "macos")]
-async fn capture_selection_impl(_source: Option<String>) -> Option<String> {
-    super::macos::capture_selection().await
+async fn capture_selection_impl(source: Option<String>) -> Option<String> {
+    super::macos::capture_selection(source).await
 }

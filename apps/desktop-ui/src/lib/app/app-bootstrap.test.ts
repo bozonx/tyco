@@ -136,6 +136,28 @@ describe('app-bootstrap', () => {
     expect(deps.navigateTo).toHaveBeenNthCalledWith(2, APP_ROUTES.WRITE.path)
   })
 
+  it('closes previous modal operations on a new activation in the same mode', async () => {
+    const { deps } = createDeps()
+    const bootstrap = createAppBootstrap(deps)
+    await bootstrap.applyParams({
+      ...DEFAULT_DESKTOP_VIEW_STATE,
+      activationId: 1,
+    })
+    await bootstrap.applyParams({
+      ...DEFAULT_DESKTOP_VIEW_STATE,
+      activationId: 2,
+      revision: 1,
+    })
+    expect(deps.closeAllModals).toHaveBeenCalledTimes(2)
+    expect(deps.navigateTo).toHaveBeenCalledOnce()
+    await bootstrap.applyParams({
+      ...DEFAULT_DESKTOP_VIEW_STATE,
+      activationId: 2,
+      revision: 2,
+    })
+    expect(deps.closeAllModals).toHaveBeenCalledTimes(2)
+  })
+
   it('leaves the screen alone for a mode of the other window', async () => {
     const { deps, listeners } = createDeps({
       ownsMode: (mode) => mode !== StartMode.VOICE,

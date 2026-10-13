@@ -10,6 +10,9 @@
     <template #actions>
       <QueryPanel
         v-if="promptMode"
+        :disabled="
+          props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
+        "
         v-model="prompt"
         :placeholder="t('menu.aiPromptPlaceholder')"
         :options="recentOptions"

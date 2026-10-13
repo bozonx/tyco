@@ -11,25 +11,37 @@ export function createWindowsCommandMap(): DomainCommandMap<
       buildArgs: (_, { activationId }) =>
         ({ activationId }) satisfies DesktopCommandArgs<'hide_window'>,
     },
-    dismissQuickWindow: { command: DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW },
+    dismissQuickWindow: {
+      command: DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW,
+      buildArgs: (_, { activationId }) =>
+        ({ activationId }) satisfies DesktopCommandArgs<'dismiss_quick_window'>,
+    },
     setQuickInputRegion: {
       command: DESKTOP_COMMANDS.SET_QUICK_INPUT_REGION,
-      buildArgs: ([region]) =>
-        ({ region }) satisfies DesktopCommandArgs<'set_quick_input_region'>,
+      buildArgs: ([region], { activationId }) =>
+        ({
+          region,
+          activationId,
+        }) satisfies DesktopCommandArgs<'set_quick_input_region'>,
     },
     openMainChat: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
-      buildArgs: ([attachment, question, autoSend]) =>
+      buildArgs: ([attachment, question, autoSend], { activationId }) =>
         ({
           attachment,
           question,
           autoSend,
+          activationId,
         }) satisfies DesktopCommandArgs<'open_main_chat'>,
     },
     openMainEditor: {
       command: DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
-      buildArgs: ([text, sourceText]) =>
-        ({ text, sourceText }) satisfies DesktopCommandArgs<'open_main_editor'>,
+      buildArgs: ([text, sourceText], { activationId }) =>
+        ({
+          text,
+          sourceText,
+          activationId,
+        }) satisfies DesktopCommandArgs<'open_main_editor'>,
     },
     activateMode: {
       command: DESKTOP_COMMANDS.ACTIVATE_MODE,

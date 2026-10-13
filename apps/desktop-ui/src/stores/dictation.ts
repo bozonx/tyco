@@ -4,6 +4,7 @@ import { onScopeDispose } from 'vue'
 import { clientLogger } from '../lib/logger'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { createLiveDictation } from '../lib/stt/live-dictation'
+import { createDictationOwnership } from '../lib/stt/dictation-ownership'
 import { createSttClient } from '../lib/stt/stt-client'
 import { createVoiceCaptureControl } from '../lib/stt/voice-capture'
 
@@ -18,5 +19,5 @@ export const useDictationStore = defineStore('dictation', () => {
       clientLogger.error('Could not cancel the dictation session', error, 'stt')
     })
   })
-  return model
+  return { ...model, ...createDictationOwnership(model) }
 })

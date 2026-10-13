@@ -177,6 +177,23 @@ describe('TranslateMenu', () => {
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de_DE')
   })
+
+  it('translates the highlighted language by clicking the Enter hint', async () => {
+    useIpcStore().desktopState.localState = {
+      recentTranslateLanguages: ['it_IT'],
+    }
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const button = wrapper.find('.query-panel-hint')
+    expect(button.attributes('disabled')).toBeDefined()
+    await wrapper.find('input').trigger('keydown', { key: 'ArrowDown' })
+    expect(button.attributes('disabled')).toBeUndefined()
+    await button.trigger('click')
+    await vi.waitFor(() => expect(transform).toHaveBeenCalled())
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
+    wrapper.unmount()
+  })
   it('drops late results and stages after cancellation without clearing a new operation', async () => {
     let resolve!: (value: typeof result) => void
     transform.mockReturnValue(

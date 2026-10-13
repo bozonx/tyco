@@ -20,13 +20,17 @@ pub fn hide_window(
 /// Hides the quick window after it lost focus. Unlike `hide_window`, it
 /// leaves the main window alone when that one became active meanwhile.
 #[tauri::command]
-pub fn dismiss_quick_window(app: AppHandle) -> Result<(), AppError> {
-    runtime::dismiss_quick_window(&app)
+pub fn dismiss_quick_window(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::dismiss_quick_window(&app, activation_id)
 }
 
 #[tauri::command]
-pub fn set_quick_input_region(app: AppHandle, region: Option<InputRegion>) -> Result<(), AppError> {
-    runtime::set_quick_input_region(&app, region)
+pub fn set_quick_input_region(
+    app: AppHandle,
+    region: Option<InputRegion>,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    runtime::set_quick_input_region(&app, region, activation_id)
 }
 
 /// On the blocking pool: the opener and the clipboard tools are separate

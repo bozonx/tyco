@@ -1,24 +1,86 @@
 use std::mem::size_of;
+use std::sync::atomic::{AtomicIsize, Ordering};
+use std::time::Duration;
 
 use windows_sys::Win32::Foundation::HWND;
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL, VK_SHIFT,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetClassNameW, GetForegroundWindow, SetForegroundWindow,
+    GetClassNameW, GetForegroundWindow, GetWindowThreadProcessId, IsWindow, SetForegroundWindow,
 };
 
 use crate::errors::AppError;
 
-pub fn capture_source() -> Option<String> {
+pub(crate) fn focused_source() -> Option<String> {
     let handle = unsafe { GetForegroundWindow() };
-    (!handle.is_null())
-        .then(|| handle as isize)
-        .map(|value| value.to_string())
+    if handle.is_null() {
+        return None;
+    }
+    let mut process_id = 0;
+    unsafe { GetWindowThreadProcessId(handle, &mut process_id) };
+    (process_id != std::process::id()).then(|| (handle as isize).to_string())
 }
 
-pub async fn capture_selection() -> Option<String> {
-    None
+pub fn capture_source() -> Option<String> {
+    static LAST_SOURCE: AtomicIsize = AtomicIsize::new(0);
+    let handle = unsafe { GetForegroundWindow() };
+    if handle.is_null() {
+        return None;
+    }
+    let mut process_id = 0;
+    unsafe { GetWindowThreadProcessId(handle, &mut process_id) };
+    let source = if process_id == std::process::id() {
+        LAST_SOURCE.load(Ordering::SeqCst)
+    } else {
+        LAST_SOURCE.store(handle as isize, Ordering::SeqCst);
+        handle as isize
+    };
+    (source != 0 && unsafe { IsWindow(source as HWND) } != 0).then(|| source.to_string())
+}
+
+pub async fn capture_selection(source: Option<String>) -> Option<String> {
+    let handle = source?.parse::<isize>().ok()?;
+    if handle == 0 || unsafe { IsWindow(handle as HWND) } == 0 {
+        return None;
+    }
+    let mut process_id = 0;
+    unsafe { GetWindowThreadProcessId(handle as HWND, &mut process_id) };
+    if process_id == std::process::id() {
+        return None;
+    }
+    // Read the source window through UI Automation after Tyco takes focus.
+    // Sending Ctrl+C here would steal focus back and dismiss the quick panel.
+    const SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+$root = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr][long]$env:TYCO_SELECTION_WINDOW)
+$condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::IsTextPatternAvailableProperty, $true)
+$elements = $root.FindAll([System.Windows.Automation.TreeScope]::Subtree, $condition)
+foreach ($element in $elements) {
+    try {
+        $pattern = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
+        $text = ($pattern.GetSelection() | ForEach-Object { $_.GetText(-1) }) -join "`n"
+        if (-not [string]::IsNullOrWhiteSpace($text)) {
+            $json = ConvertTo-Json -InputObject $text -Compress
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            [Console]::OpenStandardOutput().Write($bytes, 0, $bytes.Length)
+            break
+        }
+    } catch { continue }
+}
+"#;
+    let mut command = super::process::command(
+        "powershell",
+        &["-NoProfile", "-NonInteractive", "-Command", SCRIPT],
+    );
+    command.env("TYCO_SELECTION_WINDOW", handle.to_string());
+    let (status, output) = super::process::run(command, None, Duration::from_secs(3)).ok()?;
+    status
+        .success()
+        .then(|| super::native_selection::decode_selected_text(&output))
+        .flatten()
 }
 
 pub fn inject_paste(source_window_id: Option<&str>) -> Result<(), AppError> {
@@ -30,6 +92,11 @@ pub fn inject_paste(source_window_id: Option<&str>) -> Result<(), AppError> {
         return Err(AppError::Message(String::from(
             "Could not focus the target window",
         )));
+    }
+    if unsafe { GetForegroundWindow() } != handle {
+        return Err(AppError::Message(
+            "The target window did not receive focus".into(),
+        ));
     }
     press_copy_or_paste(false, foreground_is_terminal())
 }

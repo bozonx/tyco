@@ -61,6 +61,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
   let recordingTimer: ReturnType<typeof setInterval> | undefined
   let sessionGeneration = 0
   let starting: Promise<void> | undefined
+  let cancelling: Promise<void> | undefined
+  let notifyCancellation = false
+  let restartGeneration = 0
+  let disposed = false
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
   // Silence is billed too: a forgotten dictation must not run all day
@@ -110,28 +114,41 @@ export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
     deps.onCancelled()
   }
 
-  const cancel = async () => {
-    if (isCancelling.value) return
+  const cancelSession = (notify: boolean): Promise<void> => {
+    notifyCancellation ||= notify
+    if (cancelling) return cancelling
     isCancelling.value = true
     sessionGeneration += 1
     hasSession = false
     stopRecordingTimer()
     voiceSession.abort()
 
-    try {
-      await starting
-      await cancelDictation()
-    } catch (error) {
-      const message = describeVoiceError(error)
-      if (message) toastText(message, 'error')
-      else toast('toast.voiceRecognitionFailed', 'error')
-    } finally {
-      isStarted.value = false
-      isTranscribing.value = false
-      isFinishing.value = false
-      isCancelling.value = false
-      notifyCancelled()
-    }
+    cancelling = (async () => {
+      try {
+        await cancelDictation()
+        await starting
+        await cancelDictation()
+      } catch (error) {
+        const message = describeVoiceError(error)
+        if (message) toastText(message, 'error')
+        else toast('toast.voiceRecognitionFailed', 'error')
+      } finally {
+        isStarted.value = false
+        isTranscribing.value = false
+        isFinishing.value = false
+        isCancelling.value = false
+        cancelling = undefined
+        const shouldNotify = notifyCancellation
+        notifyCancellation = false
+        if (shouldNotify && !disposed) notifyCancelled()
+      }
+    })()
+    return cancelling
+  }
+
+  const cancel = () => {
+    restartGeneration += 1
+    return cancelSession(true)
   }
 
   const finish = async (intent: VoiceFinishIntent = 'insert') => {
@@ -261,7 +278,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
   }
 
   async function startSession() {
-    if (isStarted.value || isFinishing.value || starting) return
+    if (
+      disposed ||
+      isCancelling.value ||
+      isStarted.value ||
+      isFinishing.value ||
+      starting
+    )
+      return
     transcript.value = createLiveTranscriptState()
     const generation = ++sessionGeneration
     starting = (async () => {
@@ -300,13 +324,25 @@ export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
   }
 
   function dispose() {
+    disposed = true
+    restartGeneration += 1
     sessionGeneration += 1
     stopRecordingTimer()
     voiceSession.dispose()
+    const stopping = cancelDictation()
     void (async () => {
+      await stopping
       await starting
       await cancelDictation()
     })().catch(() => undefined)
+  }
+
+  async function restartSession() {
+    const restart = ++restartGeneration
+    notifyCancellation = false
+    await cancelSession(false)
+    if (disposed || restart !== restartGeneration) return
+    await startSession()
   }
   return {
     transcript,
@@ -319,6 +355,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
     cancel,
     finish,
     startSession,
+    restartSession,
     dispose,
     isStarting: () => Boolean(starting),
   }

@@ -101,7 +101,7 @@ const listenDesktop = <K extends keyof AppEventPayloads>(
   handler: (payload: AppEventPayloads[K]) => void | Promise<void>
 ) => runtimeScope.listen(desktopClient.listen, event, handler)
 const mainWindowReset = createMainWindowReset({
-  closeAllModals: () => menuModalsStore.closeAll(),
+  closeAllModals: () => menuModalsStore.cancelAndCloseAll(),
   goToEditor: () => appNavigation.goToEditor(),
 })
 const bootstrap = createAppBootstrap({
@@ -113,7 +113,7 @@ const bootstrap = createAppBootstrap({
     return () => window.removeEventListener('focus', handler)
   },
   applyViewState: (params) => ipcStore.applyViewState(params),
-  closeAllModals: () => menuModalsStore.closeAll(),
+  closeAllModals: () => menuModalsStore.cancelAndCloseAll(),
   navigateTo: (path) => appNavigation.push(path),
   // the quick window has no routes of its own: it renders by the mode
   ownsMode: (mode) => isQuickWindow || !isQuickWindowMode(mode),

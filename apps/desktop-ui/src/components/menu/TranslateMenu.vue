@@ -10,6 +10,9 @@
     <template #actions>
       <QueryPanel
         v-if="pickerMode"
+        :disabled="
+          props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
+        "
         v-model="query"
         :label="
           field === 'source'
@@ -241,9 +244,8 @@ const pickerHints = computed<QueryPanelHint[]>(() => [
         ? t('menu.translatePickSource')
         : t('menu.translate'),
     // nothing is highlighted in the target list until the user types or moves
-    disabled:
-      pickerOptions.value.length === 0 ||
-      (field.value === 'target' && !query.value.trim()),
+    disabled: pickerOptions.value.length === 0,
+    requireOption: true,
   },
   { keys: [], label: t('menu.translateSwitchField'), action: switchField },
   { keys: ['Esc'], label: t('common.back'), action: closePicker },

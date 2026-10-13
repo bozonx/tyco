@@ -1,8 +1,22 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { MenuModals, createMenuModalsStoreModel } from './menu-modals-store'
+import { blurActiveElement } from '../ui/focus'
 
 describe('createMenuModalsStoreModel', () => {
+  it('releases query focus so Escape reaches the pending operation', () => {
+    const input = document.createElement('input')
+    document.body.append(input)
+    try {
+      input.focus()
+      expect(document.activeElement).toBe(input)
+      const store = createMenuModalsStoreModel({ blurActiveElement })
+      store.setPendingModal({ label: 'Translating' })
+      expect(document.activeElement).not.toBe(input)
+    } finally {
+      input.remove()
+    }
+  })
   it('starts with NONE and no breadcrumbs', () => {
     const store = createMenuModalsStoreModel()
     expect(store.currentModal.value).toBe(MenuModals.NONE)

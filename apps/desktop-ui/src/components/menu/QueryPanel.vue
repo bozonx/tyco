@@ -1,6 +1,10 @@
 <template>
   <!-- keyup.esc stops here: the window's own Esc handling must not close the menu -->
-  <div class="query-panel" @keyup.esc.prevent.stop="emit('back')">
+  <div
+    class="query-panel"
+    :inert="props.disabled"
+    @keyup.esc.prevent.stop="emit('back')"
+  >
     <div class="query-panel-head">
       <slot name="before-input" />
       <label class="query-panel-field">
@@ -11,6 +15,7 @@
           ref="inputRef"
           class="query-panel-input"
           type="text"
+          :disabled="props.disabled"
           :value="props.modelValue"
           :placeholder="props.placeholder"
           :aria-label="props.placeholder"
@@ -92,9 +97,13 @@
         :key="hint.keys.join('+')"
         type="button"
         class="query-panel-hint"
-        :disabled="hint.disabled"
+        :disabled="
+          props.disabled ||
+          hint.disabled ||
+          (hint.requireOption && highlighted < 0)
+        "
         @mousedown.prevent
-        @click="hint.action?.()"
+        @click="activateHint(hint)"
       >
         <KeyButton v-for="key in hint.keys" :key="key">{{ key }}</KeyButton>
         <span>{{ hint.label }}</span>
@@ -128,6 +137,7 @@ export interface QueryPanelHint {
   keys: string[]
   label: string
   disabled?: boolean
+  requireOption?: boolean
   action?: () => void
 }
 
@@ -152,6 +162,7 @@ const props = withDefaults(
      */
     autoHighlight?: boolean
     emptyText?: string
+    disabled?: boolean
   }>(),
   {
     placeholder: '',
@@ -160,6 +171,7 @@ const props = withDefaults(
     hints: () => [],
     autoHighlight: false,
     emptyText: '',
+    disabled: false,
   }
 )
 
@@ -188,9 +200,26 @@ const resetHighlight = () => {
 watch(() => props.options, resetHighlight, { immediate: true })
 
 const focus = () => inputRef.value?.focus()
+watch(
+  () => props.disabled,
+  (disabled) => {
+    if (!disabled) void nextTick(focus)
+  }
+)
 
 const onInput = (event: Event) => {
   emit('update:modelValue', (event.target as HTMLInputElement).value)
+}
+
+function submit(ctrl = false) {
+  emit('submit', { option: props.options[highlighted.value], ctrl })
+}
+
+function activateHint(hint: QueryPanelHint) {
+  if (hint.action) hint.action()
+  else if (hint.keys.includes('Enter')) {
+    submit(hint.keys.includes('Ctrl') || hint.keys.includes('Cmd'))
+  }
 }
 
 function scrollToHighlighted() {
@@ -202,7 +231,7 @@ function scrollToHighlighted() {
 }
 
 const onKeyDown = (event: KeyboardEvent) => {
-  if (event.isComposing) return
+  if (props.disabled || event.isComposing) return
 
   switch (event.key) {
     case 'ArrowDown':
@@ -218,10 +247,7 @@ const onKeyDown = (event: KeyboardEvent) => {
     case 'Enter':
       event.preventDefault()
       if (event.repeat) return
-      emit('submit', {
-        option: props.options[highlighted.value],
-        ctrl: event.ctrlKey || event.metaKey,
-      })
+      submit(event.ctrlKey || event.metaKey)
       return
     case 'Escape':
       // acted on at keyup, like the shortcut lists

@@ -70,6 +70,8 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     }
     if (owner === undefined) {
       cancelPending()
+      // Hidden query inputs must not intercept Escape from the progress UI.
+      deps.blurActiveElement?.()
       pendingId += 1
     }
     pendingModal.value = params

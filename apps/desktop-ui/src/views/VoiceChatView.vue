@@ -70,12 +70,21 @@ async function handleCorrected(
 
   const autoSend = intent === 'submit'
 
-  await ipcStore.callFunction('openMainChat', [
+  const activationId = ipcStore.desktopState.activationId
+  const result = await ipcStore.callFunctionOrNotify('openMainChat', [
     context.value ?? undefined,
     resultText,
     autoSend,
   ])
-  await ipcStore.callFunction('dismissQuickWindow')
+  if (
+    !result.success &&
+    ipcStore.desktopState.activationId === activationId &&
+    ipcStore.desktopState.mode === 'voiceChat' &&
+    ipcStore.desktopState.isWindowShown
+  ) {
+    resText.value = resultText
+    isInsertMenu.value = true
+  }
 }
 
 async function handleCancelled() {

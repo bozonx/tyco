@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   focusHandlers: [] as ((event: { payload: boolean }) => void)[],
   aiTaskMounts: 0,
   aiTaskUnmounts: 0,
+  cancelAndCloseAll: vi.fn(),
   launcher: { stage: { kind: 'list' } },
 }))
 
@@ -46,7 +47,7 @@ vi.mock('../../stores/menu-modals', () => ({
   useMenuModalsStore: () =>
     Object.assign(reactive(mocks.modals), {
       cancelPending: vi.fn(),
-      cancelAndCloseAll: vi.fn(),
+      cancelAndCloseAll: mocks.cancelAndCloseAll,
       closeAll: vi.fn(),
     }),
 }))
@@ -388,7 +389,7 @@ describe('quick overlay menus', () => {
     }
   })
 
-  it('keeps a menu mounted while hidden and drops it with its mode', async () => {
+  it('keeps a hidden menu but resets it for the next activation', async () => {
     stubResizeObserver()
     const desktopState = reactive(mocks.desktopState)
     desktopState.mode = 'aiTasks'
@@ -399,15 +400,19 @@ describe('quick overlay menus', () => {
 
       desktopState.isWindowShown = false
       await nextTick()
+      expect(mocks.aiTaskMounts).toBe(1)
+      expect(mocks.aiTaskUnmounts).toBe(0)
+      mocks.cancelAndCloseAll.mockClear()
       desktopState.isWindowShown = true
       desktopState.activationId++
       await nextTick()
-      expect(mocks.aiTaskMounts).toBe(1)
-      expect(mocks.aiTaskUnmounts).toBe(0)
+      expect(mocks.aiTaskMounts).toBe(2)
+      expect(mocks.aiTaskUnmounts).toBe(1)
+      expect(mocks.cancelAndCloseAll).toHaveBeenCalledOnce()
 
       desktopState.mode = 'write'
       await nextTick()
-      expect(mocks.aiTaskUnmounts).toBe(1)
+      expect(mocks.aiTaskUnmounts).toBe(2)
     } finally {
       wrapper.unmount()
       desktopState.mode = 'write'

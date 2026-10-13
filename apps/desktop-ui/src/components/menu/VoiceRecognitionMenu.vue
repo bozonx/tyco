@@ -66,6 +66,10 @@ const { globalEvents } = useGlobalEvents()
 const { toast, toastText } = useToast()
 const { t } = useI18n()
 const ipcStore = useIpcStore()
+let sessionActivationId = ipcStore.desktopState.activationId
+const ownsActivation = () =>
+  sessionActivationId === ipcStore.desktopState.activationId &&
+  ipcStore.desktopState.isWindowShown
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
@@ -90,11 +94,14 @@ const model = createVoiceRecognition({
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
   options: () => props,
   onCancelled: () => {
+    if (!ownsActivation()) return
     invokeCallback(props.onCancel)
     emit('cancelled')
   },
-  onCorrected: (result, recognized, corrected, intent) =>
-    emit('corrected', result, recognized, corrected, intent),
+  onCorrected: (result, recognized, corrected, intent) => {
+    if (ownsActivation())
+      emit('corrected', result, recognized, corrected, intent)
+  },
   t,
   toast,
   toastText,
@@ -164,9 +171,19 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 watch(
+  () => ipcStore.desktopState.activationId,
+  async (activationId) => {
+    if (!ipcStore.desktopState.isWindowShown) return
+    sessionActivationId = activationId
+    await model.restartSession()
+  }
+)
+
+watch(
   () => ipcStore.desktopState?.isWindowShown,
   (isShown) => {
     if (isShown) {
+      sessionActivationId = ipcStore.desktopState.activationId
       void startSession()
     } else {
       if ((isStarted.value || model.isStarting()) && !isFinishing.value) {

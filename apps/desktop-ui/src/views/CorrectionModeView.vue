@@ -1,13 +1,23 @@
 <template>
   <ContentPadding>
     <InProgressMessage v-if="isStarting" correction :onCancel="handleCancel" />
+    <ActionOverlayLayout
+      v-else
+      :title="t('menu.correction')"
+      :onEsc="handleCancel"
+    >
+      <p class="p-4 text-center">{{ emptyMessage }}</p>
+    </ActionOverlayLayout>
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
 import InProgressMessage from '../components/menu/InProgressMessage.vue'
+import { useI18n } from '../composables/use-i18n'
+import useToast from '../composables/use-toast'
 import { createCorrectionMode } from '../lib/correction-mode/correction-mode'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useIpcStore } from '../stores/ipc'
@@ -17,10 +27,30 @@ const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
 const navPanelStore = useNavPanelStore()
 const isStarting = ref(false)
+const { t } = useI18n()
+const { toastText } = useToast()
+const viewActivationId = ipcStore.desktopState.activationId
+let unmounted = false
+const isCurrent = () =>
+  !unmounted &&
+  ipcStore.desktopState.activationId === viewActivationId &&
+  ipcStore.desktopState.mode === 'correction' &&
+  ipcStore.desktopState.isWindowShown
+const emptyMessage = computed(() => {
+  const text = ipcStore.desktopState.selectedText
+  if (!text?.trim()) return t('toast.textNotSelected')
+  const minLength = ipcStore.desktopState.appConfig?.minCorrectionLength ?? 0
+  return t(
+    text.length < minLength
+      ? 'toast.textTooShortForCorrection'
+      : 'write.correctionFailed'
+  )
+})
 
 navPanelStore.resetNavParams({ panelVisible: false })
 
 function handleCancel() {
+  if (!isCurrent()) return
   isStarting.value = false
   void ipcStore.callFunctionOrNotify('hideWindow')
 }
@@ -35,8 +65,30 @@ const correctionMode = createCorrectionMode({
 })
 
 watch(
-  () => ipcStore.desktopState.selectedText,
-  (text) => void correctionMode.consume(text),
+  () =>
+    [
+      ipcStore.desktopState.selectedText,
+      ipcStore.desktopState.activationId,
+    ] as const,
+  ([text, activationId]) => {
+    if (!isCurrent()) return
+    void correctionMode.consume(text, activationId).catch((error: unknown) => {
+      if (isCurrent()) toastText(String(error), 'error')
+    })
+  },
   { immediate: true }
 )
+
+function handleKeyUp(event: KeyboardEvent) {
+  if (event.code !== 'Escape' || event.defaultPrevented || !isCurrent()) return
+  event.preventDefault()
+  handleCancel()
+}
+
+onMounted(() => window.addEventListener('keyup', handleKeyUp))
+onUnmounted(() => {
+  unmounted = true
+  correctionMode.dispose()
+  window.removeEventListener('keyup', handleKeyUp)
+})
 </script>

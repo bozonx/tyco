@@ -12,6 +12,8 @@ mod foreground_context;
 pub(crate) mod hotkeys;
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 pub mod keychain;
+#[cfg(any(target_os = "windows", test))]
+mod native_selection;
 mod panel_surface;
 pub(crate) mod selection;
 pub mod session;

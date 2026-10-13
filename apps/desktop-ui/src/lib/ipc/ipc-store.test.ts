@@ -25,6 +25,21 @@ function createDeps(overrides: Partial<IpcStoreDeps> = {}): IpcStoreDeps {
 }
 
 describe('ipc-store', () => {
+  it('binds quick dismissal and input regions to their activation', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+    await store.callFunction('dismissQuickWindow')
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW,
+      { activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId }
+    )
+    const region = { x: 0, y: 400, width: 800, height: 100 }
+    await store.callFunction('setQuickInputRegion', [region])
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.SET_QUICK_INPUT_REGION,
+      { region, activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId }
+    )
+  })
   it('maps a function name to desktop command invocation', async () => {
     const deps = createDeps()
     const store = createIpcStoreModel(deps)
@@ -93,7 +108,26 @@ describe('ipc-store', () => {
 
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
       DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
-      { text: 'result', sourceText: 'source' }
+      {
+        text: 'result',
+        sourceText: 'source',
+        activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
+      }
+    )
+  })
+
+  it('binds a voice handoff to the activation that produced its question', async () => {
+    const deps = createDeps()
+    const store = createIpcStoreModel(deps)
+    await store.callFunction('openMainChat', [undefined, 'Question', true])
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
+      {
+        attachment: undefined,
+        question: 'Question',
+        autoSend: true,
+        activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
+      }
     )
   })
 

@@ -6,8 +6,9 @@ pub fn open_main_chat(
     attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
+    activation_id: u64,
 ) -> Result<(), AppError> {
-    runtime::open_main_chat(&app, attachment, question, auto_send)
+    runtime::open_main_chat(&app, attachment, question, auto_send, activation_id)
 }
 
 #[tauri::command]
@@ -15,8 +16,9 @@ pub fn open_main_editor(
     app: AppHandle,
     text: Option<String>,
     source_text: Option<String>,
+    activation_id: u64,
 ) -> Result<(), AppError> {
-    runtime::open_main_editor(&app, text, source_text)
+    runtime::open_main_editor(&app, text, source_text, activation_id)
 }
 
 #[tauri::command]
