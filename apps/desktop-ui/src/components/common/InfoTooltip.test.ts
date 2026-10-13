@@ -76,6 +76,27 @@ describe('InfoTooltip', () => {
     expect(wrapper.find('.info-tooltip-popover').exists()).toBe(false)
   })
 
+  it('dismisses a hovered tooltip with Escape while focus is elsewhere', async () => {
+    const wrapper = mount(InfoTooltip, {
+      props: { text: 'Helpful text', teleport: false },
+      global: { stubs: { Icon: true } },
+      attachTo: document.body,
+    })
+    const other = document.createElement('button')
+    document.body.append(other)
+    other.focus()
+    await wrapper.find('.info-tooltip-container').trigger('mouseenter')
+    expect(wrapper.find('[role="tooltip"]').exists()).toBe(true)
+    other.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    )
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[role="tooltip"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(other)
+    wrapper.unmount()
+    other.remove()
+  })
+
   it('renders custom slot content', async () => {
     const wrapper = mount(InfoTooltip, {
       props: { teleport: false },

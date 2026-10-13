@@ -206,6 +206,8 @@
     "launcherResultGroup": "Resultado de comandos rápidos"
   },
   "common": {
+    "moveUp": "Mover {name} hacia arriba",
+    "moveDown": "Mover {name} hacia abajo",
     "add": "Agregar",
     "back": "Atrás",
     "cancel": "Cancelar",

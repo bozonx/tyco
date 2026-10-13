@@ -58,6 +58,38 @@ async function pickMenuItem(
 }
 
 describe('SettingsCommandsTab.vue', () => {
+  it('moves commands with accessible controls and prevents moving past a boundary', async () => {
+    const wrapper = mountTab()
+    const header = wrapper.find('.command-header')
+    await header.find('[aria-label^="common.moveUp"]').trigger('click')
+    expect(wrapper.emitted('update:commands')).toBeUndefined()
+    await header.find('[aria-label^="common.moveDown"]').trigger('click')
+    expect(
+      (wrapper.emitted('update:commands')![0][0] as CommandConfig[]).map(
+        (command) => command.id
+      )
+    ).toEqual(['sc1', 'wh1'])
+    await wrapper.setProps({
+      userConfig: {
+        ...wrapper.props('userConfig'),
+        commands: [script, webhook],
+      },
+    })
+    const movedHeader = wrapper.findAll('.command-header')[1]
+    expect(
+      movedHeader
+        .find('[aria-label^="common.moveDown"]')
+        .attributes('aria-disabled')
+    ).toBe('true')
+    await movedHeader.find('[aria-label^="common.moveUp"]').trigger('click')
+    expect(
+      (wrapper.emitted('update:commands')![1][0] as CommandConfig[]).map(
+        (command) => command.id
+      )
+    ).toEqual(['wh1', 'sc1'])
+    wrapper.unmount()
+  })
+
   it('lists the commands and marks the ones in the menu', () => {
     const wrapper = mountTab()
     const cards = wrapper.findAll('.command-card')

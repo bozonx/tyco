@@ -7,6 +7,12 @@
     >
       <Icon icon="mdi:drag-vertical" width="18" height="18" />
     </div>
+    <ReorderControls
+      :name="command.name || t('commands.unnamed')"
+      :can-move-up="canMoveUp"
+      :can-move-down="canMoveDown"
+      @move="emit('move', $event)"
+    />
     <button
       type="button"
       class="command-summary"
@@ -116,6 +122,7 @@ import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import ReorderControls from '../common/ReorderControls.vue'
 import CommandEditor from './CommandEditor.vue'
 import { Icon } from '@iconify/vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
@@ -123,6 +130,8 @@ import type { CommandConfig, UserConfig } from '@tyco/shared'
 const props = defineProps<{
   command: CommandConfig
   userConfig: UserConfig
+  canMoveUp: boolean
+  canMoveDown: boolean
   expanded: boolean
   menuSlot?: number
   launcherSlots: { page: number; index: number }[]
@@ -131,6 +140,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'toggle'): void
   (event: 'drag', value: PointerEvent): void
+  (event: 'move', offset: number): void
   (event: 'update', value: CommandConfig): void
   (event: 'navigate', tab: string): void
   (event: 'copy-id'): void

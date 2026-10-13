@@ -206,6 +206,8 @@
     "launcherResultGroup": "Hızlı komut sonucu"
   },
   "common": {
+    "moveUp": "{name} öğesini yukarı taşı",
+    "moveDown": "{name} öğesini aşağı taşı",
     "add": "Ekle",
     "back": "Geri",
     "cancel": "İptal",

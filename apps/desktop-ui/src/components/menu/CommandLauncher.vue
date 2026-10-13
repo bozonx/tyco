@@ -132,7 +132,8 @@
               <KeyButton>{{ index === 10 ? 0 : index }}</KeyButton>
             </button>
             <span class="launcher-hint launcher-pages-tab"
-              ><KeyButton>Tab</KeyButton></span
+              ><KeyButton>PageUp</KeyButton
+              ><KeyButton>PageDown</KeyButton></span
             >
           </div>
           <ShortcutList
@@ -307,9 +308,9 @@ const handleKeyDown = (event: KeyboardEvent) => {
     !event.metaKey &&
     !event.isComposing
   ) {
-    if (event.key === 'Tab') {
+    if (event.key === 'PageDown' || event.key === 'PageUp') {
       event.preventDefault()
-      if (!event.repeat) launcher.nextPage(event.shiftKey ? -1 : 1)
+      if (!event.repeat) launcher.nextPage(event.key === 'PageUp' ? -1 : 1)
     } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
       event.preventDefault()
       launcher.setPage(event.key === '0' ? 9 : Number(event.key) - 1)

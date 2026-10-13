@@ -26,7 +26,6 @@
         :emptyText="t('menu.translateNoLanguage')"
         :autoHighlight="query.trim() !== ''"
         @submit="submitLanguage"
-        @tab="switchField"
         @back="closePicker"
       >
         <template v-if="field === 'target'" #before-input>
@@ -246,7 +245,7 @@ const pickerHints = computed<QueryPanelHint[]>(() => [
       pickerOptions.value.length === 0 ||
       (field.value === 'target' && !query.value.trim()),
   },
-  { keys: ['Tab'], label: t('menu.translateSwitchField'), action: switchField },
+  { keys: [], label: t('menu.translateSwitchField'), action: switchField },
   { keys: ['Esc'], label: t('common.back'), action: closePicker },
 ])
 

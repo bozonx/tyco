@@ -71,6 +71,8 @@
         >
           <CommandCard
             :command="command"
+            :can-move-up="index > 0"
+            :can-move-down="index < commands.length - 1"
             :user-config="userConfig"
             :expanded="isExpanded(command.id)"
             :menu-slot="menuSlots.get(command.id)"
@@ -80,6 +82,9 @@
             "
             @toggle="toggle(command.id)"
             @drag="startDrag(index, $event)"
+            @move="
+              emit('update:commands', moveItem(commands, index, index + $event))
+            "
             @update="updateCommand(index, $event)"
             @navigate="emit('navigate', $event)"
             @copy-id="copyId(command)"

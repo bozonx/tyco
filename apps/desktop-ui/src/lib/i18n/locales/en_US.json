@@ -206,6 +206,8 @@
     "launcherResultGroup": "Quick command result"
   },
   "common": {
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",

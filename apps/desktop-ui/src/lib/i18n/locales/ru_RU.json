@@ -206,6 +206,8 @@
     "launcherResultGroup": "Результат быстрых команд"
   },
   "common": {
+    "moveUp": "Переместить {name} вверх",
+    "moveDown": "Переместить {name} вниз",
     "add": "Добавить",
     "back": "Назад",
     "cancel": "Отмена",

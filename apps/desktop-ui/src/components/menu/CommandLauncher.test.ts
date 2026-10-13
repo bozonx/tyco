@@ -96,13 +96,13 @@ afterEach(() => {
 })
 
 describe('CommandLauncher', () => {
-  it('selects pages with digits and cycles with Tab without running commands', async () => {
+  it('selects pages with digits and cycles with PageUp/PageDown without running commands', async () => {
     const wrapper = mountLauncher([webhook('backup')], [['backup'], []])
     const press = (key: string, shiftKey = false) =>
       window.dispatchEvent(
         new KeyboardEvent('keydown', {
           key,
-          code: key === 'Tab' ? 'Tab' : `Digit${key}`,
+          code: key.startsWith('Page') ? key : `Digit${key}`,
           shiftKey,
           cancelable: true,
         })
@@ -119,13 +119,17 @@ describe('CommandLauncher', () => {
     await pageButtons[1].trigger('click')
     expect((mocks.store as { page: number }).page).toBe(1)
 
+    for (const shiftKey of [false, true]) {
+      expect(press('Tab', shiftKey)).toBe(true)
+      expect((mocks.store as { page: number }).page).toBe(1)
+    }
     press('2')
     expect((mocks.store as { page: number }).page).toBe(1)
-    press('Tab')
+    press('PageDown')
     expect((mocks.store as { page: number }).page).toBe(2)
-    press('Tab')
+    press('PageDown')
     expect((mocks.store as { page: number }).page).toBe(0)
-    press('Tab', true)
+    press('PageUp')
     expect((mocks.store as { page: number }).page).toBe(2)
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()

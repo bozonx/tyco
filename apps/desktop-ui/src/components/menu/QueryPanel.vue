@@ -17,8 +17,9 @@
           role="combobox"
           aria-autocomplete="list"
           :aria-expanded="props.options.length > 0"
+          :aria-controls="props.options.length ? listboxId : undefined"
           :aria-activedescendant="
-            highlighted >= 0 ? `query-option-${highlighted}` : undefined
+            highlighted >= 0 ? `${listboxId}-option-${highlighted}` : undefined
           "
           spellcheck="false"
           autocomplete="off"
@@ -33,6 +34,7 @@
       v-if="props.options.length > 0"
       class="query-panel-options"
       role="listbox"
+      :id="listboxId"
     >
       <template v-for="(option, index) in props.options" :key="option.id">
         <li
@@ -45,7 +47,7 @@
           {{ option.group }}
         </li>
         <li
-          :id="`query-option-${index}`"
+          :id="`${listboxId}-option-${index}`"
           role="option"
           class="query-panel-option"
           :class="{
@@ -102,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, useId, watch } from 'vue'
 
 import {
   type QueryOption,
@@ -165,10 +167,10 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'submit', value: QueryPanelSubmit): void
   (e: 'back'): void
-  (e: 'tab'): void
   (e: 'save'): void
 }>()
 
+const listboxId = useId()
 const inputRef = ref<HTMLInputElement | null>(null)
 const highlighted = ref(-1)
 
@@ -194,7 +196,7 @@ const onInput = (event: Event) => {
 function scrollToHighlighted() {
   void nextTick(() =>
     document
-      .getElementById(`query-option-${highlighted.value}`)
+      .getElementById(`${listboxId}-option-${highlighted.value}`)
       ?.scrollIntoView?.({ block: 'nearest' })
   )
 }
@@ -220,10 +222,6 @@ const onKeyDown = (event: KeyboardEvent) => {
         option: props.options[highlighted.value],
         ctrl: event.ctrlKey || event.metaKey,
       })
-      return
-    case 'Tab':
-      event.preventDefault()
-      emit('tab')
       return
     case 'Escape':
       // acted on at keyup, like the shortcut lists

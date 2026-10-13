@@ -23,6 +23,13 @@
           <Icon icon="mdi:drag-vertical" width="18" height="18" />
         </div>
 
+        <ReorderControls
+          :name="getOptionLabel(item.id)"
+          :can-move-up="index > 0"
+          :can-move-down="index < localItems.length - 1"
+          @move="reorderItem(index, index + $event)"
+        />
+
         <label
           class="checklist-item-label flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer py-1.5 pr-2.5 select-none"
         >
@@ -52,6 +59,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
+import ReorderControls from './ReorderControls.vue'
 import { Icon } from '@iconify/vue'
 import {
   type SortableChecklistItem,
@@ -99,10 +107,14 @@ const syncItems = () => {
 const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   listRef,
   (from, to) => {
-    localItems.value = moveItem(localItems.value, from, to)
-    syncItems()
+    reorderItem(from, to)
   }
 )
+
+function reorderItem(from: number, to: number) {
+  localItems.value = moveItem(localItems.value, from, to)
+  syncItems()
+}
 
 const itemStyle = (index: number) => {
   const offset = itemOffset(index)

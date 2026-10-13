@@ -240,11 +240,7 @@ function onDocumentClick(event: MouseEvent) {
 }
 
 function onDocumentKeydown(event: KeyboardEvent) {
-  if (
-    event.key === 'Escape' &&
-    isOpen.value &&
-    containerRef.value?.contains(document.activeElement)
-  ) {
+  if (event.key === 'Escape' && isOpen.value) {
     event.preventDefault()
     close()
   }

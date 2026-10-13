@@ -126,13 +126,13 @@ describe('TranslateMenu', () => {
     })
   })
 
-  it('takes the source language picked after Tab', async () => {
+  it('takes the source language picked after activating its field', async () => {
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
     await nextTick()
     const input = wrapper.find('input')
-    await input.trigger('keydown', { key: 'Tab' })
+    await wrapper.find('.language-field').trigger('click')
     await input.setValue('pol')
     await input.trigger('keydown', { key: 'Enter' })
     await input.setValue('ital')

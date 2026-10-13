@@ -9,6 +9,50 @@ const options = [
 ]
 
 describe('QueryPanel', () => {
+  it('preserves forward and backward tab navigation', () => {
+    const wrapper = mount(QueryPanel, { props: { modelValue: '' } })
+    for (const shiftKey of [false, true]) {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      })
+      wrapper.find('input').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+    }
+    wrapper.unmount()
+  })
+
+  it('links each combobox to its own list and active option', async () => {
+    const parent = mount({
+      components: { QueryPanel },
+      props: { options: { type: Array, default: () => options } },
+      template:
+        '<QueryPanel model-value="" :options="options" auto-highlight /><QueryPanel model-value="" :options="options" auto-highlight />',
+    })
+    const [first, second] = parent.findAllComponents(QueryPanel)
+    expect(first.find('[role="listbox"]').attributes('id')).not.toBe(
+      second.find('[role="listbox"]').attributes('id')
+    )
+    for (const wrapper of [first, second]) {
+      expect(wrapper.find('input').attributes('aria-controls')).toBe(
+        wrapper.find('[role="listbox"]').attributes('id')
+      )
+      expect(wrapper.find('input').attributes('aria-activedescendant')).toBe(
+        wrapper.find('[role="option"]').attributes('id')
+      )
+    }
+    await parent.setProps({ options: [] })
+    for (const wrapper of [first, second]) {
+      expect(wrapper.find('input').attributes('aria-controls')).toBeUndefined()
+      expect(
+        wrapper.find('input').attributes('aria-activedescendant')
+      ).toBeUndefined()
+    }
+    parent.unmount()
+  })
+
   it('submits the highlighted option, moved by the arrows', async () => {
     const wrapper = mount(QueryPanel, {
       props: { modelValue: '', options, autoHighlight: true },
@@ -35,7 +79,7 @@ describe('QueryPanel', () => {
     ])
   })
 
-  it('goes back on Esc and passes Tab and Ctrl+S on', async () => {
+  it('goes back on Esc and passes Ctrl+S on', async () => {
     const wrapper = mount(QueryPanel, { props: { modelValue: '' } })
     const input = wrapper.find('input')
 
@@ -43,7 +87,7 @@ describe('QueryPanel', () => {
     await input.trigger('keydown', { key: 's', code: 'KeyS', ctrlKey: true })
     await input.trigger('keyup', { key: 'Escape' })
 
-    expect(wrapper.emitted('tab')).toHaveLength(1)
+    expect(wrapper.emitted('tab')).toBeUndefined()
     expect(wrapper.emitted('save')).toHaveLength(1)
     expect(wrapper.emitted('back')).toHaveLength(1)
   })

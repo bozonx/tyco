@@ -1,5 +1,10 @@
 <template>
   <div class="ai-chat">
+    <ChatResponseAnnouncer
+      :chat-id="chatStore.currentChatState.id"
+      :is-generating="chatStore.isGenerating"
+      :message="chatStore.messages.at(-1)"
+    />
     <div ref="scroller" class="chat-messages" @scroll="handleScroll">
       <div class="chat-column">
         <UiState
@@ -235,6 +240,7 @@ import {
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
 import { appNavigation } from '../../lib/navigation/navigation'
+import { resolveScrollBehavior } from '../../lib/ui/scroll-behavior'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
 import { useIpcStore } from '../../stores/ipc'
@@ -245,6 +251,7 @@ import IconButton from '../common/IconButton.vue'
 import UiState from '../common/UiState.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import ChatContextList from './ChatContextList.vue'
+import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import { Icon } from '@iconify/vue'
 import type { ChatMessage } from '@tyco/shared'
 
@@ -391,7 +398,13 @@ async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
   const element = scroller.value
   if (!element) return
   const top = Math.max(0, element.scrollHeight - element.clientHeight)
-  element.scrollTo({ top: Math.round(top), behavior })
+  element.scrollTo({
+    top: Math.round(top),
+    behavior: resolveScrollBehavior(
+      behavior,
+      document.documentElement.dataset.motion
+    ),
+  })
 }
 
 const draggingFiles = ref(false)
