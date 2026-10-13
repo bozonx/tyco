@@ -82,9 +82,11 @@ describe('TranslateMenu', () => {
 
   it('translates into the language of the main menu item once', async () => {
     const menuModalsStore = useMenuModalsStore()
-    menuModalsStore.updateStep(menuModalsStore.currentStepId!, {
-      language: 'de_DE',
-    })
+    menuModalsStore.updateStep(
+      menuModalsStore.currentStepId!,
+      MenuModals.TRANSLATE,
+      { language: 'de_DE' }
+    )
     mountMenu({ language: 'de_DE' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
@@ -101,7 +103,10 @@ describe('TranslateMenu', () => {
     // back on the step, the menu waits for a choice
     menuModalsStore.back()
     expect(menuModalsStore.currentModal).toBe(MenuModals.TRANSLATE)
-    expect(menuModalsStore.currentModalParams.language).toBeUndefined()
+    expect(menuModalsStore.currentModalParams).toHaveProperty(
+      'language',
+      undefined
+    )
   })
 
   it('translates into any language picked from the full list', async () => {

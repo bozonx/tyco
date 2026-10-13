@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validatePluginManifest } from './validation.js'
+import { validatePluginManifest, validatePluginFields } from './validation.js'
 const manifest = {
   id: 'Example',
   version: '1.0.0',
@@ -79,6 +79,45 @@ describe('plugin locale completeness', () => {
           ru_RU: { nested: { label: '{name}, welcome {name}' } },
         },
       })
+    ).not.toThrow()
+  })
+})
+
+describe('plugin field value contracts', () => {
+  it.each([
+    { name: 'feature', type: 'checkbox', defaultValue: true, value: 'false' },
+    { name: 'prompt', type: 'textarea', defaultValue: 7 },
+    { name: 'path', type: 'text', defaultValue: {} },
+    { name: 'count', type: 'text', defaultValue: Infinity },
+    {
+      name: 'actions',
+      type: 'sortable-checklist',
+      defaultValue: [{ id: 'a', enabled: 'true' }],
+    },
+    {
+      name: 'mode',
+      type: 'select',
+      options: [{ id: 'a' }],
+      defaultValue: 'a',
+      value: 'missing',
+    },
+  ])('rejects declarations outside the field type: %j', (field) => {
+    expect(() => validatePluginFields([field])).toThrow()
+  })
+
+  it('accepts typed defaults and optional values', () => {
+    expect(() =>
+      validatePluginFields([
+        { name: 'feature', type: 'checkbox', defaultValue: false },
+        { name: 'prompt', type: 'textarea', defaultValue: '' },
+        { name: 'count', type: 'text', defaultValue: 0 },
+        { name: 'mode', type: 'select', options: [{ id: 0 }], defaultValue: 0 },
+        {
+          name: 'actions',
+          type: 'sortable-checklist',
+          defaultValue: [{ id: 'a', enabled: false }],
+        },
+      ])
     ).not.toThrow()
   })
 })

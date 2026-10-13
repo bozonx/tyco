@@ -1,3 +1,8 @@
+import type { PendingModalParams } from '../modals/menu-modal-params'
+import type {
+  CorrectionStepParams,
+  CorrectionStepExtra,
+} from './correction-step'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -25,9 +30,10 @@ function setup(overrides: Record<string, unknown> = {}) {
       signal = s
       return request.promise
     }),
-    openStep: (params: Record<string, unknown>) =>
+    openStep: (params: CorrectionStepParams & CorrectionStepExtra) =>
       menu.nextModal(MenuModals.INSERT, params),
-    updateStep: menu.updateStep,
+    updateStep: (id: number, params: Partial<CorrectionStepParams>) =>
+      menu.updateStep(id, MenuModals.INSERT, params),
     saveResult: vi.fn().mockResolvedValue(undefined),
     reportError: vi.fn(() => 'failed'),
     ...overrides,
@@ -135,7 +141,7 @@ describe('createCorrectionStep', () => {
       text: 'helo',
       correcting: false,
     })
-    expect(menu.currentModalParams.value.correctionError).toBeUndefined()
+    expect(menu.currentModalParams.value).not.toHaveProperty('correctionError')
   })
 
   it('passes extra params to the step', () => {
@@ -143,7 +149,10 @@ describe('createCorrectionStep', () => {
 
     void step.start('helo', { toEditorVisible: true })
 
-    expect(menu.currentModalParams.value.toEditorVisible).toBe(true)
+    expect(menu.currentModalParams.value).toHaveProperty(
+      'toEditorVisible',
+      true
+    )
   })
 
   describe('with setPending and clearPending', () => {
@@ -156,9 +165,9 @@ describe('createCorrectionStep', () => {
           signal = s
           return request.promise
         }),
-        openStep: (params: Record<string, unknown>) =>
+        openStep: (params: CorrectionStepParams & CorrectionStepExtra) =>
           menu.nextModal(MenuModals.INSERT, params),
-        setPending: (params: Record<string, unknown>) =>
+        setPending: (params: PendingModalParams) =>
           menu.setPendingModal(params),
         clearPending: (owner?: number | void) =>
           menu.clearPendingModal(owner ?? undefined),
@@ -277,7 +286,7 @@ describe('correction step disposal', () => {
     request.resolve('hello')
     await pending
     expect(deps.saveResult).not.toHaveBeenCalled()
-    expect(menu.currentModalParams.value.text).toBe('helo')
+    expect(menu.currentModalParams.value).toHaveProperty('text', 'helo')
     await step.start('again')
     expect(deps.correct).toHaveBeenCalledOnce()
   })

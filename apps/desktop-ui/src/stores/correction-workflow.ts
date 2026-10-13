@@ -39,7 +39,8 @@ export const useCorrectionWorkflowStore = defineStore(
       peek: corrector.peek,
       openStep: (params) =>
         menuModalsStore.nextModal(MenuModals.INSERT, params),
-      updateStep: menuModalsStore.updateStep,
+      updateStep: (id, params) =>
+        menuModalsStore.updateStep(id, MenuModals.INSERT, params),
       setPending: (params) => menuModalsStore.setPendingModal(params),
       clearPending: (owner) =>
         menuModalsStore.clearPendingModal(owner ?? undefined),

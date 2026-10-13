@@ -9,16 +9,23 @@ export interface SortableChecklistItem {
   enabled: boolean
 }
 
-export interface InputConfigItem {
-  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'sortable-checklist'
+interface InputConfigField<Type extends string, Value> {
+  type: Type
   name: string
   label?: string
   labelKey?: string
-  value?: unknown
-  defaultValue?: unknown
+  value?: Value
+  defaultValue?: Value
   options?: InputConfigOption[]
   vertical?: boolean
 }
+
+export type InputConfigItem =
+  | InputConfigField<'text', string | number>
+  | InputConfigField<'textarea', string>
+  | InputConfigField<'select', string | number>
+  | InputConfigField<'checkbox', boolean>
+  | InputConfigField<'sortable-checklist', SortableChecklistItem[]>
 
 /** Copies JSON settings, including reactive objects supplied by a host. */
 export function clonePluginValue<T>(value: T): T {

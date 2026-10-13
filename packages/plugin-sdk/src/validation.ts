@@ -220,6 +220,13 @@ export function validatePluginFields(fields: unknown): void {
         ))
     )
       fail('Invalid plugin field options')
+    for (const key of ['value', 'defaultValue']) {
+      if (
+        field[key] !== undefined &&
+        !validDeclaredFieldValue(field, field[key])
+      )
+        fail(`Invalid plugin field ${key}`)
+    }
     if (field.type === 'checkbox' && typeof field.defaultValue !== 'boolean')
       fail('Invalid checkbox default')
     if (
@@ -231,11 +238,35 @@ export function validatePluginFields(fields: unknown): void {
   }
 }
 
+function validDeclaredFieldValue(
+  field: Record<string, unknown>,
+  value: unknown
+): boolean {
+  if (field.type === 'text')
+    return (
+      typeof value === 'string' ||
+      (typeof value === 'number' && Number.isFinite(value))
+    )
+  if (field.type === 'textarea') return typeof value === 'string'
+  if (field.type === 'sortable-checklist')
+    return (
+      Array.isArray(value) &&
+      value.every(
+        (item) =>
+          record(item) &&
+          typeof item.id === 'string' &&
+          typeof item.enabled === 'boolean'
+      )
+    )
+  return validPresetValue(field, value)
+}
+
 function validPresetValue(
   field: Record<string, unknown>,
   value: unknown
 ): boolean {
   if (field.type === 'checkbox') return typeof value === 'boolean'
+  if (field.type === 'textarea') return typeof value === 'string'
   if (field.type === 'select')
     return (
       Array.isArray(field.options) &&

@@ -1,3 +1,4 @@
+import { withConfigFieldValue } from '@tyco/plugin-sdk'
 import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
 import { pluginMessageKey, scopeConfigFields } from './plugin-resources'
 import type { InputConfigItem } from '../../types'
@@ -15,7 +16,7 @@ export interface InstalledPluginItem {
   status?: Exclude<PluginRuntimeState['status'], 'active' | 'disabled'>
   canRestore?: boolean
   error?: string
-  fields: Array<InputConfigItem & { value: unknown }>
+  fields: InputConfigItem[]
 }
 
 export function resolveInstalledPlugins(
@@ -50,7 +51,7 @@ export function resolveInstalledPlugins(
       canRestore: plugin._canRestore ?? false,
       ...(error ? { error } : {}),
       fields: scopeConfigFields(pluginName, error ? [] : rawFields).map(
-        (field) => ({ ...field, value: config[field.name] })
+        (field) => withConfigFieldValue(field, config[field.name])
       ),
     }
   })

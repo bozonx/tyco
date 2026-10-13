@@ -41,7 +41,9 @@ import type { UserConfig } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: Pick<UserConfig, 'aiTasks'> }>()
 
-const emit = defineEmits<{ (e: 'update:aiTasks', value: any[]): void }>()
+const emit = defineEmits<{
+  (e: 'update:aiTasks', value: UserConfig['aiTasks']): void
+}>()
 
 const { t } = useI18n()
 

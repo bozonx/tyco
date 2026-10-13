@@ -72,6 +72,7 @@ import {
   getLanguageLabel,
 } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
+import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
 import {
   type LanguageGroup,
   groupLanguages,
@@ -95,15 +96,11 @@ import QueryPanel, {
 } from './QueryPanel.vue'
 import { Icon } from '@iconify/vue'
 
-const props = withDefaults(
-  defineProps<{
-    text?: string
-    shortcutsDisabled?: boolean
-    /** A language to translate into at once: the main menu item of it */
-    language?: string
-  }>(),
-  { text: '', shortcutsDisabled: false, language: undefined }
-)
+const props = withDefaults(defineProps<TranslateMenuParams>(), {
+  text: '',
+  shortcutsDisabled: false,
+  language: undefined,
+})
 
 const ipcStore = useIpcStore()
 const routeParamsStore = useEditorNavigation()
@@ -354,7 +351,9 @@ onMounted(() => {
   if (!language) return
   const stepId = menuModalsStore.currentStepId
   if (stepId !== undefined) {
-    menuModalsStore.updateStep(stepId, { language: undefined })
+    menuModalsStore.updateStep(stepId, MenuModals.TRANSLATE, {
+      language: undefined,
+    })
   }
   void translate(language)
 })

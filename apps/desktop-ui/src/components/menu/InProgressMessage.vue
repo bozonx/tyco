@@ -17,18 +17,14 @@
 import { onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import Button from '../common/Button.vue'
 
-const props = withDefaults(
-  defineProps<{
-    ai?: boolean
-    correction?: boolean
-    label?: string
-    onCancel?: () => void
-  }>(),
-  { ai: false, correction: false }
-)
+const props = withDefaults(defineProps<PendingModalParams>(), {
+  ai: false,
+  correction: false,
+})
 
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()

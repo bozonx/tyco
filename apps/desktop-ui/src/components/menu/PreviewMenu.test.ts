@@ -25,6 +25,7 @@ describe('PreviewMenu', () => {
         sourceText: 'Original text',
         translationMeta: {
           provider: 'llm',
+          kind: 'llm',
           model: 'gpt-4o-mini',
           quality: {
             gate: 'on_problems',
@@ -68,6 +69,7 @@ describe('PreviewMenu', () => {
         text: 'Translation with issues',
         translationMeta: {
           provider: 'deepl',
+          kind: 'machine',
           quality: {
             gate: 'on_problems',
             problems: [{ code: 'untranslated' }],

@@ -202,7 +202,7 @@
     <VoiceRecognitionMenu
       v-if="isInlineVoice"
       variant="bar"
-      v-bind="menuModalsStore.currentModalParams"
+      v-bind="voiceParams"
       @cancelled="menuModalsStore.closeAll()"
       @corrected="menuModalsStore.closeAll()"
     />
@@ -232,7 +232,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('write')"
+          @click="openQuick(StartMode.WRITE)"
           title="Open Quick Write"
         >
           <Icon icon="mdi:pencil-outline" height="15" />
@@ -241,7 +241,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('aiTasks')"
+          @click="openQuick(StartMode.AI_TASKS)"
           title="Open Quick AI Tasks"
         >
           <Icon icon="mdi:robot-outline" height="15" />
@@ -250,7 +250,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('select')"
+          @click="openQuick(StartMode.SELECT)"
           title="Open Quick Select"
         >
           <Icon icon="mdi:format-list-checks" height="15" />
@@ -259,7 +259,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('voice')"
+          @click="openQuick(StartMode.VOICE)"
           title="Open Quick Voice"
         >
           <Icon icon="mdi:microphone-outline" height="15" />
@@ -268,7 +268,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('commandLauncher')"
+          @click="openQuick(StartMode.COMMAND_LAUNCHER)"
           title="Open Quick Commands"
         >
           <Icon icon="mdi:console-line" height="15" />
@@ -277,7 +277,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('translate')"
+          @click="openQuick(StartMode.TRANSLATE)"
           title="Open Quick Translate"
         >
           <Icon icon="mdi:translate" height="15" />
@@ -286,7 +286,7 @@
         <Button
           size="sm"
           variant="neutral"
-          @click="openQuick('correction')"
+          @click="openQuick(StartMode.CORRECTION)"
           title="Open Quick Correction"
         >
           <Icon icon="mdi:text-box-edit-outline" height="15" />
@@ -324,7 +324,7 @@ import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import { Icon } from '@iconify/vue'
-import type { StartMode } from '@tyco/shared'
+import { StartMode } from '@tyco/shared'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
@@ -351,34 +351,25 @@ const viewModeTitle = computed(() =>
 const isDev = import.meta.env.DEV
 
 /** The voice input runs in a bar under the editor, which stays in view */
-const isInlineVoice = computed(
-  () =>
-    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION &&
-    Boolean(menuModalsStore.currentModalParams?.inline)
-)
+const voiceParams = computed(() => {
+  const step = menuModalsStore.currentStep
+  return step?.modal === MenuModals.VOICE_RECOGNITION ? step.params : undefined
+})
+const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
 const copyText = useCopyText({ saveOutput: true })
 
-const openQuick = async (
-  mode:
-    | 'write'
-    | 'voice'
-    | 'aiTasks'
-    | 'select'
-    | 'commandLauncher'
-    | 'translate'
-    | 'correction'
-) => {
+const openQuick = async (mode: StartMode) => {
   const text =
     editorInputStore.selectedText || editorInputStore.value || undefined
 
   const res = await ipcStore.callFunction('activateMode', [mode, text])
   if (!res?.success) {
     desktopClient.setLocalParams({
-      mode: mode as unknown as StartMode,
+      mode: mode,
       selectedText: text ?? '',
       isWindowShown: true,
     })
-    void appNavigation.push(resolveModeRoute(mode as unknown as StartMode))
+    void appNavigation.push(resolveModeRoute(mode))
   }
 }
 

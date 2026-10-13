@@ -20,51 +20,57 @@ export function normalizeMainActions(
 ): (MainActionConfig | null)[] {
   const source = Array.isArray(value) ? value : DEFAULT_MAIN_ACTIONS
 
-  return normalizeShortcutSlots<MainActionConfig>(source).map((item) => {
-    if (
-      item?.type === 'launcherPage' &&
-      Number.isInteger(item.page) &&
-      item.page >= 0
-    )
-      return { type: 'launcherPage', page: item.page }
-    if (
-      item?.type === 'plugin' &&
-      typeof item.actionId === 'string' &&
-      item.actionId.trim()
-    ) {
-      return { type: 'plugin', actionId: item.actionId }
-    }
-    if (
-      item?.type === 'command' &&
-      typeof item.commandId === 'string' &&
-      item.commandId.trim()
-    ) {
-      return { type: 'command', commandId: item.commandId }
-    }
-    if (
-      item?.type === 'aiTask' &&
-      typeof item.taskId === 'string' &&
-      item.taskId.trim()
-    ) {
-      return { type: 'aiTask', taskId: item.taskId }
-    }
-    if (
-      item?.type === 'translation' &&
-      typeof item.language === 'string' &&
-      item.language.trim()
-    ) {
-      return { type: 'translation', language: item.language }
-    }
-    if (
-      !item ||
-      item.type !== 'standard' ||
-      !isStandardActionId(item.actionId)
-    ) {
-      return null
-    }
+  return normalizeShortcutSlots<unknown>(source).map(
+    (value): MainActionConfig | null => {
+      if (!value || typeof value !== 'object' || Array.isArray(value))
+        return null
+      const item = value as Record<string, unknown>
+      if (
+        item?.type === 'launcherPage' &&
+        typeof item.page === 'number' &&
+        Number.isInteger(item.page) &&
+        item.page >= 0
+      )
+        return { type: 'launcherPage', page: item.page }
+      if (
+        item?.type === 'plugin' &&
+        typeof item.actionId === 'string' &&
+        item.actionId.trim()
+      ) {
+        return { type: 'plugin', actionId: item.actionId }
+      }
+      if (
+        item?.type === 'command' &&
+        typeof item.commandId === 'string' &&
+        item.commandId.trim()
+      ) {
+        return { type: 'command', commandId: item.commandId }
+      }
+      if (
+        item?.type === 'aiTask' &&
+        typeof item.taskId === 'string' &&
+        item.taskId.trim()
+      ) {
+        return { type: 'aiTask', taskId: item.taskId }
+      }
+      if (
+        item?.type === 'translation' &&
+        typeof item.language === 'string' &&
+        item.language.trim()
+      ) {
+        return { type: 'translation', language: item.language }
+      }
+      if (
+        !item ||
+        item.type !== 'standard' ||
+        !isStandardActionId(item.actionId)
+      ) {
+        return null
+      }
 
-    return { type: 'standard', actionId: item.actionId }
-  })
+      return { type: 'standard', actionId: item.actionId }
+    }
+  )
 }
 
 export function assignPluginActions(

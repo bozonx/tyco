@@ -7,7 +7,7 @@ import {
 
 import { createCleanupScope } from './cleanup-scope'
 
-import { GlobalEvents } from './global-events'
+import { GlobalEvents, type GlobalEventEmit } from './global-events'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
 export interface AppBootstrapDeps {
@@ -24,7 +24,7 @@ export interface AppBootstrapDeps {
    */
   ownsMode?: (mode: DesktopViewState['mode']) => boolean
   listen: DesktopListen
-  emitGlobal: (event: GlobalEvents, payload?: unknown) => void
+  emitGlobal: GlobalEventEmit
   initPlugins: () => void | Promise<void>
   handleNavKeyUp: (event: KeyboardEvent) => void
   addWindowKeyupListener: (

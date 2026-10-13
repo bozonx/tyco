@@ -118,7 +118,7 @@ const bootstrap = createAppBootstrap({
   // the quick window has no routes of its own: it renders by the mode
   ownsMode: (mode) => isQuickWindow || !isQuickWindowMode(mode),
   listen: desktopClient.listen,
-  emitGlobal: (event, payload) => globalEvents.emit(event, payload),
+  emitGlobal: globalEvents.emit,
   initPlugins: async () => {
     await pluginRuntime.refreshInstalledPlugins()
     await pluginRuntime.reloadPlugins()

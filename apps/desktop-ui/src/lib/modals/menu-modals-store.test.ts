@@ -105,16 +105,54 @@ describe('createMenuModalsStoreModel', () => {
     const lower = store.nextModal(MenuModals.INSERT, { text: 'a' })
     const upper = store.nextModal(MenuModals.INSERT, { correcting: true })
 
-    expect(store.updateStep(lower, { text: 'b' })).toBe(true)
-    expect(store.updateStep(upper, { correcting: false })).toBe(true)
+    expect(store.updateStep(lower, MenuModals.INSERT, { text: 'b' })).toBe(true)
+    expect(
+      store.updateStep(upper, MenuModals.INSERT, { correcting: false })
+    ).toBe(true)
     expect(store.currentModalParams.value).toEqual({ correcting: false })
     expect(store.currentStepId.value).toBe(upper)
 
     store.back()
     expect(store.currentModalParams.value).toEqual({ text: 'b' })
     expect(store.hasStep(upper)).toBe(false)
-    expect(store.updateStep(upper, { text: 'c' })).toBe(false)
+    expect(store.updateStep(upper, MenuModals.INSERT, { text: 'c' })).toBe(
+      false
+    )
   })
+  it('rejects patches for a different modal without changing its params', () => {
+    const store = createMenuModalsStoreModel()
+    const id = store.nextModal(MenuModals.DIFF, {
+      oldText: 'before',
+      newText: 'after',
+    })
+    expect(
+      store.updateStep(id, MenuModals.PREVIEW, { text: 'unexpected' })
+    ).toBe(false)
+    expect(store.currentModalParams.value).toEqual({
+      oldText: 'before',
+      newText: 'after',
+    })
+  })
+
+  it('requires parameters that match the modal contract', () => {
+    const store = createMenuModalsStoreModel()
+    const checkContracts = () => {
+      // @ts-expect-error Diff dialogs require both texts.
+      store.nextModal(MenuModals.DIFF)
+      // @ts-expect-error Preview dialogs require text.
+      store.nextModal(MenuModals.PREVIEW, {})
+      // @ts-expect-error Callbacks must have the declared parameter type.
+      store.nextModal(MenuModals.ACTION_SELECT, {
+        onSelect: (id: number) => id,
+      })
+      // @ts-expect-error Diff patches cannot introduce an AI task.
+      store.updateStep(1, MenuModals.DIFF, { taskId: 'task' })
+      // @ts-expect-error NONE is the empty state, not a dialog.
+      store.nextModal(MenuModals.NONE)
+    }
+    void checkContracts
+  })
+
   it('keeps a new operation when stale cleanup or progress arrives', () => {
     const store = createMenuModalsStoreModel()
     const first = store.setPendingModal({ label: 'first' })

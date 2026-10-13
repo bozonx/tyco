@@ -15,32 +15,47 @@ export interface SttConfig {
  * the active model falls back to the first default when it is not one of them.
  * Mirrors `normalize_stt_config` on the Rust side.
  */
-export function normalizeSttConfig(config: Record<string, any>): SttConfig {
-  const existing: Record<string, any>[] = Array.isArray(config.sttModels)
-    ? config.sttModels.filter(
-        (model: unknown) => typeof model === 'object' && model !== null
-      )
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+
+export function normalizeSttConfig(value: unknown): SttConfig {
+  const config = isRecord(value) ? value : {}
+  const existing: unknown[] = Array.isArray(config.sttModels)
+    ? config.sttModels
     : []
-
-  const sttModels = DEFAULT_USER_CONFIG.sttModels.map((defaults) => {
-    const own = existing.find((model) => model.provider === defaults.provider)
-    return { ...defaults, ...own, id: defaults.id } as SttModel
+  const sttModels = DEFAULT_USER_CONFIG.sttModels.map((defaults): SttModel => {
+    const own = existing.find(
+      (model): model is Record<string, unknown> =>
+        isRecord(model) && model.provider === defaults.provider
+    )
+    const model = { ...defaults }
+    if (!own) return model
+    if (typeof own.model === 'string') model.model = own.model
+    if (typeof own.description === 'string') model.description = own.description
+    if (typeof own.language === 'string') model.language = own.language
+    if (typeof own.baseUrl === 'string') model.baseUrl = own.baseUrl
+    if (typeof own.formatWithLlm === 'boolean')
+      model.formatWithLlm = own.formatWithLlm
+    return model
   })
-
-  const active = config.aiModelUsage?.stt
-  const stt = sttModels.some((model) => model.id === active)
-    ? (active as string)
-    : sttModels[0].id
-
-  return { sttModels, aiModelUsage: { ...config.aiModelUsage, stt } }
+  const usage = isRecord(config.aiModelUsage) ? config.aiModelUsage : {}
+  const active = usage.stt
+  const first = sttModels[0]
+  if (!first) throw new Error('No default speech model is configured')
+  const stt =
+    typeof active === 'string' && sttModels.some((model) => model.id === active)
+      ? active
+      : first.id
+  return { sttModels, aiModelUsage: { stt } }
 }
 
 /** The model dictation uses, by the provider chosen in the settings */
 export function activeSttModel(config: SttConfig): SttModel {
-  return (
-    config.sttModels.find((model) => model.id === config.aiModelUsage.stt) ??
+  const model =
+    config.sttModels.find((item) => item.id === config.aiModelUsage.stt) ??
     config.sttModels[0]
-  )
+  if (!model) throw new Error('No speech model is configured')
+  return model
 }
 
 /** Makes the model of `provider` the one dictation uses */

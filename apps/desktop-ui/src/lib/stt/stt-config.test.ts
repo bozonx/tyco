@@ -40,6 +40,43 @@ describe('normalizeSttConfig', () => {
     expect(config.aiModelUsage.stt).toBe('deepgram-stt')
   })
 
+  it('rejects invalid field types without losing valid provider settings', () => {
+    const config = normalizeSttConfig({
+      sttModels: [
+        null,
+        [],
+        {
+          provider: 'deepgram',
+          model: null,
+          description: 7,
+          language: {},
+          formatWithLlm: 'false',
+          baseUrl: 42,
+        },
+        {
+          provider: 'sherpa-onnx',
+          baseUrl: 'ws://speech.lan:6006',
+          formatWithLlm: true,
+        },
+      ],
+      aiModelUsage: { stt: ['deepgram-stt'] },
+    })
+    expect(config.sttModels[0]).toEqual(DEFAULT_USER_CONFIG.sttModels[0])
+    expect(config.sttModels[1]).toMatchObject({
+      baseUrl: 'ws://speech.lan:6006',
+      formatWithLlm: true,
+    })
+    expect(config.aiModelUsage.stt).toBe('deepgram-stt')
+    expect(activeSttModel(config).model.trim()).toBe('nova-3')
+  })
+
+  it.each([null, [], 'invalid', 42])(
+    'accepts malformed sections: %j',
+    (input) => {
+      expect(normalizeSttConfig(input)).toEqual(normalizeSttConfig({}))
+    }
+  )
+
   it('keeps the chosen provider', () => {
     const config = normalizeSttConfig({
       aiModelUsage: { stt: 'sherpa-onnx-stt' },

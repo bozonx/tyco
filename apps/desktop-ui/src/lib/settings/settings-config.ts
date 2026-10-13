@@ -9,6 +9,7 @@ import {
   type AppearanceSettings,
 } from '@tyco/shared'
 import { withAiTaskIds } from '../ai-tasks/custom-prompt'
+import { normalizeMainActions } from '../action-menu/main-actions'
 import {
   normalizeCommands,
   normalizeLauncherCommands,
@@ -33,156 +34,186 @@ export interface SettingsConfigDeps {
   appearance: () => AppearanceSettings
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+const recordOf = (value: unknown): Record<string, unknown> =>
+  isRecord(value) ? value : {}
+const stringOf = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback
+const booleanOf = (value: unknown, fallback: boolean): boolean =>
+  typeof value === 'boolean' ? value : fallback
+const numberOf = (value: unknown, fallback: number): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : fallback
+const stringsOf = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : []
+const stringRecordOf = (value: unknown): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(recordOf(value)).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string'
+    )
+  )
+
+function normalizeAiTasks(value: unknown): UserConfig['aiTasks'] {
+  const source: unknown[] = Array.isArray(value) ? value : []
+  return withAiTaskIds(
+    normalizeShortcutSlots(source).map((task) => {
+      if (!isRecord(task)) return null
+      const name = stringOf(task.name)
+      const rule = stringOf(task.rule)
+      if (!name.trim() && !rule.trim()) return null
+      return { id: stringOf(task.id), name, rule }
+    })
+  )
+}
+
 /** Normalizes legacy input without changing the persisted source object. */
 export function createSettingsConfig(deps: SettingsConfigDeps) {
-  type LegacyUserConfig = UserConfig &
-    Record<string, unknown> & {
-      aiRules: UserConfig['aiRules'] & { base?: string }
-    }
-  function cloneUserConfig(config: unknown): LegacyUserConfig {
-    return JSON.parse(
-      JSON.stringify(config || DEFAULT_USER_CONFIG)
-    ) as LegacyUserConfig
-  }
-
-  function prepare(config: unknown) {
-    const nextConfig = cloneUserConfig(config)
-
-    ensurePluginDefaults(nextConfig)
-    normalizeAppearanceConfig(nextConfig)
-    normalizeLanguageConfig(nextConfig)
-    nextConfig.mainActions = deps.resolveMainActions(
-      nextConfig.mainActions,
-      nextConfig.mainActionRegistrations ?? []
+  function prepare(value: unknown): UserConfig {
+    // Clone serialized settings before migration; Vue drafts may be reactive.
+    const cloned: unknown = JSON.parse(
+      JSON.stringify(isRecord(value) ? value : DEFAULT_USER_CONFIG)
     )
-    nextConfig.commands = normalizeCommands(nextConfig.commands)
-    nextConfig.mainActionRegistrations = [
-      ...new Set([
-        ...(nextConfig.mainActionRegistrations ?? []),
-        ...deps
-          .getRegisteredActions()
-          .flatMap((action) => (action.id ? [action.id] : [])),
-      ]),
-    ]
-    normalizeWindowInsertionConfig(nextConfig)
-    normalizeEditorConfig(nextConfig)
-    nextConfig.markdown = normalizeMarkdownSettings(nextConfig.markdown)
-    nextConfig.markdownClean = normalizeMarkdownCleanSettings(
-      nextConfig.markdownClean
-    )
-    normalizeHotkeysConfig(nextConfig)
-    Object.assign(nextConfig, normalizeSttConfig(nextConfig))
-    normalizeLlmConfigSection(nextConfig)
-    nextConfig.translation = normalizeTranslationConfig(nextConfig.translation)
-    delete nextConfig.chatRoles
-    delete nextConfig.chatHistoryMaxItems
-    nextConfig.launcherCommands = normalizeLauncherCommands(
-      nextConfig.launcherCommands,
-      nextConfig.commands
-    )
-    nextConfig.launcherPages = (nextConfig.launcherPages ?? []).map(
-      (page: (string | null)[]) =>
-        normalizeLauncherCommands(page, nextConfig.commands)
-    )
-    normalizeAiTasks(nextConfig)
-    nextConfig.aiRules = {
-      ...DEFAULT_USER_CONFIG.aiRules,
-      ...(nextConfig.aiRules || {}),
-    }
-    // the common rule was replaced by per-task rules
-    delete nextConfig.aiRules.base
-
-    return nextConfig
-  }
-
-  function normalizeHotkeysConfig(config: LegacyUserConfig) {
-    config.hotkeys = {
-      ...DEFAULT_USER_CONFIG.hotkeys,
-      ...(config.hotkeys || {}),
-    }
-    delete config.hotkeys?.history
-    delete config.hotkeys?.config
-    config.submitKey = resolveSubmitKey(config.submitKey)
-    delete config.quickInputHotkeys
-    delete config.quickInputSubmit
-    delete config.quickCorrection
-    delete config.hotkeys?.correction
-    // only the correction replaces the selection from a hotkey
-    config.selectionHotkeys = {
-      correction:
-        config.selectionHotkeys?.correction ??
-        DEFAULT_USER_CONFIG.selectionHotkeys.correction,
-    }
-    delete config.selectionReplace
-    config.quickCorrectionPrefetch = config.quickCorrectionPrefetch === true
-    config.quickHideOnBlur = config.quickHideOnBlur !== false
-  }
-
-  function ensurePluginDefaults(config: LegacyUserConfig) {
-    config.plugins = applyPluginDefaults(deps.pluginIndexes(), config.plugins)
-  }
-
-  // configs created before the accessibility settings come without these keys;
-  // the theme falls back to what the pre-render bootstrap applied
-  function normalizeAppearanceConfig(config: LegacyUserConfig) {
-    Object.assign(
-      config,
-      normalizeAppearance({ ...deps.appearance(), ...config })
-    )
-  }
-
-  function normalizeLanguageConfig(config: LegacyUserConfig) {
-    config.appLanguage = config.appLanguage || AUTO_LANGUAGE_VALUE
-    config.userLanguage = config.userLanguage || AUTO_LANGUAGE_VALUE
-    config.toTranslateLanguages = normalizeShortcutSlots<string>(
-      config.toTranslateLanguages
-    ).map((lang) => (typeof lang === 'string' ? lang : null))
-  }
-
-  function normalizeWindowInsertionConfig(config: LegacyUserConfig) {
-    const defaultWindowInsertion = DEFAULT_USER_CONFIG.windowInsertion
-    const windowInsertion = config.windowInsertion || {}
+    const input = recordOf(cloned)
+    normalizeEditorConfig(input)
+    const defaults = DEFAULT_USER_CONFIG
+    const insertion = recordOf(input.windowInsertion)
+    const rules = recordOf(input.aiRules)
+    const selectionHotkeys = recordOf(input.selectionHotkeys)
+    const externalAccess = recordOf(input.externalAccess)
+    const registrations = stringsOf(input.mainActionRegistrations)
+    const commands = normalizeCommands(input.commands)
     const xdotoolBin =
-      windowInsertion.xdotoolBin ||
-      config.xdotoolBin ||
-      defaultWindowInsertion.xdotoolBin
-
-    config.windowInsertion = {
-      method:
-        windowInsertion.method === 'ydotool' ||
-        windowInsertion.method === 'xdotool'
-          ? windowInsertion.method
-          : defaultWindowInsertion.method,
+      stringOf(
+        insertion.xdotoolBin,
+        stringOf(input.xdotoolBin, defaults.windowInsertion.xdotoolBin)
+      ) || defaults.windowInsertion.xdotoolBin
+    const next: UserConfig & Record<string, unknown> = {
+      ...input,
+      ...normalizeAppearance({ ...deps.appearance(), ...input }),
+      configVersion: numberOf(input.configVersion, defaults.configVersion ?? 0),
+      externalAccess: { selection: externalAccess.selection === true },
+      hotkeys: { ...defaults.hotkeys, ...stringRecordOf(input.hotkeys) },
+      selectionHotkeys: {
+        correction: stringOf(
+          selectionHotkeys.correction,
+          defaults.selectionHotkeys.correction ?? ''
+        ),
+      },
+      submitKey: resolveSubmitKey(input.submitKey),
+      quickCorrectionPrefetch: input.quickCorrectionPrefetch === true,
+      quickHideOnBlur: input.quickHideOnBlur !== false,
       xdotoolBin,
-      ydotoolBin:
-        windowInsertion.ydotoolBin || defaultWindowInsertion.ydotoolBin,
-      pasteShortcut: PASTE_SHORTCUTS.includes(windowInsertion.pasteShortcut)
-        ? windowInsertion.pasteShortcut
-        : defaultWindowInsertion.pasteShortcut,
+      windowInsertion: {
+        method: insertion.method === 'ydotool' ? 'ydotool' : 'xdotool',
+        xdotoolBin,
+        ydotoolBin:
+          stringOf(insertion.ydotoolBin, defaults.windowInsertion.ydotoolBin) ||
+          defaults.windowInsertion.ydotoolBin,
+        pasteShortcut:
+          PASTE_SHORTCUTS.find(
+            (shortcut) => shortcut === insertion.pasteShortcut
+          ) ?? defaults.windowInsertion.pasteShortcut,
+      },
+      appLanguage: stringOf(input.appLanguage) || AUTO_LANGUAGE_VALUE,
+      userLanguage: stringOf(input.userLanguage) || AUTO_LANGUAGE_VALUE,
+      toTranslateLanguages: normalizeShortcutSlots<unknown>(
+        Array.isArray(input.toTranslateLanguages)
+          ? input.toTranslateLanguages
+          : []
+      ).map((language) => (typeof language === 'string' ? language : null)),
+      translation: normalizeTranslationConfig(input.translation),
+      mainActions: deps.resolveMainActions(
+        normalizeMainActions(input.mainActions),
+        registrations
+      ),
+      mainActionRegistrations: [
+        ...new Set([
+          ...registrations,
+          ...deps
+            .getRegisteredActions()
+            .flatMap((action) => (action.id ? [action.id] : [])),
+        ]),
+      ],
+      commands,
+      launcherCommands: normalizeLauncherCommands(
+        input.launcherCommands,
+        commands
+      ),
+      launcherPages: Array.isArray(input.launcherPages)
+        ? input.launcherPages.map((page: unknown) =>
+            normalizeLauncherCommands(page, commands)
+          )
+        : [],
+      launcherPagesWithoutText: Array.isArray(input.launcherPagesWithoutText)
+        ? input.launcherPagesWithoutText.filter(
+            (page): page is number =>
+              typeof page === 'number' && Number.isInteger(page) && page >= 0
+          )
+        : [],
+      seededCommands: stringsOf(input.seededCommands),
+      editorHistoryStorage:
+        input.editorHistoryStorage === 'off' ||
+        input.editorHistoryStorage === 'session'
+          ? input.editorHistoryStorage
+          : 'disk',
+      editorHistoryMaxItems: numberOf(
+        input.editorHistoryMaxItems,
+        defaults.editorHistoryMaxItems
+      ),
+      editorHistoryRetentionDays: numberOf(
+        input.editorHistoryRetentionDays,
+        defaults.editorHistoryRetentionDays ?? 30
+      ),
+      sanitizeSecretsInEditorHistory: booleanOf(
+        input.sanitizeSecretsInEditorHistory,
+        defaults.sanitizeSecretsInEditorHistory ?? true
+      ),
+      chatImageQuality:
+        input.chatImageQuality === 'economy' ||
+        input.chatImageQuality === 'original'
+          ? input.chatImageQuality
+          : 'balanced',
+      chatHistoryEnabled: booleanOf(
+        input.chatHistoryEnabled,
+        defaults.chatHistoryEnabled
+      ),
+      chatHistoryRetentionDays: numberOf(
+        input.chatHistoryRetentionDays,
+        defaults.chatHistoryRetentionDays
+      ),
+      llm: normalizeLlmConfig(input.llm),
+      ...normalizeSttConfig(input),
+      aiRules: {
+        chat: stringOf(rules.chat),
+        correction: stringOf(rules.correction),
+        translate: stringOf(rules.translate),
+        voiceCorrection: stringOf(rules.voiceCorrection),
+      },
+      aiTasks: normalizeAiTasks(input.aiTasks),
+      markdown: normalizeMarkdownSettings(input.markdown),
+      markdownClean: normalizeMarkdownCleanSettings(input.markdownClean),
+      plugins: applyPluginDefaults(
+        deps.pluginIndexes(),
+        recordOf(input.plugins)
+      ),
     }
-    config.xdotoolBin = xdotoolBin
+    for (const key of ['history', 'config', 'correction'])
+      delete next.hotkeys[key]
+    for (const key of [
+      'chatRoles',
+      'chatHistoryMaxItems',
+      'quickInputHotkeys',
+      'quickInputSubmit',
+      'quickCorrection',
+      'selectionReplace',
+      'llmModels',
+    ])
+      delete next[key]
+    return next
   }
-
-  function normalizeLlmConfigSection(config: LegacyUserConfig) {
-    config.llm = normalizeLlmConfig(config.llm)
-    delete config.llmModels
-  }
-
-  function normalizeAiTasks(config: LegacyUserConfig) {
-    if (!Array.isArray(config.aiTasks)) {
-      config.aiTasks = []
-    }
-
-    config.aiTasks = withAiTaskIds(
-      normalizeShortcutSlots<NonNullable<UserConfig['aiTasks'][number]>>(
-        config.aiTasks
-      ).map((task) =>
-        task && (task.name?.trim() || task.rule?.trim())
-          ? { id: task.id, name: task.name || '', rule: task.rule || '' }
-          : null
-      )
-    )
-  }
-
-  return { prepare: (config: unknown): UserConfig => prepare(config) }
+  return { prepare }
 }

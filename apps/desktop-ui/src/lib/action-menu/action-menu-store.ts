@@ -1,3 +1,4 @@
+import type { CorrectionStepExtra } from '../correction/correction-step'
 import type { ActionItem } from '@tyco/plugin-sdk'
 import { shallowRef } from 'vue'
 
@@ -32,10 +33,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
-  startCorrection: (
-    text: string,
-    extra?: Record<string, unknown>
-  ) => Promise<void>
+  startCorrection: (text: string, extra?: CorrectionStepExtra) => Promise<void>
   minCorrectionLength?: () => number
   mainActionRegistrations?: () => readonly string[] | undefined
   openLauncherPage?: (page: number, text: string) => Promise<void>
@@ -119,7 +117,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
   /** Corrects `text` on a step of its own, unless it is empty or too short. */
   const correct = async (
     text: string,
-    extra?: Record<string, unknown>
+    extra?: CorrectionStepExtra
   ): Promise<void> => {
     if (!text?.trim()) {
       deps.showToast('toast.textNotSelected', 'error')

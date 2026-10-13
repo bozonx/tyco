@@ -52,6 +52,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
+import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -60,20 +61,9 @@ import ParallelModeToggle, {
 } from '../common/ParallelModeToggle.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import TextPreview from '../common/TextPreview.vue'
-import type { TranslationQualityReport } from '@bozonx/ai-kit/translate'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
-  text: string
-  sourceText?: string
-  translationMeta?: {
-    provider: string
-    kind?: 'llm' | 'machine'
-    model?: string
-    quality: TranslationQualityReport
-  }
-}>()
-
+const props = defineProps<PreviewMenuParams>()
 const ipcStore = useIpcStore()
 const TRANSLATION_VIEW_MODE_KEY = 'tyco-translation-view-mode'
 

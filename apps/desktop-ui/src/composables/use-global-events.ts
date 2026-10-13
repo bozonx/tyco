@@ -1,6 +1,8 @@
 import { IndexedEventEmitter } from '@/lib/app/indexed-event-emitter'
 
-const globalEvents = new IndexedEventEmitter()
+import type { GlobalEventArgs } from '../lib/app/global-events'
+
+const globalEvents = new IndexedEventEmitter<GlobalEventArgs>()
 
 export { GlobalEvents } from '../lib/app/global-events'
 

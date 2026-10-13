@@ -31,6 +31,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useLlmActions } from '../../composables/use-llm-actions'
 import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
+import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { useHistoryStore } from '../../stores/history'
@@ -41,41 +42,7 @@ import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
-type CorrectedHandler = (
-  resultText: string,
-  recognizedText: string,
-  correctedText: string | undefined,
-  intent: VoiceFinishIntent
-) => void
-
-const props = defineProps<{
-  onCorrected?: CorrectedHandler | CorrectedHandler[]
-  onCancel?: (() => void) | (() => void)[]
-  /**
-   * The result is sent right away: Enter, Space and the voice chat hotkey
-   * submit it, Shift+Enter only inserts it, Tab opens the step with the actions
-   * for it
-   */
-  quickSend?: boolean
-  /**
-   * Space and Enter insert the result into the target window, Tab opens the
-   * step with the actions for it, as the quick text input does
-   */
-  withNext?: boolean
-  /** `bar`: a compact strip instead of the full screen layout */
-  variant?: 'sheet' | 'bar'
-  /** Where the bar is shown: the editor keeps its own params, see `inline` */
-  inline?: boolean
-  /** Dictation is opened from the AI chat */
-  chat?: boolean
-  /** Text that preceded the voice dictation (e.g. earlier content in input) */
-  prefix?: string
-  /** Text that follows the voice dictation (e.g. content after caret) */
-  suffix?: string
-  /** The text the question goes to the chat with */
-  context?: string
-}>()
-
+const props = defineProps<VoiceMenuParams>()
 const emit = defineEmits<{
   (
     e: 'corrected',

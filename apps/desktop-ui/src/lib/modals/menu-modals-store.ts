@@ -1,38 +1,31 @@
 import { computed, ref } from 'vue'
 
-export enum MenuModals {
-  INSERT = 'insert',
-  AI_TASK = 'ai-task',
-  DIFF = 'diff',
-  VOICE_RECOGNITION = 'voice-recognition',
-  TRANSLATE = 'translate',
-  PREVIEW = 'preview',
-  ACTION_SELECT = 'action-select',
-  NONE = 'none',
-}
+import {
+  MenuModals,
+  type MenuStep,
+  type OpenModalArgs,
+  type UpdateModalArgs,
+  type PendingModalParams,
+} from './menu-modal-params'
+export { MenuModals } from './menu-modal-params'
+export type { MenuStep } from './menu-modal-params'
 
 export interface MenuModalsDependencies {
   blurActiveElement?: () => void
 }
 
-/**
- * One screen of the menu stack. Its params may hold `onLeave`, called once the
- * step is removed from the stack, to stop work started for it
- */
-export interface MenuStep {
-  id: number
-  modal: MenuModals
-  params: Record<string, any>
-}
-
 export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
-  const pendingModal = ref<Record<string, any> | null>(null)
+  const pendingModal = ref<PendingModalParams | null>(null)
   const steps = ref<MenuStep[]>([])
   let lastStepId = 0
   let pendingId = 0
 
-  const topStep = computed(() => steps.value[steps.value.length - 1])
-  const currentModal = computed(() => topStep.value?.modal ?? MenuModals.NONE)
+  const topStep = computed<MenuStep | undefined>(
+    () => steps.value[steps.value.length - 1]
+  )
+  const currentModal = computed<MenuModals>(
+    () => topStep.value?.modal ?? MenuModals.NONE
+  )
   const currentModalParams = computed(() => topStep.value?.params ?? {})
   const currentStepId = computed(() => topStep.value?.id)
   const menuBreadcrumbs = computed(() => steps.value.map((step) => step.modal))
@@ -43,13 +36,13 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   }
 
   /** Opens a step on top of the stack; returns its id. */
-  const nextModal = (
-    modal: MenuModals,
-    params: Record<string, any> = {}
-  ): number => {
+  const nextModal = (...request: OpenModalArgs): number => {
+    const [modal, params = {}] = request
     deps.blurActiveElement?.()
     const id = ++lastStepId
-    steps.value = [...steps.value, { id, modal, params }]
+    // The public tuple contract pairs the modal with its parameters.
+    const step = { id, modal, params } as MenuStep
+    steps.value = [...steps.value, step]
     pendingModal.value = null
     return id
   }
@@ -69,7 +62,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   }
 
   const setPendingModal = (
-    params: Record<string, any>,
+    params: PendingModalParams,
     owner?: number
   ): number => {
     if (owner !== undefined && (owner !== pendingId || !pendingModal.value)) {
@@ -102,12 +95,14 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   }
 
   /** Changes the params of a step; false when it is no longer on the stack. */
-  const updateStep = (id: number, params: Record<string, any>): boolean => {
+  const updateStep = (...[id, modal, params]: UpdateModalArgs): boolean => {
     const index = steps.value.findIndex((step) => step.id === id)
     if (index === -1) return false
     const step = steps.value[index]
+    if (!step || step.modal !== modal) return false
     const next = [...steps.value]
-    next[index] = { ...step, params: { ...step.params, ...params } }
+    // Matching discriminators ensure the patch belongs to this step.
+    next[index] = { ...step, params: { ...step.params, ...params } } as MenuStep
     steps.value = next
     return true
   }
@@ -121,6 +116,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
 
   return {
     steps,
+    currentStep: topStep,
     pendingModal,
     currentModal,
     currentModalParams,

@@ -1,3 +1,10 @@
+import type {
+  InsertMenuParams,
+  PendingModalParams,
+} from '../modals/menu-modal-params'
+
+export type CorrectionStepExtra = InsertMenuParams & PendingModalParams
+
 /** Params of the actions step that shows a correction, see `InsertMenu`. */
 export interface CorrectionStepParams {
   /** Marks the step as a correction: Esc goes back to the text before it */
@@ -21,11 +28,11 @@ export interface CorrectionStepDeps {
   /** A finished correction of exactly this text, if there is one */
   peek?: (text: string) => string | undefined
   /** Opens the step on top of the others; returns its id */
-  openStep: (params: CorrectionStepParams & Record<string, unknown>) => number
+  openStep: (params: CorrectionStepParams & CorrectionStepExtra) => number
   /** Changes the params of the step; false when it is gone */
   updateStep?: (id: number, params: Partial<CorrectionStepParams>) => boolean
   /** Shows an in-progress overlay while waiting for correction */
-  setPending?: (params: Record<string, unknown>) => number | void
+  setPending?: (params: PendingModalParams) => number | void
   /** Clears the in-progress overlay */
   clearPending?: (owner?: number | void) => void
   isPending?: (owner: number | void) => boolean
@@ -55,7 +62,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
   /** Resolves once the correction is shown, failed, or abandoned. */
   const perform = async (
     text: string,
-    extra: Record<string, unknown>,
+    extra: CorrectionStepExtra,
     controller: AbortController
   ): Promise<void> => {
     const base = { ...extra, correction: true as const, originalText: text }
@@ -135,7 +142,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
     await deps.saveResult(text, result)
   }
 
-  const start = async (text: string, extra: Record<string, unknown> = {}) => {
+  const start = async (text: string, extra: CorrectionStepExtra = {}) => {
     if (disposed) return
     const controller = new AbortController()
     controllers.set(controller, undefined)

@@ -20,6 +20,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import type { ActionSelectMenuParams } from '../../lib/modals/menu-modal-params'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -29,16 +30,15 @@ const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 
-const props = defineProps<{ onSelect: (actionId: string) => void }>()
-
+const props = defineProps<ActionSelectMenuParams>()
 const actions = computed(() => {
   return actionMenuStore
     .getDefaultActions()
-    .map((action: any) => ({
-      id: action.labelKey?.replace('action.', '') || action.name || '',
+    .map((action) => ({
+      id: action.id || '',
       name: action.labelKey ? t(action.labelKey) : action.name || '',
     }))
-    .filter((a: any) => a.id)
+    .filter((a) => a.id)
 })
 
 function selectAction(id: string) {

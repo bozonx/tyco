@@ -77,7 +77,7 @@
         v-if="isInlineVoice"
         variant="bar"
         chat
-        v-bind="menuModalsStore.currentModalParams"
+        v-bind="voiceParams"
         @cancelled="menuModalsStore.closeAll()"
         @corrected="menuModalsStore.closeAll()"
       />
@@ -257,11 +257,11 @@ const { toast } = useToast()
 const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
 
-const isInlineVoice = computed(
-  () =>
-    menuModalsStore.currentModal === MenuModals.VOICE_RECOGNITION &&
-    Boolean(menuModalsStore.currentModalParams?.inline)
-)
+const voiceParams = computed(() => {
+  const step = menuModalsStore.currentStep
+  return step?.modal === MenuModals.VOICE_RECOGNITION ? step.params : undefined
+})
+const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
 
 const inputHint = computed(() => {
   const submitKey = resolveSubmitKey(

@@ -30,7 +30,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openTranslateModal: (text: string, language?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text, language })
     },
-    startCorrection: (text: string, extra?: Record<string, unknown>) =>
+    startCorrection: (text, extra) =>
       // the result replaces the text in the editor as well
       correctionWorkflowStore.start(text, { toEditorVisible: true, ...extra }),
     minCorrectionLength: () => appConfig.value.minCorrectionLength,

@@ -40,6 +40,7 @@ import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
+import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
@@ -57,15 +58,11 @@ import QueryPanel, {
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
 
-const props = withDefaults(
-  defineProps<{
-    text?: string
-    shortcutsDisabled?: boolean
-    /** An AI task to run at once, by its id: the main menu item of the task */
-    taskId?: string
-  }>(),
-  { text: '', shortcutsDisabled: false, taskId: undefined }
-)
+const props = withDefaults(defineProps<AiTaskMenuParams>(), {
+  text: '',
+  shortcutsDisabled: false,
+  taskId: undefined,
+})
 
 const routeParamsStore = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
@@ -130,7 +127,9 @@ onMounted(() => {
   if (!taskId) return
   const stepId = menuModalsStore.currentStepId
   if (stepId !== undefined) {
-    menuModalsStore.updateStep(stepId, { taskId: undefined })
+    menuModalsStore.updateStep(stepId, MenuModals.AI_TASK, {
+      taskId: undefined,
+    })
   }
   const index = (ipcStore.desktopState.userConfig?.aiTasks ?? []).findIndex(
     (task) => task?.id === taskId

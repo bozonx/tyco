@@ -208,7 +208,7 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
     props.spaceKey &&
     !props.spaceKey.disabled
   ) {
-    props.spaceKey.action(props.text || '')
+    void props.spaceKey.action(props.text || '')
   } else if (event.code === 'Tab' && props.toEditorVisible) {
     goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
@@ -224,7 +224,7 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
       const index = SHORTCUT_SLOT_KEYS.indexOf(codeLetter)
       const action = props.leftLetterKeys[index]
       if (action && !action.disabled) {
-        action.action(props.text || '')
+        void action.action(props.text || '')
       }
     }
   }

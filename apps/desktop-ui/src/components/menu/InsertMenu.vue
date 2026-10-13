@@ -74,6 +74,7 @@ import {
   readStoredDiffMode,
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
+import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
@@ -88,42 +89,20 @@ import { Icon } from '@iconify/vue'
 
 const routeParamsStore = useEditorNavigation()
 
-const props = withDefaults(
-  defineProps<{
-    text?: string
-    oldText?: string
-    actions?: ActionItem[]
-    allowInsertButton?: boolean
-    shortcutsDisabled?: boolean
-    toEditorVisible?: boolean
-    /** A correction step: in the main window Esc goes back to the text before it */
-    correction?: boolean
-    /** The text before correction, still insertable with Shift+Space */
-    originalText?: string
-    /** A correction of `text` is on its way and will replace it */
-    correcting?: boolean
-    /** Why the correction failed; `text` is then the uncorrected one */
-    correctionError?: string
-    /** The correction came back without changes */
-    correctionUnchanged?: boolean
-    /** Offer only inserting the text, the editor and cancelling */
-    insertOnly?: boolean
-  }>(),
-  {
-    text: '',
-    oldText: '',
-    actions: undefined,
-    allowInsertButton: true,
-    shortcutsDisabled: false,
-    toEditorVisible: undefined,
-    correction: false,
-    originalText: undefined,
-    correcting: false,
-    correctionError: undefined,
-    correctionUnchanged: false,
-    insertOnly: false,
-  }
-)
+const props = withDefaults(defineProps<InsertMenuParams>(), {
+  text: '',
+  oldText: '',
+  actions: undefined,
+  allowInsertButton: true,
+  shortcutsDisabled: false,
+  toEditorVisible: undefined,
+  correction: false,
+  originalText: undefined,
+  correcting: false,
+  correctionError: undefined,
+  correctionUnchanged: false,
+  insertOnly: false,
+})
 
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()

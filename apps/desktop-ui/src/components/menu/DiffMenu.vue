@@ -35,14 +35,14 @@ import {
   readStoredDiffMode,
   writeStoredDiffMode,
 } from '../../lib/diff/diff-model'
+import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
 import DiffModeToggle from '../common/DiffModeToggle.vue'
 
-const props = defineProps<{ oldText: string; newText: string }>()
-
+const props = defineProps<DiffMenuParams>()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
 

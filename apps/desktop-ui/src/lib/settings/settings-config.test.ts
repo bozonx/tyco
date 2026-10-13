@@ -27,6 +27,66 @@ describe('settings config preparation', () => {
     expect(result.mainActionRegistrations).toContain('new-action')
     expect(result.markdown).toBeDefined()
   })
+  it('normalizes malformed nested settings and filters invalid task fields', () => {
+    const input = {
+      ...structuredClone(DEFAULT_USER_CONFIG),
+      aiTasks: [
+        null,
+        42,
+        { name: 123, rule: {} },
+        { name: 123, rule: 'Translate', id: [] },
+      ],
+      aiRules: { chat: [], correction: 1 },
+      plugins: [],
+      windowInsertion: { xdotoolBin: 42, ydotoolBin: null, pasteShortcut: {} },
+      hotkeys: { editor: 123, write: 'Ctrl+W' },
+      selectionHotkeys: { correction: false },
+      launcherPages: 'invalid',
+      launcherPagesWithoutText: [null, -1, '2', 1.5, 2],
+      mainActionRegistrations: 'invalid',
+      toTranslateLanguages: 'invalid',
+      chatHistoryRetentionDays: -1,
+      chatHistoryEnabled: 'false',
+      editorHistoryMaxItems: {},
+    }
+    const original = structuredClone(input)
+    const result = model().prepare(input)
+    expect(input).toEqual(original)
+    expect(result.aiTasks.slice(0, 4)).toEqual([
+      null,
+      null,
+      null,
+      { id: 'task-1', name: '', rule: 'Translate' },
+    ])
+    expect(result.aiRules).toEqual(DEFAULT_USER_CONFIG.aiRules)
+    expect(result.windowInsertion).toEqual(DEFAULT_USER_CONFIG.windowInsertion)
+    expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)
+    expect(result.hotkeys.write).toBe('Ctrl+W')
+    expect(result.launcherPages).toEqual([])
+    expect(result.launcherPagesWithoutText).toEqual([2])
+    expect(result.chatHistoryEnabled).toBe(
+      DEFAULT_USER_CONFIG.chatHistoryEnabled
+    )
+    expect(result.chatHistoryRetentionDays).toBe(
+      DEFAULT_USER_CONFIG.chatHistoryRetentionDays
+    )
+    expect(result.editorHistoryMaxItems).toBe(
+      DEFAULT_USER_CONFIG.editorHistoryMaxItems
+    )
+    expect(model().prepare(result)).toEqual(result)
+  })
+
+  it.each([null, [], 'invalid', 42, { aiTasks: [{ name: 123 }], aiRules: 7 }])(
+    'accepts incomplete or malformed settings: %j',
+    (value) => {
+      const result = model().prepare(value)
+      expect(result.aiRules.chat).toBeTypeOf('string')
+      expect(result.windowInsertion.xdotoolBin).toBeTypeOf('string')
+      expect(Array.isArray(result.llm.models)).toBe(true)
+      expect(model().prepare(result)).toEqual(result)
+    }
+  )
+
   it('is idempotent', () => {
     const prepare = model().prepare
     const result = prepare(DEFAULT_USER_CONFIG)

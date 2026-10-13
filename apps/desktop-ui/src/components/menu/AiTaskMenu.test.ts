@@ -257,6 +257,9 @@ describe('AiTaskMenu', () => {
     )
     // back on the step, the menu waits for a choice
     menuModalsStore.back()
-    expect(menuModalsStore.currentModalParams.taskId).toBeUndefined()
+    expect(menuModalsStore.currentModalParams).toHaveProperty(
+      'taskId',
+      undefined
+    )
   })
 })

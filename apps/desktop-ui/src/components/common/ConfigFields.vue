@@ -1,36 +1,36 @@
 <template>
   <div>
     <FieldRow
-      v-for="item in config"
+      v-for="item in fields"
       :key="item.name"
       :label="configFieldLabel(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
       <FieldInput
         v-if="item.type === 'text'"
-        :value="values[item.name]"
+        :value="item.value"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldTextArea
         v-else-if="item.type === 'textarea'"
-        :value="values[item.name]"
+        :value="item.value"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldSelect
         v-else-if="item.type === 'select'"
         class="w-full"
-        :value="values[item.name]"
+        :value="item.value"
         :options="configFieldOptions(item, t)"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldCheckbox
         v-else-if="item.type === 'checkbox'"
-        :value="values[item.name]"
+        :value="item.value ?? false"
         @update:value="updateValue(item.name, $event)"
       />
       <FieldSortableChecklist
         v-else-if="item.type === 'sortable-checklist'"
-        :value="values[item.name]"
+        :value="item.value"
         :options="item.options || []"
         :default-value="item.defaultValue"
         @update:value="updateValue(item.name, $event)"
@@ -54,33 +54,43 @@ import FieldSelect from './FieldSelect.vue'
 import FieldSortableChecklist from './FieldSortableChecklist.vue'
 import FieldTextArea from './FieldTextArea.vue'
 import type { InputConfigItem } from '@/types'
+import { withConfigFieldValue } from '@tyco/plugin-sdk'
 
 const props = defineProps<{ config: InputConfigItem[] }>()
 
 const emit = defineEmits<{
-  (e: 'update:values', values: Record<string, any>): void
+  (e: 'update:values', values: Record<string, unknown>): void
 }>()
 
 const { t } = useI18n()
-const config = computed(() => props.config)
-const values = ref<Record<string, any>>({})
+const fields = computed(() =>
+  props.config.map((field) =>
+    withConfigFieldValue(field, values.value[field.name])
+  )
+)
+const values = ref<Record<string, unknown>>({})
 
 watch(
   () => props.config,
   (newConfig) => {
     for (const item of newConfig) {
       if (item.value !== undefined) {
-        values.value[item.name] = item.value
+        values.value[item.name] = withConfigFieldValue(item, item.value).value
       } else if (values.value[item.name] === undefined) {
-        values.value[item.name] = item.defaultValue
+        values.value[item.name] = withConfigFieldValue(
+          item,
+          item.defaultValue
+        ).value
       }
     }
   },
   { immediate: true, deep: true }
 )
 
-function updateValue(name: string, value: any) {
-  values.value[name] = value
+function updateValue(name: string, value: unknown) {
+  const field = props.config.find((item) => item.name === name)
+  if (!field) return
+  values.value[name] = withConfigFieldValue(field, value).value
   emit('update:values', { ...values.value })
 }
 </script>
