@@ -11,6 +11,21 @@ import EditorView from './EditorView.vue'
 describe('Editor actions shortcut', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
+  it('does not hide the editor when Escape was handled by its search panel', () => {
+    const call = vi.spyOn(useIpcStore(), 'callFunctionOrNotify')
+    const wrapper = mount(EditorView, {
+      global: { stubs: { Editor: true, ContentPadding: true } },
+    })
+    const event = new KeyboardEvent('keydown', {
+      code: 'Escape',
+      cancelable: true,
+    })
+    event.preventDefault()
+    window.dispatchEvent(event)
+    expect(call).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('opens actions with editor text and ignores repeats and open modals', () => {
     const editor = useEditorInputStore()
     editor.setValue('Editor text', 'plain')

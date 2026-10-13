@@ -10,6 +10,7 @@ import {
   type PluginContext,
   type ToolDefinition,
   type ToolbarItem,
+  type EditorInputSnapshot,
 } from '@tyco/plugin-sdk'
 
 import type { ToolDefinition as HostToolDefinition } from '../tools/tool-types'
@@ -33,6 +34,12 @@ export interface PluginContextDependencies {
   ): void
   getEditorInputValue(): string
   getEditorInputSelectedText(): string
+  getEditorInputSnapshot(): EditorInputSnapshot
+  applyEditorInputEdit(
+    snapshot: EditorInputSnapshot,
+    value: string,
+    scope: 'selection' | 'document'
+  ): boolean
   setEditorInputValue(value: string): void
   replaceEditorInputSelection(value: string): void
   setEditorInputFocus(): void
@@ -271,6 +278,27 @@ export function createPluginContext(
       guard(deps.getEditorInputValue, 'editor')(),
     getEditorInputSelectedText: async () =>
       guard(deps.getEditorInputSelectedText, 'editor')(),
+    getEditorInputSnapshot: async () =>
+      guard(deps.getEditorInputSnapshot, 'editor')(),
+    applyEditorInputEdit: async (snapshot, value, scope) => {
+      check('editor')
+      if (
+        !snapshot ||
+        typeof snapshot.value !== 'string' ||
+        typeof snapshot.selectedText !== 'string' ||
+        !Number.isSafeInteger(snapshot.revision) ||
+        snapshot.revision < 0 ||
+        !Number.isSafeInteger(snapshot.selectionStart) ||
+        !Number.isSafeInteger(snapshot.selectionEnd) ||
+        snapshot.selectionStart < 0 ||
+        snapshot.selectionEnd < snapshot.selectionStart ||
+        snapshot.selectionEnd > snapshot.value.length ||
+        typeof value !== 'string' ||
+        !['selection', 'document'].includes(scope)
+      )
+        throw new Error('Invalid conditional editor edit')
+      return deps.applyEditorInputEdit(snapshot, value, scope)
+    },
     setEditorInputValue: guard(deps.setEditorInputValue, 'editor'),
     replaceEditorInputSelection: guard(
       deps.replaceEditorInputSelection,

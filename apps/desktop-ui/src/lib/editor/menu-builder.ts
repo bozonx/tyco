@@ -9,6 +9,7 @@ export interface EditorMenuCommands {
   paste: () => void | Promise<void>
   pastePlain: () => void | Promise<void>
   selectAll: () => void | Promise<void>
+  search?: () => void | Promise<void>
 }
 
 /** Text transforms and actions, already bound to the editor text */
@@ -155,6 +156,16 @@ export const buildContextMenu = ({
     },
   ]),
   ...startGroup([
+    ...(commands.search
+      ? [
+          {
+            id: 'search',
+            label: t('editor.search.title'),
+            icon: 'mdi:magnify',
+            action: commands.search,
+          },
+        ]
+      : []),
     {
       id: 'undo',
       label: t('editor.menu.undo'),

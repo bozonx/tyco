@@ -20,6 +20,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useShowMarkup } from '../../composables/use-show-markup'
 import useToast from '../../composables/use-toast'
 import {
+  StaleClipboardError,
   copySelection,
   cutSelection,
   pasteFromClipboard,
@@ -27,6 +28,10 @@ import {
 } from '../../lib/editor/clipboard'
 import type { ContextMenuRequest } from '../../lib/editor/context-menu'
 import { createEditorState } from '../../lib/editor/create-editor-state'
+import {
+  openEditorSearch,
+  setEditorPhrases,
+} from '../../lib/editor/editor-search'
 import {
   applyStoreEdit,
   selectAll,
@@ -87,12 +92,17 @@ const closeMenu = (restoreFocus = false): void => {
 const withClipboard = async (run: () => Promise<void>): Promise<void> => {
   try {
     await run()
-  } catch {
-    toast('editor.menu.clipboardUnavailable', 'error')
+  } catch (error) {
+    if (error instanceof StaleClipboardError)
+      toast('toast.textTransformStale', 'warn')
+    else toast('editor.menu.clipboardUnavailable', 'error')
   }
 }
 
 const commands: EditorMenuCommands = {
+  search: () => {
+    if (view) openEditorSearch(view)
+  },
   undo: () => {
     if (!view) return
 
@@ -191,6 +201,7 @@ onMounted(() => {
       doc: editorInputStore.value,
       placeholder: t('input.textPlaceholder'),
       ariaLabel: t('editor.inputLabel'),
+      t,
       paste: true,
       getMarkdownSettings: () => ipcStore.desktopState?.userConfig.markdown,
       onPastePlain: () => void commands.pastePlain(),
@@ -240,7 +251,11 @@ watch(showMarkup, (show) => {
 watch(
   () => t('input.textPlaceholder'),
   (text) => {
-    if (view) setPlaceholder(view, text)
+    if (view) {
+      setPlaceholder(view, text)
+      setEditorPhrases(view, t)
+      setMarkdownPreview(view, !showMarkup.value)
+    }
   }
 )
 
@@ -261,6 +276,13 @@ watch(
 )
 
 // handle select all
+watch(
+  () => editorInputStore.searchCount,
+  () => {
+    if (view) openEditorSearch(view)
+  }
+)
+
 watch(
   () => editorInputStore.selectAllCount,
   (newValue, oldValue) => {

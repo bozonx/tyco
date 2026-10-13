@@ -73,6 +73,8 @@ export interface VoiceMenuParams {
 export interface DiffMenuParams {
   oldText: string
   newText: string
+  /** Explicit replacement after reviewing a conflicting editor transfer. */
+  replaceEditor?: () => void
 }
 export interface PreviewMenuParams {
   text: string

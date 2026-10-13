@@ -14,6 +14,7 @@ export interface EditorActionsDeps {
     setSelection: (text: string, from: number, to: number) => void
     replaceSelection: (text: string, source: EditSource) => void
     actionText: () => string
+    captureResultSource: (sourceText: string) => void
     focus: () => void
   }
   openVoice: (params: {
@@ -74,6 +75,7 @@ export function createEditorActions(deps: EditorActionsDeps) {
       value = value.trim()
     }
 
+    editorInputStore.captureResultSource(value)
     return item.action(value)
   }
 

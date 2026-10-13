@@ -1,6 +1,7 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
+import { syntaxHighlighting } from '@codemirror/language'
 import type { Extension } from '@codemirror/state'
 import { Annotation, Compartment, EditorState } from '@codemirror/state'
 import {
@@ -14,10 +15,12 @@ import {
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
 import { historyKeysExtension } from './history-keys'
+import { editorSearch } from './editor-search'
+import { translate } from '../i18n'
 import { markdownKeymap } from './markdown-commands'
 import { markdownPreview } from './markdown-preview'
 import { pasteExtension } from './paste'
-import { editorAppearance } from './theme'
+import { editorAppearance, editorHighlightStyle } from './theme'
 
 /**
  * Marks transactions received by the editor from the store. The update listener
@@ -49,6 +52,7 @@ export interface CreateEditorStateOptions
   onPastePlain?: () => void
   /** Accessible name of the input, announced by screen readers */
   ariaLabel?: string
+  t?: (key: string) => string
   /**
    * Hide the markup outside the lines being edited; `setMarkdownPreview`
    * switches it later
@@ -75,6 +79,7 @@ export const createEditorExtensions = (
 ): Extension[] => [
   history(),
   historyKeysExtension(),
+  editorSearch(options.t ?? translate),
   // before the default keymap: Mod-i selects the parent syntax node there
   keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
   ...(options.onToggleMarkup
@@ -93,6 +98,7 @@ export const createEditorExtensions = (
   placeholderCompartment.of(placeholder(options.placeholder ?? '')),
   // fenced code blocks are highlighted by their language
   markdown({ base: markdownLanguage, codeLanguages: languages }),
+  syntaxHighlighting(editorHighlightStyle),
   markdownPreview(options.markdownPreview ?? false),
   editorAppearance,
   ...(options.paste

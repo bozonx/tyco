@@ -1,5 +1,10 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.compareResult')" escMode="back">
+  <ActionOverlayLayout
+    :title="
+      t(props.replaceEditor ? 'editor.conflict.title' : 'menu.compareResult')
+    "
+    escMode="back"
+  >
     <template #header-extra>
       <DiffModeToggle v-model:value="diffMode" />
     </template>
@@ -16,16 +21,16 @@
       <ShortcutList
         :text="props.newText"
         :sourceText="props.oldText"
-        :leftLetterKeys="leftLetterKeys"
-        :spaceKey="spaceKey"
-        :toEditorVisible="true"
+        :leftLetterKeys="props.replaceEditor ? [] : leftLetterKeys"
+        :spaceKey="props.replaceEditor ? replaceEditorAction : spaceKey"
+        :toEditorVisible="!props.replaceEditor"
       />
     </template>
   </ActionOverlayLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
@@ -37,10 +42,17 @@ import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
 import DiffModeToggle from '../common/DiffModeToggle.vue'
+import type { ActionItem } from '@tyco/plugin-sdk'
 
 const props = defineProps<DiffMenuParams>()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
+const replaceEditorAction = computed<ActionItem>(() => ({
+  id: 'replaceEditor',
+  labelKey: 'editor.conflict.replace',
+  icon: 'mdi:pencil-outline',
+  action: async () => props.replaceEditor?.(),
+}))
 
 const diffMode = ref<DiffViewMode>(
   resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)

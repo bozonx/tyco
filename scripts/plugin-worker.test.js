@@ -306,3 +306,44 @@ test(
     assert.equal(unwanted, false)
   }
 )
+
+test(
+  'conditional editor edits round-trip snapshots and conflicts through the worker',
+  { timeout: 5000 },
+  async (t) => {
+    const snapshot = {
+      value: 'before selected after',
+      selectedText: 'selected',
+      selectionStart: 7,
+      selectionEnd: 15,
+      revision: 2,
+    }
+    let applyCount = 0
+    const runtime = await session(
+      t,
+      `(ctx) => {
+    ctx.registerToolbarItems([{ id: 'edit', action: async () => {
+      const snapshot = await ctx.getEditorInputSnapshot();
+      return ctx.applyEditorInputEdit(snapshot, 'new', 'selection');
+    } }]);
+  }`,
+      async (method, args) => {
+        if (method === 'getEditorInputSnapshot') return snapshot
+        if (method === 'applyEditorInputEdit') {
+          assert.deepEqual(args, [snapshot, 'new', 'selection'])
+          return ++applyCount === 1
+        }
+        return undefined
+      }
+    )
+    const invoke = () =>
+      runtime.rpc.request('invoke', {
+        callback: runtime.items[0].action.$callback,
+        args: [],
+        messages: {},
+      })
+    assert.equal(await invoke(), true)
+    assert.equal(await invoke(), false)
+    assert.equal(runtime.getFailure(), undefined)
+  }
+)

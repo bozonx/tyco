@@ -27,6 +27,7 @@ async function closeEditor() {
 }
 
 function openInsertMenu() {
+  editorInputStore.captureResultSource(editorInputStore.actionText())
   menuModalsStore.nextModal(MenuModals.INSERT, {
     text: editorInputStore.actionText(),
   })
@@ -40,6 +41,7 @@ navPanelStore.resetNavParams({
 })
 
 function handleKeyDown(event: KeyboardEvent) {
+  if (event.defaultPrevented) return
   if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) return
   if (event.code === 'Escape') {
     event.preventDefault()

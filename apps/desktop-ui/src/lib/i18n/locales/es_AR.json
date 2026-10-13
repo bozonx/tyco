@@ -273,6 +273,27 @@
       "undo": "Deshacer"
     },
     "selectAll": "Seleccionar todo",
+    "conflict": {
+      "title": "Revisá el reemplazo del texto actual del editor",
+      "replace": "Reemplazar todo el texto del editor"
+    },
+    "search": {
+      "title": "Buscar y reemplazar (Ctrl+F / Ctrl+H)",
+      "find": "Buscar",
+      "replace": "Reemplazar",
+      "next": "Siguiente",
+      "previous": "Anterior",
+      "all": "Seleccionar todas las coincidencias",
+      "matchCase": "Distinguir mayúsculas",
+      "regexp": "Expresión regular",
+      "wholeWord": "Palabra completa",
+      "replaceAll": "Reemplazar todo",
+      "close": "Cerrar búsqueda",
+      "currentMatch": "Coincidencia actual",
+      "onLine": "en la línea",
+      "replacedOnLine": "Coincidencia reemplazada en la línea $",
+      "replacedCount": "Se reemplazaron $ coincidencias"
+    },
     "selectionHint": "Consejo: puedes seleccionar una parte del texto y solo esa parte se modificará.",
     "selectionScope": "Selección: {count} caracteres",
     "voiceInput": "Entrada por voz"

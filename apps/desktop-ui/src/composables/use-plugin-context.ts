@@ -38,7 +38,9 @@ export default function usePluginContext() {
       getEditorInputValue: () => editor.value,
       getEditorInputSelectedText: () =>
         editor.hasSelection ? editor.selectedText : '',
-      setEditorInputValue: (value) => editor.setValue(value),
+      getEditorInputSnapshot: editor.getSnapshot,
+      applyEditorInputEdit: editor.applySnapshotEdit,
+      setEditorInputValue: (value) => editor.replaceValue(value),
       replaceEditorInputSelection: (value) => editor.replaceSelection(value),
       setEditorInputFocus: () => editor.focus(),
       toEditor: (text) => routes.toEditor(text),

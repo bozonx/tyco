@@ -173,3 +173,17 @@ describe('actionIcon', () => {
     expect(actionIcon()).toBe(ACTIONS_ICON)
   })
 })
+
+it('exposes search and replace through the context menu', async () => {
+  const search = vi.fn()
+  const menu = buildContextMenu({
+    t,
+    commands: { ...commands(), search },
+    groups: groups(),
+    selected: false,
+  })
+  const entry = menu.find((item) => item.id === 'search')
+  expect(entry?.label).toBe('editor.search.title')
+  await entry?.action?.()
+  expect(search).toHaveBeenCalledOnce()
+})

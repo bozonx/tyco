@@ -191,7 +191,7 @@ describe('live preview', () => {
       )
       expect(view.dom.querySelector('.cm-preview-heading')).toBeNull()
       expect(view.contentDOM.textContent).toContain('# Title')
-      expect(view.contentDOM.querySelector('span')).toBeNull()
+      expect(view.contentDOM.querySelector('span')).not.toBeNull()
       setMarkdownPreview(view, true)
       expect(view.dom.querySelector('.cm-preview-heading')).not.toBeNull()
       expect(undo(view)).toBe(true)

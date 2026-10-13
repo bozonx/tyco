@@ -10,15 +10,16 @@ export async function runToolFromToolbar(
   ctx: PluginContext,
   tool: ToolDefinition
 ): Promise<void> {
-  const text =
-    (await ctx.getEditorInputSelectedText()) ||
-    (await ctx.getEditorInputValue()) ||
-    ''
   try {
+    const editorSnapshot = await ctx.getEditorInputSnapshot()
+    const text = editorSnapshot.selectedText.trim()
+      ? editorSnapshot.selectedText
+      : editorSnapshot.value
     const result = await tool.run({
       input: { text },
       config: ctx.getMyConfig<Record<string, unknown>>() ?? {},
       source: 'toolbar',
+      editorSnapshot,
       signal: ctx.signal,
       wantsOutput: false,
     })

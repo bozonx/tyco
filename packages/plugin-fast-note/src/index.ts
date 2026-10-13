@@ -146,7 +146,13 @@ export default function pluginIndex(): PluginDefinition {
             menu: { preferredKey: 'd' },
           },
         ],
-        run: async ({ input, config, source }): Promise<ToolResult> => {
+        run: async ({
+          input,
+          config,
+          source,
+          signal,
+          editorSnapshot,
+        }): Promise<ToolResult> => {
           const text = String(input.text ?? '').trim()
           if (!text)
             return {
@@ -160,6 +166,17 @@ export default function pluginIndex(): PluginDefinition {
           if (!baseDir) {
             return { ok: false, level: 'warn', messageKey: 'local.noNotesPath' }
           }
+
+          const fromEditor = source === 'menu' || source === 'toolbar'
+          const canClearEditor =
+            fromEditor && ctx.getMyConfig<FastNoteConfig>()?.clearInputAfterSave
+          const snapshot = canClearEditor
+            ? (editorSnapshot ?? (await ctx.getEditorInputSnapshot()))
+            : undefined
+          const sourceMatches =
+            snapshot &&
+            (snapshot.selectedText.trim() || snapshot.value.trim()) === text
+          if (signal.aborted) return { ok: false, cancelled: true }
 
           const effective = getEffectiveConfig(settings)
           const now = new Date()
@@ -191,12 +208,13 @@ export default function pluginIndex(): PluginDefinition {
           }
 
           // the overlay and external calls have no editor to clear or keep
-          const fromEditor = source === 'menu' || source === 'toolbar'
-          if (
-            fromEditor &&
-            ctx.getMyConfig<FastNoteConfig>()?.clearInputAfterSave
-          ) {
-            ctx.setEditorInputValue('')
+          if (snapshot && sourceMatches && !signal.aborted) {
+            // Saving a selection must preserve the surrounding document.
+            await ctx.applyEditorInputEdit(
+              snapshot,
+              '',
+              snapshot.selectedText.trim() ? 'selection' : 'document'
+            )
           }
           return {
             ok: true,

@@ -28,6 +28,15 @@ function setup() {
 }
 
 describe('editor actions', () => {
+  it('captures an action source before it can move to an identical selection', async () => {
+    const { editor, actions } = setup()
+    editor.setValue('old old')
+    editor.setSelection('old', 0, 3)
+    await actions.doAction({ action: async () => {} })
+    editor.setSelection('old', 4, 7)
+    expect(editor.applyResult('new', 'old')).toBe(false)
+    expect(editor.value).toBe('old old')
+  })
   it('replaces the captured voice selection and focuses at the end of the inserted text', () => {
     const { actions, editor, openVoice, closeVoice } = setup()
     actions.voiceRecognition()

@@ -273,6 +273,27 @@
       "undo": "Undo"
     },
     "selectAll": "Select all",
+    "conflict": {
+      "title": "Review replacement of the current editor text",
+      "replace": "Replace the entire editor text"
+    },
+    "search": {
+      "title": "Find and replace (Ctrl+F / Ctrl+H)",
+      "find": "Find",
+      "replace": "Replace",
+      "next": "Next",
+      "previous": "Previous",
+      "all": "Select all matches",
+      "matchCase": "Match case",
+      "regexp": "Regular expression",
+      "wholeWord": "Whole word",
+      "replaceAll": "Replace all",
+      "close": "Close search",
+      "currentMatch": "Current match",
+      "onLine": "on line",
+      "replacedOnLine": "Replaced match on line $",
+      "replacedCount": "Replaced $ matches"
+    },
     "selectionHint": "Hint: you can select part of the text, and only the selected fragment will be changed.",
     "selectionScope": "Selection: {count} chars",
     "voiceInput": "Voice input"

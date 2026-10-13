@@ -74,6 +74,14 @@ export interface PluginDesktopFunctions {
     result: string
   }
 }
+/** A serializable editor state used for conditional, atomic edits. */
+export interface EditorInputSnapshot {
+  value: string
+  selectedText: string
+  selectionStart: number
+  selectionEnd: number
+  revision: number
+}
 export interface PluginContext {
   readonly signal: AbortSignal
   onDispose(cleanup: () => void | Promise<void>): void
@@ -85,6 +93,13 @@ export interface PluginContext {
   registerTools(tools: ToolDefinition[]): void
   getEditorInputValue(): Promise<string>
   getEditorInputSelectedText(): Promise<string>
+  getEditorInputSnapshot(): Promise<EditorInputSnapshot>
+  /** Returns false if the document or selection changed after the snapshot. */
+  applyEditorInputEdit(
+    snapshot: EditorInputSnapshot,
+    value: string,
+    scope: 'selection' | 'document'
+  ): Promise<boolean>
   setEditorInputValue(value: string): void
   replaceEditorInputSelection(value: string): void
   setEditorInputFocus(): void

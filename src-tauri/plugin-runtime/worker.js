@@ -118,6 +118,14 @@ const context = {
     check('editor')
     return rpc('getEditorInputSelectedText', [])
   },
+  getEditorInputSnapshot: () => {
+    check('editor')
+    return rpc('getEditorInputSnapshot', [])
+  },
+  applyEditorInputEdit: (snapshot, value, scope) => {
+    check('editor')
+    return rpc('applyEditorInputEdit', [snapshot, value, scope])
+  },
   callApiFunction: (name, args) => {
     check()
     return rpc('callApiFunction', [name, args])

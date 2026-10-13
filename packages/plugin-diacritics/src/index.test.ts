@@ -61,3 +61,31 @@ describe('diacritics plugin', () => {
     expect(mocks.replaceEditorInputSelection).not.toHaveBeenCalled()
   })
 })
+
+describe('diacritics editor conflicts', () => {
+  it('does not replace a changed editor selection after reading a snapshot', async () => {
+    const { ctx, mocks, toolbarItems } = createPluginTestContext({
+      value: 'a b',
+      selectedText: 'a',
+    })
+    diacritics().init(ctx)
+    const pending = toolbarItems[0].action()
+    ctx.replaceEditorInputSelection('b')
+    mocks.replaceEditorInputSelection.mockClear()
+    await pending
+    expect(await ctx.getEditorInputValue()).toBe('b b')
+    expect(mocks.replaceEditorInputSelection).not.toHaveBeenCalled()
+    expect(mocks.setEditorInputFocus).not.toHaveBeenCalled()
+    expect(mocks.toast).toHaveBeenCalledWith('toast.textTransformStale', 'warn')
+  })
+
+  it('treats whitespace-only selections as empty', async () => {
+    const { ctx, mocks, toolbarItems } = createPluginTestContext({
+      selectedText: ' \n ',
+    })
+    diacritics().init(ctx)
+    await toolbarItems[0].action()
+    expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
+    expect(mocks.toast).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
+  })
+})

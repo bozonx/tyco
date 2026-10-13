@@ -20,6 +20,24 @@ const apply = (
 }
 
 describe('toggleInlineMark', () => {
+  it('removes code marks around nested emphasis without altering its markers', () => {
+    const state = stateWith('`**text**`', 0, 10)
+    expect(apply(state, toggleInlineMark(state, '`')).doc).toBe('**text**')
+  })
+  it('adds and removes italic inside bold without stripping bold', () => {
+    const bold = stateWith('**text**', 2, 6)
+    const both = bold.update(toggleInlineMark(bold, '*')).state
+    expect(both.doc.toString()).toBe('***text***')
+    expect(both.update(toggleInlineMark(both, '*')).state.doc.toString()).toBe(
+      '**text**'
+    )
+  })
+
+  it('wraps an entire bold expression in italic instead of unwrapping bold', () => {
+    const state = stateWith('**text**', 0, 8)
+    expect(apply(state, toggleInlineMark(state, '*')).doc).toBe('***text***')
+  })
+
   it('wraps the selection and keeps it selected', () => {
     const state = stateWith('make it bold', 8, 12)
     expect(apply(state, toggleInlineMark(state, '**'))).toMatchObject({
@@ -49,6 +67,19 @@ describe('toggleInlineMark', () => {
 })
 
 describe('toggleLinePrefix', () => {
+  it('excludes the next line when the selection ends at its start', () => {
+    const state = stateWith('one\ntwo', 0, 4)
+    expect(
+      state.update(toggleLinePrefix(state, '- ')).state.doc.toString()
+    ).toBe('- one\ntwo')
+  })
+
+  it('formats a collapsed cursor at the start of its own line', () => {
+    const state = stateWith('one\ntwo', 4)
+    expect(
+      state.update(toggleLinePrefix(state, '# ')).state.doc.toString()
+    ).toBe('one\n# two')
+  })
   it('sets, replaces and removes the prefix of every selected line', () => {
     const plain = stateWith('one\ntwo', 0, 7)
     const listed = plain.update(toggleLinePrefix(plain, '- ')).state

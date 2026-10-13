@@ -142,6 +142,14 @@ Plugins can call browser and note services only when they declare the correspond
 must stay typed, narrow and independent of internal stores. Add a host adapter and
 SDK contract when a genuinely reusable capability is needed.
 
+For delayed editor mutations, use `getEditorInputSnapshot()` followed by
+`applyEditorInputEdit(snapshot, text, 'selection' | 'document')`. The host compares
+the document, selection and revision atomically and returns `false` on a conflict;
+do not retry with an unconditional setter. Revisions also detect changes that were
+subsequently undone. Toolbar tools receive the same snapshot used to capture their
+input in `ToolCall.editorSnapshot`. FastNote clears only the saved selection when
+there is one, and preserves subsequent edits while the file is being written.
+
 The `notes` capability does not grant arbitrary filesystem writes. Declare a text
 setting with an empty default and name it using `notesDirectoryField` (the legacy
 default is `pathToNotes`). The user must save a directory in that setting or in an

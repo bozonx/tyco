@@ -1,4 +1,5 @@
 import type { InputConfigItem } from './config.js'
+import type { EditorInputSnapshot } from './plugin.js'
 
 export type CommandRunSource =
   'menu' | 'toolbar' | 'launcher' | 'external' | 'chat' | 'selection'
@@ -69,6 +70,8 @@ export interface ToolCall {
   config: Record<string, unknown>
   /** Where the call came from */
   source: CommandRunSource
+  /** Present when the toolbar captured the input from the editor. */
+  editorSnapshot?: EditorInputSnapshot
   signal: AbortSignal
   command?: ToolCallCommand
   /** The output is used: it is not enough to start a long script and leave */

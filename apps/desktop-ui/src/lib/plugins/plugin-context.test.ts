@@ -24,6 +24,14 @@ function setup(
     registerTools: vi.fn(),
     getEditorInputValue: vi.fn(() => 'text'),
     getEditorInputSelectedText: vi.fn(() => 'selection'),
+    getEditorInputSnapshot: vi.fn(() => ({
+      value: 'text',
+      selectedText: '',
+      selectionStart: 0,
+      selectionEnd: 0,
+      revision: 0,
+    })),
+    applyEditorInputEdit: vi.fn(() => true),
     setEditorInputValue: vi.fn(),
     replaceEditorInputSelection: vi.fn(),
     setEditorInputFocus: vi.fn(),
@@ -218,4 +226,59 @@ it('rejects tool presets that would manufacture a saved notes grant', () => {
       },
     ])
   ).toThrow('cannot grant notes access')
+})
+
+describe('conditional plugin editor boundary', () => {
+  it('requires editor capability for snapshots and conditional writes', async () => {
+    const { context, deps } = setup([])
+    await expect(context.getEditorInputSnapshot()).rejects.toThrow(
+      'requires editor'
+    )
+    await expect(
+      context.applyEditorInputEdit(
+        {
+          value: '',
+          selectedText: '',
+          selectionStart: 0,
+          selectionEnd: 0,
+          revision: 0,
+        },
+        '',
+        'document'
+      )
+    ).rejects.toThrow('requires editor')
+    expect(deps.getEditorInputSnapshot).not.toHaveBeenCalled()
+    expect(deps.applyEditorInputEdit).not.toHaveBeenCalled()
+  })
+
+  it('passes conditional writes to the host and returns conflicts', async () => {
+    const { context, deps } = setup()
+    const snapshot = await context.getEditorInputSnapshot()
+    vi.mocked(deps.applyEditorInputEdit).mockReturnValue(false)
+    expect(
+      await context.applyEditorInputEdit(snapshot, 'new', 'document')
+    ).toBe(false)
+    expect(deps.applyEditorInputEdit).toHaveBeenCalledWith(
+      snapshot,
+      'new',
+      'document'
+    )
+  })
+
+  it('rejects malformed ranges and disposed conditional writes', async () => {
+    const { context, deps, controller } = setup()
+    const snapshot = await context.getEditorInputSnapshot()
+    await expect(
+      context.applyEditorInputEdit(
+        { ...snapshot, selectionEnd: 99 },
+        '',
+        'selection'
+      )
+    ).rejects.toThrow('Invalid conditional editor edit')
+    controller.abort()
+    await expect(
+      context.applyEditorInputEdit(snapshot, '', 'document')
+    ).rejects.toThrow('disposed')
+    expect(deps.applyEditorInputEdit).not.toHaveBeenCalled()
+  })
 })

@@ -21,6 +21,14 @@
               showMarkup ? 'mdi:language-markdown-outline' : 'mdi:format-text'
             "
           />
+          <IconButton
+            size="sm"
+            variant="ghost"
+            :label="t('editor.search.title')"
+            :title="t('editor.search.title')"
+            icon="mdi:magnify"
+            @click="editorInputStore.openSearch"
+          />
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
           <DropdownMenu
             :label="t('editor.format')"

@@ -54,15 +54,16 @@ describe('createEditorInputStoreModel', () => {
     // the text was the source of the operation, stored as such already
   })
 
-  it('replaces a document with a foreign result', async () => {
+  it('preserves a document when a foreign result has no matching source', async () => {
     const { store } = createStore()
 
     store.setValue('Intro. hello world')
     store.setSelection('Intro.', 0, 6)
 
-    store.applyResult('Texto externo', 'external text')
+    expect(store.applyResult('Texto externo', 'external text')).toBe(false)
 
-    expect(store.value.value).toBe('Texto externo')
+    expect(store.value.value).toBe('Intro. hello world')
+    expect(store.selectedText.value).toBe('Intro.')
   })
 
   it('replaces a document with an external value', async () => {
@@ -142,11 +143,86 @@ describe('whole document replacement', () => {
       store.setValue('old document')
       store.setSelection('old', 0, 3)
       if (operation === 'replaceValue') store.replaceValue('new')
-      else store.applyResult('new', 'external source')
+      else store.applyResult('new', 'old document')
       expect(store.selectedText.value).toBe('')
       expect(store.selectionStart.value).toBe(0)
       expect(store.selectionEnd.value).toBe(0)
       expect(store.actionText()).toBe('new')
     }
   )
+})
+
+describe('conditional editor edits', () => {
+  it('applies a current selection snapshot and keeps the surrounding document', () => {
+    const { store } = createStore()
+    store.setValue('before selected after')
+    store.setSelection('selected', 7, 15)
+    expect(
+      store.applySnapshotEdit(store.getSnapshot(), 'new', 'selection')
+    ).toBe(true)
+    expect(store.value.value).toBe('before new after')
+  })
+
+  it.each(['document', 'selection', 'undo'] as const)(
+    'rejects snapshots after %s changes',
+    (change) => {
+      const { store } = createStore()
+      store.setValue('old old')
+      store.setSelection('old', 0, 3)
+      const snapshot = store.getSnapshot()
+      if (change === 'selection') store.setSelection('old', 4, 7)
+      else {
+        store.setValue('edited')
+        if (change === 'undo') store.setValue('old old')
+      }
+      const current = store.getSnapshot()
+      expect(store.applySnapshotEdit(snapshot, 'new', 'selection')).toBe(false)
+      expect(store.getSnapshot()).toEqual(current)
+    }
+  )
+
+  it('clears a current document snapshot and drops its selection', () => {
+    const { store } = createStore()
+    store.setValue('saved text')
+    expect(store.applySnapshotEdit(store.getSnapshot(), '', 'document')).toBe(
+      true
+    )
+    expect(store.value.value).toBe('')
+    expect(store.selectedText.value).toBe('')
+  })
+
+  it('rejects an AI result after a captured selection moves to identical text', () => {
+    const { store } = createStore()
+    store.setValue('old old')
+    store.setSelection('old', 0, 3)
+    store.captureResultSource('old')
+    store.setSelection('old', 4, 7)
+    expect(store.applyResult('new', 'old')).toBe(false)
+    expect(store.value.value).toBe('old old')
+  })
+
+  it('does not replace the document after the original selection is cleared', () => {
+    const { store } = createStore()
+    store.setValue('before old after')
+    store.setSelection('old', 7, 10)
+    store.captureResultSource('old')
+    store.setSelection('', 0, 0)
+    expect(store.applyResult('new', 'old')).toBe(false)
+    expect(store.value.value).toBe('before old after')
+  })
+
+  it('retains edits made while a whole document AI result was pending', () => {
+    const { store } = createStore()
+    store.setValue('original')
+    store.captureResultSource('original')
+    store.setValue('original plus new text')
+    expect(store.applyResult('replacement', 'original')).toBe(false)
+    expect(store.value.value).toBe('original plus new text')
+  })
+
+  it('accepts a foreign result into an empty editor', () => {
+    const { store } = createStore()
+    expect(store.applyResult('external result', 'external source')).toBe(true)
+    expect(store.value.value).toBe('external result')
+  })
 })

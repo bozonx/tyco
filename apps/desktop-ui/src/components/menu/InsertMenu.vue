@@ -118,7 +118,11 @@ const applyToEditorAction: ActionItem = {
   labelKey: 'menu.replaceInEditor',
   icon: 'mdi:pencil-outline',
   action: async (text: string) => {
-    routeParamsStore.applyEditorTransfer(text, props.originalText ?? '')
+    if (
+      routeParamsStore.applyEditorTransfer(text, props.originalText ?? '') ===
+      false
+    )
+      return
     menuModalsStore.closeAll()
     editorInputStore.focus()
   },

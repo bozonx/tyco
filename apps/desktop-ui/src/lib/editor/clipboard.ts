@@ -3,7 +3,7 @@ import type { EditorView } from '@codemirror/view'
 import { htmlToMarkdown, isCodeEditorHtml } from './html-to-markdown'
 import { insertFormattedText, insertPastedText } from './paste'
 
-/** Есть ли в документе что копировать */
+/** Whether there is text to copy. */
 const hasSelection = (view: EditorView): boolean => {
   const { from, to } = view.state.selection.main
 
@@ -24,19 +24,32 @@ export const copySelection = async (view: EditorView): Promise<void> => {
 
 export const cutSelection = async (view: EditorView): Promise<void> => {
   if (!hasSelection(view)) return
-
+  const before = view.state
+  const { from, to } = before.selection.main
   await navigator.clipboard.writeText(selectedText(view))
-
-  const { from, to } = view.state.selection.main
+  assertClipboardTarget(view, before)
 
   view.dispatch({ changes: { from, to, insert: '' }, scrollIntoView: true })
   view.focus()
 }
 
-/**
- * Прочитать буфер обмена. Возвращает HTML, если он там есть — из него получится
- * Markdown; иначе только текст
- */
+export class StaleClipboardError extends Error {}
+
+/** Do not apply a delayed clipboard operation to a different document or range. */
+const assertClipboardTarget = (
+  view: EditorView,
+  before: EditorView['state']
+): void => {
+  if (
+    !view.dom.isConnected ||
+    view.state.doc !== before.doc ||
+    !view.state.selection.eq(before.selection)
+  ) {
+    throw new StaleClipboardError('Clipboard target changed')
+  }
+}
+
+/** Read HTML for Markdown conversion when available, otherwise plain text. */
 const readClipboard = async (): Promise<{ html: string; plain: string }> => {
   const read = navigator.clipboard.read?.bind(navigator.clipboard)
 
@@ -56,19 +69,21 @@ const readClipboard = async (): Promise<{ html: string; plain: string }> => {
         if (plain) return { html: '', plain }
       }
     } catch {
-      // нет прав на чтение произвольных типов — падаем на readText ниже
+      // Reading arbitrary types may be denied; try plain text below.
     }
   }
 
   return { html: '', plain: await navigator.clipboard.readText() }
 }
 
-/** Вставка из пункта меню: то же преобразование в Markdown, что и у Ctrl+V */
+/** Menu paste uses the same Markdown conversion as the native paste event. */
 export const pasteFromClipboard = async (
   view: EditorView,
   settings?: unknown
 ): Promise<void> => {
+  const before = view.state
   const { html, plain } = await readClipboard()
+  assertClipboardTarget(view, before)
   const markdown =
     html.trim() && !isCodeEditorHtml(html) ? htmlToMarkdown(html, settings) : ''
 
@@ -83,11 +98,13 @@ export const pasteFromClipboard = async (
   view.focus()
 }
 
-/** Вставка «как текст» — всегда `text/plain` */
+/** Paste as plain text only. */
 export const pastePlainFromClipboard = async (
   view: EditorView
 ): Promise<void> => {
+  const before = view.state
   const text = await navigator.clipboard.readText()
+  assertClipboardTarget(view, before)
 
   if (!text) return
 

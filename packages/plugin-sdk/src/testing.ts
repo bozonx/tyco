@@ -2,6 +2,7 @@ import { vi, type Mock } from 'vitest'
 
 import type {
   ActionItem,
+  EditorInputSnapshot,
   PluginContext,
   ToolbarItem,
   ToolDefinition,
@@ -14,7 +15,7 @@ export interface PluginTestContextOptions {
   apiResult?: { success: boolean; error?: string }
 }
 
-/** Builds a plugin context whose editor text and settings are fixed. */
+/** Builds a mutable editor context for plugin behavior and conflict tests. */
 export function createPluginTestContext(
   options: PluginTestContextOptions = {}
 ): {
@@ -25,6 +26,9 @@ export function createPluginTestContext(
 } {
   const toolbarItems: ToolbarItem[] = []
   const tools: ToolDefinition[] = []
+  let value = options.value ?? options.selectedText ?? ''
+  let selectedText = options.selectedText ?? ''
+  let revision = 0
 
   const ctx = {
     signal: new AbortController().signal,
@@ -42,11 +46,44 @@ export function createPluginTestContext(
     registerTools: vi.fn((items: ToolDefinition[]) => {
       tools.push(...items)
     }),
-    getEditorInputValue: vi.fn(() => options.value ?? ''),
-    getEditorInputSelectedText: vi.fn(() => options.selectedText ?? ''),
-    setEditorInputValue: vi.fn(),
-    replaceEditorInputSelection: vi.fn(),
+    getEditorInputValue: vi.fn(async () => value),
+    getEditorInputSelectedText: vi.fn(async () => selectedText),
+    getEditorInputSnapshot: vi.fn(async () => ({
+      value,
+      selectedText,
+      selectionStart: 0,
+      selectionEnd: selectedText.length,
+      revision,
+    })),
+    applyEditorInputEdit: vi.fn(
+      async (
+        snapshot: EditorInputSnapshot,
+        text: string,
+        scope: 'selection' | 'document'
+      ) => {
+        if (
+          snapshot.revision !== revision ||
+          snapshot.value !== value ||
+          snapshot.selectedText !== selectedText
+        )
+          return false
+        if (scope === 'selection') ctx.replaceEditorInputSelection(text)
+        else ctx.setEditorInputValue(text)
+        return true
+      }
+    ),
+    setEditorInputValue: vi.fn((text: string) => {
+      value = text
+      selectedText = ''
+      revision++
+    }),
+    replaceEditorInputSelection: vi.fn((text: string) => {
+      value = text + value.slice(selectedText.length)
+      selectedText = text
+      revision++
+    }),
     setEditorInputFocus: vi.fn(),
+    toEditor: vi.fn(),
     toast: vi.fn(),
     callApiFunction: vi.fn(async () => options.apiResult ?? { success: true }),
     getMyConfig: vi.fn(() => options.config),

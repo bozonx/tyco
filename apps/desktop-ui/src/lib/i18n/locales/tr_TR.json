@@ -273,6 +273,27 @@
       "undo": "Geri al"
     },
     "selectAll": "Tümünü seç",
+    "conflict": {
+      "title": "Geçerli düzenleyici metninin değiştirilmesini inceleyin",
+      "replace": "Düzenleyicideki tüm metni değiştir"
+    },
+    "search": {
+      "title": "Bul ve değiştir (Ctrl+F / Ctrl+H)",
+      "find": "Bul",
+      "replace": "Değiştir",
+      "next": "Sonraki",
+      "previous": "Önceki",
+      "all": "Tüm eşleşmeleri seç",
+      "matchCase": "Büyük/küçük harf duyarlı",
+      "regexp": "Düzenli ifade",
+      "wholeWord": "Tam sözcük",
+      "replaceAll": "Tümünü değiştir",
+      "close": "Aramayı kapat",
+      "currentMatch": "Geçerli eşleşme",
+      "onLine": "satırda",
+      "replacedOnLine": "$ satırındaki eşleşme değiştirildi",
+      "replacedCount": "$ eşleşme değiştirildi"
+    },
     "selectionHint": "İpucu: metnin bir kısmını seçebilir ve sadece seçilen bölümü değiştirebilirsin.",
     "selectionScope": "Seçim: {count} karakter",
     "voiceInput": "Ses girişi"

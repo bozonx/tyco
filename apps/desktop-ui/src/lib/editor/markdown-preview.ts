@@ -1,4 +1,5 @@
-import { syntaxHighlighting, syntaxTree } from '@codemirror/language'
+import { syntaxTree } from '@codemirror/language'
+import { searchPanelOpen } from '@codemirror/search'
 import type { EditorState, Extension, Range } from '@codemirror/state'
 import { Compartment, StateEffect, StateField } from '@codemirror/state'
 import type { DecorationSet } from '@codemirror/view'
@@ -9,7 +10,6 @@ import {
   MarkerWidget,
   PreviewWidget,
 } from './preview-widget'
-import { editorHighlightStyle } from './theme'
 
 /** A span of the document hidden while the caret is elsewhere */
 export interface HiddenRange {
@@ -312,7 +312,7 @@ const previewField = StateField.define<{
 }>({
   create: (state) => ({
     focused: false,
-    decorations: previewDecorations(state, false),
+    decorations: previewDecorations(state, searchPanelOpen(state)),
   }),
   update(value, transaction) {
     let focused = value.focused
@@ -323,11 +323,18 @@ const previewField = StateField.define<{
       transaction.docChanged ||
       transaction.selection ||
       focused !== value.focused ||
+      searchPanelOpen(transaction.startState) !==
+        searchPanelOpen(transaction.state) ||
       syntaxTree(transaction.startState) !== syntaxTree(transaction.state)
     ) {
       return {
         focused,
-        decorations: previewDecorations(transaction.state, focused),
+        // Search may select hidden markup (such as a link URL) while its panel
+        // holds focus. Reveal that line so the current match remains visible.
+        decorations: previewDecorations(
+          transaction.state,
+          focused || searchPanelOpen(transaction.state)
+        ),
       }
     }
     return value
@@ -416,6 +423,12 @@ const formattedAppearance = EditorView.theme({
     color: 'var(--color-base-content)',
   },
   '.cm-preview-code-copy.copied': { color: 'var(--color-success)' },
+  '.cm-preview-copy-status': {
+    fontSize: '0.75rem',
+    color: 'var(--app-text-muted)',
+    marginLeft: '0.35em',
+    maxWidth: '16rem',
+  },
   '.cm-preview-code-block': {
     fontFamily: 'var(--font-mono)',
     background: 'var(--app-surface-raised)',
@@ -485,7 +498,6 @@ const previewExtensions = (enabled: boolean): Extension =>
           previewFocus.of(focused)
         ),
         formattedAppearance,
-        syntaxHighlighting(editorHighlightStyle),
         EditorView.atomicRanges.of((view) =>
           view.state
             .field(previewField)

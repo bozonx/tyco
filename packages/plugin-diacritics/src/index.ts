@@ -51,13 +51,17 @@ async function executeTransform(
   ctx: PluginContext,
   transform: (text: string) => string
 ): Promise<void> {
-  const selected = await ctx.getEditorInputSelectedText()
-  if (!selected) {
+  const snapshot = await ctx.getEditorInputSnapshot()
+  const selected = snapshot.selectedText
+  if (!selected.trim()) {
     ctx.toast('toast.textNotSelected', 'warn')
     return
   }
   const result = transform(selected)
-  ctx.replaceEditorInputSelection(result)
+  if (!(await ctx.applyEditorInputEdit(snapshot, result, 'selection'))) {
+    ctx.toast('toast.textTransformStale', 'warn')
+    return
+  }
   ctx.setEditorInputFocus()
 }
 

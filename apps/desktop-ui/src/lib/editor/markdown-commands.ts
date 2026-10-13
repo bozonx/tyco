@@ -22,8 +22,21 @@ export const toggleInlineMark = (
   const { from, to } = state.selection.main
   const size = mark.length
   const text = state.sliceDoc(from, to)
+  // A pair of stars is strong emphasis, not two independent italic markers.
+  const canRemove = (left: string, right: string): boolean => {
+    if (mark !== '*') return left.endsWith(mark) && right.startsWith(mark)
+    const leftCount = left.match(/\*+$/)?.[0].length ?? 0
+    const rightCount = right.match(/^\*+/)?.[0].length ?? 0
+    return leftCount % 2 === 1 && rightCount % 2 === 1
+  }
 
-  if (text.length >= size * 2 && text.startsWith(mark) && text.endsWith(mark)) {
+  if (
+    text.length >= size * 2 &&
+    text.startsWith(mark) &&
+    text.endsWith(mark) &&
+    (mark !== '*' ||
+      canRemove(text.match(/^\*+/)?.[0] ?? '', text.match(/\*+$/)?.[0] ?? ''))
+  ) {
     const inner = text.slice(size, -size)
     return {
       changes: { from, to, insert: inner },
@@ -31,10 +44,10 @@ export const toggleInlineMark = (
     }
   }
 
-  const before = state.sliceDoc(from - size, from)
-  const after = state.sliceDoc(to, to + size)
+  const before = state.sliceDoc(0, from)
+  const after = state.sliceDoc(to)
 
-  if (from !== to && before === mark && after === mark) {
+  if (from !== to && canRemove(before, after)) {
     return {
       changes: [
         { from: from - size, to: from, insert: '' },
@@ -63,7 +76,9 @@ export const toggleLinePrefix = (
 ): TransactionSpec => {
   const { from, to } = state.selection.main
   const first = state.doc.lineAt(from).number
-  const last = state.doc.lineAt(to).number
+  const last = state.doc.lineAt(
+    to > from && state.doc.lineAt(to).from === to ? to - 1 : to
+  ).number
   const lines = Array.from({ length: last - first + 1 }, (_, index) =>
     state.doc.line(first + index)
   )

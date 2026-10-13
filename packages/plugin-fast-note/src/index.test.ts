@@ -173,6 +173,7 @@ describe('FastNote plugin', () => {
 
   it('clears the editor only for a call from the editor', async () => {
     const { mocks, tools } = setup({
+      value: ' menu text ',
       config: { pathToNotes: '/notes', clearInputAfterSave: true },
     })
     const call = (source: 'menu' | 'launcher') =>
@@ -193,5 +194,77 @@ describe('FastNote plugin', () => {
       expect.any(String),
       'menu text\n',
     ])
+  })
+})
+
+describe('FastNote editor conflicts', () => {
+  it('preserves text edited while saving a previous note', async () => {
+    const { ctx, mocks, toolbarItems } = setup({
+      value: 'original note',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+    })
+    let finish!: () => void
+    let started!: () => void
+    const saving = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    mocks.callApiFunction.mockImplementation(() => {
+      started()
+      return new Promise((resolve) => {
+        finish = () => resolve({ success: true })
+      })
+    })
+    const pending = toolbarItems[0].action()
+    await saving
+    ctx.setEditorInputValue('new unsaved text')
+    mocks.setEditorInputValue.mockClear()
+    finish()
+    await pending
+    expect(await ctx.getEditorInputValue()).toBe('new unsaved text')
+    expect(mocks.setEditorInputValue).not.toHaveBeenCalled()
+    expect(mocks.toast).toHaveBeenCalledWith('local.noteSaved', 'success')
+  })
+
+  it('removes only a saved selection and preserves the rest of the editor', async () => {
+    const { ctx, mocks, toolbarItems } = setup({
+      value: 'selected surrounding text',
+      selectedText: 'selected',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+    })
+    await toolbarItems[0].action()
+    expect(mocks.applyEditorInputEdit).toHaveBeenCalledWith(
+      expect.objectContaining({ selectedText: 'selected' }),
+      '',
+      'selection'
+    )
+    expect(await ctx.getEditorInputValue()).toBe(' surrounding text')
+    expect(mocks.setEditorInputValue).not.toHaveBeenCalled()
+  })
+
+  it('does not clear the editor when menu input belongs to another source', async () => {
+    const { ctx, mocks, tools } = setup({
+      value: 'new unsaved text',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+    })
+    await tools[0].run({
+      input: { text: 'earlier menu input' },
+      config: { pathToNotes: '/notes' },
+      source: 'menu',
+      signal: new AbortController().signal,
+      wantsOutput: false,
+    })
+    expect(await ctx.getEditorInputValue()).toBe('new unsaved text')
+    expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
+  })
+
+  it('does not clear the editor after a failed save', async () => {
+    const { ctx, mocks, toolbarItems } = setup({
+      value: 'original note',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+      apiResult: { success: false },
+    })
+    await toolbarItems[0].action()
+    expect(await ctx.getEditorInputValue()).toBe('original note')
+    expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
   })
 })

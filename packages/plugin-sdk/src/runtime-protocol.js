@@ -137,5 +137,7 @@ export const PLUGIN_HOST_METHODS = Object.freeze([
   ...PLUGIN_EFFECT_METHODS,
   'getEditorInputValue',
   'getEditorInputSelectedText',
+  'getEditorInputSnapshot',
+  'applyEditorInputEdit',
   'callApiFunction',
 ])

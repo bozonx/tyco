@@ -1,4 +1,5 @@
-import { computed, ref } from 'vue'
+import type { EditorInputSnapshot } from '@tyco/plugin-sdk'
+import { computed, ref, watch } from 'vue'
 
 import type { EditSource } from '../editor/edit-source'
 
@@ -6,10 +7,37 @@ export function createEditorInputStoreModel() {
   const value = ref<string>('')
   const focusCount = ref<number>(0)
   const selectAllCount = ref<number>(0)
+  const searchCount = ref<number>(0)
   const selectedText = ref<string>('')
   const selectionStart = ref<number>(0)
   const selectionEnd = ref<number>(0)
   const lastEditSource = ref<EditSource>('plain')
+  let revision = 0
+  const resultSources = new Map<string, EditorInputSnapshot>()
+  // Track intermediate edits too, including changes that are later undone.
+  watch([value, selectedText, selectionStart, selectionEnd], () => revision++, {
+    flush: 'sync',
+  })
+  const getSnapshot = (): EditorInputSnapshot => ({
+    value: value.value,
+    selectedText: selectedText.value,
+    selectionStart: selectionStart.value,
+    selectionEnd: selectionEnd.value,
+    revision,
+  })
+  const isSnapshotCurrent = (snapshot: EditorInputSnapshot): boolean =>
+    snapshot.revision === revision &&
+    snapshot.value === value.value &&
+    snapshot.selectedText === selectedText.value &&
+    snapshot.selectionStart === selectionStart.value &&
+    snapshot.selectionEnd === selectionEnd.value
+
+  /** Remember the exact source before opening an editor action's result flow. */
+  const captureResultSource = (sourceText: string): void => {
+    if (resultSources.size >= 16)
+      resultSources.delete(resultSources.keys().next().value!)
+    resultSources.set(sourceText.trim(), getSnapshot())
+  }
 
   /** A selection of whitespace only does not count: actions take the whole text */
   const hasSelection = computed(() => selectedText.value.trim() !== '')
@@ -50,30 +78,49 @@ export function createEditorInputStoreModel() {
     setSelection(newText, selectionStart.value, newEnd)
   }
 
+  const applySnapshotEdit = (
+    snapshot: EditorInputSnapshot,
+    text: string,
+    scope: 'selection' | 'document',
+    source: EditSource = 'ai'
+  ): boolean => {
+    if (!isSnapshotCurrent(snapshot)) return false
+    if (scope === 'selection') replaceSelection(text, source)
+    else replaceValue(text, source)
+    return true
+  }
+
   /**
    * Puts the result of a transformation of `sourceText` into the editor. When
    * the source is the current selection (the action was started on it), only
-   * the selection is replaced and its surrounding whitespace is kept; otherwise
-   * the source came from elsewhere and the result replaces the whole document
+   * the selection is replaced and its surrounding whitespace is kept. Whole
+   * document results require a matching source or an empty destination.
+   * Conflicts leave the editor untouched and the result available for review.
    */
   const applyResult = (
     result: string,
     sourceText: string,
     source: EditSource = 'ai'
-  ): void => {
+  ): boolean => {
     const selected = selectedText.value
     const trimmedSource = sourceText.trim()
+    const snapshot = resultSources.get(trimmedSource)
+    if (snapshot && !isSnapshotCurrent(snapshot)) return false
 
     if (!selected.trim() || selected.trim() !== trimmedSource) {
-      setValue(result, source)
-      setSelection('', 0, 0)
-      return
+      if (value.value.trim() && value.value.trim() !== trimmedSource)
+        return false
+      replaceValue(result, source)
+      resultSources.delete(trimmedSource)
+      return true
     }
 
     const leading = selected.match(/^\s*/)?.[0] ?? ''
     const trailing = selected.match(/\s*$/)?.[0] ?? ''
 
     replaceSelection(leading + result.trim() + trailing, source)
+    resultSources.delete(trimmedSource)
+    return true
   }
 
   const clear = (): void => {
@@ -92,6 +139,10 @@ export function createEditorInputStoreModel() {
     selectAllCount.value++
   }
 
+  const openSearch = (): void => {
+    searchCount.value++
+  }
+
   const setSelection = (text: string, start: number, end: number): void => {
     selectedText.value = text
     selectionStart.value = start
@@ -102,6 +153,7 @@ export function createEditorInputStoreModel() {
     value,
     focusCount,
     selectAllCount,
+    searchCount,
     selectedText,
     selectionStart,
     selectionEnd,
@@ -115,6 +167,10 @@ export function createEditorInputStoreModel() {
     setSelection,
     replaceSelection,
     applyResult,
+    getSnapshot,
+    applySnapshotEdit,
+    captureResultSource,
+    openSearch,
     clear,
   }
 }

@@ -39,6 +39,15 @@ async function session(id = 'RuntimeProbe') {
         data.method === 'getEditorInputSelectedText'
       )
         result = 'hello'
+      else if (data.method === 'getEditorInputSnapshot')
+        result = {
+          value: 'hello',
+          selectedText: 'hello',
+          selectionStart: 0,
+          selectionEnd: 5,
+          revision: 0,
+        }
+      else if (data.method === 'applyEditorInputEdit') result = true
       else if (data.method === 'callApiFunction')
         result = { success: true, result: '/vault/note.md' }
       channel.port1.postMessage({ type: 'host-result', id: data.id, result })

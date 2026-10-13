@@ -151,7 +151,7 @@ describe('Editor.vue toolbar', () => {
       leftColumn
         .findAll('.btn-stub:not(.view-mode-toggle)')
         .map((btn) => btn.attributes('title'))
-    ).toEqual(['tool.left'])
+    ).toEqual(['editor.search.title', 'tool.left'])
     expect(
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
     ).toEqual([

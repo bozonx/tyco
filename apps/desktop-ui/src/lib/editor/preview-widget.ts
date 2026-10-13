@@ -108,9 +108,13 @@ export class CodeBlockHeaderWidget extends WidgetType {
     const copyBtn = view.dom.ownerDocument.createElement('button')
     copyBtn.type = 'button'
     copyBtn.className = 'cm-preview-code-copy'
-    copyBtn.title = 'Copy code'
-    copyBtn.setAttribute('aria-label', 'Copy code')
+    copyBtn.title = view.state.phrase('Copy code')
+    copyBtn.setAttribute('aria-label', view.state.phrase('Copy code'))
     copyBtn.innerHTML = COPY_ICON_SVG
+    const status = view.dom.ownerDocument.createElement('span')
+    status.className = 'cm-preview-copy-status'
+    status.setAttribute('role', 'status')
+    let feedbackTimer: ReturnType<typeof setTimeout> | undefined
 
     copyBtn.addEventListener('mousedown', (event) => {
       event.preventDefault()
@@ -120,22 +124,33 @@ export class CodeBlockHeaderWidget extends WidgetType {
     copyBtn.addEventListener('click', async (event) => {
       event.preventDefault()
       event.stopPropagation()
+      clearTimeout(feedbackTimer)
+      copyBtn.disabled = true
+      copyBtn.innerHTML = COPY_ICON_SVG
+      copyBtn.classList.remove('copied')
+      status.textContent = ''
       try {
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(this.code)
-        }
+        if (!navigator.clipboard?.writeText)
+          throw new Error('Clipboard is not available')
+        await navigator.clipboard.writeText(this.code)
+        if (!copyBtn.isConnected) return
         copyBtn.innerHTML = CHECK_ICON_SVG
         copyBtn.classList.add('copied')
-        setTimeout(() => {
+        status.textContent = view.state.phrase('Copied')
+        feedbackTimer = setTimeout(() => {
           copyBtn.innerHTML = COPY_ICON_SVG
           copyBtn.classList.remove('copied')
+          status.textContent = ''
         }, 1500)
       } catch {
-        // clipboard unavailable
+        status.textContent = view.state.phrase('Clipboard is not available')
+      } finally {
+        copyBtn.disabled = false
       }
     })
 
     dom.appendChild(copyBtn)
+    dom.appendChild(status)
 
     dom.addEventListener('mousedown', (event) => {
       if (event.target === copyBtn || copyBtn.contains(event.target as Node)) {
