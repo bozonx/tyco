@@ -1,39 +1,18 @@
 <template>
-  <SegmentedControl
+  <ResultViewModeToggle
     :value="value"
     :label="t('menu.compareResult')"
-    :options="options"
-    compact
-    hide-labels-on-small-screens
-    @update:value="selectMode"
+    :modes="modes"
+    @update:value="emit('update:value', $event)"
   />
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import { useI18n } from '../../composables/use-i18n'
 import type { DiffViewMode } from '../../lib/diff/diff-model'
-import SegmentedControl from './SegmentedControl.vue'
+import ResultViewModeToggle from './ResultViewModeToggle.vue'
 
-const props = defineProps<{ value: DiffViewMode }>()
+defineProps<{ value: DiffViewMode }>()
 const emit = defineEmits<{ (e: 'update:value', value: DiffViewMode): void }>()
 const { t } = useI18n()
-const options = computed<{ id: DiffViewMode; name: string; icon: string }[]>(
-  () => [
-    {
-      id: 'unified',
-      name: t('diff.modeUnified'),
-      icon: 'mdi:view-agenda-outline',
-    },
-    { id: 'split', name: t('diff.modeSplit'), icon: 'mdi:view-split-vertical' },
-    {
-      id: 'result',
-      name: t('diff.modeResult'),
-      icon: 'mdi:file-document-outline',
-    },
-  ]
-)
-function selectMode(mode: DiffViewMode) {
-  if (props.value !== mode) emit('update:value', mode)
-}
+const modes: DiffViewMode[] = ['unified', 'split', 'result']
 </script>

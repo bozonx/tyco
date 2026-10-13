@@ -73,6 +73,7 @@ import {
   type CommandTestResult,
   runCommandTest,
 } from '../../lib/commands/command-test-run'
+import { createScriptActionClient } from '../../lib/custom-actions/script-action-client'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
@@ -118,21 +119,7 @@ async function run() {
       text.value,
       toolsStore,
       {
-        executeScriptAction: async (request) => {
-          const res = await ipcStore.callFunction('executeScriptAction', [
-            request,
-          ])
-          if (!res.success || !res.result) {
-            throw new Error(res.error ?? 'Empty response')
-          }
-          return res.result
-        },
-        cancelScriptAction: async (runId) => {
-          const result = await ipcStore.callFunction('cancelScriptAction', [
-            runId,
-          ])
-          return result.success && result.result === true
-        },
+        ...createScriptActionClient(ipcStore.callFunction),
         newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
       },
       current.signal

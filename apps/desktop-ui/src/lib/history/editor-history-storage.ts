@@ -1,3 +1,5 @@
+import { historyRetentionChoices } from './history-retention'
+
 import {
   DEFAULT_USER_CONFIG,
   EDITOR_HISTORY_STORAGES,
@@ -58,13 +60,5 @@ export function normalizeEditorConfig(config: Record<string, unknown>): void {
 
 /** The offered retention periods plus the saved one if it is not among them */
 export function editorHistoryRetentionChoices(saved: unknown): number[] {
-  const days = Number(saved)
-  const choices: number[] = [...EDITOR_HISTORY_RETENTION_DAYS]
-
-  if (Number.isInteger(days) && days > 0 && !choices.includes(days)) {
-    choices.push(days)
-    choices.sort((a, b) => a - b)
-  }
-
-  return choices
+  return historyRetentionChoices(EDITOR_HISTORY_RETENTION_DAYS, saved)
 }

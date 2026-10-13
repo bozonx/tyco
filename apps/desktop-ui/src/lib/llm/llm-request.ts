@@ -1,11 +1,9 @@
 import type { ChatMessage } from '@tyco/shared'
+import { LlmError, type LlmClient, type LlmRunName } from './llm-client'
 import {
-  LlmError,
-  toLlmError,
-  type LlmClient,
-  type LlmRunName,
-} from './llm-client'
-import { formatLlmError } from './llm-errors'
+  handleLlmRequestError,
+  type LlmRequestErrorDependencies,
+} from './llm-request-error'
 import { buildLlmPrompt } from './llm-prompt'
 
 export interface AiRequestOptions {
@@ -17,13 +15,10 @@ export interface AiRequestOptions {
   models?: string[]
 }
 
-export interface LlmRequestDependencies {
+export interface LlmRequestDependencies extends LlmRequestErrorDependencies {
   client: LlmClient
   getImage: (id: string) => Promise<Uint8Array<ArrayBuffer>>
   rulePrefix: () => string
-  translate: (key: string) => string
-  logError: (message: string, error: LlmError) => void
-  notifyError: (message: string) => void
 }
 
 export function createLlmRequest(deps: LlmRequestDependencies) {
@@ -67,13 +62,12 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
         onModel: options.onModel,
       })
     } catch (error) {
-      if (options.signal?.aborted) return ''
-      const llmError = error instanceof LlmError ? error : toLlmError(error)
-      deps.logError(`LLM request "${taskName}" failed`, llmError)
-      if (options.notifyError !== false) {
-        deps.notifyError(formatLlmError(llmError, deps.translate))
-      }
-      throw llmError
+      return handleLlmRequestError(
+        error,
+        `LLM request "${taskName}" failed`,
+        options,
+        deps
+      )
     }
   }
 

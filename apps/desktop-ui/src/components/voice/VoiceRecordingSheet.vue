@@ -52,32 +52,16 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import type { LiveTranscriptState } from '../../lib/stt/live-transcript'
-import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import IconButton from '../common/IconButton.vue'
 import TextPreview from '../common/TextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
+import type { VoiceRecordingProps } from './voice-recording-props'
 import { Icon } from '@iconify/vue'
 
-defineProps<{
-  transcript: LiveTranscriptState
-  audioLevel: number
-  audioPeak: number
-  recordingDurationMs: number
-  isTranscribing: boolean
-  isFinishing: boolean
-  quickSend?: boolean
-  withNext?: boolean
-  chat?: boolean
-  prefix?: string
-  suffix?: string
-  context?: string
-  finish: (intent?: VoiceFinishIntent) => Promise<void>
-  cancel: () => Promise<void>
-}>()
+defineProps<VoiceRecordingProps>()
 const emit = defineEmits<{ (e: 'removeContext'): void }>()
 const { t } = useI18n()
 </script>

@@ -17,6 +17,7 @@ import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useChatStore } from './chat'
 import { useTextCorrectionStore } from './text-correction'
+import { createScriptActionClient } from '../lib/custom-actions/script-action-client'
 import { useIpcStore } from './ipc'
 import { useMenuModalsStore } from './menu-modals'
 
@@ -76,21 +77,7 @@ export const useToolsStore = defineStore('tools', () => {
 
   return createToolRegistry([
     ...createBuiltinTools({
-      executeScriptAction: async (request) => {
-        const res = await ipcStore.callFunction('executeScriptAction', [
-          request,
-        ])
-        if (!res.success || !res.result) {
-          throw new Error(res.error ?? 'Empty response')
-        }
-        return res.result
-      },
-      cancelScriptAction: async (runId) => {
-        const result = await ipcStore.callFunction('cancelScriptAction', [
-          runId,
-        ])
-        return result.success && result.result === true
-      },
+      ...createScriptActionClient(ipcStore.callFunction),
       executeWebhook: (target, text, signal) =>
         executeWebhook(
           target,

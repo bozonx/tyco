@@ -1,3 +1,5 @@
+import { historyRetentionChoices } from '../history/history-retention'
+
 /** Retention periods offered by the settings; 0 keeps the chats forever */
 export const CHAT_HISTORY_RETENTION_DAYS = [0, 7, 30, 90, 365] as const
 
@@ -10,13 +12,5 @@ export function isChatHistoryEnabled(
 
 /** The offered retention periods plus the saved one if it is not among them */
 export function chatHistoryRetentionChoices(saved: unknown): number[] {
-  const days = Number(saved)
-  const choices: number[] = [...CHAT_HISTORY_RETENTION_DAYS]
-
-  if (Number.isInteger(days) && days > 0 && !choices.includes(days)) {
-    choices.push(days)
-    choices.sort((a, b) => a - b)
-  }
-
-  return choices
+  return historyRetentionChoices(CHAT_HISTORY_RETENTION_DAYS, saved)
 }

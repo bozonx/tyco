@@ -30,28 +30,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { LiveTranscriptState } from '../../lib/stt/live-transcript'
-import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
+import type { VoiceRecordingProps } from './voice-recording-props'
 
-defineProps<{
-  transcript: LiveTranscriptState
-  audioLevel: number
-  audioPeak: number
-  recordingDurationMs: number
-  isTranscribing: boolean
-  isFinishing: boolean
-  quickSend?: boolean
-  withNext?: boolean
-  chat?: boolean
-  prefix?: string
-  suffix?: string
-  context?: string
-  finish: (intent?: VoiceFinishIntent) => Promise<void>
-  cancel: () => Promise<void>
-}>()
+defineProps<VoiceRecordingProps>()
 </script>
 <style scoped>
 .voice-bar {
