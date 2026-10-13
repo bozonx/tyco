@@ -86,6 +86,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Icon from '../common/AppIcon.vue'
 import TextPreview from '../common/TextPreview.vue'
 import LanguageField from './LanguageField.vue'
 import QueryPanel, {
@@ -93,7 +94,6 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
-import { Icon } from '@iconify/vue'
 
 const props = withDefaults(defineProps<TranslateMenuParams>(), {
   text: '',

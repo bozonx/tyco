@@ -110,8 +110,8 @@ import {
   type QueryOption,
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
+import Icon from '../common/AppIcon.vue'
 import KeyButton from '../common/KeyButton.vue'
-import { Icon } from '@iconify/vue'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */

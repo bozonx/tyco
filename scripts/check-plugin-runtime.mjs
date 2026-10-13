@@ -85,11 +85,18 @@ const server = createServer(async (request, response) => {
         '/runtime/index.html',
         '/runtime/frame.js',
         '/runtime/worker.js',
+        '/runtime/protocol.js',
       ].includes(path)
     ) {
       if (path.endsWith('.html')) type = 'text/html'
       body = await readFile(
-        resolve(root, 'src-tauri/plugin-runtime', path.split('/').at(-1) ?? '')
+        path === '/runtime/protocol.js'
+          ? resolve(root, 'packages/plugin-sdk/src/runtime-protocol.js')
+          : resolve(
+              root,
+              'src-tauri/plugin-runtime',
+              path.split('/').at(-1) ?? ''
+            )
       )
       response.setHeader(
         'Content-Security-Policy',

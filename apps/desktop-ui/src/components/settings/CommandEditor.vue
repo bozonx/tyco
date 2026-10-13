@@ -215,6 +215,7 @@ import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -227,7 +228,6 @@ import CommandTestRun from './CommandTestRun.vue'
 import CustomActionFields from './CustomActionFields.vue'
 import FieldIssues from './FieldIssues.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
-import { Icon } from '@iconify/vue'
 import {
   type CommandConfig,
   type CustomActionAfterRun,

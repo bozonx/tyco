@@ -56,8 +56,8 @@
 <script setup lang="ts">
 import { translate } from '../../lib/i18n'
 import { type ToastType, useToastStore } from '../../stores/toast'
+import Icon from './AppIcon.vue'
 import IconButton from './IconButton.vue'
-import { Icon } from '@iconify/vue'
 
 const toastStore = useToastStore()
 

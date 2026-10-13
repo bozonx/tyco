@@ -42,6 +42,13 @@ export interface PluginContextDependencies {
   t(key: string, params?: Record<string, string | number>): string
   log: PluginContext['log']
   callApiFunction: PluginContext['callApiFunction']
+  writeNote?(
+    id: string,
+    dir: string,
+    fileName: string,
+    text: string,
+    append: boolean
+  ): Promise<{ success: boolean; result?: string; error?: string }>
 }
 
 /** The sole adapter from SDK operations to host services. */
@@ -227,6 +234,29 @@ export function createPluginContext(
           throw new Error('Invalid plugin tool')
         if (definition.configFields)
           validatePluginFields(definition.configFields)
+        if (lifecycle.capabilities.includes('notes')) {
+          const directoryField = lifecycle.notesDirectoryField ?? 'pathToNotes'
+          const field = definition.configFields?.find(
+            (field) => field.name === directoryField
+          )
+          if (
+            field &&
+            (field.type !== 'text' ||
+              field.defaultValue !== '' ||
+              (field.value !== undefined && field.value !== ''))
+          )
+            throw new Error('Plugin tools cannot grant notes access')
+          if (
+            Array.isArray(definition.defaultCommands) &&
+            definition.defaultCommands.some(
+              (command) =>
+                command.toolConfig?.[directoryField] !== undefined &&
+                command.toolConfig[directoryField] !== ''
+            )
+          )
+            throw new Error('Plugin commands cannot grant notes access')
+        }
+
         if (
           definition.defaultCommands &&
           !Array.isArray(definition.defaultCommands)
@@ -278,7 +308,20 @@ export function createPluginContext(
       // Packages built with the previous SDK keep the same browser capability.
       const nativeName =
         String(name) === 'openInBrowserAndClose' ? 'openInBrowserAndHide' : name
-      const result = await deps.callApiFunction(nativeName as typeof name, args)
+      const result =
+        capability === 'notes'
+          ? await (deps.writeNote
+              ? deps.writeNote(
+                  id,
+                  args[0]!,
+                  args[1]!,
+                  args[2]!,
+                  name === 'appendNote'
+                )
+              : Promise.reject(
+                  new Error('Scoped notes service is unavailable')
+                ))
+          : await deps.callApiFunction(nativeName as typeof name, args)
       check()
       return result
     },

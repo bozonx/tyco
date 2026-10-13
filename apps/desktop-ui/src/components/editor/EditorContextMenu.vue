@@ -85,7 +85,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import { placeMenu, placeSubmenu } from '../../lib/editor/menu-placement'
-import { Icon } from '@iconify/vue'
+import Icon from '../common/AppIcon.vue'
 
 const props = withDefaults(
   defineProps<{

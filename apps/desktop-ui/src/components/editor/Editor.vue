@@ -319,11 +319,11 @@ import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolbarStore } from '../../stores/toolbar'
 import type { ToolbarItem } from '../../types/plugins'
+import Icon from '../common/AppIcon.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
-import { Icon } from '@iconify/vue'
 import { StartMode } from '@tyco/shared'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })

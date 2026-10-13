@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
+import Icon from './AppIcon.vue'
 import Button from './Button.vue'
-import { Icon } from '@iconify/vue'
 
 withDefaults(
   defineProps<{

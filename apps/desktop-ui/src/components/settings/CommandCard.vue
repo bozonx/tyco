@@ -120,11 +120,11 @@ import {
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
+import Icon from '../common/AppIcon.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import ReorderControls from '../common/ReorderControls.vue'
 import CommandEditor from './CommandEditor.vue'
-import { Icon } from '@iconify/vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
 const props = defineProps<{

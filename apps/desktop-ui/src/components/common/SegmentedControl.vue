@@ -34,7 +34,7 @@
 import { useId } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
-import { Icon } from '@iconify/vue'
+import Icon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ register: false })

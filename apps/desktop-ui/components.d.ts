@@ -16,6 +16,7 @@ declare module 'vue' {
     ActionTemplateField: typeof import('./src/components/settings/ActionTemplateField.vue')['default']
     AiChat: typeof import('./src/components/chat/AiChat.vue')['default']
     AiTaskMenu: typeof import('./src/components/menu/AiTaskMenu.vue')['default']
+    AppIcon: typeof import('./src/components/common/AppIcon.vue')['default']
     AudioWaveform: typeof import('./src/components/voice/AudioWaveform.vue')['default']
     BaseDialog: typeof import('./src/components/common/BaseDialog.vue')['default']
     Button: typeof import('./src/components/common/Button.vue')['default']

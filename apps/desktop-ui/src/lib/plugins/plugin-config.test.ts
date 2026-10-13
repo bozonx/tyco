@@ -79,3 +79,32 @@ describe('plugin config', () => {
     )
   })
 })
+
+it('resolves and applies presets with numeric selector IDs', () => {
+  const numeric = {
+    ...plugin,
+    defaultConfig: {
+      fields: [
+        {
+          name: 'mode',
+          type: 'select' as const,
+          defaultValue: 0,
+          options: [{ id: 0 }, { id: 1 }],
+        },
+        {
+          name: 'enabledFeature',
+          type: 'checkbox' as const,
+          defaultValue: false,
+        },
+      ],
+      presets: { mode: { '1': { enabledFeature: true } } },
+    },
+  }
+  expect(resolvePluginConfig(numeric, { mode: 1 })).toEqual({
+    mode: 1,
+    enabledFeature: true,
+  })
+  expect(
+    applyPluginPreset(numeric, { mode: 0, enabledFeature: false }, { mode: 1 })
+  ).toEqual({ mode: 1, enabledFeature: true })
+})

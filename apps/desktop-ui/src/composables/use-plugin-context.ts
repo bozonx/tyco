@@ -49,6 +49,14 @@ export default function usePluginContext() {
         error === undefined
           ? clientLogger.log(level, message, id)
           : clientLogger.error(message, error, id),
+      writeNote: (pluginId, dir, fileName, text, append) =>
+        ipc.callFunction('writePluginNote', [
+          pluginId,
+          dir,
+          fileName,
+          text,
+          append,
+        ]),
       callApiFunction: (name, args) =>
         ipc.callFunction(name, ...([args] as DesktopCallArgs<typeof name>)),
     })

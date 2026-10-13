@@ -49,11 +49,17 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
 
     let path = dir.join(file_name);
 
-    let mut file = OpenOptions::new()
-        .read(true)
-        .create(true)
-        .append(true)
-        .open(&path)?;
+    let mut options = OpenOptions::new();
+    options.read(true).create(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    }
+    let mut file = options.open(&path)?;
+    if !file.metadata()?.is_file() {
+        return Err(AppError::Message("Notes require a regular file".into()));
+    }
     file.lock()?;
     let needs_newline = {
         let meta = file.metadata()?;
@@ -73,6 +79,83 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
     file.write_all(text.as_bytes())?;
 
     Ok(path)
+}
+
+/// A plugin may write only under a user-approved root, including new subfolders.
+pub fn write_scoped_note(
+    roots: &[String],
+    dir: &str,
+    file_name: &str,
+    text: &str,
+    append: bool,
+) -> Result<PathBuf, AppError> {
+    validate_file_name(file_name)?;
+    if text.len() > 8 * 1024 * 1024 {
+        return Err(AppError::Message(
+            "Plugin note exceeds the size limit".into(),
+        ));
+    }
+    let requested = resolve_notes_dir(dir, home_dir().as_deref())?;
+    if requested
+        .components()
+        .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
+        return Err(AppError::Message(
+            "Plugin notes cannot traverse parent directories".into(),
+        ));
+    }
+    for root in roots {
+        let root = resolve_notes_dir(root, home_dir().as_deref())?;
+        if root
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+        {
+            continue;
+        }
+        let Ok(relative) = requested.strip_prefix(&root) else {
+            continue;
+        };
+        fs::create_dir_all(&root)?;
+        let canonical_root = root.canonicalize()?;
+        let mut target = canonical_root.clone();
+        for component in relative.components() {
+            if let std::path::Component::Normal(name) = component {
+                target.push(name);
+                match fs::symlink_metadata(&target) {
+                    Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
+                        return Err(AppError::Message(
+                            "Plugin notes cannot follow directory symlinks".into(),
+                        ));
+                    }
+                    Ok(_) => {}
+                    Err(error) if error.kind() == ErrorKind::NotFound => fs::create_dir(&target)?,
+                    Err(error) => return Err(error.into()),
+                }
+                if !target.canonicalize()?.starts_with(&canonical_root) {
+                    return Err(AppError::Message(
+                        "Plugin note directory is outside the approved root".into(),
+                    ));
+                }
+            }
+        }
+        let file = target.join(file_name);
+        if fs::symlink_metadata(&file).is_ok_and(|metadata| !metadata.file_type().is_file()) {
+            return Err(AppError::Message(
+                "Plugin notes require a regular file".into(),
+            ));
+        }
+        let target = target
+            .to_str()
+            .ok_or_else(|| AppError::Message("Invalid notes directory encoding".into()))?;
+        return if append {
+            append_note(target, file_name, text)
+        } else {
+            save_note(target, file_name, text)
+        };
+    }
+    Err(AppError::Message(
+        "Plugin note directory is outside the approved roots".into(),
+    ))
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -161,6 +244,59 @@ fn numbered_file_name(file_name: &str, attempt: u32) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn plugin_notes_stay_inside_approved_roots() {
+        let root = std::env::temp_dir().join(format!("tyco-scoped-note-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let roots = vec![root.to_string_lossy().into_owned()];
+        let child = root.join("year/month");
+        let path =
+            write_scoped_note(&roots, child.to_str().unwrap(), "note.md", "one", false).unwrap();
+        write_scoped_note(&roots, child.to_str().unwrap(), "note.md", "two", true).unwrap();
+        assert_eq!(fs::read_to_string(path).unwrap(), "one\ntwo");
+        assert!(write_scoped_note(
+            &roots,
+            root.parent().unwrap().to_str().unwrap(),
+            "escape.md",
+            "text",
+            false
+        )
+        .is_err());
+        assert!(write_scoped_note(
+            &roots,
+            root.join("../escape").to_str().unwrap(),
+            "note.md",
+            "text",
+            false
+        )
+        .is_err());
+        #[cfg(unix)]
+        {
+            let outside = root.with_extension("outside");
+            fs::create_dir_all(&outside).unwrap();
+            std::os::unix::fs::symlink(&outside, root.join("link")).unwrap();
+            assert!(write_scoped_note(
+                &roots,
+                root.join("link").to_str().unwrap(),
+                "escape.md",
+                "text",
+                false
+            )
+            .is_err());
+            fs::write(outside.join("target.md"), "original").unwrap();
+            std::os::unix::fs::symlink(outside.join("target.md"), root.join("linked.md")).unwrap();
+            assert!(
+                write_scoped_note(&roots, root.to_str().unwrap(), "linked.md", "text", true)
+                    .is_err()
+            );
+            assert_eq!(
+                fs::read_to_string(outside.join("target.md")).unwrap(),
+                "original"
+            );
+            fs::remove_dir_all(outside).unwrap();
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn concurrent_appends_preserve_lines() {
         let dir =

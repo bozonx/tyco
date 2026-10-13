@@ -78,6 +78,7 @@ export function validatePluginManifest(
     'labelKey',
     'description',
     'descriptionKey',
+    'notesDirectoryField',
     'defaultLocale',
     'locales',
     'icons',
@@ -161,24 +162,74 @@ export function validatePluginManifest(
       }
     }
   }
+  if (
+    value.notesDirectoryField !== undefined &&
+    !value.capabilities.includes('notes')
+  )
+    fail('Invalid notes directory field')
+  if (value.capabilities.includes('notes')) {
+    const fieldName = value.notesDirectoryField ?? 'pathToNotes'
+    const config = value.defaultConfig as
+      | {
+          fields?: Array<{
+            name: string
+            type: string
+            defaultValue?: unknown
+            value?: unknown
+          }>
+          presets?: Record<string, Record<string, Record<string, unknown>>>
+        }
+      | undefined
+    if (
+      typeof fieldName !== 'string' ||
+      !config?.fields?.some(
+        (field) =>
+          field.name === fieldName &&
+          field.type === 'text' &&
+          field.defaultValue === '' &&
+          (field.value === undefined || field.value === '')
+      )
+    )
+      fail('Notes access requires an empty directory setting')
+    for (const presets of Object.values(config?.presets ?? {}))
+      for (const preset of Object.values(presets))
+        if (preset[fieldName] !== undefined && preset[fieldName] !== '')
+          fail('Plugin presets cannot grant notes access')
+  }
   if (value.icons !== undefined) {
     if (
       !record(value.icons) ||
       typeof value.icons.prefix !== 'string' ||
       !/^[a-z][a-z0-9-]*$/.test(value.icons.prefix) ||
-      !record(value.icons.icons)
+      !record(value.icons.icons) ||
+      Object.keys(value.icons.icons).length > 4096
     )
       fail('Invalid plugin icons')
     for (const [name, icon] of Object.entries(value.icons.icons)) {
       if (
         !/^[a-z0-9-]+$/.test(name) ||
         !record(icon) ||
-        typeof icon.body !== 'string'
+        typeof icon.body !== 'string' ||
+        new TextEncoder().encode(icon.body).length > 128 * 1024
       )
         fail('Invalid plugin icon')
+      for (const dimension of [
+        value.icons.width,
+        value.icons.height,
+        icon.width,
+        icon.height,
+      ])
+        if (
+          dimension !== undefined &&
+          (typeof dimension !== 'number' ||
+            !Number.isFinite(dimension) ||
+            dimension <= 0 ||
+            dimension > 4096)
+        )
+          fail('Invalid plugin icon dimensions')
       // SVG inserted by the host must not contain active or external content.
       if (
-        /<\s*(script|foreignObject|iframe|image|style|a)\b|\bon[a-z]+\s*=|(?:href|url)\s*[=(]|javascript:|https?:/i.test(
+        /<\s*(script|foreignObject|iframe|image|style|a)\b|\bon[a-z0-9_-]+\s*=|(?:href|url)\s*[=(]|javascript:|https?:|data:/i.test(
           icon.body
         )
       )
@@ -216,10 +267,17 @@ export function validatePluginFields(fields: unknown): void {
       (!Array.isArray(field.options) ||
         field.options.some(
           (option) =>
-            !record(option) || !['string', 'number'].includes(typeof option.id)
+            !record(option) ||
+            !(typeof option.id === 'string' || Number.isSafeInteger(option.id))
         ))
     )
       fail('Invalid plugin field options')
+    if (
+      Array.isArray(field.options) &&
+      new Set(field.options.map((option) => option.id)).size !==
+        field.options.length
+    )
+      fail('Duplicate plugin field option')
     for (const key of ['value', 'defaultValue']) {
       if (
         field[key] !== undefined &&
@@ -272,7 +330,8 @@ function validPresetValue(
       Array.isArray(field.options) &&
       field.options.some((option) => record(option) && option.id === value)
     )
-  if (field.type === 'sortable-checklist') return Array.isArray(value)
+  if (field.type === 'sortable-checklist')
+    return validDeclaredFieldValue(field, value)
   return (
     typeof value === 'string' ||
     (typeof field.defaultValue === 'number' &&
@@ -292,6 +351,7 @@ export function pluginManifest(definition: PluginDefinition): PluginManifest {
     labelKey,
     description,
     descriptionKey,
+    notesDirectoryField,
     defaultLocale,
     locales,
     icons,
@@ -306,6 +366,7 @@ export function pluginManifest(definition: PluginDefinition): PluginManifest {
     labelKey,
     description,
     descriptionKey,
+    notesDirectoryField,
     defaultLocale,
     locales,
     icons,

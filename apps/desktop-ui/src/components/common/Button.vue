@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { Icon } from '@iconify/vue'
+import Icon from './AppIcon.vue'
 
 const props = defineProps<{
   type?: 'button' | 'submit' | 'reset'

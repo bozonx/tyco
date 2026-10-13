@@ -129,3 +129,65 @@ describe('plugin RPC', () => {
     }
   })
 })
+
+it('terminates a cancelled worker that never acknowledges completion', async () => {
+  vi.useFakeTimers()
+  try {
+    const { rpc, close, onFailure } = setup()
+    const controller = new AbortController()
+    const cancelled = expect(
+      rpc.request('invoke', {}, controller.signal)
+    ).rejects.toMatchObject({ code: 'tyco-plugin-cancelled' })
+    controller.abort()
+    await cancelled
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(close).toHaveBeenCalledOnce()
+    expect(onFailure).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Plugin cancellation timed out' })
+    )
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+it('rejects inactive host calls explicitly and admits background calls after initialization', async () => {
+  const { rpc, receive, send, callHost } = setup()
+  receive({ type: 'host', id: 1, method: 'toastText', args: ['early', 'info'] })
+  expect(send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      type: 'host-result',
+      id: 1,
+      error: expect.any(Object),
+    })
+  )
+  const init = rpc.request('init', {})
+  receive({ type: 'result', id: 1 })
+  await init
+  receive({
+    type: 'host',
+    id: 2,
+    method: 'toastText',
+    args: ['background', 'info'],
+  })
+  await vi.waitFor(() =>
+    expect(callHost).toHaveBeenCalledWith('toastText', ['background', 'info'])
+  )
+  rpc.close()
+})
+
+it('limits unresolved host requests and fails the peer before flooding services', async () => {
+  const { rpc, receive, callHost, close } = setup()
+  vi.mocked(callHost).mockImplementation(() => new Promise(() => {}))
+  const init = rpc.request('init', {})
+  receive({ type: 'result', id: 1 })
+  await init
+  for (let id = 1; id <= 65; id++)
+    receive({
+      type: 'host',
+      id,
+      method: 'toastText',
+      args: ['message', 'info'],
+    })
+  expect(close).toHaveBeenCalledOnce()
+  rpc.close()
+})

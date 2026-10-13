@@ -13,6 +13,10 @@
     "./testing": {
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime-protocol.d.ts",
+      "default": "./dist/runtime-protocol.js"
     }
   },
   "scripts": {

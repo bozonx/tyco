@@ -135,13 +135,13 @@ import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useLlmStore } from '../../stores/llm'
 import { useToolsStore } from '../../stores/tools'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import UiState from '../common/UiState.vue'
 import CommandCard from './CommandCard.vue'
-import { Icon } from '@iconify/vue'
 import {
   type CommandConfig,
   DEFAULT_EXTERNAL_ACCESS,

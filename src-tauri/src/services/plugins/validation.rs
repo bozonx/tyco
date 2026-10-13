@@ -6,6 +6,48 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
     validate_metadata(manifest)?;
     validate_locales(manifest)?;
     validate_icons(manifest)?;
+    let has_notes = manifest
+        .capabilities
+        .iter()
+        .any(|capability| capability == "notes");
+    if manifest.notes_directory_field.is_some() && !has_notes {
+        return Err(error("Invalid notes directory field"));
+    }
+    if has_notes {
+        let name = manifest
+            .notes_directory_field
+            .as_deref()
+            .unwrap_or("pathToNotes");
+        let config = manifest
+            .default_config
+            .as_ref()
+            .ok_or_else(|| error("Notes access requires an empty directory setting"))?;
+        if !config["fields"].as_array().is_some_and(|fields| {
+            fields.iter().any(|field| {
+                field["name"].as_str() == Some(name)
+                    && field["type"].as_str() == Some("text")
+                    && field["defaultValue"].as_str() == Some("")
+                    && field
+                        .get("value")
+                        .is_none_or(|value| value.as_str() == Some(""))
+            })
+        }) {
+            return Err(error("Notes access requires an empty directory setting"));
+        }
+        if config["presets"].as_object().is_some_and(|selectors| {
+            selectors.values().any(|presets| {
+                presets.as_object().is_some_and(|presets| {
+                    presets.values().any(|preset| {
+                        preset
+                            .get(name)
+                            .is_some_and(|value| value.as_str() != Some(""))
+                    })
+                })
+            })
+        }) {
+            return Err(error("Plugin presets cannot grant notes access"));
+        }
+    }
     if let Some(config) = &manifest.default_config {
         let fields = validate_config_fields(config)?;
         validate_presets(config, fields)?;
@@ -66,6 +108,7 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
         }
         for (key, entry) in object {
             if key.is_empty()
+                || !key.as_bytes()[0].is_ascii_alphabetic()
                 || matches!(key.as_str(), "__proto__" | "constructor" | "prototype")
                 || !key
                     .bytes()
@@ -132,38 +175,49 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
         if map.len() > 4096 {
             return Err(error("Too many plugin icons"));
         }
-        let event_attribute = regex::Regex::new(r"\bon[a-z][a-z0-9_-]*\s*=")
+        let prefix = icons
+            .get("prefix")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| error("Invalid plugin icon prefix"))?;
+        if prefix.is_empty()
+            || !prefix.as_bytes()[0].is_ascii_lowercase()
+            || !prefix
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        {
+            return Err(error("Invalid plugin icon prefix"));
+        }
+        let unsafe_svg = regex::Regex::new(r"(?i)<\s*(script|foreignObject|iframe|image|style|a)\b|\bon[a-z0-9_-]+\s*=|(?:href|url)\s*[=(]|javascript:|https?:|data:")
             .map_err(|_| error("Invalid plugin icon validator"))?;
         for (name, icon) in map {
             let body = icon
                 .get("body")
                 .and_then(serde_json::Value::as_str)
                 .ok_or_else(|| error("Invalid plugin icon"))?;
-            let lowered = body.to_ascii_lowercase();
             if name.is_empty()
                 || !name
                     .bytes()
                     .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
                 || body.len() > 128 * 1024
-                || [
-                    "<script",
-                    "<foreignobject",
-                    "<iframe",
-                    "<image",
-                    "<style",
-                    "<a ",
-                    "href=",
-                    "url(",
-                    "javascript:",
-                    "http:",
-                    "https:",
-                    "data:",
-                ]
-                .iter()
-                .any(|token| lowered.contains(token))
-                || event_attribute.is_match(&lowered)
+                || unsafe_svg.is_match(body)
             {
                 return Err(error("Unsafe plugin icon"));
+            }
+            for dimension in [
+                icons.get("width"),
+                icons.get("height"),
+                icon.get("width"),
+                icon.get("height"),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                if !dimension
+                    .as_f64()
+                    .is_some_and(|number| number.is_finite() && number > 0.0 && number <= 4096.0)
+                {
+                    return Err(error("Invalid plugin icon dimensions"));
+                }
             }
         }
     }
@@ -213,7 +267,11 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
                 let id = option
                     .get("id")
                     .ok_or_else(|| error("Invalid plugin option"))?;
-                if !(id.is_string() || id.as_i64().is_some()) || !option_ids.insert(id.to_string())
+                if !(id.is_string()
+                    || id.as_f64().is_some_and(|number| {
+                        number.fract() == 0.0 && number.abs() <= 9_007_199_254_740_991.0
+                    }))
+                    || !option_ids.insert(format!("{}:{}", id.is_string(), option_identity(id)))
                 {
                     return Err(error("Invalid plugin option"));
                 }
@@ -228,10 +286,23 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
                 .get("options")
                 .and_then(serde_json::Value::as_array)
                 .ok_or_else(|| error("Select fields require options"))?;
-            if !default
-                .is_some_and(|value| options.iter().any(|option| option.get("id") == Some(value)))
-            {
+            if !default.is_some_and(|value| {
+                options.iter().any(|option| {
+                    option.get("id").is_some_and(|id| {
+                        option_identity(id) == option_identity(value)
+                            && id.is_string() == value.is_string()
+                    })
+                })
+            }) {
                 return Err(error("Invalid select default"));
+            }
+        }
+        for key in ["value", "defaultValue"] {
+            if field
+                .get(key)
+                .is_some_and(|value| !valid_field_value(field, value, false))
+            {
+                return Err(error(format!("Invalid plugin field {key}")));
             }
         }
     }
@@ -269,7 +340,9 @@ fn validate_presets(
                 .ok_or_else(|| error("Invalid preset choices"))?;
             for (choice, values) in choices {
                 if !options.iter().any(|option| {
-                    option.get("id").and_then(serde_json::Value::as_str) == Some(choice)
+                    option
+                        .get("id")
+                        .is_some_and(|id| option_identity(id) == choice.as_str())
                 }) {
                     return Err(error("Unknown plugin preset"));
                 }
@@ -290,28 +363,7 @@ fn validate_presets(
                                 == Some(name.as_str())
                         })
                         .ok_or_else(|| error("Unknown plugin preset field"))?;
-                    let field_type = field
-                        .get("type")
-                        .and_then(serde_json::Value::as_str)
-                        .unwrap_or_default();
-                    let valid = match field_type {
-                        "checkbox" => value.is_boolean(),
-                        "select" => field
-                            .get("options")
-                            .and_then(serde_json::Value::as_array)
-                            .is_some_and(|options| {
-                                options.iter().any(|option| option.get("id") == Some(value))
-                            }),
-                        "sortable-checklist" => value.is_array(),
-                        _ => {
-                            value.is_string()
-                                || (field
-                                    .get("defaultValue")
-                                    .and_then(serde_json::Value::as_f64)
-                                    .is_some()
-                                    && value.as_f64().is_some())
-                        }
-                    };
+                    let valid = valid_field_value(field, value, true);
                     if !valid {
                         return Err(error("Invalid plugin preset value"));
                     }
@@ -322,12 +374,61 @@ fn validate_presets(
     Ok(())
 }
 
+fn option_identity(value: &serde_json::Value) -> String {
+    value.as_str().map(str::to_owned).unwrap_or_else(|| {
+        value
+            .as_f64()
+            .map_or_else(|| value.to_string(), |number| number.to_string())
+    })
+}
+fn valid_field_value(field: &serde_json::Value, value: &serde_json::Value, preset: bool) -> bool {
+    match field["type"].as_str().unwrap_or_default() {
+        "checkbox" => value.is_boolean(),
+        "textarea" => value.is_string(),
+        "select" => field["options"].as_array().is_some_and(|options| {
+            options.iter().any(|option| {
+                option_identity(&option["id"]) == option_identity(value)
+                    && option["id"].is_string() == value.is_string()
+            })
+        }),
+        "sortable-checklist" => value.as_array().is_some_and(|items| {
+            items
+                .iter()
+                .all(|item| item["id"].is_string() && item["enabled"].is_boolean())
+        }),
+        "text" => {
+            value.is_string()
+                || ((!preset || field["defaultValue"].is_number())
+                    && value.as_f64().is_some_and(f64::is_finite))
+        }
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn manifest() -> PluginManifest {
         serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
+    }
+    #[test]
+    fn matches_sdk_manifest_fixtures() {
+        let cases: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../packages/plugin-sdk/src/test-fixtures/manifests.json"
+        ))
+        .unwrap();
+        for case in cases.as_array().unwrap() {
+            let result = serde_json::from_value::<PluginManifest>(case["manifest"].clone())
+                .map_err(AppError::from)
+                .and_then(|manifest| validate_manifest(&manifest));
+            assert_eq!(
+                result.is_ok(),
+                case["valid"].as_bool().unwrap(),
+                "{}: {result:?}",
+                case["name"]
+            );
+        }
     }
     #[test]
     fn rejects_incomplete_or_mismatched_plugin_locales() {
@@ -363,6 +464,7 @@ mod tests {
     fn rejects_active_icons_and_accepts_bundled_paths() {
         let mut value = manifest();
         value.icons = Some(serde_json::json!({
+            "prefix": "example",
             "icons": {"sample": {"body": "<path d=\"M0 0h1v1z\"/>"}}
         }));
         assert!(validate_manifest(&value).is_ok());

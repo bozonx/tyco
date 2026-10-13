@@ -19,6 +19,8 @@ export interface PluginManifest {
   labelKey?: string
   description?: string
   descriptionKey?: string
+  /** Saved text field that authorizes the notes root; defaults to pathToNotes. */
+  notesDirectoryField?: string
   defaultLocale: string
   locales: Record<string, PluginMessages>
   icons?: PluginIcons

@@ -46,6 +46,7 @@ export function scopeConfigFields(
 export interface PluginResourceHost {
   setMessages(locale: string, namespace: string, messages: PluginMessages): void
   removeMessages(locale: string, namespace: string): void
+  removeIcons?(prefix: string): void
   addIcons?(icons: NonNullable<PluginDefinition['icons']>): void
 }
 
@@ -58,6 +59,7 @@ export function createPluginResources(
     for (const locale of installed.get(id) ?? [])
       host.removeMessages(locale, pluginNamespace(id))
     installed.delete(id)
+    host.removeIcons?.(pluginIconPrefix(id))
   }
   function register(
     id: string,

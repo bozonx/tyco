@@ -1,4 +1,4 @@
-import { addCollection } from '@iconify/vue'
+import { pluginIcons } from './plugin-icons'
 import type { PluginDefinition, PluginMessages } from '@tyco/plugin-sdk'
 
 import { i18n } from '../i18n'
@@ -31,8 +31,9 @@ const resources = createPluginResources(
         { ...current, plugins } as never
       )
     },
+    removeIcons: pluginIcons.remove,
     addIcons: (icons) => {
-      addCollection(icons)
+      pluginIcons.register(icons)
     },
   },
   Object.keys(messages)

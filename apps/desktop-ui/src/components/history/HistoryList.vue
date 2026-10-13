@@ -200,10 +200,10 @@ import {
   formatHistoryTime,
   groupByDay,
 } from '../../lib/history/history-list'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
 import UiState from '../common/UiState.vue'
-import { Icon } from '@iconify/vue'
 
 const { t, locale } = useI18n()
 

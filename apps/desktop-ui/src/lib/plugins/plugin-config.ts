@@ -42,7 +42,10 @@ export function resolvePluginConfig(
     plugin.defaultConfig?.presets ?? {}
   )) {
     const selected = state[selector]
-    if (typeof selected === 'string' && Object.hasOwn(presets, selected))
+    if (
+      (typeof selected === 'string' || typeof selected === 'number') &&
+      Object.hasOwn(presets, selected)
+    )
       Object.assign(presetDefaults, presets[selected])
   }
   const config: Record<string, unknown> = {}
@@ -81,7 +84,10 @@ export function applyPluginPreset(
     )
       continue
     const selected = updates[selector]
-    if (typeof selected === 'string' && Object.hasOwn(presets, selected))
+    if (
+      (typeof selected === 'string' || typeof selected === 'number') &&
+      Object.hasOwn(presets, selected)
+    )
       Object.assign(next, clonePluginValue(presets[selected]))
   }
   return clonePluginValue(next)

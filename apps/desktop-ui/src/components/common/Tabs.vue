@@ -46,8 +46,8 @@
 <script setup lang="ts">
 import { computed, nextTick, useId } from 'vue'
 
+import Icon from './AppIcon.vue'
 import TabItem from './TabItem.vue'
-import { Icon } from '@iconify/vue'
 
 const emit = defineEmits<{ (e: 'update:value', key: string | number): void }>()
 

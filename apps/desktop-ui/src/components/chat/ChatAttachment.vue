@@ -45,8 +45,8 @@ import {
   attachmentLabelKey,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
+import Icon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
-import { Icon } from '@iconify/vue'
 import type { ChatAttachmentSource } from '@tyco/shared'
 
 /** A text attached to a chat message: one sent, or one going with the next */

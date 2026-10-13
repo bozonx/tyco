@@ -5,7 +5,8 @@
     "noEmit": true,
     "allowJs": true,
     "checkJs": true,
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
   "include": ["scripts/**/*"],
   "exclude": ["scripts/plugin-runtime-browser.js"]

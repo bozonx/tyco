@@ -59,6 +59,7 @@
     "allow-stop-voice-capture",
     "allow-store-chat-image",
     "allow-sync-chat-images",
-    "allow-paste-into-target-and-hide"
+    "allow-paste-into-target-and-hide",
+    "allow-write-plugin-note"
   ]
 }

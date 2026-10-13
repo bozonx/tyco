@@ -89,3 +89,30 @@ fn publish_plugins_changed(app: &AppHandle) {
         log::warn!("Could not publish plugin changes: {error}");
     }
 }
+
+/// Writes only under a notes root saved by the user for this plugin.
+#[tauri::command]
+pub async fn write_plugin_note(
+    app: AppHandle,
+    plugin_id: String,
+    dir: String,
+    file_name: String,
+    text: String,
+    append: bool,
+) -> Result<String, AppError> {
+    blocking(move || {
+        let field = app
+            .state::<PluginStore>()
+            .notes_directory_field(&plugin_id)?;
+        let config = app
+            .state::<crate::state::AppState>()
+            .snapshot()
+            .settings
+            .user_config;
+        let roots = plugins::approved_note_roots(&config, &plugin_id, &field)?;
+        let path =
+            crate::services::notes::write_scoped_note(&roots, &dir, &file_name, &text, append)?;
+        Ok(path.to_string_lossy().into_owned())
+    })
+    .await?
+}

@@ -188,3 +188,34 @@ it('translates the previous SDK browser name without extending capabilities', as
   ).rejects.toThrow()
   expect(denied.deps.callApiFunction).not.toHaveBeenCalled()
 })
+
+it('routes note writes through the identity-bound scoped service', async () => {
+  const { context, deps } = setup(['notes'])
+  deps.writeNote = vi.fn(async () => ({
+    success: true,
+    result: '/notes/file.md',
+  }))
+  await expect(
+    context.callApiFunction('appendNote', ['/notes', 'file.md', 'text'])
+  ).resolves.toMatchObject({ success: true })
+  expect(deps.writeNote).toHaveBeenCalledWith(
+    'Example',
+    '/notes',
+    'file.md',
+    'text',
+    true
+  )
+  expect(deps.callApiFunction).not.toHaveBeenCalled()
+})
+
+it('rejects tool presets that would manufacture a saved notes grant', () => {
+  const { context } = setup(['notes'])
+  expect(() =>
+    context.registerTools([
+      {
+        ...tool(async () => ({ ok: true })),
+        defaultCommands: [{ id: 'grant', toolConfig: { pathToNotes: '/' } }],
+      },
+    ])
+  ).toThrow('cannot grant notes access')
+})

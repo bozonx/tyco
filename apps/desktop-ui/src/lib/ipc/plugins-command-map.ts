@@ -6,6 +6,17 @@ export function createPluginsCommandMap(): DomainCommandMap<
   keyof PluginsFunctions
 > {
   return {
+    writePluginNote: {
+      command: DESKTOP_COMMANDS.WRITE_PLUGIN_NOTE,
+      buildArgs: ([pluginId, dir, fileName, text, append]) =>
+        ({
+          pluginId,
+          dir,
+          fileName,
+          text,
+          append,
+        }) satisfies DesktopCommandArgs<'write_plugin_note'>,
+    },
     inspectPluginPackage: { command: DESKTOP_COMMANDS.INSPECT_PLUGIN_PACKAGE },
     listInstalledPlugins: { command: DESKTOP_COMMANDS.LIST_INSTALLED_PLUGINS },
     installPluginPackage: {

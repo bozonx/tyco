@@ -1,3 +1,10 @@
+import { watch } from 'vue'
+import {
+  encodePluginValue,
+  decodePluginValue,
+  PLUGIN_HOST_METHODS,
+  PLUGIN_RPC_LIMITS,
+} from '@tyco/plugin-sdk/runtime'
 import {
   clonePluginValue,
   type PluginContext,
@@ -9,6 +16,7 @@ import { createPluginResourceUrl } from './plugin-resource-url'
 
 import { i18n } from '../i18n'
 import { messages } from '../i18n/messages'
+import { clientLogger } from '../logger'
 import { createPluginRpc, type PluginTransport } from './plugin-rpc'
 
 const pluginResourceUrl = (id: string, path: string) =>
@@ -88,89 +96,53 @@ export async function activatePluginSandbox(
   }
   const hostCallbacks = new Map<number, (...args: unknown[]) => unknown>()
   let sequence = 0
-  const encode = (value: unknown): unknown => {
-    if (typeof value === 'function') {
+  const encode = (value: unknown): unknown =>
+    encodePluginValue(value, (callback) => {
+      if (hostCallbacks.size >= PLUGIN_RPC_LIMITS.callbacks)
+        throw new Error('Too many plugin callbacks')
       const id = ++sequence
-      hostCallbacks.set(id, value as (...args: unknown[]) => unknown)
-      return { $callback: id }
-    }
-    if (value instanceof Date) return { $date: value.toISOString() }
-    if (value instanceof AbortSignal) return undefined
-    if (Array.isArray(value)) return value.map(encode)
-    if (value && typeof value === 'object')
-      return Object.fromEntries(
-        Object.entries(value).map(([key, entry]) => [key, encode(entry)])
+      hostCallbacks.set(id, callback as (...args: unknown[]) => unknown)
+      return id
+    })
+  const decode = (value: unknown): unknown =>
+    decodePluginValue(value, (callbackId) => async (...args: unknown[]) => {
+      const signal = args.find(
+        (arg) => arg && typeof arg === 'object' && 'signal' in arg
+      ) as { signal?: AbortSignal } | undefined
+      const firstCallback = sequence + 1
+      const serialized = args.map((arg) =>
+        arg && typeof arg === 'object' && 'signal' in arg
+          ? { ...(encode(arg) as object), $signal: true }
+          : encode(arg)
       )
-    return value
-  }
-  const decode = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(decode)
-    if (value && typeof value === 'object') {
-      const entry = value as Record<string, unknown>
-      if (
-        Number.isSafeInteger(entry.$callback) &&
-        Object.keys(entry).length === 1
-      ) {
-        return async (...args: unknown[]) => {
-          const signal = args.find(
-            (arg) => arg && typeof arg === 'object' && 'signal' in arg
-          ) as { signal?: AbortSignal } | undefined
-          const firstCallback = sequence + 1
-          const serialized = args.map((arg) =>
-            arg && typeof arg === 'object' && 'signal' in arg
-              ? { ...(encode(arg) as object), $signal: true }
-              : encode(arg)
+      const lastCallback = sequence
+      try {
+        return decode(
+          await rpc.request(
+            'invoke',
+            {
+              callback: callbackId,
+              args: serialized,
+              messages: snapshot(manifest),
+            },
+            signal?.signal ?? ctx.signal,
+            120000,
+            { fatalTimeout: false }
           )
-          // the callbacks handed over with this call live as long as it
-          const lastCallback = sequence
-          try {
-            return decode(
-              await rpc.request(
-                'invoke',
-                {
-                  callback: entry.$callback,
-                  args: serialized,
-                  messages: snapshot(manifest),
-                },
-                signal?.signal ?? ctx.signal,
-                120000,
-                // one slow call fails alone; the plugin stays
-                { fatalTimeout: false }
-              )
-            )
-          } finally {
-            for (let id = firstCallback; id <= lastCallback; id += 1)
-              hostCallbacks.delete(id)
-          }
-        }
+        )
+      } finally {
+        for (let id = firstCallback; id <= lastCallback; id += 1)
+          hostCallbacks.delete(id)
       }
-      return Object.fromEntries(
-        Object.entries(entry).map(([key, child]) => [key, decode(child)])
-      )
-    }
-    return value
-  }
-  const methods = new Set([
-    'registerActionsItems',
-    'registerEditItems',
-    'registerCaseItems',
-    'registerFormatItems',
-    'registerToolbarItems',
-    'registerTools',
-    'getEditorInputValue',
-    'getEditorInputSelectedText',
-    'setEditorInputValue',
-    'replaceEditorInputSelection',
-    'setEditorInputFocus',
-    'toEditor',
-    'toast',
-    'toastText',
-    'log',
-    'callApiFunction',
-  ])
+    })
+  const methods = new Set(PLUGIN_HOST_METHODS)
   const rpc = createPluginRpc({
     transport,
-    onFailure,
+    onFailure: (error) => {
+      if (!ctx.signal.aborted) onFailure(error)
+    },
+    onCleanupError: (error) =>
+      clientLogger.error('Plugin cleanup failed', error, manifest.id),
     callHost: async (method, encoded) => {
       if (ctx.signal.aborted) throw new Error('Plugin is disposed')
       const args = decode(encoded) as unknown[]
@@ -209,12 +181,19 @@ export async function activatePluginSandbox(
       return encode(await fn(...args))
     },
   })
-  const stop = () => rpc.abortPending()
+  const stopMessages = watch(i18n.global.locale, () =>
+    rpc.updateMessages(snapshot(manifest))
+  )
+  const stop = () => {
+    stopMessages()
+    rpc.abortPending()
+  }
   ctx.signal.addEventListener('abort', stop, { once: true })
   ctx.onDispose(async () => {
+    stopMessages()
     ctx.signal.removeEventListener('abort', stop)
     try {
-      await rpc.request('dispose', {}, undefined, 1500)
+      await rpc.request('dispose', {}, undefined, 1500, { fatalTimeout: false })
     } finally {
       rpc.close()
       hostCallbacks.clear()
@@ -238,6 +217,7 @@ export async function activatePluginSandbox(
       ctx.signal
     )
   } catch (error) {
+    stopMessages()
     rpc.close()
     throw error
   }

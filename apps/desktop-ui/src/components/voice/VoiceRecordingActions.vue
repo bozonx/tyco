@@ -100,10 +100,10 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
 import ShortcutButton from '../common/ShortcutButton.vue'
-import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
   compact?: boolean

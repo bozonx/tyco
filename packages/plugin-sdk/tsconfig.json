@@ -18,8 +18,9 @@
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    "allowJs": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js"],
   "exclude": ["src/**/*.test.ts"]
 }

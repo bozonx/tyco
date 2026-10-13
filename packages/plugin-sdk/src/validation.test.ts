@@ -121,3 +121,12 @@ describe('plugin field value contracts', () => {
     ).not.toThrow()
   })
 })
+
+import manifestCases from './test-fixtures/manifests.json'
+it.each(manifestCases)(
+  'matches the native contract: $name',
+  ({ valid, manifest }) => {
+    if (valid) expect(() => validatePluginManifest(manifest)).not.toThrow()
+    else expect(() => validatePluginManifest(manifest)).toThrow()
+  }
+)

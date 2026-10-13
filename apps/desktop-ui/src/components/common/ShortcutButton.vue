@@ -17,8 +17,8 @@
 </template>
 
 <script setup lang="ts">
+import Icon from './AppIcon.vue'
 import KeyButton from './KeyButton.vue'
-import { Icon } from '@iconify/vue'
 
 withDefaults(
   defineProps<{

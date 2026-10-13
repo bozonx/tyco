@@ -40,6 +40,8 @@ pub struct PluginManifest {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes_directory_field: Option<String>,
     pub default_locale: String,
     pub locales: serde_json::Value,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -136,6 +138,38 @@ impl PluginStore {
             root,
             lock: Mutex::new(()),
         }
+    }
+    /// Only native metadata chooses which saved setting grants notes access.
+    pub fn notes_directory_field(&self, id: &str) -> Result<String, AppError> {
+        if id == "FastNote" {
+            return Ok("pathToNotes".into());
+        }
+        if !valid_id(id) || BUNDLED_IDS.contains(&id) {
+            return Err(error("Plugin has no notes capability"));
+        }
+        let _guard = self
+            .lock
+            .lock()
+            .map_err(|_| error("Plugin storage lock failed"))?;
+        let installed: InstalledPackage = serde_json::from_str(&read_stored(
+            &self.root.join(format!("{}.json", storage_key(id))),
+        )?)?;
+        validate_manifest(&installed.package.manifest)?;
+        if installed.package.manifest.id != id
+            || !installed
+                .package
+                .manifest
+                .capabilities
+                .iter()
+                .any(|capability| capability == "notes")
+        {
+            return Err(error("Plugin has no notes capability"));
+        }
+        Ok(installed
+            .package
+            .manifest
+            .notes_directory_field
+            .unwrap_or_else(|| "pathToNotes".into()))
     }
     pub fn install(
         &self,
@@ -283,11 +317,65 @@ impl PluginStore {
     }
 }
 
+/// Plugin code cannot grant itself access through runtime tool arguments.
+pub fn approved_note_roots(
+    config: &serde_json::Value,
+    id: &str,
+    field: &str,
+) -> Result<Vec<String>, AppError> {
+    let settings = &config["plugins"][id];
+    if settings["enabled"].as_bool() != Some(true) {
+        return Err(error("Plugin is disabled"));
+    }
+    let mut roots = Vec::new();
+    if let Some(root) = settings[field]
+        .as_str()
+        .filter(|root| !root.trim().is_empty())
+    {
+        roots.push(root.to_owned());
+    }
+    if let Some(commands) = config["commands"].as_array() {
+        let prefix = format!("{id}.");
+        for command in commands {
+            if command["enabled"].as_bool() == Some(true)
+                && command["toolId"]
+                    .as_str()
+                    .is_some_and(|tool| tool.starts_with(&prefix))
+            {
+                if let Some(root) = command["toolConfig"][field]
+                    .as_str()
+                    .filter(|root| !root.trim().is_empty())
+                {
+                    roots.push(root.to_owned());
+                }
+            }
+        }
+    }
+    if roots.is_empty() {
+        return Err(error("Notes directory is not configured"));
+    }
+    Ok(roots)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     fn manifest() -> PluginManifest {
         serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
+    }
+    #[test]
+    fn only_saved_enabled_plugin_and_command_settings_grant_note_roots() {
+        let mut config = serde_json::json!({"plugins": {"Example": {"enabled": true, "notesPath": "/notes"}}, "commands": [
+            {"enabled": true, "toolId": "Example.write", "toolConfig": {"notesPath": "/command-notes"}},
+            {"enabled": false, "toolId": "Example.write", "toolConfig": {"notesPath": "/disabled"}},
+            {"enabled": true, "toolId": "Other.write", "toolConfig": {"notesPath": "/other"}}
+        ]});
+        assert_eq!(
+            approved_note_roots(&config, "Example", "notesPath").unwrap(),
+            ["/notes", "/command-notes"]
+        );
+        config["plugins"]["Example"]["enabled"] = false.into();
+        assert!(approved_note_roots(&config, "Example", "notesPath").is_err());
     }
     #[test]
     fn installs_updates_serves_and_removes_only_owned_modules() {

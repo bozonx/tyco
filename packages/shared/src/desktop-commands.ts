@@ -115,6 +115,7 @@ export const DESKTOP_COMMANDS = {
   SUBMIT_ACTIVATION_METRIC_VALUE: 'submit_activation_metric_value',
   SUSPEND_HOTKEYS: 'suspend_hotkeys',
   SYNC_CHAT_IMAGES: 'sync_chat_images',
+  WRITE_PLUGIN_NOTE: 'write_plugin_note',
 } as const
 
 export interface DesktopCommands {
@@ -286,6 +287,16 @@ export interface DesktopCommands {
   sync_chat_images: {
     args: { ids: Array<string>; leases: Array<string> }
     result: void
+  }
+  write_plugin_note: {
+    args: {
+      pluginId: string
+      dir: string
+      fileName: string
+      text: string
+      append: boolean
+    }
+    result: string
   }
 }
 

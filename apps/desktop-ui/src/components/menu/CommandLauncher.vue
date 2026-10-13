@@ -167,6 +167,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Icon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
 import KeyButton from '../common/KeyButton.vue'
 import TextPreview from '../common/TextPreview.vue'
@@ -176,7 +177,6 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
-import { Icon } from '@iconify/vue'
 
 const props = withDefaults(defineProps<{ shortcutsDisabled?: boolean }>(), {
   shortcutsDisabled: false,

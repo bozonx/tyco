@@ -222,12 +222,12 @@ import { supportsImages } from '../../lib/llm/llm-catalog'
 import { modelLabel, removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
+import Icon from '../common/AppIcon.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SecretKeyField from './SecretKeyField.vue'
-import { Icon } from '@iconify/vue'
 import type { LlmConfig, LlmProvider } from '@tyco/shared'
 
 const props = defineProps<{

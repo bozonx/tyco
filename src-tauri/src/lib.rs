@@ -145,6 +145,10 @@ fn plugin_protocol_response(
                 "application/javascript; charset=utf-8",
                 include_str!("../plugin-runtime/frame.js"),
             )),
+            "/runtime/protocol.js" => Some((
+                "application/javascript; charset=utf-8",
+                include_str!("../../packages/plugin-sdk/src/runtime-protocol.js"),
+            )),
             "/runtime/worker.js" => Some((
                 "application/javascript; charset=utf-8",
                 include_str!("../plugin-runtime/worker.js"),
@@ -321,6 +325,7 @@ pub fn run() {
             commands::plugins::restore_plugin_package,
             save_note,
             append_note,
+            commands::plugins::write_plugin_note,
             net_fetch,
             net_fetch_ack,
             net_cancel,

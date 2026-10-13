@@ -1,7 +1,9 @@
 # Plugin packages
 
 TyCo's bundled plugins use the same framework-independent SDK and package format
-as locally installed extensions. External packages run in a dedicated Worker on
+as locally installed extensions. Bundled plugins are trusted application code and
+run in the host realm; their synchronous work is not isolated by worker timeouts.
+External packages run in a dedicated Worker on
 a per-plugin origin. The worker has no app IPC, DOM, network, `eval`, or child
 workers. A message port exposes only the declared host services. The browser can
 terminate a worker that times out. This limits damage within the webview; users
@@ -77,7 +79,9 @@ Missing translations are rejected; the host never falls back to another locale.
 Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool
 IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Icons are
 bundled offline from literal `mdi:*` references and registered under a plugin-owned
-prefix so one package cannot overwrite another package's icons.
+prefix so one package cannot overwrite another package's icons. Plugin collections
+live in an owned reactive registry, outside Iconify's permanent global cache.
+Updating replaces the entire collection; removing releases it.
 
 Declare dependencies in the plugin's own `package.json`. Source imports use `.js`
 extensions so TypeScript output also runs as standard ESM outside the monorepo.
@@ -119,12 +123,35 @@ Only plugins whose effective settings or package revision changed are restarted.
 An activation failure rolls back partial registrations without stopping other
 plugins. A late async activation cannot register after disposal; its returned
 cleanup is still called. Tool execution combines the caller's cancellation signal
-with the plugin lifetime and suppresses cancelled output.
+with the plugin lifetime and suppresses cancelled output. Cancellation gives an
+external worker 1.5 seconds to finish its current callback; an uncooperative worker
+is terminated and marked failed. Cancellation of queued invocations is remembered.
+Cleanup handlers run in reverse order and a throwing handler does not skip the rest.
+
+Background SDK calls from timers and subscriptions are accepted after successful
+initialization and stop with the plugin lifetime. Invalid or expired host calls
+receive explicit errors. Host and worker share the wire codec and service names
+from `@tyco/plugin-sdk/runtime`: dates and callback references round-trip in both
+directions. RPC values are limited to 8 MiB, 32 nesting levels and 100,000 entries;
+each direction permits at most 64 unresolved requests and 4,096 callback references.
+Background translation snapshots update when the host locale changes. Host service calls time out
+after 10 seconds.
 
 Plugins can call browser and note services only when they declare the corresponding
 `browser` or `notes` capabilities; editor access requires `editor`. Public services
 must stay typed, narrow and independent of internal stores. Add a host adapter and
 SDK contract when a genuinely reusable capability is needed.
+
+The `notes` capability does not grant arbitrary filesystem writes. Declare a text
+setting with an empty default and name it using `notesDirectoryField` (the legacy
+default is `pathToNotes`). The user must save a directory in that setting or in an
+enabled command's corresponding tool setting. The Rust `write_plugin_note` command
+binds the request to the host-selected plugin identity and reads authorized roots
+from persisted settings; runtime arguments cannot grant another root. Subfolders
+are supported, parent traversal and descendant symlinks are rejected, and only
+regular files can be appended. Plugin defaults, presets and default commands
+cannot pre-authorize a directory. Existing SDK `saveNote` and `appendNote` calls
+use this scoped service through the host adapter.
 
 ## Local installation
 
@@ -152,3 +179,9 @@ versions, known unique capabilities, safe icons and bounded UTF-8 JSON packages
 retain one prior package so a failed update can be restored. Runtime status is
 visible in plugin settings. A corrupt installed package is logged and skipped
 without preventing startup.
+
+Both native and SDK manifest validators run the shared cases in
+`packages/plugin-sdk/src/test-fixtures/manifests.json`. `pnpm test:tooling` also
+connects the production worker to the actual host RPC adapter to cover background
+calls, cooperative and uncooperative cancellation, and cleanup failures; the
+Chromium check separately verifies worker isolation under CSP.

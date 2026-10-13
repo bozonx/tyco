@@ -1,0 +1,653 @@
+[
+  {
+    "name": "complete",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      }
+    }
+  },
+  {
+    "name": "unknown manifest field",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "extra": true
+    }
+  },
+  {
+    "name": "future api",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 3,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      }
+    }
+  },
+  {
+    "name": "duplicate capability",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor", "editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      }
+    }
+  },
+  {
+    "name": "numeric locale key",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "1label": "Example" },
+        "ru_RU": { "1label": "Example" },
+        "es_AR": { "1label": "Example" },
+        "tr_TR": { "1label": "Example" }
+      }
+    }
+  },
+  {
+    "name": "missing locale",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": { "en_US": {} }
+    }
+  },
+  {
+    "name": "fractional option",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": 0.5 }],
+            "defaultValue": 0.5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "duplicate option",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": 1 }, { "id": 1 }],
+            "defaultValue": 1
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "distinct string and number options",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": 1 }, { "id": "1" }],
+            "defaultValue": 1
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "numeric preset selector",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": 0 }],
+            "defaultValue": 0
+          },
+          { "name": "flag", "type": "checkbox", "defaultValue": false }
+        ],
+        "presets": { "mode": { "0": { "flag": true } } }
+      }
+    }
+  },
+  {
+    "name": "invalid text default",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "field", "type": "text", "defaultValue": {} }]
+      }
+    }
+  },
+  {
+    "name": "invalid textarea default",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "field", "type": "textarea", "defaultValue": 7 }]
+      }
+    }
+  },
+  {
+    "name": "invalid sortable-checklist default",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "field",
+            "type": "sortable-checklist",
+            "defaultValue": [{ "id": "a", "enabled": "true" }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "invalid checkbox default",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          { "name": "field", "type": "checkbox", "defaultValue": "true" }
+        ]
+      }
+    }
+  },
+  {
+    "name": "invalid field value",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "field",
+            "type": "text",
+            "defaultValue": "",
+            "value": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "invalid checklist preset",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": "a" }],
+            "defaultValue": "a"
+          },
+          { "name": "list", "type": "sortable-checklist", "defaultValue": [] }
+        ],
+        "presets": {
+          "mode": { "a": { "list": [{ "id": "a", "enabled": "true" }] } }
+        }
+      }
+    }
+  },
+  {
+    "name": "safe icon",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<path d=\"M0 0h1v1z\"/>" } }
+      }
+    }
+  },
+  {
+    "name": "missing icon prefix",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": { "icons": { "test": { "body": "<path/>" } } }
+    }
+  },
+  {
+    "name": "invalid icon dimensions",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<path/>", "width": -1 } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <script/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<script/>" } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <path onload = \"run()\"/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<path onload = \"run()\"/>" } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <use href = \"#x\"/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<use href = \"#x\"/>" } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <a\n/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<a\n/>" } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <path fill=\"url (#x)\"/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<path fill=\"url (#x)\"/>" } }
+      }
+    }
+  },
+  {
+    "name": "unsafe icon <image href=\"data:x\"/>",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "icons": {
+        "prefix": "example",
+        "icons": { "test": { "body": "<image href=\"data:x\"/>" } }
+      }
+    }
+  },
+  {
+    "name": "notes directory declaration",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["notes"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "notesDirectoryField": "notesPath",
+      "defaultConfig": {
+        "fields": [{ "name": "notesPath", "type": "text", "defaultValue": "" }]
+      }
+    }
+  },
+  {
+    "name": "undeclared notes field",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["notes"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "notesDirectoryField": "notesPath"
+    }
+  },
+  {
+    "name": "notes field without capability",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "notesDirectoryField": "notesPath",
+      "defaultConfig": {
+        "fields": [{ "name": "notesPath", "type": "text", "defaultValue": "" }]
+      }
+    }
+  },
+  {
+    "name": "plugin cannot default a notes grant",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["notes"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "notesDirectoryField": "notesPath",
+      "defaultConfig": {
+        "fields": [{ "name": "notesPath", "type": "text", "defaultValue": "/" }]
+      }
+    }
+  },
+  {
+    "name": "plugin cannot preset a notes grant",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["notes"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "notesDirectoryField": "notesPath",
+      "defaultConfig": {
+        "fields": [
+          { "name": "notesPath", "type": "text", "defaultValue": "" },
+          {
+            "name": "mode",
+            "type": "select",
+            "options": [{ "id": "a" }],
+            "defaultValue": "a"
+          }
+        ],
+        "presets": { "mode": { "a": { "notesPath": "/" } } }
+      }
+    }
+  }
+]

@@ -9,6 +9,7 @@ fn main() {
             "activate_mode",
             "answer_external_access",
             "append_note",
+            "write_plugin_note",
             "apply_hotkey",
             "cancel_script_action",
             "check_text_injection",
