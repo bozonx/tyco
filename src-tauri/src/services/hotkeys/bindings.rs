@@ -1,6 +1,6 @@
 //! Binding targets, configuration overrides, and default assignments.
 use crate::errors::AppError;
-use crate::services::activation::{Activation, ActivationSource, StartMode};
+use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::platform::hotkeys::DEFAULT_MODIFIERS;
 use crate::services::selection_replace::{HotkeyPress, TriggerWait};
 use crate::services::{runtime, selection_replace};
@@ -21,7 +21,7 @@ const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 /// run from the overlay, by voice, or through tyco-ctl.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum HotkeyTarget {
-    Mode(StartMode),
+    Mode(ActivationMode),
     InlineCorrection,
     LauncherPage(usize),
 }
@@ -42,7 +42,7 @@ impl HotkeyTarget {
             Some(action) => Err(AppError::Message(format!(
                 "Unknown selection action: {action}"
             ))),
-            None => StartMode::parse(id).map(Self::Mode),
+            None => ActivationMode::parse(id).map(Self::Mode),
         }
     }
 
@@ -95,17 +95,17 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [StartMode; 10] = [
-    StartMode::Editor,
-    StartMode::Write,
-    StartMode::Chat,
-    StartMode::VoiceChat,
-    StartMode::Voice,
-    StartMode::Select,
-    StartMode::AiTasks,
-    StartMode::CommandLauncher,
-    StartMode::Correction,
-    StartMode::Translate,
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 10] = [
+    ActivationMode::Editor,
+    ActivationMode::Write,
+    ActivationMode::Chat,
+    ActivationMode::VoiceChat,
+    ActivationMode::Voice,
+    ActivationMode::Select,
+    ActivationMode::AiTasks,
+    ActivationMode::CommandLauncher,
+    ActivationMode::Correction,
+    ActivationMode::Translate,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -175,25 +175,25 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
 /// are assigned by default: every default may collide with a shortcut of the
 /// desktop or another application, and the rest open Tyco windows that the
 /// tray reaches as well.
-fn default_key(mode: StartMode) -> Option<&'static str> {
+fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
-        StartMode::Voice => Some("V"),
-        StartMode::Select => Some("S"),
-        StartMode::Editor
-        | StartMode::Write
-        | StartMode::Chat
-        | StartMode::VoiceChat
-        | StartMode::AiTasks
-        | StartMode::CommandLauncher
-        | StartMode::Correction
-        | StartMode::Translate
-        | StartMode::History
-        | StartMode::Config
-        | StartMode::ExternalAccess => None,
+        ActivationMode::Voice => Some("V"),
+        ActivationMode::Select => Some("S"),
+        ActivationMode::Editor
+        | ActivationMode::Write
+        | ActivationMode::Chat
+        | ActivationMode::VoiceChat
+        | ActivationMode::AiTasks
+        | ActivationMode::CommandLauncher
+        | ActivationMode::Correction
+        | ActivationMode::Translate
+        | ActivationMode::History
+        | ActivationMode::Config
+        | ActivationMode::ExternalAccess => None,
     }
 }
 
-fn default_shortcut(mode: StartMode) -> Option<String> {
+fn default_shortcut(mode: ActivationMode) -> Option<String> {
     default_key(mode).map(|key| format!("{DEFAULT_MODIFIERS}+{key}"))
 }
 
@@ -236,21 +236,21 @@ pub fn default_selection_hotkeys_config() -> Value {
     Value::Object(hotkeys)
 }
 
-fn mode_description(mode: StartMode) -> &'static str {
+fn mode_description(mode: ActivationMode) -> &'static str {
     match mode {
-        StartMode::Editor => "Open quick editor",
-        StartMode::Write => "Open writing mode",
-        StartMode::Chat => "Open chat",
-        StartMode::VoiceChat => "Ask the chat by voice",
-        StartMode::Voice => "Start voice input",
-        StartMode::Select => "Open selection actions",
-        StartMode::AiTasks => "Open AI tasks",
-        StartMode::CommandLauncher => "Run a command",
-        StartMode::Correction => "Correct selected text with review",
-        StartMode::Translate => "Translate selected text",
-        StartMode::History => "Open history",
-        StartMode::Config => "Open settings",
-        StartMode::ExternalAccess => "Answer a request for the selection",
+        ActivationMode::Editor => "Open quick editor",
+        ActivationMode::Write => "Open writing mode",
+        ActivationMode::Chat => "Open chat",
+        ActivationMode::VoiceChat => "Ask the chat by voice",
+        ActivationMode::Voice => "Start voice input",
+        ActivationMode::Select => "Open selection actions",
+        ActivationMode::AiTasks => "Open AI tasks",
+        ActivationMode::CommandLauncher => "Run a command",
+        ActivationMode::Correction => "Correct selected text with review",
+        ActivationMode::Translate => "Translate selected text",
+        ActivationMode::History => "Open history",
+        ActivationMode::Config => "Open settings",
+        ActivationMode::ExternalAccess => "Answer a request for the selection",
     }
 }
 
@@ -266,10 +266,10 @@ mod tests {
             "Ctrl+Alt+V"
         };
         assert_eq!(
-            default_shortcut(StartMode::Voice).as_deref(),
+            default_shortcut(ActivationMode::Voice).as_deref(),
             Some(expected)
         );
-        assert_eq!(default_shortcut(StartMode::History), None);
+        assert_eq!(default_shortcut(ActivationMode::History), None);
         assert_eq!(
             default_hotkeys_config().get("voice"),
             Some(&Value::String(expected.to_owned()))
@@ -320,7 +320,7 @@ mod tests {
         assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 5);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("voice"), None);
-        assert_eq!(shortcut("select"), default_shortcut(StartMode::Select));
+        assert_eq!(shortcut("select"), default_shortcut(ActivationMode::Select));
         assert_eq!(shortcut("chat"), None);
     }
 
@@ -359,14 +359,14 @@ mod tests {
             "hotkeys": { "history": "Ctrl+Alt+H", "config": "Ctrl+Alt+Comma" }
         }));
         assert!(bindings.iter().all(|binding| binding.target
-            != HotkeyTarget::Mode(StartMode::History)
-            && binding.target != HotkeyTarget::Mode(StartMode::Config)));
+            != HotkeyTarget::Mode(ActivationMode::History)
+            && binding.target != HotkeyTarget::Mode(ActivationMode::Config)));
     }
 
     #[test]
     fn modes_open_with_their_cli_spelling() {
         assert_eq!(
-            HotkeyTarget::Mode(StartMode::VoiceChat).cli_command(),
+            HotkeyTarget::Mode(ActivationMode::VoiceChat).cli_command(),
             "tyco-ctl open voice-chat"
         );
     }
@@ -383,7 +383,7 @@ mod tests {
     fn parses_hotkey_targets() {
         assert_eq!(
             HotkeyTarget::parse("editor").unwrap(),
-            HotkeyTarget::Mode(StartMode::Editor)
+            HotkeyTarget::Mode(ActivationMode::Editor)
         );
         let target = HotkeyTarget::parse("replace.correction").unwrap();
         assert_eq!(target, HotkeyTarget::InlineCorrection);
@@ -400,15 +400,15 @@ mod tests {
     fn runs_only_current_global_hotkeys() {
         assert_eq!(
             global_target("editor"),
-            Some(HotkeyTarget::Mode(StartMode::Editor))
+            Some(HotkeyTarget::Mode(ActivationMode::Editor))
         );
         assert_eq!(
             global_target("correction"),
-            Some(HotkeyTarget::Mode(StartMode::Correction))
+            Some(HotkeyTarget::Mode(ActivationMode::Correction))
         );
         assert_eq!(
             global_target("translate"),
-            Some(HotkeyTarget::Mode(StartMode::Translate))
+            Some(HotkeyTarget::Mode(ActivationMode::Translate))
         );
         assert_eq!(
             global_target("replace.correction"),

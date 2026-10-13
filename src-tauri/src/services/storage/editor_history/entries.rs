@@ -1,5 +1,5 @@
 //! Pure ordering, deduplication, result updates, and restoration of entries.
-use crate::models::{EditorHistoryItem, EditorHistoryKind};
+use crate::models::{EditorHistoryKind, EditorHistoryRecord};
 
 /// How much an entry says about the text: a text that was sent somewhere or
 /// fed to the AI must not turn into a plain draft just because it is still in
@@ -29,8 +29,8 @@ fn collapses_duplicate(new_kind: EditorHistoryKind, existing_kind: EditorHistory
 /// an output of an AI result is not a new entry: its source is moved to the top
 /// instead, marked as sent in the case of an output.
 pub(super) fn push_editor_history(
-    history: &mut Vec<EditorHistoryItem>,
-    mut item: EditorHistoryItem,
+    history: &mut Vec<EditorHistoryRecord>,
+    mut item: EditorHistoryRecord,
     replace_id: Option<&str>,
     limit: usize,
 ) -> String {
@@ -61,7 +61,7 @@ pub(super) fn push_editor_history(
         }
     }
 
-    let duplicates: Vec<EditorHistoryItem> = history
+    let duplicates: Vec<EditorHistoryRecord> = history
         .iter()
         .filter(|existing| {
             existing.text.trim() == text && collapses_duplicate(item.kind, existing.kind)
@@ -94,7 +94,7 @@ pub(super) fn push_editor_history(
 }
 
 pub(super) fn apply_editor_history_result(
-    history: &mut [EditorHistoryItem],
+    history: &mut [EditorHistoryRecord],
     id: &str,
     result: String,
 ) -> bool {
@@ -109,8 +109,8 @@ pub(super) fn apply_editor_history_result(
 /// Entries are ordered newest first, so the item goes before the first older
 /// one. Nothing is inserted when the same text has been added again meanwhile
 pub(super) fn insert_restored_item(
-    history: &mut Vec<EditorHistoryItem>,
-    item: EditorHistoryItem,
+    history: &mut Vec<EditorHistoryRecord>,
+    item: EditorHistoryRecord,
     limit: usize,
 ) -> bool {
     let text = item.text.trim();
@@ -141,8 +141,8 @@ mod tests {
     use super::*;
     use crate::models::EditorHistoryOperation;
 
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryItem {
-        EditorHistoryItem {
+    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
+        EditorHistoryRecord {
             id: id.to_string(),
             text: text.to_string(),
             kind,
@@ -153,7 +153,7 @@ mod tests {
         }
     }
 
-    fn history_texts(history: &[EditorHistoryItem]) -> Vec<&str> {
+    fn history_texts(history: &[EditorHistoryRecord]) -> Vec<&str> {
         history.iter().map(|item| item.text.as_str()).collect()
     }
 

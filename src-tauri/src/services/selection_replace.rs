@@ -4,7 +4,6 @@
 //! with the copy keys, transformed by the webview of the quick window, and
 //! pasted back over the selection, which the paste replaces.
 
-#[path = "selection_replace/hotkey-release.rs"]
 mod hotkey_release;
 pub use hotkey_release::{hotkey_released, HotkeyPress};
 
@@ -59,7 +58,7 @@ pub enum TriggerWait {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum RunErrorCode {
+pub enum SelectionRunErrorCode {
     /// No application window has the focus.
     NoTarget,
     /// Nothing is selected, or the selection is not text.
@@ -72,13 +71,13 @@ pub enum RunErrorCode {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RunError {
-    code: RunErrorCode,
+pub struct SelectionRunError {
+    code: SelectionRunErrorCode,
     message: String,
 }
 
-impl RunError {
-    pub(crate) fn new(code: RunErrorCode, message: impl Into<String>) -> Self {
+impl SelectionRunError {
+    pub(crate) fn new(code: SelectionRunErrorCode, message: impl Into<String>) -> Self {
         Self {
             code,
             message: message.into(),
@@ -95,14 +94,14 @@ struct RunEvent {
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    error: Option<RunError>,
+    error: Option<SelectionRunError>,
     /// The quick window does not receive config changes made elsewhere.
     user_config: Value,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum FinishStatus {
+pub enum SelectionFinishStatus {
     /// The result replaced the selection.
     Pasted,
     /// The focus moved to another window meanwhile; the result waits in the
@@ -115,39 +114,39 @@ pub enum FinishStatus {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Target {
+pub(crate) struct SelectionTarget {
     pub id: String,
     pub terminal: bool,
 }
 
-pub(crate) struct Run {
+pub(crate) struct SelectionRun {
     pub id: u64,
     pub external: bool,
     pub captured_text: Option<String>,
-    pub target: Target,
+    pub target: SelectionTarget,
     pub started: Instant,
     #[cfg(target_os = "linux")]
     pub snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
     #[cfg(target_os = "windows")]
-    pub snapshot: Option<super::platform::windows_clipboard::Snapshot>,
+    pub snapshot: Option<super::platform::windows_clipboard::ClipboardSnapshot>,
 }
 
 /// The run a trigger found, see `SelectionRuns::take_active_at`.
 enum Taken {
     Nothing,
-    Active(Run),
-    Abandoned(Run),
+    Active(SelectionRun),
+    Abandoned(SelectionRun),
 }
 
 #[derive(Default)]
 pub struct SelectionRuns {
     next_id: AtomicU64,
     capturing: Arc<AtomicBool>,
-    current: Mutex<Option<Run>>,
+    current: Mutex<Option<SelectionRun>>,
 }
 
 impl SelectionRuns {
-    fn lock(&self) -> std::sync::MutexGuard<'_, Option<Run>> {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Option<SelectionRun>> {
         self.current.lock().expect("selection run lock poisoned")
     }
 
@@ -167,7 +166,7 @@ impl SelectionRuns {
         }
     }
 
-    fn take_if(&self, id: u64) -> Option<Run> {
+    fn take_if(&self, id: u64) -> Option<SelectionRun> {
         let mut current = self.lock();
         if current.as_ref().is_some_and(|run| run.id == id) {
             current.take()
@@ -182,9 +181,14 @@ impl SelectionRuns {
 trait SelectionBackend {
     fn user_config(&self) -> Value;
     fn wait(&self, wait: TriggerWait);
-    fn capture(&self, config: &Value) -> Result<(String, Run), RunError>;
-    fn restore(&self, run: Run);
-    fn paste(&self, config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError>;
+    fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError>;
+    fn restore(&self, run: SelectionRun);
+    fn paste(
+        &self,
+        config: &Value,
+        run: SelectionRun,
+        text: String,
+    ) -> Result<SelectionFinishStatus, AppError>;
     fn publish(&self, event: RunEvent) -> Result<(), AppError>;
     fn cancelled(&self, id: u64) -> Result<(), AppError>;
 }
@@ -204,13 +208,18 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
             }
         }
     }
-    fn capture(&self, config: &Value) -> Result<(String, Run), RunError> {
+    fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
         capture(config)
     }
-    fn restore(&self, run: Run) {
+    fn restore(&self, run: SelectionRun) {
         restore_clipboard(run);
     }
-    fn paste(&self, config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
+    fn paste(
+        &self,
+        config: &Value,
+        run: SelectionRun,
+        text: String,
+    ) -> Result<SelectionFinishStatus, AppError> {
         paste_result(config, run, text)
     }
     fn publish(&self, event: RunEvent) -> Result<(), AppError> {
@@ -235,9 +244,9 @@ impl Drop for CapturingGuard {
 
 enum TriggerDecision {
     Busy,
-    Cancel(Run, CapturingGuard),
+    Cancel(SelectionRun, CapturingGuard),
     /// With a run the webview abandoned, whose clipboard goes back first.
-    Capture(CapturingGuard, Option<Run>),
+    Capture(CapturingGuard, Option<SelectionRun>),
 }
 
 impl SelectionRuns {
@@ -274,7 +283,7 @@ impl SelectionRuns {
         action: String,
         wait: TriggerWait,
         guard: CapturingGuard,
-        abandoned: Option<Run>,
+        abandoned: Option<SelectionRun>,
     ) {
         // the clipboard of the abandoned run would otherwise keep its
         // selection, and the new snapshot would take that for the user's
@@ -286,7 +295,7 @@ impl SelectionRuns {
         let user_config = backend.user_config();
         let event = match backend.capture(&user_config) {
             Ok((text, run)) => {
-                self.lock().replace(Run {
+                self.lock().replace(SelectionRun {
                     id: run_id,
                     captured_text: Some(text.clone()),
                     ..run
@@ -347,21 +356,21 @@ impl SelectionRuns {
         backend: &impl SelectionBackend,
         run_id: u64,
         text: Option<String>,
-    ) -> Result<FinishStatus, AppError> {
+    ) -> Result<SelectionFinishStatus, AppError> {
         let Some(run) = self.take_if(run_id) else {
-            return Ok(FinishStatus::Stale);
+            return Ok(SelectionFinishStatus::Stale);
         };
         match text {
             None => {
                 backend.restore(run);
-                Ok(FinishStatus::Restored)
+                Ok(SelectionFinishStatus::Restored)
             }
             Some(text) => backend.paste(&backend.user_config(), run, text),
         }
     }
 }
 
-fn cancel_with(backend: &impl SelectionBackend, run: Run) {
+fn cancel_with(backend: &impl SelectionBackend, run: SelectionRun) {
     let id = run.id;
     backend.restore(run);
     if let Err(error) = backend.cancelled(id) {
@@ -405,7 +414,7 @@ pub fn finish(
     app: &AppHandle,
     run_id: u64,
     text: Option<String>,
-) -> Result<FinishStatus, AppError> {
+) -> Result<SelectionFinishStatus, AppError> {
     app.state::<SelectionRuns>()
         .finish_with(&SystemSelectionBackend(app), run_id, text)
 }
@@ -445,12 +454,12 @@ mod tests {
         }
     }
 
-    fn run_at(id: u64, started: Instant) -> Run {
-        Run {
+    fn run_at(id: u64, started: Instant) -> SelectionRun {
+        SelectionRun {
             id,
             external: false,
             captured_text: None,
-            target: Target {
+            target: SelectionTarget {
                 id: String::from("window"),
                 terminal: false,
             },
@@ -492,12 +501,12 @@ mod tests {
         runs.lock().replace(run_at(1, now));
         assert!(matches!(
             runs.take_active_at(now + ABANDONED_RUN_AGE - Duration::from_nanos(1)),
-            Taken::Active(Run { id: 1, .. })
+            Taken::Active(SelectionRun { id: 1, .. })
         ));
         runs.lock().replace(run_at(2, now));
         assert!(matches!(
             runs.take_active_at(now + ABANDONED_RUN_AGE),
-            Taken::Abandoned(Run { id: 2, .. })
+            Taken::Abandoned(SelectionRun { id: 2, .. })
         ));
         assert!(runs.lock().is_none());
     }
@@ -536,22 +545,30 @@ mod tests {
         fn wait(&self, _wait: TriggerWait) {
             self.operations.lock().unwrap().push("wait".into());
         }
-        fn capture(&self, config: &Value) -> Result<(String, Run), RunError> {
+        fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
             assert_eq!(config, &self.user_config());
             self.operations.lock().unwrap().push("capture".into());
             if self.capture_error {
-                Err(RunError::new(RunErrorCode::NoSelection, "no selection"))
+                Err(SelectionRunError::new(
+                    SelectionRunErrorCode::NoSelection,
+                    "no selection",
+                ))
             } else {
                 Ok(("selected".into(), run_at(0, Instant::now())))
             }
         }
-        fn restore(&self, run: Run) {
+        fn restore(&self, run: SelectionRun) {
             self.operations
                 .lock()
                 .unwrap()
                 .push(format!("restore:{}", run.id));
         }
-        fn paste(&self, _config: &Value, run: Run, text: String) -> Result<FinishStatus, AppError> {
+        fn paste(
+            &self,
+            _config: &Value,
+            run: SelectionRun,
+            text: String,
+        ) -> Result<SelectionFinishStatus, AppError> {
             self.operations
                 .lock()
                 .unwrap()
@@ -559,7 +576,7 @@ mod tests {
             if self.paste_error {
                 Err(AppError::Message("paste failed".into()))
             } else {
-                Ok(FinishStatus::Pasted)
+                Ok(SelectionFinishStatus::Pasted)
             }
         }
         fn publish(&self, event: RunEvent) -> Result<(), AppError> {
@@ -599,16 +616,16 @@ mod tests {
         assert_eq!(
             runs.finish_with(&backend, id + 1, Some("wrong".into()))
                 .unwrap(),
-            FinishStatus::Stale
+            SelectionFinishStatus::Stale
         );
         assert_eq!(
             runs.finish_with(&backend, id, Some("result".into()))
                 .unwrap(),
-            FinishStatus::Pasted
+            SelectionFinishStatus::Pasted
         );
         assert_eq!(
             runs.finish_with(&backend, id, None).unwrap(),
-            FinishStatus::Stale
+            SelectionFinishStatus::Stale
         );
         assert_eq!(
             *backend.operations.lock().unwrap(),
@@ -647,7 +664,7 @@ mod tests {
         let events = backend.events.lock().unwrap();
         assert_eq!(
             events[0].error.as_ref().unwrap().code,
-            RunErrorCode::NoSelection
+            SelectionRunErrorCode::NoSelection
         );
         assert!(events[0].text.is_none());
         assert!(!runs.capturing.load(Ordering::SeqCst));
@@ -687,7 +704,7 @@ mod tests {
         assert!(!runs.capturing.load(Ordering::SeqCst));
         assert_eq!(
             runs.finish_with(&backend, id, None).unwrap(),
-            FinishStatus::Restored
+            SelectionFinishStatus::Restored
         );
         assert!(runs.lock().is_none());
     }

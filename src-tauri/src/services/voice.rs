@@ -4,7 +4,6 @@
 //! the webview passed in, which hands it on to the speech provider's socket.
 //! A dictation can therefore last as long as the user keeps talking.
 
-#[path = "voice/audio-processing.rs"]
 mod audio_processing;
 
 pub use audio_processing::compute_audio_level;
@@ -127,7 +126,7 @@ where
     let _operation = state.voice_session.lock().await;
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
-    let session_id = state.voice_session.next_id();
+    let session_id = state.voice_session.allocate_session_id();
     let (session, sample_rate) = tokio::task::spawn_blocking(move || {
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
     })

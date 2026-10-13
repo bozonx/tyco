@@ -1,19 +1,19 @@
 use super::blocking;
 use crate::{
     errors::AppError,
-    models::{EditorHistoryEntry, EditorHistoryItem},
+    models::{CreateEditorHistoryRequest, EditorHistoryRecord},
     services::storage,
 };
 use tauri::AppHandle;
 #[tauri::command]
-pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
+pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
     blocking(move || storage::get_editor_history(&app)).await?
 }
 
 #[tauri::command]
 pub async fn save_editor_history(
     app: AppHandle,
-    entry: EditorHistoryEntry,
+    entry: CreateEditorHistoryRequest,
 ) -> Result<Option<String>, AppError> {
     blocking(move || storage::save_editor_history(&app, entry)).await?
 }
@@ -30,7 +30,7 @@ pub async fn set_editor_history_result(
 #[tauri::command]
 pub async fn restore_editor_history_item(
     app: AppHandle,
-    item: EditorHistoryItem,
+    item: EditorHistoryRecord,
 ) -> Result<(), AppError> {
     blocking(move || storage::restore_editor_history_item(&app, item)).await?
 }

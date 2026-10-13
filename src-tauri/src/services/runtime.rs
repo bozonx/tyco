@@ -9,7 +9,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 pub use super::activation::Activation;
-use super::activation::{StartMode, WindowProfile, WINDOW_SIZE};
+use super::activation::{ActivationMode, WindowProfile, WINDOW_SIZE};
 use super::activation_coordinator::{ActivationCoordinator, ActivationHost};
 use super::platform::{InputRegion, PanelKeyboard};
 
@@ -130,7 +130,7 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
         let handle = app.clone();
         thread::spawn(move || {
             let selected_text = tauri::async_runtime::block_on(super::platform::capture_selection(
-                request.source.clone(),
+                request.source_window_id.clone(),
             ));
             if let Err(error) = on_main_thread(&handle, move |app| {
                 app.state::<ActivationCoordinator>().publish(&request, || {
@@ -246,7 +246,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         // a region left by the previous session must not hide the new content
         super::platform::set_panel_input_region(&window, None)?;
         super::platform::apply_panel_surface(&window, activation.mode.profile(), layer)?;
-    } else if !(activation.mode == StartMode::VoiceChat && window.is_visible()?) {
+    } else if !(activation.mode == ActivationMode::VoiceChat && window.is_visible()?) {
         // a follow-up voice question must not move the chat the user placed
         window.set_size(tauri::LogicalSize::new(width, height))?;
         window.set_decorations(true)?;
@@ -282,20 +282,21 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     emit_state(app, &state)
 }
 
-fn window_label_for_mode(mode: StartMode) -> &'static str {
+fn window_label_for_mode(mode: ActivationMode) -> &'static str {
     match mode {
-        StartMode::Write
-        | StartMode::Voice
-        | StartMode::Select
-        | StartMode::AiTasks
-        | StartMode::CommandLauncher
-        | StartMode::Correction
-        | StartMode::VoiceChat
-        | StartMode::Translate
-        | StartMode::ExternalAccess => QUICK_WINDOW_LABEL,
-        StartMode::Editor | StartMode::Chat | StartMode::History | StartMode::Config => {
-            MAIN_WINDOW_LABEL
-        }
+        ActivationMode::Write
+        | ActivationMode::Voice
+        | ActivationMode::Select
+        | ActivationMode::AiTasks
+        | ActivationMode::CommandLauncher
+        | ActivationMode::Correction
+        | ActivationMode::VoiceChat
+        | ActivationMode::Translate
+        | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
+        ActivationMode::Editor
+        | ActivationMode::Chat
+        | ActivationMode::History
+        | ActivationMode::Config => MAIN_WINDOW_LABEL,
     }
 }
 
@@ -337,7 +338,7 @@ pub fn open_main_editor(
 ) -> Result<(), AppError> {
     show_main_with(
         app,
-        StartMode::Editor,
+        ActivationMode::Editor,
         OPEN_MAIN_EDITOR_EVENT,
         serde_json::json!({ "text": text, "sourceText": source_text }),
     )
@@ -351,7 +352,7 @@ pub fn open_main_chat(
 ) -> Result<(), AppError> {
     show_main_with(
         app,
-        StartMode::Chat,
+        ActivationMode::Chat,
         OPEN_MAIN_CHAT_EVENT,
         serde_json::to_value(crate::models::OpenMainChatEvent {
             attachment,
@@ -364,7 +365,7 @@ pub fn open_main_chat(
 /// Shows the main window and hands `payload` over to it.
 fn show_main_with(
     app: &AppHandle,
-    mode: StartMode,
+    mode: ActivationMode,
     event: &'static str,
     payload: serde_json::Value,
 ) -> Result<(), AppError> {
@@ -404,10 +405,13 @@ fn is_quick_window_shown(active_label: &str, is_window_shown: bool) -> bool {
 }
 
 fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
-    show_application_mode_on_main_thread(app, StartMode::Editor)
+    show_application_mode_on_main_thread(app, ActivationMode::Editor)
 }
 
-fn show_application_mode_on_main_thread(app: &AppHandle, mode: StartMode) -> Result<(), AppError> {
+fn show_application_mode_on_main_thread(
+    app: &AppHandle,
+    mode: ActivationMode,
+) -> Result<(), AppError> {
     app.state::<RuntimeWindows>()
         .set_active_label(MAIN_WINDOW_LABEL);
     hide_inactive_window(app, MAIN_WINDOW_LABEL)?;
@@ -571,23 +575,23 @@ mod tests {
     #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
         for mode in [
-            StartMode::Write,
-            StartMode::Voice,
-            StartMode::Select,
-            StartMode::AiTasks,
-            StartMode::CommandLauncher,
-            StartMode::Correction,
-            StartMode::VoiceChat,
-            StartMode::Translate,
-            StartMode::ExternalAccess,
+            ActivationMode::Write,
+            ActivationMode::Voice,
+            ActivationMode::Select,
+            ActivationMode::AiTasks,
+            ActivationMode::CommandLauncher,
+            ActivationMode::Correction,
+            ActivationMode::VoiceChat,
+            ActivationMode::Translate,
+            ActivationMode::ExternalAccess,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);
         }
         for mode in [
-            StartMode::Editor,
-            StartMode::Chat,
-            StartMode::History,
-            StartMode::Config,
+            ActivationMode::Editor,
+            ActivationMode::Chat,
+            ActivationMode::History,
+            ActivationMode::Config,
         ] {
             assert_eq!(window_label_for_mode(mode), MAIN_WINDOW_LABEL);
         }

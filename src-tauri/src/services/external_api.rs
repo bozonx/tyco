@@ -4,8 +4,8 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager};
 use tyco_activation_protocol::{Job, JobState, Request, Response, RunRequest, API_VERSION};
 
-use super::activation::{Activation, ActivationSource, StartMode};
-use super::external_access::{self, AccessPrompt, AccessRequest, AskError};
+use super::activation::{Activation, ActivationMode, ActivationSource};
+use super::external_access::{self, AccessPrompt, AccessPromptError, AccessRequest};
 use super::external_commands::{self, ExternalCommand, LookupError};
 use super::external_jobs::ExternalJobs;
 use super::{runtime, selection_replace};
@@ -194,8 +194,8 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
         };
         let (code, message) = match external_access::ask(app, prompt, source) {
             Ok(()) => return Ok(job),
-            Err(AskError::Busy) => ("AccessDenied", String::from(PROMPT_BUSY)),
-            Err(AskError::Failed(error)) => ("Unavailable", error.to_string()),
+            Err(AccessPromptError::Busy) => ("AccessDenied", String::from(PROMPT_BUSY)),
+            Err(AccessPromptError::Failed(error)) => ("Unavailable", error.to_string()),
         };
         // also gives the selection run its clipboard back
         fail(app, &job.id, message.clone(), code);
@@ -241,7 +241,7 @@ fn hand_off(
     let config = app.state::<AppState>().snapshot().settings.user_config;
     let needs_ui = command.takes_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
-        let mut activation = Activation::new(StartMode::CommandLauncher, source);
+        let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
         activation.selected_text = Some(String::new());
         activation.launcher_request = Some(external_commands::LauncherRequest {
@@ -357,10 +357,10 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             selection_replace::finish(app, run_id, if replace { output.clone() } else { None });
         let error = match result {
             Err(error) => Some(error.to_string()),
-            Ok(selection_replace::FinishStatus::Clipboard) if replace => {
+            Ok(selection_replace::SelectionFinishStatus::Clipboard) if replace => {
                 Some("Focus changed; result is in the clipboard".into())
             }
-            Ok(selection_replace::FinishStatus::Stale) if replace => {
+            Ok(selection_replace::SelectionFinishStatus::Stale) if replace => {
                 Some("Selection target is no longer available".into())
             }
             _ if replace && output.is_none() => {
@@ -485,7 +485,7 @@ fn open(
     selection: bool,
     source: ActivationSource,
 ) -> ApiResult<()> {
-    let mode = StartMode::parse(mode)
+    let mode = ActivationMode::parse(mode)
         .map_err(|error| Response::coded_error("InvalidArgs", error.to_string()))?;
     if selection && text.is_some() {
         return Err(Response::coded_error(

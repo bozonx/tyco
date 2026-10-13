@@ -29,7 +29,6 @@ mod macos;
 #[cfg(target_os = "windows")]
 pub mod windows;
 #[cfg(target_os = "windows")]
-#[path = "windows-clipboard.rs"]
 pub mod windows_clipboard;
 
 pub use file_manager::{open_dir, open_file, open_web_url};

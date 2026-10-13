@@ -45,7 +45,7 @@ impl VoiceSessionState {
         }
     }
 
-    pub fn next_id(&self) -> u64 {
+    pub fn allocate_session_id(&self) -> u64 {
         self.next_id.fetch_add(1, Ordering::SeqCst)
     }
 
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn capture_ids_are_unique() {
         let state = VoiceSessionState::default();
-        assert_ne!(state.next_id(), state.next_id());
+        assert_ne!(state.allocate_session_id(), state.allocate_session_id());
     }
     #[tokio::test]
     async fn capture_operations_are_serialized() {

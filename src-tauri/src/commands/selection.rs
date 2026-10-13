@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use crate::errors::AppError;
 use crate::services::runtime;
-use crate::services::selection_replace::{self, FinishStatus, COMMAND_ACTION_PREFIX};
+use crate::services::selection_replace::{self, SelectionFinishStatus, COMMAND_ACTION_PREFIX};
 use crate::services::status_overlay::{self, OverlayRequest};
 use crate::state::AppState;
 
@@ -18,7 +18,7 @@ pub async fn finish_selection_run(
     app: AppHandle,
     run_id: u64,
     text: Option<String>,
-) -> Result<FinishStatus, AppError> {
+) -> Result<SelectionFinishStatus, AppError> {
     tauri::async_runtime::spawn_blocking(move || selection_replace::finish(&app, run_id, text))
         .await
         .map_err(|error| AppError::Message(error.to_string()))?

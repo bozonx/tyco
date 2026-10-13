@@ -179,7 +179,7 @@ fn stored_file(directory: &Path, id: &str) -> Option<(PathBuf, &'static str)> {
 #[derive(Default)]
 pub struct ChatImageStore {
     images: HashMap<String, (ChatImage, Vec<u8>)>,
-    size: usize,
+    total_image_bytes: usize,
     owners: HashMap<String, HashSet<String>>,
     expires: HashMap<String, std::time::Instant>,
 }
@@ -211,24 +211,24 @@ impl ChatImageStore {
         if self.images.contains_key(&image.id) {
             return Ok(());
         }
-        if self.size + bytes.len() > MAX_SESSION_BYTES {
+        if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
             let held: HashSet<_> = self.owners.values().flatten().cloned().collect();
             self.images.retain(|id, (_, cached)| {
                 if held.contains(id) {
                     true
                 } else {
-                    self.size -= cached.len();
+                    self.total_image_bytes -= cached.len();
                     false
                 }
             });
         }
-        if self.size + bytes.len() > MAX_SESSION_BYTES {
+        if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
             return Err(ChatFileError::new(
                 ChatFileErrorKind::Memory,
                 "Chat image session memory limit exceeded",
             ));
         }
-        self.size += bytes.len();
+        self.total_image_bytes += bytes.len();
         self.images.insert(image.id.clone(), (image, bytes));
         Ok(())
     }
@@ -262,7 +262,7 @@ impl ChatImageStore {
             if held.contains(id) {
                 true
             } else {
-                self.size -= bytes.len();
+                self.total_image_bytes -= bytes.len();
                 false
             }
         });
@@ -427,14 +427,14 @@ mod tests {
         let image = store.insert(&png(), None).unwrap();
         store.hold("main/import/lease", &image.id);
         store.sync("main", &[]).unwrap();
-        assert_eq!(store.size, image.size);
+        assert_eq!(store.total_image_bytes, image.size);
         store.sync("main", std::slice::from_ref(&image.id)).unwrap();
         store.release_owner("main/import/lease");
         store.hold("quick", &image.id);
         store.release_owner("main");
-        assert_eq!(store.size, image.size);
+        assert_eq!(store.total_image_bytes, image.size);
         store.release_owner("quick");
-        assert_eq!(store.size, 0);
+        assert_eq!(store.total_image_bytes, 0);
         assert!(store.images.is_empty());
     }
 
@@ -464,9 +464,9 @@ mod tests {
         store
             .images
             .insert("cache".into(), (image.clone(), vec![0; MAX_SESSION_BYTES]));
-        store.size = MAX_SESSION_BYTES;
+        store.total_image_bytes = MAX_SESSION_BYTES;
         store.remember(image.clone(), bytes).unwrap();
-        assert_eq!(store.size, image.size);
+        assert_eq!(store.total_image_bytes, image.size);
         assert!(!store.images.contains_key("cache"));
         store.hold("main", &image.id);
         store.sync("quick", &[]).unwrap();
@@ -551,7 +551,7 @@ mod tests {
                     vec![0; MAX_SESSION_BYTES],
                 ),
             )]),
-            size: MAX_SESSION_BYTES,
+            total_image_bytes: MAX_SESSION_BYTES,
             owners: HashMap::from([("window".into(), HashSet::from(["held".into()]))]),
             expires: HashMap::new(),
         };

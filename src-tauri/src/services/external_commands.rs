@@ -168,7 +168,10 @@ fn webhook_takes_text(config: &Value) -> bool {
 
 /// Whether the tool of the command can run it, and if so whether it takes
 /// a text.
-fn tool_status(command: &Value, catalog: Option<&ToolCatalog>) -> Result<bool, LookupError> {
+fn resolve_text_input_support(
+    command: &Value,
+    catalog: Option<&ToolCatalog>,
+) -> Result<bool, LookupError> {
     let id = id_of(command).to_owned();
     let tool_id = str_field(command, "toolId").trim();
     let config = command.get("toolConfig").unwrap_or(&Value::Null);
@@ -197,7 +200,7 @@ fn tool_status(command: &Value, catalog: Option<&ToolCatalog>) -> Result<bool, L
 }
 
 /// The command as a call runs it, or why it cannot be called from outside.
-fn callable(
+fn resolve_callable_command(
     command: &Value,
     catalog: Option<&ToolCatalog>,
 ) -> Result<ExternalCommand, LookupError> {
@@ -208,7 +211,7 @@ fn callable(
     if !is_external(command) {
         return Err(LookupError::NotExternal(id));
     }
-    let takes_text = tool_status(command, catalog)?;
+    let takes_text = resolve_text_input_support(command, catalog)?;
     Ok(ExternalCommand {
         id,
         takes_text,
@@ -230,7 +233,7 @@ pub fn find_by_id(
         .iter()
         .find(|command| !id.is_empty() && id_of(command) == id)
         .ok_or_else(|| LookupError::NotFound(id.to_owned()))
-        .and_then(|command| callable(command, catalog))
+        .and_then(|command| resolve_callable_command(command, catalog))
 }
 
 /// The only callable command with the name `name`, compared normalized.
@@ -248,12 +251,12 @@ pub fn find_by_name(
         .collect();
     let callable_matches: Vec<ExternalCommand> = matches
         .iter()
-        .filter_map(|command| callable(command, catalog).ok())
+        .filter_map(|command| resolve_callable_command(command, catalog).ok())
         .collect();
     match callable_matches.as_slice() {
         [command] => Ok(command.clone()),
         [] => match matches.first() {
-            Some(command) => callable(command, catalog),
+            Some(command) => resolve_callable_command(command, catalog),
             None => Err(LookupError::NotFound(name.into())),
         },
         several => Err(LookupError::Ambiguous(
@@ -281,7 +284,7 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())
-        .filter_map(|command| Some((command, callable(command, catalog).ok()?)))
+        .filter_map(|command| Some((command, resolve_callable_command(command, catalog).ok()?)))
         .map(|(command, found)| {
             let name = str_field(command, "name").trim();
             ListedCommand {

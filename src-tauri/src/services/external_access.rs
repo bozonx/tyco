@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
-use super::activation::{Activation, ActivationSource, StartMode};
+use super::activation::{Activation, ActivationMode, ActivationSource};
 use super::external_api;
 use super::external_jobs::ExternalJobs;
 use super::{config_migration, runtime, storage};
@@ -34,7 +34,7 @@ pub enum AccessDecision {
     Deny,
 }
 
-struct Pending {
+struct PendingAccessRequest {
     job_id: String,
     source: ActivationSource,
 }
@@ -42,7 +42,7 @@ struct Pending {
 /// The one request waiting for an answer: a second one is refused rather
 /// than queued behind a prompt the user may not have seen yet.
 #[derive(Default)]
-pub struct AccessPrompt(Mutex<Option<Pending>>);
+pub struct AccessPrompt(Mutex<Option<PendingAccessRequest>>);
 
 impl AccessPrompt {
     pub fn is_pending(&self) -> bool {
@@ -54,7 +54,7 @@ impl AccessPrompt {
 
     /// Takes the prompt for `pending`; false while another request waits.
     /// One step, so that two requests at once cannot both take it.
-    fn claim(&self, pending: Pending) -> bool {
+    fn claim(&self, pending: PendingAccessRequest) -> bool {
         let mut slot = self.0.lock().unwrap_or_else(|error| error.into_inner());
         if slot.is_some() {
             return false;
@@ -63,7 +63,7 @@ impl AccessPrompt {
         true
     }
 
-    fn take(&self, job_id: &str) -> Option<Pending> {
+    fn take(&self, job_id: &str) -> Option<PendingAccessRequest> {
         let mut pending = self.0.lock().unwrap_or_else(|error| error.into_inner());
         if pending.as_ref().is_some_and(|item| item.job_id == job_id) {
             pending.take()
@@ -75,7 +75,7 @@ impl AccessPrompt {
 
 /// Why the prompt was not shown.
 #[derive(Debug)]
-pub enum AskError {
+pub enum AccessPromptError {
     /// Another request is waiting for an answer.
     Busy,
     Failed(AppError),
@@ -86,22 +86,22 @@ pub fn ask(
     app: &AppHandle,
     request: AccessRequest,
     source: ActivationSource,
-) -> Result<(), AskError> {
-    let claimed = app.state::<AccessPrompt>().claim(Pending {
+) -> Result<(), AccessPromptError> {
+    let claimed = app.state::<AccessPrompt>().claim(PendingAccessRequest {
         job_id: request.job_id.clone(),
         source,
     });
     if !claimed {
-        return Err(AskError::Busy);
+        return Err(AccessPromptError::Busy);
     }
-    let mut activation = Activation::new(StartMode::ExternalAccess, source);
+    let mut activation = Activation::new(ActivationMode::ExternalAccess, source);
     // the selection is taken already; the prompt must not capture another
     activation.selected_text = Some(String::new());
     let job_id = request.job_id.clone();
     activation.access_request = Some(request);
     runtime::activate(app, activation).map_err(|error| {
         app.state::<AccessPrompt>().take(&job_id);
-        AskError::Failed(error)
+        AccessPromptError::Failed(error)
     })
 }
 
@@ -143,7 +143,9 @@ pub fn withdraw(app: &AppHandle, job_id: &str) {
 /// user has switched to since.
 fn hide_prompt(app: &AppHandle) {
     let params = app.state::<AppState>().snapshot();
-    if params.window.is_window_shown && params.activation.mode == Some(StartMode::ExternalAccess) {
+    if params.window.is_window_shown
+        && params.activation.mode == Some(ActivationMode::ExternalAccess)
+    {
         if let Err(error) = runtime::hide_active_window(app) {
             log::warn!("Could not hide the access prompt: {error}");
         }
@@ -200,13 +202,13 @@ mod tests {
     fn only_the_waiting_job_takes_the_prompt() {
         let prompt = AccessPrompt::default();
         assert!(!prompt.is_pending());
-        assert!(prompt.claim(Pending {
+        assert!(prompt.claim(PendingAccessRequest {
             job_id: "job-1".into(),
             source: ActivationSource::Cli,
         }));
         assert!(prompt.is_pending());
         // a second request does not take the prompt of the first
-        assert!(!prompt.claim(Pending {
+        assert!(!prompt.claim(PendingAccessRequest {
             job_id: "job-2".into(),
             source: ActivationSource::Cli,
         }));

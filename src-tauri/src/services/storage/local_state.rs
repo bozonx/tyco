@@ -116,7 +116,7 @@ mod tests {
     fn merge_local_state_replaces_only_the_patched_fields() {
         let current = LocalState {
             last_chat_id: Some(String::from("chat")),
-            last_mode: Some(crate::services::activation::StartMode::Editor),
+            last_mode: Some(crate::services::activation::ActivationMode::Editor),
             ..LocalState::default()
         };
         let patch = json!({ "lastMode": "write" });
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
         assert_eq!(
             merged.last_mode,
-            Some(crate::services::activation::StartMode::Write)
+            Some(crate::services::activation::ActivationMode::Write)
         );
 
         let cleared = merge_local_state(

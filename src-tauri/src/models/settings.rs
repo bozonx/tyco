@@ -1,11 +1,11 @@
-use crate::services::activation::StartMode;
+use crate::services::activation::ActivationMode;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalState {
     pub last_chat_id: Option<String>,
-    pub last_mode: Option<StartMode>,
+    pub last_mode: Option<ActivationMode>,
     /// The model the chat was last used with.
     #[serde(default)]
     pub last_chat_model_id: Option<String>,

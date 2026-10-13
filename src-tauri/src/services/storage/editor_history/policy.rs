@@ -1,6 +1,6 @@
 //! Storage modes, retention limits, and secret sanitization.
 use super::DEFAULT_EDITOR_HISTORY_LIMIT;
-use crate::models::EditorHistoryItem;
+use crate::models::EditorHistoryRecord;
 use crate::services::secret_detector::redact_secrets;
 use crate::services::storage::{history_limit, DAY_MS};
 use serde_json::Value;
@@ -117,7 +117,7 @@ impl EditorHistoryPolicy {
     /// Brings stored entries in line with the settings: drops those past the
     /// retention period or over the limit and masks secrets when asked, also
     /// in entries stored before the setting was turned on.
-    pub(super) fn enforce(&self, history: &mut Vec<EditorHistoryItem>, now_ms: u64) {
+    pub(super) fn enforce(&self, history: &mut Vec<EditorHistoryRecord>, now_ms: u64) {
         if self.retention_days > 0 {
             let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
             history.retain(|item| item.created_at >= cutoff);
@@ -139,8 +139,8 @@ mod tests {
     use crate::services::storage::now_ms;
     use serde_json::json;
 
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryItem {
-        EditorHistoryItem {
+    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
+        EditorHistoryRecord {
             id: id.to_string(),
             text: text.to_string(),
             kind,
@@ -151,7 +151,7 @@ mod tests {
         }
     }
 
-    fn history_texts(history: &[EditorHistoryItem]) -> Vec<&str> {
+    fn history_texts(history: &[EditorHistoryRecord]) -> Vec<&str> {
         history.iter().map(|item| item.text.as_str()).collect()
     }
 

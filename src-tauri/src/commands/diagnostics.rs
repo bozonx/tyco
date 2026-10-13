@@ -6,5 +6,5 @@ pub fn mark_activation_metric(app: AppHandle, id: u64, mark: String) {
 
 #[tauri::command]
 pub fn submit_activation_metric_value(app: AppHandle, id: u64, value: String) {
-    crate::services::activation_metrics::submit_value(&app, id, value);
+    crate::services::activation_metrics::submit_received_text(&app, id, value);
 }

@@ -9,13 +9,13 @@ use tyco_activation_protocol::{Job, JobState, OutputMode, RunRequest};
 const MAX_JOBS: usize = 128;
 const MAX_ACTIVE: usize = 32;
 const JOB_TIMEOUT: Duration = Duration::from_secs(300);
-const MAX_OUTPUT: usize = 512 * 1024;
+const MAX_OUTPUT_BYTES: usize = 512 * 1024;
 
-struct Entry {
+struct ExternalJobEntry {
     job: Job,
     request: RunRequest,
     created: Instant,
-    selection: Option<u64>,
+    selection_run_id: Option<u64>,
     command_snapshot: Option<serde_json::Value>,
     pending_completion: Option<Job>,
     /// The user allowed this call to use the selection, see `external_access`.
@@ -25,7 +25,7 @@ struct Entry {
 #[derive(Default)]
 pub struct ExternalJobs {
     next: AtomicU64,
-    entries: Mutex<BTreeMap<String, Entry>>,
+    entries: Mutex<BTreeMap<String, ExternalJobEntry>>,
 }
 
 impl ExternalJobs {
@@ -33,16 +33,16 @@ impl ExternalJobs {
         &self,
         command_id: String,
         request: RunRequest,
-        selection: Option<u64>,
+        selection_run_id: Option<u64>,
     ) -> Result<Job, &'static str> {
-        self.create_at(command_id, request, selection, Instant::now())
+        self.create_at(command_id, request, selection_run_id, Instant::now())
     }
 
     fn create_at(
         &self,
         command_id: String,
         request: RunRequest,
-        selection: Option<u64>,
+        selection_run_id: Option<u64>,
         now: Instant,
     ) -> Result<Job, &'static str> {
         let mut entries = self
@@ -84,11 +84,11 @@ impl ExternalJobs {
         };
         entries.insert(
             id,
-            Entry {
+            ExternalJobEntry {
                 job: job.clone(),
                 request,
                 created: now,
-                selection,
+                selection_run_id,
                 command_snapshot: None,
                 pending_completion: None,
                 selection_approved: false,
@@ -185,7 +185,7 @@ impl ExternalJobs {
         entry.job.state = state;
         if output
             .as_ref()
-            .is_some_and(|output| output.len() > MAX_OUTPUT)
+            .is_some_and(|output| output.len() > MAX_OUTPUT_BYTES)
         {
             entry.job.state = JobState::Failed;
             entry.job.error = Some("Command output is too large".into());
@@ -206,8 +206,8 @@ impl ExternalJobs {
             entry.job.code = Some("OutputTooLarge".into());
         }
         let job = entry.job.clone();
-        let selection = entry.selection.take();
-        if selection.is_some() {
+        let selection_run_id = entry.selection_run_id.take();
+        if selection_run_id.is_some() {
             entry.pending_completion = Some(job.clone());
             entry.job.state = JobState::Running;
         }
@@ -215,7 +215,7 @@ impl ExternalJobs {
         entry.request.text = None;
         entry.request.input = None;
         entry.command_snapshot = None;
-        Some((job, selection, output_mode))
+        Some((job, selection_run_id, output_mode))
     }
 
     pub fn publish_selection(&self, id: &str, error: Option<String>) {
@@ -383,7 +383,7 @@ mod tests {
         jobs.finish(
             &job.id,
             JobState::Succeeded,
-            Some("x".repeat(MAX_OUTPUT + 1)),
+            Some("x".repeat(MAX_OUTPUT_BYTES + 1)),
             None,
             None,
         )
@@ -403,7 +403,7 @@ mod tests {
         jobs.finish(
             &job.id,
             JobState::Succeeded,
-            Some("\0".repeat(MAX_OUTPUT / 2)),
+            Some("\0".repeat(MAX_OUTPUT_BYTES / 2)),
             None,
             None,
         )

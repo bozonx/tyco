@@ -1,6 +1,5 @@
 //! Coordinates hotkey providers and exposes the application hotkey API.
 mod bindings;
-#[path = "hotkeys/global-shortcut.rs"]
 mod global_shortcut;
 mod status;
 pub use status::{provider_info, ApplyHotkeyResult, HotkeyApplyStatus, HotkeyProviderInfo};

@@ -262,7 +262,7 @@ impl GlobalShortcutProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::activation::StartMode;
+    use crate::services::activation::ActivationMode;
     #[derive(Default)]
     struct FakeProvider {
         registered: std::cell::RefCell<std::collections::HashSet<u32>>,
@@ -302,7 +302,7 @@ mod tests {
     ) {
         let registry = HotkeyRegistry::default();
         let provider = FakeProvider::default();
-        let target = HotkeyTarget::Mode(StartMode::Write);
+        let target = HotkeyTarget::Mode(ActivationMode::Write);
         let old: Shortcut = "Ctrl+Shift+W".parse().unwrap();
         let new: Shortcut = "Ctrl+Shift+E".parse().unwrap();
         registry

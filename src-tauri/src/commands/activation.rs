@@ -31,14 +31,26 @@ pub fn activate_mode(app: AppHandle, mode: String, text: Option<String>) -> Resu
 
 #[cfg(test)]
 mod tests {
-    use crate::services::activation::StartMode;
+    use crate::services::activation::ActivationMode;
 
     #[test]
     fn parses_valid_and_invalid_modes() {
-        assert_eq!(StartMode::parse("write").unwrap(), StartMode::Write);
-        assert_eq!(StartMode::parse("aiTasks").unwrap(), StartMode::AiTasks);
-        assert_eq!(StartMode::parse("voice").unwrap(), StartMode::Voice);
-        assert_eq!(StartMode::parse("select").unwrap(), StartMode::Select);
-        assert!(StartMode::parse("invalidMode").is_err());
+        assert_eq!(
+            ActivationMode::parse("write").unwrap(),
+            ActivationMode::Write
+        );
+        assert_eq!(
+            ActivationMode::parse("aiTasks").unwrap(),
+            ActivationMode::AiTasks
+        );
+        assert_eq!(
+            ActivationMode::parse("voice").unwrap(),
+            ActivationMode::Voice
+        );
+        assert_eq!(
+            ActivationMode::parse("select").unwrap(),
+            ActivationMode::Select
+        );
+        assert!(ActivationMode::parse("invalidMode").is_err());
     }
 }

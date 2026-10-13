@@ -25,28 +25,28 @@ Run defaults to non-interactive execution and always returns output.
 Tyco must already be running in the same user session.";
 
 #[derive(Debug, PartialEq, Eq)]
-struct Command {
+struct CliInvocation {
     request: Request,
     stdin: bool,
     wait: bool,
     json: bool,
     /// `None` until `--timeout` is given; it only bounds `--wait`.
-    timeout: Option<u64>,
+    timeout_secs: Option<u64>,
 }
 
-const DEFAULT_TIMEOUT: u64 = 300;
+const DEFAULT_JOB_WAIT_TIMEOUT_SECS: u64 = 300;
 
-fn mode(value: &str) -> String {
+fn canonical_activation_mode(value: &str) -> String {
     tyco_activation_protocol::canonical_mode(value).into()
 }
 
-fn parse(args: &[String]) -> Result<Command, String> {
-    let mut command = Command {
+fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
+    let mut command = CliInvocation {
         request: Request::Status,
         stdin: false,
         wait: false,
         json: false,
-        timeout: None,
+        timeout_secs: None,
     };
     let Some(action) = args.first().map(String::as_str) else {
         return Err(USAGE.into());
@@ -82,7 +82,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
             _ => return Err(USAGE.into()),
         },
         "open" => {
-            let mode = mode(&value(1)?);
+            let mode = canonical_activation_mode(&value(1)?);
             if !is_start_mode(&mode) {
                 return Err(format!("Unknown mode: {mode}"));
             }
@@ -131,7 +131,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
                     "--json" => command.json = true,
                     "--timeout" => {
                         index += 1;
-                        command.timeout =
+                        command.timeout_secs =
                             Some(value(index)?.parse().map_err(|_| "Invalid timeout")?);
                     }
                     "--output" => {
@@ -171,7 +171,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
             if request.replace && !request.selection {
                 return Err("--replace requires --selection".into());
             }
-            if !command.wait && (command.json || command.timeout.is_some()) {
+            if !command.wait && (command.json || command.timeout_secs.is_some()) {
                 return Err("--json and --timeout require --wait".into());
             }
             command.request = Request::Run { request };
@@ -191,7 +191,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
                     "--json" => command.json = true,
                     "--timeout" if command.wait => {
                         index += 1;
-                        command.timeout =
+                        command.timeout_secs =
                             Some(value(index)?.parse().map_err(|_| "Invalid timeout")?);
                     }
                     _ => return Err(USAGE.into()),
@@ -202,7 +202,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
         _ => return Err(USAGE.into()),
     }
     if command
-        .timeout
+        .timeout_secs
         .is_some_and(|timeout| timeout == 0 || timeout > 3600)
     {
         return Err("Timeout must be between 1 and 3600 seconds".into());
@@ -210,7 +210,7 @@ fn parse(args: &[String]) -> Result<Command, String> {
     Ok(command)
 }
 
-fn checked(response: Response) -> Result<Response, (i32, String)> {
+fn ensure_success_response(response: Response) -> Result<Response, (i32, String)> {
     if response.success {
         return Ok(response);
     }
@@ -230,10 +230,10 @@ fn checked(response: Response) -> Result<Response, (i32, String)> {
 }
 
 fn send(request: &Request) -> Result<Response, (i32, String)> {
-    checked(transport::send(request).map_err(|error| (4, error))?)
+    ensure_success_response(transport::send(request).map_err(|error| (4, error))?)
 }
 
-fn job_of(response: Response) -> Result<Job, (i32, String)> {
+fn decode_job_response(response: Response) -> Result<Job, (i32, String)> {
     serde_json::from_value(response.result.unwrap_or_default())
         .map_err(|error| (5, format!("Invalid job response: {error}")))
 }
@@ -250,8 +250,8 @@ fn command_lines(list: &serde_json::Value) -> String {
         .collect()
 }
 
-fn wait(mut job: Job, timeout: u64) -> Result<Job, (i32, String)> {
-    let deadline = Instant::now() + Duration::from_secs(timeout);
+fn wait_for_job(mut job: Job, timeout_secs: u64) -> Result<Job, (i32, String)> {
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
     while !job.state.is_terminal() {
         if Instant::now() >= deadline {
             return Err((
@@ -263,7 +263,7 @@ fn wait(mut job: Job, timeout: u64) -> Result<Job, (i32, String)> {
             ));
         }
         std::thread::sleep(Duration::from_millis(100));
-        job = job_of(send(&Request::JobStatus { id: job.id.clone() })?)?;
+        job = decode_job_response(send(&Request::JobStatus { id: job.id.clone() })?)?;
     }
     Ok(job)
 }
@@ -282,7 +282,7 @@ fn run() -> Result<(), (i32, String)> {
         );
         return Ok(());
     }
-    let mut command = parse(&args).map_err(|error| (2, error))?;
+    let mut command = parse_cli_invocation(&args).map_err(|error| (2, error))?;
     if command.stdin {
         let mut text = String::new();
         io::stdin()
@@ -298,15 +298,17 @@ fn run() -> Result<(), (i32, String)> {
     }
     let response = send(&command.request)?;
     if command.wait {
-        let job = wait(
-            job_of(response)?,
-            command.timeout.unwrap_or(DEFAULT_TIMEOUT),
+        let job = wait_for_job(
+            decode_job_response(response)?,
+            command
+                .timeout_secs
+                .unwrap_or(DEFAULT_JOB_WAIT_TIMEOUT_SECS),
         )?;
         if command.json {
             println!("{}", serde_json::to_string(&job).unwrap());
         }
         if job.state != JobState::Succeeded {
-            return checked(Response::coded_error(
+            return ensure_success_response(Response::coded_error(
                 job.code.unwrap_or_else(|| "ExecutionFailed".into()),
                 job.error.unwrap_or_else(|| "Command failed".into()),
             ))
@@ -339,8 +341,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn command(args: &[&str]) -> Result<Command, String> {
-        parse(&args.iter().map(|arg| (*arg).into()).collect::<Vec<_>>())
+    fn command(args: &[&str]) -> Result<CliInvocation, String> {
+        parse_cli_invocation(&args.iter().map(|arg| (*arg).into()).collect::<Vec<_>>())
     }
     #[test]
     fn explicit_run_options_reject_legacy_aliases() {
@@ -412,25 +414,25 @@ mod tests {
     #[test]
     fn errors_have_stable_exit_codes() {
         assert_eq!(
-            checked(Response::coded_error("AccessDenied", "blocked"))
+            ensure_success_response(Response::coded_error("AccessDenied", "blocked"))
                 .unwrap_err()
                 .0,
             3
         );
         assert_eq!(
-            checked(Response::coded_error("ExecutionFailed", "failed"))
+            ensure_success_response(Response::coded_error("ExecutionFailed", "failed"))
                 .unwrap_err()
                 .0,
             5
         );
         assert_eq!(
-            checked(Response::coded_error("AmbiguousName", "twins"))
+            ensure_success_response(Response::coded_error("AmbiguousName", "twins"))
                 .unwrap_err()
                 .0,
             2
         );
         assert_eq!(
-            checked(Response::coded_error("Busy", "busy"))
+            ensure_success_response(Response::coded_error("Busy", "busy"))
                 .unwrap_err()
                 .0,
             4

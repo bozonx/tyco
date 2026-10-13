@@ -161,11 +161,11 @@ pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>,
     }
 }
 
-type Buffer = Arc<Mutex<Vec<u8>>>;
+type SharedOutputBuffer = Arc<Mutex<Vec<u8>>>;
 
 /// Reads a pipe into a buffer of bounded size; the receiver gets a message
 /// once the pipe is closed.
-fn spawn_reader(pipe: impl Pipe, buffer: Buffer) -> std::io::Result<PipeReader> {
+fn spawn_reader(pipe: impl Pipe, buffer: SharedOutputBuffer) -> std::io::Result<PipeReader> {
     PipeReader::start(pipe, move |bytes| {
         if let Ok(mut buffer) = buffer.lock() {
             let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
@@ -174,35 +174,35 @@ fn spawn_reader(pipe: impl Pipe, buffer: Buffer) -> std::io::Result<PipeReader> 
     })
 }
 
-fn read_buffer(buffer: &Buffer) -> String {
+fn read_buffer(buffer: &SharedOutputBuffer) -> String {
     buffer
         .lock()
         .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
         .unwrap_or_default()
 }
 
-struct Running {
+struct RunningScript {
     child: Child,
-    stdout: Buffer,
-    stderr: Buffer,
+    stdout: SharedOutputBuffer,
+    stderr: SharedOutputBuffer,
     readers: Vec<PipeReader>,
-    reap_on_drop: bool,
+    kill_and_reap_on_drop: bool,
 }
 
-impl Running {
+impl RunningScript {
     fn start(
         child: Child,
         stdout: Option<ChildStdout>,
         stderr: Option<ChildStderr>,
     ) -> std::io::Result<Self> {
-        let stdout_buffer = Buffer::default();
-        let stderr_buffer = Buffer::default();
+        let stdout_buffer = SharedOutputBuffer::default();
+        let stderr_buffer = SharedOutputBuffer::default();
         let mut running = Self {
             child,
             stdout: stdout_buffer,
             stderr: stderr_buffer,
             readers: Vec::new(),
-            reap_on_drop: true,
+            kill_and_reap_on_drop: true,
         };
         if let Some(pipe) = stdout {
             running
@@ -219,16 +219,20 @@ impl Running {
 
     /// Waits until the command exits, the deadline passes or the run is
     /// cancelled.
-    fn wait_until(&mut self, deadline: Instant, cancelled: &AtomicBool) -> std::io::Result<Wait> {
+    fn wait_until(
+        &mut self,
+        deadline: Instant,
+        cancelled: &AtomicBool,
+    ) -> std::io::Result<ProcessWaitOutcome> {
         loop {
             if let Some(status) = self.child.try_wait()? {
-                return Ok(Wait::Exited(status));
+                return Ok(ProcessWaitOutcome::Exited(status));
             }
             if cancelled.load(Ordering::SeqCst) {
-                return Ok(Wait::Cancelled);
+                return Ok(ProcessWaitOutcome::Cancelled);
             }
             if Instant::now() >= deadline {
-                return Ok(Wait::TimedOut);
+                return Ok(ProcessWaitOutcome::TimedOut);
             }
             thread::sleep(POLL_INTERVAL);
         }
@@ -240,7 +244,7 @@ impl Running {
             reader.drain_until(deadline);
         }
         self.readers.clear();
-        self.reap_on_drop = false;
+        self.kill_and_reap_on_drop = false;
         ScriptExecutionResult {
             success: status.success(),
             exit_code: status.code(),
@@ -251,16 +255,16 @@ impl Running {
     }
 }
 
-impl Drop for Running {
+impl Drop for RunningScript {
     fn drop(&mut self) {
-        if self.reap_on_drop {
+        if self.kill_and_reap_on_drop {
             shell::kill_tree(&mut self.child);
             let _ = self.child.wait();
         }
     }
 }
 
-enum Wait {
+enum ProcessWaitOutcome {
     Exited(std::process::ExitStatus),
     TimedOut,
     Cancelled,
@@ -301,7 +305,7 @@ pub fn execute_script(
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
-    let mut running = Running::start(child, stdout, stderr)?;
+    let mut running = RunningScript::start(child, stdout, stderr)?;
 
     let output_timeout = request
         .output_timeout
@@ -318,15 +322,15 @@ pub fn execute_script(
     drop(registration);
 
     match status {
-        Wait::Exited(status) => {
+        ProcessWaitOutcome::Exited(status) => {
             let result = running.finish(status);
             log.write(&result, None);
             return Ok(result);
         }
-        Wait::Cancelled => {
+        ProcessWaitOutcome::Cancelled => {
             return Err(fail(&log, String::from(SCRIPT_CANCELLED)));
         }
-        Wait::TimedOut => {}
+        ProcessWaitOutcome::TimedOut => {}
     }
 
     if request.capture_output {

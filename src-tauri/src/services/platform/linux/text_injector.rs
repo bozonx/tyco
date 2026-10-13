@@ -16,7 +16,7 @@ const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
 const WAYLAND_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(80);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Session {
+enum InjectionSessionKind {
     X11,
     Wayland,
     Unsupported,
@@ -157,15 +157,15 @@ struct CommandSpec {
 }
 
 pub struct SystemTextInjector {
-    session: Session,
+    session: InjectionSessionKind,
 }
 
 impl SystemTextInjector {
     pub fn detect() -> Self {
         let session = match session::current().display {
-            DisplayServer::X11 => Session::X11,
-            DisplayServer::Wayland => Session::Wayland,
-            DisplayServer::Native | DisplayServer::Unknown => Session::Unsupported,
+            DisplayServer::X11 => InjectionSessionKind::X11,
+            DisplayServer::Wayland => InjectionSessionKind::Wayland,
+            DisplayServer::Native | DisplayServer::Unknown => InjectionSessionKind::Unsupported,
         };
         Self { session }
     }
@@ -187,7 +187,7 @@ impl SystemTextInjector {
                 .env
                 .push((String::from("YDOTOOL_SOCKET"), ydotool_socket()?));
         }
-        if self.session == Session::Wayland {
+        if self.session == InjectionSessionKind::Wayland {
             // Wayland has no generic way to activate a foreign window; only
             // KWin windows reported by the tracker script can be targeted
             let window_id = source_window_id.ok_or_else(missing_wayland_target)?;
@@ -247,7 +247,7 @@ impl SystemTextInjector {
                 ensure_binary(&xdotool_binary(insertion, user_config), "xdotool")?;
             }
         }
-        if self.session == Session::Wayland && !tracker().is_running() {
+        if self.session == InjectionSessionKind::Wayland && !tracker().is_running() {
             return Err(AppError::Message(String::from(
                 "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running",
             )));
@@ -291,11 +291,14 @@ fn missing_wayland_target() -> AppError {
     AppError::Message(String::from(message))
 }
 
-fn select_method(session: Session, configured: &str) -> Result<InjectionMethod, AppError> {
+fn select_method(
+    session: InjectionSessionKind,
+    configured: &str,
+) -> Result<InjectionMethod, AppError> {
     match (session, configured) {
-        (Session::Wayland, _) | (_, "ydotool") => Ok(InjectionMethod::Ydotool),
-        (Session::X11, _) => Ok(InjectionMethod::Xdotool),
-        (Session::Unsupported, _) => Err(AppError::Message(String::from(
+        (InjectionSessionKind::Wayland, _) | (_, "ydotool") => Ok(InjectionMethod::Ydotool),
+        (InjectionSessionKind::X11, _) => Ok(InjectionMethod::Xdotool),
+        (InjectionSessionKind::Unsupported, _) => Err(AppError::Message(String::from(
             "Text insertion is unavailable outside an X11 or Wayland session",
         ))),
     }
@@ -422,7 +425,7 @@ mod tests {
     #[test]
     fn wayland_always_uses_ydotool() {
         assert_eq!(
-            select_method(Session::Wayland, "xdotool").unwrap(),
+            select_method(InjectionSessionKind::Wayland, "xdotool").unwrap(),
             InjectionMethod::Ydotool
         );
     }
@@ -430,11 +433,11 @@ mod tests {
     #[test]
     fn x11_uses_the_configured_method() {
         assert_eq!(
-            select_method(Session::X11, "xdotool").unwrap(),
+            select_method(InjectionSessionKind::X11, "xdotool").unwrap(),
             InjectionMethod::Xdotool
         );
         assert_eq!(
-            select_method(Session::X11, "ydotool").unwrap(),
+            select_method(InjectionSessionKind::X11, "ydotool").unwrap(),
             InjectionMethod::Ydotool
         );
     }
@@ -544,7 +547,7 @@ mod tests {
 
     #[test]
     fn unsupported_sessions_fail_with_a_clear_error() {
-        let error = select_method(Session::Unsupported, "xdotool").unwrap_err();
+        let error = select_method(InjectionSessionKind::Unsupported, "xdotool").unwrap_err();
         assert!(error.to_string().contains("X11 or Wayland"));
     }
 }

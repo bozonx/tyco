@@ -14,7 +14,7 @@ pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum StoredEditorHistoryLine {
-    Item(EditorHistoryItem),
+    Item(EditorHistoryRecord),
     Legacy(String),
 }
 
@@ -25,7 +25,7 @@ fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
 /// Entries without a date (the legacy format) get the time the file was last
 /// written: the latest they can be from, so that the retention period applies
 /// to them too.
-fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryItem>, AppError> {
+fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryRecord>, AppError> {
     let lines: Vec<StoredEditorHistoryLine> = read_jsonl(path)?;
     let file_time = || {
         fs::metadata(path)
@@ -42,7 +42,7 @@ fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryItem>, AppError> 
         .map(|(index, line)| match line {
             StoredEditorHistoryLine::Item(item) => item,
             // stable while the file is untouched; the next write persists it
-            StoredEditorHistoryLine::Legacy(text) => EditorHistoryItem {
+            StoredEditorHistoryLine::Legacy(text) => EditorHistoryRecord {
                 id: format!("legacy-{index}"),
                 text,
                 kind: EditorHistoryKind::Draft,
@@ -64,11 +64,11 @@ fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryItem>, AppError> 
 /// Where the editor history lives: its file, or the memory of the process.
 enum EditorHistoryStore<'a> {
     File(PathBuf),
-    Memory(&'a mut Vec<EditorHistoryItem>),
+    Memory(&'a mut Vec<EditorHistoryRecord>),
 }
 
 impl EditorHistoryStore<'_> {
-    fn read(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
+    fn read(&self) -> Result<Vec<EditorHistoryRecord>, AppError> {
         match self {
             Self::File(path) => read_editor_history(path),
             Self::Memory(items) => Ok(items.to_vec()),
@@ -76,7 +76,7 @@ impl EditorHistoryStore<'_> {
     }
 
     /// An empty history leaves no file behind.
-    fn write(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
+    fn write(&mut self, items: Vec<EditorHistoryRecord>) -> Result<(), AppError> {
         match self {
             Self::File(path) if items.is_empty() => remove_file_if_exists(path),
             Self::File(path) => write_jsonl(path, &items),
@@ -99,7 +99,7 @@ impl<'a> EditorHistory<'a> {
     fn open(
         app: &AppHandle,
         user_config: &Value,
-        memory: &'a mut Vec<EditorHistoryItem>,
+        memory: &'a mut Vec<EditorHistoryRecord>,
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
         let store = if policy.memory_only {
@@ -111,13 +111,13 @@ impl<'a> EditorHistory<'a> {
         Ok(Self { store, policy })
     }
 
-    fn load(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
+    fn load(&self) -> Result<Vec<EditorHistoryRecord>, AppError> {
         let mut items = self.store.read()?;
         self.policy.enforce(&mut items, now_ms());
         Ok(items)
     }
 
-    fn save(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
+    fn save(&mut self, items: Vec<EditorHistoryRecord>) -> Result<(), AppError> {
         self.store.write(items)
     }
 }
@@ -125,8 +125,8 @@ impl<'a> EditorHistory<'a> {
 pub fn get_editor_history(
     app: &AppHandle,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
-) -> Result<Vec<EditorHistoryItem>, AppError> {
+    memory: &mut Vec<EditorHistoryRecord>,
+) -> Result<Vec<EditorHistoryRecord>, AppError> {
     EditorHistory::open(app, user_config, memory)?.load()
 }
 
@@ -135,15 +135,15 @@ pub fn get_editor_history(
 pub fn save_editor_history(
     app: &AppHandle,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
-    entry: EditorHistoryEntry,
+    memory: &mut Vec<EditorHistoryRecord>,
+    entry: CreateEditorHistoryRequest,
 ) -> Result<Option<String>, AppError> {
     save_editor_history_entry(&mut EditorHistory::open(app, user_config, memory)?, entry)
 }
 
 fn save_editor_history_entry(
     history: &mut EditorHistory,
-    mut entry: EditorHistoryEntry,
+    mut entry: CreateEditorHistoryRequest,
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
@@ -155,7 +155,7 @@ fn save_editor_history_entry(
 
     let mut items = history.load()?;
     let created_at = now_ms();
-    let item = EditorHistoryItem {
+    let item = EditorHistoryRecord {
         id: new_history_id(created_at),
         text: entry.text,
         kind: entry.kind,
@@ -175,7 +175,7 @@ fn save_editor_history_entry(
 pub fn set_editor_history_result(
     app: &AppHandle,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
     id: String,
     result: String,
 ) -> Result<(), AppError> {
@@ -194,8 +194,8 @@ pub fn set_editor_history_result(
 pub fn restore_editor_history_item(
     app: &AppHandle,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
-    mut item: EditorHistoryItem,
+    memory: &mut Vec<EditorHistoryRecord>,
+    mut item: EditorHistoryRecord,
 ) -> Result<(), AppError> {
     let mut history = EditorHistory::open(app, user_config, memory)?;
     let policy = history.policy;
@@ -219,7 +219,7 @@ pub fn restore_editor_history_item(
 pub fn remove_from_editor_history(
     app: &AppHandle,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
     id: String,
 ) -> Result<(), AppError> {
     let mut history = EditorHistory::open(app, user_config, memory)?;
@@ -232,7 +232,7 @@ pub fn remove_from_editor_history(
 /// the settings use now.
 pub fn clear_editor_history(
     app: &AppHandle,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
 ) -> Result<(), AppError> {
     memory.clear();
     remove_file_if_exists(&editor_history_path(app)?)
@@ -285,7 +285,7 @@ pub fn apply_history_settings_change(
     app: &AppHandle,
     previous_config: &Value,
     user_config: &Value,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
 ) -> Result<(), AppError> {
     let before = EditorHistoryPolicy::from_config(previous_config);
     let after = EditorHistoryPolicy::from_config(user_config);
@@ -306,7 +306,7 @@ fn apply_history_transition(
     path: &Path,
     before: &EditorHistoryPolicy,
     after: &EditorHistoryPolicy,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
     apply_chats: impl FnOnce() -> Result<(), AppError>,
 ) -> Result<(), AppError> {
     if before == after {
@@ -340,7 +340,7 @@ fn switch_editor_history_store(
     path: &Path,
     before: &EditorHistoryPolicy,
     after: &EditorHistoryPolicy,
-    memory: &mut Vec<EditorHistoryItem>,
+    memory: &mut Vec<EditorHistoryRecord>,
     now_ms: u64,
 ) -> Result<(), AppError> {
     let mut file = EditorHistoryStore::File(path.to_path_buf());
@@ -385,12 +385,12 @@ fn switch_editor_history_store(
 mod tests {
     use super::*;
 
-    fn history_texts(history: &[EditorHistoryItem]) -> Vec<&str> {
+    fn history_texts(history: &[EditorHistoryRecord]) -> Vec<&str> {
         history.iter().map(|item| item.text.as_str()).collect()
     }
 
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryItem {
-        EditorHistoryItem {
+    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
+        EditorHistoryRecord {
             id: id.to_string(),
             text: text.to_string(),
             kind,
@@ -428,7 +428,7 @@ mod tests {
         }
     }
 
-    fn entry(text: &str) -> EditorHistoryEntry {
+    fn entry(text: &str) -> CreateEditorHistoryRequest {
         serde_json::from_value(json!({ "text": text, "kind": "draft" })).unwrap()
     }
 

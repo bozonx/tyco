@@ -1,6 +1,6 @@
 use super::LocalState;
 use crate::services::{
-    activation::{StartMode, WindowProfile},
+    activation::{ActivationMode, WindowProfile},
     external_access::AccessRequest,
     external_commands::LauncherRequest,
 };
@@ -21,7 +21,7 @@ pub struct ActivationSnapshot {
     pub activation_id: u64,
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
-    pub mode: Option<StartMode>,
+    pub mode: Option<ActivationMode>,
     pub launcher_page: usize,
     pub launcher_request: Option<LauncherRequest>,
     pub access_request: Option<AccessRequest>,

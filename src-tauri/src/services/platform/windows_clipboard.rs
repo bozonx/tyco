@@ -65,9 +65,9 @@ impl Drop for Clipboard {
 }
 
 #[derive(Clone)]
-pub struct Snapshot(Vec<(u32, Vec<u8>)>);
+pub struct ClipboardSnapshot(Vec<(u32, Vec<u8>)>);
 
-pub fn snapshot() -> Result<Snapshot, AppError> {
+pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
     let _clipboard = Clipboard::open()?;
     let mut formats = Vec::new();
     let mut format = 0;
@@ -111,7 +111,7 @@ pub fn snapshot() -> Result<Snapshot, AppError> {
             "Clipboard holds no format that can be preserved".into(),
         ));
     }
-    Ok(Snapshot(formats))
+    Ok(ClipboardSnapshot(formats))
 }
 
 fn set_bytes(format: u32, bytes: &[u8]) -> Result<(), AppError> {
@@ -140,7 +140,7 @@ fn set_bytes(format: u32, bytes: &[u8]) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn restore(snapshot: &Snapshot) -> Result<(), AppError> {
+pub fn restore(snapshot: &ClipboardSnapshot) -> Result<(), AppError> {
     let _clipboard = Clipboard::open()?;
     if unsafe { EmptyClipboard() } == 0 {
         return Err(std::io::Error::last_os_error().into());
@@ -195,7 +195,7 @@ pub fn read_text() -> Option<String> {
     text
 }
 
-pub fn restore_later(snapshot: Snapshot) {
+pub fn restore_later(snapshot: ClipboardSnapshot) {
     let sequence = unsafe { GetClipboardSequenceNumber() };
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(500));

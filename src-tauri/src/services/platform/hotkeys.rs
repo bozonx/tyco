@@ -179,8 +179,8 @@ mod tests {
 
     #[test]
     fn generates_complete_compositor_bindings() {
-        use crate::services::activation::StartMode;
-        let target = HotkeyTarget::Mode(StartMode::VoiceChat);
+        use crate::services::activation::ActivationMode;
+        let target = HotkeyTarget::Mode(ActivationMode::VoiceChat);
         assert_eq!(
             external_command_for(Desktop::Sway, &target, "Ctrl+Alt+E"),
             "bindsym Control+Mod1+e exec tyco-ctl open voice-chat"

@@ -1,6 +1,6 @@
 use super::{ActivationSnapshot, DesktopSnapshot, LocalState, SettingsSnapshot, WindowSnapshot};
 use crate::services::{
-    activation::{StartMode, WindowProfile},
+    activation::{ActivationMode, WindowProfile},
     hotkeys,
     platform::default_binary_path,
 };
@@ -119,7 +119,7 @@ pub fn default_desktop_state(user_config: Value, local_state: LocalState) -> Des
             activation_id: 0,
             window_id: None,
             selected_text: None,
-            mode: local_state.last_mode.or(Some(StartMode::Editor)),
+            mode: local_state.last_mode.or(Some(ActivationMode::Editor)),
             launcher_page: 0,
             launcher_request: None,
             access_request: None,

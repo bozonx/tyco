@@ -17,9 +17,9 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(params: DesktopSnapshot) -> Self {
+    pub fn new(initial_snapshot: DesktopSnapshot) -> Self {
         Self {
-            snapshot: Mutex::new(params),
+            snapshot: Mutex::new(initial_snapshot),
             history: crate::services::storage::HistoryStorage::default(),
             config_storage: Mutex::new(()),
             chat_images: Mutex::new(crate::services::chat_images::ChatImageStore::default()),
@@ -30,7 +30,7 @@ impl AppState {
     }
 
     /// Serializes writes of the user config and the local state, so that the
-    /// file and `params` always end up with the same, latest value.
+    /// file and `snapshot` always end up with the same, latest value.
     pub fn lock_config_storage(&self) -> std::sync::MutexGuard<'_, ()> {
         self.config_storage
             .lock()
@@ -48,13 +48,13 @@ impl AppState {
     where
         F: FnOnce(&mut DesktopSnapshot),
     {
-        let mut params = self.snapshot.lock().expect("desktop state lock poisoned");
-        update(&mut params);
-        params.revision = params
+        let mut snapshot = self.snapshot.lock().expect("desktop state lock poisoned");
+        update(&mut snapshot);
+        snapshot.revision = snapshot
             .revision
             .checked_add(1)
             .expect("state revision exhausted");
-        params.clone()
+        snapshot.clone()
     }
 
     pub fn tool_catalog(&self) -> Option<ToolCatalog> {
@@ -91,11 +91,13 @@ mod tests {
             serde_json::json!({}),
             LocalState::default(),
         ));
-        state.update_state(|params| {
-            params.settings.user_config = serde_json::json!({ "theme": "dark" })
+        state.update_state(|snapshot| {
+            snapshot.settings.user_config = serde_json::json!({ "theme": "dark" })
         });
         assert_eq!(state.snapshot().revision, 1);
-        state.update_state(|params| params.activation.selected_text = Some("New selection".into()));
+        state.update_state(|snapshot| {
+            snapshot.activation.selected_text = Some("New selection".into())
+        });
         let snapshot = state.snapshot();
         assert_eq!(snapshot.revision, 2);
         assert_eq!(snapshot.settings.user_config["theme"], "dark");
@@ -118,7 +120,7 @@ mod tests {
                 let revisions = &revisions;
                 scope.spawn(move || {
                     let snapshot =
-                        state.update_state(|params| params.activation.activation_id += 1);
+                        state.update_state(|snapshot| snapshot.activation.activation_id += 1);
                     assert_eq!(snapshot.revision, snapshot.activation.activation_id);
                     revisions.lock().unwrap().push(snapshot.revision);
                 });

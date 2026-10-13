@@ -22,8 +22,8 @@ use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::models::{
-    default_user_config, Chat, ChatSummary, EditorHistoryEntry, EditorHistoryItem,
-    EditorHistoryKind, LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
+    default_user_config, Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryKind,
+    EditorHistoryRecord, LocalState, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
     STATE_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
@@ -224,8 +224,8 @@ fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
 mod tests {
     use super::*;
     use crate::models::EditorHistoryOperation;
-    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryItem {
-        EditorHistoryItem {
+    fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {
+        EditorHistoryRecord {
             id: id.to_string(),
             text: text.to_string(),
             kind,
@@ -321,7 +321,7 @@ mod tests {
 
     #[test]
     fn editor_history_entry_reads_the_replace_id() {
-        let entry: EditorHistoryEntry = serde_json::from_value(json!({
+        let entry: CreateEditorHistoryRequest = serde_json::from_value(json!({
             "text": "text",
             "kind": "draft",
             "replaceId": "abc",

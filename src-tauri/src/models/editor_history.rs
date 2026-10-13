@@ -25,7 +25,7 @@ pub enum EditorHistoryOperation {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EditorHistoryItem {
+pub struct EditorHistoryRecord {
     pub id: String,
     pub text: String,
     pub kind: EditorHistoryKind,
@@ -45,7 +45,7 @@ pub struct EditorHistoryItem {
 /// What the UI sends to add a text; id and time are assigned by the backend.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EditorHistoryEntry {
+pub struct CreateEditorHistoryRequest {
     pub text: String,
     pub kind: EditorHistoryKind,
     #[serde(default)]

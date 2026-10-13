@@ -24,6 +24,7 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Accompany every DI model with focused unit tests.
 - **Naming Conventions**:
   - Use kebab-case for filenames across all TypeScript and utility modules (e.g., `context-menu.ts`, `editor-sync.ts`).
+  - Rust module filenames use snake_case to match their module identifiers; Cargo example and integration test target filenames may use kebab-case.
   - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
   - Types and enums use PascalCase; constant collections use SCREAMING_SNAKE_CASE.
   - Distinguish identifiers, display labels, state, and call parameters in names (`providerId`, `providerLabel`, `desktopState`).

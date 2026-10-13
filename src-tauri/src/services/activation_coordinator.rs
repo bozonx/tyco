@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use serde_json::Value;
 
-use super::activation::{Activation, StartMode};
+use super::activation::{Activation, ActivationMode};
 use crate::errors::AppError;
 
 pub(crate) trait ActivationHost {
@@ -15,7 +15,7 @@ pub(crate) trait ActivationHost {
 
 pub(crate) struct CaptureRequest {
     pub generation: u64,
-    pub source: Option<String>,
+    pub source_window_id: Option<String>,
 }
 
 #[derive(Default)]
@@ -29,13 +29,13 @@ impl ActivationCoordinator {
         host: &impl ActivationHost,
         mut activation: Activation,
     ) -> Result<Option<CaptureRequest>, AppError> {
-        let source = activation
+        let source_window_id = activation
             .window_id
             .clone()
             .or_else(|| host.source_window());
-        activation.window_id.clone_from(&source);
+        activation.window_id.clone_from(&source_window_id);
         let capture = activation.selected_text.is_none()
-            && !(activation.mode == StartMode::Editor && host.has_focused_window())
+            && !(activation.mode == ActivationMode::Editor && host.has_focused_window())
             && activation.takes_selection(&host.user_config());
         let generation = {
             let mut generation = self.generation.lock().expect("activation lock poisoned");
@@ -43,7 +43,10 @@ impl ActivationCoordinator {
             *generation
         };
         host.activate(activation)?;
-        Ok(capture.then_some(CaptureRequest { generation, source }))
+        Ok(capture.then_some(CaptureRequest {
+            generation,
+            source_window_id,
+        }))
     }
 
     /// Serialize publication with invalidation by a newer activation.
@@ -94,7 +97,7 @@ mod tests {
         }
     }
 
-    fn activation(mode: StartMode) -> Activation {
+    fn activation(mode: ActivationMode) -> Activation {
         Activation::new(mode, ActivationSource::Cli)
     }
 
@@ -103,11 +106,11 @@ mod tests {
         let coordinator = ActivationCoordinator::default();
         let host = Host::default();
         let first = coordinator
-            .begin(&host, activation(StartMode::Write))
+            .begin(&host, activation(ActivationMode::Write))
             .unwrap()
             .unwrap();
         let second = coordinator
-            .begin(&host, activation(StartMode::Chat))
+            .begin(&host, activation(ActivationMode::Chat))
             .unwrap()
             .unwrap();
         let mut published = Vec::new();
@@ -124,7 +127,7 @@ mod tests {
             })
             .unwrap();
         assert_eq!(published, ["second"]);
-        assert_eq!(first.source.as_deref(), Some("foreground"));
+        assert_eq!(first.source_window_id.as_deref(), Some("foreground"));
     }
 
     #[test]
@@ -135,17 +138,17 @@ mod tests {
             ..Host::default()
         };
         let old = coordinator
-            .begin(&host, activation(StartMode::Write))
+            .begin(&host, activation(ActivationMode::Write))
             .unwrap()
             .unwrap();
         assert!(coordinator
-            .begin(&host, activation(StartMode::Editor))
+            .begin(&host, activation(ActivationMode::Editor))
             .unwrap()
             .is_none());
         coordinator
             .publish(&old, || panic!("stale capture published"))
             .unwrap();
-        let mut explicit = activation(StartMode::Chat);
+        let mut explicit = activation(ActivationMode::Chat);
         explicit.window_id = Some("explicit".into());
         explicit.selected_text = Some("selected".into());
         assert!(coordinator.begin(&host, explicit).unwrap().is_none());
@@ -163,11 +166,11 @@ mod tests {
             ..Host::default()
         };
         assert!(coordinator
-            .begin(&host, activation(StartMode::CommandLauncher))
+            .begin(&host, activation(ActivationMode::CommandLauncher))
             .unwrap()
             .is_none());
         let old = coordinator
-            .begin(&host, activation(StartMode::Chat))
+            .begin(&host, activation(ActivationMode::Chat))
             .unwrap()
             .unwrap();
         let failing = Host {
@@ -175,7 +178,7 @@ mod tests {
             ..Host::default()
         };
         assert!(coordinator
-            .begin(&failing, activation(StartMode::Write))
+            .begin(&failing, activation(ActivationMode::Write))
             .is_err());
         coordinator
             .publish(&old, || {
@@ -188,7 +191,7 @@ mod tests {
     fn publication_errors_are_returned() {
         let coordinator = ActivationCoordinator::default();
         let request = coordinator
-            .begin(&Host::default(), activation(StartMode::Chat))
+            .begin(&Host::default(), activation(ActivationMode::Chat))
             .unwrap()
             .unwrap();
         assert!(coordinator

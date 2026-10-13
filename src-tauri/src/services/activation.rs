@@ -6,7 +6,7 @@ use crate::services::external_commands::LauncherRequest;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum StartMode {
+pub enum ActivationMode {
     Editor,
     Write,
     Chat,
@@ -24,9 +24,9 @@ pub enum StartMode {
     ExternalAccess,
 }
 
-impl StartMode {
+impl ActivationMode {
     #[allow(dead_code)]
-    pub const ALL: [Self; 12] = [
+    pub const PUBLIC_MODES: [Self; 12] = [
         Self::Editor,
         Self::Write,
         Self::Chat,
@@ -115,7 +115,7 @@ pub enum ActivationSource {
 
 #[derive(Debug)]
 pub struct Activation {
-    pub mode: StartMode,
+    pub mode: ActivationMode,
     pub source: ActivationSource,
     pub window_id: Option<String>,
     pub selected_text: Option<String>,
@@ -127,7 +127,7 @@ pub struct Activation {
 }
 
 impl Activation {
-    pub fn new(mode: StartMode, source: ActivationSource) -> Self {
+    pub fn new(mode: ActivationMode, source: ActivationSource) -> Self {
         Self {
             mode,
             source,
@@ -149,18 +149,18 @@ impl Activation {
                 .ok()
                 .filter(|page| *page > 0)
                 .ok_or_else(|| AppError::Message("Invalid command page".into()))?;
-            let mut activation = Self::new(StartMode::CommandLauncher, source);
+            let mut activation = Self::new(ActivationMode::CommandLauncher, source);
             activation.launcher_page = page - 1;
             return Ok(activation);
         }
-        Ok(Self::new(StartMode::parse(value)?, source))
+        Ok(Self::new(ActivationMode::parse(value)?, source))
     }
 
     /// Whether the activation takes the selection of the window it was made
     /// from: not a page of the command overlay the user set to run without
     /// text, see `launcherPagesWithoutText` of the config.
     pub fn takes_selection(&self, user_config: &Value) -> bool {
-        if self.mode != StartMode::CommandLauncher || self.launcher_request.is_some() {
+        if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
             return true;
         }
         !user_config
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn command_pages_parse_without_changing_the_overlay_mode() {
         let activation = Activation::from_mode("commandLauncher5", ActivationSource::Ui).unwrap();
-        assert_eq!(activation.mode, StartMode::CommandLauncher);
+        assert_eq!(activation.mode, ActivationMode::CommandLauncher);
         assert_eq!(activation.launcher_page, 4);
         assert!(Activation::from_mode("commandLauncher0", ActivationSource::Ui).is_err());
         assert_eq!(
@@ -236,35 +236,37 @@ mod tests {
             "history",
             "config",
         ] {
-            let mode = StartMode::parse(value).unwrap();
+            let mode = ActivationMode::parse(value).unwrap();
             assert_eq!(mode.as_str(), value);
         }
-        assert!(StartMode::parse("unknown").is_err());
+        assert!(ActivationMode::parse("unknown").is_err());
     }
 
     #[test]
     fn activation_protocol_has_the_same_modes() {
         assert_eq!(
-            StartMode::ALL.map(StartMode::as_str).as_slice(),
+            ActivationMode::PUBLIC_MODES
+                .map(ActivationMode::as_str)
+                .as_slice(),
             tyco_activation_protocol::START_MODES
         );
     }
 
     #[test]
     fn selects_geometry_profile() {
-        assert_eq!(StartMode::Write.profile(), WindowProfile::Panel);
-        assert_eq!(StartMode::Voice.profile(), WindowProfile::Panel);
+        assert_eq!(ActivationMode::Write.profile(), WindowProfile::Panel);
+        assert_eq!(ActivationMode::Voice.profile(), WindowProfile::Panel);
         for mode in [
-            StartMode::Editor,
-            StartMode::Select,
-            StartMode::AiTasks,
-            StartMode::CommandLauncher,
-            StartMode::Correction,
-            StartMode::Translate,
-            StartMode::Chat,
-            StartMode::VoiceChat,
-            StartMode::History,
-            StartMode::Config,
+            ActivationMode::Editor,
+            ActivationMode::Select,
+            ActivationMode::AiTasks,
+            ActivationMode::CommandLauncher,
+            ActivationMode::Correction,
+            ActivationMode::Translate,
+            ActivationMode::Chat,
+            ActivationMode::VoiceChat,
+            ActivationMode::History,
+            ActivationMode::Config,
         ] {
             assert_eq!(mode.profile(), WindowProfile::Sheet);
         }
@@ -279,7 +281,7 @@ mod tests {
         ] {
             let args = args.into_iter().map(String::from).collect::<Vec<_>>();
             let activation = Activation::from_args(&args).unwrap().unwrap();
-            assert_eq!(activation.mode, StartMode::Chat);
+            assert_eq!(activation.mode, ActivationMode::Chat);
             assert_eq!(activation.source, ActivationSource::Cli);
         }
         assert!(Activation::from_args(&["tyco".into()]).unwrap().is_none());

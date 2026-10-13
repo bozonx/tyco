@@ -8,8 +8,10 @@ use serde_json::Value;
 
 use crate::errors::AppError;
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
-use crate::services::selection_replace::Target;
-use crate::services::selection_replace::{FinishStatus, Run, RunError, RunErrorCode};
+use crate::services::selection_replace::SelectionTarget;
+use crate::services::selection_replace::{
+    SelectionFinishStatus, SelectionRun, SelectionRunError, SelectionRunErrorCode,
+};
 
 /// Application ids of terminals, where Ctrl+C interrupts the running
 /// program, so copying and pasting take Ctrl+Shift+C and Ctrl+Shift+V.
@@ -49,11 +51,11 @@ pub(crate) fn is_terminal_class(class: &str) -> bool {
 /// The window that has the keyboard focus now. The tracker knows its class,
 /// which tells a terminal; without it X11 can still tell the window.
 #[cfg(target_os = "linux")]
-fn active_target() -> Option<Target> {
+fn active_target() -> Option<SelectionTarget> {
     use super::{session, window_tracker::tracker};
 
     if tracker().is_running() {
-        return tracker().active_window().map(|window| Target {
+        return tracker().active_window().map(|window| SelectionTarget {
             terminal: is_terminal_class(&window.class),
             id: window.id,
         });
@@ -67,14 +69,14 @@ fn active_target() -> Option<Target> {
         Duration::from_secs(2),
     )?;
     let id = String::from_utf8(output).ok()?.trim().to_owned();
-    (!id.is_empty()).then_some(Target {
+    (!id.is_empty()).then_some(SelectionTarget {
         id,
         terminal: false,
     })
 }
 
 #[cfg(target_os = "linux")]
-pub(crate) fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
+pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
     use super::linux::clipboard_restore;
     use super::linux::text_injector::SystemTextInjector;
 
@@ -86,13 +88,13 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
         } else {
             "No application window has the focus"
         };
-        RunError::new(RunErrorCode::NoTarget, message)
+        SelectionRunError::new(SelectionRunErrorCode::NoTarget, message)
     })?;
     let injector = SystemTextInjector::detect();
     // the copy keys overwrite the clipboard, which gets its content back
     // once the result is pasted
     let snapshot = clipboard_restore::snapshot();
-    let mut run = Run {
+    let mut run = SelectionRun {
         id: 0,
         external: false,
         captured_text: None,
@@ -108,41 +110,45 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, Run), RunError> {
         }
         Ok(None) => {
             restore_clipboard(run);
-            Err(RunError::new(
-                RunErrorCode::NoSelection,
+            Err(SelectionRunError::new(
+                SelectionRunErrorCode::NoSelection,
                 "Nothing is selected in the focused window",
             ))
         }
         Err(error) => {
             restore_clipboard(run);
-            Err(RunError::new(RunErrorCode::Capture, error.to_string()))
+            Err(SelectionRunError::new(
+                SelectionRunErrorCode::Capture,
+                error.to_string(),
+            ))
         }
     }
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "windows")))]
-pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
-    Err(RunError::new(
-        RunErrorCode::Unsupported,
+pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
+    Err(SelectionRunError::new(
+        SelectionRunErrorCode::Unsupported,
         "Replacing the selection is only available on Linux and Windows",
     ))
 }
 
 #[cfg(target_os = "windows")]
-pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
+pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
     use super::{windows, windows_clipboard};
-    let id = windows::capture_source()
-        .ok_or_else(|| RunError::new(RunErrorCode::NoTarget, "No foreground window"))?;
+    let id = windows::capture_source().ok_or_else(|| {
+        SelectionRunError::new(SelectionRunErrorCode::NoTarget, "No foreground window")
+    })?;
     // without a snapshot the selection is still replaced; the clipboard
     // keeps the result instead of getting its old content back
     let snapshot = windows_clipboard::snapshot()
         .inspect_err(|error| log::warn!("The clipboard will not be restored: {error}"))
         .ok();
-    let run = Run {
+    let run = SelectionRun {
         id: 0,
         external: false,
         captured_text: None,
-        target: Target {
+        target: SelectionTarget {
             id,
             terminal: windows::foreground_is_terminal(),
         },
@@ -151,16 +157,18 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
     };
     let probe = format!("tyco-selection-probe-{}", std::process::id());
     let result = (|| {
-        windows_clipboard::write_text(&probe)
-            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+        windows_clipboard::write_text(&probe).map_err(|error| {
+            SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
+        })?;
         if windows::capture_source().as_deref() != Some(run.target.id.as_str()) {
-            return Err(RunError::new(
-                RunErrorCode::NoTarget,
+            return Err(SelectionRunError::new(
+                SelectionRunErrorCode::NoTarget,
                 "Focus changed before capture",
             ));
         }
-        windows::press_copy_or_paste(true, run.target.terminal)
-            .map_err(|error| RunError::new(RunErrorCode::Capture, error.to_string()))?;
+        windows::press_copy_or_paste(true, run.target.terminal).map_err(|error| {
+            SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
+        })?;
         let deadline = Instant::now() + Duration::from_millis(700);
         loop {
             if let Some(text) = windows_clipboard::read_text() {
@@ -169,8 +177,8 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
                 }
             }
             if Instant::now() >= deadline {
-                return Err(RunError::new(
-                    RunErrorCode::NoSelection,
+                return Err(SelectionRunError::new(
+                    SelectionRunErrorCode::NoSelection,
                     "Nothing is selected in the foreground window",
                 ));
             }
@@ -187,7 +195,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, Run), RunError> {
 }
 
 #[cfg(target_os = "windows")]
-pub(crate) fn restore_clipboard(run: Run) {
+pub(crate) fn restore_clipboard(run: SelectionRun) {
     if run
         .captured_text
         .as_ref()
@@ -222,7 +230,7 @@ pub(crate) fn restore_clipboard(run: Run) {
 fn copy_selection(
     injector: &super::linux::text_injector::SystemTextInjector,
     user_config: &Value,
-    target: &Target,
+    target: &SelectionTarget,
 ) -> Result<Option<String>, AppError> {
     use super::linux::text_injector::FocusedKeys;
 
@@ -267,7 +275,7 @@ fn copy_selection(
 /// snapshot only the probe text is removed: a copied selection is what the
 /// user had selected anyway.
 #[cfg(target_os = "linux")]
-pub(crate) fn restore_clipboard(run: Run) {
+pub(crate) fn restore_clipboard(run: SelectionRun) {
     use super::linux::clipboard_restore;
     if run
         .captured_text
@@ -290,30 +298,30 @@ pub(crate) fn restore_clipboard(run: Run) {
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "windows")))]
-pub(crate) fn restore_clipboard(_run: Run) {}
+pub(crate) fn restore_clipboard(_run: SelectionRun) {}
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 trait PasteDestination {
     fn write_text(&self, text: &str) -> Result<(), AppError>;
     fn active_target_id(&self) -> Option<String>;
-    fn paste_keys(&self, config: &Value, target: &Target) -> Result<(), AppError>;
-    fn restore_later(&self, run: Run, text: String);
+    fn paste_keys(&self, config: &Value, target: &SelectionTarget) -> Result<(), AppError>;
+    fn restore_later(&self, run: SelectionRun, text: String);
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 fn paste_with(
     destination: &impl PasteDestination,
     config: &Value,
-    run: Run,
+    run: SelectionRun,
     text: String,
-) -> Result<FinishStatus, AppError> {
+) -> Result<SelectionFinishStatus, AppError> {
     destination.write_text(&text)?;
     if destination.active_target_id().as_deref() != Some(run.target.id.as_str()) {
-        return Ok(FinishStatus::Clipboard);
+        return Ok(SelectionFinishStatus::Clipboard);
     }
     destination.paste_keys(config, &run.target)?;
     destination.restore_later(run, text);
-    Ok(FinishStatus::Pasted)
+    Ok(SelectionFinishStatus::Pasted)
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -327,13 +335,13 @@ impl PasteDestination for SystemPasteDestination {
     fn active_target_id(&self) -> Option<String> {
         active_target().map(|target| target.id)
     }
-    fn paste_keys(&self, config: &Value, target: &Target) -> Result<(), AppError> {
+    fn paste_keys(&self, config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
         use super::linux::text_injector::{FocusedKeys, SystemTextInjector};
         SystemTextInjector::detect()
             .press_in_focused(config, FocusedKeys::Paste, target.terminal)
             .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))
     }
-    fn restore_later(&self, run: Run, text: String) {
+    fn restore_later(&self, run: SelectionRun, text: String) {
         if let Some(snapshot) = run.snapshot {
             super::linux::clipboard_restore::restore_later(snapshot, text);
         }
@@ -348,10 +356,10 @@ impl PasteDestination for SystemPasteDestination {
     fn active_target_id(&self) -> Option<String> {
         super::windows::capture_source()
     }
-    fn paste_keys(&self, _config: &Value, target: &Target) -> Result<(), AppError> {
+    fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
         super::windows::press_copy_or_paste(false, target.terminal)
     }
-    fn restore_later(&self, run: Run, _text: String) {
+    fn restore_later(&self, run: SelectionRun, _text: String) {
         if let Some(snapshot) = run.snapshot {
             super::windows_clipboard::restore_later(snapshot);
         }
@@ -361,18 +369,18 @@ impl PasteDestination for SystemPasteDestination {
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 pub(crate) fn paste_result(
     config: &Value,
-    run: Run,
+    run: SelectionRun,
     text: String,
-) -> Result<FinishStatus, AppError> {
+) -> Result<SelectionFinishStatus, AppError> {
     paste_with(&SystemPasteDestination, config, run, text)
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "windows")))]
 pub(crate) fn paste_result(
     _config: &Value,
-    _run: Run,
+    _run: SelectionRun,
     _text: String,
-) -> Result<FinishStatus, AppError> {
+) -> Result<SelectionFinishStatus, AppError> {
     Err(AppError::Message(
         "Replacing the selection is only available on Linux and Windows".into(),
     ))
@@ -404,7 +412,7 @@ mod tests {
             self.calls.borrow_mut().push("focus");
             self.target.clone()
         }
-        fn paste_keys(&self, _config: &Value, target: &Target) -> Result<(), AppError> {
+        fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
             assert!(target.terminal);
             self.calls.borrow_mut().push("paste");
             if self.paste_fails {
@@ -413,17 +421,17 @@ mod tests {
                 Ok(())
             }
         }
-        fn restore_later(&self, _run: Run, _text: String) {
+        fn restore_later(&self, _run: SelectionRun, _text: String) {
             self.calls.borrow_mut().push("restore");
         }
     }
 
-    fn run() -> Run {
-        Run {
+    fn run() -> SelectionRun {
+        SelectionRun {
             id: 1,
             external: false,
             captured_text: Some("selected".into()),
-            target: Target {
+            target: SelectionTarget {
                 id: "target".into(),
                 terminal: true,
             },
@@ -448,7 +456,7 @@ mod tests {
             let destination = destination(target);
             assert_eq!(
                 paste_with(&destination, &Value::Null, run(), "result".into()).unwrap(),
-                FinishStatus::Clipboard
+                SelectionFinishStatus::Clipboard
             );
             assert_eq!(*destination.calls.borrow(), ["write", "focus"]);
         }
@@ -459,7 +467,7 @@ mod tests {
         let destination = destination(Some("target"));
         assert_eq!(
             paste_with(&destination, &Value::Null, run(), "result".into()).unwrap(),
-            FinishStatus::Pasted
+            SelectionFinishStatus::Pasted
         );
         assert_eq!(
             *destination.calls.borrow(),

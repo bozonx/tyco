@@ -8,7 +8,7 @@ use serde::Serialize;
 use tauri::{App, AppHandle, Emitter, Manager};
 
 use crate::errors::AppError;
-use crate::services::activation::{Activation, ActivationSource, StartMode};
+use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::runtime;
 
 pub const START_EVENT: &str = "app://activation-metrics-start";
@@ -25,23 +25,31 @@ pub fn now_ns() -> u128 {
 
 #[derive(Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Trial {
+pub struct ActivationTrial {
     pub id: u64,
-    pub t0_trigger: u128,
-    pub t1_ipc: Option<u128>,
-    pub t2_show: Option<u128>,
-    pub t3_frame: Option<u128>,
-    pub t4_os_focus: Option<u128>,
-    pub t4_dom_focus: Option<u128>,
-    pub t5_first_char: Option<u128>,
-    pub value: String,
+    #[serde(rename = "t0Trigger")]
+    pub triggered_at_ns: u128,
+    #[serde(rename = "t1Ipc")]
+    pub ipc_received_at_ns: Option<u128>,
+    #[serde(rename = "t2Show")]
+    pub window_shown_at_ns: Option<u128>,
+    #[serde(rename = "t3Frame")]
+    pub frame_rendered_at_ns: Option<u128>,
+    #[serde(rename = "t4OsFocus")]
+    pub os_focused_at_ns: Option<u128>,
+    #[serde(rename = "t4DomFocus")]
+    pub dom_focused_at_ns: Option<u128>,
+    #[serde(rename = "t5FirstChar")]
+    pub first_char_received_at_ns: Option<u128>,
+    #[serde(rename = "value")]
+    pub received_text: String,
     #[serde(skip)]
     pub result_submitted: bool,
 }
 
 pub struct ActivationMetrics {
     enabled: bool,
-    trials: Mutex<HashMap<u64, Trial>>,
+    trials: Mutex<HashMap<u64, ActivationTrial>>,
     result_ready: Condvar,
     csv: Mutex<Option<BufWriter<File>>>,
 }
@@ -73,19 +81,19 @@ impl ActivationMetrics {
         })
     }
 
-    fn start(&self, id: u64, t0_trigger: u128) {
+    fn start(&self, id: u64, triggered_at_ns: u128) {
         self.trials.lock().expect("metrics lock poisoned").insert(
             id,
-            Trial {
+            ActivationTrial {
                 id,
-                t0_trigger,
-                t1_ipc: Some(now_ns()),
-                ..Trial::default()
+                triggered_at_ns,
+                ipc_received_at_ns: Some(now_ns()),
+                ..ActivationTrial::default()
             },
         );
     }
 
-    fn mark(&self, id: u64, apply: impl FnOnce(&mut Trial)) {
+    fn mark(&self, id: u64, apply: impl FnOnce(&mut ActivationTrial)) {
         if !self.enabled {
             return;
         }
@@ -99,7 +107,7 @@ impl ActivationMetrics {
         }
     }
 
-    fn mark_latest(&self, apply: impl FnOnce(&mut Trial)) {
+    fn mark_latest(&self, apply: impl FnOnce(&mut ActivationTrial)) {
         if !self.enabled {
             return;
         }
@@ -108,21 +116,21 @@ impl ActivationMetrics {
             .lock()
             .expect("metrics lock poisoned")
             .values_mut()
-            .max_by_key(|trial| trial.t0_trigger)
+            .max_by_key(|trial| trial.triggered_at_ns)
         {
             apply(trial);
         }
     }
 
-    fn submit_value(&self, id: u64, value: String) {
+    fn submit_received_text(&self, id: u64, received_text: String) {
         self.mark(id, |trial| {
-            trial.value = value;
+            trial.received_text = received_text;
             trial.result_submitted = true;
         });
         self.result_ready.notify_all();
     }
 
-    fn wait_for_result(&self, id: u64) -> Option<Trial> {
+    fn wait_for_result(&self, id: u64) -> Option<ActivationTrial> {
         let trials = self.trials.lock().expect("metrics lock poisoned");
         let (trials, _) = self
             .result_ready
@@ -133,16 +141,21 @@ impl ActivationMetrics {
         trials.get(&id).cloned()
     }
 
-    fn write_row(&self, trial: &Trial, chars_sent: usize) {
+    fn write_row(&self, trial: &ActivationTrial, chars_sent: usize) {
         let mut csv = self.csv.lock().expect("metrics CSV lock poisoned");
         let Some(writer) = csv.as_mut() else { return };
         let elapsed = |value: Option<u128>| {
             value
-                .filter(|value| *value >= trial.t0_trigger)
-                .map(|value| format!("{:.1}", (value - trial.t0_trigger) as f64 / 1_000_000.0))
+                .filter(|value| *value >= trial.triggered_at_ns)
+                .map(|value| {
+                    format!(
+                        "{:.1}",
+                        (value - trial.triggered_at_ns) as f64 / 1_000_000.0
+                    )
+                })
                 .unwrap_or_default()
         };
-        let landed = trial.value.chars().count();
+        let landed = trial.received_text.chars().count();
         let _ = writeln!(
             writer,
             "{},{},{},{},{},{},{},{},{},{}",
@@ -151,11 +164,11 @@ impl ActivationMetrics {
             landed,
             chars_sent.saturating_sub(landed),
             landed.saturating_sub(chars_sent),
-            elapsed(trial.t2_show),
-            elapsed(trial.t3_frame),
-            elapsed(trial.t4_os_focus),
-            elapsed(trial.t4_dom_focus),
-            elapsed(trial.t5_first_char),
+            elapsed(trial.window_shown_at_ns),
+            elapsed(trial.frame_rendered_at_ns),
+            elapsed(trial.os_focused_at_ns),
+            elapsed(trial.dom_focused_at_ns),
+            elapsed(trial.first_char_received_at_ns),
         );
         let _ = writer.flush();
     }
@@ -175,13 +188,13 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
 
 pub fn mark_show(app: &AppHandle) {
     if let Some(metrics) = app.try_state::<ActivationMetrics>() {
-        metrics.mark_latest(|trial| trial.t2_show = Some(now_ns()));
+        metrics.mark_latest(|trial| trial.window_shown_at_ns = Some(now_ns()));
     }
 }
 
 pub fn mark_os_focus(app: &AppHandle) {
     if let Some(metrics) = app.try_state::<ActivationMetrics>() {
-        metrics.mark_latest(|trial| trial.t4_os_focus = Some(now_ns()));
+        metrics.mark_latest(|trial| trial.os_focused_at_ns = Some(now_ns()));
     }
 }
 
@@ -191,21 +204,21 @@ pub fn mark_from_frontend(app: &AppHandle, id: u64, mark: &str) {
     };
     metrics.mark(id, |trial| match mark {
         "frame" => {
-            trial.t3_frame.get_or_insert_with(now_ns);
+            trial.frame_rendered_at_ns.get_or_insert_with(now_ns);
         }
         "dom-focus" => {
-            trial.t4_dom_focus.get_or_insert_with(now_ns);
+            trial.dom_focused_at_ns.get_or_insert_with(now_ns);
         }
         "first-char" => {
-            trial.t5_first_char.get_or_insert_with(now_ns);
+            trial.first_char_received_at_ns.get_or_insert_with(now_ns);
         }
         _ => {}
     });
 }
 
-pub fn submit_value(app: &AppHandle, id: u64, value: String) {
+pub fn submit_received_text(app: &AppHandle, id: u64, received_text: String) {
     if let Some(metrics) = app.try_state::<ActivationMetrics>() {
-        metrics.submit_value(id, value);
+        metrics.submit_received_text(id, received_text);
     }
 }
 
@@ -264,7 +277,7 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
                 metrics.start(id, t0);
                 match runtime::activate(
                     app,
-                    Activation::new(StartMode::Write, ActivationSource::Cli),
+                    Activation::new(ActivationMode::Write, ActivationSource::Cli),
                 ) {
                     Ok(()) => {
                         // `emit` would reach the main window too, and it would
@@ -313,6 +326,36 @@ mod tests {
     use super::*;
 
     #[test]
+    fn renamed_trial_fields_preserve_the_benchmark_wire_contract() {
+        let trial = ActivationTrial {
+            id: 7,
+            triggered_at_ns: 10,
+            ipc_received_at_ns: Some(11),
+            window_shown_at_ns: Some(12),
+            frame_rendered_at_ns: Some(13),
+            os_focused_at_ns: Some(14),
+            dom_focused_at_ns: Some(15),
+            first_char_received_at_ns: Some(16),
+            received_text: String::from("probe"),
+            result_submitted: true,
+        };
+        assert_eq!(
+            serde_json::to_value(trial).unwrap(),
+            serde_json::json!({
+                "id": 7,
+                "t0Trigger": 10,
+                "t1Ipc": 11,
+                "t2Show": 12,
+                "t3Frame": 13,
+                "t4OsFocus": 14,
+                "t4DomFocus": 15,
+                "t5FirstChar": 16,
+                "value": "probe"
+            })
+        );
+    }
+
+    #[test]
     fn records_marks_without_overwriting_the_first_timestamp() {
         let metrics = ActivationMetrics {
             enabled: true,
@@ -322,12 +365,15 @@ mod tests {
         };
         metrics.start(7, 10);
         metrics.mark(7, |trial| {
-            trial.t3_frame.get_or_insert(20);
+            trial.frame_rendered_at_ns.get_or_insert(20);
         });
         metrics.mark(7, |trial| {
-            trial.t3_frame.get_or_insert(30);
+            trial.frame_rendered_at_ns.get_or_insert(30);
         });
-        metrics.submit_value(7, String::from("123"));
-        assert_eq!(metrics.wait_for_result(7).unwrap().t3_frame, Some(20));
+        metrics.submit_received_text(7, String::from("123"));
+        assert_eq!(
+            metrics.wait_for_result(7).unwrap().frame_rendered_at_ns,
+            Some(20)
+        );
     }
 }
