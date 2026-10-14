@@ -25,6 +25,7 @@
       />
       <FieldCheckbox
         v-else-if="item.type === 'checkbox'"
+        :key="item.name"
         :value="item.value ?? false"
         @update:value="updateValue(item.name, $event)"
       />
@@ -73,16 +74,18 @@ const values = ref<Record<string, unknown>>({})
 watch(
   () => props.config,
   (newConfig) => {
+    const nextValues: Record<string, unknown> = {}
     for (const item of newConfig) {
       if (item.value !== undefined) {
-        values.value[item.name] = withConfigFieldValue(item, item.value).value
-      } else if (values.value[item.name] === undefined) {
-        values.value[item.name] = withConfigFieldValue(
+        nextValues[item.name] = withConfigFieldValue(item, item.value).value
+      } else {
+        nextValues[item.name] = withConfigFieldValue(
           item,
           item.defaultValue
         ).value
       }
     }
+    values.value = nextValues
   },
   { immediate: true, deep: true }
 )

@@ -2,8 +2,8 @@
   <SettingsSection :description="t('settings.launcherCommandsHint')" bare>
     <div class="flex flex-wrap items-center gap-2 mb-3">
       <Button
-        v-for="(_, index) in pagesCount"
-        :key="index"
+        v-for="(pageItem, index) in props.userConfig.launcherPages"
+        :key="pageItem.id"
         size="sm"
         :variant="page === index ? 'primary' : 'neutral'"
         class="min-w-8"
@@ -20,6 +20,7 @@
     <div class="flex flex-wrap items-center gap-4 mb-3">
       <div class="flex items-center gap-2">
         <FieldCheckbox
+          :key="props.userConfig.launcherPages[page]?.id ?? page"
           :value="takesText"
           :label="t('settings.launcherPageTakesText')"
           @update:value="setTakesText"
@@ -31,6 +32,7 @@
       }}</Button>
     </div>
     <ShortcutSlots
+      :key="props.userConfig.launcherPages[page]?.id ?? page"
       :items="launcherSlots"
       @move="moveSlot"
       @add="addSlot"

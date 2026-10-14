@@ -75,6 +75,7 @@
       </button>
     </div>
     <FieldCheckbox
+      :key="command.id"
       class="enabled-switch"
       :value="command.enabled"
       :title="t(command.enabled ? 'commands.disable' : 'commands.enable')"
@@ -93,6 +94,7 @@
 
   <div v-if="expanded" class="command-body">
     <CommandEditor
+      :key="command.id"
       :command="command"
       :user-config="userConfig"
       :name-conflicts="nameConflicts"

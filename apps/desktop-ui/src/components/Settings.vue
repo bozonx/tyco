@@ -243,6 +243,7 @@
 
           <SettingsPluginDetailTab
             v-else-if="currentPlugin"
+            :key="currentPlugin.pluginId"
             :plugin="currentPlugin"
             @back="currentTab = 'plugins'"
             @update:plugin-config="updatePluginConfig"

@@ -5,7 +5,12 @@ import { createUiConfig } from './build/ui-config.ts'
 // Only modules independent of DOM APIs belong in the Node project.
 const NODE_TEST_PATTERNS = [
   'build/**/*.test.ts',
-  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,ai-tasks,logger,diff,locale,input-keys,command-launcher}/**/*.test.ts',
+  'src/test/offline-assets.test.ts',
+  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,ai-tasks,logger,diff,locale,input-keys,command-launcher,shortcut-slots,sortable,toast,toolbar,menu-query,external-access}/**/*.test.ts',
+  'src/lib/theme/{appearance,theme-controller}.test.ts',
+  'src/lib/desktop/ipc-error.test.ts',
+  'src/lib/quick-input/{draft-restore,quick-insert}.test.ts',
+  'src/lib/editor/{strip-markdown,format-markdown,html-to-markdown}.test.ts',
   'src/lib/net/{async-queue,base64,provider-fetch,secrets,secrets-state}.test.ts',
   'src/lib/chat/{context-budget,chat-title,chat-request,chat-history-entry,chat-context,chat-attachment,chat-export,chat-history-list,chat-history-settings,chat-persistence-queue,chat-session-model,chat-generation-model}.test.ts',
   'src/lib/stt/{stt-config,sherpa-provider,deepgram-provider,dictation-language,dictation-ownership,stt-readiness}.test.ts',

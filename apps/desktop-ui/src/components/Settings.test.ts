@@ -477,6 +477,27 @@ describe('Settings.vue', () => {
     expect(wrapper.find('.plugin-detail-stub').text()).toBe('PluginA')
   })
 
+  it('remounts SettingsPluginDetailTab with pluginId key when switching plugins', async () => {
+    const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
+
+    const subnavItems = wrapper.findAll('.settings-subnav-item')
+    // Click on Plugin A (enabled: true)
+    await subnavItems[0].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const detailCardA = wrapper.find('[data-plugin="PluginA"]')
+    expect(detailCardA.exists()).toBe(true)
+    expect(detailCardA.classes()).not.toContain('is-disabled')
+
+    // Click on Plugin B (enabled: false)
+    await subnavItems[1].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const detailCardB = wrapper.find('[data-plugin="PluginB"]')
+    expect(detailCardB.exists()).toBe(true)
+    expect(detailCardB.classes()).toContain('is-disabled')
+  })
+
   it('renders a row per storage root when storage info is loaded', async () => {
     const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
     await wrapper.vm.$nextTick()

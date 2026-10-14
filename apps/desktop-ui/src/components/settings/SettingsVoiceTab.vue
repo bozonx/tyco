@@ -51,6 +51,7 @@
     <SettingsSection :title="t('settings.sttLlmFormatting')">
       <FieldRow :label="t('settings.formatWithLlm')">
         <FieldCheckbox
+          :key="currentSttModel.id"
           :value="Boolean(currentSttModel.formatWithLlm)"
           @update:value="setSttFormatWithLlm"
         />

@@ -122,6 +122,7 @@
         </Button>
         <div class="plugin-toggle" @click.stop>
           <FieldCheckbox
+            :key="plugin.pluginId"
             :value="plugin.isEnabled"
             :title="
               plugin.isEnabled

@@ -27,8 +27,9 @@ const props = defineProps<{ value: boolean; label?: string; title?: string }>()
 
 const emit = defineEmits<{ (e: 'update:value', value: boolean): void }>()
 
-function handleChange() {
-  emit('update:value', !props.value)
+function handleChange(event?: Event) {
+  const target = event?.target as HTMLInputElement | undefined
+  emit('update:value', target ? target.checked : !props.value)
 }
 </script>
 

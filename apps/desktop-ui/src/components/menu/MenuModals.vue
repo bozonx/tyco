@@ -9,32 +9,38 @@
     />
     <AiTaskMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.AI_TASK"
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
     <DiffMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.DIFF"
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
     <VoiceRecognitionMenu
       v-else-if="
         menuModalsStore.currentStep?.modal === MenuModals.VOICE_RECOGNITION
       "
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
       @cancelled="handleVoiceCancelled"
       @corrected="handleVoiceCorrected"
     />
     <TranslateMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.TRANSLATE"
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
     <PreviewMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.PREVIEW"
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
     <ActionSelectModal
       v-else-if="
         menuModalsStore.currentStep?.modal === MenuModals.ACTION_SELECT
       "
+      :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
   </Overlay>

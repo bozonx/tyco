@@ -37,6 +37,7 @@
         </div>
 
         <FieldCheckbox
+          :key="plugin.pluginId"
           :value="plugin.isEnabled"
           :title="
             plugin.isEnabled
@@ -59,6 +60,7 @@
       <div v-if="plugin.isEnabled" class="plugin-card-body">
         <ConfigFields
           v-if="plugin.fields.length > 0"
+          :key="plugin.pluginId"
           :config="plugin.fields"
           @update:values="updatePluginConfig(plugin.pluginId, $event)"
         />
