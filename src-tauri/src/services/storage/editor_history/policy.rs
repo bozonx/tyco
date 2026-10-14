@@ -33,15 +33,15 @@ impl EditorHistoryStorage {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EditorHistoryPolicy {
     /// How many entries to keep; 0 keeps none.
-    pub limit: usize,
+    pub max_entries: usize,
     /// The entries live in the memory of the process only and never reach the
     /// disk, so nothing of them outlives the app, whichever way it ends.
-    pub memory_only: bool,
+    pub is_memory_only: bool,
     /// Entries older than this many days are dropped; 0 keeps them forever.
-    /// Applies on the disk only, as does `sanitize`.
+    /// Applies on the disk only, as does `should_redact_secrets`.
     pub retention_days: u64,
     /// What looks like a password or a key is masked before it is stored.
-    pub sanitize: bool,
+    pub should_redact_secrets: bool,
 }
 
 impl EditorHistoryPolicy {
@@ -57,7 +57,7 @@ impl EditorHistoryPolicy {
         let on_disk = storage == EditorHistoryStorage::Disk;
 
         Self {
-            limit: if storage == EditorHistoryStorage::Off {
+            max_entries: if storage == EditorHistoryStorage::Off {
                 0
             } else {
                 history_limit(
@@ -66,7 +66,7 @@ impl EditorHistoryPolicy {
                     DEFAULT_EDITOR_HISTORY_LIMIT,
                 )
             },
-            memory_only: storage == EditorHistoryStorage::Session,
+            is_memory_only: storage == EditorHistoryStorage::Session,
             retention_days: if on_disk {
                 user_config
                     .get("editorHistoryRetentionDays")
@@ -75,12 +75,12 @@ impl EditorHistoryPolicy {
             } else {
                 0
             },
-            sanitize: on_disk && flag("sanitizeSecretsInEditorHistory"),
+            should_redact_secrets: on_disk && flag("sanitizeSecretsInEditorHistory"),
         }
     }
 
     pub(super) fn redact(&self, text: String) -> String {
-        if self.sanitize {
+        if self.should_redact_secrets {
             redact_secrets(&text)
         } else {
             text
@@ -93,10 +93,10 @@ impl EditorHistoryPolicy {
     pub(super) fn enforce(&self, history: &mut Vec<EditorHistoryRecord>, now_ms: u64) {
         if self.retention_days > 0 {
             let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
-            history.retain(|item| item.created_at >= cutoff);
+            history.retain(|item| item.created_at_ms >= cutoff);
         }
-        history.truncate(self.limit);
-        if self.sanitize {
+        history.truncate(self.max_entries);
+        if self.should_redact_secrets {
             for item in history.iter_mut() {
                 item.text = redact_secrets(&item.text);
                 item.result = item.result.take().map(|result| redact_secrets(&result));
@@ -118,9 +118,9 @@ mod tests {
             text: text.to_string(),
             kind,
             operation: None,
-            created_at: 1,
+            created_at_ms: 1,
             result: None,
-            sent: false,
+            is_result_applied: false,
         }
     }
 
@@ -130,10 +130,10 @@ mod tests {
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {
-            limit: 100,
-            memory_only: false,
+            max_entries: 100,
+            is_memory_only: false,
             retention_days: 0,
-            sanitize: false,
+            should_redact_secrets: false,
         }
     }
 
@@ -149,10 +149,10 @@ mod tests {
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
             EditorHistoryPolicy {
-                limit: 20,
-                memory_only: false,
+                max_entries: 20,
+                is_memory_only: false,
                 retention_days: 7,
-                sanitize: true,
+                should_redact_secrets: true,
             }
         );
         assert_eq!(
@@ -163,8 +163,8 @@ mod tests {
                 "sanitizeSecretsInEditorHistory": true,
             })),
             EditorHistoryPolicy {
-                limit: 20,
-                memory_only: true,
+                max_entries: 20,
+                is_memory_only: true,
                 ..policy()
             }
         );
@@ -174,14 +174,14 @@ mod tests {
                 "editorHistoryMaxItems": 20,
             })),
             EditorHistoryPolicy {
-                limit: 0,
+                max_entries: 0,
                 ..policy()
             }
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(&json!({})),
             EditorHistoryPolicy {
-                limit: DEFAULT_EDITOR_HISTORY_LIMIT,
+                max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 ..policy()
             }
         );
@@ -191,11 +191,11 @@ mod tests {
     fn enforce_drops_expired_entries_and_those_over_the_limit() {
         let now = 100 * DAY_MS;
         let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
-        fresh.created_at = now - DAY_MS;
+        fresh.created_at_ms = now - DAY_MS;
         let mut second = history_item("second", "second", EditorHistoryKind::Draft);
-        second.created_at = now - 2 * DAY_MS;
+        second.created_at_ms = now - 2 * DAY_MS;
         let mut old = history_item("old", "old", EditorHistoryKind::Draft);
-        old.created_at = now - 3 * DAY_MS;
+        old.created_at_ms = now - 3 * DAY_MS;
         let mut history = vec![fresh, second, old];
 
         EditorHistoryPolicy {
@@ -206,7 +206,7 @@ mod tests {
         assert_eq!(history_texts(&history), ["fresh", "second"]);
 
         EditorHistoryPolicy {
-            limit: 1,
+            max_entries: 1,
             ..policy()
         }
         .enforce(&mut history, now);
@@ -220,7 +220,7 @@ mod tests {
         let mut history = vec![item];
 
         EditorHistoryPolicy {
-            sanitize: true,
+            should_redact_secrets: true,
             ..policy()
         }
         .enforce(&mut history, now_ms());

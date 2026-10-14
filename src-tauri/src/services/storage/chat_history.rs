@@ -439,7 +439,7 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result
     }
     crate::services::atomic_file::sync_parent(&chats_dir.join(CHAT_INDEX_FILE))?;
 
-    crate::services::chat_images::collect_orphans(chats_dir)
+    crate::services::chat_images::remove_orphan_images(chats_dir)
 }
 
 #[cfg(test)]

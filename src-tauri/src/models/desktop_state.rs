@@ -19,10 +19,12 @@ pub struct DesktopSnapshot {
 #[serde(rename_all = "camelCase")]
 pub struct ActivationSnapshot {
     pub activation_id: u64,
-    pub window_id: Option<String>,
+    #[serde(rename = "windowId")]
+    pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
     pub mode: Option<ActivationMode>,
-    pub launcher_page: usize,
+    #[serde(rename = "launcherPage")]
+    pub launcher_page_index: usize,
     pub launcher_request: Option<LauncherRequest>,
     pub access_request: Option<AccessRequest>,
 }
@@ -45,10 +47,10 @@ mod tests {
     #[test]
     fn snapshot_matches_the_shared_domain_wire_fixture() {
         let mut params =
-            crate::models::default_desktop_state(serde_json::json!({}), SessionState::default());
+            crate::models::default_desktop_snapshot(serde_json::json!({}), SessionState::default());
         params.revision = 7;
         params.activation.activation_id = 2;
-        params.activation.window_id = Some("target".into());
+        params.activation.target_window_id = Some("target".into());
         params.activation.selected_text = Some("Captured text".into());
         params.window.is_window_shown = true;
         params.settings.app_config = serde_json::json!({});

@@ -34,7 +34,7 @@ pub mod windows;
 pub mod windows_clipboard;
 
 pub use file_manager::{open_dir, open_file, open_web_url};
-pub use foreground_context::{capture_selection, capture_source};
+pub use foreground_context::{capture_selection, capture_source, ForegroundTarget};
 #[cfg(target_os = "linux")]
 pub use panel_surface::settle_panel_keyboard;
 pub use panel_surface::{

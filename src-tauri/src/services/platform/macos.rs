@@ -12,7 +12,7 @@ const MAX_SELECTION_BYTES: isize = 16 * 1024 * 1024;
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
     fn AXIsProcessTrusted() -> bool;
-    fn AXUIElementCreateApplication(pid: i32) -> CFTypeRef;
+    fn AXUIElementCreateApplication(process_id: i32) -> CFTypeRef;
     fn AXUIElementSetMessagingTimeout(element: CFTypeRef, timeout: f32) -> i32;
     fn AXUIElementCopyAttributeValue(
         element: CFTypeRef,
@@ -85,22 +85,25 @@ function run() {
     if !status.success() {
         return None;
     }
-    let pid = String::from_utf8(output).ok()?.trim().parse::<i32>().ok()?;
-    let source = if pid as u32 == std::process::id() {
+    let process_id = String::from_utf8(output).ok()?.trim().parse::<i32>().ok()?;
+    let source = if process_id as u32 == std::process::id() {
         LAST_SOURCE.load(Ordering::SeqCst)
     } else {
-        LAST_SOURCE.store(pid, Ordering::SeqCst);
-        pid
+        LAST_SOURCE.store(process_id, Ordering::SeqCst);
+        process_id
     };
     (source > 0).then(|| source.to_string())
 }
 
 pub async fn capture_selection(source: Option<String>) -> Option<String> {
-    let pid = source?.parse::<i32>().ok()?;
-    if pid <= 0 || pid as u32 == std::process::id() || !unsafe { AXIsProcessTrusted() } {
+    let process_id = source?.parse::<i32>().ok()?;
+    if process_id <= 0
+        || process_id as u32 == std::process::id()
+        || !unsafe { AXIsProcessTrusted() }
+    {
         return None;
     }
-    let app = OwnedValue::new(unsafe { AXUIElementCreateApplication(pid) })?;
+    let app = OwnedValue::new(unsafe { AXUIElementCreateApplication(process_id) })?;
     // A hung application must not keep a selection request alive indefinitely.
     unsafe { AXUIElementSetMessagingTimeout(app.0, 1.0) };
     let focused = attribute(app.0, "AXFocusedUIElement")?;
@@ -129,10 +132,10 @@ pub async fn capture_selection(source: Option<String>) -> Option<String> {
     (!text.trim().is_empty()).then_some(text)
 }
 
-pub fn inject_paste(source_window_id: Option<&str>) -> Result<(), AppError> {
-    let pid = source_window_id
+pub fn inject_paste(target_process_id: Option<&str>) -> Result<(), AppError> {
+    let process_id = target_process_id
         .and_then(|value| value.parse::<i32>().ok())
-        .filter(|pid| *pid > 0 && *pid as u32 != std::process::id())
+        .filter(|process_id| *process_id > 0 && *process_id as u32 != std::process::id())
         .ok_or_else(|| AppError::Message("Target application is not available".into()))?;
     check_text_injection()?;
     const SCRIPT: &str = r#"
@@ -154,7 +157,7 @@ function run(argv) {
     let (status, _) = super::process::run(
         super::process::command(
             "osascript",
-            &["-l", "JavaScript", "-e", SCRIPT, &pid.to_string()],
+            &["-l", "JavaScript", "-e", SCRIPT, &process_id.to_string()],
         ),
         None,
         Duration::from_secs(3),

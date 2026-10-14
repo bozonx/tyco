@@ -1,4 +1,4 @@
-use super::blocking;
+use super::run_blocking;
 use crate::{
     errors::AppError,
     services::{
@@ -14,7 +14,7 @@ pub async fn log_custom_action(
     action_type: String,
     details: String,
 ) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         if let Ok(log_dir) = storage::app_log_dir(&app) {
             if let Err(error) =
                 custom_actions::log_custom_action(&log_dir, &name, &action_type, &details)
@@ -28,7 +28,7 @@ pub async fn log_custom_action(
 
 #[tauri::command]
 pub async fn log_command_run(app: AppHandle, record: CommandRunRecord) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         if let Ok(log_dir) = storage::app_log_dir(&app) {
             if let Err(error) = custom_actions::log_command_run(&log_dir, &record) {
                 log::warn!("Could not log the command run: {error}");
@@ -40,7 +40,7 @@ pub async fn log_command_run(app: AppHandle, record: CommandRunRecord) -> Result
 
 #[tauri::command]
 pub async fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let path = custom_actions::action_log_path(&storage::app_log_dir(&app)?);
         if !path.is_file() {
             return Ok(false);

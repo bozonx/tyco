@@ -127,20 +127,20 @@ async fn run_socket_with<S: EventSink>(
                     }
                 };
                 if let Err(error) = sent {
-                    sink.event(&SocketEvent::Error { message: error });
+                    sink.send_event(&SocketEvent::Error { message: error });
                     return;
                 }
             }
             message = read.next() => {
                 match message {
                     Some(Ok(Message::Text(data))) => {
-                        if !sink.event(&SocketEvent::Message { data }) {
+                        if !sink.send_event(&SocketEvent::Message { data }) {
                             let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
                     }
                     Some(Ok(Message::Binary(bytes))) => {
-                        if !sink.bytes(bytes) {
+                        if !sink.send_bytes(bytes) {
                             let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
@@ -151,12 +151,12 @@ async fn run_socket_with<S: EventSink>(
                         let (code, reason) = frame
                             .map(|frame| (u16::from(frame.code), frame.reason.into_owned()))
                             .unwrap_or((NO_STATUS, String::new()));
-                        sink.event(&SocketEvent::Close { code, reason });
+                        sink.send_event(&SocketEvent::Close { code, reason });
                         return;
                     }
                     Some(Ok(Message::Ping(_))) => {
                         if let Err(message) = bounded_write(write.flush(), write_timeout, closing_deadline).await {
-                            sink.event(&SocketEvent::Error { message });
+                            sink.send_event(&SocketEvent::Error { message });
                             return;
                         }
                     }
@@ -164,15 +164,15 @@ async fn run_socket_with<S: EventSink>(
                     // We asked to close; a server that drops the connection
                     // instead of answering has still closed it.
                     Some(Err(_)) | None if closing_deadline.is_some() && !awaiting_results => {
-                        sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                        sink.send_event(&SocketEvent::Close { code: 1000, reason: String::new() });
                         return;
                     }
                     Some(Err(error)) => {
-                        sink.event(&SocketEvent::Error { message: error.to_string() });
+                        sink.send_event(&SocketEvent::Error { message: error.to_string() });
                         return;
                     }
                     None => {
-                        sink.event(&SocketEvent::Close {
+                        sink.send_event(&SocketEvent::Close {
                             code: ABNORMAL_CLOSE,
                             reason: String::from("connection closed without a close frame"),
                         });
@@ -182,9 +182,9 @@ async fn run_socket_with<S: EventSink>(
             }
             _ = sleep_until(closing_deadline.unwrap_or_else(Instant::now)), if closing_deadline.is_some() => {
                 if awaiting_results {
-                    sink.event(&SocketEvent::Error { message: "Timed out waiting for the final speech recognition result".into() });
+                    sink.send_event(&SocketEvent::Error { message: "Timed out waiting for the final speech recognition result".into() });
                 } else {
-                    sink.event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                    sink.send_event(&SocketEvent::Close { code: 1000, reason: String::new() });
                 }
                 return;
             }
@@ -230,7 +230,7 @@ mod tests {
     struct RecordingSink(Arc<Mutex<Vec<serde_json::Value>>>);
 
     impl EventSink for RecordingSink {
-        fn event<T: Serialize>(&self, event: &T) -> bool {
+        fn send_event<T: Serialize>(&self, event: &T) -> bool {
             self.0
                 .lock()
                 .unwrap()
@@ -238,7 +238,7 @@ mod tests {
             true
         }
 
-        fn bytes(&self, bytes: Vec<u8>) -> bool {
+        fn send_bytes(&self, bytes: Vec<u8>) -> bool {
             self.0
                 .lock()
                 .unwrap()

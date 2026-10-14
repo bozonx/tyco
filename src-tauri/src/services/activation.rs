@@ -115,10 +115,10 @@ pub enum ActivationSource {
 pub struct Activation {
     pub mode: ActivationMode,
     pub source: ActivationSource,
-    pub window_id: Option<String>,
+    pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
     /// The command the command overlay opens with, for an external call.
-    pub launcher_page: usize,
+    pub launcher_page_index: usize,
     pub launcher_request: Option<LauncherRequest>,
     /// What the access prompt asks about, see `external_access`.
     pub access_request: Option<AccessRequest>,
@@ -129,9 +129,9 @@ impl Activation {
         Self {
             mode,
             source,
-            window_id: None,
+            target_window_id: None,
             selected_text: None,
-            launcher_page: 0,
+            launcher_page_index: 0,
             launcher_request: None,
             access_request: None,
         }
@@ -148,7 +148,7 @@ impl Activation {
                 .filter(|page| *page > 0)
                 .ok_or_else(|| AppError::Message("Invalid command page".into()))?;
             let mut activation = Self::new(ActivationMode::CommandLauncher, source);
-            activation.launcher_page = page - 1;
+            activation.launcher_page_index = page - 1;
             return Ok(activation);
         }
         Ok(Self::new(ActivationMode::parse(value)?, source))
@@ -167,7 +167,7 @@ impl Activation {
             .is_some_and(|pages| {
                 pages
                     .iter()
-                    .any(|page| page.as_u64() == Some(self.launcher_page as u64))
+                    .any(|page| page.as_u64() == Some(self.launcher_page_index as u64))
             })
     }
 
@@ -208,12 +208,12 @@ mod tests {
     fn command_pages_parse_without_changing_the_overlay_mode() {
         let activation = Activation::from_mode("commandLauncher5", ActivationSource::Ui).unwrap();
         assert_eq!(activation.mode, ActivationMode::CommandLauncher);
-        assert_eq!(activation.launcher_page, 4);
+        assert_eq!(activation.launcher_page_index, 4);
         assert!(Activation::from_mode("commandLauncher0", ActivationSource::Ui).is_err());
         assert_eq!(
             Activation::from_mode("commandLauncher42", ActivationSource::Ui)
                 .unwrap()
-                .launcher_page,
+                .launcher_page_index,
             41
         );
     }

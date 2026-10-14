@@ -1,4 +1,4 @@
-use super::blocking;
+use super::run_blocking;
 use crate::{
     errors::AppError,
     services::external_commands::{self, ToolCatalogEntry},
@@ -45,7 +45,7 @@ pub async fn finish_external_job(
     if window.label() != crate::services::runtime::QUICK_WINDOW_LABEL {
         return Ok(None);
     }
-    blocking(move || {
+    run_blocking(move || {
         crate::services::external_api::complete(&app, &id, completion);
         use tauri::Manager;
         app.state::<crate::services::external_jobs::ExternalJobs>()

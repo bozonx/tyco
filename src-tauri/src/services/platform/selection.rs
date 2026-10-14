@@ -56,7 +56,7 @@ fn active_target() -> Option<SelectionTarget> {
 
     if tracker().is_running() {
         return tracker().active_window().map(|window| SelectionTarget {
-            terminal: is_terminal_class(&window.class),
+            is_terminal: is_terminal_class(&window.class),
             id: window.id,
         });
     }
@@ -71,7 +71,7 @@ fn active_target() -> Option<SelectionTarget> {
     let id = String::from_utf8(output).ok()?.trim().to_owned();
     (!id.is_empty()).then_some(SelectionTarget {
         id,
-        terminal: false,
+        is_terminal: false,
     })
 }
 
@@ -96,16 +96,16 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
     let snapshot = clipboard_restore::snapshot();
     let mut run = SelectionRun {
         id: 0,
-        external: false,
+        is_external: false,
         captured_text: None,
         target,
-        started: Instant::now(),
-        snapshot,
+        started_at: Instant::now(),
+        clipboard_snapshot: snapshot,
     };
 
     match copy_selection(&injector, user_config, &run.target) {
         Ok(Some(text)) => {
-            run.started = Instant::now();
+            run.started_at = Instant::now();
             Ok((text, run))
         }
         Ok(None) => {
@@ -146,14 +146,14 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         .ok();
     let run = SelectionRun {
         id: 0,
-        external: false,
+        is_external: false,
         captured_text: None,
         target: SelectionTarget {
             id,
-            terminal: windows::foreground_is_terminal(),
+            is_terminal: windows::foreground_is_terminal(),
         },
-        started: Instant::now(),
-        snapshot,
+        started_at: Instant::now(),
+        clipboard_snapshot: snapshot,
     };
     let probe = format!("tyco-selection-probe-{}", std::process::id());
     let result = (|| {
@@ -166,7 +166,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
                 "Focus changed before capture",
             ));
         }
-        windows::press_copy_or_paste(true, run.target.terminal).map_err(|error| {
+        windows::press_copy_or_paste(true, run.target.is_terminal).map_err(|error| {
             SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
         })?;
         let deadline = Instant::now() + Duration::from_millis(700);
@@ -203,7 +203,7 @@ pub(crate) fn restore_clipboard(run: SelectionRun) {
     {
         return;
     }
-    match run.snapshot {
+    match run.clipboard_snapshot {
         Some(snapshot) => {
             if let Err(error) = super::windows_clipboard::restore(&snapshot) {
                 log::warn!("Could not restore the clipboard: {error}");
@@ -245,7 +245,7 @@ fn copy_selection(
             .unwrap_or_default()
     );
     crate::services::clipboard::copy_to_clipboard(&probe)?;
-    injector.press_in_focused(user_config, FocusedKeys::Copy, target.terminal)?;
+    injector.press_in_focused(user_config, FocusedKeys::Copy, target.is_terminal)?;
 
     let deadline = Instant::now() + COPY_TIMEOUT;
     loop {
@@ -285,7 +285,7 @@ pub(crate) fn restore_clipboard(run: SelectionRun) {
         return;
     }
 
-    match run.snapshot {
+    match run.clipboard_snapshot {
         Some(snapshot) => clipboard_restore::restore_now(&snapshot),
         None => {
             if clipboard_restore::read_text()
@@ -338,11 +338,11 @@ impl PasteDestination for SystemPasteDestination {
     fn paste_keys(&self, config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
         use super::linux::text_injector::{FocusedKeys, SystemTextInjector};
         SystemTextInjector::detect()
-            .press_in_focused(config, FocusedKeys::Paste, target.terminal)
+            .press_in_focused(config, FocusedKeys::Paste, target.is_terminal)
             .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))
     }
     fn restore_later(&self, run: SelectionRun, text: String) {
-        if let Some(snapshot) = run.snapshot {
+        if let Some(snapshot) = run.clipboard_snapshot {
             super::linux::clipboard_restore::restore_later(snapshot, text);
         }
     }
@@ -357,10 +357,10 @@ impl PasteDestination for SystemPasteDestination {
         super::windows::focused_source()
     }
     fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
-        super::windows::press_copy_or_paste(false, target.terminal)
+        super::windows::press_copy_or_paste(false, target.is_terminal)
     }
     fn restore_later(&self, run: SelectionRun, _text: String) {
-        if let Some(snapshot) = run.snapshot {
+        if let Some(snapshot) = run.clipboard_snapshot {
             super::windows_clipboard::restore_later(snapshot);
         }
     }
@@ -413,7 +413,7 @@ mod tests {
             self.target.clone()
         }
         fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
-            assert!(target.terminal);
+            assert!(target.is_terminal);
             self.calls.borrow_mut().push("paste");
             if self.paste_fails {
                 Err(AppError::Message("paste failed".into()))
@@ -429,15 +429,15 @@ mod tests {
     fn run() -> SelectionRun {
         SelectionRun {
             id: 1,
-            external: false,
+            is_external: false,
             captured_text: Some("selected".into()),
             target: SelectionTarget {
                 id: "target".into(),
-                terminal: true,
+                is_terminal: true,
             },
-            started: std::time::Instant::now(),
+            started_at: std::time::Instant::now(),
             #[cfg(any(target_os = "linux", target_os = "windows"))]
-            snapshot: None,
+            clipboard_snapshot: None,
         }
     }
 

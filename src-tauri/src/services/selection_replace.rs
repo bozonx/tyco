@@ -88,7 +88,7 @@ impl SelectionRunError {
 /// Sent to the webview: the text to transform, or why there is none.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct RunEvent {
+struct SelectionRunEvent {
     run_id: u64,
     action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -116,53 +116,53 @@ pub enum SelectionFinishStatus {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct SelectionTarget {
     pub id: String,
-    pub terminal: bool,
+    pub is_terminal: bool,
 }
 
 pub(crate) struct SelectionRun {
     pub id: u64,
-    pub external: bool,
+    pub is_external: bool,
     pub captured_text: Option<String>,
     pub target: SelectionTarget,
-    pub started: Instant,
+    pub started_at: Instant,
     #[cfg(target_os = "linux")]
-    pub snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
+    pub clipboard_snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
     #[cfg(target_os = "windows")]
-    pub snapshot: Option<super::platform::windows_clipboard::ClipboardSnapshot>,
+    pub clipboard_snapshot: Option<super::platform::windows_clipboard::ClipboardSnapshot>,
 }
 
-/// The run a trigger found, see `SelectionRuns::take_active_at`.
-enum Taken {
-    Nothing,
+/// The run a trigger found, see `SelectionRunCoordinator::take_active_at`.
+enum SelectionRunTakeOutcome {
+    Empty,
     Active(SelectionRun),
     Abandoned(SelectionRun),
 }
 
 #[derive(Default)]
-pub struct SelectionRuns {
+pub struct SelectionRunCoordinator {
     next_id: AtomicU64,
     capturing: Arc<AtomicBool>,
     current: Mutex<Option<SelectionRun>>,
 }
 
-impl SelectionRuns {
+impl SelectionRunCoordinator {
     fn lock(&self) -> std::sync::MutexGuard<'_, Option<SelectionRun>> {
         self.current.lock().expect("selection run lock poisoned")
     }
 
     /// Takes the run in progress, telling one the webview abandoned.
-    fn take_active_at(&self, now: Instant) -> Taken {
+    fn take_active_at(&self, now: Instant) -> SelectionRunTakeOutcome {
         let Some(run) = self.lock().take() else {
-            return Taken::Nothing;
+            return SelectionRunTakeOutcome::Empty;
         };
-        if now.saturating_duration_since(run.started) < ABANDONED_RUN_AGE {
-            Taken::Active(run)
+        if now.saturating_duration_since(run.started_at) < ABANDONED_RUN_AGE {
+            SelectionRunTakeOutcome::Active(run)
         } else {
             log::warn!(
                 "Dropping selection run {} the webview never finished",
                 run.id
             );
-            Taken::Abandoned(run)
+            SelectionRunTakeOutcome::Abandoned(run)
         }
     }
 
@@ -189,7 +189,7 @@ trait SelectionBackend {
         run: SelectionRun,
         text: String,
     ) -> Result<SelectionFinishStatus, AppError>;
-    fn publish(&self, event: RunEvent) -> Result<(), AppError>;
+    fn publish(&self, event: SelectionRunEvent) -> Result<(), AppError>;
     fn cancelled(&self, id: u64) -> Result<(), AppError>;
 }
 
@@ -222,7 +222,7 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     ) -> Result<SelectionFinishStatus, AppError> {
         paste_result(config, run, text)
     }
-    fn publish(&self, event: RunEvent) -> Result<(), AppError> {
+    fn publish(&self, event: SelectionRunEvent) -> Result<(), AppError> {
         emit_to_webview(self.0, SELECTION_RUN_EVENT, event)
     }
     fn cancelled(&self, id: u64) -> Result<(), AppError> {
@@ -249,7 +249,7 @@ enum TriggerDecision {
     Capture(CapturingGuard, Option<SelectionRun>),
 }
 
-impl SelectionRuns {
+impl SelectionRunCoordinator {
     fn reserve(&self) -> Option<CapturingGuard> {
         (!self.capturing.swap(true, Ordering::SeqCst))
             .then(|| CapturingGuard(Arc::clone(&self.capturing)))
@@ -265,15 +265,17 @@ impl SelectionRuns {
         let Some(guard) = self.reserve() else {
             return Ok(TriggerDecision::Busy);
         };
-        if self.lock().as_ref().is_some_and(|run| run.external) {
+        if self.lock().as_ref().is_some_and(|run| run.is_external) {
             return Err(AppError::Message(
                 "An external selection job is running".into(),
             ));
         }
         match self.take_active_at(now) {
-            Taken::Active(run) => Ok(TriggerDecision::Cancel(run, guard)),
-            Taken::Nothing => Ok(TriggerDecision::Capture(guard, None)),
-            Taken::Abandoned(run) => Ok(TriggerDecision::Capture(guard, Some(run))),
+            SelectionRunTakeOutcome::Active(run) => Ok(TriggerDecision::Cancel(run, guard)),
+            SelectionRunTakeOutcome::Empty => Ok(TriggerDecision::Capture(guard, None)),
+            SelectionRunTakeOutcome::Abandoned(run) => {
+                Ok(TriggerDecision::Capture(guard, Some(run)))
+            }
         }
     }
 
@@ -300,7 +302,7 @@ impl SelectionRuns {
                     captured_text: Some(text.clone()),
                     ..run
                 });
-                RunEvent {
+                SelectionRunEvent {
                     run_id,
                     action,
                     text: Some(text),
@@ -310,7 +312,7 @@ impl SelectionRuns {
             }
             Err(error) => {
                 log::warn!("Could not capture the selection: {}", error.message);
-                RunEvent {
+                SelectionRunEvent {
                     run_id,
                     action,
                     text: None,
@@ -345,7 +347,7 @@ impl SelectionRuns {
             .map_err(|error| AppError::Message(error.message))?;
         let id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
         run.id = id;
-        run.external = true;
+        run.is_external = true;
         run.captured_text = Some(text.clone());
         self.lock().replace(run);
         Ok((id, text))
@@ -381,7 +383,7 @@ fn cancel_with(backend: &impl SelectionBackend, run: SelectionRun) {
 /// Starts an action, or cancels the current hotkey run on a second trigger.
 pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
     let decision = app
-        .state::<SelectionRuns>()
+        .state::<SelectionRunCoordinator>()
         .begin_trigger(action, Instant::now())?;
     match decision {
         TriggerDecision::Busy => {
@@ -392,7 +394,7 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
             let app = app.clone();
             let action = action.to_owned();
             thread::spawn(move || {
-                app.state::<SelectionRuns>().capture_and_publish(
+                app.state::<SelectionRunCoordinator>().capture_and_publish(
                     &SystemSelectionBackend(&app),
                     action,
                     wait,
@@ -406,7 +408,7 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
 }
 
 pub fn prepare_external(app: &AppHandle) -> Result<(u64, String), AppError> {
-    app.state::<SelectionRuns>()
+    app.state::<SelectionRunCoordinator>()
         .prepare_external_with(&SystemSelectionBackend(app))
 }
 
@@ -415,7 +417,7 @@ pub fn finish(
     run_id: u64,
     text: Option<String>,
 ) -> Result<SelectionFinishStatus, AppError> {
-    app.state::<SelectionRuns>()
+    app.state::<SelectionRunCoordinator>()
         .finish_with(&SystemSelectionBackend(app), run_id, text)
 }
 
@@ -454,18 +456,18 @@ mod tests {
         }
     }
 
-    fn run_at(id: u64, started: Instant) -> SelectionRun {
+    fn run_at(id: u64, started_at: Instant) -> SelectionRun {
         SelectionRun {
             id,
-            external: false,
+            is_external: false,
             captured_text: None,
             target: SelectionTarget {
                 id: String::from("window"),
-                terminal: false,
+                is_terminal: false,
             },
-            started,
+            started_at,
             #[cfg(any(target_os = "linux", target_os = "windows"))]
-            snapshot: None,
+            clipboard_snapshot: None,
         }
     }
 
@@ -487,7 +489,7 @@ mod tests {
 
     #[test]
     fn finishes_only_the_current_run() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         runs.lock().replace(run_at(2, Instant::now()));
         assert!(runs.take_if(1).is_none());
         assert_eq!(runs.take_if(2).map(|run| run.id), Some(2));
@@ -496,24 +498,24 @@ mod tests {
 
     #[test]
     fn an_abandoned_run_is_not_cancelled_but_dropped() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let now = Instant::now();
         runs.lock().replace(run_at(1, now));
         assert!(matches!(
             runs.take_active_at(now + ABANDONED_RUN_AGE - Duration::from_nanos(1)),
-            Taken::Active(SelectionRun { id: 1, .. })
+            SelectionRunTakeOutcome::Active(SelectionRun { id: 1, .. })
         ));
         runs.lock().replace(run_at(2, now));
         assert!(matches!(
             runs.take_active_at(now + ABANDONED_RUN_AGE),
-            Taken::Abandoned(SelectionRun { id: 2, .. })
+            SelectionRunTakeOutcome::Abandoned(SelectionRun { id: 2, .. })
         ));
         assert!(runs.lock().is_none());
     }
 
     #[test]
     fn an_abandoned_run_gets_its_clipboard_back_before_the_next_capture() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend::default();
         let guard = runs.reserve().unwrap();
         runs.capture_and_publish(
@@ -532,7 +534,7 @@ mod tests {
     #[derive(Default)]
     struct Backend {
         operations: Mutex<Vec<String>>,
-        events: Mutex<Vec<RunEvent>>,
+        events: Mutex<Vec<SelectionRunEvent>>,
         capture_error: bool,
         publish_error: bool,
         paste_error: bool,
@@ -579,7 +581,7 @@ mod tests {
                 Ok(SelectionFinishStatus::Pasted)
             }
         }
-        fn publish(&self, event: RunEvent) -> Result<(), AppError> {
+        fn publish(&self, event: SelectionRunEvent) -> Result<(), AppError> {
             self.operations.lock().unwrap().push("publish".into());
             self.events.lock().unwrap().push(event);
             if self.publish_error {
@@ -594,7 +596,7 @@ mod tests {
         }
     }
 
-    fn start(runs: &SelectionRuns, backend: &Backend) -> u64 {
+    fn start(runs: &SelectionRunCoordinator, backend: &Backend) -> u64 {
         let TriggerDecision::Capture(guard, None) =
             runs.begin_trigger("correction", Instant::now()).unwrap()
         else {
@@ -606,7 +608,7 @@ mod tests {
 
     #[test]
     fn capture_publish_finish_and_stale_results_have_no_system_dependencies() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend::default();
         let id = start(&runs, &backend);
         assert_eq!(
@@ -635,7 +637,7 @@ mod tests {
 
     #[test]
     fn failed_publication_restores_only_its_capture_and_releases_the_reservation() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend {
             publish_error: true,
             ..Backend::default()
@@ -654,7 +656,7 @@ mod tests {
 
     #[test]
     fn capture_failure_is_published_without_creating_a_run() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend {
             capture_error: true,
             ..Backend::default()
@@ -672,7 +674,7 @@ mod tests {
 
     #[test]
     fn a_second_trigger_cancels_and_keeps_capture_reserved_until_restoration_finishes() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend::default();
         start(&runs, &backend);
         let TriggerDecision::Cancel(run, guard) =
@@ -696,7 +698,7 @@ mod tests {
 
     #[test]
     fn external_capture_is_never_cancelled_and_empty_results_restore_the_clipboard() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend::default();
         let (id, text) = runs.prepare_external_with(&backend).unwrap();
         assert_eq!(text, "selected");
@@ -711,7 +713,7 @@ mod tests {
 
     #[test]
     fn paste_failure_consumes_the_run_and_is_returned_to_the_caller() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         let backend = Backend {
             paste_error: true,
             ..Backend::default()
@@ -725,7 +727,7 @@ mod tests {
 
     #[test]
     fn unwinding_releases_capture_and_invalid_actions_do_not_reserve_it() {
-        let runs = SelectionRuns::default();
+        let runs = SelectionRunCoordinator::default();
         assert!(runs.begin_trigger("invalid", Instant::now()).is_err());
         let result = std::panic::catch_unwind(|| {
             let _guard = runs.reserve().unwrap();

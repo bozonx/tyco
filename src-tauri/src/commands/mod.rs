@@ -15,7 +15,7 @@ use crate::errors::AppError;
 /// the blocking pool. A synchronous `#[tauri::command(async)]` would run it on
 /// an async worker instead, and a few long waits there stall every request,
 /// socket and stream of the app.
-pub async fn blocking<T: Send + 'static>(
+pub async fn run_blocking<T: Send + 'static>(
     task: impl FnOnce() -> T + Send + 'static,
 ) -> Result<T, AppError> {
     tauri::async_runtime::spawn_blocking(task)

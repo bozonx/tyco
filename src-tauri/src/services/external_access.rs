@@ -154,14 +154,14 @@ fn hide_prompt(app: &AppHandle) {
 
 fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<AppState>();
-    let _guard = state.lock_config_storage();
+    let _guard = state.lock_settings_update();
     let mut user_config = state.snapshot().settings.user_config;
     if config_version::is_newer_than_supported(&user_config) {
         return Err(storage::newer_config_error());
     }
     grant_selection(&mut user_config);
     storage::save_user_config(app, &user_config)?;
-    state.update_state(|params| {
+    state.update_snapshot(|params| {
         params.settings.user_config = user_config;
     });
     runtime::emit_state(app, &state)

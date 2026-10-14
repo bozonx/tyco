@@ -35,7 +35,7 @@ use commands::window::{
     copy_text, dismiss_quick_window, hide_window, open_in_browser, open_in_browser_and_hide,
     paste_into_target_and_hide, set_quick_input_region,
 };
-use models::default_desktop_state;
+use models::default_desktop_snapshot;
 #[cfg(target_os = "linux")]
 use services::dbus;
 use services::{runtime, storage};
@@ -226,7 +226,7 @@ pub fn run() {
                 log::error!("Could not apply the history settings: {error}");
             }
             let session_state = crate::models::SessionState::default();
-            app.manage(AppState::new(default_desktop_state(
+            app.manage(AppState::new(default_desktop_snapshot(
                 user_config,
                 session_state,
             )));

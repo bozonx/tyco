@@ -108,13 +108,13 @@ pub async fn net_socket_open(
             let connection = match socket::connect(&prepared, &request.protocols).await {
                 Ok(connection) => connection,
                 Err(message) => {
-                    on_event.event(&socket::SocketEvent::Error { message });
+                    on_event.send_event(&socket::SocketEvent::Error { message });
                     return;
                 }
             };
             let (sender, receiver) = mpsc::channel(socket::SOCKET_QUEUE_CAPACITY);
             task.register_socket(sender);
-            if on_event.event(&socket::SocketEvent::Open) {
+            if on_event.send_event(&socket::SocketEvent::Open) {
                 socket::run_socket(connection, receiver, &on_event).await;
             }
         };

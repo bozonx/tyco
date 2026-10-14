@@ -34,12 +34,12 @@ const READ_TIMEOUT: Duration = Duration::from_secs(180);
 /// webview.
 pub trait EventSink: Send + Sync + 'static {
     /// Returns false once nobody is listening any more.
-    fn event<T: Serialize>(&self, event: &T) -> bool;
-    fn bytes(&self, bytes: Vec<u8>) -> bool;
+    fn send_event<T: Serialize>(&self, event: &T) -> bool;
+    fn send_bytes(&self, bytes: Vec<u8>) -> bool;
 }
 
 impl EventSink for Channel<InvokeResponseBody> {
-    fn event<T: Serialize>(&self, event: &T) -> bool {
+    fn send_event<T: Serialize>(&self, event: &T) -> bool {
         match serde_json::to_string(event) {
             Ok(json) => self.send(InvokeResponseBody::Json(json)).is_ok(),
             Err(error) => {
@@ -49,7 +49,7 @@ impl EventSink for Channel<InvokeResponseBody> {
         }
     }
 
-    fn bytes(&self, bytes: Vec<u8>) -> bool {
+    fn send_bytes(&self, bytes: Vec<u8>) -> bool {
         self.send(InvokeResponseBody::Raw(bytes)).is_ok()
     }
 }

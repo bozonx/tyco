@@ -7,29 +7,29 @@ pub(super) struct Downsampler {
     /// Input samples per output sample, at least 1.
     step: f64,
     phase: f64,
-    sum: f32,
-    count: u32,
+    sample_sum: f32,
+    sample_count: u32,
 }
 
 impl Downsampler {
-    pub(super) fn new(input_rate: u32, output_rate: u32) -> Self {
+    pub(super) fn new(input_sample_rate_hz: u32, output_sample_rate_hz: u32) -> Self {
         Self {
-            step: (f64::from(input_rate) / f64::from(output_rate)).max(1.0),
+            step: (f64::from(input_sample_rate_hz) / f64::from(output_sample_rate_hz)).max(1.0),
             phase: 0.0,
-            sum: 0.0,
-            count: 0,
+            sample_sum: 0.0,
+            sample_count: 0,
         }
     }
 
     pub(super) fn push(&mut self, sample: f32, output: &mut Vec<i16>) {
-        self.sum += sample;
-        self.count += 1;
+        self.sample_sum += sample;
+        self.sample_count += 1;
         self.phase += 1.0;
         if self.phase >= self.step {
-            output.push(float_to_pcm16(self.sum / self.count as f32));
+            output.push(float_to_pcm16(self.sample_sum / self.sample_count as f32));
             self.phase -= self.step;
-            self.sum = 0.0;
-            self.count = 0;
+            self.sample_sum = 0.0;
+            self.sample_count = 0;
         }
     }
 }
@@ -56,7 +56,7 @@ fn float_to_pcm16(sample: f32) -> i16 {
     value.round() as i16
 }
 
-pub(super) fn pcm16_to_bytes(samples: &[i16]) -> Vec<u8> {
+pub(super) fn pcm16_to_le_bytes(samples: &[i16]) -> Vec<u8> {
     samples
         .iter()
         .flat_map(|sample| sample.to_le_bytes())
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn encodes_pcm16_little_endian() {
-        assert_eq!(pcm16_to_bytes(&[1, -2]), vec![1, 0, 0xfe, 0xff]);
+        assert_eq!(pcm16_to_le_bytes(&[1, -2]), vec![1, 0, 0xfe, 0xff]);
     }
 
     #[test]

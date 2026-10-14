@@ -27,7 +27,7 @@ pub fn create_windows(app: &App) -> Result<(), AppError> {
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(super::settings_shutdown::SettingsShutdown::default());
     app.manage(ActivationCoordinator::default());
-    app.manage(crate::services::selection_replace::SelectionRuns::default());
+    app.manage(crate::services::selection_replace::SelectionRunCoordinator::default());
     app.manage(RuntimeWindows::default());
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)

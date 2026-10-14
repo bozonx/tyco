@@ -6,7 +6,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 use crate::errors::AppError;
 use crate::services::voice::{
-    build_input_stream, AudioSource, OpenedCapture, StreamContext, TARGET_SAMPLE_RATE,
+    build_input_stream, AudioSource, OpenedCapture, StreamContext, TARGET_SAMPLE_RATE_HZ,
 };
 
 pub(crate) struct SystemAudioSource;
@@ -22,15 +22,15 @@ impl AudioSource for SystemAudioSource {
         let supported_config = device
             .default_input_config()
             .map_err(|error| AppError::Message(error.to_string()))?;
-        let device_rate = supported_config.sample_rate().0;
-        let sample_rate = device_rate.min(TARGET_SAMPLE_RATE);
+        let device_sample_rate_hz = supported_config.sample_rate().0;
+        let sample_rate_hz = device_sample_rate_hz.min(TARGET_SAMPLE_RATE_HZ);
         let context = StreamContext {
             pending: Arc::new(Mutex::new(Vec::new())),
             stream_error: Arc::new(Mutex::new(None)),
             current_level: Arc::new(Mutex::new((0.0, 0.0))),
             stop_flag: Arc::clone(stop_flag),
-            device_rate,
-            sample_rate,
+            device_sample_rate_hz,
+            sample_rate_hz,
         };
         let config = supported_config.config();
         let stream = match supported_config.sample_format() {
@@ -50,7 +50,7 @@ impl AudioSource for SystemAudioSource {
         Ok(OpenedCapture {
             stream,
             context,
-            sample_rate,
+            sample_rate_hz,
         })
     }
 }

@@ -19,7 +19,7 @@ pub const COMMAND_RUN_EVENT: &str = "app://command-run";
 /// How a command of a tool gets its input from a text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum ToolInput {
+pub enum ToolInputKind {
     None,
     Text,
     /// The tool parses the text itself.
@@ -34,7 +34,7 @@ pub enum ToolInput {
 #[serde(rename_all = "camelCase")]
 pub struct ToolCatalogEntry {
     pub id: String,
-    pub input: ToolInput,
+    pub input: ToolInputKind,
     pub available: bool,
     /// Why it is not available, already translated.
     #[serde(default)]
@@ -64,7 +64,7 @@ pub struct ExternalCommand {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LookupError {
+pub enum CommandLookupError {
     NotFound(String),
     /// Several commands that may be called have this name.
     Ambiguous(String, Vec<String>),
@@ -76,7 +76,7 @@ pub enum LookupError {
     ToolsLoading(String),
 }
 
-impl std::fmt::Display for LookupError {
+impl std::fmt::Display for CommandLookupError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotFound(target) => write!(f, "No command with the id or name `{target}`"),
@@ -107,8 +107,8 @@ impl std::fmt::Display for LookupError {
     }
 }
 
-impl From<LookupError> for AppError {
-    fn from(error: LookupError) -> Self {
+impl From<CommandLookupError> for AppError {
+    fn from(error: CommandLookupError) -> Self {
         AppError::Message(error.to_string())
     }
 }
@@ -142,7 +142,7 @@ fn is_enabled(command: &Value) -> bool {
     command.get("enabled").and_then(Value::as_bool) != Some(false)
 }
 
-fn is_external(command: &Value) -> bool {
+fn can_run_externally(command: &Value) -> bool {
     command
         .pointer("/availableIn/external")
         .and_then(Value::as_bool)
@@ -171,7 +171,7 @@ fn webhook_takes_text(config: &Value) -> bool {
 fn resolve_text_input_support(
     command: &Value,
     catalog: Option<&ToolCatalog>,
-) -> Result<bool, LookupError> {
+) -> Result<bool, CommandLookupError> {
     let id = id_of(command).to_owned();
     let tool_id = str_field(command, "toolId").trim();
     let config = command.get("toolConfig").unwrap_or(&Value::Null);
@@ -180,22 +180,22 @@ fn resolve_text_input_support(
         "webhook" => return Ok(webhook_takes_text(config)),
         _ => {}
     }
-    let catalog = catalog.ok_or_else(|| LookupError::ToolsLoading(id.clone()))?;
+    let catalog = catalog.ok_or_else(|| CommandLookupError::ToolsLoading(id.clone()))?;
     let tool = catalog
         .get(tool_id)
-        .ok_or_else(|| LookupError::Unavailable(id.clone(), None))?;
+        .ok_or_else(|| CommandLookupError::Unavailable(id.clone(), None))?;
     if !tool.available {
-        return Err(LookupError::Unavailable(id, tool.reason.clone()));
+        return Err(CommandLookupError::Unavailable(id, tool.reason.clone()));
     }
     match tool.input {
-        ToolInput::None => Ok(false),
-        ToolInput::Text | ToolInput::Parsed => Ok(true),
-        ToolInput::Structured
+        ToolInputKind::None => Ok(false),
+        ToolInputKind::Text | ToolInputKind::Parsed => Ok(true),
+        ToolInputKind::Structured
             if command.get("llmArgumentParsing").and_then(Value::as_bool) == Some(true) =>
         {
             Ok(true)
         }
-        ToolInput::Structured => Ok(false),
+        ToolInputKind::Structured => Ok(false),
     }
 }
 
@@ -203,13 +203,13 @@ fn resolve_text_input_support(
 fn resolve_callable_command(
     command: &Value,
     catalog: Option<&ToolCatalog>,
-) -> Result<ExternalCommand, LookupError> {
+) -> Result<ExternalCommand, CommandLookupError> {
     let id = id_of(command).to_owned();
     if !is_enabled(command) {
-        return Err(LookupError::Disabled(id));
+        return Err(CommandLookupError::Disabled(id));
     }
-    if !is_external(command) {
-        return Err(LookupError::NotExternal(id));
+    if !can_run_externally(command) {
+        return Err(CommandLookupError::NotExternal(id));
     }
     let takes_text = resolve_text_input_support(command, catalog)?;
     Ok(ExternalCommand {
@@ -217,7 +217,7 @@ fn resolve_callable_command(
         takes_text,
         structured: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
-            .is_some_and(|tool| tool.input == ToolInput::Structured),
+            .is_some_and(|tool| tool.input == ToolInputKind::Structured),
     })
 }
 
@@ -227,12 +227,12 @@ pub fn find_by_id(
     user_config: &Value,
     catalog: Option<&ToolCatalog>,
     id: &str,
-) -> Result<ExternalCommand, LookupError> {
+) -> Result<ExternalCommand, CommandLookupError> {
     let id = id.trim();
     commands_of(user_config)
         .iter()
         .find(|command| !id.is_empty() && id_of(command) == id)
-        .ok_or_else(|| LookupError::NotFound(id.to_owned()))
+        .ok_or_else(|| CommandLookupError::NotFound(id.to_owned()))
         .and_then(|command| resolve_callable_command(command, catalog))
 }
 
@@ -241,7 +241,7 @@ pub fn find_by_name(
     user_config: &Value,
     catalog: Option<&ToolCatalog>,
     name: &str,
-) -> Result<ExternalCommand, LookupError> {
+) -> Result<ExternalCommand, CommandLookupError> {
     let normalized = normalize_name(name);
     let matches: Vec<&Value> = commands_of(user_config)
         .iter()
@@ -257,9 +257,9 @@ pub fn find_by_name(
         [command] => Ok(command.clone()),
         [] => match matches.first() {
             Some(command) => resolve_callable_command(command, catalog),
-            None => Err(LookupError::NotFound(name.into())),
+            None => Err(CommandLookupError::NotFound(name.into())),
         },
-        several => Err(LookupError::Ambiguous(
+        several => Err(CommandLookupError::Ambiguous(
             name.into(),
             several.iter().map(|command| command.id.clone()).collect(),
         )),
@@ -449,24 +449,24 @@ mod tests {
             input_schema: None,
         };
         catalog_from(vec![
-            entry("script", ToolInput::Text, true, None),
-            entry("FastNote.write", ToolInput::Text, true, None),
+            entry("script", ToolInputKind::Text, true, None),
+            entry("FastNote.write", ToolInputKind::Text, true, None),
             entry(
                 "core.translate",
-                ToolInput::Text,
+                ToolInputKind::Text,
                 false,
                 Some("No LLM is configured"),
             ),
-            entry("Home.lights", ToolInput::None, true, None),
-            entry("Home.remind", ToolInput::Structured, true, None),
+            entry("Home.lights", ToolInputKind::None, true, None),
+            entry("Home.remind", ToolInputKind::Structured, true, None),
         ])
     }
 
-    fn find_in(id: &str) -> Result<ExternalCommand, LookupError> {
+    fn find_in(id: &str) -> Result<ExternalCommand, CommandLookupError> {
         find_by_id(&config(), Some(&catalog()), id)
     }
 
-    fn find_named(name: &str) -> Result<ExternalCommand, LookupError> {
+    fn find_named(name: &str) -> Result<ExternalCommand, CommandLookupError> {
         find_by_name(&config(), Some(&catalog()), name)
     }
 
@@ -476,7 +476,7 @@ mod tests {
         assert_eq!(find_in("Lamp").unwrap().id, "Lamp");
         assert_eq!(
             find_in("Бэкап"),
-            Err(LookupError::NotFound(String::from("Бэкап")))
+            Err(CommandLookupError::NotFound(String::from("Бэкап")))
         );
     }
 
@@ -511,24 +511,30 @@ mod tests {
     fn reports_why_a_command_cannot_be_called() {
         assert_eq!(
             find_in("nothing"),
-            Err(LookupError::NotFound(String::from("nothing")))
+            Err(CommandLookupError::NotFound(String::from("nothing")))
         );
-        assert_eq!(find_in(""), Err(LookupError::NotFound(String::new())));
+        assert_eq!(
+            find_in(""),
+            Err(CommandLookupError::NotFound(String::new()))
+        );
         assert_eq!(
             find_in("hidden"),
-            Err(LookupError::NotExternal(String::from("hidden")))
+            Err(CommandLookupError::NotExternal(String::from("hidden")))
         );
         assert_eq!(
             find_named("Off"),
-            Err(LookupError::Disabled(String::from("off")))
+            Err(CommandLookupError::Disabled(String::from("off")))
         );
         assert_eq!(
             find_in("missing-tool"),
-            Err(LookupError::Unavailable(String::from("missing-tool"), None))
+            Err(CommandLookupError::Unavailable(
+                String::from("missing-tool"),
+                None
+            ))
         );
         assert_eq!(
             find_in("translate"),
-            Err(LookupError::Unavailable(
+            Err(CommandLookupError::Unavailable(
                 String::from("translate"),
                 Some(String::from("No LLM is configured"))
             ))
@@ -540,7 +546,7 @@ mod tests {
     fn learns_plugin_tools_from_the_catalog() {
         assert_eq!(
             find_by_id(&config(), None, "plugin"),
-            Err(LookupError::ToolsLoading(String::from("plugin")))
+            Err(CommandLookupError::ToolsLoading(String::from("plugin")))
         );
         // the backend knows its own tools without the catalog
         assert_eq!(find_by_id(&config(), None, "backup").unwrap().id, "backup");
@@ -592,7 +598,7 @@ mod tests {
         // twin-c may not be called from outside, so it does not count
         assert_eq!(
             find_named("TWIN"),
-            Err(LookupError::Ambiguous(
+            Err(CommandLookupError::Ambiguous(
                 String::from("TWIN"),
                 vec![String::from("twin-a"), String::from("twin-b")]
             ))

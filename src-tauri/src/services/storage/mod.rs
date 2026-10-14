@@ -304,7 +304,7 @@ mod tests {
             })
         );
 
-        item.sent = true;
+        item.is_result_applied = true;
 
         assert_eq!(serde_json::to_value(&item).unwrap()["sent"], json!(true));
     }

@@ -45,15 +45,18 @@ pub fn app_config() -> Value {
     })
 }
 
-pub fn default_desktop_state(user_config: Value, session_state: SessionState) -> DesktopSnapshot {
+pub fn default_desktop_snapshot(
+    user_config: Value,
+    session_state: SessionState,
+) -> DesktopSnapshot {
     DesktopSnapshot {
         revision: 0,
         activation: ActivationSnapshot {
             activation_id: 0,
-            window_id: None,
+            target_window_id: None,
             selected_text: None,
             mode: session_state.last_mode.or(Some(ActivationMode::Editor)),
-            launcher_page: 0,
+            launcher_page_index: 0,
             launcher_request: None,
             access_request: None,
         },

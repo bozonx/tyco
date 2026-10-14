@@ -67,19 +67,19 @@ impl PanelKeyboard {
 }
 
 pub(crate) trait PanelSurface {
-    fn supported(&self) -> bool;
+    fn is_supported(&self) -> bool;
 }
 
 struct SystemPanelSurface;
 
 impl PanelSurface for SystemPanelSurface {
-    fn supported(&self) -> bool {
+    fn is_supported(&self) -> bool {
         panel_surface_supported_impl()
     }
 }
 
 pub fn panel_surface_supported() -> bool {
-    SystemPanelSurface.supported()
+    SystemPanelSurface.is_supported()
 }
 
 #[cfg(target_os = "linux")]

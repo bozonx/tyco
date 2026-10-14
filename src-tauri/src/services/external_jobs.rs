@@ -7,14 +7,14 @@ use std::time::{Duration, Instant};
 use tyco_activation_protocol::{Job, JobState, RunRequest};
 
 const MAX_JOBS: usize = 128;
-const MAX_ACTIVE: usize = 32;
+const MAX_ACTIVE_JOBS: usize = 32;
 const JOB_TIMEOUT: Duration = Duration::from_secs(300);
 const MAX_OUTPUT_BYTES: usize = 512 * 1024;
 
 struct ExternalJobEntry {
     job: Job,
     request: RunRequest,
-    created: Instant,
+    created_at: Instant,
     selection_run_id: Option<u64>,
     command_snapshot: Option<serde_json::Value>,
     pending_completion: Option<Job>,
@@ -24,7 +24,7 @@ struct ExternalJobEntry {
 
 #[derive(Default)]
 pub struct ExternalJobs {
-    next: AtomicU64,
+    next_job_sequence: AtomicU64,
     entries: Mutex<BTreeMap<String, ExternalJobEntry>>,
 }
 
@@ -56,7 +56,7 @@ impl ExternalJobs {
             .values()
             .filter(|entry| !entry.job.state.is_terminal())
             .count()
-            >= MAX_ACTIVE
+            >= MAX_ACTIVE_JOBS
         {
             return Err("Too many active jobs");
         }
@@ -64,7 +64,7 @@ impl ExternalJobs {
             let oldest = entries
                 .iter()
                 .filter(|(_, entry)| entry.job.state.is_terminal())
-                .min_by_key(|(_, entry)| entry.created)
+                .min_by_key(|(_, entry)| entry.created_at)
                 .map(|(id, _)| id.clone());
             if let Some(id) = oldest {
                 entries.remove(&id);
@@ -75,7 +75,7 @@ impl ExternalJobs {
         let id = format!(
             "job-{}-{}",
             std::process::id(),
-            self.next.fetch_add(1, Ordering::Relaxed) + 1
+            self.next_job_sequence.fetch_add(1, Ordering::Relaxed) + 1
         );
         let job = Job {
             id: id.clone(),
@@ -90,7 +90,7 @@ impl ExternalJobs {
             ExternalJobEntry {
                 job: job.clone(),
                 request,
-                created: now,
+                created_at: now,
                 selection_run_id,
                 command_snapshot: None,
                 pending_completion: None,
@@ -194,7 +194,7 @@ impl ExternalJobs {
         Some((job, selection_run_id))
     }
 
-    pub fn publish_selection(&self, id: &str, error: Option<String>) {
+    pub fn complete_selection_replacement(&self, id: &str, error: Option<String>) {
         let mut entries = self.lock_entries();
         if let Some(entry) = entries.get_mut(id) {
             if let Some(mut job) = entry.pending_completion.take() {
@@ -230,7 +230,7 @@ impl ExternalJobs {
             .iter()
             .filter(|(_, entry)| {
                 !entry.job.state.is_terminal()
-                    && now.saturating_duration_since(entry.created) >= JOB_TIMEOUT
+                    && now.saturating_duration_since(entry.created_at) >= JOB_TIMEOUT
             })
             .map(|(id, _)| id.clone())
             .collect()
@@ -288,7 +288,7 @@ mod tests {
     #[test]
     fn active_jobs_are_bounded_and_terminal_jobs_are_evicted() {
         let jobs = ExternalJobs::default();
-        for _ in 0..MAX_ACTIVE {
+        for _ in 0..MAX_ACTIVE_JOBS {
             jobs.create("test".into(), RunRequest::default(), None)
                 .unwrap();
         }
@@ -331,7 +331,7 @@ mod tests {
         assert!(jobs
             .finish(&job.id, JobState::Cancelled, None, None, None)
             .is_none());
-        jobs.publish_selection(&job.id, Some("Focus changed".into()));
+        jobs.complete_selection_replacement(&job.id, Some("Focus changed".into()));
         assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Failed);
         assert_eq!(jobs.get(&job.id).unwrap().output.as_deref(), Some("result"));
     }

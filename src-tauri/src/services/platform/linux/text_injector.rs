@@ -173,12 +173,12 @@ impl SystemTextInjector {
     pub fn inject_paste(
         &self,
         user_config: &Value,
-        source_window_id: Option<&str>,
+        target_window_id: Option<&str>,
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
         let shortcut = PasteShortcut::from_config(insertion);
-        let mut command = command_spec(method, insertion, source_window_id, shortcut)?;
+        let mut command = command_spec(method, insertion, target_window_id, shortcut)?;
 
         if method == InjectionMethod::Ydotool {
             // the client knows a single default path, which differs between
@@ -190,7 +190,7 @@ impl SystemTextInjector {
         if self.session == InjectionSessionKind::Wayland {
             // Wayland has no generic way to activate a foreign window; only
             // KWin windows reported by the tracker script can be targeted
-            let window_id = source_window_id.ok_or_else(missing_wayland_target)?;
+            let window_id = target_window_id.ok_or_else(missing_wayland_target)?;
             super::kwin::activate_window(window_id)?;
             thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
         }
@@ -234,7 +234,7 @@ impl SystemTextInjector {
 
     /// Checks everything text insertion needs, so that settings can tell what
     /// is missing before the first attempt fails.
-    pub fn check(&self, user_config: &Value) -> Result<(), AppError> {
+    pub fn check_text_injection(&self, user_config: &Value) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
         match method {
@@ -306,7 +306,7 @@ fn select_method(
 fn command_spec(
     method: InjectionMethod,
     insertion: Option<&Value>,
-    source_window_id: Option<&str>,
+    target_window_id: Option<&str>,
     shortcut: PasteShortcut,
 ) -> Result<CommandSpec, AppError> {
     match method {
@@ -318,7 +318,7 @@ fn command_spec(
             env: Vec::new(),
         }),
         InjectionMethod::Xdotool => {
-            let window_id = source_window_id.ok_or_else(|| {
+            let window_id = target_window_id.ok_or_else(|| {
                 AppError::Message(String::from(
                     "Target window is not available for text insertion",
                 ))

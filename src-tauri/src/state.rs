@@ -8,7 +8,7 @@ use crate::services::voice_session::VoiceSessionState;
 pub struct AppState {
     snapshot: Mutex<DesktopSnapshot>,
     pub(crate) history: crate::services::storage::HistoryStorage,
-    config_storage: Mutex<()>,
+    settings_update_lock: Mutex<()>,
     pub chat_images: Mutex<crate::services::chat_images::ChatImageStore>,
     quitting: AtomicBool,
     pub(crate) voice_session: VoiceSessionState,
@@ -21,7 +21,7 @@ impl AppState {
         Self {
             snapshot: Mutex::new(initial_snapshot),
             history: crate::services::storage::HistoryStorage::default(),
-            config_storage: Mutex::new(()),
+            settings_update_lock: Mutex::new(()),
             chat_images: Mutex::new(crate::services::chat_images::ChatImageStore::default()),
             quitting: AtomicBool::new(false),
             voice_session: VoiceSessionState::default(),
@@ -30,8 +30,8 @@ impl AppState {
     }
 
     /// Serializes config writes and session updates to keep snapshots coherent.
-    pub fn lock_config_storage(&self) -> std::sync::MutexGuard<'_, ()> {
-        self.config_storage
+    pub fn lock_settings_update(&self) -> std::sync::MutexGuard<'_, ()> {
+        self.settings_update_lock
             .lock()
             .expect("config storage lock poisoned")
     }
@@ -43,7 +43,7 @@ impl AppState {
             .clone()
     }
 
-    pub fn update_state<F>(&self, update: F) -> DesktopSnapshot
+    pub fn update_snapshot<F>(&self, update: F) -> DesktopSnapshot
     where
         F: FnOnce(&mut DesktopSnapshot),
     {
@@ -82,19 +82,19 @@ impl AppState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{default_desktop_state, SessionState};
+    use crate::models::{default_desktop_snapshot, SessionState};
 
     #[test]
     fn snapshots_order_settings_and_activation_changes_with_the_same_revision() {
-        let state = AppState::new(default_desktop_state(
+        let state = AppState::new(default_desktop_snapshot(
             serde_json::json!({}),
             SessionState::default(),
         ));
-        state.update_state(|snapshot| {
+        state.update_snapshot(|snapshot| {
             snapshot.settings.user_config = serde_json::json!({ "theme": "dark" })
         });
         assert_eq!(state.snapshot().revision, 1);
-        state.update_state(|snapshot| {
+        state.update_snapshot(|snapshot| {
             snapshot.activation.selected_text = Some("New selection".into())
         });
         let snapshot = state.snapshot();
@@ -110,13 +110,13 @@ mod tests {
     fn session_preferences_do_not_survive_a_new_app_state() {
         let config = serde_json::json!({ "theme": "dark" });
         let create_state = || {
-            AppState::new(default_desktop_state(
+            AppState::new(default_desktop_snapshot(
                 config.clone(),
                 SessionState::default(),
             ))
         };
         let state = create_state();
-        state.update_state(|snapshot| {
+        state.update_snapshot(|snapshot| {
             snapshot.settings.session_state.last_chat_id = Some("chat".into());
             snapshot.settings.session_state.recent_ai_prompts = vec!["Private prompt".into()];
         });
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn concurrent_updates_get_unique_coherent_revisions() {
-        let state = AppState::new(default_desktop_state(
+        let state = AppState::new(default_desktop_snapshot(
             serde_json::json!({}),
             SessionState::default(),
         ));
@@ -153,7 +153,7 @@ mod tests {
                 let revisions = &revisions;
                 scope.spawn(move || {
                     let snapshot =
-                        state.update_state(|snapshot| snapshot.activation.activation_id += 1);
+                        state.update_snapshot(|snapshot| snapshot.activation.activation_id += 1);
                     assert_eq!(snapshot.revision, snapshot.activation.activation_id);
                     revisions.lock().unwrap().push(snapshot.revision);
                 });

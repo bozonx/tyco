@@ -1,7 +1,7 @@
 use std::time::Duration;
 use tauri::{AppHandle, State, WebviewWindow};
 
-use super::blocking;
+use super::run_blocking;
 use crate::errors::AppError;
 use crate::services::clipboard::copy_to_clipboard;
 use crate::services::platform::InputRegion;
@@ -42,7 +42,7 @@ pub async fn open_in_browser_and_hide(
     url: String,
     activation_id: u64,
 ) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         open_url(&url)?;
         runtime::hide_window(&app, window.label().into(), activation_id)
     })
@@ -52,7 +52,7 @@ pub async fn open_in_browser_and_hide(
 /// Opens a chat citation without hiding the conversation.
 #[tauri::command]
 pub async fn open_in_browser(url: String) -> Result<(), AppError> {
-    blocking(move || open_url(&url)).await?
+    run_blocking(move || open_url(&url)).await?
 }
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
@@ -76,7 +76,7 @@ pub async fn paste_into_target_and_hide(
     let focus_app = app.clone();
     // The clipboard tools, waiting for focus and insertion must not hold an
     // async worker.
-    blocking(move || {
+    run_blocking(move || {
         #[cfg(target_os = "linux")]
         let previous_clipboard = crate::services::platform::linux::clipboard_restore::snapshot();
         runtime::hide_window(&focus_app, window.label().into(), activation_id)?;
@@ -92,7 +92,12 @@ pub async fn paste_into_target_and_hide(
                 activation_id,
             },
             &params.settings.user_config,
-            params.activation.window_id.as_deref(),
+            params
+                .activation
+                .target_window_id
+                .clone()
+                .map(crate::services::platform::ForegroundTarget::from_platform_id)
+                .as_ref(),
             || runtime::wait_until_unfocused(&focus_app, FOCUS_RELEASE_TIMEOUT),
             || {
                 #[cfg(target_os = "linux")]
@@ -113,7 +118,7 @@ pub async fn paste_into_target_and_hide(
 /// its output while another Tyco window may be in use.
 #[tauri::command]
 pub async fn copy_text(text: String) -> Result<(), AppError> {
-    blocking(move || copy_to_clipboard(&text)).await?
+    run_blocking(move || copy_to_clipboard(&text)).await?
 }
 
 /// Only web pages are opened: the URL comes from the webview, and the system
@@ -145,7 +150,11 @@ struct ActivationTextInjector<'a> {
 }
 
 impl crate::services::platform::TextInjector for ActivationTextInjector<'_> {
-    fn inject(&self, config: &serde_json::Value, target: Option<&str>) -> Result<(), AppError> {
+    fn inject(
+        &self,
+        config: &serde_json::Value,
+        target: Option<&crate::services::platform::ForegroundTarget>,
+    ) -> Result<(), AppError> {
         if state_activation_changed(self.app, self.activation_id) {
             return Err(AppError::InvalidInput(
                 "The insertion activation changed while waiting for focus".into(),

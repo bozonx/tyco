@@ -1,4 +1,4 @@
-use super::blocking;
+use super::run_blocking;
 use crate::{
     errors::AppError,
     services::{
@@ -29,7 +29,7 @@ pub async fn execute_script_action(
     app: AppHandle,
     request: ScriptActionRequest,
 ) -> Result<ScriptExecutionResult, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let log_dir = storage::app_log_dir(&app).ok();
         custom_actions::execute_script(
             &ScriptRequest {
@@ -55,10 +55,10 @@ pub fn cancel_script_action(run_id: String) -> bool {
 
 #[tauri::command]
 pub async fn pick_script_file(app: AppHandle) -> Result<Option<String>, AppError> {
-    blocking(move || custom_actions::pick_script_file(&app)).await
+    run_blocking(move || custom_actions::pick_script_file(&app)).await
 }
 
 #[tauri::command]
 pub async fn pick_directory(app: AppHandle) -> Result<Option<String>, AppError> {
-    blocking(move || custom_actions::pick_directory(&app)).await
+    run_blocking(move || custom_actions::pick_directory(&app)).await
 }

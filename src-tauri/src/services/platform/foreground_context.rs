@@ -1,27 +1,46 @@
+/// An opaque foreground target: a window ID on Linux, HWND on Windows,
+/// or application PID on macOS. Strings are used only at platform and wire boundaries.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ForegroundTarget(String);
+
+impl ForegroundTarget {
+    pub fn from_platform_id(platform_id: String) -> Self {
+        Self(platform_id)
+    }
+
+    pub fn as_platform_id(&self) -> &str {
+        &self.0
+    }
+
+    pub fn into_platform_id(self) -> String {
+        self.0
+    }
+}
+
 #[allow(async_fn_in_trait)]
 pub(crate) trait ForegroundContext {
-    fn source(&self) -> Option<String>;
-    async fn selection(&self, source: Option<String>) -> Option<String>;
+    fn capture_source(&self) -> Option<ForegroundTarget>;
+    async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String>;
 }
 
 struct SystemForegroundContext;
 
 impl ForegroundContext for SystemForegroundContext {
-    fn source(&self) -> Option<String> {
-        capture_source_impl()
+    fn capture_source(&self) -> Option<ForegroundTarget> {
+        capture_source_impl().map(ForegroundTarget::from_platform_id)
     }
 
-    async fn selection(&self, source: Option<String>) -> Option<String> {
-        capture_selection_impl(source).await
+    async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String> {
+        capture_selection_impl(target.map(ForegroundTarget::into_platform_id)).await
     }
 }
 
-pub fn capture_source() -> Option<String> {
-    SystemForegroundContext.source()
+pub fn capture_source() -> Option<ForegroundTarget> {
+    SystemForegroundContext.capture_source()
 }
 
-pub async fn capture_selection(source: Option<String>) -> Option<String> {
-    SystemForegroundContext.selection(source).await
+pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<String> {
+    SystemForegroundContext.capture_selection(target).await
 }
 
 #[cfg(target_os = "linux")]

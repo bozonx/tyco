@@ -32,13 +32,15 @@ pub struct EditorHistoryRecord {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub operation: Option<EditorHistoryOperation>,
     /// Unix time in milliseconds.
-    pub created_at: u64,
+    #[serde(rename = "createdAt")]
+    pub created_at_ms: u64,
     /// What the AI turned a `Source` entry into.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<String>,
     /// The `result` of a `Source` entry was inserted into a window or copied.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub sent: bool,
+    #[serde(rename = "sent")]
+    pub is_result_applied: bool,
 }
 
 /// What the UI sends to add a text; id and time are assigned by the backend.
@@ -52,4 +54,16 @@ pub struct CreateEditorHistoryRequest {
     /// A draft entry this one supersedes: the same editing session saved again.
     #[serde(default)]
     pub replace_id: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn persisted_records_preserve_timestamp_and_applied_result_wire_names() {
+        let value = serde_json::json!({"id":"record", "text":"source", "kind":"source", "createdAt":123, "result":"output", "sent":true});
+        let record: super::EditorHistoryRecord = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(record.created_at_ms, 123);
+        assert!(record.is_result_applied);
+        assert_eq!(serde_json::to_value(record).unwrap(), value);
+    }
 }

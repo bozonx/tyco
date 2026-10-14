@@ -8,9 +8,9 @@ pub(super) fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> Edi
         text: text.to_owned(),
         kind,
         operation: None,
-        created_at: 1,
+        created_at_ms: 1,
         result: None,
-        sent: false,
+        is_result_applied: false,
     }
 }
 

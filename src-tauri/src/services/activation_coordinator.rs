@@ -4,10 +4,11 @@ use std::sync::Mutex;
 use serde_json::Value;
 
 use super::activation::{Activation, ActivationMode};
+use super::platform::ForegroundTarget;
 use crate::errors::AppError;
 
 pub(crate) trait ActivationHost {
-    fn source_window(&self) -> Option<String>;
+    fn foreground_target(&self) -> Option<ForegroundTarget>;
     fn has_focused_window(&self) -> bool;
     fn user_config(&self) -> Value;
     fn activate(&self, activation: Activation) -> Result<(), AppError>;
@@ -15,7 +16,7 @@ pub(crate) trait ActivationHost {
 
 pub(crate) struct CaptureRequest {
     pub generation: u64,
-    pub source_window_id: Option<String>,
+    pub foreground_target: Option<ForegroundTarget>,
 }
 
 #[derive(Default)]
@@ -29,11 +30,14 @@ impl ActivationCoordinator {
         host: &impl ActivationHost,
         mut activation: Activation,
     ) -> Result<Option<CaptureRequest>, AppError> {
-        let source_window_id = activation
-            .window_id
+        let foreground_target = activation
+            .target_window_id
             .clone()
-            .or_else(|| host.source_window());
-        activation.window_id.clone_from(&source_window_id);
+            .map(ForegroundTarget::from_platform_id)
+            .or_else(|| host.foreground_target());
+        activation.target_window_id = foreground_target
+            .as_ref()
+            .map(|target| target.as_platform_id().to_owned());
         let capture = activation.selected_text.is_none()
             && !(activation.mode == ActivationMode::Editor && host.has_focused_window())
             && activation.takes_selection(&host.user_config());
@@ -45,7 +49,7 @@ impl ActivationCoordinator {
         host.activate(activation)?;
         Ok(capture.then_some(CaptureRequest {
             generation,
-            source_window_id,
+            foreground_target,
         }))
     }
 
@@ -78,8 +82,8 @@ mod tests {
     }
 
     impl ActivationHost for Host {
-        fn source_window(&self) -> Option<String> {
-            Some("foreground".into())
+        fn foreground_target(&self) -> Option<ForegroundTarget> {
+            Some(ForegroundTarget::from_platform_id("foreground".into()))
         }
         fn has_focused_window(&self) -> bool {
             self.focused
@@ -127,7 +131,13 @@ mod tests {
             })
             .unwrap();
         assert_eq!(published, ["second"]);
-        assert_eq!(first.source_window_id.as_deref(), Some("foreground"));
+        assert_eq!(
+            first
+                .foreground_target
+                .as_ref()
+                .map(ForegroundTarget::as_platform_id),
+            Some("foreground")
+        );
     }
 
     #[test]
@@ -149,11 +159,16 @@ mod tests {
             .publish(&old, || panic!("stale capture published"))
             .unwrap();
         let mut explicit = activation(ActivationMode::Chat);
-        explicit.window_id = Some("explicit".into());
+        explicit.target_window_id = Some("explicit".into());
         explicit.selected_text = Some("selected".into());
         assert!(coordinator.begin(&host, explicit).unwrap().is_none());
         assert_eq!(
-            host.activated.borrow().last().unwrap().window_id.as_deref(),
+            host.activated
+                .borrow()
+                .last()
+                .unwrap()
+                .target_window_id
+                .as_deref(),
             Some("explicit")
         );
     }

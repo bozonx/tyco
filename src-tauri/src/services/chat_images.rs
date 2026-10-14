@@ -133,9 +133,9 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         let image = ChatImage {
             id: format!("{:x}", Sha256::digest(&*encoded)),
             media_type: crate::models::ChatImageMediaType::Webp,
-            width: output.width,
-            height: output.height,
-            size: encoded.len(),
+            width_px: output.width,
+            height_px: output.height,
+            size_bytes: encoded.len(),
             name: name.map(|name| name.chars().take(255).collect()),
         };
         return Ok((image, encoded.to_vec()));
@@ -299,9 +299,9 @@ impl ChatImageStore {
         let image = ChatImage {
             id: id.to_string(),
             media_type: media_type.parse()?,
-            width,
-            height,
-            size: bytes.len(),
+            width_px: width,
+            height_px: height,
+            size_bytes: bytes.len(),
             name: None,
         };
         self.remember(image, bytes.clone())?;
@@ -318,9 +318,9 @@ impl ChatImageStore {
             for image in &message.images {
                 let bytes = self.get(directory, &image.id)?;
                 let canonical = &self.images[&image.id].0;
-                if canonical.width != image.width
-                    || canonical.height != image.height
-                    || canonical.size != image.size
+                if canonical.width_px != image.width_px
+                    || canonical.height_px != image.height_px
+                    || canonical.size_bytes != image.size_bytes
                     || canonical.media_type != image.media_type
                 {
                     return Err(AppError::Message("Invalid chat image metadata".into()));
@@ -340,7 +340,7 @@ impl ChatImageStore {
 
 /// Scan surviving chats rather than duplicating references in the index.
 /// An unreadable chat aborts collection: uncertain references are kept.
-pub fn collect_orphans(chats_dir: &Path) -> Result<(), AppError> {
+pub fn remove_orphan_images(chats_dir: &Path) -> Result<(), AppError> {
     let mut live = HashSet::new();
     for entry in fs::read_dir(chats_dir)? {
         let path = entry?.path();
@@ -410,7 +410,7 @@ mod tests {
                 .get(Path::new("/nonexistent"), &image.id)
                 .unwrap()
                 .len(),
-            image.size
+            image.size_bytes
         );
     }
 
@@ -420,12 +420,12 @@ mod tests {
         let image = store.insert(&png(), None).unwrap();
         store.hold("main/import/lease", &image.id);
         store.sync("main", &[]).unwrap();
-        assert_eq!(store.total_image_bytes, image.size);
+        assert_eq!(store.total_image_bytes, image.size_bytes);
         store.sync("main", std::slice::from_ref(&image.id)).unwrap();
         store.release_owner("main/import/lease");
         store.hold("quick", &image.id);
         store.release_owner("main");
-        assert_eq!(store.total_image_bytes, image.size);
+        assert_eq!(store.total_image_bytes, image.size_bytes);
         store.release_owner("quick");
         assert_eq!(store.total_image_bytes, 0);
         assert!(store.images.is_empty());
@@ -459,7 +459,7 @@ mod tests {
             .insert("cache".into(), (image.clone(), vec![0; MAX_SESSION_BYTES]));
         store.total_image_bytes = MAX_SESSION_BYTES;
         store.remember(image.clone(), bytes).unwrap();
-        assert_eq!(store.total_image_bytes, image.size);
+        assert_eq!(store.total_image_bytes, image.size_bytes);
         assert!(!store.images.contains_key("cache"));
         store.hold("main", &image.id);
         store.sync("quick", &[]).unwrap();
@@ -500,14 +500,14 @@ mod tests {
             serde_json::to_vec(&chat).unwrap(),
         )
         .unwrap();
-        collect_orphans(&directory).unwrap();
+        remove_orphan_images(&directory).unwrap();
         let mut restored = ChatImageStore::default();
         assert_eq!(
             restored.get(&directory.join("images"), &image.id).unwrap(),
             store.get(&directory.join("images"), &image.id).unwrap()
         );
         fs::remove_file(directory.join("test.json")).unwrap();
-        collect_orphans(&directory).unwrap();
+        remove_orphan_images(&directory).unwrap();
         assert!(!directory
             .join("images")
             .join(format!("{}.webp", image.id))
@@ -518,7 +518,7 @@ mod tests {
     fn rejects_mismatched_metadata_and_exhausted_session_memory() {
         let mut store = ChatImageStore::default();
         let mut image = store.insert(&png(), None).unwrap();
-        image.width = 2;
+        image.width_px = 2;
         let chat = Chat {
             id: "test".into(),
             title: String::new(),

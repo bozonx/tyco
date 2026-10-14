@@ -48,8 +48,8 @@ pub(super) fn push_editor_history(
                 && existing.result.as_deref().map(str::trim) == Some(text)
         }) {
             let mut source = history.remove(index);
-            source.sent |= item.kind == EditorHistoryKind::Output;
-            source.created_at = item.created_at;
+            source.is_result_applied |= item.kind == EditorHistoryKind::Output;
+            source.created_at_ms = item.created_at_ms;
             history.retain(|existing| {
                 existing.kind == EditorHistoryKind::Source || existing.text.trim() != text
             });
@@ -124,7 +124,7 @@ pub(super) fn insert_restored_item(
 
     let index = history
         .iter()
-        .position(|existing| existing.created_at < item.created_at)
+        .position(|existing| existing.created_at_ms < item.created_at_ms)
         .unwrap_or(history.len());
 
     if index >= limit {
@@ -251,14 +251,14 @@ mod tests {
             source,
         ];
         let mut output = history_item("b", "Text.\n", EditorHistoryKind::Output);
-        output.created_at = 5;
+        output.created_at_ms = 5;
 
         let id = push_editor_history(&mut history, output, None, 10);
 
         assert_eq!(id, "a");
         assert_eq!(history_texts(&history), vec!["text", "older"]);
-        assert!(history[0].sent);
-        assert_eq!(history[0].created_at, 5);
+        assert!(history[0].is_result_applied);
+        assert_eq!(history[0].created_at_ms, 5);
         assert_eq!(history[0].kind, EditorHistoryKind::Source);
     }
 
@@ -280,7 +280,7 @@ mod tests {
 
         assert_eq!(id, "a");
         assert_eq!(history_texts(&history), vec!["text", "older"]);
-        assert!(!history[0].sent);
+        assert!(!history[0].is_result_applied);
     }
 
     #[test]
@@ -359,12 +359,12 @@ mod tests {
     #[test]
     fn insert_restored_item_goes_back_to_its_place() {
         let mut newer = history_item("n", "newer", EditorHistoryKind::Draft);
-        newer.created_at = 30;
+        newer.created_at_ms = 30;
         let mut older = history_item("o", "older", EditorHistoryKind::Draft);
-        older.created_at = 10;
+        older.created_at_ms = 10;
         let mut history = vec![newer, older];
         let mut removed = history_item("r", "removed", EditorHistoryKind::Output);
-        removed.created_at = 20;
+        removed.created_at_ms = 20;
 
         assert!(insert_restored_item(&mut history, removed, 10));
         assert_eq!(history_texts(&history), vec!["newer", "removed", "older"]);
@@ -385,10 +385,10 @@ mod tests {
     #[test]
     fn insert_restored_item_respects_the_limit() {
         let mut newer = history_item("n", "newer", EditorHistoryKind::Draft);
-        newer.created_at = 30;
+        newer.created_at_ms = 30;
         let mut history = vec![newer];
         let mut removed = history_item("r", "removed", EditorHistoryKind::Draft);
-        removed.created_at = 10;
+        removed.created_at_ms = 10;
 
         assert!(!insert_restored_item(&mut history, removed, 1));
         assert_eq!(history_texts(&history), vec!["newer"]);

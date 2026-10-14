@@ -27,6 +27,6 @@ pub async fn capture_selection(source: Option<String>) -> Option<String> {
         .await
 }
 
-pub fn inject_paste(user_config: &Value, source_window_id: Option<&str>) -> Result<(), AppError> {
-    text_injector::SystemTextInjector::detect().inject_paste(user_config, source_window_id)
+pub fn inject_paste(user_config: &Value, target_window_id: Option<&str>) -> Result<(), AppError> {
+    text_injector::SystemTextInjector::detect().inject_paste(user_config, target_window_id)
 }

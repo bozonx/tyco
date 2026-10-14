@@ -13,39 +13,39 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
 use crate::errors::AppError;
 
 pub(crate) fn focused_source() -> Option<String> {
-    let handle = unsafe { GetForegroundWindow() };
-    if handle.is_null() {
+    let window_handle = unsafe { GetForegroundWindow() };
+    if window_handle.is_null() {
         return None;
     }
     let mut process_id = 0;
-    unsafe { GetWindowThreadProcessId(handle, &mut process_id) };
-    (process_id != std::process::id()).then(|| (handle as isize).to_string())
+    unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
+    (process_id != std::process::id()).then(|| (window_handle as isize).to_string())
 }
 
 pub fn capture_source() -> Option<String> {
     static LAST_SOURCE: AtomicIsize = AtomicIsize::new(0);
-    let handle = unsafe { GetForegroundWindow() };
-    if handle.is_null() {
+    let window_handle = unsafe { GetForegroundWindow() };
+    if window_handle.is_null() {
         return None;
     }
     let mut process_id = 0;
-    unsafe { GetWindowThreadProcessId(handle, &mut process_id) };
+    unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
     let source = if process_id == std::process::id() {
         LAST_SOURCE.load(Ordering::SeqCst)
     } else {
-        LAST_SOURCE.store(handle as isize, Ordering::SeqCst);
-        handle as isize
+        LAST_SOURCE.store(window_handle as isize, Ordering::SeqCst);
+        window_handle as isize
     };
     (source != 0 && unsafe { IsWindow(source as HWND) } != 0).then(|| source.to_string())
 }
 
 pub async fn capture_selection(source: Option<String>) -> Option<String> {
-    let handle = source?.parse::<isize>().ok()?;
-    if handle == 0 || unsafe { IsWindow(handle as HWND) } == 0 {
+    let window_handle = source?.parse::<isize>().ok()?;
+    if window_handle == 0 || unsafe { IsWindow(window_handle as HWND) } == 0 {
         return None;
     }
     let mut process_id = 0;
-    unsafe { GetWindowThreadProcessId(handle as HWND, &mut process_id) };
+    unsafe { GetWindowThreadProcessId(window_handle as HWND, &mut process_id) };
     if process_id == std::process::id() {
         return None;
     }
@@ -75,7 +75,7 @@ foreach ($element in $elements) {
         "powershell",
         &["-NoProfile", "-NonInteractive", "-Command", SCRIPT],
     );
-    command.env("TYCO_SELECTION_WINDOW", handle.to_string());
+    command.env("TYCO_SELECTION_WINDOW", window_handle.to_string());
     let (status, output) = super::process::run(command, None, Duration::from_secs(3)).ok()?;
     status
         .success()
@@ -83,17 +83,17 @@ foreach ($element in $elements) {
         .flatten()
 }
 
-pub fn inject_paste(source_window_id: Option<&str>) -> Result<(), AppError> {
-    let handle = source_window_id
+pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> {
+    let window_handle = target_window_handle
         .and_then(|value| value.parse::<isize>().ok())
         .map(|value| value as HWND)
         .ok_or_else(|| AppError::Message(String::from("Target window is not available")))?;
-    if unsafe { SetForegroundWindow(handle) } == 0 {
+    if unsafe { SetForegroundWindow(window_handle) } == 0 {
         return Err(AppError::Message(String::from(
             "Could not focus the target window",
         )));
     }
-    if unsafe { GetForegroundWindow() } != handle {
+    if unsafe { GetForegroundWindow() } != window_handle {
         return Err(AppError::Message(
             "The target window did not receive focus".into(),
         ));

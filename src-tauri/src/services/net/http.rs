@@ -86,7 +86,7 @@ pub async fn run_fetch_controlled<S: EventSink>(
     let response = match builder.send().await {
         Ok(response) => response,
         Err(error) => {
-            sink.event(&FetchEvent::Error {
+            sink.send_event(&FetchEvent::Error {
                 message: describe(&error),
             });
             return;
@@ -112,7 +112,7 @@ pub async fn run_fetch_controlled<S: EventSink>(
             })
             .collect(),
     };
-    if !sink.event(&head) {
+    if !sink.send_event(&head) {
         return;
     }
 
@@ -123,7 +123,7 @@ pub async fn run_fetch_controlled<S: EventSink>(
             Ok(bytes) => {
                 received = received.saturating_add(bytes.len());
                 if received > response_limit_bytes {
-                    sink.event(&FetchEvent::Error {
+                    sink.send_event(&FetchEvent::Error {
                         message: format!(
                             "Response body exceeds the {response_limit_bytes} byte limit"
                         ),
@@ -138,20 +138,20 @@ pub async fn run_fetch_controlled<S: EventSink>(
                         )
                         .await
                         else {
-                            sink.event(&FetchEvent::Error {
+                            sink.send_event(&FetchEvent::Error {
                                 message: "HTTP response consumption timed out".into(),
                             });
                             return;
                         };
                         permit.forget();
                     }
-                    if !sink.bytes(chunk.to_vec()) {
+                    if !sink.send_bytes(chunk.to_vec()) {
                         return;
                     }
                 }
             }
             Err(error) => {
-                sink.event(&FetchEvent::Error {
+                sink.send_event(&FetchEvent::Error {
                     message: describe(&error),
                 });
                 return;
@@ -159,7 +159,7 @@ pub async fn run_fetch_controlled<S: EventSink>(
         }
     }
 
-    sink.event(&FetchEvent::End);
+    sink.send_event(&FetchEvent::End);
 }
 
 /// The error with its causes: reqwest's own message is only the outermost
@@ -242,7 +242,7 @@ mod tests {
     }
 
     impl EventSink for RecordingSink {
-        fn event<T: Serialize>(&self, event: &T) -> bool {
+        fn send_event<T: Serialize>(&self, event: &T) -> bool {
             self.records
                 .lock()
                 .unwrap()
@@ -251,7 +251,7 @@ mod tests {
             true
         }
 
-        fn bytes(&self, bytes: Vec<u8>) -> bool {
+        fn send_bytes(&self, bytes: Vec<u8>) -> bool {
             self.records.lock().unwrap().push(Recorded::Bytes(bytes));
             self.bytes_received.notify_one();
             true

@@ -76,10 +76,10 @@ pub fn home_dir() -> Option<PathBuf> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Context {
+enum QuoteContext {
     Bare,
-    Single,
-    Double,
+    SingleQuoted,
+    DoubleQuoted,
 }
 
 /// Replaces every `placeholder` in `script` with a reference to [`TEXT_ENV`],
@@ -93,7 +93,7 @@ enum Context {
 pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
     let windows = cfg!(target_os = "windows");
     let mut result = String::with_capacity(script.len() + 16);
-    let mut context = Context::Bare;
+    let mut context = QuoteContext::Bare;
     let mut rest = script;
 
     while !rest.is_empty() {
@@ -110,24 +110,26 @@ pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
 
         let escape = if windows { '`' } else { '\\' };
         match (context, c) {
-            (Context::Bare | Context::Double, c) if c == escape => {
+            (QuoteContext::Bare | QuoteContext::DoubleQuoted, c) if c == escape => {
                 // the escaped character is taken as it is
                 if let Some(next) = rest.chars().next() {
                     result.push(next);
                     rest = &rest[next.len_utf8()..];
                 }
             }
-            (Context::Bare, '\'') => context = Context::Single,
-            (Context::Bare, '"') => context = Context::Double,
-            (Context::Single, '\'') if windows && rest.starts_with('\'') => {
+            (QuoteContext::Bare, '\'') => context = QuoteContext::SingleQuoted,
+            (QuoteContext::Bare, '"') => context = QuoteContext::DoubleQuoted,
+            (QuoteContext::SingleQuoted, '\'') if windows && rest.starts_with('\'') => {
                 result.push('\'');
                 rest = &rest[1..];
             }
-            (Context::Double, '"') if windows && rest.starts_with('"') => {
+            (QuoteContext::DoubleQuoted, '"') if windows && rest.starts_with('"') => {
                 result.push('"');
                 rest = &rest[1..];
             }
-            (Context::Single, '\'') | (Context::Double, '"') => context = Context::Bare,
+            (QuoteContext::SingleQuoted, '\'') | (QuoteContext::DoubleQuoted, '"') => {
+                context = QuoteContext::Bare
+            }
             _ => {}
         }
     }
@@ -137,15 +139,15 @@ pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
 
 /// What stands for the text in `context`. The braces keep a character right
 /// after the placeholder out of the variable name.
-fn reference(context: Context, text: &str, windows: bool) -> String {
+fn reference(context: QuoteContext, text: &str, windows: bool) -> String {
     match (context, windows) {
-        (Context::Bare, false) => format!("\"${{{TEXT_ENV}}}\""),
+        (QuoteContext::Bare, false) => format!("\"${{{TEXT_ENV}}}\""),
         // close the quotes, add the variable quoted on its own, reopen them
-        (Context::Single, false) => format!("'\"${{{TEXT_ENV}}}\"'"),
-        (Context::Double, false) => format!("${{{TEXT_ENV}}}"),
-        (Context::Bare | Context::Double, true) => format!("${{env:{TEXT_ENV}}}"),
+        (QuoteContext::SingleQuoted, false) => format!("'\"${{{TEXT_ENV}}}\"'"),
+        (QuoteContext::DoubleQuoted, false) => format!("${{{TEXT_ENV}}}"),
+        (QuoteContext::Bare | QuoteContext::DoubleQuoted, true) => format!("${{env:{TEXT_ENV}}}"),
         // a single-quoted string cannot hold a variable, and expands nothing
-        (Context::Single, true) => escape_powershell_single(text),
+        (QuoteContext::SingleQuoted, true) => escape_powershell_single(text),
     }
 }
 

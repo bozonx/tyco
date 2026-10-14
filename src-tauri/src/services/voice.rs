@@ -7,7 +7,7 @@
 mod audio_processing;
 
 pub use audio_processing::compute_audio_level;
-use audio_processing::{mix_frame, pcm16_to_bytes, Downsampler};
+use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
@@ -26,7 +26,7 @@ use crate::state::AppState;
 pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
 
 /// What speech models are trained on; a higher device rate is averaged down.
-pub(crate) const TARGET_SAMPLE_RATE: u32 = 16_000;
+pub(crate) const TARGET_SAMPLE_RATE_HZ: u32 = 16_000;
 /// Chunks of about 100 ms: what Deepgram recommends, and few enough IPC calls.
 const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
@@ -44,7 +44,8 @@ pub struct VoiceAudioLevelPayload {
 #[serde(rename_all = "camelCase")]
 pub struct VoiceCaptureInfo {
     /// Rate of the PCM16 mono chunks that follow.
-    pub sample_rate: u32,
+    #[serde(rename = "sampleRate")]
+    pub sample_rate_hz: u32,
     /// What `stop_capture` takes to stop this capture and no other.
     pub session_id: u64,
 }
@@ -69,7 +70,7 @@ pub(crate) trait AudioSource {
 pub(crate) struct OpenedCapture<T> {
     pub stream: T,
     pub context: StreamContext,
-    pub sample_rate: u32,
+    pub sample_rate_hz: u32,
 }
 
 trait AudioLevels {
@@ -127,14 +128,14 @@ where
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
     let session_id = state.voice_session.allocate_session_id();
-    let (session, sample_rate) = tokio::task::spawn_blocking(move || {
+    let (session, sample_rate_hz) = tokio::task::spawn_blocking(move || {
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
     })
     .await
     .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
     state.voice_session.replace(Some(session));
     Ok(VoiceCaptureInfo {
-        sample_rate,
+        sample_rate_hz,
         session_id,
     })
 }
@@ -200,13 +201,13 @@ where
     });
 
     match setup_rx.recv_timeout(setup_timeout) {
-        Ok(Ok(sample_rate)) => Ok((
+        Ok(Ok(sample_rate_hz)) => Ok((
             VoiceCaptureSession {
                 id,
                 stop_flag,
                 thread,
             },
-            sample_rate,
+            sample_rate_hz,
         )),
         Ok(Err(error)) => {
             let _ = thread.join();
@@ -236,14 +237,14 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
     let OpenedCapture {
         stream,
         context,
-        sample_rate,
+        sample_rate_hz,
     } = source.open(stop_flag)?;
 
     setup_tx
-        .send(Ok(sample_rate))
+        .send(Ok(sample_rate_hz))
         .map_err(|error| AppError::Message(error.to_string()))?;
 
-    let chunk_samples = sample_rate as usize * CHUNK_MS / 1_000;
+    let chunk_samples = sample_rate_hz as usize * CHUNK_MS / 1_000;
     let mut last_level = runtime.now();
     while !stop_flag.load(Ordering::SeqCst) {
         runtime.wait();
@@ -278,12 +279,12 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
         .ok()
         .and_then(|mut error| error.take());
     if let Some(message) = stream_error {
-        sink.event(&CaptureEvent::Error { message });
+        sink.send_event(&CaptureEvent::Error { message });
         return Ok(());
     }
 
     if flush_pending(&context.pending, sink, 1) {
-        sink.event(&CaptureEvent::End);
+        sink.send_event(&CaptureEvent::End);
     }
     Ok(())
 }
@@ -295,7 +296,7 @@ fn flush_pending<S: EventSink>(pending: &Mutex<Vec<i16>>, sink: &S, min_samples:
         Ok(mut pending) if pending.len() >= min_samples => std::mem::take(&mut *pending),
         _ => return true,
     };
-    sink.bytes(pcm16_to_bytes(&samples))
+    sink.send_bytes(pcm16_to_le_bytes(&samples))
 }
 
 pub(crate) struct StreamContext {
@@ -303,8 +304,8 @@ pub(crate) struct StreamContext {
     pub stream_error: Arc<Mutex<Option<String>>>,
     pub current_level: Arc<Mutex<(f32, f32)>>,
     pub stop_flag: Arc<AtomicBool>,
-    pub device_rate: u32,
-    pub sample_rate: u32,
+    pub device_sample_rate_hz: u32,
+    pub sample_rate_hz: u32,
 }
 
 pub(crate) fn build_input_stream<T>(
@@ -321,7 +322,7 @@ where
     let level_monitor = Arc::clone(&context.current_level);
     let stream_error = Arc::clone(&context.stream_error);
     let error_stop_flag = Arc::clone(&context.stop_flag);
-    let mut downsampler = Downsampler::new(context.device_rate, context.sample_rate);
+    let mut downsampler = Downsampler::new(context.device_sample_rate_hz, context.sample_rate_hz);
     let mut converted = Vec::new();
     let error_callback = move |error| {
         log::error!("Voice capture audio input stream error: {error}");
@@ -358,6 +359,18 @@ where
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn capture_info_preserves_the_frontend_wire_names() {
+        let info = super::VoiceCaptureInfo {
+            sample_rate_hz: 16_000,
+            session_id: 7,
+        };
+        assert_eq!(
+            serde_json::to_value(info).unwrap(),
+            serde_json::json!({"sampleRate": 16_000, "sessionId": 7})
+        );
+    }
+
     use super::*;
 
     #[derive(Default)]
@@ -368,7 +381,7 @@ mod tests {
     }
 
     impl EventSink for RecordingSink {
-        fn event<T: Serialize>(&self, event: &T) -> bool {
+        fn send_event<T: Serialize>(&self, event: &T) -> bool {
             self.events
                 .lock()
                 .unwrap()
@@ -376,7 +389,7 @@ mod tests {
             !self.closed
         }
 
-        fn bytes(&self, bytes: Vec<u8>) -> bool {
+        fn send_bytes(&self, bytes: Vec<u8>) -> bool {
             self.chunks.lock().unwrap().push(bytes);
             !self.closed
         }
@@ -401,11 +414,11 @@ mod tests {
     }
 
     impl EventSink for Trace {
-        fn event<T: Serialize>(&self, event: &T) -> bool {
+        fn send_event<T: Serialize>(&self, event: &T) -> bool {
             self.push(serde_json::to_string(event).unwrap());
             true
         }
-        fn bytes(&self, bytes: Vec<u8>) -> bool {
+        fn send_bytes(&self, bytes: Vec<u8>) -> bool {
             self.push(format!("bytes:{}", bytes.len()));
             true
         }
@@ -446,14 +459,14 @@ mod tests {
                     pending: Arc::clone(&pending),
                     trace: self.trace.clone(),
                 },
-                sample_rate: TARGET_SAMPLE_RATE,
+                sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 context: StreamContext {
                     pending,
                     stream_error: Arc::new(Mutex::new(self.stream_error.clone())),
                     current_level: Arc::new(Mutex::new((0.5, 0.75))),
                     stop_flag: Arc::clone(stop_flag),
-                    device_rate: TARGET_SAMPLE_RATE,
-                    sample_rate: TARGET_SAMPLE_RATE,
+                    device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+                    sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 },
             })
         }
@@ -488,7 +501,7 @@ mod tests {
         };
         let (tx, rx) = std_mpsc::sync_channel(1);
         run_capture_thread(&source, &trace, &runtime, &trace, &stop, &tx).unwrap();
-        assert_eq!(rx.try_recv().unwrap().unwrap(), TARGET_SAMPLE_RATE);
+        assert_eq!(rx.try_recv().unwrap().unwrap(), TARGET_SAMPLE_RATE_HZ);
         assert_eq!(
             trace.values(),
             [
@@ -607,7 +620,7 @@ mod tests {
 
     #[tokio::test]
     async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
-        let state = AppState::new(crate::models::default_desktop_state(
+        let state = AppState::new(crate::models::default_desktop_snapshot(
             serde_json::Value::Null,
             Default::default(),
         ));

@@ -4,7 +4,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
 
-use super::blocking;
+use super::run_blocking;
 use crate::errors::AppError;
 use crate::services::plugins::{self, InstalledPlugin, PluginManifest, PluginStore};
 
@@ -20,7 +20,7 @@ pub struct PluginPreview {
 
 #[tauri::command]
 pub async fn inspect_plugin_package(app: AppHandle) -> Result<Option<PluginPreview>, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let Some(file) = app
             .dialog()
             .file()
@@ -44,7 +44,7 @@ pub async fn inspect_plugin_package(app: AppHandle) -> Result<Option<PluginPrevi
 
 #[tauri::command]
 pub async fn list_installed_plugins(app: AppHandle) -> Result<Vec<InstalledPlugin>, AppError> {
-    blocking(move || app.state::<PluginStore>().list()).await?
+    run_blocking(move || app.state::<PluginStore>().list()).await?
 }
 
 #[tauri::command]
@@ -54,7 +54,7 @@ pub async fn install_plugin_package(
     manifest: PluginManifest,
     digest: String,
 ) -> Result<InstalledPlugin, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let result = app
             .state::<PluginStore>()
             .install(Path::new(&path), &manifest, &digest)?;
@@ -66,7 +66,7 @@ pub async fn install_plugin_package(
 
 #[tauri::command]
 pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         app.state::<PluginStore>().remove(&id)?;
         publish_plugins_changed(&app);
         Ok(())
@@ -76,7 +76,7 @@ pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), App
 
 #[tauri::command]
 pub async fn restore_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         app.state::<PluginStore>().restore(&id)?;
         publish_plugins_changed(&app);
         Ok(())
@@ -100,7 +100,7 @@ pub async fn write_plugin_note(
     text: String,
     append: bool,
 ) -> Result<String, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let field = app
             .state::<PluginStore>()
             .notes_directory_field(&plugin_id)?;

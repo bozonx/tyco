@@ -106,7 +106,7 @@ fn on_main_thread(
 struct RuntimeActivationHost<'a>(&'a AppHandle);
 
 impl ActivationHost for RuntimeActivationHost<'_> {
-    fn source_window(&self) -> Option<String> {
+    fn foreground_target(&self) -> Option<super::platform::ForegroundTarget> {
         super::platform::capture_source()
     }
 
@@ -131,12 +131,12 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
         let handle = app.clone();
         thread::spawn(move || {
             let selected_text = tauri::async_runtime::block_on(super::platform::capture_selection(
-                request.source_window_id.clone(),
+                request.foreground_target.clone(),
             ));
             if let Err(error) = on_main_thread(&handle, move |app| {
                 app.state::<ActivationCoordinator>().publish(&request, || {
                     let state = app.state::<AppState>();
-                    state.update_state(|params| {
+                    state.update_snapshot(|params| {
                         params.activation.selected_text.clone_from(&selected_text)
                     });
                     emit_state(app, &state)
@@ -182,12 +182,12 @@ fn has_focused_window(app: &AppHandle) -> bool {
 /// The target window was closed: nothing can be inserted into it any more.
 pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppError> {
     let state = app.state::<AppState>();
-    if state.snapshot().activation.window_id.as_deref() != Some(window_id) {
+    if state.snapshot().activation.target_window_id.as_deref() != Some(window_id) {
         return Ok(());
     }
-    state.update_state(|params| {
-        if params.activation.window_id.as_deref() == Some(window_id) {
-            params.activation.window_id = None;
+    state.update_snapshot(|params| {
+        if params.activation.target_window_id.as_deref() == Some(window_id) {
+            params.activation.target_window_id = None;
         }
     });
     emit_state(app, &state)
@@ -204,11 +204,11 @@ pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
     let active_label = app.state::<RuntimeWindows>().active_label();
     let state = app.state::<AppState>();
     let mut changed = false;
-    state.update_state(|params| {
+    state.update_snapshot(|params| {
         if is_main_window_shown(active_label, params.window.is_window_shown)
-            && params.activation.window_id.as_ref() != Some(&target)
+            && params.activation.target_window_id.as_ref() != Some(&target)
         {
-            params.activation.window_id = Some(target);
+            params.activation.target_window_id = Some(target);
             changed = true;
         }
     });
@@ -264,12 +264,12 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_state(|params| {
+    state.update_snapshot(|params| {
         params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
         params.activation.mode = Some(activation.mode);
-        params.activation.window_id = activation.window_id;
+        params.activation.target_window_id = activation.target_window_id;
         params.activation.selected_text = activation.selected_text;
-        params.activation.launcher_page = activation.launcher_page;
+        params.activation.launcher_page_index = activation.launcher_page_index;
         params.activation.launcher_request = activation.launcher_request;
         params.activation.access_request = activation.access_request;
         params.window.is_window_shown = true;
@@ -324,10 +324,11 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
 /// Tyco was last activated from may be long gone from the user's mind, so the
 /// target is taken anew, the way an activation takes it.
 pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
-    let window_id = super::platform::capture_source();
+    let target_window_id =
+        super::platform::capture_source().map(super::platform::ForegroundTarget::into_platform_id);
     on_main_thread(app, move |app| {
         app.state::<AppState>()
-            .update_state(|params| params.activation.window_id = window_id);
+            .update_snapshot(|params| params.activation.target_window_id = target_window_id);
         show_application_on_main_thread(app)
     })
 }
@@ -458,7 +459,7 @@ fn show_application_mode_on_main_thread(
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_state(|params| {
+    state.update_snapshot(|params| {
         params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
         params.activation.selected_text = None;
         params.activation.mode = Some(mode);
@@ -502,7 +503,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         super::platform::disable_panel_keyboard(&window)?;
     }
 
-    state.update_state(|params| {
+    state.update_snapshot(|params| {
         params.window.is_window_shown = false;
     });
 

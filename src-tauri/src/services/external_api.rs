@@ -6,7 +6,7 @@ use tyco_activation_protocol::{Job, JobState, Request, Response, RunRequest, API
 
 use super::activation::{Activation, ActivationMode, ActivationSource};
 use super::external_access::{self, AccessPrompt, AccessPromptError, AccessRequest};
-use super::external_commands::{self, ExternalCommand, LookupError};
+use super::external_commands::{self, CommandLookupError, ExternalCommand};
 use super::external_jobs::ExternalJobs;
 use super::{runtime, selection_replace};
 use crate::state::AppState;
@@ -86,14 +86,14 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
     }))
 }
 
-fn lookup_error(error: LookupError) -> Response {
+fn lookup_error(error: CommandLookupError) -> Response {
     let code = match &error {
-        LookupError::NotFound(_) => "NotFound",
-        LookupError::Ambiguous(_, _) => "AmbiguousName",
-        LookupError::Disabled(_) => "Disabled",
-        LookupError::NotExternal(_) => "AccessDenied",
-        LookupError::Unavailable(_, _) => "Unavailable",
-        LookupError::ToolsLoading(_) => "NotReady",
+        CommandLookupError::NotFound(_) => "NotFound",
+        CommandLookupError::Ambiguous(_, _) => "AmbiguousName",
+        CommandLookupError::Disabled(_) => "Disabled",
+        CommandLookupError::NotExternal(_) => "AccessDenied",
+        CommandLookupError::Unavailable(_, _) => "Unavailable",
+        CommandLookupError::ToolsLoading(_) => "NotReady",
     };
     Response::coded_error(code, error.to_string())
 }
@@ -364,7 +364,7 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             }
             _ => None,
         };
-        jobs.publish_selection(id, error);
+        jobs.complete_selection_replacement(id, error);
     }
 }
 

@@ -69,9 +69,12 @@ pub struct ChatImage {
     pub id: String,
     #[serde(rename = "mediaType")]
     pub media_type: ChatImageMediaType,
-    pub width: u32,
-    pub height: u32,
-    pub size: usize,
+    #[serde(rename = "width")]
+    pub width_px: u32,
+    #[serde(rename = "height")]
+    pub height_px: u32,
+    #[serde(rename = "size")]
+    pub size_bytes: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
@@ -162,6 +165,17 @@ impl std::str::FromStr for ChatImageMediaType {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn image_dimensions_and_size_preserve_the_wire_names() {
+        let value = serde_json::json!({"id":"image", "mediaType":"image/webp", "width":320, "height":240, "size":1024});
+        let image: super::ChatImage = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(
+            (image.width_px, image.height_px, image.size_bytes),
+            (320, 240, 1024)
+        );
+        assert_eq!(serde_json::to_value(image).unwrap(), value);
+    }
+
     use super::*;
 
     #[test]

@@ -77,7 +77,7 @@ impl<'a> EditorHistory<'a> {
         memory: &'a mut Vec<EditorHistoryRecord>,
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
-        let store = if policy.memory_only {
+        let store = if policy.is_memory_only {
             EditorHistoryStore::Memory(memory)
         } else {
             EditorHistoryStore::File(editor_history_path(app)?)
@@ -122,25 +122,30 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    if entry.text.trim().is_empty() || policy.limit == 0 {
+    if entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
 
     entry.text = policy.redact(entry.text);
 
     let mut items = history.load()?;
-    let created_at = now_ms();
+    let created_at_ms = now_ms();
     let item = EditorHistoryRecord {
-        id: new_history_id(created_at),
+        id: new_history_id(created_at_ms),
         text: entry.text,
         kind: entry.kind,
         operation: entry.operation,
-        created_at,
+        created_at_ms,
         result: None,
-        sent: false,
+        is_result_applied: false,
     };
 
-    let id = push_editor_history(&mut items, item, entry.replace_id.as_deref(), policy.limit);
+    let id = push_editor_history(
+        &mut items,
+        item,
+        entry.replace_id.as_deref(),
+        policy.max_entries,
+    );
     history.save(items)?;
 
     Ok(Some(id))
@@ -175,7 +180,7 @@ pub fn restore_editor_history_item(
     let mut history = EditorHistory::open(app, user_config, memory)?;
     let policy = history.policy;
 
-    if policy.limit == 0 {
+    if policy.max_entries == 0 {
         return Ok(());
     }
 
@@ -184,7 +189,7 @@ pub fn restore_editor_history_item(
 
     let mut items = history.load()?;
 
-    if insert_restored_item(&mut items, item, policy.limit) {
+    if insert_restored_item(&mut items, item, policy.max_entries) {
         history.save(items)?;
     }
 
@@ -223,7 +228,7 @@ pub fn apply_history_settings_on_startup(
     let policy = EditorHistoryPolicy::from_config(user_config);
     let path = editor_history_path(app)?;
 
-    if policy.memory_only {
+    if policy.is_memory_only {
         remove_editor_history_files(&path)?;
     } else {
         enforce_editor_history_file(&path, &policy, now_ms())?;
@@ -320,16 +325,16 @@ fn switch_editor_history_store(
 ) -> Result<(), AppError> {
     let mut file = EditorHistoryStore::File(path.to_path_buf());
 
-    if after.memory_only != before.memory_only {
+    if after.is_memory_only != before.is_memory_only {
         // the entries move to where the history lives now
-        let mut items = if after.memory_only {
+        let mut items = if after.is_memory_only {
             file.read()?
         } else {
             memory.clone()
         };
         after.enforce(&mut items, now_ms);
 
-        if after.memory_only {
+        if after.is_memory_only {
             remove_editor_history_files(path)?;
             *memory = items;
             return Ok(());
@@ -339,11 +344,11 @@ fn switch_editor_history_store(
         return Ok(());
     }
 
-    let turned_off = after.limit == 0 && before.limit != 0;
-    let sanitize_turned_on = after.sanitize && !before.sanitize;
+    let turned_off = after.max_entries == 0 && before.max_entries != 0;
+    let sanitize_turned_on = after.should_redact_secrets && !before.should_redact_secrets;
 
     if turned_off || sanitize_turned_on {
-        let mut store = if after.memory_only {
+        let mut store = if after.is_memory_only {
             EditorHistoryStore::Memory(memory)
         } else {
             file
@@ -364,10 +369,10 @@ mod tests {
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {
-            limit: 100,
-            memory_only: false,
+            max_entries: 100,
+            is_memory_only: false,
             retention_days: 0,
-            sanitize: false,
+            should_redact_secrets: false,
         }
     }
 
@@ -384,7 +389,7 @@ mod tests {
         let original = fs::read(&path).unwrap();
         let mut memory = Vec::new();
         let after = EditorHistoryPolicy {
-            memory_only: true,
+            is_memory_only: true,
             ..policy()
         };
         let result = apply_history_transition(&path, &policy(), &after, &mut memory, || {
@@ -402,7 +407,7 @@ mod tests {
         let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
         let original = memory.clone();
         let before = EditorHistoryPolicy {
-            memory_only: true,
+            is_memory_only: true,
             ..policy()
         };
         let result = apply_history_transition(&path, &before, &policy(), &mut memory, || {
@@ -420,7 +425,7 @@ mod tests {
         let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
         let original = memory.clone();
         let before = EditorHistoryPolicy {
-            memory_only: true,
+            is_memory_only: true,
             ..policy()
         };
         assert!(
@@ -436,7 +441,7 @@ mod tests {
         let mut history = EditorHistory {
             store: EditorHistoryStore::File(path.clone()),
             policy: EditorHistoryPolicy {
-                sanitize: true,
+                should_redact_secrets: true,
                 ..policy()
             },
         };
@@ -459,7 +464,7 @@ mod tests {
         let mut history = EditorHistory {
             store: EditorHistoryStore::File(path.clone()),
             policy: EditorHistoryPolicy {
-                limit: 0,
+                max_entries: 0,
                 ..policy()
             },
         };
@@ -478,7 +483,7 @@ mod tests {
         let mut history = EditorHistory {
             store: EditorHistoryStore::Memory(&mut memory),
             policy: EditorHistoryPolicy {
-                memory_only: true,
+                is_memory_only: true,
                 ..policy()
             },
         };
@@ -509,7 +514,7 @@ mod tests {
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut item = history_item("a", "stored", EditorHistoryKind::Draft);
-        item.created_at = now;
+        item.created_at_ms = now;
         write_jsonl(&path, &[item]).unwrap();
         let mut memory = Vec::new();
 
@@ -517,7 +522,7 @@ mod tests {
             &path,
             &policy(),
             &EditorHistoryPolicy {
-                memory_only: true,
+                is_memory_only: true,
                 ..policy()
             },
             &mut memory,
@@ -535,13 +540,13 @@ mod tests {
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut item = history_item("a", "in memory", EditorHistoryKind::Draft);
-        item.created_at = now;
+        item.created_at_ms = now;
         let mut memory = vec![item];
 
         switch_editor_history_store(
             &path,
             &EditorHistoryPolicy {
-                memory_only: true,
+                is_memory_only: true,
                 ..policy()
             },
             &policy(),
@@ -567,7 +572,7 @@ mod tests {
             &path,
             &policy(),
             &EditorHistoryPolicy {
-                limit: 0,
+                max_entries: 0,
                 ..policy()
             },
             &mut Vec::new(),
@@ -592,7 +597,7 @@ mod tests {
             &path,
             &policy(),
             &EditorHistoryPolicy {
-                limit: 1,
+                max_entries: 1,
                 ..policy()
             },
             &mut Vec::new(),
@@ -609,9 +614,9 @@ mod tests {
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
-        fresh.created_at = now;
+        fresh.created_at_ms = now;
         let mut expired = history_item("expired", "expired", EditorHistoryKind::Draft);
-        expired.created_at = now - 2 * DAY_MS;
+        expired.created_at_ms = now - 2 * DAY_MS;
         let raw = format!(
             "{}\n{}\n",
             serde_json::to_string(&fresh).unwrap(),

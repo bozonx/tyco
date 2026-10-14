@@ -1,4 +1,4 @@
-use super::blocking;
+use super::run_blocking;
 use crate::{
     errors::AppError,
     services::{
@@ -37,7 +37,7 @@ pub async fn store_chat_image(
         ));
     };
     let bytes = bytes.clone();
-    blocking(move || {
+    run_blocking(move || {
         let (image, encoded) = ChatImageStore::prepare(&bytes, name)?;
         let state = app.state::<AppState>();
         let mut images = chat_images(&state);
@@ -51,7 +51,7 @@ pub async fn store_chat_image(
 
 #[tauri::command]
 pub async fn get_chat_image(app: AppHandle, id: String) -> Result<tauri::ipc::Response, AppError> {
-    blocking(move || storage::get_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
+    run_blocking(move || storage::get_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
 }
 
 #[tauri::command]
@@ -61,7 +61,7 @@ pub async fn sync_chat_images(
     ids: Vec<String>,
     leases: Vec<String>,
 ) -> Result<(), AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let state = app.state::<AppState>();
         let mut images = chat_images(&state);
         images.sync(window.label(), &ids)?;
@@ -76,7 +76,7 @@ pub async fn sync_chat_images(
 /// Only bounded bytes are returned; a dropped path is never used as a webview URL.
 #[tauri::command]
 pub async fn read_chat_file(path: String) -> Result<tauri::ipc::Response, ChatFileError> {
-    blocking(move || read_chat_file_bytes(std::path::Path::new(&path)))
+    run_blocking(move || read_chat_file_bytes(std::path::Path::new(&path)))
         .await
         .map_err(|error| ChatFileError::new(ChatFileErrorKind::Invalid, &error.to_string()))?
         .map(tauri::ipc::Response::new)

@@ -1,4 +1,4 @@
-use super::blocking;
+use super::run_blocking;
 use crate::{
     errors::AppError,
     models::DesktopSnapshot,
@@ -18,7 +18,7 @@ pub async fn save_user_config(
     user_config: Value,
     base_config: Value,
 ) -> Result<DesktopSnapshot, AppError> {
-    blocking(move || save_user_config_blocking(&app, user_config, base_config)).await?
+    run_blocking(move || save_user_config_blocking(&app, user_config, base_config)).await?
 }
 
 fn save_user_config_blocking(
@@ -32,7 +32,7 @@ fn save_user_config_blocking(
         )));
     }
     let state = app.state::<AppState>();
-    let _guard = state.lock_config_storage();
+    let _guard = state.lock_settings_update();
     // the stored config came from a newer build; whatever the webview sends,
     // it is not written over
     if config_version::is_newer_than_supported(&state.snapshot().settings.user_config) {
@@ -92,14 +92,14 @@ pub async fn patch_session_state(
     app: AppHandle,
     patch: serde_json::Map<String, Value>,
 ) -> Result<DesktopSnapshot, AppError> {
-    blocking(move || {
+    run_blocking(move || {
         let state = app.state::<AppState>();
-        let _guard = state.lock_config_storage();
+        let _guard = state.lock_settings_update();
         let session_state = crate::services::session_state::merge_session_state(
             &state.snapshot().settings.session_state,
             patch,
         )?;
-        state.update_state(|params| {
+        state.update_snapshot(|params| {
             params.settings.session_state = session_state.clone();
         });
         runtime::publish_state(&app, &state);

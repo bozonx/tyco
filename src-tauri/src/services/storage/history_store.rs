@@ -36,7 +36,7 @@ impl HistoryStorage {
         let _chats = self.chats();
         editor::apply_history_settings_change(app, previous, next, &mut memory)?;
         app.state::<AppState>()
-            .update_state(|params| params.settings.user_config = next.clone());
+            .update_snapshot(|params| params.settings.user_config = next.clone());
         Ok(())
     }
 }
@@ -227,9 +227,9 @@ mod tests {
                         text: String::new(),
                         kind: crate::models::EditorHistoryKind::Draft,
                         operation: None,
-                        created_at: 1,
+                        created_at_ms: 1,
                         result: None,
-                        sent: false,
+                        is_result_applied: false,
                     });
                 });
             }
