@@ -1,17 +1,19 @@
 import { createRouter, createMemoryHistory } from 'vue-router'
-const HomeView = () => import('../views/HomeView.vue')
-const HistoryView = () => import('../views/HistoryView.vue')
-const SettingsView = () => import('../views/SettingsView.vue')
-const ChatView = () => import('../views/ChatView.vue')
-const WriteView = () => import('../views/WriteView.vue')
-const VoiceView = () => import('../views/VoiceView.vue')
-const SelectionView = () => import('../views/SelectionView.vue')
-const AiTaskView = () => import('../views/AiTaskView.vue')
-const CommandLauncherView = () => import('../views/CommandLauncherView.vue')
-const CorrectionView = () => import('../views/CorrectionView.vue')
-const TranslateView = () => import('../views/TranslateView.vue')
-const EditorView = () => import('../views/EditorView.vue')
+
+import { clientLogger } from '../lib/logger'
 import { APP_ROUTES } from '../lib/navigation/routes'
+import AiTaskView from '../views/AiTaskView.vue'
+import ChatView from '../views/ChatView.vue'
+import CommandLauncherView from '../views/CommandLauncherView.vue'
+import CorrectionView from '../views/CorrectionView.vue'
+import EditorView from '../views/EditorView.vue'
+import HistoryView from '../views/HistoryView.vue'
+import HomeView from '../views/HomeView.vue'
+import SelectionView from '../views/SelectionView.vue'
+import SettingsView from '../views/SettingsView.vue'
+import TranslateView from '../views/TranslateView.vue'
+import VoiceView from '../views/VoiceView.vue'
+import WriteView from '../views/WriteView.vue'
 
 const router = createRouter({
   history: createMemoryHistory(),
@@ -79,6 +81,10 @@ const router = createRouter({
       component: CommandLauncherView,
     },
   ],
+})
+
+router.onError((error) => {
+  clientLogger.error('Navigation error', error, 'router')
 })
 
 export default router

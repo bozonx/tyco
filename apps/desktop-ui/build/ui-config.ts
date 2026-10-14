@@ -35,6 +35,7 @@ export function createUiConfig(mode: string, useLocalKit: boolean): UserConfig {
         ...(localAiKit?.aliases ?? []),
       ],
     },
+    optimizeDeps: { include: ['highlight.js', 'mermaid', 'katex'] },
     ...(localAiKit
       ? { server: { fs: { allow: [envDir, localAiKit.dir] } } }
       : {}),
