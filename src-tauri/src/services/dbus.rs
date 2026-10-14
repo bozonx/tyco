@@ -3,7 +3,7 @@ use std::thread;
 
 use tauri::AppHandle;
 use tyco_activation_protocol::{Request, Response, RunRequest};
-use zbus::message::{Builder, Header, Message};
+use zbus::message::{Header, Message};
 use zbus::names::{BusName, ErrorName, OwnedErrorName, OwnedUniqueName};
 use zbus::{interface, Connection, DBusError};
 
@@ -29,7 +29,7 @@ pub fn spawn_dbus_server(app: AppHandle) {
         let connection = runtime.block_on(async {
             let interface = TycoDbus { app: app.clone() };
 
-            zbus::ConnectionBuilder::session()?
+            zbus::connection::Builder::session()?
                 .name(MESSAGE_DEST)?
                 .serve_at(MESSAGE_PATH, interface)?
                 .serve_at(MESSAGE_PATH, TycoKwin { app: app.clone() })?
@@ -170,11 +170,9 @@ impl From<Response> for ApiError {
 }
 
 impl DBusError for ApiError {
-    // `Message::method_error` needs the whole call, which the trait does not
-    // pass; zbus' own `DBusError` derive builds the reply the same way.
-    #[allow(deprecated)]
+    // zbus' own `DBusError` derive builds the reply the same way.
     fn create_reply(&self, call: &Header<'_>) -> zbus::Result<Message> {
-        Builder::error(call, self.name())?.build(&self.message)
+        Message::error(call, self.name())?.build(&self.message)
     }
 
     fn name(&self) -> ErrorName<'_> {

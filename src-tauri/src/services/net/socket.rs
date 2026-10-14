@@ -77,11 +77,9 @@ pub async fn connect(prepared: &PreparedRequest, protocols: &[String]) -> Result
         headers.insert("sec-websocket-protocol", value);
     }
 
-    let config = WebSocketConfig {
-        max_message_size: Some(MAX_FRAME_BYTES),
-        max_frame_size: Some(MAX_FRAME_BYTES),
-        ..Default::default()
-    };
+    let config = WebSocketConfig::default()
+        .max_message_size(Some(MAX_FRAME_BYTES))
+        .max_frame_size(Some(MAX_FRAME_BYTES));
     match tokio::time::timeout(
         HANDSHAKE_TIMEOUT,
         connect_async_with_config(request, Some(config), false),
@@ -114,12 +112,12 @@ async fn run_socket_with<S: EventSink>(
         tokio::select! {
             command = commands.recv(), if closing_deadline.is_none() => {
                 let sent = match command {
-                    Some(SocketCommand::Text(text)) => bounded_write(write.send(Message::Text(text)), write_timeout, closing_deadline).await,
-                    Some(SocketCommand::Binary(bytes)) => bounded_write(write.send(Message::Binary(bytes)), write_timeout, closing_deadline).await,
+                    Some(SocketCommand::Text(text)) => bounded_write(write.send(Message::Text(text.into())), write_timeout, closing_deadline).await,
+                    Some(SocketCommand::Binary(bytes)) => bounded_write(write.send(Message::Binary(bytes.into())), write_timeout, closing_deadline).await,
                     Some(SocketCommand::Close(Some(payload))) => {
                         awaiting_results = true;
                         closing_deadline = Some(Instant::now() + CLOSE_GRACE);
-                        bounded_write(write.send(Message::Text(payload)), write_timeout, closing_deadline).await
+                        bounded_write(write.send(Message::Text(payload.into())), write_timeout, closing_deadline).await
                     }
                     Some(SocketCommand::Close(None)) | None => {
                         closing_deadline = Some(Instant::now() + CLOSE_GRACE);
@@ -134,13 +132,13 @@ async fn run_socket_with<S: EventSink>(
             message = read.next() => {
                 match message {
                     Some(Ok(Message::Text(data))) => {
-                        if !sink.send_event(&SocketEvent::Message { data }) {
+                        if !sink.send_event(&SocketEvent::Message { data: data.to_string() }) {
                             let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
                     }
                     Some(Ok(Message::Binary(bytes))) => {
-                        if !sink.send_bytes(bytes) {
+                        if !sink.send_bytes(bytes.into()) {
                             let _ = bounded_write(write.send(Message::Close(Some(normal_close()))), write_timeout, closing_deadline).await;
                             return;
                         }
@@ -149,7 +147,7 @@ async fn run_socket_with<S: EventSink>(
                         // Sends the close reply tungstenite has queued.
                         let _ = bounded_write(write.flush(), write_timeout, closing_deadline).await;
                         let (code, reason) = frame
-                            .map(|frame| (u16::from(frame.code), frame.reason.into_owned()))
+                            .map(|frame| (u16::from(frame.code), frame.reason.to_string()))
                             .unwrap_or((NO_STATUS, String::new()));
                         sink.send_event(&SocketEvent::Close { code, reason });
                         return;
@@ -206,7 +204,7 @@ async fn bounded_write<T, E: std::fmt::Display>(
         .map_err(|error| error.to_string())
 }
 
-fn normal_close() -> CloseFrame<'static> {
+fn normal_close() -> CloseFrame {
     CloseFrame {
         code: CloseCode::Normal,
         reason: "".into(),
@@ -335,7 +333,7 @@ mod tests {
                 match message {
                     Message::Binary(bytes) => received.push(format!("bin:{}", bytes.len())),
                     Message::Text(text) => {
-                        received.push(text.clone());
+                        received.push(text.to_string());
                         if text == "end-of-stream" {
                             // The tail of the transcript, after the client asked to stop.
                             socket.send(Message::Text("final".into())).await.unwrap();

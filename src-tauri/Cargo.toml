@@ -29,18 +29,18 @@ regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
-png = "0.17"
+png = "0.18"
 percent-encoding = "2"
 webp = { version = "0.3", default-features = false }
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-log = "2"
 tauri-plugin-single-instance = "2.4.5"
-thiserror = "1"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt", "sync", "time", "signal", "process", "io-util", "net"] }
-tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+tokio-tungstenite = { version = "0.30", features = ["rustls-tls-webpki-roots"] }
 tyco-activation-protocol = { path = "crates/activation-protocol" }
 url = "2"
-zbus = "4"
+zbus = "5"
 tauri-plugin-dialog = "2.7.2"
 
 [dev-dependencies]
@@ -51,7 +51,7 @@ evdev = "0.13"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # the Secret Service over zbus, like the rest of the D-Bus code
-keyring = { version = "3", features = ["async-secret-service", "async-io", "crypto-rust"] }
+zbus-secret-service-keyring-store = { version = "1", features = ["rt-async-io-crypto-rust"] }
 ashpd = { version = "0.13.13", features = ["global_shortcuts"] }
 gtk = "0.18"
 gtk-sys = "0.18"
@@ -63,13 +63,14 @@ webkit2gtk = "2.0"
 libc = "0.2"
 
 [target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
+keyring-core = "1"
 tauri-plugin-global-shortcut = "2.3.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-keyring = { version = "3", features = ["apple-native"] }
+apple-native-keyring-store = { version = "1", features = ["keychain"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-keyring = { version = "3", features = ["windows-native"] }
+windows-native-keyring-store = { version = "1", default-features = false }
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Pipes"] }
 
 [profile.release]

@@ -113,7 +113,10 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     {
         return Err(invalid("Unsupported image dimensions or format"));
     }
-    let mut pixels = vec![0; reader.output_buffer_size()];
+    let buffer_size = reader
+        .output_buffer_size()
+        .ok_or_else(|| invalid("Unsupported image dimensions or format"))?;
+    let mut pixels = vec![0; buffer_size];
     let output = reader
         .next_frame(&mut pixels)
         .map_err(|_| invalid("Invalid PNG pixels"))?;
