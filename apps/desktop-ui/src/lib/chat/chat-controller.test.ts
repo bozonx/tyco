@@ -4,7 +4,7 @@ import type { Chat } from '@tyco/shared'
 
 import { createChatController } from './chat-controller'
 import { createChatModel } from './chat-model'
-import type { ChatLlmOption } from './chat-model-selection'
+import type { ChatLlmOption } from './chat-llm-selection'
 
 function setup() {
   const selectedModel = ref<ChatLlmOption | null>({

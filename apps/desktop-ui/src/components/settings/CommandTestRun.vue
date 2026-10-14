@@ -9,7 +9,7 @@
     />
     <div class="test-run-actions">
       <Button
-        v-if="!running"
+        v-if="!isRunning"
         size="sm"
         icon="mdi:play"
         :disabled="hasIssues"
@@ -20,7 +20,7 @@
       <Button v-else size="sm" icon="mdi:stop" @click="stop">
         {{ t('commands.testStop') }}
       </Button>
-      <span v-if="running" class="test-run-status">
+      <span v-if="isRunning" class="test-run-status">
         {{ t('commands.testRunning') }}
       </span>
       <span v-else-if="hasIssues" class="test-run-status">
@@ -89,7 +89,7 @@ const toolsStore = useToolsStore()
 
 const text = ref('')
 const result = ref<CommandTestResult | null>(null)
-const running = ref(false)
+const isRunning = ref(false)
 let controller: AbortController | null = null
 let runCounter = 0
 
@@ -111,7 +111,7 @@ async function run() {
   controller?.abort()
   const current = new AbortController()
   controller = current
-  running.value = true
+  isRunning.value = true
   result.value = null
   try {
     result.value = await runCommandTest(
@@ -127,7 +127,7 @@ async function run() {
   } finally {
     if (controller === current) {
       controller = null
-      running.value = false
+      isRunning.value = false
     }
   }
 }
@@ -140,7 +140,7 @@ function stop() {
 watch(
   () => props.command.toolConfig,
   () => {
-    if (!running.value) result.value = null
+    if (!isRunning.value) result.value = null
   }
 )
 

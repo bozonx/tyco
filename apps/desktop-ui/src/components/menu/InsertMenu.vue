@@ -56,7 +56,7 @@
         :isEditorButtonVisible="
           !props.isCorrecting &&
           !editorTarget &&
-          (props.isEditorButtonVisible ?? !routeParamsStore.isEditorPage())
+          (props.isEditorButtonVisible ?? !editorNavigation.isEditorPage())
         "
         :escMode="props.correction ? 'back' : 'auto'"
       />
@@ -83,7 +83,7 @@ import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import { Icon } from '@iconify/vue'
 
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 
 const props = withDefaults(defineProps<InsertMenuParams>(), {
   text: '',
@@ -110,7 +110,7 @@ const editorInputStore = useEditorInputStore()
  * step then only applies it or, with Esc, leaves the text as it was
  */
 const editorTarget = computed(
-  () => props.correction && routeParamsStore.isEditorPage()
+  () => props.correction && editorNavigation.isEditorPage()
 )
 
 const applyToEditorAction: ActionItem = {
@@ -119,7 +119,7 @@ const applyToEditorAction: ActionItem = {
   icon: 'mdi:pencil-outline',
   action: async (text: string) => {
     if (
-      routeParamsStore.applyEditorTransfer(text, props.originalText ?? '') ===
+      editorNavigation.applyEditorTransfer(text, props.originalText ?? '') ===
       false
     )
       return

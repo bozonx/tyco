@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import CorrectionModeView from './CorrectionModeView.vue'
+import CorrectionView from './CorrectionView.vue'
 
 const mocks = vi.hoisted(() => ({
   desktopState: {
@@ -58,7 +58,7 @@ vi.mock('../stores/action-menu', () => ({
   useActionMenuStore: () => ({ correct: mocks.correct }),
 }))
 
-describe('CorrectionModeView', () => {
+describe('CorrectionView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.correct.mockReset().mockResolvedValue(undefined)
@@ -68,7 +68,7 @@ describe('CorrectionModeView', () => {
 
   it('shows an explanation and a close action when no selection was captured', async () => {
     mocks.desktopState.selectedText = null
-    const wrapper = mount(CorrectionModeView)
+    const wrapper = mount(CorrectionView)
     expect(wrapper.text()).toContain('toast.textNotSelected')
     expect(mocks.correct).not.toHaveBeenCalled()
     await wrapper.find('.close-btn').trigger('click')
@@ -77,7 +77,7 @@ describe('CorrectionModeView', () => {
   })
 
   it('does not let cancellation from an old correction hide a new activation', async () => {
-    const wrapper = mount(CorrectionModeView)
+    const wrapper = mount(CorrectionView)
     await flushPromises()
     const onCancel = mocks.correct.mock.calls[0]![1].onCancel
     reactive(mocks.desktopState).activationId++
@@ -87,7 +87,7 @@ describe('CorrectionModeView', () => {
   })
 
   it('passes onCancel handler to actionMenuStore.correct', async () => {
-    mount(CorrectionModeView)
+    mount(CorrectionView)
     await flushPromises()
 
     expect(mocks.correct).toHaveBeenCalledWith('Selected text', {
@@ -97,7 +97,7 @@ describe('CorrectionModeView', () => {
   })
 
   it('closes window when onCancel callback passed to correct is called', async () => {
-    mount(CorrectionModeView)
+    mount(CorrectionView)
     await flushPromises()
 
     const options = mocks.correct.mock.calls[0]?.[1]
@@ -114,7 +114,7 @@ describe('CorrectionModeView', () => {
       return new Promise(() => {})
     })
 
-    const wrapper = mount(CorrectionModeView)
+    const wrapper = mount(CorrectionView)
     await flushPromises()
 
     const cancelBtn = wrapper.find('.cancel-btn')

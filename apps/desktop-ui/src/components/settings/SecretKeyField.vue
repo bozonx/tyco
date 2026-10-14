@@ -4,7 +4,7 @@
       class="flex-1"
       type="password"
       :value="value"
-      :disabled="busy"
+      :disabled="isBusy"
       :aria-label="t('settings.apiKey')"
       :placeholder="
         hasKey
@@ -13,14 +13,14 @@
       "
       @update:value="emit('update:value', $event)"
     />
-    <Button size="sm" :disabled="busy || !value.trim()" @click="run(save)">{{
+    <Button size="sm" :disabled="isBusy || !value.trim()" @click="run(save)">{{
       t('settings.saveKey')
     }}</Button>
     <Button
       v-if="hasKey"
       size="sm"
       variant="ghost"
-      :disabled="busy"
+      :disabled="isBusy"
       @click="run(remove)"
       >{{ t('settings.removeKey') }}</Button
     >
@@ -41,14 +41,14 @@ defineProps<{
 }>()
 const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
 const { t } = useI18n()
-const busy = ref(false)
+const isBusy = ref(false)
 async function run(action: () => Promise<void>) {
-  if (busy.value) return
-  busy.value = true
+  if (isBusy.value) return
+  isBusy.value = true
   try {
     await action()
   } finally {
-    busy.value = false
+    isBusy.value = false
   }
 }
 </script>

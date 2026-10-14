@@ -21,7 +21,7 @@
       </template>
 
       <template #notice>
-        <div v-if="editorLoadError" class="history-notice is-error">
+        <div v-if="hasEditorLoadError" class="history-notice is-error">
           <Icon icon="mdi:alert-circle-outline" height="16" />
           <span>{{ t('history.loadFailed') }}</span>
           <Button
@@ -40,7 +40,7 @@
             {{ t('history.undo') }}
           </Button>
         </div>
-        <div v-if="editorHistoryDisabled" class="history-notice">
+        <div v-if="isEditorHistoryDisabled" class="history-notice">
           <Icon icon="mdi:information-outline" height="16" />
           <span>{{ t('history.textsDisabled') }}</span>
         </div>
@@ -78,7 +78,7 @@ const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
-const routeParams = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 
 const removal = createRemovalUndo<EditorHistoryItem>({
   remove: historyStore.removeFromEditorHistory,
@@ -89,9 +89,9 @@ const removal = createRemovalUndo<EditorHistoryItem>({
 const removedItem = removal.removed
 const undoRemove = removal.undo
 const clearEditorHistory = removal.clear
-const editorLoadError = ref(false)
+const hasEditorLoadError = ref(false)
 
-const editorHistoryDisabled = computed(() =>
+const isEditorHistoryDisabled = computed(() =>
   isEditorHistoryOff({ ...ipcStore.desktopState.userConfig })
 )
 
@@ -163,9 +163,9 @@ navPanelStore.resetNavPanelState({})
 const loadEditorHistory = async () => {
   try {
     await historyStore.loadEditorHistory()
-    editorLoadError.value = false
+    hasEditorLoadError.value = false
   } catch {
-    editorLoadError.value = true
+    hasEditorLoadError.value = true
   }
 }
 
@@ -180,7 +180,7 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
       await copyText(item.value)
       break
     case 'originalToEditor':
-      if (item.original) routeParams.toEditor(item.original.text)
+      if (item.original) editorNavigation.toEditor(item.original.text)
       break
     case 'copyOriginal':
       if (item.original) await copyText(item.original.text)
@@ -192,7 +192,7 @@ const onEditorAction = async (actionId: string, item: HistoryListItem) => {
 }
 
 const toEditor = (item: HistoryListItem) => {
-  routeParams.toEditor(item.value)
+  editorNavigation.toEditor(item.value)
 }
 </script>
 

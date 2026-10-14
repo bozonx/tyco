@@ -1,7 +1,7 @@
 <template>
   <div class="command-editor">
-    <p v-if="unavailable" class="command-warning">
-      {{ t(unavailable) }}
+    <p v-if="unavailableReason" class="command-warning">
+      {{ t(unavailableReason) }}
     </p>
 
     <label class="command-field">
@@ -38,7 +38,7 @@
       </p>
     </div>
 
-    <details v-if="testable" class="command-group">
+    <details v-if="canTest" class="command-group">
       <summary class="command-group-title command-group-toggle">
         <Icon icon="mdi:chevron-right" width="16" height="16" />
         {{ t('commands.testGroup') }}
@@ -146,10 +146,10 @@
             <IconButton
               variant="ghost"
               size="sm"
-              :title="copied ? t('commands.idCopied') : t('commands.copyCli')"
+              :title="isCopied ? t('commands.idCopied') : t('commands.copyCli')"
               @click="copyCli"
-              :label="copied ? t('commands.idCopied') : t('commands.copyCli')"
-              :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+              :label="isCopied ? t('commands.idCopied') : t('commands.copyCli')"
+              :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"
             />
           </span>
         </div>
@@ -240,10 +240,10 @@ const tool = computed(() => commandTool(props.command, toolsStore))
 const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
-const testable = computed(() => canTestCommand(props.command))
+const canTest = computed(() => canTestCommand(props.command))
 const scriptConfig = computed(() => scriptToolConfig(props.command))
 /** Why the command cannot run, unless its tool is missing altogether */
-const unavailable = computed(() =>
+const unavailableReason = computed(() =>
   tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
 )
 const nameIssues = computed(() =>
@@ -311,16 +311,16 @@ const cliCommand = computed(() =>
     : commandCliCall(props.command.id)
 )
 
-const copied = ref(false)
+const isCopied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
 async function copyCli() {
   try {
     await navigator.clipboard.writeText(cliCommand.value)
-    copied.value = true
+    isCopied.value = true
     if (copiedTimer) clearTimeout(copiedTimer)
     copiedTimer = setTimeout(() => {
-      copied.value = false
+      isCopied.value = false
     }, 2000)
   } catch {
     // clipboard access might be denied; the line stays selectable

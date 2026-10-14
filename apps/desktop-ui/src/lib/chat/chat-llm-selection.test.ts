@@ -6,13 +6,13 @@ import {
   chatRequestBudgetCharacters,
   contextBudgetCharacters,
   pickChatModel,
-} from './chat-model-selection'
+} from './chat-llm-selection'
 
 function config(): LlmConfig {
   return structuredClone(DEFAULT_LLM_CONFIG)
 }
 
-describe('chat-model-selection', () => {
+describe('chat-llm-selection', () => {
   it('offers only models with a key, and keyless local ones', () => {
     const options = chatModelOptions(config(), (id) => id === 'deepseek')
 

@@ -41,10 +41,10 @@
         <IconButton
           v-if="message.content"
           class="message-action"
-          :title="copied ? t('chat.copied') : t('chat.copy')"
+          :title="isCopied ? t('chat.copied') : t('chat.copy')"
           @click="copyMessage"
-          :label="copied ? t('chat.copied') : t('chat.copy')"
-          :icon="copied ? 'mdi:check' : 'mdi:content-copy'"
+          :label="isCopied ? t('chat.copied') : t('chat.copy')"
+          :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"
         />
         <DropdownMenu
           xs
@@ -66,11 +66,11 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import ChatAttachment from '../chat/ChatAttachment.vue'
-import ChatImageAttachment from '../chat/ChatImageAttachment.vue'
-import ChatMarkdown from '../chat/ChatMarkdown.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import IconButton from './IconButton.vue'
+import IconButton from '../common/IconButton.vue'
+import ChatAttachment from './ChatAttachment.vue'
+import ChatImageAttachment from './ChatImageAttachment.vue'
+import ChatMarkdown from './ChatMarkdown.vue'
 import type { ChatMessage } from '@tyco/shared'
 
 const props = defineProps<{
@@ -86,7 +86,7 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 const { toastKey } = useToast()
-const copied = ref(false)
+const isCopied = ref(false)
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   ...(props.message.role === 'assistant' && props.canRegenerate
@@ -116,8 +116,8 @@ async function copyText(value: string) {
     toastKey('editor.menu.clipboardUnavailable', 'error')
     return
   }
-  copied.value = true
-  window.setTimeout(() => (copied.value = false), 1500)
+  isCopied.value = true
+  window.setTimeout(() => (isCopied.value = false), 1500)
 }
 
 function copyMessage() {

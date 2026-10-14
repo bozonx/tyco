@@ -3,13 +3,13 @@ const HomeView = () => import('../views/HomeView.vue')
 const HistoryView = () => import('../views/HistoryView.vue')
 const SettingsView = () => import('../views/SettingsView.vue')
 const ChatView = () => import('../views/ChatView.vue')
-const WriteModeView = () => import('../views/WriteModeView.vue')
+const WriteView = () => import('../views/WriteView.vue')
 const VoiceView = () => import('../views/VoiceView.vue')
-const SelectionActionsView = () => import('../views/SelectionActionsView.vue')
+const SelectionView = () => import('../views/SelectionView.vue')
 const AiTaskView = () => import('../views/AiTaskView.vue')
 const CommandLauncherView = () => import('../views/CommandLauncherView.vue')
-const CorrectionModeView = () => import('../views/CorrectionModeView.vue')
-const TranslateModeView = () => import('../views/TranslateModeView.vue')
+const CorrectionView = () => import('../views/CorrectionView.vue')
+const TranslateView = () => import('../views/TranslateView.vue')
 const EditorView = () => import('../views/EditorView.vue')
 import { APP_ROUTES } from '../lib/navigation/routes'
 
@@ -46,7 +46,7 @@ const router = createRouter({
     {
       path: APP_ROUTES.WRITE.path,
       name: APP_ROUTES.WRITE.name,
-      component: WriteModeView,
+      component: WriteView,
     },
     {
       path: APP_ROUTES.VOICE.path,
@@ -61,17 +61,17 @@ const router = createRouter({
     {
       path: APP_ROUTES.CORRECTION.path,
       name: APP_ROUTES.CORRECTION.name,
-      component: CorrectionModeView,
+      component: CorrectionView,
     },
     {
       path: APP_ROUTES.TRANSLATE.path,
       name: APP_ROUTES.TRANSLATE.name,
-      component: TranslateModeView,
+      component: TranslateView,
     },
     {
       path: APP_ROUTES.SELECT.path,
       name: APP_ROUTES.SELECT.name,
-      component: SelectionActionsView,
+      component: SelectionView,
     },
     {
       path: APP_ROUTES.COMMAND_LAUNCHER.path,

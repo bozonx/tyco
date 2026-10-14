@@ -2,9 +2,9 @@
   <div class="image-attachment" :class="{ 'is-compact': compact }">
     <button
       type="button"
-      :title="failed ? t('chat.imageError') : t('chat.viewImage')"
-      :disabled="!url && !failed"
-      @click="failed ? load() : (viewerOpen = true)"
+      :title="hasFailed ? t('chat.imageError') : t('chat.viewImage')"
+      :disabled="!url && !hasFailed"
+      @click="hasFailed ? load() : (isViewerOpen = true)"
     >
       <img
         v-if="url"
@@ -13,7 +13,7 @@
         @load="emit('loaded')"
       />
       <span v-else role="status">{{
-        failed ? t('chat.imageUnavailable') : t('chat.imageProcessing')
+        hasFailed ? t('chat.imageUnavailable') : t('chat.imageProcessing')
       }}</span>
     </button>
     <IconButton
@@ -25,13 +25,13 @@
     />
     <BaseDialog
       size="content"
-      :open="viewerOpen"
+      :open="isViewerOpen"
       :label="image.name || t('chat.imageTitle')"
       class="image-viewer"
-      @close="viewerOpen = false"
+      @close="isViewerOpen = false"
     >
       <IconButton
-        @click="viewerOpen = false"
+        @click="isViewerOpen = false"
         :label="t('chat.closeImage')"
         icon="mdi:close"
       />
@@ -58,8 +58,8 @@ const props = defineProps<{
 const emit = defineEmits<{ remove: []; loaded: [] }>()
 const { t } = useI18n()
 const url = ref('')
-const failed = ref(false)
-const viewerOpen = ref(false)
+const hasFailed = ref(false)
+const isViewerOpen = ref(false)
 let version = 0
 function release() {
   if (url.value) URL.revokeObjectURL(url.value)
@@ -68,7 +68,7 @@ function release() {
 async function load() {
   const current = ++version
   release()
-  failed.value = false
+  hasFailed.value = false
   try {
     const bytes = await getChatImage(props.image.id)
     if (current === version)
@@ -76,7 +76,7 @@ async function load() {
         new Blob([bytes], { type: props.image.mediaType })
       )
   } catch {
-    if (current === version) failed.value = true
+    if (current === version) hasFailed.value = true
   }
 }
 watch(() => props.image.id, load, { immediate: true })

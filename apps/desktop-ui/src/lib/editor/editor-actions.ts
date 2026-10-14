@@ -66,7 +66,7 @@ export function createEditorActions(deps: EditorActionsDependencies) {
     })
   }
 
-  const doAction = async (item: ActionItem): Promise<void> => {
+  const executeAction = async (item: ActionItem): Promise<void> => {
     let value = item.useFullEditorText
       ? editorInputStore.value
       : editorInputStore.actionText()
@@ -91,7 +91,7 @@ export function createEditorActions(deps: EditorActionsDependencies) {
   })
 
   /** Transforms the selection, or the whole text, in place: one undo step. */
-  const doEdit = async (item: EditItem): Promise<void> => {
+  const applyTextEdit = async (item: EditItem): Promise<void> => {
     try {
       const result = await textEdit.run(item)
       if (result === 'empty') toastKey('toast.textNotSelected', 'warn')
@@ -107,5 +107,12 @@ export function createEditorActions(deps: EditorActionsDependencies) {
     }
   }
 
-  return { getLabel, voiceRecognition, doAction, doEdit }
+  return {
+    getLabel,
+    voiceRecognition,
+    executeAction,
+    applyTextEdit,
+    doAction: executeAction,
+    doEdit: applyTextEdit,
+  }
 }

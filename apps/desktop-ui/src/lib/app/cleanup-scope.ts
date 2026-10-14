@@ -31,6 +31,9 @@ export function createCleanupScope() {
     add,
     listen,
     stop,
+    get isStopped() {
+      return stopped
+    },
     get stopped() {
       return stopped
     },

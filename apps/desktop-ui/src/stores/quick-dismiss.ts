@@ -6,21 +6,21 @@ import { computed, ref } from 'vue'
  * progress) hold it open while they need it
  */
 export const useQuickDismissStore = defineStore('quickDismiss', () => {
-  const holds = ref(0)
+  const holdCount = ref(0)
 
   /** Returns the release function; releasing twice is harmless. */
   const hold = (): (() => void) => {
-    holds.value += 1
+    holdCount.value += 1
     let released = false
 
     return () => {
       if (released) return
       released = true
-      holds.value -= 1
+      holdCount.value -= 1
     }
   }
 
-  const isHeld = computed(() => holds.value > 0)
+  const isHeld = computed(() => holdCount.value > 0)
 
-  return { hold, isHeld }
+  return { hold, isHeld, holdCount }
 })

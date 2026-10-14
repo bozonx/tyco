@@ -2,8 +2,8 @@
   <span
     class="chat-attachment"
     :class="{
-      'is-open': open,
-      'is-arriving': arriving,
+      'is-open': isOpen,
+      'is-arriving': isArriving,
       'is-pending': removable,
     }"
   >
@@ -11,8 +11,8 @@
       type="button"
       class="chat-attachment-toggle"
       :title="toggleTitle"
-      :aria-expanded="open"
-      @click="open = !open"
+      :aria-expanded="isOpen"
+      @click="isOpen = !isOpen"
     >
       <Icon
         :icon="attachmentIcon(source, mediaType)"
@@ -32,7 +32,7 @@
       icon="mdi:close"
     />
   </span>
-  <pre v-if="open" class="chat-attachment-preview selectable">{{ text }}</pre>
+  <pre v-if="isOpen" class="chat-attachment-preview selectable">{{ text }}</pre>
 </template>
 
 <script setup lang="ts">
@@ -61,8 +61,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ (e: 'remove'): void }>()
 const { t } = useI18n()
-const open = ref(false)
-const arriving = ref(false)
+const isOpen = ref(false)
+const isArriving = ref(false)
 
 const label = computed(() => props.name || t(attachmentLabelKey(props.source)))
 const excerpt = computed(() => attachmentExcerpt(props.text))
@@ -74,7 +74,7 @@ const toggleTitle = computed(() =>
 )
 
 onMounted(() => {
-  if (props.announce) arriving.value = true
+  if (props.announce) isArriving.value = true
 })
 </script>
 

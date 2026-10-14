@@ -25,7 +25,7 @@ import {
   chatModelOptions,
   chatRequestBudgetCharacters,
   pickChatModel,
-} from '../lib/chat/chat-model-selection'
+} from '../lib/chat/chat-llm-selection'
 import { createChatModel } from '../lib/chat/chat-model'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'

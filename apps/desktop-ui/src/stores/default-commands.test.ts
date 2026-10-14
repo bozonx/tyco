@@ -1,7 +1,7 @@
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useDefaultCommandsStore } from './commands'
+import { useDefaultCommandsStore } from './default-commands'
 import { useIpcStore } from './ipc'
 
 vi.mock('../lib/logger', () => ({ clientLogger: { error: vi.fn() } }))

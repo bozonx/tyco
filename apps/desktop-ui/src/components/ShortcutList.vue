@@ -112,7 +112,7 @@ const props = withDefaults(
   }
 )
 
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 const { t } = useI18n()
 const { handleEsc } = useOverlayNav(() => ({
   escMode: props.escMode,
@@ -162,13 +162,13 @@ const hasPresetActions = computed(() =>
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('keyup', handleShortCutKeyUp)
+  window.addEventListener('keyup', handleShortcutKeyUp)
   window.addEventListener('blur', handleWindowBlur)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
-  window.removeEventListener('keyup', handleShortCutKeyUp)
+  window.removeEventListener('keyup', handleShortcutKeyUp)
   window.removeEventListener('blur', handleWindowBlur)
 })
 
@@ -188,7 +188,7 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-function handleShortCutKeyUp(event: KeyboardEvent) {
+function handleShortcutKeyUp(event: KeyboardEvent) {
   const textAtKeyDown = pressedKeys.get(event.code)
   pressedKeys.delete(event.code)
   if (props.shortcutsDisabled || textAtKeyDown === undefined) return
@@ -231,7 +231,7 @@ function handleShortCutKeyUp(event: KeyboardEvent) {
 }
 
 function goToEditor() {
-  routeParamsStore.toEditor(props.text, props.sourceText)
+  editorNavigation.toEditor(props.text, props.sourceText)
 }
 
 function getActionLabel(item?: ActionItem) {

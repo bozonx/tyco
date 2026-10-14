@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SubmitKey } from '@tyco/shared'
-import WriteModeView from './WriteModeView.vue'
+import WriteView from './WriteView.vue'
 
 const mocks = vi.hoisted(() => ({
   desktopState: {
@@ -87,7 +87,7 @@ beforeEach(() => {
   mocks.desktopState.userConfig.submitKey = undefined
   mocks.modals.pendingModal = null
   mocks.modals.hasOpenModal = false
-  wrapper = mount(WriteModeView)
+  wrapper = mount(WriteView)
   vi.clearAllMocks()
 })
 afterEach(() => {

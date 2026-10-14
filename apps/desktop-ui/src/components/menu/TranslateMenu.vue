@@ -55,7 +55,7 @@
         :spaceKey="otherLanguageAction"
         :leftLetterKeys="leftLetterKeys"
         :shortcutsDisabled="props.shortcutsDisabled"
-        :isEditorButtonVisible="!routeParamsStore.isEditorPage()"
+        :isEditorButtonVisible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -75,13 +75,13 @@ import {
 } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
+import { translationMetaOf } from '../../lib/translation/translation-meta'
 import {
   type LanguageGroup,
   groupLanguages,
   languageSearchNames,
   nativeLanguageName,
-} from '../../lib/translate-picker/translate-picker'
-import { translationMetaOf } from '../../lib/translation/translation-meta'
+} from '../../lib/translation/translation-picker'
 import { type ActionItem } from '../../stores/action-menu'
 import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
@@ -105,7 +105,7 @@ const props = withDefaults(defineProps<TranslateMenuParams>(), {
 })
 
 const ipcStore = useIpcStore()
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()

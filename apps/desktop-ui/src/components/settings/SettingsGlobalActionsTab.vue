@@ -4,12 +4,12 @@
       :title="t('settings.globalHotkeysTitle')"
       :info="globalInfo"
     >
-      <template v-if="systemManaged" #actions>
+      <template v-if="isSystemManaged" #actions>
         <Button
           size="sm"
           :variant="missing.length === 0 ? 'ghost' : 'primary'"
           icon="mdi:refresh"
-          :disabled="rebinding"
+          :disabled="isRebinding"
           :title="t('settings.rebindHotkeysHint')"
           @click="rebindHotkeys"
         >
@@ -68,13 +68,13 @@
             :value="row.value"
             :aria-label="row.label"
             :placeholder="t('settings.hotkeyNotAssigned')"
-            :readonly="!editable"
+            :readonly="!isEditable"
             :platform="providerState.platform"
             @record="setShortcut(row.id, $event)"
             @recording="suspendHotkeys"
           />
           <Button
-            v-if="editable && row.value"
+            v-if="isEditable && row.value"
             size="sm"
             variant="ghost"
             square
@@ -85,7 +85,7 @@
           />
           <Button
             v-if="
-              editable && row.defaultValue && row.value !== row.defaultValue
+              isEditable && row.defaultValue && row.value !== row.defaultValue
             "
             size="sm"
             variant="ghost"
@@ -157,12 +157,12 @@ import useToast from '../../composables/use-toast'
 import { desktopClient } from '../../lib/desktop/client'
 import {
   applyProviderInfo,
+  isEditable as checkIsEditable,
+  isSystemManaged as checkIsSystemManaged,
   createHotkeySettingsState,
   defaultShortcut,
   displayedShortcut,
   hasConflict,
-  isEditable,
-  isSystemManaged,
   missingHotkeys,
   modeCliCall,
   providerNoteKey,
@@ -230,8 +230,8 @@ const ipcStore = useIpcStore()
 const { toastKey } = useToast()
 const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
-const editable = computed(() => isEditable(providerState))
-const systemManaged = computed(() => isSystemManaged(providerState))
+const isEditable = computed(() => checkIsEditable(providerState))
+const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
 const providerNote = computed(() => providerNoteKey(providerState))
 const globalInfo = computed(() =>
   [t('settings.globalActionsHint'), providerNote.value && t(providerNote.value)]
@@ -239,7 +239,7 @@ const globalInfo = computed(() =>
     .join('\n\n')
 )
 const portalError = ref('')
-const rebinding = ref(false)
+const isRebinding = ref(false)
 const injection = reactive<{ ok: boolean | null; error: string }>({
   ok: null,
   error: '',
@@ -334,9 +334,9 @@ async function configureHotkeys() {
 // the backend reports the new shortcuts with the hotkeys changed event
 async function rebindHotkeys() {
   portalError.value = ''
-  rebinding.value = true
+  isRebinding.value = true
   const result = await ipcStore.callFunction('rebindHotkeys')
-  rebinding.value = false
+  isRebinding.value = false
   if (!result.success) {
     portalError.value = result.error || t('settings.rebindHotkeysError')
   }

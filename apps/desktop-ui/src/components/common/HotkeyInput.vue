@@ -5,13 +5,13 @@
     type="button"
     class="input hotkey-input"
     :class="{
-      'is-recording': recording,
-      'is-invalid': recording && invalid,
-      'is-saved': saved,
+      'is-recording': isRecording,
+      'is-invalid': isRecording && isInvalid,
+      'is-saved': isSaved,
       'is-readonly': readonly,
     }"
     :aria-label="ariaLabel"
-    :aria-pressed="readonly ? undefined : recording"
+    :aria-pressed="readonly ? undefined : isRecording"
     :aria-readonly="readonly || undefined"
     @click="start"
     @keydown="onKeyDown"
@@ -19,7 +19,7 @@
     @blur="stop"
   >
     <span
-      v-if="recording && heldKeys.length === 0"
+      v-if="isRecording && heldKeys.length === 0"
       class="hotkey-main hotkey-prompt"
     >
       <span class="hotkey-dot" aria-hidden="true" />
@@ -33,21 +33,21 @@
           <KeyboardKey>{{ key }}</KeyboardKey>
         </template>
       </template>
-      <span v-if="recording && !invalid" class="hotkey-plus">+ …</span>
+      <span v-if="isRecording && !isInvalid" class="hotkey-plus">+ …</span>
     </span>
     <span v-else class="hotkey-main hotkey-placeholder">
       <span class="hotkey-text">{{ placeholder }}</span>
     </span>
 
-    <span v-if="recording" class="hotkey-hint">
+    <span v-if="isRecording" class="hotkey-hint">
       {{
-        invalid
+        isInvalid
           ? t('settings.hotkeyInput.needsModifier')
           : t('settings.hotkeyInput.cancelHint')
       }}
     </span>
     <Icon
-      v-else-if="saved"
+      v-else-if="isSaved"
       icon="mdi:check-circle"
       height="16"
       class="hotkey-saved-icon"
@@ -100,16 +100,16 @@ const { t } = useI18n()
 const SAVED_FLASH_MS = 1500
 
 const buttonRef = ref<HTMLButtonElement | null>(null)
-const recording = ref(false)
+const isRecording = ref(false)
 const heldKeys = ref<string[]>([])
-const invalid = ref(false)
-const saved = ref(false)
+const isInvalid = ref(false)
+const isSaved = ref(false)
 let recorded: string | null = null
 let savedTimer: ReturnType<typeof setTimeout> | null = null
 
 /** The keys to show, one group per alternative shortcut. */
 const displayGroups = computed(() =>
-  (recording.value
+  (isRecording.value
     ? [heldKeys.value]
     : shortcutAlternatives(props.value).map(shortcutKeys)
   )
@@ -118,30 +118,30 @@ const displayGroups = computed(() =>
 )
 
 function start() {
-  if (recording.value || props.readonly) return
-  recording.value = true
+  if (isRecording.value || props.readonly) return
+  isRecording.value = true
   heldKeys.value = []
-  invalid.value = false
-  saved.value = false
+  isInvalid.value = false
+  isSaved.value = false
   emit('recording', true)
 }
 
 function stop() {
-  if (!recording.value) return
-  recording.value = false
+  if (!isRecording.value) return
+  isRecording.value = false
   heldKeys.value = []
-  invalid.value = false
+  isInvalid.value = false
   emit('recording', false)
 }
 
 function flashSaved() {
   if (savedTimer) clearTimeout(savedTimer)
-  saved.value = true
-  savedTimer = setTimeout(() => (saved.value = false), SAVED_FLASH_MS)
+  isSaved.value = true
+  savedTimer = setTimeout(() => (isSaved.value = false), SAVED_FLASH_MS)
 }
 
 function onKeyDown(event: KeyboardEvent) {
-  if (!recording.value) return
+  if (!isRecording.value) return
   event.preventDefault()
   event.stopPropagation()
   const step = recordKeyDown(event)
@@ -151,11 +151,11 @@ function onKeyDown(event: KeyboardEvent) {
       return
     case 'pending':
       heldKeys.value = step.keys
-      invalid.value = false
+      isInvalid.value = false
       return
     case 'invalid':
       heldKeys.value = step.keys
-      invalid.value = true
+      isInvalid.value = true
       return
     case 'done':
       recorded = step.shortcut
@@ -166,7 +166,7 @@ function onKeyDown(event: KeyboardEvent) {
 }
 
 function onKeyUp(event: KeyboardEvent) {
-  if (!recording.value || invalid.value) return
+  if (!isRecording.value || isInvalid.value) return
   heldKeys.value = heldModifiers(event)
 }
 

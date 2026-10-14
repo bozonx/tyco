@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { groupLanguages, languageSearchNames } from './translate-picker'
+import { groupLanguages, languageSearchNames } from './translation-picker'
 
 const LABELS: Record<string, string> = {
   de_DE: 'Немецкий',

@@ -70,7 +70,7 @@ vi.mock('@tauri-apps/api/window', () => ({
     isFocused: vi.fn(async () => mocks.windowFocused),
   }),
 }))
-vi.mock('../../views/WriteModeView.vue', () => ({
+vi.mock('../../views/WriteView.vue', () => ({
   default: {
     template:
       '<div><div class="write-frame"><textarea /></div><p class="write-hint" /></div>',
@@ -83,16 +83,16 @@ vi.mock('../../views/AiTaskView.vue', () => ({
     unmounted: () => mocks.aiTaskUnmounts++,
   },
 }))
-vi.mock('../../views/SelectionActionsView.vue', () => ({
+vi.mock('../../views/SelectionView.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('../../views/CommandLauncherView.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('../../views/CorrectionModeView.vue', () => ({
+vi.mock('../../views/CorrectionView.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('../../views/TranslateModeView.vue', () => ({
+vi.mock('../../views/TranslateView.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('../../views/VoiceView.vue', () => ({

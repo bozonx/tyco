@@ -8,7 +8,7 @@ import { resolveContextBudget } from './context-budget'
 import {
   contextBudgetCharacters,
   type ChatLlmOption,
-} from './chat-model-selection'
+} from './chat-llm-selection'
 import { trimChatContext } from './chat-context'
 import type { createChatModel } from './chat-model'
 import type { createChatFileController } from './chat-file-controller'

@@ -27,7 +27,7 @@
         :spaceKey="customPromptAction"
         :leftLetterKeys="leftLetterKeys"
         :shortcutsDisabled="props.shortcutsDisabled"
-        :isEditorButtonVisible="!routeParamsStore.isEditorPage()"
+        :isEditorButtonVisible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<AiTaskMenuParams>(), {
   taskId: undefined,
 })
 
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const invocations = useInvocationsStore()

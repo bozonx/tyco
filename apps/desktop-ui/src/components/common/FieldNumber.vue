@@ -9,8 +9,8 @@
     :step="step"
     class="input"
     @input="handleInput"
-    @mouseenter="hovered = true"
-    @mouseleave="hovered = false"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
     @wheel="handleWheel"
   />
 </template>
@@ -38,7 +38,7 @@ const emit = defineEmits<{
   (e: 'update:value', value: string): void
   (e: 'invalid-input'): void
 }>()
-const hovered = ref(false)
+const isHovered = ref(false)
 
 function handleInput(event: Event) {
   const input = event.target as HTMLInputElement
@@ -54,7 +54,7 @@ function handleInput(event: Event) {
 function handleWheel(event: WheelEvent) {
   const input = event.currentTarget as HTMLInputElement
   if (
-    !hovered.value ||
+    !isHovered.value ||
     input.ownerDocument.activeElement !== input ||
     input.disabled ||
     input.readOnly ||

@@ -10,7 +10,7 @@
         :class="{
           'is-active': appNavigation.isCurrent(APP_ROUTES.EDITOR.path),
         }"
-        @click="routeParamsStore.toEditor()"
+        @click="editorNavigation.toEditor()"
       >
         <Icon icon="mdi:pencil-outline" height="16" />
         {{ t('nav.editor') }}
@@ -82,7 +82,7 @@ import { useNavPanelStore } from '../stores/nav-panel'
 import IconButton from './common/IconButton.vue'
 import { Icon } from '@iconify/vue'
 
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()

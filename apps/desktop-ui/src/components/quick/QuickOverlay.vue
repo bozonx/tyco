@@ -15,7 +15,7 @@
     </div>
     <div ref="cardRef" class="quick-overlay-card">
       <div v-show="currentMode === 'write'" class="quick-mode-layer">
-        <WriteModeView />
+        <WriteView />
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
         <VoiceView
@@ -30,10 +30,7 @@
         <AiTaskView v-if="currentMode === 'aiTasks'" :key="activationId" />
       </div>
       <div v-show="currentMode === 'select'" class="quick-mode-layer">
-        <SelectionActionsView
-          v-if="currentMode === 'select'"
-          :key="activationId"
-        />
+        <SelectionView v-if="currentMode === 'select'" :key="activationId" />
       </div>
       <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
         <CommandLauncherView
@@ -42,16 +39,13 @@
         />
       </div>
       <div v-show="currentMode === 'correction'" class="quick-mode-layer">
-        <CorrectionModeView
+        <CorrectionView
           v-if="currentMode === 'correction'"
           :key="activationId"
         />
       </div>
       <div v-show="currentMode === 'translate'" class="quick-mode-layer">
-        <TranslateModeView
-          v-if="currentMode === 'translate'"
-          :key="activationId"
-        />
+        <TranslateView v-if="currentMode === 'translate'" :key="activationId" />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
@@ -89,13 +83,13 @@ import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import { useQuickInputStore } from '../../stores/quick-input'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
-import CorrectionModeView from '../../views/CorrectionModeView.vue'
+import CorrectionView from '../../views/CorrectionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
-import SelectionActionsView from '../../views/SelectionActionsView.vue'
-import TranslateModeView from '../../views/TranslateModeView.vue'
+import SelectionView from '../../views/SelectionView.vue'
+import TranslateView from '../../views/TranslateView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceView from '../../views/VoiceView.vue'
-import WriteModeView from '../../views/WriteModeView.vue'
+import WriteView from '../../views/WriteView.vue'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()

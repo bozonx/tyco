@@ -47,7 +47,7 @@ import { createSettingsShutdown } from './lib/settings/settings-shutdown'
 import { useChatStore } from './stores/chat'
 import { useChatInputStore } from './stores/chat-input'
 import { useCommandLauncherStore } from './stores/command-launcher'
-import { useDefaultCommandsStore } from './stores/commands'
+import { useDefaultCommandsStore } from './stores/default-commands'
 import { useEditorInputStore } from './stores/editor-input'
 import { useExternalCommandsStore } from './stores/external-commands'
 import { useIpcStore } from './stores/ipc'
@@ -73,7 +73,7 @@ const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
 const quickInputStore = useQuickInputStore()
-const routeParamsStore = useEditorNavigation()
+const editorNavigation = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
 const { toastKey } = useToast()
@@ -309,7 +309,7 @@ onMounted(() => {
   })
   void listenDesktop(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, (payload) => {
     if (!isQuickWindow) {
-      routeParamsStore.applyEditorTransfer(payload.text, payload.sourceText)
+      editorNavigation.applyEditorTransfer(payload.text, payload.sourceText)
       void appNavigation.goToEditor()
     }
   })

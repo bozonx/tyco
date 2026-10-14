@@ -105,10 +105,10 @@ const emit = defineEmits<{ (e: 'close', restoreFocus: boolean): void }>()
 const menuRef = ref<HTMLElement | null>(null)
 const subRef = ref<HTMLElement | null>(null)
 const position = ref({ x: props.x, y: props.y })
-const placed = ref(false)
+const isPlaced = ref(false)
 const subIndex = ref<number | null>(null)
 const subPosition = ref({ x: 0, y: 0 })
-const subPlaced = ref(false)
+const isSubPlaced = ref(false)
 
 const hasIcons = computed(() => props.items.some((item) => item.icon))
 const subHasIcons = computed(() =>
@@ -124,13 +124,13 @@ const subItems = computed(() =>
 const style = computed<CSSProperties>(() => ({
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
-  visibility: placed.value ? 'visible' : 'hidden',
+  visibility: isPlaced.value ? 'visible' : 'hidden',
 }))
 
 const subStyle = computed<CSSProperties>(() => ({
   left: `${subPosition.value.x}px`,
   top: `${subPosition.value.y}px`,
-  visibility: subPlaced.value ? 'visible' : 'hidden',
+  visibility: isSubPlaced.value ? 'visible' : 'hidden',
 }))
 
 const viewport = () => ({
@@ -152,7 +152,7 @@ const place = (): void => {
     props.placement,
     viewport()
   )
-  placed.value = true
+  isPlaced.value = true
 }
 
 const itemButton = (index: number): HTMLButtonElement | null =>
@@ -171,7 +171,7 @@ const openSubmenu = async (
 ): Promise<void> => {
   if (subIndex.value !== index) {
     subIndex.value = index
-    subPlaced.value = false
+    isSubPlaced.value = false
   }
 
   await nextTick()
@@ -188,7 +188,7 @@ const openSubmenu = async (
     { width, height },
     viewport()
   )
-  subPlaced.value = true
+  isSubPlaced.value = true
 
   if (focusFirst) enabledButtons(element)[0]?.focus()
 }
