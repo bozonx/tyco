@@ -13,11 +13,11 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
-import { useShowMarkup } from '../../composables/use-show-markup'
 import useToast from '../../composables/use-toast'
 import {
   StaleClipboardError,
@@ -52,6 +52,7 @@ import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
+import { useMarkupModeStore } from '../../stores/markup-mode'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
@@ -77,7 +78,9 @@ interface OpenMenu {
 
 const menu = ref<OpenMenu | null>(null)
 
-const { showMarkup, toggleShowMarkup } = useShowMarkup()
+const markupMode = useMarkupModeStore()
+const { showMarkup } = storeToRefs(markupMode)
+const { toggleShowMarkup } = markupMode
 
 let view: EditorView | null = null
 

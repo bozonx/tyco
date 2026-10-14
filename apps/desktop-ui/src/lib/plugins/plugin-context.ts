@@ -15,7 +15,6 @@ import {
 
 import type { ToolDefinition as HostToolDefinition } from '../tools/tool-types'
 import type { PluginLifecycle } from './plugin-manager'
-import { linkPluginSignals } from './plugin-signals'
 import {
   pluginIconName,
   pluginMessageKey,
@@ -171,43 +170,33 @@ export function createPluginContext(
       parseText: definition.parseText
         ? async (text, context) => {
             check()
-            const linked = linkPluginSignals([context.signal, lifecycle.signal])
-            try {
-              const result = await definition.parseText!(text, {
-                ...context,
-                signal: linked.signal,
-              })
-              return result.ok
-                ? result
-                : {
-                    ...result,
-                    messageKey: pluginMessageKey(id, result.messageKey),
-                  }
-            } finally {
-              linked.dispose()
-            }
+            const result = await definition.parseText!(text, {
+              ...context,
+              signal: AbortSignal.any([context.signal, lifecycle.signal]),
+            })
+            return result.ok
+              ? result
+              : {
+                  ...result,
+                  messageKey: pluginMessageKey(id, result.messageKey),
+                }
           }
         : undefined,
       run: async (call) => {
         check()
-        const linked = linkPluginSignals([call.signal, lifecycle.signal])
+        const signal = AbortSignal.any([call.signal, lifecycle.signal])
         try {
-          const result = await definition.run({
-            ...call,
-            signal: linked.signal,
-          })
-          if (linked.signal.aborted) return { ok: false, cancelled: true }
+          const result = await definition.run({ ...call, signal })
+          if (signal.aborted) return { ok: false, cancelled: true }
           return {
             ...result,
             messageKey: pluginMessageKey(id, result.messageKey),
           }
         } catch (error) {
-          if (linked.signal.aborted) return { ok: false, cancelled: true }
+          if (signal.aborted) return { ok: false, cancelled: true }
           if (isPluginError(error))
             return { ok: false, messageKey: key(error.messageKey) }
           throw error
-        } finally {
-          linked.dispose()
         }
       },
     }

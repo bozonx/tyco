@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { createAssistantMessage } from './chat-message'
 import { createChatHistoryEntry } from './chat-history-entry'
 
 describe('createChatHistoryEntry', () => {
   it('creates a history entry from prepared messages', () => {
     const userMessage = { role: 'user' as const, content: 'Question' }
-    const assistantMessage = createAssistantMessage('Answer')
+    const assistantMessage = { role: 'assistant' as const, content: 'Answer' }
 
     expect(
       createChatHistoryEntry({

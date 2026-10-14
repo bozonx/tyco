@@ -6,7 +6,6 @@ import {
   type ChatImage,
 } from '@tyco/shared'
 import { LlmInstructionKind } from '../../types'
-import { createAssistantMessage } from './chat-message'
 import { prepareChatRequest } from './chat-request'
 import { draftChatTitle } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
@@ -136,7 +135,10 @@ export function createChatGenerationModel(
     currentChatParams.value.attachments = []
     currentChatParams.value.images = []
 
-    const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
+    const assistantMessage = reactive<ChatMessage>({
+      role: 'assistant',
+      content: '',
+    })
     messages.value.push(assistantMessage)
 
     isGenerating.value = true

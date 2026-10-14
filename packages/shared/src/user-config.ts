@@ -9,19 +9,6 @@ import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
  */
 export const CONFIG_VERSION = configVersion
 
-export type ModelTag =
-  | 'voice'
-  | 'text'
-  | 'dialog'
-  | 'translation'
-  | 'uncensored'
-  | 'simple'
-  | 'smart'
-  | 'lowLatency'
-  | 'highCost'
-  | 'lowCost'
-  | 'free'
-
 /** Provider families the app can talk to; see `@bozonx/ai-kit` */
 export type LlmProviderType =
   'google' | 'openrouter' | 'deepseek' | 'openai-compatible'
@@ -104,9 +91,6 @@ export interface TranslationConfig {
   correctionPrompt: string
 }
 
-export const DEFAULT_TRANSLATION_CONFIG =
-  configDefaults.translation as TranslationConfig
-
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
 
 export interface SttModel {
@@ -184,18 +168,6 @@ export const CORE_TOOL_IDS = [
   'core.askInChat',
 ] as const
 export type CoreToolId = (typeof CORE_TOOL_IDS)[number]
-
-/** `toolConfig` of a `core.translate` command */
-export interface TranslateToolConfig {
-  /** Target language code, copied from a slot when the command is made */
-  language: string
-}
-
-/** `toolConfig` of a `core.aiTask` command */
-export interface AiTaskToolConfig {
-  /** Instruction for the LLM, as the rule of an AI task */
-  prompt: string
-}
 
 /** `toolConfig` of a `script` command */
 export interface ScriptToolConfig {

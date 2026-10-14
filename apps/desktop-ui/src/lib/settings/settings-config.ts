@@ -1,10 +1,7 @@
 import {
   DEFAULT_USER_CONFIG,
   normalizeUserConfig,
-  PASTE_SHORTCUTS,
   normalizeAppearance,
-  normalizeMarkdownSettings,
-  normalizeMarkdownCleanSettings,
   type UserConfig,
   type MainActionConfig,
   type AppearanceSettings,
@@ -15,13 +12,11 @@ import {
   normalizeCommands,
   normalizeLauncherCommands,
 } from '../commands/command-config'
-import { resolveSubmitKey } from '../input-keys/input-keys'
 import { normalizeLlmConfig } from '../llm/llm-config'
 import { AUTO_LANGUAGE_VALUE } from '../locale/language'
 import { applyPluginDefaults } from '../plugins/plugin-config'
 import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 import { normalizeSttConfig } from '../stt/stt-config'
-import { normalizeTranslationConfig } from '../translation/translation-config'
 import type { PluginFactory } from '../../types/plugins'
 
 export interface SettingsConfigDependencies {
@@ -40,12 +35,6 @@ const recordOf = (value: unknown): Record<string, unknown> =>
   isRecord(value) ? value : {}
 const stringOf = (value: unknown, fallback = ''): string =>
   typeof value === 'string' ? value : fallback
-const booleanOf = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback
-const numberOf = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
-    ? value
-    : fallback
 const stringsOf = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
@@ -80,20 +69,15 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
     const input = recordOf(cloned)
     const defaults = DEFAULT_USER_CONFIG
     const insertion = recordOf(input.windowInsertion)
-    const rules = recordOf(input.aiRules)
     const selectionHotkeys = recordOf(input.selectionHotkeys)
-    const externalAccess = recordOf(input.externalAccess)
     const registrationState = recordOf(input.registrationState)
     const registrations = stringsOf(registrationState.reviewedMainActionIds)
     const commands = normalizeCommands(input.commands)
-    const xdotoolBin =
-      stringOf(insertion.xdotoolBin, defaults.windowInsertion.xdotoolBin) ||
-      defaults.windowInsertion.xdotoolBin
-    const next: UserConfig & Record<string, unknown> = {
+    // Only what the shared schema cannot express; `normalizeUserConfig`
+    // repairs field types, enums and defaults, and drops unknown fields.
+    const next: Record<string, unknown> = {
       ...input,
       ...normalizeAppearance({ ...deps.appearance(), ...input }),
-      configVersion: numberOf(input.configVersion, defaults.configVersion ?? 0),
-      externalAccess: { selection: externalAccess.selection === true },
       hotkeys: { ...defaults.hotkeys, ...stringRecordOf(input.hotkeys) },
       selectionHotkeys: {
         correction: stringOf(
@@ -101,19 +85,12 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
           defaults.selectionHotkeys.correction ?? ''
         ),
       },
-      submitKey: resolveSubmitKey(input.submitKey),
-      quickCorrectionPrefetch: input.quickCorrectionPrefetch === true,
-      quickHideOnBlur: input.quickHideOnBlur !== false,
       windowInsertion: {
-        method: insertion.method === 'ydotool' ? 'ydotool' : 'xdotool',
-        xdotoolBin,
+        ...insertion,
+        xdotoolBin:
+          stringOf(insertion.xdotoolBin) || defaults.windowInsertion.xdotoolBin,
         ydotoolBin:
-          stringOf(insertion.ydotoolBin, defaults.windowInsertion.ydotoolBin) ||
-          defaults.windowInsertion.ydotoolBin,
-        pasteShortcut:
-          PASTE_SHORTCUTS.find(
-            (shortcut) => shortcut === insertion.pasteShortcut
-          ) ?? defaults.windowInsertion.pasteShortcut,
+          stringOf(insertion.ydotoolBin) || defaults.windowInsertion.ydotoolBin,
       },
       appLanguage: stringOf(input.appLanguage) || AUTO_LANGUAGE_VALUE,
       userLanguage: stringOf(input.userLanguage) || AUTO_LANGUAGE_VALUE,
@@ -122,7 +99,6 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
           ? input.toTranslateLanguages
           : []
       ).map((language) => (typeof language === 'string' ? language : null)),
-      translation: normalizeTranslationConfig(input.translation),
       mainActions: deps.resolveMainActions(
         normalizeMainActions(input.mainActions),
         registrations
@@ -139,12 +115,6 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
           ]),
         ],
       },
-      diffViewMode:
-        input.diffViewMode === 'split' || input.diffViewMode === 'result'
-          ? input.diffViewMode
-          : 'unified',
-      translationViewMode:
-        input.translationViewMode === 'result' ? 'result' : 'split',
       commands,
       launcherCommands: normalizeLauncherCommands(
         input.launcherCommands,
@@ -161,68 +131,14 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
               typeof page === 'number' && Number.isInteger(page) && page >= 0
           )
         : [],
-      editorHistoryStorage:
-        input.editorHistoryStorage === 'off' ||
-        input.editorHistoryStorage === 'session'
-          ? input.editorHistoryStorage
-          : 'disk',
-      editorHistoryMaxItems: numberOf(
-        input.editorHistoryMaxItems,
-        defaults.editorHistoryMaxItems
-      ),
-      editorHistoryRetentionDays: numberOf(
-        input.editorHistoryRetentionDays,
-        defaults.editorHistoryRetentionDays ?? 30
-      ),
-      sanitizeSecretsInEditorHistory: booleanOf(
-        input.sanitizeSecretsInEditorHistory,
-        defaults.sanitizeSecretsInEditorHistory ?? true
-      ),
-      chatImageQuality:
-        input.chatImageQuality === 'economy' ||
-        input.chatImageQuality === 'original'
-          ? input.chatImageQuality
-          : 'balanced',
-      chatHistoryEnabled: booleanOf(
-        input.chatHistoryEnabled,
-        defaults.chatHistoryEnabled
-      ),
-      chatHistoryRetentionDays: numberOf(
-        input.chatHistoryRetentionDays,
-        defaults.chatHistoryRetentionDays
-      ),
       llm: normalizeLlmConfig(input.llm),
       ...normalizeSttConfig(input),
-      aiRules: {
-        chat: stringOf(rules.chat),
-        correction: stringOf(rules.correction),
-        translate: stringOf(rules.translate),
-        voiceCorrection: stringOf(rules.voiceCorrection),
-      },
       aiTasks: normalizeAiTasks(input.aiTasks),
-      markdown: normalizeMarkdownSettings(input.markdown),
-      markdownClean: normalizeMarkdownCleanSettings(input.markdownClean),
       plugins: applyPluginDefaults(
         deps.pluginFactories(),
         recordOf(input.plugins)
       ),
     }
-    for (const key of ['history', 'config', 'correction'])
-      delete next.hotkeys[key]
-    for (const key of [
-      'chatRoles',
-      'chatHistoryMaxItems',
-      'quickInputHotkeys',
-      'quickInputSubmit',
-      'quickCorrection',
-      'selectionReplace',
-      'llmModels',
-      'xdotoolBin',
-      'aiModelUsage',
-      'mainActionRegistrations',
-      'seededCommands',
-    ])
-      delete next[key]
     return normalizeUserConfig(next)
   }
   return { prepare }

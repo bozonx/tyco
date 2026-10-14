@@ -1,40 +1,27 @@
-use super::ensure_field;
 use crate::models::default_user_config;
 use serde_json::Value;
 
+/// The translation languages fill a fixed number of shortcut slots.
 pub(in crate::services::storage::config) fn normalize_language_config(
     user_config: &mut Value,
 ) -> bool {
-    let defaults = default_user_config();
     let Some(config) = user_config.as_object_mut() else {
         return false;
     };
-    let mut changed = false;
-
-    changed |= ensure_field(
-        config,
-        "appLanguage",
-        &defaults["appLanguage"],
-        Value::is_string,
+    let defaults = default_user_config();
+    let slot_count = defaults["toTranslateLanguages"]
+        .as_array()
+        .map_or(0, Vec::len);
+    if config
+        .get("toTranslateLanguages")
+        .and_then(Value::as_array)
+        .is_some_and(|languages| languages.len() == slot_count)
+    {
+        return false;
+    }
+    config.insert(
+        String::from("toTranslateLanguages"),
+        defaults["toTranslateLanguages"].clone(),
     );
-
-    changed |= ensure_field(
-        config,
-        "userLanguage",
-        &defaults["userLanguage"],
-        Value::is_string,
-    );
-
-    changed |= ensure_field(
-        config,
-        "toTranslateLanguages",
-        &defaults["toTranslateLanguages"],
-        |value| {
-            value
-                .as_array()
-                .is_some_and(|languages| languages.len() == 4)
-        },
-    );
-
-    changed
+    true
 }

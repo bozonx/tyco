@@ -33,18 +33,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         }
 
         let original = value.clone();
-        let normalized = config_version::stamp_current_version(&mut value)
-            | normalize_window_insertion_config(&mut value)
-            | normalize_hotkeys_config(&mut value)
-            | normalize_appearance_config(&mut value)
-            | normalize_language_config(&mut value)
-            | normalize_editor_config(&mut value)
-            | normalize_translation_config(&mut value)
-            | normalize_main_actions_config(&mut value)
-            | normalize_stt_config(&mut value)
-            | normalize_ai_rules_and_tasks(&mut value);
-        let repaired = crate::services::config_schema::normalize_user_config(&mut value);
-        let changed = normalized | repaired;
+        let changed = normalize_loaded_config(&mut value);
 
         // the app starts with the config in memory either way; the next
         // save writes it
@@ -75,6 +64,19 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     }
 
     Ok(default_config)
+}
+
+/// Brings a config read from disk up to the current version: the rules the
+/// schema cannot express first, then the schema repair. True when it changed.
+fn normalize_loaded_config(value: &mut Value) -> bool {
+    let normalized = config_version::stamp_current_version(value)
+        | normalize_window_insertion_config(value)
+        | normalize_hotkeys_config(value)
+        | normalize_language_config(value)
+        | normalize_stt_config(value)
+        | normalize_ai_task_ids(value);
+    let repaired = crate::services::config_schema::normalize_user_config(value);
+    normalized | repaired
 }
 
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {

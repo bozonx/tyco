@@ -121,56 +121,31 @@ fn normalize_hotkeys_adds_defaults_and_keeps_overrides() {
     assert!(normalize_hotkeys_config(&mut config));
     assert_eq!(config["hotkeys"]["editor"], json!("Super+Space"));
     assert_eq!(config["hotkeys"]["voice"], json!("Ctrl+Alt+V"));
-    assert_eq!(config["submitKey"], json!("enter"));
-    assert_eq!(config["quickCorrectionPrefetch"], json!(false));
-    assert_eq!(config["quickHideOnBlur"], json!(true));
-    assert!(!normalize_hotkeys_config(&mut config));
-}
-
-#[test]
-fn normalize_hotkeys_drops_unknown_selection_hotkeys() {
-    let mut config = json!({
-        "selectionHotkeys": { "correction": "Ctrl+Alt+X", "translate.0": "Ctrl+Alt+1" },
-    });
-
-    assert!(normalize_hotkeys_config(&mut config));
     assert_eq!(
         config["selectionHotkeys"],
-        json!({ "correction": "Ctrl+Alt+X" })
+        default_user_config()["selectionHotkeys"]
     );
     assert!(!normalize_hotkeys_config(&mut config));
 }
 
 #[test]
-fn normalize_hotkeys_repairs_an_invalid_submit_key() {
-    let mut kept = json!({ "submitKey": "ctrlEnter" });
-    normalize_hotkeys_config(&mut kept);
-    assert_eq!(kept["submitKey"], json!("ctrlEnter"));
+fn normalize_hotkeys_drops_modes_of_older_versions() {
+    let mut config = json!({
+        "hotkeys": { "history": "Ctrl+H", "config": "Ctrl+,", "correction": "Ctrl+Alt+C" },
+    });
 
-    let mut invalid = json!({ "submitKey": "Ctrl+Enter" });
-    assert!(normalize_hotkeys_config(&mut invalid));
-    assert_eq!(invalid["submitKey"], json!("enter"));
+    assert!(normalize_hotkeys_config(&mut config));
+    assert!(config["hotkeys"].get("history").is_none());
+    assert!(config["hotkeys"].get("config").is_none());
+    assert_eq!(config["hotkeys"]["correction"], json!("Ctrl+Alt+C"));
+    assert!(!normalize_hotkeys_config(&mut config));
 }
 
 #[test]
-fn appearance_choices_survive_restart_with_shared_enum_names() {
-    let mut config = json!({"theme":"e-ink","motion":"reduce","contrast":"more","uiScale":175});
-    assert!(!normalize_appearance_config(&mut config));
-    assert_eq!(config["theme"], "e-ink");
-    assert_eq!(config["motion"], "reduce");
-}
-
-#[test]
-fn normalize_appearance_and_language_fills_defaults() {
-    let mut config = json!({ "theme": "invalid-theme" });
-
-    assert!(normalize_appearance_config(&mut config));
-    assert_eq!(config["theme"], json!("auto"));
-    assert_eq!(config["uiScale"], json!(100));
-    assert!(!normalize_appearance_config(&mut config));
+fn normalize_language_restores_the_translation_slots() {
+    let mut config = json!({ "toTranslateLanguages": ["en_US"] });
 
     assert!(normalize_language_config(&mut config));
-    assert_eq!(config["appLanguage"], json!("auto"));
     assert_eq!(
         config["toTranslateLanguages"],
         json!(["en_US", "ru_RU", "es_AR", "tr_TR"])
@@ -179,35 +154,7 @@ fn normalize_appearance_and_language_fills_defaults() {
 }
 
 #[test]
-fn normalize_editor_and_translation_fills_defaults() {
-    let mut config = json!({});
-
-    assert!(normalize_editor_config(&mut config));
-    assert_eq!(config["editorHistoryStorage"], json!("disk"));
-    assert_eq!(config["editorHistoryMaxItems"], json!(1000));
-    assert_eq!(config["editorHistoryRetentionDays"], json!(30));
-    assert_eq!(config["sanitizeSecretsInEditorHistory"], json!(true));
-    assert!(!normalize_editor_config(&mut config));
-
-    assert!(normalize_translation_config(&mut config));
-    assert_eq!(config["translation"]["provider"], json!("llm"));
-    assert_eq!(config["translation"]["qualityGate"], json!("off"));
-    assert_eq!(config["translation"]["correctionPrompt"], json!(""));
-    assert!(!normalize_translation_config(&mut config));
-}
-
-#[test]
-fn normalize_ai_rules_and_tasks_fills_defaults() {
-    let mut config = json!({ "aiRules": {} });
-
-    assert!(normalize_ai_rules_and_tasks(&mut config));
-    assert_eq!(config["aiRules"]["chat"], json!(""));
-    assert!(config["aiTasks"].as_array().is_some());
-    assert!(!normalize_ai_rules_and_tasks(&mut config));
-}
-
-#[test]
-fn normalize_ai_rules_and_tasks_gives_tasks_ids() {
+fn normalize_ai_task_ids_gives_tasks_ids() {
     let mut config = json!({
         "aiTasks": [
             { "name": "a", "rule": "x" },
@@ -217,43 +164,22 @@ fn normalize_ai_rules_and_tasks_gives_tasks_ids() {
         ]
     });
 
-    assert!(normalize_ai_rules_and_tasks(&mut config));
+    assert!(normalize_ai_task_ids(&mut config));
     assert_eq!(config["aiTasks"][0]["id"], json!("task-2"));
     assert_eq!(config["aiTasks"][1], Value::Null);
     assert_eq!(config["aiTasks"][2]["id"], json!("task-1"));
     assert_eq!(config["aiTasks"][3]["id"], json!("task-3"));
-    assert!(!normalize_ai_rules_and_tasks(&mut config));
-}
-
-#[test]
-fn normalize_main_actions_preserves_custom_entries_and_repairs_invalid_sections() {
-    let mut config = json!({ "mainActions": "invalid", "commands": null });
-    assert!(normalize_main_actions_config(&mut config));
-    assert_eq!(
-        config["mainActions"],
-        crate::models::default_user_config()["mainActions"]
-    );
-    assert_eq!(config["commands"], json!([]));
-    assert!(!normalize_main_actions_config(&mut config));
-
-    let mut custom = json!({ "mainActions": ["custom"], "commands": [{ "id": "custom" }] });
-    let original = custom.clone();
-    assert!(!normalize_main_actions_config(&mut custom));
-    assert_eq!(custom, original);
+    assert!(!normalize_ai_task_ids(&mut config));
 }
 
 #[test]
 fn domain_normalizers_ignore_non_mapping_configs() {
-    let normalizers: [fn(&mut Value) -> bool; 9] = [
+    let normalizers: [fn(&mut Value) -> bool; 5] = [
         normalize_window_insertion_config,
         normalize_hotkeys_config,
-        normalize_appearance_config,
         normalize_language_config,
-        normalize_editor_config,
-        normalize_translation_config,
-        normalize_main_actions_config,
         normalize_stt_config,
-        normalize_ai_rules_and_tasks,
+        normalize_ai_task_ids,
     ];
     for normalize in normalizers {
         for mut config in [Value::Null, json!([]), json!("invalid")] {
@@ -265,21 +191,50 @@ fn domain_normalizers_ignore_non_mapping_configs() {
 }
 
 #[test]
-fn normalization_repairs_invalid_fields_without_overwriting_valid_values() {
+fn loaded_config_fills_missing_sections_from_defaults() {
+    let defaults = default_user_config();
+    let mut config = json!({});
+
+    assert!(super::super::normalize_loaded_config(&mut config));
+    for key in [
+        "theme",
+        "uiScale",
+        "appLanguage",
+        "submitKey",
+        "quickCorrectionPrefetch",
+        "quickHideOnBlur",
+        "editorHistoryStorage",
+        "editorHistoryMaxItems",
+        "translation",
+        "mainActions",
+        "commands",
+        "aiRules",
+        "aiTasks",
+        "plugins",
+    ] {
+        assert_eq!(config[key], defaults[key], "{key}");
+    }
+    assert!(!super::super::normalize_loaded_config(&mut config));
+}
+
+#[test]
+fn loaded_config_repairs_invalid_fields_without_overwriting_valid_values() {
     let defaults = default_user_config();
     let mut config = json!({
-        "theme": "dark",
+        "theme": "e-ink",
         "contrast": null,
         "motion": "unknown",
         "uiScale": 201,
         "appLanguage": "es_AR",
         "userLanguage": false,
         "toTranslateLanguages": [],
+        "submitKey": "Ctrl+Enter",
         "editorHistoryMaxItems": -1,
         "editorHistoryRetentionDays": 1.5,
         "sanitizeSecretsInEditorHistory": "true",
         "chatHistoryEnabled": false,
         "chatHistoryRetentionDays": 0,
+        "selectionHotkeys": { "correction": "Ctrl+Alt+X", "translate.0": "Ctrl+Alt+1" },
         "translation": {
             "provider": "google",
             "qualityGate": "invalid",
@@ -287,12 +242,10 @@ fn normalization_repairs_invalid_fields_without_overwriting_valid_values() {
             "glossary": {},
             "correctionPrompt": "custom prompt"
         },
-        "customField": "preserved"
+        "mainActions": "invalid",
+        "chatRoles": ["legacy"]
     });
-    assert!(normalize_appearance_config(&mut config));
-    assert!(normalize_language_config(&mut config));
-    assert!(normalize_editor_config(&mut config));
-    assert!(normalize_translation_config(&mut config));
+    assert!(super::super::normalize_loaded_config(&mut config));
 
     for key in [
         "contrast",
@@ -300,9 +253,11 @@ fn normalization_repairs_invalid_fields_without_overwriting_valid_values() {
         "uiScale",
         "userLanguage",
         "toTranslateLanguages",
+        "submitKey",
         "editorHistoryMaxItems",
         "editorHistoryRetentionDays",
         "sanitizeSecretsInEditorHistory",
+        "mainActions",
     ] {
         assert_eq!(config[key], defaults[key], "{key}");
     }
@@ -312,16 +267,17 @@ fn normalization_repairs_invalid_fields_without_overwriting_valid_values() {
             "{key}"
         );
     }
-    assert_eq!(config["theme"], "dark");
+    assert_eq!(config["theme"], "e-ink");
     assert_eq!(config["appLanguage"], "es_AR");
     assert_eq!(config["chatHistoryEnabled"], false);
     assert_eq!(config["chatHistoryRetentionDays"], 0);
+    assert_eq!(
+        config["selectionHotkeys"],
+        json!({ "correction": "Ctrl+Alt+X" })
+    );
     assert_eq!(config["translation"]["provider"], "google");
     assert_eq!(config["translation"]["correctionPrompt"], "custom prompt");
-    assert_eq!(config["customField"], "preserved");
+    assert!(config.get("chatRoles").is_none());
 
-    assert!(!normalize_appearance_config(&mut config));
-    assert!(!normalize_language_config(&mut config));
-    assert!(!normalize_editor_config(&mut config));
-    assert!(!normalize_translation_config(&mut config));
+    assert!(!super::super::normalize_loaded_config(&mut config));
 }

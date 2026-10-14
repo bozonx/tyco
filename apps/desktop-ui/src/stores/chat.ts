@@ -36,7 +36,6 @@ import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
-import { createRuntimeId } from '@/lib/runtime-id'
 
 export const useChatStore = defineStore('chat', () => {
   const { toastKey, toastText } = useToast()
@@ -114,7 +113,7 @@ export const useChatStore = defineStore('chat', () => {
       error instanceof LlmError
         ? formatLlmError(error, translate)
         : String(error instanceof Error ? error.message : error),
-    createId: () => createRuntimeId(),
+    createId: () => crypto.randomUUID(),
     nowIso: () => new Date().toISOString(),
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {

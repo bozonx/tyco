@@ -308,12 +308,12 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount } from 'vue'
 
 import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
-import { useShowMarkup } from '../../composables/use-show-markup'
 import { desktopClient } from '../../lib/desktop/client'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveModeRoute } from '../../lib/navigation/routes'
@@ -324,6 +324,7 @@ import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
+import { useMarkupModeStore } from '../../stores/markup-mode'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolbarStore } from '../../stores/toolbar'
 import type { ToolbarItem } from '../../types/plugins'
@@ -345,7 +346,9 @@ const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
-const { showMarkup, toggleShowMarkup, resetShowMarkup } = useShowMarkup()
+const markupMode = useMarkupModeStore()
+const { showMarkup } = storeToRefs(markupMode)
+const { toggleShowMarkup, resetShowMarkup } = markupMode
 // the Markdown view lasts only while the page is open
 onBeforeUnmount(resetShowMarkup)
 

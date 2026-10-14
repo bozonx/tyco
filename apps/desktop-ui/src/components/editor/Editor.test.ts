@@ -72,7 +72,7 @@ describe('Editor.vue toolbar', () => {
   })
 
   it('toggles the Markdown view with one highlighted button that resets on leave', async () => {
-    const { useShowMarkup } = await import('../../composables/use-show-markup')
+    const { useMarkupModeStore } = await import('../../stores/markup-mode')
     const stubs = {
       Icon: true,
       EditorInput: true,
@@ -100,7 +100,7 @@ describe('Editor.vue toolbar', () => {
     )
 
     wrapper.unmount()
-    expect(useShowMarkup().showMarkup.value).toBe(false)
+    expect(useMarkupModeStore().showMarkup).toBe(false)
   })
 
   it('renders plugin toolbar buttons in left and right positions', async () => {

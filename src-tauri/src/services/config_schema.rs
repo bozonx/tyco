@@ -358,23 +358,6 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
     validate_references(config)
 }
 
-/// Domain startup adapters use the shared field rules without touching siblings.
-pub fn normalize_config_fields(config: &mut Value, keys: &[&str]) -> bool {
-    if !config.is_object() {
-        return false;
-    }
-    let mut changed = false;
-    for key in keys {
-        let previous = config.get(*key).cloned().unwrap_or(Value::Null);
-        let next = repair(&previous, &SCHEMA["properties"][*key]);
-        if previous != next || config.get(*key).is_none() {
-            config[*key] = next;
-            changed = true;
-        }
-    }
-    changed
-}
-
 /// Repairs old files on startup; IPC saves reject invalid input instead.
 pub fn normalize_user_config(config: &mut Value) -> bool {
     let original = config.clone();
