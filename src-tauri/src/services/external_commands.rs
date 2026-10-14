@@ -35,7 +35,8 @@ pub enum ToolInputKind {
 pub struct ToolCatalogEntry {
     pub id: String,
     pub input: ToolInputKind,
-    pub available: bool,
+    #[serde(rename = "available")]
+    pub is_available: bool,
     /// Why it is not available, already translated.
     #[serde(default)]
     pub reason: Option<String>,
@@ -59,7 +60,7 @@ pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExternalCommand {
     pub id: String,
-    pub takes_text: bool,
+    pub can_take_text: bool,
     pub has_structured_input: bool,
 }
 
@@ -152,7 +153,7 @@ fn can_run_externally(command: &Value) -> bool {
 /// Whether a script takes the text: its command mentions `{{TEXT}}`.
 /// Keep in sync with `scriptTakesText` in
 /// `packages/shared/src/user-config.ts`.
-fn script_takes_text(config: &Value) -> bool {
+fn script_can_take_text(config: &Value) -> bool {
     let command = str_field(config, "command");
     command.contains(TEXT_PLACEHOLDER)
 }
@@ -160,7 +161,7 @@ fn script_takes_text(config: &Value) -> bool {
 /// Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body
 /// of a POST request. Keep in sync with `webhookTakesText` in
 /// `packages/shared/src/user-config.ts`.
-fn webhook_takes_text(config: &Value) -> bool {
+fn webhook_can_take_text(config: &Value) -> bool {
     str_field(config, "url").contains(TEXT_PLACEHOLDER)
         || (str_field(config, "method") != "GET"
             && str_field(config, "payloadTemplate").contains(TEXT_PLACEHOLDER))
@@ -176,15 +177,15 @@ fn resolve_text_input_support(
     let tool_id = str_field(command, "toolId").trim();
     let config = command.get("toolConfig").unwrap_or(&Value::Null);
     match tool_id {
-        "script" => return Ok(script_takes_text(config)),
-        "webhook" => return Ok(webhook_takes_text(config)),
+        "script" => return Ok(script_can_take_text(config)),
+        "webhook" => return Ok(webhook_can_take_text(config)),
         _ => {}
     }
     let catalog = catalog.ok_or_else(|| CommandLookupError::ToolsLoading(id.clone()))?;
     let tool = catalog
         .get(tool_id)
         .ok_or_else(|| CommandLookupError::Unavailable(id.clone(), None))?;
-    if !tool.available {
+    if !tool.is_available {
         return Err(CommandLookupError::Unavailable(id, tool.reason.clone()));
     }
     match tool.input {
@@ -211,10 +212,10 @@ fn resolve_callable_command(
     if !can_run_externally(command) {
         return Err(CommandLookupError::NotExternal(id));
     }
-    let takes_text = resolve_text_input_support(command, catalog)?;
+    let can_take_text = resolve_text_input_support(command, catalog)?;
     Ok(ExternalCommand {
         id,
-        takes_text,
+        can_take_text,
         has_structured_input: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
             .is_some_and(|tool| tool.input == ToolInputKind::Structured),
@@ -297,12 +298,12 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
                 .to_owned(),
                 input: if found.has_structured_input {
                     "structured"
-                } else if found.takes_text {
+                } else if found.can_take_text {
                     "text"
                 } else {
                     "none"
                 },
-                can_replace_selection: found.takes_text && !found.has_structured_input,
+                can_replace_selection: found.can_take_text && !found.has_structured_input,
                 output: "return",
             }
         })
@@ -444,7 +445,7 @@ mod tests {
         let entry = |id: &str, input, available, reason: Option<&str>| ToolCatalogEntry {
             id: id.to_owned(),
             input,
-            available,
+            is_available: available,
             reason: reason.map(str::to_owned),
             input_schema: None,
         };
@@ -493,7 +494,7 @@ mod tests {
             found,
             ExternalCommand {
                 id: String::from("backup"),
-                takes_text: false,
+                can_take_text: false,
                 has_structured_input: false,
             }
         );
@@ -504,7 +505,7 @@ mod tests {
         assert_eq!(find_named("бэкап").unwrap().id, "backup");
         let note = find_named("work note").unwrap();
         assert_eq!(note.id, "note");
-        assert!(note.takes_text);
+        assert!(note.can_take_text);
     }
 
     #[test]
@@ -551,46 +552,46 @@ mod tests {
         // the backend knows its own tools without the catalog
         assert_eq!(find_by_id(&config(), None, "backup").unwrap().id, "backup");
         let note = find_in("plugin").unwrap();
-        assert!(note.takes_text);
-        assert!(!find_in("lights").unwrap().takes_text);
+        assert!(note.can_take_text);
+        assert!(!find_in("lights").unwrap().can_take_text);
         // the LLM fills the structured input from the text
-        assert!(find_in("remind").unwrap().takes_text);
+        assert!(find_in("remind").unwrap().can_take_text);
     }
 
     #[test]
     fn a_script_takes_the_text_it_mentions() {
-        assert!(script_takes_text(&json!({ "command": "echo {{TEXT}}" })));
-        assert!(!script_takes_text(
+        assert!(script_can_take_text(&json!({ "command": "echo {{TEXT}}" })));
+        assert!(!script_can_take_text(
             &json!({ "command": "printf %s \"$TYCO_TEXT\"" })
         ));
-        assert!(!script_takes_text(&json!({ "command": "backup.sh" })));
-        assert!(!script_takes_text(&json!({})));
+        assert!(!script_can_take_text(&json!({ "command": "backup.sh" })));
+        assert!(!script_can_take_text(&json!({})));
     }
 
     #[test]
     fn a_webhook_takes_the_text_where_its_placeholder_stands() {
-        assert!(webhook_takes_text(
+        assert!(webhook_can_take_text(
             &json!({ "url": "https://x.test/?q={{TEXT}}", "method": "GET" })
         ));
-        assert!(webhook_takes_text(&json!({
+        assert!(webhook_can_take_text(&json!({
             "url": "https://x.test",
             "payloadTemplate": "{\"text\": \"{{TEXT}}\"}"
         })));
         // a GET request sends no body
-        assert!(!webhook_takes_text(&json!({
+        assert!(!webhook_can_take_text(&json!({
             "url": "https://x.test",
             "method": "GET",
             "payloadTemplate": "{{TEXT}}"
         })));
-        assert!(!webhook_takes_text(&json!({ "url": "https://x.test" })));
+        assert!(!webhook_can_take_text(&json!({ "url": "https://x.test" })));
     }
 
     #[test]
     fn accepts_commands_independently_of_launcher_output_settings() {
         let mut catalog = catalog();
-        catalog.get_mut("core.translate").unwrap().available = true;
+        catalog.get_mut("core.translate").unwrap().is_available = true;
         let found = find_by_id(&config(), Some(&catalog), "translate").unwrap();
-        assert!(found.takes_text);
+        assert!(found.can_take_text);
     }
 
     #[test]

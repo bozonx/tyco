@@ -82,7 +82,8 @@ pub struct SecretEntry {
 pub struct SecretStatus {
     pub origins: Vec<String>,
     /// False while the vault holding the value is locked or unreachable.
-    pub available: bool,
+    #[serde(rename = "available")]
+    pub is_available: bool,
 }
 
 /// A secret as `secrets.json` keeps it.
@@ -199,7 +200,7 @@ impl SecretStore {
                     id.clone(),
                     SecretStatus {
                         origins: stored.origins.clone(),
-                        available: state.value(id).is_some(),
+                        is_available: state.value(id).is_some(),
                     },
                 )
             })
@@ -555,15 +556,15 @@ mod tests {
 
         let store = load_with(&path, &vault);
         assert_eq!(store.vault_state(), VaultState::Available);
-        assert!(!store.status()["google"].available);
+        assert!(!store.status()["google"].is_available);
 
         vault.locked.lock().unwrap().clear();
         assert!(
-            !store.status()["google"].available,
+            !store.status()["google"].is_available,
             "a request does not retry"
         );
         store.vault_state();
-        assert!(store.status()["google"].available);
+        assert!(store.status()["google"].is_available);
     }
 
     #[test]
@@ -717,7 +718,7 @@ mod tests {
             offline.status()["google"],
             SecretStatus {
                 origins: vec![String::from("https://generativelanguage.googleapis.com")],
-                available: false,
+                is_available: false,
             }
         );
         assert!(offline.snapshot().is_empty());
@@ -727,7 +728,7 @@ mod tests {
 
         vault.unreachable.store(false, Ordering::SeqCst);
         assert_eq!(offline.vault_state(), VaultState::Available);
-        assert!(offline.status()["google"].available);
+        assert!(offline.status()["google"].is_available);
         assert_eq!(offline.snapshot()["google"].value, "g-key");
     }
 

@@ -73,11 +73,11 @@ pub(crate) struct OpenedCapture<T> {
     pub output_sample_rate_hz: u32,
 }
 
-trait AudioLevels {
+trait AudioLevelSink {
     fn publish(&self, payload: VoiceAudioLevelPayload);
 }
 
-impl AudioLevels for AppHandle {
+impl AudioLevelSink for AppHandle {
     fn publish(&self, payload: VoiceAudioLevelPayload) {
         let _ = self.emit(VOICE_AUDIO_LEVEL_EVENT, payload);
     }
@@ -85,7 +85,7 @@ impl AudioLevels for AppHandle {
 
 trait CaptureRuntime {
     fn now(&self) -> Instant;
-    fn wait(&self);
+    fn sleep_poll_interval(&self);
 }
 
 struct SystemCaptureRuntime;
@@ -94,7 +94,7 @@ impl CaptureRuntime for SystemCaptureRuntime {
     fn now(&self) -> Instant {
         Instant::now()
     }
-    fn wait(&self) {
+    fn sleep_poll_interval(&self) {
         thread::sleep(POLL_INTERVAL);
     }
 }
@@ -121,7 +121,7 @@ async fn start_capture_with<A, L, S>(
 ) -> Result<VoiceCaptureInfo, AppError>
 where
     A: AudioSource + Send + 'static,
-    L: AudioLevels + Send + 'static,
+    L: AudioLevelSink + Send + 'static,
     S: EventSink,
 {
     let _operation = state.voice_session.lock_capture_operation().await;
@@ -179,7 +179,7 @@ fn create_capture_session<A, L, S>(
 ) -> Result<(VoiceCaptureSession, u32), AppError>
 where
     A: AudioSource + Send + 'static,
-    L: AudioLevels + Send + 'static,
+    L: AudioLevelSink + Send + 'static,
     S: EventSink,
 {
     let stop_flag = Arc::new(AtomicBool::new(false));
@@ -226,7 +226,7 @@ where
     }
 }
 
-fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
+fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     source: &A,
     levels: &L,
     runtime: &impl CaptureRuntime,
@@ -247,7 +247,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
     let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
     let mut last_level = runtime.now();
     while !stop_flag.load(Ordering::SeqCst) {
-        runtime.wait();
+        runtime.sleep_poll_interval();
 
         if !flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
             // nobody is listening any more: the webview went away
@@ -414,7 +414,7 @@ mod tests {
         }
     }
 
-    impl AudioLevels for Trace {
+    impl AudioLevelSink for Trace {
         fn publish(&self, payload: VoiceAudioLevelPayload) {
             self.push(format!("level:{}", payload.level));
         }
@@ -488,7 +488,7 @@ mod tests {
         fn now(&self) -> Instant {
             self.now.get()
         }
-        fn wait(&self) {
+        fn sleep_poll_interval(&self) {
             self.now.set(self.now.get() + LEVEL_INTERVAL);
             self.stop.store(true, Ordering::SeqCst);
         }

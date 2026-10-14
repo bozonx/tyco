@@ -32,20 +32,20 @@ fn remove_editor_history_files(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryRecord>, AppError> {
+fn read_file_records(path: &Path) -> Result<Vec<EditorHistoryRecord>, AppError> {
     read_jsonl(path)
 }
 
 /// Where the editor history lives: its file, or the memory of the process.
-enum EditorHistoryStore<'a> {
+enum EditorHistoryTarget<'a> {
     File(PathBuf),
     Memory(&'a mut Vec<EditorHistoryRecord>),
 }
 
-impl EditorHistoryStore<'_> {
+impl EditorHistoryTarget<'_> {
     fn read(&self) -> Result<Vec<EditorHistoryRecord>, AppError> {
         match self {
-            Self::File(path) => read_editor_history(path),
+            Self::File(path) => read_file_records(path),
             Self::Memory(items) => Ok(items.to_vec()),
         }
     }
@@ -64,12 +64,12 @@ impl EditorHistoryStore<'_> {
 }
 
 /// The editor history as the settings let it be seen and changed.
-struct EditorHistory<'a> {
-    store: EditorHistoryStore<'a>,
+struct EditorHistorySession<'a> {
+    store: EditorHistoryTarget<'a>,
     policy: EditorHistoryPolicy,
 }
 
-impl<'a> EditorHistory<'a> {
+impl<'a> EditorHistorySession<'a> {
     /// `memory` holds the entries while the history is kept in memory only.
     fn open(
         app: &AppHandle,
@@ -78,9 +78,9 @@ impl<'a> EditorHistory<'a> {
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
         let store = if policy.is_memory_only {
-            EditorHistoryStore::Memory(memory)
+            EditorHistoryTarget::Memory(memory)
         } else {
-            EditorHistoryStore::File(editor_history_path(app)?)
+            EditorHistoryTarget::File(editor_history_path(app)?)
         };
 
         Ok(Self { store, policy })
@@ -97,12 +97,12 @@ impl<'a> EditorHistory<'a> {
     }
 }
 
-pub fn get_editor_history(
+pub fn read_editor_history(
     app: &AppHandle,
     user_config: &Value,
     memory: &mut Vec<EditorHistoryRecord>,
 ) -> Result<Vec<EditorHistoryRecord>, AppError> {
-    EditorHistory::open(app, user_config, memory)?.load()
+    EditorHistorySession::open(app, user_config, memory)?.load()
 }
 
 /// Adds an entry and returns its id, or `None` when nothing was stored: the
@@ -113,11 +113,14 @@ pub fn save_editor_history(
     memory: &mut Vec<EditorHistoryRecord>,
     entry: CreateEditorHistoryRequest,
 ) -> Result<Option<String>, AppError> {
-    save_editor_history_entry(&mut EditorHistory::open(app, user_config, memory)?, entry)
+    save_editor_history_entry(
+        &mut EditorHistorySession::open(app, user_config, memory)?,
+        entry,
+    )
 }
 
 fn save_editor_history_entry(
-    history: &mut EditorHistory,
+    history: &mut EditorHistorySession,
     mut entry: CreateEditorHistoryRequest,
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
@@ -159,7 +162,7 @@ pub fn set_editor_history_result(
     id: String,
     result: String,
 ) -> Result<(), AppError> {
-    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let mut history = EditorHistorySession::open(app, user_config, memory)?;
     let result = history.policy.redact(result);
     let mut items = history.load()?;
 
@@ -177,7 +180,7 @@ pub fn restore_editor_history_item(
     memory: &mut Vec<EditorHistoryRecord>,
     mut item: EditorHistoryRecord,
 ) -> Result<(), AppError> {
-    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let mut history = EditorHistorySession::open(app, user_config, memory)?;
     let policy = history.policy;
 
     if policy.max_entries == 0 {
@@ -202,7 +205,7 @@ pub fn remove_from_editor_history(
     memory: &mut Vec<EditorHistoryRecord>,
     id: String,
 ) -> Result<(), AppError> {
-    let mut history = EditorHistory::open(app, user_config, memory)?;
+    let mut history = EditorHistorySession::open(app, user_config, memory)?;
     let mut items = history.load()?;
     items.retain(|item| item.id != id);
     history.save(items)
@@ -242,12 +245,12 @@ fn enforce_editor_history_file(
     policy: &EditorHistoryPolicy,
     now_ms: u64,
 ) -> Result<(), AppError> {
-    let stored = read_editor_history(path)?;
+    let stored = read_file_records(path)?;
     let mut items = stored.clone();
     policy.enforce(&mut items, now_ms);
 
     if items != stored {
-        EditorHistoryStore::File(path.to_path_buf()).write(items)?;
+        EditorHistoryTarget::File(path.to_path_buf()).write(items)?;
     }
 
     Ok(())
@@ -323,7 +326,7 @@ fn switch_editor_history_store(
     memory: &mut Vec<EditorHistoryRecord>,
     now_ms: u64,
 ) -> Result<(), AppError> {
-    let mut file = EditorHistoryStore::File(path.to_path_buf());
+    let mut file = EditorHistoryTarget::File(path.to_path_buf());
 
     if after.is_memory_only != before.is_memory_only {
         // the entries move to where the history lives now
@@ -349,7 +352,7 @@ fn switch_editor_history_store(
 
     if turned_off || sanitize_turned_on {
         let mut store = if after.is_memory_only {
-            EditorHistoryStore::Memory(memory)
+            EditorHistoryTarget::Memory(memory)
         } else {
             file
         };
@@ -438,8 +441,8 @@ mod tests {
     fn save_editor_history_entry_masks_secrets_when_enabled() {
         let dir = TestDir::new("save-secrets");
         let path = dir.join(EDITOR_HISTORY_FILE);
-        let mut history = EditorHistory {
-            store: EditorHistoryStore::File(path.clone()),
+        let mut history = EditorHistorySession {
+            store: EditorHistoryTarget::File(path.clone()),
             policy: EditorHistoryPolicy {
                 should_redact_secrets: true,
                 ..policy()
@@ -461,8 +464,8 @@ mod tests {
     fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
         let dir = TestDir::new("save-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
-        let mut history = EditorHistory {
-            store: EditorHistoryStore::File(path.clone()),
+        let mut history = EditorHistorySession {
+            store: EditorHistoryTarget::File(path.clone()),
             policy: EditorHistoryPolicy {
                 max_entries: 0,
                 ..policy()
@@ -480,8 +483,8 @@ mod tests {
     fn the_memory_store_never_touches_the_disk() {
         let dir = TestDir::new("memory-store");
         let mut memory = Vec::new();
-        let mut history = EditorHistory {
-            store: EditorHistoryStore::Memory(&mut memory),
+        let mut history = EditorHistorySession {
+            store: EditorHistoryTarget::Memory(&mut memory),
             policy: EditorHistoryPolicy {
                 is_memory_only: true,
                 ..policy()
@@ -498,7 +501,7 @@ mod tests {
     fn an_emptied_file_store_leaves_no_file() {
         let dir = TestDir::new("empty-store");
         let path = dir.join(EDITOR_HISTORY_FILE);
-        let mut store = EditorHistoryStore::File(path.clone());
+        let mut store = EditorHistoryTarget::File(path.clone());
 
         store
             .write(vec![history_item("a", "a", EditorHistoryKind::Draft)])
@@ -557,7 +560,7 @@ mod tests {
 
         assert!(memory.is_empty());
         assert_eq!(
-            history_texts(&read_editor_history(&path).unwrap()),
+            history_texts(&read_file_records(&path).unwrap()),
             ["in memory"]
         );
     }
@@ -605,7 +608,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(read_editor_history(&path).unwrap().len(), 2);
+        assert_eq!(read_file_records(&path).unwrap().len(), 2);
     }
 
     #[test]
@@ -629,7 +632,7 @@ mod tests {
         };
 
         enforce_editor_history_file(&path, &retention, now).unwrap();
-        assert_eq!(read_editor_history(&path).unwrap(), vec![fresh]);
+        assert_eq!(read_file_records(&path).unwrap(), vec![fresh]);
 
         enforce_editor_history_file(&path, &retention, now + 2 * DAY_MS).unwrap();
         assert!(!path.exists());

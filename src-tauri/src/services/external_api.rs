@@ -74,13 +74,13 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
         "name": raw.and_then(|item| item.get("name")),
         "input": if command.has_structured_input {
             "structured"
-        } else if command.takes_text {
+        } else if command.can_take_text {
             "text"
         } else {
             "none"
         },
-        "textAccepted": command.takes_text,
-        "canReplaceSelection": command.takes_text && !command.has_structured_input,
+        "textAccepted": command.can_take_text,
+        "canReplaceSelection": command.can_take_text && !command.has_structured_input,
         "output": "return",
         "inputSchema": input_schema,
     }))
@@ -109,13 +109,13 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "Choose one input source; replacement requires selection",
         ));
     }
-    if request.selection && (!command.takes_text || command.has_structured_input) {
+    if request.selection && (!command.can_take_text || command.has_structured_input) {
         return Err(Response::coded_error(
             "InvalidInput",
             "This command does not accept selection text",
         ));
     }
-    if !command.takes_text
+    if !command.can_take_text
         && !command.has_structured_input
         && (request.text.is_some() || request.input.is_some())
     {
@@ -124,13 +124,13 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "This command does not accept input",
         ));
     }
-    if command.has_structured_input && !command.takes_text && request.input.is_none() {
+    if command.has_structured_input && !command.can_take_text && request.input.is_none() {
         return Err(Response::coded_error(
             "InputRequired",
             "This command requires structured input",
         ));
     }
-    if command.takes_text
+    if command.can_take_text
         && request.text.is_none()
         && request.input.is_none()
         && !request.selection
@@ -187,7 +187,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
         let prompt = AccessRequest {
             job_id: job.id.clone(),
             command_name: command_name(&config, &command.id),
-            replace: request.replace,
+            should_replace: request.replace,
         };
         let (code, message) = match external_access::ask(app, prompt, source) {
             Ok(()) => return Ok(job),
@@ -217,8 +217,8 @@ fn fail(app: &AppHandle, id: &str, message: String, code: &str) {
         app,
         id,
         JobCompletion {
-            success: false,
-            cancelled: false,
+            is_success: false,
+            is_cancelled: false,
             output: None,
             message: Some(message),
             code: Some(code.into()),
@@ -236,7 +236,7 @@ fn hand_off(
     source: ActivationSource,
 ) -> ApiResult<()> {
     let config = app.state::<AppState>().snapshot().settings.user_config;
-    let needs_ui = command.takes_text && request.text.is_none() && request.input.is_none();
+    let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
         let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
@@ -274,8 +274,8 @@ pub fn resume(app: &AppHandle, job_id: &str, source: ActivationSource) {
                 app,
                 job_id,
                 JobCompletion {
-                    success: false,
-                    cancelled: false,
+                    is_success: false,
+                    is_cancelled: false,
                     output: None,
                     message: error.error,
                     code: error.code,
@@ -301,9 +301,10 @@ pub fn deny_selection(app: &AppHandle, job_id: &str) {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JobCompletion {
-    pub success: bool,
-    #[serde(default)]
-    pub cancelled: bool,
+    #[serde(rename = "success")]
+    pub is_success: bool,
+    #[serde(default, rename = "cancelled")]
+    pub is_cancelled: bool,
     pub output: Option<String>,
     pub message: Option<String>,
     pub code: Option<String>,
@@ -318,18 +319,18 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             *output = keep_selection_whitespace(&input, output);
         }
     }
-    let state = if completion.cancelled {
+    let state = if completion.is_cancelled {
         JobState::Cancelled
-    } else if completion.success {
+    } else if completion.is_success {
         JobState::Succeeded
     } else {
         JobState::Failed
     };
     let jobs = app.state::<ExternalJobs>();
     let code = completion.code.or_else(|| {
-        if completion.cancelled {
+        if completion.is_cancelled {
             Some("Cancelled".into())
-        } else if !completion.success {
+        } else if !completion.is_success {
             Some("ExecutionFailed".into())
         } else {
             None
@@ -393,8 +394,8 @@ fn cancel(app: &AppHandle, id: &str, code: &str) -> Response {
             app,
             id,
             JobCompletion {
-                success: false,
-                cancelled: true,
+                is_success: false,
+                is_cancelled: true,
                 output: None,
                 message: Some(code.into()),
                 code: Some(code.into()),
@@ -417,8 +418,8 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
             app,
             id,
             JobCompletion {
-                success: false,
-                cancelled: false,
+                is_success: false,
+                is_cancelled: false,
                 output: None,
                 message: error.error,
                 code: error.code,
@@ -433,8 +434,8 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
                 app,
                 id,
                 JobCompletion {
-                    success: false,
-                    cancelled: false,
+                    is_success: false,
+                    is_cancelled: false,
                     output: None,
                     message: error.error,
                     code: error.code,
@@ -448,8 +449,8 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
             app,
             id,
             JobCompletion {
-                success: false,
-                cancelled: false,
+                is_success: false,
+                is_cancelled: false,
                 output: None,
                 message: Some("Command configuration changed before execution".into()),
                 code: Some("ConfigurationChanged".into()),
@@ -586,7 +587,7 @@ mod tests {
     fn command() -> ExternalCommand {
         ExternalCommand {
             id: "test".into(),
-            takes_text: true,
+            can_take_text: true,
             has_structured_input: false,
         }
     }

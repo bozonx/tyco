@@ -6,18 +6,21 @@ const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
 /// The index and optional chat replacement are committed together. The journal
 /// remains until cleanup finishes, so interrupted saves and deletes are replayed.
 #[derive(Serialize, Deserialize)]
-struct ChatTransaction {
+struct PendingChatTransaction {
     history: Vec<ChatSummary>,
     chat: Option<Chat>,
 }
 
-fn commit_chat_transaction(chats_dir: &Path, transaction: ChatTransaction) -> Result<(), AppError> {
+fn commit_chat_transaction(
+    chats_dir: &Path,
+    transaction: PendingChatTransaction,
+) -> Result<(), AppError> {
     validate_chat_transaction(&transaction)?;
     write_json(&chats_dir.join(CHAT_TRANSACTION_FILE), &transaction)?;
     recover_chat_transaction(chats_dir)
 }
 
-fn validate_chat_transaction(transaction: &ChatTransaction) -> Result<(), AppError> {
+fn validate_chat_transaction(transaction: &PendingChatTransaction) -> Result<(), AppError> {
     for item in &transaction.history {
         validate_chat_id(&item.id)?;
     }
@@ -35,7 +38,7 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
         Err(error) => return Err(error.into()),
     };
     // A damaged journal is an error, never permission to delete stored chats.
-    let transaction: ChatTransaction = serde_json::from_slice(&raw)?;
+    let transaction: PendingChatTransaction = serde_json::from_slice(&raw)?;
     validate_chat_transaction(&transaction)?;
     if let Some(chat) = transaction.chat {
         let id = validate_chat_id(&chat.id)?;
@@ -155,7 +158,7 @@ pub fn save_chat(app: &AppHandle, user_config: &Value, chat: Chat) -> Result<(),
     policy.drop_expired(&mut history, now_ms());
     commit_chat_transaction(
         &chats_dir,
-        ChatTransaction {
+        PendingChatTransaction {
             history,
             chat: Some(chat),
         },
@@ -171,7 +174,7 @@ fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
     history.insert(0, index_item);
 }
 
-pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
+pub fn read_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let chat_file_path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
 
@@ -197,14 +200,14 @@ pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
 pub fn rename_chat(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = list_chats(app)?;
-    let Some(mut chat) = get_chat(app, id.clone())? else {
+    let Some(mut chat) = read_chat(app, id.clone())? else {
         return Err(AppError::Message(String::from("Chat not found")));
     };
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);
     commit_chat_transaction(
         &chats_dir,
-        ChatTransaction {
+        PendingChatTransaction {
             history,
             chat: Some(chat),
         },
@@ -227,7 +230,7 @@ pub(super) fn search_chats(
     let mut found = Vec::new();
 
     for item in history {
-        let matches = match get_chat(app, item.id.clone()) {
+        let matches = match read_chat(app, item.id.clone()) {
             Ok(Some(chat)) => chat_matches(&chat, &query),
             _ => item
                 .title
@@ -262,7 +265,7 @@ pub fn delete_chat(app: &AppHandle, id: String) -> Result<(), AppError> {
     history.retain(|item| item.id != id);
     commit_chat_transaction(
         &chats_dir,
-        ChatTransaction {
+        PendingChatTransaction {
             history,
             chat: None,
         },
@@ -374,7 +377,7 @@ pub(super) fn enforce_chat_history_policy(
     let chats_dir = app_data_sub_dir(app, "chats")?;
     commit_chat_transaction(
         &chats_dir,
-        ChatTransaction {
+        PendingChatTransaction {
             history,
             chat: None,
         },
@@ -387,7 +390,7 @@ pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
     recover_chat_transaction(&chats_dir)?;
     commit_chat_transaction(
         &chats_dir,
-        ChatTransaction {
+        PendingChatTransaction {
             history: Vec::new(),
             chat: None,
         },
@@ -463,7 +466,7 @@ mod tests {
         let new = chat_item("new");
         write_json(&dir.join(CHAT_INDEX_FILE), &vec![old.clone()]).unwrap();
         write_json(&dir.join("old.json"), &old).unwrap();
-        let journal = ChatTransaction {
+        let journal = PendingChatTransaction {
             history: vec![ChatSummary::from(&new), ChatSummary::from(&old)],
             chat: Some(new.clone()),
         };
@@ -490,7 +493,7 @@ mod tests {
         write_json(&dir.join("removed.json"), &chat).unwrap();
         write_json(
             &dir.join(CHAT_TRANSACTION_FILE),
-            &ChatTransaction {
+            &PendingChatTransaction {
                 history: Vec::new(),
                 chat: None,
             },
@@ -503,7 +506,7 @@ mod tests {
     #[test]
     fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
         let dir = TestDir::new("invalid-save");
-        let transaction = ChatTransaction {
+        let transaction = PendingChatTransaction {
             history: vec![ChatSummary::from(&chat_item("../invalid"))],
             chat: None,
         };
@@ -518,7 +521,7 @@ mod tests {
         let chat = chat_item("new");
         write_json(
             &dir.join(CHAT_TRANSACTION_FILE),
-            &ChatTransaction {
+            &PendingChatTransaction {
                 history: vec![ChatSummary::from(&chat)],
                 chat: Some(chat),
             },

@@ -1,6 +1,6 @@
 //! Serialized hotkey status and the provider snapshot shown by the UI.
 use super::bindings::{bindings_from_config, default_bindings};
-use super::{HotkeyRegistry, ProviderKind, ProviderState, SystemTriggers};
+use super::{HotkeyRegistry, PortalShortcutBindings, ProviderKind, ProviderState};
 use crate::services::platform::hotkeys::{external_command, platform_name};
 #[cfg(target_os = "linux")]
 use crate::services::platform::linux::hotkeys_portal::{
@@ -33,20 +33,24 @@ pub struct ApplyHotkeyResult {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HotkeyProviderInfo {
-    provider: &'static str,
-    can_configure: bool,
-    actions: HashMap<String, ApplyHotkeyResult>,
-    system_triggers: HashMap<String, String>,
+    #[serde(rename = "provider")]
+    pub provider_id: &'static str,
+    pub can_configure: bool,
+    pub actions: HashMap<String, ApplyHotkeyResult>,
+    pub system_triggers: HashMap<String, String>,
     /// The portal session is bound, so `system_triggers` is what the desktop
     /// has, not what it has not reported yet
-    registered: bool,
+    #[serde(rename = "registered")]
+    pub is_registered: bool,
     /// The default shortcut of every hotkey id on this platform
-    defaults: HashMap<String, String>,
-    platform: &'static str,
+    #[serde(rename = "defaults")]
+    pub default_shortcuts: HashMap<String, String>,
+    #[serde(rename = "platform")]
+    pub platform_name: &'static str,
 }
 
 pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
-    let kind = app.state::<ProviderState>().get();
+    let kind = app.state::<ProviderState>().kind();
     #[cfg(target_os = "linux")]
     if kind == ProviderKind::Portal {
         refresh_system_triggers(app).await;
@@ -88,7 +92,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     };
     let system_triggers = match kind {
         ProviderKind::Portal => app
-            .state::<SystemTriggers>()
+            .state::<PortalShortcutBindings>()
             .0
             .read()
             .expect("system triggers lock poisoned")
@@ -96,20 +100,20 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         ProviderKind::GlobalShortcut | ProviderKind::External => HashMap::new(),
     };
     HotkeyProviderInfo {
-        provider: match kind {
+        provider_id: match kind {
             ProviderKind::Portal => "portal",
             ProviderKind::GlobalShortcut => "global-shortcut",
             ProviderKind::External => "external",
         },
         can_configure: kind == ProviderKind::Portal && can_configure_portal(app),
-        registered: kind == ProviderKind::Portal && portal_registered(app),
+        is_registered: kind == ProviderKind::Portal && is_portal_registered(app),
         actions,
         system_triggers,
-        defaults: default_bindings()
+        default_shortcuts: default_bindings()
             .into_iter()
             .map(|binding| (binding.target.id(), binding.shortcut.unwrap_or_default()))
             .collect(),
-        platform: platform_name(),
+        platform_name: platform_name(),
     }
 }
 
@@ -119,11 +123,11 @@ fn can_configure_portal(_app: &AppHandle) -> bool {
 }
 
 #[cfg(target_os = "linux")]
-fn portal_registered(app: &AppHandle) -> bool {
+fn is_portal_registered(app: &AppHandle) -> bool {
     app.state::<PortalState>().registration().is_some()
 }
 
 #[cfg(not(target_os = "linux"))]
-fn portal_registered(_app: &AppHandle) -> bool {
+fn is_portal_registered(_app: &AppHandle) -> bool {
     false
 }

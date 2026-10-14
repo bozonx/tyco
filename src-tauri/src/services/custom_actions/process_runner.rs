@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use super::command_logging::LogContext;
 use crate::errors::AppError;
-use crate::services::platform::process::{Pipe, PipeReader};
+use crate::services::platform::process::{PipeReader, PollablePipe};
 use crate::services::platform::shell;
 
 /// Stands in for the text in a command; see `shell::substitute`.
@@ -36,12 +36,14 @@ const MAX_OUTPUT_BYTES: usize = 1 << 20;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ScriptExecutionResult {
-    pub success: bool,
+    #[serde(rename = "success")]
+    pub is_success: bool,
     pub exit_code: Option<i32>,
     pub stdout: String,
     pub stderr: String,
     /// The command did not finish while waited for and keeps running.
-    pub running: bool,
+    #[serde(rename = "running")]
+    pub is_running: bool,
 }
 
 pub struct ScriptRequest<'a> {
@@ -51,10 +53,10 @@ pub struct ScriptRequest<'a> {
     pub text: &'a str,
     /// The caller uses the output: the command is waited for longer and
     /// killed if it does not finish in time.
-    pub capture_output: bool,
+    pub should_capture_output: bool,
     /// Replaces `OUTPUT_TIMEOUT`, up to `MAX_OUTPUT_TIMEOUT`.
     pub output_timeout: Option<Duration>,
-    pub log_output: bool,
+    pub should_log_output: bool,
     /// Lets `cancel_script` stop the command while it is waited for.
     pub run_id: Option<&'a str>,
 }
@@ -165,7 +167,10 @@ type SharedOutputBuffer = Arc<Mutex<Vec<u8>>>;
 
 /// Reads a pipe into a buffer of bounded size; the receiver gets a message
 /// once the pipe is closed.
-fn spawn_reader(pipe: impl Pipe, buffer: SharedOutputBuffer) -> std::io::Result<PipeReader> {
+fn spawn_reader(
+    pipe: impl PollablePipe,
+    buffer: SharedOutputBuffer,
+) -> std::io::Result<PipeReader> {
     PipeReader::start(pipe, move |bytes| {
         if let Ok(mut buffer) = buffer.lock() {
             let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
@@ -246,11 +251,11 @@ impl RunningScript {
         self.readers.clear();
         self.kill_and_reap_on_drop = false;
         ScriptExecutionResult {
-            success: status.success(),
+            is_success: status.success(),
             exit_code: status.code(),
             stdout: read_buffer(&self.stdout),
             stderr: read_buffer(&self.stderr),
-            running: false,
+            is_running: false,
         }
     }
 }
@@ -279,7 +284,7 @@ pub fn execute_script(
         name: request.name.to_string(),
         command: request.command.to_string(),
         cwd: String::from("(default)"),
-        log_output: request.log_output,
+        should_log_output: request.should_log_output,
         started: Instant::now(),
     };
     let fail = |log: &LogContext, message: String| {
@@ -311,7 +316,7 @@ pub fn execute_script(
         .output_timeout
         .filter(|timeout| !timeout.is_zero())
         .map_or(OUTPUT_TIMEOUT, |timeout| timeout.min(MAX_OUTPUT_TIMEOUT));
-    let wait = if request.capture_output {
+    let wait = if request.should_capture_output {
         output_timeout
     } else {
         STATUS_WAIT
@@ -333,7 +338,7 @@ pub fn execute_script(
         ProcessWaitOutcome::TimedOut => {}
     }
 
-    if request.capture_output {
+    if request.should_capture_output {
         return Err(fail(
             &log,
             format!(
@@ -352,18 +357,18 @@ pub fn execute_script(
         }
     });
     Ok(ScriptExecutionResult {
-        running: true,
+        is_running: true,
         ..empty_result()
     })
 }
 
 fn empty_result() -> ScriptExecutionResult {
     ScriptExecutionResult {
-        success: false,
+        is_success: false,
         exit_code: None,
         stdout: String::new(),
         stderr: String::new(),
-        running: false,
+        is_running: false,
     }
 }
 
@@ -379,9 +384,9 @@ mod tests {
             command,
             working_dir: None,
             text,
-            capture_output: true,
+            should_capture_output: true,
             output_timeout: None,
-            log_output: false,
+            should_log_output: false,
             run_id: None,
         }
     }
@@ -432,14 +437,14 @@ mod tests {
     fn integration_passes_the_text_through_the_placeholder() {
         let text = "don't \"stop\" $HOME";
         let result = execute_script(&request(commands::ECHO_PLACEHOLDER, text), None).unwrap();
-        assert!(result.success, "{}", result.stderr);
+        assert!(result.is_success, "{}", result.stderr);
         assert_eq!(result.stdout, text);
     }
 
     #[test]
     fn integration_does_not_pass_text_to_stdin() {
         let result = execute_script(&request(commands::CAT, "input text"), None).unwrap();
-        assert!(result.success, "{}", result.stderr);
+        assert!(result.is_success, "{}", result.stderr);
         assert_eq!(result.stdout, "");
     }
 
@@ -488,13 +493,13 @@ mod tests {
         let started = Instant::now();
         let result = execute_script(
             &ScriptRequest {
-                capture_output: false,
+                should_capture_output: false,
                 ..request(commands::SLEEP, "")
             },
             None,
         )
         .unwrap();
-        assert!(result.running);
+        assert!(result.is_running);
         assert!(started.elapsed() < Duration::from_secs(10));
     }
 
@@ -542,7 +547,7 @@ mod tests {
     #[test]
     fn integration_reports_a_failure() {
         let result = execute_script(&request("exit 3", ""), None).unwrap();
-        assert!(!result.success);
+        assert!(!result.is_success);
         assert_eq!(result.exit_code, Some(3));
     }
 
@@ -551,13 +556,13 @@ mod tests {
         let dir = TestDir::new("process-log");
         let result = execute_script(
             &ScriptRequest {
-                log_output: true,
+                should_log_output: true,
                 ..request(commands::ECHO_PLACEHOLDER, "private_text")
             },
             Some(&dir),
         )
         .unwrap();
-        assert!(result.success);
+        assert!(result.is_success);
 
         let content = fs::read_to_string(dir.join("actions.log")).unwrap();
         assert!(content.contains("[Action: \"Test\"]"));

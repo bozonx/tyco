@@ -13,7 +13,7 @@ pub fn with_config_changes<T>(
     next: &Value,
     save: impl FnOnce() -> Result<T, AppError>,
 ) -> Result<T, AppError> {
-    if app.state::<ProviderState>().get() != ProviderKind::GlobalShortcut {
+    if app.state::<ProviderState>().kind() != ProviderKind::GlobalShortcut {
         return save();
     }
     let before = bindings_from_config(previous);

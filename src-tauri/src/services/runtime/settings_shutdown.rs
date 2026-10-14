@@ -19,7 +19,7 @@ struct ShutdownState {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Acknowledgement {
+enum ShutdownFlushOutcome {
     Ignored,
     Pending,
     Complete,
@@ -36,25 +36,25 @@ impl ShutdownState {
         Some(self.generation)
     }
 
-    fn acknowledge(&mut self, generation: u64, window: &str, saved: bool) -> Acknowledgement {
+    fn acknowledge(&mut self, generation: u64, window: &str, saved: bool) -> ShutdownFlushOutcome {
         if generation != self.generation {
-            return Acknowledgement::Ignored;
+            return ShutdownFlushOutcome::Ignored;
         }
         let Some(pending) = self.pending.as_mut() else {
-            return Acknowledgement::Ignored;
+            return ShutdownFlushOutcome::Ignored;
         };
         if !pending.remove(window) {
-            return Acknowledgement::Ignored;
+            return ShutdownFlushOutcome::Ignored;
         }
         if !saved {
             self.pending = None;
-            return Acknowledgement::Cancelled;
+            return ShutdownFlushOutcome::Cancelled;
         }
         if pending.is_empty() {
             self.pending = None;
-            return Acknowledgement::Complete;
+            return ShutdownFlushOutcome::Complete;
         }
-        Acknowledgement::Pending
+        ShutdownFlushOutcome::Pending
     }
 
     fn cancel(&mut self, generation: u64) -> bool {
@@ -131,12 +131,12 @@ pub fn acknowledge(app: &AppHandle, request_id: u64, window: &str, saved: bool) 
         .expect("shutdown lock poisoned")
         .acknowledge(request_id, window, saved);
     match result {
-        Acknowledgement::Complete => {
+        ShutdownFlushOutcome::Complete => {
             app.state::<AppState>().set_quitting(true);
             app.exit(0);
         }
-        Acknowledgement::Cancelled => cancel_exit(app),
-        Acknowledgement::Ignored | Acknowledgement::Pending => {}
+        ShutdownFlushOutcome::Cancelled => cancel_exit(app),
+        ShutdownFlushOutcome::Ignored | ShutdownFlushOutcome::Pending => {}
     }
 }
 
@@ -154,23 +154,23 @@ mod tests {
         assert!(state.start(windows()).is_none());
         assert_eq!(
             state.acknowledge(id + 1, "main", true),
-            Acknowledgement::Ignored
+            ShutdownFlushOutcome::Ignored
         );
         assert_eq!(
             state.acknowledge(id, "unknown", true),
-            Acknowledgement::Ignored
+            ShutdownFlushOutcome::Ignored
         );
         assert_eq!(
             state.acknowledge(id, "main", true),
-            Acknowledgement::Pending
+            ShutdownFlushOutcome::Pending
         );
         assert_eq!(
             state.acknowledge(id, "main", true),
-            Acknowledgement::Ignored
+            ShutdownFlushOutcome::Ignored
         );
         assert_eq!(
             state.acknowledge(id, "quick", true),
-            Acknowledgement::Complete
+            ShutdownFlushOutcome::Complete
         );
     }
 
@@ -180,14 +180,14 @@ mod tests {
         let id = state.start(windows()).unwrap();
         assert_eq!(
             state.acknowledge(id, "main", false),
-            Acknowledgement::Cancelled
+            ShutdownFlushOutcome::Cancelled
         );
         let next = state.start(windows()).unwrap();
         assert!(!state.cancel(id));
         assert!(state.cancel(next));
         assert_eq!(
             state.acknowledge(next, "quick", true),
-            Acknowledgement::Ignored
+            ShutdownFlushOutcome::Ignored
         );
         assert!(state.start(windows()).is_some());
     }

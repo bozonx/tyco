@@ -99,7 +99,8 @@ pub struct CommandRunRecord {
     pub source: String,
     /// The text the command got; absent for a command that takes none.
     pub text: Option<String>,
-    pub success: bool,
+    #[serde(rename = "success")]
+    pub is_success: bool,
     /// Why it failed, or what it reported.
     pub message: Option<String>,
 }
@@ -117,7 +118,11 @@ fn format_command_run(record: &CommandRunRecord) -> String {
         record.name,
         record.command_id,
         record.source,
-        if record.success { "success" } else { "failed" },
+        if record.is_success {
+            "success"
+        } else {
+            "failed"
+        },
     );
     if let Some(text) = &record.text {
         entry.push_str(&format!("Text:\n{}\n", or_empty(&redact_secrets(text))));
@@ -158,7 +163,7 @@ pub(super) struct LogContext {
     pub(super) name: String,
     pub(super) command: String,
     pub(super) cwd: String,
-    pub(super) log_output: bool,
+    pub(super) should_log_output: bool,
     pub(super) started: Instant,
 }
 
@@ -167,7 +172,7 @@ impl LogContext {
         let duration = self.started.elapsed();
         if let Some(error) = error {
             log::warn!("[Action: \"{}\"] {error}", self.name);
-        } else if result.success {
+        } else if result.is_success {
             log::info!(
                 "[Action: \"{}\"] Finished in {duration:?} with exit code {:?}",
                 self.name,
@@ -181,12 +186,12 @@ impl LogContext {
             );
         }
 
-        let failed = error.is_some() || !result.success;
-        if !(self.log_output || failed) {
+        let failed = error.is_some() || !result.is_success;
+        if !(self.should_log_output || failed) {
             return;
         }
         let Some(dir) = &self.dir else { return };
-        let status = match (error, result.success) {
+        let status = match (error, result.is_success) {
             (Some(error), _) => format!("ERROR: {error}"),
             (None, true) => String::from("SUCCESS"),
             (None, false) => String::from("FAILED"),
@@ -222,7 +227,7 @@ mod tests {
             name: String::from("Backup"),
             source: String::from("launcher"),
             text: Some(String::from("key sk-proj-1234567890abcdef1234567890")),
-            success: false,
+            is_success: false,
             message: Some(String::from("exit code 1")),
         };
         let entry = format_command_run(&record);
@@ -235,7 +240,7 @@ mod tests {
         let without_text = format_command_run(&CommandRunRecord {
             text: None,
             message: None,
-            success: true,
+            is_success: true,
             ..record
         });
         assert!(without_text.contains("Result: success"));

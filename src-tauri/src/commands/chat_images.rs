@@ -51,7 +51,7 @@ pub async fn store_chat_image(
 
 #[tauri::command]
 pub async fn get_chat_image(app: AppHandle, id: String) -> Result<tauri::ipc::Response, AppError> {
-    run_blocking(move || storage::get_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
+    run_blocking(move || storage::read_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
 }
 
 #[tauri::command]

@@ -7,10 +7,10 @@ use crate::services::voice_session::VoiceSessionState;
 
 pub struct AppState {
     snapshot: Mutex<DesktopSnapshot>,
-    pub(crate) history: crate::services::storage::HistoryStorage,
+    pub(crate) history: crate::services::storage::HistoryStorageCoordinator,
     settings_update_lock: Mutex<()>,
     pub chat_images: Mutex<crate::services::chat_images::ChatImageStore>,
-    quitting: AtomicBool,
+    is_quitting: AtomicBool,
     pub(crate) voice_session: VoiceSessionState,
     /// `None` until the quick window sends it, see `set_tool_catalog`.
     tool_catalog: Mutex<Option<ToolCatalog>>,
@@ -20,10 +20,10 @@ impl AppState {
     pub fn new(initial_snapshot: DesktopSnapshot) -> Self {
         Self {
             snapshot: Mutex::new(initial_snapshot),
-            history: crate::services::storage::HistoryStorage::default(),
+            history: crate::services::storage::HistoryStorageCoordinator::default(),
             settings_update_lock: Mutex::new(()),
             chat_images: Mutex::new(crate::services::chat_images::ChatImageStore::default()),
-            quitting: AtomicBool::new(false),
+            is_quitting: AtomicBool::new(false),
             voice_session: VoiceSessionState::default(),
             tool_catalog: Mutex::new(None),
         }
@@ -71,11 +71,11 @@ impl AppState {
     }
 
     pub fn set_quitting(&self, quitting: bool) {
-        self.quitting.store(quitting, Ordering::SeqCst);
+        self.is_quitting.store(quitting, Ordering::SeqCst);
     }
 
     pub fn is_quitting(&self) -> bool {
-        self.quitting.load(Ordering::SeqCst)
+        self.is_quitting.load(Ordering::SeqCst)
     }
 }
 

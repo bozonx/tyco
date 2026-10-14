@@ -10,13 +10,13 @@ use std::sync::OnceLock;
 /// left alone, so masking a masked text changes nothing.
 const MARK: &str = "[REDACTED";
 
-struct SecretRules {
+struct SecretMaskingRules {
     set: RegexSet,
     rules: Vec<(Regex, &'static str)>,
 }
 
-fn secret_rules() -> &'static SecretRules {
-    static RULES: OnceLock<SecretRules> = OnceLock::new();
+fn masking_rules() -> &'static SecretMaskingRules {
+    static RULES: OnceLock<SecretMaskingRules> = OnceLock::new();
     RULES.get_or_init(|| {
         // Specific token shapes come first: the generic key-value rule at the
         // end then finds their values already masked.
@@ -82,14 +82,14 @@ fn secret_rules() -> &'static SecretRules {
             })
             .collect();
 
-        SecretRules { set, rules }
+        SecretMaskingRules { set, rules }
     })
 }
 
 /// Masks what looks like passwords, API keys, tokens and private keys.
 /// Idempotent: a text masked once comes out of a second pass unchanged.
 pub fn redact_secrets(text: &str) -> String {
-    let rules_ref = secret_rules();
+    let rules_ref = masking_rules();
     if !rules_ref.set.is_match(text) {
         return text.to_string();
     }

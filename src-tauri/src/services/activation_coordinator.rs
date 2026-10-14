@@ -40,7 +40,7 @@ impl ActivationCoordinator {
             .map(|target| target.as_platform_id().to_owned());
         let capture = activation.selected_text.is_none()
             && !(activation.mode == ActivationMode::Editor && host.has_focused_window())
-            && activation.takes_selection(&host.user_config());
+            && activation.can_take_selection(&host.user_config());
         let generation = {
             let mut generation = self.generation.lock().expect("activation lock poisoned");
             *generation += 1;

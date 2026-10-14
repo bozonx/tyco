@@ -1,8 +1,8 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
 use crate::errors::AppError;
 use crate::services::hotkeys::{
-    bindings_from_config, global_target, HotkeyBinding, PortalProvider, ProviderState,
-    SystemTriggers, HOTKEYS_CHANGED_EVENT,
+    bindings_from_config, global_target, HotkeyBinding, PortalProvider, PortalShortcutBindings,
+    ProviderState, HOTKEYS_CHANGED_EVENT,
 };
 use crate::services::platform::hotkeys::ProviderKind;
 use crate::services::selection_replace;
@@ -87,7 +87,7 @@ pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
     let bindings = bindings_from_config(&app.state::<AppState>().snapshot().settings.user_config);
     let result = bind_session(app, &portal, &bindings).await;
     if result.is_err() {
-        app.state::<SystemTriggers>()
+        app.state::<PortalShortcutBindings>()
             .0
             .write()
             .expect("system triggers lock poisoned")
@@ -281,7 +281,7 @@ fn store_system_triggers(
     app: &AppHandle,
     shortcuts: &[ashpd::desktop::global_shortcuts::Shortcut],
 ) {
-    let state = app.state::<SystemTriggers>();
+    let state = app.state::<PortalShortcutBindings>();
     let mut triggers = state.0.write().expect("system triggers lock poisoned");
     triggers.clear();
     triggers.extend(shortcuts.iter().map(|shortcut| {

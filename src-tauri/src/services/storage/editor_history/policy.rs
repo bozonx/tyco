@@ -7,7 +7,7 @@ use serde_json::Value;
 
 /// Where the editor history lives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EditorHistoryStorage {
+pub enum EditorHistoryStorageMode {
     /// Nothing is kept.
     Off,
     /// The memory of the process only: nothing outlives the app.
@@ -15,7 +15,7 @@ pub enum EditorHistoryStorage {
     Disk,
 }
 
-impl EditorHistoryStorage {
+impl EditorHistoryStorageMode {
     /// The saved storage; `disk`, the default, when it is missing.
     pub fn from_config(user_config: &Value) -> Self {
         match user_config
@@ -53,11 +53,11 @@ impl EditorHistoryPolicy {
                 .unwrap_or(false)
         };
 
-        let storage = EditorHistoryStorage::from_config(user_config);
-        let on_disk = storage == EditorHistoryStorage::Disk;
+        let storage = EditorHistoryStorageMode::from_config(user_config);
+        let on_disk = storage == EditorHistoryStorageMode::Disk;
 
         Self {
-            max_entries: if storage == EditorHistoryStorage::Off {
+            max_entries: if storage == EditorHistoryStorageMode::Off {
                 0
             } else {
                 history_limit(
@@ -66,7 +66,7 @@ impl EditorHistoryPolicy {
                     DEFAULT_EDITOR_HISTORY_LIMIT,
                 )
             },
-            is_memory_only: storage == EditorHistoryStorage::Session,
+            is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk {
                 user_config
                     .get("editorHistoryRetentionDays")

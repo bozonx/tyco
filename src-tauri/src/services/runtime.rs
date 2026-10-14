@@ -39,7 +39,7 @@ pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
 
 #[cfg(target_os = "linux")]
 #[derive(Default)]
-struct LayerShell {
+pub(super) struct LayerShellRuntimeState {
     supported: bool,
     keyboard: PanelKeyboardMode,
 }
@@ -49,7 +49,7 @@ struct LayerShell {
 fn panel_layer(app: &AppHandle) -> Option<PanelKeyboardMode> {
     #[cfg(target_os = "linux")]
     {
-        let layer = app.state::<LayerShell>();
+        let layer = app.state::<LayerShellRuntimeState>();
         layer.supported.then_some(layer.keyboard)
     }
     #[cfg(not(target_os = "linux"))]
@@ -312,7 +312,7 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
     };
 
     #[cfg(target_os = "linux")]
-    if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
+    if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
         super::platform::disable_panel_keyboard(&window)?;
     }
 
@@ -499,7 +499,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         .ok_or_else(|| AppError::Message(format!("Window {label} not found")))?;
 
     #[cfg(target_os = "linux")]
-    if label == QUICK_WINDOW_LABEL && app.state::<LayerShell>().supported {
+    if label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
         super::platform::disable_panel_keyboard(&window)?;
     }
 

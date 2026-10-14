@@ -7,7 +7,7 @@ use crate::{
 use tauri::AppHandle;
 #[tauri::command]
 pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
-    run_blocking(move || storage::get_editor_history(&app)).await?
+    run_blocking(move || storage::read_editor_history(&app)).await?
 }
 
 #[tauri::command]

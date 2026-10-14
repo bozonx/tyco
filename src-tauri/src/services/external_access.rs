@@ -23,7 +23,8 @@ pub struct AccessRequest {
     pub job_id: String,
     pub command_name: String,
     /// The output is to replace the selection, not only to be returned.
-    pub replace: bool,
+    #[serde(rename = "replace")]
+    pub should_replace: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -54,7 +55,7 @@ impl AccessPrompt {
 
     /// Takes the prompt for `pending`; false while another request waits.
     /// One step, so that two requests at once cannot both take it.
-    fn claim(&self, pending: PendingAccessRequest) -> bool {
+    fn try_claim(&self, pending: PendingAccessRequest) -> bool {
         let mut slot = self.0.lock().unwrap_or_else(|error| error.into_inner());
         if slot.is_some() {
             return false;
@@ -87,7 +88,7 @@ pub fn ask(
     request: AccessRequest,
     source: ActivationSource,
 ) -> Result<(), AccessPromptError> {
-    let claimed = app.state::<AccessPrompt>().claim(PendingAccessRequest {
+    let claimed = app.state::<AccessPrompt>().try_claim(PendingAccessRequest {
         job_id: request.job_id.clone(),
         source,
     });
@@ -202,13 +203,13 @@ mod tests {
     fn only_the_waiting_job_takes_the_prompt() {
         let prompt = AccessPrompt::default();
         assert!(!prompt.is_pending());
-        assert!(prompt.claim(PendingAccessRequest {
+        assert!(prompt.try_claim(PendingAccessRequest {
             job_id: "job-1".into(),
             source: ActivationSource::Cli,
         }));
         assert!(prompt.is_pending());
         // a second request does not take the prompt of the first
-        assert!(!prompt.claim(PendingAccessRequest {
+        assert!(!prompt.try_claim(PendingAccessRequest {
             job_id: "job-2".into(),
             source: ActivationSource::Cli,
         }));

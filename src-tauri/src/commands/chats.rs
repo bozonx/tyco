@@ -18,7 +18,7 @@ pub async fn get_chat(
     lease: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
     let owner = lease.map(|lease| format!("{}/import/{lease}", window.label()));
-    run_blocking(move || storage::get_chat(&app, id, owner)).await?
+    run_blocking(move || storage::read_chat(&app, id, owner)).await?
 }
 
 #[tauri::command]

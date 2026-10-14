@@ -9,12 +9,12 @@ use crate::models::{Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistory
 use crate::state::AppState;
 
 #[derive(Default)]
-pub struct HistoryStorage {
+pub struct HistoryStorageCoordinator {
     editor_history: Mutex<Vec<EditorHistoryRecord>>,
     chat_history_lock: Mutex<()>,
 }
 
-impl HistoryStorage {
+impl HistoryStorageCoordinator {
     fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryRecord>> {
         self.editor_history
             .lock()
@@ -64,9 +64,9 @@ fn with_chats<T>(
     operation(&state)
 }
 
-pub fn get_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
+pub fn read_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
     with_editor(app, |config, memory| {
-        editor::get_editor_history(app, config, memory)
+        editor::read_editor_history(app, config, memory)
     })
 }
 
@@ -113,14 +113,14 @@ pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
 }
 
 /// Import leases and image loading are protected against concurrent cleanup.
-pub fn get_chat(
+pub fn read_chat(
     app: &AppHandle,
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
     with_chats(app, |state| {
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
-        let chat = chats::get_chat(app, id)?;
+        let chat = chats::read_chat(app, id)?;
         if let Some(chat) = &chat {
             load_chat_images(app, state, chat, ImageRetention::Active(owner.as_deref()))?;
         }
@@ -148,7 +148,7 @@ pub fn search_chats(app: &AppHandle, query: String) -> Result<Vec<String>, AppEr
 pub fn delete_chat(app: &AppHandle, id: String, owner: String) -> Result<(), AppError> {
     with_chats(app, |state| {
         chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
-        match chats::get_chat(app, id.clone()) {
+        match chats::read_chat(app, id.clone()) {
             Ok(Some(chat)) => {
                 load_chat_images(app, state, &chat, ImageRetention::Undo(&owner))?;
             }
@@ -192,7 +192,7 @@ fn load_chat_images(
     Ok(())
 }
 
-pub fn get_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {
+pub fn read_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {
     with_chats(app, |state| {
         state
             .chat_images
@@ -208,21 +208,21 @@ mod tests {
 
     #[test]
     fn chat_operations_do_not_lock_editor_history() {
-        let storage = HistoryStorage::default();
+        let storage = HistoryStorageCoordinator::default();
         let _chats = storage.lock_chat_history();
         assert!(storage.editor_history.try_lock().is_ok());
     }
 
     #[test]
     fn editor_operations_do_not_lock_chat_history() {
-        let storage = HistoryStorage::default();
+        let storage = HistoryStorageCoordinator::default();
         let _editor = storage.lock_editor_history();
         assert!(storage.chat_history_lock.try_lock().is_ok());
     }
 
     #[test]
     fn concurrent_editor_updates_are_serialized() {
-        let storage = HistoryStorage::default();
+        let storage = HistoryStorageCoordinator::default();
         std::thread::scope(|scope| {
             for index in 0..16 {
                 let storage = &storage;

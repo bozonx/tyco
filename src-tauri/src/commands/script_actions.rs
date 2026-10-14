@@ -16,11 +16,13 @@ pub struct ScriptActionRequest {
     command: String,
     working_dir: Option<String>,
     text: String,
-    capture_output: bool,
+    #[serde(rename = "captureOutput")]
+    should_capture_output: bool,
     /// How long the output is waited for, in seconds.
     #[serde(rename = "timeoutSec")]
     execution_timeout_secs: Option<u64>,
-    log_output: bool,
+    #[serde(rename = "logOutput")]
+    should_log_output: bool,
     /// Lets `cancel_script_action` stop the command.
     run_id: Option<String>,
 }
@@ -38,9 +40,9 @@ pub async fn execute_script_action(
                 command: &request.command,
                 working_dir: request.working_dir.as_deref(),
                 text: &request.text,
-                capture_output: request.capture_output,
+                should_capture_output: request.should_capture_output,
                 output_timeout: request.execution_timeout_secs.map(Duration::from_secs),
-                log_output: request.log_output,
+                should_log_output: request.should_log_output,
                 run_id: request.run_id.as_deref(),
             },
             log_dir.as_deref(),
