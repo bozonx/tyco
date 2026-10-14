@@ -36,7 +36,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Setup Turborepo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
