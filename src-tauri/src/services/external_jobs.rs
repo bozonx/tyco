@@ -19,7 +19,7 @@ struct ExternalJobEntry {
     command_snapshot: Option<serde_json::Value>,
     pending_completion: Option<Job>,
     /// The user allowed this call to use the selection, see `external_access`.
-    selection_approved: bool,
+    is_selection_approved: bool,
 }
 
 #[derive(Default)]
@@ -94,7 +94,7 @@ impl ExternalJobs {
                 selection_run_id,
                 command_snapshot: None,
                 pending_completion: None,
-                selection_approved: false,
+                is_selection_approved: false,
             },
         );
         Ok(job)
@@ -106,7 +106,7 @@ impl ExternalJobs {
         }
     }
 
-    pub fn command_unchanged(&self, id: &str, command: Option<&serde_json::Value>) -> bool {
+    pub fn is_command_unchanged(&self, id: &str, command: Option<&serde_json::Value>) -> bool {
         self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.command_snapshot.as_ref() == command)
@@ -114,14 +114,14 @@ impl ExternalJobs {
 
     pub fn approve_selection(&self, id: &str) {
         if let Some(entry) = self.lock_entries().get_mut(id) {
-            entry.selection_approved = true;
+            entry.is_selection_approved = true;
         }
     }
 
-    pub fn selection_approved(&self, id: &str) -> bool {
+    pub fn is_selection_approved(&self, id: &str) -> bool {
         self.lock_entries()
             .get(id)
-            .is_some_and(|entry| entry.selection_approved)
+            .is_some_and(|entry| entry.is_selection_approved)
     }
 
     /// The request of a job not claimed yet.
@@ -215,17 +215,17 @@ impl ExternalJobs {
             .and_then(|entry| entry.request.text.clone())
     }
 
-    pub fn replace_requested(&self, id: &str) -> bool {
+    pub fn is_selection_replacement_requested(&self, id: &str) -> bool {
         self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.request.replace)
     }
 
-    pub fn expired(&self) -> Vec<String> {
-        self.expired_at(Instant::now())
+    pub fn expired_job_ids(&self) -> Vec<String> {
+        self.expired_job_ids_at(Instant::now())
     }
 
-    fn expired_at(&self, now: Instant) -> Vec<String> {
+    fn expired_job_ids_at(&self, now: Instant) -> Vec<String> {
         self.lock_entries()
             .iter()
             .filter(|(_, entry)| {
@@ -250,8 +250,8 @@ mod tests {
             .create("test".into(), RunRequest::default(), None)
             .unwrap();
         jobs.approve_selection(&first.id);
-        assert!(jobs.selection_approved(&first.id));
-        assert!(!jobs.selection_approved(&second.id));
+        assert!(jobs.is_selection_approved(&first.id));
+        assert!(!jobs.is_selection_approved(&second.id));
         assert!(jobs.accepted_request(&first.id).is_some());
         jobs.claim(&first.id);
         // a claimed job is past the prompt and must not be handed off again
@@ -344,9 +344,12 @@ mod tests {
             .create_at("test".into(), RunRequest::default(), None, now)
             .unwrap();
         assert!(jobs
-            .expired_at(now + JOB_TIMEOUT - Duration::from_nanos(1))
+            .expired_job_ids_at(now + JOB_TIMEOUT - Duration::from_nanos(1))
             .is_empty());
-        assert_eq!(jobs.expired_at(now + JOB_TIMEOUT), vec![job.id.clone()]);
+        assert_eq!(
+            jobs.expired_job_ids_at(now + JOB_TIMEOUT),
+            vec![job.id.clone()]
+        );
         jobs.finish(
             &job.id,
             JobState::Succeeded,
@@ -359,7 +362,7 @@ mod tests {
             jobs.get(&job.id).unwrap().code.as_deref(),
             Some("OutputTooLarge")
         );
-        assert!(jobs.expired_at(now + JOB_TIMEOUT).is_empty());
+        assert!(jobs.expired_job_ids_at(now + JOB_TIMEOUT).is_empty());
     }
     #[test]
     fn escaped_output_must_fit_the_wire_envelope() {

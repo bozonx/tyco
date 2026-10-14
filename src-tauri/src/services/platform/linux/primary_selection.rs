@@ -62,7 +62,7 @@ impl OwnerState {
     }
 
     /// `None` when the owner is not watched, so it cannot be told.
-    fn made_in(&self, window_id: Option<&str>) -> Option<bool> {
+    fn is_selection_from_window(&self, window_id: Option<&str>) -> Option<bool> {
         if !self.watching {
             return None;
         }
@@ -81,11 +81,11 @@ fn update<T>(change: impl FnOnce(&mut OwnerState) -> T) -> T {
 
 /// Whether the primary selection was made in `window_id`; `None` when that is
 /// not known, see the module docs.
-pub fn made_in(window_id: Option<&str>) -> Option<bool> {
+pub fn is_selection_from_window(window_id: Option<&str>) -> Option<bool> {
     if !tracker().is_running() {
         return None;
     }
-    update(|state| state.made_in(window_id))
+    update(|state| state.is_selection_from_window(window_id))
 }
 
 /// Follows the changes of the primary selection for as long as Tyco runs.
@@ -182,7 +182,7 @@ mod tests {
     fn tells_nothing_without_a_watch() {
         let mut state = OwnerState::default();
         state.selection_changed(Some("a".into()));
-        assert_eq!(state.made_in(Some("a")), None);
+        assert_eq!(state.is_selection_from_window(Some("a")), None);
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod tests {
             state.selection_changed(Some("a".into()));
             state
         };
-        assert_eq!(state.made_in(Some("a")), Some(false));
+        assert_eq!(state.is_selection_from_window(Some("a")), Some(false));
     }
 
     #[test]
@@ -200,12 +200,12 @@ mod tests {
         let mut state = watching();
         state.selection_changed(None);
         state.selection_changed(Some("a".into()));
-        assert_eq!(state.made_in(Some("a")), Some(true));
+        assert_eq!(state.is_selection_from_window(Some("a")), Some(true));
 
         // selected in another window afterwards: the first one's is gone
         state.selection_changed(Some("b".into()));
-        assert_eq!(state.made_in(Some("a")), Some(false));
-        assert_eq!(state.made_in(Some("b")), Some(true));
+        assert_eq!(state.is_selection_from_window(Some("a")), Some(false));
+        assert_eq!(state.is_selection_from_window(Some("b")), Some(true));
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod tests {
         let mut state = watching();
         state.selection_changed(None);
         state.selection_changed(None);
-        assert_eq!(state.made_in(None), Some(false));
+        assert_eq!(state.is_selection_from_window(None), Some(false));
     }
 
     #[test]
@@ -222,6 +222,6 @@ mod tests {
         state.selection_changed(None);
         state.selection_changed(Some("a".into()));
         state.watch_stopped();
-        assert_eq!(state.made_in(Some("a")), None);
+        assert_eq!(state.is_selection_from_window(Some("a")), None);
     }
 }

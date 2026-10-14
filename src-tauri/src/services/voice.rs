@@ -70,7 +70,7 @@ pub(crate) trait AudioSource {
 pub(crate) struct OpenedCapture<T> {
     pub stream: T,
     pub context: StreamContext,
-    pub sample_rate_hz: u32,
+    pub output_sample_rate_hz: u32,
 }
 
 trait AudioLevels {
@@ -124,7 +124,7 @@ where
     L: AudioLevels + Send + 'static,
     S: EventSink,
 {
-    let _operation = state.voice_session.lock().await;
+    let _operation = state.voice_session.lock_capture_operation().await;
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
     let session_id = state.voice_session.allocate_session_id();
@@ -143,7 +143,7 @@ where
 /// Stops the microphone; returns once the last chunk and `end` are sent.
 /// With `session_id`, only that capture is stopped: a newer one goes on.
 pub async fn stop_capture(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
-    let _operation = state.voice_session.lock().await;
+    let _operation = state.voice_session.lock_capture_operation().await;
     stop_capture_unlocked(state, session_id).await
 }
 
@@ -237,19 +237,19 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
     let OpenedCapture {
         stream,
         context,
-        sample_rate_hz,
+        output_sample_rate_hz,
     } = source.open(stop_flag)?;
 
     setup_tx
-        .send(Ok(sample_rate_hz))
+        .send(Ok(output_sample_rate_hz))
         .map_err(|error| AppError::Message(error.to_string()))?;
 
-    let chunk_samples = sample_rate_hz as usize * CHUNK_MS / 1_000;
+    let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
     let mut last_level = runtime.now();
     while !stop_flag.load(Ordering::SeqCst) {
         runtime.wait();
 
-        if !flush_pending(&context.pending, sink, chunk_samples) {
+        if !flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
             // nobody is listening any more: the webview went away
             stop_flag.store(true, Ordering::SeqCst);
             break;
@@ -283,7 +283,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
         return Ok(());
     }
 
-    if flush_pending(&context.pending, sink, 1) {
+    if flush_pending(&context.pending_pcm_samples, sink, 1) {
         sink.send_event(&CaptureEvent::End);
     }
     Ok(())
@@ -291,21 +291,27 @@ fn run_capture_thread<A: AudioSource, L: AudioLevels, S: EventSink>(
 
 /// Sends what has accumulated once it reaches `min_samples`; false when the
 /// receiving side is gone.
-fn flush_pending<S: EventSink>(pending: &Mutex<Vec<i16>>, sink: &S, min_samples: usize) -> bool {
-    let samples = match pending.lock() {
-        Ok(mut pending) if pending.len() >= min_samples => std::mem::take(&mut *pending),
+fn flush_pending<S: EventSink>(
+    pending_pcm_samples: &Mutex<Vec<i16>>,
+    sink: &S,
+    min_samples: usize,
+) -> bool {
+    let samples = match pending_pcm_samples.lock() {
+        Ok(mut pending_pcm_samples) if pending_pcm_samples.len() >= min_samples => {
+            std::mem::take(&mut *pending_pcm_samples)
+        }
         _ => return true,
     };
     sink.send_bytes(pcm16_to_le_bytes(&samples))
 }
 
 pub(crate) struct StreamContext {
-    pub pending: Arc<Mutex<Vec<i16>>>,
+    pub pending_pcm_samples: Arc<Mutex<Vec<i16>>>,
     pub stream_error: Arc<Mutex<Option<String>>>,
     pub current_level: Arc<Mutex<(f32, f32)>>,
     pub stop_flag: Arc<AtomicBool>,
     pub device_sample_rate_hz: u32,
-    pub sample_rate_hz: u32,
+    pub output_sample_rate_hz: u32,
 }
 
 pub(crate) fn build_input_stream<T>(
@@ -318,11 +324,12 @@ where
     f32: cpal::FromSample<T>,
 {
     let channels = usize::from(config.channels);
-    let pending = Arc::clone(&context.pending);
+    let pending_pcm_samples = Arc::clone(&context.pending_pcm_samples);
     let level_monitor = Arc::clone(&context.current_level);
     let stream_error = Arc::clone(&context.stream_error);
     let error_stop_flag = Arc::clone(&context.stop_flag);
-    let mut downsampler = Downsampler::new(context.device_sample_rate_hz, context.sample_rate_hz);
+    let mut downsampler =
+        Downsampler::new(context.device_sample_rate_hz, context.output_sample_rate_hz);
     let mut converted = Vec::new();
     let error_callback = move |error| {
         log::error!("Voice capture audio input stream error: {error}");
@@ -347,8 +354,8 @@ where
                 if let Ok(mut level) = level_monitor.lock() {
                     *level = compute_audio_level(&converted);
                 }
-                if let Ok(mut pending) = pending.lock() {
-                    pending.extend_from_slice(&converted);
+                if let Ok(mut pending_pcm_samples) = pending_pcm_samples.lock() {
+                    pending_pcm_samples.extend_from_slice(&converted);
                 }
             },
             error_callback,
@@ -425,7 +432,7 @@ mod tests {
     }
 
     struct TestStream {
-        pending: Arc<Mutex<Vec<i16>>>,
+        pending_pcm_samples: Arc<Mutex<Vec<i16>>>,
         trace: Trace,
     }
 
@@ -433,7 +440,7 @@ mod tests {
         fn drop(&mut self) {
             self.trace.push("drop-stream");
             // Simulate the last callback completing when the stream shuts down.
-            self.pending.lock().unwrap().push(7);
+            self.pending_pcm_samples.lock().unwrap().push(7);
         }
     }
 
@@ -453,20 +460,20 @@ mod tests {
                 return Err(AppError::Message("device unavailable".into()));
             }
             stop_flag.store(self.stop_on_open, Ordering::SeqCst);
-            let pending = Arc::new(Mutex::new(vec![1; 1600]));
+            let pending_pcm_samples = Arc::new(Mutex::new(vec![1; 1600]));
             Ok(OpenedCapture {
                 stream: TestStream {
-                    pending: Arc::clone(&pending),
+                    pending_pcm_samples: Arc::clone(&pending_pcm_samples),
                     trace: self.trace.clone(),
                 },
-                sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+                output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 context: StreamContext {
-                    pending,
+                    pending_pcm_samples,
                     stream_error: Arc::new(Mutex::new(self.stream_error.clone())),
                     current_level: Arc::new(Mutex::new((0.5, 0.75))),
                     stop_flag: Arc::clone(stop_flag),
                     device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
-                    sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
+                    output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                 },
             })
         }
@@ -679,17 +686,17 @@ mod tests {
     #[test]
     fn flushes_only_full_chunks_until_forced() {
         let sink = RecordingSink::default();
-        let pending = Mutex::new(vec![1_i16, 2, 3]);
+        let pending_pcm_samples = Mutex::new(vec![1_i16, 2, 3]);
 
-        assert!(flush_pending(&pending, &sink, 4));
+        assert!(flush_pending(&pending_pcm_samples, &sink, 4));
         assert!(sink.chunks.lock().unwrap().is_empty());
 
-        assert!(flush_pending(&pending, &sink, 1));
+        assert!(flush_pending(&pending_pcm_samples, &sink, 1));
         assert_eq!(sink.chunks.lock().unwrap().len(), 1);
-        assert!(pending.lock().unwrap().is_empty());
+        assert!(pending_pcm_samples.lock().unwrap().is_empty());
 
         // nothing left: no empty frame goes out
-        assert!(flush_pending(&pending, &sink, 1));
+        assert!(flush_pending(&pending_pcm_samples, &sink, 1));
         assert_eq!(sink.chunks.lock().unwrap().len(), 1);
     }
 

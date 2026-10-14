@@ -214,11 +214,11 @@ mod windows {
     };
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
-    pub struct Security {
+    pub struct NamedPipeSecurity {
         descriptor: *mut std::ffi::c_void,
-        pub name: String,
+        pub pipe_name: String,
     }
-    impl Security {
+    impl NamedPipeSecurity {
         pub fn new() -> io::Result<Self> {
             unsafe {
                 let mut token = std::ptr::null_mut();
@@ -272,7 +272,7 @@ mod windows {
                     }
                     Ok(Self {
                         descriptor,
-                        name: format!(r"\\.\pipe\tyco-control-{sid_text}"),
+                        pipe_name: format!(r"\\.\pipe\tyco-control-{sid_text}"),
                     })
                 })();
                 CloseHandle(token);
@@ -287,7 +287,7 @@ mod windows {
             }
         }
     }
-    impl Drop for Security {
+    impl Drop for NamedPipeSecurity {
         fn drop(&mut self) {
             unsafe {
                 LocalFree(self.descriptor);
@@ -299,9 +299,9 @@ mod windows {
 #[cfg(windows)]
 async fn connect() -> io::Result<tokio::net::windows::named_pipe::NamedPipeClient> {
     use tokio::net::windows::named_pipe::ClientOptions;
-    let security = windows::Security::new()?;
+    let security = windows::NamedPipeSecurity::new()?;
     for _ in 0..100 {
-        match ClientOptions::new().open(&security.name) {
+        match ClientOptions::new().open(&security.pipe_name) {
             Ok(client) => return Ok(client),
             Err(error) if error.raw_os_error() == Some(231) => {
                 tokio::time::sleep(Duration::from_millis(20)).await
@@ -315,14 +315,14 @@ async fn connect() -> io::Result<tokio::net::windows::named_pipe::NamedPipeClien
 #[cfg(windows)]
 async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) -> io::Result<()> {
     use tokio::net::windows::named_pipe::ServerOptions;
-    let security = windows::Security::new()?;
+    let security = windows::NamedPipeSecurity::new()?;
     let mut options = ServerOptions::new();
     options
         .reject_remote_clients(true)
         .first_pipe_instance(true);
     let create = |options: &ServerOptions| unsafe {
         options.create_with_security_attributes_raw(
-            &security.name,
+            &security.pipe_name,
             &security.attributes() as *const _ as *mut _,
         )
     };

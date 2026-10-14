@@ -11,14 +11,14 @@ pub struct VoiceCaptureSession {
 
 pub struct VoiceSessionState {
     session: Mutex<Option<VoiceCaptureSession>>,
-    operation: tokio::sync::Mutex<()>,
+    capture_operation_lock: tokio::sync::Mutex<()>,
     next_id: AtomicU64,
 }
 impl Default for VoiceSessionState {
     fn default() -> Self {
         Self {
             session: Mutex::new(None),
-            operation: tokio::sync::Mutex::new(()),
+            capture_operation_lock: tokio::sync::Mutex::new(()),
             next_id: AtomicU64::new(1),
         }
     }
@@ -49,8 +49,8 @@ impl VoiceSessionState {
         self.next_id.fetch_add(1, Ordering::SeqCst)
     }
 
-    pub async fn lock(&self) -> tokio::sync::MutexGuard<'_, ()> {
-        self.operation.lock().await
+    pub async fn lock_capture_operation(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.capture_operation_lock.lock().await
     }
 }
 
@@ -93,9 +93,9 @@ mod tests {
     #[tokio::test]
     async fn capture_operations_are_serialized() {
         let state = VoiceSessionState::default();
-        let operation = state.lock().await;
-        assert!(state.operation.try_lock().is_err());
-        drop(operation);
-        assert!(state.operation.try_lock().is_ok());
+        let capture_operation_lock = state.lock_capture_operation().await;
+        assert!(state.capture_operation_lock.try_lock().is_err());
+        drop(capture_operation_lock);
+        assert!(state.capture_operation_lock.try_lock().is_ok());
     }
 }

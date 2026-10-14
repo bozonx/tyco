@@ -142,9 +142,9 @@ pub fn withdraw(app: &AppHandle, job_id: &str) {
 /// Hides the quick window while it still shows the prompt, not a mode the
 /// user has switched to since.
 fn hide_prompt(app: &AppHandle) {
-    let params = app.state::<AppState>().snapshot();
-    if params.window.is_window_shown
-        && params.activation.mode == Some(ActivationMode::ExternalAccess)
+    let snapshot = app.state::<AppState>().snapshot();
+    if snapshot.window.is_window_shown
+        && snapshot.activation.mode == Some(ActivationMode::ExternalAccess)
     {
         if let Err(error) = runtime::hide_active_window(app) {
             log::warn!("Could not hide the access prompt: {error}");
@@ -161,8 +161,8 @@ fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
     }
     grant_selection(&mut user_config);
     storage::save_user_config(app, &user_config)?;
-    state.update_snapshot(|params| {
-        params.settings.user_config = user_config;
+    state.update_snapshot(|snapshot| {
+        snapshot.settings.user_config = user_config;
     });
     runtime::emit_state(app, &state)
 }

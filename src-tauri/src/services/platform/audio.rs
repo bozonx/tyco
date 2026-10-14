@@ -23,14 +23,14 @@ impl AudioSource for SystemAudioSource {
             .default_input_config()
             .map_err(|error| AppError::Message(error.to_string()))?;
         let device_sample_rate_hz = supported_config.sample_rate().0;
-        let sample_rate_hz = device_sample_rate_hz.min(TARGET_SAMPLE_RATE_HZ);
+        let output_sample_rate_hz = device_sample_rate_hz.min(TARGET_SAMPLE_RATE_HZ);
         let context = StreamContext {
-            pending: Arc::new(Mutex::new(Vec::new())),
+            pending_pcm_samples: Arc::new(Mutex::new(Vec::new())),
             stream_error: Arc::new(Mutex::new(None)),
             current_level: Arc::new(Mutex::new((0.0, 0.0))),
             stop_flag: Arc::clone(stop_flag),
             device_sample_rate_hz,
-            sample_rate_hz,
+            output_sample_rate_hz,
         };
         let config = supported_config.config();
         let stream = match supported_config.sample_format() {
@@ -50,7 +50,7 @@ impl AudioSource for SystemAudioSource {
         Ok(OpenedCapture {
             stream,
             context,
-            sample_rate_hz,
+            output_sample_rate_hz,
         })
     }
 }

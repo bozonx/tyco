@@ -46,20 +46,20 @@ mod tests {
     use super::*;
     #[test]
     fn snapshot_matches_the_shared_domain_wire_fixture() {
-        let mut params =
+        let mut snapshot =
             crate::models::default_desktop_snapshot(serde_json::json!({}), SessionState::default());
-        params.revision = 7;
-        params.activation.activation_id = 2;
-        params.activation.target_window_id = Some("target".into());
-        params.activation.selected_text = Some("Captured text".into());
-        params.window.is_window_shown = true;
-        params.settings.app_config = serde_json::json!({});
+        snapshot.revision = 7;
+        snapshot.activation.activation_id = 2;
+        snapshot.activation.target_window_id = Some("target".into());
+        snapshot.activation.selected_text = Some("Captured text".into());
+        snapshot.window.is_window_shown = true;
+        snapshot.settings.app_config = serde_json::json!({});
         let fixture: Value = serde_json::from_str(include_str!(
             "../../../packages/shared/fixtures/desktop-events.json"
         ))
         .unwrap();
         assert_eq!(
-            serde_json::to_value(params).unwrap(),
+            serde_json::to_value(snapshot).unwrap(),
             fixture["desktopState"]
         );
     }

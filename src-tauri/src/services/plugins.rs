@@ -76,7 +76,7 @@ pub struct PluginStore {
 fn error(message: impl Into<String>) -> AppError {
     AppError::Message(message.into())
 }
-fn valid_id(id: &str) -> bool {
+fn is_valid_plugin_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 128
         && id.as_bytes()[0].is_ascii_alphanumeric()
@@ -144,7 +144,7 @@ impl PluginStore {
         if id == "FastNote" {
             return Ok("pathToNotes".into());
         }
-        if !valid_id(id) || BUNDLED_IDS.contains(&id) {
+        if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
             return Err(error("Plugin has no notes capability"));
         }
         let _guard = self
@@ -255,7 +255,7 @@ impl PluginStore {
             .lock
             .lock()
             .map_err(|_| error("Plugin storage lock failed"))?;
-        if !valid_id(id) || BUNDLED_IDS.contains(&id) {
+        if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
             return Err(error("Invalid or bundled plugin ID"));
         }
         let key = storage_key(id);
@@ -275,7 +275,7 @@ impl PluginStore {
             .lock
             .lock()
             .map_err(|_| error("Plugin storage lock failed"))?;
-        if !valid_id(id) {
+        if !is_valid_plugin_id(id) {
             return Err(error("Invalid plugin ID"));
         }
         if BUNDLED_IDS.contains(&id) {

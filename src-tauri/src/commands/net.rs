@@ -49,7 +49,7 @@ pub async fn net_fetch(
 
     let (task, registration) = net.register_task();
     let id = task.id();
-    let flow = task.read_flow();
+    let chunk_permits = task.response_chunk_permits();
     let response_limit_bytes = if request.purpose.is_some() {
         10 * 1024 * 1024
     } else {
@@ -63,7 +63,7 @@ pub async fn net_fetch(
             prepared,
             body,
             &on_event,
-            Some(flow),
+            Some(chunk_permits),
             response_limit_bytes,
         );
         let _ = Abortable::new(run, registration).await;
@@ -75,7 +75,7 @@ pub async fn net_fetch(
 
 #[tauri::command]
 pub fn net_cancel(net: State<'_, NetState>, id: u64) {
-    net.cancel_fetch(id);
+    net.cancel_task(id);
 }
 
 #[tauri::command]

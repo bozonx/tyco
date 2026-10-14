@@ -18,7 +18,8 @@ pub struct ScriptActionRequest {
     text: String,
     capture_output: bool,
     /// How long the output is waited for, in seconds.
-    timeout_sec: Option<u64>,
+    #[serde(rename = "timeoutSec")]
+    execution_timeout_secs: Option<u64>,
     log_output: bool,
     /// Lets `cancel_script_action` stop the command.
     run_id: Option<String>,
@@ -38,7 +39,7 @@ pub async fn execute_script_action(
                 working_dir: request.working_dir.as_deref(),
                 text: &request.text,
                 capture_output: request.capture_output,
-                output_timeout: request.timeout_sec.map(Duration::from_secs),
+                output_timeout: request.execution_timeout_secs.map(Duration::from_secs),
                 log_output: request.log_output,
                 run_id: request.run_id.as_deref(),
             },
@@ -61,4 +62,23 @@ pub async fn pick_script_file(app: AppHandle) -> Result<Option<String>, AppError
 #[tauri::command]
 pub async fn pick_directory(app: AppHandle) -> Result<Option<String>, AppError> {
     run_blocking(move || custom_actions::pick_directory(&app)).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn script_request_preserves_the_timeout_wire_name() {
+        let request: ScriptActionRequest = serde_json::from_value(serde_json::json!({
+            "name": "Example",
+            "command": "echo example",
+            "text": "",
+            "captureOutput": true,
+            "timeoutSec": 45,
+            "logOutput": false
+        }))
+        .unwrap();
+        assert_eq!(request.execution_timeout_secs, Some(45));
+    }
 }

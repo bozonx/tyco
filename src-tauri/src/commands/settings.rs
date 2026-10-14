@@ -100,8 +100,8 @@ pub async fn patch_session_state(
             &state.snapshot().settings.session_state,
             patch,
         )?;
-        state.update_snapshot(|params| {
-            params.settings.session_state = session_state.clone();
+        state.update_snapshot(|snapshot| {
+            snapshot.settings.session_state = session_state.clone();
         });
         runtime::publish_state(&app, &state);
 

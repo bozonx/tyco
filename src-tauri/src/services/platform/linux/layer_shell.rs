@@ -14,7 +14,7 @@ const KEYBOARD_EXCLUSIVE: u32 = 1;
 const KEYBOARD_ON_DEMAND: u32 = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Keyboard {
+pub enum KeyboardMode {
     None,
     /// Takes the keyboard as soon as the surface is mapped, without asking the
     /// compositor to activate it, and keeps it until the mode changes.
@@ -86,11 +86,11 @@ pub fn set_sheet_profile(window: &impl IsA<gtk::Window>, margin_top: i32) {
     }
 }
 
-pub fn set_keyboard(window: &impl IsA<gtk::Window>, keyboard: Keyboard) {
+pub fn set_keyboard(window: &impl IsA<gtk::Window>, keyboard: KeyboardMode) {
     let mode = match keyboard {
-        Keyboard::None => KEYBOARD_NONE,
-        Keyboard::Exclusive => KEYBOARD_EXCLUSIVE,
-        Keyboard::OnDemand => KEYBOARD_ON_DEMAND,
+        KeyboardMode::None => KEYBOARD_NONE,
+        KeyboardMode::Exclusive => KEYBOARD_EXCLUSIVE,
+        KeyboardMode::OnDemand => KEYBOARD_ON_DEMAND,
     };
     // SAFETY: the window was initialized by `attach` and remains alive.
     unsafe {

@@ -175,18 +175,18 @@ fn stored_file(directory: &Path, id: &str) -> Option<(PathBuf, &'static str)> {
 pub struct ChatImageStore {
     images: HashMap<String, (ChatImage, Vec<u8>)>,
     total_image_bytes: usize,
-    owners: HashMap<String, HashSet<String>>,
-    expires: HashMap<String, std::time::Instant>,
+    image_ids_by_owner: HashMap<String, HashSet<String>>,
+    owner_expiration_deadlines: HashMap<String, std::time::Instant>,
 }
 
 impl ChatImageStore {
     fn expire_owners(&mut self) {
         let now = std::time::Instant::now();
-        self.expires.retain(|owner, deadline| {
+        self.owner_expiration_deadlines.retain(|owner, deadline| {
             if *deadline > now {
                 true
             } else {
-                self.owners.remove(owner);
+                self.image_ids_by_owner.remove(owner);
                 false
             }
         });
@@ -207,7 +207,12 @@ impl ChatImageStore {
             return Ok(());
         }
         if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
-            let held: HashSet<_> = self.owners.values().flatten().cloned().collect();
+            let held: HashSet<_> = self
+                .image_ids_by_owner
+                .values()
+                .flatten()
+                .cloned()
+                .collect();
             self.images.retain(|id, (_, cached)| {
                 if held.contains(id) {
                     true
@@ -230,7 +235,7 @@ impl ChatImageStore {
 
     /// Window ownership keeps active drafts alive even when saved history is removed.
     pub fn hold(&mut self, owner: &str, id: &str) {
-        self.owners
+        self.image_ids_by_owner
             .entry(owner.to_string())
             .or_default()
             .insert(id.to_string());
@@ -239,7 +244,7 @@ impl ChatImageStore {
     pub fn hold_undo(&mut self, owner: &str, id: &str) {
         self.hold(owner, id);
         // UI releases its eight-second undo explicitly; abandoned webviews cannot pin forever.
-        self.expires.insert(
+        self.owner_expiration_deadlines.insert(
             owner.to_string(),
             std::time::Instant::now() + std::time::Duration::from_secs(30),
         );
@@ -250,9 +255,14 @@ impl ChatImageStore {
         for id in ids {
             validate_id(id)?;
         }
-        self.owners
+        self.image_ids_by_owner
             .insert(owner.to_string(), ids.iter().cloned().collect());
-        let held: HashSet<_> = self.owners.values().flatten().cloned().collect();
+        let held: HashSet<_> = self
+            .image_ids_by_owner
+            .values()
+            .flatten()
+            .cloned()
+            .collect();
         self.images.retain(|id, (_, bytes)| {
             if held.contains(id) {
                 true
@@ -265,12 +275,12 @@ impl ChatImageStore {
     }
 
     pub fn release_owner(&mut self, owner: &str) {
-        self.expires
+        self.owner_expiration_deadlines
             .retain(|key, _| key != owner && !key.starts_with(&format!("{owner}/")));
-        self.owners
+        self.image_ids_by_owner
             .retain(|key, _| key != owner && !key.starts_with(&format!("{owner}/")));
         let _ = self.sync(owner, &[]);
-        self.owners.remove(owner);
+        self.image_ids_by_owner.remove(owner);
     }
 
     #[cfg(test)]
@@ -441,13 +451,13 @@ mod tests {
         store.hold_undo("main/undo/chat", &image.id);
         store.sync("main", &[]).unwrap();
         assert!(store.images.contains_key(&image.id));
-        store.expires.insert(
+        store.owner_expiration_deadlines.insert(
             "main/undo/chat".into(),
             std::time::Instant::now() - std::time::Duration::from_secs(1),
         );
         store.hold("quick", &image.id);
         store.sync("main", &[]).unwrap();
-        assert!(!store.owners.contains_key("main/undo/chat"));
+        assert!(!store.image_ids_by_owner.contains_key("main/undo/chat"));
         assert!(store.images.contains_key(&image.id));
         store.release_owner("quick");
         assert!(store.images.is_empty());
@@ -544,8 +554,8 @@ mod tests {
                 ),
             )]),
             total_image_bytes: MAX_SESSION_BYTES,
-            owners: HashMap::from([("window".into(), HashSet::from(["held".into()]))]),
-            expires: HashMap::new(),
+            image_ids_by_owner: HashMap::from([("window".into(), HashSet::from(["held".into()]))]),
+            owner_expiration_deadlines: HashMap::new(),
         };
         assert!(full.insert(&png(), None).is_err());
     }

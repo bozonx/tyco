@@ -20,7 +20,7 @@ pub struct InputRegion {
 impl InputRegion {
     /// Whole pixels covering the region: it may grow by a fraction of a
     /// pixel, never shrink, so its edges always stay clickable.
-    pub fn to_pixels(self) -> (i32, i32, i32, i32) {
+    pub fn to_integer_logical_bounds(self) -> (i32, i32, i32, i32) {
         let left = self.x.floor().max(0.0);
         let top = self.y.floor().max(0.0);
         let right = (self.x + self.width).ceil().max(left);
@@ -38,7 +38,7 @@ const PANEL_KEYBOARD_ENV: &str = "TYCO_PANEL_KEYBOARD";
 
 /// How the layer-shell panel takes the keyboard when it is shown.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum PanelKeyboard {
+pub enum PanelKeyboardMode {
     /// The compositor decides whether the mapped panel gets the focus.
     #[default]
     OnDemand,
@@ -48,7 +48,7 @@ pub enum PanelKeyboard {
     ExclusiveUntilFocused,
 }
 
-impl PanelKeyboard {
+impl PanelKeyboardMode {
     pub fn from_env() -> Self {
         let value = std::env::var(PANEL_KEYBOARD_ENV).ok();
         Self::parse(value.as_deref())
@@ -107,7 +107,7 @@ pub fn attach_panel_surface(_window: &WebviewWindow) -> Result<(), AppError> {
 pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
     crate::services::platform::linux::layer_shell::set_keyboard(
         &window.gtk_window()?,
-        crate::services::platform::linux::layer_shell::Keyboard::None,
+        crate::services::platform::linux::layer_shell::KeyboardMode::None,
     );
     Ok(())
 }
@@ -121,12 +121,12 @@ pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
 #[cfg(target_os = "linux")]
 pub fn settle_panel_keyboard(
     window: &WebviewWindow,
-    keyboard: PanelKeyboard,
+    keyboard: PanelKeyboardMode,
 ) -> Result<(), AppError> {
-    if keyboard == PanelKeyboard::ExclusiveUntilFocused {
+    if keyboard == PanelKeyboardMode::ExclusiveUntilFocused {
         crate::services::platform::linux::layer_shell::set_keyboard(
             &window.gtk_window()?,
-            crate::services::platform::linux::layer_shell::Keyboard::OnDemand,
+            crate::services::platform::linux::layer_shell::KeyboardMode::OnDemand,
         );
     }
     Ok(())
@@ -142,7 +142,7 @@ pub fn set_panel_input_region(
     let gtk_window = window.gtk_window()?;
     match region {
         Some(region) => {
-            let (x, y, width, height) = region.to_pixels();
+            let (x, y, width, height) = region.to_integer_logical_bounds();
             let shape = gtk::cairo::Region::create_rectangle(&gtk::cairo::RectangleInt::new(
                 x, y, width, height,
             ));
@@ -180,9 +180,9 @@ const PANEL_MARGIN_BOTTOM: i32 = 48;
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    layer: Option<PanelKeyboard>,
+    layer: Option<PanelKeyboardMode>,
 ) -> Result<(), AppError> {
-    use crate::services::platform::linux::layer_shell::{self, Keyboard};
+    use crate::services::platform::linux::layer_shell::{self, KeyboardMode};
 
     let Some(keyboard) = layer else {
         return position_regular_panel(window, profile);
@@ -210,8 +210,8 @@ pub fn apply_panel_surface(
     layer_shell::set_keyboard(
         &gtk_window,
         match keyboard {
-            PanelKeyboard::OnDemand => Keyboard::OnDemand,
-            PanelKeyboard::ExclusiveUntilFocused => Keyboard::Exclusive,
+            PanelKeyboardMode::OnDemand => KeyboardMode::OnDemand,
+            PanelKeyboardMode::ExclusiveUntilFocused => KeyboardMode::Exclusive,
         },
     );
     Ok(())
@@ -237,7 +237,7 @@ fn sheet_margin_top(window: &WebviewWindow) -> i32 {
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    _layer: Option<PanelKeyboard>,
+    _layer: Option<PanelKeyboardMode>,
 ) -> Result<(), AppError> {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         GetWindowLongW, SetWindowLongW, GWL_EXSTYLE, WS_EX_NOACTIVATE, WS_EX_TOPMOST,
@@ -256,7 +256,7 @@ pub fn apply_panel_surface(
 pub fn apply_panel_surface(
     window: &WebviewWindow,
     profile: WindowProfile,
-    _layer: Option<PanelKeyboard>,
+    _layer: Option<PanelKeyboardMode>,
 ) -> Result<(), AppError> {
     window.set_always_on_top(true)?;
     position_regular_panel(window, profile)?;
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn keeps_whole_pixel_regions_as_they_are() {
         assert_eq!(
-            region(8.0, 300.0, 784.0, 192.0).to_pixels(),
+            region(8.0, 300.0, 784.0, 192.0).to_integer_logical_bounds(),
             (8, 300, 784, 192)
         );
     }
@@ -314,30 +314,42 @@ mod tests {
     #[test]
     fn covers_fractional_edges() {
         assert_eq!(
-            region(7.5, 300.4, 784.2, 60.1).to_pixels(),
+            region(7.5, 300.4, 784.2, 60.1).to_integer_logical_bounds(),
             (7, 300, 785, 61)
         );
     }
 
     #[test]
     fn clamps_to_the_window_origin_and_never_goes_negative() {
-        assert_eq!(region(-4.0, -2.5, 10.0, 5.0).to_pixels(), (0, 0, 6, 3));
-        assert_eq!(region(10.0, 10.0, -5.0, 0.0).to_pixels(), (10, 10, 0, 0));
+        assert_eq!(
+            region(-4.0, -2.5, 10.0, 5.0).to_integer_logical_bounds(),
+            (0, 0, 6, 3)
+        );
+        assert_eq!(
+            region(10.0, 10.0, -5.0, 0.0).to_integer_logical_bounds(),
+            (10, 10, 0, 0)
+        );
     }
 
     #[test]
     fn panel_keyboard_defaults_to_on_demand() {
-        assert_eq!(PanelKeyboard::parse(None), PanelKeyboard::OnDemand);
-        assert_eq!(PanelKeyboard::parse(Some("")), PanelKeyboard::OnDemand);
+        assert_eq!(PanelKeyboardMode::parse(None), PanelKeyboardMode::OnDemand);
         assert_eq!(
-            PanelKeyboard::parse(Some("on-demand")),
-            PanelKeyboard::OnDemand
+            PanelKeyboardMode::parse(Some("")),
+            PanelKeyboardMode::OnDemand
         );
         assert_eq!(
-            PanelKeyboard::parse(Some(" exclusive-until-focused ")),
-            PanelKeyboard::ExclusiveUntilFocused
+            PanelKeyboardMode::parse(Some("on-demand")),
+            PanelKeyboardMode::OnDemand
         );
-        assert_eq!(PanelKeyboard::parse(Some("grab")), PanelKeyboard::OnDemand);
+        assert_eq!(
+            PanelKeyboardMode::parse(Some(" exclusive-until-focused ")),
+            PanelKeyboardMode::ExclusiveUntilFocused
+        );
+        assert_eq!(
+            PanelKeyboardMode::parse(Some("grab")),
+            PanelKeyboardMode::OnDemand
+        );
     }
 
     #[test]

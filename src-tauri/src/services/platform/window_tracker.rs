@@ -48,17 +48,17 @@ impl WindowKind {
 struct TrackerState {
     running: bool,
     /// Tells the reports of the running backend from late ones of an earlier run.
-    session: String,
+    backend_session_id: String,
     /// The number of the latest report applied, see `accept`.
-    last_seq: u64,
+    last_report_sequence: u64,
     /// Set by the first report of the backend.
-    reported: bool,
-    active: Option<String>,
+    has_received_report: bool,
+    active_window_id: Option<String>,
     active_kind: WindowKind,
     /// The resource class (application id) of the active window.
     active_class: String,
-    last_foreign: Option<String>,
-    missing: Option<String>,
+    last_foreign_window_id: Option<String>,
+    missing_window_id: Option<String>,
 }
 
 impl TrackerState {
@@ -68,30 +68,30 @@ impl TrackerState {
     fn accept(&mut self, seq: &str) -> bool {
         let Some(number) = seq
             .split_once(':')
-            .filter(|(session, _)| *session == self.session)
+            .filter(|(backend_session_id, _)| *backend_session_id == self.backend_session_id)
             .and_then(|(_, number)| number.parse::<u64>().ok())
         else {
             return false;
         };
-        if number <= self.last_seq {
+        if number <= self.last_report_sequence {
             return false;
         }
-        self.last_seq = number;
+        self.last_report_sequence = number;
         true
     }
 
     fn window_activated(&mut self, id: &str, kind: WindowKind) {
-        self.reported = true;
-        self.active = (!id.is_empty()).then(|| id.to_owned());
+        self.has_received_report = true;
+        self.active_window_id = (!id.is_empty()).then(|| id.to_owned());
         self.active_kind = if id.is_empty() {
             WindowKind::Other
         } else {
             kind
         };
         if self.active_kind == WindowKind::Foreign {
-            self.last_foreign = Some(id.to_owned());
+            self.last_foreign_window_id = Some(id.to_owned());
         } else if self.active_kind == WindowKind::Other {
-            self.last_foreign = None;
+            self.last_foreign_window_id = None;
         }
     }
 
@@ -101,20 +101,20 @@ impl TrackerState {
     /// left long ago.
     fn target(&self) -> Option<String> {
         match self.active_kind {
-            WindowKind::Foreign => self.active.clone(),
-            WindowKind::Own => self.last_foreign.clone(),
+            WindowKind::Foreign => self.active_window_id.clone(),
+            WindowKind::Own => self.last_foreign_window_id.clone(),
             WindowKind::Other => None,
         }
     }
 
     fn window_closed(&mut self, id: &str) {
-        if self.active.as_deref() == Some(id) {
-            self.active = None;
+        if self.active_window_id.as_deref() == Some(id) {
+            self.active_window_id = None;
             self.active_kind = WindowKind::Other;
             self.active_class.clear();
         }
-        if self.last_foreign.as_deref() == Some(id) {
-            self.last_foreign = None;
+        if self.last_foreign_window_id.as_deref() == Some(id) {
+            self.last_foreign_window_id = None;
         }
     }
 }
@@ -171,7 +171,7 @@ impl WindowTracker {
     pub fn window_missing(&self, id: &str) {
         self.update(|state| {
             state.window_closed(id);
-            state.missing = Some(id.to_owned());
+            state.missing_window_id = Some(id.to_owned());
         });
     }
 
@@ -189,7 +189,7 @@ impl WindowTracker {
         if !state.running || state.active_kind == WindowKind::Other {
             return None;
         }
-        state.active.clone().map(|id| ActiveWindow {
+        state.active_window_id.clone().map(|id| ActiveWindow {
             id,
             class: state.active_class.clone(),
         })
@@ -204,15 +204,15 @@ impl WindowTracker {
 
     /// Clears the window an activation found missing, before a new one.
     pub(crate) fn forget_missing(&self) {
-        self.update(|state| state.missing = None);
+        self.update(|state| state.missing_window_id = None);
     }
 
-    /// Starts over for the backend run `session`, or for none when stopped.
-    pub(crate) fn reset(&self, running: bool, session: String) {
+    /// Starts over for the backend run `backend_session_id`, or for none when stopped.
+    pub(crate) fn reset(&self, running: bool, backend_session_id: String) {
         self.update(|state| {
             *state = TrackerState {
                 running,
-                session,
+                backend_session_id,
                 ..TrackerState::default()
             }
         });
@@ -248,10 +248,10 @@ impl WindowTracker {
             timeout,
             "Timed out waiting for the target window to receive focus",
             |state| {
-                if state.active.as_deref() == Some(id) {
+                if state.active_window_id.as_deref() == Some(id) {
                     return Some(Ok(()));
                 }
-                (state.missing.as_deref() == Some(id)).then(|| {
+                (state.missing_window_id.as_deref() == Some(id)).then(|| {
                     Err(AppError::Message(String::from(
                         "The target window has been closed",
                     )))
@@ -262,7 +262,7 @@ impl WindowTracker {
 
     pub(crate) fn wait_until_reported(&self, timeout: Duration) -> Result<(), AppError> {
         self.wait_for(timeout, "The window tracker does not report", |state| {
-            state.reported.then_some(Ok(()))
+            state.has_received_report.then_some(Ok(()))
         })
     }
 }
@@ -356,12 +356,12 @@ mod tests {
         state.window_activated("a", WindowKind::Foreign);
         state.window_activated("tyco", WindowKind::Own);
         state.window_activated("", WindowKind::Foreign);
-        assert_eq!(state.last_foreign, None);
-        assert_eq!(state.active, None);
+        assert_eq!(state.last_foreign_window_id, None);
+        assert_eq!(state.active_window_id, None);
         assert_eq!(state.active_kind, WindowKind::Other);
         state.window_activated("b", WindowKind::Foreign);
-        assert_eq!(state.last_foreign.as_deref(), Some("b"));
-        assert_eq!(state.active.as_deref(), Some("b"));
+        assert_eq!(state.last_foreign_window_id.as_deref(), Some("b"));
+        assert_eq!(state.active_window_id.as_deref(), Some("b"));
     }
 
     #[test]
@@ -408,10 +408,10 @@ mod tests {
         let mut state = TrackerState::default();
         state.window_activated("a", WindowKind::Foreign);
         state.window_closed("other");
-        assert_eq!(state.last_foreign.as_deref(), Some("a"));
+        assert_eq!(state.last_foreign_window_id.as_deref(), Some("a"));
         state.window_closed("a");
-        assert_eq!(state.last_foreign, None);
-        assert_eq!(state.active, None);
+        assert_eq!(state.last_foreign_window_id, None);
+        assert_eq!(state.active_window_id, None);
         assert_eq!(state.target(), None);
     }
 

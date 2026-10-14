@@ -67,8 +67,8 @@ pub async fn paste_into_target_and_hide(
     state: State<'_, AppState>,
     text: String,
 ) -> Result<(), AppError> {
-    let params = state.snapshot();
-    if params.activation.activation_id != activation_id {
+    let snapshot = state.snapshot();
+    if snapshot.activation.activation_id != activation_id {
         return Err(AppError::InvalidInput(
             "The insertion activation is no longer current".into(),
         ));
@@ -91,8 +91,8 @@ pub async fn paste_into_target_and_hide(
                 app: &focus_app,
                 activation_id,
             },
-            &params.settings.user_config,
-            params
+            &snapshot.settings.user_config,
+            snapshot
                 .activation
                 .target_window_id
                 .clone()

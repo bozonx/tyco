@@ -18,7 +18,7 @@ fn hotkey_releases() -> &'static Arc<HotkeyReleases> {
 pub struct HotkeyPress {
     releases: Arc<HotkeyReleases>,
     id: String,
-    seen: u64,
+    initial_release_count: u64,
 }
 
 impl HotkeyPress {
@@ -27,7 +27,7 @@ impl HotkeyPress {
     }
 
     fn with_releases(id: &str, releases: Arc<HotkeyReleases>) -> Self {
-        let seen = releases
+        let initial_release_count = releases
             .counts
             .lock()
             .expect("hotkey release lock poisoned")
@@ -37,7 +37,7 @@ impl HotkeyPress {
         Self {
             releases,
             id: id.to_owned(),
-            seen,
+            initial_release_count,
         }
     }
 
@@ -51,7 +51,7 @@ impl HotkeyPress {
             .lock()
             .expect("hotkey release lock poisoned");
         let started = Instant::now();
-        while counts.get(&self.id).copied().unwrap_or_default() == self.seen {
+        while counts.get(&self.id).copied().unwrap_or_default() == self.initial_release_count {
             let now = Instant::now();
             if now >= deadline {
                 log::debug!("Hotkey {} was not reported released in time", self.id);
@@ -102,7 +102,7 @@ mod tests {
         releases.released("release");
         assert!(press.wait(Duration::ZERO));
         let press = HotkeyPress::with_releases("release", Arc::clone(&releases));
-        assert_eq!(press.seen, 1);
+        assert_eq!(press.initial_release_count, 1);
         // The timeout branch needs no wall-clock wait.
         assert!(!press.wait(Duration::ZERO));
         assert_eq!(releases.counts.lock().unwrap().get("release"), Some(&1));

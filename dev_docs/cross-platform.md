@@ -41,7 +41,7 @@ Cinnamon, i3, LXQt и LTS-дистрибутивы (Ubuntu 22.04, RHEL 9, Debian
 
 ```
 platform/
-  mod.rs              фасад: capture_source, capture_selection, inject_paste,
+  mod.rs              фасад: capture_foreground_target, capture_selection, inject_paste,
                       check_text_injection, panel surface, titlebar
   session.rs          определение сессии один раз за процесс
   window_tracker.rs   общее состояние «какое окно активно, куда вставлять»

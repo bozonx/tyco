@@ -136,7 +136,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
 #[cfg(target_os = "windows")]
 pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
     use super::{windows, windows_clipboard};
-    let id = windows::focused_source().ok_or_else(|| {
+    let id = windows::focused_foreground_target().ok_or_else(|| {
         SelectionRunError::new(SelectionRunErrorCode::NoTarget, "No foreground window")
     })?;
     // without a snapshot the selection is still replaced; the clipboard
@@ -150,7 +150,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         captured_text: None,
         target: SelectionTarget {
             id,
-            is_terminal: windows::foreground_is_terminal(),
+            is_terminal: windows::is_foreground_terminal(),
         },
         started_at: Instant::now(),
         clipboard_snapshot: snapshot,
@@ -160,7 +160,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         windows_clipboard::write_text(&probe).map_err(|error| {
             SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
         })?;
-        if windows::focused_source().as_deref() != Some(run.target.id.as_str()) {
+        if windows::focused_foreground_target().as_deref() != Some(run.target.id.as_str()) {
             return Err(SelectionRunError::new(
                 SelectionRunErrorCode::NoTarget,
                 "Focus changed before capture",
@@ -354,7 +354,7 @@ impl PasteDestination for SystemPasteDestination {
         super::windows_clipboard::write_text(text)
     }
     fn active_target_id(&self) -> Option<String> {
-        super::windows::focused_source()
+        super::windows::focused_foreground_target()
     }
     fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
         super::windows::press_copy_or_paste(false, target.is_terminal)

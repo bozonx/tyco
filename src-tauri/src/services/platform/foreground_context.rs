@@ -19,15 +19,15 @@ impl ForegroundTarget {
 
 #[allow(async_fn_in_trait)]
 pub(crate) trait ForegroundContext {
-    fn capture_source(&self) -> Option<ForegroundTarget>;
+    fn capture_foreground_target(&self) -> Option<ForegroundTarget>;
     async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String>;
 }
 
 struct SystemForegroundContext;
 
 impl ForegroundContext for SystemForegroundContext {
-    fn capture_source(&self) -> Option<ForegroundTarget> {
-        capture_source_impl().map(ForegroundTarget::from_platform_id)
+    fn capture_foreground_target(&self) -> Option<ForegroundTarget> {
+        capture_foreground_target_impl().map(ForegroundTarget::from_platform_id)
     }
 
     async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String> {
@@ -35,8 +35,8 @@ impl ForegroundContext for SystemForegroundContext {
     }
 }
 
-pub fn capture_source() -> Option<ForegroundTarget> {
-    SystemForegroundContext.capture_source()
+pub fn capture_foreground_target() -> Option<ForegroundTarget> {
+    SystemForegroundContext.capture_foreground_target()
 }
 
 pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<String> {
@@ -44,31 +44,31 @@ pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<Strin
 }
 
 #[cfg(target_os = "linux")]
-fn capture_source_impl() -> Option<String> {
-    super::linux::capture_source()
+fn capture_foreground_target_impl() -> Option<String> {
+    super::linux::capture_foreground_target()
 }
 
 #[cfg(target_os = "linux")]
-async fn capture_selection_impl(source: Option<String>) -> Option<String> {
-    super::linux::capture_selection(source).await
+async fn capture_selection_impl(target: Option<String>) -> Option<String> {
+    super::linux::capture_selection(target).await
 }
 
 #[cfg(target_os = "windows")]
-fn capture_source_impl() -> Option<String> {
-    super::windows::capture_source()
+fn capture_foreground_target_impl() -> Option<String> {
+    super::windows::capture_foreground_target()
 }
 
 #[cfg(target_os = "windows")]
-async fn capture_selection_impl(source: Option<String>) -> Option<String> {
-    super::windows::capture_selection(source).await
+async fn capture_selection_impl(target: Option<String>) -> Option<String> {
+    super::windows::capture_selection(target).await
 }
 
 #[cfg(target_os = "macos")]
-fn capture_source_impl() -> Option<String> {
-    super::macos::capture_source()
+fn capture_foreground_target_impl() -> Option<String> {
+    super::macos::capture_foreground_target()
 }
 
 #[cfg(target_os = "macos")]
-async fn capture_selection_impl(source: Option<String>) -> Option<String> {
-    super::macos::capture_selection(source).await
+async fn capture_selection_impl(target: Option<String>) -> Option<String> {
+    super::macos::capture_selection(target).await
 }

@@ -34,12 +34,12 @@ pub mod windows;
 pub mod windows_clipboard;
 
 pub use file_manager::{open_dir, open_file, open_web_url};
-pub use foreground_context::{capture_selection, capture_source, ForegroundTarget};
+pub use foreground_context::{capture_foreground_target, capture_selection, ForegroundTarget};
 #[cfg(target_os = "linux")]
 pub use panel_surface::settle_panel_keyboard;
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, panel_surface_supported,
-    set_panel_input_region, InputRegion, PanelKeyboard,
+    set_panel_input_region, InputRegion, PanelKeyboardMode,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::check_text_injection;

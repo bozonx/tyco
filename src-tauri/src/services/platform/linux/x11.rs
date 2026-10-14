@@ -182,7 +182,7 @@ impl<'a> Watcher<'a> {
         tracker().window_activated(seq, &window.to_string(), kind, &class.class)
     }
 
-    fn kind(&self, window: Window, class: &Class) -> WindowKind {
+    fn kind(&self, window: Window, class: &WindowClass) -> WindowKind {
         let pid = self
             .property32(window, self.atoms.wm_pid, AtomEnum::CARDINAL)
             .and_then(|values| values.first().copied());
@@ -190,17 +190,17 @@ impl<'a> Watcher<'a> {
             .property32(window, self.atoms.window_type, AtomEnum::ATOM)
             .unwrap_or_default();
         window_kind(
-            pid == Some(self.pid) || class.is(&self.own_class),
+            pid == Some(self.pid) || class.matches_name(&self.own_class),
             &types,
             &self.atoms.text_types,
         )
     }
 
-    fn class(&self, window: Window) -> Class {
+    fn class(&self, window: Window) -> WindowClass {
         let class = WmClass::get(self.connection, window)
             .ok()
             .and_then(|cookie| cookie.reply().ok().flatten());
-        class.map_or_else(Class::default, |class| Class {
+        class.map_or_else(WindowClass::default, |class| WindowClass {
             instance: String::from_utf8_lossy(class.instance()).into_owned(),
             class: String::from_utf8_lossy(class.class()).into_owned(),
         })
@@ -228,13 +228,13 @@ impl<'a> Watcher<'a> {
 /// WM_CLASS: GTK sets the program name as the instance and a capitalized
 /// form of it as the class.
 #[derive(Debug, Default)]
-struct Class {
+struct WindowClass {
     instance: String,
     class: String,
 }
 
-impl Class {
-    fn is(&self, name: &str) -> bool {
+impl WindowClass {
+    fn matches_name(&self, name: &str) -> bool {
         !name.is_empty()
             && (self.instance.eq_ignore_ascii_case(name) || self.class.eq_ignore_ascii_case(name))
     }
@@ -287,14 +287,14 @@ mod tests {
 
     #[test]
     fn matches_the_own_class_in_either_part() {
-        let class = Class {
+        let class = WindowClass {
             instance: String::from("tyco"),
             class: String::from("Tyco"),
         };
-        assert!(class.is("tyco"));
-        assert!(class.is("TYCO"));
-        assert!(!class.is("kate"));
-        assert!(!Class::default().is(""));
+        assert!(class.matches_name("tyco"));
+        assert!(class.matches_name("TYCO"));
+        assert!(!class.matches_name("kate"));
+        assert!(!WindowClass::default().matches_name(""));
     }
 
     #[test]

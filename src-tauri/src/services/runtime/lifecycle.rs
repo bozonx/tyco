@@ -3,7 +3,7 @@ use super::tray::setup_tray;
 use super::warmup::spawn_quick_warmup;
 use super::{ActivationCoordinator, RuntimeWindows, MAIN_WINDOW_LABEL};
 #[cfg(target_os = "linux")]
-use super::{LayerShell, PanelKeyboard, QUICK_WINDOW_LABEL};
+use super::{LayerShell, PanelKeyboardMode, QUICK_WINDOW_LABEL};
 use crate::errors::AppError;
 use crate::state::AppState;
 use tauri::{App, AppHandle, Manager};
@@ -47,7 +47,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         }
         app.manage(LayerShell {
             supported,
-            keyboard: PanelKeyboard::from_env(),
+            keyboard: PanelKeyboardMode::from_env(),
         });
     }
     setup_tray(app)?;

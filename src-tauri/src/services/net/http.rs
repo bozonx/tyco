@@ -42,16 +42,19 @@ pub fn decode_body(body: Option<&str>) -> Result<Option<Vec<u8>>, String> {
     decode_body_with_limit(body, MAX_REQUEST_BODY_BYTES)
 }
 
-fn decode_body_with_limit(body: Option<&str>, limit: usize) -> Result<Option<Vec<u8>>, String> {
+fn decode_body_with_limit(
+    body: Option<&str>,
+    max_decoded_body_bytes: usize,
+) -> Result<Option<Vec<u8>>, String> {
     body.map(|body| {
-        let max_encoded_bytes = limit.div_ceil(3) * 4;
+        let max_encoded_bytes = max_decoded_body_bytes.div_ceil(3) * 4;
         if body.len() > max_encoded_bytes {
             return Err(String::from("Request body exceeds the 128 MiB limit"));
         }
         let decoded = base64::engine::general_purpose::STANDARD
             .decode(body)
             .map_err(|error| format!("Invalid request body: {error}"))?;
-        if decoded.len() > limit {
+        if decoded.len() > max_decoded_body_bytes {
             return Err(String::from("Request body exceeds the 128 MiB limit"));
         }
         Ok(decoded)
@@ -72,7 +75,7 @@ pub async fn run_fetch_controlled<S: EventSink>(
     prepared: PreparedRequest,
     body: Option<Vec<u8>>,
     sink: &S,
-    flow: Option<Arc<Semaphore>>,
+    chunk_permits: Option<Arc<Semaphore>>,
     response_limit_bytes: usize,
 ) {
     let mut builder = client.request(method, prepared.url);
@@ -131,10 +134,10 @@ pub async fn run_fetch_controlled<S: EventSink>(
                     return;
                 }
                 for chunk in bytes.chunks(64 * 1024) {
-                    if let Some(flow) = &flow {
+                    if let Some(chunk_permits) = &chunk_permits {
                         let Ok(Ok(permit)) = tokio::time::timeout(
                             std::time::Duration::from_secs(180),
-                            flow.acquire(),
+                            chunk_permits.acquire(),
                         )
                         .await
                         else {
@@ -285,9 +288,9 @@ mod tests {
         )
         .unwrap();
         let sink = RecordingSink::default();
-        let flow = Arc::new(Semaphore::new(0));
+        let chunk_permits = Arc::new(Semaphore::new(0));
         let task_sink = sink.clone();
-        let task_flow = flow.clone();
+        let task_flow = chunk_permits.clone();
         let task = tokio::spawn(async move {
             run_fetch_controlled(
                 &reqwest::Client::new(),
@@ -311,7 +314,7 @@ mod tests {
             .unwrap()
             .iter()
             .any(|item| matches!(item, Recorded::Bytes(_))));
-        flow.add_permits(1);
+        chunk_permits.add_permits(1);
         tokio::time::timeout(Duration::from_secs(1), task)
             .await
             .unwrap()

@@ -19,10 +19,10 @@ fn commit_chat_transaction(chats_dir: &Path, transaction: ChatTransaction) -> Re
 
 fn validate_chat_transaction(transaction: &ChatTransaction) -> Result<(), AppError> {
     for item in &transaction.history {
-        sanitize_chat_id(&item.id)?;
+        validate_chat_id(&item.id)?;
     }
     if let Some(chat) = &transaction.chat {
-        sanitize_chat_id(&chat.id)?;
+        validate_chat_id(&chat.id)?;
     }
     Ok(())
 }
@@ -38,7 +38,7 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     let transaction: ChatTransaction = serde_json::from_slice(&raw)?;
     validate_chat_transaction(&transaction)?;
     if let Some(chat) = transaction.chat {
-        let id = sanitize_chat_id(&chat.id)?;
+        let id = validate_chat_id(&chat.id)?;
         write_json(&chats_dir.join(format!("{id}.json")), &chat)?;
     }
     write_json(&chats_dir.join(CHAT_INDEX_FILE), &transaction.history)?;
@@ -61,7 +61,7 @@ fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
         let history: Vec<ChatSummary> = serde_json::from_str(raw)?;
         let mut ids = std::collections::HashSet::new();
         for item in &history {
-            sanitize_chat_id(&item.id)?;
+            validate_chat_id(&item.id)?;
             if !ids.insert(&item.id) {
                 return Err(AppError::InvalidInput("Duplicate chat id in index".into()));
             }
@@ -117,11 +117,11 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
 fn chat_file_id(path: &Path) -> Option<&str> {
     let name = path.file_name()?.to_str()?;
     let id = name.strip_suffix(".json")?;
-    sanitize_chat_id(id).ok().map(|_| id)
+    validate_chat_id(id).ok().map(|_| id)
 }
 
 fn validate_stored_chat_id(path: &Path, chat: &Chat) -> Result<(), AppError> {
-    sanitize_chat_id(&chat.id)?;
+    validate_chat_id(&chat.id)?;
     if chat_file_id(path) != Some(chat.id.as_str()) {
         return Err(AppError::InvalidInput(
             "Chat id does not match its filename".into(),
@@ -141,7 +141,7 @@ pub fn save_chat(app: &AppHandle, user_config: &Value, chat: Chat) -> Result<(),
         return Ok(());
     }
 
-    sanitize_chat_id(&chat.id)?;
+    validate_chat_id(&chat.id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = list_chats(app)?;
 
@@ -173,7 +173,7 @@ fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
 
 pub fn get_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
     let chats_dir = app_data_sub_dir(app, "chats")?;
-    let chat_file_path = chats_dir.join(format!("{}.json", sanitize_chat_id(&id)?));
+    let chat_file_path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
 
     if !chat_file_path.exists() {
         return Ok(None);
@@ -256,7 +256,7 @@ fn chat_matches(chat: &Chat, query: &str) -> bool {
 }
 
 pub fn delete_chat(app: &AppHandle, id: String) -> Result<(), AppError> {
-    sanitize_chat_id(&id)?;
+    validate_chat_id(&id)?;
     let chats_dir = app_data_sub_dir(app, "chats")?;
     let mut history = list_chats(app)?;
     history.retain(|item| item.id != id);
@@ -407,7 +407,7 @@ pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-fn sanitize_chat_id(id: &str) -> Result<String, AppError> {
+fn validate_chat_id(id: &str) -> Result<String, AppError> {
     // "index" would name the index file
     let is_safe = !id.is_empty()
         && id != "index"
@@ -736,12 +736,12 @@ mod tests {
     }
 
     #[test]
-    fn sanitize_chat_id_rejects_path_traversal() {
-        assert!(sanitize_chat_id("../../etc/passwd").is_err());
-        assert!(sanitize_chat_id("chat/id").is_err());
-        assert!(sanitize_chat_id("").is_err());
-        assert!(sanitize_chat_id("index").is_err());
-        assert_eq!(sanitize_chat_id("chat-1_A").unwrap(), "chat-1_A");
+    fn validate_chat_id_rejects_path_traversal() {
+        assert!(validate_chat_id("../../etc/passwd").is_err());
+        assert!(validate_chat_id("chat/id").is_err());
+        assert!(validate_chat_id("").is_err());
+        assert!(validate_chat_id("index").is_err());
+        assert_eq!(validate_chat_id("chat-1_A").unwrap(), "chat-1_A");
     }
 
     #[test]

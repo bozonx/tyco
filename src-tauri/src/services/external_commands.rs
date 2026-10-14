@@ -60,7 +60,7 @@ pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
 pub struct ExternalCommand {
     pub id: String,
     pub takes_text: bool,
-    pub structured: bool,
+    pub has_structured_input: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -215,7 +215,7 @@ fn resolve_callable_command(
     Ok(ExternalCommand {
         id,
         takes_text,
-        structured: catalog
+        has_structured_input: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
             .is_some_and(|tool| tool.input == ToolInputKind::Structured),
     })
@@ -295,14 +295,14 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
                     name
                 }
                 .to_owned(),
-                input: if found.structured {
+                input: if found.has_structured_input {
                     "structured"
                 } else if found.takes_text {
                     "text"
                 } else {
                     "none"
                 },
-                can_replace_selection: found.takes_text && !found.structured,
+                can_replace_selection: found.takes_text && !found.has_structured_input,
                 output: "return",
             }
         })
@@ -494,7 +494,7 @@ mod tests {
             ExternalCommand {
                 id: String::from("backup"),
                 takes_text: false,
-                structured: false,
+                has_structured_input: false,
             }
         );
     }
@@ -539,7 +539,7 @@ mod tests {
                 Some(String::from("No LLM is configured"))
             ))
         );
-        assert!(find_in("remind-raw").unwrap().structured);
+        assert!(find_in("remind-raw").unwrap().has_structured_input);
     }
 
     #[test]

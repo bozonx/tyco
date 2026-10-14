@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 pub use super::activation::Activation;
 use super::activation::{ActivationMode, WindowProfile, WINDOW_SIZE};
 use super::activation_coordinator::{ActivationCoordinator, ActivationHost};
-use super::platform::{InputRegion, PanelKeyboard};
+use super::platform::{InputRegion, PanelKeyboardMode};
 
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 
@@ -41,12 +41,12 @@ pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
 #[derive(Default)]
 struct LayerShell {
     supported: bool,
-    keyboard: PanelKeyboard,
+    keyboard: PanelKeyboardMode,
 }
 
 /// Keyboard mode of the quick window's layer surface, `None` when it is a
 /// regular window.
-fn panel_layer(app: &AppHandle) -> Option<PanelKeyboard> {
+fn panel_layer(app: &AppHandle) -> Option<PanelKeyboardMode> {
     #[cfg(target_os = "linux")]
     {
         let layer = app.state::<LayerShell>();
@@ -107,7 +107,7 @@ struct RuntimeActivationHost<'a>(&'a AppHandle);
 
 impl ActivationHost for RuntimeActivationHost<'_> {
     fn foreground_target(&self) -> Option<super::platform::ForegroundTarget> {
-        super::platform::capture_source()
+        super::platform::capture_foreground_target()
     }
 
     fn has_focused_window(&self) -> bool {
@@ -136,8 +136,8 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             if let Err(error) = on_main_thread(&handle, move |app| {
                 app.state::<ActivationCoordinator>().publish(&request, || {
                     let state = app.state::<AppState>();
-                    state.update_snapshot(|params| {
-                        params.activation.selected_text.clone_from(&selected_text)
+                    state.update_snapshot(|snapshot| {
+                        snapshot.activation.selected_text.clone_from(&selected_text)
                     });
                     emit_state(app, &state)
                 })
@@ -185,9 +185,9 @@ pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppE
     if state.snapshot().activation.target_window_id.as_deref() != Some(window_id) {
         return Ok(());
     }
-    state.update_snapshot(|params| {
-        if params.activation.target_window_id.as_deref() == Some(window_id) {
-            params.activation.target_window_id = None;
+    state.update_snapshot(|snapshot| {
+        if snapshot.activation.target_window_id.as_deref() == Some(window_id) {
+            snapshot.activation.target_window_id = None;
         }
     });
     emit_state(app, &state)
@@ -204,11 +204,11 @@ pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
     let active_label = app.state::<RuntimeWindows>().active_label();
     let state = app.state::<AppState>();
     let mut changed = false;
-    state.update_snapshot(|params| {
-        if is_main_window_shown(active_label, params.window.is_window_shown)
-            && params.activation.target_window_id.as_ref() != Some(&target)
+    state.update_snapshot(|snapshot| {
+        if is_main_window_shown(active_label, snapshot.window.is_window_shown)
+            && snapshot.activation.target_window_id.as_ref() != Some(&target)
         {
-            params.activation.target_window_id = Some(target);
+            snapshot.activation.target_window_id = Some(target);
             changed = true;
         }
     });
@@ -264,16 +264,16 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_snapshot(|params| {
-        params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
-        params.activation.mode = Some(activation.mode);
-        params.activation.target_window_id = activation.target_window_id;
-        params.activation.selected_text = activation.selected_text;
-        params.activation.launcher_page_index = activation.launcher_page_index;
-        params.activation.launcher_request = activation.launcher_request;
-        params.activation.access_request = activation.access_request;
-        params.window.is_window_shown = true;
-        params.window.window_profile = activation.mode.profile();
+    state.update_snapshot(|snapshot| {
+        snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
+        snapshot.activation.mode = Some(activation.mode);
+        snapshot.activation.target_window_id = activation.target_window_id;
+        snapshot.activation.selected_text = activation.selected_text;
+        snapshot.activation.launcher_page_index = activation.launcher_page_index;
+        snapshot.activation.launcher_request = activation.launcher_request;
+        snapshot.activation.access_request = activation.access_request;
+        snapshot.window.is_window_shown = true;
+        snapshot.window.window_profile = activation.mode.profile();
     });
     log::debug!(
         "Activated {:?} from {:?}",
@@ -324,11 +324,11 @@ fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppEr
 /// Tyco was last activated from may be long gone from the user's mind, so the
 /// target is taken anew, the way an activation takes it.
 pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
-    let target_window_id =
-        super::platform::capture_source().map(super::platform::ForegroundTarget::into_platform_id);
+    let target_window_id = super::platform::capture_foreground_target()
+        .map(super::platform::ForegroundTarget::into_platform_id);
     on_main_thread(app, move |app| {
         app.state::<AppState>()
-            .update_snapshot(|params| params.activation.target_window_id = target_window_id);
+            .update_snapshot(|snapshot| snapshot.activation.target_window_id = target_window_id);
         show_application_on_main_thread(app)
     })
 }
@@ -400,13 +400,13 @@ pub fn set_quick_input_region(
     activation_id: u64,
 ) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        let params = app.state::<AppState>().snapshot();
+        let snapshot = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
         // a late request must not narrow the window of the next session
         if !is_current_quick_activation(
             active_label,
-            params.window.is_window_shown,
-            params.activation.activation_id,
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
             activation_id,
         ) {
             return Ok(());
@@ -459,12 +459,12 @@ fn show_application_mode_on_main_thread(
         log::warn!("Could not focus window: {error}");
     }
 
-    state.update_snapshot(|params| {
-        params.activation.activation_id = params.activation.activation_id.wrapping_add(1);
-        params.activation.selected_text = None;
-        params.activation.mode = Some(mode);
-        params.window.is_window_shown = true;
-        params.window.window_profile = WindowProfile::Sheet;
+    state.update_snapshot(|snapshot| {
+        snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
+        snapshot.activation.selected_text = None;
+        snapshot.activation.mode = Some(mode);
+        snapshot.window.is_window_shown = true;
+        snapshot.window.window_profile = WindowProfile::Sheet;
     });
     log::debug!("Showed main application with mode {}", mode.as_str());
     emit_state(app, &state)
@@ -472,12 +472,12 @@ fn show_application_mode_on_main_thread(
 
 pub fn dismiss_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
-        let params = app.state::<AppState>().snapshot();
+        let snapshot = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
         if !is_current_quick_activation(
             active_label,
-            params.window.is_window_shown,
-            params.activation.activation_id,
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
             activation_id,
         ) {
             return Ok(());
@@ -503,8 +503,8 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         super::platform::disable_panel_keyboard(&window)?;
     }
 
-    state.update_snapshot(|params| {
-        params.window.is_window_shown = false;
+    state.update_snapshot(|snapshot| {
+        snapshot.window.is_window_shown = false;
     });
 
     window.hide()?;
@@ -668,10 +668,10 @@ pub fn publish_state(app: &AppHandle, state: &AppState) {
 pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
         let state = app.state::<AppState>();
-        let params = state.snapshot();
+        let snapshot = state.snapshot();
         if !matches_window_activation(
             app.state::<RuntimeWindows>().active_label(),
-            params.activation.activation_id,
+            snapshot.activation.activation_id,
             &label,
             activation_id,
         ) {

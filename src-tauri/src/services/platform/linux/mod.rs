@@ -17,13 +17,13 @@ use serde_json::Value;
 use crate::errors::AppError;
 use foreground_context::{ForegroundContext, SystemForegroundContext};
 
-pub fn capture_source() -> Option<String> {
-    SystemForegroundContext::detect().capture_source()
+pub fn capture_foreground_target() -> Option<String> {
+    SystemForegroundContext::detect().capture_foreground_target()
 }
 
-pub async fn capture_selection(source: Option<String>) -> Option<String> {
+pub async fn capture_selection(target: Option<String>) -> Option<String> {
     SystemForegroundContext::detect()
-        .capture_selection(source)
+        .capture_selection(target)
         .await
 }
 

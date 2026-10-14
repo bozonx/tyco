@@ -19,15 +19,15 @@ const PROMPT_BUSY: &str = "Another request for the selection is waiting for an a
 
 /// Selection capture is opt-in; which commands run from
 /// outside is decided by each command's own grant.
-fn access_allowed(config: &Value, capability: &str) -> bool {
+fn is_external_access_allowed(config: &Value, capability: &str) -> bool {
     config
         .pointer(&format!("/externalAccess/{capability}"))
         .and_then(Value::as_bool)
         .unwrap_or(false)
 }
 
-fn permission(config: &Value, capability: &str) -> ApiResult<()> {
-    if access_allowed(config, capability) {
+fn ensure_external_access_allowed(config: &Value, capability: &str) -> ApiResult<()> {
+    if is_external_access_allowed(config, capability) {
         Ok(())
     } else {
         Err(Response::coded_error(
@@ -72,7 +72,7 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
     Ok(json!({
         "id": command.id,
         "name": raw.and_then(|item| item.get("name")),
-        "input": if command.structured {
+        "input": if command.has_structured_input {
             "structured"
         } else if command.takes_text {
             "text"
@@ -80,7 +80,7 @@ fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
             "none"
         },
         "textAccepted": command.takes_text,
-        "canReplaceSelection": command.takes_text && !command.structured,
+        "canReplaceSelection": command.takes_text && !command.has_structured_input,
         "output": "return",
         "inputSchema": input_schema,
     }))
@@ -109,14 +109,14 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "Choose one input source; replacement requires selection",
         ));
     }
-    if request.selection && (!command.takes_text || command.structured) {
+    if request.selection && (!command.takes_text || command.has_structured_input) {
         return Err(Response::coded_error(
             "InvalidInput",
             "This command does not accept selection text",
         ));
     }
     if !command.takes_text
-        && !command.structured
+        && !command.has_structured_input
         && (request.text.is_some() || request.input.is_some())
     {
         return Err(Response::coded_error(
@@ -124,7 +124,7 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "This command does not accept input",
         ));
     }
-    if command.structured && !command.takes_text && request.input.is_none() {
+    if command.has_structured_input && !command.takes_text && request.input.is_none() {
         return Err(Response::coded_error(
             "InputRequired",
             "This command requires structured input",
@@ -155,7 +155,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     validate_run(&command, &request)?;
     let config = app.state::<AppState>().snapshot().settings.user_config;
     // without the permission the user is asked, see `external_access`
-    let ask = request.selection && !access_allowed(&config, "selection");
+    let ask = request.selection && !is_external_access_allowed(&config, "selection");
     // checked again when the prompt is taken; this saves the capture
     if ask && app.state::<AccessPrompt>().is_pending() {
         return Err(Response::coded_error("AccessDenied", PROMPT_BUSY));
@@ -378,7 +378,8 @@ fn keep_selection_whitespace(input: &str, output: &str) -> String {
 }
 
 fn jobs_request_replace(app: &AppHandle, id: &str) -> bool {
-    app.state::<ExternalJobs>().replace_requested(id)
+    app.state::<ExternalJobs>()
+        .is_selection_replacement_requested(id)
 }
 
 fn cancel(app: &AppHandle, id: &str, code: &str) -> Response {
@@ -426,8 +427,8 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
         return false;
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
-    if request.selection && !jobs.selection_approved(id) {
-        if let Err(error) = permission(&config, "selection") {
+    if request.selection && !jobs.is_selection_approved(id) {
+        if let Err(error) = ensure_external_access_allowed(&config, "selection") {
             complete(
                 app,
                 id,
@@ -442,7 +443,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
             return false;
         }
     }
-    if !jobs.command_unchanged(id, raw_command(&config, &command_id)) {
+    if !jobs.is_command_unchanged(id, raw_command(&config, &command_id)) {
         complete(
             app,
             id,
@@ -464,7 +465,7 @@ pub fn spawn_reaper(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            let ids = app.state::<ExternalJobs>().expired();
+            let ids = app.state::<ExternalJobs>().expired_job_ids();
             for id in ids {
                 let app = app.clone();
                 let _ = tauri::async_runtime::spawn_blocking(move || cancel(&app, &id, "TimedOut"))
@@ -491,7 +492,7 @@ fn open(
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     if selection {
-        permission(&config, "selection")?;
+        ensure_external_access_allowed(&config, "selection")?;
     }
     let mut activation = Activation::new(mode, source);
     activation.selected_text = if selection {
@@ -522,7 +523,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     }) {
         return Response::coded_error("InvalidInput", "Protocol message is too large");
     }
-    for id in app.state::<ExternalJobs>().expired() {
+    for id in app.state::<ExternalJobs>().expired_job_ids() {
         cancel(app, &id, "TimedOut");
     }
     match request {
@@ -533,7 +534,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                 "version": app.package_info().version.to_string(),
                 "running": true,
                 "externalAccess": {
-                    "selection": access_allowed(&config, "selection"),
+                    "selection": is_external_access_allowed(&config, "selection"),
                 },
             }))
         }
@@ -586,7 +587,7 @@ mod tests {
         ExternalCommand {
             id: "test".into(),
             takes_text: true,
-            structured: false,
+            has_structured_input: false,
         }
     }
     #[test]
@@ -612,10 +613,20 @@ mod tests {
     }
     #[test]
     fn permission_defaults_deny_capture() {
-        assert!(permission(&json!({}), "selection").is_err());
-        assert!(permission(&json!({"externalAccess":null}), "selection").is_err());
-        assert!(permission(&json!({"externalAccess":{"selection":"true"}}), "selection").is_err());
-        assert!(permission(&json!({"externalAccess":{"selection":true}}), "selection").is_ok());
+        assert!(ensure_external_access_allowed(&json!({}), "selection").is_err());
+        assert!(
+            ensure_external_access_allowed(&json!({"externalAccess":null}), "selection").is_err()
+        );
+        assert!(ensure_external_access_allowed(
+            &json!({"externalAccess":{"selection":"true"}}),
+            "selection"
+        )
+        .is_err());
+        assert!(ensure_external_access_allowed(
+            &json!({"externalAccess":{"selection":true}}),
+            "selection"
+        )
+        .is_ok());
     }
     #[test]
     fn replacement_preserves_original_surrounding_whitespace() {

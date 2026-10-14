@@ -447,7 +447,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         }
         glossary.retain(|entry| entry["term"].as_str().is_some_and(|term| !term.is_empty()));
     }
-    deduplicate(&mut config["commands"], false);
+    deduplicate_by_id(&mut config["commands"], false);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         let schema = match command["toolId"].as_str() {
             Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
@@ -458,10 +458,10 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
             command["toolConfig"] = repair(&command["toolConfig"], schema);
         }
     }
-    deduplicate(&mut config["aiTasks"], true);
-    deduplicate(&mut config["sttModels"], false);
-    deduplicate(&mut config["llm"]["providers"], false);
-    deduplicate(&mut config["llm"]["models"], false);
+    deduplicate_by_id(&mut config["aiTasks"], true);
+    deduplicate_by_id(&mut config["sttModels"], false);
+    deduplicate_by_id(&mut config["llm"]["providers"], false);
+    deduplicate_by_id(&mut config["llm"]["models"], false);
     let provider_ids: HashSet<String> = ids(&config["llm"], "providers")
         .into_iter()
         .map(str::to_owned)
@@ -526,15 +526,17 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
     *config != original
 }
 
-fn deduplicate(collection: &mut Value, slots: bool) {
-    let mut used = HashSet::new();
+fn deduplicate_by_id(collection: &mut Value, preserve_slots: bool) {
+    let mut seen_ids = HashSet::new();
     if let Some(items) = collection.as_array_mut() {
         for item in items.iter_mut() {
-            if !item.is_null() && !used.insert(item["id"].as_str().unwrap_or_default().to_owned()) {
+            if !item.is_null()
+                && !seen_ids.insert(item["id"].as_str().unwrap_or_default().to_owned())
+            {
                 *item = Value::Null;
             }
         }
-        if !slots {
+        if !preserve_slots {
             items.retain(|item| !item.is_null());
         }
     }

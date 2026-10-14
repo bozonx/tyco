@@ -1,5 +1,5 @@
 //! Validates plugin metadata and bundled assets without executing code.
-use super::{error, valid_id, PluginManifest, API_VERSION};
+use super::{error, is_valid_plugin_id, PluginManifest, API_VERSION};
 use crate::errors::AppError;
 
 pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
@@ -57,7 +57,7 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
 
 fn validate_metadata(manifest: &PluginManifest) -> Result<(), AppError> {
     let id = &manifest.id;
-    if !valid_id(id) {
+    if !is_valid_plugin_id(id) {
         return Err(error("Invalid plugin ID"));
     }
     let parts: Vec<_> = manifest.version.split('.').collect();

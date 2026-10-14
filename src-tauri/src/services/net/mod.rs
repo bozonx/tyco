@@ -57,9 +57,9 @@ impl EventSink for Channel<InvokeResponseBody> {
 pub struct NetState {
     client: reqwest::Client,
     next_id: AtomicU64,
-    fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
+    task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
-    read_flows: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
+    response_chunk_permits: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
 
 impl NetState {
@@ -74,9 +74,9 @@ impl NetState {
         Ok(Self {
             client,
             next_id: AtomicU64::new(1),
-            fetches: Arc::default(),
+            task_abort_handles: Arc::default(),
             sockets: Arc::default(),
-            read_flows: Arc::default(),
+            response_chunk_permits: Arc::default(),
         })
     }
 
@@ -89,41 +89,51 @@ impl NetState {
     }
 
     /// Registration owns cleanup even when a task is cancelled or panics.
-    pub fn register_task(&self) -> (NetTask, AbortRegistration) {
+    pub fn register_task(&self) -> (NetTaskRegistration, AbortRegistration) {
         let id = self.next_id();
         let (handle, registration) = AbortHandle::new_pair();
-        self.fetches
+        self.task_abort_handles
             .lock()
-            .expect("fetches lock")
+            .expect("task abort handles lock")
             .insert(id, handle);
-        let flow = Arc::new(Semaphore::new(FETCH_WINDOW_CHUNKS));
-        self.read_flows
+        let chunk_permits = Arc::new(Semaphore::new(FETCH_WINDOW_CHUNKS));
+        self.response_chunk_permits
             .lock()
-            .expect("read flows lock")
-            .insert(id, flow.clone());
+            .expect("response chunk permits lock")
+            .insert(id, chunk_permits.clone());
         (
-            NetTask {
+            NetTaskRegistration {
                 id,
-                fetches: Arc::clone(&self.fetches),
+                task_abort_handles: Arc::clone(&self.task_abort_handles),
                 sockets: Arc::clone(&self.sockets),
-                read_flows: Arc::clone(&self.read_flows),
-                flow,
+                response_chunk_permits: Arc::clone(&self.response_chunk_permits),
+                chunk_permits,
             },
             registration,
         )
     }
 
     /// Stops a request. Unknown ids are fine: the request may have finished.
-    pub fn cancel_fetch(&self, id: u64) {
-        if let Some(handle) = self.fetches.lock().expect("fetches lock").remove(&id) {
+    pub fn cancel_task(&self, id: u64) {
+        if let Some(handle) = self
+            .task_abort_handles
+            .lock()
+            .expect("task abort handles lock")
+            .remove(&id)
+        {
             handle.abort();
         }
     }
 
     pub fn acknowledge_fetch(&self, id: u64) {
-        if let Some(flow) = self.read_flows.lock().expect("read flows lock").get(&id) {
-            if flow.available_permits() < FETCH_WINDOW_CHUNKS {
-                flow.add_permits(1);
+        if let Some(chunk_permits) = self
+            .response_chunk_permits
+            .lock()
+            .expect("response chunk permits lock")
+            .get(&id)
+        {
+            if chunk_permits.available_permits() < FETCH_WINDOW_CHUNKS {
+                chunk_permits.add_permits(1);
             }
         }
     }
@@ -159,27 +169,32 @@ impl NetState {
         for sender in sockets.into_values() {
             let _ = sender.try_send(SocketCommand::Close(None));
         }
-        let fetches = std::mem::take(&mut *self.fetches.lock().expect("fetches lock"));
-        for handle in fetches.into_values() {
+        let task_abort_handles = std::mem::take(
+            &mut *self
+                .task_abort_handles
+                .lock()
+                .expect("task abort handles lock"),
+        );
+        for handle in task_abort_handles.into_values() {
             handle.abort();
         }
     }
 }
 
 /// A task lease keeps registry mutation inside the network service.
-pub struct NetTask {
-    flow: Arc<Semaphore>,
+pub struct NetTaskRegistration {
+    chunk_permits: Arc<Semaphore>,
     id: u64,
-    fetches: Arc<Mutex<HashMap<u64, AbortHandle>>>,
+    task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
-    read_flows: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
+    response_chunk_permits: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
-impl NetTask {
+impl NetTaskRegistration {
     pub fn id(&self) -> u64 {
         self.id
     }
-    pub fn read_flow(&self) -> Arc<Semaphore> {
-        self.flow.clone()
+    pub fn response_chunk_permits(&self) -> Arc<Semaphore> {
+        self.chunk_permits.clone()
     }
     pub fn register_socket(&self, sender: Sender<SocketCommand>) {
         self.sockets
@@ -188,14 +203,19 @@ impl NetTask {
             .insert(self.id, sender);
     }
 }
-impl Drop for NetTask {
+impl Drop for NetTaskRegistration {
     fn drop(&mut self) {
-        self.read_flows
+        self.response_chunk_permits
             .lock()
-            .expect("read flows lock")
+            .expect("response chunk permits lock")
             .remove(&self.id);
         self.sockets.lock().expect("sockets lock").remove(&self.id);
-        if let Some(handle) = self.fetches.lock().expect("fetches lock").remove(&self.id) {
+        if let Some(handle) = self
+            .task_abort_handles
+            .lock()
+            .expect("task abort handles lock")
+            .remove(&self.id)
+        {
             handle.abort();
         }
     }
@@ -212,16 +232,18 @@ mod tests {
     use crate::services::secrets::Secrets;
 
     #[test]
-    fn task_drop_cleans_both_registries() {
+    fn task_registration_drop_cleans_all_registries() {
         let net = NetState::new().unwrap();
         let (task, _) = net.register_task();
         let (sender, _) = tokio::sync::mpsc::channel(1);
         task.register_socket(sender);
-        assert_eq!(net.fetches.lock().unwrap().len(), 1);
+        assert_eq!(net.task_abort_handles.lock().unwrap().len(), 1);
         assert_eq!(net.sockets.lock().unwrap().len(), 1);
+        assert_eq!(net.response_chunk_permits.lock().unwrap().len(), 1);
         drop(task);
-        assert!(net.fetches.lock().unwrap().is_empty());
+        assert!(net.task_abort_handles.lock().unwrap().is_empty());
         assert!(net.sockets.lock().unwrap().is_empty());
+        assert!(net.response_chunk_permits.lock().unwrap().is_empty());
     }
 
     #[test]
@@ -262,7 +284,7 @@ mod tests {
         let net = NetState::new().unwrap();
         let id = net.next_id();
         let (handle, registration) = AbortHandle::new_pair();
-        net.fetches.lock().unwrap().insert(id, handle);
+        net.task_abort_handles.lock().unwrap().insert(id, handle);
         let connecting = tokio::spawn(async move {
             Abortable::new(socket::connect(&prepared, &[]), registration).await
         });
@@ -270,7 +292,7 @@ mod tests {
         let mut bytes = [0; 4096];
         assert!(peer.read(&mut bytes).await.unwrap() > 0);
 
-        net.cancel_fetch(id);
+        net.cancel_task(id);
         assert!(connecting.await.unwrap().is_err());
         let remaining = tokio::time::timeout(Duration::from_secs(1), async {
             loop {
@@ -281,7 +303,7 @@ mod tests {
         })
         .await;
         assert!(remaining.is_ok(), "cancel closes the pending connection");
-        assert!(net.fetches.lock().unwrap().is_empty());
-        net.cancel_fetch(id);
+        assert!(net.task_abort_handles.lock().unwrap().is_empty());
+        net.cancel_task(id);
     }
 }

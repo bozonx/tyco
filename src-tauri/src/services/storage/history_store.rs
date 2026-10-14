@@ -10,33 +10,38 @@ use crate::state::AppState;
 
 #[derive(Default)]
 pub struct HistoryStorage {
-    editor: Mutex<Vec<EditorHistoryRecord>>,
-    chats: Mutex<()>,
+    editor_history: Mutex<Vec<EditorHistoryRecord>>,
+    chat_history_lock: Mutex<()>,
 }
 
 impl HistoryStorage {
-    fn editor(&self) -> MutexGuard<'_, Vec<EditorHistoryRecord>> {
-        self.editor.lock().expect("editor history lock poisoned")
+    fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryRecord>> {
+        self.editor_history
+            .lock()
+            .expect("editor history lock poisoned")
     }
 
-    fn chats(&self) -> MutexGuard<'_, ()> {
-        self.chats.lock().expect("chat history lock poisoned")
+    fn lock_chat_history(&self) -> MutexGuard<'_, ()> {
+        self.chat_history_lock
+            .lock()
+            .expect("chat history lock poisoned")
     }
 
     /// Settings and their in-memory publication share the same lock order as
-    /// all history operations: editor, chats, then params. Both repositories
-    /// observe the new policy only after its storage transition finishes.
+    /// all history operations: editor history, chat history, then the desktop
+    /// snapshot. Both repositories observe the new policy only after its
+    /// storage transition finishes.
     pub fn apply_settings(
         &self,
         app: &AppHandle,
         previous: &serde_json::Value,
         next: &serde_json::Value,
     ) -> Result<(), AppError> {
-        let mut memory = self.editor();
-        let _chats = self.chats();
+        let mut memory = self.lock_editor_history();
+        let _chats = self.lock_chat_history();
         editor::apply_history_settings_change(app, previous, next, &mut memory)?;
         app.state::<AppState>()
-            .update_snapshot(|params| params.settings.user_config = next.clone());
+            .update_snapshot(|snapshot| snapshot.settings.user_config = next.clone());
         Ok(())
     }
 }
@@ -46,7 +51,7 @@ fn with_editor<T>(
     operation: impl FnOnce(&serde_json::Value, &mut Vec<EditorHistoryRecord>) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
-    let mut memory = state.history.editor();
+    let mut memory = state.history.lock_editor_history();
     operation(&state.snapshot().settings.user_config, &mut memory)
 }
 
@@ -55,7 +60,7 @@ fn with_chats<T>(
     operation: impl FnOnce(&AppState) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
-    let _guard = state.history.chats();
+    let _guard = state.history.lock_chat_history();
     operation(&state)
 }
 
@@ -204,15 +209,15 @@ mod tests {
     #[test]
     fn chat_operations_do_not_lock_editor_history() {
         let storage = HistoryStorage::default();
-        let _chats = storage.chats();
-        assert!(storage.editor.try_lock().is_ok());
+        let _chats = storage.lock_chat_history();
+        assert!(storage.editor_history.try_lock().is_ok());
     }
 
     #[test]
     fn editor_operations_do_not_lock_chat_history() {
         let storage = HistoryStorage::default();
-        let _editor = storage.editor();
-        assert!(storage.chats.try_lock().is_ok());
+        let _editor = storage.lock_editor_history();
+        assert!(storage.chat_history_lock.try_lock().is_ok());
     }
 
     #[test]
@@ -222,7 +227,7 @@ mod tests {
             for index in 0..16 {
                 let storage = &storage;
                 scope.spawn(move || {
-                    storage.editor().push(EditorHistoryRecord {
+                    storage.lock_editor_history().push(EditorHistoryRecord {
                         id: index.to_string(),
                         text: String::new(),
                         kind: crate::models::EditorHistoryKind::Draft,
@@ -234,6 +239,6 @@ mod tests {
                 });
             }
         });
-        assert_eq!(storage.editor().len(), 16);
+        assert_eq!(storage.lock_editor_history().len(), 16);
     }
 }

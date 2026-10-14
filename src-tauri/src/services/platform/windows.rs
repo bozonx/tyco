@@ -12,7 +12,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
 
 use crate::errors::AppError;
 
-pub(crate) fn focused_source() -> Option<String> {
+pub(crate) fn focused_foreground_target() -> Option<String> {
     let window_handle = unsafe { GetForegroundWindow() };
     if window_handle.is_null() {
         return None;
@@ -22,25 +22,25 @@ pub(crate) fn focused_source() -> Option<String> {
     (process_id != std::process::id()).then(|| (window_handle as isize).to_string())
 }
 
-pub fn capture_source() -> Option<String> {
-    static LAST_SOURCE: AtomicIsize = AtomicIsize::new(0);
+pub fn capture_foreground_target() -> Option<String> {
+    static LAST_FOREGROUND_TARGET: AtomicIsize = AtomicIsize::new(0);
     let window_handle = unsafe { GetForegroundWindow() };
     if window_handle.is_null() {
         return None;
     }
     let mut process_id = 0;
     unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
-    let source = if process_id == std::process::id() {
-        LAST_SOURCE.load(Ordering::SeqCst)
+    let target = if process_id == std::process::id() {
+        LAST_FOREGROUND_TARGET.load(Ordering::SeqCst)
     } else {
-        LAST_SOURCE.store(window_handle as isize, Ordering::SeqCst);
+        LAST_FOREGROUND_TARGET.store(window_handle as isize, Ordering::SeqCst);
         window_handle as isize
     };
-    (source != 0 && unsafe { IsWindow(source as HWND) } != 0).then(|| source.to_string())
+    (target != 0 && unsafe { IsWindow(target as HWND) } != 0).then(|| target.to_string())
 }
 
-pub async fn capture_selection(source: Option<String>) -> Option<String> {
-    let window_handle = source?.parse::<isize>().ok()?;
+pub async fn capture_selection(target: Option<String>) -> Option<String> {
+    let window_handle = target?.parse::<isize>().ok()?;
     if window_handle == 0 || unsafe { IsWindow(window_handle as HWND) } == 0 {
         return None;
     }
@@ -49,7 +49,7 @@ pub async fn capture_selection(source: Option<String>) -> Option<String> {
     if process_id == std::process::id() {
         return None;
     }
-    // Read the source window through UI Automation after Tyco takes focus.
+    // Read the target window through UI Automation after Tyco takes focus.
     // Sending Ctrl+C here would steal focus back and dismiss the quick panel.
     const SCRIPT: &str = r#"
 $ErrorActionPreference = 'Stop'
@@ -98,10 +98,10 @@ pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> 
             "The target window did not receive focus".into(),
         ));
     }
-    press_copy_or_paste(false, foreground_is_terminal())
+    press_copy_or_paste(false, is_foreground_terminal())
 }
 
-pub fn foreground_is_terminal() -> bool {
+pub fn is_foreground_terminal() -> bool {
     let mut class = [0u16; 256];
     let length = unsafe {
         GetClassNameW(
@@ -110,10 +110,10 @@ pub fn foreground_is_terminal() -> bool {
             class.len() as i32,
         )
     };
-    length > 0 && terminal_class(&String::from_utf16_lossy(&class[..length as usize]))
+    length > 0 && is_terminal_class(&String::from_utf16_lossy(&class[..length as usize]))
 }
 
-fn terminal_class(class: &str) -> bool {
+fn is_terminal_class(class: &str) -> bool {
     matches!(
         class.to_ascii_lowercase().as_str(),
         "cascadia_hosting_window_class"
@@ -175,9 +175,9 @@ mod tests {
     use super::*;
     #[test]
     fn terminal_copy_uses_shift_instead_of_interrupting_the_process() {
-        assert!(terminal_class("CASCADIA_HOSTING_WINDOW_CLASS"));
-        assert!(terminal_class("ConsoleWindowClass"));
-        assert!(!terminal_class("Notepad"));
+        assert!(is_terminal_class("CASCADIA_HOSTING_WINDOW_CLASS"));
+        assert!(is_terminal_class("ConsoleWindowClass"));
+        assert!(!is_terminal_class("Notepad"));
         let inputs = copy_or_paste_inputs(true, true);
         assert_eq!(inputs.len(), 6);
         assert_eq!(unsafe { inputs[1].Anonymous.ki.wVk }, VK_SHIFT);

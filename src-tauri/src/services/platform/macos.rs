@@ -1,4 +1,4 @@
-//! macOS source identity and selection through AppKit and Accessibility.
+//! macOS target identity and selection through AppKit and Accessibility.
 use std::ffi::{c_char, c_void, CString};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::Duration;
@@ -67,8 +67,8 @@ fn attribute(element: CFTypeRef, name: &str) -> Option<OwnedValue> {
     }
 }
 
-pub fn capture_source() -> Option<String> {
-    static LAST_SOURCE: AtomicI32 = AtomicI32::new(0);
+pub fn capture_foreground_target() -> Option<String> {
+    static LAST_FOREGROUND_TARGET: AtomicI32 = AtomicI32::new(0);
     const SCRIPT: &str = r#"
 ObjC.import('AppKit');
 function run() {
@@ -86,17 +86,17 @@ function run() {
         return None;
     }
     let process_id = String::from_utf8(output).ok()?.trim().parse::<i32>().ok()?;
-    let source = if process_id as u32 == std::process::id() {
-        LAST_SOURCE.load(Ordering::SeqCst)
+    let target = if process_id as u32 == std::process::id() {
+        LAST_FOREGROUND_TARGET.load(Ordering::SeqCst)
     } else {
-        LAST_SOURCE.store(process_id, Ordering::SeqCst);
+        LAST_FOREGROUND_TARGET.store(process_id, Ordering::SeqCst);
         process_id
     };
-    (source > 0).then(|| source.to_string())
+    (target > 0).then(|| target.to_string())
 }
 
-pub async fn capture_selection(source: Option<String>) -> Option<String> {
-    let process_id = source?.parse::<i32>().ok()?;
+pub async fn capture_selection(target: Option<String>) -> Option<String> {
+    let process_id = target?.parse::<i32>().ok()?;
     if process_id <= 0
         || process_id as u32 == std::process::id()
         || !unsafe { AXIsProcessTrusted() }
