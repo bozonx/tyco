@@ -5,10 +5,7 @@ import type {
 } from './correction-step'
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  MenuModals,
-  createMenuModalsStoreModel,
-} from '../modals/menu-modals-store'
+import { MenuModals, createMenuModalsModel } from '../modals/menu-modals-store'
 import { createCorrectionStep } from './correction-step'
 
 function deferred<T>() {
@@ -22,7 +19,7 @@ function deferred<T>() {
 }
 
 function setup(overrides: Record<string, unknown> = {}) {
-  const menu = createMenuModalsStoreModel()
+  const menu = createMenuModalsModel()
   const request = deferred<string>()
   let signal: AbortSignal | undefined
   const deps = {
@@ -55,7 +52,7 @@ describe('createCorrectionStep', () => {
       text: 'helo',
       oldText: '',
       originalText: 'helo',
-      correcting: true,
+      isCorrecting: true,
     })
 
     request.resolve('hello')
@@ -65,14 +62,14 @@ describe('createCorrectionStep', () => {
       text: 'hello',
       oldText: 'helo',
       originalText: 'helo',
-      correcting: false,
-      correctionUnchanged: false,
+      isCorrecting: false,
+      isCorrectionUnchanged: false,
     })
     expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
   })
 
   it('opens a correction made in advance without waiting', async () => {
-    const { menu, deps, step } = setup({ peek: () => 'hello' })
+    const { menu, deps, step } = setup({ getCachedCorrection: () => 'hello' })
 
     await step.start('helo')
 
@@ -80,7 +77,7 @@ describe('createCorrectionStep', () => {
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'hello',
       oldText: 'helo',
-      correcting: false,
+      isCorrecting: false,
     })
     expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
   })
@@ -95,7 +92,7 @@ describe('createCorrectionStep', () => {
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'hello',
       oldText: '',
-      correctionUnchanged: true,
+      isCorrectionUnchanged: true,
     })
   })
 
@@ -124,7 +121,7 @@ describe('createCorrectionStep', () => {
     expect(deps.reportError).toHaveBeenCalledOnce()
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'helo',
-      correcting: false,
+      isCorrecting: false,
       correctionError: 'failed',
     })
   })
@@ -139,7 +136,7 @@ describe('createCorrectionStep', () => {
     expect(deps.reportError).not.toHaveBeenCalled()
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'helo',
-      correcting: false,
+      isCorrecting: false,
     })
     expect(menu.currentModalParams.value).not.toHaveProperty('correctionError')
   })
@@ -147,17 +144,17 @@ describe('createCorrectionStep', () => {
   it('passes extra params to the step', () => {
     const { menu, step } = setup()
 
-    void step.start('helo', { toEditorVisible: true })
+    void step.start('helo', { isEditorButtonVisible: true })
 
     expect(menu.currentModalParams.value).toHaveProperty(
-      'toEditorVisible',
+      'isEditorButtonVisible',
       true
     )
   })
 
   describe('with setPending and clearPending', () => {
     function setupPending() {
-      const menu = createMenuModalsStoreModel()
+      const menu = createMenuModalsModel()
       const request = deferred<string>()
       let signal: AbortSignal | undefined
       const deps = {
@@ -200,7 +197,7 @@ describe('createCorrectionStep', () => {
       expect(menu.currentModal.value).toBe(MenuModals.NONE)
       expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
     })
-    it('shows pending overlay while correcting and opens diff on success', async () => {
+    it('shows pending overlay while isCorrecting and opens diff on success', async () => {
       const { menu, request, deps, step } = setupPending()
       menu.nextModal(MenuModals.INSERT, { text: 'helo' })
 

@@ -33,9 +33,9 @@
         {{ t('commands.badgeNoText') }}
       </span>
       <span
-        v-if="command.enabled && unavailableReason"
+        v-if="command.enabled && unavailableReasonKey"
         class="command-badge is-muted"
-        :title="t(unavailableReason!)"
+        :title="t(unavailableReasonKey!)"
       >
         {{ t('commands.badgeUnavailable') }}
       </span>
@@ -150,7 +150,7 @@ const { t } = useI18n()
 const toolsStore = useToolsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
-const unavailableReason = computed(() =>
+const unavailableReasonKey = computed(() =>
   commandUnavailableReason(props.command, toolsStore)
 )
 const hasIssues = computed(

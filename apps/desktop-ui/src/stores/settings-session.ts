@@ -14,14 +14,14 @@ import { useThemeStore } from './theme'
 /** Owns the draft across settings navigation, including failed final saves. */
 export const useSettingsSessionStore = defineStore('settingsSession', () => {
   const ipc = useIpcStore()
-  const { pluginIndexes } = usePluginRuntimeStore()
+  const { pluginFactories } = usePluginRuntimeStore()
   const actions = useActionMenuStore()
   const theme = useThemeStore()
   const { toastText } = useToast()
   const config = createSettingsConfig({
     resolveMainActions: actions.resolveMainActions,
     getRegisteredActions: actions.getRegisteredActions,
-    pluginIndexes: () => pluginIndexes,
+    pluginFactories: () => pluginFactories,
     appearance: () => theme.settings,
   })
   const session = createSettingsSession({

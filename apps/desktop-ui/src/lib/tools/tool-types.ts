@@ -15,7 +15,7 @@ export interface ToolDefinition extends Omit<
   'defaultCommands'
 > {
   inputSchemaFor?(config: Record<string, unknown>): JsonSchema
-  unavailableReason?(): string | undefined
+  getUnavailableReasonKey?(): string | undefined
   /** The tool writes its output to the action log when the command asks */
   logsOutput?: boolean
   defaultCommands?(context: DefaultCommandsContext): DefaultCommand[]

@@ -26,7 +26,7 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ callFunction, desktopState: reactiveParams }),
 }))
 vi.mock('../stores/nav-panel', () => ({
-  useNavPanelStore: () => ({ resetNavParams: vi.fn() }),
+  useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
 }))
 vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: (

@@ -86,7 +86,7 @@ import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
-import { useWriteInputStore } from '../../stores/write-input'
+import { useQuickInputStore } from '../../stores/quick-input'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionModeView from '../../views/CorrectionModeView.vue'
@@ -99,7 +99,7 @@ import WriteModeView from '../../views/WriteModeView.vue'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const writeInputStore = useWriteInputStore()
+const quickInputStore = useQuickInputStore()
 const quickDismissStore = useQuickDismissStore()
 const commandLauncherStore = useCommandLauncherStore()
 const cardRef = ref<HTMLElement | null>(null)
@@ -159,7 +159,7 @@ const keepsOnFocusLoss = computed(
 
 /** The user clicked elsewhere: drop what is in progress, keep the text. */
 const dismiss = () => {
-  if (currentMode.value === 'write') writeInputStore.markDismissed()
+  if (currentMode.value === 'write') quickInputStore.markDismissed()
   menuModalsStore.cancelAndCloseAll()
   // a failed dismissal leaves the window shown, which tells enough
   void ipcStore.callFunction('dismissQuickWindow')
@@ -257,7 +257,7 @@ function observeInputParts() {
 
 const syncFocus = () => {
   if (currentMode.value === 'write') {
-    writeInputStore.focus()
+    quickInputStore.focus()
   }
 }
 

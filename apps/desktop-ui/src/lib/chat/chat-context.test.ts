@@ -1,56 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { trimChatContext } from './chat-context'
 
-import {
-  createAssistantMessage,
-  createChatHistoryEntry,
-  prepareChatRequest,
-  trimChatContext,
-} from './chat-helpers'
-
-describe('chat-helpers', () => {
-  it('prepares a chat request with attachments', () => {
-    const result = prepareChatRequest('Hello', [
-      { text: 'file-a' },
-      { text: 'file-b', source: 'editor-text' },
-    ])
-
-    expect(result.userMessage).toEqual({
-      role: 'user',
-      content: 'Hello',
-      attachments: [
-        { text: 'file-a' },
-        { text: 'file-b', source: 'editor-text' },
-      ],
-    })
-
-    expect(result.preparedMessage).toContain(
-      '<attachment>\nfile-a\n</attachment>'
-    )
-    expect(result.preparedMessage).toContain(
-      '<attachment source="editor-text">\nfile-b\n</attachment>'
-    )
-    expect(result.preparedMessage).toContain('Hello')
-  })
-
-  it('creates a history entry from prepared messages', () => {
-    const userMessage = { role: 'user' as const, content: 'Question' }
-    const assistantMessage = createAssistantMessage('Answer')
-
-    expect(
-      createChatHistoryEntry({
-        id: 'chat-1',
-        title: 'Question',
-        lastMessageAt: '2026-04-22T00:00:00.000Z',
-        messages: [userMessage, assistantMessage],
-      })
-    ).toEqual({
-      id: 'chat-1',
-      title: 'Question',
-      lastMessageAt: '2026-04-22T00:00:00.000Z',
-      messages: [userMessage, assistantMessage],
-    })
-  })
-
+describe('trimChatContext', () => {
   it('keeps complete recent turns within the context budget', () => {
     const messages = [
       { role: 'user' as const, content: 'old question' },

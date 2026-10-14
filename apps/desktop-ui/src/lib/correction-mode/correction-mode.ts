@@ -1,9 +1,9 @@
-export interface CorrectionModeDeps {
+export interface CorrectionModeDependencies {
   startCorrection: (text: string) => Promise<void>
   setPending: (pending: boolean) => void
 }
 
-export function createCorrectionMode(deps: CorrectionModeDeps) {
+export function createCorrectionMode(deps: CorrectionModeDependencies) {
   let lastText: string | null = null
   let pending = false
   let queuedText: string | null = null

@@ -29,7 +29,7 @@ in `assets/styles/tokens.css`. Assets must remain bundled and work offline.
   initial focus on Cancel. Do not attach a second global Escape handler.
 - `DropdownMenu` uses menu semantics and arrow/Home/End navigation; Escape and
   selection restore trigger focus. `usePopover` owns outside-click and focus exit.
-- `UiState` standardizes empty/loading/error/info presentation. Keep domain text
+- `StateMessage` standardizes empty/loading/error/info presentation. Keep domain text
   and retry callbacks in the screen. Loading uses `status`, errors use `alert`.
 
 ## Styling

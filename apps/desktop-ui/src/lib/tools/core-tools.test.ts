@@ -21,8 +21,8 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
     aiCustomPrompt: vi.fn(
       async (prompt: string, text: string) => `${prompt} → ${text}`
     ),
-    llmUnavailable: vi.fn(() => undefined),
-    translatorUnavailable: vi.fn(() => undefined),
+    getLlmUnavailableReasonKey: vi.fn(() => undefined),
+    getTranslatorUnavailableReasonKey: vi.fn(() => undefined),
     describeError: (error) =>
       error instanceof Error ? error.message : String(error),
     ...extra,
@@ -188,15 +188,19 @@ describe('createCoreTools', () => {
 
   it('tells why a tool of the LLM cannot run', () => {
     const { tools } = setup({
-      llmUnavailable: (task) =>
+      getLlmUnavailableReasonKey: (task) =>
         task === 'aiTasks' ? 'tools.noLlm' : undefined,
-      translatorUnavailable: () => 'tools.noLlm',
+      getTranslatorUnavailableReasonKey: () => 'tools.noLlm',
     })
-    expect(tools.get('core.correct')?.unavailableReason?.()).toBeUndefined()
-    expect(tools.get('core.aiTask')?.unavailableReason?.()).toBe('tools.noLlm')
-    expect(tools.get('core.translate')?.unavailableReason?.()).toBe(
+    expect(
+      tools.get('core.correct')?.getUnavailableReasonKey?.()
+    ).toBeUndefined()
+    expect(tools.get('core.aiTask')?.getUnavailableReasonKey?.()).toBe(
       'tools.noLlm'
     )
-    expect(tools.get('core.copy')?.unavailableReason).toBeUndefined()
+    expect(tools.get('core.translate')?.getUnavailableReasonKey?.()).toBe(
+      'tools.noLlm'
+    )
+    expect(tools.get('core.copy')?.getUnavailableReasonKey).toBeUndefined()
   })
 })

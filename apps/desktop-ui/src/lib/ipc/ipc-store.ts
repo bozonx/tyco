@@ -26,7 +26,7 @@ export interface DesktopInvoker {
   isAvailable: () => boolean
 }
 
-export interface IpcStoreDeps {
+export interface IpcStoreDependencies {
   desktopClient: DesktopInvoker
   notifyError: (message: string, title: string) => void
   logError: (message: string, error: unknown) => void
@@ -36,7 +36,7 @@ export interface IpcStoreDeps {
   waitForKeysReleased?: () => Promise<void>
 }
 
-export function createIpcStoreModel(deps: IpcStoreDeps) {
+export function createIpcModel(deps: IpcStoreDependencies) {
   const commandMap = createCommandMap()
 
   /**

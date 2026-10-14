@@ -5,13 +5,13 @@ import {
 } from '@tyco/plugin-sdk'
 import type { InstalledPluginPackage } from '@tyco/shared'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 
 export interface PluginPackageLoaderDependencies {
   activate(
     manifest: PluginManifest,
     modulePath: string,
-    ctx: Parameters<ReturnType<PluginIndex>['init']>[0]
+    ctx: Parameters<ReturnType<PluginFactory>['init']>[0]
   ): Promise<void>
   reportError(id: string, error: unknown): void
 }
@@ -22,8 +22,8 @@ export function createPluginPackageLoader(
   async function load(
     packages: InstalledPluginPackage[],
     reservedIds: readonly string[]
-  ): Promise<PluginIndex[]> {
-    const factories: PluginIndex[] = []
+  ): Promise<PluginFactory[]> {
+    const factories: PluginFactory[] = []
     const seen = new Set(reservedIds)
     for (const installed of packages) {
       const { manifest, modulePath } = installed

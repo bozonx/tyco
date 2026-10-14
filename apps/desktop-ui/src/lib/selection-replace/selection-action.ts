@@ -6,13 +6,13 @@ import type {
 
 import { normalizeCommands } from '../commands/command-config'
 import { commandLabel } from '../commands/command-runtime'
-import type { createHistoryStoreModel } from '../history/history-store'
+import type { createHistoryModel } from '../history/history-store'
 import { toolResultMessage } from '../invocation/invocation-result'
 import type { ToolResult } from '../tools/tool-types'
 
 export class SelectionActionAbortedError extends Error {}
 
-export interface SelectionActionDeps {
+export interface SelectionActionDependencies {
   commands: () => unknown
   correct: (text: string, signal: AbortSignal) => Promise<ToolResult>
   transform: (
@@ -22,7 +22,7 @@ export interface SelectionActionDeps {
   ) => Promise<ToolResult>
   logRun: (record: CommandRunRecord) => Promise<void>
   history: Pick<
-    ReturnType<typeof createHistoryStoreModel>,
+    ReturnType<typeof createHistoryModel>,
     'saveSource' | 'saveSourceResult' | 'saveOutput'
   >
   t: (key: string, params?: Record<string, string>) => string
@@ -30,7 +30,7 @@ export interface SelectionActionDeps {
 }
 
 /** Runs a selection action and records text that leaves the application. */
-export function createSelectionAction(deps: SelectionActionDeps) {
+export function createSelectionAction(deps: SelectionActionDependencies) {
   const run = async (
     action: SelectionAction,
     text: string,

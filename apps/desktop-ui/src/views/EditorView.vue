@@ -33,16 +33,16 @@ function openInsertMenu() {
   })
 }
 
-navPanelStore.resetNavParams({
-  escBtnAction: () => {
+navPanelStore.resetNavPanelState({
+  onEscape: () => {
     openInsertMenu()
   },
-  escBtnLabelKey: 'menu.actions',
+  escapeButtonLabelKey: 'menu.actions',
 })
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.defaultPrevented) return
-  if (menuModalsStore.anyModalOpen || menuModalsStore.pendingModal) return
+  if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) return
   if (event.code === 'Escape') {
     event.preventDefault()
     if (!event.repeat) {

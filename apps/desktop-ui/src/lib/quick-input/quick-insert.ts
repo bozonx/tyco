@@ -1,4 +1,4 @@
-export interface QuickInsertDeps {
+export interface QuickInsertDependencies {
   correct: (text: string) => Promise<string>
   cancelCorrection: () => void
   saveOutput: (text: string) => Promise<unknown>
@@ -9,7 +9,7 @@ export interface QuickInsertDeps {
 }
 
 /** Owns a submission until insertion starts; abandoned results cannot paste. */
-export function createQuickInsert(deps: QuickInsertDeps) {
+export function createQuickInsert(deps: QuickInsertDependencies) {
   let disposed = false
   let active: { owner?: number | void } | null = null
 

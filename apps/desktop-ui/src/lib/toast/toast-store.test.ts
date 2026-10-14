@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_TOAST_DURATIONS,
   MAX_TOASTS,
-  createToastStoreModel,
+  createToastModel,
 } from './toast-store'
 
-describe('createToastStoreModel', () => {
+describe('createToastModel', () => {
   beforeEach(() => {
     vi.useFakeTimers()
   })
@@ -16,7 +16,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('adds a toast with default durations', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     const id = store.addToast('Operation succeeded', 'success')
 
     expect(store.toasts.value).toHaveLength(1)
@@ -29,7 +29,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('supports custom duration and title', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     const id = store.addToast('Custom message', 'error', {
       title: 'Failed',
       duration: 3000,
@@ -45,7 +45,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('auto-dismisses toast after its duration', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     store.addToast('Expiring toast', 'info', { duration: 2000 })
 
     expect(store.toasts.value).toHaveLength(1)
@@ -58,7 +58,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('removes toast explicitly by id', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     const id = store.addToast('Item to remove', 'warn')
 
     expect(store.toasts.value).toHaveLength(1)
@@ -69,7 +69,7 @@ describe('createToastStoreModel', () => {
   it('pauses and resumes countdown on hover', () => {
     let currentTime = 1000
     const now = () => currentTime
-    const store = createToastStoreModel({ now })
+    const store = createToastModel({ now })
 
     const id = store.addToast('Hover toast', 'info', { duration: 4000 })
 
@@ -107,7 +107,7 @@ describe('createToastStoreModel', () => {
   it('pauses and resumes multiple times without losing remaining time', () => {
     let currentTime = 1000
     const now = () => currentTime
-    const store = createToastStoreModel({ now })
+    const store = createToastModel({ now })
 
     const id = store.addToast('Multi hover toast', 'info', { duration: 4000 })
 
@@ -152,7 +152,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('deduplicates identical toasts by refreshing duration', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     const id1 = store.addToast('Duplicate message', 'warn', { duration: 3000 })
 
     vi.advanceTimersByTime(1500)
@@ -173,7 +173,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('respects MAX_TOASTS limit by evicting oldest toasts', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
 
     for (let i = 1; i <= MAX_TOASTS + 2; i++) {
       store.addToast(`Toast ${i}`, 'info', { duration: 0 })
@@ -185,7 +185,7 @@ describe('createToastStoreModel', () => {
   })
 
   it('clears all toasts', () => {
-    const store = createToastStoreModel()
+    const store = createToastModel()
     store.addToast('Toast 1', 'info', { duration: 10000 })
     store.addToast('Toast 2', 'error', { duration: 10000 })
 

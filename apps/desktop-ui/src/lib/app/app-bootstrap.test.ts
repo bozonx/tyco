@@ -7,15 +7,18 @@ import {
 import { describe, expect, it, vi } from 'vitest'
 
 import { APP_ROUTES } from '../navigation/routes'
-import { createAppBootstrap, type AppBootstrapDeps } from './app-bootstrap'
+import {
+  createAppBootstrap,
+  type AppBootstrapDependencies,
+} from './app-bootstrap'
 
-function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
+function createDeps(overrides: Partial<AppBootstrapDependencies> = {}) {
   const listeners = new Map<
     string,
     (payload: unknown) => void | Promise<void>
   >()
 
-  const deps: AppBootstrapDeps = {
+  const deps: AppBootstrapDependencies = {
     loadDesktopState: vi.fn(async () => ({
       ...DEFAULT_DESKTOP_VIEW_STATE,
       mode: StartMode.EDITOR,

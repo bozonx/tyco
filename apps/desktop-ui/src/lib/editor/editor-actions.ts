@@ -4,7 +4,7 @@ import type { EditItem } from '../edit-menu/edit-menu-store'
 import type { EditSource } from './edit-source'
 import { createTextEditModel } from '../edit-menu/text-edit'
 
-export interface EditorActionsDeps {
+export interface EditorActionsDependencies {
   editor: {
     value: string
     selectedText: string
@@ -32,7 +32,7 @@ export interface EditorActionsDeps {
 }
 
 /** Shared editor actions for the toolbar and context menu. */
-export function createEditorActions(deps: EditorActionsDeps) {
+export function createEditorActions(deps: EditorActionsDependencies) {
   const { editor: editorInputStore, t, toast } = deps
   const getLabel = (item: ActionItem | EditItem): string =>
     item.labelKey ? t(item.labelKey) : item.name || ''

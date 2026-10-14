@@ -184,10 +184,12 @@ describe('VoiceRecognitionMenu', () => {
     expect(wrapper.emitted('corrected')).toBeTruthy()
     expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('submit')
   })
-  describe('quick voice chat keys', () => {
-    const mountQuickSend = () =>
+  describe('voice completion shortcuts', () => {
+    const mountVoiceInput = (
+      finishBehavior: 'submitToChat' | 'insertIntoTarget' | 'confirm'
+    ) =>
       mount(VoiceRecognitionMenu, {
-        props: { variant: 'sheet', quickSend: true },
+        props: { variant: 'sheet', finishBehavior },
         global: {
           stubs: {
             ActionOverlayLayout: {
@@ -212,17 +214,38 @@ describe('VoiceRecognitionMenu', () => {
     }
 
     it.each([
-      [{ code: 'Enter' }, 'submit'],
-      [{ code: 'Space' }, 'submit'],
-      [{ code: 'Enter', shiftKey: true }, 'insert'],
-      [{ code: 'Tab' }, 'next'],
-    ] as const)('finishes %o with %s', async (init, intent) => {
-      const wrapper = mountQuickSend()
+      ['submitToChat', { code: 'Enter' }, 'submit'],
+      ['submitToChat', { code: 'Space' }, 'submit'],
+      ['submitToChat', { code: 'Enter', shiftKey: true }, 'insert'],
+      ['submitToChat', { code: 'Tab' }, 'next'],
+      ['insertIntoTarget', { code: 'Enter' }, 'insert'],
+      ['insertIntoTarget', { code: 'Space' }, 'insert'],
+      ['insertIntoTarget', { code: 'Tab' }, 'next'],
+      ['confirm', { code: 'Enter' }, 'insert'],
+      ['confirm', { code: 'Space' }, 'insert'],
+    ] as const)('%s finishes %o with %s', async (behavior, init, intent) => {
+      const wrapper = mountVoiceInput(behavior)
       await flushPromises()
 
       await keyUp(init)
 
       expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe(intent)
+      wrapper.unmount()
+    })
+
+    it('keeps Tab available for focus navigation in confirm mode', async () => {
+      const wrapper = mountVoiceInput('confirm')
+      await flushPromises()
+      const event = new KeyboardEvent('keydown', {
+        code: 'Tab',
+        cancelable: true,
+      })
+      window.dispatchEvent(event)
+      await keyUp({ code: 'Tab' })
+
+      expect(event.defaultPrevented).toBe(false)
+      expect(mocks.finishDictation).not.toHaveBeenCalled()
+      expect(wrapper.emitted('corrected')).toBeUndefined()
       wrapper.unmount()
     })
   })

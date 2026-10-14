@@ -2,14 +2,14 @@ import { ref } from 'vue'
 
 import { createQuickInputSession } from './quick-input-session'
 
-export interface WriteInputDependencies {
+export interface QuickInputDependencies {
   now?: () => number
 }
 
-export function createWriteInputModel(deps: WriteInputDependencies = {}) {
+export function createQuickInputModel(deps: QuickInputDependencies = {}) {
   const value = ref<string>('')
-  const focusCount = ref<number>(0)
-  const selectAllCount = ref<number>(0)
+  const focusRequestCount = ref<number>(0)
+  const selectAllRequestCount = ref<number>(0)
   /** The last text sent on or cancelled, offered again on ArrowUp. */
   const recallText = ref<string>('')
 
@@ -60,17 +60,17 @@ export function createWriteInputModel(deps: WriteInputDependencies = {}) {
   }
 
   const focus = (): void => {
-    focusCount.value++
+    focusRequestCount.value++
   }
 
   const focusAndSelectAll = (): void => {
-    selectAllCount.value++
+    selectAllRequestCount.value++
   }
 
   return {
     value,
-    focusCount,
-    selectAllCount,
+    focusRequestCount,
+    selectAllRequestCount,
     recallText,
     setValue,
     clear,

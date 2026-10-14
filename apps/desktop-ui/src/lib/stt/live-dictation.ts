@@ -24,7 +24,7 @@ export class DictationError extends Error {
 /** How long the provider may take for its last words once the audio ends */
 const FINISH_TIMEOUT_MS = 10_000
 
-export interface LiveDictationDeps {
+export interface LiveDictationDependencies {
   capture: VoiceCaptureControl
   stt: SttClient
   finishTimeoutMs?: number
@@ -53,7 +53,9 @@ export interface LiveDictation {
 }
 
 /** One dictation at a time: the microphone streamed to a live transcription. */
-export function createLiveDictation(deps: LiveDictationDeps): LiveDictation {
+export function createLiveDictation(
+  deps: LiveDictationDependencies
+): LiveDictation {
   let controller: AbortController | undefined
   let session: Promise<void> | undefined
   let state = createLiveTranscriptState()

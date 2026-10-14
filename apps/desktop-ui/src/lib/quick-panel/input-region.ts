@@ -52,7 +52,7 @@ export function sameRegion(a: InputRect | null, b: InputRect | null): boolean {
   )
 }
 
-export interface InputRegionSyncDeps {
+export interface InputRegionSyncDependencies {
   apply: (region: InputRect | null) => Promise<void>
 }
 
@@ -61,7 +61,7 @@ export interface InputRegionSyncDeps {
  * latest region matters: the ones requested while a request is in flight
  * collapse into it, and a region equal to the applied one is skipped.
  */
-export function createInputRegionSync(deps: InputRegionSyncDeps) {
+export function createInputRegionSync(deps: InputRegionSyncDependencies) {
   // undefined: nothing is known to be applied
   let applied: InputRect | null | undefined
   let wanted: InputRect | null = null

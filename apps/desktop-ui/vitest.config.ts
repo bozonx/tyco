@@ -7,7 +7,7 @@ const NODE_TEST_PATTERNS = [
   'build/**/*.test.ts',
   'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,correction-mode,ai-tasks,logger,diff,locale,input-keys,command-launcher}/**/*.test.ts',
   'src/lib/net/{async-queue,base64,provider-fetch,secrets,secrets-state}.test.ts',
-  'src/lib/chat/{context-budget,chat-title,chat-helpers,chat-attachment,chat-export,chat-history-list,chat-history-settings}.test.ts',
+  'src/lib/chat/{context-budget,chat-title,chat-request,chat-history-entry,chat-context,chat-attachment,chat-export,chat-history-list,chat-history-settings}.test.ts',
   'src/lib/stt/{stt-config,sherpa-provider,deepgram-provider,dictation-language,dictation-ownership,stt-readiness}.test.ts',
   'src/lib/clipboard/copy-text.test.ts',
   'src/lib/i18n/messages.test.ts',

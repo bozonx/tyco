@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import type { DesktopErrorCode, IpcResult, UserConfig } from '@tyco/shared'
 
-export interface SettingsSessionDeps {
+export interface SettingsSessionDependencies {
   initialConfig: UserConfig
   prepare: (config: unknown) => UserConfig
   save: (next: UserConfig, base: UserConfig) => Promise<IpcResult<UserConfig>>
@@ -59,7 +59,7 @@ function findConflicts(
   )
 }
 
-export function createSettingsSession(deps: SettingsSessionDeps) {
+export function createSettingsSession(deps: SettingsSessionDependencies) {
   let baseline = clone(deps.initialConfig)
   let savedDraft = deps.prepare(baseline)
   const draft = ref<UserConfig>(clone(savedDraft))

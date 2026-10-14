@@ -36,8 +36,8 @@ vi.mock('../../stores/ipc', () => ({
     callFunction: mocks.callFunction,
   }),
 }))
-vi.mock('../../stores/write-input', () => ({
-  useWriteInputStore: () => ({
+vi.mock('../../stores/quick-input', () => ({
+  useQuickInputStore: () => ({
     focus: mocks.focus,
     markDismissed: mocks.markDismissed,
   }),

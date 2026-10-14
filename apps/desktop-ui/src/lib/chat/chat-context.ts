@@ -1,41 +1,11 @@
-import type { ChatAttachment, Chat, ChatMessage } from '@tyco/shared'
-
+import type { ChatMessage } from '@tyco/shared'
 import { imageBudgetCharacters } from './chat-image-input'
-
-import { formatAttachmentsForPrompt } from './chat-attachment'
-
-export interface PreparedChatRequest {
-  userMessage: ChatMessage
-  preparedMessage: string
-}
-
-export function prepareChatRequest(
-  message: string,
-  attachments: ChatAttachment[] = []
-): PreparedChatRequest {
-  const attachString = formatAttachmentsForPrompt(attachments)
-
-  return {
-    userMessage: {
-      role: 'user',
-      content: message,
-      ...(attachments.length
-        ? { attachments: attachments.map((item) => ({ ...item })) }
-        : {}),
-    },
-    preparedMessage: [attachString, message].filter(Boolean).join('\n\n'),
-  }
-}
-
-export function createAssistantMessage(content: string): ChatMessage {
-  return { role: 'assistant', content }
-}
 
 /** Keeps complete recent turns within a conservative character budget. */
 export function trimChatContext(
   messages: ChatMessage[],
   maxCharacters: number,
-  availableImages = Number.POSITIVE_INFINITY
+  maxImageCount = Number.POSITIVE_INFINITY
 ): ChatMessage[] {
   const turns: ChatMessage[][] = []
   for (const message of messages) {
@@ -70,7 +40,7 @@ export function trimChatContext(
     )
     if (
       used + size + imageSize > maxCharacters ||
-      imageCount + images > availableImages
+      imageCount + images > maxImageCount
     )
       break
     selected.unshift(turn)
@@ -78,18 +48,4 @@ export function trimChatContext(
     imageCount += images
   }
   return selected.flat()
-}
-
-export function createChatHistoryEntry(params: {
-  id: string
-  title: string
-  lastMessageAt: string
-  messages: ChatMessage[]
-}): Chat {
-  return {
-    id: params.id,
-    title: params.title,
-    lastMessageAt: params.lastMessageAt,
-    messages: params.messages,
-  }
 }

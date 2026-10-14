@@ -9,7 +9,7 @@ import { createCleanupScope } from './cleanup-scope'
 
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
-export interface AppBootstrapDeps {
+export interface AppBootstrapDependencies {
   onError?: (error: unknown) => void
   addWindowFocusListener?: (handler: () => void) => () => void
   loadDesktopState: () => Promise<DesktopViewState>
@@ -30,7 +30,7 @@ export interface AppBootstrapDeps {
   ) => () => void
 }
 
-export function createAppBootstrap(deps: AppBootstrapDeps) {
+export function createAppBootstrap(deps: AppBootstrapDependencies) {
   let scope: ReturnType<typeof createCleanupScope> | undefined
   let starting: Promise<void> | undefined
   let lastRevision = -1

@@ -3,7 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import type { Chat } from '@tyco/shared'
 
 import { createChatController } from './chat-controller'
-import { createChatStoreModel } from './chat-store'
+import { createChatModel } from './chat-store'
 import type { ChatModelOption } from './chat-model'
 
 function setup() {
@@ -29,7 +29,7 @@ function setup() {
   const sendChatMessage = vi.fn(async () => 'answer')
   const loadChat = vi.fn<(id: string) => Promise<Chat | null>>(async () => null)
   let id = 0
-  const model = createChatStoreModel({
+  const model = createChatModel({
     sendChatMessage,
     generateChatTitle: async () => '',
     saveChat: vi.fn(),

@@ -105,23 +105,23 @@
     </section>
     <section class="surface catalog-section">
       <h2>States</h2>
-      <UiState
+      <StateMessage
         title="No items"
         message="Add an item to get started."
         icon="mdi:history"
       />
-      <UiState
+      <StateMessage
         kind="loading"
         message="Loading items…"
         icon="mdi:progress-clock"
         inline
       />
-      <UiState
+      <StateMessage
         kind="error"
         message="Could not load items."
         icon="mdi:alert-circle-outline"
         inline
-        ><Button size="xs" variant="ghost">Retry</Button></UiState
+        ><Button size="xs" variant="ghost">Retry</Button></StateMessage
       >
     </section>
     <ConfirmModal
@@ -151,9 +151,9 @@ import FieldTextArea from '../components/common/FieldTextArea.vue'
 import IconButton from '../components/common/IconButton.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
+import StateMessage from '../components/common/StateMessage.vue'
 import Tabs from '../components/common/Tabs.vue'
 import ToastContainer from '../components/common/ToastContainer.vue'
-import UiState from '../components/common/UiState.vue'
 import { useToastStore } from '../stores/toast'
 
 const themes = [

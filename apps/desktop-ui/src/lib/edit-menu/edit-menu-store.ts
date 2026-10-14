@@ -8,7 +8,7 @@ export interface EditMenuDependencies {
   stripMarkdown: (text: string) => string
 }
 
-export function createEditMenuStoreModel(deps: EditMenuDependencies) {
+export function createEditMenuModel(deps: EditMenuDependencies) {
   const registeredCaseMenu = shallowRef<EditItem[]>([])
   const registeredFormatMenu = shallowRef<EditItem[]>([])
   const registeredOtherEditMenu = shallowRef<EditItem[]>([])

@@ -7,8 +7,7 @@
     :recording-duration-ms="recordingDurationMs"
     :is-transcribing="isTranscribing"
     :is-finishing="isFinishing"
-    :quick-send="props.quickSend"
-    :with-next="props.withNext"
+    :finish-behavior="props.finishBehavior"
     :chat="props.chat"
     :prefix="props.prefix"
     :suffix="props.suffix"
@@ -133,20 +132,28 @@ function handleKeyUp(event: KeyboardEvent) {
   }
 
   // as in a chat input, Shift+Enter keeps the text without sending it
-  if (props.quickSend && event.shiftKey && event.code === 'Enter') {
+  if (
+    props.finishBehavior === 'submitToChat' &&
+    event.shiftKey &&
+    event.code === 'Enter'
+  ) {
     event.preventDefault()
     void finish('insert')
     return
   }
 
-  if ((props.quickSend || props.withNext) && event.code === 'Tab') {
+  if (
+    (props.finishBehavior === 'submitToChat' ||
+      props.finishBehavior === 'insertIntoTarget') &&
+    event.code === 'Tab'
+  ) {
     event.preventDefault()
     void finish('next')
     return
   }
 
   if (event.code === 'Space' || event.code === 'Enter') {
-    void finish(props.quickSend ? 'submit' : 'insert')
+    void finish(props.finishBehavior === 'submitToChat' ? 'submit' : 'insert')
   }
 }
 
@@ -158,7 +165,11 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 
   // Tab finishes the dictation; it must not move the focus first
-  if ((props.quickSend || props.withNext) && event.code === 'Tab') {
+  if (
+    (props.finishBehavior === 'submitToChat' ||
+      props.finishBehavior === 'insertIntoTarget') &&
+    event.code === 'Tab'
+  ) {
     event.preventDefault()
   }
 }

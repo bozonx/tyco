@@ -5,11 +5,11 @@ import type {
   ChatMessage,
 } from '@tyco/shared'
 import { APP_ROUTES } from '../navigation/routes'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatSessionModel(
   deps: Pick<
-    ChatStoreDeps,
+    ChatStoreDependencies,
     | 'createId'
     | 'saveSessionState'
     | 'navigateTo'

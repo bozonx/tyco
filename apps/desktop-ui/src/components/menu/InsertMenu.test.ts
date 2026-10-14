@@ -44,7 +44,7 @@ const correctionStep = {
   text: 'Corrected text',
   oldText: 'Original text',
   originalText: 'Original text',
-  toEditorVisible: true,
+  isEditorButtonVisible: true,
 }
 
 describe('InsertMenu correction step', () => {
@@ -66,7 +66,7 @@ describe('InsertMenu correction step', () => {
 
     expect(list.props('leftLetterKeys')).toEqual([])
     expect(list.props('altText')).toBeUndefined()
-    expect(list.props('toEditorVisible')).toBe(false)
+    expect(list.props('isEditorButtonVisible')).toBe(false)
     const space = list.props('spaceKey')
     expect(space?.id).toBe('applyToEditor')
 
@@ -81,10 +81,10 @@ describe('InsertMenu correction step', () => {
 
     expect(list.props('spaceKey')?.id).not.toBe('applyToEditor')
     expect(list.props('altText')).toBe('Original text')
-    expect(list.props('toEditorVisible')).toBe(true)
+    expect(list.props('isEditorButtonVisible')).toBe(true)
   })
 
-  it('uses menu.actions title by default and menu.correction when correcting', () => {
+  it('uses menu.actions title by default and menu.correction when isCorrecting', () => {
     const defaultWrapper = mountMenu({ text: 'Some text' })
     expect(
       defaultWrapper.find('[data-testid="layout"]').attributes('data-title')

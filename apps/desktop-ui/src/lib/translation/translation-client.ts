@@ -28,7 +28,7 @@ const MT_CHUNK_LIMIT = 4_500
 const LLM_CHUNK_LIMIT = 36_000
 const LLM_REPAIR_COMBINED_LIMIT = 48_000
 
-export interface TranslationClientDeps {
+export interface TranslationClientDependencies {
   getConfig: () => TranslationConfig
   getLlmLimits?: () => { contextWindowTokens: number; maxOutputTokens: number }
   transport: Transport
@@ -64,7 +64,7 @@ interface FirstPass {
   detectedSourceLanguage?: string
 }
 
-export function createTranslationClient(deps: TranslationClientDeps): {
+export function createTranslationClient(deps: TranslationClientDependencies): {
   translate: (
     text: string,
     options: TranslationRunOptions
@@ -125,7 +125,7 @@ export function createTranslationClient(deps: TranslationClientDeps): {
 }
 
 async function translateWithMachine(
-  deps: TranslationClientDeps,
+  deps: TranslationClientDependencies,
   config: TranslationConfig,
   text: string,
   options: TranslationRunOptions
@@ -203,7 +203,7 @@ async function translateWithMachine(
 }
 
 async function translateWithLlm(
-  deps: TranslationClientDeps,
+  deps: TranslationClientDependencies,
   text: string,
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
@@ -259,7 +259,7 @@ async function translateWithLlm(
 }
 
 async function repairWithLlm(
-  deps: TranslationClientDeps,
+  deps: TranslationClientDependencies,
   source: string,
   translation: string,
   problems: TranslationProblem[],
@@ -386,7 +386,7 @@ function repairInstruction(problems: TranslationProblem[]): string {
 
 /** Reserve context for instructions and an expanded translation, conservatively. */
 function llmChunkLimit(
-  deps: TranslationClientDeps,
+  deps: TranslationClientDependencies,
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
 ): number {

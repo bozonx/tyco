@@ -40,7 +40,12 @@ describe('TranslateMenu', () => {
             template: `<div><slot name="preview" /><slot name="actions" /></div>`,
           },
           ShortcutList: {
-            props: ['text', 'spaceKey', 'leftLetterKeys', 'toEditorVisible'],
+            props: [
+              'text',
+              'spaceKey',
+              'leftLetterKeys',
+              'isEditorButtonVisible',
+            ],
             setup(props: any) {
               shortcutListProps = props
               return () => null

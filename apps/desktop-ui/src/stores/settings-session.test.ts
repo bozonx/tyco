@@ -28,7 +28,7 @@ vi.mock('./action-menu', () => ({
 }))
 vi.mock('./theme', () => ({ useThemeStore: () => ({ settings: {} }) }))
 vi.mock('./plugin-runtime', () => ({
-  usePluginRuntimeStore: () => ({ pluginIndexes: [] }),
+  usePluginRuntimeStore: () => ({ pluginFactories: [] }),
 }))
 vi.mock('../composables/use-toast', () => ({
   default: () => ({ toastText: mocks.toastText }),

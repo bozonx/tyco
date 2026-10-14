@@ -46,10 +46,10 @@ describe('store lifecycle', () => {
     const first = createPinia()
     const second = createPinia()
     const nav = useNavPanelStore(first)
-    nav.params.panelVisible = false
-    expect(useNavPanelStore(second).params.panelVisible).toBe(true)
-    nav.resetNavParams()
-    expect(nav.params.panelVisible).toBe(true)
+    nav.navPanelState.panelVisible = false
+    expect(useNavPanelStore(second).navPanelState.panelVisible).toBe(true)
+    nav.resetNavPanelState()
+    expect(nav.navPanelState.panelVisible).toBe(true)
     disposePinia(first)
     disposePinia(second)
   })

@@ -11,7 +11,7 @@ import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { describeError } from '../lib/llm/llm-errors'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
-import { createBuiltinTools } from '../lib/tools/builtin-tools'
+import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-tools'
 import { createCoreTools } from '../lib/tools/core-tools'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
@@ -35,7 +35,7 @@ export const useToolsStore = defineStore('tools', () => {
   const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = useDesktopInsertion()
 
-  const llmUnavailable = (task: LlmTask) =>
+  const getLlmUnavailableReasonKey = (task: LlmTask) =>
     normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).tasks[task]
       ?.length
       ? undefined
@@ -67,16 +67,16 @@ export const useToolsStore = defineStore('tools', () => {
     },
     aiCustomPrompt: (prompt, text, signal) =>
       aiCustomPrompt(prompt, text, { signal, notifyError: false }),
-    llmUnavailable,
-    translatorUnavailable: () =>
+    getLlmUnavailableReasonKey,
+    getTranslatorUnavailableReasonKey: () =>
       ipcStore.desktopState.userConfig?.translation?.provider === 'llm'
-        ? llmUnavailable('translate')
+        ? getLlmUnavailableReasonKey('translate')
         : undefined,
     describeError: (error) => describeError(error, translate),
   })
 
   return createToolRegistry([
-    ...createBuiltinTools({
+    ...createScriptAndWebhookTools({
       ...createScriptActionClient(ipcStore.callFunction),
       executeWebhook: (target, text, signal) =>
         executeWebhook(

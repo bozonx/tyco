@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { createCommand } from '../commands/command-config'
 import { createSettingsOperations } from './settings-operations'
 
@@ -8,7 +8,7 @@ function fixture() {
   const config = structuredClone(DEFAULT_USER_CONFIG)
   const deps = {
     getConfig: () => config,
-    pluginIndexes: (): PluginIndex[] => [],
+    pluginFactories: (): PluginFactory[] => [],
     createCommand: vi.fn((toolId: string) => createCommand(toolId, 'created')),
     persist: vi.fn().mockResolvedValue(undefined),
     isSaved: vi.fn(() => true),
@@ -103,7 +103,7 @@ describe('settings operations', () => {
 
   it('applies plugin presets and preserves unrelated settings', () => {
     const f = fixture()
-    f.deps.pluginIndexes = () => [
+    f.deps.pluginFactories = () => [
       () => ({
         id: 'test',
         name: 'Test',

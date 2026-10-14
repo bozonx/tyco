@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
     setValue: vi.fn(),
   },
   modals: {
-    anyModalOpen: false,
+    hasOpenModal: false,
     pendingModal: null as object | null,
     nextModal: vi.fn(),
     cancelPending: vi.fn(),
@@ -33,8 +33,8 @@ const mocks = vi.hoisted(() => ({
   correction: {
     insert: vi.fn(),
     cancelInsert: vi.fn(),
-    speculate: vi.fn(),
-    cancelSpeculation: vi.fn(),
+    schedulePrecorrection: vi.fn(),
+    cancelPrecorrection: vi.fn(),
   },
   callFunction: vi.fn(),
 }))
@@ -48,8 +48,8 @@ vi.mock('../stores/ipc', () => ({
     callFunctionOrNotify: mocks.callFunction,
   }),
 }))
-vi.mock('../stores/write-input', () => ({
-  useWriteInputStore: () => reactive(mocks.writer),
+vi.mock('../stores/quick-input', () => ({
+  useQuickInputStore: () => reactive(mocks.writer),
 }))
 vi.mock('../stores/menu-modals', () => ({
   MenuModals: { INSERT: 'insert' },
@@ -59,7 +59,7 @@ vi.mock('../stores/correction-workflow', () => ({
   useCorrectionWorkflowStore: () => mocks.correction,
 }))
 vi.mock('../stores/nav-panel', () => ({
-  useNavPanelStore: () => ({ resetNavParams: vi.fn() }),
+  useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
 }))
 vi.mock('../components/quick/WriteModeInput.vue', () => ({
   default: { template: '<textarea />' },
@@ -86,7 +86,7 @@ beforeEach(() => {
   mocks.desktopState.isWindowShown = true
   mocks.desktopState.userConfig.submitKey = undefined
   mocks.modals.pendingModal = null
-  mocks.modals.anyModalOpen = false
+  mocks.modals.hasOpenModal = false
   wrapper = mount(WriteModeView)
   vi.clearAllMocks()
 })

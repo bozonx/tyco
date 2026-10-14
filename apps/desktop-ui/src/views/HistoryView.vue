@@ -158,7 +158,7 @@ onUnmounted(() => {
   void removal.dispose()
 })
 
-navPanelStore.resetNavParams({})
+navPanelStore.resetNavPanelState({})
 
 const loadEditorHistory = async () => {
   try {

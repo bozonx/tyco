@@ -2,16 +2,16 @@ import type { PluginContext } from '@tyco/plugin-sdk'
 import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { createPluginManager, type PluginLifecycle } from './plugin-manager'
 
-function setup(indexes: PluginIndex[]) {
+function setup(indexes: PluginFactory[]) {
   const contexts = new Map<
     string,
     { config: () => Record<string, unknown>; lifecycle: PluginLifecycle }
   >()
   const deps = {
-    pluginIndexes: indexes,
+    pluginFactories: indexes,
     createPluginContext: vi.fn(
       (
         id: string,
@@ -35,8 +35,8 @@ function setup(indexes: PluginIndex[]) {
 const plugin =
   (
     name: string,
-    init: ReturnType<PluginIndex>['init'] = vi.fn()
-  ): PluginIndex =>
+    init: ReturnType<PluginFactory>['init'] = vi.fn()
+  ): PluginFactory =>
   () => ({
     id: name,
     name,
@@ -101,7 +101,7 @@ describe('plugin manager', () => {
     expect(contexts.get('First')!.config()).toEqual({ value: 2 })
   })
   it('reads reactive saved settings with defaults and returns detached copies', async () => {
-    const index: PluginIndex = () => ({
+    const index: PluginFactory = () => ({
       ...plugin('Example')(),
       defaultConfig: {
         fields: [{ name: 'value', type: 'text', defaultValue: 'default' }],

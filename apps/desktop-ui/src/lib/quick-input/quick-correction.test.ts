@@ -63,8 +63,8 @@ describe('createQuickCorrection', () => {
     await first
 
     await expect(model.request('text')).resolves.toBe('fixed')
-    expect(model.peek('text')).toBe('fixed')
-    expect(model.peek('other')).toBeUndefined()
+    expect(model.getCachedCorrection('text')).toBe('fixed')
+    expect(model.getCachedCorrection('other')).toBeUndefined()
     expect(correct).toHaveBeenCalledTimes(1)
   })
 
@@ -80,7 +80,7 @@ describe('createQuickCorrection', () => {
 
     calls[1].result.resolve('fixed new')
     await expect(second).resolves.toBe('fixed new')
-    expect(model.peek('old')).toBeUndefined()
+    expect(model.getCachedCorrection('old')).toBeUndefined()
   })
 
   it('rejects an aborted run even when the request layer resolves', async () => {
@@ -91,7 +91,7 @@ describe('createQuickCorrection', () => {
     calls[0].result.resolve('partial')
 
     await expect(pending).rejects.toSatisfy(isCorrectionAborted)
-    expect(model.peek('text')).toBeUndefined()
+    expect(model.getCachedCorrection('text')).toBeUndefined()
   })
 
   it('passes real failures through and allows a retry', async () => {
@@ -108,23 +108,23 @@ describe('createQuickCorrection', () => {
   it('corrects speculatively after a pause and drops stale work on edits', async () => {
     const { model, correct, calls, fireTimer, hasTimer } = setup()
 
-    model.speculate('draft')
+    model.schedulePrecorrection('draft')
     expect(correct).not.toHaveBeenCalled()
     fireTimer()
     expect(calls[0].text).toBe('draft')
 
-    model.speculate('draft more')
+    model.schedulePrecorrection('draft more')
     expect(calls[0].signal.aborted).toBe(true)
     expect(hasTimer()).toBe(true)
 
-    model.speculate(null)
+    model.schedulePrecorrection(null)
     expect(hasTimer()).toBe(false)
   })
 
   it('lets the submit take over a speculative run', async () => {
     const { model, correct, calls, fireTimer } = setup()
 
-    model.speculate('text')
+    model.schedulePrecorrection('text')
     fireTimer()
     const submitted = model.request('text')
     calls[0].result.resolve('fixed')
@@ -184,16 +184,16 @@ describe('correction cache invalidation', () => {
     calls[0].result.resolve('old rules')
     await first
     model.cancel()
-    expect(model.peek('text')).toBe('old rules')
+    expect(model.getCachedCorrection('text')).toBe('old rules')
     model.invalidate()
-    expect(model.peek('text')).toBeUndefined()
+    expect(model.getCachedCorrection('text')).toBeUndefined()
     const pending = model.request('text')
     const rejected = expect(pending).rejects.toThrow('Correction aborted')
     model.invalidate()
     expect(calls[1].signal.aborted).toBe(true)
     calls[1].result.resolve('late result')
     await rejected
-    expect(model.peek('text')).toBeUndefined()
+    expect(model.getCachedCorrection('text')).toBeUndefined()
     const fresh = model.request('text')
     calls[2].result.resolve('new rules')
     expect(await fresh).toBe('new rules')

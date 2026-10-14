@@ -44,7 +44,7 @@ describe('corrector configuration ownership', () => {
         )
       if (setting === 'prefix')
         Reflect.set(ipc.desktopState.appConfig, 'rulePrefix', 'New prefix')
-      expect(store.peek('Sample')).toBeUndefined()
+      expect(store.getCachedCorrection('Sample')).toBeUndefined()
       expect(await store.correct('Sample', signal)).toBe('Updated result')
       expect(mocks.correctText).toHaveBeenCalledTimes(2)
     }
@@ -57,11 +57,11 @@ describe('corrector disposal', () => {
     const signal = new AbortController().signal
     await store.correct('Sample', signal)
     store.$dispose()
-    expect(store.peek('Sample')).toBeUndefined()
+    expect(store.getCachedCorrection('Sample')).toBeUndefined()
     await expect(store.correct('Sample', signal)).rejects.toThrow(
       'Correction aborted'
     )
-    store.speculate('Another')
+    store.schedulePrecorrection('Another')
     expect(mocks.correctText).toHaveBeenCalledOnce()
   })
 })

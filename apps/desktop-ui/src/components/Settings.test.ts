@@ -86,7 +86,7 @@ vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
 vi.mock('../stores/plugin-runtime', () => ({
   usePluginRuntimeStore: () => ({
     pluginRuntimeStates: {},
-    pluginIndexes: [
+    pluginFactories: [
       () => ({
         id: 'PluginA',
         name: 'PluginA',

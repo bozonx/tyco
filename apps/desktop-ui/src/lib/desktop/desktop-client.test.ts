@@ -1,20 +1,26 @@
 import { describe, expect, it, vi } from 'vitest'
 import { DESKTOP_EVENTS, type AppEventPayloads } from '@tyco/shared'
 
-import { createDesktopClient, type DesktopClientDeps } from './desktop-client'
+import {
+  createDesktopClient,
+  type DesktopClientDependencies,
+} from './desktop-client'
 
 function setup(available = false) {
   const handlers = new Map<string, (payload: unknown) => void | Promise<void>>()
   const remove = vi.fn()
-  const invoke = vi.fn<DesktopClientDeps['invoke']>()
-  const listen: DesktopClientDeps['listen'] = async (event, handler) => {
+  const invoke = vi.fn<DesktopClientDependencies['invoke']>()
+  const listen: DesktopClientDependencies['listen'] = async (
+    event,
+    handler
+  ) => {
     handlers.set(event, handler as (payload: unknown) => void | Promise<void>)
     return remove
   }
   const onEventError = vi.fn()
   const client = createDesktopClient({
     isAvailable: () => available,
-    invoke: invoke as DesktopClientDeps['invoke'],
+    invoke: invoke as DesktopClientDependencies['invoke'],
     listen,
     onEventError,
   })

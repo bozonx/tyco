@@ -48,7 +48,7 @@
           {{ t('commands.undo') }}
         </Button>
       </div>
-      <UiState
+      <StateMessage
         v-if="!commands.length"
         class="commands-empty"
         :message="t('commands.empty')"
@@ -65,7 +65,7 @@
             'is-sorting': isSorting,
             'is-dragged': draggedIndex === index,
             'is-disabled':
-              !command.enabled || Boolean(unavailableReason(command)),
+              !command.enabled || Boolean(getUnavailableReasonKey(command)),
           }"
           :style="itemStyle(index)"
         >
@@ -142,7 +142,7 @@ import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
-import UiState from '../common/UiState.vue'
+import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
 import {
   type CommandConfig,
@@ -246,7 +246,7 @@ async function reveal(id: string) {
 
 if (props.focusCommandId) void reveal(props.focusCommandId)
 
-const unavailableReason = (command: CommandConfig) =>
+const getUnavailableReasonKey = (command: CommandConfig) =>
   commandUnavailableReason(command, toolsStore)
 
 /** The tool picker of a new command is open */
@@ -255,7 +255,7 @@ const pickingTool = ref(false)
 /** The tools a command can be made of, the unavailable ones with the reason */
 const tools = computed(() =>
   toolsStore.list().map((tool) => {
-    const reason = tool.unavailableReason?.()
+    const reason = tool.getUnavailableReasonKey?.()
     return {
       id: tool.id,
       icon: tool.icon,

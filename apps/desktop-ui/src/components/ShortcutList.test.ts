@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   currentModalParams: {} as Record<string, unknown>,
   hideWindow: vi.fn(),
   goToEditor: vi.fn(),
-  discardWriteInput: vi.fn(),
+  discardQuickInput: vi.fn(),
   currentWindowLabel: 'main',
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
@@ -26,8 +26,8 @@ vi.mock('../composables/use-editor-navigation', () => ({
   useEditorNavigation: () => ({ toEditor: mocks.toEditor }),
 }))
 
-vi.mock('../stores/write-input', () => ({
-  useWriteInputStore: () => ({ discard: mocks.discardWriteInput }),
+vi.mock('../stores/quick-input', () => ({
+  useQuickInputStore: () => ({ discard: mocks.discardQuickInput }),
 }))
 
 vi.mock('../stores/menu-modals', () => ({
@@ -117,7 +117,7 @@ describe('ShortcutList', () => {
       props: {
         text: 'hello',
         leftLetterKeys,
-        toEditorVisible: true,
+        isEditorButtonVisible: true,
         escVisible: true,
       },
     })
@@ -143,7 +143,7 @@ describe('ShortcutList', () => {
         text: 'test text',
         sourceText: 'source text',
         spaceKey: { name: 'Insert', action: spaceAction },
-        toEditorVisible: true,
+        isEditorButtonVisible: true,
         escVisible: true,
         escAction,
       },
@@ -184,7 +184,7 @@ describe('ShortcutList', () => {
     press('Escape')
 
     expect(mocks.closeAll).toHaveBeenCalled()
-    expect(mocks.discardWriteInput).toHaveBeenCalled()
+    expect(mocks.discardQuickInput).toHaveBeenCalled()
     expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
     wrapper.unmount()
   })

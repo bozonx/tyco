@@ -37,7 +37,7 @@ describe('editor transfer review', () => {
     const wrapper = mountMenu(replace)
     expect(wrapper.attributes('data-title')).toBe('editor.conflict.title')
     const list = wrapper.findComponent(ShortcutList)
-    expect(list.props('toEditorVisible')).toBe(false)
+    expect(list.props('isEditorButtonVisible')).toBe(false)
     expect(list.props('leftLetterKeys')).toEqual([])
     expect(list.props('spaceKey')).toMatchObject({
       id: 'replaceEditor',
@@ -52,9 +52,9 @@ describe('editor transfer review', () => {
   it('retains the normal result actions when there is no editor conflict', () => {
     const wrapper = mountMenu()
     expect(wrapper.attributes('data-title')).toBe('menu.compareResult')
-    expect(wrapper.findComponent(ShortcutList).props('toEditorVisible')).toBe(
-      true
-    )
+    expect(
+      wrapper.findComponent(ShortcutList).props('isEditorButtonVisible')
+    ).toBe(true)
     expect(wrapper.findComponent(ShortcutList).props('spaceKey')?.id).not.toBe(
       'replaceEditor'
     )

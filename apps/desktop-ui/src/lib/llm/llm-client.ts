@@ -44,7 +44,7 @@ export class LlmError extends Error {
   }
 }
 
-export interface LlmClientDeps {
+export interface LlmClientDependencies {
   getConfig: () => LlmConfig
   transport: Transport
   keys: KeyProvider
@@ -91,7 +91,7 @@ export interface LlmClient {
   ) => Promise<string>
 }
 
-export function createLlmClient(deps: LlmClientDeps): LlmClient {
+export function createLlmClient(deps: LlmClientDependencies): LlmClient {
   const kits = new Map<string, AiKit>()
 
   /** Rebuilt when the config changes, reused otherwise */

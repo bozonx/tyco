@@ -6,7 +6,7 @@ import type {
   ScriptExecutionResult,
 } from '@tyco/shared'
 
-import type { BuiltinToolDependencies } from '../tools/builtin-tools'
+import type { ScriptAndWebhookToolDependencies } from '../tools/script-and-webhook-tools'
 import { testCopyTool, testInsertTool, testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand, launcherAfterRunFromOutput } from './command-config'
@@ -50,7 +50,7 @@ const result = (
 
 function setup(
   extra: Partial<InvocationRunnerDependencies> &
-    BuiltinToolDependencies & {
+    ScriptAndWebhookToolDependencies & {
       /** What `core.copy` does: the clipboard sink runs it */
       copyText?: (text: string) => Promise<void>
       /** What `core.insert` does: the paste sink runs it */
@@ -441,7 +441,7 @@ describe('plugin tools', () => {
   })
 
   it('does not run a command of an unavailable tool', async () => {
-    const tool = noteTool({ unavailableReason: () => 'commands.noLlm' })
+    const tool = noteTool({ getUnavailableReasonKey: () => 'commands.noLlm' })
     const { deps, runner } = setup({}, [tool])
     const outcome = await runner.run(note(), 'x')
     expect(outcome).toEqual({ success: false, message: 'commands.noLlm' })

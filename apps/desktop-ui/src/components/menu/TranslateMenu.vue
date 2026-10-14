@@ -55,7 +55,7 @@
         :spaceKey="otherLanguageAction"
         :leftLetterKeys="leftLetterKeys"
         :shortcutsDisabled="props.shortcutsDisabled"
-        :toEditorVisible="!routeParamsStore.isEditorPage()"
+        :isEditorButtonVisible="!routeParamsStore.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -71,7 +71,7 @@ import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import {
   AUTO_LANGUAGE_VALUE,
   buildLanguageOptions,
-  getLanguageLabel,
+  getLanguageLabelKey,
 } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
@@ -123,7 +123,7 @@ const query = ref('')
 const sourceLanguage = ref(AUTO_LANGUAGE_VALUE)
 
 const languageLabel = (id: string): string => {
-  const key = getLanguageLabel(id)
+  const key = getLanguageLabelKey(id)
   const label = t(key)
   return label === key ? (nativeLanguageName(id) ?? id) : label
 }

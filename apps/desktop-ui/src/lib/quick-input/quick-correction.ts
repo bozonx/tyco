@@ -1,7 +1,7 @@
-export interface QuickCorrectionDeps {
+export interface QuickCorrectionDependencies {
   correct: (text: string, signal: AbortSignal) => Promise<string>
   /** Idle time after the last edit before a speculative correction starts */
-  speculateDelayMs?: number
+  precorrectionDelayMs?: number
   setTimer?: (callback: () => void, ms: number) => unknown
   clearTimer?: (timer: unknown) => void
 }
@@ -16,7 +16,7 @@ export class CorrectionAbortedError extends Error {
 export const isCorrectionAborted = (error: unknown): boolean =>
   error instanceof CorrectionAbortedError
 
-interface Run {
+interface CorrectionRun {
   text: string
   controller: AbortController
   promise: Promise<string>
@@ -27,16 +27,16 @@ interface Run {
  * request for another text aborts the running one, while a request for the same
  * text shares it, or gets the finished result right away
  */
-export function createQuickCorrection(deps: QuickCorrectionDeps) {
+export function createQuickCorrection(deps: QuickCorrectionDependencies) {
   const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
   const clearTimer =
     deps.clearTimer ??
     ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>))
-  const speculateDelayMs = deps.speculateDelayMs ?? 1000
+  const precorrectionDelayMs = deps.precorrectionDelayMs ?? 1000
 
-  let disposed = false
-  let run: Run | null = null
-  let done: { text: string; result: string } | null = null
+  let isDisposed = false
+  let activeRun: CorrectionRun | null = null
+  let cachedCorrection: { text: string; result: string } | null = null
   let timer: unknown = null
 
   const stopTimer = () => {
@@ -46,37 +46,38 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
   }
 
   const abort = () => {
-    run?.controller.abort()
-    run = null
+    activeRun?.controller.abort()
+    activeRun = null
   }
 
   /** Resolves to the corrected text; rejects when aborted or failed. */
   const request = (text: string): Promise<string> => {
-    if (disposed) return Promise.reject(new CorrectionAbortedError())
+    if (isDisposed) return Promise.reject(new CorrectionAbortedError())
     stopTimer()
-    if (done?.text === text) return Promise.resolve(done.result)
-    if (run?.text === text) return run.promise
+    if (cachedCorrection?.text === text)
+      return Promise.resolve(cachedCorrection.result)
+    if (activeRun?.text === text) return activeRun.promise
     abort()
 
     const controller = new AbortController()
-    const current: Run = {
+    const current: CorrectionRun = {
       text,
       controller,
       promise: deps.correct(text, controller.signal).then(
         (result) => {
           // a request layer may resolve with a partial text on abort
           if (controller.signal.aborted) throw new CorrectionAbortedError()
-          if (run === current) run = null
-          done = { text, result }
+          if (activeRun === current) activeRun = null
+          cachedCorrection = { text, result }
           return result
         },
         (error: unknown) => {
-          if (run === current) run = null
+          if (activeRun === current) activeRun = null
           throw controller.signal.aborted ? new CorrectionAbortedError() : error
         }
       ),
     }
-    run = current
+    activeRun = current
 
     return current.promise
   }
@@ -88,9 +89,9 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
   ): Promise<string> => {
     if (signal.aborted) throw new CorrectionAbortedError()
     const promise = request(text)
-    const ownedRun = run
+    const ownedRun = activeRun
     const onAbort = () => {
-      if (ownedRun && run === ownedRun) cancel()
+      if (ownedRun && activeRun === ownedRun) cancel()
     }
     signal.addEventListener('abort', onAbort, { once: true })
     try {
@@ -103,24 +104,29 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
   }
 
   /** The finished correction of exactly this text, if there is one. */
-  const peek = (text: string): string | undefined =>
-    done?.text === text ? done.result : undefined
+  const getCachedCorrection = (text: string): string | undefined =>
+    cachedCorrection?.text === text ? cachedCorrection.result : undefined
 
   /**
    * The text was edited: drop work for older texts and correct this one once
    * the user pauses. Pass null when the text should not be corrected
    */
-  const speculate = (text: string | null) => {
-    if (disposed) return
+  const schedulePrecorrection = (text: string | null) => {
+    if (isDisposed) return
     stopTimer()
-    if (run && run.text !== text) abort()
-    if (text === null || done?.text === text || run?.text === text) return
+    if (activeRun && activeRun.text !== text) abort()
+    if (
+      text === null ||
+      cachedCorrection?.text === text ||
+      activeRun?.text === text
+    )
+      return
 
     timer = setTimer(() => {
       timer = null
       // failures are reported by the request that needs the result
       request(text).catch(() => {})
-    }, speculateDelayMs)
+    }, precorrectionDelayMs)
   }
 
   /** Aborts the running correction; a finished one stays reusable. */
@@ -131,13 +137,21 @@ export function createQuickCorrection(deps: QuickCorrectionDeps) {
 
   const invalidate = () => {
     cancel()
-    done = null
+    cachedCorrection = null
   }
 
   const dispose = () => {
-    disposed = true
+    isDisposed = true
     invalidate()
   }
 
-  return { request, correct, peek, speculate, cancel, invalidate, dispose }
+  return {
+    request,
+    correct,
+    getCachedCorrection,
+    schedulePrecorrection,
+    cancel,
+    invalidate,
+    dispose,
+  }
 }

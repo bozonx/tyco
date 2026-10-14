@@ -31,7 +31,7 @@
       </Button>
     </template>
     <template v-else>
-      <template v-if="quickSend">
+      <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :sm="compact"
           :keys="submitKeys"
@@ -73,7 +73,7 @@
           {{ isFinishing ? t('common.inProgress') : t(insertLabelKey) }}
         </ShortcutButton>
         <ShortcutButton
-          v-if="withNext"
+          v-if="finishBehavior === 'insertIntoTarget'"
           :sm="compact"
           :keys="['Tab']"
           icon="mdi:arrow-right"
@@ -99,7 +99,10 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import type {
+  VoiceFinishBehavior,
+  VoiceFinishIntent,
+} from '../../lib/stt/voice-finish-intent'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
@@ -108,18 +111,21 @@ import ShortcutButton from '../common/ShortcutButton.vue'
 const props = defineProps<{
   compact?: boolean
   chat?: boolean
-  quickSend?: boolean
-  withNext?: boolean
+  finishBehavior?: VoiceFinishBehavior
   isFinishing: boolean
   finish: (intent?: VoiceFinishIntent) => Promise<void>
   cancel: () => Promise<void>
 }>()
 const { t } = useI18n()
 const insertLabelKey = computed(() =>
-  props.withNext ? 'action.insertIntoWindow' : 'menu.finish'
+  props.finishBehavior === 'insertIntoTarget'
+    ? 'action.insertIntoWindow'
+    : 'menu.finish'
 )
 const insertIcon = computed(() =>
-  props.withNext ? 'mdi:application-export' : 'mdi:check'
+  props.finishBehavior === 'insertIntoTarget'
+    ? 'mdi:application-export'
+    : 'mdi:check'
 )
 const submitKeys = ['Space', 'Enter']
 </script>

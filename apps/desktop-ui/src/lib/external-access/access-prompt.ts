@@ -1,6 +1,6 @@
 import type { AccessDecision } from '@tyco/shared'
 
-export interface AccessPromptDeps {
+export interface AccessPromptDependencies {
   answer: (jobId: string, decision: AccessDecision) => Promise<void>
 }
 
@@ -8,7 +8,7 @@ export interface AccessPromptDeps {
  * Sends one answer per request: whatever comes after it, a second click, Esc or
  * the prompt going away when the window hides, does nothing
  */
-export function createAccessPrompt(deps: AccessPromptDeps) {
+export function createAccessPrompt(deps: AccessPromptDependencies) {
   const answered = new Set<string>()
 
   const respond = (jobId: string | undefined, decision: AccessDecision) => {

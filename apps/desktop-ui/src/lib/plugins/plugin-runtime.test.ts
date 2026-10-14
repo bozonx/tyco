@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import {
   createPluginRuntime,
   type PluginRuntimeDependencies,
 } from './plugin-runtime'
 
 const index =
-  (id: string): PluginIndex =>
+  (id: string): PluginFactory =>
   () => ({
     id,
     name: id,
@@ -39,15 +39,15 @@ describe('application plugin runtime', () => {
     try {
       await first.runtime.refreshInstalledPlugins()
       expect(
-        first.runtime.pluginIndexes.map((factory) => factory().id)
+        first.runtime.pluginFactories.map((factory) => factory().id)
       ).toEqual(['Builtin', 'Installed'])
       expect(
-        second.runtime.pluginIndexes.map((factory) => factory().id)
+        second.runtime.pluginFactories.map((factory) => factory().id)
       ).toEqual(['Builtin'])
       expect(first.runtime.manager).not.toBe(second.runtime.manager)
       await first.runtime.dispose()
       await second.runtime.refreshInstalledPlugins()
-      expect(second.runtime.pluginIndexes).toHaveLength(2)
+      expect(second.runtime.pluginFactories).toHaveLength(2)
     } finally {
       await first.runtime.dispose()
       await second.runtime.dispose()
@@ -70,11 +70,11 @@ describe('application plugin runtime', () => {
   })
 
   it('ignores refresh completion after disposal and stays stopped', async () => {
-    let resolve!: (indexes: PluginIndex[]) => void
+    let resolve!: (indexes: PluginFactory[]) => void
     const { runtime, deps } = setup({
       loadInstalled: vi.fn(
         () =>
-          new Promise<PluginIndex[]>((done) => {
+          new Promise<PluginFactory[]>((done) => {
             resolve = done
           })
       ),
@@ -86,7 +86,7 @@ describe('application plugin runtime', () => {
     await pending
     await firstDisposal
     await runtime.refreshInstalledPlugins()
-    expect(runtime.pluginIndexes).toHaveLength(1)
+    expect(runtime.pluginFactories).toHaveLength(1)
     expect(deps.loadInstalled).toHaveBeenCalledOnce()
     expect(runtime.pluginRuntimeStates).toEqual({})
   })

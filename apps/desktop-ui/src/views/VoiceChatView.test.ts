@@ -17,8 +17,8 @@ const mocks = vi.hoisted(() => ({
       source: string
     } | null,
   },
-  navPanel: { resetNavParams: vi.fn() },
-  menuModals: { anyModalOpen: false },
+  navPanel: { resetNavPanelState: vi.fn() },
+  menuModals: { hasOpenModal: false },
   callFunction: vi.fn(),
   callFunctionOrNotify: vi.fn(),
 }))
@@ -30,7 +30,7 @@ vi.mock('../components/common/ContentPadding.vue', () => ({
 vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   default: {
     name: 'VoiceRecognitionMenu',
-    props: ['variant', 'quickSend', 'context'],
+    props: ['variant', 'finishBehavior', 'context'],
     emits: ['corrected', 'cancelled', 'removeContext'],
     template: '<div class="voice-menu" />',
   },

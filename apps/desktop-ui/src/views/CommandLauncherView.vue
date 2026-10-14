@@ -19,8 +19,8 @@ const navPanelStore = useNavPanelStore()
 // The view outlives a hidden window. Until the next activation reaches it, the
 // keys belong to whatever mode that activation opens
 const shortcutsDisabled = computed(
-  () => menuModalsStore.anyModalOpen || !ipcStore.desktopState.isWindowShown
+  () => menuModalsStore.hasOpenModal || !ipcStore.desktopState.isWindowShown
 )
 
-navPanelStore.resetNavParams({})
+navPanelStore.resetNavPanelState({})
 </script>

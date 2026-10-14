@@ -1,4 +1,4 @@
-export interface VoiceSessionDeps {
+export interface VoiceSessionDependencies {
   maxRecordingMs: number
   onLimit: () => void
   setTimer?: typeof setTimeout
@@ -14,7 +14,9 @@ export interface VoiceSession {
 }
 
 /** Owns cancellation and the recording deadline for one voice UI instance. */
-export function createVoiceSession(deps: VoiceSessionDeps): VoiceSession {
+export function createVoiceSession(
+  deps: VoiceSessionDependencies
+): VoiceSession {
   const setTimer = deps.setTimer ?? setTimeout
   const clearTimer = deps.clearTimer ?? clearTimeout
   let controller: AbortController | undefined

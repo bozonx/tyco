@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <UiState
+    <StateMessage
       v-if="filtered.length === 0"
       class="history-empty"
       :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
@@ -203,7 +203,7 @@ import {
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
-import UiState from '../common/UiState.vue'
+import StateMessage from '../common/StateMessage.vue'
 
 const { t, locale } = useI18n()
 

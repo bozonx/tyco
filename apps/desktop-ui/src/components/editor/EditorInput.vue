@@ -261,7 +261,7 @@ watch(
 
 // set focus on close modal
 watch(
-  () => menuModalsStore.anyModalOpen,
+  () => menuModalsStore.hasOpenModal,
   (value) => {
     if (!value) editorInputStore.focus()
   }
@@ -269,7 +269,7 @@ watch(
 
 // handle focus
 watch(
-  () => editorInputStore.focusCount,
+  () => editorInputStore.focusRequestCount,
   (newValue, oldValue) => {
     if (newValue > oldValue) view?.focus()
   }
@@ -277,14 +277,14 @@ watch(
 
 // handle select all
 watch(
-  () => editorInputStore.searchCount,
+  () => editorInputStore.searchRequestCount,
   () => {
     if (view) openEditorSearch(view)
   }
 )
 
 watch(
-  () => editorInputStore.selectAllCount,
+  () => editorInputStore.selectAllRequestCount,
   (newValue, oldValue) => {
     if (newValue > oldValue && view) {
       selectAll(view)

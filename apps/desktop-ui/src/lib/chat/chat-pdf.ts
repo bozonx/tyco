@@ -27,7 +27,7 @@ export interface PdfContents {
 export async function readChatPdf(
   bytes: Uint8Array<ArrayBuffer>,
   name: string,
-  availableImages: number,
+  maxImageCount: number,
   isCurrent: () => boolean
 ): Promise<PdfContents> {
   GlobalWorkerOptions.workerPort ??= new PdfWorker()
@@ -75,7 +75,7 @@ export async function readChatPdf(
               operation
             )
           )
-        if ((!text || sparseImagePage) && pages.length >= availableImages) {
+        if ((!text || sparseImagePage) && pages.length >= maxImageCount) {
           skippedPages++
         } else if (!text || sparseImagePage) {
           const base = page.getViewport({ scale: 1 })

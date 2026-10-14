@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createEditMenuStoreModel } from './edit-menu-store'
+import { createEditMenuModel } from './edit-menu-store'
 
-describe('createEditMenuStoreModel', () => {
+describe('createEditMenuModel', () => {
   const setup = () => {
     const deps = {
       transformTextCase: vi.fn(
@@ -11,7 +11,7 @@ describe('createEditMenuStoreModel', () => {
       formatMdAndStyle: vi.fn(async (text: string) => `md:${text}`),
       stripMarkdown: vi.fn((text: string) => `plain:${text}`),
     }
-    const store = createEditMenuStoreModel(deps)
+    const store = createEditMenuModel(deps)
     return { store, deps }
   }
 

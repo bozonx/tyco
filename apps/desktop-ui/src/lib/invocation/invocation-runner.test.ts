@@ -56,7 +56,7 @@ describe('built-in invocations', () => {
 
   it('names the invocation when its tool is unavailable', async () => {
     const { tool, runner, deps } = setup(
-      echoTool({ unavailableReason: () => 'commands.noLlm' })
+      echoTool({ getUnavailableReasonKey: () => 'commands.noLlm' })
     )
     const outcome = await runner.run(builtin, 'hello')
     expect(outcome).toEqual({ success: false, message: 'commands.noLlm' })
@@ -83,7 +83,7 @@ describe('built-in invocations', () => {
 
   it('tells a transform why the tool cannot run', async () => {
     const { runner } = setup(
-      echoTool({ unavailableReason: () => 'tools.noLlm' })
+      echoTool({ getUnavailableReasonKey: () => 'tools.noLlm' })
     )
     expect(await runner.transform(builtin, 'hello')).toEqual({
       ok: false,

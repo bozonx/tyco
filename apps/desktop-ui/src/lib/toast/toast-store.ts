@@ -35,7 +35,7 @@ export const DEFAULT_TOAST_DURATIONS: Record<ToastType, number> = {
 
 export const MAX_TOASTS = 5
 
-export function createToastStoreModel(deps: ToastDependencies = {}) {
+export function createToastModel(deps: ToastDependencies = {}) {
   const now = deps.now ?? Date.now
   const setTimeoutFn = deps.setTimeoutFn ?? setTimeout
   const clearTimeoutFn = deps.clearTimeoutFn ?? clearTimeout

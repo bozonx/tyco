@@ -1,5 +1,8 @@
 import type { ActionItem } from '@tyco/plugin-sdk'
-import type { VoiceFinishIntent } from '../stt/voice-finish-intent'
+import type {
+  VoiceFinishBehavior,
+  VoiceFinishIntent,
+} from '../stt/voice-finish-intent'
 import type { TranslationMeta } from '../translation/translation-meta'
 
 export enum MenuModals {
@@ -19,17 +22,17 @@ export interface InsertMenuParams {
   actions?: ActionItem[]
   allowInsertButton?: boolean
   shortcutsDisabled?: boolean
-  toEditorVisible?: boolean
+  isEditorButtonVisible?: boolean
   /** Esc returns from a correction step to its original text. */
   correction?: boolean
   /** Shift+Space inserts the uncorrected text. */
   originalText?: string
   /** A pending correction will replace the displayed text. */
-  correcting?: boolean
+  isCorrecting?: boolean
   /** A failed correction leaves the original text available. */
   correctionError?: string
   /** The correction returned the same text. */
-  correctionUnchanged?: boolean
+  isCorrectionUnchanged?: boolean
   /** Offer insertion, the editor and cancellation only. */
   insertOnly?: boolean
 }
@@ -54,10 +57,8 @@ type VoiceCorrectedHandler = (
 export interface VoiceMenuParams {
   onCorrected?: VoiceCorrectedHandler | VoiceCorrectedHandler[]
   onCancel?: (() => void) | (() => void)[]
-  /** Enter and Space submit to chat; Shift+Enter inserts, Tab opens actions. */
-  quickSend?: boolean
-  /** Enter and Space insert into the target window; Tab opens actions. */
-  withNext?: boolean
+  /** Chooses the primary completion action and its shortcuts. */
+  finishBehavior?: VoiceFinishBehavior
   /** The bar keeps its host editor visible during dictation. */
   variant?: 'sheet' | 'bar'
   /** The host editor renders the voice input with these params. */

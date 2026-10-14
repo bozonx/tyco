@@ -667,7 +667,7 @@ export interface ToolDefinition {
    * Why the tool cannot run now (no LLM configured and so on); its commands are
    * then marked unavailable. Absent means always available
    */
-  unavailableReason?(): string | undefined
+  getUnavailableReasonKey?(): string | undefined
   run(call: ToolCall): Promise<ToolResult>
 }
 
@@ -747,7 +747,7 @@ export interface PluginContext {
 ### 5.3. Встроенные инструменты ядра
 
 `script`, `webhook` и `core.*` описываются тем же `ToolDefinition` и
-регистрируются в реестре при создании (`lib/tools/builtin-tools.ts`,
+регистрируются в реестре при создании (`lib/tools/script-and-webhook-tools.ts`,
 `lib/tools/core-tools.ts`). Зависимости — функции из `useCallAi`, IPC и
 чата — передаются в фабрику, как в остальных DI-моделях, поэтому
 инструменты тестируются без Pinia и Tauri.
@@ -1039,7 +1039,7 @@ apps/desktop-ui/src/lib/
     webhook-executor.ts
   tools/
     tool-types.ts            # ToolDefinition, ToolCall, ToolResult, schemas
-    builtin-tools.ts         # script and webhook as tools
+    script-and-webhook-tools.ts         # script and webhook as tools
     core-tools.ts            # core.* tools over the existing app code
     tool-registry.ts         # built-in + plugin (+ MCP later) tools
     tool-catalog.ts          # registry → catalog sent to Rust
@@ -1188,7 +1188,7 @@ Rust:
 
       Реализация. Реестр — `lib/tools/tool-registry.ts` (Pinia-обёртка
       `stores/tools.ts`, чтения реактивные), разбор входа и проверка по схеме —
-      `lib/tools/tool-input.ts`, `script`/`webhook` — `lib/tools/builtin-tools.ts`,
+      `lib/tools/tool-input.ts`, `script`/`webhook` — `lib/tools/script-and-webhook-tools.ts`,
       `core.*` — `lib/tools/core-tools.ts`. Функции `command-config` получают
       реестр вторым аргументом (`ToolLookup`). Кроме полей из §5.1 у
       `ToolDefinition` есть `inputSchemaFor(config)` (вход `script`/`webhook`

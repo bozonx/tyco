@@ -1,5 +1,8 @@
 import type { LiveTranscriptState } from '../../lib/stt/live-transcript'
-import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
+import type {
+  VoiceFinishBehavior,
+  VoiceFinishIntent,
+} from '../../lib/stt/voice-finish-intent'
 
 export interface VoiceRecordingProps {
   transcript: LiveTranscriptState
@@ -8,8 +11,7 @@ export interface VoiceRecordingProps {
   recordingDurationMs: number
   isTranscribing: boolean
   isFinishing: boolean
-  quickSend?: boolean
-  withNext?: boolean
+  finishBehavior?: VoiceFinishBehavior
   chat?: boolean
   prefix?: string
   suffix?: string

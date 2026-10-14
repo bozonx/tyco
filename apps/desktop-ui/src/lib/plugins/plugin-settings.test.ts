@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { resolveInstalledPlugins } from './plugin-settings'
 
 describe('plugin-settings', () => {
-  const samplePlugins: PluginIndex[] = [
+  const samplePlugins: PluginFactory[] = [
     () => ({
       id: 'AlphaPlugin',
       name: 'AlphaPlugin',

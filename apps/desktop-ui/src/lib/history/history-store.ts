@@ -3,7 +3,7 @@ import { createEditorHistoryModel } from './editor-history'
 import { createChatHistoryModel } from './chat-history'
 export type { HistoryApi } from './history-call'
 
-export function createHistoryStoreModel(historyApi: HistoryApi) {
+export function createHistoryModel(historyApi: HistoryApi) {
   return {
     ...createEditorHistoryModel(historyApi),
     ...createChatHistoryModel(historyApi),

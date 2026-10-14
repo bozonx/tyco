@@ -3,7 +3,7 @@
     <VoiceRecognitionMenu
       v-if="!isInsertMenu"
       variant="sheet"
-      quick-send
+      finish-behavior="submitToChat"
       :context="context?.text"
       @remove-context="contextRemoved = true"
       @corrected="handleCorrected"
@@ -14,7 +14,7 @@
       v-else
       :text="resText"
       :allowInsertButton="true"
-      :shortcutsDisabled="menuModalsStore.anyModalOpen"
+      :shortcutsDisabled="menuModalsStore.hasOpenModal"
     />
   </ContentPadding>
 </template>
@@ -36,7 +36,7 @@ const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
 
-navPanelStore.resetNavParams({ panelVisible: false })
+navPanelStore.resetNavPanelState({ panelVisible: false })
 
 /** The user removed the context of this activation */
 const contextRemoved = ref(false)

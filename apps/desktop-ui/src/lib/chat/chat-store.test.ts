@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { APP_ROUTES } from '../navigation/routes'
-import { type ChatStoreDeps, createChatStoreModel } from './chat-store'
+import { type ChatStoreDependencies, createChatModel } from './chat-store'
 
-function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
+function createDeps(
+  overrides: Partial<ChatStoreDependencies> = {}
+): ChatStoreDependencies {
   return {
     sendChatMessage: vi.fn(async () => 'Assistant reply'),
     generateChatTitle: vi.fn(async () => ''),
@@ -29,7 +31,7 @@ function createDeps(overrides: Partial<ChatStoreDeps> = {}): ChatStoreDeps {
 describe('chat-store', () => {
   it('rejects empty messages and notifies the user', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     const result = await store.sendMessage('   ')
 
@@ -40,7 +42,7 @@ describe('chat-store', () => {
 
   it('sends a message, appends assistant response, and saves history', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.currentChatState.value = {
       id: 'chat-id-1',
       title: 'Hello',
@@ -70,7 +72,7 @@ describe('chat-store', () => {
 
   it('adds developer instructions from the first message', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.sendMessage('First question')
 
@@ -88,7 +90,7 @@ describe('chat-store', () => {
 
   it('persists the complete chat state after follow-up messages', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.currentChatState.value = { id: 'chat-id-1', title: 'First question' }
     store.messages.value = [
       { role: 'user', content: 'First question' },
@@ -120,7 +122,7 @@ describe('chat-store', () => {
         }
       ),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     const result = await store.sendMessage('Hi')
 
@@ -131,7 +133,7 @@ describe('chat-store', () => {
 
   it('starts a chat with generated id and navigates to chat page', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.startChat({ attachments: [{ text: 'context' }] })
 
@@ -144,7 +146,7 @@ describe('chat-store', () => {
 
   it('rolls back optimistic user message when request returns no content', async () => {
     const deps = createDeps({ sendChatMessage: vi.fn(async () => '') })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     const result = await store.sendMessage('Hello')
 
@@ -157,7 +159,7 @@ describe('chat-store', () => {
       .fn()
       .mockRejectedValueOnce(new Error('Provider unavailable'))
       .mockResolvedValueOnce('Recovered answer')
-    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+    const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Keep this question')
 
@@ -182,7 +184,7 @@ describe('chat-store', () => {
         }
       )
       .mockResolvedValueOnce('Complete answer')
-    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+    const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Question')
     expect(store.messages.value.at(-1)).toMatchObject({
@@ -198,7 +200,7 @@ describe('chat-store', () => {
   })
 
   it('regenerates an assistant turn from its user message', async () => {
-    const store = createChatStoreModel(createDeps())
+    const store = createChatModel(createDeps())
     store.messages.value = [
       { role: 'user', content: 'Question' },
       { role: 'assistant', content: 'Old answer' },
@@ -224,7 +226,7 @@ describe('chat-store', () => {
         ],
       })),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.openChat('chat-7')
 
@@ -242,7 +244,7 @@ describe('chat-store', () => {
 
   it('adds and removes attachments', () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     store.addAttachment({ text: 'attachment 1' })
     store.addAttachment({ text: 'attachment 2' })
@@ -271,7 +273,7 @@ describe('chat-store', () => {
       () => new Promise<string>((resolve) => (resolveRequest = resolve))
     )
     const deps = createDeps({ sendChatMessage })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     const pending = store.sendMessage('Old chat')
     await store.startChat({})
@@ -292,7 +294,7 @@ describe('chat-store', () => {
     const deps = createDeps({
       getChatModel: () => ({ id: 'model-1', budgetCharacters: 20 }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.messages.value = [
       { role: 'user', content: '1234567890' },
       { role: 'assistant', content: '1234567890' },
@@ -312,7 +314,7 @@ describe('chat-store', () => {
     const deps = createDeps({
       saveChat: vi.fn().mockRejectedValue(new Error('Disk full')),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await expect(store.sendMessage('Hello')).resolves.toBe('Assistant reply')
     expect(store.messages.value.at(-1)?.content).toBe('Assistant reply')
@@ -322,7 +324,7 @@ describe('chat-store', () => {
 
   it('refuses to send without a model', async () => {
     const deps = createDeps({ getChatModel: () => null })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await expect(store.sendMessage('Hello')).resolves.toBe('')
     expect(deps.notifyError).toHaveBeenCalledWith('No model')
@@ -333,7 +335,7 @@ describe('chat-store', () => {
     const deps = createDeps({
       generateChatTitle: vi.fn(async () => 'Greeting'),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.sendMessage('Hello there')
     expect(deps.saveChat).toHaveBeenCalledWith(
@@ -361,7 +363,7 @@ describe('chat-store', () => {
         () => new Promise<string>((resolve) => (resolveTitle = resolve))
       ),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.sendMessage('Hello there')
     await vi.waitFor(() => expect(deps.generateChatTitle).toHaveBeenCalled())
@@ -377,7 +379,7 @@ describe('chat-store', () => {
     const deps = createDeps({
       sendChatMessage: vi.fn().mockRejectedValue(new Error('Offline')),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.sendMessage('Hello')
     await store.whenSaved()
@@ -395,7 +397,7 @@ describe('chat-store', () => {
       .fn()
       .mockRejectedValueOnce(new Error('Offline'))
       .mockResolvedValueOnce('Answer')
-    const store = createChatStoreModel(createDeps({ sendChatMessage }))
+    const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Question', [{ text: 'context' }])
     await store.sendMessage('Question')
@@ -410,7 +412,7 @@ describe('chat-store', () => {
 
   it('does not touch the chat when a new one starts without an answer running', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     await store.sendMessage('Hello')
     await store.whenSaved()
     vi.mocked(deps.saveChat).mockClear()
@@ -423,7 +425,7 @@ describe('chat-store', () => {
   it('gives a text to the empty current chat, to a new one otherwise', async () => {
     let id = 0
     const deps = createDeps({ createId: () => `chat-${++id}` })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     await store.startChat({})
 
     await store.attachToChat({ text: 'first' })
@@ -451,7 +453,7 @@ describe('chat-store', () => {
         }
       ),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     const pending = store.sendMessage('Hello')
     await store.whenSaved()
     vi.mocked(deps.saveChat).mockClear()
@@ -467,7 +469,7 @@ describe('chat-store', () => {
 
   it('opens a new chat when the last one is gone', async () => {
     const deps = createDeps({ getLastChatId: () => 'gone' })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.openLastOrNewChat()
 
@@ -478,7 +480,7 @@ describe('chat-store', () => {
   it('branches a dialogue from a selected message index', async () => {
     let idCounter = 1
     const deps = createDeps({ createId: () => `branch-id-${idCounter++}` })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.currentChatState.value = {
       id: 'original-id',
       title: 'Original Title',
@@ -518,9 +520,9 @@ describe('chat-store', () => {
     'stops a reply with %j content and lets the user retry',
     async (partial) => {
       let resolve!: (text: string) => void
-      let options!: Parameters<ChatStoreDeps['sendChatMessage']>[3]
+      let options!: Parameters<ChatStoreDependencies['sendChatMessage']>[3]
       const send = vi
-        .fn<ChatStoreDeps['sendChatMessage']>()
+        .fn<ChatStoreDependencies['sendChatMessage']>()
         .mockImplementationOnce((_text, _previous, _instructions, input) => {
           options = input
           return new Promise((done) => {
@@ -528,7 +530,7 @@ describe('chat-store', () => {
           })
         })
         .mockResolvedValue('Complete')
-      const store = createChatStoreModel(createDeps({ sendChatMessage: send }))
+      const store = createChatModel(createDeps({ sendChatMessage: send }))
       const pending = store.sendMessage('Question')
       if (partial) options.onChunk?.(partial)
       store.stopGeneration()
@@ -550,7 +552,7 @@ describe('chat-store', () => {
 
   it('does not restore an old regeneration over a newly opened chat', async () => {
     let resolve!: (text: string) => void
-    const store = createChatStoreModel(
+    const store = createChatModel(
       createDeps({
         sendChatMessage: () =>
           new Promise((done) => {
@@ -580,7 +582,7 @@ describe('chat-store', () => {
         })
       },
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     await store.sendMessage('First question')
     await vi.waitFor(() => expect(signal).toBeDefined())
     await store.startChat({ title: 'New' })
@@ -614,7 +616,7 @@ describe('image turns', () => {
         budgetCharacters: 100_000,
       }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     await store.sendMessage('', [], [image])
     expect(store.messages.value[0].images).toEqual([image])
     await store.retryLastTurn()
@@ -637,7 +639,7 @@ describe('image turns', () => {
   })
   it('rejects text-only models without consuming the draft', async () => {
     const deps = createDeps({ imageModelError: () => 'Vision required' })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.currentChatState.value.images = [image]
     await store.sendMessage('', [], [image])
     expect(deps.notifyError).toHaveBeenCalledWith('Vision required')
@@ -652,7 +654,7 @@ describe('image turns', () => {
         budgetCharacters: 1000,
       }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     await store.sendMessage('', [], [image])
     expect(deps.notifyError).toHaveBeenCalledWith('Message too long')
     expect(deps.sendChatMessage).not.toHaveBeenCalled()
@@ -670,7 +672,7 @@ describe('image retry validation', () => {
         budgetCharacters: 100_000,
       }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     const image = {
       id: 'image',
       mediaType: 'image/webp' as const,
@@ -697,7 +699,7 @@ describe('file and image context policies', () => {
   }
   it('sends an attachment-only turn and preserves file metadata in history', async () => {
     const deps = createDeps()
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     const attachment = {
       text: 'file contents',
       name: 'source.ts',
@@ -715,7 +717,7 @@ describe('file and image context policies', () => {
         budgetCharacters: 4000,
       }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.messages.value = [
       { role: 'user', content: 'old', images: [image] },
       { role: 'assistant', content: 'reply' },
@@ -729,7 +731,7 @@ describe('file and image context policies', () => {
       imageModelError: () => 'Vision required',
       imageOmittedText: () => '[Images omitted]',
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.messages.value = [
       { role: 'user', content: 'old', images: [image] },
       { role: 'assistant', content: 'reply' },
@@ -766,7 +768,7 @@ describe('file and image context policies', () => {
         }),
       sendChatMessage: () => new Promise(() => {}),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     void store.sendMessage('image', [], [image])
     await Promise.resolve()
     expect(store.savingImages.value).toHaveLength(1)
@@ -783,7 +785,7 @@ describe('file and image context policies', () => {
         throw new Error('Provider down')
       }),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     store.messages.value = [
       { role: 'user', content: 'Question' },
       { role: 'assistant', content: 'Old answer' },
@@ -806,7 +808,7 @@ describe('file and image context policies', () => {
       generateChatTitle: vi.fn(async () => 'Generated'),
       isHistoryEnabled: () => false,
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     await store.sendMessage('First question')
 
@@ -823,7 +825,7 @@ describe('file and image context policies', () => {
       getLastChatId: () => 'chat-1',
       createId: vi.fn(() => 'new-chat'),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
 
     expect(await store.openChat('chat-1')).toBe(false)
     expect(deps.notifyError).toHaveBeenCalledWith('Load failed')
@@ -841,9 +843,9 @@ describe('file and image context policies', () => {
           new Promise((resolve) => {
             loads.set(id, resolve as (chat: unknown) => void)
           })
-      ) as ChatStoreDeps['loadChat'],
+      ) as ChatStoreDependencies['loadChat'],
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     const chat = (id: string) => ({
       id,
       title: id,
@@ -872,7 +874,7 @@ describe('file and image context policies', () => {
       ),
       createId: vi.fn(() => 'chat-id-1'),
     })
-    const store = createChatStoreModel(deps)
+    const store = createChatModel(deps)
     const pending = store.sendMessage('Question')
     vi.mocked(deps.createId).mockReturnValue('branch-id')
 
@@ -890,7 +892,7 @@ it('sends the configured chat instructions used by request budgeting', async () 
   const deps = createDeps({
     getChatInstructions: () => 'Configured instructions',
   })
-  const store = createChatStoreModel(deps)
+  const store = createChatModel(deps)
   await store.sendMessage('Question')
   expect(deps.sendChatMessage).toHaveBeenCalledWith(
     'Question',

@@ -12,14 +12,14 @@ import { ref } from 'vue'
 import type { DesktopInvoker } from './ipc-store'
 import type { DesktopCall } from './desktop-functions'
 
-export interface DesktopStateDeps {
+export interface DesktopStateDependencies {
   desktopClient: DesktopInvoker
   callFunction: DesktopCall
   reportFailure: (name: string, message: string) => void
 }
 
 /** Applies every snapshot through one revision gate, including write responses. */
-export function createDesktopStateModel(deps: DesktopStateDeps) {
+export function createDesktopStateModel(deps: DesktopStateDependencies) {
   const desktopState = ref<DesktopViewState>(
     structuredClone(DEFAULT_DESKTOP_VIEW_STATE)
   )

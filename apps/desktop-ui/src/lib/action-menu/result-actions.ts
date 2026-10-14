@@ -1,13 +1,13 @@
 import type { ActionItem } from '@tyco/plugin-sdk'
 
-export interface ResultActionsDeps {
+export interface ResultActionsDependencies {
   getShortcutActions: () => (ActionItem | undefined)[]
   getDefaultActions: () => ActionItem[]
   hasTargetWindow: () => boolean
   noTargetHint: () => string
 }
 
-export function createResultActions(deps: ResultActionsDeps) {
+export function createResultActions(deps: ResultActionsDependencies) {
   return {
     shortcutActions() {
       return deps

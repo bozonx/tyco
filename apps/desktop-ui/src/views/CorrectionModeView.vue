@@ -47,7 +47,7 @@ const emptyMessage = computed(() => {
   )
 })
 
-navPanelStore.resetNavParams({ panelVisible: false })
+navPanelStore.resetNavPanelState({ panelVisible: false })
 
 function handleCancel() {
   if (!isCurrent()) return

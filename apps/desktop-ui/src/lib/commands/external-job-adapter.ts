@@ -1,13 +1,13 @@
 import type { DesktopCall } from '../ipc/desktop-functions'
 import type { InvocationOutcome } from '../invocation/invocation-types'
 
-export interface ExternalJobAdapterDeps {
+export interface ExternalJobAdapterDependencies {
   callFunction: DesktopCall
   selectionFailed?: (message: string | undefined) => void
 }
 
 /** Maps desktop job responses to the outcome understood by both runners. */
-export function createExternalJobAdapter(deps: ExternalJobAdapterDeps) {
+export function createExternalJobAdapter(deps: ExternalJobAdapterDependencies) {
   return {
     async claimJob(id: string): Promise<boolean> {
       const result = await deps.callFunction('claimExternalJob', [id])

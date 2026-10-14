@@ -150,7 +150,7 @@ import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
 
 const plugins = usePluginRuntimeStore()
-const { pluginIndexes, pluginRuntimeStates } = plugins
+const { pluginFactories, pluginRuntimeStates } = plugins
 
 const props = defineProps<{
   userConfig: { plugins?: Record<string, unknown> }
@@ -195,7 +195,7 @@ const installation = createPluginInstallation({
 
 const installedPlugins = computed(() => {
   return resolveInstalledPlugins(
-    pluginIndexes,
+    pluginFactories,
     props.userConfig,
     pluginRuntimeStates ?? {}
   )

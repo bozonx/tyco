@@ -51,7 +51,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => chatInputStore.focusCount,
+  () => chatInputStore.focusRequestCount,
   (newValue, oldValue) => {
     if (newValue <= oldValue) return
     const textarea = textareaRef.value

@@ -83,7 +83,7 @@ it('offers explicit document replacement after reviewing a transfer conflict', (
   expect(editor.value).toBe('unsaved document')
   step.params.replaceEditor?.()
   expect(editor.value).toBe('foreign result')
-  expect(modals.anyModalOpen).toBe(false)
+  expect(modals.hasOpenModal).toBe(false)
   expect(appNavigation.goToEditor).toHaveBeenCalledOnce()
 })
 

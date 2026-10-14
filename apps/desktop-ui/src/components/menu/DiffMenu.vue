@@ -23,7 +23,7 @@
         :sourceText="props.oldText"
         :leftLetterKeys="props.replaceEditor ? [] : leftLetterKeys"
         :spaceKey="props.replaceEditor ? replaceEditorAction : spaceKey"
-        :toEditorVisible="!props.replaceEditor"
+        :isEditorButtonVisible="!props.replaceEditor"
       />
     </template>
   </ActionOverlayLayout>

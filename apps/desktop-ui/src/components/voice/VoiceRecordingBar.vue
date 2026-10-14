@@ -20,8 +20,7 @@
         class="voice-bar-actions"
         compact
         :chat="chat"
-        :quick-send="quickSend"
-        :with-next="withNext"
+        :finish-behavior="finishBehavior"
         :is-finishing="isFinishing"
         :finish="finish"
         :cancel="cancel"

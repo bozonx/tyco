@@ -9,7 +9,7 @@ export type SelectionActivation = Pick<
   'activationId' | 'mode' | 'isWindowShown' | 'selectedText'
 >
 
-export interface CapturedChatSelectionDeps {
+export interface CapturedChatSelectionDependencies {
   startChatWithAttachment: (attachment: ChatAttachment) => Promise<void> | void
   /** The selection in the editor of this window */
   getSelectedText?: () => string | undefined
@@ -24,7 +24,9 @@ export interface CapturedChatSelectionDeps {
  * the window was already shown: the editor of a hidden window keeps the
  * selection of its last use, which has nothing to do with the question.
  */
-export function createCapturedChatSelection(deps: CapturedChatSelectionDeps) {
+export function createCapturedChatSelection(
+  deps: CapturedChatSelectionDependencies
+) {
   let lastAppliedActivation: number | undefined
   let appliedFromExternal = false
   let currentActivation: number | undefined

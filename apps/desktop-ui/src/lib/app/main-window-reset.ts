@@ -1,4 +1,4 @@
-export interface MainWindowResetDeps {
+export interface MainWindowResetDependencies {
   closeAllModals: () => void
   goToEditor: () => Promise<void>
 }
@@ -9,7 +9,7 @@ export interface MainWindowResetDeps {
  * goes; the texts and the history stay. Pending modal operations are cancelled.
  * Hiding the window with a hotkey or the tray keeps everything.
  */
-export function createMainWindowReset(deps: MainWindowResetDeps) {
+export function createMainWindowReset(deps: MainWindowResetDependencies) {
   return {
     async reset(): Promise<void> {
       deps.closeAllModals()

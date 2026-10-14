@@ -4,7 +4,7 @@ import { insertAtCursor, type TextRange } from './insert-at-cursor'
 
 export function createChatInputModel() {
   const value = ref<string>('')
-  const focusCount = ref<number>(0)
+  const focusRequestCount = ref<number>(0)
   /** Selection the input had when it lost the focus */
   const selection = ref<TextRange | null>(null)
   /** Caret to restore on the next focus */
@@ -24,7 +24,7 @@ export function createChatInputModel() {
   }
 
   const focus = (): void => {
-    focusCount.value++
+    focusRequestCount.value++
   }
 
   const rememberSelection = (range: TextRange | null): void => {
@@ -48,7 +48,7 @@ export function createChatInputModel() {
 
   return {
     value,
-    focusCount,
+    focusRequestCount,
     selection,
     pendingCaret,
     setValue,

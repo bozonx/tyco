@@ -1,9 +1,9 @@
 import { needsGeneratedTitle } from './chat-title'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatTitleController(
   deps: Pick<
-    ChatStoreDeps,
+    ChatStoreDependencies,
     'generateChatTitle' | 'renameChat' | 'isHistoryEnabled'
   >,
   state: Pick<ChatState, 'messages' | 'currentChatState'>

@@ -9,7 +9,7 @@ import {
 } from './chat-file-input'
 import { prepareChatImage } from './chat-image-input'
 
-export interface ChatFileReaderDeps {
+export interface ChatFileReaderDependencies {
   quality: () => 'economy' | 'balanced' | 'original'
   storeImage: (
     bytes: Uint8Array<ArrayBuffer>,
@@ -17,10 +17,10 @@ export interface ChatFileReaderDeps {
   ) => Promise<ChatImage>
 }
 
-export function createChatFileReader(deps: ChatFileReaderDeps) {
+export function createChatFileReader(deps: ChatFileReaderDependencies) {
   return async (
     file: File,
-    availableImages: number,
+    maxImageCount: number,
     isCurrent: () => boolean
   ): Promise<PreparedChatFile> => {
     const kind = chatFileKind(file.name)
@@ -45,7 +45,7 @@ export function createChatFileReader(deps: ChatFileReaderDeps) {
       const pdf = await readChatPdf(
         new Uint8Array(await file.arrayBuffer()),
         file.name,
-        availableImages,
+        maxImageCount,
         isCurrent
       )
       if (pdf.text) result.attachments.push(pdf.text)
@@ -53,7 +53,7 @@ export function createChatFileReader(deps: ChatFileReaderDeps) {
         result.notices = [{ kind: 'pdfPagesSkipped', count: pdf.skippedPages }]
       images = pdf.pages
     }
-    if (images.length > availableImages) throw new ChatFileError('imageLimit')
+    if (images.length > maxImageCount) throw new ChatFileError('imageLimit')
     // Normalize the entire file before accepting any part of it.
     for (const image of images) {
       if (!isCurrent()) return { attachments: [], images: [] }

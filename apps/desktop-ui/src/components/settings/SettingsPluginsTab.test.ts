@@ -21,7 +21,7 @@ vi.mock('../../lib/plugins/builtin-plugins', () => ({
 vi.mock('../../stores/plugin-runtime', () => ({
   usePluginRuntimeStore: () => ({
     pluginRuntimeStates: {},
-    pluginIndexes: [
+    pluginFactories: [
       () => ({
         id: 'PluginWithConfig',
         name: 'PluginWithConfig',

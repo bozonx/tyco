@@ -21,7 +21,7 @@ import {
   createInvocationRunner,
   type InvocationRunnerDependencies,
 } from '../invocation/invocation-runner'
-import { getLanguageLabel } from '../locale/language'
+import { getLanguageLabelKey } from '../locale/language'
 import { assignPluginActions } from './main-actions'
 
 export type { ActionItem } from '@tyco/plugin-sdk'
@@ -44,7 +44,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   aiTasks?: () => readonly ({ id: string; name: string } | null)[] | undefined
 }
 
-export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
+export function createActionMenuModel(deps: ActionMenuDependencies) {
   const registeredActionsMenu = shallowRef<ActionItem[]>([])
   const commandRunner = createCommandRunner(deps)
   const invocationRunner = createInvocationRunner(deps)
@@ -109,7 +109,7 @@ export function createActionMenuStoreModel(deps: ActionMenuDependencies) {
 
   const createTranslationActionItem = (language: string): ActionItem => ({
     id: `translation:${language}`,
-    labelKey: getLanguageLabel(language),
+    labelKey: getLanguageLabelKey(language),
     icon: 'mdi:translate',
     action: withText((text) => deps.openTranslateModal(text, language)),
   })

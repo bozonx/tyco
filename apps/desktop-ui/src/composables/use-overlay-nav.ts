@@ -7,13 +7,13 @@ import {
 import { appNavigation } from '../lib/navigation/navigation'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
-import { useWriteInputStore } from '../stores/write-input'
+import { useQuickInputStore } from '../stores/quick-input'
 import { useI18n } from './use-i18n'
 
 export function useOverlayNav(options?: () => OverlayNavOptions) {
   const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
-  const writeInputStore = useWriteInputStore()
+  const quickInputStore = useQuickInputStore()
   const { t } = useI18n()
 
   const isQuickWindow = () => {
@@ -36,7 +36,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     try {
       if (isQuickWindow()) {
         if (ipcStore.desktopState?.mode === 'write') {
-          writeInputStore.discard()
+          quickInputStore.discard()
         }
         void ipcStore.callFunctionOrNotify('hideWindow')
       } else {

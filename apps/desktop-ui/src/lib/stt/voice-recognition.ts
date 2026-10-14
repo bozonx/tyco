@@ -7,7 +7,7 @@ import {
 import type { VoiceFinishIntent } from './voice-finish-intent'
 import { createVoiceSession } from './voice-session'
 
-export interface VoiceRecognitionDeps {
+export interface VoiceRecognitionDependencies {
   startDictation: (
     handlers: Pick<LiveDictationStart, 'onText' | 'onError'>
   ) => Promise<void>
@@ -38,7 +38,7 @@ export interface VoiceRecognitionDeps {
   toastText: (text: string, kind: 'error') => void
 }
 
-export function createVoiceRecognition(deps: VoiceRecognitionDeps) {
+export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   const {
     startDictation,
     finishDictation,

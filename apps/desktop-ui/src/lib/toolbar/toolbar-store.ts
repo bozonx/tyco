@@ -2,7 +2,7 @@ import { shallowRef } from 'vue'
 
 import type { ToolbarItem } from '../../types/plugins'
 
-export function createToolbarStoreModel() {
+export function createToolbarModel() {
   const registeredToolbarItems = shallowRef<ToolbarItem[]>([])
 
   const getToolbarItems = (): ToolbarItem[] => {

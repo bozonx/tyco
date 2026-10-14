@@ -30,7 +30,7 @@ export function sttProviderNeedsKey(provider: SttProvider): boolean {
   return !KEYLESS_STT_PROVIDERS.includes(provider)
 }
 
-export interface SttClientDeps {
+export interface SttClientDependencies {
   transport: Transport
   keys?: KeyProvider
 }
@@ -82,7 +82,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
   })
 }
 
-export function createSttClient(deps: SttClientDeps): SttClient {
+export function createSttClient(deps: SttClientDependencies): SttClient {
   const kits = new Map<string, AiKit>()
   const defaultKeys: KeyProvider = {
     async get(provider) {

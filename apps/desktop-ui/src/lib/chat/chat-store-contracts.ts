@@ -9,7 +9,7 @@ interface ChatRequestModel {
   budgetCharacters: number
 }
 
-export interface ChatStoreDeps {
+export interface ChatStoreDependencies {
   sendChatMessage: (
     message: string | ChatMessage,
     prevMessages: ChatMessage[],

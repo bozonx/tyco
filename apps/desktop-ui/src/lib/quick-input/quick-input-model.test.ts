@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { DRAFT_RESTORE_MS } from './draft-restore'
-import { createWriteInputModel } from './write-input-model'
+import { createQuickInputModel } from './quick-input-model'
 
 function setup() {
   let now = 100
-  const model = createWriteInputModel({ now: () => now })
+  const model = createQuickInputModel({ now: () => now })
   return {
     model,
     advance: (ms: number) => {
@@ -47,7 +47,7 @@ describe('writer input model', () => {
     expect(model.recallText.value).toBe('submitted')
     model.focus()
     model.focusAndSelectAll()
-    expect(model.focusCount.value).toBe(1)
-    expect(model.selectAllCount.value).toBe(1)
+    expect(model.focusRequestCount.value).toBe(1)
+    expect(model.selectAllRequestCount.value).toBe(1)
   })
 })

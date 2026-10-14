@@ -26,7 +26,7 @@ import {
   type ToolResult,
 } from './tool-types'
 
-export interface BuiltinToolDependencies {
+export interface ScriptAndWebhookToolDependencies {
   executeScriptAction?: (
     request: ScriptActionRequest
   ) => Promise<ScriptExecutionResult>
@@ -60,7 +60,9 @@ const textSchema = (takesText: boolean) =>
 const textOf = (input: Record<string, unknown>): string | null =>
   typeof input.text === 'string' ? input.text : null
 
-function createScriptTool(deps: BuiltinToolDependencies): ToolDefinition {
+function createScriptTool(
+  deps: ScriptAndWebhookToolDependencies
+): ToolDefinition {
   return {
     id: 'script',
     labelKey: 'action.script',
@@ -81,9 +83,13 @@ function createScriptTool(deps: BuiltinToolDependencies): ToolDefinition {
         }
       }
       const runId = (deps.newRunId ?? defaultRunId)()
-      let over = false
+      let isExecutionFinished = false
       const cancel = () => {
-        cancelScriptRun(deps.cancelScriptAction, runId, () => over)
+        cancelScriptRun(
+          deps.cancelScriptAction,
+          runId,
+          () => isExecutionFinished
+        )
       }
       call.signal.addEventListener('abort', cancel, { once: true })
       let result: ScriptExecutionResult | undefined
@@ -106,7 +112,7 @@ function createScriptTool(deps: BuiltinToolDependencies): ToolDefinition {
         if (message === SCRIPT_CANCELLED_ERROR) return cancelled
         return { ok: false, messageKey: 'toast.scriptFailed', message }
       } finally {
-        over = true
+        isExecutionFinished = true
         call.signal.removeEventListener('abort', cancel)
       }
       // finished before the cancellation reached it
@@ -130,7 +136,9 @@ function createScriptTool(deps: BuiltinToolDependencies): ToolDefinition {
   }
 }
 
-function createWebhookTool(deps: BuiltinToolDependencies): ToolDefinition {
+function createWebhookTool(
+  deps: ScriptAndWebhookToolDependencies
+): ToolDefinition {
   return {
     id: 'webhook',
     labelKey: 'action.webhook',
@@ -177,8 +185,8 @@ function createWebhookTool(deps: BuiltinToolDependencies): ToolDefinition {
 }
 
 /** `script` and `webhook`: the way out for anything without a tool of its own */
-export function createBuiltinTools(
-  deps: BuiltinToolDependencies
+export function createScriptAndWebhookTools(
+  deps: ScriptAndWebhookToolDependencies
 ): ToolDefinition[] {
   return [createScriptTool(deps), createWebhookTool(deps)]
 }

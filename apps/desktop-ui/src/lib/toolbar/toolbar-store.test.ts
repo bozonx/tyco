@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ToolbarItem } from '../../types/plugins'
-import { createToolbarStoreModel } from './toolbar-store'
+import { createToolbarModel } from './toolbar-store'
 
-describe('createToolbarStoreModel', () => {
+describe('createToolbarModel', () => {
   it('starts with empty toolbar items', () => {
-    const store = createToolbarStoreModel()
+    const store = createToolbarModel()
     expect(store.getToolbarItems()).toHaveLength(0)
     expect(store.getLeftToolbarItems()).toHaveLength(0)
     expect(store.getRightToolbarItems()).toHaveLength(0)
   })
 
   it('registers and filters toolbar items by position', () => {
-    const store = createToolbarStoreModel()
+    const store = createToolbarModel()
 
     const itemLeft: ToolbarItem = {
       id: 'tool-left',
@@ -45,7 +45,7 @@ describe('createToolbarStoreModel', () => {
   })
 
   it('clears registered toolbar items', () => {
-    const store = createToolbarStoreModel()
+    const store = createToolbarModel()
 
     const item: ToolbarItem = {
       id: 'tool-1',

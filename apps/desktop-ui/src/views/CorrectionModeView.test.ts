@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
     mode: 'correction',
     activationId: 1,
   },
-  navPanel: { resetNavParams: vi.fn() },
+  navPanel: { resetNavPanelState: vi.fn() },
   callFunctionOrNotify: vi.fn(),
   correct: vi.fn(),
 }))

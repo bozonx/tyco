@@ -300,7 +300,7 @@ import {
   isUiScale,
 } from '@tyco/shared'
 
-const { pluginIndexes, pluginRuntimeStates } = usePluginRuntimeStore()
+const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()
 const llmStore = useLlmStore()
 const { t } = useI18n()
 const { toastText } = useToast()
@@ -366,7 +366,11 @@ const primaryTabs = computed(() => [
 ])
 
 const installedPlugins = computed(() =>
-  resolveInstalledPlugins(pluginIndexes, userConfig.value, pluginRuntimeStates)
+  resolveInstalledPlugins(
+    pluginFactories,
+    userConfig.value,
+    pluginRuntimeStates
+  )
 )
 
 const currentPluginName = computed(() =>
@@ -473,7 +477,7 @@ const persistUserConfig = session.persist
 
 const operations = createSettingsOperations({
   getConfig: () => userConfig.value,
-  pluginIndexes: () => pluginIndexes,
+  pluginFactories: () => pluginFactories,
   createCommand,
   persist: persistUserConfig,
   isSaved: session.isSaved,

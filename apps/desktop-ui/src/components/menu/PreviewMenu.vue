@@ -40,7 +40,7 @@
         :sourceText="props.sourceText"
         :leftLetterKeys="leftLetterKeys"
         :spaceKey="spaceKey"
-        :toEditorVisible="true"
+        :isEditorButtonVisible="true"
       />
     </template>
   </ActionOverlayLayout>

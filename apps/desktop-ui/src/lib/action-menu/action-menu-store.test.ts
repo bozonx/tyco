@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { createCommand } from '../commands/command-config'
 import { createCoreTools } from '../tools/core-tools'
 import { testTools } from '../tools/testing'
-import { createActionMenuStoreModel } from './action-menu-store'
+import { createActionMenuModel } from './action-menu-store'
 
 /** The core tools the built-in actions run, over mocks of what the app does */
 function coreTools() {
@@ -20,15 +20,15 @@ function coreTools() {
       correctText: vi.fn(),
       translateTo: vi.fn(),
       aiCustomPrompt: vi.fn(),
-      llmUnavailable: () => undefined,
-      translatorUnavailable: () => undefined,
+      getLlmUnavailableReasonKey: () => undefined,
+      getTranslatorUnavailableReasonKey: () => undefined,
       describeError: String,
     })
   )
   return { services, tools }
 }
 
-describe('createActionMenuStoreModel', () => {
+describe('createActionMenuModel', () => {
   const setup = () => {
     const { services, tools } = coreTools()
     const deps = {
@@ -41,14 +41,14 @@ describe('createActionMenuStoreModel', () => {
       minCorrectionLength: () => 10,
       tools,
     }
-    const store = createActionMenuStoreModel(deps)
+    const store = createActionMenuModel(deps)
     return { store, deps, services }
   }
 
   it('opens command pages beyond the global shortcut range with the current text', async () => {
     const { deps } = setup()
     const openLauncherPage = vi.fn(async () => {})
-    const store = createActionMenuStoreModel({
+    const store = createActionMenuModel({
       ...deps,
       openLauncherPage,
       mainActions: () => [{ type: 'launcherPage', page: 12 }],
@@ -214,7 +214,7 @@ describe('createActionMenuStoreModel', () => {
 
   it('restores saved plugin positions after disabling and re-enabling', () => {
     const { deps } = setup()
-    const store = createActionMenuStoreModel({
+    const store = createActionMenuModel({
       ...deps,
       mainActions: () => [null, { type: 'plugin', actionId: 'Notes:create' }],
       reviewedMainActionIds: () => ['Notes:create'],
@@ -243,7 +243,7 @@ describe('createActionMenuStoreModel', () => {
       mainActions: () => mainActions,
       tools: testTools(),
     }
-    const store = createActionMenuStoreModel(deps)
+    const store = createActionMenuModel(deps)
 
     expect(store.getShortcutActions().map((action) => action?.id)).toEqual([
       undefined,
@@ -272,7 +272,7 @@ describe('createActionMenuStoreModel', () => {
         stderr: '',
         running: false,
       })
-    const store = createActionMenuStoreModel({
+    const store = createActionMenuModel({
       ...deps,
       tools: testTools({ executeScriptAction }),
       mainActions: () => [{ type: 'command', commandId: 'sc1' }],
@@ -310,7 +310,7 @@ describe('createActionMenuStoreModel', () => {
         stderr: '',
         running: false,
       })
-    const store = createActionMenuStoreModel({
+    const store = createActionMenuModel({
       ...deps,
       tools: testTools({ executeScriptAction }),
       mainActions: () => [
@@ -343,7 +343,7 @@ describe('createActionMenuStoreModel', () => {
 
   it('builds the items of AI tasks and languages, which open their dialog', async () => {
     const { deps } = setup()
-    const store = createActionMenuStoreModel({
+    const store = createActionMenuModel({
       ...deps,
       mainActions: () => [
         { type: 'aiTask', taskId: 'task-2' },

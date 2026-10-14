@@ -14,14 +14,14 @@ import {
   type PreparedChatFile,
 } from './chat-file-input'
 
-export interface ChatFileControllerDeps {
+export interface ChatFileControllerDependencies {
   getDraft: () => ChatParams
   getMessages: () => ChatMessage[]
   getSavingImages: () => ChatImage[]
   isGenerating: () => boolean
   prepare: (
     file: File,
-    availableImages: number,
+    maxImageCount: number,
     isCurrent: () => boolean
   ) => Promise<PreparedChatFile>
   addAttachment: (attachment: ChatAttachment) => void
@@ -33,7 +33,7 @@ export interface ChatFileControllerDeps {
 }
 
 /** Owns import queues and image lifetimes independently of Pinia and native IO. */
-export function createChatFileController(deps: ChatFileControllerDeps) {
+export function createChatFileController(deps: ChatFileControllerDependencies) {
   const importing = ref(0)
   const opening = ref(0)
   const pendingImages = computed(() => deps.getDraft().images || [])

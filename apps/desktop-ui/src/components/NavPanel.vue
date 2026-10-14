@@ -1,7 +1,7 @@
 <template>
   <header class="app-topbar">
     <nav
-      v-if="navPanelStore.params.rightPanelVisible"
+      v-if="navPanelStore.navPanelState.rightPanelVisible"
       class="topbar-nav"
       :aria-label="t('app.title')"
     >
@@ -35,18 +35,20 @@
     <div class="flex-1" />
     <div
       class="flex flex-row gap-1 items-center"
-      v-if="navPanelStore.params.rightPanelVisible"
+      v-if="navPanelStore.navPanelState.rightPanelVisible"
     >
       <Button
-        v-if="navPanelStore.params.escBtnAction"
+        v-if="navPanelStore.navPanelState.onEscape"
         size="sm"
         variant="neutral"
         icon="mdi:lightning-bolt-outline"
         class="mr-1"
-        @click="navPanelStore.params.escBtnAction"
-        >{{ escBtnText
+        @click="navPanelStore.navPanelState.onEscape"
+        >{{ escapeButtonText
         }}<template
-          v-if="navPanelStore.params.escBtnLabelKey === 'menu.actions'"
+          v-if="
+            navPanelStore.navPanelState.escapeButtonLabelKey === 'menu.actions'
+          "
         >
           ({{ actionsShortcut }})</template
         ></Button
@@ -95,10 +97,10 @@ const { t } = useI18n()
 
 const actionsShortcut = EDITOR_ACTIONS_SHORTCUT.toUpperCase()
 
-const escBtnText = computed(() => {
-  return navPanelStore.params.escBtnLabelKey
-    ? t(navPanelStore.params.escBtnLabelKey)
-    : navPanelStore.params.escBtnText || ''
+const escapeButtonText = computed(() => {
+  return navPanelStore.navPanelState.escapeButtonLabelKey
+    ? t(navPanelStore.navPanelState.escapeButtonLabelKey)
+    : navPanelStore.navPanelState.escapeButtonText || ''
 })
 
 function openSettings() {

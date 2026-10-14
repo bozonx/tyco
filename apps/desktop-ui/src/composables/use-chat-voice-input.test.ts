@@ -41,7 +41,7 @@ describe('useChatVoiceInput', () => {
     mocks.chatInputStore.selection = { start: 5, end: 5 }
 
     const { openChatVoiceInput } = useChatVoiceInput()
-    openChatVoiceInput({ quickSend: false })
+    openChatVoiceInput({ finishBehavior: 'confirm' })
 
     expect(mocks.menuModalsStore.nextModal).toHaveBeenCalledWith(
       MenuModals.VOICE_RECOGNITION,
@@ -50,7 +50,7 @@ describe('useChatVoiceInput', () => {
         chat: true,
         prefix: 'Hello',
         suffix: ' world',
-        quickSend: false,
+        finishBehavior: 'confirm',
       })
     )
   })
@@ -59,7 +59,7 @@ describe('useChatVoiceInput', () => {
     mocks.chatInputStore.value = 'Existing text'
 
     const { openChatVoiceInput } = useChatVoiceInput()
-    openChatVoiceInput({ quickSend: false })
+    openChatVoiceInput({ finishBehavior: 'confirm' })
 
     const modalParams = mocks.menuModalsStore.nextModal.mock.calls[0][1]
     modalParams.onCorrected('added speech', 'speech', undefined, 'insert')
@@ -71,7 +71,7 @@ describe('useChatVoiceInput', () => {
 
   it('inserts text and immediately sends input when intent is submit', () => {
     const { openChatVoiceInput } = useChatVoiceInput()
-    openChatVoiceInput({ quickSend: false })
+    openChatVoiceInput({ finishBehavior: 'confirm' })
 
     const modalParams = mocks.menuModalsStore.nextModal.mock.calls[0][1]
     modalParams.onCorrected('urgent question', 'speech', undefined, 'submit')

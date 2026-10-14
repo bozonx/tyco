@@ -14,7 +14,7 @@ export interface MenuModalsDependencies {
   blurActiveElement?: () => void
 }
 
-export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
+export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
   const pendingModal = ref<PendingModalParams | null>(null)
   const steps = ref<MenuStep[]>([])
   let lastStepId = 0
@@ -112,7 +112,7 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
   const hasStep = (id: number): boolean =>
     steps.value.some((step) => step.id === id)
 
-  const anyModalOpen = computed(() => {
+  const hasOpenModal = computed(() => {
     return currentModal.value !== MenuModals.NONE
   })
 
@@ -135,6 +135,6 @@ export function createMenuModalsStoreModel(deps: MenuModalsDependencies = {}) {
     cancelPending,
     updateStep,
     hasStep,
-    anyModalOpen,
+    hasOpenModal,
   }
 }

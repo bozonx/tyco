@@ -3,12 +3,12 @@ import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 
 import {
   createSettingsSession,
-  type SettingsSessionDeps,
+  type SettingsSessionDependencies,
 } from './settings-session'
 
 const config = () => structuredClone(DEFAULT_USER_CONFIG)
-function setup(extra: Partial<SettingsSessionDeps> = {}) {
-  const deps: SettingsSessionDeps = {
+function setup(extra: Partial<SettingsSessionDependencies> = {}) {
+  const deps: SettingsSessionDependencies = {
     initialConfig: config(),
     prepare: (value) => JSON.parse(JSON.stringify(value)),
     save: vi.fn(async (next) => ({ success: true as const, result: next })),
@@ -57,7 +57,7 @@ describe('settings session', () => {
   it('serializes saves and retains edits made while saving over merged fields', async () => {
     let finish!: (result: { success: true; result: UserConfig }) => void
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockImplementationOnce(
         () =>
           new Promise((resolve) => {
@@ -96,7 +96,7 @@ describe('settings session', () => {
 
   it('retains failed changes and recovers the queue after an exception', async () => {
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockRejectedValueOnce(new Error('Unavailable'))
       .mockImplementation(async (next) => ({
         success: true as const,
@@ -116,7 +116,7 @@ describe('settings disposal failures', () => {
   it.each(['result', 'exception'])(
     'reports a failed final save (%s) and retains the draft',
     async (kind) => {
-      const save = vi.fn<SettingsSessionDeps['save']>()
+      const save = vi.fn<SettingsSessionDependencies['save']>()
       if (kind === 'result')
         save.mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       else save.mockRejectedValueOnce(new Error('Unavailable'))
@@ -153,7 +153,7 @@ describe('settings concurrency and recovery', () => {
 
   it('recovers from a temporary error using the latest draft', async () => {
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockResolvedValueOnce({
         success: false,
         error: 'Unavailable',
@@ -173,7 +173,7 @@ describe('settings concurrency and recovery', () => {
   it('coalesces queued edits and never writes a reverted history policy', async () => {
     let finish!: (result: { success: true; result: UserConfig }) => void
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockImplementationOnce(
         () =>
           new Promise((resolve) => {
@@ -237,7 +237,7 @@ describe('settings concurrency and recovery', () => {
   it('reloads current settings after a backend conflict and allows discarding local edits', async () => {
     const latest = { ...config(), theme: 'light' as const }
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockResolvedValue({
         success: false,
         error: 'Conflict',
@@ -256,7 +256,7 @@ describe('settings concurrency and recovery', () => {
 
   it('retries temporary failures and stops after three automatic retries', async () => {
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockResolvedValue({
         success: false,
         error: 'Unavailable',
@@ -274,7 +274,7 @@ describe('settings concurrency and recovery', () => {
 
   it('does not retry invalid settings automatically', async () => {
     const save = vi
-      .fn<SettingsSessionDeps['save']>()
+      .fn<SettingsSessionDependencies['save']>()
       .mockResolvedValue({
         success: false,
         error: 'Invalid',

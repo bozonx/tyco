@@ -1,6 +1,10 @@
 <template>
   <ActionOverlayLayout
-    :title="quickSend ? t('menu.voiceChat') : t('menu.voiceInput')"
+    :title="
+      finishBehavior === 'submitToChat'
+        ? t('menu.voiceChat')
+        : t('menu.voiceInput')
+    "
     :onEsc="cancel"
   >
     <template #preview>
@@ -41,8 +45,7 @@
     <template #actions>
       <VoiceRecordingActions
         class="voice-shortcuts"
-        :quick-send="quickSend"
-        :with-next="withNext"
+        :finish-behavior="finishBehavior"
         :is-finishing="isFinishing"
         :finish="finish"
         :cancel="cancel"

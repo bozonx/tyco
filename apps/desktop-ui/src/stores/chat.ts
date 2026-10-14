@@ -13,7 +13,7 @@ import { formatLlmError } from '../lib/llm/llm-errors'
 import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
 import { APP_CONFIG } from '@tyco/shared'
-import { AiTaskKind } from '../types'
+import { LlmInstructionKind } from '../types'
 import { defineStore } from 'pinia'
 import { computed, nextTick, onScopeDispose, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
@@ -26,7 +26,7 @@ import {
   chatRequestBudgetCharacters,
   pickChatModel,
 } from '../lib/chat/chat-model'
-import { createChatStoreModel } from '../lib/chat/chat-store'
+import { createChatModel } from '../lib/chat/chat-store'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -64,7 +64,7 @@ export const useChatStore = defineStore('chat', () => {
 
   const getChatInstructions = () =>
     (ipcStore.desktopState.appConfig ?? APP_CONFIG).aiInstructions[
-      AiTaskKind.CHAT
+      LlmInstructionKind.CHAT
     ]
   const requestBudgetCharacters = () => {
     const picked = selectedModel.value
@@ -76,7 +76,7 @@ export const useChatStore = defineStore('chat', () => {
     })
   }
 
-  const model = createChatStoreModel({
+  const model = createChatModel({
     sendChatMessage,
     generateChatTitle,
     saveChat: async (item) => {

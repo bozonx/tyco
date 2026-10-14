@@ -5,12 +5,12 @@ import { createChatPersistenceQueue } from './chat-persistence-queue'
 import { prepareGenerationRequest } from './chat-request-preparation'
 import { createChatSessionModel } from './chat-session-model'
 import { createChatState } from './chat-state'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import { createChatTitleController } from './chat-title-controller'
 
 function fixture() {
   const state = createChatState()
-  const deps: ChatStoreDeps = {
+  const deps: ChatStoreDependencies = {
     sendChatMessage: vi.fn(async () => 'Answer'),
     generateChatTitle: vi.fn(async () => 'Generated title'),
     saveChat: vi.fn(),

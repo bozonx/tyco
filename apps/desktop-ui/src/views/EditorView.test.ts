@@ -39,7 +39,9 @@ describe('Editor actions shortcut', () => {
         },
       },
     })
-    expect(useNavPanelStore().params.escBtnLabelKey).toBe('menu.actions')
+    expect(useNavPanelStore().navPanelState.escapeButtonLabelKey).toBe(
+      'menu.actions'
+    )
     const press = (repeat = false) => {
       const event = new KeyboardEvent('keydown', {
         code: 'Enter',

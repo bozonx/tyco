@@ -70,7 +70,7 @@ import type { AccessDecision } from '@tyco/shared'
 const { t } = useI18n()
 const ipcStore = useIpcStore()
 
-useNavPanelStore().resetNavParams({ panelVisible: false })
+useNavPanelStore().resetNavPanelState({ panelVisible: false })
 
 const request = computed(() => ipcStore.desktopState.accessRequest ?? null)
 

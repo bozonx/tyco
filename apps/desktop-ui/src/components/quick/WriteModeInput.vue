@@ -5,7 +5,7 @@
     auto-resize
     :max-auto-height="maxHeight"
     :placeholder="t('input.textPlaceholder')"
-    :value="writeInputStore.value"
+    :value="quickInputStore.value"
     @update:value="handleInput"
   />
 </template>
@@ -15,11 +15,11 @@ import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import { useWriteInputStore } from '../../stores/write-input'
+import { useQuickInputStore } from '../../stores/quick-input'
 
 withDefaults(defineProps<{ maxHeight?: number }>(), { maxHeight: 200 })
 
-const writeInputStore = useWriteInputStore()
+const quickInputStore = useQuickInputStore()
 const menuModalsStore = useMenuModalsStore()
 // FieldTextArea exposes these
 const textareaRef = ref<{ focus: () => void; select: () => void } | null>(null)
@@ -28,20 +28,20 @@ const { t } = useI18n()
 // set value from route params and focus
 onMounted(async () => {
   await nextTick()
-  writeInputStore.focus()
+  quickInputStore.focus()
 })
 
 // set focus on close modal
 watch(
-  () => menuModalsStore.anyModalOpen,
+  () => menuModalsStore.hasOpenModal,
   (value) => {
-    if (!value) writeInputStore.focus()
+    if (!value) quickInputStore.focus()
   }
 )
 
 // handle focus
 watch(
-  () => writeInputStore.focusCount,
+  () => quickInputStore.focusRequestCount,
   (newValue, oldValue) => {
     if (newValue > oldValue) {
       textareaRef.value?.focus()
@@ -50,7 +50,7 @@ watch(
 )
 
 watch(
-  () => writeInputStore.selectAllCount,
+  () => quickInputStore.selectAllRequestCount,
   async (newValue, oldValue) => {
     if (newValue <= oldValue) return
     await nextTick()
@@ -60,7 +60,7 @@ watch(
 )
 
 const handleInput = (value: string): void => {
-  writeInputStore.setValue(value)
+  quickInputStore.setValue(value)
 }
 </script>
 

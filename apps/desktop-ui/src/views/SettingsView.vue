@@ -7,5 +7,5 @@ import { useNavPanelStore } from '../stores/nav-panel'
 
 const navPanelStore = useNavPanelStore()
 
-navPanelStore.resetNavParams({})
+navPanelStore.resetNavPanelState({})
 </script>

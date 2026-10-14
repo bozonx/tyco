@@ -27,7 +27,7 @@
         :spaceKey="customPromptAction"
         :leftLetterKeys="leftLetterKeys"
         :shortcutsDisabled="props.shortcutsDisabled"
-        :toEditorVisible="!routeParamsStore.isEditorPage()"
+        :isEditorButtonVisible="!routeParamsStore.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>

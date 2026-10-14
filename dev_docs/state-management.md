@@ -16,7 +16,7 @@ schema, file inventory, migration, recovery and credential lifetimes.
 | ---------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Desktop configuration and window context | ipc                                                                 | Backend snapshots, typed desktop calls, configuration saves, serialized session-state patches |
 | Editor document and selection            | editor-input                                                        | Document, selection, edit source, draft persistence and focus requests                        |
-| Quick writing input                      | write-input                                                         | Draft lifetime, dismissal restoration, recall and focus requests                              |
+| Quick writing input                      | quick-input                                                         | Draft lifetime, dismissal restoration, recall and focus requests                              |
 | Chat input                               | chat-input                                                          | Input text, remembered selection and one-shot caret restoration                               |
 | Chat session                             | chat                                                                | Conversation, generation, context, attachments and file ownership                             |
 | Microphone session                       | dictation                                                           | One live dictation per application instance; cancellation on disposal                         |
@@ -124,3 +124,24 @@ both cached corrections and in-flight work. Cancelling speculation alone retains
 completed results. Default command synchronization reports failed loads and
 writes and retries at most three times with exponential backoff. Disposal stops
 the retry queue.
+
+## Naming vocabulary
+
+- A `tool` is an executable capability registered by the application or a plugin.
+- A `command` is a saved tool configuration, including its input and output policy.
+- An `action` is a UI operation or menu entry that can invoke a tool or command.
+- `QuickInput` names the quick writing draft model and store. The serialized
+  `write` start mode and its route remain compatibility boundaries.
+- `LlmInstructionKind` selects application instructions. `LlmTask` selects a
+  configured model chain; `LlmRunName` also includes the chat operation.
+- Core tools expose built-in text operations. Script and webhook tools expose
+  user-configured external execution; their serialized tool IDs remain unchanged.
+- DI factories use `create…Model` when creating state models; dependency types
+  use the `Dependencies` suffix.
+- Boolean state uses `is…` or `has…`; capabilities use `can…`. Request counters
+  include `RequestCount`, and untranslated labels include `Key`.
+
+Voice input uses `finishBehavior` (`submitToChat`, `insertIntoTarget`, or
+`confirm`) to select its primary completion action and available shortcuts.
+`VoiceFinishIntent` describes the action the user actually chose: insert,
+submit, or continue to the action menu.

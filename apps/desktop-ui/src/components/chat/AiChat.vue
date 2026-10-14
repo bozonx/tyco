@@ -7,7 +7,7 @@
     />
     <div ref="scroller" class="chat-messages" @scroll="handleScroll">
       <div class="chat-column">
-        <UiState
+        <StateMessage
           v-if="chatStore.messages.length === 0"
           class="chat-empty"
           :title="t('chat.emptyTitle')"
@@ -39,7 +39,7 @@
         </div>
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
-        <UiState
+        <StateMessage
           v-if="chatStore.isStopped && !chatStore.error"
           class="chat-error"
           kind="info"
@@ -49,8 +49,8 @@
           <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
             t('chat.retry')
           }}</Button>
-        </UiState>
-        <UiState
+        </StateMessage>
+        <StateMessage
           v-if="chatStore.error"
           class="chat-error"
           kind="error"
@@ -61,7 +61,7 @@
           <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
             t('chat.retry')
           }}</Button>
-        </UiState>
+        </StateMessage>
       </div>
     </div>
 
@@ -256,7 +256,7 @@ import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import type { DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
-import UiState from '../common/UiState.vue'
+import StateMessage from '../common/StateMessage.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import ChatContextList from './ChatContextList.vue'
 import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
@@ -381,7 +381,7 @@ async function copyMarkdownToPoint(index: number) {
 }
 
 function voiceInput() {
-  openChatVoiceInput({ quickSend: false })
+  openChatVoiceInput({ finishBehavior: 'confirm' })
 }
 
 function handleScroll() {

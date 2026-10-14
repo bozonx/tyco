@@ -57,7 +57,7 @@ function closeMobileSidebar() {
   if (window.matchMedia('(max-width: 760px)').matches) sidebarOpen.value = false
 }
 
-navPanelStore.resetNavParams({})
+navPanelStore.resetNavPanelState({})
 
 onMounted(async () => {
   await historyStore.loadChatHistory()

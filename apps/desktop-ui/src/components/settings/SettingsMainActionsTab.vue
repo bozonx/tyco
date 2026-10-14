@@ -46,7 +46,7 @@ import {
 import { normalizeMainActions } from '../../lib/action-menu/main-actions'
 import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
-import { getLanguageLabel } from '../../lib/locale/language'
+import { getLanguageLabelKey } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/action-menu'
@@ -63,7 +63,7 @@ import {
   type UserConfig,
 } from '@tyco/shared'
 
-const { pluginIndexes } = usePluginRuntimeStore()
+const { pluginFactories } = usePluginRuntimeStore()
 
 const props = defineProps<{ userConfig: UserConfig }>()
 
@@ -137,7 +137,7 @@ const availableActions = computed((): MainActionChoice[] => [
   })),
   ...languages.value.map((language) => ({
     config: { type: 'translation' as const, language },
-    name: t(getLanguageLabel(language)),
+    name: t(getLanguageLabelKey(language)),
     group: { kind: 'translation' as const },
   })),
   ...aiTasks.value.map((task) => ({
@@ -176,10 +176,12 @@ const availableActions = computed((): MainActionChoice[] => [
 const pluginLabels = computed(
   () =>
     new Map(
-      resolveInstalledPlugins(pluginIndexes, props.userConfig).map((plugin) => [
-        plugin.name,
-        plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name,
-      ])
+      resolveInstalledPlugins(pluginFactories, props.userConfig).map(
+        (plugin) => [
+          plugin.name,
+          plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name,
+        ]
+      )
     )
 )
 

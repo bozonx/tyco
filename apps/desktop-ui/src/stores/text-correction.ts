@@ -35,8 +35,8 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
 
   return {
     correct: corrector.correct,
-    peek: corrector.peek,
-    speculate: corrector.speculate,
+    getCachedCorrection: corrector.getCachedCorrection,
+    schedulePrecorrection: corrector.schedulePrecorrection,
     cancel: corrector.cancel,
   }
 })

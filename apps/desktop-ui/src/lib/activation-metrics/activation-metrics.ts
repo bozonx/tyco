@@ -1,6 +1,6 @@
 import { createCleanupScope } from '../app/cleanup-scope'
 
-export interface ActivationMetricsDeps {
+export interface ActivationMetricsDependencies {
   listen: (
     event: 'start' | 'collect',
     handler: (payload: { id: number }) => void
@@ -13,7 +13,9 @@ export interface ActivationMetricsDeps {
   eventTarget: Pick<Document, 'addEventListener' | 'removeEventListener'>
 }
 
-export function createActivationMetricsClient(deps: ActivationMetricsDeps) {
+export function createActivationMetricsClient(
+  deps: ActivationMetricsDependencies
+) {
   let activeId: number | null = null
   let firstCharacterMarked = false
   let scope = createCleanupScope()

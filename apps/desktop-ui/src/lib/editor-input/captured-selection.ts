@@ -5,7 +5,7 @@ export type SelectionActivation = Pick<
   'activationId' | 'mode' | 'isWindowShown' | 'selectedText'
 >
 
-export interface CapturedSelectionDeps {
+export interface CapturedSelectionDependencies {
   /** Puts the text into the editor instead of the current one. */
   replaceValue: (text: string) => void
   focus: () => void
@@ -16,7 +16,7 @@ export interface CapturedSelectionDeps {
  * activated. The selection is captured asynchronously and arrives after the
  * activation itself, so it is taken at most once per activation.
  */
-export function createCapturedSelection(deps: CapturedSelectionDeps) {
+export function createCapturedSelection(deps: CapturedSelectionDependencies) {
   let lastAppliedActivation: number | undefined
 
   const apply = (params: SelectionActivation): boolean => {

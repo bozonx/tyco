@@ -163,7 +163,7 @@ export function createPluginContext(
                 : preset.phrases,
             }))
         : undefined,
-      unavailableReason: () =>
+      getUnavailableReasonKey: () =>
         lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
       parseText: definition.parseText
         ? async (text, context) => {

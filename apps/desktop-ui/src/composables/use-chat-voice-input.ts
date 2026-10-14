@@ -1,4 +1,7 @@
-import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
+import type {
+  VoiceFinishBehavior,
+  VoiceFinishIntent,
+} from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chat-input'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -12,7 +15,9 @@ export function useChatVoiceInput() {
   const chatInputStore = useChatInputStore()
   const menuModalsStore = useMenuModalsStore()
 
-  const openChatVoiceInput = (options: { quickSend: boolean }) => {
+  const openChatVoiceInput = (options: {
+    finishBehavior: VoiceFinishBehavior
+  }) => {
     const value = chatInputStore.value
     const selection = chatInputStore.selection
     const start = Math.min(
@@ -28,7 +33,7 @@ export function useChatVoiceInput() {
       chat: true,
       prefix,
       suffix,
-      quickSend: options.quickSend,
+      finishBehavior: options.finishBehavior,
       onCorrected: (
         text: string,
         _recognizedText: string,

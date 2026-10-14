@@ -1,6 +1,6 @@
 import { shallowRef } from 'vue'
 
-export interface RemovalUndoDeps<T> {
+export interface RemovalUndoDependencies<T> {
   remove: (id: string) => Promise<T | null>
   restore: (item: T) => Promise<void>
   release?: (item: T) => Promise<void>
@@ -10,7 +10,7 @@ export interface RemovalUndoDeps<T> {
 }
 
 /** Serializes mutations and retains the removed item until restoration succeeds. */
-export function createRemovalUndo<T>(deps: RemovalUndoDeps<T>) {
+export function createRemovalUndo<T>(deps: RemovalUndoDependencies<T>) {
   const removed = shallowRef<T | null>(null)
   let queue = Promise.resolve()
   let timer: ReturnType<typeof setTimeout> | undefined

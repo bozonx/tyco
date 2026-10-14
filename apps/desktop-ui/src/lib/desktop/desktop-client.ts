@@ -16,7 +16,7 @@ import {
 
 import { desktopErrorMessage, isDesktopError } from './ipc-error'
 
-export interface DesktopClientDeps {
+export interface DesktopClientDependencies {
   onEventError: (event: string, error: unknown) => void
   isAvailable: () => boolean
   invoke: DesktopInvoke
@@ -26,7 +26,7 @@ export interface DesktopClientDeps {
   ) => Promise<() => void>
 }
 
-export function createDesktopClient(deps: DesktopClientDeps) {
+export function createDesktopClient(deps: DesktopClientDependencies) {
   const localListeners = new Map<string, Set<(payload: unknown) => void>>()
 
   let localParams: DesktopViewState = structuredClone({

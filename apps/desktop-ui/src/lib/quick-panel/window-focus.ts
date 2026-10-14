@@ -1,4 +1,4 @@
-export interface WindowFocusDeps {
+export interface WindowFocusDependencies {
   /** Asks the window system whether the window has focus right now. */
   isFocused: () => Promise<boolean>
   onChange: (focused: boolean) => void
@@ -13,7 +13,7 @@ export interface WindowFocusDeps {
  * has no decorations that would tell it. A gained focus shows at once, a lost
  * one only once it lasts, so short blurs do not blink
  */
-export function createWindowFocus(deps: WindowFocusDeps) {
+export function createWindowFocus(deps: WindowFocusDependencies) {
   const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
   const clearTimer =
     deps.clearTimer ??

@@ -9,7 +9,7 @@ import { createLlmRequest, type AiRequestOptions } from '../lib/llm/llm-request'
 import { clientLogger } from '../lib/logger/index'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
-import { AiTaskKind } from '../types/index'
+import { LlmInstructionKind } from '../types/index'
 import useToast from './use-toast'
 import { APP_CONFIG, type ChatMessage } from '@tyco/shared'
 
@@ -33,9 +33,9 @@ export const useLlmActions = () => {
   const voiceCorrection = async (text: string, signal?: AbortSignal) => {
     const userConfig = currentUserConfig()
 
-    return await aiRequest(AiTaskKind.VOICE_CORRECTION, text, {
+    return await aiRequest(LlmInstructionKind.VOICE_CORRECTION, text, {
       instructions:
-        currentAppConfig().aiInstructions[AiTaskKind.VOICE_CORRECTION],
+        currentAppConfig().aiInstructions[LlmInstructionKind.VOICE_CORRECTION],
       rules: userConfig.aiRules?.voiceCorrection,
       signal,
     })
@@ -49,7 +49,7 @@ export const useLlmActions = () => {
   ) => {
     const { modelId, ...rest } = options
     return await aiRequest(
-      AiTaskKind.CHAT,
+      LlmInstructionKind.CHAT,
       [
         ...prevMessages,
         typeof message === 'string'
@@ -61,7 +61,8 @@ export const useLlmActions = () => {
         models: [modelId],
         notifyError: false,
         instructions:
-          devInstructions ?? currentAppConfig().aiInstructions[AiTaskKind.CHAT],
+          devInstructions ??
+          currentAppConfig().aiInstructions[LlmInstructionKind.CHAT],
         rules: currentUserConfig().aiRules?.chat,
       }
     )
@@ -75,7 +76,7 @@ export const useLlmActions = () => {
     signal?: AbortSignal
   ) => {
     const raw = await aiRequest(
-      AiTaskKind.CHAT,
+      LlmInstructionKind.CHAT,
       chatTitleSource(question, answer),
       {
         models: [modelId],
@@ -98,9 +99,10 @@ export const useLlmActions = () => {
 
     const userConfig = currentUserConfig()
 
-    return await aiRequest(AiTaskKind.CORRECTION, text, {
+    return await aiRequest(LlmInstructionKind.CORRECTION, text, {
       ...options,
-      instructions: currentAppConfig().aiInstructions[AiTaskKind.CORRECTION],
+      instructions:
+        currentAppConfig().aiInstructions[LlmInstructionKind.CORRECTION],
       rules: userConfig.aiRules?.correction,
     })
   }
@@ -117,9 +119,10 @@ export const useLlmActions = () => {
     }
     if (!prompt.trim()) return ''
 
-    return await aiRequest(AiTaskKind.AI_TASKS, text, {
+    return await aiRequest(LlmInstructionKind.AI_TASKS, text, {
       ...options,
-      instructions: currentAppConfig().aiInstructions[AiTaskKind.AI_TASKS],
+      instructions:
+        currentAppConfig().aiInstructions[LlmInstructionKind.AI_TASKS],
       rules: prompt.trim(),
     })
   }

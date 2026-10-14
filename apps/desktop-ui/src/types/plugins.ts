@@ -1,7 +1,7 @@
 import type { PluginDefinition } from '@tyco/plugin-sdk'
 export * from '@tyco/plugin-sdk'
 
-export type PluginIndex = () => PluginDefinition & {
+export type PluginFactory = () => PluginDefinition & {
   name: string
   _revision?: string
   _loadError?: string

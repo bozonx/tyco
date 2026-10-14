@@ -1,4 +1,4 @@
-export enum AiTaskKind {
+export enum LlmInstructionKind {
   VOICE_CORRECTION = 'voiceCorrection',
   CORRECTION = 'correction',
   AI_TASKS = 'aiTasks',

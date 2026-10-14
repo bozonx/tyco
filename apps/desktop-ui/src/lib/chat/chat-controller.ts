@@ -6,12 +6,12 @@ import { attachmentTexts, inferAttachmentSource } from './chat-attachment'
 import { resolveVoiceChatContext } from './editor-context'
 import { resolveContextBudget } from './context-budget'
 import { contextBudgetCharacters, type ChatModelOption } from './chat-model'
-import { trimChatContext } from './chat-helpers'
-import type { createChatStoreModel } from './chat-store'
+import { trimChatContext } from './chat-context'
+import type { createChatModel } from './chat-store'
 import type { createChatFileController } from './chat-file-controller'
 
-export interface ChatControllerDeps {
-  model: ReturnType<typeof createChatStoreModel>
+export interface ChatControllerDependencies {
+  model: ReturnType<typeof createChatModel>
   files: Pick<
     ReturnType<typeof createChatFileController>,
     'pendingImages' | 'importing' | 'whileOpening'
@@ -34,7 +34,7 @@ export interface ChatControllerDeps {
 }
 
 /** Coordinates chat input, attached context, and window transitions. */
-export function createChatController(deps: ChatControllerDeps) {
+export function createChatController(deps: ChatControllerDependencies) {
   const { model, files, editor: editorInputStore, input: chatInputStore } = deps
   const selectedModel = computed(deps.selectedModel)
   const pendingImages = files.pendingImages

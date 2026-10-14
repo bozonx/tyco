@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { createEditorInputStoreModel } from './editor-input-store'
+import { createEditorInputModel } from './editor-input-store'
 
 function createStore() {
-  return { store: createEditorInputStoreModel() }
+  return { store: createEditorInputModel() }
 }
 
-describe('createEditorInputStoreModel', () => {
+describe('createEditorInputModel', () => {
   it('updates text without touching the history', () => {
     const { store } = createStore()
 
@@ -108,13 +108,13 @@ describe('createEditorInputStoreModel', () => {
   it('increments focus and selectAll counters', () => {
     const { store } = createStore()
 
-    expect(store.focusCount.value).toBe(0)
+    expect(store.focusRequestCount.value).toBe(0)
     store.focus()
-    expect(store.focusCount.value).toBe(1)
+    expect(store.focusRequestCount.value).toBe(1)
 
-    expect(store.selectAllCount.value).toBe(0)
+    expect(store.selectAllRequestCount.value).toBe(0)
     store.selectAll()
-    expect(store.selectAllCount.value).toBe(1)
+    expect(store.selectAllRequestCount.value).toBe(1)
   })
 
   it('acts on the selection, or on the whole text without one', () => {

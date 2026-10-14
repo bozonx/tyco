@@ -12,7 +12,7 @@ export function buildToolCatalog(
 ): ToolCatalogEntry[] {
   return tools.map((tool) => {
     const shape = schemaShape(tool.inputSchema)
-    const reason = tool.unavailableReason?.()
+    const reason = tool.getUnavailableReasonKey?.()
     const entry: ToolCatalogEntry = {
       id: tool.id,
       input:

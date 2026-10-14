@@ -4,12 +4,12 @@ import { createCommand } from '../commands/command-config'
 import {
   createSelectionAction,
   SelectionActionAbortedError,
-  type SelectionActionDeps,
+  type SelectionActionDependencies,
 } from './selection-action'
 
 function fixture() {
   const command = { ...createCommand('script', 'command'), name: 'Transform' }
-  const deps: SelectionActionDeps = {
+  const deps: SelectionActionDependencies = {
     commands: () => [command],
     correct: vi.fn(async () => ({ ok: true, content: 'Corrected' })),
     transform: vi.fn(async () => ({ ok: true, content: 'Transformed' })),

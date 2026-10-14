@@ -7,14 +7,17 @@ import {
 import { describe, expect, it, vi } from 'vitest'
 import { proxyRefs } from 'vue'
 
-import { createEditorInputStoreModel } from '../editor-input/editor-input-store'
-import { createEditorActions, type EditorActionsDeps } from './editor-actions'
+import { createEditorInputModel } from '../editor-input/editor-input-store'
+import {
+  createEditorActions,
+  type EditorActionsDependencies,
+} from './editor-actions'
 
 function setup() {
-  const editor = proxyRefs(createEditorInputStoreModel())
+  const editor = proxyRefs(createEditorInputModel())
   editor.setValue('before selected after')
   editor.setSelection('selected', 7, 15)
-  const openVoice = vi.fn<EditorActionsDeps['openVoice']>()
+  const openVoice = vi.fn<EditorActionsDependencies['openVoice']>()
   const closeVoice = vi.fn()
   const toast = vi.fn()
   const actions = createEditorActions({
@@ -48,7 +51,7 @@ describe('editor actions', () => {
     expect(editor.selectionEnd).toBe(18)
     expect(editor.selectedText).toBe('')
     expect(editor.lastEditSource).toBe('voice')
-    expect(editor.focusCount).toBe(1)
+    expect(editor.focusRequestCount).toBe(1)
     expect(closeVoice).toHaveBeenCalledOnce()
   })
 
@@ -70,7 +73,7 @@ describe('editor actions', () => {
       if (kind === 'empty') params.onCorrected('  ')
       else params.onCancel()
       expect(editor.value).toBe('before selected after')
-      expect(editor.focusCount).toBe(0)
+      expect(editor.focusRequestCount).toBe(0)
       expect(closeVoice).toHaveBeenCalledOnce()
     }
   )

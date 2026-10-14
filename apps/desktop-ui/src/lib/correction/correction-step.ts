@@ -15,18 +15,18 @@ export interface CorrectionStepParams {
   /** The text before correction, still insertable with Shift+Space */
   originalText: string
   /** The correction is on its way and will replace `text` */
-  correcting: boolean
+  isCorrecting: boolean
   /** Why the correction failed; `text` is then the uncorrected one */
   correctionError?: string
   /** The correction came back without changes */
-  correctionUnchanged?: boolean
+  isCorrectionUnchanged?: boolean
   onLeave?: () => void
 }
 
-export interface CorrectionStepDeps {
+export interface CorrectionStepDependencies {
   correct: (text: string, signal: AbortSignal) => Promise<string>
   /** A finished correction of exactly this text, if there is one */
-  peek?: (text: string) => string | undefined
+  getCachedCorrection?: (text: string) => string | undefined
   /** Opens the step on top of the others; returns its id */
   openStep: (params: CorrectionStepParams & CorrectionStepExtra) => number
   /** Changes the params of the step; false when it is gone */
@@ -46,8 +46,8 @@ export interface CorrectionStepDeps {
 const resultParams = (text: string, result: string) => ({
   text: result,
   oldText: result === text ? '' : text,
-  correcting: false,
-  correctionUnchanged: result === text,
+  isCorrecting: false,
+  isCorrectionUnchanged: result === text,
   onLeave: undefined,
 })
 
@@ -56,7 +56,7 @@ const resultParams = (text: string, result: string) => ({
  * the actions then run on the corrected text, and going back returns to the
  * text as it was. Leaving the step aborts the correction
  */
-export function createCorrectionStep(deps: CorrectionStepDeps) {
+export function createCorrectionStep(deps: CorrectionStepDependencies) {
   let disposed = false
   const controllers = new Map<AbortController, number | void>()
   /** Resolves once the correction is shown, failed, or abandoned. */
@@ -67,7 +67,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
   ): Promise<void> => {
     const base = { ...extra, correction: true as const, originalText: text }
 
-    const ready = deps.peek?.(text)
+    const ready = deps.getCachedCorrection?.(text)
     if (ready !== undefined) {
       deps.openStep({ ...base, ...resultParams(text, ready) })
       await deps.saveResult(text, ready)
@@ -109,7 +109,7 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
       ...base,
       text,
       oldText: '',
-      correcting: true,
+      isCorrecting: true,
       onLeave: () => {
         controller.abort()
         if (typeof extra.onCancel === 'function') {
@@ -125,12 +125,12 @@ export function createCorrectionStep(deps: CorrectionStepDeps) {
       if (controller.signal.aborted) return
       if (deps.isAborted?.(error)) {
         // the text stays as it was, the actions work on it
-        deps.updateStep?.(id, { correcting: false, onLeave: undefined })
+        deps.updateStep?.(id, { isCorrecting: false, onLeave: undefined })
         return
       }
       const message = deps.reportError(error)
       deps.updateStep?.(id, {
-        correcting: false,
+        isCorrecting: false,
         correctionError: message,
         onLeave: undefined,
       })

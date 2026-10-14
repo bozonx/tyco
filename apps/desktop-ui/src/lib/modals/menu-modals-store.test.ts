@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { MenuModals, createMenuModalsStoreModel } from './menu-modals-store'
+import { MenuModals, createMenuModalsModel } from './menu-modals-store'
 import { blurActiveElement } from '../ui/focus'
 
-describe('createMenuModalsStoreModel', () => {
+describe('createMenuModalsModel', () => {
   it('releases query focus so Escape reaches the pending operation', () => {
     const input = document.createElement('input')
     document.body.append(input)
     try {
       input.focus()
       expect(document.activeElement).toBe(input)
-      const store = createMenuModalsStoreModel({ blurActiveElement })
+      const store = createMenuModalsModel({ blurActiveElement })
       store.setPendingModal({ label: 'Translating' })
       expect(document.activeElement).not.toBe(input)
     } finally {
@@ -18,27 +18,27 @@ describe('createMenuModalsStoreModel', () => {
     }
   })
   it('starts with NONE and no breadcrumbs', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     expect(store.currentModal.value).toBe(MenuModals.NONE)
-    expect(store.anyModalOpen.value).toBe(false)
+    expect(store.hasOpenModal.value).toBe(false)
     expect(store.menuBreadcrumbs.value).toEqual([])
   })
 
   it('navigates to next modal and calls blurActiveElement', () => {
     const blurActiveElement = vi.fn()
-    const store = createMenuModalsStoreModel({ blurActiveElement })
+    const store = createMenuModalsModel({ blurActiveElement })
 
     store.nextModal(MenuModals.TRANSLATE, { text: 'hello' })
 
     expect(blurActiveElement).toHaveBeenCalled()
     expect(store.currentModal.value).toBe(MenuModals.TRANSLATE)
     expect(store.currentModalParams.value).toEqual({ text: 'hello' })
-    expect(store.anyModalOpen.value).toBe(true)
+    expect(store.hasOpenModal.value).toBe(true)
     expect(store.menuBreadcrumbs.value).toEqual([MenuModals.TRANSLATE])
   })
 
   it('handles back navigation correctly across stack', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
 
     store.nextModal(MenuModals.AI_TASK, { text: 'first' })
     store.nextModal(MenuModals.INSERT, { text: 'second' })
@@ -54,12 +54,12 @@ describe('createMenuModalsStoreModel', () => {
 
     store.back()
     expect(store.currentModal.value).toBe(MenuModals.NONE)
-    expect(store.anyModalOpen.value).toBe(false)
+    expect(store.hasOpenModal.value).toBe(false)
     expect(store.menuBreadcrumbs.value).toEqual([])
   })
 
   it('closes all and resets state', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
 
     store.nextModal(MenuModals.AI_TASK)
     store.setPendingModal({ correction: true })
@@ -75,7 +75,7 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('cancels the pending operation through its onCancel', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const onCancel = vi.fn()
 
     store.setPendingModal({ correction: true, onCancel })
@@ -87,7 +87,7 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('restores the params of the step it goes back to', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
 
     store.nextModal(MenuModals.INSERT, { text: 'typed' })
     store.nextModal(MenuModals.INSERT, { text: 'corrected' })
@@ -97,7 +97,7 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('calls onLeave of the steps it removes', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const first = vi.fn()
     const second = vi.fn()
 
@@ -114,16 +114,16 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('updates the params only of a step still on the stack', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
 
     const lower = store.nextModal(MenuModals.INSERT, { text: 'a' })
-    const upper = store.nextModal(MenuModals.INSERT, { correcting: true })
+    const upper = store.nextModal(MenuModals.INSERT, { isCorrecting: true })
 
     expect(store.updateStep(lower, MenuModals.INSERT, { text: 'b' })).toBe(true)
     expect(
-      store.updateStep(upper, MenuModals.INSERT, { correcting: false })
+      store.updateStep(upper, MenuModals.INSERT, { isCorrecting: false })
     ).toBe(true)
-    expect(store.currentModalParams.value).toEqual({ correcting: false })
+    expect(store.currentModalParams.value).toEqual({ isCorrecting: false })
     expect(store.currentStepId.value).toBe(upper)
 
     store.back()
@@ -134,7 +134,7 @@ describe('createMenuModalsStoreModel', () => {
     )
   })
   it('rejects patches for a different modal without changing its params', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const id = store.nextModal(MenuModals.DIFF, {
       oldText: 'before',
       newText: 'after',
@@ -149,7 +149,7 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('requires parameters that match the modal contract', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const checkContracts = () => {
       // @ts-expect-error Diff dialogs require both texts.
       store.nextModal(MenuModals.DIFF)
@@ -168,7 +168,7 @@ describe('createMenuModalsStoreModel', () => {
   })
 
   it('keeps a new operation when stale cleanup or progress arrives', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const first = store.setPendingModal({ label: 'first' })
     store.cancelPending()
     store.setPendingModal({ label: 'late' }, first)
@@ -184,7 +184,7 @@ describe('createMenuModalsStoreModel', () => {
 
 describe('modal visibility and cancellation', () => {
   it('keeps pending work running when only its UI is closed', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const onCancel = vi.fn()
     store.setPendingModal({ onCancel })
     store.closeAll()
@@ -193,7 +193,7 @@ describe('modal visibility and cancellation', () => {
   })
 
   it('explicitly cancels and closes once', () => {
-    const store = createMenuModalsStoreModel()
+    const store = createMenuModalsModel()
     const onCancel = vi.fn()
     const onLeave = vi.fn()
     store.nextModal(MenuModals.INSERT, { onLeave })

@@ -3,7 +3,7 @@
   <div v-if="props.bar && !isInsertMenu" class="voice-bar-layer">
     <VoiceRecognitionMenu
       variant="bar"
-      with-next
+      finish-behavior="insertIntoTarget"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -11,7 +11,7 @@
   <ContentPadding v-else>
     <VoiceRecognitionMenu
       v-if="!isInsertMenu"
-      with-next
+      finish-behavior="insertIntoTarget"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -19,7 +19,7 @@
       v-else
       :text="resText"
       :allowInsertButton="true"
-      :shortcutsDisabled="menuModalsStore.anyModalOpen"
+      :shortcutsDisabled="menuModalsStore.hasOpenModal"
     />
   </ContentPadding>
 </template>
@@ -56,7 +56,7 @@ const actionMenuStore = useActionMenuStore()
 const isInsertMenu = ref(false)
 const resText = ref('')
 
-navPanelStore.resetNavParams({ panelVisible: false })
+navPanelStore.resetNavPanelState({ panelVisible: false })
 
 watch(isInsertMenu, (shown) => emit('result-shown', shown), { immediate: true })
 

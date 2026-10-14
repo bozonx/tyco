@@ -7,7 +7,7 @@ const model = () =>
   createSettingsConfig({
     resolveMainActions: (actions) => actions ?? [],
     getRegisteredActions: () => [{ id: 'new-action' }],
-    pluginIndexes: () => [],
+    pluginFactories: () => [],
     appearance: () => DEFAULT_APPEARANCE,
   })
 describe('settings config preparation', () => {

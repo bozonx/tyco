@@ -52,7 +52,7 @@ describe('chat store dependency wiring', () => {
     editor.setValue('Draft with a part')
     editor.setSelection('a part', 13, 19)
     await store.startChat({ attachments: [{ text: 'pending' }] })
-    expect(input.focusCount).toBe(1)
+    expect(input.focusRequestCount).toBe(1)
     input.setValue(' Question ')
     expect(await store.sendInput()).toBe(true)
     await vi.waitFor(() => expect(store.isGenerating).toBe(false))

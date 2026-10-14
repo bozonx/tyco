@@ -36,7 +36,7 @@ export const useCorrectionWorkflowStore = defineStore(
 
     const step = createCorrectionStep({
       correct,
-      peek: corrector.peek,
+      getCachedCorrection: corrector.getCachedCorrection,
       openStep: (params) =>
         menuModalsStore.nextModal(MenuModals.INSERT, params),
       updateStep: (id, params) =>
@@ -95,9 +95,9 @@ export const useCorrectionWorkflowStore = defineStore(
       /** Opens a step with the correction of `text` over the current one. */
       start: step.start,
       /** Corrects `text` in advance once the user pauses; null drops it. */
-      speculate: corrector.speculate,
+      schedulePrecorrection: corrector.schedulePrecorrection,
       /** Stops a correction made in advance; a finished one stays reusable. */
-      cancelSpeculation: corrector.cancel,
+      cancelPrecorrection: corrector.cancel,
     }
   }
 )

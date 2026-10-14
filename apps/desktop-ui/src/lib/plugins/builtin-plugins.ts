@@ -3,12 +3,12 @@ import Diacritics from '@tyco/plugin-diacritics'
 import TextCase from '@tyco/plugin-text-case'
 import WebFormatter from '@tyco/plugin-web-formatter'
 import SearchInInternet from '@tyco/plugin-search-in-internet'
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { pluginId } from './plugin-config'
 
-export const builtinPlugins: PluginIndex[] = [
+export const builtinPlugins: PluginFactory[] = [
   ...[SearchInInternet, Diacritics, TextCase, WebFormatter, FastNote].map(
-    (factory): PluginIndex =>
+    (factory): PluginFactory =>
       () => {
         const plugin = factory()
         return { ...plugin, name: plugin.id }

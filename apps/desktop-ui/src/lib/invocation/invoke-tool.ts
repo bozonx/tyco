@@ -37,7 +37,7 @@ export function invocationUnavailableReason(
 ): string | undefined {
   const tool = tools.get(invocation.toolId)
   if (!tool) return 'commands.toolMissing'
-  const reason = tool.unavailableReason?.()
+  const reason = tool.getUnavailableReasonKey?.()
   if (reason) return reason
   const kind = toolInputKind(
     tool,
@@ -66,7 +66,7 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
     const reason =
       options.input !== undefined
         ? tool
-          ? tool.unavailableReason?.()
+          ? tool.getUnavailableReasonKey?.()
           : 'commands.toolMissing'
         : invocationUnavailableReason(invocation, deps.tools)
     if (!tool || reason) {

@@ -5,7 +5,7 @@ import {
   type PluginContext,
 } from '@tyco/plugin-sdk'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
 
 export interface PluginLifecycle {
@@ -24,14 +24,14 @@ export interface PluginManagerDependencies {
   cleanupTimeoutMs?: number
   onStateChange?(id: string, state: PluginRuntimeState): void
 
-  pluginIndexes: PluginIndex[]
+  pluginFactories: PluginFactory[]
   createPluginContext(
     id: string,
     config: () => Record<string, unknown>,
     lifecycle: PluginLifecycle
   ): PluginContext
   unregisterPlugin(id: string): void
-  registerResources?(plugin: ReturnType<PluginIndex>): void
+  registerResources?(plugin: ReturnType<PluginFactory>): void
   reportError?(id: string, error: unknown): void
 }
 interface ActivePlugin {
@@ -114,9 +114,9 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     pending = pending
       .then(async () => {
         if (requested !== revision || disposed) return
-        const definitions = new Map<string, ReturnType<PluginIndex>>()
+        const definitions = new Map<string, ReturnType<PluginFactory>>()
         const duplicates = new Set<string>()
-        for (const factory of deps.pluginIndexes) {
+        for (const factory of deps.pluginFactories) {
           try {
             const plugin = factory()
             const id = pluginId(plugin)

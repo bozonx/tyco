@@ -12,7 +12,7 @@
   </template>
   <template v-else>
     <div class="layout" :inert="settingsShutdown.isClosing.value">
-      <NavPanel v-if="navPanelStore.params.panelVisible" />
+      <NavPanel v-if="navPanelStore.navPanelState.panelVisible" />
       <div class="main">
         <RouterView />
       </div>
@@ -54,11 +54,11 @@ import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menu-modals'
 import { useNavPanelStore } from './stores/nav-panel'
 import { usePluginRuntimeStore } from './stores/plugin-runtime'
+import { useQuickInputStore } from './stores/quick-input'
 import { useSelectionReplaceStore } from './stores/selection-replace'
 import { useSettingsSessionStore } from './stores/settings-session'
 import { useThemeStore } from './stores/theme'
 import { useToolCatalogStore } from './stores/tool-catalog'
-import { useWriteInputStore } from './stores/write-input'
 import { type StartMode } from '@tyco/shared'
 import { type AppEventPayloads } from '@tyco/shared'
 import { DESKTOP_COMMANDS, DESKTOP_EVENTS } from '@tyco/shared'
@@ -72,7 +72,7 @@ const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 const editorInputStore = useEditorInputStore()
-const writeInputStore = useWriteInputStore()
+const quickInputStore = useQuickInputStore()
 const routeParamsStore = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
@@ -109,10 +109,10 @@ const activationMetrics = createActivationMetricsClient({
   submitValue: (id) => {
     void ipcStore.callFunction('submitActivationMetricValue', [
       id,
-      writeInputStore.value,
+      quickInputStore.value,
     ])
   },
-  prepareTrial: () => writeInputStore.clear(),
+  prepareTrial: () => quickInputStore.clear(),
   activeElement: () => document.activeElement,
   requestFrame: (handler) => requestAnimationFrame(handler),
   eventTarget: document,

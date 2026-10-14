@@ -4,7 +4,7 @@ import { onScopeDispose } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
 import { createHeldKeys } from '../lib/desktop/held-keys'
 import { translate } from '../lib/i18n'
-import { createIpcStoreModel } from '../lib/ipc/ipc-store'
+import { createIpcModel } from '../lib/ipc/ipc-store'
 import { clientLogger } from '../lib/logger'
 import { useToastStore } from './toast'
 
@@ -14,7 +14,7 @@ export const useIpcStore = defineStore('ipc', () => {
   const heldKeys = createHeldKeys(window)
   onScopeDispose(heldKeys.dispose)
   const toastStore = useToastStore()
-  return createIpcStoreModel({
+  return createIpcModel({
     desktopClient,
     notifyError: (message, title) => {
       toastStore.addToast(message, 'error', { title })

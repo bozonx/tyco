@@ -1,7 +1,7 @@
 import type { ChatAttachment, ChatImage } from '@tyco/shared'
-import { trimChatContext } from './chat-helpers'
+import { trimChatContext } from './chat-context'
 import { imageBudgetCharacters, MAX_CHAT_IMAGES } from './chat-image-input'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 /** The same text attached twice goes once, with the source it came first */
 const uniqueAttachments = (attachments: ChatAttachment[]) =>
@@ -14,7 +14,7 @@ const uniqueAttachments = (attachments: ChatAttachment[]) =>
 
 export function prepareGenerationRequest(
   deps: Pick<
-    ChatStoreDeps,
+    ChatStoreDependencies,
     | 'getChatModel'
     | 'notifyError'
     | 'noModelError'

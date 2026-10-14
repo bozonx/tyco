@@ -13,7 +13,7 @@ export function useSelectionActionContext() {
     editorSelectedText: () => editor.selectedText,
     editorText: () => editor.value,
     isWindowShown: () => ipc.desktopState.isWindowShown,
-    hasOpenModal: () => modals.anyModalOpen || Boolean(modals.pendingModal),
+    hasOpenModal: () => modals.hasOpenModal || Boolean(modals.pendingModal),
     canUseEditorText: () => getDesktopWindowLabel() !== 'quick',
   })
 }

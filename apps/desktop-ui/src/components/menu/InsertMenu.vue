@@ -28,7 +28,7 @@
 
     <template #preview>
       <InProgressMessage
-        v-if="props.correcting"
+        v-if="props.isCorrecting"
         correction
         :onCancel="menuModalsStore.back"
       />
@@ -50,13 +50,13 @@
         :altText="
           props.insertOnly || editorTarget ? undefined : props.originalText
         "
-        :altAlwaysVisible="props.correcting"
+        :altAlwaysVisible="props.isCorrecting"
         :altAction="primaryAction"
         :shortcutsDisabled="props.shortcutsDisabled"
-        :toEditorVisible="
-          !props.correcting &&
+        :isEditorButtonVisible="
+          !props.isCorrecting &&
           !editorTarget &&
-          (props.toEditorVisible ?? !routeParamsStore.isEditorPage())
+          (props.isEditorButtonVisible ?? !routeParamsStore.isEditorPage())
         "
         :escMode="props.correction ? 'back' : 'auto'"
       />
@@ -91,12 +91,12 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   actions: undefined,
   allowInsertButton: true,
   shortcutsDisabled: false,
-  toEditorVisible: undefined,
+  isEditorButtonVisible: undefined,
   correction: false,
   originalText: undefined,
-  correcting: false,
+  isCorrecting: false,
   correctionError: undefined,
-  correctionUnchanged: false,
+  isCorrectionUnchanged: false,
   insertOnly: false,
 })
 
@@ -146,11 +146,11 @@ const diffMode = ref<DiffViewMode>(
   resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)
 )
 
-/** Space was pressed while correcting: insert once the correction is in. */
+/** Space was pressed while isCorrecting: insert once the correction is in. */
 const insertQueued = ref(false)
 
 const statusVisible = computed(
-  () => Boolean(props.correctionError) || props.correctionUnchanged
+  () => Boolean(props.correctionError) || props.isCorrectionUnchanged
 )
 
 const statusText = computed(() => {
@@ -166,9 +166,9 @@ watch(diffMode, (mode) => {
 })
 
 watch(
-  () => props.correcting,
-  (correcting, wasCorrecting) => {
-    if (correcting || !wasCorrecting) return
+  () => props.isCorrecting,
+  (isCorrecting, wasCorrecting) => {
+    if (isCorrecting || !wasCorrecting) return
     const queued = insertQueued.value
     insertQueued.value = false
     // after a failure the user decides what to do with the text as typed
@@ -225,7 +225,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   (props.insertOnly || editorTarget.value ? [] : actionsMenu.value).map(
     (item: ActionItem | undefined) => {
       if (!item) return undefined
-      if (props.correcting) return { ...item, disabled: true }
+      if (props.isCorrecting) return { ...item, disabled: true }
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
@@ -258,7 +258,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 const spaceKey = computed<ActionItem | undefined>(() => {
   if (!props.allowInsertButton && !editorTarget.value) return undefined
   const primary = primaryAction.value
-  if (!primary || !props.correcting) return primary
+  if (!primary || !props.isCorrecting) return primary
 
   return {
     ...primary,

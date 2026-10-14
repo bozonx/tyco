@@ -29,7 +29,7 @@ describe('buildToolCatalog', () => {
   it('describes the input and the availability of each tool', () => {
     const registry = createToolRegistry([
       tool('script'),
-      tool('core.translate', { unavailableReason: () => 'reason.noLlm' }),
+      tool('core.translate', { getUnavailableReasonKey: () => 'reason.noLlm' }),
     ])
     registry.registerPluginTools('Home', [
       tool('lights', { inputSchema: NO_INPUT_SCHEMA }),
@@ -82,7 +82,7 @@ describe('createToolCatalogSync', () => {
     const llmReady = ref(false)
     registry.registerCoreTools([
       tool('core.correct', {
-        unavailableReason: () => (llmReady.value ? undefined : 'noLlm'),
+        getUnavailableReasonKey: () => (llmReady.value ? undefined : 'noLlm'),
       }),
     ])
     const send = vi.fn()

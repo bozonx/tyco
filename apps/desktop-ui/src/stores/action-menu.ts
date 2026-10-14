@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import {
   type ActionItem,
-  createActionMenuStoreModel,
+  createActionMenuModel,
 } from '../lib/action-menu/action-menu-store'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
@@ -20,7 +20,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const appConfig = computed(() => ipcStore.desktopState.appConfig)
   const correctionWorkflowStore = useCorrectionWorkflowStore()
 
-  return createActionMenuStoreModel({
+  return createActionMenuModel({
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
@@ -32,7 +32,10 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     },
     startCorrection: (text, extra) =>
       // the result replaces the text in the editor as well
-      correctionWorkflowStore.start(text, { toEditorVisible: true, ...extra }),
+      correctionWorkflowStore.start(text, {
+        isEditorButtonVisible: true,
+        ...extra,
+      }),
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
     reviewedMainActionIds: () =>
       ipcStore.desktopState.userConfig.registrationState?.reviewedMainActionIds,

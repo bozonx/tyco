@@ -22,15 +22,15 @@ import { applyPluginDefaults } from '../plugins/plugin-config'
 import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 import { normalizeSttConfig } from '../stt/stt-config'
 import { normalizeTranslationConfig } from '../translation/translation-config'
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 
-export interface SettingsConfigDeps {
+export interface SettingsConfigDependencies {
   resolveMainActions: (
     actions: (MainActionConfig | null)[],
     registrations: string[]
   ) => (MainActionConfig | null)[]
   getRegisteredActions: () => { id?: string }[]
-  pluginIndexes: () => PluginIndex[]
+  pluginFactories: () => PluginFactory[]
   appearance: () => AppearanceSettings
 }
 
@@ -71,7 +71,7 @@ function normalizeAiTasks(value: unknown): UserConfig['aiTasks'] {
 }
 
 /** Normalizes the input without changing the persisted source object. */
-export function createSettingsConfig(deps: SettingsConfigDeps) {
+export function createSettingsConfig(deps: SettingsConfigDependencies) {
   function prepare(value: unknown): UserConfig {
     // Clone serialized settings before normalizing; Vue drafts may be reactive.
     const cloned: unknown = JSON.parse(
@@ -203,7 +203,7 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
       markdown: normalizeMarkdownSettings(input.markdown),
       markdownClean: normalizeMarkdownCleanSettings(input.markdownClean),
       plugins: applyPluginDefaults(
-        deps.pluginIndexes(),
+        deps.pluginFactories(),
         recordOf(input.plugins)
       ),
     }

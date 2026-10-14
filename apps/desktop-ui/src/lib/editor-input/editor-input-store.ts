@@ -3,11 +3,11 @@ import { computed, ref, watch } from 'vue'
 
 import type { EditSource } from '../editor/edit-source'
 
-export function createEditorInputStoreModel() {
+export function createEditorInputModel() {
   const value = ref<string>('')
-  const focusCount = ref<number>(0)
-  const selectAllCount = ref<number>(0)
-  const searchCount = ref<number>(0)
+  const focusRequestCount = ref<number>(0)
+  const selectAllRequestCount = ref<number>(0)
+  const searchRequestCount = ref<number>(0)
   const selectedText = ref<string>('')
   const selectionStart = ref<number>(0)
   const selectionEnd = ref<number>(0)
@@ -132,15 +132,15 @@ export function createEditorInputStoreModel() {
   }
 
   const focus = (): void => {
-    focusCount.value++
+    focusRequestCount.value++
   }
 
   const selectAll = (): void => {
-    selectAllCount.value++
+    selectAllRequestCount.value++
   }
 
   const openSearch = (): void => {
-    searchCount.value++
+    searchRequestCount.value++
   }
 
   const setSelection = (text: string, start: number, end: number): void => {
@@ -151,9 +151,9 @@ export function createEditorInputStoreModel() {
 
   return {
     value,
-    focusCount,
-    selectAllCount,
-    searchCount,
+    focusRequestCount,
+    selectAllRequestCount,
+    searchRequestCount,
     selectedText,
     selectionStart,
     selectionEnd,

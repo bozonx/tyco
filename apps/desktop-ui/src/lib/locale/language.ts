@@ -178,7 +178,7 @@ export function toHtmlLang(locale: string): string {
   return normalizeLocale(locale).replace(/_/g, '-')
 }
 
-export function getLanguageLabel(locale: string): string {
+export function getLanguageLabelKey(locale: string): string {
   const normalized = normalizeLocale(locale)
   const key = locale === AUTO_LANGUAGE_VALUE ? AUTO_LANGUAGE_VALUE : normalized
   return `language.${key}`
@@ -198,7 +198,7 @@ export function buildLanguageOptions(
       return fallbackName
     }
 
-    const translationKey = getLanguageLabel(value)
+    const translationKey = getLanguageLabelKey(value)
     const translatedValue = translate(translationKey)
 
     return translatedValue === translationKey ? fallbackName : translatedValue

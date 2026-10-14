@@ -47,7 +47,7 @@
     />
 
     <div class="chat-list-scroll">
-      <UiState
+      <StateMessage
         v-if="groups.length === 0"
         class="chat-list-empty"
         :message="query ? t('history.nothingFound') : t('history.empty')"
@@ -140,7 +140,7 @@ import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import SearchInput from '../common/SearchInput.vue'
-import UiState from '../common/UiState.vue'
+import StateMessage from '../common/StateMessage.vue'
 import { Icon } from '@iconify/vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 

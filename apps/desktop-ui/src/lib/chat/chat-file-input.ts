@@ -77,10 +77,10 @@ export function extractedTextAttachment(
   return { text: text.trim(), name: name.slice(0, 255), mediaType }
 }
 
-export interface ChatFileInputDeps {
+export interface ChatFileInputDependencies {
   prepare: (
     file: File,
-    availableImages: number,
+    maxImageCount: number,
     isCurrent: () => boolean
   ) => Promise<PreparedChatFile>
   accept: (prepared: PreparedChatFile) => void
@@ -94,7 +94,7 @@ export interface ChatFileInputDeps {
  * One failed file does not discard later files; replaced drafts receive
  * nothing.
  */
-export function createChatFileInput(deps: ChatFileInputDeps) {
+export function createChatFileInput(deps: ChatFileInputDependencies) {
   let queue = Promise.resolve()
   return {
     add(files: File[], isCurrent: () => boolean): Promise<void> {
@@ -129,7 +129,7 @@ export function createChatFileInput(deps: ChatFileInputDeps) {
   }
 }
 
-export interface ChatFileDropDeps {
+export interface ChatFileDropDependencies {
   read: (path: string) => Promise<File>
   accept: (files: File[]) => Promise<void>
   report: (name: string, kind: ChatFileErrorKind) => void
@@ -141,7 +141,7 @@ export interface ChatFileDropDeps {
  */
 export async function importDroppedChatFiles(
   paths: string[],
-  deps: ChatFileDropDeps,
+  deps: ChatFileDropDependencies,
   isCurrent: () => boolean
 ) {
   if (paths.length > MAX_CHAT_FILES && isCurrent())

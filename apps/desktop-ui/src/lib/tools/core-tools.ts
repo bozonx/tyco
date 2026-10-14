@@ -1,6 +1,6 @@
 import type { CoreToolId, LlmTask } from '@tyco/shared'
 
-import { getLanguageLabel } from '../locale/language'
+import { getLanguageLabelKey } from '../locale/language'
 import {
   TEXT_INPUT_SCHEMA,
   type ToolCall,
@@ -40,9 +40,9 @@ export interface CoreToolDependencies {
     signal: AbortSignal
   ) => Promise<string>
   /** Why the task cannot run on the LLM, as an i18n key */
-  llmUnavailable: (task: LlmTask) => string | undefined
+  getLlmUnavailableReasonKey: (task: LlmTask) => string | undefined
   /** Why the translator cannot run, as an i18n key */
-  translatorUnavailable: () => string | undefined
+  getTranslatorUnavailableReasonKey: () => string | undefined
   /** A message for a failure of the LLM or the translator */
   describeError: (error: unknown) => string
 }
@@ -175,7 +175,8 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       icon: 'mdi:spellcheck',
       description:
         'Corrects spelling, grammar and punctuation of the text with the LLM',
-      unavailableReason: () => deps.llmUnavailable('correction'),
+      getUnavailableReasonKey: () =>
+        deps.getLlmUnavailableReasonKey('correction'),
       defaultCommands: ({ t }) => [
         {
           id: 'fix',
@@ -196,7 +197,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       icon: 'mdi:translate',
       description:
         'Translates the text into the language of the command; `sourceLanguage` of the config skips detecting it',
-      unavailableReason: () => deps.translatorUnavailable(),
+      getUnavailableReasonKey: () => deps.getTranslatorUnavailableReasonKey(),
       // one per translation language set at the time; a language added
       // later gets a command only when the user makes one
       defaultCommands: ({ userConfig, t }) =>
@@ -206,7 +207,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
                 {
                   id: language,
                   name: t('tools.defaultTranslate', {
-                    language: t(getLanguageLabel(language)),
+                    language: t(getLanguageLabelKey(language)),
                   }),
                   toolConfig: { language },
                 },
@@ -237,7 +238,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       icon: 'mdi:robot-outline',
       description:
         'Applies the instruction of the command to the text with the LLM',
-      unavailableReason: () => deps.llmUnavailable('aiTasks'),
+      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('aiTasks'),
     },
     (call, text) => {
       const prompt = stringOf(call.config.prompt)

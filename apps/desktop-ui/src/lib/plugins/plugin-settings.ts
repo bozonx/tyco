@@ -3,7 +3,7 @@ import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
 import { pluginMessageKey, scopeConfigFields } from './plugin-resources'
 import type { InputConfigItem } from '../../types'
 import type { PluginRuntimeState } from './plugin-manager'
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 
 export interface InstalledPluginItem {
   name: string
@@ -20,12 +20,12 @@ export interface InstalledPluginItem {
 }
 
 export function resolveInstalledPlugins(
-  indexes: PluginIndex[],
+  factories: PluginFactory[],
   userConfig?: { plugins?: Record<string, unknown> },
   runtime: Record<string, PluginRuntimeState> = {}
 ): InstalledPluginItem[] {
-  return indexes.map((pluginIndex) => {
-    const plugin = pluginIndex()
+  return factories.map((pluginFactory) => {
+    const plugin = pluginFactory()
     const pluginName = pluginId(plugin)
     const pluginState = getPluginState(plugin, userConfig?.plugins)
     let config: Record<string, unknown> = {}

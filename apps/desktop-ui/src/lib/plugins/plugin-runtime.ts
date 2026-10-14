@@ -1,7 +1,7 @@
 import { markRaw, shallowReactive } from 'vue'
 import type { UserConfig } from '@tyco/shared'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import {
   createPluginManager,
   type PluginManagerDependencies,
@@ -11,17 +11,19 @@ import { pluginId } from './plugin-config'
 
 export interface PluginRuntimeDependencies extends Omit<
   PluginManagerDependencies,
-  'pluginIndexes' | 'onStateChange'
+  'pluginFactories' | 'onStateChange'
 > {
-  builtinPlugins: readonly PluginIndex[]
+  builtinPlugins: readonly PluginFactory[]
   getConfig: () => UserConfig
-  loadInstalled: () => Promise<PluginIndex[]>
+  loadInstalled: () => Promise<PluginFactory[]>
   removeResources: (id: string) => void
 }
 
 /** Owns the catalog, manager, and refresh queue for one application instance. */
 export function createPluginRuntime(deps: PluginRuntimeDependencies) {
-  const pluginIndexes = shallowReactive<PluginIndex[]>([...deps.builtinPlugins])
+  const pluginFactories = shallowReactive<PluginFactory[]>([
+    ...deps.builtinPlugins,
+  ])
   const pluginRuntimeStates = shallowReactive<
     Record<string, PluginRuntimeState>
   >({})
@@ -32,7 +34,7 @@ export function createPluginRuntime(deps: PluginRuntimeDependencies) {
   const manager = markRaw(
     createPluginManager({
       ...deps,
-      pluginIndexes,
+      pluginFactories,
       onStateChange: (id, state) => {
         if (!disposed) pluginRuntimeStates[id] = state
       },
@@ -53,15 +55,16 @@ export function createPluginRuntime(deps: PluginRuntimeDependencies) {
         const installed = await deps.loadInstalled()
         if (disposed) return
         const removed = new Set(
-          pluginIndexes.map((factory) => pluginId(factory()))
+          pluginFactories.map((factory) => pluginId(factory()))
         )
-        pluginIndexes.splice(
+        pluginFactories.splice(
           0,
-          pluginIndexes.length,
+          pluginFactories.length,
           ...deps.builtinPlugins,
           ...installed
         )
-        for (const factory of pluginIndexes) removed.delete(pluginId(factory()))
+        for (const factory of pluginFactories)
+          removed.delete(pluginId(factory()))
         await reloadPlugins()
         if (disposed) return
         for (const id of removed) {
@@ -81,7 +84,7 @@ export function createPluginRuntime(deps: PluginRuntimeDependencies) {
     return disposal
   }
   return {
-    pluginIndexes,
+    pluginFactories,
     pluginRuntimeStates,
     manager,
     reloadPlugins,

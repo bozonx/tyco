@@ -14,7 +14,7 @@ const INFO_HIDE_MS = 1800
 const NOTICE_HIDE_MS = 4000
 const ERROR_HIDE_MS = 6000
 
-export interface SelectionReplaceDeps {
+export interface SelectionReplaceDependencies {
   /** Transforms the text; rejects on failure */
   run: (
     action: SelectionAction,
@@ -56,7 +56,7 @@ export function keepSurroundingWhitespace(
  * back for pasting. Nothing is shown while it is quick; a bubble tells what is
  * going on once it takes longer, and failures also go to desktop notifications
  */
-export function createSelectionReplace(deps: SelectionReplaceDeps) {
+export function createSelectionReplace(deps: SelectionReplaceDependencies) {
   let disposed = false
   let active: { runId: number; controller: AbortController } | null = null
 

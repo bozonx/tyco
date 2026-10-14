@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createVoiceRecognition,
-  type VoiceRecognitionDeps,
+  type VoiceRecognitionDependencies,
 } from './voice-recognition'
 
-function setup(overrides: Partial<VoiceRecognitionDeps> = {}) {
-  const deps: VoiceRecognitionDeps = {
+function setup(overrides: Partial<VoiceRecognitionDependencies> = {}) {
+  const deps: VoiceRecognitionDependencies = {
     startDictation: vi.fn().mockResolvedValue(undefined),
     finishDictation: vi.fn().mockResolvedValue('Raw words'),
     cancelDictation: vi.fn().mockResolvedValue(undefined),

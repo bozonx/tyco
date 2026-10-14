@@ -4,7 +4,7 @@ import type {
   MainActionConfig,
   UserConfig,
 } from '@tyco/shared'
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import {
   normalizeCommands,
   normalizeLauncherCommands,
@@ -13,7 +13,7 @@ import { applyPluginPreset } from '../plugins/plugin-config'
 
 export function createSettingsOperations(deps: {
   getConfig: () => UserConfig
-  pluginIndexes: () => PluginIndex[]
+  pluginFactories: () => PluginFactory[]
   createCommand: (toolId: BuiltinToolId) => CommandConfig
   persist: () => Promise<unknown>
   isSaved: () => boolean
@@ -100,7 +100,7 @@ export function createSettingsOperations(deps: {
         ? (current as Record<string, unknown>)
         : {}
     const definition = deps
-      .pluginIndexes()
+      .pluginFactories()
       .find((factory) => factory().id === pluginName)?.()
     config.plugins[pluginName] = definition
       ? applyPluginPreset(definition, previous, values)

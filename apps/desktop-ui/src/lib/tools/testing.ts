@@ -1,17 +1,17 @@
 import {
-  type BuiltinToolDependencies,
-  createBuiltinTools,
-} from './builtin-tools'
+  type ScriptAndWebhookToolDependencies,
+  createScriptAndWebhookTools,
+} from './script-and-webhook-tools'
 import { createCoreTools } from './core-tools'
 import { createToolRegistry } from './tool-registry'
 import type { ToolDefinition } from './tool-types'
 
 /** A registry of `script` and `webhook` and the given tools, for tests */
 export function testTools(
-  deps: BuiltinToolDependencies = {},
+  deps: ScriptAndWebhookToolDependencies = {},
   extra: readonly ToolDefinition[] = []
 ) {
-  return createToolRegistry([...createBuiltinTools(deps), ...extra])
+  return createToolRegistry([...createScriptAndWebhookTools(deps), ...extra])
 }
 
 /** A core tool over the given dependencies; the others fail */
@@ -29,8 +29,8 @@ function testCoreTool(
     correctText: unused,
     translateTo: unused,
     aiCustomPrompt: unused,
-    llmUnavailable: () => undefined,
-    translatorUnavailable: () => undefined,
+    getLlmUnavailableReasonKey: () => undefined,
+    getTranslatorUnavailableReasonKey: () => undefined,
     describeError: (error) =>
       error instanceof Error ? error.message : String(error),
   }).find((tool) => tool.id === id)!

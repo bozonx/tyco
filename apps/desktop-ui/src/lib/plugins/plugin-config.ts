@@ -1,15 +1,15 @@
 import { clonePluginValue } from '@tyco/plugin-sdk'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
-import type { PluginIndex } from '../../types/plugins'
+import type { PluginFactory } from '../../types/plugins'
 import { resolveSortableChecklist } from '@tyco/plugin-sdk'
 
-export function pluginId(plugin: ReturnType<PluginIndex>): string {
+export function pluginId(plugin: ReturnType<PluginFactory>): string {
   return plugin.id
 }
 
 export function getPluginState(
-  plugin: ReturnType<PluginIndex>,
+  plugin: ReturnType<PluginFactory>,
   states: Record<string, unknown> = {}
 ): Record<string, unknown> {
   const value = states[plugin.id]
@@ -34,7 +34,7 @@ function validField(field: InputConfigItem, value: unknown): boolean {
 
 /** Resolves declared fields only; plugins never read another identity. */
 export function resolvePluginConfig(
-  plugin: ReturnType<PluginIndex>,
+  plugin: ReturnType<PluginFactory>,
   state: Record<string, unknown> = {}
 ): Record<string, unknown> {
   const presetDefaults: Record<string, unknown> = {}
@@ -70,7 +70,7 @@ export function resolvePluginConfig(
 
 /** Applies declarative preset values when a user changes a preset selector. */
 export function applyPluginPreset(
-  plugin: ReturnType<PluginIndex>,
+  plugin: ReturnType<PluginFactory>,
   state: Record<string, unknown>,
   updates: Record<string, unknown>
 ): Record<string, unknown> {
@@ -94,11 +94,11 @@ export function applyPluginPreset(
 }
 
 export function applyPluginDefaults(
-  indexes: PluginIndex[],
+  factories: PluginFactory[],
   states: Record<string, unknown> = {}
 ): Record<string, unknown> {
   const result = clonePluginValue(states)
-  for (const factory of indexes) {
+  for (const factory of factories) {
     try {
       const plugin = factory()
       if (plugin._loadError) continue

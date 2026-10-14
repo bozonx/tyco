@@ -88,7 +88,7 @@ describe('AiChat.vue', () => {
     return shallowMount(AiChat, {
       global: {
         stubs: {
-          UiState: {
+          StateMessage: {
             props: ['title', 'message', 'kind'],
             template:
               '<div class="ui-state-stub" :data-kind="kind"><slot /></div>',
@@ -159,7 +159,7 @@ describe('AiChat.vue', () => {
     wrapper.unmount()
   })
 
-  it('renders empty UiState when messages array is empty', () => {
+  it('renders empty StateMessage when messages array is empty', () => {
     mocks.chatState.messages = []
     mocks.chatState.error = ''
     const wrapper = mountChat()

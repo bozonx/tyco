@@ -31,7 +31,7 @@ describe('HistoryList.vue', () => {
       props: { items: [], emptyHint: 'No history yet' },
       global: {
         stubs: {
-          UiState: {
+          StateMessage: {
             props: ['title', 'message', 'icon'],
             template:
               '<div class="ui-state-stub"><span class="title">{{ title }}</span><span class="msg">{{ message }}</span></div>',
@@ -52,7 +52,12 @@ describe('HistoryList.vue', () => {
     const wrapper = mount(HistoryList, {
       props: { items: sampleItems },
       global: {
-        stubs: { UiState: true, Button: true, IconButton: true, Icon: true },
+        stubs: {
+          StateMessage: true,
+          Button: true,
+          IconButton: true,
+          Icon: true,
+        },
       },
     })
 
@@ -65,7 +70,12 @@ describe('HistoryList.vue', () => {
     const wrapper = mount(HistoryList, {
       props: { items: sampleItems, searchQuery: 'Second' },
       global: {
-        stubs: { UiState: true, Button: true, IconButton: true, Icon: true },
+        stubs: {
+          StateMessage: true,
+          Button: true,
+          IconButton: true,
+          Icon: true,
+        },
       },
     })
 
@@ -79,7 +89,7 @@ describe('HistoryList.vue', () => {
       props: { items: sampleItems, searchQuery: 'non-existent-match' },
       global: {
         stubs: {
-          UiState: {
+          StateMessage: {
             props: ['title'],
             template: '<div class="ui-state-stub">{{ title }}</div>',
           },
@@ -100,7 +110,7 @@ describe('HistoryList.vue', () => {
         stubs: {
           Button: { props: ['variant'], template: '<button><slot /></button>' },
           IconButton: true,
-          UiState: true,
+          StateMessage: true,
           Icon: true,
         },
       },
@@ -123,7 +133,12 @@ describe('HistoryList.vue', () => {
     const wrapper = mount(HistoryList, {
       props: { items: sampleItems },
       global: {
-        stubs: { Button: true, IconButton: true, UiState: true, Icon: true },
+        stubs: {
+          Button: true,
+          IconButton: true,
+          StateMessage: true,
+          Icon: true,
+        },
       },
     })
 
@@ -153,7 +168,7 @@ describe('HistoryList.vue', () => {
               '<button class="icon-btn-stub" :title="title" @click="$emit(\'click\')"><slot /></button>',
           },
           Button: true,
-          UiState: true,
+          StateMessage: true,
           Icon: true,
         },
       },

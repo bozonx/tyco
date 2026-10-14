@@ -37,7 +37,7 @@ describe('correction mode', () => {
     expect(startCorrection).toHaveBeenCalledTimes(2)
   })
 
-  it('processes the latest capture received while correcting', async () => {
+  it('processes the latest capture received while isCorrecting', async () => {
     let finish!: () => void
     const startCorrection = vi
       .fn()

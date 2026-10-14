@@ -1,10 +1,10 @@
 import { ref } from 'vue'
 import type { ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
-import { createChatHistoryEntry } from './chat-helpers'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import { createChatHistoryEntry } from './chat-history-entry'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
-  deps: Pick<ChatStoreDeps, 'saveChat' | 'renameChat' | 'nowIso'>,
+  deps: Pick<ChatStoreDependencies, 'saveChat' | 'renameChat' | 'nowIso'>,
   state: Pick<ChatState, 'currentChatState'>
 ) {
   const { currentChatState } = state

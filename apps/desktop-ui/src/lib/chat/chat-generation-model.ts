@@ -5,15 +5,16 @@ import {
   type ChatAttachment,
   type ChatImage,
 } from '@tyco/shared'
-import { AiTaskKind } from '../../types'
-import { createAssistantMessage, prepareChatRequest } from './chat-helpers'
+import { LlmInstructionKind } from '../../types'
+import { createAssistantMessage } from './chat-message'
+import { prepareChatRequest } from './chat-request'
 import { draftChatTitle } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
-import type { ChatStoreDeps } from './chat-store-contracts'
+import type { ChatStoreDependencies } from './chat-store-contracts'
 import type { ChatState } from './chat-state'
 export function createChatGenerationModel(
   deps: Pick<
-    ChatStoreDeps,
+    ChatStoreDependencies,
     | 'sendChatMessage'
     | 'notifyError'
     | 'emptyMessageError'
@@ -114,12 +115,9 @@ export function createChatGenerationModel(
 
     const devInstructions = deps.getChatInstructions
       ? deps.getChatInstructions()
-      : APP_CONFIG.aiInstructions[AiTaskKind.CHAT]
+      : APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT]
 
-    const { preparedMessage, userMessage } = prepareChatRequest(
-      message,
-      attachments
-    )
+    const { promptText, userMessage } = prepareChatRequest(message, attachments)
 
     if (images.length)
       userMessage.images = images.map((image) => ({ ...image }))
@@ -159,7 +157,7 @@ export function createChatGenerationModel(
 
     try {
       result = await deps.sendChatMessage(
-        images.length ? userMessage : preparedMessage,
+        images.length ? userMessage : promptText,
         prevMessages,
         devInstructions,
         {

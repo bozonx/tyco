@@ -4,3 +4,7 @@
  * actions for the text.
  */
 export type VoiceFinishIntent = 'insert' | 'submit' | 'next'
+
+/** Default completion behavior and available shortcuts of a voice input. */
+export type VoiceFinishBehavior =
+  'submitToChat' | 'insertIntoTarget' | 'confirm'

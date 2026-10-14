@@ -1,4 +1,4 @@
-export interface FocusLossDeps {
+export interface FocusLossDependencies {
   /** Asks the window system whether the window has focus right now. */
   isFocused: () => Promise<boolean>
   /** Whether losing focus may dismiss the window at this moment. */
@@ -14,7 +14,7 @@ export interface FocusLossDeps {
  * Tells a real focus loss (the user clicked another window) from the short
  * blurs the window system causes by itself
  */
-export function createFocusLossWatcher(deps: FocusLossDeps) {
+export function createFocusLossWatcher(deps: FocusLossDependencies) {
   const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
   const clearTimer =
     deps.clearTimer ??

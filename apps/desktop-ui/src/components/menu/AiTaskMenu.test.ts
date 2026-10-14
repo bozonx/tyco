@@ -44,7 +44,7 @@ describe('AiTaskMenu', () => {
         'altIcon',
         'leftLetterKeys',
         'shortcutsDisabled',
-        'toEditorVisible',
+        'isEditorButtonVisible',
       ],
       setup(props: any) {
         onProps(props)
@@ -161,7 +161,7 @@ describe('AiTaskMenu', () => {
               'actionsKey',
               'leftLetterKeys',
               'shortcutsDisabled',
-              'toEditorVisible',
+              'isEditorButtonVisible',
             ],
             setup(props: any) {
               shortcutListProps = props

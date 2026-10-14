@@ -10,7 +10,7 @@ describe('chat input model', () => {
     input.insertText('new')
     expect(input.value.value).toBe('one new three')
     expect(input.selection.value).toEqual({ start: 7, end: 7 })
-    expect(input.focusCount.value).toBe(1)
+    expect(input.focusRequestCount.value).toBe(1)
     expect(input.takePendingCaret()).toBe(7)
     expect(input.takePendingCaret()).toBeNull()
   })
