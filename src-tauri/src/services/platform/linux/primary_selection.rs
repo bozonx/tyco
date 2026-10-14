@@ -31,34 +31,34 @@ const MAX_RETRY_DELAY: Duration = Duration::from_secs(60);
 const MAX_FAILURES: u32 = 5;
 
 #[derive(Debug, Default)]
-struct OwnerState {
+struct SelectionOriginState {
     watching: bool,
     /// `wl-paste --watch` reports the selection it finds at start, which was
     /// made before the watch, in a window nobody knows.
     initial_pending: bool,
     /// The window the selection was last made in, see the module docs; `None`
     /// when it is not known, or no application window had the focus.
-    owner: Option<String>,
+    owner_window_id: Option<String>,
 }
 
-impl OwnerState {
+impl SelectionOriginState {
     fn watch_started(&mut self) {
         self.watching = true;
         self.initial_pending = true;
-        self.owner = None;
+        self.owner_window_id = None;
     }
 
     fn watch_stopped(&mut self) {
         self.watching = false;
-        self.owner = None;
+        self.owner_window_id = None;
     }
 
     fn selection_changed(&mut self, focused: Option<String>) {
         if std::mem::take(&mut self.initial_pending) {
-            self.owner = None;
+            self.owner_window_id = None;
             return;
         }
-        self.owner = focused;
+        self.owner_window_id = focused;
     }
 
     /// `None` when the owner is not watched, so it cannot be told.
@@ -66,16 +66,16 @@ impl OwnerState {
         if !self.watching {
             return None;
         }
-        Some(window_id.is_some() && self.owner.as_deref() == window_id)
+        Some(window_id.is_some() && self.owner_window_id.as_deref() == window_id)
     }
 }
 
-fn state() -> &'static Mutex<OwnerState> {
-    static STATE: OnceLock<Mutex<OwnerState>> = OnceLock::new();
+fn state() -> &'static Mutex<SelectionOriginState> {
+    static STATE: OnceLock<Mutex<SelectionOriginState>> = OnceLock::new();
     STATE.get_or_init(Mutex::default)
 }
 
-fn update<T>(change: impl FnOnce(&mut OwnerState) -> T) -> T {
+fn update<T>(change: impl FnOnce(&mut SelectionOriginState) -> T) -> T {
     change(&mut state().lock().expect("primary selection lock poisoned"))
 }
 
@@ -105,7 +105,7 @@ pub fn spawn_watcher() {
                     failures = failures.saturating_add(1);
                     log::warn!("Could not watch the primary selection: {error}");
                     if failures >= MAX_FAILURES {
-                        update(OwnerState::watch_stopped);
+                        update(SelectionOriginState::watch_stopped);
                         log::warn!(
                             "Gave up watching the primary selection: the selection of any window may become the context"
                         );
@@ -113,7 +113,7 @@ pub fn spawn_watcher() {
                     }
                 }
             }
-            update(OwnerState::watch_stopped);
+            update(SelectionOriginState::watch_stopped);
             thread::sleep(retry_delay(failures));
         }
     });
@@ -144,7 +144,7 @@ fn watch() -> std::io::Result<()> {
         let _ = child.wait();
         return Ok(());
     };
-    update(OwnerState::watch_started);
+    update(SelectionOriginState::watch_started);
     log::info!("Watching which window the primary selection is made in");
 
     for line in BufReader::new(stdout).lines() {
@@ -172,15 +172,15 @@ fn retry_delay(failures: u32) -> Duration {
 mod tests {
     use super::*;
 
-    fn watching() -> OwnerState {
-        let mut state = OwnerState::default();
+    fn watching() -> SelectionOriginState {
+        let mut state = SelectionOriginState::default();
         state.watch_started();
         state
     }
 
     #[test]
     fn tells_nothing_without_a_watch() {
-        let mut state = OwnerState::default();
+        let mut state = SelectionOriginState::default();
         state.selection_changed(Some("a".into()));
         assert_eq!(state.is_selection_from_window(Some("a")), None);
     }

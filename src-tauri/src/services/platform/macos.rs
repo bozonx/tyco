@@ -38,28 +38,28 @@ extern "C" {
 }
 
 /// Every Create/Copy result has one reference, released on every exit path.
-struct OwnedValue(CFTypeRef);
+struct ScopedCFTypeRef(CFTypeRef);
 
-impl OwnedValue {
+impl ScopedCFTypeRef {
     fn new(value: CFTypeRef) -> Option<Self> {
         (!value.is_null()).then(|| Self(value))
     }
 }
 
-impl Drop for OwnedValue {
+impl Drop for ScopedCFTypeRef {
     fn drop(&mut self) {
         unsafe { CFRelease(self.0) };
     }
 }
 
-fn attribute(element: CFTypeRef, name: &str) -> Option<OwnedValue> {
+fn attribute(element: CFTypeRef, name: &str) -> Option<ScopedCFTypeRef> {
     let name = CString::new(name).ok()?;
-    let name = OwnedValue::new(unsafe {
+    let name = ScopedCFTypeRef::new(unsafe {
         CFStringCreateWithCString(std::ptr::null(), name.as_ptr(), UTF8_ENCODING)
     })?;
     let mut value = std::ptr::null();
     let status = unsafe { AXUIElementCopyAttributeValue(element, name.0, &mut value) };
-    let value = OwnedValue::new(value);
+    let value = ScopedCFTypeRef::new(value);
     if status == 0 {
         value
     } else {
@@ -103,7 +103,7 @@ pub async fn capture_selection(target: Option<String>) -> Option<String> {
     {
         return None;
     }
-    let app = OwnedValue::new(unsafe { AXUIElementCreateApplication(process_id) })?;
+    let app = ScopedCFTypeRef::new(unsafe { AXUIElementCreateApplication(process_id) })?;
     // A hung application must not keep a selection request alive indefinitely.
     unsafe { AXUIElementSetMessagingTimeout(app.0, 1.0) };
     let focused = attribute(app.0, "AXFocusedUIElement")?;

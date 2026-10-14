@@ -17,8 +17,8 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{CreateWindowExW, DestroyWindow
 const UNICODE_TEXT: u32 = 13;
 const MAX_SNAPSHOT_BYTES: usize = 16 * 1024 * 1024;
 
-struct Clipboard(HWND);
-impl Clipboard {
+struct WindowsClipboardLock(HWND);
+impl WindowsClipboardLock {
     fn open() -> Result<Self, AppError> {
         let class: Vec<u16> = "STATIC".encode_utf16().chain(Some(0)).collect();
         let window = unsafe {
@@ -55,7 +55,7 @@ impl Clipboard {
         }
     }
 }
-impl Drop for Clipboard {
+impl Drop for WindowsClipboardLock {
     fn drop(&mut self) {
         unsafe {
             CloseClipboard();
@@ -68,7 +68,7 @@ impl Drop for Clipboard {
 pub struct ClipboardSnapshot(Vec<(u32, Vec<u8>)>);
 
 pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
-    let _clipboard = Clipboard::open()?;
+    let _clipboard = WindowsClipboardLock::open()?;
     let mut formats = Vec::new();
     let mut format = 0;
     let mut total = 0;
@@ -141,7 +141,7 @@ fn set_bytes(format: u32, bytes: &[u8]) -> Result<(), AppError> {
 }
 
 pub fn restore(snapshot: &ClipboardSnapshot) -> Result<(), AppError> {
-    let _clipboard = Clipboard::open()?;
+    let _clipboard = WindowsClipboardLock::open()?;
     if unsafe { EmptyClipboard() } == 0 {
         return Err(std::io::Error::last_os_error().into());
     }
@@ -152,7 +152,7 @@ pub fn restore(snapshot: &ClipboardSnapshot) -> Result<(), AppError> {
 }
 
 pub fn clear() -> Result<(), AppError> {
-    let _clipboard = Clipboard::open()?;
+    let _clipboard = WindowsClipboardLock::open()?;
     if unsafe { EmptyClipboard() } == 0 {
         return Err(std::io::Error::last_os_error().into());
     }
@@ -160,7 +160,7 @@ pub fn clear() -> Result<(), AppError> {
 }
 
 pub fn write_text(text: &str) -> Result<(), AppError> {
-    let _clipboard = Clipboard::open()?;
+    let _clipboard = WindowsClipboardLock::open()?;
     if unsafe { EmptyClipboard() } == 0 {
         return Err(std::io::Error::last_os_error().into());
     }
@@ -173,7 +173,7 @@ pub fn write_text(text: &str) -> Result<(), AppError> {
 }
 
 pub fn read_text() -> Option<String> {
-    let _clipboard = Clipboard::open().ok()?;
+    let _clipboard = WindowsClipboardLock::open().ok()?;
     let handle = unsafe { GetClipboardData(UNICODE_TEXT) };
     let size = unsafe { GlobalSize(handle) };
     if handle.is_null() || size == 0 || size > MAX_SNAPSHOT_BYTES {

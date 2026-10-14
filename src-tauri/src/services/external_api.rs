@@ -353,7 +353,7 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             selection_replace::finish(app, run_id, if replace { output.clone() } else { None });
         let error = match result {
             Err(error) => Some(error.to_string()),
-            Ok(selection_replace::SelectionFinishStatus::Clipboard) if replace => {
+            Ok(selection_replace::SelectionFinishStatus::CopiedToClipboard) if replace => {
                 Some("Focus changed; result is in the clipboard".into())
             }
             Ok(selection_replace::SelectionFinishStatus::Stale) if replace => {

@@ -119,12 +119,12 @@ fn press_and_release(keys: &[u16]) -> Vec<String> {
 
 /// A key combination pressed in the window that has the keyboard focus.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FocusedKeys {
+pub enum FocusedKeyAction {
     Copy,
     Paste,
 }
 
-impl FocusedKeys {
+impl FocusedKeyAction {
     fn xdotool_keys(self, shortcut: PasteShortcut) -> &'static str {
         match self {
             Self::Copy => shortcut.copy_xdotool_keys(),
@@ -203,7 +203,7 @@ impl SystemTextInjector {
     pub fn press_in_focused(
         &self,
         user_config: &Value,
-        keys: FocusedKeys,
+        action: FocusedKeyAction,
         terminal: bool,
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
@@ -216,13 +216,13 @@ impl SystemTextInjector {
             InjectionMethod::Ydotool => CommandSpec {
                 binary: configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool"),
                 args: std::iter::once(String::from("key"))
-                    .chain(keys.ydotool_keys(shortcut))
+                    .chain(action.ydotool_keys(shortcut))
                     .collect(),
                 env: vec![(String::from("YDOTOOL_SOCKET"), ydotool_socket()?)],
             },
             InjectionMethod::Xdotool => CommandSpec {
                 binary: xdotool_binary(insertion),
-                args: ["key", "--clearmodifiers", keys.xdotool_keys(shortcut)]
+                args: ["key", "--clearmodifiers", action.xdotool_keys(shortcut)]
                     .into_iter()
                     .map(String::from)
                     .collect(),
@@ -514,7 +514,7 @@ mod tests {
 
     #[test]
     fn focused_keys_release_held_modifiers_first() {
-        let keys = FocusedKeys::Copy.ydotool_keys(PasteShortcut::CtrlV);
+        let keys = FocusedKeyAction::Copy.ydotool_keys(PasteShortcut::CtrlV);
         assert_eq!(keys.len(), MODIFIER_KEYS.len() + 4);
         assert!(keys[..MODIFIER_KEYS.len()]
             .iter()
@@ -528,11 +528,11 @@ mod tests {
     #[test]
     fn copy_follows_the_paste_shortcut_family() {
         assert_eq!(
-            FocusedKeys::Copy.xdotool_keys(PasteShortcut::CtrlShiftV),
+            FocusedKeyAction::Copy.xdotool_keys(PasteShortcut::CtrlShiftV),
             "ctrl+shift+c"
         );
         assert_eq!(
-            FocusedKeys::Copy.xdotool_keys(PasteShortcut::ShiftInsert),
+            FocusedKeyAction::Copy.xdotool_keys(PasteShortcut::ShiftInsert),
             "ctrl+Insert"
         );
         assert_eq!(

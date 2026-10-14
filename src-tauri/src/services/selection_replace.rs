@@ -106,7 +106,8 @@ pub enum SelectionFinishStatus {
     Pasted,
     /// The focus moved to another window meanwhile; the result waits in the
     /// clipboard instead of going into the wrong place.
-    Clipboard,
+    #[serde(rename = "clipboard")]
+    CopiedToClipboard,
     /// No result to insert; the clipboard got its old content back.
     Restored,
     /// The run was cancelled or replaced meanwhile.

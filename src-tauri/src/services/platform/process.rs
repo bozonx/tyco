@@ -133,13 +133,13 @@ pub fn kill_tree(child: &mut std::process::Child) {
     let _ = child.kill();
 }
 
-pub trait Pipe: Read + Send + 'static {
+pub trait PollablePipe: Read + Send + 'static {
     fn prepare(&self) -> io::Result<()>;
-    fn ready(&self) -> io::Result<bool>;
+    fn is_ready(&self) -> io::Result<bool>;
 }
 
 #[cfg(unix)]
-impl<T: Read + Send + std::os::fd::AsRawFd + 'static> Pipe for T {
+impl<T: Read + Send + std::os::fd::AsRawFd + 'static> PollablePipe for T {
     fn prepare(&self) -> io::Result<()> {
         // SAFETY: the owned pipe descriptor remains valid during these calls.
         let flags = unsafe { libc::fcntl(self.as_raw_fd(), libc::F_GETFL) };
@@ -152,17 +152,17 @@ impl<T: Read + Send + std::os::fd::AsRawFd + 'static> Pipe for T {
         }
         Ok(())
     }
-    fn ready(&self) -> io::Result<bool> {
+    fn is_ready(&self) -> io::Result<bool> {
         Ok(true)
     }
 }
 
 #[cfg(windows)]
-impl<T: Read + Send + std::os::windows::io::AsRawHandle + 'static> Pipe for T {
+impl<T: Read + Send + std::os::windows::io::AsRawHandle + 'static> PollablePipe for T {
     fn prepare(&self) -> io::Result<()> {
         Ok(())
     }
-    fn ready(&self) -> io::Result<bool> {
+    fn is_ready(&self) -> io::Result<bool> {
         use windows_sys::Win32::System::Pipes::PeekNamedPipe;
         let mut available = 0;
         // SAFETY: the owned handle is a readable pipe; only byte count is requested.
@@ -192,7 +192,7 @@ pub struct PipeReader {
 }
 impl PipeReader {
     pub fn start(
-        mut pipe: impl Pipe,
+        mut pipe: impl PollablePipe,
         mut consume: impl FnMut(&[u8]) + Send + 'static,
     ) -> io::Result<Self> {
         pipe.prepare()?;
@@ -201,7 +201,7 @@ impl PipeReader {
         let thread = thread::spawn(move || {
             let mut chunk = [0; 8192];
             while !flag.load(Ordering::Relaxed) {
-                match pipe.ready() {
+                match pipe.is_ready() {
                     Ok(false) => {
                         thread::sleep(Duration::from_millis(5));
                         continue;

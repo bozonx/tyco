@@ -232,7 +232,7 @@ fn copy_selection(
     user_config: &Value,
     target: &SelectionTarget,
 ) -> Result<Option<String>, AppError> {
-    use super::linux::text_injector::FocusedKeys;
+    use super::linux::text_injector::FocusedKeyAction;
 
     const COPY_TIMEOUT: Duration = Duration::from_millis(700);
     const POLL_INTERVAL: Duration = Duration::from_millis(25);
@@ -245,7 +245,7 @@ fn copy_selection(
             .unwrap_or_default()
     );
     crate::services::clipboard::copy_to_clipboard(&probe)?;
-    injector.press_in_focused(user_config, FocusedKeys::Copy, target.is_terminal)?;
+    injector.press_in_focused(user_config, FocusedKeyAction::Copy, target.is_terminal)?;
 
     let deadline = Instant::now() + COPY_TIMEOUT;
     loop {
@@ -301,7 +301,7 @@ pub(crate) fn restore_clipboard(run: SelectionRun) {
 pub(crate) fn restore_clipboard(_run: SelectionRun) {}
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
-trait PasteDestination {
+trait PasteExecutor {
     fn write_text(&self, text: &str) -> Result<(), AppError>;
     fn active_target_id(&self) -> Option<String>;
     fn paste_keys(&self, config: &Value, target: &SelectionTarget) -> Result<(), AppError>;
@@ -310,25 +310,25 @@ trait PasteDestination {
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 fn paste_with(
-    destination: &impl PasteDestination,
+    executor: &impl PasteExecutor,
     config: &Value,
     run: SelectionRun,
     text: String,
 ) -> Result<SelectionFinishStatus, AppError> {
-    destination.write_text(&text)?;
-    if destination.active_target_id().as_deref() != Some(run.target.id.as_str()) {
-        return Ok(SelectionFinishStatus::Clipboard);
+    executor.write_text(&text)?;
+    if executor.active_target_id().as_deref() != Some(run.target.id.as_str()) {
+        return Ok(SelectionFinishStatus::CopiedToClipboard);
     }
-    destination.paste_keys(config, &run.target)?;
-    destination.restore_later(run, text);
+    executor.paste_keys(config, &run.target)?;
+    executor.restore_later(run, text);
     Ok(SelectionFinishStatus::Pasted)
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-struct SystemPasteDestination;
+struct SystemPasteExecutor;
 
 #[cfg(target_os = "linux")]
-impl PasteDestination for SystemPasteDestination {
+impl PasteExecutor for SystemPasteExecutor {
     fn write_text(&self, text: &str) -> Result<(), AppError> {
         crate::services::clipboard::copy_to_clipboard(text)
     }
@@ -336,9 +336,9 @@ impl PasteDestination for SystemPasteDestination {
         active_target().map(|target| target.id)
     }
     fn paste_keys(&self, config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
-        use super::linux::text_injector::{FocusedKeys, SystemTextInjector};
+        use super::linux::text_injector::{FocusedKeyAction, SystemTextInjector};
         SystemTextInjector::detect()
-            .press_in_focused(config, FocusedKeys::Paste, target.is_terminal)
+            .press_in_focused(config, FocusedKeyAction::Paste, target.is_terminal)
             .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))
     }
     fn restore_later(&self, run: SelectionRun, text: String) {
@@ -349,7 +349,7 @@ impl PasteDestination for SystemPasteDestination {
 }
 
 #[cfg(target_os = "windows")]
-impl PasteDestination for SystemPasteDestination {
+impl PasteExecutor for SystemPasteExecutor {
     fn write_text(&self, text: &str) -> Result<(), AppError> {
         super::windows_clipboard::write_text(text)
     }
@@ -372,7 +372,7 @@ pub(crate) fn paste_result(
     run: SelectionRun,
     text: String,
 ) -> Result<SelectionFinishStatus, AppError> {
-    paste_with(&SystemPasteDestination, config, run, text)
+    paste_with(&SystemPasteExecutor, config, run, text)
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "windows")))]
@@ -391,14 +391,14 @@ mod tests {
     use super::*;
     use std::cell::RefCell;
 
-    struct Destination {
+    struct MockPasteExecutor {
         target: Option<String>,
         write_fails: bool,
         paste_fails: bool,
         calls: RefCell<Vec<&'static str>>,
     }
 
-    impl PasteDestination for Destination {
+    impl PasteExecutor for MockPasteExecutor {
         fn write_text(&self, text: &str) -> Result<(), AppError> {
             assert_eq!(text, "result");
             self.calls.borrow_mut().push("write");
@@ -441,8 +441,8 @@ mod tests {
         }
     }
 
-    fn destination(target: Option<&str>) -> Destination {
-        Destination {
+    fn mock_executor(target: Option<&str>) -> MockPasteExecutor {
+        MockPasteExecutor {
             target: target.map(str::to_owned),
             write_fails: false,
             paste_fails: false,
@@ -453,24 +453,24 @@ mod tests {
     #[test]
     fn changed_or_missing_focus_keeps_the_result_in_clipboard_without_pasting() {
         for target in [None, Some("other")] {
-            let destination = destination(target);
+            let executor = mock_executor(target);
             assert_eq!(
-                paste_with(&destination, &Value::Null, run(), "result".into()).unwrap(),
-                SelectionFinishStatus::Clipboard
+                paste_with(&executor, &Value::Null, run(), "result".into()).unwrap(),
+                SelectionFinishStatus::CopiedToClipboard
             );
-            assert_eq!(*destination.calls.borrow(), ["write", "focus"]);
+            assert_eq!(*executor.calls.borrow(), ["write", "focus"]);
         }
     }
 
     #[test]
     fn successful_paste_schedules_restoration_after_pressing_the_keys() {
-        let destination = destination(Some("target"));
+        let executor = mock_executor(Some("target"));
         assert_eq!(
-            paste_with(&destination, &Value::Null, run(), "result".into()).unwrap(),
+            paste_with(&executor, &Value::Null, run(), "result".into()).unwrap(),
             SelectionFinishStatus::Pasted
         );
         assert_eq!(
-            *destination.calls.borrow(),
+            *executor.calls.borrow(),
             ["write", "focus", "paste", "restore"]
         );
     }
@@ -478,18 +478,18 @@ mod tests {
     #[test]
     fn clipboard_and_key_errors_do_not_schedule_restoration() {
         for write_fails in [false, true] {
-            let destination = Destination {
+            let executor = MockPasteExecutor {
                 write_fails,
                 paste_fails: true,
-                ..destination(Some("target"))
+                ..mock_executor(Some("target"))
             };
-            assert!(paste_with(&destination, &Value::Null, run(), "result".into()).is_err());
+            assert!(paste_with(&executor, &Value::Null, run(), "result".into()).is_err());
             let expected = if write_fails {
                 vec!["write"]
             } else {
                 vec!["write", "focus", "paste"]
             };
-            assert_eq!(*destination.calls.borrow(), expected);
+            assert_eq!(*executor.calls.borrow(), expected);
         }
     }
 }

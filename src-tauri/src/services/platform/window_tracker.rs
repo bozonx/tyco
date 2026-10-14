@@ -65,7 +65,7 @@ impl TrackerState {
     /// Whether a report numbered `seq` ("session:number") is newer than all
     /// applied so far. D-Bus calls are handled concurrently, so a report can
     /// arrive after a later one, and must not undo it.
-    fn accept(&mut self, seq: &str) -> bool {
+    fn accept_report(&mut self, seq: &str) -> bool {
         let Some(number) = seq
             .split_once(':')
             .filter(|(backend_session_id, _)| *backend_session_id == self.backend_session_id)
@@ -148,7 +148,7 @@ impl WindowTracker {
     /// Applies a report of the backend; `false` when it was outdated.
     pub fn window_activated(&self, seq: &str, id: &str, kind: WindowKind, class: &str) -> bool {
         self.update(|state| {
-            if !state.accept(seq) {
+            if !state.accept_report(seq) {
                 return false;
             }
             state.window_activated(id, kind);
@@ -160,7 +160,7 @@ impl WindowTracker {
     /// Applies a report of the backend; `false` when it was outdated.
     pub fn window_closed(&self, seq: &str, id: &str) -> bool {
         self.update(|state| {
-            if !state.accept(seq) {
+            if !state.accept_report(seq) {
                 return false;
             }
             state.window_closed(id);
@@ -269,36 +269,36 @@ impl WindowTracker {
 
 /// Whether the first attempt to start the tracker has finished, see
 /// `wait_for_startup`.
-struct Startup {
+struct TrackerStartupBarrier {
     done: Mutex<bool>,
     changed: Condvar,
 }
 
-fn startup() -> &'static Startup {
-    static STARTUP: Startup = Startup {
+fn startup_barrier() -> &'static TrackerStartupBarrier {
+    static BARRIER: TrackerStartupBarrier = TrackerStartupBarrier {
         done: Mutex::new(false),
         changed: Condvar::new(),
     };
-    &STARTUP
+    &BARRIER
 }
 
 /// Reports that a backend started, or that none will start soon.
 pub fn finish_startup() {
-    *startup()
+    *startup_barrier()
         .done
         .lock()
         .unwrap_or_else(|error| error.into_inner()) = true;
-    startup().changed.notify_all();
+    startup_barrier().changed.notify_all();
 }
 
 /// Waits up to `timeout` for the first attempt to start a backend. An
 /// activation needs the tracker to know the window it was called from.
 pub fn wait_for_startup(timeout: Duration) {
-    let done = startup()
+    let done = startup_barrier()
         .done
         .lock()
         .unwrap_or_else(|error| error.into_inner());
-    let (_done, result) = startup()
+    let (_done, result) = startup_barrier()
         .changed
         .wait_timeout_while(done, timeout, |done| !*done)
         .unwrap_or_else(|error| error.into_inner());
