@@ -22,9 +22,15 @@ describe('desktop IPC errors', () => {
     expect(desktopErrorMessage(payload)).toBe(payload.message)
   })
 
-  it('leaves legacy and file-import errors intact', () => {
+  it('preserves file-import errors', () => {
     const fileError = { kind: 'memory', message: 'Too many images' }
     expect(normalizeDesktopError(fileError)).toBe(fileError)
-    expect(normalizeDesktopError('failed')).toBe('failed')
+  })
+
+  it('rejects unstructured error payloads', () => {
+    expect(normalizeDesktopError('failed')).toMatchObject({
+      code: 'invalidData',
+      message: 'Invalid desktop error payload',
+    })
   })
 })

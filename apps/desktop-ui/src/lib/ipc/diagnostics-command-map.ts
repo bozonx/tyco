@@ -34,15 +34,6 @@ export function createDiagnosticsCommandMap(): DomainCommandMap<
         ({ record }) satisfies DesktopCommandArgs<'log_command_run'>,
     },
     openActionLog: { command: DESKTOP_COMMANDS.OPEN_ACTION_LOG },
-    logClientMessage: {
-      command: DESKTOP_COMMANDS.LOG_CLIENT_MESSAGE,
-      buildArgs: ([level, message, context]) =>
-        ({
-          level,
-          message,
-          context,
-        }) satisfies DesktopCommandArgs<'log_client_message'>,
-    },
     setToolCatalog: {
       command: DESKTOP_COMMANDS.SET_TOOL_CATALOG,
       buildArgs: ([tools]) =>

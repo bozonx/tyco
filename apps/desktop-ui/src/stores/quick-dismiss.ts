@@ -22,5 +22,5 @@ export const useQuickDismissStore = defineStore('quickDismiss', () => {
 
   const isHeld = computed(() => holds.value > 0)
 
-  return { holds, hold, isHeld }
+  return { hold, isHeld }
 })

@@ -367,12 +367,12 @@ describe('chat-model', () => {
 
     await store.sendMessage('Hello there')
     await vi.waitFor(() => expect(deps.generateChatTitle).toHaveBeenCalled())
-    store.setTitle('chat-id-1', 'Mine')
+    await store.renameChat('chat-id-1', 'Mine')
     resolveTitle('Greeting')
     await Promise.resolve()
 
     expect(store.currentChatParams.value.title).toBe('Mine')
-    expect(deps.renameChat).not.toHaveBeenCalled()
+    expect(deps.renameChat).toHaveBeenCalledExactlyOnceWith('chat-id-1', 'Mine')
   })
 
   it('writes the question even when no answer comes', async () => {

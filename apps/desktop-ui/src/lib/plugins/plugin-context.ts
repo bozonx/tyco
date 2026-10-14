@@ -307,8 +307,7 @@ export function createPluginContext(
     ) as PluginContext['getMyConfig'],
     callApiFunction: async (name, args) => {
       const capability =
-        name === 'openInBrowserAndHide' ||
-        String(name) === 'openInBrowserAndClose'
+        name === 'openInBrowserAndHide'
           ? 'browser'
           : name === 'saveNote' || name === 'appendNote'
             ? 'notes'
@@ -325,9 +324,6 @@ export function createPluginContext(
         args.some((arg) => typeof arg !== 'string')
       )
         throw new Error('Invalid desktop function arguments')
-      // Packages built with the previous SDK keep the same browser capability.
-      const nativeName =
-        String(name) === 'openInBrowserAndClose' ? 'openInBrowserAndHide' : name
       const result =
         capability === 'notes'
           ? await (deps.writeNote
@@ -341,7 +337,7 @@ export function createPluginContext(
               : Promise.reject(
                   new Error('Scoped notes service is unavailable')
                 ))
-          : await deps.callApiFunction(nativeName as typeof name, args)
+          : await deps.callApiFunction(name, args)
       check()
       return result
     },

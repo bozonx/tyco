@@ -20,7 +20,6 @@ declare module 'vue' {
     AudioWaveform: typeof import('./src/components/voice/AudioWaveform.vue')['default']
     BaseDialog: typeof import('./src/components/common/BaseDialog.vue')['default']
     Button: typeof import('./src/components/common/Button.vue')['default']
-    Card: typeof import('./src/components/common/Card.vue')['default']
     ChatAttachment: typeof import('./src/components/chat/ChatAttachment.vue')['default']
     ChatContextList: typeof import('./src/components/chat/ChatContextList.vue')['default']
     ChatImageAttachment: typeof import('./src/components/chat/ChatImageAttachment.vue')['default']

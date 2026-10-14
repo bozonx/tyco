@@ -34,11 +34,18 @@ export class DesktopIpcError extends Error {
   }
 }
 
-/** Keep legacy string rejections and specialized file-import errors intact. */
+/** Native commands return structured errors; file-import errors keep their kind. */
 export function normalizeDesktopError(error: unknown): unknown {
-  return isDesktopError(error) && !(error instanceof DesktopIpcError)
-    ? new DesktopIpcError(error.code, error.message, error)
-    : error
+  if (error instanceof Error) return error
+  if (isDesktopError(error))
+    return new DesktopIpcError(error.code, error.message, error)
+  if (typeof error === 'object' && error !== null && 'kind' in error)
+    return error
+  return new DesktopIpcError(
+    'invalidData',
+    'Invalid desktop error payload',
+    error
+  )
 }
 
 export function desktopErrorMessage(error: unknown): string {

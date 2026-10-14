@@ -1,10 +1,6 @@
 <template>
   <header class="app-topbar">
-    <nav
-      v-if="navPanelStore.navPanelState.rightPanelVisible"
-      class="topbar-nav"
-      :aria-label="t('app.title')"
-    >
+    <nav class="topbar-nav" :aria-label="t('app.title')">
       <button
         type="button"
         class="topbar-tab"
@@ -33,10 +29,7 @@
       </button>
     </nav>
     <div class="flex-1" />
-    <div
-      class="flex flex-row gap-1 items-center"
-      v-if="navPanelStore.navPanelState.rightPanelVisible"
-    >
+    <div class="flex flex-row gap-1 items-center">
       <Button
         v-if="navPanelStore.navPanelState.onEscape"
         size="sm"
@@ -98,9 +91,7 @@ const { t } = useI18n()
 const actionsShortcut = EDITOR_ACTIONS_SHORTCUT.toUpperCase()
 
 const escapeButtonText = computed(() => {
-  return navPanelStore.navPanelState.escapeButtonLabelKey
-    ? t(navPanelStore.navPanelState.escapeButtonLabelKey)
-    : navPanelStore.navPanelState.escapeButtonText || ''
+  return t(navPanelStore.navPanelState.escapeButtonLabelKey)
 })
 
 function openSettings() {

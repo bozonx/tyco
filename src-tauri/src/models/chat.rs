@@ -11,57 +11,15 @@ pub struct OpenMainChatEvent {
 
 /// A text the user attached to a chat message.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(from = "StoredChatAttachment")]
 pub struct ChatAttachment {
     pub text: String,
-    /// Where the text came from; unknown for attachments stored as plain
-    /// strings, before the source was kept.
+    /// Where the attached text came from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<ChatAttachmentSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
     pub media_type: Option<String>,
-}
-
-/// An attachment as the history holds it: a plain string in older files.
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum StoredChatAttachment {
-    Text(String),
-    Full {
-        text: String,
-        #[serde(default)]
-        source: Option<ChatAttachmentSource>,
-        #[serde(default)]
-        name: Option<String>,
-        #[serde(default, rename = "mediaType")]
-        media_type: Option<String>,
-    },
-}
-
-impl From<StoredChatAttachment> for ChatAttachment {
-    fn from(stored: StoredChatAttachment) -> Self {
-        match stored {
-            StoredChatAttachment::Text(text) => Self {
-                text,
-                source: None,
-                name: None,
-                media_type: None,
-            },
-            StoredChatAttachment::Full {
-                text,
-                source,
-                name,
-                media_type,
-            } => Self {
-                text,
-                source,
-                name,
-                media_type,
-            },
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

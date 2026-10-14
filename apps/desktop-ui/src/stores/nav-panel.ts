@@ -5,9 +5,7 @@ import { useMenuModalsStore } from './menu-modals'
 
 export const DEFAULT_NAV_PANEL_STATE = {
   panelVisible: true,
-  rightPanelVisible: true,
-  escapeButtonText: undefined as string | undefined,
-  escapeButtonLabelKey: 'nav.menu' as string | undefined,
+  escapeButtonLabelKey: 'nav.menu' as string,
   onEscape: undefined as (() => void) | undefined,
 }
 

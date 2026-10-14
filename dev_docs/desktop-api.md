@@ -65,13 +65,9 @@ hiding the newly active window or pasting into its activation.
 
 `list_chats` returns `ChatSummary[]`, without messages. `get_chat` returns a full
 `Chat | null`; `save_chat` accepts a full chat. The title field is `title`.
-Old chat and index files containing `description` remain readable through serde
-aliases, and subsequent writes use `title`. Plain string attachments from older
-chat files remain supported.
+Attachments use objects containing `text` and optional source and file metadata.
 
-Bundled plugins use `openInBrowserAndHide`. Previously built packages calling
-`openInBrowserAndClose` are translated at the plugin capability boundary.
-Native commands and new SDK types use only the new name.
+Plugins use `openInBrowserAndHide`; removed SDK browser names are rejected.
 
 ## Verification
 

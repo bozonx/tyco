@@ -49,10 +49,5 @@ export function createChatModel(deps: ChatModelDependencies) {
     },
     /** Resolves once the writes started so far are done */
     whenSaved: persistence.whenSaved,
-    /** Renames the current chat in memory, after it was renamed in storage */
-    setTitle: (id: string, title: string) => {
-      if (currentChatParams.value.id === id)
-        currentChatParams.value.title = title
-    },
   }
 }

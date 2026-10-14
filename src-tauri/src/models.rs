@@ -19,31 +19,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn chat_message_reads_plain_string_attachments_of_older_files() {
-        let message: ChatMessage = serde_json::from_value(serde_json::json!({
+    fn chat_message_rejects_plain_string_attachments() {
+        assert!(serde_json::from_value::<ChatMessage>(serde_json::json!({
             "role": "user",
             "content": "q",
-            "attachments": ["old", { "text": "new", "source": "editor-text" }],
+            "attachments": ["text"],
         }))
-        .unwrap();
-
-        assert_eq!(
-            message.attachments,
-            vec![
-                ChatAttachment {
-                    text: String::from("old"),
-                    source: None,
-                    name: None,
-                    media_type: None,
-                },
-                ChatAttachment {
-                    text: String::from("new"),
-                    source: Some(ChatAttachmentSource::EditorText),
-                    name: None,
-                    media_type: None,
-                },
-            ]
-        );
+        .is_err());
     }
 
     #[test]

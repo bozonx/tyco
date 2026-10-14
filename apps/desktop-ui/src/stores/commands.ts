@@ -54,5 +54,5 @@ export const useDefaultCommandsStore = defineStore('defaultCommands', () => {
   }
   onScopeDispose(dispose)
 
-  return { start, dispose, check: sync.check }
+  return { start, dispose }
 })

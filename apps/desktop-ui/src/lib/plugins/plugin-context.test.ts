@@ -178,23 +178,14 @@ describe('plugin context boundary', () => {
   })
 })
 
-it('translates the previous SDK browser name without extending capabilities', async () => {
+it('rejects removed browser API names', async () => {
   const { context, deps } = setup(['browser'])
-  await context.callApiFunction(
-    'openInBrowserAndClose' as 'openInBrowserAndHide',
-    ['https://example.com']
-  )
-  expect(deps.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
-    'https://example.com',
-  ])
-  const denied = setup()
   await expect(
-    denied.context.callApiFunction(
-      'openInBrowserAndClose' as 'openInBrowserAndHide',
-      ['https://example.com']
-    )
-  ).rejects.toThrow()
-  expect(denied.deps.callApiFunction).not.toHaveBeenCalled()
+    context.callApiFunction('openInBrowserAndClose' as 'openInBrowserAndHide', [
+      'https://example.com',
+    ])
+  ).resolves.toMatchObject({ success: false })
+  expect(deps.callApiFunction).not.toHaveBeenCalled()
 })
 
 it('routes note writes through the identity-bound scoped service', async () => {
