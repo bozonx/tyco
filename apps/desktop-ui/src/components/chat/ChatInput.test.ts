@@ -1,61 +1,161 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
+
 import ChatInput from './ChatInput.vue'
 
-const mocks = vi.hoisted(() => ({ addFiles: vi.fn(), setValue: vi.fn() }))
-vi.mock('../../stores/chat', () => ({
-  useChatStore: () => ({ attachedContext: [], addFiles: mocks.addFiles }),
+const mocks = vi.hoisted(() => ({
+  addFiles: vi.fn(),
+  setValue: vi.fn(),
+  focus: vi.fn(),
+  rememberSelection: vi.fn(),
+  takePendingCaret: vi.fn(() => null),
+  chatState: { attachedContext: [] as any[], addFiles: vi.fn() },
+  ipcState: { desktopState: { userConfig: {} as any } },
 }))
+
+vi.mock('../../stores/chat', () => ({ useChatStore: () => mocks.chatState }))
+
 vi.mock('../../stores/chat-input', () => ({
-  useChatInputStore: () => ({
-    value: 'Hello world',
-    focus: vi.fn(),
-    setValue: mocks.setValue,
-    takePendingCaret: () => null,
-  }),
+  useChatInputStore: () =>
+    reactive({
+      value: 'Hello world',
+      focusCount: 0,
+      focus: mocks.focus,
+      setValue: mocks.setValue,
+      takePendingCaret: mocks.takePendingCaret,
+      rememberSelection: mocks.rememberSelection,
+    }),
 }))
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ desktopState: { userConfig: {} } }),
-}))
+
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => mocks.ipcState }))
+
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-describe('chat file paste', () => {
-  beforeEach(() => vi.clearAllMocks())
-  it('attaches clipboard files that come without text', () => {
-    const wrapper = mount(ChatInput)
-    const file = new File(['pixels'], 'screenshot.png', { type: 'image/png' })
-    const event = new Event('paste', { cancelable: true })
-    Object.defineProperty(event, 'clipboardData', {
-      value: { files: [file], getData: () => '' },
-    })
-    wrapper.get('textarea').element.dispatchEvent(event)
-    expect(event.defaultPrevented).toBe(true)
-    expect(mocks.addFiles).toHaveBeenCalledWith([file])
-    wrapper.unmount()
+describe('ChatInput.vue', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.chatState.attachedContext = []
+    mocks.ipcState.desktopState.userConfig = {}
   })
-  it('pastes text copied from office apps without their picture of it', () => {
-    const wrapper = mount(ChatInput)
-    const file = new File(['pixels'], 'image.png', { type: 'image/png' })
-    const event = new Event('paste', { cancelable: true })
-    Object.defineProperty(event, 'clipboardData', {
-      value: { files: [file], getData: () => 'Copied cells' },
+
+  describe('chat file paste', () => {
+    it('attaches clipboard files that come without text', () => {
+      const wrapper = mount(ChatInput)
+      const file = new File(['pixels'], 'screenshot.png', { type: 'image/png' })
+      const event = new Event('paste', { cancelable: true })
+      Object.defineProperty(event, 'clipboardData', {
+        value: { files: [file], getData: () => '' },
+      })
+      wrapper.get('textarea').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+      expect(mocks.chatState.addFiles).toHaveBeenCalledWith([file])
+      wrapper.unmount()
     })
-    wrapper.get('textarea').element.dispatchEvent(event)
-    expect(event.defaultPrevented).toBe(false)
-    expect(mocks.addFiles).not.toHaveBeenCalled()
-    wrapper.unmount()
+
+    it('pastes text copied from office apps without their picture of it', () => {
+      const wrapper = mount(ChatInput)
+      const file = new File(['pixels'], 'image.png', { type: 'image/png' })
+      const event = new Event('paste', { cancelable: true })
+      Object.defineProperty(event, 'clipboardData', {
+        value: { files: [file], getData: () => 'Copied cells' },
+      })
+      wrapper.get('textarea').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(mocks.addFiles).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
+    it('leaves ordinary text paste to the textarea', () => {
+      const wrapper = mount(ChatInput)
+      const event = new Event('paste', { cancelable: true })
+      Object.defineProperty(event, 'clipboardData', {
+        value: { files: [], getData: () => 'Text' },
+      })
+      wrapper.get('textarea').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(mocks.addFiles).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
   })
-  it('leaves ordinary text paste to the textarea', () => {
-    const wrapper = mount(ChatInput)
-    const event = new Event('paste', { cancelable: true })
-    Object.defineProperty(event, 'clipboardData', {
-      value: { files: [], getData: () => 'Text' },
+
+  describe('keyboard input and submit', () => {
+    it('emits send on Enter key by default', async () => {
+      const wrapper = mount(ChatInput)
+      const textarea = wrapper.get('textarea')
+
+      await textarea.trigger('keydown', { key: 'Enter', code: 'Enter' })
+
+      expect(wrapper.emitted('send')).toHaveLength(1)
+      wrapper.unmount()
     })
-    wrapper.get('textarea').element.dispatchEvent(event)
-    expect(event.defaultPrevented).toBe(false)
-    expect(mocks.addFiles).not.toHaveBeenCalled()
-    wrapper.unmount()
+
+    it('does not emit send on Shift+Enter and leaves line break to textarea', async () => {
+      const wrapper = mount(ChatInput)
+      const textarea = wrapper.get('textarea')
+
+      await textarea.trigger('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        shiftKey: true,
+      })
+
+      expect(wrapper.emitted('send')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('emits send on Ctrl+Enter when submitKey is configured as ctrlEnter', async () => {
+      mocks.ipcState.desktopState.userConfig = { submitKey: 'ctrlEnter' }
+      const wrapper = mount(ChatInput)
+      const textarea = wrapper.get('textarea')
+
+      // Bare Enter should NOT submit in ctrlEnter mode
+      await textarea.trigger('keydown', { key: 'Enter', code: 'Enter' })
+      expect(wrapper.emitted('send')).toBeUndefined()
+
+      // Ctrl+Enter should submit
+      await textarea.trigger('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        ctrlKey: true,
+      })
+      expect(wrapper.emitted('send')).toHaveLength(1)
+      wrapper.unmount()
+    })
+
+    it('calls setValue when input event fires on textarea', async () => {
+      const wrapper = mount(ChatInput)
+      const textarea = wrapper.get('textarea')
+
+      await textarea.setValue('Updated question')
+
+      expect(mocks.setValue).toHaveBeenCalledWith('Updated question')
+      wrapper.unmount()
+    })
+
+    it('remembers cursor selection on blur', async () => {
+      const wrapper = mount(ChatInput)
+      const textarea = wrapper.get('textarea')
+      const el = textarea.element as HTMLTextAreaElement
+      el.selectionStart = 2
+      el.selectionEnd = 5
+
+      await textarea.trigger('blur')
+
+      expect(mocks.rememberSelection).toHaveBeenCalledWith({ start: 2, end: 5 })
+      wrapper.unmount()
+    })
+
+    it('shows context placeholder when attachedContext is present', () => {
+      mocks.chatState.attachedContext = [{ text: 'context' }]
+      const wrapper = mount(ChatInput)
+
+      expect(wrapper.get('textarea').attributes('placeholder')).toBe(
+        'chat.placeholderWithContext'
+      )
+      wrapper.unmount()
+    })
   })
 })

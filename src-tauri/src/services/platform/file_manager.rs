@@ -62,3 +62,35 @@ pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::test_support::TestDir;
+
+    #[test]
+    fn rejects_invalid_paths_before_opening() {
+        let dir = TestDir::new("file-manager-test");
+        let file_path = dir.join("test.txt");
+        std::fs::write(&file_path, "sample").unwrap();
+        let missing = dir.join("nonexistent");
+
+        assert!(open_dir(&file_path).is_err());
+        assert!(open_dir(&missing).is_err());
+
+        assert!(open_file(&dir).is_err());
+        assert!(open_file(&missing).is_err());
+    }
+
+    #[test]
+    fn chooses_expected_opener() {
+        let op = opener();
+        if cfg!(target_os = "macos") {
+            assert_eq!(op, "open");
+        } else if cfg!(target_os = "windows") {
+            assert_eq!(op, "explorer.exe");
+        } else {
+            assert_eq!(op, "xdg-open");
+        }
+    }
+}

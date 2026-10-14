@@ -36,15 +36,10 @@ pub async fn secrets_remove(app: AppHandle, id: String) -> Result<(), AppError> 
     with_store(&app, move |secrets| {
         let state = handle.state::<crate::state::AppState>();
         let _guard = state.lock_config_storage();
-        if crate::services::webhook_secrets::referenced_secrets(
+        crate::services::webhook_secrets::ensure_secret_not_referenced(
             &state.snapshot().settings.user_config,
-        )
-        .contains(&id)
-        {
-            return Err(AppError::InvalidInput(
-                "The secret is still referenced by the saved configuration".into(),
-            ));
-        }
+            &id,
+        )?;
         secrets.remove(&id)
     })
     .await?

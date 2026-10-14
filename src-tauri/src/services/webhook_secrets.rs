@@ -166,6 +166,17 @@ pub fn referenced_secrets(config: &Value) -> HashSet<String> {
     result
 }
 
+/// Refuses removal if the secret is still referenced anywhere in the user config.
+pub fn ensure_secret_not_referenced(config: &Value, secret_id: &str) -> Result<(), AppError> {
+    if referenced_secrets(config).contains(secret_id) {
+        Err(AppError::InvalidInput(
+            "The secret is still referenced by the saved configuration".into(),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 fn collect_references(value: &Value, result: &mut HashSet<String>) {
     match value {
         Value::String(text) => {
@@ -318,5 +329,22 @@ mod tests {
             .is_err()
         );
         assert_eq!(config, original);
+    }
+
+    #[test]
+    fn ensure_secret_not_referenced_rejects_used_keys_and_allows_free_keys() {
+        let config = serde_json::json!({
+            "commands": [{
+                "toolConfig": {
+                    "headers": {
+                        "Authorization": "tyco-secret:active-secret"
+                    }
+                }
+            }],
+            "nested": ["tyco-secret:nested-secret"]
+        });
+        assert!(ensure_secret_not_referenced(&config, "active-secret").is_err());
+        assert!(ensure_secret_not_referenced(&config, "nested-secret").is_err());
+        assert!(ensure_secret_not_referenced(&config, "unused-secret").is_ok());
     }
 }

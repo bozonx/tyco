@@ -302,3 +302,35 @@ mod imp {
 
     pub fn update(_request: Option<OverlayRequest>) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserializes_overlay_requests_with_defaults() {
+        let json = serde_json::json!({
+            "kind": "success",
+            "text": "Done"
+        });
+        let req: OverlayRequest = serde_json::from_value(json).unwrap();
+        assert_eq!(req.kind, OverlayKind::Success);
+        assert_eq!(req.text, "Done");
+        assert_eq!(req.delay_ms, 0);
+        assert_eq!(req.hide_after_ms, None);
+        assert!(!req.only_if_visible);
+    }
+
+    #[test]
+    fn deserializes_overlay_kinds() {
+        for (name, expected) in [
+            ("pending", OverlayKind::Pending),
+            ("success", OverlayKind::Success),
+            ("info", OverlayKind::Info),
+            ("error", OverlayKind::Error),
+        ] {
+            let parsed: OverlayKind = serde_json::from_value(serde_json::json!(name)).unwrap();
+            assert_eq!(parsed, expected);
+        }
+    }
+}

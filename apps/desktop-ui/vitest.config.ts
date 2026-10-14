@@ -5,9 +5,12 @@ import { createUiConfig } from './build/ui-config.ts'
 // Only modules independent of DOM APIs belong in the Node project.
 const NODE_TEST_PATTERNS = [
   'build/**/*.test.ts',
-  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,correction-mode,ai-tasks,logger}/**/*.test.ts',
+  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,correction-mode,ai-tasks,logger,diff,locale,input-keys,command-launcher}/**/*.test.ts',
   'src/lib/net/{async-queue,base64,provider-fetch,secrets,secrets-state}.test.ts',
   'src/lib/chat/{context-budget,chat-title,chat-helpers,chat-attachment,chat-export,chat-history-list,chat-history-settings}.test.ts',
+  'src/lib/stt/{stt-config,sherpa-provider,deepgram-provider,dictation-language,dictation-ownership,stt-readiness}.test.ts',
+  'src/lib/clipboard/copy-text.test.ts',
+  'src/lib/i18n/messages.test.ts',
 ]
 
 const MODEL_COVERAGE_THRESHOLDS = {
@@ -56,6 +59,7 @@ export default defineConfig((configEnv) =>
             'src/lib/history/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
             'src/lib/llm/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
             'src/lib/commands/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
+            'src/lib/translation/**/*.ts': MODEL_COVERAGE_THRESHOLDS,
           },
           reporter: ['text', 'json-summary', 'html', 'lcov'],
           include: ['src/**/*.ts', 'src/**/*.vue'],
