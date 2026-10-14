@@ -50,9 +50,12 @@
       <p v-if="plugin.status" class="px-4 text-sm text-muted">
         {{ t(`settings.pluginStatus.${plugin.status}`) }}
       </p>
-      <p v-if="plugin.error" class="px-4 text-sm text-error">
-        {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
-      </p>
+      <StateMessage
+        v-if="plugin.error"
+        kind="error"
+        inline
+        :message="t('settings.pluginPackageFailed', { detail: plugin.error })"
+      />
       <div v-if="plugin.isEnabled" class="plugin-card-body">
         <ConfigFields
           v-if="plugin.fields.length > 0"
@@ -77,6 +80,7 @@ import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
 import Button from '../common/Button.vue'
 import ConfigFields from '../common/ConfigFields.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import StateMessage from '../common/StateMessage.vue'
 import { Icon } from '@iconify/vue'
 
 defineProps<{ plugin: InstalledPluginItem }>()

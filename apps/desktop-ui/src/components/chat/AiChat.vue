@@ -182,7 +182,7 @@
             icon="mdi:paperclip"
           />
           <DropdownMenu
-            xs
+            size="xs"
             class="model-picker"
             icon="mdi:creation-outline"
             placement="top"
@@ -590,7 +590,7 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--app-text-faint);
-  font-size: 0.68rem;
+  font-size: var(--text-micro);
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;

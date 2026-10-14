@@ -78,8 +78,8 @@ withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   max-width: 360px;
   padding: var(--space-2xl);
   border: 1px solid var(--app-border);
-  border-radius: 14px;
-  background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
+  border-radius: var(--radius-lg);
+  background-color: var(--app-quick-surface);
 }
 
 .overlay-body {

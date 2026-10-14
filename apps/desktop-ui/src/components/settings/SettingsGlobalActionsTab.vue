@@ -9,7 +9,7 @@
           size="sm"
           :variant="missing.length === 0 ? 'ghost' : 'primary'"
           icon="mdi:refresh"
-          :disabled="isRebinding"
+          :loading="isRebinding"
           :title="t('settings.rebindHotkeysHint')"
           @click="rebindHotkeys"
         >
@@ -36,7 +36,16 @@
           </p>
         </div>
       </div>
-      <FieldRow v-for="row in rows" :key="row.id" :label="row.label">
+      <FieldRow
+        v-for="row in rows"
+        :key="row.id"
+        :label="row.label"
+        :error="
+          hasConflict(providerState, row.id)
+            ? t('settings.hotkeyStatus.conflict')
+            : undefined
+        "
+      >
         <template #info>
           <InfoTooltip
             :aria-label="t('settings.externalMethods')"
@@ -95,9 +104,6 @@
             :aria-label="t('settings.resetToDefault')"
             @click="setShortcut(row.id, row.defaultValue)"
           />
-          <p v-if="hasConflict(providerState, row.id)" class="hotkey-error">
-            {{ t('settings.hotkeyStatus.conflict') }}
-          </p>
           <p v-if="row.inline && injection.ok === false" class="hotkey-error">
             {{
               t('settings.textInjection.unavailable', {

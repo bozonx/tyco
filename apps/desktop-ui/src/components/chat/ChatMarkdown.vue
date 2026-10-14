@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .chat-markdown {
   color: var(--color-base-content);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
   font-size: 1rem;
 }
 .chat-markdown :deep(h5) {
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
 }
 .chat-markdown :deep(h6) {
   font-size: var(--text-body);

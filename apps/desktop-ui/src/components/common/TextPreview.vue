@@ -14,7 +14,7 @@ pre {
   padding: var(--space-md) var(--space-lg);
   overflow-y: auto;
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.6;
   text-align: left;
   white-space: pre-wrap;

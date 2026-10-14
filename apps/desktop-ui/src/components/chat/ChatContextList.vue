@@ -92,7 +92,7 @@ const visible = computed(
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.72rem;
+  font-size: var(--text-caption);
 }
 .context-budget.is-high {
   color: var(--color-warning);

@@ -5,6 +5,7 @@
       class="editor-context-menu"
       :style="style"
       role="menu"
+      @focusout="onFocusout"
       @contextmenu.prevent
       @mousedown.prevent
     >
@@ -17,6 +18,7 @@
         <button
           type="button"
           role="menuitem"
+          tabindex="-1"
           class="editor-context-menu__item"
           :class="{
             'is-accent': item.accent,
@@ -50,6 +52,7 @@
       class="editor-context-menu"
       :style="subStyle"
       role="menu"
+      @focusout="onFocusout"
       @contextmenu.prevent
       @mousedown.prevent
     >
@@ -62,6 +65,7 @@
         <button
           type="button"
           role="menuitem"
+          tabindex="-1"
           class="editor-context-menu__item"
           :class="{ 'is-accent': item.accent }"
           :disabled="item.disabled"
@@ -85,6 +89,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import { placeMenu, placeSubmenu } from '../../lib/editor/menu-placement'
+import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
 import Icon from '../common/AppIcon.vue'
 
 const props = withDefaults(
@@ -159,12 +164,6 @@ const itemButton = (index: number): HTMLButtonElement | null =>
   menuRef.value?.querySelector<HTMLButtonElement>(`[data-index="${index}"]`) ??
   null
 
-const enabledButtons = (container: HTMLElement | null): HTMLButtonElement[] =>
-  Array.from(
-    container?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ??
-      []
-  )
-
 const openSubmenu = async (
   index: number,
   focusFirst = false
@@ -190,7 +189,10 @@ const openSubmenu = async (
   )
   isSubPlaced.value = true
 
-  if (focusFirst) enabledButtons(element)[0]?.focus()
+  if (focusFirst) {
+    await nextTick()
+    menuButtons(element)[0]?.focus()
+  }
 }
 
 const closeSubmenu = (focusParent: boolean): void => {
@@ -241,21 +243,9 @@ const onPointerDown = (event: MouseEvent): void => {
 const inSubmenu = (): boolean =>
   Boolean(subRef.value?.contains(document.activeElement))
 
-/** Move focus between enabled items of the active panel, wrapping around */
-const moveFocus = (delta: number): void => {
-  const buttons = enabledButtons(inSubmenu() ? subRef.value : menuRef.value)
-
-  if (buttons.length === 0) return
-
-  const current = buttons.indexOf(document.activeElement as HTMLButtonElement)
-  const next =
-    current === -1
-      ? delta > 0
-        ? 0
-        : buttons.length - 1
-      : (current + delta + buttons.length) % buttons.length
-
-  buttons[next].focus()
+async function onFocusout() {
+  await nextTick()
+  if (!holdsFocus()) emit('close', false)
 }
 
 const focusedIndex = (): number | null => {
@@ -268,6 +258,12 @@ const onKeyDown = (event: KeyboardEvent): void => {
   const handled = (): void => {
     event.preventDefault()
     event.stopPropagation()
+  }
+
+  if (event.key === 'Tab' && holdsFocus()) {
+    // Restore the editor before the browser computes its next Tab stop.
+    emit('close', true)
+    return
   }
 
   if (event.key === 'Escape') {
@@ -283,15 +279,14 @@ const onKeyDown = (event: KeyboardEvent): void => {
   if (!holdsFocus()) {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       handled()
-      moveFocus(event.key === 'ArrowDown' ? 1 : -1)
+      focusMenuItem(inSubmenu() ? subRef.value : menuRef.value, event.key)
     }
 
     return
   }
 
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+  if (focusMenuItem(inSubmenu() ? subRef.value : menuRef.value, event.key)) {
     handled()
-    moveFocus(event.key === 'ArrowDown' ? 1 : -1)
   } else if (event.key === 'ArrowRight' && !inSubmenu()) {
     const index = focusedIndex()
 

@@ -132,7 +132,7 @@ provide(fieldContextKey, {
   font-size: var(--text-control);
 }
 
-@media (max-width: 640px) {
+@container (max-width: 40rem) {
   .field-row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);

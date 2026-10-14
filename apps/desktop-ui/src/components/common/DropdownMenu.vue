@@ -8,10 +8,14 @@
     <button
       ref="triggerRef"
       type="button"
-      class="btn btn-ghost dropdown-trigger flex items-center gap-1"
+      class="btn dropdown-trigger flex items-center gap-1"
       :class="{
-        'btn-xs': xs,
-        'btn-sm': !xs,
+        'btn-xs': size === 'xs',
+        'btn-sm': size === 'sm',
+        'btn-primary': variant === 'primary',
+        'btn-neutral': variant === 'neutral',
+        'btn-ghost': variant === 'ghost',
+        'btn-error': variant === 'danger',
         'btn-active': isOpen,
         'btn-square': square,
       }"
@@ -76,6 +80,8 @@ import { nextTick, useId } from 'vue'
 
 import { usePopover } from '../../composables/use-popover'
 import { translate } from '../../lib/i18n'
+import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
+import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
 import Icon from './AppIcon.vue'
 
 export interface DropdownMenuItem {
@@ -85,17 +91,21 @@ export interface DropdownMenuItem {
   action: () => void | Promise<void>
 }
 
-defineProps<{
-  label?: string
-  icon?: string
-  title?: string
-  xs?: boolean
-  square?: boolean
-  hideChevron?: boolean
-  placement?: 'bottom' | 'top'
-  align?: 'left' | 'right'
-  items: DropdownMenuItem[]
-}>()
+withDefaults(
+  defineProps<{
+    label?: string
+    icon?: string
+    title?: string
+    size?: ControlSize
+    variant?: ButtonVariant
+    square?: boolean
+    hideChevron?: boolean
+    placement?: 'bottom' | 'top'
+    align?: 'left' | 'right'
+    items: DropdownMenuItem[]
+  }>(),
+  { size: 'sm', variant: 'ghost' }
+)
 
 const menuId = useId()
 const { isOpen, containerRef, triggerRef, close, onFocusout, onEscape } =
@@ -104,33 +114,18 @@ const { isOpen, containerRef, triggerRef, close, onFocusout, onEscape } =
 async function openAndFocus(index: number) {
   isOpen.value = true
   await nextTick()
-  const items =
-    containerRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
-  items?.[index]?.focus()
+  const items = menuButtons(containerRef.value)
+  items[index]?.focus()
 }
 function toggleMenu() {
   if (isOpen.value) close(true)
   else void openAndFocus(0)
 }
 function onMenuKeydown(event: KeyboardEvent) {
-  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
-  event.preventDefault()
-  event.stopPropagation()
-  const items = [
-    ...(containerRef.value?.querySelectorAll<HTMLButtonElement>(
-      '[role="menuitem"]'
-    ) ?? []),
-  ]
-  if (!items.length) return
-  const current = items.indexOf(document.activeElement as HTMLButtonElement)
-  const index =
-    event.key === 'Home'
-      ? 0
-      : event.key === 'End'
-        ? items.length - 1
-        : (current + (event.key === 'ArrowUp' ? -1 : 1) + items.length) %
-          items.length
-  items[index].focus()
+  if (focusMenuItem(containerRef.value, event.key)) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
 }
 const selectItem = async (item: DropdownMenuItem) => {
   close(true)

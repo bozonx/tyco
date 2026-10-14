@@ -48,7 +48,7 @@ const emit = defineEmits<{ (e: 'activate'): void }>()
 
 .language-field-label {
   padding-left: 0.125rem;
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -64,7 +64,7 @@ const emit = defineEmits<{ (e: 'activate'): void }>()
   border: 1px solid var(--app-border);
   border-radius: var(--radius-md);
   color: var(--color-base-content);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
 }
 
 .language-field:hover .language-field-value {

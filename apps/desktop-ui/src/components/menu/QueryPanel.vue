@@ -299,7 +299,7 @@ defineExpose({ focus })
 
 .query-panel-label {
   padding-left: 0.125rem;
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -315,7 +315,7 @@ defineExpose({ focus })
   border-radius: var(--radius-md);
   background-color: var(--app-surface);
   color: var(--color-base-content);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   outline: none;
 }
 
@@ -355,7 +355,7 @@ defineExpose({ focus })
 
 .query-panel-group {
   padding: 0.375rem 0.5rem 0.125rem;
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;

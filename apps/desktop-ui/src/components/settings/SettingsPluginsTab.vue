@@ -82,9 +82,14 @@
               · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span
             >
           </p>
-          <p v-if="plugin.error" class="text-xs text-error mt-0.5">
-            {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
-          </p>
+          <StateMessage
+            v-if="plugin.error"
+            kind="error"
+            inline
+            :message="
+              t('settings.pluginPackageFailed', { detail: plugin.error })
+            "
+          />
           <p
             v-if="plugin.descriptionKey || plugin.description"
             class="text-xs text-muted mt-0.5"
@@ -149,6 +154,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import StateMessage from '../common/StateMessage.vue'
 import { Icon } from '@iconify/vue'
 
 const plugins = usePluginRuntimeStore()

@@ -276,6 +276,6 @@ onUnmounted(() => {
 }
 
 .audio-waveform-container:not(.compact) .transcribing-label {
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
 }
 </style>

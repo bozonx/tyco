@@ -107,7 +107,7 @@
           </template>
           <template v-else-if="saveError">
             <p>{{ saveError }}</p>
-            <Button size="sm" :disabled="isSaving" @click="session.persist()">{{
+            <Button size="sm" :loading="isSaving" @click="session.persist()">{{
               t('settings.saveRetry')
             }}</Button>
             <Button size="sm" :disabled="isSaving" @click="reloadSettings">{{
@@ -646,7 +646,7 @@ onUnmounted(() => {
 
 .settings-nav-category {
   padding: var(--space-md) var(--space-sm) var(--space-xs);
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -660,6 +660,7 @@ onUnmounted(() => {
 }
 
 .settings-content-inner {
+  container-type: inline-size;
   max-width: 820px;
   padding: var(--space-xl) var(--space-2xl) var(--space-3xl);
 }
@@ -669,7 +670,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   margin: 0 0 var(--space-xl);
-  font-size: 1.25rem;
+  font-size: var(--text-heading);
   font-weight: 600;
 }
 
@@ -728,7 +729,7 @@ onUnmounted(() => {
   margin-left: auto;
   padding: 0.0625rem 0.3125rem;
   border-radius: var(--radius-sm);
-  font-size: 0.625rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   line-height: 1.2;
   text-transform: uppercase;
@@ -745,7 +746,7 @@ onUnmounted(() => {
   color: var(--app-text-faint);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 45rem) {
   .settings-nav {
     width: 64px;
     padding-inline: var(--space-sm);

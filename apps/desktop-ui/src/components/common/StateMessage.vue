@@ -7,8 +7,13 @@
     "
     :aria-busy="kind === 'loading' || undefined"
   >
+    <span
+      v-if="kind === 'loading'"
+      class="loading loading-spinner text-primary"
+      aria-hidden="true"
+    />
     <Icon
-      v-if="icon"
+      v-else-if="icon"
       :icon="icon"
       :height="inline ? 18 : 28"
       class="ui-state-icon"

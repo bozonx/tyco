@@ -2,10 +2,10 @@
   <div class="voice-actions">
     <template v-if="compact && chat">
       <ShortcutButton
-        :sm="compact"
+        :size="compact ? 'sm' : 'md'"
         :keys="['Space', 'Enter']"
         :icon="insertIcon"
-        primary
+        variant="primary"
         :disabled="isFinishing"
         @click="() => finish('insert')"
       >
@@ -33,17 +33,17 @@
     <template v-else>
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
-          :sm="compact"
+          :size="compact ? 'sm' : 'md'"
           :keys="submitKeys"
           icon="mdi:send"
-          primary
+          variant="primary"
           :disabled="isFinishing"
           @click="() => finish('submit')"
         >
           {{ isFinishing ? t('common.inProgress') : t('menu.voiceSend') }}
         </ShortcutButton>
         <ShortcutButton
-          :sm="compact"
+          :size="compact ? 'sm' : 'md'"
           :keys="['Shift', 'Enter']"
           icon="mdi:form-textbox"
           :disabled="isFinishing"
@@ -52,7 +52,7 @@
           {{ t('menu.voiceToInput') }}
         </ShortcutButton>
         <ShortcutButton
-          :sm="compact"
+          :size="compact ? 'sm' : 'md'"
           :keys="['Tab']"
           icon="mdi:arrow-right"
           :disabled="isFinishing"
@@ -63,10 +63,10 @@
       </template>
       <template v-else>
         <ShortcutButton
-          :sm="compact"
+          :size="compact ? 'sm' : 'md'"
           :keys="['Space', 'Enter']"
           :icon="insertIcon"
-          primary
+          variant="primary"
           :disabled="isFinishing"
           @click="() => finish('insert')"
         >
@@ -74,7 +74,7 @@
         </ShortcutButton>
         <ShortcutButton
           v-if="finishBehavior === 'insertIntoTarget'"
-          :sm="compact"
+          :size="compact ? 'sm' : 'md'"
           :keys="['Tab']"
           icon="mdi:arrow-right"
           :disabled="isFinishing"
@@ -85,7 +85,7 @@
       </template>
       <ShortcutButton
         v-if="compact"
-        :sm="compact"
+        :size="compact ? 'sm' : 'md'"
         :keys="['Esc']"
         icon="mdi:close"
         @click="cancel"

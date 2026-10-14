@@ -87,7 +87,7 @@ onMounted(() => {
   border-radius: var(--radius-md);
   background: var(--app-surface-raised);
   color: var(--app-text-muted);
-  font-size: 0.72rem;
+  font-size: var(--text-caption);
 }
 .chat-attachment.is-pending {
   border-color: color-mix(

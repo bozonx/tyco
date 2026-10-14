@@ -54,7 +54,8 @@ const { t } = useI18n()
 const sidebarOpen = ref(true)
 
 function closeMobileSidebar() {
-  if (window.matchMedia('(max-width: 760px)').matches) sidebarOpen.value = false
+  if (window.matchMedia('(max-width: 47.5rem)').matches)
+    sidebarOpen.value = false
 }
 
 navPanelStore.resetNavPanelState({})
@@ -79,34 +80,19 @@ onMounted(async () => {
 }
 .sidebar-closed-tools {
   position: absolute;
-  top: 0.7rem;
-  left: 0.7rem;
-  z-index: 5;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: calc(var(--z-sidebar) - 2);
   display: flex;
-  gap: 0.15rem;
+  gap: var(--space-xs);
 }
 .sidebar-tool {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-md);
   color: var(--app-text-muted);
-  cursor: pointer;
-}
-.sidebar-tool:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.sidebar-tool:not(:disabled):hover {
-  background: var(--app-hover);
-  color: var(--color-base-content);
 }
 .sidebar-backdrop {
   display: none;
 }
-@media (max-width: 760px) {
+@media (max-width: 47.5rem) {
   .chat-sidebar-panel {
     position: absolute;
     inset: 0 auto 0 0;

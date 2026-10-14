@@ -90,14 +90,14 @@ function onCancel() {
 .confirm-modal-title {
   margin: 0;
   color: var(--color-base-content);
-  font-size: 0.95rem;
+  font-size: var(--text-title);
   font-weight: 600;
 }
 
 .confirm-modal-message {
   margin: 0 0 var(--space-lg);
   color: var(--app-text-muted);
-  font-size: 0.84rem;
+  font-size: var(--text-body);
   line-height: 1.5;
 }
 

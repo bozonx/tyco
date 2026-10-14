@@ -462,7 +462,7 @@ onUnmounted(() => {
   background-color: var(--app-surface);
   color: var(--color-base-content);
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   resize: none;
   outline: none;
 }

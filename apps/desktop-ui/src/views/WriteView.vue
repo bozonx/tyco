@@ -279,8 +279,8 @@ function submit() {
   min-height: 2.25rem;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  background-color: color-mix(in oklab, var(--app-surface) 96%, transparent);
-  backdrop-filter: blur(16px);
+  background-color: var(--app-quick-surface);
+  backdrop-filter: var(--app-quick-backdrop);
   box-shadow: var(--app-shadow-md);
   transition:
     border-color var(--transition-fast),
@@ -289,10 +289,8 @@ function submit() {
 }
 
 .write-frame:focus-within {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  box-shadow:
-    var(--app-shadow-sm),
-    0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
+  border-color: var(--color-primary);
+  box-shadow: var(--app-shadow-sm), var(--app-focus-ring);
 }
 
 .write-frame :deep(.main-input) {
@@ -320,8 +318,8 @@ function submit() {
   padding: 0.25rem 0.625rem 0.25rem 0.25rem;
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  background-color: color-mix(in oklab, var(--app-surface) 92%, transparent);
-  backdrop-filter: blur(16px);
+  background-color: var(--app-quick-hint-surface);
+  backdrop-filter: var(--app-quick-backdrop);
   box-shadow: var(--app-shadow-sm);
   font-size: 0.75rem;
   color: var(--app-text-muted);

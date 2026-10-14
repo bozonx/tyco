@@ -5,7 +5,7 @@
       Development reference for shared controls, states, keyboard navigation and
       appearance.
     </p>
-    <section class="catalog-options surface">
+    <section class="catalog-options surface ui-form-container">
       <FieldRow label="Theme"
         ><SegmentedControl
           v-model:value="theme"
@@ -28,7 +28,7 @@
           ]"
       /></FieldRow>
     </section>
-    <section class="surface catalog-section">
+    <section class="surface catalog-section ui-form-container">
       <h2>Buttons</h2>
       <div class="catalog-row">
         <Button
@@ -38,11 +38,26 @@
           size="sm"
           >{{ variant }}</Button
         >
+        <Button size="sm" loading>Saving</Button>
         <Button size="xs">Extra small</Button><Button disabled>Disabled</Button>
         <IconButton label="Close" icon="mdi:close" />
       </div>
     </section>
-    <section class="surface catalog-section">
+    <section class="surface catalog-section ui-form-container">
+      <h2>Quick surfaces and long content</h2>
+      <div class="catalog-quick-surface">
+        <FieldInput aria-label="Quick input" value="Theme-aware quick input" />
+      </div>
+      <ShortcutButton :keys="['Enter']" variant="primary" size="sm"
+        >A deliberately long action label that should remain readable at
+        increased interface scale</ShortcutButton
+      >
+      <FieldRow
+        label="A deliberately long translated field label spanning several words"
+        ><FieldInput value="Long content"
+      /></FieldRow>
+    </section>
+    <section class="surface catalog-section ui-form-container">
       <h2>Fields</h2>
       <FieldRow
         label="Text"
@@ -74,7 +89,7 @@
         ><SearchInput v-model:value="query" placeholder="Search components"
       /></FieldRow>
     </section>
-    <section class="surface catalog-section">
+    <section class="surface catalog-section ui-form-container">
       <h2>Navigation and menus</h2>
       <Tabs v-model:value="tab" label="Preview tabs" :tabs="tabs"
         ><template #panel="{ value }"
@@ -101,9 +116,15 @@
           ]"
         />
         <Button size="sm" @click="dialogOpen = true">Open dialog</Button>
+        <Button size="sm" @click="outerDialogOpen = true"
+          >Open nested dialogs</Button
+        >
+        <Button size="sm" @click="contextMenuOpen = true"
+          >Open editor menu</Button
+        >
       </div>
     </section>
-    <section class="surface catalog-section">
+    <section class="surface catalog-section ui-form-container">
       <h2>States</h2>
       <StateMessage
         title="No items"
@@ -132,13 +153,28 @@
       @cancel="dialogOpen = false"
       @confirm="dialogOpen = false"
     />
+    <BaseDialog
+      :open="outerDialogOpen"
+      label="Outer dialog"
+      @close="outerDialogOpen = false"
+    >
+      <Button autofocus @click="dialogOpen = true">Open confirmation</Button>
+    </BaseDialog>
+    <EditorContextMenu
+      v-if="contextMenuOpen"
+      :x="24"
+      :y="24"
+      :items="contextItems"
+      @close="closeContextMenu"
+    />
     <ToastContainer />
   </main>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watchEffect } from 'vue'
+import { onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 
+import BaseDialog from '../components/common/BaseDialog.vue'
 import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import DropdownMenu from '../components/common/DropdownMenu.vue'
@@ -151,9 +187,11 @@ import FieldTextArea from '../components/common/FieldTextArea.vue'
 import IconButton from '../components/common/IconButton.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
+import ShortcutButton from '../components/common/ShortcutButton.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import Tabs from '../components/common/Tabs.vue'
 import ToastContainer from '../components/common/ToastContainer.vue'
+import EditorContextMenu from '../components/editor/EditorContextMenu.vue'
 import { useToastStore } from '../stores/toast'
 
 const themes = [
@@ -176,6 +214,25 @@ const selected = ref<string | number | undefined>(1)
 const query = ref('')
 const tab = ref<string | number>('source')
 const dialogOpen = ref(false)
+const outerDialogOpen = ref(false)
+const contextMenuOpen = ref(false)
+let contextTrigger: HTMLElement | null = null
+watch(contextMenuOpen, (open) => {
+  if (open) contextTrigger = document.activeElement as HTMLElement
+})
+function closeContextMenu(restoreFocus: boolean) {
+  contextMenuOpen.value = false
+  if (restoreFocus) contextTrigger?.focus()
+}
+const contextItems = [
+  { id: 'first', label: 'First action', action: () => {} },
+  { id: 'disabled', label: 'Unavailable action', disabled: true },
+  {
+    id: 'nested',
+    label: 'Nested actions',
+    children: [{ id: 'child', label: 'Child action', action: () => {} }],
+  },
+]
 const toastStore = useToastStore()
 function notify() {
   toastStore.addToast('Example notification', 'info', { durationMs: 5000 })
@@ -216,6 +273,14 @@ onBeforeUnmount(() => {
 }
 .catalog-section {
   padding: var(--space-lg);
+}
+.catalog-quick-surface {
+  padding: var(--space-sm);
+  background: var(--app-quick-surface);
+  backdrop-filter: var(--app-quick-backdrop);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--app-shadow-md);
 }
 .catalog-row {
   display: flex;

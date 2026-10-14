@@ -172,3 +172,13 @@
 @utility text-faint {
   color: var(--app-text-faint);
 }
+
+/* Forms adapt to their available width, including interface scaling. */
+.ui-form-container,
+.settings-section {
+  container-type: inline-size;
+}
+.btn:not(.btn-xs):not(.btn-sm) {
+  min-height: var(--control-size-md);
+  height: var(--control-size-md);
+}

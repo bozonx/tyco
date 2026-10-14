@@ -1,12 +1,17 @@
 <template>
   <div class="in-progress">
-    <span class="loading loading-spinner loading-lg text-primary"></span>
-    <div class="in-progress-label">
-      <span v-if="props.label">{{ props.label }}</span>
-      <span v-else-if="props.ai">{{ t('menu.aiRequest') }}</span>
-      <span v-else-if="props.correction">{{ t('menu.correction') }}</span>
-      <span v-else>{{ t('common.inProgress') }}</span>
-    </div>
+    <StateMessage
+      kind="loading"
+      :message="
+        props.label ||
+        (props.ai
+          ? t('menu.aiRequest')
+          : props.correction
+            ? t('menu.correction')
+            : t('common.inProgress'))
+      "
+      icon="mdi:progress-clock"
+    />
     <Button type="button" @click="handleCancel" variant="ghost" size="sm">
       {{ t('common.cancel') }}
     </Button>
@@ -20,6 +25,7 @@ import { useI18n } from '../../composables/use-i18n'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import Button from '../common/Button.vue'
+import StateMessage from '../common/StateMessage.vue'
 
 const props = withDefaults(defineProps<PendingModalParams>(), {
   ai: false,
@@ -65,7 +71,7 @@ onUnmounted(() => {
 }
 
 .in-progress-label {
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   font-weight: 500;
   color: var(--app-text-muted);
 }

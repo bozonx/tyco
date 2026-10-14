@@ -59,7 +59,7 @@ function handleInput(event: Event) {
   background: transparent;
   color: var(--color-base-content);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.6;
   padding: var(--space-sm) var(--space-md);
   box-sizing: border-box;

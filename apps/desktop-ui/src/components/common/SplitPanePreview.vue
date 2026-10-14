@@ -97,7 +97,7 @@ onUnmounted(() => {
   min-height: 0;
   overflow-y: auto;
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.6;
   padding: var(--space-sm) var(--space-md);
   white-space: pre-wrap;

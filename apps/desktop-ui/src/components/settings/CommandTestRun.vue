@@ -184,7 +184,7 @@ onUnmounted(stop)
 }
 
 .test-run-stream-label {
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--app-text-faint);

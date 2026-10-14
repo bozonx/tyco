@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="ui-form-container">
     <FieldRow
       v-for="item in fields"
       :key="item.name"

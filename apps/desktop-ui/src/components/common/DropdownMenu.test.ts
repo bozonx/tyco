@@ -41,7 +41,7 @@ describe('DropdownMenu', () => {
       props: {
         icon: 'mdi:robot-outline',
         square: true,
-        xs: true,
+        size: 'xs',
         hideChevron: true,
         placement: 'top',
         align: 'right',

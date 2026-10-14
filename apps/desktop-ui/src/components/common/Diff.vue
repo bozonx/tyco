@@ -126,7 +126,7 @@ function getPartClass(part: DiffPart): string {
 
 <style scoped>
 .diff-container {
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.6;
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-lg);

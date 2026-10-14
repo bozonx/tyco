@@ -87,7 +87,7 @@
       @update:value="emit('update', { ...command, enabled: $event })"
     />
     <DropdownMenu
-      xs
+      size="xs"
       square
       hide-chevron
       align="right"
@@ -230,7 +230,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   padding: 0 var(--space-xs);
   border: 1px solid var(--app-border);
   border-radius: var(--radius-sm);
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   color: var(--app-text-muted);
 }
 

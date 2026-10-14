@@ -2,10 +2,21 @@
   <button
     :class="['btn', buttonClass]"
     :type="props.type ?? 'button'"
-    :disabled="props.disabled"
+    :disabled="props.disabled || props.loading"
+    :aria-busy="props.loading || undefined"
     @click="onClick"
   >
-    <Icon v-if="props.icon" :icon="props.icon" class="shrink-0" height="16" />
+    <span
+      v-if="props.loading"
+      class="loading loading-spinner loading-xs"
+      aria-hidden="true"
+    />
+    <Icon
+      v-else-if="props.icon"
+      :icon="props.icon"
+      class="shrink-0"
+      height="16"
+    />
     <slot></slot>
   </button>
 </template>
@@ -13,15 +24,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
 const props = defineProps<{
   type?: 'button' | 'submit' | 'reset'
-  variant?: 'primary' | 'neutral' | 'ghost' | 'danger'
-  size?: 'sm' | 'xs'
+  variant?: ButtonVariant
+  size?: ControlSize
   icon?: string
   active?: boolean
   disabled?: boolean
+  loading?: boolean
   square?: boolean
 }>()
 
@@ -36,7 +49,7 @@ const buttonClass = computed(() => {
     'btn-xs': size === 'xs',
     'btn-sm': size === 'sm',
     'btn-active': props.active,
-    'btn-disabled': props.disabled,
+    'btn-disabled': props.disabled || props.loading,
     'btn-square': props.square,
   }
 })
@@ -44,7 +57,7 @@ const buttonClass = computed(() => {
 const emit = defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
 const onClick = (event: MouseEvent) => {
-  emit('click', event)
+  if (!props.disabled && !props.loading) emit('click', event)
 }
 </script>
 

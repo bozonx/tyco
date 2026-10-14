@@ -47,7 +47,7 @@
           :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"
         />
         <DropdownMenu
-          xs
+          size="xs"
           square
           hide-chevron
           placement="top"
@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
@@ -109,6 +109,9 @@ const moreMenuItems = computed<DropdownMenuItem[]>(() => [
     action: () => emit('branch'),
   },
 ])
+let copiedTimer: ReturnType<typeof setTimeout> | undefined
+onBeforeUnmount(() => clearTimeout(copiedTimer))
+
 async function copyText(value: string) {
   try {
     await navigator.clipboard.writeText(value)
@@ -117,7 +120,8 @@ async function copyText(value: string) {
     return
   }
   isCopied.value = true
-  window.setTimeout(() => (isCopied.value = false), 1500)
+  clearTimeout(copiedTimer)
+  copiedTimer = setTimeout(() => (isCopied.value = false), 1500)
 }
 
 function copyMessage() {
@@ -146,7 +150,7 @@ function copyMessage() {
     var(--radius-lg);
   background-color: var(--color-primary);
   color: var(--color-primary-content);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
@@ -165,7 +169,7 @@ function copyMessage() {
   align-self: center;
   margin-right: auto;
   color: var(--app-text-faint);
-  font-size: 0.72rem;
+  font-size: var(--text-caption);
 }
 .chat-item-content:hover .message-actions,
 .message-actions:focus-within {

@@ -86,7 +86,7 @@
                 }}</span>
               </button>
               <DropdownMenu
-                xs
+                size="xs"
                 square
                 hide-chevron
                 icon="mdi:dots-horizontal"
@@ -353,7 +353,7 @@ onUnmounted(() => {
 .history-disabled-hint {
   margin: 0;
   color: var(--app-text-faint);
-  font-size: 0.72rem;
+  font-size: var(--text-caption);
   line-height: 1.3;
 }
 .sidebar-notice {
@@ -371,7 +371,7 @@ onUnmounted(() => {
   height: 2.25rem;
   border-color: transparent;
   background: var(--app-surface);
-  font-size: 0.78rem;
+  font-size: var(--text-control);
 }
 .chat-list-scroll {
   flex: 1;
@@ -385,7 +385,7 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xs);
   padding: 0 var(--space-sm);
   color: var(--app-text-faint);
-  font-size: 0.68rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;

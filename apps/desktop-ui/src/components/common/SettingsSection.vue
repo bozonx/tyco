@@ -50,6 +50,7 @@ withDefaults(
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--space-lg);
   margin-bottom: var(--space-sm);
   padding: 0 var(--space-xs);
@@ -63,7 +64,7 @@ withDefaults(
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  font-size: 0.9375rem;
+  font-size: var(--text-title);
   font-weight: 600;
   line-height: 1.4;
   margin: 0;

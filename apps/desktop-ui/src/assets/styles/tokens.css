@@ -51,6 +51,8 @@
   --z-modal: 200;
   --z-toast: 300;
 
+  --text-micro: 0.6875rem;
+  --text-heading: 1.25rem;
   --text-caption: 0.75rem;
   --text-control: 0.8125rem;
   --text-body: 0.875rem;
@@ -67,7 +69,7 @@
   --ui-scale: 1;
 
   /* Field row label width — global token so FieldRow and ConfigFields stay in sync */
-  --field-label-width: 250px;
+  --field-label-width: 15.625rem;
 
   /* Editor (CodeMirror) typography and padding */
   --editor-font-family: var(--font-sans);
@@ -124,6 +126,13 @@
   --app-shadow-overlay:
     0 24px 64px -12px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
   --app-overlay-backdrop: blur(6px);
+  --app-quick-backdrop: blur(16px);
+  --app-quick-surface: color-mix(in oklab, var(--app-surface) 96%, transparent);
+  --app-quick-hint-surface: color-mix(
+    in oklab,
+    var(--app-surface) 92%,
+    transparent
+  );
 
   --app-diff-added-decoration: none;
   /* Translucent, so it stands out on whatever surface the editor sits on */
@@ -198,6 +207,9 @@
   --app-shadow-overlay: none;
   --app-overlay-bg: var(--color-base-100);
   --app-overlay-backdrop: none;
+  --app-quick-backdrop: none;
+  --app-quick-surface: var(--app-surface);
+  --app-quick-hint-surface: var(--app-surface);
   --editor-selection-bg: var(--color-base-300);
 
   --app-diff-added-bg: transparent;

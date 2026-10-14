@@ -29,4 +29,18 @@ describe('Button', () => {
     expect(wrapper.emitted('click')?.[0][0]).toBeInstanceOf(MouseEvent)
     expect((wrapper.emitted('click')?.[0][0] as MouseEvent).shiftKey).toBe(true)
   })
+  it('blocks actions while loading and preserves the accessible label', async () => {
+    const wrapper = mount(Button, {
+      props: { loading: true },
+      slots: { default: 'Save' },
+    })
+    expect(wrapper.attributes('disabled')).toBeDefined()
+    expect(wrapper.attributes('aria-busy')).toBe('true')
+    expect(wrapper.text()).toBe('Save')
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('click')).toBeUndefined()
+    await wrapper.setProps({ loading: false })
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('click')).toHaveLength(1)
+  })
 })

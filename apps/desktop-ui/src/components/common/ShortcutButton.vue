@@ -2,7 +2,11 @@
   <button
     type="button"
     class="shortcut"
-    :class="{ 'is-primary': primary, 'is-sm': sm }"
+    :class="{
+      'is-primary': variant === 'primary',
+      'is-sm': size === 'sm',
+      'is-xs': size === 'xs',
+    }"
     :disabled="disabled"
     @click="emit('click')"
   >
@@ -17,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 import KeyboardKey from './KeyboardKey.vue'
 
@@ -25,10 +30,10 @@ withDefaults(
     keys: string[]
     icon?: string
     disabled?: boolean
-    primary?: boolean
-    sm?: boolean
+    variant?: 'primary' | 'ghost'
+    size?: ControlSize
   }>(),
-  { icon: undefined, disabled: false, primary: false, sm: false }
+  { icon: undefined, disabled: false, variant: 'ghost', size: 'md' }
 )
 
 const emit = defineEmits<{ (e: 'click'): void }>()
@@ -38,7 +43,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 .shortcut {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--space-md);
   width: 100%;
   max-width: var(--shortcut-max-width, 20rem);
   min-width: 0;
@@ -61,7 +66,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 .shortcut:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  color: var(--app-text-faint);
 }
 
 .shortcut.is-primary:disabled {
@@ -122,5 +127,14 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   min-width: 1.4rem;
   height: 1.4rem;
   font-size: var(--text-caption);
+}
+
+.shortcut.is-xs {
+  padding: var(--space-xs);
+  font-size: var(--text-caption);
+}
+.shortcut.is-xs .shortcut-keys :deep(.kbd) {
+  min-width: var(--control-size-xs);
+  height: var(--control-size-xs);
 }
 </style>

@@ -10,6 +10,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 import Button from './Button.vue'
 
@@ -17,8 +18,8 @@ withDefaults(
   defineProps<{
     label: string
     icon: string
-    size?: 'xs' | 'sm'
-    variant?: 'primary' | 'neutral' | 'ghost' | 'danger'
+    size?: ControlSize
+    variant?: ButtonVariant
   }>(),
   { size: 'sm', variant: 'ghost' }
 )

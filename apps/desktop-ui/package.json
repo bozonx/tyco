@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^3.0.64",
@@ -71,6 +72,7 @@
     "@iconify-json/mdi": "^1.2.3",
     "@iconify/types": "^2.0.0",
     "@iconify/utils": "^3.1.7",
+    "@playwright/test": "^1.64.0",
     "@types/hast": "^3.0.5",
     "@types/node": "catalog:",
     "@types/unist": "^3.0.3",

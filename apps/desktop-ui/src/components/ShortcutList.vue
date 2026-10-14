@@ -10,7 +10,7 @@
         :keys="['Space', 'Enter']"
         :icon="props.spaceKey.icon"
         :disabled="props.spaceKey.disabled"
-        primary
+        variant="primary"
         @click="props.spaceKey.action(props.text || '')"
       >
         {{ getActionLabel(props.spaceKey) }}
@@ -41,7 +41,7 @@
       <template v-for="slot in slots" :key="slot.key">
         <ShortcutButton
           v-if="slot.action"
-          sm
+          size="sm"
           :keys="[slot.key.toUpperCase()]"
           :icon="slot.action.icon"
           :disabled="slot.action.disabled"

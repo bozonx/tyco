@@ -22,7 +22,7 @@ describe('ShortcutButton', () => {
 
   it('applies primary and sm variant classes', () => {
     const wrapper = mount(ShortcutButton, {
-      props: { keys: ['Tab'], primary: true, sm: true },
+      props: { keys: ['Tab'], variant: 'primary', size: 'sm' },
       slots: { default: 'Tab action' },
     })
 

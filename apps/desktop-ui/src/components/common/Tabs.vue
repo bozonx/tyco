@@ -134,7 +134,7 @@ async function onKeydown(event: KeyboardEvent) {
   padding: 0 0.375rem;
   border-radius: 999px;
   background-color: var(--app-active);
-  font-size: 0.6875rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   line-height: 1.125rem;
   color: var(--app-text-muted);
