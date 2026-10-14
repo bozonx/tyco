@@ -1,3 +1,4 @@
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -10,7 +11,14 @@ vi.mock('../../composables/use-i18n', () => ({
 describe('SettingsLanguagesTab.vue', () => {
   const mountTab = () =>
     mount(SettingsLanguagesTab, {
-      props: { userConfig: { toTranslateLanguages: ['en_US', 'ru_RU'] } },
+      props: {
+        userConfig: {
+          translation: {
+            ...DEFAULT_USER_CONFIG.translation,
+            targetLanguages: ['en_US', 'ru_RU'],
+          },
+        },
+      },
       global: {
         stubs: {
           SettingsSection: {
@@ -34,7 +42,7 @@ describe('SettingsLanguagesTab.vue', () => {
 
     await slots.vm.$emit('remove', 0)
 
-    const [[languages]] = wrapper.emitted('update:toTranslateLanguages')!
+    const [[languages]] = wrapper.emitted('update:targetLanguages')!
     expect((languages as (string | null)[]).slice(0, 2)).toEqual([
       null,
       'ru_RU',

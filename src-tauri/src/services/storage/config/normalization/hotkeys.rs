@@ -2,7 +2,7 @@ use crate::models::default_user_config;
 use serde_json::{Map, Value};
 
 /// Keeps one hotkey per known mode: the user's shortcut, or the platform
-/// default when there is none. Modes of older versions are dropped. A missing
+/// default when there is none. Unknown modes are dropped. A missing
 /// selection hotkey gets its default too.
 pub(in crate::services::storage::config) fn normalize_hotkeys_config(
     user_config: &mut Value,

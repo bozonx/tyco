@@ -36,9 +36,9 @@ export function normalizeLlmConfig(raw: unknown): LlmConfig {
   const source = isRecord(raw) ? raw : {}
   const providers = normalizeProviders(source.providers)
   const models = normalizeModels(source.models, providers)
-  const tasks = normalizeTasks(source.tasks, models)
+  const taskModelChains = normalizeTasks(source.taskModelChains, models)
 
-  return { providers, models, tasks }
+  return { providers, models, taskModelChains }
 }
 
 function normalizeProviders(raw: unknown): LlmProvider[] {
@@ -196,7 +196,9 @@ export function removeModel(config: LlmConfig, modelId: string) {
   config.models = config.models.filter((model) => model.id !== modelId)
 
   for (const task of LLM_TASKS) {
-    config.tasks[task] = config.tasks[task].filter((id) => id !== modelId)
+    config.taskModelChains[task] = config.taskModelChains[task].filter(
+      (id) => id !== modelId
+    )
   }
 }
 

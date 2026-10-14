@@ -192,7 +192,10 @@ fn resolve_text_input_support(
         ToolInputKind::None => Ok(false),
         ToolInputKind::Text | ToolInputKind::Parsed => Ok(true),
         ToolInputKind::Structured
-            if command.get("llmArgumentParsing").and_then(Value::as_bool) == Some(true) =>
+            if command
+                .get("isLlmArgumentParsingEnabled")
+                .and_then(Value::as_bool)
+                == Some(true) =>
         {
             Ok(true)
         }
@@ -380,7 +383,7 @@ mod tests {
                     "id": "translate",
                     "name": "Translate",
                     "toolId": "core.translate",
-                    "afterRun": "replaceSelection",
+                    "afterRun": "insertIntoWindow",
                     "availableIn": { "external": true }
                 },
                 {
@@ -393,7 +396,7 @@ mod tests {
                     "id": "remind",
                     "name": "Remind",
                     "toolId": "Home.remind",
-                    "llmArgumentParsing": true,
+                    "isLlmArgumentParsingEnabled": true,
                     "availableIn": { "external": true }
                 },
                 {

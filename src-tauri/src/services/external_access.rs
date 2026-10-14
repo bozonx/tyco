@@ -185,10 +185,11 @@ mod tests {
 
     #[test]
     fn granting_keeps_the_other_settings() {
-        let mut config = json!({ "theme": "dark", "externalAccess": { "selection": false } });
+        let mut config =
+            json!({"externalAccess":{"selection":false } ,"appearance":{"theme":"dark"}});
         grant_selection(&mut config);
         assert_eq!(config["externalAccess"], json!({ "selection": true }));
-        assert_eq!(config["theme"], json!("dark"));
+        assert_eq!(config["appearance"]["theme"], json!("dark"));
 
         let mut config = json!({ "externalAccess": null });
         grant_selection(&mut config);

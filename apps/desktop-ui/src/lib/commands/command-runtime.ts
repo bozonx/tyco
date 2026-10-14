@@ -35,7 +35,11 @@ function commandInputKind(
 ): ToolInputKind | null {
   const tool = commandTool(command, tools)
   return tool
-    ? toolInputKind(tool, command.toolConfig, command.llmArgumentParsing)
+    ? toolInputKind(
+        tool,
+        command.toolConfig,
+        command.isLlmArgumentParsingEnabled
+      )
     : null
 }
 
@@ -121,7 +125,7 @@ export function commandInvocation(command: CommandConfig): Invocation {
     toolConfig: command.toolConfig,
     label: commandLabel(command),
     commandId: command.id,
-    llmArgumentParsing: command.llmArgumentParsing,
+    isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
     logOutput: command.logOutput,
     launcherSink: command.launcherAfterRun,
   }

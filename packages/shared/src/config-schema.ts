@@ -1,9 +1,11 @@
 import schemaValue from './user-config-schema.json'
 import configDefaults from './user-config-defaults.json'
 import configVersion from './config-version.json'
-import type { UserConfig } from './user-config'
+import type { UserConfig, UserConfigInput } from './user-config'
 
 interface Schema {
+  minItems?: number
+  maxItems?: number
   type?: string
   enum?: unknown[]
   anyOf?: Schema[]
@@ -56,6 +58,8 @@ function valid(value: unknown, shape: Schema): boolean {
     case 'array':
       return (
         Array.isArray(value) &&
+        (shape.minItems === undefined || value.length >= shape.minItems) &&
+        (shape.maxItems === undefined || value.length <= shape.maxItems) &&
         value.every(
           (item, index) =>
             valid(item, shape.items ?? {}) &&
@@ -142,6 +146,14 @@ function repair(value: unknown, shape: Schema): unknown {
       )
         result.push(repaired)
     }
+    if (shape.maxItems !== undefined)
+      result.length = Math.min(result.length, shape.maxItems)
+    while (shape.minItems !== undefined && result.length < shape.minItems) {
+      const item = repair(defaultOf(shape.items ?? {}), shape.items ?? {})
+      if (!valid(item, shape.items ?? {}))
+        return repair(defaultOf(shape), { ...shape, minItems: undefined })
+      result.push(item)
+    }
     return result
   }
   return valid(value, shape) ? value : defaultOf(shape)
@@ -170,8 +182,9 @@ export function normalizeConfigField<K extends keyof UserConfig>(
 }
 
 /** Repairs known fields while preserving opaque plugin and tool settings. */
-export function normalizeUserConfig(value: unknown): UserConfig {
+export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   const config = repair(value, schema) as UserConfig
+  config.configVersion = configVersion
   for (const command of config.commands) {
     command.id = command.id.trim()
     command.toolId = command.toolId.trim()
@@ -222,7 +235,9 @@ export function normalizeUserConfig(value: unknown): UserConfig {
       ) as Record<string, unknown>
   }
   config.aiTasks = deduplicate(config.aiTasks, true)
-  config.sttModels = deduplicate(config.sttModels) as UserConfig['sttModels']
+  config.stt.models = deduplicate(
+    config.stt.models
+  ) as UserConfig['stt']['models']
   config.llm.providers = deduplicate(
     config.llm.providers
   ) as UserConfig['llm']['providers']
@@ -235,32 +250,31 @@ export function normalizeUserConfig(value: unknown): UserConfig {
   )
   const models = new Set(config.llm.models.map((model) => model.id))
   for (const task of Object.keys(
-    config.llm.tasks
-  ) as (keyof UserConfig['llm']['tasks'])[])
-    config.llm.tasks[task] = config.llm.tasks[task].filter((id) =>
-      models.has(id)
+    config.llm.taskModelChains
+  ) as (keyof UserConfig['llm']['taskModelChains'])[])
+    config.llm.taskModelChains[task] = config.llm.taskModelChains[task].filter(
+      (id) => models.has(id)
     )
   const commands = new Set(config.commands.map((command) => command.id))
   const tasks = new Set(
     config.aiTasks.flatMap((task) => (task ? [task.id] : []))
   )
-  const pageCount = config.launcherPages?.length ?? 0
+  config.launcherPages = deduplicate(
+    config.launcherPages
+  ) as UserConfig['launcherPages']
+  const pageIds = new Set(config.launcherPages.map((page) => page.id))
   config.mainActions = config.mainActions.map((slot) => {
     if (slot?.type === 'command' && !commands.has(slot.commandId)) return null
     if (slot?.type === 'aiTask' && !tasks.has(slot.taskId)) return null
-    if (slot?.type === 'launcherPage' && slot.page > pageCount) return null
+    if (slot?.type === 'launcherPage' && !pageIds.has(slot.pageId)) return null
     return slot
   })
   const cleanSlots = (slots: (string | null)[]) =>
     slots.map((id) => (id && commands.has(id) ? id : null))
-  config.launcherCommands = cleanSlots(config.launcherCommands)
-  if (config.launcherPages)
-    config.launcherPages = config.launcherPages.map(cleanSlots)
-  if (config.launcherPagesWithoutText)
-    config.launcherPagesWithoutText = config.launcherPagesWithoutText.filter(
-      (page) => page <= pageCount
-    )
-  if (!config.sttModels.some((model) => model.id === config.selectedSttModelId))
-    config.selectedSttModelId = config.sttModels[0]?.id ?? ''
+  for (const page of config.launcherPages) page.slots = cleanSlots(page.slots)
+  if (
+    !config.stt.models.some((model) => model.id === config.stt.selectedModelId)
+  )
+    config.stt.selectedModelId = config.stt.models[0]?.id ?? ''
   return config
 }

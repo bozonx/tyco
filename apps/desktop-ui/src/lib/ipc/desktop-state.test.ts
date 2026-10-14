@@ -113,15 +113,26 @@ describe('desktop state revision ordering', () => {
     )
     const dark = {
       ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
-      theme: 'dark' as const,
+      appearance: {
+        ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.appearance,
+        theme: 'dark' as const,
+      },
     }
     const pending = model.saveUserConfig(dark)
-    const newer = view(3, { userConfig: { ...dark, theme: 'light' } })
+    const newer = view(3, {
+      userConfig: {
+        ...dark,
+        appearance: { ...dark.appearance, theme: 'light' },
+      },
+    })
     model.applyViewState(newer)
     finish(response(2, { userConfig: dark }))
     const result = await pending
-    expect(result).toMatchObject({ success: true, result: { theme: 'light' } })
-    expect(model.desktopState.value.userConfig.theme).toBe('light')
+    expect(result).toMatchObject({
+      success: true,
+      result: { appearance: { theme: 'light' } },
+    })
+    expect(model.desktopState.value.userConfig.appearance.theme).toBe('light')
   })
 
   it('preserves state and error codes after a rejected save', async () => {
@@ -136,7 +147,10 @@ describe('desktop state revision ordering', () => {
     expect(
       await model.saveUserConfig({
         ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
-        theme: 'dark',
+        appearance: {
+          ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.appearance,
+          theme: 'dark',
+        },
       })
     ).toEqual(failure)
     expect(model.desktopState.value.revision).toBe(0)

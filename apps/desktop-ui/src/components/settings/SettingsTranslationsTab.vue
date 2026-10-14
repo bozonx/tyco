@@ -112,10 +112,7 @@ import SecretStorageNotice from './SecretStorageNotice.vue'
 import type { UserConfig } from '@tyco/shared'
 
 const props = defineProps<{
-  userConfig: Pick<
-    UserConfig,
-    'toTranslateLanguages' | 'aiRules' | 'translation'
-  >
+  userConfig: Pick<UserConfig, 'translation' | 'aiRules'>
 }>()
 
 const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
@@ -142,7 +139,7 @@ const providerOptions = computed(() => [
 ])
 const qualityOptions = computed(() => [
   { id: 'off', name: t('settings.translationCorrectionOff') },
-  { id: 'on_problems', name: t('settings.translationCorrectionOnProblems') },
+  { id: 'onProblems', name: t('settings.translationCorrectionOnProblems') },
   { id: 'always', name: t('settings.translationCorrectionAlways') },
 ])
 // DeepL and Google ignore the rules; only the AI correction pass reads them.

@@ -3,7 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import SettingsLauncherTab from './SettingsLauncherTab.vue'
-import type { UserConfig } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  type LauncherPageConfig,
+  type UserConfig,
+} from '@tyco/shared'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -18,14 +22,19 @@ vi.mock('../../stores/tools', async () => {
 const cmd1 = { ...createCommand('script', 'cmd1'), name: 'Script 1' }
 const cmd2 = { ...createCommand('webhook', 'cmd2'), name: 'Webhook 2' }
 
-const mountTab = (
-  launcherCommands: (string | null)[] = ['cmd1', null, 'cmd2']
-) =>
+const mountTab = (commandSlots: (string | null)[] = ['cmd1', null, 'cmd2']) =>
   mount(SettingsLauncherTab, {
     props: {
       userConfig: {
+        ...structuredClone(DEFAULT_USER_CONFIG),
         commands: [cmd1, cmd2],
-        launcherCommands,
+        launcherPages: [
+          {
+            id: 'main',
+            slots: [...commandSlots, ...Array(15).fill(null)].slice(0, 15),
+            inputMode: 'selection',
+          },
+        ],
       } as unknown as UserConfig,
     },
   })
@@ -37,10 +46,16 @@ describe('SettingsLauncherTab.vue', () => {
       .findAll('button')
       .find((button) => button.text() === 'settings.addLauncherPage')!
     await add.trigger('click')
-    const pages = wrapper.emitted('update:launcherPages')?.[0]?.[0] as (
-      string | null
-    )[][]
-    expect(pages).toEqual([Array(15).fill(null)])
+    const pages = wrapper.emitted(
+      'update:launcherPages'
+    )?.[0]?.[0] as LauncherPageConfig[]
+    expect(pages).toHaveLength(2)
+    expect(pages[0]).toEqual(wrapper.props('userConfig').launcherPages[0])
+    expect(pages[1]).toEqual({
+      id: expect.any(String),
+      slots: Array(15).fill(null),
+      inputMode: 'selection',
+    })
     await wrapper.setProps({
       userConfig: { ...wrapper.props('userConfig'), launcherPages: pages },
     })
@@ -48,7 +63,33 @@ describe('SettingsLauncherTab.vue', () => {
       .findAll('button')
       .find((button) => button.text() === 'settings.removeLauncherPage')!
     await remove.trigger('click')
-    expect(wrapper.emitted('update:launcherPages')?.[1]?.[0]).toEqual([])
+    expect(wrapper.emitted('update:launcherPages')?.[1]?.[0]).toEqual([
+      pages[0],
+    ])
+  })
+
+  it('allows removing the first page but retains the final page', async () => {
+    const wrapper = mountTab()
+    const remove = () =>
+      wrapper
+        .findAll('button')
+        .find((button) => button.text() === 'settings.removeLauncherPage')!
+    expect(remove().attributes('disabled')).toBeDefined()
+    const main = wrapper.props('userConfig').launcherPages[0]
+    const other = {
+      id: 'other',
+      slots: Array<string | null>(15).fill(null),
+      inputMode: 'none' as const,
+    }
+    await wrapper.setProps({
+      userConfig: {
+        ...wrapper.props('userConfig'),
+        launcherPages: [main, other],
+      },
+    })
+    expect(remove().attributes('disabled')).toBeUndefined()
+    await remove().trigger('click')
+    expect(wrapper.emitted('update:launcherPages')?.[0]?.[0]).toEqual([other])
   })
 
   it('renders 15 shortcut slots with configured commands', () => {
@@ -68,17 +109,17 @@ describe('SettingsLauncherTab.vue', () => {
     expect(wrapper.emitted('editCommand')?.[0]).toEqual(['cmd1'])
   })
 
-  it('emits update:launcherCommands when a slot is cleared', async () => {
+  it('emits update:launcherPages when a slot is cleared', async () => {
     const wrapper = mountTab()
     const deleteBtn = wrapper.find('.shortcut-slot .delete-btn')
     expect(deleteBtn.exists()).toBe(true)
 
     await deleteBtn.trigger('click')
-    const emitted = wrapper.emitted('update:launcherCommands')?.[0]?.[0] as (
-      string | null
-    )[]
+    const emitted = wrapper.emitted(
+      'update:launcherPages'
+    )?.[0]?.[0] as LauncherPageConfig[]
     expect(emitted).toBeDefined()
-    expect(emitted[0]).toBeNull()
+    expect(emitted[0].slots[0]).toBeNull()
   })
 
   it('emits createCommand when choosing new script', async () => {
@@ -95,9 +136,13 @@ describe('SettingsLauncherTab.vue', () => {
     const wrapper = mount(SettingsLauncherTab, {
       props: {
         userConfig: {
+          ...structuredClone(DEFAULT_USER_CONFIG),
           commands: [cmd1, cmd2],
-          launcherCommands: ['cmd1'],
-          launcherPages: [['cmd2'], [null]],
+          launcherPages: [['cmd1'], ['cmd2'], [null]].map((slots, index) => ({
+            id: `page-${index}`,
+            slots,
+            inputMode: 'selection',
+          })),
         } as unknown as UserConfig,
       },
     })

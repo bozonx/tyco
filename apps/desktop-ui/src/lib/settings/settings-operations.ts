@@ -1,7 +1,7 @@
 import type {
   BuiltinToolId,
   CommandConfig,
-  MainActionConfig,
+  LauncherPageConfig,
   UserConfig,
 } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
@@ -38,23 +38,14 @@ export function createSettingsOperations(deps: {
     }
   }
 
-  const updateLauncherPages = (pages: (string | null)[][]) => {
+  const updateLauncherPages = (pages: LauncherPageConfig[]) => {
+    if (pages.length === 0)
+      throw new Error('At least one launcher page is required')
     const config = deps.getConfig()
-    const previous = config.launcherPages ?? []
-    if (pages.length < previous.length) {
-      const removed =
-        previous.findIndex((page: (string | null)[]) => !pages.includes(page)) +
-        1
-      config.mainActions = config.mainActions.map(
-        (item: MainActionConfig | null) => {
-          if (item?.type !== 'launcherPage' || item.page < removed) return item
-          return item.page === removed ? null : { ...item, page: item.page - 1 }
-        }
-      )
-      config.launcherPagesWithoutText = (config.launcherPagesWithoutText ?? [])
-        .filter((page: number) => page !== removed)
-        .map((page: number) => (page > removed ? page - 1 : page))
-    }
+    const ids = new Set(pages.map((page) => page.id))
+    config.mainActions = config.mainActions.map((item) =>
+      item?.type === 'launcherPage' && !ids.has(item.pageId) ? null : item
+    )
     config.launcherPages = pages
   }
 
@@ -64,19 +55,17 @@ export function createSettingsOperations(deps: {
     page = 0
   ) => {
     const config = deps.getConfig()
+    const targetPage = config.launcherPages[page]
+    if (!targetPage) throw new Error('Launcher page does not exist')
     const command = deps.createCommand(toolId)
     const nextCommands = [...normalizeCommands(config.commands), command]
     const slots = normalizeLauncherCommands(
-      page ? config.launcherPages?.[page - 1] : config.launcherCommands,
+      config.launcherPages[page]?.slots,
       nextCommands
     )
     slots[index] = command.id
     config.commands = nextCommands
-    if (page) {
-      const pages = [...(config.launcherPages ?? [])]
-      pages[page - 1] = slots
-      config.launcherPages = pages
-    } else config.launcherCommands = slots
+    targetPage.slots = slots
     return command.id
   }
 

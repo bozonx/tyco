@@ -19,17 +19,9 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
             )))
         }
     })? {
-        // a newer build wrote it: its settings are kept as they are, and the
-        // config is never written over (see `save_user_config`)
+        // Never interpret or overwrite an unsupported future schema.
         if config_version::is_newer_than_supported(&value) {
-            log::warn!(
-                "{} is of config version {}, newer than {} this build supports; \
-                 it is used as it is and not saved",
-                path.display(),
-                config_version::config_version(&value),
-                config_version::CONFIG_VERSION
-            );
-            return Ok(value);
+            return Err(newer_config_error());
         }
 
         let original = value.clone();
@@ -66,15 +58,13 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     Ok(default_config)
 }
 
-/// Brings a config read from disk up to the current version: the rules the
-/// schema cannot express first, then the schema repair. True when it changed.
+/// Repairs disk input using domain rules followed by the shared schema.
+/// Returns true when the normalized configuration differs from the input.
 fn normalize_loaded_config(value: &mut Value) -> bool {
-    let normalized = config_version::stamp_current_version(value)
-        | normalize_window_insertion_config(value)
+    let normalized = normalize_window_insertion_config(value)
         | normalize_hotkeys_config(value)
         | normalize_language_config(value)
-        | normalize_stt_config(value)
-        | normalize_ai_task_ids(value);
+        | normalize_stt_config(value);
     let repaired = crate::services::config_schema::normalize_user_config(value);
     normalized | repaired
 }
@@ -104,6 +94,6 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
 
 pub fn newer_config_error() -> AppError {
     AppError::UnsupportedConfig(String::from(
-        "The config was written by a newer version of Tyco; update Tyco to change the settings",
+        "The config was written by a newer version of Tyco; update Tyco to open this configuration",
     ))
 }

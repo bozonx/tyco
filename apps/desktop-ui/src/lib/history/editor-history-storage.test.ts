@@ -1,3 +1,4 @@
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -7,17 +8,27 @@ import {
 
 describe('isEditorHistoryOff', () => {
   it('is off by the storage or by a zero limit', () => {
-    expect(isEditorHistoryOff({ editorHistoryStorage: 'off' })).toBe(true)
     expect(
       isEditorHistoryOff({
-        editorHistoryStorage: 'disk',
-        editorHistoryMaxItems: 0,
+        editorHistory: { ...DEFAULT_USER_CONFIG.editorHistory, storage: 'off' },
       })
     ).toBe(true)
     expect(
       isEditorHistoryOff({
-        editorHistoryStorage: 'session',
-        editorHistoryMaxItems: 10,
+        editorHistory: {
+          ...DEFAULT_USER_CONFIG.editorHistory,
+          storage: 'disk',
+          maxItems: 0,
+        },
+      })
+    ).toBe(true)
+    expect(
+      isEditorHistoryOff({
+        editorHistory: {
+          ...DEFAULT_USER_CONFIG.editorHistory,
+          storage: 'session',
+          maxItems: 10,
+        },
       })
     ).toBe(false)
   })

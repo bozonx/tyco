@@ -1,3 +1,4 @@
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -7,10 +8,17 @@ import {
 
 describe('isChatHistoryEnabled', () => {
   it('is on unless the settings turn it off', () => {
-    expect(isChatHistoryEnabled(undefined)).toBe(true)
-    expect(isChatHistoryEnabled({})).toBe(true)
-    expect(isChatHistoryEnabled({ chatHistoryEnabled: true })).toBe(true)
-    expect(isChatHistoryEnabled({ chatHistoryEnabled: false })).toBe(false)
+    expect(isChatHistoryEnabled(DEFAULT_USER_CONFIG)).toBe(true)
+    expect(
+      isChatHistoryEnabled({
+        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: true },
+      })
+    ).toBe(true)
+    expect(
+      isChatHistoryEnabled({
+        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: false },
+      })
+    ).toBe(false)
   })
 })
 

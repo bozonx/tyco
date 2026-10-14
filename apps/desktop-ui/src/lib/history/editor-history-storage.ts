@@ -1,13 +1,16 @@
+import type { UserConfig } from '@tyco/shared'
 import { historyRetentionChoices } from './history-retention'
 
 /** Retention periods offered by the settings; 0 keeps the entries forever */
 const EDITOR_HISTORY_RETENTION_DAYS = [0, 1, 7, 30, 90] as const
 
 /** The editor history keeps nothing */
-export function isEditorHistoryOff(config: Record<string, unknown>): boolean {
+export function isEditorHistoryOff(
+  config: Pick<UserConfig, 'editorHistory'>
+): boolean {
   return (
-    config.editorHistoryStorage === 'off' ||
-    String(config.editorHistoryMaxItems ?? '').trim() === '0'
+    config.editorHistory.storage === 'off' ||
+    config.editorHistory.maxItems === 0
   )
 }
 

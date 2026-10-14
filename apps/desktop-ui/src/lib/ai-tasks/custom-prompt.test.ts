@@ -4,7 +4,6 @@ import {
   addTaskFromPrompt,
   newAiTaskId,
   taskNameFromPrompt,
-  withAiTaskIds,
 } from './custom-prompt'
 
 describe('taskNameFromPrompt', () => {
@@ -24,22 +23,6 @@ describe('AI task ids', () => {
     expect(newAiTaskId([{ id: 'task-1' }, null, { id: 'task-3' }])).toBe(
       'task-2'
     )
-  })
-
-  it('gives an id to the tasks that have none and keeps the others', () => {
-    expect(
-      withAiTaskIds([
-        { name: 'a' },
-        null,
-        { id: 'task-1', name: 'b' },
-        { id: ' ', name: 'c' },
-      ])
-    ).toEqual([
-      { id: 'task-2', name: 'a' },
-      null,
-      { id: 'task-1', name: 'b' },
-      { id: 'task-3', name: 'c' },
-    ])
   })
 })
 

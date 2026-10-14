@@ -1,3 +1,4 @@
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { expect, it, vi } from 'vitest'
 import { createDeepLProvider } from './machine-providers'
 import { createTranslationClient } from './translation-client'
@@ -31,6 +32,7 @@ it('does not retry a depleted subscription through ai-kit', async () => {
     )
   const client = createTranslationClient({
     getConfig: () => ({
+      ...DEFAULT_USER_CONFIG.translation,
       provider: 'deepl',
       qualityGate: 'off',
       deeplEndpoint: 'free',

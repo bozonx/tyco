@@ -50,7 +50,7 @@ describe('external commands store wiring', () => {
       toolId: 'mock.tool',
       toolConfig: {},
       phrases: [],
-      llmArgumentParsing: false,
+      isLlmArgumentParsingEnabled: false,
       launcherAfterRun: { action: 'none' },
       logOutput: false,
       availableIn: { external: true, chat: false },

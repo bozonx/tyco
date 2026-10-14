@@ -49,9 +49,8 @@ vi.mock('../stores/ipc', () => ({
     desktopState: {
       userConfig: {
         configVersion: settingsMocks.configVersion,
-        theme: 'auto',
-        contrast: 'normal',
-        motion: 'auto',
+        appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
+
         plugins: { PluginA: { enabled: true }, PluginB: { enabled: false } },
       },
     },

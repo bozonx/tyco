@@ -28,10 +28,10 @@ vi.mock('../../stores/llm', () => ({
 describe('SettingsTranslationsTab.vue', () => {
   const createConfig = (
     overrides = {}
-  ): Pick<UserConfig, 'toTranslateLanguages' | 'aiRules' | 'translation'> => ({
-    toTranslateLanguages: ['en', 'es', null, null, null],
+  ): Pick<UserConfig, 'translation' | 'aiRules'> => ({
     aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
     translation: {
+      viewMode: 'split',
       provider: 'deepl',
       qualityGate: 'off',
       deeplEndpoint: 'free',
@@ -41,6 +41,7 @@ describe('SettingsTranslationsTab.vue', () => {
         { term: 'baz', use: 'baz', doNotTranslate: true },
       ],
       ...overrides,
+      targetLanguages: ['en', 'es', null, null, null],
     },
   })
 
@@ -289,7 +290,7 @@ describe('SettingsTranslationsTab.vue', () => {
     )
 
     await wrapper.setProps({
-      userConfig: createConfig({ qualityGate: 'on_problems' }),
+      userConfig: createConfig({ qualityGate: 'onProblems' }),
     })
     expect(section('settings.translationRules')?.attributes('data-info')).toBe(
       'settings.translationRulesInfo'

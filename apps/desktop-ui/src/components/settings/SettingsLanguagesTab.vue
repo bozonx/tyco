@@ -49,12 +49,10 @@ import SettingsSection from '../common/SettingsSection.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import type { UserConfig } from '@tyco/shared'
 
-const props = defineProps<{
-  userConfig: Pick<UserConfig, 'toTranslateLanguages'>
-}>()
+const props = defineProps<{ userConfig: Pick<UserConfig, 'translation'> }>()
 
 const emit = defineEmits<{
-  (e: 'update:toTranslateLanguages', value: string[]): void
+  (e: 'update:targetLanguages', value: string[]): void
   (e: 'navigate', tab: string): void
 }>()
 
@@ -62,7 +60,7 @@ const { t } = useI18n()
 
 const translateLanguageOptions = computed(() => {
   return buildLanguageOptions(
-    (props.userConfig.toTranslateLanguages || []).filter(Boolean),
+    (props.userConfig.translation.targetLanguages || []).filter(Boolean),
     false,
     t
   ).map((option) => ({
@@ -72,11 +70,11 @@ const translateLanguageOptions = computed(() => {
 })
 
 const translateLanguageSlots = computed(() =>
-  normalizeShortcutSlots<string>(props.userConfig.toTranslateLanguages)
+  normalizeShortcutSlots<string>(props.userConfig.translation.targetLanguages)
 )
 
 function emitSlots(slots: (string | null)[]) {
-  emit('update:toTranslateLanguages', slots as string[])
+  emit('update:targetLanguages', slots as string[])
 }
 
 function moveLanguage(from: number, to: number) {

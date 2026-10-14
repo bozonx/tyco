@@ -11,9 +11,6 @@ pub(super) use hotkeys::normalize_hotkeys_config;
 mod language;
 pub(super) use language::normalize_language_config;
 
-mod ai;
-pub(super) use ai::normalize_ai_task_ids;
-
 mod window_insertion;
 pub(super) use window_insertion::normalize_window_insertion_config;
 

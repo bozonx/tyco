@@ -35,7 +35,7 @@ describe('application state synchronization', () => {
   it('reacts only to language inputs and locale changes when updating document language', async () => {
     const f = fixture()
     vi.mocked(f.deps.syncDocumentLanguage).mockClear()
-    f.state.value.userConfig.theme = 'dark'
+    f.state.value.userConfig.appearance.theme = 'dark'
     f.state.value.userConfig.aiRules.chat = 'Updated rules'
     await nextTick()
     expect(f.deps.syncDocumentLanguage).not.toHaveBeenCalled()

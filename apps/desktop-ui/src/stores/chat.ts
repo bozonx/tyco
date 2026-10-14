@@ -163,7 +163,7 @@ export const useChatStore = defineStore('chat', () => {
     isGenerating: () => model.isGenerating.value,
     prepare: createChatFileReader({
       quality: () =>
-        ipcStore.desktopState.userConfig?.chatImageQuality || 'balanced',
+        ipcStore.desktopState.userConfig?.chat.imageQuality || 'balanced',
       storeImage: storeChatImage,
     }),
     addAttachment: model.addAttachment,

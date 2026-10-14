@@ -152,7 +152,10 @@ fn collect_references(value: &Value, result: &mut HashSet<String>) {
             }
         }
         Value::Object(fields) => {
-            if fields.get("authSecret").is_some_and(|value| value == true) {
+            if fields
+                .get("isAuthEnabled")
+                .is_some_and(|value| value == true)
+            {
                 if let Some(id) = fields.get("authSecretId").and_then(Value::as_str) {
                     result.insert(id.to_owned());
                 }

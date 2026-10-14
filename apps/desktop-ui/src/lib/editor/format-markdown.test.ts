@@ -71,7 +71,7 @@ describe('shared Markdown formatting', () => {
 })
 
 describe('Markdown settings', () => {
-  it('supplies backward-compatible defaults and rejects malformed saved values', () => {
+  it('supplies defaults and rejects malformed saved values', () => {
     expect(normalizeMarkdownSettings(undefined)).toEqual(
       DEFAULT_MARKDOWN_SETTINGS
     )

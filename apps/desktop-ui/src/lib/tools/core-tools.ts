@@ -79,7 +79,7 @@ function transformTool(
   ) => Promise<string | TransformOutput> | ToolResult
 ): ToolDefinition {
   return {
-    defaultAfterRun: 'replaceSelection',
+    defaultAfterRun: 'insertIntoWindow',
     ...tool,
     inputSchema: TEXT_INPUT_SCHEMA,
     run: async (call) => {
@@ -201,18 +201,19 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       // one per translation language set at the time; a language added
       // later gets a command only when the user makes one
       defaultCommands: ({ userConfig, t }) =>
-        [...new Set(userConfig.toTranslateLanguages)].flatMap((language) =>
-          language
-            ? [
-                {
-                  id: language,
-                  name: t('tools.defaultTranslate', {
-                    language: t(getLanguageLabelKey(language)),
-                  }),
-                  toolConfig: { language },
-                },
-              ]
-            : []
+        [...new Set(userConfig.translation.targetLanguages)].flatMap(
+          (language) =>
+            language
+              ? [
+                  {
+                    id: language,
+                    name: t('tools.defaultTranslate', {
+                      language: t(getLanguageLabelKey(language)),
+                    }),
+                    toolConfig: { language },
+                  },
+                ]
+              : []
         ),
     },
     (call, text) => {

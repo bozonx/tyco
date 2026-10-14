@@ -70,20 +70,41 @@ describe('settings operations', () => {
 
   it('repairs page references after removing a launcher page', () => {
     const f = fixture()
-    const pages = [[null], [null], [null]]
-    f.config.launcherPages = pages
-    f.config.mainActions = [1, 2, 3].map((page) => ({
-      type: 'launcherPage',
-      page,
+    const pages = ['a', 'b', 'c'].map((id) => ({
+      id,
+      slots: Array<string | null>(15).fill(null),
+      inputMode: 'selection' as const,
     }))
-    f.config.launcherPagesWithoutText = [1, 2, 3]
+    f.config.launcherPages = pages
+    f.config.mainActions = ['a', 'b', 'c'].map((pageId) => ({
+      type: 'launcherPage',
+      pageId,
+    }))
     f.model.updateLauncherPages([pages[0], pages[2]])
     expect(f.config.mainActions).toEqual([
-      { type: 'launcherPage', page: 1 },
+      { type: 'launcherPage', pageId: 'a' },
       null,
-      { type: 'launcherPage', page: 2 },
+      { type: 'launcherPage', pageId: 'c' },
     ])
-    expect(f.config.launcherPagesWithoutText).toEqual([1, 2])
+  })
+
+  it('keeps stable references when pages are reordered', () => {
+    const f = fixture()
+    const pages = ['a', 'b'].map((id) => ({
+      id,
+      slots: Array<string | null>(15).fill(null),
+      inputMode: 'selection' as const,
+    }))
+    f.config.launcherPages = pages
+    f.config.mainActions = [{ type: 'launcherPage', pageId: 'a' }]
+    f.model.updateLauncherPages([pages[1], pages[0]])
+    expect(f.config.mainActions).toEqual([
+      { type: 'launcherPage', pageId: 'a' },
+    ])
+    expect(() => f.model.updateLauncherPages([])).toThrow(
+      'At least one launcher page is required'
+    )
+    expect(f.config.launcherPages).toEqual([pages[1], pages[0]])
   })
 
   it.each([0, 1])(
@@ -91,13 +112,14 @@ describe('settings operations', () => {
     (page) => {
       const f = fixture()
       f.config.commands = []
-      f.config.launcherCommands = []
-      f.config.launcherPages = [[]]
+      f.config.launcherPages = ['a', 'b'].map((id) => ({
+        id,
+        slots: Array<string | null>(15).fill(null),
+        inputMode: 'selection' as const,
+      }))
       const id = f.model.createLauncherCommand(2, 'script', page)
       expect(f.config.commands[0].id).toBe(id)
-      expect(
-        (page ? f.config.launcherPages[0] : f.config.launcherCommands)[2]
-      ).toBe(id)
+      expect(f.config.launcherPages[page].slots[2]).toBe(id)
     }
   )
 

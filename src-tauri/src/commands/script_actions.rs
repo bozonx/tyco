@@ -14,7 +14,7 @@ use tauri::{AppHandle, Manager, State};
 pub struct ScriptActionRequest {
     name: String,
     command: String,
-    working_dir: Option<String>,
+    working_directory: Option<String>,
     text: String,
     #[serde(rename = "captureOutput")]
     should_capture_output: bool,
@@ -39,7 +39,7 @@ pub async fn execute_script_action(
             &ScriptRequest {
                 name: &request.name,
                 command: &request.command,
-                working_dir: request.working_dir.as_deref(),
+                working_dir: request.working_directory.as_deref(),
                 text: &request.text,
                 should_capture_output: request.should_capture_output,
                 output_timeout: request.execution_timeout_secs.map(Duration::from_secs),

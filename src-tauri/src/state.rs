@@ -91,7 +91,7 @@ mod tests {
             SessionState::default(),
         ));
         state.update_snapshot(|snapshot| {
-            snapshot.settings.user_config = serde_json::json!({ "theme": "dark" })
+            snapshot.settings.user_config = serde_json::json!({"appearance":{"theme":"dark" }})
         });
         assert_eq!(state.snapshot().revision, 1);
         state.update_snapshot(|snapshot| {
@@ -99,7 +99,7 @@ mod tests {
         });
         let snapshot = state.snapshot();
         assert_eq!(snapshot.revision, 2);
-        assert_eq!(snapshot.settings.user_config["theme"], "dark");
+        assert_eq!(snapshot.settings.user_config["appearance"]["theme"], "dark");
         assert_eq!(
             snapshot.activation.selected_text.as_deref(),
             Some("New selection")
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn session_preferences_do_not_survive_a_new_app_state() {
-        let config = serde_json::json!({ "theme": "dark" });
+        let config = serde_json::json!({"appearance":{"theme":"dark" }});
         let create_state = || {
             AppState::new(default_desktop_snapshot(
                 config.clone(),

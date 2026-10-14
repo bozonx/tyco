@@ -6,17 +6,25 @@ use serde_json::Value;
 /// and the active model falls back to the first default when it is not one of
 /// them.
 pub(in crate::services::storage::config) fn normalize_stt_config(user_config: &mut Value) -> bool {
-    let defaults = default_user_config();
+    let defaults = default_user_config()["stt"].clone();
     let default_models: Vec<Value> = defaults
-        .get("sttModels")
+        .get("models")
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    let Some(config) = user_config.as_object_mut() else {
+    let Some(root) = user_config.as_object_mut() else {
         return false;
     };
+    if !root.get("stt").is_some_and(Value::is_object) {
+        root.insert("stt".into(), defaults);
+        return true;
+    }
+    let config = root
+        .get_mut("stt")
+        .and_then(Value::as_object_mut)
+        .expect("speech settings object");
     let existing: Vec<&serde_json::Map<String, Value>> = config
-        .get("sttModels")
+        .get("models")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
@@ -50,7 +58,7 @@ pub(in crate::services::storage::config) fn normalize_stt_config(user_config: &m
         .collect();
 
     let mut active = config
-        .get("selectedSttModelId")
+        .get("selectedModelId")
         .cloned()
         .unwrap_or(Value::Null);
     if !models.iter().any(|model| model.get("id") == Some(&active)) {
@@ -62,11 +70,10 @@ pub(in crate::services::storage::config) fn normalize_stt_config(user_config: &m
     }
     let models = Value::Array(models);
 
-    if config.get("sttModels") == Some(&models) && config.get("selectedSttModelId") == Some(&active)
-    {
+    if config.get("models") == Some(&models) && config.get("selectedModelId") == Some(&active) {
         return false;
     }
-    config.insert(String::from("sttModels"), models);
-    config.insert(String::from("selectedSttModelId"), active);
+    config.insert(String::from("models"), models);
+    config.insert(String::from("selectedModelId"), active);
     true
 }

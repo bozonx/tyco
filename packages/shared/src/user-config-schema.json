@@ -7,66 +7,11 @@
       "defaultPath": "quickCorrectionPrefetch"
     },
     "quickHideOnBlur": { "type": "boolean", "defaultPath": "quickHideOnBlur" },
-    "theme": {
-      "enum": ["auto", "light", "dark", "e-ink"],
-      "defaultPath": "theme"
-    },
-    "contrast": {
-      "enum": ["auto", "normal", "more"],
-      "defaultPath": "contrast"
-    },
-    "motion": { "enum": ["auto", "normal", "reduce"], "defaultPath": "motion" },
-    "uiScale": {
-      "enum": [100, 115, 130, 150, 175, 200],
-      "defaultPath": "uiScale"
-    },
     "appLanguage": { "type": "string", "defaultPath": "appLanguage" },
     "userLanguage": { "type": "string", "defaultPath": "userLanguage" },
-    "editorHistoryStorage": {
-      "enum": ["off", "session", "disk"],
-      "defaultPath": "editorHistoryStorage"
-    },
-    "editorHistoryMaxItems": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 9007199254740991,
-      "defaultPath": "editorHistoryMaxItems"
-    },
-    "editorHistoryRetentionDays": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 9007199254740991,
-      "defaultPath": "editorHistoryRetentionDays"
-    },
-    "sanitizeSecretsInEditorHistory": {
-      "type": "boolean",
-      "defaultPath": "sanitizeSecretsInEditorHistory"
-    },
-    "chatImageQuality": {
-      "enum": ["economy", "balanced", "original"],
-      "defaultPath": "chatImageQuality"
-    },
-    "chatHistoryEnabled": {
-      "type": "boolean",
-      "defaultPath": "chatHistoryEnabled"
-    },
-    "chatHistoryRetentionDays": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 9007199254740991,
-      "defaultPath": "chatHistoryRetentionDays"
-    },
-    "selectedSttModelId": {
-      "type": "string",
-      "defaultPath": "selectedSttModelId"
-    },
     "diffViewMode": {
       "enum": ["unified", "split", "result"],
       "defaultPath": "diffViewMode"
-    },
-    "translationViewMode": {
-      "enum": ["split", "result"],
-      "defaultPath": "translationViewMode"
     },
     "configVersion": {
       "type": "integer",
@@ -76,9 +21,39 @@
     },
     "hotkeys": {
       "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": { "type": "string", "default": "" },
+      "properties": {
+        "editor": { "type": "string", "default": "" },
+        "write": { "type": "string", "default": "" },
+        "chat": { "type": "string", "default": "" },
+        "voiceChat": { "type": "string", "default": "" },
+        "voice": { "type": "string", "default": "Ctrl+Alt+V" },
+        "select": { "type": "string", "default": "Ctrl+Alt+S" },
+        "aiTasks": { "type": "string", "default": "" },
+        "commandLauncher": { "type": "string", "default": "" },
+        "commandLauncher2": { "type": "string", "default": "" },
+        "commandLauncher3": { "type": "string", "default": "" },
+        "commandLauncher4": { "type": "string", "default": "" },
+        "commandLauncher5": { "type": "string", "default": "" },
+        "correction": { "type": "string", "default": "" },
+        "translate": { "type": "string", "default": "" }
+      },
+      "required": [
+        "editor",
+        "write",
+        "chat",
+        "voiceChat",
+        "voice",
+        "select",
+        "aiTasks",
+        "commandLauncher",
+        "commandLauncher2",
+        "commandLauncher3",
+        "commandLauncher4",
+        "commandLauncher5",
+        "correction",
+        "translate"
+      ],
+      "additionalProperties": false,
       "defaultPath": "hotkeys"
     },
     "selectionHotkeys": {
@@ -109,14 +84,6 @@
       "required": ["method", "xdotoolBin", "ydotoolBin", "pasteShortcut"],
       "additionalProperties": false,
       "defaultPath": "windowInsertion"
-    },
-    "toTranslateLanguages": {
-      "type": "array",
-      "items": {
-        "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
-        "default": null
-      },
-      "defaultPath": "toTranslateLanguages"
     },
     "mainActions": {
       "type": "array",
@@ -181,14 +148,9 @@
             "type": "object",
             "properties": {
               "type": { "enum": ["launcherPage"] },
-              "page": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991,
-                "default": 0
-              }
+              "pageId": { "type": "string", "minLength": 1 }
             },
-            "required": ["type", "page"],
+            "required": ["type", "pageId"],
             "additionalProperties": false
           },
           { "type": "null" }
@@ -196,43 +158,55 @@
       },
       "defaultPath": "mainActions"
     },
-    "launcherCommands": {
-      "type": "array",
-      "items": {
-        "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
-        "default": null
-      },
-      "defaultPath": "launcherCommands"
-    },
     "launcherPages": {
       "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "array",
-        "items": {
-          "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
-          "default": null
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "slots": {
+            "type": "array",
+            "minItems": 15,
+            "maxItems": 15,
+            "items": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ],
+              "default": null
+            },
+            "default": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          "inputMode": { "enum": ["selection", "none"], "default": "selection" }
         },
-        "default": []
+        "required": ["id", "slots", "inputMode"],
+        "additionalProperties": false
       },
       "defaultPath": "launcherPages"
-    },
-    "launcherPagesWithoutText": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 9007199254740991,
-        "default": 0
-      },
-      "uniqueItems": true,
-      "defaultPath": "launcherPagesWithoutText"
     },
     "translation": {
       "type": "object",
       "properties": {
         "provider": { "enum": ["deepl", "google", "llm"], "default": "llm" },
         "qualityGate": {
-          "enum": ["off", "on_problems", "always"],
+          "enum": ["off", "onProblems", "always"],
           "default": "off"
         },
         "deeplEndpoint": { "enum": ["free", "pro"], "default": "free" },
@@ -250,14 +224,25 @@
           },
           "default": []
         },
-        "correctionPrompt": { "type": "string", "default": "" }
+        "correctionPrompt": { "type": "string", "default": "" },
+        "targetLanguages": {
+          "type": "array",
+          "items": {
+            "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
+            "default": null
+          },
+          "default": ["en_US", "ru_RU", "es_AR", "tr_TR"]
+        },
+        "viewMode": { "enum": ["split", "result"], "default": "split" }
       },
       "required": [
         "provider",
         "qualityGate",
         "deeplEndpoint",
         "glossary",
-        "correctionPrompt"
+        "correctionPrompt",
+        "targetLanguages",
+        "viewMode"
       ],
       "additionalProperties": false,
       "defaultPath": "translation"
@@ -282,12 +267,15 @@
             "required": [],
             "additionalProperties": true
           },
-          "llmArgumentParsing": { "type": "boolean", "default": false },
+          "isLlmArgumentParsingEnabled": {
+            "type": "boolean",
+            "default": false
+          },
           "launcherAfterRun": {
             "type": "object",
             "properties": {
               "action": {
-                "enum": ["none", "showMenu", "replaceSelection", "copy"],
+                "enum": ["none", "showMenu", "insertIntoWindow", "copy"],
                 "default": "none"
               }
             },
@@ -312,7 +300,7 @@
           "phrases",
           "toolId",
           "toolConfig",
-          "llmArgumentParsing",
+          "isLlmArgumentParsingEnabled",
           "launcherAfterRun",
           "logOutput",
           "availableIn",
@@ -412,7 +400,7 @@
           },
           "default": []
         },
-        "tasks": {
+        "taskModelChains": {
           "type": "object",
           "properties": {
             "translate": {
@@ -444,30 +432,9 @@
           "additionalProperties": false
         }
       },
-      "required": ["providers", "models", "tasks"],
+      "required": ["providers", "models", "taskModelChains"],
       "additionalProperties": false,
       "defaultPath": "llm"
-    },
-    "sttModels": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "default": "", "minLength": 1 },
-          "providerModelId": { "type": "string", "default": "" },
-          "provider": {
-            "enum": ["deepgram", "sherpa-onnx"],
-            "default": "deepgram"
-          },
-          "description": { "type": "string", "default": "" },
-          "formatWithLlm": { "type": "boolean", "default": false },
-          "language": { "type": "string", "default": "" },
-          "baseUrl": { "type": "string", "default": "" }
-        },
-        "required": ["id", "providerModelId", "provider"],
-        "additionalProperties": false
-      },
-      "defaultPath": "sttModels"
     },
     "aiRules": {
       "type": "object",
@@ -548,8 +515,8 @@
           "enum": ["alt", "altAndUrl", "url", "none"],
           "default": "alt"
         },
-        "keepThematicBreaks": { "type": "boolean", "default": false },
-        "keepTaskCheckboxes": { "type": "boolean", "default": false }
+        "keepThematicBreaks": { "type": "boolean", "default": true },
+        "keepTaskCheckboxes": { "type": "boolean", "default": true }
       },
       "required": [
         "bullet",
@@ -563,6 +530,110 @@
       ],
       "additionalProperties": false,
       "defaultPath": "markdownClean"
+    },
+    "appearance": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "enum": ["auto", "light", "dark", "e-ink"],
+          "default": "auto"
+        },
+        "contrast": { "enum": ["auto", "normal", "more"], "default": "auto" },
+        "motion": { "enum": ["auto", "normal", "reduce"], "default": "auto" },
+        "uiScale": { "enum": [100, 115, 130, 150, 175, 200], "default": 100 }
+      },
+      "required": ["theme", "contrast", "motion", "uiScale"],
+      "additionalProperties": false,
+      "defaultPath": "appearance"
+    },
+    "editorHistory": {
+      "type": "object",
+      "properties": {
+        "storage": { "enum": ["off", "session", "disk"], "default": "disk" },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 1000
+        },
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 30
+        },
+        "sanitizeSecrets": { "type": "boolean", "default": true }
+      },
+      "required": ["storage", "maxItems", "retentionDays", "sanitizeSecrets"],
+      "additionalProperties": false,
+      "defaultPath": "editorHistory"
+    },
+    "chat": {
+      "type": "object",
+      "properties": {
+        "imageQuality": {
+          "enum": ["economy", "balanced", "original"],
+          "default": "balanced"
+        },
+        "isHistoryEnabled": { "type": "boolean", "default": true },
+        "historyRetentionDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 0
+        }
+      },
+      "required": ["imageQuality", "isHistoryEnabled", "historyRetentionDays"],
+      "additionalProperties": false,
+      "defaultPath": "chat"
+    },
+    "stt": {
+      "type": "object",
+      "properties": {
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "default": "", "minLength": 1 },
+              "providerModelId": { "type": "string", "default": "" },
+              "provider": {
+                "enum": ["deepgram", "sherpa-onnx"],
+                "default": "deepgram"
+              },
+              "description": { "type": "string", "default": "" },
+              "formatWithLlm": { "type": "boolean", "default": false },
+              "language": { "type": "string", "default": "" },
+              "baseUrl": { "type": "string", "default": "" }
+            },
+            "required": ["id", "providerModelId", "provider"],
+            "additionalProperties": false
+          },
+          "default": [
+            {
+              "id": "deepgram-stt",
+              "provider": "deepgram",
+              "description": "Deepgram speech recognition",
+              "formatWithLlm": false,
+              "language": "auto",
+              "providerModelId": "nova-3"
+            },
+            {
+              "id": "sherpa-onnx-stt",
+              "provider": "sherpa-onnx",
+              "description": "Self-hosted sherpa-onnx streaming server",
+              "formatWithLlm": false,
+              "baseUrl": "ws://localhost:6006",
+              "providerModelId": "sherpa-onnx"
+            }
+          ],
+          "minItems": 1
+        },
+        "selectedModelId": { "type": "string", "default": "deepgram-stt" }
+      },
+      "required": ["models", "selectedModelId"],
+      "additionalProperties": false,
+      "defaultPath": "stt"
     }
   },
   "required": [
@@ -572,37 +643,26 @@
     "submitKey",
     "quickCorrectionPrefetch",
     "quickHideOnBlur",
-    "theme",
-    "contrast",
-    "motion",
-    "uiScale",
     "windowInsertion",
     "appLanguage",
     "userLanguage",
-    "toTranslateLanguages",
     "translation",
     "mainActions",
-    "launcherCommands",
     "commands",
-    "editorHistoryStorage",
-    "editorHistoryMaxItems",
-    "editorHistoryRetentionDays",
-    "sanitizeSecretsInEditorHistory",
-    "chatImageQuality",
-    "chatHistoryEnabled",
-    "chatHistoryRetentionDays",
     "llm",
-    "sttModels",
     "aiRules",
     "aiTasks",
     "markdown",
     "markdownClean",
     "plugins",
-    "selectedSttModelId",
     "registrationState",
     "diffViewMode",
-    "translationViewMode",
-    "configVersion"
+    "configVersion",
+    "appearance",
+    "editorHistory",
+    "chat",
+    "stt",
+    "launcherPages"
   ],
   "additionalProperties": false,
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -612,7 +672,7 @@
       "type": "object",
       "properties": {
         "command": { "type": "string", "default": "" },
-        "workingDir": { "type": "string", "default": "" },
+        "workingDirectory": { "type": "string", "default": "" },
         "timeoutSec": { "type": "integer", "minimum": 1, "maximum": 3600 }
       },
       "required": ["command"],
@@ -629,7 +689,7 @@
           "default": {}
         },
         "payloadTemplate": { "type": "string", "default": "" },
-        "authSecret": { "type": "boolean", "default": false },
+        "isAuthEnabled": { "type": "boolean", "default": false },
         "authSecretId": {
           "type": "string",
           "minLength": 1,

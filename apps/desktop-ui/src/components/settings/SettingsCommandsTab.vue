@@ -196,10 +196,7 @@ const menuSlots = computed(() => {
 /** Every quick-command page and key assigned to each command. */
 const launcherSlots = computed(() => {
   const slots = new Map<string, { page: number; index: number }[]>()
-  const pages = [
-    props.userConfig.launcherCommands ?? [],
-    ...(props.userConfig.launcherPages ?? []),
-  ]
+  const pages = props.userConfig.launcherPages.map((page) => page.slots)
   pages.forEach((commands, page) => {
     commands.forEach((id, index) => {
       if (!id) return

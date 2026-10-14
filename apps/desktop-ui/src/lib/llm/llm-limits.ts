@@ -6,7 +6,7 @@ import { modelContextWindowTokens } from './llm-catalog'
  * chain.
  */
 export function taskModelLimits(config: LlmConfig, task: LlmTask) {
-  const models = config.tasks[task]
+  const models = config.taskModelChains[task]
     .map((id) => config.models.find((model) => model.id === id))
     .filter((model) => model !== undefined)
   if (!models.length)

@@ -35,8 +35,8 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
     },
     canSave: () =>
       Math.max(
-        session.draft.value.configVersion ?? 0,
-        session.latestConfig.value.configVersion ?? 0
+        session.draft.value.configVersion,
+        session.latestConfig.value.configVersion
       ) <= CONFIG_VERSION,
     notifyError: (error) =>
       toastText(

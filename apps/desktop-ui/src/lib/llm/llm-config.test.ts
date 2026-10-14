@@ -33,7 +33,7 @@ describe('llm-config', () => {
       'deepseek',
     ])
     expect(config.models).toEqual([])
-    expect(config.tasks.aiTasks).toEqual([])
+    expect(config.taskModelChains.aiTasks).toEqual([])
   })
 
   it('puts missing built-in providers back, first', () => {
@@ -102,12 +102,12 @@ describe('llm-config', () => {
         { id: 'a', providerId: 'google', providerModelId: 'g' },
         { id: 'b', providerId: 'deepseek', providerModelId: 'd' },
       ],
-      tasks: { aiTasks: ['b', 'gone', 'b', 'a'], translate: [] },
+      taskModelChains: { aiTasks: ['b', 'gone', 'b', 'a'], translate: [] },
     })
 
-    expect(config.tasks.aiTasks).toEqual(['b', 'a'])
-    expect(config.tasks.translate).toEqual([])
-    expect(config.tasks.correction).toEqual([])
+    expect(config.taskModelChains.aiTasks).toEqual(['b', 'a'])
+    expect(config.taskModelChains.translate).toEqual([])
+    expect(config.taskModelChains.correction).toEqual([])
   })
 
   it('generates unique ids', () => {
@@ -127,7 +127,7 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.tasks.aiTasks = [model.id, 'local-qwen']
+    config.taskModelChains.aiTasks = [model.id, 'local-qwen']
 
     expect(provider.id).toMatch(/^local-[a-f0-9-]{36}$/)
     expect(model.id).toBe(`${provider.id}-model`)
@@ -135,7 +135,7 @@ describe('llm-config', () => {
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.tasks.aiTasks).toEqual(['local-qwen'])
+    expect(config.taskModelChains.aiTasks).toEqual(['local-qwen'])
   })
 
   it('never removes a built-in provider', () => {
@@ -148,10 +148,10 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    config.tasks.translate = ['gemini-flash', 'local-qwen']
+    config.taskModelChains.translate = ['gemini-flash', 'local-qwen']
     removeModel(config, 'gemini-flash')
 
-    expect(config.tasks.translate).toEqual(['local-qwen'])
+    expect(config.taskModelChains.translate).toEqual(['local-qwen'])
   })
 
   it('labels a model by name, then model id', () => {

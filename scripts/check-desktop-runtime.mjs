@@ -159,15 +159,15 @@ try {
   const initial = await invoke('get_user_config')
   const first = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, theme: 'dark' },
+    userConfig: { ...initial, appearance: { theme: 'dark' } },
   })
-  assert.equal(first.settings.userConfig.theme, 'dark')
+  assert.equal(first.settings.userConfig.appearance.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
     userConfig: { ...initial, userLanguage: 'en_US', appLanguage: 'en_US' },
   })
   assert.equal(
-    second.settings.userConfig.theme,
+    second.settings.userConfig.appearance.theme,
     'dark',
     "Stale snapshots must preserve another window's changes"
   )

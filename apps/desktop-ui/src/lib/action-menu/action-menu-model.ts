@@ -37,6 +37,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   minCorrectionLength?: () => number
   reviewedMainActionIds?: () => readonly string[] | undefined
   openLauncherPage?: (page: number, text: string) => Promise<void>
+  launcherPages?: () => readonly { id: string }[]
   mainActions?: () => readonly (MainActionConfig | null)[] | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
@@ -213,10 +214,20 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       if (!item) return undefined
       if (item.type === 'launcherPage')
         return {
-          name: translate('settings.launcherPage', { page: item.page + 1 }),
+          name: translate('settings.launcherPage', {
+            page:
+              (deps.launcherPages?.() ?? []).findIndex(
+                (page) => page.id === item.pageId
+              ) + 1,
+          }),
           icon: 'mdi:view-grid-outline',
           action: async (text: string) => {
-            await deps.openLauncherPage?.(item.page, text)
+            await deps.openLauncherPage?.(
+              (deps.launcherPages?.() ?? []).findIndex(
+                (page) => page.id === item.pageId
+              ),
+              text
+            )
           },
         }
       if (item.type === 'standard') return defaults.get(item.actionId)

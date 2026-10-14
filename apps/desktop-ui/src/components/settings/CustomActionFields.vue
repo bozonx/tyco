@@ -37,9 +37,9 @@
         <div class="action-field-row">
           <FieldInput
             class="flex-1"
-            :value="script.workingDir"
+            :value="script.workingDirectory"
             :placeholder="t('settings.actionWorkingDirPlaceholder')"
-            @update:value="update('workingDir', $event)"
+            @update:value="update('workingDirectory', $event)"
           />
           <IconButton
             variant="ghost"
@@ -240,7 +240,7 @@ async function browseScript() {
 
 async function browseWorkingDir() {
   const res = await ipcStore.callFunctionOrNotify('pickDirectory', [])
-  if (typeof res.result === 'string') update('workingDir', res.result)
+  if (typeof res.result === 'string') update('workingDirectory', res.result)
 }
 
 // headers are edited as rows: a row with an empty name is still shown
@@ -274,7 +274,7 @@ const secretId = computed(() => webhook.value.authSecretId ?? '')
 const hasAuth = computed(
   () =>
     props.command.toolId === 'webhook' &&
-    Boolean(webhook.value.authSecret) &&
+    Boolean(webhook.value.isAuthEnabled) &&
     Object.hasOwn(llmStore.secrets, secretId.value)
 )
 const authOrigins = computed(
@@ -302,7 +302,7 @@ async function saveAuth() {
     update('authSecretId', newSecretId)
     await nextTick()
     authDraft.value = ''
-    update('authSecret', true)
+    update('isAuthEnabled', true)
   } catch (error) {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   }
@@ -311,7 +311,7 @@ async function saveAuth() {
 async function removeAuth() {
   try {
     const previousSecretId = secretId.value
-    update('authSecret', false)
+    update('isAuthEnabled', false)
     await nextTick()
     await session.persist()
     if (session.isSaved() && previousSecretId)
@@ -321,7 +321,7 @@ async function removeAuth() {
   }
 }
 
-if (props.command.toolId === 'webhook' && webhook.value.authSecret) {
+if (props.command.toolId === 'webhook' && webhook.value.isAuthEnabled) {
   llmStore.refreshSecrets().catch(() => {
     // the status only decides which placeholder is shown
   })

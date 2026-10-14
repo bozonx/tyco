@@ -97,7 +97,7 @@ describe('buildWebhookRequest', () => {
       webhook({
         id: 'ABC',
         headers: { 'X-Token': 't', ' ': 'skip' },
-        authSecret: true,
+        isAuthEnabled: true,
         authSecretId: 'webhook-auth-abc',
       }),
       'a'

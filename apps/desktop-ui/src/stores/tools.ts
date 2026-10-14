@@ -36,8 +36,9 @@ export const useToolsStore = defineStore('tools', () => {
   const { pasteIntoTargetAndHide } = useDesktopInsertion()
 
   const getLlmUnavailableReasonKey = (task: LlmTask) =>
-    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).tasks[task]
-      ?.length
+    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).taskModelChains[
+      task
+    ]?.length
       ? undefined
       : 'tools.noLlm'
 

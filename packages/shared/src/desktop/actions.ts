@@ -19,7 +19,7 @@ export interface EditorTransfer {
 export interface ScriptActionRequest {
   name: string
   command: string
-  workingDir?: string
+  workingDirectory?: string
   text: string
   /** The output is used: the command is waited for longer */
   captureOutput: boolean

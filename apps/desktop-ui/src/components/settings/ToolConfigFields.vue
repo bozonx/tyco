@@ -134,7 +134,7 @@ const stringValue = (name: string): string => {
 }
 
 const languageOptions = computed(() => {
-  const slots = (props.userConfig?.toTranslateLanguages ?? []).filter(
+  const slots = (props.userConfig?.translation.targetLanguages ?? []).filter(
     (language): language is string => Boolean(language)
   )
   const options = buildLanguageOptions(

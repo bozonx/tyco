@@ -56,7 +56,7 @@ afterEach(async () => {
 describe('settings session ownership', () => {
   it('retains a failed page-exit save for the next settings mount', async () => {
     const session = useSettingsSessionStore()
-    session.draft.theme = 'dark'
+    session.draft.appearance.theme = 'dark'
     mocks.save.mockResolvedValueOnce({ success: false, error: 'Unavailable' })
     await session.persist()
     expect(mocks.toastText).toHaveBeenCalledWith(
@@ -64,7 +64,7 @@ describe('settings session ownership', () => {
       'error'
     )
     const reopened = useSettingsSessionStore()
-    expect(reopened.draft.theme).toBe('dark')
+    expect(reopened.draft.appearance.theme).toBe('dark')
     expect(reopened.isSaved()).toBe(false)
     await reopened.persist()
     expect(reopened.isSaved()).toBe(true)

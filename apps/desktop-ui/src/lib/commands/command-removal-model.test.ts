@@ -11,7 +11,7 @@ describe('command removal model', () => {
       ...createCommand('webhook', 'test'),
       toolConfig: {
         url: 'https://example.com',
-        authSecret: true,
+        isAuthEnabled: true,
         authSecretId: 'webhook-auth-test',
       },
     }

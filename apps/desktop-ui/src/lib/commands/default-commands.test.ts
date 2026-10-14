@@ -52,7 +52,7 @@ const config = (extra: Partial<UserConfig> = {}): UserConfig => ({
 const registry = (...plugin: ToolDefinition[]) => {
   const tools = createToolRegistry([
     tool('core.correct', {
-      defaultAfterRun: 'replaceSelection',
+      defaultAfterRun: 'insertIntoWindow',
       defaultCommands: () => [{ id: 'fix', name: 'Fix' }],
     }),
     tool('core.copy'),
@@ -72,7 +72,7 @@ describe('seedDefaultCommands', () => {
     expect(seeded.commands[0]).toMatchObject({
       name: 'Fix',
       toolId: 'core.correct',
-      launcherAfterRun: { action: 'replaceSelection' },
+      launcherAfterRun: { action: 'insertIntoWindow' },
       availableIn: { external: false, chat: false },
       enabled: true,
     })
@@ -168,7 +168,9 @@ describe('seedDefaultCommands', () => {
 
 describe('createDefaultCommandsSync', () => {
   it('seeds the saved config and saves it back', async () => {
-    const saved: UserConfig = config({ theme: 'dark' })
+    const saved: UserConfig = config({
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+    })
     const saveUserConfig = vi.fn(async () => true)
     const sync = createDefaultCommandsSync({
       tools: () => registry(),

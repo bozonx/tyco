@@ -13,7 +13,10 @@
           { id: 'original', name: t('settings.imageQualityOriginal') },
         ]"
         @update:value="
-          emit('update:imageQuality', $event as UserConfig['chatImageQuality'])
+          emit(
+            'update:imageQuality',
+            $event as UserConfig['chat']['imageQuality']
+          )
         "
       />
     </FieldRow>
@@ -57,7 +60,7 @@
     >
       <div class="flex flex-col gap-2 w-full">
         <div
-          v-for="(modelId, index) in llm.tasks[task]"
+          v-for="(modelId, index) in llm.taskModelChains[task]"
           :key="`${task}-${index}`"
           class="assignment-row"
         >
@@ -72,7 +75,7 @@
             class="flex-1"
             :value="modelId"
             :options="modelOptions"
-            @update:value="llm.tasks[task][index] = String($event)"
+            @update:value="llm.taskModelChains[task][index] = String($event)"
           />
           <Button
             size="sm"
@@ -80,7 +83,7 @@
             square
             icon="mdi:close"
             :title="t('settings.removeFallback')"
-            @click="llm.tasks[task].splice(index, 1)"
+            @click="llm.taskModelChains[task].splice(index, 1)"
           />
         </div>
         <div>
@@ -92,7 +95,7 @@
             @click="addFallback(task)"
           >
             {{
-              llm.tasks[task].length
+              llm.taskModelChains[task].length
                 ? t('settings.addFallback')
                 : t('settings.addPrimaryModel')
             }}
@@ -148,11 +151,14 @@ import {
 const props = defineProps<{
   llm: LlmConfig
   aiRules?: UserConfig['aiRules']
-  imageQuality?: UserConfig['chatImageQuality']
+  imageQuality?: UserConfig['chat']['imageQuality']
 }>()
 const emit = defineEmits<{
   (event: 'providerRemoved', id: string): void
-  (event: 'update:imageQuality', value: UserConfig['chatImageQuality']): void
+  (
+    event: 'update:imageQuality',
+    value: UserConfig['chat']['imageQuality']
+  ): void
 }>()
 const { t } = useI18n()
 const { toastKey, toastText } = useToast()

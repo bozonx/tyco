@@ -129,7 +129,7 @@ const languageLabel = (id: string): string => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  ipcStore.desktopState.userConfig.toTranslateLanguages.map(
+  ipcStore.desktopState.userConfig.translation.targetLanguages.map(
     (lang: string | null) =>
       lang
         ? {

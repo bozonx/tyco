@@ -20,10 +20,6 @@
   "submitKey": "enter",
   "quickCorrectionPrefetch": false,
   "quickHideOnBlur": true,
-  "theme": "auto",
-  "contrast": "auto",
-  "motion": "auto",
-  "uiScale": 100,
   "windowInsertion": {
     "method": "xdotool",
     "xdotoolBin": "/usr/bin/xdotool",
@@ -32,13 +28,14 @@
   },
   "appLanguage": "auto",
   "userLanguage": "auto",
-  "toTranslateLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
   "translation": {
     "provider": "llm",
     "qualityGate": "off",
     "deeplEndpoint": "free",
     "glossary": [],
-    "correctionPrompt": ""
+    "correctionPrompt": "",
+    "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+    "viewMode": "split"
   },
   "mainActions": [
     { "type": "standard", "actionId": "insertIntoWindow" },
@@ -48,31 +45,7 @@
     { "type": "standard", "actionId": "translation" },
     { "type": "standard", "actionId": "askInChat" }
   ],
-  "launcherCommands": [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
-  ],
   "commands": [],
-  "editorHistoryStorage": "disk",
-  "editorHistoryMaxItems": 1000,
-  "editorHistoryRetentionDays": 30,
-  "sanitizeSecretsInEditorHistory": true,
-  "chatImageQuality": "balanced",
-  "chatHistoryEnabled": true,
-  "chatHistoryRetentionDays": 0,
   "llm": {
     "providers": [
       { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -122,31 +95,13 @@
         "canUseImages": true
       }
     ],
-    "tasks": {
+    "taskModelChains": {
       "translate": ["local-qwen"],
       "voiceCorrection": ["local-qwen"],
       "correction": ["local-qwen"],
       "aiTasks": ["local-qwen"]
     }
   },
-  "sttModels": [
-    {
-      "id": "deepgram-stt",
-      "provider": "deepgram",
-      "description": "Deepgram speech recognition",
-      "formatWithLlm": false,
-      "language": "auto",
-      "providerModelId": "nova-3"
-    },
-    {
-      "id": "sherpa-onnx-stt",
-      "provider": "sherpa-onnx",
-      "description": "Self-hosted sherpa-onnx streaming server",
-      "formatWithLlm": false,
-      "baseUrl": "ws://localhost:6006",
-      "providerModelId": "sherpa-onnx"
-    }
-  ],
   "aiRules": {
     "chat": "",
     "correction": "",
@@ -178,12 +133,71 @@
     "keepTaskCheckboxes": true
   },
   "plugins": {},
-  "selectedSttModelId": "deepgram-stt",
   "registrationState": {
     "reviewedMainActionIds": [],
     "seededCommandIds": [],
     "seededToolIds": []
   },
   "diffViewMode": "unified",
-  "translationViewMode": "split"
+  "appearance": {
+    "theme": "auto",
+    "contrast": "auto",
+    "motion": "auto",
+    "uiScale": 100
+  },
+  "editorHistory": {
+    "storage": "disk",
+    "maxItems": 1000,
+    "retentionDays": 30,
+    "sanitizeSecrets": true
+  },
+  "chat": {
+    "imageQuality": "balanced",
+    "isHistoryEnabled": true,
+    "historyRetentionDays": 0
+  },
+  "stt": {
+    "models": [
+      {
+        "id": "deepgram-stt",
+        "provider": "deepgram",
+        "description": "Deepgram speech recognition",
+        "formatWithLlm": false,
+        "language": "auto",
+        "providerModelId": "nova-3"
+      },
+      {
+        "id": "sherpa-onnx-stt",
+        "provider": "sherpa-onnx",
+        "description": "Self-hosted sherpa-onnx streaming server",
+        "formatWithLlm": false,
+        "baseUrl": "ws://localhost:6006",
+        "providerModelId": "sherpa-onnx"
+      }
+    ],
+    "selectedModelId": "deepgram-stt"
+  },
+  "launcherPages": [
+    {
+      "id": "main",
+      "slots": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "inputMode": "selection"
+    }
+  ]
 }

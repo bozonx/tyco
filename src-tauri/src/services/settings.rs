@@ -130,9 +130,6 @@ fn save_with(
         return Err(storage::newer_config_error());
     }
     let mut next = config_update::merge_config(&previous, &base, &next)?;
-    if config_version::config_version(&next) == 0 {
-        config_version::stamp_current_version(&mut next);
-    }
     config_schema::validate_user_config(&next)?;
     let mut pending = Some(host.protect(&mut next)?);
     let before = HistorySettings::from_config(&previous);

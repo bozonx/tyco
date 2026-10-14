@@ -286,11 +286,13 @@ impl ChatHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
         Self {
             enabled: user_config
-                .get("chatHistoryEnabled")
+                .get("chat")
+                .and_then(|value| value.get("isHistoryEnabled"))
                 .and_then(Value::as_bool)
                 .unwrap_or(true),
             retention_days: user_config
-                .get("chatHistoryRetentionDays")
+                .get("chat")
+                .and_then(|value| value.get("historyRetentionDays"))
                 .and_then(Value::as_u64)
                 .unwrap_or(0),
         }
@@ -648,10 +650,9 @@ mod tests {
             }
         );
         assert_eq!(
-            ChatHistoryPolicy::from_config(&json!({
-                "chatHistoryEnabled": false,
-                "chatHistoryRetentionDays": 30,
-            })),
+            ChatHistoryPolicy::from_config(
+                &json!({"chat":{"isHistoryEnabled":false,"historyRetentionDays":30}})
+            ),
             ChatHistoryPolicy {
                 enabled: false,
                 retention_days: 30,

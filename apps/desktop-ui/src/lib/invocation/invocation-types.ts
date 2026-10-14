@@ -17,7 +17,7 @@ export interface Invocation {
   /** The command it comes from; a built-in action has none */
   commandId?: string
   /** Fill a structured input from the text with the LLM */
-  llmArgumentParsing?: boolean
+  isLlmArgumentParsingEnabled?: boolean
   /** The tool writes its output to the action log */
   logOutput?: boolean
   /** Where quick commands send the output, see `resolveSink` */

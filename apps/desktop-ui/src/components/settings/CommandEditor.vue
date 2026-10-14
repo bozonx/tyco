@@ -271,7 +271,7 @@ function suggestName() {
 
 const afterRunOptions = computed(() => [
   { id: 'showMenu', name: t('commands.afterRunShowResult') },
-  { id: 'replaceSelection', name: t('commands.afterRunInsert') },
+  { id: 'insertIntoWindow', name: t('commands.afterRunInsert') },
   { id: 'copy', name: t('commands.afterRunCopy') },
   { id: 'none', name: t('settings.actionAfterRunNone') },
 ])

@@ -145,7 +145,7 @@
                 :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
               >
                 <FieldSelect
-                  v-model:value="userConfig.contrast"
+                  v-model:value="userConfig.appearance.contrast"
                   :disabled="isEInkTheme"
                   :options="contrastOptions"
                 />
@@ -155,14 +155,14 @@
                 :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
               >
                 <FieldSelect
-                  v-model:value="userConfig.motion"
+                  v-model:value="userConfig.appearance.motion"
                   :disabled="isEInkTheme"
                   :options="motionOptions"
                 />
               </FieldRow>
               <FieldRow :label="t('settings.uiScale')">
                 <FieldSelect
-                  :value="userConfig.uiScale"
+                  :value="userConfig.appearance.uiScale"
                   :options="uiScaleOptions"
                   @update:value="updateUiScale"
                 />
@@ -185,7 +185,7 @@
           <SettingsLanguagesTab
             v-else-if="currentTab === 'languages'"
             :user-config="userConfig"
-            @update:to-translate-languages="updateTranslateLanguages"
+            @update:target-languages="updateTranslateLanguages"
             @navigate="currentTab = $event"
           />
 
@@ -199,11 +199,7 @@
           <SettingsLauncherTab
             v-else-if="currentTab === 'launcher-commands'"
             :user-config="userConfig"
-            @update:launcher-commands="userConfig.launcherCommands = $event"
             @update:launcher-pages="updateLauncherPages"
-            @update:launcher-pages-without-text="
-              userConfig.launcherPagesWithoutText = $event
-            "
             @create-command="createLauncherCommand"
             @edit-command="editCommand"
           />
@@ -228,7 +224,7 @@
             v-else-if="currentTab === 'llm'"
             :llm="userConfig.llm"
             :ai-rules="userConfig.aiRules"
-            v-model:image-quality="userConfig.chatImageQuality"
+            v-model:image-quality="userConfig.chat.imageQuality"
             @provider-removed="finishProviderRemoval"
           />
 
@@ -468,7 +464,9 @@ const uiScaleOptions = UI_SCALES.map((scale) => ({
   name: `${scale}%`,
 }))
 
-const isEInkTheme = computed(() => userConfig.value.theme === 'e-ink')
+const isEInkTheme = computed(
+  () => userConfig.value.appearance.theme === 'e-ink'
+)
 
 const navigatorLanguages = computed(() => getNavigatorLanguages())
 
@@ -507,7 +505,7 @@ watch(
 )
 
 const updateTranslateLanguages = (languages: string[]) => {
-  userConfig.value.toTranslateLanguages = languages
+  userConfig.value.translation.targetLanguages = languages
 }
 
 const updateMainActions = (actions: (MainActionConfig | null)[]) => {
@@ -564,7 +562,7 @@ const updateUiScale = (value: string | number | undefined) => {
   const scale = Number(value)
 
   if (isUiScale(scale)) {
-    userConfig.value.uiScale = scale
+    userConfig.value.appearance.uiScale = scale
   }
 }
 

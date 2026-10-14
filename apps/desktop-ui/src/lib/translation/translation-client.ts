@@ -81,7 +81,10 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
         sourceLanguage: options.sourceLanguage,
         targetLanguage: options.targetLanguage,
         glossary,
-        qualityGate: config.qualityGate,
+        qualityGate:
+          config.qualityGate === 'onProblems'
+            ? 'on_problems'
+            : config.qualityGate,
         repairFailure: 'keep_first',
         firstPass: async () => {
           const result =

@@ -51,7 +51,9 @@ describe('createActionMenuModel', () => {
     const store = createActionMenuModel({
       ...deps,
       openLauncherPage,
-      mainActions: () => [{ type: 'launcherPage', page: 12 }],
+      launcherPages: () =>
+        Array.from({ length: 13 }, (_, index) => ({ id: `page-${index}` })),
+      mainActions: () => [{ type: 'launcherPage', pageId: 'page-12' }],
     })
     await store.getShortcutActions()[0]?.action('current text')
     expect(openLauncherPage).toHaveBeenCalledWith(12, 'current text')

@@ -44,36 +44,29 @@ describe('settings config preparation', () => {
       hotkeys: { editor: 123, write: 'Ctrl+W' },
       selectionHotkeys: { correction: false },
       launcherPages: 'invalid',
-      launcherPagesWithoutText: [null, -1, '2', 1.5, 2],
       registrationState: { reviewedMainActionIds: 'invalid' },
-      toTranslateLanguages: 'invalid',
-      chatHistoryRetentionDays: -1,
-      chatHistoryEnabled: 'false',
-      editorHistoryMaxItems: {},
+      translation: { targetLanguages: 'invalid' },
+      chat: { historyRetentionDays: -1, isHistoryEnabled: 'false' },
+
+      editorHistory: { maxItems: {} },
     }
     const original = structuredClone(input)
     const result = model().prepare(input)
     expect(input).toEqual(original)
-    expect(result.aiTasks.slice(0, 4)).toEqual([
-      null,
-      null,
-      null,
-      { id: 'task-1', name: '', rule: 'Translate' },
-    ])
+    expect(result.aiTasks.slice(0, 4)).toEqual([null, null, null, null])
     expect(result.aiRules).toEqual(DEFAULT_USER_CONFIG.aiRules)
     expect(result.windowInsertion).toEqual(DEFAULT_USER_CONFIG.windowInsertion)
     expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)
     expect(result.hotkeys.write).toBe('Ctrl+W')
-    expect(result.launcherPages).toEqual([])
-    expect(result.launcherPagesWithoutText).toEqual([])
-    expect(result.chatHistoryEnabled).toBe(
-      DEFAULT_USER_CONFIG.chatHistoryEnabled
+    expect(result.launcherPages).toEqual(DEFAULT_USER_CONFIG.launcherPages)
+    expect(result.chat.isHistoryEnabled).toBe(
+      DEFAULT_USER_CONFIG.chat.isHistoryEnabled
     )
-    expect(result.chatHistoryRetentionDays).toBe(
-      DEFAULT_USER_CONFIG.chatHistoryRetentionDays
+    expect(result.chat.historyRetentionDays).toBe(
+      DEFAULT_USER_CONFIG.chat.historyRetentionDays
     )
-    expect(result.editorHistoryMaxItems).toBe(
-      DEFAULT_USER_CONFIG.editorHistoryMaxItems
+    expect(result.editorHistory.maxItems).toBe(
+      DEFAULT_USER_CONFIG.editorHistory.maxItems
     )
     expect(model().prepare(result)).toEqual(result)
   })

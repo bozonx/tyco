@@ -1,8 +1,7 @@
-//! The schema version of the user config. A config without `configVersion`
-//! is version 0; a config newer than this build is left untouched and never
-//! written over.
+//! The supported config schema version. Future schemas are rejected without
+//! changing the saved file.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
 /// Both runtimes read the same portable schema version.
 pub const CONFIG_VERSION: u64 = shared_config_version();
@@ -36,16 +35,4 @@ pub fn config_version(user_config: &Value) -> u64 {
 /// A config written by a newer build: this one must not write over it.
 pub fn is_newer_than_supported(user_config: &Value) -> bool {
     config_version(user_config) > CONFIG_VERSION
-}
-
-/// Sets `configVersion` to the current one, unless it is there already.
-pub fn stamp_current_version(user_config: &mut Value) -> bool {
-    let Some(config) = user_config.as_object_mut() else {
-        return false;
-    };
-    if config.get(CONFIG_VERSION_KEY).and_then(Value::as_u64) == Some(CONFIG_VERSION) {
-        return false;
-    }
-    config.insert(String::from(CONFIG_VERSION_KEY), json!(CONFIG_VERSION));
-    true
 }

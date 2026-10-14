@@ -147,7 +147,7 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
         return { success: true, output: result.content }
       // a text taken from a selection is handed over to a selection run
       // instead, see `transform`; here there is nothing to replace
-      case 'replaceSelection':
+      case 'insertIntoWindow':
         return result.content === undefined
           ? finish(result)
           : insertOutput(result.content)

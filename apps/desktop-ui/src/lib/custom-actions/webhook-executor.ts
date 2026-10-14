@@ -79,7 +79,7 @@ export function buildWebhookRequest(
   for (const [name, value] of Object.entries(target.headers ?? {})) {
     if (name.trim()) headers[name.trim().toLowerCase()] = value
   }
-  if (target.authSecret) {
+  if (target.isAuthEnabled) {
     if (!target.authSecretId)
       throw new Error('Missing webhook authorization secret id')
     headers.authorization = secretRef(target.authSecretId)

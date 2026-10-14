@@ -180,7 +180,7 @@ describe('resolveToolInput', () => {
         tool: structured,
         config: {},
         text: 'x',
-        llmArgumentParsing: true,
+        isLlmArgumentParsingEnabled: true,
         context: { ...context(), llm: { extract } },
       })
     ).toEqual({ ok: true, input: { at: '9:00', text: 'bank' } })
@@ -189,7 +189,7 @@ describe('resolveToolInput', () => {
         tool: structured,
         config: {},
         text: 'x',
-        llmArgumentParsing: true,
+        isLlmArgumentParsingEnabled: true,
         context: context(),
       })
     ).toEqual({ ok: false, messageKey: 'toast.commandInputUnsupported' })

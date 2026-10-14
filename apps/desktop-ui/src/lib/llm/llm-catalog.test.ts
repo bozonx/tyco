@@ -34,8 +34,8 @@ describe('llm-catalog', () => {
   it('turns task chains into task classes', () => {
     const catalog = buildLlmCatalog(
       config({
-        tasks: {
-          ...DEFAULT_LLM_CONFIG.tasks,
+        taskModelChains: {
+          ...DEFAULT_LLM_CONFIG.taskModelChains,
           aiTasks: ['gemini-flash', 'deepseek-chat'],
         },
       })
@@ -61,7 +61,10 @@ describe('llm-catalog', () => {
         ...base.models,
         { id: 'blank', providerId: 'google', providerModelId: '  ' },
       ],
-      tasks: { ...base.tasks, aiTasks: ['blank', 'gemini-flash'] },
+      taskModelChains: {
+        ...base.taskModelChains,
+        aiTasks: ['blank', 'gemini-flash'],
+      },
     })!
 
     expect(catalog.find('local-qwen')).toBeUndefined()
@@ -88,7 +91,7 @@ describe('llm-catalog', () => {
           maxOutputTokens: 10_000_000,
         },
       ],
-      tasks: { ...base.tasks, aiTasks: ['a'] },
+      taskModelChains: { ...base.taskModelChains, aiTasks: ['a'] },
     })!
 
     expect(catalog.require('a').maxOutputTokens).toBe(1024)

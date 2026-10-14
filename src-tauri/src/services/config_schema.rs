@@ -76,6 +76,15 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
         }
         Some("array") => {
             let items = value.as_array().ok_or_else(|| invalid(path))?;
+            if schema["minItems"]
+                .as_u64()
+                .is_some_and(|min| items.len() < min as usize)
+                || schema["maxItems"]
+                    .as_u64()
+                    .is_some_and(|max| items.len() > max as usize)
+            {
+                return Err(invalid(path));
+            }
             for (index, item) in items.iter().enumerate() {
                 validate(item, &schema["items"], &format!("{path}[{index}]"))?;
                 if schema["uniqueItems"] == true && items[..index].contains(item) {
@@ -207,6 +216,18 @@ fn repair(value: &Value, schema: &Value) -> Value {
                     result.push(item);
                 }
             }
+            if let Some(max) = schema["maxItems"].as_u64() {
+                result.truncate(max as usize);
+            }
+            if let Some(min) = schema["minItems"].as_u64() {
+                while result.len() < min as usize {
+                    let item = repair(default_of(&schema["items"]), &schema["items"]);
+                    if validate(&item, &schema["items"], "").is_err() {
+                        return default_of(schema).clone();
+                    }
+                    result.push(item);
+                }
+            }
             Value::Array(result)
         }
         _ if validate(value, schema, "").is_ok() => value.clone(),
@@ -227,7 +248,8 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     for (collection, key) in [
         (&config["commands"], "commands"),
         (&config["aiTasks"], "aiTasks"),
-        (&config["sttModels"], "sttModels"),
+        (&config["stt"]["models"], "stt.models"),
+        (&config["launcherPages"], "launcherPages"),
         (&config["llm"]["providers"], "llm.providers"),
         (&config["llm"]["models"], "llm.models"),
     ] {
@@ -256,16 +278,21 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     let models = ids(&config["llm"], "models");
     let commands = ids(config, "commands");
     let tasks = ids(config, "aiTasks");
-    let stt = ids(config, "sttModels");
-    if !stt.contains(config["selectedSttModelId"].as_str().unwrap_or_default()) {
-        return Err(invalid("selectedSttModelId"));
+    let pages = ids(config, "launcherPages");
+    let stt = ids(&config["stt"], "models");
+    if !stt.contains(
+        config["stt"]["selectedModelId"]
+            .as_str()
+            .unwrap_or_default(),
+    ) {
+        return Err(invalid("stt.selectedModelId"));
     }
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
             return Err(invalid("llm.models.providerId"));
         }
     }
-    for chain in config["llm"]["tasks"]
+    for chain in config["llm"]["taskModelChains"]
         .as_object()
         .into_iter()
         .flat_map(|fields| fields.values())
@@ -277,7 +304,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             .filter_map(Value::as_str)
         {
             if !models.contains(id) {
-                return Err(invalid("llm.tasks"));
+                return Err(invalid("llm.taskModelChains"));
             }
         }
     }
@@ -292,37 +319,23 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
                 return Err(invalid("mainActions.taskId"))
             }
             Some("launcherPage")
-                if slot["page"].as_u64().unwrap_or(u64::MAX)
-                    > config["launcherPages"].as_array().map_or(0, Vec::len) as u64 =>
+                if !pages.contains(slot["pageId"].as_str().unwrap_or_default()) =>
             {
-                return Err(invalid("mainActions.page"))
+                return Err(invalid("mainActions.pageId"));
             }
             _ => {}
         }
     }
-    for slots in std::iter::once(&config["launcherCommands"])
-        .chain(config["launcherPages"].as_array().into_iter().flatten())
-    {
-        for id in slots
+    for page in config["launcherPages"].as_array().into_iter().flatten() {
+        for id in page["slots"]
             .as_array()
             .into_iter()
             .flatten()
             .filter_map(Value::as_str)
         {
             if !commands.contains(id) {
-                return Err(invalid("launcherCommands"));
+                return Err(invalid("launcherPages.slots"));
             }
-        }
-    }
-    for page in config["launcherPagesWithoutText"]
-        .as_array()
-        .into_iter()
-        .flatten()
-    {
-        if page.as_u64().unwrap_or(u64::MAX)
-            > config["launcherPages"].as_array().map_or(0, Vec::len) as u64
-        {
-            return Err(invalid("launcherPagesWithoutText"));
         }
     }
     Ok(())
@@ -342,7 +355,7 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
         if let Some(schema) = schema {
             validate(&command["toolConfig"], schema, "commands.toolConfig")?;
         }
-        if command["toolId"] == "webhook" && command["toolConfig"]["authSecret"] == true {
+        if command["toolId"] == "webhook" && command["toolConfig"]["isAuthEnabled"] == true {
             let id = command["toolConfig"]["authSecretId"]
                 .as_str()
                 .ok_or_else(|| invalid("commands.toolConfig.authSecretId"))?;
@@ -358,11 +371,12 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
     validate_references(config)
 }
 
-/// Repairs old files on startup; IPC saves reject invalid input instead.
+/// Repairs untrusted disk input; IPC saves reject invalid input instead.
 pub fn normalize_user_config(config: &mut Value) -> bool {
     let original = config.clone();
     *config = repair(config, &SCHEMA);
-    // Preserve platform defaults for fields not present in older files.
+    config["configVersion"] = json!(super::config_version::CONFIG_VERSION);
+    // Apply platform defaults when a field is missing.
     let defaults = crate::models::default_user_config();
     for (key, value) in defaults.as_object().into_iter().flatten() {
         if original.get(key).is_none() {
@@ -442,7 +456,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         }
     }
     deduplicate_by_id(&mut config["aiTasks"], true);
-    deduplicate_by_id(&mut config["sttModels"], false);
+    deduplicate_by_id(&mut config["stt"]["models"], false);
     deduplicate_by_id(&mut config["llm"]["providers"], false);
     deduplicate_by_id(&mut config["llm"]["models"], false);
     let provider_ids: HashSet<String> = ids(&config["llm"], "providers")
@@ -458,7 +472,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    if let Some(tasks) = config["llm"]["tasks"].as_object_mut() {
+    if let Some(tasks) = config["llm"]["taskModelChains"].as_object_mut() {
         for chain in tasks.values_mut().filter_map(Value::as_array_mut) {
             chain.retain(|id| model_ids.contains(id.as_str().unwrap_or_default()));
         }
@@ -471,7 +485,11 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    let page_count = config["launcherPages"].as_array().map_or(0, Vec::len) as u64;
+    deduplicate_by_id(&mut config["launcherPages"], false);
+    let page_ids: HashSet<String> = ids(config, "launcherPages")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
     if let Some(slots) = config["mainActions"].as_array_mut() {
         for slot in slots {
             let valid = match slot["type"].as_str() {
@@ -479,7 +497,9 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
                     command_ids.contains(slot["commandId"].as_str().unwrap_or_default())
                 }
                 Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
-                Some("launcherPage") => slot["page"].as_u64().unwrap_or(u64::MAX) <= page_count,
+                Some("launcherPage") => {
+                    page_ids.contains(slot["pageId"].as_str().unwrap_or_default())
+                }
                 _ => true,
             };
             if !valid {
@@ -487,24 +507,17 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
             }
         }
     }
-    clean_slots(&mut config["launcherCommands"], &command_ids);
-    if let Some(pages) = config
-        .get_mut("launcherPages")
-        .and_then(Value::as_array_mut)
-    {
+    if let Some(pages) = config["launcherPages"].as_array_mut() {
         for page in pages {
-            clean_slots(page, &command_ids);
+            clean_slots(&mut page["slots"], &command_ids);
         }
     }
-    if let Some(pages) = config
-        .get_mut("launcherPagesWithoutText")
-        .and_then(Value::as_array_mut)
-    {
-        pages.retain(|page| page.as_u64().is_some_and(|page| page <= page_count));
-    }
-    if !ids(config, "sttModels").contains(config["selectedSttModelId"].as_str().unwrap_or_default())
-    {
-        config["selectedSttModelId"] = config["sttModels"][0]["id"].clone();
+    if !ids(&config["stt"], "models").contains(
+        config["stt"]["selectedModelId"]
+            .as_str()
+            .unwrap_or_default(),
+    ) {
+        config["stt"]["selectedModelId"] = config["stt"]["models"][0]["id"].clone();
     }
     *config != original
 }
@@ -562,20 +575,22 @@ mod tests {
     #[test]
     fn rejects_bad_types_counts_duplicate_ids_and_dangling_references() {
         let defaults = crate::models::default_user_config();
-        for (key, value) in [
-            ("editorHistoryMaxItems", json!(1.5)),
-            ("chatHistoryRetentionDays", json!(-1)),
-            ("sttModels", json!("bad")),
-            ("selectedSttModelId", json!("missing")),
-            ("commands", json!([{"id":"a"}])),
+        for (path, value) in [
+            ("/editorHistory/maxItems", json!(1.5)),
+            ("/chat/historyRetentionDays", json!(-1)),
+            ("/stt/models", json!("bad")),
+            ("/stt/selectedModelId", json!("missing")),
+            ("/commands", json!([{"id":"a"}])),
             (
-                "mainActions",
+                "/mainActions",
                 json!([{"type":"command","commandId":"missing"}]),
             ),
+            ("/launcherPages/0/slots", json!([])),
+            ("/launcherPages", json!([])),
         ] {
             let mut config = defaults.clone();
-            config[key] = value;
-            assert!(validate_user_config(&config).is_err(), "{key}");
+            *config.pointer_mut(path).unwrap() = value;
+            assert!(validate_user_config(&config).is_err(), "{path}");
         }
         let mut config = defaults;
         let duplicate = config["llm"]["models"][0].clone();
@@ -589,8 +604,8 @@ mod tests {
     #[test]
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::models::default_user_config();
-        config["editorHistoryMaxItems"] = json!(1.5);
-        config["sttModels"][0]["formatWithLlm"] = json!("yes");
+        config["editorHistory"]["maxItems"] = json!(1.5);
+        config["stt"]["models"][0]["formatWithLlm"] = json!("yes");
         config["mainActions"] = json!([{"type":"command","commandId":"missing"}]);
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();

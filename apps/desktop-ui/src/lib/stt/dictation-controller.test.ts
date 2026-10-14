@@ -14,8 +14,8 @@ function setup(
   }
 ) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
-  config.sttModels = [model]
-  config.selectedSttModelId = model.id
+  config.stt.models = [model]
+  config.stt.selectedModelId = model.id
   config.userLanguage = 'es_AR'
   const secrets: SecretsStatus = { deepgram: { origins: [], available: true } }
   const deps = {
@@ -113,14 +113,14 @@ describe('dictation controller', () => {
   it('uses the latest configuration for each session and formatting preference', async () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)
-    config.sttModels[0].formatWithLlm = true
-    config.sttModels[0].language = 'en_US'
+    config.stt.models[0].formatWithLlm = true
+    config.stt.models[0].language = 'en_US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en' })
     )
-    config.selectedSttModelId = 'missing'
+    config.stt.selectedModelId = 'missing'
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.modelNotFound'
     )

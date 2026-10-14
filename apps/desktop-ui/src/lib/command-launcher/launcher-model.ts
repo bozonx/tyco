@@ -2,6 +2,7 @@ import { computed, ref, shallowRef } from 'vue'
 
 import type {
   CommandConfig,
+  LauncherPageConfig,
   CommandRunRecord,
   CommandRunSource,
   LauncherRequest,
@@ -107,10 +108,7 @@ export interface CommandLauncherDependencies {
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
   /** The 15 slots of the command overlay */
-  launcherPages?: () => readonly (readonly (string | null)[])[] | undefined
-  launcherCommands?: () => readonly (string | null)[] | undefined
-  /** The pages whose commands run without the selection */
-  launcherPagesWithoutText?: () => readonly number[] | undefined
+  launcherPages: () => readonly LauncherPageConfig[]
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
   /** Runs the command and tells the user how it went */
@@ -135,7 +133,7 @@ export interface CommandLauncherDependencies {
 export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   let disposed = false
   const pageIndex = ref(0)
-  const pageCount = computed(() => 1 + (deps.launcherPages?.()?.length ?? 0))
+  const pageCount = computed(() => deps.launcherPages().length)
   const setPage = (index: number) => {
     if (Number.isInteger(index) && index >= 0 && index < pageCount.value)
       pageIndex.value = index
@@ -159,7 +157,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** The commands take the selection: not dropped, nor on a page without text */
   const selectionAllowed = () =>
     !selectionDropped.value &&
-    !deps.launcherPagesWithoutText?.()?.includes(pageIndex.value)
+    deps.launcherPages()[pageIndex.value]?.inputMode !== 'none'
   /** The selection the commands take, empty when not allowed */
   const currentSelection = () =>
     selectionAllowed() ? (deps.selectedText() ?? '') : ''
@@ -179,10 +177,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   )
 
   const slotCommands = computed<(CommandConfig | null)[]>(() => {
-    const rawSlots =
-      pageIndex.value === 0
-        ? deps.launcherCommands?.()
-        : deps.launcherPages?.()?.[pageIndex.value - 1]
+    const rawSlots = deps.launcherPages()[pageIndex.value]?.slots
     const all = deps.commands() ?? []
     if (rawSlots && rawSlots.length > 0) {
       return Array.from({ length: 15 }, (_, index) => {
@@ -265,7 +260,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   ): Promise<InvocationOutcome> => {
     if (
       source === 'launcher' &&
-      commandAfterRun(command, source) === 'replaceSelection' &&
+      commandAfterRun(command, source) === 'insertIntoWindow' &&
       input !== null &&
       fromSelection &&
       deps.replaceSelection

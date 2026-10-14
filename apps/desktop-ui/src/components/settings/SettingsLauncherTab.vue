@@ -26,7 +26,7 @@
         />
         <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
       </div>
-      <Button :disabled="page === 0" size="sm" @click="removePage">{{
+      <Button :disabled="pagesCount <= 1" size="sm" @click="removePage">{{
         t('settings.removeLauncherPage')
       }}</Button>
     </div>
@@ -79,14 +79,16 @@ import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import type { BuiltinToolId, UserConfig } from '@tyco/shared'
+import type {
+  BuiltinToolId,
+  LauncherPageConfig,
+  UserConfig,
+} from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
 
 const emit = defineEmits<{
-  (event: 'update:launcherPages', value: (string | null)[][]): void
-  (event: 'update:launcherCommands', value: (string | null)[]): void
-  (event: 'update:launcherPagesWithoutText', value: number[]): void
+  (event: 'update:launcherPages', value: LauncherPageConfig[]): void
   /** A new command of the library goes to the slot at `index` */
   (
     event: 'createCommand',
@@ -105,59 +107,52 @@ const toolsStore = useToolsStore()
 const commands = computed(() => normalizeCommands(props.userConfig.commands))
 
 const page = ref(0)
-const pagesCount = computed(
-  () => 1 + (props.userConfig.launcherPages?.length ?? 0)
-)
+const pagesCount = computed(() => props.userConfig.launcherPages.length)
 watch(pagesCount, (count) => {
   if (page.value >= count) {
     page.value = Math.max(0, count - 1)
   }
 })
 function addPage() {
-  const pages = [
-    ...(props.userConfig.launcherPages ?? []),
-    Array<string | null>(15).fill(null),
+  const pages: LauncherPageConfig[] = [
+    ...props.userConfig.launcherPages,
+    {
+      id: crypto.randomUUID(),
+      slots: Array<string | null>(15).fill(null),
+      inputMode: 'selection',
+    },
   ]
   emit('update:launcherPages', pages)
-  page.value = pages.length
+  page.value = pages.length - 1
 }
 function removePage() {
-  if (!page.value) return
+  if (pagesCount.value <= 1) return
   emit(
     'update:launcherPages',
-    (props.userConfig.launcherPages ?? []).filter(
-      (_, index) => index !== page.value - 1
-    )
+    props.userConfig.launcherPages.filter((_, index) => index !== page.value)
   )
   page.value = Math.max(0, page.value - 1)
 }
-/** The commands of the page get the selection of the window */
 const takesText = computed(
-  () => !props.userConfig.launcherPagesWithoutText?.includes(page.value)
+  () => props.userConfig.launcherPages[page.value]?.inputMode === 'selection'
 )
-function setTakesText(value: boolean) {
-  const pages = (props.userConfig.launcherPagesWithoutText ?? []).filter(
-    (item) => item !== page.value
-  )
-  if (!value) pages.push(page.value)
+function updatePage(values: Partial<LauncherPageConfig>) {
   emit(
-    'update:launcherPagesWithoutText',
-    pages.sort((a, b) => a - b)
+    'update:launcherPages',
+    props.userConfig.launcherPages.map((item, index) =>
+      index === page.value ? { ...item, ...values } : item
+    )
   )
 }
+function setTakesText(value: boolean) {
+  updatePage({ inputMode: value ? 'selection' : 'none' })
+}
 function updateSlots(slots: (string | null)[]) {
-  if (!page.value) emit('update:launcherCommands', slots)
-  else {
-    const pages = [...(props.userConfig.launcherPages ?? [])]
-    pages[page.value - 1] = slots
-    emit('update:launcherPages', pages)
-  }
+  updatePage({ slots })
 }
 const launcherSlots = computed(() =>
   normalizeLauncherCommands(
-    page.value
-      ? props.userConfig.launcherPages?.[page.value - 1]
-      : props.userConfig.launcherCommands,
+    props.userConfig.launcherPages[page.value]?.slots,
     commands.value
   )
 )

@@ -174,18 +174,12 @@ fn write_jsonl<T: Serialize>(path: &Path, items: &[T]) -> Result<(), AppError> {
     write_private(path, &raw)
 }
 
-/// How many entries to keep; 0 turns the history off. A missing or invalid
-/// value falls back to `default`. Numeric strings are accepted, as older
-/// settings screens stored the field as text
-fn history_limit(user_config: &Value, key: &str, default: usize) -> usize {
-    let value = user_config.get(key);
-    let parsed = match value {
-        Some(Value::Number(number)) => number.as_u64(),
-        Some(Value::String(text)) => text.trim().parse::<u64>().ok(),
-        _ => None,
-    };
-
-    parsed
+/// How many entries to keep; 0 turns the history off. Missing or invalid
+/// numbers use the domain default; serialized numeric strings are not accepted.
+fn history_limit(config: &Value, key: &str, default: usize) -> usize {
+    config
+        .get(key)
+        .and_then(Value::as_u64)
         .and_then(|value| usize::try_from(value).ok())
         .unwrap_or(default)
 }
@@ -236,11 +230,11 @@ mod tests {
     }
 
     #[test]
-    fn history_limit_reads_a_number_or_a_numeric_string() {
+    fn history_limit_accepts_numbers_and_rejects_numeric_strings() {
         let config = json!({ "editorHistoryLimit": 5, "chatHistoryLimit": " 7 " });
 
         assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 5);
-        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 7);
+        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 50);
     }
 
     #[test]
@@ -248,7 +242,7 @@ mod tests {
         let config = json!({ "editorHistoryLimit": 0, "chatHistoryLimit": "0" });
 
         assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 0);
-        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 0);
+        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 50);
     }
 
     #[test]

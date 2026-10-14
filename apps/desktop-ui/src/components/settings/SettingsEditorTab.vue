@@ -79,10 +79,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import type { MarkdownSettings, UserConfig } from '@tyco/shared'
-import {
-  normalizeMarkdownCleanSettings,
-  normalizeMarkdownSettings,
-} from '@tyco/shared'
+import { normalizeMarkdownSettings } from '@tyco/shared'
 
 const props = defineProps<{
   userConfig: Pick<UserConfig, 'markdown' | 'markdownClean'>
@@ -90,15 +87,8 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-if (!props.userConfig.markdown) {
-  props.userConfig.markdown = normalizeMarkdownSettings(undefined)
-}
-if (!props.userConfig.markdownClean) {
-  props.userConfig.markdownClean = normalizeMarkdownCleanSettings(undefined)
-}
-
-const markdown = computed(() => props.userConfig.markdown!)
-const markdownClean = computed(() => props.userConfig.markdownClean!)
+const markdown = computed(() => props.userConfig.markdown)
+const markdownClean = computed(() => props.userConfig.markdownClean)
 
 function updateMarkdown(
   name: keyof Omit<MarkdownSettings, 'incrementListMarker'>,

@@ -4,7 +4,7 @@ import type { EditorInputSnapshot } from './plugin.js'
 export type CommandRunSource =
   'menu' | 'toolbar' | 'launcher' | 'external' | 'chat' | 'selection'
 export type CustomActionAfterRun =
-  'none' | 'showMenu' | 'replaceSelection' | 'copy'
+  'none' | 'showMenu' | 'insertIntoWindow' | 'copy'
 
 /**
  * A JSON Schema as MCP tools describe their input; only the parts the app

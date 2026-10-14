@@ -45,6 +45,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         text,
       ])
     },
+    launcherPages: () => ipcStore.desktopState.userConfig.launcherPages,
     mainActions: () => ipcStore.desktopState.userConfig.mainActions,
     commands: () => ipcStore.desktopState.userConfig.commands,
     aiTasks: () => ipcStore.desktopState.userConfig.aiTasks,

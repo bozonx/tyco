@@ -121,7 +121,9 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
       if (options.signal?.aborted) return ''
       const config = deps.getConfig()
       const chain =
-        options.models ?? (task === 'chat' ? [] : config.tasks[task]) ?? []
+        options.models ??
+        (task === 'chat' ? [] : config.taskModelChains[task]) ??
+        []
       const candidates = chain
         .map((id) => config.models.find((model) => model.id === id))
         .filter((model) => model !== undefined)
@@ -145,10 +147,10 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
           throw new LlmError('timeout', 'The language model request timed out')
         let emittedText = false
         let streamedText = ''
-        // the catalog's task classes come from `tasks`; the chat is one too
+        // the catalog's task classes come from `taskModelChains`; the chat is one too
         const scopedConfig = {
           ...config,
-          tasks: { ...config.tasks, [task]: [model.id] },
+          taskModelChains: { ...config.taskModelChains, [task]: [model.id] },
         } as LlmConfig
         try {
           const kit = kitFor(scopedConfig)

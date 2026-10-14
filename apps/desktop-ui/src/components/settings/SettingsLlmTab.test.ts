@@ -110,7 +110,7 @@ describe('SettingsLlmTab.vue', () => {
   const baseLlmConfig = {
     providers: [],
     models: [],
-    tasks: {
+    taskModelChains: {
       translate: [],
       voiceCorrection: [],
       correction: [],

@@ -12,15 +12,18 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     desktopState: {
       userConfig: {
-        selectedSttModelId: 'speech',
-        sttModels: [
-          {
-            id: 'speech',
-            provider: mocks.provider,
-            providerModelId: 'nova-3',
-            baseUrl: 'ws://localhost:6006',
-          },
-        ],
+        stt: {
+          selectedModelId: 'speech',
+          models: [
+            {
+              id: 'speech',
+              provider: mocks.provider,
+              providerModelId: 'nova-3',
+              baseUrl: 'ws://localhost:6006',
+            },
+          ],
+        },
+
         userLanguage: 'en_US',
       },
     },

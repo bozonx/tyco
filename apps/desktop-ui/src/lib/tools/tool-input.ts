@@ -57,11 +57,11 @@ export function schemaShape(schema: JsonSchema): SchemaShape {
 export function toolInputKind(
   tool: RegisteredTool,
   config: Record<string, unknown>,
-  llmArgumentParsing = false
+  isLlmArgumentParsingEnabled = false
 ): ToolInputKind | null {
   const shape = schemaShape(toolInputSchema(tool, config))
   if (shape !== 'structured') return shape
-  return tool.parseText || llmArgumentParsing ? 'parsed' : null
+  return tool.parseText || isLlmArgumentParsingEnabled ? 'parsed' : null
 }
 
 const typeMatches = (schema: JsonSchema, value: unknown): boolean => {
@@ -113,7 +113,7 @@ export interface ToolInputRequest {
   tool: RegisteredTool
   config: Record<string, unknown>
   text: string
-  llmArgumentParsing?: boolean
+  isLlmArgumentParsingEnabled?: boolean
   context: Omit<ToolParseContext, 'config'>
 }
 
@@ -134,7 +134,7 @@ export async function resolveToolInput(
   let parsed: ParseResult
   if (tool.parseText) {
     parsed = await tool.parseText(text, { ...context, config })
-  } else if (request.llmArgumentParsing && context.llm) {
+  } else if (request.isLlmArgumentParsingEnabled && context.llm) {
     parsed = {
       ok: true,
       input: await context.llm.extract(text, schema, tool.description),

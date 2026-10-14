@@ -30,21 +30,20 @@ describe('SettingsHistoryTab.vue', () => {
 
   const createConfig = (
     overrides = {}
-  ): Pick<
-    UserConfig,
-    | 'editorHistoryStorage'
-    | 'editorHistoryMaxItems'
-    | 'editorHistoryRetentionDays'
-    | 'sanitizeSecretsInEditorHistory'
-    | 'chatHistoryEnabled'
-    | 'chatHistoryRetentionDays'
-  > => ({
-    editorHistoryStorage: 'disk',
-    editorHistoryMaxItems: 100,
-    editorHistoryRetentionDays: 30,
-    sanitizeSecretsInEditorHistory: true,
-    chatHistoryEnabled: true,
-    chatHistoryRetentionDays: 0,
+  ): Pick<UserConfig, 'editorHistory' | 'chat'> => ({
+    editorHistory: {
+      storage: 'disk',
+      maxItems: 100,
+      retentionDays: 30,
+      sanitizeSecrets: true,
+    },
+
+    chat: {
+      imageQuality: 'balanced',
+      isHistoryEnabled: true,
+      historyRetentionDays: 0,
+    },
+
     ...overrides,
   })
 
@@ -105,7 +104,9 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   it('renders editor history rows when storage is disk', () => {
-    const wrapper = mountTab(createConfig({ editorHistoryStorage: 'disk' }))
+    const wrapper = mountTab(
+      createConfig({ editorHistory: { storage: 'disk' } })
+    )
 
     const editorSection = wrapper.findAll('.section-stub')[0]
     expect(
@@ -131,7 +132,9 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   it('hides retention and secret masking when storage is session', () => {
-    const wrapper = mountTab(createConfig({ editorHistoryStorage: 'session' }))
+    const wrapper = mountTab(
+      createConfig({ editorHistory: { storage: 'session' } })
+    )
 
     const editorSection = wrapper.findAll('.section-stub')[0]
     expect(
@@ -157,7 +160,9 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   it('hides all nested options when storage is off', () => {
-    const wrapper = mountTab(createConfig({ editorHistoryStorage: 'off' }))
+    const wrapper = mountTab(
+      createConfig({ editorHistory: { storage: 'off' } })
+    )
 
     const editorSection = wrapper.findAll('.section-stub')[0]
     expect(
@@ -225,11 +230,11 @@ describe('SettingsHistoryTab.vue', () => {
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(false)
-    expect(config.chatHistoryEnabled).toBe(true)
+    expect(config.chat.isHistoryEnabled).toBe(true)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
 
     await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.chatHistoryEnabled).toBe(true)
+    expect(config.chat.isHistoryEnabled).toBe(true)
     expect(
       (chatSection.find('.field-checkbox-stub').element as HTMLInputElement)
         .checked
@@ -237,7 +242,7 @@ describe('SettingsHistoryTab.vue', () => {
 
     await chatSection.find('.field-checkbox-stub').setValue(false)
     await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.chatHistoryEnabled).toBe(false)
+    expect(config.chat.isHistoryEnabled).toBe(false)
     expect(
       wrapper
         .findAll('.section-stub')[1]
@@ -247,13 +252,13 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   it('turns the chat history on without asking', async () => {
-    const config = createConfig({ chatHistoryEnabled: false })
+    const config = createConfig({ chat: { isHistoryEnabled: false } })
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(true)
 
-    expect(config.chatHistoryEnabled).toBe(true)
+    expect(config.chat.isHistoryEnabled).toBe(true)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

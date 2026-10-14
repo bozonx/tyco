@@ -64,8 +64,8 @@ describe('normalizeCommand', () => {
       name: '',
       phrases: [],
       toolId: 'script',
-      toolConfig: { command: 'echo', workingDir: '' },
-      llmArgumentParsing: false,
+      toolConfig: { command: 'echo', workingDirectory: '' },
+      isLlmArgumentParsingEnabled: false,
       launcherAfterRun: { action: 'none' },
       logOutput: false,
       availableIn: { external: false, chat: false },
@@ -83,15 +83,15 @@ describe('normalizeCommand', () => {
     expect(command).not.toHaveProperty('afterRun')
   })
 
-  it('keeps the action and drops the fallback of older configs', () => {
+  it('keeps the action and ignores unsupported settings', () => {
     expect(
       normalizeCommand({
         id: 'new',
         toolId: 'script',
         afterRun: 'copy',
-        launcherAfterRun: { action: 'replaceSelection', fallback: 'copy' },
+        launcherAfterRun: { action: 'insertIntoWindow', fallback: 'copy' },
       })?.launcherAfterRun
-    ).toEqual({ action: 'replaceSelection' })
+    ).toEqual({ action: 'insertIntoWindow' })
     expect(
       normalizeCommand({
         id: 'partial',
@@ -118,7 +118,7 @@ describe('normalizeCommand', () => {
       method: 'POST',
       headers: { 'x-a': '1' },
       payloadTemplate: '',
-      authSecret: false,
+      isAuthEnabled: false,
     })
   })
 
@@ -333,10 +333,10 @@ describe('external names', () => {
 describe('commands of the core tools', () => {
   it('start with the settings and the output handling of their tool', () => {
     const translate = createCommand('core.translate', 't', {
-      defaultAfterRun: 'replaceSelection',
+      defaultAfterRun: 'insertIntoWindow',
     })
     expect(translate.toolConfig).toEqual({ language: '' })
-    expect(translate.launcherAfterRun).toEqual({ action: 'replaceSelection' })
+    expect(translate.launcherAfterRun).toEqual({ action: 'insertIntoWindow' })
     expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
   })
@@ -377,11 +377,11 @@ describe('normalizeLauncherCommands', () => {
   })
 
   it('leaves missing slots empty instead of reading removed launcher flags', () => {
-    const legacyCmd = {
+    const configuredCommand = {
       ...createCommand('script', 'leg1'),
       availableIn: { launcher: true, external: true, chat: false },
     }
-    const slots = normalizeLauncherCommands(undefined, [legacyCmd])
+    const slots = normalizeLauncherCommands(undefined, [configuredCommand])
     expect(slots).toHaveLength(15)
     expect(slots.every((slot) => slot === null)).toBe(true)
     expect(slots[1]).toBeNull()
@@ -453,9 +453,9 @@ describe('commandAfterRun', () => {
   it('uses quick-command settings only in their matching context', () => {
     const command = {
       ...createCommand('script'),
-      launcherAfterRun: { action: 'replaceSelection' as const },
+      launcherAfterRun: { action: 'insertIntoWindow' as const },
     }
-    expect(commandAfterRun(command, 'launcher')).toBe('replaceSelection')
+    expect(commandAfterRun(command, 'launcher')).toBe('insertIntoWindow')
     expect(commandAfterRun(command, 'menu')).toBe('showMenu')
     expect(commandAfterRun(command, 'external')).toBe('return')
   })

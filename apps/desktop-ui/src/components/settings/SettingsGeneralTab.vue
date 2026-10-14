@@ -3,7 +3,7 @@
     <SettingsSection :title="t('settings.sectionAppearance')">
       <FieldRow :label="t('settings.theme')">
         <SegmentedControl
-          v-model:value="userConfig.theme"
+          v-model:value="userConfig.appearance.theme"
           :label="t('settings.theme')"
           :options="themeOptions"
         />

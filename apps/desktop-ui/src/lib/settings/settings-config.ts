@@ -6,12 +6,8 @@ import {
   type MainActionConfig,
   type AppearanceSettings,
 } from '@tyco/shared'
-import { withAiTaskIds } from '../ai-tasks/custom-prompt'
 import { normalizeMainActions } from '../action-menu/main-actions'
-import {
-  normalizeCommands,
-  normalizeLauncherCommands,
-} from '../commands/command-config'
+import { normalizeCommands } from '../commands/command-config'
 import { normalizeLlmConfig } from '../llm/llm-config'
 import { AUTO_LANGUAGE_VALUE } from '../locale/language'
 import { applyPluginDefaults } from '../plugins/plugin-config'
@@ -48,15 +44,13 @@ const stringRecordOf = (value: unknown): Record<string, string> =>
 
 function normalizeAiTasks(value: unknown): UserConfig['aiTasks'] {
   const source: unknown[] = Array.isArray(value) ? value : []
-  return withAiTaskIds(
-    normalizeShortcutSlots(source).map((task) => {
-      if (!isRecord(task)) return null
-      const name = stringOf(task.name)
-      const rule = stringOf(task.rule)
-      if (!name.trim() && !rule.trim()) return null
-      return { id: stringOf(task.id), name, rule }
-    })
-  )
+  return normalizeShortcutSlots(source).map((task) => {
+    if (!isRecord(task)) return null
+    const name = stringOf(task.name)
+    const rule = stringOf(task.rule)
+    if (!stringOf(task.id).trim() || (!name.trim() && !rule.trim())) return null
+    return { id: stringOf(task.id), name, rule }
+  })
 }
 
 /** Normalizes the input without changing the persisted source object. */
@@ -68,6 +62,7 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
     )
     const input = recordOf(cloned)
     const defaults = DEFAULT_USER_CONFIG
+    const translation = recordOf(input.translation)
     const insertion = recordOf(input.windowInsertion)
     const selectionHotkeys = recordOf(input.selectionHotkeys)
     const registrationState = recordOf(input.registrationState)
@@ -77,7 +72,7 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
     // repairs field types, enums and defaults, and drops unknown fields.
     const next: Record<string, unknown> = {
       ...input,
-      ...normalizeAppearance({ ...deps.appearance(), ...input }),
+      appearance: normalizeAppearance(input.appearance ?? deps.appearance()),
       hotkeys: { ...defaults.hotkeys, ...stringRecordOf(input.hotkeys) },
       selectionHotkeys: {
         correction: stringOf(
@@ -94,11 +89,14 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
       },
       appLanguage: stringOf(input.appLanguage) || AUTO_LANGUAGE_VALUE,
       userLanguage: stringOf(input.userLanguage) || AUTO_LANGUAGE_VALUE,
-      toTranslateLanguages: normalizeShortcutSlots<unknown>(
-        Array.isArray(input.toTranslateLanguages)
-          ? input.toTranslateLanguages
-          : []
-      ).map((language) => (typeof language === 'string' ? language : null)),
+      translation: {
+        ...recordOf(input.translation),
+        targetLanguages: normalizeShortcutSlots<unknown>(
+          Array.isArray(translation.targetLanguages)
+            ? translation.targetLanguages
+            : []
+        ).map((language) => (typeof language === 'string' ? language : null)),
+      },
       mainActions: deps.resolveMainActions(
         normalizeMainActions(input.mainActions),
         registrations
@@ -116,23 +114,8 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
         ],
       },
       commands,
-      launcherCommands: normalizeLauncherCommands(
-        input.launcherCommands,
-        commands
-      ),
-      launcherPages: Array.isArray(input.launcherPages)
-        ? input.launcherPages.map((page: unknown) =>
-            normalizeLauncherCommands(page, commands)
-          )
-        : [],
-      launcherPagesWithoutText: Array.isArray(input.launcherPagesWithoutText)
-        ? input.launcherPagesWithoutText.filter(
-            (page): page is number =>
-              typeof page === 'number' && Number.isInteger(page) && page >= 0
-          )
-        : [],
       llm: normalizeLlmConfig(input.llm),
-      ...normalizeSttConfig(input),
+      stt: normalizeSttConfig(input.stt),
       aiTasks: normalizeAiTasks(input.aiTasks),
       plugins: applyPluginDefaults(
         deps.pluginFactories(),

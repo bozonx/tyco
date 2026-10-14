@@ -32,7 +32,9 @@ describe('corrector configuration ownership', () => {
           correction: 'New rules',
         }
       if (setting === 'models')
-        ipc.desktopState.userConfig.llm.tasks.correction = ['another-model']
+        ipc.desktopState.userConfig.llm.taskModelChains.correction = [
+          'another-model',
+        ]
       // Simulate a new backend instruction snapshot; production defaults have literal types.
       if (setting === 'instructions')
         Reflect.set(

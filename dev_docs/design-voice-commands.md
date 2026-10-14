@@ -232,7 +232,7 @@ also fail explicitly.
 (нужна LLM) известны только webview, поэтому быстрое окно при загрузке и
 перезагрузке плагинов передаёт в Rust **каталог инструментов**
 (`set_tool_catalog`): `{ id, input: 'none' | 'text' | 'parsed' | 'structured', available, reason? }` (`structured` — вход, который из текста может заполнить
-только LLM: такая команда принимает текст лишь с `llmArgumentParsing`). Rust хранит его в памяти и по нему решает «инструмент
+только LLM: такая команда принимает текст лишь с `isLlmArgumentParsingEnabled`). Rust хранит его в памяти и по нему решает «инструмент
 недоступен», «принимает ли команда текст» (`tyco-ctl commands list`, фон или оверлей).
 Пока каталог не пришёл (первые секунды после запуска), команда незнакомого
 Rust инструмента получает ошибку «инструменты ещё загружаются»; `script` и
@@ -338,7 +338,7 @@ Rust инструмента получает ошибку «инструмент
    номер слота, как глобальные действия над выделением (`SelectionAction`):
    слоты можно переставить или очистить, и команда «Перевести на английский»
    молча начала бы переводить на другой язык. Редактор команды предлагает
-   заполнить поля из слотов (выбор языка из `toTranslateLanguages`, «взять
+   заполнить поля из слотов (выбор языка из `translation.targetLanguages`, «взять
    инструкцию из AI-задачи»), но копирует значение. Перевод, коррекция и
    AI-задача без настроенной LLM помечаются недоступными, как команды
    выключенного плагина (§5.2).
@@ -529,7 +529,7 @@ export interface CommandConfig {
    * Fill a structured input from text with the LLM; only for tools that take a
    * structured input and do not parse text themselves (§5.2)
    */
-  llmArgumentParsing: boolean
+  isLlmArgumentParsingEnabled: boolean
   /** What to do with text the tool returns (§3.2) */
   afterRun: 'none' | 'showMenu' | 'replaceSelection' | 'copy'
   logOutput: boolean
@@ -784,13 +784,13 @@ export interface PluginContext {
 или ничего**. Распознаватель не знает структуру входа и не пытается её
 заполнить. Как превратить текст во вход, решает инструмент:
 
-| Инструмент                                                | Голос, меню, извне                                 |
-| --------------------------------------------------------- | -------------------------------------------------- |
-| `NO_INPUT_SCHEMA`                                         | без текста                                         |
-| `TEXT_INPUT_SCHEMA`                                       | текст как есть → `{ text }`                        |
-| другая схема + `parseText`                                | текст → `parseText` → вход                         |
-| другая схема без `parseText`, `llmArgumentParsing: true`  | текст → `llm.extract` по `inputSchema` → вход      |
-| другая схема без `parseText`, `llmArgumentParsing: false` | недоступна; только в чате, в настройках помечается |
+| Инструмент                                                         | Голос, меню, извне                                 |
+| ------------------------------------------------------------------ | -------------------------------------------------- |
+| `NO_INPUT_SCHEMA`                                                  | без текста                                         |
+| `TEXT_INPUT_SCHEMA`                                                | текст как есть → `{ text }`                        |
+| другая схема + `parseText`                                         | текст → `parseText` → вход                         |
+| другая схема без `parseText`, `isLlmArgumentParsingEnabled: true`  | текст → `llm.extract` по `inputSchema` → вход      |
+| другая схема без `parseText`, `isLlmArgumentParsingEnabled: false` | недоступна; только в чате, в настройках помечается |
 
 Почему так:
 
@@ -1227,7 +1227,7 @@ Rust:
    медиа, «Открыть». FastNote, поиск, перевод, AI-задача, вставка и буфер
    обмена уже есть после этапа 4.
 8. **Разбор аргумента через LLM.** `llm.extract` в `ToolParseContext`,
-   `llmArgumentParsing` у команд; первый потребитель — напоминания.
+   `isLlmArgumentParsingEnabled` у команд; первый потребитель — напоминания.
 9. **Агентный чат и MCP** (§12).
 10. **Плагины внешних сервисов** по спросу.
 

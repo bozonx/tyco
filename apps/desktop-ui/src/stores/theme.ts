@@ -19,7 +19,7 @@ export const useThemeStore = defineStore('theme', () => {
       return
     }
 
-    settings.value = normalizeAppearance(userConfig)
+    settings.value = normalizeAppearance(userConfig.appearance)
     resolved.value = controller.setSettings(settings.value)
   })
 

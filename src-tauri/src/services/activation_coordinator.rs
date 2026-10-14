@@ -218,7 +218,7 @@ mod tests {
     fn no_text_launcher_and_failed_activation_do_not_schedule_capture() {
         let coordinator = ActivationCoordinator::default();
         let host = Host {
-            config: serde_json::json!({"launcherPagesWithoutText": [0]}),
+            config: serde_json::json!({"launcherPages": [{"id":"main","inputMode":"none"}]}),
             ..Host::default()
         };
         assert!(coordinator

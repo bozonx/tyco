@@ -1,4 +1,4 @@
-import type { UserConfig } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -119,8 +119,8 @@ describe('SettingsEditorTab.vue', () => {
     ).toBe(true)
   })
 
-  it('initializes missing markdown and markdownClean configs with defaults', () => {
-    const userConfig: Pick<UserConfig, 'markdown' | 'markdownClean'> = {}
+  it('uses the normalized markdown defaults', () => {
+    const userConfig = structuredClone(DEFAULT_USER_CONFIG)
     mount(SettingsEditorTab, {
       props: { userConfig },
       global: {
@@ -134,10 +134,10 @@ describe('SettingsEditorTab.vue', () => {
     })
 
     expect(userConfig.markdown).toBeDefined()
-    expect(userConfig.markdown!.bullet).toBe('-')
+    expect(userConfig.markdown.bullet).toBe('-')
     expect(userConfig.markdownClean).toBeDefined()
-    expect(userConfig.markdownClean!.bullet).toBe('-')
-    expect(userConfig.markdownClean!.codeBlockIndent).toBe('none')
-    expect(userConfig.markdownClean!.keepThematicBreaks).toBe(true)
+    expect(userConfig.markdownClean.bullet).toBe('-')
+    expect(userConfig.markdownClean.codeBlockIndent).toBe('none')
+    expect(userConfig.markdownClean.keepThematicBreaks).toBe(true)
   })
 })

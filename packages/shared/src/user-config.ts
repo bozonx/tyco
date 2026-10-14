@@ -1,11 +1,11 @@
 import configDefaults from './user-config-defaults.json'
 import configVersion from './config-version.json'
 import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
-import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
+import type { AppearanceSettings } from './appearance'
 
 /**
- * The schema version of the user config; the backend leaves newer configs
- * untouched. Both runtimes read `config-version.json`
+ * The supported schema version; the backend rejects future schemas without
+ * overwriting them. Both runtimes read `config-version.json`
  */
 export const CONFIG_VERSION = configVersion
 
@@ -63,7 +63,7 @@ export interface LlmConfig {
    * Model ids per task: the first answers, the rest are its fallbacks. The chat
    * has no chain: it runs on the model picked in it
    */
-  tasks: Record<LlmTask, string[]>
+  taskModelChains: Record<LlmTask, string[]>
 }
 
 export const TRANSLATION_PROVIDERS = ['deepl', 'google', 'llm'] as const
@@ -71,7 +71,7 @@ export type TranslationProvider = (typeof TRANSLATION_PROVIDERS)[number]
 
 export const TRANSLATION_QUALITY_GATES = [
   'off',
-  'on_problems',
+  'onProblems',
   'always',
 ] as const
 export type TranslationQualityGate = (typeof TRANSLATION_QUALITY_GATES)[number]
@@ -83,6 +83,8 @@ export interface TranslationGlossaryEntry {
 }
 
 export interface TranslationConfig {
+  targetLanguages: (string | null)[]
+  viewMode: 'split' | 'result'
   provider: TranslationProvider
   qualityGate: TranslationQualityGate
   deeplEndpoint: 'free' | 'pro'
@@ -143,13 +145,13 @@ export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
  * pasting it into the window the user works in (over the selection, if there is
- * one), or the clipboard. `replaceSelection` is the serialized name of the
- * paste
+ * one), or the clipboard. `insertIntoWindow` pastes the result into the target
+ * window
  */
 export const CUSTOM_ACTION_AFTER_RUN = [
   'none',
   'showMenu',
-  'replaceSelection',
+  'insertIntoWindow',
   'copy',
 ] as const
 export type CustomActionAfterRun = (typeof CUSTOM_ACTION_AFTER_RUN)[number]
@@ -177,7 +179,7 @@ export interface ScriptToolConfig {
    */
   command: string
   /** Empty for the home directory */
-  workingDir?: string
+  workingDirectory?: string
   /**
    * How long the output is waited for, in seconds; absent for
    * `SCRIPT_OUTPUT_TIMEOUT_SEC`
@@ -200,7 +202,7 @@ export interface WebhookToolConfig {
    * The Authorization header is kept in the secret store under `authSecretId`,
    * bound to the origin of the URL
    */
-  authSecret?: boolean
+  isAuthEnabled?: boolean
   /** Opaque secret identity, independent of the command display name and id. */
   authSecretId?: string
 }
@@ -263,7 +265,7 @@ export interface CommandConfig {
    * Fill a structured input from text with the LLM; only for tools that take a
    * structured input and do not parse text themselves
    */
-  llmArgumentParsing: boolean
+  isLlmArgumentParsingEnabled: boolean
   /**
    * What quick commands do with returned text; other contexts have fixed
    * behavior
@@ -286,14 +288,14 @@ export interface AiTaskMainAction {
   taskId: string
 }
 
-/** A translation into a language of `toTranslateLanguages` */
+/** A translation into one of `translation.targetLanguages`. */
 export interface TranslationMainAction {
   type: 'translation'
   language: string
 }
 
 export type MainActionConfig =
-  | { type: 'launcherPage'; page: number }
+  | { type: 'launcherPage'; pageId: string }
   | StandardMainAction
   | PluginMainAction
   | CommandMainAction
@@ -343,25 +345,43 @@ export interface ConfigRegistrationState {
   seededToolIds: string[]
 }
 
+/** A configured launcher page; references stay stable when pages move. */
+export interface LauncherPageConfig {
+  id: string
+  slots: (string | null)[]
+  inputMode: 'selection' | 'none'
+}
+
+export interface EditorHistoryConfig {
+  storage: EditorHistoryStorage
+  maxItems: number
+  /** Zero retains entries indefinitely. */
+  retentionDays: number
+  sanitizeSecrets: boolean
+}
+
+export interface ChatConfig {
+  imageQuality: 'economy' | 'balanced' | 'original'
+  isHistoryEnabled: boolean
+  /** Zero retains chats indefinitely. */
+  historyRetentionDays: number
+}
+
+export interface SttConfig {
+  models: SttModel[]
+  selectedModelId: string
+}
+
+/** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
-  externalAccess?: ExternalAccess
-  /** See `CONFIG_VERSION`; absent in configs older than version 1 */
-  configVersion?: number
+  configVersion: number
+  externalAccess: ExternalAccess
   hotkeys: Record<string, string>
-  /**
-   * Hotkeys of the actions that replace the selection, keyed by action id; only
-   * `correction` has one, an empty string unbinds it
-   */
   selectionHotkeys: Record<string, string>
-  submitKey?: SubmitKey
-  /** Correct the quick input text in advance while the user pauses */
-  quickCorrectionPrefetch?: boolean
-  /** Hide the quick window when the user clicks elsewhere */
-  quickHideOnBlur?: boolean
-  theme: ThemeMode
-  contrast: ContrastMode
-  motion: MotionMode
-  uiScale: UiScale
+  submitKey: SubmitKey
+  quickCorrectionPrefetch: boolean
+  quickHideOnBlur: boolean
+  appearance: AppearanceSettings
   windowInsertion: {
     method: 'xdotool' | 'ydotool'
     xdotoolBin: string
@@ -370,54 +390,30 @@ export interface UserConfig {
   }
   appLanguage: string
   userLanguage: string
-  toTranslateLanguages: (string | null)[]
   translation: TranslationConfig
   mainActions: (MainActionConfig | null)[]
-  /** Slots of the command overlay (15 keys) */
-  launcherCommands: (string | null)[]
-  launcherPages?: (string | null)[][]
-  /**
-   * Pages of the command overlay that open without the selection, so that a
-   * leftover of an earlier one never reaches their commands; 0 is the page of
-   * `launcherCommands`
-   */
-  launcherPagesWithoutText?: number[]
-  /** The command library; the action menu refers to commands by id */
+  launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
-  /** Portable registration ledger; keeps deleted defaults from returning. */
-  registrationState?: ConfigRegistrationState
+  registrationState: ConfigRegistrationState
   diffViewMode: 'unified' | 'split' | 'result'
-  translationViewMode: 'split' | 'result'
-  editorHistoryStorage: EditorHistoryStorage
-  editorHistoryMaxItems: number
-  /** Kept on the disk only; 0 keeps the entries forever */
-  editorHistoryRetentionDays?: number
-  /** Kept on the disk only */
-  sanitizeSecretsInEditorHistory?: boolean
-  /** Chats are saved; turning it off deletes the saved ones */
-  chatImageQuality?: 'economy' | 'balanced' | 'original'
-  chatHistoryEnabled: boolean
-  /** Chats without a message for longer are deleted; 0 keeps them forever */
-  chatHistoryRetentionDays: number
+  editorHistory: EditorHistoryConfig
+  chat: ChatConfig
   llm: LlmConfig
-  sttModels: SttModel[]
-  selectedSttModelId: string
+  stt: SttConfig
   aiRules: {
     chat: string
     correction: string
     translate: string
     voiceCorrection: string
   }
-  aiTasks: ({
-    /** Stable, hidden from the user: what the main menu refers to the task by */
-    id: string
-    name: string
-    rule: string
-  } | null)[]
-  markdown?: MarkdownSettings
-  markdownClean?: MarkdownCleanSettings
+  aiTasks: ({ id: string; name: string; rule: string } | null)[]
+  markdown: MarkdownSettings
+  markdownClean: MarkdownCleanSettings
   plugins: Record<string, unknown>
 }
+
+/** Untrusted serialized input; normalize before reading any field. */
+export type UserConfigInput = unknown
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
   ...configDefaults,

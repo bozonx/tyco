@@ -309,7 +309,7 @@ describe('application workflow integration', () => {
         notifyError: vi.fn(),
         debounceMs: 500,
       })
-      session.draft.value.theme = 'dark'
+      session.draft.value.appearance.theme = 'dark'
       const acknowledge = vi.fn(async () => {})
       const shutdown = createSettingsShutdown({
         flush: async () => {
@@ -328,7 +328,13 @@ describe('application workflow integration', () => {
         await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
         finish(
           success
-            ? { success: true, result: { ...initialConfig, theme: 'dark' } }
+            ? {
+                success: true,
+                result: {
+                  ...initialConfig,
+                  appearance: { ...initialConfig.appearance, theme: 'dark' },
+                },
+              }
             : { success: false, error: 'Storage unavailable' }
         )
         await quit

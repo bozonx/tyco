@@ -12,14 +12,14 @@ const MAX_ERROR_DETAIL_LENGTH = 200
  */
 export function buildScriptRequest(
   name: string,
-  config: Pick<ScriptToolConfig, 'command' | 'workingDir' | 'timeoutSec'>,
+  config: Pick<ScriptToolConfig, 'command' | 'workingDirectory' | 'timeoutSec'>,
   text: string | null,
   options: { captureOutput: boolean; logOutput: boolean }
 ): ScriptActionRequest {
   return {
     name,
     command: config.command,
-    workingDir: config.workingDir?.trim() || undefined,
+    workingDirectory: config.workingDirectory?.trim() || undefined,
     text: text ?? '',
     captureOutput: options.captureOutput,
     ...(config.timeoutSec ? { timeoutSec: config.timeoutSec } : {}),

@@ -90,6 +90,6 @@ describe('LLM settings model', () => {
     expect(model.contextWindowTokens).toBeUndefined()
     f.model.addFallback('aiTasks')
     f.model.addFallback('aiTasks')
-    expect(f.config.tasks.aiTasks).toEqual(['model'])
+    expect(f.config.taskModelChains.aiTasks).toEqual(['model'])
   })
 })

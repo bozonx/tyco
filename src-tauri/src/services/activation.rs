@@ -156,19 +156,12 @@ impl Activation {
 
     /// Whether the activation takes the selection of the window it was made
     /// from: not a page of the command overlay the user set to run without
-    /// text, see `launcherPagesWithoutText` of the config.
+    /// text, see `launcherPages[].inputMode` of the config.
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
         if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
             return true;
         }
-        !user_config
-            .get("launcherPagesWithoutText")
-            .and_then(Value::as_array)
-            .is_some_and(|pages| {
-                pages
-                    .iter()
-                    .any(|page| page.as_u64() == Some(self.launcher_page_index as u64))
-            })
+        user_config["launcherPages"][self.launcher_page_index]["inputMode"] != "none"
     }
 
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
@@ -195,7 +188,7 @@ mod tests {
 
     #[test]
     fn a_command_page_set_without_text_takes_no_selection() {
-        let config = json!({ "launcherPagesWithoutText": [0, 2] });
+        let config = json!({ "launcherPages": [{"id":"main","inputMode":"none"},{"id":"second","inputMode":"selection"},{"id":"third","inputMode":"none"}] });
         let page = |mode: &str| Activation::from_mode(mode, ActivationSource::Ui).unwrap();
         assert!(!page("commandLauncher").can_take_selection(&config));
         assert!(page("commandLauncher2").can_take_selection(&config));

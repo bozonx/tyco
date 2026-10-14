@@ -58,12 +58,13 @@ mod tests {
 
     #[test]
     fn independent_nested_edits_and_removals_survive() {
-        let base = json!({"theme":"light", "llm":{"models":[],"name":"old"},"legacy":true});
-        let current = json!({"theme":"dark", "llm":{"models":["new"],"name":"old"},"legacy":true});
-        let next = json!({"theme":"light", "llm":{"models":[],"name":"mine"}});
+        let base =
+            json!({"llm":{"models":[],"name":"old"},"legacy":true,"appearance":{"theme":"light"}});
+        let current = json!({"llm":{"models":["new"],"name":"old"},"legacy":true,"appearance":{"theme":"dark"}});
+        let next = json!({"llm":{"models":[],"name":"mine"},"appearance":{"theme":"light"}});
         assert_eq!(
             merge_config(&current, &base, &next).unwrap(),
-            json!({"theme":"dark","llm":{"models":["new"],"name":"mine"}})
+            json!({"llm":{"models":["new"],"name":"mine"},"appearance":{"theme":"dark"}})
         );
     }
 

@@ -88,7 +88,7 @@ const { t } = useI18n()
 const llmStore = useLlmStore()
 const { toastText } = useToast()
 const sttKeyDraft = ref('')
-const currentSttModel = computed(() => activeSttModel(userConfig.value))
+const currentSttModel = computed(() => activeSttModel(userConfig.value.stt))
 
 const sttNeedsKey = computed(() =>
   sttProviderNeedsKey(currentSttModel.value.provider)
@@ -100,7 +100,7 @@ const sttProviderOptions = computed(() => [
 ])
 
 const setSttProvider = (value: string | number | undefined) => {
-  selectSttProvider(userConfig.value, value as SttProvider)
+  selectSttProvider(userConfig.value.stt, value as SttProvider)
 }
 
 const setSttServerUrl = (value: string) => {
@@ -140,7 +140,7 @@ async function removeSttKey() {
 
 const setSttFormatWithLlm = (value: boolean) => {
   currentSttModel.value.formatWithLlm = value
-  for (const model of userConfig.value.sttModels ?? []) {
+  for (const model of userConfig.value.stt.models ?? []) {
     model.formatWithLlm = value
   }
 }

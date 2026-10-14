@@ -50,6 +50,13 @@ function setup(
   const deps = {
     tools,
     commands: () => commands,
+    launcherPages: () => [
+      {
+        id: 'main',
+        inputMode: 'selection' as const,
+        slots: commands.map((command) => command.id),
+      },
+    ],
     selectedText: vi.fn<() => string | null>(() => null),
     run: vi.fn(async () => ({ success: true, result: undefined })),
     saveOutput: vi.fn(async () => {}),
@@ -70,12 +77,18 @@ describe('isLauncherCommand', () => {
 })
 
 describe('slotCommands and pickSlot', () => {
-  it('maps slots by launcherCommands and runs picked slot', async () => {
+  it('maps page slots to commands and runs the selected slot', async () => {
     const run = vi.fn(async () => ({ success: true, result: undefined }))
     const deps = {
       tools,
       commands: () => [backup, note],
-      launcherCommands: () => ['note', null, 'backup'],
+      launcherPages: () => [
+        {
+          id: 'main',
+          slots: ['note', null, 'backup'],
+          inputMode: 'selection' as const,
+        },
+      ],
       selectedText: () => null,
       run,
     }
@@ -423,7 +436,7 @@ describe('commands that replace the selection', () => {
   const replacing = command(
     'translate',
     'Translate',
-    { launcherAfterRun: { action: 'replaceSelection' } },
+    { launcherAfterRun: { action: 'insertIntoWindow' } },
     {}
   )
 
@@ -569,8 +582,12 @@ describe('launcher pages', () => {
     const { deps } = setup()
     const model = createCommandLauncherModel({
       ...deps,
-      launcherCommands: () => ['backup'],
-      launcherPages: () => [['note'], ['lights']],
+      launcherPages: () =>
+        ['backup', 'note', 'lights'].map((id) => ({
+          id,
+          slots: [id],
+          inputMode: 'selection' as const,
+        })),
     })
     expect(model.slotCommands.value[0]?.id).toBe('backup')
     model.nextPage()
@@ -590,9 +607,10 @@ describe('launcher pages', () => {
     deps.selectedText.mockReturnValue('leftover')
     const model = createCommandLauncherModel({
       ...deps,
-      launcherCommands: () => ['note'],
-      launcherPages: () => [['note']],
-      launcherPagesWithoutText: () => [1],
+      launcherPages: () => [
+        { id: 'main', slots: ['note'], inputMode: 'selection' as const },
+        { id: 'other', slots: ['note'], inputMode: 'none' as const },
+      ],
     })
     model.setPage(1)
     expect(model.selection.value).toBe('')
@@ -645,6 +663,9 @@ describe('launcher completion ownership', () => {
     const model = createCommandLauncherModel({
       tools,
       commands: () => [backup],
+      launcherPages: () => [
+        { id: 'main', slots: [backup.id], inputMode: 'selection' as const },
+      ],
       selectedText: () => null,
       run: async () => ({ success: true }),
       claimJob: async () => true,

@@ -94,7 +94,7 @@ const aiTasks = computed(() =>
 /** The translation languages, and those the slots translate into already */
 const languages = computed(() => [
   ...new Set([
-    ...(props.userConfig.toTranslateLanguages ?? []).filter(
+    ...(props.userConfig.translation.targetLanguages ?? []).filter(
       (language): language is string => !!language
     ),
     ...actionSlots.value.flatMap((slot) =>
@@ -120,14 +120,11 @@ const isOffered = (command: CommandConfig) =>
 const OPENS_DIALOG = new Set<StandardActionId>(['translation', 'aiTask'])
 
 const availableActions = computed((): MainActionChoice[] => [
-  ...Array.from(
-    { length: 1 + (props.userConfig.launcherPages?.length ?? 0) },
-    (_, page) => ({
-      config: { type: 'launcherPage' as const, page },
-      name: t('settings.launcherPage', { page: page + 1 }),
-      group: { kind: 'commands' as const },
-    })
-  ),
+  ...props.userConfig.launcherPages.map((page, index) => ({
+    config: { type: 'launcherPage' as const, pageId: page.id },
+    name: t('settings.launcherPage', { page: index + 1 }),
+    group: { kind: 'commands' as const },
+  })),
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
     name: OPENS_DIALOG.has(actionId)
@@ -207,7 +204,12 @@ function groupLabel(group: MainActionGroup): string {
 /** The name of a slot whose action is not on offer, e.g. a disabled command */
 function unavailableName(slot: MainActionConfig): string {
   if (slot.type === 'launcherPage')
-    return t('settings.launcherPage', { page: slot.page + 1 })
+    return t('settings.launcherPage', {
+      page:
+        props.userConfig.launcherPages.findIndex(
+          (page) => page.id === slot.pageId
+        ) + 1,
+    })
   if (slot.type === 'aiTask') return t('settings.mainActionTaskRemoved')
   if (slot.type === 'translation') return slot.language
   if (slot.type !== 'command') return slot.actionId

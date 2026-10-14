@@ -62,7 +62,7 @@ describe('createCoreTools', () => {
       'core.aiTask',
       'core.askInChat',
     ])
-    expect(tools.get('core.correct')?.defaultAfterRun).toBe('replaceSelection')
+    expect(tools.get('core.correct')?.defaultAfterRun).toBe('insertIntoWindow')
     expect(tools.get('core.copy')?.defaultAfterRun).toBeUndefined()
   })
 

@@ -9,7 +9,7 @@ pub(super) fn back_up_config_before_repair(path: &Path, original: &Value) -> Res
     write_json(&backup, &without_api_keys(original))
 }
 
-/// `value` without the fields that held API keys, at any depth.
+/// Removes credential fields from untrusted input at any depth.
 fn without_api_keys(value: &Value) -> Value {
     match value {
         Value::Object(fields) => Value::Object(
@@ -37,10 +37,7 @@ mod tests {
     fn config_backups_hold_no_api_keys() {
         let dir = TestDir::new("backup-scrub");
         let path = dir.join(CONFIG_FILE_NAME);
-        let config = json!({
-            "theme": "dark",
-            "llmModels": [{ "baseUrl": "https://x.example", "apiKey": "sk-secret" }],
-        });
+        let config = json!({"llm":{"providers":[{"baseUrl":"https://x.example","apiKey":"sk-secret" }]},"appearance":{"theme":"dark"}});
 
         back_up_config_before_repair(&path, &config).unwrap();
         let raw = fs::read_to_string(dir.join("userConfig.repaired.bak")).unwrap();

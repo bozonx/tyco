@@ -27,11 +27,10 @@ export function normalizeMainActions(
       const item = value as Record<string, unknown>
       if (
         item?.type === 'launcherPage' &&
-        typeof item.page === 'number' &&
-        Number.isInteger(item.page) &&
-        item.page >= 0
+        typeof item.pageId === 'string' &&
+        item.pageId.trim().length > 0
       )
-        return { type: 'launcherPage', page: item.page }
+        return { type: 'launcherPage', pageId: item.pageId }
       if (
         item?.type === 'plugin' &&
         typeof item.actionId === 'string' &&

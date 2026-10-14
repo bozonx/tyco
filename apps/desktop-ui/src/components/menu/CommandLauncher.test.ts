@@ -68,7 +68,12 @@ function mountLauncher(
 ) {
   mocks.store = reactive(
     createCommandLauncherModel({
-      launcherPages: () => launcherPages,
+      launcherPages: () =>
+        [[], ...launcherPages].map((slots, index) => ({
+          id: `page-${index}`,
+          slots,
+          inputMode: 'selection',
+        })),
       tools: testTools(),
       commands: () => commands,
       selectedText: () => mocks.desktopState.selectedText,

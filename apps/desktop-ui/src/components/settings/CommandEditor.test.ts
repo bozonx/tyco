@@ -29,7 +29,7 @@ const script = (
 ): CommandConfig => ({
   ...createCommand('script', 'sc1'),
   ...extra,
-  toolConfig: { command: '', workingDir: '', ...toolConfig },
+  toolConfig: { command: '', workingDirectory: '', ...toolConfig },
 })
 
 const mountEditor = (
@@ -73,7 +73,7 @@ describe('CommandEditor.vue', () => {
   it('has one output action, with or without a selection', async () => {
     const command = script(
       { command: 'echo {{TEXT}}' },
-      { name: 'Echo', launcherAfterRun: { action: 'replaceSelection' } }
+      { name: 'Echo', launcherAfterRun: { action: 'insertIntoWindow' } }
     )
     const wrapper = mountEditor(command)
     const selects = wrapper.findAll('select')

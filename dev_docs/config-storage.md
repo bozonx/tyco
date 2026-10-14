@@ -1,7 +1,7 @@
 # Configuration and persistent files
 
 `userConfig.json` is a JSON object with camelCase keys. The supported schema
-version comes from `packages/shared/src/config-version.json`. Portable defaults
+version is `1` and comes from `packages/shared/src/config-version.json`. Portable defaults
 come from `user-config-defaults.json`; the Rust backend overrides only platform
 hotkeys and insertion binaries. `user-config-schema.json` describes known fields,
 with `defaultPath` pointing into those defaults. The two schema adapters support
@@ -9,12 +9,78 @@ only the keywords used by this checked-in schema, not arbitrary JSON Schema.
 Shared normalization fixtures verify that both adapters produce identical data.
 
 The backend repairs malformed known settings on startup and drops unknown
-fields. Older configs are not migrated: they are repaired against the current
-schema and stamped with the current version.
+fields. Only the current field names and structure are supported: there are no
+migrations or aliases for earlier development formats. Normalization fills
+missing fields and stamps the current version.
 It rejects invalid IPC saves before storing credentials or writing the config:
 counts must be safe nonnegative integers, entity ids must be unique, and command,
 task, provider, model and launcher references must exist. Opaque plugin settings
-and plugin tool config remain plugin-owned. A newer schema version is read-only.
+and plugin tool config remain plugin-owned. A newer schema version is rejected without modifying the file.
+
+The normalized `UserConfig` type has all core sections present. Serialized input
+is untrusted `UserConfigInput` and must pass through normalization before use.
+Related preferences are grouped under `appearance`, `editorHistory`, `chat`,
+`stt`, and `translation`. For example:
+
+```json
+{
+  "configVersion": 1,
+  "appearance": {
+    "theme": "auto",
+    "contrast": "auto",
+    "motion": "auto",
+    "uiScale": 100
+  },
+  "editorHistory": {
+    "storage": "disk",
+    "maxItems": 1000,
+    "retentionDays": 30,
+    "sanitizeSecrets": true
+  },
+  "chat": {
+    "imageQuality": "balanced",
+    "isHistoryEnabled": true,
+    "historyRetentionDays": 0
+  },
+  "launcherPages": [
+    {
+      "id": "main",
+      "inputMode": "selection",
+      "slots": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ]
+}
+```
+
+This is a structural excerpt, not a complete configuration. Launcher pages
+share one representation, including the first page. Every page has a stable
+`id`, exactly 15 nullable command slots, and `inputMode` (`selection` or `none`).
+Main actions reference pages through `pageId`; reordering pages preserves these
+references. At least one page is required. Keyboard page numbers remain positions
+in the current page list.
+
+Translation targets and display preferences live in `translation.targetLanguages`
+and `translation.viewMode`; LLM task assignments live in `llm.taskModelChains`.
+Script tools use `workingDirectory`; webhook tools use `isAuthEnabled` and
+`authSecretId`; commands use `isLlmArgumentParsingEnabled`. The insertion output
+action is `insertIntoWindow`. SDK-specific enum spellings are converted only at
+the SDK boundary.
 
 The portable `registrationState` ledger has separate `reviewedMainActionIds`,
 `seededCommandIds`, and `seededToolIds`; it travels with the user's configuration
@@ -27,7 +93,7 @@ three-way merge; conflicting arrays are rejected explicitly.
 
 `SessionState` is shared across windows and lives only in backend memory. Last
 chat, last model, activation mode and recent menu inputs reset on restart.
-`diffViewMode` and `translationViewMode` are persistent user preferences in the
+`diffViewMode` and `translation.viewMode` are persistent user preferences in the
 config. The browser's `localStorage.appearance` is a bootstrap cache to avoid a
 flash before the authoritative config arrives.
 

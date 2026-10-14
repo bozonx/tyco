@@ -38,7 +38,7 @@ const webhook = {
   name: 'Hook',
   toolConfig: {
     url: 'https://x.test',
-    authSecret: true,
+    isAuthEnabled: true,
     authSecretId: 'webhook-auth-wh1',
   },
 }
@@ -48,6 +48,7 @@ const mountTab = (focusCommandId?: string) =>
   mount(SettingsCommandsTab, {
     props: {
       userConfig: {
+        launcherPages: [],
         commands: [webhook, script],
         mainActions: [
           { type: 'command', commandId: 'wh1' },
@@ -118,8 +119,13 @@ describe('SettingsCommandsTab.vue', () => {
     await wrapper.setProps({
       userConfig: {
         ...wrapper.props('userConfig'),
-        launcherCommands: ['wh1'],
-        launcherPages: [[null, 'wh1'], ['sc1']],
+        launcherPages: [['wh1'], [null, 'wh1'], ['sc1']].map(
+          (slots, index) => ({
+            id: `page-${index}`,
+            slots,
+            inputMode: 'selection' as const,
+          })
+        ),
       },
     })
     const placements = wrapper.findAll('.command-placements')
@@ -201,6 +207,7 @@ describe('SettingsCommandsTab.vue', () => {
     await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
     await wrapper.setProps({
       userConfig: {
+        ...wrapper.props('userConfig'),
         commands: [script],
         mainActions: [null, { type: 'standard', actionId: 'translation' }],
       } as unknown as UserConfig,

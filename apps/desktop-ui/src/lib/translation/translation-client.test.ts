@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createTranslationClient } from './translation-client'
-import type { TranslationConfig } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, type TranslationConfig } from '@tyco/shared'
 
 function config(overrides: Partial<TranslationConfig> = {}): TranslationConfig {
   return {
+    ...DEFAULT_USER_CONFIG.translation,
     provider: 'llm',
     qualityGate: 'off',
     deeplEndpoint: 'free',

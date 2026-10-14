@@ -29,7 +29,6 @@ export function launcherAfterRunFromOutput(
 }
 
 function normalizeLauncherAfterRun(value: unknown): CommandLauncherAfterRun {
-  // `fallback` of older configs is dropped: the paste works without a selection
   return { action: afterRunOf(isRecord(value) ? value.action : undefined) }
 }
 
@@ -55,7 +54,7 @@ export function scriptToolConfigOf(
   const timeoutSec = timeoutOf(config.timeoutSec)
   return {
     command: stringOr(config.command),
-    workingDir: stringOr(config.workingDir),
+    workingDirectory: stringOr(config.workingDirectory),
     ...(timeoutSec ? { timeoutSec } : {}),
   }
 }
@@ -68,7 +67,7 @@ export function webhookToolConfigOf(
     method: config.method === 'GET' ? 'GET' : 'POST',
     headers: headersOf(config.headers),
     payloadTemplate: stringOr(config.payloadTemplate),
-    authSecret: config.authSecret === true,
+    isAuthEnabled: config.isAuthEnabled === true,
     ...(typeof config.authSecretId === 'string'
       ? { authSecretId: config.authSecretId }
       : {}),
@@ -107,7 +106,7 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
       : [],
     toolId,
     toolConfig: isRecord(value.toolConfig) ? value.toolConfig : {},
-    llmArgumentParsing: value.llmArgumentParsing === true,
+    isLlmArgumentParsingEnabled: value.isLlmArgumentParsingEnabled === true,
     launcherAfterRun: normalizeLauncherAfterRun(value.launcherAfterRun),
     logOutput: value.logOutput === true,
     availableIn: {
@@ -159,14 +158,14 @@ function newCommandId(): string {
 function defaultToolConfig(toolId: string): Record<string, unknown> {
   switch (toolId) {
     case 'script':
-      return { command: '', workingDir: '' }
+      return { command: '', workingDirectory: '' }
     case 'webhook':
       return {
         url: '',
         method: 'POST',
         headers: {},
         payloadTemplate: '',
-        authSecret: false,
+        isAuthEnabled: false,
       }
     case 'core.translate':
       return { language: '' }
@@ -193,7 +192,7 @@ export function createCommand(
     phrases: [],
     toolId,
     toolConfig: defaultToolConfig(toolId),
-    llmArgumentParsing: false,
+    isLlmArgumentParsingEnabled: false,
     launcherAfterRun: launcherAfterRunFromOutput(tool?.defaultAfterRun),
     logOutput: false,
     availableIn: { external: false, chat: false },

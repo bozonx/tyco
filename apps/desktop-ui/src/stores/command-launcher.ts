@@ -22,10 +22,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const model = createCommandLauncherModel({
     tools: useToolsStore(),
     commands: () => ipcStore.desktopState.userConfig?.commands,
-    launcherPages: () => ipcStore.desktopState.userConfig?.launcherPages,
-    launcherCommands: () => ipcStore.desktopState.userConfig?.launcherCommands,
-    launcherPagesWithoutText: () =>
-      ipcStore.desktopState.userConfig?.launcherPagesWithoutText,
+    launcherPages: () => ipcStore.desktopState.userConfig.launcherPages,
     selectedText: () => ipcStore.desktopState.selectedText,
     run: runner.run,
     ...createExternalJobAdapter({

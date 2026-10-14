@@ -109,7 +109,7 @@ describe('script commands', () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(
-      script({ workingDir: ' /tmp ' }, { logOutput: true }),
+      script({ workingDirectory: ' /tmp ' }, { logOutput: true }),
       'input'
     )
 
@@ -118,7 +118,7 @@ describe('script commands', () => {
     expect(executeScriptAction).toHaveBeenCalledWith({
       name: 'Echo',
       command: 'echo {{TEXT}}',
-      workingDir: '/tmp',
+      workingDirectory: '/tmp',
       text: 'input',
       captureOutput: false,
       logOutput: true,
@@ -478,7 +478,7 @@ describe('the output of a command', () => {
     launcherAfterRun: launcherAfterRunFromOutput(afterRun),
   })
 
-  it.each(['none', 'copy', 'replaceSelection'] as const)(
+  it.each(['none', 'copy', 'insertIntoWindow'] as const)(
     'shows menu results regardless of quick-command setting %s',
     async (setting) => {
       const tool = echo('result')
@@ -496,7 +496,7 @@ describe('the output of a command', () => {
     }
   )
 
-  it.each(['none', 'copy', 'showMenu', 'replaceSelection'] as const)(
+  it.each(['none', 'copy', 'showMenu', 'insertIntoWindow'] as const)(
     'returns external output without UI or clipboard actions for %s',
     async (setting) => {
       const tool = echo('result\n')
@@ -518,7 +518,7 @@ describe('the output of a command', () => {
   it('pastes the output into the window without a selection too', async () => {
     const insertText = vi.fn(async () => {})
     const { deps, runner } = setup({ insertText }, [echo('result\n')])
-    expect(await runner.run(command('replaceSelection'), 'typed')).toEqual({
+    expect(await runner.run(command('insertIntoWindow'), 'typed')).toEqual({
       success: true,
     })
     expect(insertText).toHaveBeenCalledWith('result')
@@ -528,7 +528,7 @@ describe('the output of a command', () => {
   it('warns when there is no output to paste', async () => {
     const insertText = vi.fn(async () => {})
     const { deps, runner } = setup({ insertText }, [echo(' ')])
-    const outcome = await runner.run(command('replaceSelection'), 'x')
+    const outcome = await runner.run(command('insertIntoWindow'), 'x')
     expect(outcome.success).toBe(false)
     expect(insertText).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith(
@@ -542,7 +542,7 @@ describe('the output of a command', () => {
       throw new Error('no target')
     })
     const { deps, runner } = setup({ insertText }, [echo('result')])
-    expect(await runner.run(command('replaceSelection'), 'x')).toEqual({
+    expect(await runner.run(command('insertIntoWindow'), 'x')).toEqual({
       success: false,
       message: 'no target',
     })
@@ -587,13 +587,13 @@ describe('the output of a command', () => {
   it('returns the output for a selection run and reports nothing', async () => {
     const { deps, runner } = setup({}, [echo('Hello')])
     expect(
-      await runner.transform(command('replaceSelection'), 'hola', {
+      await runner.transform(command('insertIntoWindow'), 'hola', {
         source: 'selection',
       })
     ).toEqual({ ok: true, content: 'Hello' })
     expect(
       await runner.transform(
-        { ...command('replaceSelection'), enabled: false },
+        { ...command('insertIntoWindow'), enabled: false },
         'hola'
       )
     ).toMatchObject({ ok: false, messageKey: 'toast.commandDisabled' })

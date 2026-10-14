@@ -25,14 +25,14 @@ describe('buildScriptRequest', () => {
     expect(
       buildScriptRequest(
         'Echo',
-        { command: 'echo', workingDir: ' /tmp ' },
+        { command: 'echo', workingDirectory: ' /tmp ' },
         'x',
         options
       )
     ).toEqual({
       name: 'Echo',
       command: 'echo',
-      workingDir: '/tmp',
+      workingDirectory: '/tmp',
       text: 'x',
       captureOutput: true,
       logOutput: false,
@@ -40,10 +40,10 @@ describe('buildScriptRequest', () => {
     expect(
       buildScriptRequest(
         'Echo',
-        { command: 'echo', workingDir: ' ' },
+        { command: 'echo', workingDirectory: ' ' },
         'x',
         options
-      ).workingDir
+      ).workingDirectory
     ).toBeUndefined()
   })
 

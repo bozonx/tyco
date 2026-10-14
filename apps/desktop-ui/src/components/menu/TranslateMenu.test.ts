@@ -71,7 +71,7 @@ describe('TranslateMenu', () => {
 
   it('translates into a configured language by its key', async () => {
     const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.toTranslateLanguages = ['de_DE']
+    ipcStore.desktopState.userConfig.translation.targetLanguages = ['de_DE']
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -206,7 +206,9 @@ describe('TranslateMenu', () => {
         resolve = done
       })
     )
-    useIpcStore().desktopState.userConfig.toTranslateLanguages = ['de_DE']
+    useIpcStore().desktopState.userConfig.translation.targetLanguages = [
+      'de_DE',
+    ]
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())

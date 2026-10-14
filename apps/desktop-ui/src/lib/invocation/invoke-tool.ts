@@ -32,7 +32,10 @@ export type InvokeResult = ToolResult & {
  * not available, or it cannot get its input from a text
  */
 export function invocationUnavailableReason(
-  invocation: Pick<Invocation, 'toolId' | 'toolConfig' | 'llmArgumentParsing'>,
+  invocation: Pick<
+    Invocation,
+    'toolId' | 'toolConfig' | 'isLlmArgumentParsingEnabled'
+  >,
   tools: ToolLookup
 ): string | undefined {
   const tool = tools.get(invocation.toolId)
@@ -42,7 +45,7 @@ export function invocationUnavailableReason(
   const kind = toolInputKind(
     tool,
     invocation.toolConfig,
-    invocation.llmArgumentParsing ?? false
+    invocation.isLlmArgumentParsingEnabled ?? false
   )
   return kind === null ? 'commands.inputUnsupported' : undefined
 }
@@ -102,7 +105,8 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
               tool,
               config,
               text,
-              llmArgumentParsing: invocation.llmArgumentParsing ?? false,
+              isLlmArgumentParsingEnabled:
+                invocation.isLlmArgumentParsingEnabled ?? false,
               context: { now: new Date(), signal, language: deps.language?.() },
             })
       if (signal.aborted) return { ok: false, cancelled: true }

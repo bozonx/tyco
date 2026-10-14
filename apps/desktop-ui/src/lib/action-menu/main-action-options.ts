@@ -42,7 +42,7 @@ export function mainActionOptionId(
   item: MainActionConfig | null | undefined
 ): string {
   if (!item) return ''
-  if (item.type === 'launcherPage') return `launcherPage:${item.page}`
+  if (item.type === 'launcherPage') return `launcherPage:${item.pageId}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'aiTask') return `aiTask:${item.taskId}`
   if (item.type === 'translation') return `translation:${item.language}`

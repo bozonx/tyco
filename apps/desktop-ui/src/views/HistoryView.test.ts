@@ -171,7 +171,7 @@ describe('HistoryView.vue', () => {
     const ipc = useIpcStore()
     ipc.desktopState.userConfig = {
       ...ipc.desktopState.userConfig,
-      editorHistoryStorage: 'off',
+      editorHistory: { storage: 'off' },
     } as any
 
     const wrapper = mount(HistoryView, {

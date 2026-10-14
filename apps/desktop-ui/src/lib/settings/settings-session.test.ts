@@ -29,27 +29,31 @@ describe('settings session', () => {
   it('debounces changes and flushes a pending save on disposal', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup()
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     model.schedule()
     await vi.advanceTimersByTimeAsync(50)
-    model.draft.value.theme = 'light'
+    model.draft.value.appearance.theme = 'light'
     model.schedule()
     model.dispose()
     await model.persist()
     expect(deps.save).toHaveBeenCalledOnce()
     expect(deps.save).toHaveBeenCalledWith(
-      expect.objectContaining({ theme: 'light' }),
+      expect.objectContaining({
+        appearance: expect.objectContaining({ theme: 'light' }),
+      }),
       DEFAULT_USER_CONFIG
     )
   })
 
   it('keeps a dirty draft and its baseline when another window sends a config', async () => {
     const { deps, model } = setup()
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     model.applyIncoming({ ...config(), userLanguage: 'ru_RU' })
     await model.persist()
     expect(deps.save).toHaveBeenCalledWith(
-      expect.objectContaining({ theme: 'dark' }),
+      expect.objectContaining({
+        appearance: expect.objectContaining({ theme: 'dark' }),
+      }),
       DEFAULT_USER_CONFIG
     )
   })
@@ -69,26 +73,30 @@ describe('settings session', () => {
         result: next,
       }))
     const { model } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     const first = model.persist()
     await Promise.resolve()
-    model.draft.value.theme = 'light'
+    model.draft.value.appearance.theme = 'light'
     const second = model.persist()
     finish({
       success: true,
-      result: { ...config(), theme: 'dark', userLanguage: 'ru_RU' },
+      result: {
+        ...config(),
+        appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+        userLanguage: 'ru_RU',
+      },
     })
     await Promise.all([first, second])
     expect(save.mock.calls[1][0]).toMatchObject({
-      theme: 'light',
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
       userLanguage: 'ru_RU',
     })
     expect(save.mock.calls[1][1]).toMatchObject({
-      theme: 'dark',
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
       userLanguage: 'ru_RU',
     })
     expect(model.draft.value).toMatchObject({
-      theme: 'light',
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
       userLanguage: 'ru_RU',
     })
     expect(model.isSaved()).toBe(true)
@@ -103,7 +111,7 @@ describe('settings session', () => {
         result: next,
       }))
     const { model, deps } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
     expect(model.isSaved()).toBe(false)
     expect(deps.notifyError).toHaveBeenCalledWith('Unavailable')
@@ -125,10 +133,10 @@ describe('settings disposal failures', () => {
         result: next,
       }))
       const { model, deps } = setup({ save })
-      model.draft.value.theme = 'dark'
+      model.draft.value.appearance.theme = 'dark'
       await model.dispose()
       expect(deps.notifyError).toHaveBeenCalledWith('Unavailable')
-      expect(model.draft.value.theme).toBe('dark')
+      expect(model.draft.value.appearance.theme).toBe('dark')
       expect(model.isSaved()).toBe(false)
       await model.persist()
       expect(model.isSaved()).toBe(true)
@@ -139,12 +147,16 @@ describe('settings disposal failures', () => {
 describe('settings concurrency and recovery', () => {
   it('adopts buffered remote changes when local conflicting edits are reverted', () => {
     const { model } = setup()
-    model.draft.value.theme = 'dark'
-    model.applyIncoming({ ...config(), theme: 'light', userLanguage: 'ru_RU' })
-    model.draft.value.theme = DEFAULT_USER_CONFIG.theme
+    model.draft.value.appearance.theme = 'dark'
+    model.applyIncoming({
+      ...config(),
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
+      userLanguage: 'ru_RU',
+    })
+    model.draft.value.appearance.theme = DEFAULT_USER_CONFIG.appearance.theme
     model.schedule()
     expect(model.draft.value).toMatchObject({
-      theme: 'light',
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
       userLanguage: 'ru_RU',
     })
     expect(model.conflicts.value).toEqual([])
@@ -161,12 +173,12 @@ describe('settings concurrency and recovery', () => {
       })
       .mockImplementation(async (next) => ({ success: true, result: next }))
     const { model } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
-    model.draft.value.theme = 'light'
+    model.draft.value.appearance.theme = 'light'
     model.schedule()
     await vi.advanceTimersByTimeAsync(100)
-    expect(save.mock.calls[1][0].theme).toBe('light')
+    expect(save.mock.calls[1][0].appearance.theme).toBe('light')
     expect(model.saveError.value).toBe('')
     expect(model.isSaved()).toBe(true)
   })
@@ -182,15 +194,19 @@ describe('settings concurrency and recovery', () => {
       )
       .mockImplementation(async (next) => ({ success: true, result: next }))
     const { model } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     const first = model.persist()
     await Promise.resolve()
-    model.draft.value.chatHistoryEnabled = false
+    model.draft.value.chat.isHistoryEnabled = false
     const second = model.persist()
-    model.draft.value.chatHistoryEnabled = true
+    model.draft.value.chat.isHistoryEnabled = true
     finish({
       success: true,
-      result: { ...config(), theme: 'dark', chatHistoryEnabled: true },
+      result: {
+        ...config(),
+        appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: true },
+      },
     })
     await Promise.all([first, second])
     expect(save).toHaveBeenCalledOnce()
@@ -207,12 +223,22 @@ describe('settings concurrency and recovery', () => {
           finish = resolve
         }),
     })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     const pending = model.persist()
     await Promise.resolve()
-    latest = { ...config(), theme: 'dark', userLanguage: 'ru_RU' }
+    latest = {
+      ...config(),
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+      userLanguage: 'ru_RU',
+    }
     model.applyIncoming(latest)
-    finish({ success: true, result: { ...config(), theme: 'dark' } })
+    finish({
+      success: true,
+      result: {
+        ...config(),
+        appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+      },
+    })
     await pending
     expect(model.draft.value.userLanguage).toBe('ru_RU')
     expect(model.isSaved()).toBe(true)
@@ -220,22 +246,32 @@ describe('settings concurrency and recovery', () => {
 
   it('shows conflicting paths and preserves independent remote edits when keeping local changes', async () => {
     const { model, deps } = setup()
-    model.draft.value.theme = 'dark'
-    model.applyIncoming({ ...config(), theme: 'light', userLanguage: 'ru_RU' })
-    expect(model.conflicts.value).toEqual(['theme'])
+    model.draft.value.appearance.theme = 'dark'
+    model.applyIncoming({
+      ...config(),
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
+      userLanguage: 'ru_RU',
+    })
+    expect(model.conflicts.value).toEqual(['appearance.theme'])
     await model.persist()
     expect(deps.save).not.toHaveBeenCalled()
     model.resolveConflicts(true)
     await model.persist()
     expect(model.draft.value).toMatchObject({
-      theme: 'dark',
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
       userLanguage: 'ru_RU',
     })
     expect(model.isSaved()).toBe(true)
   })
 
   it('reloads current settings after a backend conflict and allows discarding local edits', async () => {
-    const latest = { ...config(), theme: 'light' as const }
+    const latest = {
+      ...config(),
+      appearance: {
+        ...DEFAULT_USER_CONFIG.appearance,
+        theme: 'light' as const,
+      },
+    }
     const save = vi
       .fn<SettingsSessionDependencies['save']>()
       .mockResolvedValue({
@@ -244,12 +280,12 @@ describe('settings concurrency and recovery', () => {
         errorCode: 'configConflict',
       })
     const { model } = setup({ save, loadConfig: async () => latest })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
-    expect(model.conflicts.value).toEqual(['theme'])
+    expect(model.conflicts.value).toEqual(['appearance.theme'])
     await model.reload()
     expect(model.reloadCount.value).toBe(1)
-    expect(model.draft.value.theme).toBe('light')
+    expect(model.draft.value.appearance.theme).toBe('light')
     expect(model.isSaved()).toBe(true)
     expect(model.saveError.value).toBe('')
   })
@@ -263,7 +299,7 @@ describe('settings concurrency and recovery', () => {
         errorCode: 'ioError',
       })
     const { model } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
     await vi.advanceTimersByTimeAsync(8000)
     expect(save).toHaveBeenCalledTimes(4)
@@ -281,7 +317,7 @@ describe('settings concurrency and recovery', () => {
         errorCode: 'invalidInput',
       })
     const { model } = setup({ save })
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
     await vi.advanceTimersByTimeAsync(8000)
     expect(save).toHaveBeenCalledOnce()
@@ -297,7 +333,7 @@ describe('settings concurrency and recovery', () => {
     }
     const { model } = setup({ prepare })
     model.draft.value.aiTasks = [{ id: 'unfinished', name: '', rule: '' }]
-    model.draft.value.theme = 'dark'
+    model.draft.value.appearance.theme = 'dark'
     await model.persist()
     expect(model.draft.value.aiTasks[0]?.id).toBe('unfinished')
     expect(model.isSaved()).toBe(true)

@@ -63,7 +63,8 @@ fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str
         .into_iter()
         .flatten();
     let stt_models = config
-        .get("sttModels")
+        .get("stt")
+        .and_then(|value| value.get("models"))
         .and_then(serde_json::Value::as_array)
         .into_iter()
         .flatten();
@@ -126,12 +127,9 @@ mod tests {
 
     #[test]
     fn allows_only_configured_or_secret_bound_origins() {
-        let config = serde_json::json!({
-            "llm": {
-                "providers": [{ "baseUrl": "http://localhost:11434/v1" }]
-            },
-            "sttModels": [{ "baseUrl": "wss://speech.example/v1" }]
-        });
+        let config = serde_json::json!({"llm":{"providers":[{"baseUrl":"http://localhost:11434/v1" }]
+            },"stt":{"models":[{"baseUrl":"wss://speech.example/v1" }]
+        }});
         let mut secrets = crate::services::secrets::Secrets::new();
         secrets.insert(
             "google".into(),
