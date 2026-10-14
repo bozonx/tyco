@@ -1,6 +1,6 @@
 # Configuration and persistent files
 
-`userConfig.yaml` is a YAML mapping with camelCase keys. The supported schema
+`userConfig.json` is a JSON object with camelCase keys. The supported schema
 version comes from `packages/shared/src/config-version.json`. Portable defaults
 come from `user-config-defaults.json`; the Rust backend overrides only platform
 hotkeys and insertion binaries. `user-config-schema.json` describes known fields,
@@ -20,10 +20,8 @@ The portable `registrationState` ledger has separate `reviewedMainActionIds`,
 `seededCommandIds`, and `seededToolIds`; it travels with the user's configuration
 so deleted defaults do not return on another installation.
 
-YAML updates retain unchanged nodes, quotes, order and comments. Comments in a
-replaced collection remain file annotations. The rendered YAML is parsed again
-and must match the exact requested values before the atomic write. Concurrent
-window edits use a three-way merge; conflicting arrays are rejected explicitly.
+Every save writes the whole config atomically. Concurrent window edits use a
+three-way merge; conflicting arrays are rejected explicitly.
 
 ## Lifetime and locations
 
@@ -38,7 +36,7 @@ in `services/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
 
 | Root                                  | Files                                                                                                                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Config (`~/.config/com.tyco.app`)     | `userConfig.yaml`, latest `userConfig.repaired.bak`, `secrets.json`                                                                                                      |
+| Config (`~/.config/com.tyco.app`)     | `userConfig.json`, latest `userConfig.repaired.bak`, `secrets.json`                                                                                                      |
 | Data (`~/.local/share/com.tyco.app`)  | `history/editor-history.jsonl`; `chats/index.json`, `<id>.json`, `images/`, `chat-transaction.pending`; `plugins/<key>.json` and `<key>.previous`; Linux webview storage |
 | State (`~/.local/state/com.tyco.app`) | `logs/tyco.log` and its rotations; `logs/actions.log` and `actions.log.1`                                                                                                |
 | Cache (`~/.cache/com.tyco.app`)       | Platform/app cache directory; no application-owned model downloads                                                                                                       |

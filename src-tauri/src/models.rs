@@ -12,7 +12,7 @@ pub use editor_history::*;
 pub use session_state::*;
 pub use storage::*;
 
-pub const CONFIG_FILE_NAME: &str = "userConfig.yaml";
+pub const CONFIG_FILE_NAME: &str = "userConfig.json";
 
 #[cfg(test)]
 mod tests {

@@ -20,8 +20,6 @@ pub enum AppError {
     Io(#[from] std::io::Error),
     #[error(transparent)]
     Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Yaml(#[from] serde_yaml::Error),
 }
 
 impl AppError {
@@ -35,7 +33,7 @@ impl AppError {
             Self::UnsupportedConfig(_) => "unsupportedConfig",
             Self::Tauri(_) => "runtimeError",
             Self::Io(_) => "ioError",
-            Self::Json(_) | Self::Yaml(_) => "invalidData",
+            Self::Json(_) => "invalidData",
         }
     }
 }
@@ -60,7 +58,6 @@ mod tests {
     #[test]
     fn ipc_errors_preserve_codes_and_readable_messages() {
         let json_err = serde_json::from_str::<serde_json::Value>("{").unwrap_err();
-        let yaml_err = serde_yaml::from_str::<serde_json::Value>(":").unwrap_err();
 
         for (error, code) in [
             (
@@ -95,7 +92,6 @@ mod tests {
                 "ioError",
             ),
             (AppError::Json(json_err), "invalidData"),
-            (AppError::Yaml(yaml_err), "invalidData"),
         ] {
             assert_eq!(
                 serde_json::to_value(&error).unwrap(),

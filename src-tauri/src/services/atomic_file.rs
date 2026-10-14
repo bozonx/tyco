@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn quarantine_keeps_the_original_content() {
         let dir = TestDir::new("quarantine");
-        let path = dir.join("config.yaml");
+        let path = dir.join("config.json");
         fs::write(&path, "broken: [").unwrap();
 
         let target = quarantine(&path).unwrap();

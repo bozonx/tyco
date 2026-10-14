@@ -1,6 +1,5 @@
 mod backups;
 mod normalization;
-mod yaml;
 
 use super::*;
 use backups::back_up_config_before_repair;
@@ -10,7 +9,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
 
     if let Some(mut value) = read_or_quarantine(&path, |raw| {
-        let value: Value = serde_yaml::from_str(raw)?;
+        let value: Value = serde_json::from_str(raw)?;
 
         if value.is_object() {
             Ok(value)
@@ -89,8 +88,8 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(error.into()),
     };
-    if let Some(raw) = &previous {
-        let original: Value = serde_yaml::from_str(raw)?;
+    if let Some(raw) = previous {
+        let original: Value = serde_json::from_str(&raw)?;
         if config_version::is_newer_than_supported(&original) {
             return Err(newer_config_error());
         }
@@ -98,8 +97,7 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
             back_up_config_before_repair(&path, &original)?;
         }
     }
-    let rendered = yaml::render_config(previous.as_deref(), user_config)?;
-    write_private(&path, &rendered)
+    write_json(&path, user_config)
 }
 
 pub fn newer_config_error() -> AppError {

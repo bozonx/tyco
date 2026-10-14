@@ -32,7 +32,6 @@ sha2 = "0.10"
 png = "0.17"
 percent-encoding = "2"
 webp = { version = "0.3", default-features = false }
-serde_yaml = "0.9"
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-log = "2"
 tauri-plugin-single-instance = "2.4.5"
@@ -43,7 +42,6 @@ tyco-activation-protocol = { path = "crates/activation-protocol" }
 url = "2"
 zbus = "4"
 tauri-plugin-dialog = "2.7.2"
-yaml-edit = "=0.3.2"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt", "net", "io-util", "time"] }

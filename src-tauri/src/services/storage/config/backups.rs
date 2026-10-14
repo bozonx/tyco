@@ -1,4 +1,4 @@
-use super::super::{write_private, AppError, Path, Value, CONFIG_FILE_NAME};
+use super::super::{write_json, AppError, Path, Value, CONFIG_FILE_NAME};
 
 /// A recoverable snapshot before repairing a current-version file.
 pub(super) fn back_up_config_before_repair(path: &Path, original: &Value) -> Result<(), AppError> {
@@ -6,10 +6,7 @@ pub(super) fn back_up_config_before_repair(path: &Path, original: &Value) -> Res
         .rsplit_once('.')
         .map_or(CONFIG_FILE_NAME, |(stem, _)| stem);
     let backup = path.with_file_name(format!("{stem}.repaired.bak"));
-    write_private(
-        &backup,
-        &serde_yaml::to_string(&without_api_keys(original))?,
-    )
+    write_json(&backup, &without_api_keys(original))
 }
 
 /// `value` without the fields that held API keys, at any depth.

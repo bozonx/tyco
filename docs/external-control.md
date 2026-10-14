@@ -112,9 +112,8 @@ Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
 
 The corresponding user configuration is:
 
-```yaml
-externalAccess:
-  selection: false
+```json
+{ "externalAccess": { "selection": false } }
 ```
 
 A command's external grant does not bypass its tool's availability or permission
