@@ -225,30 +225,20 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  toRaw,
-  watch,
-} from 'vue'
+import { computed, onMounted, ref, toRaw } from 'vue'
 
+import { useChatFileDrop } from '../../composables/use-chat-file-drop'
+import { useChatScroll } from '../../composables/use-chat-scroll'
 import { useChatVoiceInput } from '../../composables/use-chat-voice-input'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
-import { createChatFileDropTarget } from '../../lib/chat/chat-file-drop-target'
-import { getDesktopWebview as getCurrentWebview } from '../../lib/desktop/window'
 import {
   newlineShortcut,
   resolveSubmitKey,
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
-import { clientLogger } from '../../lib/logger'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { resolveScrollBehavior } from '../../lib/ui/scroll-behavior'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
 import { useIpcStore } from '../../stores/ipc'
@@ -287,9 +277,21 @@ const inputHint = computed(() => {
     newline: newlineShortcut(submitKey),
   })
 })
-const scroller = ref<HTMLElement | null>(null)
-const pinnedToBottom = ref(true)
-const showScrollButton = ref(false)
+const {
+  scroller,
+  pinnedToBottom,
+  showScrollButton,
+  handleScroll,
+  handleContentResized,
+  scrollToBottom,
+} = useChatScroll({
+  getChatId: () => chatStore.currentChatParams?.id,
+  getStreamRevision: () => [
+    chatStore.messages.length,
+    chatStore.messages.at(-1)?.content.length,
+  ],
+  clearInput: chatInputStore.clear,
+})
 const filePicker = ref<HTMLInputElement | null>(null)
 function pickFiles(event: Event) {
   const input = event.target as HTMLInputElement
@@ -384,101 +386,22 @@ function voiceInput() {
   openChatVoiceInput({ finishBehavior: 'confirm' })
 }
 
-function handleScroll() {
-  const element = scroller.value
-  if (!element) return
-  const distance =
-    element.scrollHeight - element.scrollTop - element.clientHeight
-  pinnedToBottom.value = distance < 80
-  showScrollButton.value = distance > 160
-}
-
-function handleContentResized() {
-  if (pinnedToBottom.value) void scrollToBottom()
-}
-
-// Follows the stream instantly: a smooth scroll restarted on every chunk
-// can stop at a fractional offset, and WebKitGTK then shows blurry text
-async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {
-  await nextTick()
-  const element = scroller.value
-  if (!element) return
-  const top = Math.max(0, element.scrollHeight - element.clientHeight)
-  element.scrollTo({
-    top: Math.round(top),
-    behavior: resolveScrollBehavior(
-      behavior,
-      document.documentElement.dataset.motion
-    ),
-  })
-}
-
-const composerRef = ref<HTMLElement | null>(null)
-const draggingFiles = ref(false)
-const fileDropTarget = createChatFileDropTarget({
-  getBounds: () => composerRef.value?.getBoundingClientRect() ?? null,
-  getScale: () => window.devicePixelRatio,
+const { composerRef, draggingFiles } = useChatFileDrop({
+  getContext: () => [
+    chatStore.isGenerating,
+    chatStore.selectedModel,
+    isInlineVoice.value,
+  ],
   canAccept: () =>
     !chatStore.isGenerating &&
     Boolean(chatStore.selectedModel) &&
     !isInlineVoice.value,
-  setDragging: (value) => {
-    draggingFiles.value = value
-  },
   accept: (paths) => chatStore.addDroppedFiles(paths),
 })
-watch(
-  () => [chatStore.isGenerating, chatStore.selectedModel, isInlineVoice.value],
-  () => {
-    draggingFiles.value = false
-  }
-)
-let unlistenDrop: (() => void) | undefined
-let disposed = false
-onBeforeUnmount(() => {
-  disposed = true
-  fileDropTarget.dispose()
-  unlistenDrop?.()
-})
 onMounted(() => {
-  void getCurrentWebview()
-    .onDragDropEvent(({ payload }) => {
-      void fileDropTarget.handle(payload).catch((error) => {
-        clientLogger.error('Failed to import dropped chat files', error, 'chat')
-      })
-    })
-    .then((unlisten) => {
-      if (disposed) unlisten()
-      else unlistenDrop = unlisten
-    })
-    .catch((error) => {
-      clientLogger.error(
-        'Failed to register chat file drop listener',
-        error,
-        'chat'
-      )
-    })
-  // keys may have been added or removed while the chat was not shown
-  // on failure the list stays as it was with the keys known before
+  // Keys may have changed while the chat was not shown.
   llmStore.refreshSecrets().catch(() => undefined)
 })
-
-watch(
-  // the stream only grows the last message: no need to read every one
-  () => [chatStore.messages.length, chatStore.messages.at(-1)?.content.length],
-  () => {
-    if (pinnedToBottom.value) void scrollToBottom()
-  }
-)
-
-watch(
-  () => chatStore.currentChatParams?.id,
-  () => {
-    chatInputStore.clear()
-    pinnedToBottom.value = true
-    void scrollToBottom()
-  }
-)
 </script>
 
 <style scoped>

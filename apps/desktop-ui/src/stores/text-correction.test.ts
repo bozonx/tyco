@@ -7,9 +7,7 @@ import { useIpcStore } from './ipc'
 const mocks = vi.hoisted(() => ({
   correctText: vi.fn(async () => 'First result'),
 }))
-vi.mock('../composables/use-llm-actions', () => ({
-  useLlmActions: () => mocks,
-}))
+vi.mock('./llm', () => ({ useLlmStore: () => ({ actions: mocks }) }))
 
 let pinia: ReturnType<typeof createPinia>
 beforeEach(() => {

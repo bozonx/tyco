@@ -1,9 +1,8 @@
+import { invokeDesktop } from '../lib/desktop/invoke'
 import { createChatController } from '../lib/chat/chat-controller'
 import {
-  storeChatImage,
-  syncChatImages,
   readDroppedChatFile,
-  loadChatWithImages,
+  createChatImageStorage,
 } from '../lib/chat/chat-image-storage'
 import { type ChatFileErrorKind } from '../lib/chat/chat-file-input'
 import { createChatFileController } from '../lib/chat/chat-file-controller'
@@ -19,7 +18,6 @@ import { computed, nextTick, onScopeDispose, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { useChatInputStore } from './chat-input'
 
-import { useLlmActions } from '../composables/use-llm-actions'
 import useToast from '../composables/use-toast'
 import {
   chatModelOptions,
@@ -38,11 +36,16 @@ import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
 
 export const useChatStore = defineStore('chat', () => {
+  const { storeChatImage, syncChatImages, loadChatWithImages } =
+    createChatImageStorage({
+      invoke: invokeDesktop,
+      createId: () => crypto.randomUUID(),
+    })
   const { toastKey, toastText } = useToast()
-  const { sendChatMessage, generateChatTitle } = useLlmActions()
   const ipcStore = useIpcStore()
   const saveSessionState = ipcStore.patchSessionState
   const llmStore = useLlmStore()
+  const { sendChatMessage, generateChatTitle } = llmStore.actions
   const historyStore = useHistoryStore()
   const editorInputStore = useEditorInputStore()
   const chatInputStore = useChatInputStore()

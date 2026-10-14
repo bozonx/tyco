@@ -15,11 +15,17 @@ const ai = vi.hoisted(() => ({
   generateChatTitle: vi.fn(async () => ''),
 }))
 
-vi.mock('../composables/use-llm-actions', () => ({ useLlmActions: () => ai }))
-vi.mock(import('../lib/chat/chat-image-storage'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  syncChatImages: vi.fn(async () => {}),
-}))
+vi.mock('./llm', () => ({ useLlmStore: () => ({ actions: ai, secrets: {} }) }))
+vi.mock(import('../lib/chat/chat-image-storage'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    createChatImageStorage: (deps) => ({
+      ...original.createChatImageStorage(deps),
+      syncChatImages: vi.fn(async () => {}),
+    }),
+  }
+})
 
 let pinia: ReturnType<typeof createPinia>
 beforeEach(() => {

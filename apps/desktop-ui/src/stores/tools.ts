@@ -2,7 +2,7 @@ import { defineStore, getActivePinia } from 'pinia'
 
 import type { LlmTask } from '@tyco/shared'
 
-import { useLlmActions } from '../composables/use-llm-actions'
+import { useLlmStore } from './llm'
 import { useTranslationActions } from '../composables/use-translation-actions'
 import { useDesktopInsertion } from '../composables/use-desktop-insertion'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
@@ -30,7 +30,7 @@ export const useToolsStore = defineStore('tools', () => {
   const pinia = getActivePinia()
   const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
-  const { aiCustomPrompt } = useLlmActions()
+  const { aiCustomPrompt } = useLlmStore().actions
   const { translateTo } = useTranslationActions()
   const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = useDesktopInsertion()

@@ -1,29 +1,35 @@
 import { describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
-vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke }))
-import {
-  loadChatWithImages,
-  storeChatImage,
-  syncChatImages,
-} from './chat-image-storage'
+import { createChatImageStorage } from './chat-image-storage'
+import type { DesktopInvoke } from '@tyco/shared'
+
+function fixture() {
+  const invoke = vi.fn()
+  let leaseCount = 0
+  const storage = createChatImageStorage({
+    invoke: invoke as DesktopInvoke,
+    createId: () => `lease-${++leaseCount}`,
+  })
+  return { invoke, ...storage }
+}
 
 it('hands completed import leases to ownership synchronization and retries failed syncs', async () => {
-  mocks.invoke.mockResolvedValueOnce({ id: 'image' })
+  const { invoke, storeChatImage, syncChatImages } = fixture()
+  invoke.mockResolvedValueOnce({ id: 'image' })
   const bytes = new Uint8Array([1])
-  await storeChatImage(bytes, 'фото.png')
-  const [command, body, options] = mocks.invoke.mock.calls[0]
+  await storeChatImage(bytes, 'image with spaces.png')
+  const [command, body, options] = invoke.mock.calls[0]
   expect(command).toBe('store_chat_image')
   expect(body).toBe(bytes)
   expect(options.headers['x-chat-image-name']).toBe(
-    encodeURIComponent('фото.png')
+    encodeURIComponent('image with spaces.png')
   )
   const lease = options.headers['x-chat-image-lease']
-  mocks.invoke.mockRejectedValueOnce(new Error('IPC failed'))
+  invoke.mockRejectedValueOnce(new Error('IPC failed'))
   await expect(syncChatImages(['image'])).rejects.toThrow('IPC failed')
-  mocks.invoke.mockResolvedValueOnce(undefined)
+  invoke.mockResolvedValueOnce(undefined)
   await syncChatImages(['image'])
-  expect(mocks.invoke).toHaveBeenLastCalledWith('sync_chat_images', {
+  expect(invoke).toHaveBeenLastCalledWith('sync_chat_images', {
     ids: ['image'],
     leases: [lease],
   })
@@ -31,14 +37,33 @@ it('hands completed import leases to ownership synchronization and retries faile
 
 describe('history image ownership', () => {
   it('pins loaded images under a lease until the frontend has accepted the chat', async () => {
-    mocks.invoke.mockResolvedValueOnce({ id: 'chat' })
+    const { invoke, loadChatWithImages, syncChatImages } = fixture()
+    invoke.mockResolvedValueOnce({ id: 'chat' })
     expect(await loadChatWithImages('chat')).toEqual({ id: 'chat' })
-    const lease = mocks.invoke.mock.calls.at(-1)![1].lease
-    mocks.invoke.mockResolvedValueOnce(undefined)
+    const lease = invoke.mock.calls.at(-1)![1].lease
+    invoke.mockResolvedValueOnce(undefined)
     await syncChatImages(['image'])
-    expect(mocks.invoke).toHaveBeenLastCalledWith('sync_chat_images', {
+    expect(invoke).toHaveBeenLastCalledWith('sync_chat_images', {
       ids: ['image'],
       leases: [lease],
     })
+  })
+})
+
+it('keeps completed leases isolated between storage instances', async () => {
+  const first = fixture()
+  const second = fixture()
+  first.invoke.mockResolvedValue({ id: 'image' })
+  second.invoke.mockResolvedValue(undefined)
+  await first.storeChatImage(new Uint8Array([1]), 'image.png')
+  await second.syncChatImages([])
+  expect(second.invoke).toHaveBeenCalledWith('sync_chat_images', {
+    ids: [],
+    leases: [],
+  })
+  await first.syncChatImages(['image'])
+  expect(first.invoke).toHaveBeenLastCalledWith('sync_chat_images', {
+    ids: ['image'],
+    leases: ['lease-1'],
   })
 })

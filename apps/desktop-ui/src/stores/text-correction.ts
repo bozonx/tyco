@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 import { useIpcStore } from './ipc'
 
-import { useLlmActions } from '../composables/use-llm-actions'
+import { useLlmStore } from './llm'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
 
 /**
@@ -11,7 +11,7 @@ import { createQuickCorrection } from '../lib/quick-input/quick-correction'
  * reused by whatever asks for the same text
  */
 export const useTextCorrectionStore = defineStore('textCorrection', () => {
-  const { correctText } = useLlmActions()
+  const { correctText } = useLlmStore().actions
 
   const corrector = createQuickCorrection({
     // errors are shown by whoever needed the result

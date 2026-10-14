@@ -8,7 +8,7 @@ interface DropBounds {
   top: number
   bottom: number
 }
-type FileDropEvent =
+export type FileDropEvent =
   | { type: 'leave' }
   | { type: 'enter' | 'over'; position: DropPosition }
   | { type: 'drop'; position: DropPosition; paths: string[] }
