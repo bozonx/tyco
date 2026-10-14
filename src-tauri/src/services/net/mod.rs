@@ -5,6 +5,8 @@
 //! webview never holds one. Responses and socket frames go back through a
 //! Tauri channel — JSON events for control, raw bytes for bodies.
 
+pub mod authorization;
+pub mod gateway;
 pub mod http;
 pub mod image;
 pub mod request;
@@ -12,15 +14,16 @@ pub mod socket;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::sync::{Arc, Condvar, Mutex};
+use std::time::{Duration, Instant};
 
 use futures_util::future::{AbortHandle, AbortRegistration};
 use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody};
-use tokio::sync::{mpsc::Sender, Semaphore};
+use tokio::sync::{mpsc::Sender, OwnedSemaphorePermit, Semaphore};
 
 pub const FETCH_WINDOW_CHUNKS: usize = 8;
+const MAX_ACTIVE_OPERATIONS: usize = 32;
 
 use crate::errors::AppError;
 use socket::SocketCommand;
@@ -54,8 +57,17 @@ impl EventSink for Channel<InvokeResponseBody> {
     }
 }
 
+#[derive(Default)]
+struct TaskActivity {
+    active_count: Mutex<usize>,
+    changed: Condvar,
+}
+
 pub struct NetState {
+    admission: Arc<Mutex<bool>>,
+    activity: Arc<TaskActivity>,
     client: reqwest::Client,
+    operation_permits: Arc<Semaphore>,
     next_id: AtomicU64,
     task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
@@ -72,7 +84,10 @@ impl NetState {
             .map_err(|error| AppError::Message(format!("HTTP client: {error}")))?;
 
         Ok(Self {
+            admission: Arc::default(),
+            activity: Arc::default(),
             client,
+            operation_permits: Arc::new(Semaphore::new(MAX_ACTIVE_OPERATIONS)),
             next_id: AtomicU64::new(1),
             task_abort_handles: Arc::default(),
             sockets: Arc::default(),
@@ -89,7 +104,19 @@ impl NetState {
     }
 
     /// Registration owns cleanup even when a task is cancelled or panics.
-    pub fn register_task(&self) -> (NetTaskRegistration, AbortRegistration) {
+    pub fn register_task(&self) -> Result<(NetTaskRegistration, AbortRegistration), AppError> {
+        let operation_permit =
+            self.operation_permits
+                .clone()
+                .try_acquire_owned()
+                .map_err(|error| match error {
+                    tokio::sync::TryAcquireError::Closed => {
+                        AppError::ServiceUnavailable("Network service is stopping".into())
+                    }
+                    tokio::sync::TryAcquireError::NoPermits => {
+                        AppError::ResourceLimit("Too many active network operations".into())
+                    }
+                })?;
         let id = self.next_id();
         let (handle, registration) = AbortHandle::new_pair();
         self.task_abort_handles
@@ -101,8 +128,16 @@ impl NetState {
             .lock()
             .expect("response chunk permits lock")
             .insert(id, chunk_permits.clone());
-        (
+        *self
+            .activity
+            .active_count
+            .lock()
+            .expect("network activity lock poisoned") += 1;
+        Ok((
             NetTaskRegistration {
+                admission: self.admission.clone(),
+                activity: self.activity.clone(),
+                _operation_permit: operation_permit,
                 id,
                 task_abort_handles: Arc::clone(&self.task_abort_handles),
                 sockets: Arc::clone(&self.sockets),
@@ -110,7 +145,7 @@ impl NetState {
                 chunk_permits,
             },
             registration,
-        )
+        ))
     }
 
     /// Stops a request. Unknown ids are fine: the request may have finished.
@@ -165,6 +200,12 @@ impl NetState {
 
     /// Closes all active sockets and aborts in-flight fetches on shutdown.
     pub fn close_all(&self) {
+        let mut is_stopping = self
+            .admission
+            .lock()
+            .expect("network admission lock poisoned");
+        *is_stopping = true;
+        self.operation_permits.close();
         let sockets = std::mem::take(&mut *self.sockets.lock().expect("sockets lock"));
         for sender in sockets.into_values() {
             let _ = sender.try_send(SocketCommand::Close(None));
@@ -179,10 +220,31 @@ impl NetState {
             handle.abort();
         }
     }
+    pub fn wait_until(&self, deadline: Instant) -> bool {
+        let count = self
+            .activity
+            .active_count
+            .lock()
+            .expect("network activity lock poisoned");
+        *self
+            .activity
+            .changed
+            .wait_timeout_while(
+                count,
+                deadline.saturating_duration_since(Instant::now()),
+                |count| *count != 0,
+            )
+            .expect("network activity lock poisoned")
+            .0
+            == 0
+    }
 }
 
 /// A task lease keeps registry mutation inside the network service.
 pub struct NetTaskRegistration {
+    admission: Arc<Mutex<bool>>,
+    activity: Arc<TaskActivity>,
+    _operation_permit: OwnedSemaphorePermit,
     chunk_permits: Arc<Semaphore>,
     id: u64,
     task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
@@ -196,11 +258,19 @@ impl NetTaskRegistration {
     pub fn response_chunk_permits(&self) -> Arc<Semaphore> {
         self.chunk_permits.clone()
     }
-    pub fn register_socket(&self, sender: Sender<SocketCommand>) {
+    pub fn register_socket(&self, sender: Sender<SocketCommand>) -> bool {
+        let is_stopping = self
+            .admission
+            .lock()
+            .expect("network admission lock poisoned");
+        if *is_stopping {
+            return false;
+        }
         self.sockets
             .lock()
             .expect("sockets lock")
             .insert(self.id, sender);
+        true
     }
 }
 impl Drop for NetTaskRegistration {
@@ -218,6 +288,12 @@ impl Drop for NetTaskRegistration {
         {
             handle.abort();
         }
+        *self
+            .activity
+            .active_count
+            .lock()
+            .expect("network activity lock poisoned") -= 1;
+        self.activity.changed.notify_all();
     }
 }
 
@@ -232,9 +308,69 @@ mod tests {
     use crate::services::secrets::Secrets;
 
     #[test]
+    fn active_operations_are_bounded_and_release_capacity_only_on_drop() {
+        let net = NetState::new().unwrap();
+        let mut tasks = (0..MAX_ACTIVE_OPERATIONS)
+            .map(|_| net.register_task().unwrap().0)
+            .collect::<Vec<_>>();
+        assert!(matches!(
+            net.register_task(),
+            Err(AppError::ResourceLimit(_))
+        ));
+        net.cancel_task(tasks[0].id());
+        assert!(matches!(
+            net.register_task(),
+            Err(AppError::ResourceLimit(_))
+        ));
+        tasks.pop();
+        let (replacement, _) = net.register_task().unwrap();
+        drop(tasks);
+        drop(replacement);
+        assert!(net.wait_until(Instant::now()));
+    }
+
+    #[test]
+    fn shutdown_rejects_new_tasks_and_late_socket_registration() {
+        let net = NetState::new().unwrap();
+        let (task, _) = net.register_task().unwrap();
+        net.close_all();
+        assert!(matches!(
+            net.register_task(),
+            Err(AppError::ServiceUnavailable(_))
+        ));
+        let (sender, _) = tokio::sync::mpsc::channel(1);
+        assert!(!task.register_socket(sender));
+        assert!(!net.wait_until(Instant::now()));
+        drop(task);
+        assert!(net.wait_until(Instant::now()));
+        assert!(net.sockets.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn concurrent_registration_never_exceeds_the_global_limit() {
+        let net = NetState::new().unwrap();
+        let gate = std::sync::Barrier::new(MAX_ACTIVE_OPERATIONS * 2);
+        let accepted = std::sync::atomic::AtomicUsize::new(0);
+        std::thread::scope(|scope| {
+            for _ in 0..MAX_ACTIVE_OPERATIONS * 2 {
+                scope.spawn(|| {
+                    let lease = net.register_task();
+                    if lease.is_ok() {
+                        accepted.fetch_add(1, Ordering::SeqCst);
+                    }
+                    gate.wait();
+                    drop(lease);
+                });
+            }
+        });
+        assert_eq!(accepted.load(Ordering::SeqCst), MAX_ACTIVE_OPERATIONS);
+        assert!(net.wait_until(Instant::now()));
+    }
+
+    #[test]
     fn task_registration_drop_cleans_all_registries() {
         let net = NetState::new().unwrap();
-        let (task, _) = net.register_task();
+        let (task, _) = net.register_task().unwrap();
         let (sender, _) = tokio::sync::mpsc::channel(1);
         task.register_socket(sender);
         assert_eq!(net.task_abort_handles.lock().unwrap().len(), 1);

@@ -70,8 +70,8 @@ impl AppState {
             .expect("tool catalog lock poisoned") = Some(catalog);
     }
 
-    pub fn set_quitting(&self, quitting: bool) {
-        self.is_quitting.store(quitting, Ordering::SeqCst);
+    pub fn begin_quitting(&self) -> bool {
+        !self.is_quitting.swap(true, Ordering::SeqCst)
     }
 
     pub fn is_quitting(&self) -> bool {

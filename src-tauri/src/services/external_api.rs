@@ -1,4 +1,5 @@
 //! The authorization and dispatch boundary shared by D-Bus and local IPC.
+use crate::errors::AppError;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager};
@@ -462,18 +463,31 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
 }
 
 /// Expires abandoned UI requests even when no external client polls them.
-pub fn spawn_reaper(app: AppHandle) {
-    tauri::async_runtime::spawn(async move {
+pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
+    let services = app.state::<super::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_async(async move {
+        let app = handle;
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let maintenance_app = app.clone();
+            let _ = app
+                .state::<super::background::BackgroundServices>()
+                .run_blocking(move || {
+                    let state = maintenance_app.state::<AppState>();
+                    state.history.retry_cleanup(&maintenance_app, &state);
+                })
+                .await;
             let ids = app.state::<ExternalJobs>().expired_job_ids();
             for id in ids {
-                let app = app.clone();
-                let _ = tauri::async_runtime::spawn_blocking(move || cancel(&app, &id, "TimedOut"))
+                let handle = app.clone();
+                let _ = app
+                    .state::<super::background::BackgroundServices>()
+                    .run_blocking(move || cancel(&handle, &id, "TimedOut"))
                     .await;
             }
         }
-    });
+    })
 }
 
 fn open(
@@ -572,10 +586,14 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         },
         Request::Quit => {
             let app = app.clone();
-            tauri::async_runtime::spawn(async move {
+            let services = app.state::<super::background::BackgroundServices>();
+            let handle = app.clone();
+            if let Err(error) = services.spawn_async(async move {
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                app.exit(0);
-            });
+                handle.exit(0);
+            }) {
+                return Response::coded_error("ServiceUnavailable", error.to_string());
+            }
             Response::success()
         }
     }

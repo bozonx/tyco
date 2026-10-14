@@ -2,7 +2,7 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
@@ -56,13 +56,13 @@ fn protect_headers(
 }
 
 /// Rolls back freshly created header secrets if the config transaction fails.
-pub struct PendingHeaderSecrets {
-    app: AppHandle,
+pub struct PendingHeaderSecrets<'a> {
+    store: &'a SecretStore,
     created: Vec<String>,
     committed: bool,
 }
 
-impl PendingHeaderSecrets {
+impl PendingHeaderSecrets<'_> {
     /// Preserve keys when a failed rollback leaves the disk state uncertain.
     pub fn retain(mut self) {
         self.committed = true;
@@ -83,20 +83,15 @@ impl PendingHeaderSecrets {
             }
         }
         let candidates = referenced_secrets(previous);
-        cleanup(
-            &self.app.state::<SecretStore>(),
-            &retained,
-            false,
-            Some(&candidates),
-        );
+        cleanup(self.store, &retained, false, Some(&candidates));
     }
 }
 
-impl Drop for PendingHeaderSecrets {
+impl Drop for PendingHeaderSecrets<'_> {
     fn drop(&mut self) {
         if !self.committed {
             for id in &self.created {
-                if let Err(error) = self.app.state::<SecretStore>().remove(id) {
+                if let Err(error) = self.store.remove(id) {
                     log::warn!("Could not roll back webhook header secret: {error}");
                 }
             }
@@ -104,14 +99,13 @@ impl Drop for PendingHeaderSecrets {
     }
 }
 
-pub fn protect_for_save(
-    app: &AppHandle,
+pub fn protect_for_save<'a>(
+    store: &'a SecretStore,
     config: &mut Value,
-) -> Result<PendingHeaderSecrets, AppError> {
-    let store = app.state::<SecretStore>();
+) -> Result<PendingHeaderSecrets<'a>, AppError> {
     let known: HashSet<String> = store.ids().into_iter().collect();
     let mut pending = PendingHeaderSecrets {
-        app: app.clone(),
+        store,
         created: Vec::new(),
         committed: false,
     };

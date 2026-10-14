@@ -118,6 +118,13 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
     (modifiers, key)
 }
 
+pub(crate) async fn shutdown(app: &tauri::AppHandle) {
+    #[cfg(target_os = "linux")]
+    super::linux::hotkeys_portal::shutdown(app).await;
+    #[cfg(not(target_os = "linux"))]
+    let _ = app;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

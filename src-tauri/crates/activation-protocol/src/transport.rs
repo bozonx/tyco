@@ -84,6 +84,27 @@ pub fn serve(handler: impl Fn(Request) -> Response + Send + Sync + 'static) -> R
         .map_err(|error| error.to_string())
 }
 
+/// Stop accepting clients and drop their connection tasks when shutdown begins.
+pub async fn serve_until(
+    handler: impl Fn(Request) -> Response + Send + Sync + 'static,
+    shutdown: impl std::future::Future<Output = ()>,
+) -> Result<(), String> {
+    tokio::select! {
+        biased;
+        _ = shutdown => Ok(()),
+        result = serve_async(Arc::new(handler)) => result.map_err(|error| error.to_string()),
+    }
+}
+
+#[cfg(unix)]
+struct SocketFile(std::path::PathBuf);
+#[cfg(unix)]
+impl Drop for SocketFile {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
 #[cfg(unix)]
 fn directory() -> io::Result<std::path::PathBuf> {
     use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -148,9 +169,16 @@ async fn connect() -> io::Result<tokio::net::UnixStream> {
 
 #[cfg(unix)]
 async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) -> io::Result<()> {
+    serve_unix(directory()?, handler).await
+}
+
+#[cfg(unix)]
+async fn serve_unix(
+    directory: std::path::PathBuf,
+    handler: Arc<dyn Fn(Request) -> Response + Send + Sync>,
+) -> io::Result<()> {
     use std::os::fd::AsRawFd;
     use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
-    let directory = directory()?;
     // The lock serializes stale-socket removal and stays held for the server lifetime.
     let lock = std::fs::OpenOptions::new()
         .read(true)
@@ -173,9 +201,12 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
         Err(error) => return Err(error),
     }
     let listener = tokio::net::UnixListener::bind(&path)?;
+    let _socket_file = SocketFile(path.clone());
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
     let clients = Arc::new(tokio::sync::Semaphore::new(MAX_CLIENTS));
+    let mut connections = tokio::task::JoinSet::new();
     loop {
+        while connections.try_join_next().is_some() {}
         // a failed connection, or a moment without free descriptors, must not
         // end the server for the rest of the session
         let stream = match listener.accept().await {
@@ -195,7 +226,7 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
             continue;
         };
         let handler = handler.clone();
-        tokio::spawn(async move {
+        connections.spawn(async move {
             let _permit = permit;
             handle(stream, handler).await;
         });
@@ -329,7 +360,9 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
     let mut server = create(&options)?;
     options.first_pipe_instance(false);
     let clients = Arc::new(tokio::sync::Semaphore::new(MAX_CLIENTS));
+    let mut connections = tokio::task::JoinSet::new();
     loop {
+        while connections.try_join_next().is_some() {}
         let permit = clients
             .clone()
             .acquire_owned()
@@ -350,7 +383,7 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
         }
         let connected = accepted;
         let handler = handler.clone();
-        tokio::spawn(async move {
+        connections.spawn(async move {
             let _permit = permit;
             handle(connected, handler).await;
         });
@@ -360,6 +393,71 @@ async fn serve_async(handler: Arc<dyn Fn(Request) -> Response + Send + Sync>) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn a_preexisting_shutdown_does_not_open_a_listener() {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                serve_until(
+                    |_| panic!("shutdown server accepted a request"),
+                    std::future::ready(()),
+                )
+                .await
+                .unwrap();
+            });
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cancelling_the_listener_removes_its_socket_and_releases_the_server_lock() {
+        use std::os::unix::fs::DirBuilderExt;
+        let directory = std::env::temp_dir().join(format!(
+            "tyco-listener-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&directory)
+            .unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            for _ in 0..2 {
+                let mut server = Box::pin(serve_unix(directory.clone(), Arc::new(|_| Response::success())));
+                let connect = async {
+                    loop {
+                        if let Ok(stream) = tokio::net::UnixStream::connect(directory.join("control.sock")).await { return stream; }
+                        tokio::task::yield_now().await;
+                    }
+                };
+                let mut stream = tokio::select! {
+                    result = &mut server => panic!("server stopped: {result:?}"),
+                    result = tokio::time::timeout(Duration::from_secs(1), connect) => result.unwrap(),
+                };
+                tokio::select! {
+                    biased;
+                    result = &mut server => panic!("server stopped: {result:?}"),
+                    _ = tokio::task::yield_now() => {}
+                }
+                // An idle client must not keep the listener or its lock alive.
+                drop(server);
+                assert!(!directory.join("control.sock").exists());
+                let mut byte = [0];
+                assert_eq!(tokio::time::timeout(Duration::from_secs(1), stream.read(&mut byte)).await.unwrap().unwrap(), 0);
+                drop(stream);
+            }
+        });
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+
     #[test]
     fn framing_preserves_unicode_and_rejects_incomplete_frames() {
         tokio::runtime::Builder::new_current_thread()

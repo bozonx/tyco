@@ -180,6 +180,9 @@ impl SelectionRunCoordinator {
 /// System effects of a selection run. The coordinator never needs a webview
 /// or a real clipboard when these operations are substituted.
 trait SelectionBackend {
+    fn can_run(&self) -> bool {
+        true
+    }
     fn user_config(&self) -> Value;
     fn wait(&self, wait: TriggerWait);
     fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError>;
@@ -197,6 +200,9 @@ trait SelectionBackend {
 struct SystemSelectionBackend<'a>(&'a AppHandle);
 
 impl SelectionBackend for SystemSelectionBackend<'_> {
+    fn can_run(&self) -> bool {
+        !self.0.state::<AppState>().is_quitting()
+    }
     fn user_config(&self) -> Value {
         self.0.state::<AppState>().snapshot().settings.user_config
     }
@@ -224,6 +230,11 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
         paste_result(config, run, text)
     }
     fn publish(&self, event: SelectionRunEvent) -> Result<(), AppError> {
+        if !self.can_run() {
+            return Err(AppError::ServiceUnavailable(
+                "Selection service is stopping".into(),
+            ));
+        }
         emit_to_webview(self.0, SELECTION_RUN_EVENT, event)
     }
     fn cancelled(&self, id: u64) -> Result<(), AppError> {
@@ -346,6 +357,12 @@ impl SelectionRunCoordinator {
         let (text, mut run) = backend
             .capture(&backend.user_config())
             .map_err(|error| AppError::Message(error.message))?;
+        if !backend.can_run() {
+            backend.restore(run);
+            return Err(AppError::ServiceUnavailable(
+                "Selection service is stopping".into(),
+            ));
+        }
         let id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
         run.id = id;
         run.is_external = true;
@@ -363,7 +380,7 @@ impl SelectionRunCoordinator {
         let Some(run) = self.take_if(run_id) else {
             return Ok(SelectionFinishStatus::Stale);
         };
-        match text {
+        match text.filter(|_| backend.can_run()) {
             None => {
                 backend.restore(run);
                 Ok(SelectionFinishStatus::Restored)
@@ -383,6 +400,11 @@ fn cancel_with(backend: &impl SelectionBackend, run: SelectionRun) {
 
 /// Starts an action, or cancels the current hotkey run on a second trigger.
 pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
+    if app.state::<AppState>().is_quitting() {
+        return Err(AppError::ServiceUnavailable(
+            "Selection service is stopping".into(),
+        ));
+    }
     let decision = app
         .state::<SelectionRunCoordinator>()
         .begin_trigger(action, Instant::now())?;
@@ -394,7 +416,13 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
         TriggerDecision::Capture(guard, abandoned) => {
             let app = app.clone();
             let action = action.to_owned();
-            thread::spawn(move || {
+            let services = app.state::<super::background::BackgroundServices>();
+            let handle = app.clone();
+            services.spawn_thread("selection-run", move |stop| {
+                if stop.is_stopped() {
+                    return;
+                }
+                let app = handle;
                 app.state::<SelectionRunCoordinator>().capture_and_publish(
                     &SystemSelectionBackend(&app),
                     action,
@@ -402,10 +430,17 @@ pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), A
                     guard,
                     abandoned,
                 );
-            });
+            })?;
         }
     }
     Ok(())
+}
+
+pub fn shutdown(app: &AppHandle) {
+    let run = app.state::<SelectionRunCoordinator>().lock().take();
+    if let Some(run) = run {
+        cancel_with(&SystemSelectionBackend(app), run);
+    }
 }
 
 pub fn prepare_external(app: &AppHandle) -> Result<(u64, String), AppError> {

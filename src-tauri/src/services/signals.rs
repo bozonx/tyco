@@ -1,10 +1,14 @@
 //! Handles termination signals (SIGTERM, SIGINT, Ctrl+C) to trigger
 //! graceful application shutdown.
 
-use tauri::AppHandle;
+use crate::errors::AppError;
+use tauri::{AppHandle, Manager};
 
-pub fn spawn_signal_watcher(app: AppHandle) {
-    tauri::async_runtime::spawn(async move {
+pub fn spawn_signal_watcher(app: AppHandle) -> Result<(), AppError> {
+    let services = app.state::<super::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_async(async move {
+        let app = handle;
         #[cfg(unix)]
         {
             use tokio::signal::unix::{signal, SignalKind};
@@ -58,7 +62,7 @@ pub fn spawn_signal_watcher(app: AppHandle) {
 
         log::warn!("Received a second termination signal; exiting at once");
         std::process::exit(130);
-    });
+    })
 }
 
 fn request_exit(app: &AppHandle) {

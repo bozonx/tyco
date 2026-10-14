@@ -78,10 +78,10 @@ const ACTIVATOR_SCRIPT: &str = r#"
 /// it, retries a failed start with a growing delay, and starts it again once
 /// KWin no longer runs it. `own_class` is the resource class of Tyco windows.
 /// Must run once Tyco owns its D-Bus name, otherwise the reports of the script
-/// get lost. Never returns.
-pub fn supervise_tracker(own_class: &str) -> ! {
+/// get lost. Cancellation unloads the script before the supervisor exits.
+pub fn supervise_tracker(own_class: &str, stop: &crate::services::background::StopToken) {
     let mut failures = 0u32;
-    loop {
+    while !stop.is_stopped() {
         if !tracker_alive() {
             match start_tracker(own_class) {
                 Ok(()) => {
@@ -103,12 +103,15 @@ pub fn supervise_tracker(own_class: &str) -> ! {
             }
             finish_startup();
         }
-        std::thread::sleep(if failures == 0 {
+        if stop.wait(if failures == 0 {
             TRACKER_CHECK_INTERVAL
         } else {
             retry_delay(failures)
-        });
+        }) {
+            break;
+        }
     }
+    stop_tracker();
 }
 
 fn retry_delay(failures: u32) -> Duration {

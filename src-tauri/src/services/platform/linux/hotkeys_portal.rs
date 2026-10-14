@@ -127,7 +127,10 @@ impl PortalProvider {
         bindings: Vec<HotkeyBinding>,
     ) -> Result<(), AppError> {
         let app = app.handle().clone();
-        tauri::async_runtime::spawn(async move {
+        let services = app.state::<crate::services::background::BackgroundServices>();
+        let handle = app.clone();
+        services.spawn_async(async move {
+            let app = handle;
             if let Err(error) = run_portal(app.clone(), bindings).await {
                 log::warn!("GlobalShortcuts portal is unavailable: {error}; use tyco-ctl or D-Bus");
                 // Wayland compositors without GlobalShortcuts must expose the
@@ -136,8 +139,7 @@ impl PortalProvider {
                 app.state::<ProviderState>().set(ProviderKind::External);
                 notify_hotkeys_changed(&app);
             }
-        });
-        Ok(())
+        })
     }
 }
 
@@ -175,26 +177,29 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     notify_hotkeys_changed(&app);
 
     let watched_app = app.clone();
-    tauri::async_runtime::spawn(async move {
-        if let Err(error) = rebind_when_portal_restarts(&watched_app).await {
-            log::warn!("Could not watch the hotkey portal for restarts: {error}");
-        }
-    });
+    app.state::<crate::services::background::BackgroundServices>()
+        .spawn_async(async move {
+            if let Err(error) = rebind_when_portal_restarts(&watched_app).await {
+                log::warn!("Could not watch the hotkey portal for restarts: {error}");
+            }
+        })?;
 
     // selection actions press keys of their own, and wait for the hotkey
     // to be released first
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = deactivated.next().await {
-            selection_replace::hotkey_released(event.shortcut_id());
-        }
-    });
+    app.state::<crate::services::background::BackgroundServices>()
+        .spawn_async(async move {
+            while let Some(event) = deactivated.next().await {
+                selection_replace::hotkey_released(event.shortcut_id());
+            }
+        })?;
     let changed_app = app.clone();
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = changed.next().await {
-            store_system_triggers(&changed_app, event.shortcuts());
-            notify_hotkeys_changed(&changed_app);
-        }
-    });
+    app.state::<crate::services::background::BackgroundServices>()
+        .spawn_async(async move {
+            while let Some(event) = changed.next().await {
+                store_system_triggers(&changed_app, event.shortcuts());
+                notify_hotkeys_changed(&changed_app);
+            }
+        })?;
     while let Some(event) = activated.next().await {
         // the desktop may still keep hotkeys of older versions
         let Some(target) = global_target(event.shortcut_id()) else {
@@ -207,6 +212,23 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     }
     log::warn!("The hotkey portal stopped reporting hotkeys");
     Ok(())
+}
+
+pub(crate) async fn shutdown(app: &AppHandle) {
+    let Some(state) = app.try_state::<PortalState>() else {
+        return;
+    };
+    let _binding = state.binding.lock().await;
+    let session = state
+        .session
+        .write()
+        .expect("portal session lock poisoned")
+        .take();
+    if let Some(session) = session {
+        if let Err(error) = session.close().await {
+            log::warn!("Could not close hotkey portal session: {error}");
+        }
+    }
 }
 
 /// The shortcuts live in a session of the portal service: when the service

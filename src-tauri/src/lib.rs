@@ -104,20 +104,23 @@ fn activate_from_args(app: &tauri::AppHandle, args: &[String]) -> Result<(), err
 
 /// Follows window changes on X11 the way `dbus` follows the KWin tracker.
 #[cfg(target_os = "linux")]
-fn spawn_x11_tracker(app: tauri::AppHandle) {
+fn spawn_x11_tracker(app: tauri::AppHandle) -> Result<(), errors::AppError> {
     use services::platform::window_tracker::TrackerChange;
 
     // GTK puts the program name into WM_CLASS
     let own_class = gtk::glib::prgname().unwrap_or_default().to_string();
-    services::platform::linux::x11::spawn_tracker(own_class, move |change| {
+    let services = app.state::<services::background::BackgroundServices>();
+    let handle = app.clone();
+    services::platform::linux::x11::spawn_tracker(&services, own_class, move |change| {
+        let app = &handle;
         let result = match change {
-            TrackerChange::Activated => runtime::follow_target_window(&app),
-            TrackerChange::Closed(id) => runtime::forget_target_window(&app, &id),
+            TrackerChange::Activated => runtime::follow_target_window(app),
+            TrackerChange::Closed(id) => runtime::forget_target_window(app, &id),
         };
         if let Err(error) = result {
             log::warn!("Could not follow the window change: {error}");
         }
-    });
+    })
 }
 
 /// Serves the runtime of plugin frames and the modules of installed plugins,
@@ -215,30 +218,39 @@ pub fn run() {
             }
         }))
         .setup(|app| {
+            app.manage(services::background::BackgroundServices::default());
+            app.manage(services::custom_actions::ScriptRuns::default());
             app.manage(services::plugins::PluginStore::new(
                 storage::app_data_dir(app.handle())?.join("plugins"),
             ));
             runtime::create_windows(app)?;
             let user_config = storage::read_or_create_user_config(app.handle())?;
-            if let Err(error) =
-                storage::apply_history_settings_on_startup(app.handle(), &user_config)
-            {
-                log::error!("Could not apply the history settings: {error}");
-            }
+            let history_cleanup_failed =
+                match storage::apply_history_settings_on_startup(app.handle(), &user_config) {
+                    Ok(()) => false,
+                    Err(error) => {
+                        log::error!("Could not apply the history settings: {error}");
+                        true
+                    }
+                };
             let session_state = crate::models::SessionState::default();
             app.manage(AppState::new(default_desktop_snapshot(
                 user_config,
                 session_state,
             )));
+            if history_cleanup_failed {
+                app.state::<AppState>().history.mark_cleanup_pending();
+            }
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             // reaching the system store may wait for an unlock prompt, which
             // must not hold up the start
             let secrets_app = app.handle().clone();
-            std::thread::spawn(move || {
-                secrets_app
-                    .state::<services::secrets::SecretStore>()
-                    .vault_state();
-            });
+            app.state::<services::background::BackgroundServices>()
+                .spawn_thread("secret-vault-warmup", move |_| {
+                    secrets_app
+                        .state::<services::secrets::SecretStore>()
+                        .vault_state();
+                })?;
             app.manage(services::net::NetState::new()?);
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
@@ -247,13 +259,15 @@ pub fn run() {
             // window Tyco was launched from
             #[cfg(target_os = "linux")]
             {
-                dbus::spawn_dbus_server(app.handle().clone());
+                dbus::spawn_dbus_server(app.handle().clone())?;
                 let session = services::platform::session::current();
                 if session.is_x11() {
-                    spawn_x11_tracker(app.handle().clone());
+                    spawn_x11_tracker(app.handle().clone())?;
                 }
                 if session.is_wayland() {
-                    services::platform::linux::primary_selection::spawn_watcher();
+                    services::platform::linux::primary_selection::spawn_watcher(
+                        &app.state::<services::background::BackgroundServices>(),
+                    )?;
                 }
                 if session.is_x11() || session.is_kde_wayland() {
                     services::platform::window_tracker::wait_for_startup(TRACKER_STARTUP_WAIT);
@@ -261,9 +275,9 @@ pub fn run() {
             }
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
-            services::external_api::spawn_reaper(app.handle().clone());
-            services::activation_socket::spawn_server(app.handle().clone());
-            services::signals::spawn_signal_watcher(app.handle().clone());
+            services::external_api::spawn_reaper(app.handle().clone())?;
+            services::activation_socket::spawn_server(app.handle().clone())?;
+            services::signals::spawn_signal_watcher(app.handle().clone())?;
             Ok(())
         })
         .on_window_event(|window, event| {

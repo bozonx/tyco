@@ -42,14 +42,24 @@ struct Atoms {
 /// Tracks windows on a thread of its own for the lifetime of the process.
 /// `own_class` is the WM_CLASS of Tyco windows; `on_change` hears about every
 /// change the tracker applied.
-pub fn spawn_tracker(own_class: String, on_change: impl Fn(TrackerChange) + Send + 'static) {
-    std::thread::spawn(move || supervise(&own_class, &on_change));
+pub fn spawn_tracker(
+    services: &crate::services::background::BackgroundServices,
+    own_class: String,
+    on_change: impl Fn(TrackerChange) + Send + 'static,
+) -> Result<(), AppError> {
+    services.spawn_thread("x11-window-tracker", move |stop| {
+        supervise(&own_class, &on_change, &stop)
+    })
 }
 
-fn supervise(own_class: &str, on_change: &dyn Fn(TrackerChange)) -> ! {
+fn supervise(
+    own_class: &str,
+    on_change: &dyn Fn(TrackerChange),
+    stop: &crate::services::background::StopToken,
+) {
     let mut failures = 0u32;
-    loop {
-        let error = run(own_class, on_change, &mut failures);
+    while !stop.is_stopped() {
+        let error = run(own_class, on_change, &mut failures, stop);
         tracker().reset(false, String::new());
         finish_startup();
         failures += 1;
@@ -58,7 +68,9 @@ fn supervise(own_class: &str, on_change: &dyn Fn(TrackerChange)) -> ! {
         } else {
             log::debug!("X11 window tracker is still unavailable: {error}");
         }
-        std::thread::sleep(retry_delay(failures));
+        if stop.wait(retry_delay(failures)) {
+            return;
+        }
     }
 }
 
@@ -69,7 +81,12 @@ fn retry_delay(failures: u32) -> Duration {
 }
 
 /// Reports windows until the connection fails; returns why it did.
-fn run(own_class: &str, on_change: &dyn Fn(TrackerChange), failures: &mut u32) -> AppError {
+fn run(
+    own_class: &str,
+    on_change: &dyn Fn(TrackerChange),
+    failures: &mut u32,
+    stop: &crate::services::background::StopToken,
+) -> AppError {
     let (connection, screen) = match x11rb::connect(None) {
         Ok(connected) => connected,
         Err(error) => return x11_error(error),
@@ -95,8 +112,15 @@ fn run(own_class: &str, on_change: &dyn Fn(TrackerChange), failures: &mut u32) -
     *failures = 0;
 
     loop {
-        let event = match connection.wait_for_event() {
-            Ok(event) => event,
+        if stop.is_stopped() {
+            return AppError::ServiceUnavailable("Window tracker is stopping".into());
+        }
+        let event = match connection.poll_for_event() {
+            Ok(Some(event)) => event,
+            Ok(None) => {
+                stop.wait(Duration::from_millis(20));
+                continue;
+            }
             Err(error) => return x11_error(error),
         };
         let Event::PropertyNotify(event) = event else {

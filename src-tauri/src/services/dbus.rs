@@ -1,7 +1,6 @@
 use std::sync::Mutex;
-use std::thread;
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{Request, Response, RunRequest};
 use zbus::message::{Header, Message};
 use zbus::names::{BusName, ErrorName, OwnedErrorName, OwnedUniqueName};
@@ -23,20 +22,20 @@ const ERROR_PREFIX: &str = "org.tyco.Error";
 /// Serves the D-Bus interface on a dedicated thread. A failure here (no session
 /// bus, the name already taken by another instance) must not take the app down:
 /// the rest of the UI works without the hotkey integration.
-pub fn spawn_dbus_server(app: AppHandle) {
-    thread::spawn(move || {
-        let runtime = tauri::async_runtime::handle().clone();
-        let connection = runtime.block_on(async {
-            let interface = TycoDbus { app: app.clone() };
-
+pub fn spawn_dbus_server(app: AppHandle) -> Result<(), crate::errors::AppError> {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_async(async move {
+        let app = handle;
+        let connection = async {
             zbus::connection::Builder::session()?
                 .name(MESSAGE_DEST)?
-                .serve_at(MESSAGE_PATH, interface)?
+                .serve_at(MESSAGE_PATH, TycoDbus { app: app.clone() })?
                 .serve_at(MESSAGE_PATH, TycoKwin { app: app.clone() })?
                 .build()
                 .await
-        });
-
+        }
+        .await;
         let _connection = match connection {
             Ok(connection) => connection,
             Err(error) => {
@@ -47,20 +46,20 @@ pub fn spawn_dbus_server(app: AppHandle) {
                 return;
             }
         };
-
         log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
-
         if session::current().is_kde_wayland() {
-            // Wayland gives GTK windows the program name as their app id
             let own_class = gtk::glib::prgname().unwrap_or_default();
-            kwin::supervise_tracker(&own_class);
+            if let Err(error) = app
+                .state::<crate::services::background::BackgroundServices>()
+                .spawn_thread("kwin-window-tracker", move |stop| {
+                    kwin::supervise_tracker(&own_class, &stop)
+                })
+            {
+                log::warn!("Could not start KWin window tracker: {error}");
+            }
         }
-
-        // Keep the connection alive for the lifetime of the process.
-        loop {
-            thread::park();
-        }
-    });
+        std::future::pending::<()>().await;
+    })
 }
 
 /// A shortcut-friendly launcher: it opens windows and starts commands as a
@@ -135,11 +134,13 @@ impl TycoDbus {
     /// bus thread: the KWin reports must keep coming in meanwhile.
     async fn dispatch(&self, request: Request) -> Result<(), ApiError> {
         let app = self.app.clone();
-        let response = tauri::async_runtime::spawn_blocking(move || {
-            external_api::dispatch(&app, request, ActivationSource::Dbus)
-        })
-        .await
-        .unwrap_or_else(|error| Response::error(error.to_string()));
+        let services = self
+            .app
+            .state::<crate::services::background::BackgroundServices>();
+        let response = services
+            .run_blocking(move || external_api::dispatch(&app, request, ActivationSource::Dbus))
+            .await
+            .unwrap_or_else(|error| Response::error(error.to_string()));
         if response.success {
             Ok(())
         } else {

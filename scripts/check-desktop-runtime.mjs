@@ -161,17 +161,17 @@ try {
     baseConfig: initial,
     userConfig: { ...initial, theme: 'dark' },
   })
-  assert.equal(first.theme, 'dark')
+  assert.equal(first.settings.userConfig.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
     userConfig: { ...initial, userLanguage: 'en_US', appLanguage: 'en_US' },
   })
   assert.equal(
-    second.theme,
+    second.settings.userConfig.theme,
     'dark',
     "Stale snapshots must preserve another window's changes"
   )
-  assert.equal(second.userLanguage, 'en_US')
+  assert.equal(second.settings.userConfig.userLanguage, 'en_US')
 
   const manifest = {
     id: 'DesktopSmoke',

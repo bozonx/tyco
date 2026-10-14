@@ -228,16 +228,25 @@ pub fn apply_history_settings_on_startup(
     app: &AppHandle,
     user_config: &Value,
 ) -> Result<(), AppError> {
-    let policy = EditorHistoryPolicy::from_config(user_config);
-    let path = editor_history_path(app)?;
+    retry_history_cleanup(
+        app,
+        &EditorHistoryPolicy::from_config(user_config),
+        ChatHistoryPolicy::from_config(user_config),
+    )
+}
 
-    if policy.is_memory_only {
+pub(super) fn retry_history_cleanup(
+    app: &AppHandle,
+    policy: &EditorHistoryPolicy,
+    chat_policy: ChatHistoryPolicy,
+) -> Result<(), AppError> {
+    let path = editor_history_path(app)?;
+    if policy.is_memory_only || policy.max_entries == 0 {
         remove_editor_history_files(&path)?;
     } else {
-        enforce_editor_history_file(&path, &policy, now_ms())?;
+        enforce_editor_history_file(&path, policy, now_ms())?;
     }
-
-    enforce_chat_history_policy(app, ChatHistoryPolicy::from_config(user_config))
+    enforce_chat_history_policy(app, chat_policy)
 }
 
 fn enforce_editor_history_file(
@@ -256,67 +265,99 @@ fn enforce_editor_history_file(
     Ok(())
 }
 
-/// Applies a change of the history settings right away, as far as it is safe
-/// to: the limit field passes through intermediate values while the user
-/// types, so a lower limit or a shorter retention period are applied on the
-/// next write or start instead. Turning the editor history off (limit 0) does
-/// delete what is stored, as the settings promise. The chat settings are a
-/// switch and a choice of periods, without intermediate values, so they apply
-/// at once: turning the chat history off deletes the saved chats, and a
-/// shorter retention period the chats it no longer covers.
-pub fn apply_history_settings_change(
-    app: &AppHandle,
-    previous_config: &Value,
-    user_config: &Value,
-    memory: &mut Vec<EditorHistoryRecord>,
-) -> Result<(), AppError> {
-    let before = EditorHistoryPolicy::from_config(previous_config);
-    let after = EditorHistoryPolicy::from_config(user_config);
-    let path = editor_history_path(app)?;
-
-    apply_history_transition(&path, &before, &after, memory, || {
-        let chat_before = ChatHistoryPolicy::from_config(previous_config);
-        let chat_after = ChatHistoryPolicy::from_config(user_config);
-        if chat_after != chat_before {
-            enforce_chat_history_policy(app, chat_after)?;
-        }
-        Ok(())
-    })
+pub(super) struct HistoryCommit<T> {
+    pub value: T,
+    pub is_cleanup_pending: bool,
 }
 
-/// Retains the editor snapshot until every part of the settings change succeeds.
-fn apply_history_transition(
+/// Configuration commits before irreversible cleanup. Mode changes are prepared
+/// first, so a failed config write cannot discard either source of editor history.
+pub(super) fn commit_history_settings<T>(
+    app: &AppHandle,
+    before: &EditorHistoryPolicy,
+    after: &EditorHistoryPolicy,
+    memory: &mut Vec<EditorHistoryRecord>,
+    commit: impl FnOnce() -> Result<T, AppError>,
+) -> Result<HistoryCommit<T>, AppError> {
+    commit_history_transition(&editor_history_path(app)?, before, after, memory, commit)
+}
+
+fn commit_history_transition<T>(
     path: &Path,
     before: &EditorHistoryPolicy,
     after: &EditorHistoryPolicy,
     memory: &mut Vec<EditorHistoryRecord>,
-    apply_chats: impl FnOnce() -> Result<(), AppError>,
-) -> Result<(), AppError> {
-    if before == after {
-        return apply_chats();
-    }
-    let disk = match fs::read(path) {
-        Ok(bytes) => Some(bytes),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
-        Err(error) => return Err(error.into()),
+    commit: impl FnOnce() -> Result<T, AppError>,
+) -> Result<HistoryCommit<T>, AppError> {
+    let to_memory = !before.is_memory_only && after.is_memory_only;
+    let to_disk = before.is_memory_only && !after.is_memory_only && after.max_entries > 0;
+    let prepared_memory = if to_memory {
+        let mut items = read_file_records(path)?;
+        after.enforce(&mut items, now_ms());
+        Some(items)
+    } else {
+        None
     };
-    let original_memory = memory.clone();
-    let result = switch_editor_history_store(path, before, after, memory, now_ms())
-        .and_then(|()| apply_chats());
-    if let Err(error) = result {
-        *memory = original_memory;
-        let rollback = match disk {
-            Some(bytes) => crate::services::atomic_file::write_private_bytes(path, &bytes),
-            None => remove_file_if_exists(path),
-        };
-        if let Err(rollback_error) = rollback {
-            return Err(AppError::Message(format!(
-                "Could not apply history settings: {error}; could not restore editor history: {rollback_error}"
-            )));
+    let original_disk = if to_disk {
+        match fs::read(path) {
+            Ok(bytes) => Some(bytes),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => return Err(error.into()),
         }
-        return Err(error);
+    } else {
+        None
+    };
+    // Persist a session-to-disk migration before publishing the disk policy.
+    // Until config commits, the source remains in memory and is authoritative.
+    let prepared = if to_disk {
+        let mut items = memory.clone();
+        after.enforce(&mut items, now_ms());
+        write_jsonl(path, &items)
+    } else {
+        Ok(())
+    };
+    let result = prepared.and_then(|()| commit());
+    let committed = match result {
+        Ok(committed) => committed,
+        Err(error) => {
+            if to_disk {
+                let rollback = match original_disk {
+                    Some(bytes) => crate::services::atomic_file::write_private_bytes(path, &bytes),
+                    None => remove_file_if_exists(path),
+                };
+                if let Err(rollback) = rollback {
+                    return Err(AppError::Message(format!(
+                        "{error}; could not restore editor history: {rollback}"
+                    )));
+                }
+            }
+            return Err(error);
+        }
+    };
+    let cleanup = if after.max_entries == 0 {
+        memory.clear();
+        remove_editor_history_files(path)
+    } else if let Some(items) = prepared_memory {
+        *memory = items;
+        remove_editor_history_files(path)
+    } else if to_disk {
+        memory.clear();
+        Ok(())
+    } else if after.is_memory_only {
+        remove_editor_history_files(path)
+    } else {
+        switch_editor_history_store(path, before, after, memory, now_ms())
+    };
+    let cleanup_failed = cleanup.is_err();
+    if let Err(error) = cleanup {
+        // The new policy remains committed. Subsequent saves and startup retry
+        // cleanup; restoring old settings here would misrepresent deleted data.
+        log::warn!("Settings committed; editor history cleanup will be retried: {error}");
     }
-    Ok(())
+    Ok(HistoryCommit {
+        value: committed,
+        is_cleanup_pending: cleanup_failed,
+    })
 }
 
 fn switch_editor_history_store(
@@ -384,7 +425,59 @@ mod tests {
     }
 
     #[test]
-    fn failed_chat_transition_restores_editor_disk_and_memory() {
+    fn cleanup_failure_preserves_the_committed_policy_and_can_be_retried() {
+        let dir = TestDir::new("post-commit-cleanup");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let mut memory = Vec::new();
+        write_jsonl(
+            &path,
+            &[history_item("a", "private", EditorHistoryKind::Draft)],
+        )
+        .unwrap();
+        let after = EditorHistoryPolicy {
+            max_entries: 0,
+            ..policy()
+        };
+        let HistoryCommit {
+            value: revision,
+            is_cleanup_pending: pending,
+        } = commit_history_transition(&path, &policy(), &after, &mut memory, || {
+            // Simulate a filesystem failure after the config has committed.
+            fs::remove_file(&path).unwrap();
+            fs::create_dir(&path).unwrap();
+            Ok(1u64)
+        })
+        .unwrap();
+        assert_eq!(revision, 1);
+        assert!(pending);
+        fs::remove_dir(&path).unwrap();
+        let HistoryCommit {
+            is_cleanup_pending: pending,
+            ..
+        } = commit_history_transition(&path, &after, &after, &mut memory, || Ok(2u64)).unwrap();
+        assert!(!pending);
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn config_write_failure_never_deletes_disabled_history() {
+        let dir = TestDir::new("failed-disable");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let items = vec![history_item("a", "private", EditorHistoryKind::Draft)];
+        write_jsonl(&path, &items).unwrap();
+        let after = EditorHistoryPolicy {
+            max_entries: 0,
+            ..policy()
+        };
+        let result = commit_history_transition(&path, &policy(), &after, &mut Vec::new(), || {
+            Err::<(), _>(AppError::Io(std::io::Error::other("Disk unavailable")))
+        });
+        assert!(result.is_err());
+        assert_eq!(read_file_records(&path).unwrap(), items);
+    }
+
+    #[test]
+    fn failed_config_commit_preserves_editor_disk_and_memory() {
         let dir = TestDir::new("failed-chat-transition");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let items = vec![history_item("a", "private", EditorHistoryKind::Draft)];
@@ -395,16 +488,17 @@ mod tests {
             is_memory_only: true,
             ..policy()
         };
-        let result = apply_history_transition(&path, &policy(), &after, &mut memory, || {
-            Err(AppError::Message("Chat storage failed".into()))
-        });
+        let result: Result<HistoryCommit<()>, AppError> =
+            commit_history_transition(&path, &policy(), &after, &mut memory, || {
+                Err(AppError::Message("Config storage failed".into()))
+            });
         assert!(result.is_err());
         assert!(memory.is_empty());
         assert_eq!(fs::read(&path).unwrap(), original);
     }
 
     #[test]
-    fn failed_chat_transition_restores_memory_after_disk_write() {
+    fn failed_config_commit_restores_memory_after_prepared_disk_write() {
         let dir = TestDir::new("failed-chat-after-write");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut memory = vec![history_item("a", "private", EditorHistoryKind::Draft)];
@@ -413,9 +507,10 @@ mod tests {
             is_memory_only: true,
             ..policy()
         };
-        let result = apply_history_transition(&path, &before, &policy(), &mut memory, || {
-            Err(AppError::Message("Chat storage failed".into()))
-        });
+        let result: Result<HistoryCommit<()>, AppError> =
+            commit_history_transition(&path, &before, &policy(), &mut memory, || {
+                Err(AppError::Message("Config storage failed".into()))
+            });
         assert!(result.is_err());
         assert_eq!(memory, original);
         assert!(!path.exists());

@@ -32,6 +32,7 @@ const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
 const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
+const STOP_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -125,6 +126,11 @@ where
     S: EventSink,
 {
     let _operation = state.voice_session.lock_capture_operation().await;
+    if !state.voice_session.can_start() {
+        return Err(AppError::ServiceUnavailable(
+            "Voice service is stopping".into(),
+        ));
+    }
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
     let session_id = state.voice_session.allocate_session_id();
@@ -133,7 +139,14 @@ where
     })
     .await
     .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
-    state.voice_session.replace(Some(session));
+    if let Err(session) = state.voice_session.install(session) {
+        let _ =
+            tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
+                .await;
+        return Err(AppError::ServiceUnavailable(
+            "Voice service is stopping".into(),
+        ));
+    }
     Ok(VoiceCaptureInfo {
         sample_rate_hz,
         session_id,
@@ -151,22 +164,17 @@ async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Res
     let Some(session) = state.voice_session.take(session_id) else {
         return Ok(());
     };
-    tokio::task::spawn_blocking(move || {
-        session.stop_flag.store(true, Ordering::SeqCst);
-        session
-            .thread
-            .join()
-            .map_err(|_| AppError::Message(String::from("voice capture thread panicked")))
-    })
-    .await
-    .map_err(|error| AppError::Message(format!("capture stop task failed: {error}")))?
+    tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
+        .await
+        .map_err(|error| AppError::Message(format!("capture stop task failed: {error}")))?
 }
 
-/// Signals the active voice capture thread to stop on shutdown.
-pub fn stop_capture_on_shutdown(state: &AppState) {
-    if let Some(session) = state.voice_session.replace(None) {
-        session.stop_flag.store(true, Ordering::SeqCst);
-        let _ = session.thread.join();
+/// Shutdown cannot wait indefinitely for a stalled device or event sink.
+pub fn stop_capture_on_shutdown(state: &AppState, deadline: Instant) {
+    if let Some(session) = state.voice_session.shutdown() {
+        if let Err(error) = session.stop_until(deadline) {
+            log::warn!("Could not finish voice capture during shutdown: {error}");
+        }
     }
 }
 
@@ -662,7 +670,7 @@ mod tests {
             .voice_session
             .take(Some(second.session_id))
             .expect("new capture was stopped");
-        state.voice_session.replace(Some(session));
+        assert!(state.voice_session.install(session).is_ok());
         stop_capture(&state, Some(second.session_id)).await.unwrap();
         assert!(state.voice_session.take(None).is_none());
         let values = trace.values();

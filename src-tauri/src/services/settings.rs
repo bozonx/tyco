@@ -1,0 +1,332 @@
+//! Settings transactions are independent of IPC; adapters supply native effects.
+use serde_json::Value;
+use tauri::{AppHandle, Manager};
+
+use super::secrets::SecretStore;
+use super::storage::HistorySettings;
+use super::{
+    config_schema, config_update, config_version, hotkeys, runtime, storage, webhook_secrets,
+};
+use crate::{errors::AppError, models::DesktopSnapshot, state::AppState};
+
+trait HeaderSecrets {
+    fn retain(self);
+    fn commit(self, previous: &Value, next: &Value);
+}
+
+impl HeaderSecrets for webhook_secrets::PendingHeaderSecrets<'_> {
+    fn retain(self) {
+        self.retain();
+    }
+    fn commit(self, previous: &Value, next: &Value) {
+        self.commit(previous, next);
+    }
+}
+
+trait SettingsHost {
+    type Secrets: HeaderSecrets;
+    fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError>;
+    fn write_config(&self, config: &Value) -> Result<(), AppError>;
+    fn with_hotkeys<T>(
+        &self,
+        previous: &Value,
+        next: &Value,
+        commit: impl FnOnce() -> Result<T, AppError>,
+    ) -> Result<T, AppError>;
+    fn with_history<T>(
+        &self,
+        before: HistorySettings,
+        after: HistorySettings,
+        commit: impl FnOnce() -> Result<T, AppError>,
+    ) -> Result<T, AppError>;
+    fn publish(&self, state: &AppState);
+}
+
+struct AppSettingsHost<'a> {
+    app: &'a AppHandle,
+    secrets: &'a SecretStore,
+    history: &'a storage::HistoryStorageCoordinator,
+}
+
+impl<'a> SettingsHost for AppSettingsHost<'a> {
+    type Secrets = webhook_secrets::PendingHeaderSecrets<'a>;
+    fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError> {
+        webhook_secrets::protect_for_save(self.secrets, config)
+    }
+    fn write_config(&self, config: &Value) -> Result<(), AppError> {
+        storage::save_user_config(self.app, config)
+    }
+    fn with_hotkeys<T>(
+        &self,
+        previous: &Value,
+        next: &Value,
+        commit: impl FnOnce() -> Result<T, AppError>,
+    ) -> Result<T, AppError> {
+        hotkeys::with_config_changes(self.app, previous, next, commit)
+    }
+    fn with_history<T>(
+        &self,
+        before: HistorySettings,
+        after: HistorySettings,
+        commit: impl FnOnce() -> Result<T, AppError>,
+    ) -> Result<T, AppError> {
+        self.history
+            .commit_settings(self.app, before, after, commit)
+    }
+    fn publish(&self, state: &AppState) {
+        runtime::publish_state(self.app, state);
+    }
+}
+
+/// Resolve runtime dependencies once, at the application boundary.
+pub fn save_user_config(
+    app: &AppHandle,
+    next: Value,
+    base: Value,
+) -> Result<DesktopSnapshot, AppError> {
+    let state = app.state::<AppState>();
+    let secrets = app.state::<SecretStore>();
+    save_with(
+        &state,
+        &AppSettingsHost {
+            app,
+            secrets: &secrets,
+            history: &state.history,
+        },
+        next,
+        base,
+    )
+}
+
+pub fn patch_session_state(
+    state: &AppState,
+    patch: serde_json::Map<String, Value>,
+) -> Result<DesktopSnapshot, AppError> {
+    let _guard = state.lock_settings_update();
+    if state.is_quitting() {
+        return Err(AppError::ServiceUnavailable(
+            "Settings service is stopping".into(),
+        ));
+    }
+    let session =
+        super::session_state::merge_session_state(&state.snapshot().settings.session_state, patch)?;
+    Ok(state.update_snapshot(|snapshot| snapshot.settings.session_state = session))
+}
+
+fn save_with(
+    state: &AppState,
+    host: &impl SettingsHost,
+    next: Value,
+    base: Value,
+) -> Result<DesktopSnapshot, AppError> {
+    let _guard = state.lock_settings_update();
+    if state.is_quitting() {
+        return Err(AppError::ServiceUnavailable(
+            "Settings service is stopping".into(),
+        ));
+    }
+    let previous = state.snapshot().settings.user_config;
+    if config_version::is_newer_than_supported(&previous) {
+        return Err(storage::newer_config_error());
+    }
+    let mut next = config_update::merge_config(&previous, &base, &next)?;
+    if config_version::config_version(&next) == 0 {
+        config_version::stamp_current_version(&mut next);
+    }
+    config_schema::validate_user_config(&next)?;
+    let mut pending = Some(host.protect(&mut next)?);
+    let before = HistorySettings::from_config(&previous);
+    let after = HistorySettings::from_config(&next);
+    let snapshot = host.with_hotkeys(&previous, &next, || {
+        host.with_history(before, after, || {
+            if let Err(error) = host.write_config(&next) {
+                // A directory sync can fail after rename, so restore the old file.
+                if let Err(rollback) = host.write_config(&previous) {
+                    pending.take().expect("pending header secrets").retain();
+                    return Err(AppError::Message(format!(
+                        "Could not save config: {error}; could not restore config: {rollback}"
+                    )));
+                }
+                return Err(error);
+            }
+            // Exactly one publication, while the history repositories are locked.
+            Ok(state.update_snapshot(|snapshot| snapshot.settings.user_config = next.clone()))
+        })
+    })?;
+    pending
+        .expect("pending header secrets")
+        .commit(&previous, &next);
+    host.publish(state);
+    Ok(snapshot)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{default_desktop_snapshot, default_user_config, SessionState};
+    use std::cell::RefCell;
+
+    struct FakeSecrets;
+    impl HeaderSecrets for FakeSecrets {
+        fn retain(self) {}
+        fn commit(self, _: &Value, _: &Value) {}
+    }
+    #[derive(Default)]
+    struct Host {
+        calls: RefCell<Vec<&'static str>>,
+        disk: RefCell<Value>,
+        fail_save: bool,
+        fail_rollback: bool,
+        conflict: bool,
+    }
+    impl SettingsHost for Host {
+        type Secrets = FakeSecrets;
+        fn protect(&self, _: &mut Value) -> Result<FakeSecrets, AppError> {
+            Ok(FakeSecrets)
+        }
+        fn write_config(&self, config: &Value) -> Result<(), AppError> {
+            let is_save = !self.calls.borrow().contains(&"write");
+            self.calls.borrow_mut().push("write");
+            *self.disk.borrow_mut() = config.clone();
+            if (is_save && self.fail_save) || (!is_save && self.fail_rollback) {
+                Err(AppError::Io(std::io::Error::other("Disk unavailable")))
+            } else {
+                Ok(())
+            }
+        }
+        fn with_hotkeys<T>(
+            &self,
+            _: &Value,
+            _: &Value,
+            commit: impl FnOnce() -> Result<T, AppError>,
+        ) -> Result<T, AppError> {
+            if self.conflict {
+                return Err(AppError::InvalidInput("Shortcut conflict".into()));
+            }
+            commit()
+        }
+        fn with_history<T>(
+            &self,
+            _: HistorySettings,
+            _: HistorySettings,
+            commit: impl FnOnce() -> Result<T, AppError>,
+        ) -> Result<T, AppError> {
+            self.calls.borrow_mut().push("prepare");
+            let result = commit()?;
+            self.calls.borrow_mut().push("cleanup");
+            Ok(result)
+        }
+        fn publish(&self, _: &AppState) {
+            self.calls.borrow_mut().push("publish");
+        }
+    }
+    fn state() -> AppState {
+        AppState::new(default_desktop_snapshot(
+            default_user_config(),
+            SessionState::default(),
+        ))
+    }
+    fn changed(base: &Value) -> Value {
+        let mut next = base.clone();
+        next["appLanguage"] = serde_json::json!("ru_RU");
+        next
+    }
+    #[test]
+    fn session_patch_preserves_config_and_increments_revision_once() {
+        let state = state();
+        let config = state.snapshot().settings.user_config;
+        let patch = serde_json::from_value(serde_json::json!({"lastChatId":"chat-id"})).unwrap();
+        let saved = patch_session_state(&state, patch).unwrap();
+        assert_eq!(saved.revision, 1);
+        assert_eq!(
+            saved.settings.session_state.last_chat_id.as_deref(),
+            Some("chat-id")
+        );
+        assert_eq!(saved.settings.user_config, config);
+    }
+
+    #[test]
+    fn shutdown_rejects_config_and_session_updates_without_effects() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        state.begin_quitting();
+        let host = Host::default();
+        assert!(matches!(
+            save_with(&state, &host, changed(&base), base),
+            Err(AppError::ServiceUnavailable(_))
+        ));
+        assert!(matches!(
+            patch_session_state(&state, serde_json::Map::new()),
+            Err(AppError::ServiceUnavailable(_))
+        ));
+        assert!(host.calls.borrow().is_empty());
+        assert_eq!(state.snapshot().revision, 0);
+    }
+
+    #[test]
+    fn save_commits_once_before_cleanup_and_publication() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        let host = Host::default();
+        let next = changed(&base);
+        let saved = save_with(&state, &host, next.clone(), base).unwrap();
+        assert_eq!(saved.revision, 1);
+        assert_eq!(saved.settings.user_config, next);
+        assert_eq!(
+            *host.calls.borrow(),
+            ["prepare", "write", "cleanup", "publish"]
+        );
+    }
+    #[test]
+    fn failed_save_restores_disk_without_cleanup_or_publication() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        let host = Host {
+            fail_save: true,
+            ..Host::default()
+        };
+        assert!(save_with(&state, &host, changed(&base), base.clone()).is_err());
+        assert_eq!(*host.disk.borrow(), base);
+        assert_eq!(state.snapshot().revision, 0);
+        assert_eq!(*host.calls.borrow(), ["prepare", "write", "write"]);
+    }
+    #[test]
+    fn failed_rollback_is_reported_without_publishing_uncertain_state() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        let host = Host {
+            fail_save: true,
+            fail_rollback: true,
+            ..Host::default()
+        };
+        let error = save_with(&state, &host, changed(&base), base).unwrap_err();
+        assert!(error.to_string().contains("could not restore config"));
+        assert_eq!(state.snapshot().revision, 0);
+    }
+    #[test]
+    fn conflicting_hotkeys_do_not_touch_storage() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        let host = Host {
+            conflict: true,
+            ..Host::default()
+        };
+        assert!(save_with(&state, &host, changed(&base), base).is_err());
+        assert!(host.calls.borrow().is_empty());
+    }
+    #[test]
+    fn stale_independent_edit_preserves_the_committed_language() {
+        let state = state();
+        let base = state.snapshot().settings.user_config;
+        save_with(&state, &Host::default(), changed(&base), base.clone()).unwrap();
+        let mut stale = base.clone();
+        stale["aiRules"]["chat"] = serde_json::json!("Use concise answers");
+        let saved = save_with(&state, &Host::default(), stale, base).unwrap();
+        assert_eq!(saved.revision, 2);
+        assert_eq!(saved.settings.user_config["appLanguage"], "ru_RU");
+        assert_eq!(
+            saved.settings.user_config["aiRules"]["chat"],
+            "Use concise answers"
+        );
+    }
+}

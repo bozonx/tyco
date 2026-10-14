@@ -8,7 +8,7 @@ use crate::{
 };
 use serde::Deserialize;
 use std::time::Duration;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager, State};
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScriptActionRequest {
@@ -35,6 +35,7 @@ pub async fn execute_script_action(
     run_blocking(move || {
         let log_dir = storage::app_log_dir(&app).ok();
         custom_actions::execute_script(
+            &app.state::<custom_actions::ScriptRuns>(),
             &ScriptRequest {
                 name: &request.name,
                 command: &request.command,
@@ -52,8 +53,8 @@ pub async fn execute_script_action(
 }
 
 #[tauri::command]
-pub fn cancel_script_action(run_id: String) -> bool {
-    custom_actions::cancel_script(&run_id)
+pub fn cancel_script_action(runs: State<'_, custom_actions::ScriptRuns>, run_id: String) -> bool {
+    runs.cancel(&run_id)
 }
 
 #[tauri::command]

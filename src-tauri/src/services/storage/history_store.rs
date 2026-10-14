@@ -1,4 +1,5 @@
 //! Storage owns synchronization; IPC callers never take history locks.
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 
 use tauri::{AppHandle, Manager};
@@ -8,10 +9,27 @@ use crate::errors::AppError;
 use crate::models::{Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryRecord};
 use crate::state::AppState;
 
+/// Typed history policies are parsed once at the serialized config boundary.
+#[derive(Clone, Copy)]
+pub struct HistorySettings {
+    pub editor: editor::EditorHistoryPolicy,
+    pub chat: chats::ChatHistoryPolicy,
+}
+
+impl HistorySettings {
+    pub fn from_config(config: &serde_json::Value) -> Self {
+        Self {
+            editor: editor::EditorHistoryPolicy::from_config(config),
+            chat: chats::ChatHistoryPolicy::from_config(config),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct HistoryStorageCoordinator {
     editor_history: Mutex<Vec<EditorHistoryRecord>>,
     chat_history_lock: Mutex<()>,
+    cleanup_pending: AtomicBool,
 }
 
 impl HistoryStorageCoordinator {
@@ -27,22 +45,57 @@ impl HistoryStorageCoordinator {
             .expect("chat history lock poisoned")
     }
 
-    /// Settings and their in-memory publication share the same lock order as
-    /// all history operations: editor history, chat history, then the desktop
-    /// snapshot. Both repositories observe the new policy only after its
-    /// storage transition finishes.
-    pub fn apply_settings(
+    /// Hold repository locks through the single config publication, then run
+    /// destructive cleanup under the committed policy without rolling it back.
+    pub fn commit_settings<T>(
         &self,
         app: &AppHandle,
-        previous: &serde_json::Value,
-        next: &serde_json::Value,
-    ) -> Result<(), AppError> {
+        before: HistorySettings,
+        after: HistorySettings,
+        commit: impl FnOnce() -> Result<T, AppError>,
+    ) -> Result<T, AppError> {
         let mut memory = self.lock_editor_history();
         let _chats = self.lock_chat_history();
-        editor::apply_history_settings_change(app, previous, next, &mut memory)?;
-        app.state::<AppState>()
-            .update_snapshot(|snapshot| snapshot.settings.user_config = next.clone());
-        Ok(())
+        if self.cleanup_pending.load(Ordering::SeqCst) {
+            // Complete the already committed cleanup before accepting another
+            // policy; turning history on must not resurrect data pending deletion.
+            editor::retry_history_cleanup(app, &before.editor, before.chat)?;
+            self.cleanup_pending.store(false, Ordering::SeqCst);
+        }
+        let result = editor::commit_history_settings(
+            app,
+            &before.editor,
+            &after.editor,
+            &mut memory,
+            commit,
+        )?;
+        // Retry on every settings save, even if the policy itself is unchanged.
+        // A previous cleanup may have failed after its config was committed.
+        let chat_cleanup = chats::enforce_chat_history_policy(app, after.chat);
+        self.cleanup_pending.store(
+            result.is_cleanup_pending || chat_cleanup.is_err(),
+            Ordering::SeqCst,
+        );
+        if let Err(error) = chat_cleanup {
+            log::warn!("Settings committed; chat history cleanup will be retried: {error}");
+        }
+        Ok(result.value)
+    }
+    pub fn mark_cleanup_pending(&self) {
+        self.cleanup_pending.store(true, Ordering::SeqCst);
+    }
+    /// The maintenance worker retries using current settings under the save lock.
+    pub fn retry_cleanup(&self, app: &AppHandle, state: &AppState) {
+        if !self.cleanup_pending.load(Ordering::SeqCst) {
+            return;
+        }
+        let _settings = state.lock_settings_update();
+        let _editor = self.lock_editor_history();
+        let _chats = self.lock_chat_history();
+        let policy = HistorySettings::from_config(&state.snapshot().settings.user_config);
+        if editor::retry_history_cleanup(app, &policy.editor, policy.chat).is_ok() {
+            self.cleanup_pending.store(false, Ordering::SeqCst);
+        }
     }
 }
 

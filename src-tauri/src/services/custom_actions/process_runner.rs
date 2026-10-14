@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdout, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -63,73 +63,117 @@ pub struct ScriptRequest<'a> {
 
 type CancelFlag = Arc<AtomicBool>;
 
-/// The commands being waited for that the caller may cancel, by run id.
-fn cancellable_runs() -> &'static Mutex<HashMap<String, CancelFlag>> {
-    static RUNS: OnceLock<Mutex<HashMap<String, CancelFlag>>> = OnceLock::new();
-    RUNS.get_or_init(Mutex::default)
+#[derive(Default)]
+struct RunRegistry {
+    is_stopping: bool,
+    next_id: u64,
+    runs: HashMap<u64, (Option<String>, CancelFlag)>,
+}
+#[derive(Default)]
+struct SharedRuns {
+    registry: Mutex<RunRegistry>,
+    changed: Condvar,
 }
 
-/// Keeps the run cancellable while it is alive.
-struct CancelRegistration {
-    run_id: Option<String>,
-    flag: CancelFlag,
+/// Each application owns its script registry; unnamed runs also stop on shutdown.
+#[derive(Clone, Default)]
+pub struct ScriptRuns {
+    shared: Arc<SharedRuns>,
 }
-
-impl CancelRegistration {
-    fn new(run_id: Option<&str>) -> Result<Self, AppError> {
-        let flag = CancelFlag::default();
+impl ScriptRuns {
+    fn register(&self, run_id: Option<&str>) -> Result<CancelRegistration, AppError> {
+        let mut registry = self
+            .shared
+            .registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if registry.is_stopping {
+            return Err(AppError::ServiceUnavailable(
+                "Script service is stopping".into(),
+            ));
+        }
         if let Some(run_id) = run_id {
-            let mut runs = cancellable_runs()
-                .lock()
-                .unwrap_or_else(|error| error.into_inner());
-            if runs.contains_key(run_id) {
+            if registry
+                .runs
+                .values()
+                .any(|(name, _)| name.as_deref() == Some(run_id))
+            {
                 return Err(AppError::InvalidInput(format!(
                     "Run ID {run_id} is already active"
                 )));
             }
-            runs.insert(run_id.to_owned(), flag.clone());
         }
-        Ok(Self {
-            run_id: run_id.map(str::to_owned),
+        registry.next_id += 1;
+        let id = registry.next_id;
+        let flag = CancelFlag::default();
+        registry
+            .runs
+            .insert(id, (run_id.map(str::to_owned), flag.clone()));
+        Ok(CancelRegistration {
+            id,
             flag,
+            shared: self.shared.clone(),
         })
     }
+    pub fn cancel(&self, run_id: &str) -> bool {
+        let registry = self
+            .shared
+            .registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        for (name, flag) in registry.runs.values() {
+            if name.as_deref() == Some(run_id) {
+                flag.store(true, Ordering::SeqCst);
+                return true;
+            }
+        }
+        false
+    }
+    pub fn stop(&self) {
+        let mut registry = self
+            .shared
+            .registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        registry.is_stopping = true;
+        for (_, flag) in registry.runs.values() {
+            flag.store(true, Ordering::SeqCst);
+        }
+    }
+    pub fn wait_until(&self, deadline: Instant) -> bool {
+        let registry = self
+            .shared
+            .registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        self.shared
+            .changed
+            .wait_timeout_while(
+                registry,
+                deadline.saturating_duration_since(Instant::now()),
+                |registry| !registry.runs.is_empty(),
+            )
+            .unwrap_or_else(|error| error.into_inner())
+            .0
+            .runs
+            .is_empty()
+    }
 }
 
+struct CancelRegistration {
+    id: u64,
+    flag: CancelFlag,
+    shared: Arc<SharedRuns>,
+}
 impl Drop for CancelRegistration {
     fn drop(&mut self) {
-        if let Some(run_id) = &self.run_id {
-            cancellable_runs()
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .remove_entry(run_id);
-        }
-    }
-}
-
-/// Kills the command of run `run_id` if it is still waited for; returns
-/// whether there was one. A command left running in the background is not
-/// waited for any more and keeps running.
-pub fn cancel_script(run_id: &str) -> bool {
-    let runs = cancellable_runs()
-        .lock()
-        .unwrap_or_else(|error| error.into_inner());
-    match runs.get(run_id) {
-        Some(flag) => {
-            flag.store(true, Ordering::SeqCst);
-            true
-        }
-        None => false,
-    }
-}
-
-/// Cancels all script runs that are currently waited for.
-pub fn cancel_all_scripts() {
-    let runs = cancellable_runs()
-        .lock()
-        .unwrap_or_else(|error| error.into_inner());
-    for flag in runs.values() {
-        flag.store(true, Ordering::SeqCst);
+        self.shared
+            .registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .runs
+            .remove(&self.id);
+        self.shared.changed.notify_all();
     }
 }
 
@@ -276,6 +320,7 @@ enum ProcessWaitOutcome {
 }
 
 pub fn execute_script(
+    runs: &ScriptRuns,
     request: &ScriptRequest,
     log_dir: Option<&Path>,
 ) -> Result<ScriptExecutionResult, AppError> {
@@ -304,7 +349,7 @@ pub fn execute_script(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    let registration = CancelRegistration::new(request.run_id)?;
+    let registration = runs.register(request.run_id)?;
     let mut child = command
         .spawn()
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
@@ -324,7 +369,6 @@ pub fn execute_script(
     let status = running
         .wait_until(Instant::now() + wait, &registration.flag)
         .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
-    drop(registration);
 
     match status {
         ProcessWaitOutcome::Exited(status) => {
@@ -419,7 +463,7 @@ mod tests {
         timed.output_timeout = Some(Duration::from_millis(500));
 
         let started = Instant::now();
-        assert!(execute_script(&timed, None).is_err());
+        assert!(execute_script(&ScriptRuns::default(), &timed, None).is_err());
         assert!(started.elapsed() < Duration::from_secs(5));
 
         let pid: i32 = fs::read_to_string(&pid_file)
@@ -436,21 +480,32 @@ mod tests {
     #[test]
     fn integration_passes_the_text_through_the_placeholder() {
         let text = "don't \"stop\" $HOME";
-        let result = execute_script(&request(commands::ECHO_PLACEHOLDER, text), None).unwrap();
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &request(commands::ECHO_PLACEHOLDER, text),
+            None,
+        )
+        .unwrap();
         assert!(result.is_success, "{}", result.stderr);
         assert_eq!(result.stdout, text);
     }
 
     #[test]
     fn integration_does_not_pass_text_to_stdin() {
-        let result = execute_script(&request(commands::CAT, "input text"), None).unwrap();
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &request(commands::CAT, "input text"),
+            None,
+        )
+        .unwrap();
         assert!(result.is_success, "{}", result.stderr);
         assert_eq!(result.stdout, "");
     }
 
     #[test]
     fn integration_runs_in_the_home_directory_by_default() {
-        let result = execute_script(&request(commands::PWD, ""), None).unwrap();
+        let result =
+            execute_script(&ScriptRuns::default(), &request(commands::PWD, ""), None).unwrap();
         let home = shell::home_dir().unwrap();
         assert_eq!(
             PathBuf::from(result.stdout.trim()).canonicalize().unwrap(),
@@ -463,6 +518,7 @@ mod tests {
         let dir = std::env::temp_dir().canonicalize().unwrap();
         let dir_str = dir.to_string_lossy().into_owned();
         let result = execute_script(
+            &ScriptRuns::default(),
             &ScriptRequest {
                 working_dir: Some(&dir_str),
                 ..request(commands::PWD, "")
@@ -479,6 +535,7 @@ mod tests {
     #[test]
     fn integration_refuses_a_missing_working_directory() {
         let result = execute_script(
+            &ScriptRuns::default(),
             &ScriptRequest {
                 working_dir: Some("/no/such/tyco/dir"),
                 ..request(commands::PWD, "")
@@ -492,6 +549,7 @@ mod tests {
     fn integration_leaves_a_long_command_running_when_its_output_is_not_needed() {
         let started = Instant::now();
         let result = execute_script(
+            &ScriptRuns::default(),
             &ScriptRequest {
                 should_capture_output: false,
                 ..request(commands::SLEEP, "")
@@ -507,6 +565,7 @@ mod tests {
     fn integration_kills_a_command_that_outlives_its_own_timeout() {
         let started = Instant::now();
         let error = execute_script(
+            &ScriptRuns::default(),
             &ScriptRequest {
                 output_timeout: Some(Duration::from_secs(1)),
                 ..request(commands::SLEEP, "")
@@ -521,17 +580,20 @@ mod tests {
     #[test]
     fn integration_kills_a_cancelled_command() {
         let run_id = format!("cancel-test-{}", std::process::id());
+        let runs = ScriptRuns::default();
         let canceller = {
+            let runs = runs.clone();
             let run_id = run_id.clone();
             thread::spawn(move || {
                 let deadline = Instant::now() + Duration::from_secs(5);
-                while !cancel_script(&run_id) && Instant::now() < deadline {
+                while !runs.cancel(&run_id) && Instant::now() < deadline {
                     thread::sleep(Duration::from_millis(10));
                 }
             })
         };
         let started = Instant::now();
         let result = execute_script(
+            &runs,
             &ScriptRequest {
                 run_id: Some(&run_id),
                 ..request(commands::SLEEP, "")
@@ -541,12 +603,12 @@ mod tests {
         canceller.join().unwrap();
         assert_eq!(result.unwrap_err().to_string(), SCRIPT_CANCELLED);
         assert!(started.elapsed() < Duration::from_secs(10));
-        assert!(!cancel_script(&run_id), "the run is forgotten once done");
+        assert!(!runs.cancel(&run_id), "the run is forgotten once done");
     }
 
     #[test]
     fn integration_reports_a_failure() {
-        let result = execute_script(&request("exit 3", ""), None).unwrap();
+        let result = execute_script(&ScriptRuns::default(), &request("exit 3", ""), None).unwrap();
         assert!(!result.is_success);
         assert_eq!(result.exit_code, Some(3));
     }
@@ -555,6 +617,7 @@ mod tests {
     fn integration_logs_the_command_without_the_text() {
         let dir = TestDir::new("process-log");
         let result = execute_script(
+            &ScriptRuns::default(),
             &ScriptRequest {
                 should_log_output: true,
                 ..request(commands::ECHO_PLACEHOLDER, "private_text")
@@ -572,22 +635,42 @@ mod tests {
 
     #[test]
     fn rejects_duplicate_run_ids_without_losing_registration() {
-        let registration = CancelRegistration::new(Some("duplicate-test")).unwrap();
-        assert!(CancelRegistration::new(Some("duplicate-test")).is_err());
-        assert!(cancel_script("duplicate-test"));
+        let runs = ScriptRuns::default();
+        let registration = runs.register(Some("duplicate-test")).unwrap();
+        assert!(runs.register(Some("duplicate-test")).is_err());
+        assert!(runs.cancel("duplicate-test"));
         assert!(registration.flag.load(Ordering::SeqCst));
         drop(registration);
-        assert!(!cancel_script("duplicate-test"));
+        assert!(!runs.cancel("duplicate-test"));
+    }
+
+    #[test]
+    fn application_registries_are_independent_and_shutdown_waits_for_unnamed_runs() {
+        let first = ScriptRuns::default();
+        let second = ScriptRuns::default();
+        let named = first.register(Some("same-id")).unwrap();
+        let other = second.register(Some("same-id")).unwrap();
+        let unnamed = first.register(None).unwrap();
+        first.stop();
+        assert!(named.flag.load(Ordering::SeqCst));
+        assert!(unnamed.flag.load(Ordering::SeqCst));
+        assert!(!other.flag.load(Ordering::SeqCst));
+        assert!(first.register(None).is_err());
+        assert!(!first.wait_until(Instant::now()));
+        drop(named);
+        drop(unnamed);
+        assert!(first.wait_until(Instant::now()));
     }
 
     #[test]
     fn cancels_all_running_scripts() {
-        let reg1 = CancelRegistration::new(Some("run-1")).unwrap();
-        let reg2 = CancelRegistration::new(Some("run-2")).unwrap();
+        let runs = ScriptRuns::default();
+        let reg1 = runs.register(Some("run-1")).unwrap();
+        let reg2 = runs.register(None).unwrap();
         assert!(!reg1.flag.load(Ordering::SeqCst));
         assert!(!reg2.flag.load(Ordering::SeqCst));
 
-        cancel_all_scripts();
+        runs.stop();
 
         assert!(reg1.flag.load(Ordering::SeqCst));
         assert!(reg2.flag.load(Ordering::SeqCst));

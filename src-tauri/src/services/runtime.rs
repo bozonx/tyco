@@ -3,7 +3,7 @@ pub mod settings_shutdown;
 mod tray;
 mod warmup;
 
-pub use lifecycle::{create_windows, setup, shutdown};
+pub use lifecycle::{create_windows, request_exit, setup, shutdown};
 
 use std::sync::Mutex;
 use std::thread;
@@ -103,36 +103,71 @@ fn on_main_thread(
         .map_err(|error| AppError::Message(error.to_string()))?
 }
 
-struct RuntimeActivationHost<'a>(&'a AppHandle);
+struct RuntimeActivationHost<'a> {
+    app: &'a AppHandle,
+    foreground_target: Option<super::platform::ForegroundTarget>,
+}
 
 impl ActivationHost for RuntimeActivationHost<'_> {
     fn foreground_target(&self) -> Option<super::platform::ForegroundTarget> {
-        super::platform::capture_foreground_target()
+        self.foreground_target.clone()
     }
 
     fn has_focused_window(&self) -> bool {
-        has_focused_window(self.0)
+        has_focused_window(self.app)
     }
 
     fn user_config(&self) -> serde_json::Value {
-        self.0.state::<AppState>().snapshot().settings.user_config
+        self.app.state::<AppState>().snapshot().settings.user_config
     }
 
     fn activate(&self, activation: Activation) -> Result<(), AppError> {
-        on_main_thread(self.0, move |app| activate_on_main_thread(app, activation))
+        activate_on_main_thread(self.app, activation)
     }
 }
 
 pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
-    let request = app
-        .state::<ActivationCoordinator>()
-        .begin(&RuntimeActivationHost(app), activation)?;
+    let foreground_target = if activation.target_window_id.is_none() {
+        super::platform::capture_foreground_target()
+    } else {
+        None
+    };
+    let handle = app.clone();
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    // Generation allocation and window mutation share the main-thread queue.
+    // Never hold the coordinator lock while waiting for that queue.
+    app.run_on_main_thread(move || {
+        if handle.state::<AppState>().is_quitting() {
+            let _ = sender.send(Err(AppError::ServiceUnavailable(
+                "Application is stopping".into(),
+            )));
+            return;
+        }
+        let result = handle.state::<ActivationCoordinator>().begin(
+            &RuntimeActivationHost {
+                app: &handle,
+                foreground_target,
+            },
+            activation,
+        );
+        let _ = sender.send(result);
+    })?;
+    let request = receiver
+        .recv()
+        .map_err(|error| AppError::Message(error.to_string()))??;
     if let Some(request) = request {
         let handle = app.clone();
-        thread::spawn(move || {
+        let services = app.state::<super::background::BackgroundServices>();
+        services.spawn_thread("activation-selection", move |stop| {
+            if stop.is_stopped() {
+                return;
+            }
             let selected_text = tauri::async_runtime::block_on(super::platform::capture_selection(
                 request.foreground_target.clone(),
             ));
+            if stop.is_stopped() {
+                return;
+            }
             if let Err(error) = on_main_thread(&handle, move |app| {
                 app.state::<ActivationCoordinator>().publish(&request, || {
                     let state = app.state::<AppState>();
@@ -144,7 +179,7 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             }) {
                 log::warn!("Could not publish captured foreground context: {error}");
             }
-        });
+        })?;
     }
     Ok(())
 }

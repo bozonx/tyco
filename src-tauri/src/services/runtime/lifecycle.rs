@@ -51,21 +51,72 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         });
     }
     setup_tray(app)?;
-    spawn_quick_warmup(app.handle().clone());
+    spawn_quick_warmup(app.handle().clone())?;
     Ok(())
 }
 
-/// Gracefully shuts down background services, cancel active runs, and clean up trackers.
-pub fn shutdown(app: &AppHandle) {
-    log::info!("Initiating application graceful shutdown");
-    crate::services::custom_actions::cancel_all_scripts();
-    if let Some(state) = app.try_state::<AppState>() {
-        crate::services::voice::stop_capture_on_shutdown(state.inner());
+const SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
+
+/// Drain services off the UI thread so queued window operations can complete.
+pub fn request_exit(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    if !state.begin_quitting() {
+        return;
     }
+    let handle = app.clone();
+    let result = std::thread::Builder::new()
+        .name("application-shutdown".into())
+        .spawn(move || {
+            shutdown(&handle);
+            handle.exit(0);
+        });
+    if let Err(error) = result {
+        log::error!("Could not start shutdown coordinator: {error}");
+        app.exit(0);
+    }
+}
+
+/// Cancellation is issued to every service before any bounded wait begins.
+pub fn shutdown(app: &AppHandle) {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    if !services.begin_shutdown() {
+        return;
+    }
+    app.state::<AppState>().begin_quitting();
+    let deadline = std::time::Instant::now() + SHUTDOWN_TIMEOUT;
+    log::info!("Initiating application graceful shutdown");
+    let cleanup_app = app.clone();
+    if let Err(error) = services.spawn_thread("selection-shutdown", move |_| {
+        crate::services::selection_replace::shutdown(&cleanup_app)
+    }) {
+        log::warn!("Could not start selection shutdown: {error}");
+    }
+    services.stop();
+    let scripts = app.state::<crate::services::custom_actions::ScriptRuns>();
+    scripts.stop();
     if let Some(net) = app.try_state::<crate::services::net::NetState>() {
         net.close_all();
     }
-    #[cfg(target_os = "linux")]
-    crate::services::platform::linux::kwin::stop_tracker();
-    log::info!("Graceful shutdown complete");
+    if let Some(state) = app.try_state::<AppState>() {
+        crate::services::voice::stop_capture_on_shutdown(state.inner(), deadline);
+    }
+    if let Some(net) = app.try_state::<crate::services::net::NetState>() {
+        if !net.wait_until(deadline) {
+            log::warn!("Network shutdown deadline expired");
+        }
+    }
+    let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+    let portal = tauri::async_runtime::block_on(async {
+        tokio::time::timeout(remaining, crate::services::platform::hotkeys::shutdown(app)).await
+    });
+    if portal.is_err() {
+        log::warn!("Hotkey portal shutdown deadline expired");
+    }
+    if !scripts.wait_until(deadline) {
+        log::warn!("Script shutdown deadline expired");
+    }
+    if !services.wait_until(deadline) {
+        log::warn!("Background service shutdown deadline expired");
+    }
+    log::info!("Application service shutdown finished");
 }

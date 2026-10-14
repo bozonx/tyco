@@ -7,7 +7,6 @@ use crate::errors::AppError;
 use crate::state::AppState;
 #[cfg(target_os = "linux")]
 use gtk::prelude::WidgetExt;
-use std::thread;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
 
@@ -27,25 +26,34 @@ fn warmup_cycles(value: Option<&str>) -> u32 {
 /// the window below (see dev_docs/quick-input-report.md). The warmup goes
 /// through them before the user presses a hotkey. It leaves `AppState` and the
 /// webview alone and gives way to a real activation at any step.
-pub(super) fn spawn_quick_warmup(app: AppHandle) {
+pub(super) fn spawn_quick_warmup(app: AppHandle) -> Result<(), AppError> {
     let cycles = warmup_cycles(std::env::var(WARMUP_ENV).ok().as_deref());
     if cycles == 0 {
-        return;
+        return Ok(());
     }
-    thread::spawn(move || {
-        thread::sleep(WARMUP_DELAY);
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_thread("quick-window-warmup", move |stop| {
+        let app = handle;
+        if stop.wait(WARMUP_DELAY) {
+            return;
+        }
         for _ in 0..cycles {
             let shown = on_main_thread(&app, warmup_show);
-            thread::sleep(WARMUP_STEP);
+            if stop.wait(WARMUP_STEP) {
+                return;
+            }
             let hidden = on_main_thread(&app, warmup_hide);
             if let Err(error) = shown.and(hidden) {
                 log::warn!("Quick window warmup stopped: {error}");
                 return;
             }
-            thread::sleep(WARMUP_STEP);
+            if stop.wait(WARMUP_STEP) {
+                return;
+            }
         }
         log::debug!("Quick window warmup finished after {cycles} cycles");
-    });
+    })
 }
 
 fn quick_window_in_use(app: &AppHandle) -> bool {

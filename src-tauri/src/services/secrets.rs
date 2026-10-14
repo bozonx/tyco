@@ -131,10 +131,11 @@ pub async fn with_store<T: Send + 'static>(
     app: &AppHandle,
     task: impl FnOnce(&SecretStore) -> T + Send + 'static,
 ) -> Result<T, AppError> {
-    let app = app.clone();
-    tauri::async_runtime::spawn_blocking(move || task(&app.state::<SecretStore>()))
+    let services = app.state::<super::background::BackgroundServices>();
+    let handle = app.clone();
+    services
+        .run_blocking(move || task(&handle.state::<SecretStore>()))
         .await
-        .map_err(|error| AppError::Message(error.to_string()))
 }
 
 impl SecretStore {

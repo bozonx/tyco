@@ -33,8 +33,35 @@ loads the current config. New edits during a save are rebased onto its result.
 `services/storage/` separates config loading and session state, editor history,
 chat history and shared file primitives; existing callers use its public facade.
 
+Settings orchestration lives in `services/settings.rs`, with supplied secret,
+hotkey, config-storage, history and publication effects. History policies and
+network origin authorization use typed views parsed at the config boundary.
+An editor storage-mode transition prepares its destination before the config
+write while retaining its source. Failed writes restore the previous config and
+prepared editor file. A successful write updates the desktop snapshot once,
+under the history repository locks, before irreversible retention cleanup.
+Cleanup failures keep the committed policy and are retried by maintenance,
+later saves and startup; a partially applied chat journal is replayed forward.
+
+`services/background.rs` owns admission, cancellation and a lease-based
+completion barrier for application services. Blocking work keeps its lease even
+if its async caller is cancelled. Local control, D-Bus, window trackers, portal
+streams, selection workers and warmup participate in shutdown. After both
+webviews flush settings, the coordinator runs off the UI thread and shares a
+three-second deadline across voice, network, scripts, platform cleanup and
+background services. Stalled native workers are reported rather than joined
+indefinitely. Each application owns its script registry, including unnamed runs;
+intentionally detached applications remain independent of Tyco's lifetime.
+
+The network gateway owns request startup and uses one limit of 32 active HTTP
+and WebSocket operations, including request preparation. Cancellation releases
+capacity only when the operation lease is dropped. Shutdown closes admission,
+rejects late socket registration and waits for outstanding leases.
+
 Activation policy lives in `services/activation_coordinator.rs`, with a supplied
-window host and generation checks that discard late context captures.
+window host and generation checks that discard late context captures. Generation
+allocation and window mutation run together on the main-thread executor; no
+coordinator lock is held while another thread waits for that executor.
 `SelectionRuns` coordinates capture, cancellation, publication and completion
 through a supplied backend; clipboard and focused-window effects live in
 `platform/selection.rs`. Paste and hotkey policies accept substitutable input

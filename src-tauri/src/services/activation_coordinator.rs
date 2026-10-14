@@ -30,6 +30,9 @@ impl ActivationCoordinator {
         host: &impl ActivationHost,
         mut activation: Activation,
     ) -> Result<Option<CaptureRequest>, AppError> {
+        // Call only on the window executor: host activation must never wait
+        // for another thread that can publish through this coordinator.
+        let mut generation = self.generation.lock().expect("activation lock poisoned");
         let foreground_target = activation
             .target_window_id
             .clone()
@@ -41,14 +44,11 @@ impl ActivationCoordinator {
         let capture = activation.selected_text.is_none()
             && !(activation.mode == ActivationMode::Editor && host.has_focused_window())
             && activation.can_take_selection(&host.user_config());
-        let generation = {
-            let mut generation = self.generation.lock().expect("activation lock poisoned");
-            *generation += 1;
-            *generation
-        };
+        *generation += 1;
+        let request_generation = *generation;
         host.activate(activation)?;
         Ok(capture.then_some(CaptureRequest {
-            generation,
+            generation: request_generation,
             foreground_target,
         }))
     }
@@ -103,6 +103,47 @@ mod tests {
 
     fn activation(mode: ActivationMode) -> Activation {
         Activation::new(mode, ActivationSource::Cli)
+    }
+
+    #[test]
+    fn a_concurrent_activation_cannot_advance_generation_during_window_mutation() {
+        struct BlockingHost<'a> {
+            coordinator: &'a ActivationCoordinator,
+        }
+        impl ActivationHost for BlockingHost<'_> {
+            fn foreground_target(&self) -> Option<ForegroundTarget> {
+                None
+            }
+            fn has_focused_window(&self) -> bool {
+                false
+            }
+            fn user_config(&self) -> Value {
+                serde_json::json!({})
+            }
+            fn activate(&self, _: Activation) -> Result<(), AppError> {
+                std::thread::scope(|scope| {
+                    let attempted = scope.spawn(|| self.coordinator.generation.try_lock().is_err());
+                    assert!(attempted.join().unwrap(), "another activation could advance generation before this window mutation finished");
+                });
+                Ok(())
+            }
+        }
+        let coordinator = ActivationCoordinator::default();
+        let host = BlockingHost {
+            coordinator: &coordinator,
+        };
+        let request = coordinator
+            .begin(&host, activation(ActivationMode::Write))
+            .unwrap()
+            .unwrap();
+        let mut published = false;
+        coordinator
+            .publish(&request, || {
+                published = true;
+                Ok(())
+            })
+            .unwrap();
+        assert!(published);
     }
 
     #[test]

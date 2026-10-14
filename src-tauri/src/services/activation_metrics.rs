@@ -237,7 +237,7 @@ fn socket_path() -> Result<std::path::PathBuf, AppError> {
 
 #[cfg(unix)]
 fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
-    use std::io::{BufRead, BufReader};
+    use std::io::{BufRead, BufReader, Read};
     use std::os::unix::net::UnixListener;
 
     use std::os::unix::fs::PermissionsExt;
@@ -248,23 +248,68 @@ fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
     }
     let listener = UnixListener::bind(&path)?;
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
-    std::thread::spawn(move || {
-        for stream in listener.incoming() {
-            let Ok(stream) = stream else { continue };
+    listener.set_nonblocking(true)?;
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_thread("activation-metrics", move |stop| {
+        let app = handle;
+        while !stop.is_stopped() {
+            let stream = match listener.accept() {
+                Ok((stream, _)) => stream,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    if stop.wait(Duration::from_millis(20)) {
+                        break;
+                    }
+                    continue;
+                }
+                Err(error) => {
+                    log::warn!("Metrics socket accept failed: {error}");
+                    break;
+                }
+            };
+            let _ = stream.set_read_timeout(Some(Duration::from_millis(100)));
+            let _ = stream.set_write_timeout(Some(Duration::from_millis(100)));
             let Ok(mut writer) = stream.try_clone() else {
                 continue;
             };
-            for line in BufReader::new(stream).lines().map_while(Result::ok) {
-                let response = handle_request(&app, line.trim());
-                if writeln!(writer, "{response}").is_err() {
-                    break;
+            let mut reader = BufReader::new(stream);
+            let mut line = String::new();
+            while !stop.is_stopped() {
+                let remaining_bytes = 4097usize.saturating_sub(line.len());
+                match (&mut reader)
+                    .take(remaining_bytes as u64)
+                    .read_line(&mut line)
+                {
+                    Ok(0) => break,
+                    Ok(_) => {
+                        if line.len() > 4096 {
+                            break;
+                        }
+                        let response = handle_request(&app, line.trim());
+                        if writeln!(writer, "{response}")
+                            .and_then(|()| writer.flush())
+                            .is_err()
+                        {
+                            break;
+                        }
+                        line.clear();
+                    }
+                    Err(error)
+                        if matches!(
+                            error.kind(),
+                            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                        ) =>
+                    {
+                        if line.len() > 4096 {
+                            break;
+                        }
+                    }
+                    Err(_) => break,
                 }
-                let _ = writer.flush();
             }
         }
         let _ = std::fs::remove_file(path);
-    });
-    Ok(())
+    })
 }
 
 fn handle_request(app: &AppHandle, request: &str) -> String {

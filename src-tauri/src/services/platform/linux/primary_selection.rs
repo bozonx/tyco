@@ -16,11 +16,10 @@
 //! lacks the data control protocol, or no tracker backend) nothing is known
 //! about the owner, and the selection is taken as it is.
 
-use std::io::{BufRead, BufReader};
+use std::io::Read;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::sync::{Mutex, OnceLock};
-use std::thread;
 use std::time::Duration;
 
 use crate::services::platform::window_tracker::tracker;
@@ -89,11 +88,13 @@ pub fn is_selection_from_window(window_id: Option<&str>) -> Option<bool> {
 }
 
 /// Follows the changes of the primary selection for as long as Tyco runs.
-pub fn spawn_watcher() {
-    thread::spawn(|| {
+pub fn spawn_watcher(
+    services: &crate::services::background::BackgroundServices,
+) -> Result<(), crate::errors::AppError> {
+    services.spawn_thread("primary-selection", |stop| {
         let mut failures = 0u32;
-        loop {
-            match watch() {
+        while !stop.is_stopped() {
+            match watch(&stop) {
                 Ok(()) => failures = 0,
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                     log::warn!(
@@ -114,13 +115,13 @@ pub fn spawn_watcher() {
                 }
             }
             update(SelectionOriginState::watch_stopped);
-            thread::sleep(retry_delay(failures));
+            if stop.wait(retry_delay(failures)) { return; }
         }
-    });
+    })
 }
 
 /// Runs one `wl-paste --watch` until it exits; an error when it failed.
-fn watch() -> std::io::Result<()> {
+fn watch(stop: &crate::services::background::StopToken) -> std::io::Result<()> {
     let mut command = Command::new("wl-paste");
     command
         .args(["--primary", "--watch", "echo"])
@@ -139,26 +140,42 @@ fn watch() -> std::io::Result<()> {
         });
     }
     let mut child = command.spawn()?;
-    let Some(stdout) = child.stdout.take() else {
-        let _ = child.kill();
-        let _ = child.wait();
-        return Ok(());
-    };
-    update(SelectionOriginState::watch_started);
-    log::info!("Watching which window the primary selection is made in");
-
-    for line in BufReader::new(stdout).lines() {
-        if line.is_err() {
-            break;
+    let result = (|| {
+        let Some(mut stdout) = child.stdout.take() else {
+            return Ok(());
+        };
+        use crate::services::platform::process::PollablePipe;
+        stdout.prepare()?;
+        update(SelectionOriginState::watch_started);
+        log::info!("Watching which window the primary selection is made in");
+        let mut bytes = [0u8; 1024];
+        while !stop.is_stopped() {
+            match stdout.read(&mut bytes) {
+                Ok(0) => break,
+                Ok(count) => {
+                    for _ in bytes[..count].iter().filter(|byte| **byte == b'\n') {
+                        let owner = tracker().target();
+                        update(|state| state.selection_changed(owner));
+                    }
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    if stop.wait(Duration::from_millis(20)) {
+                        break;
+                    }
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(error) => return Err(error),
+            }
         }
-        let owner = tracker().target();
-        update(|state| state.selection_changed(owner));
-    }
+        Ok(())
+    })();
+    let _ = child.kill();
     let status = child.wait()?;
-    if !status.success() {
+    update(SelectionOriginState::watch_stopped);
+    result?;
+    if !stop.is_stopped() && !status.success() {
         return Err(std::io::Error::other(format!("wl-paste exited: {status}")));
     }
-    log::warn!("The primary selection watch exited");
     Ok(())
 }
 

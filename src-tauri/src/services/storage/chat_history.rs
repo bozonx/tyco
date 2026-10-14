@@ -487,6 +487,32 @@ mod tests {
     }
 
     #[test]
+    fn cleanup_failure_after_index_commit_replays_without_resurrecting_chats() {
+        let dir = TestDir::new("failed-chat-cleanup");
+        let chat = chat_item("removed");
+        write_json(&dir.join("removed.json"), &chat).unwrap();
+        write_json(&dir.join(CHAT_INDEX_FILE), &vec![ChatSummary::from(&chat)]).unwrap();
+        // An invalid image directory fails cleanup after the new index is durable.
+        fs::write(dir.join("images"), "blocked").unwrap();
+        assert!(commit_chat_transaction(
+            &dir,
+            PendingChatTransaction {
+                history: Vec::new(),
+                chat: None
+            }
+        )
+        .is_err());
+        assert!(!dir.join("removed.json").exists());
+        assert!(dir.join(CHAT_TRANSACTION_FILE).exists());
+        let index: Vec<ChatSummary> =
+            serde_json::from_slice(&fs::read(dir.join(CHAT_INDEX_FILE)).unwrap()).unwrap();
+        assert!(index.is_empty());
+        fs::remove_file(dir.join("images")).unwrap();
+        assert!(load_chat_index(&dir).unwrap().is_empty());
+        assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
+    }
+
+    #[test]
     fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
         let dir = TestDir::new("interrupted-delete");
         let chat = chat_item("removed");

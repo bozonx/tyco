@@ -4,8 +4,6 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::state::AppState;
-
 pub const QUIT_REQUESTED_EVENT: &str = "app://quit-requested";
 pub const QUIT_CANCELLED_EVENT: &str = "app://quit-cancelled";
 
@@ -82,8 +80,7 @@ pub fn request(app: &AppHandle) {
         .map(str::to_owned)
         .collect::<HashSet<_>>();
     if windows.is_empty() {
-        app.state::<AppState>().set_quitting(true);
-        app.exit(0);
+        super::request_exit(app);
         return;
     }
     let Some(request_id) = app
@@ -108,7 +105,10 @@ pub fn request(app: &AppHandle) {
         }
     }
     let app = app.clone();
-    tauri::async_runtime::spawn(async move {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    if let Err(error) = services.spawn_async(async move {
+        let app = handle;
         tokio::time::sleep(Duration::from_secs(10)).await;
         let cancelled = app
             .state::<SettingsShutdown>()
@@ -120,7 +120,9 @@ pub fn request(app: &AppHandle) {
             log::warn!("Shutdown cancelled: a webview did not confirm saved settings");
             cancel_exit(&app);
         }
-    });
+    }) {
+        log::warn!("Could not watch settings shutdown: {error}");
+    }
 }
 
 pub fn acknowledge(app: &AppHandle, request_id: u64, window: &str, saved: bool) {
@@ -132,8 +134,7 @@ pub fn acknowledge(app: &AppHandle, request_id: u64, window: &str, saved: bool) 
         .acknowledge(request_id, window, saved);
     match result {
         ShutdownFlushOutcome::Complete => {
-            app.state::<AppState>().set_quitting(true);
-            app.exit(0);
+            super::request_exit(app);
         }
         ShutdownFlushOutcome::Cancelled => cancel_exit(app),
         ShutdownFlushOutcome::Ignored | ShutdownFlushOutcome::Pending => {}
