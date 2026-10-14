@@ -9,10 +9,7 @@ export function retryAfterMs(value: string | null, nowMs = Date.now()): number {
   return Number.isFinite(dateMs) ? Math.max(0, dateMs - nowMs) : 0
 }
 
-export function waitForRetry(
-  delayMs: number,
-  signal?: AbortSignal
-): Promise<void> {
+function waitForRetry(delayMs: number, signal?: AbortSignal): Promise<void> {
   signal?.throwIfAborted()
   if (delayMs <= 0) return Promise.resolve()
   return new Promise((resolve, reject) => {

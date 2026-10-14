@@ -1,7 +1,7 @@
 /** The share of the budget from which the user is warned */
-export const CONTEXT_BUDGET_HIGH_RATIO = 0.7
+const CONTEXT_BUDGET_HIGH_RATIO = 0.7
 
-export type ContextBudgetLevel = 'ok' | 'high' | 'over'
+type ContextBudgetLevel = 'ok' | 'high' | 'over'
 
 export interface ContextBudget {
   /** Characters the next message takes with its attachments */

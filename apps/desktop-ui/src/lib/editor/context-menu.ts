@@ -1,15 +1,13 @@
 import type { EditorState, Extension } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
-export { replaceRange } from './editor-sync'
-
 export interface WordRange {
   from: number
   to: number
   text: string
 }
 
-export interface MenuAnchor {
+interface MenuAnchor {
   x: number
   /** Top of the anchored text line */
   y: number

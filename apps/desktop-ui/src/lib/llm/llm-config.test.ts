@@ -14,7 +14,7 @@ import {
 const clone = (config: LlmConfig): LlmConfig => structuredClone(config)
 
 describe('llm-config', () => {
-  it('preserves a migrated reasoning mode', () => {
+  it('preserves the thinking mode', () => {
     const config = structuredClone(DEFAULT_LLM_CONFIG)
     config.models[0].isThinkingEnabled = true
     expect(normalizeLlmConfig(config).models[0].isThinkingEnabled).toBe(true)
@@ -78,15 +78,15 @@ describe('llm-config', () => {
       models: [
         {
           id: ' a ',
-          provider: 'google',
-          model: 'gemini',
+          providerId: 'google',
+          providerModelId: 'gemini',
           temperature: '0.5',
           maxOutputTokens: '1000.4',
           contextWindowTokens: -1,
         },
-        { id: 'a', provider: 'google', model: 'dup' },
-        { id: 'b', provider: 'nowhere', model: 'x' },
-        { id: 'c', provider: 'deepseek' },
+        { id: 'a', providerId: 'google', providerModelId: 'dup' },
+        { id: 'b', providerId: 'nowhere', providerModelId: 'x' },
+        { id: 'c', providerId: 'deepseek' },
       ],
     })
 
@@ -96,29 +96,11 @@ describe('llm-config', () => {
     ])
   })
 
-  it('prefers current model fields when legacy fields are also present', () => {
-    const config = normalizeLlmConfig({
-      models: [
-        {
-          id: 'custom',
-          provider: 'google',
-          providerId: 'deepseek',
-          model: 'old-model',
-          providerModelId: 'new-model',
-        },
-      ],
-    })
-    expect(config.models).toEqual([
-      { id: 'custom', providerId: 'deepseek', providerModelId: 'new-model' },
-    ])
-    expect(normalizeLlmConfig(config)).toEqual(config)
-  })
-
   it('keeps task chains to known models without silently assigning defaults', () => {
     const config = normalizeLlmConfig({
       models: [
-        { id: 'a', provider: 'google', model: 'g' },
-        { id: 'b', provider: 'deepseek', model: 'd' },
+        { id: 'a', providerId: 'google', providerModelId: 'g' },
+        { id: 'b', providerId: 'deepseek', providerModelId: 'd' },
       ],
       tasks: { aiTasks: ['b', 'gone', 'b', 'a'], translate: [] },
     })

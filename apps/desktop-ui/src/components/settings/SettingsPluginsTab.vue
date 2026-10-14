@@ -140,15 +140,16 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
+import { builtinPluginIds } from '../../lib/plugins/builtin-plugins'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import { builtinPluginIds, usePlugins } from '../../plugins'
 import { useIpcStore } from '../../stores/ipc'
+import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import { Icon } from '@iconify/vue'
 
-const plugins = usePlugins()
+const plugins = usePluginRuntimeStore()
 const { pluginIndexes, pluginRuntimeStates } = plugins
 
 const props = defineProps<{

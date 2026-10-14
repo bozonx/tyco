@@ -18,7 +18,7 @@ pub(crate) fn default_user_config_for_session(
         "../../../packages/shared/src/user-config-defaults.json"
     ))
     .expect("valid shared user config defaults");
-    config["configVersion"] = json!(crate::services::config_migration::CONFIG_VERSION);
+    config["configVersion"] = json!(crate::services::config_version::CONFIG_VERSION);
     config["hotkeys"] = hotkeys::default_hotkeys_config();
     config["selectionHotkeys"] = hotkeys::default_selection_hotkeys_config();
     config["windowInsertion"]["xdotoolBin"] = json!(default_binary_path("xdotool"));

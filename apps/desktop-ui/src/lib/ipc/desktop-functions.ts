@@ -30,7 +30,7 @@ export type DesktopFunctionName = keyof DesktopFunctions
 export type DesktopFunctionArgs<K extends DesktopFunctionName> =
   DesktopFunctions[K]['args']
 
-export type SnakeCase<S extends string> = S extends `${infer Head}${infer Tail}`
+type SnakeCase<S extends string> = S extends `${infer Head}${infer Tail}`
   ? `${Head extends Lowercase<Head> ? Head : `_${Lowercase<Head>}`}${SnakeCase<Tail>}`
   : S
 

@@ -117,11 +117,6 @@ externalAccess:
   selection: false
 ```
 
-Configs before version 3 also had `externalAccess.commands`, a master switch
-for all commands. The migration drops it; a config where it was `false` has the
-external grant of every command revoked instead. An `externalAccess.recording`
-left from older builds is ignored and dropped on the next save from Settings.
-
 A command's external grant does not bypass its tool's availability or permission
 checks. Permission and command configuration are checked again when the
 quick webview claims a job. A command changed after submission is rejected
@@ -135,7 +130,7 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl commands list [--json]
  tyco-ctl commands describe <id | --name NAME>
  tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-              [--replace] [--interactive] [--output return|configured]
+              [--replace] [--interactive]
               [--wait] [--json] [--timeout SECONDS]
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
  tyco-ctl quit
@@ -183,8 +178,7 @@ error when described.
 Use stable IDs in scripts. Without `--name` the target is only ever an ID.
 `--name` explicitly selects a display name, ignoring case and redundant
 whitespace; an ambiguous name is rejected with `AmbiguousName`. Display names
-can change with configuration or localization. The flag may also follow the
-name (`tyco-ctl run 'My command' --name`), as in earlier versions.
+can change with configuration or localization.
 
 ### Execute and return the result
 
@@ -210,14 +204,11 @@ input is an error. Explicitly empty text remains an input; the tool decides
 whether it is valid. The CLI does not trim, normalize, or silently drop it.
 Use stdin for private text; command-line arguments may appear in process lists.
 
-By default, tool content is returned in the job's `output`. `--wait` writes that
+Tool content is always returned in the job's `output`. `--wait` writes that
 content to stdout exactly, without adding a newline. `--wait --json` instead
 prints the complete final job object. A tool can have its own intrinsic side
 effects (for example a webhook, script, `core.copy`, or `core.insert`); choosing
 returned output does not undo or disable those effects.
-
-`--output configured` applies the command's `afterRun` behavior. Commands that
-show a result menu require `--interactive`; use returned output for pipelines.
 
 ### Interactive execution and selection
 
@@ -308,17 +299,17 @@ starts library commands the way a user would. It has no discovery, background
 execution, job monitoring, or quitting; use `tyco-ctl` for those. Both share the
 authorization dispatcher, so the same grants and capabilities apply.
 
-| Method              | Arguments          | What it does                                        |
-| ------------------- | ------------------ | --------------------------------------------------- |
-| `Open`              | `s` mode           | Opens the window of the mode                        |
-| `OpenWithText`      | `s` mode, `s` text | Opens it with the text as input                     |
-| `OpenWithSelection` | `s` mode           | Opens it with the selection of the focused window   |
-| `RunCommand`        | `s` command ID     | Runs the command interactively, applying `afterRun` |
-| `ReplaceSelection`  | `s` command ID     | Replaces the selection with the command's output    |
+| Method              | Arguments          | What it does                                      |
+| ------------------- | ------------------ | ------------------------------------------------- |
+| `Open`              | `s` mode           | Opens the window of the mode                      |
+| `OpenWithText`      | `s` mode, `s` text | Opens it with the text as input                   |
+| `OpenWithSelection` | `s` mode           | Opens it with the selection of the focused window |
+| `RunCommand`        | `s` command ID     | Runs the command interactively                    |
+| `ReplaceSelection`  | `s` command ID     | Replaces the selection with the command's output  |
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
-`tyco-ctl run <id> --interactive --output configured`: it asks for missing
-input in the command launcher. `ReplaceSelection` behaves like
+`tyco-ctl run <id> --interactive`: it asks for missing input in the command
+launcher. `ReplaceSelection` behaves like
 `tyco-ctl run <id> --selection --replace --interactive`. Command IDs are
 stable library IDs; display names are not accepted.
 

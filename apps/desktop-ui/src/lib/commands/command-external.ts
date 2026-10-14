@@ -16,7 +16,7 @@ export function normalizeCommandName(name: string): string {
 }
 
 /** Whether an external call may run the command */
-export function canRunCommandExternally(
+function canRunCommandExternally(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {

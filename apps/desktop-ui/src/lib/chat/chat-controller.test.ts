@@ -296,7 +296,7 @@ it('uses the request budget for both the composer and history image eligibility'
       images: [
         {
           id: 'image',
-          mediaType: 'image/png',
+          mediaType: 'image/webp',
           width: 10,
           height: 10,
           size: 100,

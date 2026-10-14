@@ -1,6 +1,6 @@
 import { StartMode } from '@tyco/shared'
 
-export const APP_ROUTE_NAMES = {
+const APP_ROUTE_NAMES = {
   HOME: 'home',
   EDITOR: 'editor',
   HISTORY: 'history',
@@ -56,7 +56,7 @@ export const MODE_ROUTE_MAP: Record<StartMode, AppRoutePath> = {
  * Modes shown by the quick window; the rest belong to the main window. Keep in
  * sync with `window_label_for_mode` in `src-tauri/src/services/runtime.rs`.
  */
-export const QUICK_WINDOW_MODES: ReadonlySet<StartMode> = new Set([
+const QUICK_WINDOW_MODES: ReadonlySet<StartMode> = new Set([
   StartMode.WRITE,
   StartMode.VOICE,
   StartMode.SELECT,

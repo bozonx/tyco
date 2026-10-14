@@ -595,7 +595,7 @@ describe('chat-store', () => {
 describe('image turns', () => {
   const image = {
     id: 'image',
-    mediaType: 'image/png' as const,
+    mediaType: 'image/webp' as const,
     width: 1,
     height: 1,
     size: 3,
@@ -673,7 +673,7 @@ describe('image retry validation', () => {
     const store = createChatStoreModel(deps)
     const image = {
       id: 'image',
-      mediaType: 'image/png' as const,
+      mediaType: 'image/webp' as const,
       width: 1,
       height: 1,
       size: 3,
@@ -690,7 +690,7 @@ describe('image retry validation', () => {
 describe('file and image context policies', () => {
   const image = {
     id: 'old',
-    mediaType: 'image/png' as const,
+    mediaType: 'image/webp' as const,
     width: 100,
     height: 100,
     size: 100,

@@ -31,7 +31,7 @@ function formatWith(
 
 /**
  * Splits a newest-first list into local calendar days. Entries without a known
- * time (legacy ones) end up in a group of their own
+ * time end up in a group of their own
  */
 export function groupByDay<T>(
   items: T[],

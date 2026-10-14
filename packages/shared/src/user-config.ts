@@ -4,8 +4,8 @@ import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
 /**
- * The schema version of the user config; the backend migrates older configs and
- * leaves newer ones untouched. Both runtimes read `config-version.json`
+ * The schema version of the user config; the backend leaves newer configs
+ * untouched. Both runtimes read `config-version.json`
  */
 export const CONFIG_VERSION = configVersion
 
@@ -56,7 +56,7 @@ export interface LlmModel {
   maxOutputTokens?: number
   contextWindowTokens?: number
   canUseImages?: boolean
-  /** DeepSeek thinking mode, including migrated reasoning models. */
+  /** DeepSeek thinking mode */
   isThinkingEnabled?: boolean
 }
 
@@ -270,10 +270,7 @@ export interface CommandLauncherAfterRun {
  * See `dev_docs/design-voice-commands.md`
  */
 export interface CommandConfig {
-  /**
-   * Stable; kept from the migrated action so the webhook secret id stays the
-   * same
-   */
+  /** Stable */
   id: string
   name: string
   /** Tells the LLM what the command does; the agent and LLM parsing use it */
@@ -303,14 +300,6 @@ export interface CommandConfig {
   logOutput: boolean
   availableIn: CommandAvailability
   enabled: boolean
-}
-
-/** Compatibility boundary for credentials written before config version 8. */
-export function legacyWebhookSecretId(commandId: string): string {
-  return `webhook-${commandId.toLowerCase().replace(/[^a-z0-9._-]/g, '-')}`.slice(
-    0,
-    64
-  )
 }
 
 /** A command of the library placed in the action menu */

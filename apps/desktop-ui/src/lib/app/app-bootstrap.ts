@@ -7,7 +7,6 @@ import {
 
 import { createCleanupScope } from './cleanup-scope'
 
-import { GlobalEvents, type GlobalEventEmit } from './global-events'
 import { resolveModeRoute, type AppRoutePath } from '../navigation/routes'
 
 export interface AppBootstrapDeps {
@@ -24,7 +23,6 @@ export interface AppBootstrapDeps {
    */
   ownsMode?: (mode: DesktopViewState['mode']) => boolean
   listen: DesktopListen
-  emitGlobal: GlobalEventEmit
   initPlugins: () => void | Promise<void>
   handleNavKeyUp: (event: KeyboardEvent) => void
   addWindowKeyupListener: (
@@ -73,11 +71,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     }
   }
 
-  const handleKeyUp = (event: KeyboardEvent) => {
-    deps.emitGlobal(GlobalEvents.KEY_UP, event)
-    deps.handleNavKeyUp(event)
-  }
-
   const start = (): Promise<void> => {
     if (starting) return starting
     if (scope && !scope.stopped) return Promise.resolve()
@@ -88,7 +81,7 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
     lastRevision = -1
     const work = async () => {
       try {
-        run.add(deps.addWindowKeyupListener(handleKeyUp))
+        run.add(deps.addWindowKeyupListener(deps.handleNavKeyUp))
         await run.listen(
           deps.listen,
           DESKTOP_EVENTS.STATE_CHANGED,
@@ -120,7 +113,6 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
                 })
             })
           )
-        if (!run.stopped) deps.emitGlobal(GlobalEvents.INITED)
       } catch (error) {
         run.stop()
         throw error
@@ -134,5 +126,5 @@ export function createAppBootstrap(deps: AppBootstrapDeps) {
 
   const stop = () => scope?.stop()
 
-  return { applyParams, handleKeyUp, start, stop }
+  return { applyParams, start, stop }
 }

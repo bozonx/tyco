@@ -11,7 +11,7 @@ const model = () =>
     appearance: () => DEFAULT_APPEARANCE,
   })
 describe('settings config preparation', () => {
-  it('normalizes legacy fields without mutating input', () => {
+  it('drops unknown fields without mutating input', () => {
     const input = {
       ...structuredClone(DEFAULT_USER_CONFIG),
       submitKey: 'invalid',

@@ -320,8 +320,6 @@ pub struct LauncherRequest {
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub job_id: Option<String>,
-    #[serde(default)]
-    pub output: tyco_activation_protocol::OutputMode,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub input: Option<serde_json::Map<String, Value>>,
 }

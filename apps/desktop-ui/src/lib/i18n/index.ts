@@ -19,7 +19,7 @@ type GlobalI18n = {
 
 const globalI18n = i18n.global as GlobalI18n
 
-export function resolveUiLocale(
+function resolveUiLocale(
   configuredAppLanguage?: string | null,
   configuredUserLanguage?: string | null
 ): UiLocale {

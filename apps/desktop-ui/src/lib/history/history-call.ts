@@ -8,7 +8,7 @@ import type {
 export interface HistoryApi {
   callFunction: DesktopCall
 }
-export class HistoryOperationError extends Error {
+class HistoryOperationError extends Error {
   constructor(operation: string, message?: string) {
     super(message || `History operation failed: ${operation}`)
     this.name = 'HistoryOperationError'

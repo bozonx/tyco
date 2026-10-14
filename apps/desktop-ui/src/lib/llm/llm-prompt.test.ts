@@ -64,7 +64,7 @@ describe('llm-prompt', () => {
 describe('image prompts', () => {
   const image = {
     id: 'image',
-    mediaType: 'image/png' as const,
+    mediaType: 'image/webp' as const,
     width: 1,
     height: 1,
     size: 3,
@@ -81,10 +81,10 @@ describe('image prompts', () => {
     )
     expect(prompt.messages[0].content).toEqual([
       { type: 'text', text: 'Earlier' },
-      { type: 'file', data: bytes, mediaType: 'image/png' },
+      { type: 'file', data: bytes, mediaType: 'image/webp' },
     ])
     expect(prompt.messages[2].content).toEqual([
-      { type: 'file', data: bytes, mediaType: 'image/png' },
+      { type: 'file', data: bytes, mediaType: 'image/webp' },
     ])
   })
   it('never silently drops an unavailable image', () => {

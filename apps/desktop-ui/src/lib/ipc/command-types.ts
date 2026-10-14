@@ -5,7 +5,7 @@ import type {
   NativeCommand,
 } from './desktop-functions'
 
-export interface CommandContext {
+interface CommandContext {
   activationId: number
 }
 

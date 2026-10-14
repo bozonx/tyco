@@ -9,9 +9,9 @@ pub mod app_paths;
 pub mod atomic_file;
 pub mod chat_images;
 pub mod clipboard;
-pub mod config_migration;
 pub mod config_schema;
 pub mod config_update;
+pub mod config_version;
 pub mod custom_actions;
 #[cfg(target_os = "linux")]
 pub mod dbus;
@@ -21,7 +21,6 @@ pub mod external_api;
 pub mod external_commands;
 pub mod external_jobs;
 pub mod hotkeys;
-pub mod llm_config;
 pub mod net;
 pub mod notes;
 pub mod platform;

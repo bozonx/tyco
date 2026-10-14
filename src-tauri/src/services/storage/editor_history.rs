@@ -2,21 +2,13 @@ mod entries;
 mod policy;
 
 use entries::{apply_editor_history_result, insert_restored_item, push_editor_history};
-pub use policy::{EditorHistoryPolicy, EditorHistoryStorage};
+pub use policy::EditorHistoryPolicy;
 
 use super::chat_history::enforce_chat_history_policy;
 use super::*;
 
 const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
-
-/// A line of `editor-history.jsonl`: a plain string in the legacy format.
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum StoredEditorHistoryLine {
-    Item(EditorHistoryRecord),
-    Legacy(String),
-}
 
 fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(app_data_sub_dir(app, "history")?.join(EDITOR_HISTORY_FILE))
@@ -40,43 +32,8 @@ fn remove_editor_history_files(path: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Entries without a date (the legacy format) get the time the file was last
-/// written: the latest they can be from, so that the retention period applies
-/// to them too.
 fn read_editor_history(path: &Path) -> Result<Vec<EditorHistoryRecord>, AppError> {
-    let lines: Vec<StoredEditorHistoryLine> = read_jsonl(path)?;
-    let file_time = || {
-        fs::metadata(path)
-            .and_then(|metadata| metadata.modified())
-            .ok()
-            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
-            .and_then(|duration| u64::try_from(duration.as_millis()).ok())
-            .unwrap_or_else(now_ms)
-    };
-
-    Ok(lines
-        .into_iter()
-        .enumerate()
-        .map(|(index, line)| match line {
-            StoredEditorHistoryLine::Item(item) => item,
-            // stable while the file is untouched; the next write persists it
-            StoredEditorHistoryLine::Legacy(text) => EditorHistoryRecord {
-                id: format!("legacy-{index}"),
-                text,
-                kind: EditorHistoryKind::Draft,
-                operation: None,
-                created_at: 0,
-                result: None,
-                sent: false,
-            },
-        })
-        .map(|mut item| {
-            if item.created_at == 0 {
-                item.created_at = file_time();
-            }
-            item
-        })
-        .collect())
+    read_jsonl(path)
 }
 
 /// Where the editor history lives: its file, or the memory of the process.
@@ -402,6 +359,7 @@ fn switch_editor_history_store(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::EditorHistoryKind;
     use crate::services::storage::test_support::{history_item, history_texts, TestDir};
 
     fn policy() -> EditorHistoryPolicy {
@@ -469,29 +427,6 @@ mod tests {
             switch_editor_history_store(&path, &before, &policy(), &mut memory, now_ms()).is_err()
         );
         assert_eq!(memory, original);
-    }
-
-    #[test]
-    fn read_editor_history_upgrades_legacy_lines() {
-        let dir = TestDir::new("editor-history");
-        let path = dir.join(EDITOR_HISTORY_FILE);
-        let item = history_item("x", "new", EditorHistoryKind::Output);
-        let raw = format!(
-            "{}\n{}\n",
-            serde_json::to_string("old").unwrap(),
-            serde_json::to_string(&item).unwrap()
-        );
-        fs::write(&path, raw).unwrap();
-
-        let history = read_editor_history(&path).unwrap();
-
-        assert_eq!(history[0].id, "legacy-0");
-        assert_eq!(history[0].text, "old");
-        assert_eq!(history[0].kind, EditorHistoryKind::Draft);
-        // the time the file was written, so that the retention period applies
-        assert!(history[0].created_at > 0);
-        assert!(history[0].created_at <= now_ms());
-        assert_eq!(history[1], item);
     }
 
     #[test]
@@ -669,16 +604,18 @@ mod tests {
     }
 
     #[test]
-    fn startup_drops_expired_entries_and_legacy_lines_expire_too() {
+    fn startup_drops_expired_entries() {
         let dir = TestDir::new("startup");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let now = now_ms();
         let mut fresh = history_item("fresh", "fresh", EditorHistoryKind::Draft);
         fresh.created_at = now;
+        let mut expired = history_item("expired", "expired", EditorHistoryKind::Draft);
+        expired.created_at = now - 2 * DAY_MS;
         let raw = format!(
             "{}\n{}\n",
             serde_json::to_string(&fresh).unwrap(),
-            serde_json::to_string("legacy").unwrap()
+            serde_json::to_string(&expired).unwrap()
         );
         fs::write(&path, raw).unwrap();
         let retention = EditorHistoryPolicy {
@@ -686,9 +623,8 @@ mod tests {
             ..policy()
         };
 
-        // the legacy line is as old as the file, which is new
         enforce_editor_history_file(&path, &retention, now).unwrap();
-        assert_eq!(read_editor_history(&path).unwrap().len(), 2);
+        assert_eq!(read_editor_history(&path).unwrap(), vec![fresh]);
 
         enforce_editor_history_file(&path, &retention, now + 2 * DAY_MS).unwrap();
         assert!(!path.exists());

@@ -19,7 +19,7 @@ export interface ChatAttachment {
  */
 export interface ChatImage {
   id: string
-  mediaType: 'image/webp' | 'image/png'
+  mediaType: 'image/webp'
   width: number
   height: number
   size: number

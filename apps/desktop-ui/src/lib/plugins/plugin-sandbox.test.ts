@@ -5,7 +5,7 @@ import type { PluginTransport } from './plugin-rpc'
 import { activatePluginSandbox } from './plugin-sandbox'
 
 vi.mock('../desktop/window', () => ({
-  convertDesktopFileSrc: (path: string) =>
+  convertFileSrc: (path: string) =>
     `tyco-plugin://localhost/${encodeURIComponent(path)}`,
 }))
 

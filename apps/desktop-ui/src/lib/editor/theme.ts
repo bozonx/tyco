@@ -76,6 +76,3 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: tags.propertyName, color: 'var(--app-syntax-code)' },
   { tag: tags.invalid, color: 'var(--color-error)' },
 ])
-
-/** Shared layout; each view mode supplies its own typography. */
-export const editorAppearance: Extension = editorTheme

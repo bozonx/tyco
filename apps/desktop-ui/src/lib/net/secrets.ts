@@ -5,16 +5,16 @@ import { DESKTOP_COMMANDS } from '@tyco/shared'
 import type { NetIpc } from './net-ipc'
 
 /** Stands in for a key; the Rust proxy substitutes the value on the way out */
-export const SECRET_REF_PREFIX = 'tyco-secret:'
+const SECRET_REF_PREFIX = 'tyco-secret:'
 
 /** Provider ids that may be called without a key by default */
-export const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
+const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
 
 /**
  * What the webview may know about a secret: that it exists, where it goes, and
  * whether its value can be read now
  */
-export type { SecretStatus, SecretsStatus, VaultState } from '@tyco/shared'
+export type { SecretsStatus, VaultState } from '@tyco/shared'
 /** Whether a stored secret can be used for a request now */
 export function isSecretUsable(secrets: SecretsStatus, id: string): boolean {
   return Object.hasOwn(secrets, id) && secrets[id].available

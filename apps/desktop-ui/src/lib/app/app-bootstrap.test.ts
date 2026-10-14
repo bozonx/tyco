@@ -6,7 +6,6 @@ import {
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { GlobalEvents } from './global-events'
 import { APP_ROUTES } from '../navigation/routes'
 import { createAppBootstrap, type AppBootstrapDeps } from './app-bootstrap'
 
@@ -36,7 +35,6 @@ function createDeps(overrides: Partial<AppBootstrapDeps> = {}) {
         return vi.fn()
       }
     ),
-    emitGlobal: vi.fn(),
     initPlugins: vi.fn(),
     handleNavKeyUp: vi.fn(),
     addWindowKeyupListener: vi.fn(() => vi.fn()),
@@ -77,7 +75,6 @@ describe('app-bootstrap', () => {
     expect(deps.addWindowKeyupListener).toHaveBeenCalledOnce()
     expect(deps.listen).toHaveBeenCalledTimes(1)
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.WRITE.path)
-    expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
     expect(listeners.size).toBe(1)
   })
 
@@ -207,14 +204,14 @@ describe('app-bootstrap', () => {
     )
   })
 
-  it('forwards keyup events to global events and nav handler', () => {
+  it('forwards window keyup events to the nav handler', async () => {
     const { deps } = createDeps()
     const bootstrap = createAppBootstrap(deps)
     const event = new KeyboardEvent('keyup', { code: 'Escape' })
 
-    bootstrap.handleKeyUp(event)
+    await bootstrap.start()
+    vi.mocked(deps.addWindowKeyupListener).mock.calls[0][0](event)
 
-    expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.KEY_UP, event)
     expect(deps.handleNavKeyUp).toHaveBeenCalledWith(event)
   })
 })
@@ -224,7 +221,7 @@ describe('bootstrap lifetime', () => {
     const removeKey = vi.fn()
     const removeEvent = vi.fn()
     const { deps } = createDeps({
-      addWindowKeyupListener: () => removeKey,
+      addWindowKeyupListener: vi.fn(() => removeKey),
       listen: async () => removeEvent,
       loadDesktopState: vi
         .fn()
@@ -236,7 +233,7 @@ describe('bootstrap lifetime', () => {
     expect(removeKey).toHaveBeenCalledOnce()
     expect(removeEvent).toHaveBeenCalledTimes(1)
     await bootstrap.start()
-    expect(deps.emitGlobal).toHaveBeenCalledWith(GlobalEvents.INITED)
+    expect(deps.addWindowKeyupListener).toHaveBeenCalledTimes(2)
   })
 
   it('does not initialize after a pending load finishes following stop', async () => {

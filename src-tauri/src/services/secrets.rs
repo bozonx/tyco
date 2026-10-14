@@ -7,10 +7,7 @@
 //! of its choosing and have the proxy fill the real key in for it.
 //!
 //! The values live in the system credential store only; without one no key
-//! can be saved. `secrets.json` lists the secrets and their origins. It holds
-//! a value only when an older version wrote it there, or the config migration
-//! took it out of the config: such a value is moved into the store as soon as
-//! the store opens, and used from the file until then.
+//! can be saved. `secrets.json` lists the secrets and their origins only.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -92,10 +89,6 @@ pub struct SecretStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct StoredSecret {
     origins: Vec<String>,
-    /// A value not moved into the vault yet: written by an older version or
-    /// by the config migration. Never set for a new secret.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    value: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -118,8 +111,8 @@ struct StoreState {
 
 impl StoreState {
     fn value(&self, id: &str) -> Option<&String> {
-        let stored = self.stored.get(id)?;
-        stored.value.as_ref().or_else(|| self.vault_values.get(id))
+        self.stored.get(id)?;
+        self.vault_values.get(id)
     }
 }
 
@@ -227,13 +220,9 @@ impl SecretStore {
 
         // the list is written first: a key the vault took but the list does
         // not name would stay in the vault unseen
-        let previous = state.stored.insert(
-            id.to_string(),
-            StoredSecret {
-                origins,
-                value: None,
-            },
-        );
+        let previous = state
+            .stored
+            .insert(id.to_string(), StoredSecret { origins });
         let saved = self.persist(&state).and_then(|()| {
             vault.set(id, value).map_err(|error| {
                 AppError::Message(format!("Could not save secret \"{id}\": {error}"))
@@ -253,50 +242,19 @@ impl SecretStore {
         Ok(())
     }
 
-    /// Keeps a key taken out of an old config in the file, without reaching
-    /// the vault: the migration runs at the start, which an unlock prompt
-    /// must not hold up. The config held the key in the clear until now, and
-    /// the vault takes it once it opens.
-    pub fn stage(
-        &self,
-        id: &str,
-        value: &str,
-        origins: Option<Vec<String>>,
-    ) -> Result<(), AppError> {
-        let (value, origins) = checked_secret(id, value, origins)?;
-
-        let mut state = self.lock();
-        state.vault_values.remove(id);
-        state.stored.insert(
-            id.to_string(),
-            StoredSecret {
-                origins,
-                value: Some(value.to_string()),
-            },
-        );
-        self.persist(&state)
-    }
-
     /// Removes a secret from the vault and from the file. Fails when the
     /// vault holds the value and cannot be reached: dropping the secret from
     /// the list alone would leave the key behind unseen.
     pub fn remove(&self, id: &str) -> Result<(), AppError> {
         let mut state = self.lock();
-        let Some(stored) = state.stored.get(id) else {
+        if !state.stored.contains_key(id) {
             return Ok(());
-        };
+        }
 
-        // a staged value may sit next to an older copy in the vault, so the
-        // vault is cleared in any case
         if let Some(vault) = &self.vault {
-            if let Err(error) = vault.delete(id) {
-                if stored.value.is_none() {
-                    return Err(AppError::Message(format!(
-                        "Could not remove secret \"{id}\": {error}"
-                    )));
-                }
-                log::warn!("Secret \"{id}\" may stay in the vault: {error}");
-            }
+            vault.delete(id).map_err(|error| {
+                AppError::Message(format!("Could not remove secret \"{id}\": {error}"))
+            })?;
         }
 
         state.stored.remove(id);
@@ -325,13 +283,12 @@ impl SecretStore {
             .collect()
     }
 
-    /// Reaches the vault: reads the values it holds and moves into it the
-    /// ones the file holds. Asked once, or again with `retry`; a request does
+    /// Reaches the vault and reads the values it holds. Asked once, or again with `retry`; a request does
     /// not retry, as a missing vault may take a D-Bus timeout to answer.
     fn open_locked(&self, state: &mut StoreState, retry: bool) -> VaultState {
         // a retry opens the vault again also when it answered before: a key
         // may have stayed locked, e.g. when the user dismissed the unlock
-        // prompt, or may not have been moved into it
+        // prompt
         if let (Some(known), false) = (state.vault, retry) {
             return known;
         }
@@ -351,30 +308,7 @@ impl SecretStore {
         };
         state.vault = Some(VaultState::Available);
 
-        let mut moved = false;
-        for (id, stored) in state.stored.iter_mut() {
-            let Some(value) = stored.value.take() else {
-                continue;
-            };
-            match move_to_vault(vault, id, &value) {
-                Ok(()) => {
-                    state.vault_values.insert(id.clone(), value);
-                    moved = true;
-                }
-                Err(error) => {
-                    log::warn!("Secret \"{id}\" stays in {SECRETS_FILE_NAME}: {error}");
-                    stored.value = Some(value);
-                }
-            }
-        }
         read_missing(vault, state);
-        // the values are in the vault either way, and the file is rewritten
-        // on the next try
-        if moved {
-            if let Err(error) = self.persist(state) {
-                log::error!("Could not drop the moved keys from {SECRETS_FILE_NAME}: {error}");
-            }
-        }
         VaultState::Available
     }
 
@@ -397,9 +331,9 @@ impl SecretStore {
 fn read_missing(vault: &dyn SecretVault, state: &mut StoreState) {
     let missing: Vec<String> = state
         .stored
-        .iter()
-        .filter(|(id, stored)| stored.value.is_none() && !state.vault_values.contains_key(*id))
-        .map(|(id, _)| id.clone())
+        .keys()
+        .filter(|id| !state.vault_values.contains_key(*id))
+        .cloned()
         .collect();
     for id in missing {
         match vault.get(&id) {
@@ -446,14 +380,6 @@ fn checked_secret<'a>(
 
 /// Writes the value and reads it back: the copy in the file is dropped only
 /// once the vault is known to hold it.
-fn move_to_vault(vault: &dyn SecretVault, id: &str, value: &str) -> Result<(), String> {
-    vault.set(id, value)?;
-    match vault.get(id)? {
-        Some(stored) if stored == value => Ok(()),
-        _ => Err(String::from("the vault did not keep the value")),
-    }
-}
-
 /// The app identifier, and for a development home a suffix of its own: the
 /// system store is one per user, and a test setup must not read or delete
 /// the real keys.
@@ -596,13 +522,6 @@ mod tests {
     impl FakeVault {
         fn value(&self, id: &str) -> Option<String> {
             self.values.lock().unwrap().get(id).cloned()
-        }
-
-        fn put(&self, id: &str, value: &str) {
-            self.values
-                .lock()
-                .unwrap()
-                .insert(id.to_string(), value.to_string());
         }
     }
 
@@ -810,78 +729,6 @@ mod tests {
         assert_eq!(offline.vault_state(), VaultState::Available);
         assert!(offline.status()["google"].available);
         assert_eq!(offline.snapshot()["google"].value, "g-key");
-    }
-
-    #[test]
-    fn values_in_the_file_move_into_the_vault() {
-        let (_directory, path) = temp_secrets_path("move");
-        fs::write(
-            &path,
-            r#"{"secrets":{"openai":{"value":"sk-old","origins":["https://api.openai.com"]}}}"#,
-        )
-        .unwrap();
-        let vault = Arc::new(FakeVault::default());
-
-        let store = load_with(&path, &vault);
-        assert_eq!(store.snapshot()["openai"].value, "sk-old");
-
-        assert_eq!(vault.value("openai").as_deref(), Some("sk-old"));
-        let raw = fs::read_to_string(&path).unwrap();
-        assert!(!raw.contains("sk-old"));
-        assert!(raw.contains("https://api.openai.com"));
-    }
-
-    #[test]
-    fn a_value_in_the_file_is_used_until_the_vault_takes_it() {
-        let (_directory, path) = temp_secrets_path("staged");
-        let vault = Arc::new(FakeVault::default());
-        vault.unreachable.store(true, Ordering::SeqCst);
-
-        let store = load_with(&path, &vault);
-        store
-            .stage(
-                "openai",
-                "sk-staged",
-                Some(vec!["https://api.openai.com".into()]),
-            )
-            .unwrap();
-        assert_eq!(store.snapshot()["openai"].value, "sk-staged");
-        assert!(store.status()["openai"].available);
-        assert!(fs::read_to_string(&path).unwrap().contains("sk-staged"));
-
-        vault.unreachable.store(false, Ordering::SeqCst);
-        let reloaded = load_with(&path, &vault);
-        assert_eq!(reloaded.vault_state(), VaultState::Available);
-        assert_eq!(vault.value("openai").as_deref(), Some("sk-staged"));
-        assert!(!fs::read_to_string(&path).unwrap().contains("sk-staged"));
-    }
-
-    #[test]
-    fn removing_a_value_in_the_file_clears_an_older_copy_in_the_vault() {
-        let (_directory, path) = temp_secrets_path("stale");
-        let vault = Arc::new(FakeVault::default());
-        vault.put("deepl", "d-stale");
-
-        let store = load_with(&path, &vault);
-        store.stage("deepl", "d-new", None).unwrap();
-        store.remove("deepl").unwrap();
-
-        assert_eq!(vault.value("deepl"), None);
-        assert!(store.status().is_empty());
-    }
-
-    #[test]
-    fn a_value_in_the_file_can_be_removed_without_a_vault() {
-        let (_directory, path) = temp_secrets_path("staged-offline");
-        let vault = Arc::new(FakeVault::default());
-        vault.unreachable.store(true, Ordering::SeqCst);
-
-        let store = load_with(&path, &vault);
-        store.stage("groq", "gq-key", None).unwrap();
-        store.remove("groq").unwrap();
-
-        assert!(store.status().is_empty());
-        assert!(!fs::read_to_string(&path).unwrap().contains("gq-key"));
     }
 
     #[test]

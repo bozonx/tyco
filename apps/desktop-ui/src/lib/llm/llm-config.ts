@@ -19,11 +19,11 @@ const PROVIDER_TYPES: readonly LlmProviderType[] = [
 /** Provider ids double as secret ids, so they follow the secret id rules */
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 
-export function isBuiltinProvider(id: string): boolean {
+function isBuiltinProvider(id: string): boolean {
   return (BUILTIN_LLM_PROVIDERS as readonly string[]).includes(id)
 }
 
-export function isValidLlmId(id: unknown): id is string {
+function isValidLlmId(id: unknown): id is string {
   return typeof id === 'string' && ID_PATTERN.test(id)
 }
 
@@ -86,8 +86,8 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     if (!isRecord(item) || typeof item.id !== 'string') continue
     const id = item.id.trim()
     if (!id || seen.has(id)) continue
-    const providerId = item.providerId ?? item.provider
-    const providerModelId = item.providerModelId ?? item.model
+    const providerId = item.providerId
+    const providerModelId = item.providerModelId
     if (typeof providerId !== 'string' || !providerIds.has(providerId)) {
       continue
     }
@@ -109,9 +109,7 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     }
     const maxOutputTokens = positiveInteger(item.maxOutputTokens)
     if (maxOutputTokens !== undefined) model.maxOutputTokens = maxOutputTokens
-    const contextWindowTokens = positiveInteger(
-      item.contextWindowTokens ?? item.contextSize
-    )
+    const contextWindowTokens = positiveInteger(item.contextWindowTokens)
     if (contextWindowTokens !== undefined)
       model.contextWindowTokens = contextWindowTokens
 

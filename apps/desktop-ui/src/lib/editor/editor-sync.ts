@@ -124,13 +124,3 @@ export const setPlaceholder = (view: EditorView, text: string): void => {
     annotations: fromStore.of(true),
   })
 }
-
-/** Replace a range in document — entry point for spellcheck and insertions */
-export const replaceRange = (
-  view: EditorView,
-  from: number,
-  to: number,
-  insert: string
-): void => {
-  view.dispatch({ changes: { from, to, insert }, scrollIntoView: true })
-}

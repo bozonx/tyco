@@ -9,7 +9,7 @@ import type {
 import { createToolInvoker, type ToolInvokerDependencies } from './invoke-tool'
 import { resolveSink } from './result-sinks'
 
-export type ToastKind = 'info' | 'warn' | 'error' | 'success'
+type ToastKind = 'info' | 'warn' | 'error' | 'success'
 
 export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
   showToast: (messageKey: string, type?: ToastKind) => void

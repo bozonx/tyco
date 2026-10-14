@@ -29,7 +29,7 @@ export const commandTool = (
  * How the command gets its input from a text, or `null` when its tool is
  * missing or it cannot get one outside the chat
  */
-export function commandInputKind(
+function commandInputKind(
   command: CommandConfig,
   tools: ToolLookup
 ): ToolInputKind | null {

@@ -14,9 +14,12 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toast: vi.fn() }),
 }))
 
-vi.mock('../../plugins', () => ({
+vi.mock('../../lib/plugins/builtin-plugins', () => ({
   builtinPluginIds: ['PluginWithConfig'],
-  usePlugins: () => ({
+}))
+
+vi.mock('../../stores/plugin-runtime', () => ({
+  usePluginRuntimeStore: () => ({
     pluginRuntimeStates: {},
     pluginIndexes: [
       () => ({

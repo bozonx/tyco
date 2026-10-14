@@ -1,6 +1,6 @@
 export const AUTO_LANGUAGE_VALUE = 'auto'
 export const DEFAULT_LANGUAGE = 'ru_RU'
-export const DEFAULT_UI_LANGUAGE = 'en_US'
+const DEFAULT_UI_LANGUAGE = 'en_US'
 
 export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
   { id: 'ru_RU', name: 'Русский' },

@@ -353,7 +353,7 @@ function translationSystem(
  * line break or a space, which the pieces keep; providers drop it from their
  * output, and the joined pieces would run together
  */
-export function restoreTranslationChunkWhitespace(
+function restoreTranslationChunkWhitespace(
   count: number,
   source: string,
   translated: string

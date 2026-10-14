@@ -4,16 +4,16 @@ import { ChatFileError } from './chat-file-error'
 
 /** Mirrored by `MAX_MESSAGE_IMAGES` in `src-tauri/src/services/chat_images.rs` */
 export const MAX_CHAT_IMAGES = 4
-export const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
+const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
 /**
  * The lossless PNG handed to Rust, which keeps it as a WebP; mirrors
  * `MAX_SOURCE_BYTES` there
  */
-export const MAX_CHAT_IMAGE_BYTES = 64 * 1024 * 1024
+const MAX_CHAT_IMAGE_BYTES = 64 * 1024 * 1024
 /** The largest side providers accept (Anthropic rejects anything above) */
 const MAX_OUTPUT_DIMENSION = 8000
 /** Conservative request allowance; provider-specific estimates can replace it. */
-export const IMAGE_BUDGET_CHARACTERS = 4096 * 3
+const IMAGE_BUDGET_CHARACTERS = 4096 * 3
 export function imageBudgetCharacters(
   image: Pick<ChatImage, 'width' | 'height'>
 ): number {

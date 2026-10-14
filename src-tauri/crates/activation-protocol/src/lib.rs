@@ -1,5 +1,3 @@
-use std::io::{self, BufRead, Read, Write};
-
 use serde::{Deserialize, Serialize};
 
 pub mod transport;
@@ -108,17 +106,6 @@ pub struct RunRequest {
     pub selection: bool,
     #[serde(default)]
     pub replace: bool,
-    #[serde(default)]
-    pub output: OutputMode,
-}
-
-#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum OutputMode {
-    #[default]
-    Return,
-    /// Legacy alias for returned output; UI settings do not affect external calls.
-    Configured,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -190,26 +177,6 @@ impl Response {
     }
 }
 
-pub fn read_message<T: for<'de> Deserialize<'de>>(reader: &mut impl BufRead) -> Result<T, String> {
-    let mut bytes = Vec::new();
-    Read::take(reader, (MAX_MESSAGE_BYTES + 1) as u64)
-        .read_until(b'\n', &mut bytes)
-        .map_err(|error| error.to_string())?;
-    if bytes.len() > MAX_MESSAGE_BYTES {
-        return Err("Protocol message is too large".into());
-    }
-    if bytes.last() == Some(&b'\n') {
-        bytes.pop();
-    }
-    serde_json::from_slice(&bytes).map_err(|error| error.to_string())
-}
-
-pub fn write_message<T: Serialize>(writer: &mut impl Write, message: &T) -> io::Result<()> {
-    serde_json::to_writer(&mut *writer, message)?;
-    writer.write_all(b"\n")?;
-    writer.flush()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -250,21 +217,19 @@ mod tests {
             Request::ListCommands,
             Request::Quit,
         ] {
-            let mut output = Vec::new();
-            write_message(&mut output, &request).unwrap();
-            let decoded: Request = read_message(&mut output.as_slice()).unwrap();
+            let encoded = serde_json::to_string(&request).unwrap();
+            let decoded: Request = serde_json::from_str(&encoded).unwrap();
             assert_eq!(decoded, request);
         }
     }
 
     #[test]
     fn a_response_carries_its_result_as_json() {
-        let mut output = Vec::new();
-        write_message(&mut output, &Response::json(&serde_json::json!([]))).unwrap();
-        assert_eq!(output, b"{\"success\":true,\"result\":[]}\n");
-        let decoded: Response = read_message(&mut output.as_slice()).unwrap();
+        let encoded = serde_json::to_string(&Response::json(&serde_json::json!([]))).unwrap();
+        assert_eq!(encoded, r#"{"success":true,"result":[]}"#);
+        let decoded: Response = serde_json::from_str(&encoded).unwrap();
         assert_eq!(decoded.result, Some(serde_json::json!([])));
-        let empty: Response = read_message(&mut &b"{\"success\":true}\n"[..]).unwrap();
+        let empty: Response = serde_json::from_str(r#"{"success":true}"#).unwrap();
         assert_eq!(empty, Response::success());
     }
 }

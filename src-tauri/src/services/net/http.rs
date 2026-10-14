@@ -66,26 +66,6 @@ pub fn parse_method(method: &str) -> Result<reqwest::Method, String> {
 
 /// Sends one request and streams its response into `sink`. Every outcome ends
 /// with exactly one `End` or `Error`, unless the listener is gone first.
-#[cfg(test)]
-pub async fn run_fetch<S: EventSink>(
-    client: &reqwest::Client,
-    method: reqwest::Method,
-    prepared: PreparedRequest,
-    body: Option<Vec<u8>>,
-    sink: &S,
-) {
-    run_fetch_controlled(
-        client,
-        method,
-        prepared,
-        body,
-        sink,
-        None,
-        MAX_RESPONSE_BODY_BYTES,
-    )
-    .await;
-}
-
 pub async fn run_fetch_controlled<S: EventSink>(
     client: &reqwest::Client,
     method: reqwest::Method,
@@ -213,6 +193,26 @@ mod tests {
     use super::*;
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::{SecretEntry, Secrets};
+
+    /// `run_fetch_controlled` without flow control and with the default limit.
+    async fn run_fetch<S: EventSink>(
+        client: &reqwest::Client,
+        method: reqwest::Method,
+        prepared: PreparedRequest,
+        body: Option<Vec<u8>>,
+        sink: &S,
+    ) {
+        run_fetch_controlled(
+            client,
+            method,
+            prepared,
+            body,
+            sink,
+            None,
+            MAX_RESPONSE_BODY_BYTES,
+        )
+        .await;
+    }
 
     #[test]
     fn rejects_encoded_size_before_decoding_and_checks_padding_boundary() {

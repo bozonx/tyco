@@ -1,5 +1,4 @@
 export enum AiTaskKind {
-  TRANSLATE = 'translate',
   VOICE_CORRECTION = 'voiceCorrection',
   CORRECTION = 'correction',
   AI_TASKS = 'aiTasks',

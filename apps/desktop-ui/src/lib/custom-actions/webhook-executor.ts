@@ -3,7 +3,7 @@ import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
-export const WEBHOOK_TIMEOUT_MS = 30_000
+const WEBHOOK_TIMEOUT_MS = 30_000
 
 export type CustomActionLog = (
   name: string,

@@ -2,7 +2,7 @@ use std::sync::Mutex;
 use std::thread;
 
 use tauri::AppHandle;
-use tyco_activation_protocol::{OutputMode, Request, Response, RunRequest};
+use tyco_activation_protocol::{Request, Response, RunRequest};
 use zbus::message::{Builder, Header, Message};
 use zbus::names::{BusName, ErrorName, OwnedErrorName, OwnedUniqueName};
 use zbus::{interface, Connection, DBusError};
@@ -93,7 +93,6 @@ impl TycoDbus {
         self.run(RunRequest {
             target: id,
             interactive: true,
-            output: OutputMode::Configured,
             ..Default::default()
         })
         .await

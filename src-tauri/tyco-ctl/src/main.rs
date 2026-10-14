@@ -3,8 +3,7 @@ use std::io::{self, Read, Write};
 use std::time::{Duration, Instant};
 
 use tyco_activation_protocol::{
-    is_start_mode, transport, Job, JobState, OutputMode, Request, Response, RunRequest,
-    MAX_MESSAGE_BYTES,
+    is_start_mode, transport, Job, JobState, Request, Response, RunRequest, MAX_MESSAGE_BYTES,
 };
 
 const USAGE: &str = "Usage: tyco-ctl status
@@ -12,7 +11,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl commands list [--json]
        tyco-ctl commands describe <id | --name NAME>
        tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-                    [--replace] [--interactive] [--output return|configured]
+                    [--replace] [--interactive]
                     [--wait] [--json] [--timeout SECONDS]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
        tyco-ctl quit
@@ -21,7 +20,7 @@ Modes: editor, write, chat, voice-chat, voice, select, ai-tasks,
        command-launcher, correction, translate, history, settings.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
---output configured is a legacy alias for return. Use --replace to replace a selection.
+Use --replace to replace a selection.
 Tyco must already be running in the same user session.";
 
 #[derive(Debug, PartialEq, Eq)]
@@ -73,8 +72,6 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
                 let (target, by_name) = match &args[2..] {
                     [flag, name] if flag == "--name" => (name.clone(), true),
                     [id] if id != "--name" => (id.clone(), false),
-                    // the flag after the target is the old spelling
-                    [name, flag] if flag == "--name" => (name.clone(), true),
                     _ => return Err(USAGE.into()),
                 };
                 command.request = Request::DescribeCommand { target, by_name };
@@ -123,8 +120,6 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
             let mut input_set = false;
             while index < args.len() {
                 match args[index].as_str() {
-                    // the flag after the target is the old spelling
-                    "--name" if !request.by_name => request.by_name = true,
                     "--interactive" => request.interactive = true,
                     "--replace" => request.replace = true,
                     "--wait" => command.wait = true,
@@ -133,14 +128,6 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
                         index += 1;
                         command.timeout_secs =
                             Some(value(index)?.parse().map_err(|_| "Invalid timeout")?);
-                    }
-                    "--output" => {
-                        index += 1;
-                        request.output = match value(index)?.as_str() {
-                            "return" => OutputMode::Return,
-                            "configured" => OutputMode::Configured,
-                            _ => return Err("Invalid output mode".into()),
-                        };
                     }
                     "--text" | "--input-json" if !input_set => {
                         let json = args[index] == "--input-json";
@@ -375,7 +362,7 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(run(&["run", "--name", "ls"]), ("ls".into(), true));
-        assert_eq!(run(&["run", "ls", "--name"]), ("ls".into(), true));
+        assert!(command(&["run", "ls", "--name"]).is_err());
         assert_eq!(run(&["run", "ls"]), ("ls".into(), false));
         assert!(command(&["run", "--name"]).is_err());
         assert!(command(&["run", "--name", "ls", "--name"]).is_err());
@@ -389,10 +376,7 @@ mod tests {
             describe(&["commands", "describe", "--name", "My command"]),
             name
         );
-        assert_eq!(
-            describe(&["commands", "describe", "My command", "--name"]),
-            name
-        );
+        assert!(command(&["commands", "describe", "My command", "--name"]).is_err());
         assert_eq!(
             describe(&["commands", "describe", "ls"]),
             ("ls".into(), false)

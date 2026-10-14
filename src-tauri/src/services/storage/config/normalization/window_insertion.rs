@@ -39,10 +39,6 @@ pub(super) fn normalize_window_insertion_for_session(
         return false;
     };
 
-    let legacy_xdotool_bin = config
-        .get("xdotoolBin")
-        .and_then(Value::as_str)
-        .unwrap_or(default_xdotool_bin);
     let window_insertion = config.get("windowInsertion");
     let method = window_insertion
         .and_then(|value| value.get("method"))
@@ -52,7 +48,7 @@ pub(super) fn normalize_window_insertion_for_session(
     let xdotool_bin = window_insertion
         .and_then(|value| value.get("xdotoolBin"))
         .and_then(Value::as_str)
-        .unwrap_or(legacy_xdotool_bin);
+        .unwrap_or(default_xdotool_bin);
     let ydotool_bin = window_insertion
         .and_then(|value| value.get("ydotoolBin"))
         .and_then(Value::as_str)
@@ -68,9 +64,7 @@ pub(super) fn normalize_window_insertion_for_session(
         "ydotoolBin": ydotool_bin,
         "pasteShortcut": paste_shortcut,
     });
-    let needs_update =
-        config.get("windowInsertion") != Some(&normalized) || config.contains_key("xdotoolBin");
-    config.remove("xdotoolBin");
+    let needs_update = config.get("windowInsertion") != Some(&normalized);
     if needs_update {
         config.insert(String::from("windowInsertion"), normalized);
     }

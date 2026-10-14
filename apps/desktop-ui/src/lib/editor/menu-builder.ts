@@ -23,7 +23,7 @@ export interface EditorMenuGroups {
   markupItems?: EditorMenuItem[]
 }
 
-export interface EditorMenuSources {
+interface EditorMenuSources {
   t: (key: string) => string
   commands: EditorMenuCommands
   groups: EditorMenuGroups
@@ -40,11 +40,11 @@ export interface ContextMenuSources extends EditorMenuSources {
   suggestions?: EditorMenuItem[]
 }
 
-export const UNDO_ICON = 'mdi:undo'
-export const REDO_ICON = 'mdi:redo'
-export const CASE_ICON = 'mdi:format-letter-case'
-export const FORMAT_ICON = 'mdi:code-braces'
-export const MARKUP_ICON = 'mdi:language-markdown-outline'
+const UNDO_ICON = 'mdi:undo'
+const REDO_ICON = 'mdi:redo'
+const CASE_ICON = 'mdi:format-letter-case'
+const FORMAT_ICON = 'mdi:code-braces'
+const MARKUP_ICON = 'mdi:language-markdown-outline'
 export const ACTIONS_ICON = 'mdi:lightning-bolt-outline'
 
 /** Icons of the standard actions, which do not carry their own */

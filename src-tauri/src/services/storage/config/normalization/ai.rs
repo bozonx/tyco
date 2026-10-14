@@ -43,15 +43,7 @@ pub(in crate::services::storage::config) fn normalize_ai_rules_and_tasks(
     };
     let mut changed = false;
 
-    if config.remove("chatRoles").is_some() {
-        changed = true;
-    }
-
     if let Some(rules) = config.get_mut("aiRules").and_then(Value::as_object_mut) {
-        // the common rule was replaced by per-task rules
-        if rules.remove("base").is_some() {
-            changed = true;
-        }
         if let Some(def_rules) = default_rules.as_object() {
             for (key, default_val) in def_rules {
                 if rules.get(key).and_then(Value::as_str).is_none() {

@@ -8,7 +8,7 @@ mod history_store;
 
 pub use chat_history::ChatHistoryPolicy;
 pub use config::*;
-pub use editor_history::{apply_history_settings_on_startup, EditorHistoryStorage};
+pub use editor_history::apply_history_settings_on_startup;
 pub use history_store::*;
 
 use std::fs;
@@ -23,11 +23,11 @@ use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::models::{
-    default_user_config, Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryKind,
-    EditorHistoryRecord, StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
+    default_user_config, Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryRecord,
+    StorageInfo, StorageKind, StorageLocation, CONFIG_FILE_NAME,
 };
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine, write_private};
-use crate::services::{app_paths::AppPaths, config_migration, llm_config};
+use crate::services::{app_paths::AppPaths, config_version};
 
 fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.config_dir;
@@ -223,7 +223,7 @@ fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::EditorHistoryOperation;
+    use crate::models::{EditorHistoryKind, EditorHistoryOperation};
     use crate::services::storage::test_support::{history_item, TestDir};
 
     #[test]

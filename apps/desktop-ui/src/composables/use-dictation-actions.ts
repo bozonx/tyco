@@ -5,8 +5,6 @@ import { useDictationStore } from '../stores/dictation'
 import { useIpcStore } from '../stores/ipc'
 import { useLlmStore } from '../stores/llm'
 
-export type { DictationHandlers } from '../lib/stt/dictation-controller'
-
 export function useDictationActions() {
   const dictation = useDictationStore()
   const ipc = useIpcStore()

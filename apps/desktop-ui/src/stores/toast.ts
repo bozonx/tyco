@@ -1,14 +1,9 @@
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
-import {
-  type ToastItem,
-  type ToastOptions,
-  type ToastType,
-  createToastStoreModel,
-} from '../lib/toast/toast-store'
+import { type ToastType, createToastStoreModel } from '../lib/toast/toast-store'
 
-export type { ToastItem, ToastOptions, ToastType }
+export type { ToastType }
 
 export const useToastStore = defineStore('toast', () => {
   const model = createToastStoreModel()

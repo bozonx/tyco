@@ -2,7 +2,7 @@ import type { Chat, ChatMessage, SessionState } from '@tyco/shared'
 import type { AppRoutePath } from '../navigation/routes'
 
 /** The model a chat request runs on */
-export interface ChatRequestModel {
+interface ChatRequestModel {
   id: string
   /** How many characters the request may carry */
   canUseImages?: boolean

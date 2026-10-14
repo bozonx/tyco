@@ -296,7 +296,7 @@ async function saveAuth() {
     return
   }
   try {
-    // Fresh authorization gets its own identity, even for legacy commands.
+    // Fresh authorization gets its own identity.
     const newSecretId = `webhook-auth-${crypto.randomUUID()}`
     await llmStore.setSecret(newSecretId, value, [origin])
     update('authSecretId', newSecretId)

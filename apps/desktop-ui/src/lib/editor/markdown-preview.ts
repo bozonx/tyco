@@ -510,7 +510,7 @@ const previewExtensions = (enabled: boolean): Extension =>
     : sourceAppearance
 
 /** Switches between the formatted look and the raw Markdown source */
-export const markdownPreviewCompartment = new Compartment()
+const markdownPreviewCompartment = new Compartment()
 
 export const markdownPreview = (enabled: boolean): Extension =>
   markdownPreviewCompartment.of(previewExtensions(enabled))

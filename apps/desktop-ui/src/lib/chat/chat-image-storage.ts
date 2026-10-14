@@ -1,4 +1,4 @@
-import { invokeDesktop as invoke } from '../desktop/window'
+import { invokeDesktop as invoke } from '../desktop/invoke'
 import { DESKTOP_COMMANDS, type ChatImage, type Chat } from '@tyco/shared'
 
 const completedImports: string[] = []

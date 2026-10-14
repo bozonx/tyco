@@ -32,7 +32,7 @@ const EDITOR_PHRASE_KEYS: Record<string, string> = {
   'Clipboard is not available': 'editor.menu.clipboardUnavailable',
 }
 
-export const editorPhrasesCompartment = new Compartment()
+const editorPhrasesCompartment = new Compartment()
 const phrases = (t: (key: string) => string): Extension =>
   EditorState.phrases.of(
     Object.fromEntries(

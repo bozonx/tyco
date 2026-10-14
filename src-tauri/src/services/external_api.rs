@@ -153,9 +153,6 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     }
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
-    // Keep accepting legacy configured output requests, but external calls
-    // always return output; only the caller can request a selection replacement.
-    request.output = tyco_activation_protocol::OutputMode::Return;
     let config = app.state::<AppState>().snapshot().settings.user_config;
     // without the permission the user is asked, see `external_access`
     let ask = request.selection && !access_allowed(&config, "selection");
@@ -248,7 +245,6 @@ fn hand_off(
             command_id: command.id.clone(),
             text: request.text.clone(),
             job_id: Some(job_id.to_owned()),
-            output: request.output,
             input: request.input.clone(),
         });
         runtime::activate(app, activation).map_err(|error| error.to_string())
@@ -256,7 +252,7 @@ fn hand_off(
         app.get_webview_window(runtime::QUICK_WINDOW_LABEL).ok_or_else(|| "Quick window not found".to_owned())
             .and_then(|window| window.emit(external_commands::COMMAND_RUN_EVENT, json!({
                 "commandId": command.id, "jobId": job_id, "text": request.text, "input": request.input,
-                "output": request.output, "userConfig": config,
+                "userConfig": config,
             })).map_err(|error| error.to_string()))
     };
     handoff.map_err(|error| {
@@ -339,7 +335,7 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             None
         }
     });
-    if let Some((job, Some(run_id), _)) =
+    if let Some((job, Some(run_id))) =
         jobs.finish(id, state, completion.output, completion.message, code)
     {
         // The original target is retained even while the command launcher is open.
@@ -614,17 +610,6 @@ mod tests {
         request.selection = true;
         assert!(validate_run(&command, &request).is_err());
     }
-    #[test]
-    fn legacy_configured_output_does_not_require_interactive_ui() {
-        let request = RunRequest {
-            target: "test".into(),
-            text: Some("input".into()),
-            output: tyco_activation_protocol::OutputMode::Configured,
-            ..Default::default()
-        };
-        assert!(validate_run(&command(), &request).is_ok());
-    }
-
     #[test]
     fn permission_defaults_deny_capture() {
         assert!(permission(&json!({}), "selection").is_err());

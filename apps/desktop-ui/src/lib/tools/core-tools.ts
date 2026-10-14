@@ -16,7 +16,7 @@ export interface TranslateOptions {
 }
 
 /** A text the LLM or the translator made, with facts about it for the caller */
-export interface TransformOutput {
+interface TransformOutput {
   text: string
   meta?: Record<string, unknown>
 }

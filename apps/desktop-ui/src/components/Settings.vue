@@ -269,8 +269,8 @@ import {
 } from '../lib/locale/language'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { createSettingsOperations } from '../lib/settings/settings-operations'
-import { usePlugins } from '../plugins'
 import { useLlmStore } from '../stores/llm'
+import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
@@ -300,7 +300,7 @@ import {
   isUiScale,
 } from '@tyco/shared'
 
-const { pluginIndexes, pluginRuntimeStates } = usePlugins()
+const { pluginIndexes, pluginRuntimeStates } = usePluginRuntimeStore()
 const llmStore = useLlmStore()
 const { t } = useI18n()
 const { toastText } = useToast()

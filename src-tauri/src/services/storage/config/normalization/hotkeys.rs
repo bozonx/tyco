@@ -27,8 +27,6 @@ pub(in crate::services::storage::config) fn normalize_hotkeys_config(
         .cloned()
         .unwrap_or_default();
     let previous_hotkeys = hotkeys.clone();
-    hotkeys.remove("history");
-    hotkeys.remove("config");
     for (mode, shortcut) in default_hotkeys {
         hotkeys.entry(mode).or_insert(shortcut);
     }
@@ -37,30 +35,9 @@ pub(in crate::services::storage::config) fn normalize_hotkeys_config(
         changed = true;
     }
 
-    // Quick input hotkeys
-    if config.remove("quickInputSubmit").is_some() {
-        changed = true;
-    }
-    if config.remove("quickCorrection").is_some() {
-        changed = true;
-    }
-
-    // The per-action quick input bindings gave way to a single submit key:
-    // whoever sent with Ctrl+Enter keeps doing so
-    let legacy_submit = config
-        .remove("quickInputHotkeys")
-        .map(|quick| quick.get("correctAndInsert").and_then(Value::as_str) == Some("Ctrl+Enter"));
-    if legacy_submit.is_some() {
-        changed = true;
-    }
     let submit_key = config.get("submitKey").and_then(Value::as_str);
     if !matches!(submit_key, Some("enter" | "ctrlEnter")) {
-        let migrated = if legacy_submit == Some(true) {
-            "ctrlEnter"
-        } else {
-            "enter"
-        };
-        config.insert(String::from("submitKey"), Value::String(migrated.into()));
+        config.insert(String::from("submitKey"), Value::String("enter".into()));
         changed = true;
     }
 
@@ -80,7 +57,7 @@ pub(in crate::services::storage::config) fn normalize_hotkeys_config(
     }
 
     // Selection hotkeys: only the correction replaces the selection from a
-    // hotkey, translations and AI tasks no longer do
+    // hotkey
     if let Some(sel_hotkeys) = config
         .get_mut("selectionHotkeys")
         .and_then(Value::as_object_mut)
@@ -98,11 +75,6 @@ pub(in crate::services::storage::config) fn normalize_hotkeys_config(
         }
     } else {
         config.insert(String::from("selectionHotkeys"), default_selection_hotkeys);
-        changed = true;
-    }
-
-    // Replacing the selection always takes the selection, never the whole field
-    if config.remove("selectionReplace").is_some() {
         changed = true;
     }
 

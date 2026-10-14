@@ -10,7 +10,7 @@ import {
   type PluginContext,
   type PluginManifest,
 } from '@tyco/plugin-sdk'
-import { convertDesktopFileSrc as convertFileSrc } from '../desktop/window'
+import { convertFileSrc } from '../desktop/window'
 
 import { createPluginResourceUrl } from './plugin-resource-url'
 
@@ -26,7 +26,7 @@ const pluginResourceUrl = (id: string, path: string) =>
  * Each plugin gets a distinct origin and a worker without app IPC or
  * networking.
  */
-export function openPluginTransport(id: string): Promise<PluginTransport> {
+function openPluginTransport(id: string): Promise<PluginTransport> {
   return new Promise((resolve, reject) => {
     const frame = document.createElement('iframe')
     frame.hidden = true

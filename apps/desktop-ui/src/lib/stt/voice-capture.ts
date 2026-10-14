@@ -4,7 +4,7 @@ import { DESKTOP_COMMANDS, type VoiceCaptureEvent } from '@tyco/shared'
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
 
-export interface VoiceCapture {
+interface VoiceCapture {
   /** Rate of the PCM16 mono audio, in hertz */
   sampleRate: number
   /** Ends once the microphone is stopped and its last chunk delivered */

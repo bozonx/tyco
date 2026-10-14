@@ -18,7 +18,7 @@ function setup() {
 
 const image: ChatImage = {
   id: 'image-1',
-  mediaType: 'image/png',
+  mediaType: 'image/webp',
   width: 1,
   height: 1,
   size: 3,
@@ -62,7 +62,7 @@ describe('LLM request', () => {
     expect(prompt.messages[0].content[1]).toEqual({
       type: 'file',
       data: new Uint8Array([1, 2, 3]),
-      mediaType: 'image/png',
+      mediaType: 'image/webp',
     })
     expect(prompt.messages[1].content[1]).toEqual(prompt.messages[0].content[1])
   })

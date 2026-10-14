@@ -15,7 +15,6 @@ import {
   normalizeCommands,
   normalizeLauncherCommands,
 } from '../commands/command-config'
-import { normalizeEditorConfig } from '../history/editor-history-storage'
 import { resolveSubmitKey } from '../input-keys/input-keys'
 import { normalizeLlmConfig } from '../llm/llm-config'
 import { AUTO_LANGUAGE_VALUE } from '../locale/language'
@@ -71,15 +70,14 @@ function normalizeAiTasks(value: unknown): UserConfig['aiTasks'] {
   )
 }
 
-/** Normalizes legacy input without changing the persisted source object. */
+/** Normalizes the input without changing the persisted source object. */
 export function createSettingsConfig(deps: SettingsConfigDeps) {
   function prepare(value: unknown): UserConfig {
-    // Clone serialized settings before migration; Vue drafts may be reactive.
+    // Clone serialized settings before normalizing; Vue drafts may be reactive.
     const cloned: unknown = JSON.parse(
       JSON.stringify(isRecord(value) ? value : DEFAULT_USER_CONFIG)
     )
     const input = recordOf(cloned)
-    normalizeEditorConfig(input)
     const defaults = DEFAULT_USER_CONFIG
     const insertion = recordOf(input.windowInsertion)
     const rules = recordOf(input.aiRules)
@@ -89,10 +87,8 @@ export function createSettingsConfig(deps: SettingsConfigDeps) {
     const registrations = stringsOf(registrationState.reviewedMainActionIds)
     const commands = normalizeCommands(input.commands)
     const xdotoolBin =
-      stringOf(
-        insertion.xdotoolBin,
-        stringOf(input.xdotoolBin, defaults.windowInsertion.xdotoolBin)
-      ) || defaults.windowInsertion.xdotoolBin
+      stringOf(insertion.xdotoolBin, defaults.windowInsertion.xdotoolBin) ||
+      defaults.windowInsertion.xdotoolBin
     const next: UserConfig & Record<string, unknown> = {
       ...input,
       ...normalizeAppearance({ ...deps.appearance(), ...input }),

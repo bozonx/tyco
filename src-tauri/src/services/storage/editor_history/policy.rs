@@ -16,42 +16,15 @@ pub enum EditorHistoryStorage {
 }
 
 impl EditorHistoryStorage {
-    /// Configs older than the setting said it with a zero limit (off) and the
-    /// `clearEditorHistoryOnExit` flag (session).
+    /// The saved storage; `disk`, the default, when it is missing.
     pub fn from_config(user_config: &Value) -> Self {
         match user_config
             .get("editorHistoryStorage")
             .and_then(Value::as_str)
         {
-            Some("off") => return Self::Off,
-            Some("session") => return Self::Session,
-            Some("disk") => return Self::Disk,
-            _ => {}
-        }
-
-        if history_limit(
-            user_config,
-            "editorHistoryMaxItems",
-            DEFAULT_EDITOR_HISTORY_LIMIT,
-        ) == 0
-        {
-            Self::Off
-        } else if user_config
-            .get("clearEditorHistoryOnExit")
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
-        {
-            Self::Session
-        } else {
-            Self::Disk
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Off => "off",
-            Self::Session => "session",
-            Self::Disk => "disk",
+            Some("off") => Self::Off,
+            Some("session") => Self::Session,
+            _ => Self::Disk,
         }
     }
 }
@@ -202,18 +175,6 @@ mod tests {
             })),
             EditorHistoryPolicy {
                 limit: 0,
-                ..policy()
-            }
-        );
-        // a config not migrated yet
-        assert_eq!(
-            EditorHistoryPolicy::from_config(&json!({
-                "editorHistoryMaxItems": 20,
-                "clearEditorHistoryOnExit": true,
-            })),
-            EditorHistoryPolicy {
-                limit: 20,
-                memory_only: true,
                 ..policy()
             }
         );

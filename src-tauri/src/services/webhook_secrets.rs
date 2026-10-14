@@ -127,38 +127,6 @@ pub fn protect_for_save(
     Ok(pending)
 }
 
-/// Explicit authorization identities replace lossy derivation for new commands.
-fn migrate_authorization_ids(config: &mut Value) -> bool {
-    let mut changed = false;
-    for command in config["commands"].as_array_mut().into_iter().flatten() {
-        if command["toolId"] != "webhook"
-            || command["toolConfig"]["authSecret"] != true
-            || command["toolConfig"]["authSecretId"].is_string()
-        {
-            continue;
-        }
-        let Some(id) = command["id"].as_str() else {
-            continue;
-        };
-        // Version 7 and earlier used this vault identity; keep it without opening the vault.
-        let legacy = id
-            .chars()
-            .flat_map(char::to_lowercase)
-            .map(|ch| {
-                if ch.is_ascii_lowercase() || ch.is_ascii_digit() || "._-".contains(ch) {
-                    ch
-                } else {
-                    '-'
-                }
-            })
-            .collect::<String>();
-        command["toolConfig"]["authSecretId"] =
-            Value::String(format!("webhook-{legacy}").chars().take(64).collect());
-        changed = true;
-    }
-    changed
-}
-
 /// References can be shared by copied commands and opaque plugin settings.
 pub fn referenced_secrets(config: &Value) -> HashSet<String> {
     let mut result = HashSet::new();
@@ -227,17 +195,6 @@ pub fn cleanup_after_startup(app: &AppHandle, config: &Value) -> Result<(), AppE
     Ok(())
 }
 
-/// Legacy values may be staged before a system keychain is available.
-pub fn migrate(app: &AppHandle, config: &mut Value) -> Result<bool, AppError> {
-    let mut protected = config.clone();
-    let authorization_changed = migrate_authorization_ids(&mut protected);
-    let changed = protect_headers(&mut protected, |id, value, origin| {
-        SecretStore::load_for_app(app)?.stage(id, value, Some(vec![origin.to_owned()]))
-    })?;
-    *config = protected;
-    Ok(changed | authorization_changed)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,17 +203,19 @@ mod tests {
     fn cleanup_preserves_references_shared_by_commands_and_undo_candidates() {
         let directory = TestDir::new("tyco-webhook-cleanup-");
         crate::services::atomic_file::create_private_dir(&directory).unwrap();
-        let store = SecretStore::load(directory.join("secrets.json"), None).unwrap();
-        for id in [
+        let path = directory.join("secrets.json");
+        let origins = serde_json::json!({ "origins": ["https://example.com"] });
+        let secrets: serde_json::Map<String, Value> = [
             "webhook-header-shared",
             "webhook-header-obsolete",
             "webhook-header-undo",
             "webhook-auth-unused",
-        ] {
-            store
-                .stage(id, "value", Some(vec!["https://example.com".into()]))
-                .unwrap();
-        }
+        ]
+        .into_iter()
+        .map(|id| (id.to_owned(), origins.clone()))
+        .collect();
+        std::fs::write(&path, serde_json::json!({ "secrets": secrets }).to_string()).unwrap();
+        let store = SecretStore::load(path, None).unwrap();
         let config = serde_json::json!({"commands":[{"toolConfig":{"headers":{"a":"tyco-secret:webhook-header-shared"}}}]});
         let candidates = HashSet::from([
             "webhook-header-shared".into(),
@@ -273,18 +232,6 @@ mod tests {
         assert!(!store.ids().contains(&"webhook-header-obsolete".into()));
         cleanup(&store, &referenced_secrets(&config), true, None);
         assert_eq!(store.ids(), vec![String::from("webhook-header-shared")]);
-    }
-
-    #[test]
-    fn legacy_authorization_keeps_an_explicit_identity_without_reading_the_key() {
-        let mut config = serde_json::json!({"commands":[{"id":"Legacy/ID","toolId":"webhook","toolConfig":{"authSecret":true}}]});
-        assert!(migrate_authorization_ids(&mut config));
-        assert_eq!(
-            config["commands"][0]["toolConfig"]["authSecretId"],
-            "webhook-legacy-id"
-        );
-        assert!(!migrate_authorization_ids(&mut config));
-        assert!(referenced_secrets(&config).contains("webhook-legacy-id"));
     }
 
     #[test]

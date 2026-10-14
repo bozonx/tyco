@@ -1,6 +1,5 @@
 import {
   CUSTOM_ACTION_AFTER_RUN,
-  legacyWebhookSecretId,
   type CommandConfig,
   type CommandLauncherAfterRun,
   type CustomActionAfterRun,
@@ -121,13 +120,6 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     command.description = value.description
   }
   command.toolConfig = normalizeToolConfig(toolId, command)
-  // Old serialized commands retain their existing vault entry explicitly.
-  if (
-    toolId === 'webhook' &&
-    command.toolConfig.authSecret &&
-    !command.toolConfig.authSecretId
-  )
-    command.toolConfig.authSecretId = legacyWebhookSecretId(id)
   return command
 }
 
@@ -157,7 +149,7 @@ export function normalizeLauncherCommands(
   ).map((id) => (id && existingIds.has(id) ? id : null))
 }
 
-export function newCommandId(): string {
+function newCommandId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `command-${Date.now()}`

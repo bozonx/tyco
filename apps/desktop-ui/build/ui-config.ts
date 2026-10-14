@@ -8,7 +8,7 @@ import { resolveLocalAiKit } from './local-ai-kit.ts'
 import { offlineIconsPlugin } from './offline-icons-plugin.ts'
 
 export const rootDir = resolve(import.meta.dirname, '..')
-export const srcDir = resolve(rootDir, 'src')
+const srcDir = resolve(rootDir, 'src')
 export const envDir = resolve(rootDir, '../..')
 
 /** Shared transforms and aliases; build-only assets stay out of unit tests. */

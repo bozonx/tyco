@@ -17,7 +17,6 @@ export default defineConfig(
       '**/src-tauri/gen/**',
       '**/.turbo/**',
       '**/components.d.ts',
-      'prototypes/**',
     ],
   },
   eslint.configs.recommended,

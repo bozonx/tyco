@@ -28,7 +28,6 @@ import { useRoute } from 'vue-router'
 import ToastContainer from './components/common/ToastContainer.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useEditorNavigation } from './composables/use-editor-navigation'
-import { useGlobalEvents } from './composables/use-global-events'
 import { useI18n } from './composables/use-i18n'
 import useToast from './composables/use-toast'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
@@ -45,7 +44,6 @@ import { clientLogger } from './lib/logger'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP, isQuickWindowMode } from './lib/navigation/routes'
 import { createSettingsShutdown } from './lib/settings/settings-shutdown'
-import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useChatInputStore } from './stores/chat-input'
 import { useCommandLauncherStore } from './stores/command-launcher'
@@ -55,6 +53,7 @@ import { useExternalCommandsStore } from './stores/external-commands'
 import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menu-modals'
 import { useNavPanelStore } from './stores/nav-panel'
+import { usePluginRuntimeStore } from './stores/plugin-runtime'
 import { useSelectionReplaceStore } from './stores/selection-replace'
 import { useSettingsSessionStore } from './stores/settings-session'
 import { useThemeStore } from './stores/theme'
@@ -66,9 +65,8 @@ import { DESKTOP_COMMANDS, DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
 const ipcStore = useIpcStore()
-const pluginRuntime = usePlugins()
+const pluginRuntime = usePluginRuntimeStore()
 const { locale, t } = useI18n()
-const { globalEvents } = useGlobalEvents()
 const menuModalsStore = useMenuModalsStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
@@ -145,7 +143,6 @@ const bootstrap = createAppBootstrap({
   // the quick window has no routes of its own: it renders by the mode
   ownsMode: (mode) => isQuickWindow || !isQuickWindowMode(mode),
   listen: desktopClient.listen,
-  emitGlobal: globalEvents.emit,
   initPlugins: async () => {
     await pluginRuntime.refreshInstalledPlugins()
     await pluginRuntime.reloadPlugins()

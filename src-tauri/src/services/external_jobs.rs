@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
-use tyco_activation_protocol::{Job, JobState, OutputMode, RunRequest};
+use tyco_activation_protocol::{Job, JobState, RunRequest};
 
 const MAX_JOBS: usize = 128;
 const MAX_ACTIVE: usize = 32;
@@ -153,7 +153,7 @@ impl ExternalJobs {
         output: Option<String>,
         error: Option<String>,
         code: Option<String>,
-    ) -> Option<(Job, Option<u64>, OutputMode)> {
+    ) -> Option<(Job, Option<u64>)> {
         let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state.is_terminal() || entry.pending_completion.is_some() {
@@ -188,11 +188,10 @@ impl ExternalJobs {
             entry.pending_completion = Some(job.clone());
             entry.job.state = JobState::Running;
         }
-        let output_mode = entry.request.output;
         entry.request.text = None;
         entry.request.input = None;
         entry.command_snapshot = None;
-        Some((job, selection_run_id, output_mode))
+        Some((job, selection_run_id))
     }
 
     pub fn publish_selection(&self, id: &str, error: Option<String>) {

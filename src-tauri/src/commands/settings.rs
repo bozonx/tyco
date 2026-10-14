@@ -2,7 +2,7 @@ use super::blocking;
 use crate::{
     errors::AppError,
     models::DesktopSnapshot,
-    services::{config_migration, runtime, storage},
+    services::{config_version, runtime, storage},
     state::AppState,
 };
 use serde_json::Value;
@@ -35,7 +35,7 @@ fn save_user_config_blocking(
     let _guard = state.lock_config_storage();
     // the stored config came from a newer build; whatever the webview sends,
     // it is not written over
-    if config_migration::is_newer_than_supported(&state.snapshot().settings.user_config) {
+    if config_version::is_newer_than_supported(&state.snapshot().settings.user_config) {
         return Err(storage::newer_config_error());
     }
     let mut user_config = crate::services::config_update::merge_config(
@@ -45,8 +45,8 @@ fn save_user_config_blocking(
     )?;
     // a config sent without its version would be migrated again at the next
     // start
-    if config_migration::config_version(&user_config) == 0 {
-        config_migration::stamp_current_version(&mut user_config);
+    if config_version::config_version(&user_config) == 0 {
+        config_version::stamp_current_version(&mut user_config);
     }
     crate::services::config_schema::validate_user_config(&user_config)?;
     let mut pending_secrets = Some(crate::services::webhook_secrets::protect_for_save(

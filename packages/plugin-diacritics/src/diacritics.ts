@@ -1,4 +1,4 @@
-export const DIACRITICS = {
+const DIACRITICS = {
   acute: '\u0301',
   grave: '\u0300',
   circumflex: '\u0302',

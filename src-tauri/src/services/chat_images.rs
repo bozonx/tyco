@@ -26,7 +26,7 @@ const MAX_PIXELS: u64 = 24_000_000;
 const MAX_MESSAGE_IMAGES: usize = 4;
 /// Lower qualities are tried only while the image exceeds `MAX_IMAGE_BYTES`.
 const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];
-const FORMATS: [(&str, &str); 2] = [("webp", "image/webp"), ("png", "image/png")];
+const FORMATS: [(&str, &str); 1] = [("webp", "image/webp")];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -148,22 +148,14 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
 
 /// Dimensions from the header: stored bytes are already normalized and are
 /// verified by their hash, so they are never re-encoded.
-fn stored_dimensions(bytes: &[u8], media_type: &str) -> Result<(u32, u32), ChatFileError> {
-    let (width, height) = if media_type == "image/webp" {
-        let features =
-            webp::BitstreamFeatures::new(bytes).ok_or_else(|| invalid("Invalid WebP image"))?;
-        if features.has_animation() {
-            return Err(invalid("Animated images are not supported"));
-        }
-        (features.width(), features.height())
-    } else {
-        let reader = png::Decoder::new(Cursor::new(bytes))
-            .read_info()
-            .map_err(|_| invalid("Invalid PNG image"))?;
-        (reader.info().width, reader.info().height)
-    };
-    // Images saved before WebP could be up to 16384 pixels wide.
-    if width == 0 || height == 0 || u64::from(width) * u64::from(height) > MAX_PIXELS {
+fn stored_dimensions(bytes: &[u8]) -> Result<(u32, u32), ChatFileError> {
+    let features =
+        webp::BitstreamFeatures::new(bytes).ok_or_else(|| invalid("Invalid WebP image"))?;
+    if features.has_animation() {
+        return Err(invalid("Animated images are not supported"));
+    }
+    let (width, height) = (features.width(), features.height());
+    if !within_limits(width, height) {
         return Err(invalid("Unsupported image dimensions"));
     }
     Ok((width, height))
@@ -303,7 +295,7 @@ impl ChatImageStore {
         if bytes.len() > MAX_STORED_BYTES || format!("{:x}", Sha256::digest(&bytes)) != id {
             return Err(AppError::Message("Corrupted chat image".into()));
         }
-        let (width, height) = stored_dimensions(&bytes, media_type)?;
+        let (width, height) = stored_dimensions(&bytes)?;
         let image = ChatImage {
             id: id.to_string(),
             media_type: media_type.parse()?,
@@ -584,21 +576,5 @@ mod tests {
             let _ = encoder.write_header().unwrap();
         }
         assert!(normalize(&oversized, None).is_err());
-    }
-
-    #[test]
-    fn reads_legacy_png_files_without_re_encoding_them() {
-        let directory = TestDir::new("tyco-chat-legacy-test");
-        let bytes = png();
-        let id = format!("{:x}", Sha256::digest(&bytes));
-        fs::write(directory.join(format!("{id}.png")), &bytes).unwrap();
-        let mut store = ChatImageStore::default();
-        assert_eq!(store.get(&directory, &id).unwrap(), bytes);
-        assert_eq!(
-            store.images[&id].0.media_type,
-            crate::models::ChatImageMediaType::Png
-        );
-        fs::write(directory.join(format!("{id}.png")), b"tampered").unwrap();
-        assert!(ChatImageStore::default().get(&directory, &id).is_err());
     }
 }

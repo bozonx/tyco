@@ -71,7 +71,7 @@ describe('chat-helpers', () => {
 describe('image context', () => {
   const image = {
     id: 'image',
-    mediaType: 'image/png' as const,
+    mediaType: 'image/webp' as const,
     width: 1,
     height: 1,
     size: 3,
@@ -91,7 +91,7 @@ describe('image context', () => {
 it('keeps previous image turns when the new message fills four image slots', () => {
   const image = {
     id: 'old',
-    mediaType: 'image/png' as const,
+    mediaType: 'image/webp' as const,
     width: 100,
     height: 100,
     size: 100,

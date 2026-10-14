@@ -169,9 +169,7 @@ describe('external jobs', () => {
       claimJob: async () => true,
       finishJob,
     })
-    const pending = external.handleRun(
-      event({ jobId: 'running', output: 'return' })
-    )
+    const pending = external.handleRun(event({ jobId: 'running' }))
     await vi.waitFor(() => expect(run).toHaveBeenCalled())
     external.handleCancel('running')
     finishRun()
@@ -195,9 +193,7 @@ it('reports a failed replacement instead of publishing the tool success', async 
       output: 'result',
     }),
   })
-  const outcome = await external.handleRun(
-    event({ jobId: 'selection', output: 'return' })
-  )
+  const outcome = await external.handleRun(event({ jobId: 'selection' }))
   expect(outcome.success).toBe(false)
   expect(outcome.output).toBe('result')
   expect(deps.notify).toHaveBeenCalledWith(expect.any(String), 'Focus changed')

@@ -20,7 +20,7 @@ import { translate } from '../i18n'
 import { markdownKeymap } from './markdown-commands'
 import { markdownPreview } from './markdown-preview'
 import { pasteExtension } from './paste'
-import { editorAppearance, editorHighlightStyle } from './theme'
+import { editorHighlightStyle, editorTheme } from './theme'
 
 /**
  * Marks transactions received by the editor from the store. The update listener
@@ -34,7 +34,7 @@ export const fromStore = Annotation.define<boolean>()
  */
 export const placeholderCompartment = new Compartment()
 
-export interface EditorCallbacks {
+interface EditorCallbacks {
   /** User changed text */
   onDocChange?: (value: string) => void
   /** User changed selection or cursor position */
@@ -100,7 +100,7 @@ export const createEditorExtensions = (
   markdown({ base: markdownLanguage, codeLanguages: languages }),
   syntaxHighlighting(editorHighlightStyle),
   markdownPreview(options.markdownPreview ?? false),
-  editorAppearance,
+  editorTheme,
   ...(options.paste
     ? [pasteExtension(options.getMarkdownSettings, options.onPastePlain)]
     : []),

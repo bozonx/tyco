@@ -8,7 +8,7 @@ export interface ViewportSize {
 }
 
 /** Room around the input left clickable: shadows, focus ring, rounding. */
-export const INPUT_REGION_MARGIN = 8
+const INPUT_REGION_MARGIN = 8
 
 /** Smallest rectangle containing all of `rects`, or null when there are none. */
 export function unionRect(rects: readonly InputRect[]): InputRect | null {

@@ -503,10 +503,7 @@ describe('the output of a command', () => {
       const copyText = vi.fn(async () => {})
       const { deps, runner } = setup({ copyText }, [tool])
       expect(
-        await runner.run(command(setting), 'source', {
-          source: 'external',
-          output: 'configured',
-        })
+        await runner.run(command(setting), 'source', { source: 'external' })
       ).toEqual({ success: true, output: 'result\n' })
       expect(tool.run).toHaveBeenCalledWith(
         expect.objectContaining({ wantsOutput: true })

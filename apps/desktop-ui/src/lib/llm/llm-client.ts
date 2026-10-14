@@ -65,7 +65,7 @@ export function isKeylessProvider(config: LlmConfig, providerId: string) {
 /** A configured task, or the chat, which runs on the model picked in it */
 export type LlmRunName = LlmTask | 'chat'
 
-export interface LlmRunOptions {
+interface LlmRunOptions {
   /**
    * Model ids to try in order instead of the task's chain; the chat passes the
    * one model picked in it

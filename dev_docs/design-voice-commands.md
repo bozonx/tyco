@@ -508,10 +508,7 @@ script/webhook-команды пользователя.
 
 ```ts
 export interface CommandConfig {
-  /**
-   * Stable; kept from the migrated action so the webhook secret id stays the
-   * same
-   */
+  /** Stable */
   id: string
   name: string
   /** Tells the LLM what the command does; the agent and LLM parsing use it */
@@ -611,42 +608,14 @@ export interface AiTaskToolConfig {
 как нынешние пункты меню, а пользователь переопределяет в команде только то,
 что нужно (например, папку заметок).
 
-### 4.3. Миграция
+### 4.3. Версия схемы
 
-При загрузке конфига в Rust (`services/config_migration.rs`: конфигом,
-резервной копией и версией владеет бэкенд) каждое `script`/`webhook`-действие
-из `mainActions`:
-
-1. превращается в `CommandConfig` с тем же `id` и `name`, `toolId` по типу,
-   `toolConfig` из его полей, теми же `afterRun` и
-   `logOutput`, `phrases: []`, `llmArgumentParsing: false`, `availableIn` —
-   всё `false`;
-2. заменяется в `mainActions` на `{ type: 'command', commandId: id }`.
-
-`id` сохраняется, поэтому секрет вебхука (`webhookSecretId(id)`) находится по
-тому же ключу и переносить его не нужно. Миграция идемпотентна: повторная
-загрузка ничего не меняет.
-
-Миграция односторонняя: старая сборка не знает пункт `command` и молча
-потеряет script/webhook-действия. Поэтому:
-
-- в конфиг добавляется `configVersion` (номер схемы); миграция повышает его;
-- перед первой записью мигрированного конфига рядом сохраняется копия
-  исходного файла (`userConfig.v<старая версия>.bak`), один раз;
-- сборка, встретившая `configVersion` новее своего, не перезаписывает конфиг
-  (`save_user_config` возвращает ошибку) и показывает предупреждение в
-  настройках.
-
-Номер схемы задан дважды: `CONFIG_VERSION` в `packages/shared` и в
-`config_migration.rs`; их нужно менять вместе.
-
-**Версия 2** (этап 4). Rust ничего не переносит, только повышает версию и
-сохраняет резервную копию: команды по умолчанию и замену пунктов плагинов в
-меню выполняет webview при загрузке плагинов (§3.12), потому что только он
-знает инструменты плагинов. Версия всё равно повышается: сборка версии 1 не
-знает `core.*`, `FastNote.write`, `afterRun: 'replaceSelection' | 'copy'` и
-при сохранении потеряла бы пункты FastNote и SearchInInternet в меню —
-`mainActionRegistrations` уже не даст поставить их обратно.
+Миграций конфига нет: при загрузке Rust чинит конфиг по текущей схеме
+(неизвестные поля отбрасываются) и проставляет текущий `configVersion`.
+Сборка, встретившая `configVersion` новее своего, не перезаписывает конфиг
+(`save_user_config` возвращает ошибку) и показывает предупреждение в
+настройках. Номер схемы один: `packages/shared/src/config-version.json`, его
+читают и TypeScript, и `services/config_version.rs`.
 
 ### 4.4. Прочее
 
@@ -656,9 +625,7 @@ export interface AiTaskToolConfig {
 `availableIn.chat` в первой версии сохраняется в конфиге, но в редакторе
 команды не показывается и ни на что не влияет: агента ещё нет. По умолчанию
 `false`. `availableIn.launcher` и `availableIn.external` у новых команд по
-умолчанию `true`; оба флага есть в редакторе команды. У команд, перенесённых
-миграцией, оба `false`: поведение в меню не меняется, а в другие места
-команда попадает, только когда пользователь её туда добавит. У команд по
+умолчанию `true`; оба флага есть в редакторе команды. У команд по
 умолчанию (§3.12) оба `true`: ради этого они и засеваются.
 
 ## 5. API инструментов для плагинов
@@ -1124,8 +1091,8 @@ Rust:
 
 - `services/external_commands.rs` — поиск команды по id или названию,
   список для `tyco-ctl commands list`, выбор между фоном и оверлеем, каталог
-  инструментов из webview вместо `KNOWN_TOOLS`; миграция конфига —
-  `services/config_migration.rs`;
+  инструментов из webview вместо `KNOWN_TOOLS`; версия схемы конфига —
+  `services/config_version.rs`;
 - `services/dbus.rs` exposes only `Open` and `ReplaceSelection`, plus the
   internal KWin tracker interface;
 - `crates/activation-protocol` defines the local CLI protocol: command discovery,

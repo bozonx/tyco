@@ -45,7 +45,7 @@ export interface TranslateMenuParams {
   /** Translates into this language immediately when the dialog opens. */
   language?: string
 }
-export type VoiceCorrectedHandler = (
+type VoiceCorrectedHandler = (
   resultText: string,
   recognizedText: string,
   correctedText: string | undefined,
@@ -91,7 +91,7 @@ export interface PendingModalParams {
   onCancel?: () => void
 }
 
-export interface MenuModalParams {
+interface MenuModalParams {
   [MenuModals.INSERT]: InsertMenuParams
   [MenuModals.AI_TASK]: AiTaskMenuParams
   [MenuModals.DIFF]: DiffMenuParams
@@ -100,8 +100,8 @@ export interface MenuModalParams {
   [MenuModals.PREVIEW]: PreviewMenuParams
   [MenuModals.ACTION_SELECT]: ActionSelectMenuParams
 }
-export type OpenMenuModal = keyof MenuModalParams
-export type StepParams<K extends OpenMenuModal> = MenuModalParams[K] & {
+type OpenMenuModal = keyof MenuModalParams
+type StepParams<K extends OpenMenuModal> = MenuModalParams[K] & {
   onLeave?: () => void
 }
 /** A screen and its cleanup callback, called once when the step leaves. */

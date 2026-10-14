@@ -11,7 +11,7 @@ import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 
 const standardActionIds = new Set<string>(STANDARD_ACTION_IDS)
 
-export function isStandardActionId(value: unknown): value is StandardActionId {
+function isStandardActionId(value: unknown): value is StandardActionId {
   return typeof value === 'string' && standardActionIds.has(value)
 }
 

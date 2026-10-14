@@ -105,4 +105,4 @@ The command and selection grants must both be enabled. Internal selection
 hotkeys retain their own behavior; they are independent of external access.
 
 See [External control API](docs/external-control.md) for the complete CLI,
-D-Bus contract, permissions, exit codes, platform behavior, and migration guide.
+D-Bus contract, permissions, exit codes, and platform behavior.

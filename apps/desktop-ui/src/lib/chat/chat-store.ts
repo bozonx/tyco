@@ -4,7 +4,7 @@ import { createChatTitleController } from './chat-title-controller'
 import { createChatGenerationModel } from './chat-generation-model'
 import { createChatSessionModel } from './chat-session-model'
 import type { ChatStoreDeps } from './chat-store-contracts'
-export type { ChatStoreDeps, ChatRequestModel } from './chat-store-contracts'
+export type { ChatStoreDeps } from './chat-store-contracts'
 
 export function createChatStoreModel(deps: ChatStoreDeps) {
   const state = createChatState()

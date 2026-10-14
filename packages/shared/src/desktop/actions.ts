@@ -50,7 +50,6 @@ export type CommandRunSource =
 export interface LauncherRequest {
   commandId: string
   jobId?: string
-  output?: 'return' | 'configured'
   input?: Record<string, unknown>
   /** The text of the call; without it the selection or the field gives it */
   text?: string
@@ -79,7 +78,6 @@ export interface ToolCatalogEntry {
 export interface CommandRunEvent {
   commandId: string
   jobId?: string
-  output?: 'return' | 'configured'
   input?: Record<string, unknown>
   text?: string
   userConfig: UserConfig

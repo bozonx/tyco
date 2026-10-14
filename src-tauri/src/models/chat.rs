@@ -92,9 +92,7 @@ pub struct ChatMessage {
 #[serde(rename_all = "camelCase")]
 pub struct Chat {
     pub id: String,
-    #[serde(alias = "description")]
     pub title: String,
-    #[serde(alias = "lastMsgDate")]
     pub last_message_at: String,
     pub messages: Vec<ChatMessage>,
 }
@@ -103,9 +101,7 @@ pub struct Chat {
 #[serde(rename_all = "camelCase")]
 pub struct ChatSummary {
     pub id: String,
-    #[serde(alias = "description")]
     pub title: String,
-    #[serde(alias = "lastMsgDate")]
     pub last_message_at: String,
 }
 
@@ -144,14 +140,11 @@ pub enum ChatMessageStatus {
 pub enum ChatImageMediaType {
     #[serde(rename = "image/webp")]
     Webp,
-    #[serde(rename = "image/png")]
-    Png,
 }
 impl ChatImageMediaType {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Webp => "image/webp",
-            Self::Png => "image/png",
         }
     }
 }
@@ -160,7 +153,6 @@ impl std::str::FromStr for ChatImageMediaType {
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "image/webp" => Ok(Self::Webp),
-            "image/png" => Ok(Self::Png),
             _ => Err(crate::errors::AppError::InvalidInput(
                 "Unsupported chat image media type".into(),
             )),
@@ -173,9 +165,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stored_legacy_titles_are_read_but_new_titles_use_the_wire_name() {
+    fn chat_summaries_use_the_wire_names() {
         let chat: Chat = serde_json::from_value(serde_json::json!({
-            "id": "chat-1", "description": "Chat title", "lastMsgDate": "2026-10-12T10:00:00.000Z", "messages": []
+            "id": "chat-1", "title": "Chat title", "lastMessageAt": "2026-10-12T10:00:00.000Z", "messages": []
         })).unwrap();
         let summary = serde_json::to_value(ChatSummary::from(&chat)).unwrap();
         let fixture: serde_json::Value = serde_json::from_str(include_str!(
@@ -184,8 +176,6 @@ mod tests {
         .unwrap();
         assert_eq!(summary, fixture["chatSummary"]);
         let serialized = serde_json::to_value(chat).unwrap();
-        assert!(serialized.get("description").is_none());
-        assert!(serialized.get("lastMsgDate").is_none());
         assert_eq!(serialized["lastMessageAt"], "2026-10-12T10:00:00.000Z");
         let round_trip: Chat = serde_json::from_value(serialized.clone()).unwrap();
         assert_eq!(round_trip.last_message_at, "2026-10-12T10:00:00.000Z");

@@ -486,11 +486,7 @@ describe('external job requests', () => {
       claimJob,
       finishJob,
     })
-    await model.request({
-      commandId: note.id,
-      jobId: 'job-input',
-      output: 'return',
-    })
+    await model.request({ commandId: note.id, jobId: 'job-input' })
     await model.selectionArrived('another private selection')
     expect(model.stage.value.kind).toBe('prepare')
     expect(deps.run).not.toHaveBeenCalled()
@@ -500,7 +496,7 @@ describe('external job requests', () => {
     expect(deps.run).toHaveBeenCalledWith(
       note,
       'explicit text',
-      expect.objectContaining({ source: 'external', output: 'return' })
+      expect.objectContaining({ source: 'external' })
     )
     expect(finishJob).toHaveBeenCalledWith('job-input', {
       success: true,
@@ -513,11 +509,7 @@ describe('external job requests', () => {
     const claimJob = vi.fn(async () => true)
     const finishJob = vi.fn(async () => {})
     const model = createCommandLauncherModel({ ...deps, claimJob, finishJob })
-    await model.request({
-      commandId: note.id,
-      jobId: 'job-text',
-      output: 'return',
-    })
+    await model.request({ commandId: note.id, jobId: 'job-text' })
     expect(model.stage.value.kind).toBe('prepare')
     expect(claimJob).not.toHaveBeenCalled()
     expect(deps.run).not.toHaveBeenCalled()

@@ -11,7 +11,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 const image = {
   id: 'image',
-  mediaType: 'image/png' as const,
+  mediaType: 'image/webp' as const,
   width: 1,
   height: 1,
   size: 3,

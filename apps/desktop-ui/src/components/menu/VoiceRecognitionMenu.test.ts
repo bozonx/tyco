@@ -43,10 +43,6 @@ vi.mock('../../lib/desktop/client', () => ({
   },
 }))
 
-import {
-  GlobalEvents,
-  useGlobalEvents,
-} from '../../composables/use-global-events'
 import { useIpcStore } from '../../stores/ipc'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
@@ -211,8 +207,7 @@ describe('VoiceRecognitionMenu', () => {
       })
 
     const keyUp = async (init: KeyboardEventInit) => {
-      const { globalEvents } = useGlobalEvents()
-      globalEvents.emit(GlobalEvents.KEY_UP, new KeyboardEvent('keyup', init))
+      document.dispatchEvent(new KeyboardEvent('keyup', init))
       await flushPromises()
     }
 

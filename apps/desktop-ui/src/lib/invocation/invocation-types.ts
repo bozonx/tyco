@@ -31,7 +31,7 @@ export interface InvocationOptions {
   /** The input as it is, in place of the one parsed from the text */
   input?: Record<string, unknown>
   /** `return` hands the output to the caller whatever the context */
-  output?: 'return' | 'configured'
+  output?: 'return'
   /** Cancels the run: the script is killed, the request is aborted */
   signal?: AbortSignal
   /** Where the run is invoked from; the action menu by default */

@@ -18,7 +18,7 @@ static DEFAULTS: LazyLock<Value> = LazyLock::new(|| {
         "../../../packages/shared/src/user-config-defaults.json"
     ))
     .expect("valid portable defaults");
-    defaults["configVersion"] = json!(super::config_migration::CONFIG_VERSION);
+    defaults["configVersion"] = json!(super::config_version::CONFIG_VERSION);
     defaults
 });
 
@@ -330,7 +330,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
 
 pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
     validate(config, &SCHEMA, "userConfig")?;
-    if config["configVersion"] != json!(super::config_migration::CONFIG_VERSION) {
+    if config["configVersion"] != json!(super::config_version::CONFIG_VERSION) {
         return Err(invalid("configVersion"));
     }
     for command in config["commands"].as_array().into_iter().flatten() {

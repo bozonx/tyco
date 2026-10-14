@@ -10,7 +10,7 @@ import { MAX_CHAT_IMAGES } from './chat-image-input'
 
 export const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
 export const MAX_CHAT_FILE_CHARACTERS = 500_000
-export const MAX_CHAT_FILES = 16
+const MAX_CHAT_FILES = 16
 export { ChatFileError, type ChatFileErrorKind } from './chat-file-error'
 
 export interface PreparedChatFile {
@@ -38,7 +38,7 @@ export function mayContainSecrets(name: string): boolean {
   return SECRET_FILE.test(name)
 }
 
-export function validateChatFile(file: File) {
+function validateChatFile(file: File) {
   if (!file.size) throw new ChatFileError('empty')
   if (file.size > MAX_CHAT_FILE_BYTES) throw new ChatFileError('size')
 }

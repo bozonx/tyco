@@ -18,22 +18,21 @@ fn window_insertion_defaults_follow_the_injected_session() {
             desktop: Desktop::Other,
         };
         for mut config in [
-            json!({ "xdotoolBin": "/opt/bin/xdotool" }),
+            json!({}),
             json!({ "windowInsertion": { "method": "wtype" } }),
         ] {
             assert!(normalize_window_insertion_for_session(&mut config, session));
             assert_eq!(config["windowInsertion"]["method"], expected_method);
             assert_eq!(config["windowInsertion"]["pasteShortcut"], "ctrl+v");
-            assert!(!config.as_object().unwrap().contains_key("xdotoolBin"));
             assert!(!normalize_window_insertion_for_session(
                 &mut config,
                 session
             ));
         }
-        let mut legacy = json!({ "xdotoolBin": "/opt/bin/xdotool" });
-        normalize_window_insertion_for_session(&mut legacy, session);
-        assert_eq!(legacy["windowInsertion"]["xdotoolBin"], "/opt/bin/xdotool");
-        assert_eq!(legacy["windowInsertion"]["ydotoolBin"], "/usr/bin/ydotool");
+        let mut custom = json!({ "windowInsertion": { "xdotoolBin": "/opt/bin/xdotool" } });
+        normalize_window_insertion_for_session(&mut custom, session);
+        assert_eq!(custom["windowInsertion"]["xdotoolBin"], "/opt/bin/xdotool");
+        assert_eq!(custom["windowInsertion"]["ydotoolBin"], "/usr/bin/ydotool");
         for method in ["xdotool", "ydotool"] {
             let mut config = json!({ "windowInsertion": { "method": method } });
             normalize_window_insertion_for_session(&mut config, session);
@@ -129,36 +128,21 @@ fn normalize_hotkeys_adds_defaults_and_keeps_overrides() {
 }
 
 #[test]
-fn normalize_hotkeys_drops_removed_hotkeys() {
+fn normalize_hotkeys_drops_unknown_selection_hotkeys() {
     let mut config = json!({
-        "hotkeys": { "history": "Ctrl+Alt+H" },
         "selectionHotkeys": { "correction": "Ctrl+Alt+X", "translate.0": "Ctrl+Alt+1" },
-        "selectionReplace": { "whenEmpty": "selectAll" }
     });
 
     assert!(normalize_hotkeys_config(&mut config));
-    assert!(config["hotkeys"].get("history").is_none());
     assert_eq!(
         config["selectionHotkeys"],
         json!({ "correction": "Ctrl+Alt+X" })
     );
-    assert!(config.get("selectionReplace").is_none());
     assert!(!normalize_hotkeys_config(&mut config));
 }
 
 #[test]
-fn normalize_hotkeys_migrates_quick_input_bindings_to_submit_key() {
-    let mut ctrl = json!({
-        "quickInputHotkeys": { "correctAndInsert": "Ctrl+Enter", "next": "Tab" }
-    });
-    assert!(normalize_hotkeys_config(&mut ctrl));
-    assert_eq!(ctrl["submitKey"], json!("ctrlEnter"));
-    assert!(ctrl.get("quickInputHotkeys").is_none());
-
-    let mut enter = json!({ "quickInputHotkeys": { "correctAndInsert": "Ctrl+S" } });
-    assert!(normalize_hotkeys_config(&mut enter));
-    assert_eq!(enter["submitKey"], json!("enter"));
-
+fn normalize_hotkeys_repairs_an_invalid_submit_key() {
     let mut kept = json!({ "submitKey": "ctrlEnter" });
     normalize_hotkeys_config(&mut kept);
     assert_eq!(kept["submitKey"], json!("ctrlEnter"));
@@ -196,11 +180,9 @@ fn normalize_appearance_and_language_fills_defaults() {
 
 #[test]
 fn normalize_editor_and_translation_fills_defaults() {
-    let mut config = json!({ "pasteMode": "ask", "editorSyntax": "none" });
+    let mut config = json!({});
 
     assert!(normalize_editor_config(&mut config));
-    assert!(config.get("pasteMode").is_none());
-    assert!(config.get("editorSyntax").is_none());
     assert_eq!(config["editorHistoryStorage"], json!("disk"));
     assert_eq!(config["editorHistoryMaxItems"], json!(1000));
     assert_eq!(config["editorHistoryRetentionDays"], json!(30));
@@ -215,15 +197,10 @@ fn normalize_editor_and_translation_fills_defaults() {
 }
 
 #[test]
-fn normalize_ai_rules_and_tasks_cleans_legacy() {
-    let mut config = json!({
-        "chatRoles": ["assistant", "user"],
-        "aiRules": { "base": "custom base rule" }
-    });
+fn normalize_ai_rules_and_tasks_fills_defaults() {
+    let mut config = json!({ "aiRules": {} });
 
     assert!(normalize_ai_rules_and_tasks(&mut config));
-    assert!(config.get("chatRoles").is_none());
-    assert!(config["aiRules"].get("base").is_none());
     assert_eq!(config["aiRules"]["chat"], json!(""));
     assert!(config["aiTasks"].as_array().is_some());
     assert!(!normalize_ai_rules_and_tasks(&mut config));
@@ -246,27 +223,6 @@ fn normalize_ai_rules_and_tasks_gives_tasks_ids() {
     assert_eq!(config["aiTasks"][2]["id"], json!("task-1"));
     assert_eq!(config["aiTasks"][3]["id"], json!("task-3"));
     assert!(!normalize_ai_rules_and_tasks(&mut config));
-}
-
-#[test]
-fn normalize_editor_config_migrates_the_history_storage() {
-    let mut session = json!({
-        "editorHistoryMaxItems": 20,
-        "clearEditorHistoryOnExit": true,
-    });
-    assert!(normalize_editor_config(&mut session));
-    assert_eq!(session["editorHistoryStorage"], json!("session"));
-    assert_eq!(session["editorHistoryMaxItems"], json!(20));
-    assert!(session.get("clearEditorHistoryOnExit").is_none());
-
-    let mut off = json!({
-        "editorHistoryMaxItems": 0,
-        "clearEditorHistoryOnExit": false,
-    });
-    assert!(normalize_editor_config(&mut off));
-    assert_eq!(off["editorHistoryStorage"], json!("off"));
-    assert_eq!(off["editorHistoryMaxItems"], json!(1000));
-    assert!(!normalize_editor_config(&mut off));
 }
 
 #[test]

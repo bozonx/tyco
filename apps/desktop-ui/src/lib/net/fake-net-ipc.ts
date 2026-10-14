@@ -1,7 +1,7 @@
 import type { DesktopInvoke } from '@tyco/shared'
 import type { NetIpc } from './net-ipc'
 
-export interface FakeInvokeCall {
+interface FakeInvokeCall {
   command: string
   args: Record<string, unknown> | Uint8Array | undefined
   headers: Record<string, string> | undefined

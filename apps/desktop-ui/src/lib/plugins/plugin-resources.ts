@@ -10,7 +10,7 @@ export function pluginNamespace(id: string): string {
   return `plugins.p${Array.from(new TextEncoder().encode(id), (byte) => byte.toString(16).padStart(2, '0')).join('')}`
 }
 
-export function pluginIconPrefix(id: string): string {
+function pluginIconPrefix(id: string): string {
   return `tyco-${pluginNamespace(id).split('.')[1]}`
 }
 export function pluginIconName(

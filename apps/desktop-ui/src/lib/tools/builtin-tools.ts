@@ -60,9 +60,7 @@ const textSchema = (takesText: boolean) =>
 const textOf = (input: Record<string, unknown>): string | null =>
   typeof input.text === 'string' ? input.text : null
 
-export function createScriptTool(
-  deps: BuiltinToolDependencies
-): ToolDefinition {
+function createScriptTool(deps: BuiltinToolDependencies): ToolDefinition {
   return {
     id: 'script',
     labelKey: 'action.script',
@@ -132,9 +130,7 @@ export function createScriptTool(
   }
 }
 
-export function createWebhookTool(
-  deps: BuiltinToolDependencies
-): ToolDefinition {
+function createWebhookTool(deps: BuiltinToolDependencies): ToolDefinition {
   return {
     id: 'webhook',
     labelKey: 'action.webhook',

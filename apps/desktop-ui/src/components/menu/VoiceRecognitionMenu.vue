@@ -23,10 +23,6 @@
 import { onMounted, onUnmounted, watch } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
-import {
-  GlobalEvents,
-  useGlobalEvents,
-} from '../../composables/use-global-events'
 import { useI18n } from '../../composables/use-i18n'
 import { useLlmActions } from '../../composables/use-llm-actions'
 import useToast from '../../composables/use-toast'
@@ -62,7 +58,6 @@ const {
   startDictation,
 } = useDictationActions()
 const { voiceCorrection } = useLlmActions()
-const { globalEvents } = useGlobalEvents()
 const { toast, toastText } = useToast()
 const { t } = useI18n()
 const ipcStore = useIpcStore()
@@ -119,8 +114,6 @@ const {
   startSession,
 } = model
 let unlistenAudioLevel: (() => void) | undefined
-let keyUpHandlerIndex = -1
-let submitHandlerIndex = -1
 let unmounted = false
 
 function handleKeyUp(event: KeyboardEvent) {
@@ -194,13 +187,8 @@ watch(
 )
 
 onMounted(async () => {
-  keyUpHandlerIndex = globalEvents.addListener(GlobalEvents.KEY_UP, handleKeyUp)
-  submitHandlerIndex = globalEvents.addListener(
-    GlobalEvents.VOICE_SUBMIT,
-    () => {
-      void finish('submit')
-    }
-  )
+  // on the document, so it runs before the nav panel's Esc handler on the window
+  document.addEventListener('keyup', handleKeyUp)
   window.addEventListener('keydown', handleKeyDown)
 
   // the level meter is decoration: the dictation must not wait for it, nor
@@ -228,14 +216,7 @@ onUnmounted(() => {
 
   unlistenAudioLevel?.()
 
-  if (keyUpHandlerIndex >= 0) {
-    globalEvents.removeListener(keyUpHandlerIndex)
-    keyUpHandlerIndex = -1
-  }
-  if (submitHandlerIndex >= 0) {
-    globalEvents.removeListener(submitHandlerIndex)
-    submitHandlerIndex = -1
-  }
+  document.removeEventListener('keyup', handleKeyUp)
   window.removeEventListener('keydown', handleKeyDown)
 })
 </script>

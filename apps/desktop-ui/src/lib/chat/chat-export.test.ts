@@ -48,7 +48,7 @@ it('marks images omitted from text export without leaking internal paths', () =>
       images: [
         {
           id: 'internal-id',
-          mediaType: 'image/png',
+          mediaType: 'image/webp',
           width: 32,
           height: 24,
           size: 100,
@@ -56,6 +56,6 @@ it('marks images omitted from text export without leaking internal paths', () =>
       ],
     },
   ])
-  expect(markdown).toContain('[Image omitted: 32 × 24, image/png]')
+  expect(markdown).toContain('[Image omitted: 32 × 24, image/webp]')
   expect(markdown).not.toContain('internal-id')
 })

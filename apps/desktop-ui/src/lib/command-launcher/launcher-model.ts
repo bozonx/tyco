@@ -21,7 +21,7 @@ import { moveHighlight } from '../menu-query/menu-query'
 import type { ToolLookup } from '../tools/tool-types'
 
 /** The first commands of the list are run with the keys `1`–`9` */
-export const LAUNCHER_KEY_COUNT = 9
+const LAUNCHER_KEY_COUNT = 9
 
 /**
  * What the overlay shows:
@@ -298,7 +298,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
         signal: runController.signal,
         source,
         input: call?.input,
-        output: call?.output,
       })
     } catch (error) {
       outcome = runController.signal.aborted

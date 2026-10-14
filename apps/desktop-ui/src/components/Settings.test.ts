@@ -83,8 +83,8 @@ vi.mock('../stores/history', () => ({
 
 vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
 
-vi.mock('../plugins', () => ({
-  usePlugins: () => ({
+vi.mock('../stores/plugin-runtime', () => ({
+  usePluginRuntimeStore: () => ({
     pluginRuntimeStates: {},
     pluginIndexes: [
       () => ({

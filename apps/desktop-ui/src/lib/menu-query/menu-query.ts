@@ -52,7 +52,7 @@ export function moveHighlight(
   return (((index + delta) % length) + length) % length
 }
 
-export const RECENT_LIMIT = 10
+const RECENT_LIMIT = 10
 
 /** `item` on top of `recent`, without its older copy, at most `limit` long */
 export function pushRecent(

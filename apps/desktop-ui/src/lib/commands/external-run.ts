@@ -14,11 +14,11 @@ import type {
 } from '../invocation/invocation-types'
 
 /** Quick commands finish before the bubble would show up */
-export const PENDING_OVERLAY_DELAY_MS = 400
+const PENDING_OVERLAY_DELAY_MS = 400
 const SUCCESS_HIDE_MS = 1500
 const ERROR_HIDE_MS = 6000
 
-export type RunReportKind = 'info' | 'warn' | 'error' | 'success'
+type RunReportKind = 'info' | 'warn' | 'error' | 'success'
 
 /** How the runner tells the user about the run, in place of a toast */
 export type RunReport = (kind: RunReportKind, message: string) => void
@@ -154,7 +154,6 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       outcome = await deps.run(command, input ?? '', report, {
         signal: controller.signal,
         input: event.input,
-        output: event.output,
       })
     } catch (error) {
       outcome = {

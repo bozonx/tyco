@@ -13,7 +13,7 @@ describe('LLM settings model', () => {
           baseUrl: 'http://localhost:11434/v1',
         },
       ],
-      models: [{ id: 'model', model: 'test', provider: 'local' }],
+      models: [{ id: 'model', providerModelId: 'test', providerId: 'local' }],
     })
     const setSecret = vi.fn().mockResolvedValue(undefined)
     const notifyInvalidUrl = vi.fn()

@@ -10,7 +10,7 @@ use tauri::{AppHandle, Manager};
 use super::activation::{Activation, ActivationMode, ActivationSource};
 use super::external_api;
 use super::external_jobs::ExternalJobs;
-use super::{config_migration, runtime, storage};
+use super::{config_version, runtime, storage};
 use crate::errors::AppError;
 use crate::state::AppState;
 
@@ -156,7 +156,7 @@ fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<AppState>();
     let _guard = state.lock_config_storage();
     let mut user_config = state.snapshot().settings.user_config;
-    if config_migration::is_newer_than_supported(&user_config) {
+    if config_version::is_newer_than_supported(&user_config) {
         return Err(storage::newer_config_error());
     }
     grant_selection(&mut user_config);
