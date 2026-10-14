@@ -1,10 +1,17 @@
 <template>
   <MenuModals />
+  <p
+    v-if="settingsShutdown.isClosing.value"
+    role="status"
+    class="shutdown-status"
+  >
+    {{ t('settings.shutdownSaving') }}
+  </p>
   <template v-if="isQuickWindow">
     <QuickOverlay />
   </template>
   <template v-else>
-    <div class="layout">
+    <div class="layout" :inert="settingsShutdown.isClosing.value">
       <NavPanel v-if="navPanelStore.params.panelVisible" />
       <div class="main">
         <RouterView />
@@ -23,6 +30,7 @@ import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useEditorNavigation } from './composables/use-editor-navigation'
 import { useGlobalEvents } from './composables/use-global-events'
 import { useI18n } from './composables/use-i18n'
+import useToast from './composables/use-toast'
 import { createActivationMetricsClient } from './lib/activation-metrics/activation-metrics'
 import { createAppBootstrap } from './lib/app/app-bootstrap'
 import { createCleanupScope } from './lib/app/cleanup-scope'
@@ -36,6 +44,7 @@ import { syncDocumentLanguageAttributes } from './lib/locale/language'
 import { clientLogger } from './lib/logger'
 import { appNavigation } from './lib/navigation/navigation'
 import { MODE_ROUTE_MAP, isQuickWindowMode } from './lib/navigation/routes'
+import { createSettingsShutdown } from './lib/settings/settings-shutdown'
 import { usePlugins } from './plugins'
 import { useChatStore } from './stores/chat'
 import { useChatInputStore } from './stores/chat-input'
@@ -47,12 +56,13 @@ import { useIpcStore } from './stores/ipc'
 import { useMenuModalsStore } from './stores/menu-modals'
 import { useNavPanelStore } from './stores/nav-panel'
 import { useSelectionReplaceStore } from './stores/selection-replace'
+import { useSettingsSessionStore } from './stores/settings-session'
 import { useThemeStore } from './stores/theme'
 import { useToolCatalogStore } from './stores/tool-catalog'
 import { useWriteInputStore } from './stores/write-input'
 import { type StartMode } from '@tyco/shared'
 import { type AppEventPayloads } from '@tyco/shared'
-import { DESKTOP_EVENTS } from '@tyco/shared'
+import { DESKTOP_COMMANDS, DESKTOP_EVENTS } from '@tyco/shared'
 
 useThemeStore()
 const ipcStore = useIpcStore()
@@ -68,6 +78,23 @@ const writeInputStore = useWriteInputStore()
 const routeParamsStore = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
+const { toast } = useToast()
+const settingsShutdown = createSettingsShutdown({
+  flush: async () => {
+    await ipcStore.loadDesktopState()
+    const session = useSettingsSessionStore()
+    await session.persist()
+    return session.isSaved()
+  },
+  acknowledge: async (requestId, saved) => {
+    const result = await desktopClient.invoke(
+      DESKTOP_COMMANDS.ACKNOWLEDGE_SETTINGS_SHUTDOWN,
+      { requestId, saved }
+    )
+    if (!result.success) throw new Error(result.error)
+  },
+  notifyError: () => toast('settings.shutdownCancelled', 'error'),
+})
 // The benchmark activates the write mode only. Tauri delivers its events to
 // every window, and an answer from the main window would race the real one
 const activationMetrics = createActivationMetricsClient({
@@ -217,6 +244,8 @@ watch(
 )
 
 onMounted(() => {
+  void listenDesktop(DESKTOP_EVENTS.QUIT_REQUESTED, settingsShutdown.request)
+  void listenDesktop(DESKTOP_EVENTS.QUIT_CANCELLED, settingsShutdown.cancel)
   void listenDesktop(DESKTOP_EVENTS.PLUGINS_CHANGED, () => {
     void pluginRuntime.refreshInstalledPlugins()
   })
@@ -293,6 +322,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  settingsShutdown.dispose()
   bootstrap.stop()
   runtimeScope.stop()
   void pluginRuntime.dispose()
@@ -301,6 +331,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.shutdown-status {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  padding: var(--space-md);
+  background: var(--app-surface-raised);
+  text-align: center;
+}
 .layout {
   height: 100dvh;
   width: 100dvw;

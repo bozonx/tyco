@@ -1,4 +1,5 @@
 mod lifecycle;
+pub mod settings_shutdown;
 mod tray;
 mod warmup;
 

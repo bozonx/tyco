@@ -46,7 +46,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
         .menu(&menu)
         .tooltip("TyCo - typing companion")
         .on_menu_event(move |app, event| {
-            if let Some(state) = app.try_state::<AppState>() {
+            if app.try_state::<AppState>().is_some() {
                 match event.id.as_ref() {
                     TRAY_SHOW_ID => {
                         if let Err(error) = show_application(app) {
@@ -65,7 +65,6 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
                         }
                     }
                     TRAY_QUIT_ID => {
-                        state.set_quitting(true);
                         app.exit(0);
                     }
                     _ => {}

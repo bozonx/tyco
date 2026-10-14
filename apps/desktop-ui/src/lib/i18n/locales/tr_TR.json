@@ -798,7 +798,19 @@
     "chatImageQualityHint": "Yeni eklere uygulanır. Daha yüksek kalite daha fazla bellek ve bağlam kullanır. Görseller meta veri olmadan WebP olarak gönderilir; sınırlar sıkıştırma sonrası 24 MP ve 5 MB.",
     "imageQualityEconomy": "Ekonomik — en fazla 1024 px",
     "imageQualityBalanced": "Dengeli — en fazla 1568 px",
-    "imageQualityOriginal": "En yüksek — 8000 px’e kadar"
+    "imageQualityOriginal": "En yüksek — 8000 px’e kadar",
+    "saveSaving": "Kaydediliyor…",
+    "saveSaved": "Kaydedildi",
+    "savePending": "Kaydedilmemiş değişiklikler",
+    "saveFailed": "Ayarlar kaydedilemedi",
+    "saveConflict": "Ayarlar başka bir pencerede değişti: {fields}. Hangi değişikliklerin korunacağını seçin.",
+    "saveKeepLocal": "Değişikliklerimi güncel ayarların üzerine kaydet",
+    "saveReload": "Ayarları yeniden yükle ve değişikliklerimi sil",
+    "saveRetry": "Kaydetmeyi yeniden dene",
+    "numberTemperatureInvalid": "0 ile 2 arasında bir sayı girin.",
+    "numberTokensInvalid": "Pozitif bir tam sayı girin.",
+    "shutdownSaving": "Çıkmadan önce ayarlar kaydediliyor…",
+    "shutdownCancelled": "Çıkış iptal edildi: ayarlar kaydedilemedi. Ayarlardaki hataları giderin ve yeniden çıkmayı deneyin."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

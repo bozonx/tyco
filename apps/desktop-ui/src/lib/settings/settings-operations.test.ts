@@ -20,6 +20,25 @@ function fixture() {
 }
 
 describe('settings operations', () => {
+  it('retains a provider key if the id is referenced again before cleanup', async () => {
+    const f = fixture()
+    let finish!: () => void
+    f.deps.persist.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    const pending = f.model.finishProviderRemoval('local')
+    f.config.llm.providers.push({
+      id: 'local',
+      type: 'openai-compatible',
+      baseUrl: 'http://localhost:11434/v1',
+    })
+    finish()
+    await pending
+    expect(f.deps.removeSecret).not.toHaveBeenCalled()
+  })
   it('waits for persistence and keeps secrets when saving fails', async () => {
     const f = fixture()
     let complete!: () => void

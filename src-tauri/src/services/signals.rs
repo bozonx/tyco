@@ -1,9 +1,7 @@
 //! Handles termination signals (SIGTERM, SIGINT, Ctrl+C) to trigger
 //! graceful application shutdown.
 
-use tauri::{AppHandle, Manager};
-
-use crate::state::AppState;
+use tauri::AppHandle;
 
 pub fn spawn_signal_watcher(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
@@ -64,8 +62,5 @@ pub fn spawn_signal_watcher(app: AppHandle) {
 }
 
 fn request_exit(app: &AppHandle) {
-    if let Some(state) = app.try_state::<AppState>() {
-        state.set_quitting(true);
-    }
     app.exit(0);
 }

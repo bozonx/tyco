@@ -28,7 +28,16 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
     initialConfig: ipc.desktopState.userConfig,
     prepare: config.prepare,
     save: (next, base) => ipc.saveUserConfig(next, base),
-    canSave: () => (session.draft.value.configVersion ?? 0) <= CONFIG_VERSION,
+    getLatestConfig: () => ipc.desktopState.userConfig,
+    loadConfig: async () => {
+      await ipc.loadDesktopState()
+      return ipc.desktopState.userConfig
+    },
+    canSave: () =>
+      Math.max(
+        session.draft.value.configVersion ?? 0,
+        session.latestConfig.value.configVersion ?? 0
+      ) <= CONFIG_VERSION,
     notifyError: (error) =>
       toastText(
         error
@@ -39,7 +48,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
     debounceMs: 500,
   })
   watch(() => ipc.desktopState.userConfig, session.applyIncoming)
-  watch(session.draft, session.schedule, { deep: true })
+  watch(session.draft, session.schedule, { deep: true, flush: 'sync' })
   onScopeDispose(() => {
     void session.dispose()
   })

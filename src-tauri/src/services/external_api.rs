@@ -573,7 +573,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             Err(error) => error,
         },
         Request::Quit => {
-            app.state::<AppState>().set_quitting(true);
             let app = app.clone();
             tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;

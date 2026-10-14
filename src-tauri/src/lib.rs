@@ -290,6 +290,7 @@ pub fn run() {
             mark_activation_metric,
             submit_activation_metric_value,
             save_user_config,
+            commands::settings::acknowledge_settings_shutdown,
             patch_session_state,
             hide_window,
             dismiss_quick_window,
@@ -363,9 +364,16 @@ pub fn run() {
             std::process::exit(1);
         }
     };
-    app.run(|app, event| {
-        if let tauri::RunEvent::Exit = event {
-            runtime::shutdown(app);
+    app.run(|app, event| match event {
+        tauri::RunEvent::ExitRequested { api, .. } => {
+            if let Some(state) = app.try_state::<AppState>() {
+                if !state.is_quitting() {
+                    api.prevent_exit();
+                    runtime::settings_shutdown::request(app);
+                }
+            }
         }
+        tauri::RunEvent::Exit => runtime::shutdown(app),
+        _ => {}
     });
 }

@@ -34,11 +34,21 @@ withDefaults(
   { step: 1 }
 )
 
-const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+  (e: 'invalid-input'): void
+}>()
 const hovered = ref(false)
 
 function handleInput(event: Event) {
-  emit('update:value', (event.target as HTMLInputElement).value)
+  const input = event.target as HTMLInputElement
+  // Browsers report an empty value for unfinished numeric input such as '-'.
+  // It must not be treated as the user's request to clear a setting.
+  if (input.validity.badInput) {
+    emit('invalid-input')
+    return
+  }
+  emit('update:value', input.value)
 }
 
 function handleWheel(event: WheelEvent) {

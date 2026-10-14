@@ -146,29 +146,78 @@
                 @update:value="model.canUseImages = $event"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.temperature')">
+            <FieldRow
+              :label="t('settings.temperature')"
+              :error="
+                numberErrors[`${model.id}:temperature`]
+                  ? t('settings.numberTemperatureInvalid')
+                  : undefined
+              "
+            >
               <FieldNumber
                 min="0"
                 max="2"
                 step="0.1"
-                :value="model.temperature ?? ''"
+                :value="
+                  numberDrafts[`${model.id}:temperature`] ??
+                  model.temperature ??
+                  ''
+                "
+                :aria-invalid="
+                  numberErrors[`${model.id}:temperature`] || undefined
+                "
                 @update:value="setNumber(model, 'temperature', $event)"
+                @invalid-input="numberErrors[`${model.id}:temperature`] = true"
               />
             </FieldRow>
-            <FieldRow :label="t('settings.maxTokens')">
+            <FieldRow
+              :label="t('settings.maxTokens')"
+              :error="
+                numberErrors[`${model.id}:maxOutputTokens`]
+                  ? t('settings.numberTokensInvalid')
+                  : undefined
+              "
+            >
               <FieldNumber
                 min="1"
-                :value="model.maxOutputTokens ?? ''"
+                :value="
+                  numberDrafts[`${model.id}:maxOutputTokens`] ??
+                  model.maxOutputTokens ??
+                  ''
+                "
+                :aria-invalid="
+                  numberErrors[`${model.id}:maxOutputTokens`] || undefined
+                "
                 :placeholder="t('settings.providerDefault')"
                 @update:value="setNumber(model, 'maxOutputTokens', $event)"
+                @invalid-input="
+                  numberErrors[`${model.id}:maxOutputTokens`] = true
+                "
               />
             </FieldRow>
-            <FieldRow :label="t('settings.contextSize')">
+            <FieldRow
+              :label="t('settings.contextSize')"
+              :error="
+                numberErrors[`${model.id}:contextWindowTokens`]
+                  ? t('settings.numberTokensInvalid')
+                  : undefined
+              "
+            >
               <FieldNumber
                 min="1"
-                :value="model.contextWindowTokens ?? ''"
+                :value="
+                  numberDrafts[`${model.id}:contextWindowTokens`] ??
+                  model.contextWindowTokens ??
+                  ''
+                "
+                :aria-invalid="
+                  numberErrors[`${model.id}:contextWindowTokens`] || undefined
+                "
                 :placeholder="t('settings.providerDefault')"
                 @update:value="setNumber(model, 'contextWindowTokens', $event)"
+                @invalid-input="
+                  numberErrors[`${model.id}:contextWindowTokens`] = true
+                "
               />
             </FieldRow>
           </template>
@@ -253,6 +302,8 @@ const {
   addModelTo,
   checkConnection,
   setNumber,
+  numberDrafts,
+  numberErrors,
 } = props.settings
 const MODEL_PLACEHOLDERS: Record<string, string> = {
   google: 'gemini-2.5-flash',

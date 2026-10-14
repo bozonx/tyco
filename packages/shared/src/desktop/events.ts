@@ -4,6 +4,8 @@ import type { OpenMainChatEvent } from './chat'
 import type { EditorTransfer, CommandRunEvent } from './actions'
 
 export const DESKTOP_EVENTS = {
+  QUIT_REQUESTED: 'app://quit-requested',
+  QUIT_CANCELLED: 'app://quit-cancelled',
   PLUGINS_CHANGED: 'app://plugins-changed',
   STATE_CHANGED: 'app://state-changed',
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
@@ -23,6 +25,8 @@ export const DESKTOP_EVENTS = {
 
 /** Serialized payloads shared by every desktop event adapter. */
 export interface AppEventPayloads {
+  [DESKTOP_EVENTS.QUIT_REQUESTED]: number
+  [DESKTOP_EVENTS.QUIT_CANCELLED]: null
   [DESKTOP_EVENTS.PLUGINS_CHANGED]: null
   [DESKTOP_EVENTS.OPEN_MAIN_CHAT]: OpenMainChatEvent
   [DESKTOP_EVENTS.STATE_CHANGED]: DesktopSnapshot

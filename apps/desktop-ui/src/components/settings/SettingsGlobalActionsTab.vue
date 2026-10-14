@@ -180,7 +180,6 @@ import {
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
-  type HotkeyApplyResult,
   type HotkeyProviderInfo,
   SELECTION_HOTKEY_PREFIX,
   type SubmitKey,
@@ -292,15 +291,9 @@ const rows = computed<HotkeyRow[]>(() => [
   },
 ])
 
-async function setShortcut(mode: string, shortcut: string) {
-  const result = await ipcStore.callFunction('applyHotkey', [
-    { mode, shortcut },
-  ])
-  const status: HotkeyApplyResult = result.success
-    ? (result.result as HotkeyApplyResult)
-    : { status: 'conflict', message: result.error }
-  providerState.statuses[mode] = status
-  if (status.status !== 'conflict') emit('update:hotkey', mode, shortcut)
+function setShortcut(mode: string, shortcut: string) {
+  // Native registration and persistence are one backend transaction.
+  emit('update:hotkey', mode, shortcut)
 }
 
 // pressing a bound shortcut must reach the field, not run its action

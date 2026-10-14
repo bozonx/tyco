@@ -23,7 +23,10 @@ export function createSettingsOperations(deps: {
 }) {
   async function finishProviderRemoval(id: string) {
     await deps.persist()
-    if (!deps.isSaved()) {
+    if (
+      !deps.isSaved() ||
+      deps.getConfig().llm.providers.some((provider) => provider.id === id)
+    ) {
       return
     }
     if (deps.hasSecret(id)) {

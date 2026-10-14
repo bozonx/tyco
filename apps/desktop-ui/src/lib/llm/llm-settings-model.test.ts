@@ -74,11 +74,17 @@ describe('LLM settings model', () => {
   it('validates numeric settings and never adds duplicate fallback models', () => {
     const f = fixture()
     const model = f.config.models[0]
+    model.temperature = 0.5
     f.model.setNumber(model, 'temperature', '3')
-    expect(model.temperature).toBeUndefined()
+    expect(model.temperature).toBe(0.5)
+    expect(f.model.numberErrors['model:temperature']).toBe(true)
+    expect(f.model.numberDrafts['model:temperature']).toBe('3')
     f.model.setNumber(model, 'temperature', '0.25')
     expect(model.temperature).toBe(0.25)
     f.model.setNumber(model, 'contextWindowTokens', '10.8')
+    expect(model.contextWindowTokens).toBeUndefined()
+    expect(f.model.numberErrors['model:contextWindowTokens']).toBe(true)
+    f.model.setNumber(model, 'contextWindowTokens', '11')
     expect(model.contextWindowTokens).toBe(11)
     f.model.setNumber(model, 'contextWindowTokens', '')
     expect(model.contextWindowTokens).toBeUndefined()

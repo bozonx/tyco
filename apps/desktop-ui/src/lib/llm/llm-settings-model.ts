@@ -24,6 +24,8 @@ export function createLlmSettingsModel(deps: {
   const expandedModels = reactive(new Set<string>())
   const connectionState = reactive<Partial<Record<string, ConnectionState>>>({})
   const connectionErrors = reactive<Record<string, string>>({})
+  const numberDrafts = reactive<Record<string, string>>({})
+  const numberErrors = reactive<Record<string, boolean>>({})
   const requests = new Map<string, symbol>()
 
   async function saveKey(provider: LlmProvider) {
@@ -99,13 +101,21 @@ export function createLlmSettingsModel(deps: {
     field: 'temperature' | 'maxOutputTokens' | 'contextWindowTokens',
     value: string
   ) {
+    const key = `${model.id}:${field}`
+    numberDrafts[key] = value
+    if (value.trim() === '') {
+      delete model[field]
+      delete numberErrors[key]
+      return
+    }
     const parsed = Number(value)
     const invalid =
-      value.trim() === '' ||
       !Number.isFinite(parsed) ||
-      (field === 'temperature' ? parsed < 0 || parsed > 2 : parsed < 1)
-    if (invalid) delete model[field]
-    else model[field] = field === 'temperature' ? parsed : Math.round(parsed)
+      (field === 'temperature'
+        ? parsed < 0 || parsed > 2
+        : parsed < 1 || !Number.isSafeInteger(parsed))
+    numberErrors[key] = invalid
+    if (!invalid) model[field] = parsed
   }
   function nextFallback(task: LlmTask) {
     const usable = new Set(deps.getUsableModelIds())
@@ -127,6 +137,8 @@ export function createLlmSettingsModel(deps: {
     expandedModels,
     connectionState,
     connectionErrors,
+    numberDrafts,
+    numberErrors,
     saveKey,
     removeKey,
     addProvider,

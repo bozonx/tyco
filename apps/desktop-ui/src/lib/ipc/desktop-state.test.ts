@@ -119,7 +119,8 @@ describe('desktop state revision ordering', () => {
     const newer = view(3, { userConfig: { ...dark, theme: 'light' } })
     model.applyViewState(newer)
     finish(response(2, { userConfig: dark }))
-    await pending
+    const result = await pending
+    expect(result).toMatchObject({ success: true, result: { theme: 'light' } })
     expect(model.desktopState.value.userConfig.theme).toBe('light')
   })
 

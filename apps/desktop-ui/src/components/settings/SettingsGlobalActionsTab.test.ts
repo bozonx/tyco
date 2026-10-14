@@ -141,9 +141,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
     await voiceRow.find('[title="settings.unassignHotkey"]').trigger('click')
     await flushPromises()
 
-    expect(callFunction).toHaveBeenCalledWith('applyHotkey', [
-      { mode: 'voice', shortcut: '' },
-    ])
+    expect(
+      callFunction.mock.calls.some(([name]) => name === 'applyHotkey')
+    ).toBe(false)
     expect(wrapper.emitted('update:hotkey')).toEqual([['voice', '']])
     // an unassigned hotkey offers no removal
     const editorRow = wrapper.find(

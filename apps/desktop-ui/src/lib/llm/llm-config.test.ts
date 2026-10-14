@@ -133,14 +133,22 @@ describe('llm-config', () => {
     expect(uniqueLlmId('local', ['local', 'local-2'])).toBe('local-3')
   })
 
+  it('does not reuse a removed provider id', () => {
+    const config = clone(DEFAULT_LLM_CONFIG)
+    const first = addCompatibleProvider(config)
+    removeProvider(config, first.id)
+    const second = addCompatibleProvider(config)
+    expect(second.id).not.toBe(first.id)
+  })
+
   it('adds and removes a custom provider with its models', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
     config.tasks.aiTasks = [model.id, 'local-qwen']
 
-    expect(provider.id).toBe('local-2')
-    expect(model.id).toBe('local-2-model')
+    expect(provider.id).toMatch(/^local-[a-f0-9-]{36}$/)
+    expect(model.id).toBe(`${provider.id}-model`)
 
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)

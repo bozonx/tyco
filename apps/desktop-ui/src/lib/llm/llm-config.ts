@@ -157,10 +157,7 @@ export function uniqueLlmId(prefix: string, taken: Iterable<string>): string {
 
 export function addCompatibleProvider(config: LlmConfig): LlmProvider {
   const provider: LlmProvider = {
-    id: uniqueLlmId(
-      'local',
-      config.providers.map((item) => item.id)
-    ),
+    id: `local-${crypto.randomUUID()}`,
     type: 'openai-compatible',
     name: '',
     baseUrl: '',

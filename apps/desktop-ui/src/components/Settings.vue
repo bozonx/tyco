@@ -19,6 +19,9 @@
           :title="
             plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
           "
+          :aria-label="
+            plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+          "
           @click="currentTab = `plugin:${plugin.name}`"
         >
           <Icon icon="mdi:puzzle-outline" height="14" class="shrink-0" />
@@ -60,138 +63,190 @@
         <p v-if="configIsNewer" class="settings-config-warning" role="alert">
           <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
           <span>{{ t('settings.configNewerWarning') }}</span>
+          <Button
+            size="sm"
+            :disabled="isSaving || isReloading"
+            @click="reloadSettings"
+            >{{ t('settings.saveReload') }}</Button
+          >
         </p>
 
-        <SettingsGeneralTab
-          v-if="currentTab === 'general'"
-          :user-config="userConfig"
-        />
+        <div
+          v-else
+          class="settings-save-status"
+          role="status"
+          aria-live="polite"
+        >
+          <span>{{
+            t(
+              isSaving
+                ? 'settings.saveSaving'
+                : saveError || conflicts.length
+                  ? 'settings.saveFailed'
+                  : hasUnsavedChanges
+                    ? 'settings.savePending'
+                    : 'settings.saveSaved'
+            )
+          }}</span>
+          <template v-if="conflicts.length">
+            <p>
+              {{ t('settings.saveConflict', { fields: conflicts.join(', ') }) }}
+            </p>
+            <Button size="sm" :disabled="isSaving" @click="keepLocalChanges">{{
+              t('settings.saveKeepLocal')
+            }}</Button>
+            <Button size="sm" :disabled="isSaving" @click="reloadSettings">{{
+              t('settings.saveReload')
+            }}</Button>
+          </template>
+          <template v-else-if="saveError">
+            <p>{{ saveError }}</p>
+            <Button size="sm" :disabled="isSaving" @click="session.persist()">{{
+              t('settings.saveRetry')
+            }}</Button>
+            <Button size="sm" :disabled="isSaving" @click="reloadSettings">{{
+              t('settings.saveReload')
+            }}</Button>
+          </template>
+        </div>
 
-        <SettingsEditorTab
-          v-else-if="currentTab === 'editor'"
-          :user-config="userConfig"
-        />
+        <fieldset
+          :key="`${session.reloadCount}:${configIsNewer}`"
+          class="settings-fields"
+          :disabled="configIsNewer || isReloading"
+          :inert="configIsNewer || isReloading"
+        >
+          <SettingsGeneralTab
+            v-if="currentTab === 'general'"
+            :user-config="userConfig"
+          />
 
-        <SettingsHistoryTab
-          v-else-if="currentTab === 'history'"
-          :user-config="userConfig"
-          :effective-app-language="effectiveAppLanguage"
-        />
+          <SettingsEditorTab
+            v-else-if="currentTab === 'editor'"
+            :user-config="userConfig"
+          />
 
-        <template v-else-if="currentTab === 'accessibility'">
-          <SettingsSection :title="t('settings.sectionAccessibility')">
-            <FieldRow
-              :label="t('settings.contrast')"
-              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-            >
-              <FieldSelect
-                v-model:value="userConfig.contrast"
-                :disabled="isEInkTheme"
-                :options="contrastOptions"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.motion')"
-              :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-            >
-              <FieldSelect
-                v-model:value="userConfig.motion"
-                :disabled="isEInkTheme"
-                :options="motionOptions"
-              />
-            </FieldRow>
-            <FieldRow :label="t('settings.uiScale')">
-              <FieldSelect
-                :value="userConfig.uiScale"
-                :options="uiScaleOptions"
-                @update:value="updateUiScale"
-              />
-            </FieldRow>
-          </SettingsSection>
-        </template>
+          <SettingsHistoryTab
+            v-else-if="currentTab === 'history'"
+            :user-config="userConfig"
+            :effective-app-language="effectiveAppLanguage"
+          />
 
-        <SettingsGlobalActionsTab
-          v-else-if="currentTab === 'global-actions'"
-          :user-config="userConfig"
-          @update:hotkey="updateHotkey"
-          @update:submit-key="userConfig.submitKey = $event"
-        />
-        <SettingsTranslationsTab
-          v-else-if="currentTab === 'translations'"
-          :user-config="userConfig"
-          @navigate="currentTab = $event"
-        />
+          <template v-else-if="currentTab === 'accessibility'">
+            <SettingsSection :title="t('settings.sectionAccessibility')">
+              <FieldRow
+                :label="t('settings.contrast')"
+                :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+              >
+                <FieldSelect
+                  v-model:value="userConfig.contrast"
+                  :disabled="isEInkTheme"
+                  :options="contrastOptions"
+                />
+              </FieldRow>
+              <FieldRow
+                :label="t('settings.motion')"
+                :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
+              >
+                <FieldSelect
+                  v-model:value="userConfig.motion"
+                  :disabled="isEInkTheme"
+                  :options="motionOptions"
+                />
+              </FieldRow>
+              <FieldRow :label="t('settings.uiScale')">
+                <FieldSelect
+                  :value="userConfig.uiScale"
+                  :options="uiScaleOptions"
+                  @update:value="updateUiScale"
+                />
+              </FieldRow>
+            </SettingsSection>
+          </template>
 
-        <SettingsLanguagesTab
-          v-else-if="currentTab === 'languages'"
-          :user-config="userConfig"
-          @update:to-translate-languages="updateTranslateLanguages"
-          @navigate="currentTab = $event"
-        />
+          <SettingsGlobalActionsTab
+            v-else-if="currentTab === 'global-actions'"
+            :user-config="userConfig"
+            @update:hotkey="updateHotkey"
+            @update:submit-key="userConfig.submitKey = $event"
+          />
+          <SettingsTranslationsTab
+            v-else-if="currentTab === 'translations'"
+            :user-config="userConfig"
+            @navigate="currentTab = $event"
+          />
 
-        <SettingsMainActionsTab
-          v-else-if="currentTab === 'main-actions'"
-          :user-config="userConfig"
-          @update:main-actions="updateMainActions"
-          @edit-command="editCommand"
-        />
+          <SettingsLanguagesTab
+            v-else-if="currentTab === 'languages'"
+            :user-config="userConfig"
+            @update:to-translate-languages="updateTranslateLanguages"
+            @navigate="currentTab = $event"
+          />
 
-        <SettingsLauncherTab
-          v-else-if="currentTab === 'launcher-commands'"
-          :user-config="userConfig"
-          @update:launcher-commands="userConfig.launcherCommands = $event"
-          @update:launcher-pages="updateLauncherPages"
-          @update:launcher-pages-without-text="
-            userConfig.launcherPagesWithoutText = $event
-          "
-          @create-command="createLauncherCommand"
-          @edit-command="editCommand"
-        />
+          <SettingsMainActionsTab
+            v-else-if="currentTab === 'main-actions'"
+            :user-config="userConfig"
+            @update:main-actions="updateMainActions"
+            @edit-command="editCommand"
+          />
 
-        <SettingsCommandsTab
-          v-else-if="currentTab === 'commands'"
-          :key="focusCommandId"
-          :user-config="userConfig"
-          :focus-command-id="focusCommandId"
-          @update:external-access="userConfig.externalAccess = $event"
-          @update:commands="updateCommands"
-          @update:main-actions="updateMainActions"
-          @navigate="currentTab = $event"
-        />
+          <SettingsLauncherTab
+            v-else-if="currentTab === 'launcher-commands'"
+            :user-config="userConfig"
+            @update:launcher-commands="userConfig.launcherCommands = $event"
+            @update:launcher-pages="updateLauncherPages"
+            @update:launcher-pages-without-text="
+              userConfig.launcherPagesWithoutText = $event
+            "
+            @create-command="createLauncherCommand"
+            @edit-command="editCommand"
+          />
 
-        <SettingsVoiceTab
-          v-else-if="currentTab === 'stt'"
-          :user-config="userConfig"
-        />
+          <SettingsCommandsTab
+            v-else-if="currentTab === 'commands'"
+            :key="focusCommandId"
+            :user-config="userConfig"
+            :focus-command-id="focusCommandId"
+            @update:external-access="userConfig.externalAccess = $event"
+            @update:commands="updateCommands"
+            @update:main-actions="updateMainActions"
+            @navigate="currentTab = $event"
+          />
 
-        <SettingsLlmTab
-          v-else-if="currentTab === 'llm'"
-          :llm="userConfig.llm"
-          :ai-rules="userConfig.aiRules"
-          v-model:image-quality="userConfig.chatImageQuality"
-          @provider-removed="finishProviderRemoval"
-        />
+          <SettingsVoiceTab
+            v-else-if="currentTab === 'stt'"
+            :user-config="userConfig"
+          />
 
-        <SettingsTasksTab
-          v-else-if="currentTab === 'tasks'"
-          :user-config="userConfig"
-          @update:ai-tasks="updateAiTasks"
-        />
+          <SettingsLlmTab
+            v-else-if="currentTab === 'llm'"
+            :llm="userConfig.llm"
+            :ai-rules="userConfig.aiRules"
+            v-model:image-quality="userConfig.chatImageQuality"
+            @provider-removed="finishProviderRemoval"
+          />
 
-        <SettingsPluginsTab
-          v-else-if="currentTab === 'plugins'"
-          :user-config="userConfig"
-          @select-plugin="currentTab = `plugin:${$event}`"
-          @update:plugin-enabled="updatePluginEnabled"
-        />
+          <SettingsTasksTab
+            v-else-if="currentTab === 'tasks'"
+            :user-config="userConfig"
+            @update:ai-tasks="updateAiTasks"
+          />
 
-        <SettingsPluginDetailTab
-          v-else-if="currentPlugin"
-          :plugin="currentPlugin"
-          @back="currentTab = 'plugins'"
-          @update:plugin-config="updatePluginConfig"
-          @update:plugin-enabled="updatePluginEnabled"
-        />
+          <SettingsPluginsTab
+            v-else-if="currentTab === 'plugins'"
+            :user-config="userConfig"
+            @select-plugin="currentTab = `plugin:${$event}`"
+            @update:plugin-enabled="updatePluginEnabled"
+          />
+
+          <SettingsPluginDetailTab
+            v-else-if="currentPlugin"
+            :plugin="currentPlugin"
+            @back="currentTab = 'plugins'"
+            @update:plugin-config="updatePluginConfig"
+            @update:plugin-enabled="updatePluginEnabled"
+          />
+        </fieldset>
       </div>
     </div>
   </div>
@@ -258,7 +313,28 @@ const currentTab = ref(
 )
 
 const session = useSettingsSessionStore()
-const { draft: userConfig } = storeToRefs(session)
+const {
+  draft: userConfig,
+  isSaving,
+  saveError,
+  conflicts,
+  hasUnsavedChanges,
+} = storeToRefs(session)
+const isReloading = ref(false)
+async function reloadSettings() {
+  isReloading.value = true
+  try {
+    await session.reload()
+  } catch (error) {
+    toastText(`${t('toast.settingsSaveFailed')}: ${String(error)}`, 'error')
+  } finally {
+    isReloading.value = false
+  }
+}
+function keepLocalChanges() {
+  session.resolveConflicts(true)
+  void session.persist()
+}
 
 const primaryTabs = computed(() => [
   { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
@@ -325,6 +401,29 @@ const actionTabs = computed(() => [
     icon: 'mdi:console-line',
   },
 ])
+
+const availableTabs = computed(
+  () =>
+    new Set([
+      ...primaryTabs.value.map((tab) => tab.key),
+      ...actionTabs.value.map((tab) => tab.key),
+      ...installedPlugins.value.map((plugin) => `plugin:${plugin.name}`),
+    ])
+)
+watch(
+  () => route?.query.tab,
+  (tab) => {
+    currentTab.value =
+      typeof tab === 'string' && availableTabs.value.has(tab) ? tab : 'general'
+  }
+)
+watch(
+  [currentTab, availableTabs],
+  ([tab, available]) => {
+    if (!available.has(tab)) currentTab.value = 'general'
+  },
+  { immediate: true }
+)
 
 const currentTabTitle = computed(() => {
   if (currentPlugin.value) {
@@ -430,7 +529,11 @@ const createLauncherCommand = (
 
 /** A newer build wrote the config: it is shown but never written over */
 const configIsNewer = computed(
-  () => (userConfig.value.configVersion ?? 0) > CONFIG_VERSION
+  () =>
+    Math.max(
+      userConfig.value.configVersion ?? 0,
+      session.latestConfig.configVersion ?? 0
+    ) > CONFIG_VERSION
 )
 
 const updateHotkey = (mode: string, shortcut: string) => {
@@ -469,7 +572,9 @@ const updateAiTasks = (items: UserConfig['aiTasks']) => {
 }
 
 onMounted(() => {
-  void llmStore.refreshSecrets()
+  void Promise.resolve(llmStore.refreshSecrets()).catch((error: unknown) =>
+    toastText(`${t('settings.keySaveFailed')}: ${String(error)}`, 'error')
+  )
 })
 onUnmounted(() => {
   void session.persist()
@@ -482,6 +587,29 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+.settings-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.settings-fields:disabled {
+  pointer-events: none;
+}
+.settings-save-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+}
+.settings-save-status p {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
 }
 
 .settings-nav {

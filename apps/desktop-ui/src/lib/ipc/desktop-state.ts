@@ -74,10 +74,7 @@ export function createDesktopStateModel(deps: DesktopStateDeps) {
     ])
     if (!response.success) return response
     applySnapshot(response.result)
-    return {
-      success: true as const,
-      result: response.result.settings.userConfig,
-    }
+    return { success: true as const, result: desktopState.value.userConfig }
   }
 
   const patchSessionState = (patch: Partial<SessionState>) => {

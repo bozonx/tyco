@@ -801,7 +801,19 @@
     "chatImageQualityHint": "Applies to new attachments. Higher quality uses more memory and context. Images are sent as WebP without metadata; limits are 24 MP and 5 MB after compression.",
     "imageQualityEconomy": "Economy — up to 1024 px",
     "imageQualityBalanced": "Balanced — up to 1568 px",
-    "imageQualityOriginal": "Maximum — up to 8000 px"
+    "imageQualityOriginal": "Maximum — up to 8000 px",
+    "saveSaving": "Saving…",
+    "saveSaved": "Saved",
+    "savePending": "Unsaved changes",
+    "saveFailed": "Settings could not be saved",
+    "saveConflict": "Settings changed in another window: {fields}. Choose which changes to keep.",
+    "saveKeepLocal": "Save my changes over the latest settings",
+    "saveReload": "Reload settings and discard my changes",
+    "saveRetry": "Retry saving",
+    "numberTemperatureInvalid": "Enter a number from 0 to 2.",
+    "numberTokensInvalid": "Enter a positive whole number.",
+    "shutdownSaving": "Saving settings before exiting…",
+    "shutdownCancelled": "Exit cancelled: settings could not be saved. Resolve errors in settings and try again."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

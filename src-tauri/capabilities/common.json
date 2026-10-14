@@ -6,6 +6,7 @@
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
+    "allow-acknowledge-settings-shutdown",
     "allow-activate-mode",
     "allow-append-note",
     "allow-cancel-script-action",

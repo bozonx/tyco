@@ -1,5 +1,7 @@
 //! Coordinates hotkey providers and exposes the application hotkey API.
 mod bindings;
+mod config_transaction;
+pub use config_transaction::with_config_changes;
 mod global_shortcut;
 mod status;
 pub use status::{provider_info, ApplyHotkeyResult, HotkeyApplyStatus, HotkeyProviderInfo};

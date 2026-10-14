@@ -6,6 +6,7 @@ fn main() {
     }
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "acknowledge_settings_shutdown",
             "activate_mode",
             "answer_external_access",
             "append_note",

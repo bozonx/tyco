@@ -2,12 +2,20 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useRoute } from 'vue-router'
+import { CONFIG_VERSION } from '@tyco/shared'
+import { useSettingsSessionStore } from '../stores/settings-session'
 import Settings from './Settings.vue'
 
-vi.mock(import('vue-router'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useRoute: () => ({
-    query: {},
+const settingsMocks = vi.hoisted(() => ({
+  configVersion: 0,
+  query: {} as Record<string, string>,
+}))
+
+vi.mock(import('vue-router'), async (importOriginal) => {
+  const { reactive } = await import('vue')
+  const route = reactive({
+    query: settingsMocks.query,
     params: {},
     path: '/',
     fullPath: '/',
@@ -16,8 +24,9 @@ vi.mock(import('vue-router'), async (importOriginal) => ({
     matched: [],
     meta: {},
     redirectedFrom: undefined,
-  }),
-}))
+  })
+  return { ...(await importOriginal()), useRoute: () => route }
+})
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -39,6 +48,7 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     desktopState: {
       userConfig: {
+        configVersion: settingsMocks.configVersion,
         theme: 'auto',
         contrast: 'normal',
         motion: 'auto',
@@ -108,7 +118,88 @@ vi.mock('../plugins', () => ({
 }))
 
 describe('Settings.vue', () => {
-  beforeEach(() => setActivePinia(createPinia()))
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    settingsMocks.configVersion = 0
+    delete useRoute().query.tab
+  })
+  it('falls back from unknown routes and reacts to query changes', async () => {
+    useRoute().query.tab = 'unknown'
+    const wrapper = mount(Settings, {
+      global: { stubs: { Tabs: true, SettingsHistoryTab: true } },
+    })
+    expect((wrapper.vm as any).currentTab).toBe('general')
+    useRoute().query.tab = 'history'
+    await wrapper.vm.$nextTick()
+    expect((wrapper.vm as any).currentTab).toBe('history')
+    useRoute().query.tab = 'plugin:missing'
+    await wrapper.vm.$nextTick()
+    expect((wrapper.vm as any).currentTab).toBe('general')
+    wrapper.unmount()
+  })
+
+  it('disables settings written by a newer version', () => {
+    settingsMocks.configVersion = CONFIG_VERSION + 1
+    const wrapper = mount(Settings, {
+      global: { stubs: { Tabs: true, Button: true } },
+    })
+    expect(wrapper.get('fieldset').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[role="alert"]').text()).toContain(
+      'settings.configNewerWarning'
+    )
+    wrapper.unmount()
+  })
+
+  it('shows persistent save status and recovery actions', async () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: true,
+          Button: { template: '<button><slot /></button>' },
+        },
+      },
+    })
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'settings.saveSaved'
+    )
+    const session = useSettingsSessionStore()
+    session.saveError = 'Unavailable'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[role="status"]').text()).toContain('Unavailable')
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'settings.saveRetry'
+    )
+    session.conflicts = ['theme']
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'settings.saveKeepLocal'
+    )
+    wrapper.unmount()
+  })
+
+  it('discards tab-local drafts when reloading settings', async () => {
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          Tabs: true,
+          SettingsLlmTab: {
+            data: () => ({ keyDraft: '' }),
+            template: '<input class="key-draft" v-model="keyDraft" />',
+          },
+        },
+      },
+    })
+    ;(wrapper.vm as any).currentTab = 'llm'
+    await wrapper.vm.$nextTick()
+    await wrapper.get('.key-draft').setValue('unfinished key')
+    useSettingsSessionStore().resolveConflicts(false)
+    await wrapper.vm.$nextTick()
+    expect((wrapper.get('.key-draft').element as HTMLInputElement).value).toBe(
+      ''
+    )
+    wrapper.unmount()
+  })
+
   it('places accessibility tab right above plugins tab', () => {
     const wrapper = mount(Settings, {
       global: {

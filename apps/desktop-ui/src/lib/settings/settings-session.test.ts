@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 
 import {
@@ -19,7 +19,11 @@ function setup(extra: Partial<SettingsSessionDeps> = {}) {
   }
   return { deps, model: createSettingsSession(deps) }
 }
-afterEach(() => vi.useRealTimers())
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => {
+  vi.clearAllTimers()
+  vi.useRealTimers()
+})
 
 describe('settings session', () => {
   it('debounces changes and flushes a pending save on disposal', async () => {
@@ -130,4 +134,172 @@ describe('settings disposal failures', () => {
       expect(model.isSaved()).toBe(true)
     }
   )
+})
+
+describe('settings concurrency and recovery', () => {
+  it('adopts buffered remote changes when local conflicting edits are reverted', () => {
+    const { model } = setup()
+    model.draft.value.theme = 'dark'
+    model.applyIncoming({ ...config(), theme: 'light', userLanguage: 'ru_RU' })
+    model.draft.value.theme = DEFAULT_USER_CONFIG.theme
+    model.schedule()
+    expect(model.draft.value).toMatchObject({
+      theme: 'light',
+      userLanguage: 'ru_RU',
+    })
+    expect(model.conflicts.value).toEqual([])
+    expect(model.isSaved()).toBe(true)
+  })
+
+  it('recovers from a temporary error using the latest draft', async () => {
+    const save = vi
+      .fn<SettingsSessionDeps['save']>()
+      .mockResolvedValueOnce({
+        success: false,
+        error: 'Unavailable',
+        errorCode: 'ioError',
+      })
+      .mockImplementation(async (next) => ({ success: true, result: next }))
+    const { model } = setup({ save })
+    model.draft.value.theme = 'dark'
+    await model.persist()
+    model.draft.value.theme = 'light'
+    model.schedule()
+    await vi.advanceTimersByTimeAsync(100)
+    expect(save.mock.calls[1][0].theme).toBe('light')
+    expect(model.saveError.value).toBe('')
+    expect(model.isSaved()).toBe(true)
+  })
+  it('coalesces queued edits and never writes a reverted history policy', async () => {
+    let finish!: (result: { success: true; result: UserConfig }) => void
+    const save = vi
+      .fn<SettingsSessionDeps['save']>()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          })
+      )
+      .mockImplementation(async (next) => ({ success: true, result: next }))
+    const { model } = setup({ save })
+    model.draft.value.theme = 'dark'
+    const first = model.persist()
+    await Promise.resolve()
+    model.draft.value.chatHistoryEnabled = false
+    const second = model.persist()
+    model.draft.value.chatHistoryEnabled = true
+    finish({
+      success: true,
+      result: { ...config(), theme: 'dark', chatHistoryEnabled: true },
+    })
+    await Promise.all([first, second])
+    expect(save).toHaveBeenCalledOnce()
+    expect(model.isSaved()).toBe(true)
+  })
+
+  it('adopts the newest revision when a delayed save response arrives', async () => {
+    let latest = config()
+    let finish!: (result: { success: true; result: UserConfig }) => void
+    const { model } = setup({
+      getLatestConfig: () => latest,
+      save: () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    })
+    model.draft.value.theme = 'dark'
+    const pending = model.persist()
+    await Promise.resolve()
+    latest = { ...config(), theme: 'dark', userLanguage: 'ru_RU' }
+    model.applyIncoming(latest)
+    finish({ success: true, result: { ...config(), theme: 'dark' } })
+    await pending
+    expect(model.draft.value.userLanguage).toBe('ru_RU')
+    expect(model.isSaved()).toBe(true)
+  })
+
+  it('shows conflicting paths and preserves independent remote edits when keeping local changes', async () => {
+    const { model, deps } = setup()
+    model.draft.value.theme = 'dark'
+    model.applyIncoming({ ...config(), theme: 'light', userLanguage: 'ru_RU' })
+    expect(model.conflicts.value).toEqual(['theme'])
+    await model.persist()
+    expect(deps.save).not.toHaveBeenCalled()
+    model.resolveConflicts(true)
+    await model.persist()
+    expect(model.draft.value).toMatchObject({
+      theme: 'dark',
+      userLanguage: 'ru_RU',
+    })
+    expect(model.isSaved()).toBe(true)
+  })
+
+  it('reloads current settings after a backend conflict and allows discarding local edits', async () => {
+    const latest = { ...config(), theme: 'light' as const }
+    const save = vi
+      .fn<SettingsSessionDeps['save']>()
+      .mockResolvedValue({
+        success: false,
+        error: 'Conflict',
+        errorCode: 'configConflict',
+      })
+    const { model } = setup({ save, loadConfig: async () => latest })
+    model.draft.value.theme = 'dark'
+    await model.persist()
+    expect(model.conflicts.value).toEqual(['theme'])
+    await model.reload()
+    expect(model.reloadCount.value).toBe(1)
+    expect(model.draft.value.theme).toBe('light')
+    expect(model.isSaved()).toBe(true)
+    expect(model.saveError.value).toBe('')
+  })
+
+  it('retries temporary failures and stops after three automatic retries', async () => {
+    const save = vi
+      .fn<SettingsSessionDeps['save']>()
+      .mockResolvedValue({
+        success: false,
+        error: 'Unavailable',
+        errorCode: 'ioError',
+      })
+    const { model } = setup({ save })
+    model.draft.value.theme = 'dark'
+    await model.persist()
+    await vi.advanceTimersByTimeAsync(8000)
+    expect(save).toHaveBeenCalledTimes(4)
+    expect(model.saveError.value).toBe('Unavailable')
+    expect(model.hasUnsavedChanges.value).toBe(true)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('does not retry invalid settings automatically', async () => {
+    const save = vi
+      .fn<SettingsSessionDeps['save']>()
+      .mockResolvedValue({
+        success: false,
+        error: 'Invalid',
+        errorCode: 'invalidInput',
+      })
+    const { model } = setup({ save })
+    model.draft.value.theme = 'dark'
+    await model.persist()
+    await vi.advanceTimersByTimeAsync(8000)
+    expect(save).toHaveBeenCalledOnce()
+  })
+
+  it('keeps unfinished fields when another setting is saved', async () => {
+    const prepare = (value: unknown) => {
+      const next = JSON.parse(JSON.stringify(value)) as UserConfig
+      next.aiTasks = next.aiTasks.map((task) =>
+        task && !task.name && !task.rule ? null : task
+      )
+      return next
+    }
+    const { model } = setup({ prepare })
+    model.draft.value.aiTasks = [{ id: 'unfinished', name: '', rule: '' }]
+    model.draft.value.theme = 'dark'
+    await model.persist()
+    expect(model.draft.value.aiTasks[0]?.id).toBe('unfinished')
+    expect(model.isSaved()).toBe(true)
+  })
 })

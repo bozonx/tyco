@@ -23,6 +23,15 @@ function setup(props = {}) {
 afterEach(() => wrappers.splice(0).forEach((wrapper) => wrapper.unmount()))
 
 describe('FieldNumber', () => {
+  it('does not clear a setting when the browser reports malformed input', async () => {
+    const { wrapper, input } = setup({ value: 0.5 })
+    Object.defineProperty(input.element, 'validity', {
+      value: { badInput: true },
+    })
+    await input.trigger('input')
+    expect(wrapper.emitted('update:value')).toBeUndefined()
+    expect(wrapper.emitted('invalid-input')).toHaveLength(1)
+  })
   it('requires both focus and hover and releases scrolling on mouse leave', async () => {
     const { wrapper, input, wheel } = setup({ value: 5 })
     await input.trigger('mouseenter')

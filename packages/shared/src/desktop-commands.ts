@@ -37,6 +37,7 @@ import type {
 import type { PluginManifest } from '@tyco/plugin-sdk'
 
 export const DESKTOP_COMMANDS = {
+  ACKNOWLEDGE_SETTINGS_SHUTDOWN: 'acknowledge_settings_shutdown',
   ACTIVATE_MODE: 'activate_mode',
   ANSWER_EXTERNAL_ACCESS: 'answer_external_access',
   APPEND_NOTE: 'append_note',
@@ -119,6 +120,10 @@ export const DESKTOP_COMMANDS = {
 } as const
 
 export interface DesktopCommands {
+  acknowledge_settings_shutdown: {
+    args: { requestId: number; saved: boolean }
+    result: void
+  }
   activate_mode: { args: { mode: string; text?: string | null }; result: void }
   answer_external_access: {
     args: { jobId: string; decision: AccessDecision }

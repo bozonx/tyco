@@ -49,32 +49,39 @@ fn save_user_config_blocking(
         config_migration::stamp_current_version(&mut user_config);
     }
     crate::services::config_schema::validate_user_config(&user_config)?;
-    let pending_secrets =
-        crate::services::webhook_secrets::protect_for_save(app, &mut user_config)?;
+    let mut pending_secrets = Some(crate::services::webhook_secrets::protect_for_save(
+        app,
+        &mut user_config,
+    )?);
     let previous_config = state.snapshot().settings.user_config;
-    if let Err(error) = storage::save_user_config(app, &user_config) {
-        // A parent-directory sync can fail after the rename has succeeded.
-        if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
-            pending_secrets.retain();
-            return Err(AppError::Message(format!(
-                "Could not save config: {error}; could not restore config: {rollback_error}"
-            )));
+    crate::services::hotkeys::with_config_changes(app, &previous_config, &user_config, || {
+        if let Err(error) = storage::save_user_config(app, &user_config) {
+            // A parent-directory sync can fail after the rename has succeeded.
+            if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
+                pending_secrets.take().unwrap().retain();
+                return Err(AppError::Message(format!(
+                    "Could not save config: {error}; could not restore config: {rollback_error}"
+                )));
+            }
+            return Err(error);
         }
-        return Err(error);
-    }
-    if let Err(error) = state
-        .history
-        .apply_settings(app, &previous_config, &user_config)
-    {
-        if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
-            pending_secrets.retain();
-            return Err(AppError::Message(format!(
+        if let Err(error) = state
+            .history
+            .apply_settings(app, &previous_config, &user_config)
+        {
+            if let Err(rollback_error) = storage::save_user_config(app, &previous_config) {
+                pending_secrets.take().unwrap().retain();
+                return Err(AppError::Message(format!(
                 "Could not apply history settings: {error}; could not restore config: {rollback_error}"
             )));
+            }
+            return Err(error);
         }
-        return Err(error);
-    }
-    pending_secrets.commit(&previous_config, &user_config);
+        Ok(())
+    })?;
+    pending_secrets
+        .unwrap()
+        .commit(&previous_config, &user_config);
     runtime::publish_state(app, &state);
 
     Ok(state.snapshot())
@@ -100,4 +107,14 @@ pub async fn patch_session_state(
         Ok(state.snapshot())
     })
     .await?
+}
+
+#[tauri::command]
+pub fn acknowledge_settings_shutdown(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    request_id: u64,
+    saved: bool,
+) {
+    runtime::settings_shutdown::acknowledge(&app, request_id, window.label(), saved);
 }

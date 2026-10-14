@@ -40,10 +40,10 @@ beforeEach(() => {
   pinia = createPinia()
   setActivePinia(pinia)
   mocks.config = reactive(structuredClone(DEFAULT_USER_CONFIG))
-  mocks.save.mockImplementation(async (next) => ({
-    success: true,
-    result: next,
-  }))
+  mocks.save.mockImplementation(async (next) => {
+    mocks.config = reactive(next)
+    return { success: true, result: next }
+  })
 })
 afterEach(async () => {
   disposePinia(pinia)

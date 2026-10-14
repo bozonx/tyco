@@ -18,6 +18,8 @@
       :key="tab.key"
       :active="tab.key === activeTab"
       :navigation="kind === 'navigation'"
+      :aria-label="tab.text"
+      :title="tab.text"
       :id="`${id}-tab-${index}`"
       :tabindex="kind === 'navigation' || tab.key === activeTab ? 0 : -1"
       :aria-controls="
