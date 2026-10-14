@@ -64,10 +64,3 @@ function parseRawList(raw: unknown): SortableChecklistItem[] | null {
 
   return items.length > 0 ? items : null
 }
-
-/** Returns IDs of enabled checklist items in their current order. */
-export function getActiveChecklistIds(
-  items: SortableChecklistItem[] = []
-): string[] {
-  return items.filter((item) => item.enabled).map((item) => item.id)
-}

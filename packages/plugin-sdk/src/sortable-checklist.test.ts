@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { InputConfigOption } from './config.js'
-import {
-  getActiveChecklistIds,
-  resolveSortableChecklist,
-} from './sortable-checklist.js'
+import { resolveSortableChecklist } from './sortable-checklist.js'
 
 describe('sortable-checklist helper', () => {
   const options: InputConfigOption[] = [
@@ -62,14 +59,5 @@ describe('sortable-checklist helper', () => {
       { id: 'acute', enabled: false },
       { id: 'circumflex', enabled: false },
     ])
-  })
-
-  it('extracts active IDs in order', () => {
-    const items = [
-      { id: 'circumflex', enabled: true },
-      { id: 'acute', enabled: false },
-      { id: 'grave', enabled: true },
-    ]
-    expect(getActiveChecklistIds(items)).toEqual(['circumflex', 'grave'])
   })
 })

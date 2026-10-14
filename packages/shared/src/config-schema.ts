@@ -264,27 +264,3 @@ export function normalizeUserConfig(value: unknown): UserConfig {
     config.selectedSttModelId = config.sttModels[0]?.id ?? ''
   return config
 }
-
-/** The backend repeats this check before writing the authoritative file. */
-export function isUserConfig(value: unknown): value is UserConfig {
-  if (!valid(value, schema)) return false
-  const config = value as UserConfig
-  if (config.configVersion !== configVersion) return false
-  for (const command of config.commands) {
-    const toolSchema =
-      command.toolId === 'script'
-        ? schemaValue.$defs.scriptToolConfig
-        : command.toolId === 'webhook'
-          ? schemaValue.$defs.webhookToolConfig
-          : undefined
-    if (toolSchema && !valid(command.toolConfig, toolSchema as Schema))
-      return false
-    if (
-      command.toolId === 'webhook' &&
-      command.toolConfig.authSecret === true &&
-      typeof command.toolConfig.authSecretId !== 'string'
-    )
-      return false
-  }
-  return equal(normalizeUserConfig(value), value)
-}

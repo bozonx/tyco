@@ -3,8 +3,6 @@ import configVersion from './config-version.json'
 import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
 import type { ContrastMode, MotionMode, ThemeMode, UiScale } from './appearance'
 
-export const CONFIG_FILE_NAME = 'userConfig.yaml'
-
 /**
  * The schema version of the user config; the backend migrates older configs and
  * leaves newer ones untouched. Both runtimes read `config-version.json`
@@ -108,8 +106,6 @@ export interface TranslationConfig {
 
 export const DEFAULT_TRANSLATION_CONFIG =
   configDefaults.translation as TranslationConfig
-
-export const DEFAULT_LLM_MODEL_ID = 'local-qwen'
 
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
 

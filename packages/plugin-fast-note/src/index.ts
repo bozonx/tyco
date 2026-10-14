@@ -18,11 +18,6 @@ import {
   FAST_NOTE_PRESETS,
 } from './fast-note-template.js'
 
-/** Builds a sortable, filesystem-safe file name from the local time. */
-export const buildNoteFileName = (date: Date): string => {
-  return resolveNoteFileName('{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md', date, '')
-}
-
 const FIELDS: InputConfigItem[] = [
   {
     type: 'text',

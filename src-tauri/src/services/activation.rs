@@ -25,7 +25,7 @@ pub enum ActivationMode {
 }
 
 impl ActivationMode {
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub const PUBLIC_MODES: [Self; 12] = [
         Self::Editor,
         Self::Write,
@@ -105,8 +105,6 @@ pub const WINDOW_SIZE: (f64, f64) = (930.0, 600.0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationSource {
-    // Reserved for the in-process providers introduced in task 4.
-    #[allow(dead_code)]
     Hotkey,
     Dbus,
     Cli,

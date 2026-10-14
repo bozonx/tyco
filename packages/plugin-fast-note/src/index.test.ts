@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createPluginTestContext } from '@tyco/plugin-sdk/testing'
-import pluginIndex, { buildNoteFileName } from './index.js'
+import pluginIndex from './index.js'
 
 const setup = (options: Parameters<typeof createPluginTestContext>[0]) => {
   const context = createPluginTestContext(options)
@@ -13,12 +13,6 @@ describe('FastNote plugin', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.restoreAllMocks()
-  })
-
-  it('builds a sortable file name from the local time', () => {
-    expect(buildNoteFileName(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      '2026-01-02_03-04-05.md'
-    )
   })
 
   it('registers the note tool with its default commands and a toolbar button', () => {

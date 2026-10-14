@@ -24,11 +24,6 @@ export function parseSelectionAction(id: string): SelectionAction | null {
   return null
 }
 
-export function selectionActionId(action: SelectionAction): string {
-  if (action.kind === 'correction') return 'correction'
-  return `${COMMAND_SELECTION_PREFIX}${action.commandId}`
-}
-
 export type SelectionRunErrorCode =
   'noTarget' | 'noSelection' | 'capture' | 'unsupported'
 

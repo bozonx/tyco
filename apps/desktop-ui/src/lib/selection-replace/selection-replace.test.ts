@@ -9,7 +9,6 @@ import {
   DEFAULT_USER_CONFIG,
   type SelectionRunEvent,
   parseSelectionAction,
-  selectionActionId,
 } from '@tyco/shared'
 
 function deferred<T>() {
@@ -54,9 +53,8 @@ function setup(overrides: Record<string, unknown> = {}) {
 }
 
 describe('selection actions', () => {
-  it('parses and formats action ids', () => {
+  it('parses action ids', () => {
     expect(parseSelectionAction('correction')).toEqual({ kind: 'correction' })
-    expect(selectionActionId({ kind: 'correction' })).toBe('correction')
     // slots of translation languages and AI tasks are not actions any more
     expect(parseSelectionAction('translate.0')).toBeNull()
     expect(parseSelectionAction('aiTask.0')).toBeNull()
@@ -70,9 +68,6 @@ describe('selection actions', () => {
       commandId: id,
     })
     expect(parseSelectionAction('command: ')).toBeNull()
-    expect(selectionActionId({ kind: 'command', commandId: id })).toBe(
-      `command:${id}`
-    )
   })
 })
 
