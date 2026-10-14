@@ -136,14 +136,18 @@ fn normalize_hotkeys_drops_unknown_modes() {
 
 #[test]
 fn normalize_language_restores_the_translation_slots() {
-    let mut config = json!({"translation":{"targetLanguages":["en_US"] }});
+    let mut config = json!({"translation":{"targetLanguages": []}});
 
     assert!(normalize_language_config(&mut config));
-    assert_eq!(
-        config["translation"]["targetLanguages"],
-        json!(["en_US", "ru_RU", "es_AR", "tr_TR"])
-    );
+    assert_eq!(config["translation"]["targetLanguages"], json!(["en_US"]));
     assert!(!normalize_language_config(&mut config));
+
+    let mut preserves = json!({"translation":{"targetLanguages": ["en_US", "es_AR"]}});
+    assert!(!normalize_language_config(&mut preserves));
+    assert_eq!(
+        preserves["translation"]["targetLanguages"],
+        json!(["en_US", "es_AR"])
+    );
 }
 
 #[test]

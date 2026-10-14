@@ -231,7 +231,7 @@
             "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
             "default": null
           },
-          "default": ["en_US", "ru_RU", "es_AR", "tr_TR"]
+          "default": ["en_US"]
         },
         "viewMode": { "enum": ["split", "result"], "default": "split" }
       },

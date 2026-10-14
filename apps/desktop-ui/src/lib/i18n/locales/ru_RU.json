@@ -233,9 +233,9 @@
   },
   "edit": {
     "beautifyMd": "Форматировать Markdown",
-    "lowercase": "lowercase",
+    "lowercase": "строчные",
     "stripMarkdown": "Markdown в обычный текст",
-    "uppercase": "UPPERCASE"
+    "uppercase": "ПРОПИСНЫЕ"
   },
   "editor": {
     "appliesToSelection": "{action} (только выделение)",

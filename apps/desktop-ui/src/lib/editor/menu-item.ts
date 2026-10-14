@@ -1,12 +1,12 @@
-/** Пункт плавающего меню редактора (ПКМ, выбор способа вставки) */
+/** Floating editor menu item (context menu, paste mode picker) */
 export interface EditorMenuItem {
   id: string
   label: string
   icon?: string
   disabled?: boolean
-  /** Отделить пунктом-разделителем от предыдущего элемента */
+  /** Separate from the previous item with a divider */
   separatorBefore?: boolean
-  /** Подсветить как основной вариант (например, вариант исправления слова) */
+  /** Highlight as the primary option (e.g. spelling correction suggestion) */
   accent?: boolean
   /** Keyboard shortcut shown on the right, e.g. `Ctrl+B` */
   shortcut?: string

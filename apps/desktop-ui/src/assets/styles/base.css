@@ -48,6 +48,7 @@
   body.is-sorting * {
     cursor: grabbing !important;
     user-select: none;
+    -webkit-user-drag: none;
   }
 
   /* ── scrollbars ──────────────────────────── */

@@ -181,7 +181,7 @@ describe('createDefaultCommandsSync', () => {
     await sync.check()
     expect(saveUserConfig).toHaveBeenCalledWith(
       expect.objectContaining({
-        theme: 'dark',
+        appearance: expect.objectContaining({ theme: 'dark' }),
         registrationState: {
           reviewedMainActionIds: [],
           seededCommandIds: ['default:core.correct:fix'],

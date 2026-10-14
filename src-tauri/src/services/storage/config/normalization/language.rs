@@ -1,7 +1,7 @@
 use crate::models::default_user_config;
 use serde_json::Value;
 
-/// The translation languages fill a fixed number of shortcut slots.
+/// The translation languages fill a list of shortcut slots; restore defaults when empty or missing.
 pub(in crate::services::storage::config) fn normalize_language_config(
     user_config: &mut Value,
 ) -> bool {
@@ -11,17 +11,14 @@ pub(in crate::services::storage::config) fn normalize_language_config(
     else {
         return false;
     };
-    let defaults = default_user_config();
-    let slot_count = defaults["translation"]["targetLanguages"]
-        .as_array()
-        .map_or(0, Vec::len);
     if config
         .get("targetLanguages")
         .and_then(Value::as_array)
-        .is_some_and(|languages| languages.len() == slot_count)
+        .is_some_and(|languages| !languages.is_empty())
     {
         return false;
     }
+    let defaults = default_user_config();
     config.insert(
         String::from("targetLanguages"),
         defaults["translation"]["targetLanguages"].clone(),

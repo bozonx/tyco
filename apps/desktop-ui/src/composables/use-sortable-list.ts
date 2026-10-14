@@ -21,6 +21,7 @@ interface DragSession {
   from: number
   pointerId: number
   handle: HTMLElement
+  savedHandleTitle: string | null
   items: HTMLElement[]
   rects: SortableRect[]
   startY: number
@@ -89,7 +90,9 @@ export function useSortableList(
       next.every(
         (item, index) =>
           item === current.items[index] &&
-          item.getBoundingClientRect().height === current.rects[index].height
+          Math.abs(
+            item.getBoundingClientRect().height - current.rects[index].height
+          ) <= 4
       )
     )
   }
@@ -141,6 +144,7 @@ export function useSortableList(
         ? 0
         : Math.min(time - session.lastFrameTime, 32) / 1000
     session.lastFrameTime = time
+    let shouldContinue = false
     for (const { element } of session.scrollers) {
       const bounds =
         element === document.scrollingElement
@@ -160,12 +164,14 @@ export function useSortableList(
           : session.clientY > bounds.bottom - edge
             ? Math.min(1, (session.clientY - bounds.bottom + edge) / edge)
             : 0
+      if (direction !== 0) shouldContinue = true
       const before = element.scrollTop
       element.scrollTop += direction * AUTO_SCROLL_SPEED * elapsedSeconds
       if (element.scrollTop !== before) break
     }
     update()
-    if (session?.active) session.frame = requestAnimationFrame(autoScroll)
+    if (session?.active && shouldContinue)
+      session.frame = requestAnimationFrame(autoScroll)
   }
 
   const onPointerMove = (event: PointerEvent) => {
@@ -181,12 +187,15 @@ export function useSortableList(
       session.frame = requestAnimationFrame(autoScroll)
   }
 
+  const onDragStart = (event: DragEvent) => event.preventDefault()
+
   function finish(commit: boolean) {
     const current = session
     if (!current) return
     const valid = isValid(current)
     session = null
     if (cancelActiveDrag === onCancel) cancelActiveDrag = null
+    window.removeEventListener('dragstart', onDragStart)
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
     window.removeEventListener('pointercancel', onPointerCancel)
@@ -195,6 +204,9 @@ export function useSortableList(
     window.removeEventListener('resize', onCancel)
     window.removeEventListener('scroll', update, true)
     current.handle.removeEventListener('lostpointercapture', onPointerCancel)
+    if (current.savedHandleTitle !== null) {
+      current.handle.setAttribute('title', current.savedHandleTitle)
+    }
     if (current.frame !== null) cancelAnimationFrame(current.frame)
     if (current.handle.hasPointerCapture?.(current.pointerId))
       current.handle.releasePointerCapture(current.pointerId)
@@ -237,10 +249,13 @@ export function useSortableList(
     cancelActiveDrag = onCancel
     event.preventDefault()
     const handle = event.currentTarget as HTMLElement
+    const savedHandleTitle = handle.getAttribute('title')
+    if (savedHandleTitle !== null) handle.removeAttribute('title')
     session = {
       from: index,
       pointerId: event.pointerId,
       handle,
+      savedHandleTitle,
       items: currentItems,
       rects: currentItems.map((item) => {
         const rect = item.getBoundingClientRect()
@@ -258,11 +273,14 @@ export function useSortableList(
     try {
       handle.setPointerCapture?.(event.pointerId)
     } catch {
+      if (savedHandleTitle !== null)
+        handle.setAttribute('title', savedHandleTitle)
       session = null
       cancelActiveDrag = null
       return
     }
     handle.addEventListener('lostpointercapture', onPointerCancel)
+    window.addEventListener('dragstart', onDragStart)
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     window.addEventListener('pointercancel', onPointerCancel)

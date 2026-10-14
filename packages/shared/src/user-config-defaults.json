@@ -34,7 +34,7 @@
     "deeplEndpoint": "free",
     "glossary": [],
     "correctionPrompt": "",
-    "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+    "targetLanguages": ["en_US"],
     "viewMode": "split"
   },
   "mainActions": [

@@ -12,8 +12,8 @@ describe('Diff', () => {
   it('renders unified diff with added and removed classes', () => {
     const wrapper = mount(Diff, {
       props: {
-        oldText: 'Старый текст для теста',
-        newText: 'Новый текст для теста',
+        oldText: 'Old text for testing',
+        newText: 'New text for testing',
         mode: 'unified',
       },
     })
@@ -24,15 +24,15 @@ describe('Diff', () => {
 
     expect(removed.length).toBeGreaterThan(0)
     expect(added.length).toBeGreaterThan(0)
-    expect(removed[0].text()).toBe('Старый')
-    expect(added[0].text()).toBe('Новый')
+    expect(removed[0].text()).toBe('Old')
+    expect(added[0].text()).toBe('New')
   })
 
   it('renders split diff with original and modified columns', () => {
     const wrapper = mount(Diff, {
       props: {
-        oldText: 'Исходный текст',
-        newText: 'Исправленный текст',
+        oldText: 'Original text',
+        newText: 'Corrected text',
         mode: 'split',
       },
     })
@@ -43,24 +43,24 @@ describe('Diff', () => {
 
     // Left pane has removed
     expect(columns[0].find('.removed').exists()).toBe(true)
-    expect(columns[0].find('.removed').text()).toBe('Исходный')
+    expect(columns[0].find('.removed').text()).toBe('Original')
 
     // Right pane has added
     expect(columns[1].find('.added').exists()).toBe(true)
-    expect(columns[1].find('.added').text()).toBe('Исправленный')
+    expect(columns[1].find('.added').text()).toBe('Corrected')
   })
 
   it('renders clean result in result mode', () => {
     const wrapper = mount(Diff, {
       props: {
-        oldText: 'Исходный текст',
-        newText: 'Только финальный результат',
+        oldText: 'Original text',
+        newText: 'Only final result',
         mode: 'result',
       },
     })
 
     expect(wrapper.find('.diff-result-view').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Только финальный результат')
+    expect(wrapper.text()).toContain('Only final result')
     expect(wrapper.find('.added').exists()).toBe(false)
     expect(wrapper.find('.removed').exists()).toBe(false)
   })
@@ -68,8 +68,8 @@ describe('Diff', () => {
   it('shows no-diff message when texts are identical', () => {
     const wrapper = mount(Diff, {
       props: {
-        oldText: 'Одинаковый текст',
-        newText: 'Одинаковый текст',
+        oldText: 'Identical text',
+        newText: 'Identical text',
         mode: 'unified',
       },
     })

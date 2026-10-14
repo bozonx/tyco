@@ -37,7 +37,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -241,7 +241,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -448,7 +448,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -661,7 +661,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -868,7 +868,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -1049,7 +1049,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [null, null, null],
@@ -1251,7 +1251,7 @@
           { "term": "word", "use": "term", "doNotTranslate": "yes" }
         ],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -1457,7 +1457,7 @@
           { "term": "word", "use": "term", "doNotTranslate": false }
         ],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -1664,7 +1664,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -1863,7 +1863,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -2063,7 +2063,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -2267,7 +2267,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [{ "type": "launcherPage", "pageId": "beta" }, null],
@@ -2489,7 +2489,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [
@@ -2693,7 +2693,7 @@
         "deeplEndpoint": "free",
         "glossary": [],
         "correctionPrompt": "",
-        "targetLanguages": ["en_US", "ru_RU", "es_AR", "tr_TR"],
+        "targetLanguages": ["en_US"],
         "viewMode": "split"
       },
       "mainActions": [

@@ -72,35 +72,61 @@ async function pickMenuItem(
 }
 
 describe('SettingsCommandsTab.vue', () => {
-  it('moves commands with accessible controls and prevents moving past a boundary', async () => {
-    const wrapper = mountTab()
-    const header = wrapper.find('.command-header')
-    await header.find('[aria-label^="common.moveUp"]').trigger('click')
-    expect(wrapper.emitted('update:commands')).toBeUndefined()
-    await header.find('[aria-label^="common.moveDown"]').trigger('click')
+  it('does not show header move buttons and reorders commands by dragging handle', async () => {
+    const wrapper = mount(SettingsCommandsTab, {
+      props: {
+        userConfig: {
+          launcherPages: [],
+          commands: [webhook, script],
+          mainActions: [],
+        } as unknown as UserConfig,
+      },
+      attachTo: document.body,
+      global: { stubs: { CommandEditor: true, Icon: true } },
+    })
+
+    expect(wrapper.find('[aria-label^="common.moveUp"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label^="common.moveDown"]').exists()).toBe(false)
+
+    const cards = wrapper.findAll('.command-card')
+    cards.forEach(({ element }, index) => {
+      const top = index * 48
+      vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+        top,
+        bottom: top + 40,
+        height: 40,
+        left: 0,
+        right: 100,
+      } as DOMRect)
+    })
+
+    const dispatch = (
+      type: string,
+      clientY: number,
+      target: EventTarget = window
+    ) => {
+      const event = new MouseEvent(type, {
+        clientY,
+        clientX: 20,
+        bubbles: true,
+      })
+      Object.defineProperty(event, 'pointerId', { value: 1 })
+      target.dispatchEvent(event)
+    }
+
+    dispatch('pointerdown', 10, wrapper.findAll('.drag-handle')[0].element)
+    await wrapper.vm.$nextTick()
+    dispatch('pointermove', 70)
+    await wrapper.vm.$nextTick()
+    dispatch('pointerup', 70)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('update:commands')).toBeTruthy()
     expect(
       (wrapper.emitted('update:commands')![0][0] as CommandConfig[]).map(
         (command) => command.id
       )
     ).toEqual(['sc1', 'wh1'])
-    await wrapper.setProps({
-      userConfig: {
-        ...wrapper.props('userConfig'),
-        commands: [script, webhook],
-      },
-    })
-    const movedHeader = wrapper.findAll('.command-header')[1]
-    expect(
-      movedHeader
-        .find('[aria-label^="common.moveDown"]')
-        .attributes('aria-disabled')
-    ).toBe('true')
-    await movedHeader.find('[aria-label^="common.moveUp"]').trigger('click')
-    expect(
-      (wrapper.emitted('update:commands')![1][0] as CommandConfig[]).map(
-        (command) => command.id
-      )
-    ).toEqual(['wh1', 'sc1'])
     wrapper.unmount()
   })
 

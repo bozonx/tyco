@@ -12,7 +12,7 @@
 
     <!-- Active listening / recording mode -->
     <div v-else class="listening-state">
-      <div class="waveform-visualizer" aria-label="Audio waveform">
+      <div class="waveform-visualizer" aria-hidden="true">
         <div
           v-for="(barHeight, index) in barHeights"
           :key="index"
