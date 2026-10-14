@@ -82,9 +82,10 @@ fn save_user_config_blocking(
     pending_secrets
         .unwrap()
         .commit(&previous_config, &user_config);
+    let snapshot = commit_saved_config(&state, user_config);
     runtime::publish_state(app, &state);
 
-    Ok(state.snapshot())
+    Ok(snapshot)
 }
 
 #[tauri::command]
@@ -117,4 +118,61 @@ pub fn acknowledge_settings_shutdown(
     saved: bool,
 ) {
     runtime::settings_shutdown::acknowledge(&app, request_id, window.label(), saved);
+}
+
+/// Only expose the new config after storage and dependent settings succeed.
+fn commit_saved_config(state: &AppState, user_config: Value) -> DesktopSnapshot {
+    state.update_snapshot(|snapshot| {
+        snapshot.settings.user_config = user_config;
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{default_desktop_snapshot, SessionState};
+    use serde_json::json;
+
+    #[test]
+    fn saved_config_is_visible_immediately_and_preserved_by_the_next_write() {
+        let initial = json!({
+            "appLanguage": "auto",
+            "aiRules": { "chat": "" }
+        });
+        let state = AppState::new(default_desktop_snapshot(
+            initial.clone(),
+            SessionState::default(),
+        ));
+        let next = json!({
+            "appLanguage": "ru_RU",
+            "aiRules": { "chat": "Use concise answers" }
+        });
+        let saved = commit_saved_config(&state, next.clone());
+        assert_eq!(saved.settings.user_config, next);
+        assert_eq!(saved.revision, 1);
+        assert_eq!(state.snapshot().settings.user_config, next);
+
+        // A later write from a stale window must retain the committed language.
+        let stale_edit = json!({
+            "appLanguage": "auto",
+            "aiRules": { "chat": "", "correction": "Preserve style" }
+        });
+        let merged = crate::services::config_update::merge_config(
+            &state.snapshot().settings.user_config,
+            &initial,
+            &stale_edit,
+        )
+        .unwrap();
+        let saved = commit_saved_config(&state, merged);
+        assert_eq!(saved.revision, 2);
+        assert_eq!(saved.settings.user_config["appLanguage"], "ru_RU");
+        assert_eq!(
+            saved.settings.user_config["aiRules"]["chat"],
+            "Use concise answers"
+        );
+        assert_eq!(
+            saved.settings.user_config["aiRules"]["correction"],
+            "Preserve style"
+        );
+    }
 }
