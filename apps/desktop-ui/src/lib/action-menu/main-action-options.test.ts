@@ -32,7 +32,7 @@ describe('main action groups', () => {
   })
 
   it('groups a command by what it does', () => {
-    const notes = { owner: { kind: 'plugin', name: 'Notes' } }
+    const notes = { owner: { kind: 'plugin', pluginId: 'Notes' } }
     const tools: ToolLookup = {
       get: (toolId) =>
         toolId === 'Notes.write'

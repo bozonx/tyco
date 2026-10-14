@@ -178,8 +178,10 @@ const pluginLabels = computed(
     new Map(
       resolveInstalledPlugins(pluginFactories, props.userConfig).map(
         (plugin) => [
-          plugin.name,
-          plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name,
+          plugin.pluginId,
+          plugin.labelKey
+            ? t(plugin.labelKey)
+            : plugin.label || plugin.pluginId,
         ]
       )
     )

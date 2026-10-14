@@ -21,7 +21,7 @@ vi.mock('../../stores/chat-input', () => ({
     reactive({
       value: 'Hello world',
       focusRequestCount: 0,
-      focus: mocks.focus,
+      requestFocus: mocks.focus,
       setValue: mocks.setValue,
       takePendingCaret: mocks.takePendingCaret,
       rememberSelection: mocks.rememberSelection,

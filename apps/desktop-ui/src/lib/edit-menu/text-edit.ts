@@ -1,4 +1,4 @@
-import type { EditItem } from './edit-menu-store'
+import type { EditItem } from './edit-menu-model'
 
 export interface TextEditSnapshot {
   text: string

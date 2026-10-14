@@ -37,7 +37,10 @@ export function createQuickInputModel(deps: QuickInputDependencies = {}) {
     value.value = ''
   }
 
-  /** The window lost focus: its text is offered again on the next opening. */
+  /**
+   * The window lost requestFocus: its text is offered again on the next
+   * opening.
+   */
   const markDismissed = (): void => {
     session.markDismissed()
   }
@@ -59,11 +62,11 @@ export function createQuickInputModel(deps: QuickInputDependencies = {}) {
     syncRecall()
   }
 
-  const focus = (): void => {
+  const requestFocus = (): void => {
     focusRequestCount.value++
   }
 
-  const focusAndSelectAll = (): void => {
+  const requestFocusAndSelectAll = (): void => {
     selectAllRequestCount.value++
   }
 
@@ -78,7 +81,7 @@ export function createQuickInputModel(deps: QuickInputDependencies = {}) {
     markDismissed,
     startSession,
     rememberSubmitted,
-    focus,
-    focusAndSelectAll,
+    requestFocus,
+    requestFocusAndSelectAll,
   }
 }

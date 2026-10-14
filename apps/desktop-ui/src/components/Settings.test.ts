@@ -462,7 +462,8 @@ describe('Settings.vue', () => {
           Tabs: true,
           SettingsPluginDetailTab: {
             props: ['plugin'],
-            template: '<div class="plugin-detail-stub">{{ plugin.name }}</div>',
+            template:
+              '<div class="plugin-detail-stub">{{ plugin.pluginId }}</div>',
           },
         },
       },

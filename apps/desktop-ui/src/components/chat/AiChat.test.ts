@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   sendInput: vi.fn(async () => true),
   stopGeneration: vi.fn(),
   chatState: {
-    currentChatState: { id: 'chat' },
+    currentChatParams: { id: 'chat' },
     messages: [
       { role: 'user', content: 'Question' },
       { role: 'assistant', content: 'Answer' },
@@ -60,7 +60,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn() }),
+  default: () => ({ toastKey: vi.fn() }),
 }))
 
 vi.mock('../../components/menu/VoiceRecognitionMenu.vue', () => ({

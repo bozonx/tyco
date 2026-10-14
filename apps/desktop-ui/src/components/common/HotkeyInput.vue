@@ -30,7 +30,7 @@
         <span v-if="group > 0" class="hotkey-separator">,</span>
         <template v-for="(key, index) in keys" :key="index">
           <span v-if="index > 0" class="hotkey-plus">+</span>
-          <KeyButton>{{ key }}</KeyButton>
+          <KeyboardKey>{{ key }}</KeyboardKey>
         </template>
       </template>
       <span v-if="recording && !invalid" class="hotkey-plus">+ …</span>
@@ -73,7 +73,7 @@ import {
   shortcutAlternatives,
   shortcutKeys,
 } from '../../lib/hotkeys/hotkey-recorder'
-import KeyButton from './KeyButton.vue'
+import KeyboardKey from './KeyboardKey.vue'
 import { Icon } from '@iconify/vue'
 import type { HotkeyPlatform } from '@tyco/shared'
 

@@ -173,7 +173,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const historyStore = useHistoryStore()
 
 const showClearEditorHistoryModal = ref(false)
@@ -181,7 +181,7 @@ const showClearEditorHistoryModal = ref(false)
 async function onClearEditorHistory() {
   showClearEditorHistoryModal.value = false
   await historyStore.clearEditorHistory()
-  toast('history.cleared', 'info')
+  toastKey('history.cleared', 'info')
 }
 
 const showClearChatHistoryModal = ref(false)
@@ -189,7 +189,7 @@ const showClearChatHistoryModal = ref(false)
 async function onClearChatHistory() {
   showClearChatHistoryModal.value = false
   await historyStore.clearChats()
-  toast('history.cleared', 'info')
+  toastKey('history.cleared', 'info')
 }
 
 const showDisableChatHistoryModal = ref(false)

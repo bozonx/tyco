@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ToolbarItem } from '../../types/plugins'
-import { createToolbarModel } from './toolbar-store'
+import { createToolbarModel } from './toolbar-model'
 
 describe('createToolbarModel', () => {
   it('starts with empty toolbar items', () => {

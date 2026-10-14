@@ -5,14 +5,14 @@ import {
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createIpcModel, type IpcStoreDependencies } from './ipc-store'
+import { createIpcModel, type IpcModelDependencies } from './ipc-model'
 
 function createDeps(
-  overrides: Partial<IpcStoreDependencies> = {}
-): IpcStoreDependencies {
-  const invokeMock: IpcStoreDependencies['desktopClient']['invoke'] = vi.fn(
+  overrides: Partial<IpcModelDependencies> = {}
+): IpcModelDependencies {
+  const invokeMock: IpcModelDependencies['desktopClient']['invoke'] = vi.fn(
     async () => ({ success: true, result: ['ok'] })
-  ) as IpcStoreDependencies['desktopClient']['invoke']
+  ) as IpcModelDependencies['desktopClient']['invoke']
 
   return {
     desktopClient: {
@@ -26,7 +26,7 @@ function createDeps(
   }
 }
 
-describe('ipc-store', () => {
+describe('ipc-model', () => {
   it('binds quick dismissal and input regions to their activation', async () => {
     const deps = createDeps()
     const store = createIpcModel(deps)
@@ -305,7 +305,7 @@ describe('ipc-store', () => {
                   ),
                 }
               : invoke(command)
-          ) as IpcStoreDependencies['desktopClient']['invoke'],
+          ) as IpcModelDependencies['desktopClient']['invoke'],
           getDesktopViewState: vi.fn(() => DEFAULT_DESKTOP_VIEW_STATE),
           isAvailable: () => true,
         },

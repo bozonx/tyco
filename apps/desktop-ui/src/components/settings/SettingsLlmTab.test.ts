@@ -13,14 +13,14 @@ const mocks = vi.hoisted(() => ({
   setSecret: vi.fn().mockResolvedValue(undefined),
   removeSecret: vi.fn().mockResolvedValue(undefined),
   refreshSecrets: vi.fn().mockResolvedValue(undefined),
-  toast: vi.fn(),
+  toastKey: vi.fn(),
   toastText: vi.fn(),
 }))
 vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({ ...mocks, secrets: {}, vaultState: 'available' }),
 }))
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: mocks.toast, toastText: mocks.toastText }),
+  default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),
 }))
 
 function setup() {

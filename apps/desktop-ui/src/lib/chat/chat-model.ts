@@ -1,80 +1,58 @@
-import type { LlmConfig } from '@tyco/shared'
-import { buildLlmPrompt, type LlmPromptOptions } from '../llm/llm-prompt'
+import { createChatState } from './chat-state'
+import { createChatPersistenceQueue } from './chat-persistence-queue'
+import { createChatTitleController } from './chat-title-controller'
+import { createChatGenerationModel } from './chat-generation-model'
+import { createChatSessionModel } from './chat-session-model'
+import type { ChatModelDependencies } from './chat-model-contracts'
+export type { ChatModelDependencies } from './chat-model-contracts'
 
-import {
-  modelContextWindowTokens,
-  modelMaxOutputTokens,
-  supportsImages,
-  usableModels,
-} from '../llm/llm-catalog'
-
-export interface ChatModelOption {
-  id: string
-  name: string
-  providerLabel: string
-  canUseImages: boolean
-  contextWindowTokens: number
-  maxOutputTokens?: number
-}
-
-/**
- * Models the chat can actually call: complete, and with a key unless their
- * provider is a custom endpoint, which usually takes none
- */
-export function chatModelOptions(
-  config: LlmConfig,
-  hasKey: (providerId: string) => boolean
-): ChatModelOption[] {
-  return usableModels(config)
-    .filter(
-      ({ provider }) =>
-        provider.type === 'openai-compatible' || hasKey(provider.id)
-    )
-    .map(({ model, provider }) => ({
-      id: model.id,
-      name: model.name?.trim() || model.providerModelId.trim(),
-      providerLabel: provider.name?.trim() || provider.type,
-      canUseImages: supportsImages(model),
-      contextWindowTokens: modelContextWindowTokens(model, config.providers),
-      maxOutputTokens: modelMaxOutputTokens(model, config.providers),
-    }))
-}
-
-/** The model last used in the chat, or the first one when it is gone */
-export function pickChatModel(
-  options: ChatModelOption[],
-  lastModelId: string | null | undefined
-): ChatModelOption | null {
-  return (
-    options.find((option) => option.id === lastModelId) ?? options[0] ?? null
+export function createChatModel(deps: ChatModelDependencies) {
+  const state = createChatState()
+  const { currentChatParams } = state
+  const persistence = createChatPersistenceQueue(deps, state)
+  const title = createChatTitleController(
+    { ...deps, renameChat: persistence.renameChat },
+    state
   )
-}
-
-/**
- * Approximate input budget, reserving at least a quarter of the context for
- * output and subtracting the system prompt before admitting conversation text.
- */
-export function contextBudgetCharacters(
-  contextWindowTokens: number,
-  maxOutputTokens = Math.floor(contextWindowTokens / 4),
-  systemCharacters = 0
-): number {
-  const reservedTokens = Math.max(contextWindowTokens / 4, maxOutputTokens)
-  return Math.max(
-    0,
-    Math.floor((contextWindowTokens - reservedTokens) * 3) - systemCharacters
+  const generation = createChatGenerationModel(
+    deps,
+    state,
+    persistence.persist,
+    title.maybeGenerateTitle,
+    title.cancel
   )
-}
-
-/** Subtracts the exact system text assembled for the chat request. */
-export function chatRequestBudgetCharacters(
-  model: ChatModelOption,
-  promptOptions: Pick<LlmPromptOptions, 'instructions' | 'rules' | 'rulePrefix'>
-): number {
-  const system = buildLlmPrompt([], promptOptions).system || ''
-  return contextBudgetCharacters(
-    model.contextWindowTokens,
-    model.maxOutputTokens,
-    system.length
+  const session = createChatSessionModel(
+    deps,
+    state,
+    generation.halt,
+    persistence.persist
   )
+  return {
+    ...state,
+    savingImages: persistence.savingImages,
+    renameChat: (id: string, newTitle: string) => {
+      if (currentChatParams.value.id === id) title.cancel()
+      return persistence.renameChat(id, newTitle)
+    },
+    sendMessage: generation.sendMessage,
+    stopGeneration: generation.stopGeneration,
+    retryLastTurn: generation.retryLastTurn,
+    regenerateMessage: generation.regenerateMessage,
+    ...session,
+    removeAttachment: (index: number) => {
+      const current = currentChatParams.value.attachments || []
+      if (index >= 0 && index < current.length) {
+        currentChatParams.value.attachments = current.filter(
+          (_, i) => i !== index
+        )
+      }
+    },
+    /** Resolves once the writes started so far are done */
+    whenSaved: persistence.whenSaved,
+    /** Renames the current chat in memory, after it was renamed in storage */
+    setTitle: (id: string, title: string) => {
+      if (currentChatParams.value.id === id)
+        currentChatParams.value.title = title
+    },
+  }
 }

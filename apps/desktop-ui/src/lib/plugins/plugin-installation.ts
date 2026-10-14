@@ -14,16 +14,16 @@ export interface PluginInstallationDependencies {
 /** Inspection never activates code; installation requires an explicit UI action. */
 export function createPluginInstallation(deps: PluginInstallationDependencies) {
   const preview = shallowRef<PluginPackagePreview | null>(null)
-  const busy = ref(false)
+  const isBusy = ref(false)
   async function perform(action: () => Promise<void>) {
-    if (busy.value) return
-    busy.value = true
+    if (isBusy.value) return
+    isBusy.value = true
     try {
       await action()
     } catch (error) {
       deps.reportError(error)
     } finally {
-      busy.value = false
+      isBusy.value = false
     }
   }
   const inspect = () =>
@@ -58,13 +58,13 @@ export function createPluginInstallation(deps: PluginInstallationDependencies) {
     })
   return {
     preview,
-    busy,
+    isBusy,
     inspect,
     install,
     remove,
     restore,
     cancel: () => {
-      if (!busy.value) preview.value = null
+      if (!isBusy.value) preview.value = null
     },
   }
 }

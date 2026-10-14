@@ -257,7 +257,7 @@ function observeInputParts() {
 
 const syncFocus = () => {
   if (currentMode.value === 'write') {
-    quickInputStore.focus()
+    quickInputStore.requestFocus()
   }
 }
 

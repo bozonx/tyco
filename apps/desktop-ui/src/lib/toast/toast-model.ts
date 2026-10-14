@@ -4,7 +4,7 @@ export type ToastType = 'success' | 'error' | 'warn' | 'info'
 
 export interface ToastOptions {
   title?: string
-  duration?: number
+  durationMs?: number
 }
 
 export interface ToastItem {
@@ -12,7 +12,7 @@ export interface ToastItem {
   message: string
   title?: string
   type: ToastType
-  duration: number
+  durationMs: number
   createdAt: number
   remainingMs: number
   isPaused: boolean
@@ -26,7 +26,7 @@ export interface ToastDependencies {
   clearTimeoutFn?: typeof clearTimeout
 }
 
-export const DEFAULT_TOAST_DURATIONS: Record<ToastType, number> = {
+export const DEFAULT_TOAST_DURATIONS_MS: Record<ToastType, number> = {
   success: 3000,
   info: 3000,
   warn: 5000,
@@ -77,7 +77,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
     type: ToastType = 'info',
     options: ToastOptions = {}
   ): string => {
-    const duration = options.duration ?? DEFAULT_TOAST_DURATIONS[type]
+    const durationMs = options.durationMs ?? DEFAULT_TOAST_DURATIONS_MS[type]
 
     const existingIndex = toasts.value.findIndex(
       (t) =>
@@ -88,10 +88,10 @@ export function createToastModel(deps: ToastDependencies = {}) {
 
     if (existingIndex !== -1) {
       const existing = toasts.value[existingIndex]
-      existing.duration = duration
-      existing.remainingMs = duration
+      existing.durationMs = durationMs
+      existing.remainingMs = durationMs
       existing.isPaused = false
-      if (duration > 0) {
+      if (durationMs > 0) {
         scheduleDismiss(existing)
       } else {
         clearItemTimer(existing)
@@ -106,15 +106,15 @@ export function createToastModel(deps: ToastDependencies = {}) {
       message,
       title: options.title,
       type,
-      duration,
+      durationMs,
       createdAt: now(),
-      remainingMs: duration,
+      remainingMs: durationMs,
       isPaused: false,
       timerId: null,
       timerStartedAt: null,
     }
 
-    if (duration > 0) {
+    if (durationMs > 0) {
       scheduleDismiss(item)
     }
 
@@ -133,7 +133,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
 
   const pauseToast = (id: string) => {
     const item = toasts.value.find((t) => t.id === id)
-    if (!item || item.isPaused || item.duration <= 0) return
+    if (!item || item.isPaused || item.durationMs <= 0) return
 
     item.isPaused = true
     if (item.timerStartedAt != null) {
@@ -145,7 +145,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
 
   const resumeToast = (id: string) => {
     const item = toasts.value.find((t) => t.id === id)
-    if (!item || !item.isPaused || item.duration <= 0) return
+    if (!item || !item.isPaused || item.durationMs <= 0) return
 
     item.isPaused = false
     scheduleDismiss(item)

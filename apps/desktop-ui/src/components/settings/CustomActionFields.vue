@@ -214,7 +214,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { toast, toastText } = useToast()
+const { toastKey, toastText } = useToast()
 const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
@@ -292,7 +292,7 @@ async function saveAuth() {
   const origin = httpOrigin(webhook.value.url)
   if (!value) return
   if (!origin) {
-    toast('settings.invalidBaseUrl', 'error')
+    toastKey('settings.invalidBaseUrl', 'error')
     return
   }
   try {

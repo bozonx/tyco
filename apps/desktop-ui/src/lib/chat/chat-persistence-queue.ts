@@ -1,13 +1,13 @@
 import { ref } from 'vue'
 import type { ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
 import { createChatHistoryEntry } from './chat-history-entry'
-import type { ChatStoreDependencies } from './chat-store-contracts'
+import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
-  deps: Pick<ChatStoreDependencies, 'saveChat' | 'renameChat' | 'nowIso'>,
-  state: Pick<ChatState, 'currentChatState'>
+  deps: Pick<ChatModelDependencies, 'saveChat' | 'renameChat' | 'nowIso'>,
+  state: Pick<ChatState, 'currentChatParams'>
 ) {
-  const { currentChatState } = state
+  const { currentChatParams } = state
   const renamedTitles = new Map<string, string>()
   // writes go one after another, so that an older state never lands last
   let lastWrite: Promise<unknown> = Promise.resolve()
@@ -16,7 +16,7 @@ export function createChatPersistenceQueue(
   /** Writes the chat as it is; a failure is reported by the dependency */
   const persist = (
     chatMessages: ChatMessage[],
-    chatParams: ChatParams = currentChatState.value
+    chatParams: ChatParams = currentChatParams.value
   ): Promise<boolean> => {
     const id = chatParams.id
     if (!id || chatMessages.length === 0) return Promise.resolve(false)
@@ -50,7 +50,8 @@ export function createChatPersistenceQueue(
     const write = lastWrite.then(async () => {
       await deps.renameChat(id, title)
       renamedTitles.set(id, title)
-      if (currentChatState.value.id === id) currentChatState.value.title = title
+      if (currentChatParams.value.id === id)
+        currentChatParams.value.title = title
     })
     // A failed rename must not block subsequent saves.
     lastWrite = write.catch(() => undefined)

@@ -23,12 +23,12 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
   const ipcStore = useIpcStore()
   const menuModalsStore = useMenuModalsStore()
   const toolsStore = useToolsStore()
-  const { toast, toastText } = useToast()
+  const { toastKey, toastText } = useToast()
 
   return {
     tools: toolsStore,
     showToast: (message, type) => {
-      toast(message, type)
+      toastKey(message, type)
     },
     showText: (text, type) => {
       toastText(text, type)

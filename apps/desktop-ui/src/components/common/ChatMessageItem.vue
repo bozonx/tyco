@@ -85,7 +85,7 @@ const emit = defineEmits<{
   (e: 'content-resized'): void
 }>()
 const { t } = useI18n()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const copied = ref(false)
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
@@ -113,7 +113,7 @@ async function copyText(value: string) {
   try {
     await navigator.clipboard.writeText(value)
   } catch {
-    toast('editor.menu.clipboardUnavailable', 'error')
+    toastKey('editor.menu.clipboardUnavailable', 'error')
     return
   }
   copied.value = true

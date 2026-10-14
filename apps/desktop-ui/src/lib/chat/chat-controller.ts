@@ -5,9 +5,12 @@ import { imageBudgetCharacters } from './chat-image-input'
 import { attachmentTexts, inferAttachmentSource } from './chat-attachment'
 import { resolveVoiceChatContext } from './editor-context'
 import { resolveContextBudget } from './context-budget'
-import { contextBudgetCharacters, type ChatModelOption } from './chat-model'
+import {
+  contextBudgetCharacters,
+  type ChatLlmOption,
+} from './chat-model-selection'
 import { trimChatContext } from './chat-context'
-import type { createChatModel } from './chat-store'
+import type { createChatModel } from './chat-model'
 import type { createChatFileController } from './chat-file-controller'
 
 export interface ChatControllerDependencies {
@@ -21,9 +24,9 @@ export interface ChatControllerDependencies {
     value: string
     clear: () => void
     setValue: (text: string) => void
-    focus: () => void
+    requestFocus: () => void
   }
-  selectedModel: () => ChatModelOption | null
+  selectedModel: () => ChatLlmOption | null
   requestBudgetCharacters?: () => number
   externalSelection: () => string | null | undefined
   windowLabel: () => string
@@ -50,7 +53,7 @@ export function createChatController(deps: ChatControllerDependencies) {
 
   /** What goes with the next message besides the input */
   const attachedContext = computed<ChatAttachment[]>(
-    () => model.currentChatState.value.attachments || []
+    () => model.currentChatParams.value.attachments || []
   )
 
   const requestBudgetCharacters = () => {
@@ -73,7 +76,7 @@ export function createChatController(deps: ChatControllerDependencies) {
     return resolveContextBudget(
       [...attachmentTexts(attachedContext.value), chatInputStore.value.trim()],
       requestBudgetCharacters(),
-      (model.currentChatState.value.images || []).reduce(
+      (model.currentChatParams.value.images || []).reduce(
         (sum, image) => sum + imageBudgetCharacters(image),
         0
       )
@@ -91,7 +94,7 @@ export function createChatController(deps: ChatControllerDependencies) {
 
   const historyImagesRequired = computed(() => {
     if (model.omitHistoryImages.value || !selectedModel.value) return false
-    const inputSize = contextBudget.value?.used || 0
+    const inputSize = contextBudget.value?.usedCharacters || 0
     return trimChatContext(
       model.messages.value,
       Math.max(0, requestBudgetCharacters() - inputSize)
@@ -114,7 +117,7 @@ export function createChatController(deps: ChatControllerDependencies) {
     if (!(await inMainWindow(params.attachments?.[0]))) return
     await model.startChat(params)
     await deps.afterRender()
-    chatInputStore.focus()
+    chatInputStore.requestFocus()
   }
 
   let inputSubmission = 0
@@ -149,13 +152,13 @@ export function createChatController(deps: ChatControllerDependencies) {
       if (!(await inMainWindow(attachment))) return
       await model.attachToChat(attachment)
       await deps.afterRender()
-      chatInputStore.focus()
+      chatInputStore.requestFocus()
     },
     async openLastOrNewChat() {
       deps.closeModals()
       await files.whileOpening(() => model.openLastOrNewChat())
       await deps.afterRender()
-      chatInputStore.focus()
+      chatInputStore.requestFocus()
     },
     /** A new empty chat started from the chat itself */
     async startNewChat() {
@@ -168,7 +171,7 @@ export function createChatController(deps: ChatControllerDependencies) {
       // the editor selection has nothing to do with the opened conversation
       markEditorSelectionStale()
       await deps.afterRender()
-      chatInputStore.focus()
+      chatInputStore.requestFocus()
       return result
     },
     async branchChat(index: number) {
@@ -176,7 +179,7 @@ export function createChatController(deps: ChatControllerDependencies) {
       const result = await model.branchChat(index)
       markEditorSelectionStale()
       await deps.afterRender()
-      chatInputStore.focus()
+      chatInputStore.requestFocus()
       return result
     },
     /** Sends the input; false when there is nothing to send or a reply runs */
@@ -196,7 +199,7 @@ export function createChatController(deps: ChatControllerDependencies) {
       const pending = model.sendMessage(message, attachments, [
         ...pendingImages.value,
       ])
-      const chatId = model.currentChatState.value.id
+      const chatId = model.currentChatParams.value.id
       const messages = model.messages.value
       chatInputStore.clear()
 
@@ -211,7 +214,7 @@ export function createChatController(deps: ChatControllerDependencies) {
         await pending
         if (
           submission === inputSubmission &&
-          model.currentChatState.value.id === chatId &&
+          model.currentChatParams.value.id === chatId &&
           model.messages.value === messages &&
           !chatInputStore.value
         ) {

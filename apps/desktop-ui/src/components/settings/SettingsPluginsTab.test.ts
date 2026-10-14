@@ -11,7 +11,7 @@ vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({ callFunction: vi.fn() }),
 }))
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn() }),
+  default: () => ({ toastKey: vi.fn() }),
 }))
 
 vi.mock('../../lib/plugins/builtin-plugins', () => ({

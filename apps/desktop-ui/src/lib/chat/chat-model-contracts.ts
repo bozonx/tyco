@@ -4,12 +4,12 @@ import type { AppRoutePath } from '../navigation/routes'
 /** The model a chat request runs on */
 interface ChatRequestModel {
   id: string
-  /** How many characters the request may carry */
   canUseImages?: boolean
+  /** How many characters the request may carry */
   budgetCharacters: number
 }
 
-export interface ChatStoreDependencies {
+export interface ChatModelDependencies {
   sendChatMessage: (
     message: string | ChatMessage,
     prevMessages: ChatMessage[],

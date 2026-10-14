@@ -7,12 +7,12 @@ import type {
 } from '@tyco/shared'
 export function createChatState() {
   const messages = ref<ChatMessage[]>([])
-  const currentChatState = ref<ChatParams>({})
+  const currentChatParams = ref<ChatParams>({})
   const isGenerating = ref(false)
   const error = ref('')
   const isStopped = ref(false)
   const omitHistoryImages = ref(false)
-  const trimmedTurns = ref(0)
+  const trimmedTurnCount = ref(0)
   const lastFailedTurn = ref<{
     message: string
     attachments?: ChatAttachment[]
@@ -20,12 +20,12 @@ export function createChatState() {
   } | null>(null)
   return {
     messages,
-    currentChatState,
+    currentChatParams,
     isGenerating,
     error,
     isStopped,
     omitHistoryImages,
-    trimmedTurns,
+    trimmedTurnCount,
     lastFailedTurn,
   }
 }

@@ -13,7 +13,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: mockToast, toastText: vi.fn() }),
+  default: () => ({ toastKey: mockToast, toastText: vi.fn() }),
 }))
 
 vi.mock('../../stores/history', () => ({

@@ -57,7 +57,7 @@ const {
   startDictation,
 } = useDictationActions()
 const { voiceCorrection } = useLlmActions()
-const { toast, toastText } = useToast()
+const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const ipcStore = useIpcStore()
 let sessionActivationId = ipcStore.desktopState.activationId
@@ -97,7 +97,7 @@ const model = createVoiceRecognition({
       emit('corrected', result, recognized, corrected, intent)
   },
   t,
-  toast,
+  toastKey,
   toastText,
 })
 const {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createEditMenuModel } from './edit-menu-store'
+import { createEditMenuModel } from './edit-menu-model'
 
 describe('createEditMenuModel', () => {
   const setup = () => {

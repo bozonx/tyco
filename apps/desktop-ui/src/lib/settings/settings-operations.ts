@@ -80,29 +80,29 @@ export function createSettingsOperations(deps: {
     return command.id
   }
 
-  const updatePluginEnabled = (pluginName: string, enabled: boolean) => {
+  const updatePluginEnabled = (pluginId: string, enabled: boolean) => {
     const config = deps.getConfig()
-    const current = config.plugins[pluginName]
-    config.plugins[pluginName] = {
+    const current = config.plugins[pluginId]
+    config.plugins[pluginId] = {
       ...(current && typeof current === 'object' ? current : {}),
       enabled,
     }
   }
 
   const updatePluginConfig = (
-    pluginName: string,
+    pluginId: string,
     values: Record<string, unknown>
   ) => {
     const config = deps.getConfig()
-    const current = config.plugins[pluginName]
+    const current = config.plugins[pluginId]
     const previous: Record<string, unknown> =
       current && typeof current === 'object'
         ? (current as Record<string, unknown>)
         : {}
     const definition = deps
       .pluginFactories()
-      .find((factory) => factory().id === pluginName)?.()
-    config.plugins[pluginName] = definition
+      .find((factory) => factory().id === pluginId)?.()
+    config.plugins[pluginId] = definition
       ? applyPluginPreset(definition, previous, values)
       : { ...previous, ...values }
   }

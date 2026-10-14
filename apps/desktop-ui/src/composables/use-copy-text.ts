@@ -5,13 +5,13 @@ import useToast from './use-toast'
 
 /** `saveOutput: false` for texts that are already in the history */
 export function useCopyText(options: { saveOutput: boolean }) {
-  const { toast } = useToast()
+  const { toastKey } = useToast()
   const historyStore = useHistoryStore()
 
   return createCopyText({
     // the texts are Markdown: rich editors get them formatted
     writeText: (text) => writeMarkdown(text),
-    showToast: (messageKey, type) => toast(messageKey, type),
+    showToast: (messageKey, type) => toastKey(messageKey, type),
     saveOutput: options.saveOutput ? historyStore.saveOutput : undefined,
   })
 }

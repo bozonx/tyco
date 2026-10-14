@@ -18,7 +18,7 @@ describe('HotkeyInput.vue', () => {
       global: {
         stubs: {
           Icon: true,
-          KeyButton: { template: '<span class="key-stub"><slot /></span>' },
+          KeyboardKey: { template: '<span class="key-stub"><slot /></span>' },
         },
       },
     })
@@ -31,7 +31,7 @@ describe('HotkeyInput.vue', () => {
   it('renders placeholder when value is empty', () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: '', placeholder: 'Press keys...' },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     expect(wrapper.find('.hotkey-placeholder').text()).toBe('Press keys...')
@@ -40,7 +40,7 @@ describe('HotkeyInput.vue', () => {
   it('starts recording on click when not readonly', async () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: 'Ctrl+K' },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     await wrapper.trigger('click')
@@ -52,7 +52,7 @@ describe('HotkeyInput.vue', () => {
   it('does not start recording when readonly is true', async () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: 'Ctrl+K', readonly: true },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     await wrapper.trigger('click')
@@ -64,7 +64,7 @@ describe('HotkeyInput.vue', () => {
   it('records valid shortcut on keydown and emits record', async () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: 'Ctrl+K' },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     await wrapper.trigger('click')
@@ -83,7 +83,7 @@ describe('HotkeyInput.vue', () => {
   it('shows invalid hint on non-modifier single key', async () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: 'Ctrl+K' },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     await wrapper.trigger('click')
@@ -100,7 +100,7 @@ describe('HotkeyInput.vue', () => {
   it('cancels recording on Escape', async () => {
     const wrapper = mount(HotkeyInput, {
       props: { value: 'Ctrl+K' },
-      global: { stubs: { Icon: true, KeyButton: true } },
+      global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
     await wrapper.trigger('click')

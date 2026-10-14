@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-3">
     <Button
       class="self-start"
-      :disabled="installation.busy.value"
+      :disabled="installation.isBusy.value"
       @click="installation.inspect()"
       variant="neutral"
       size="sm"
@@ -31,7 +31,7 @@
       </p>
       <div class="flex gap-2">
         <Button
-          :disabled="installation.busy.value"
+          :disabled="installation.isBusy.value"
           @click="installation.install()"
           variant="primary"
           size="sm"
@@ -39,7 +39,7 @@
           {{ t('settings.installTrustedPlugin') }}
         </Button>
         <Button
-          :disabled="installation.busy.value"
+          :disabled="installation.isBusy.value"
           @click="installation.cancel()"
           variant="neutral"
           size="sm"
@@ -54,15 +54,15 @@
 
     <div
       v-for="plugin of installedPlugins"
-      :key="plugin.name"
+      :key="plugin.pluginId"
       class="surface plugin-card"
-      :class="{ 'is-disabled': !plugin.enabled }"
-      :data-plugin="plugin.name"
+      :class="{ 'is-disabled': !plugin.isEnabled }"
+      :data-plugin="plugin.pluginId"
       role="button"
       tabindex="0"
-      @click="openPluginSettings(plugin.name)"
-      @keydown.enter.prevent="openPluginSettings(plugin.name)"
-      @keydown.space.prevent="openPluginSettings(plugin.name)"
+      @click="openPluginSettings(plugin.pluginId)"
+      @keydown.enter.prevent="openPluginSettings(plugin.pluginId)"
+      @keydown.space.prevent="openPluginSettings(plugin.pluginId)"
     >
       <div class="plugin-card-header">
         <div class="plugin-icon">
@@ -71,7 +71,9 @@
         <div class="flex flex-col min-w-0 flex-1">
           <h3 class="font-medium text-sm leading-tight">
             {{
-              plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+              plugin.labelKey
+                ? t(plugin.labelKey)
+                : plugin.label || plugin.pluginId
             }}
           </h3>
           <p class="text-xs text-muted">
@@ -97,17 +99,17 @@
 
         <Button
           v-if="plugin.canRestore"
-          :disabled="installation.busy.value"
-          @click.stop="installation.restore(plugin.name)"
+          :disabled="installation.isBusy.value"
+          @click.stop="installation.restore(plugin.pluginId)"
           variant="neutral"
           size="sm"
         >
           {{ t('settings.restorePluginPackage') }}
         </Button>
         <Button
-          v-if="!builtinPluginIds?.includes(plugin.name)"
-          :disabled="installation.busy.value"
-          @click.stop="installation.remove(plugin.name)"
+          v-if="!builtinPluginIds?.includes(plugin.pluginId)"
+          :disabled="installation.isBusy.value"
+          @click.stop="installation.remove(plugin.pluginId)"
           variant="neutral"
           size="sm"
         >
@@ -115,13 +117,13 @@
         </Button>
         <div class="plugin-toggle" @click.stop>
           <FieldCheckbox
-            :value="plugin.enabled"
+            :value="plugin.isEnabled"
             :title="
-              plugin.enabled
+              plugin.isEnabled
                 ? t('settings.pluginEnabled')
                 : t('settings.pluginDisabled')
             "
-            @update:value="setPluginEnabled(plugin.name, $event)"
+            @update:value="setPluginEnabled(plugin.pluginId, $event)"
           />
         </div>
 
@@ -157,13 +159,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:pluginEnabled': [pluginName: string, enabled: boolean]
-  selectPlugin: [pluginName: string]
+  'update:pluginEnabled': [pluginId: string, enabled: boolean]
+  selectPlugin: [pluginId: string]
 }>()
 
 const { t } = useI18n()
 const ipc = useIpcStore()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const requireResult = <T,>(result: {
   success: boolean
   result?: T
@@ -188,7 +190,7 @@ const installation = createPluginInstallation({
   refresh: plugins.refreshInstalledPlugins,
   reservedIds: builtinPluginIds ?? [],
   reportError: (error) =>
-    toast('settings.pluginPackageFailed', 'error', {
+    toastKey('settings.pluginPackageFailed', 'error', {
       detail: error instanceof Error ? error.message : String(error),
     }),
 })
@@ -201,12 +203,12 @@ const installedPlugins = computed(() => {
   )
 })
 
-const setPluginEnabled = (pluginName: string, enabled: boolean) => {
-  emit('update:pluginEnabled', pluginName, enabled)
+const setPluginEnabled = (pluginId: string, enabled: boolean) => {
+  emit('update:pluginEnabled', pluginId, enabled)
 }
 
-const openPluginSettings = (pluginName: string) => {
-  emit('selectPlugin', pluginName)
+const openPluginSettings = (pluginId: string) => {
+  emit('selectPlugin', pluginId)
 }
 </script>
 

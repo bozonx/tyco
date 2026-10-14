@@ -13,9 +13,11 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 const removeSecret = vi.fn().mockResolvedValue(undefined)
-const toast = vi.fn()
+const toastKey = vi.fn()
 
-vi.mock('../../composables/use-toast', () => ({ default: () => ({ toast }) }))
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toastKey }),
+}))
 
 vi.mock('../../stores/settings-session', () => ({
   useSettingsSessionStore: () => ({
@@ -143,7 +145,7 @@ describe('SettingsCommandsTab.vue', () => {
     const wrapper = mountTab()
     await pickMenuItem(wrapper, 1, '.dropdown-item:not(.is-danger)')
     expect(writeText).toHaveBeenCalledWith('sc1')
-    expect(toast).toHaveBeenCalledWith('commands.idCopied', 'success')
+    expect(toastKey).toHaveBeenCalledWith('commands.idCopied', 'success')
   })
 
   it('opens the editor of the focused command', () => {

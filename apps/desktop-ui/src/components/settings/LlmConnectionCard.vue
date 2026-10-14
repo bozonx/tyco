@@ -3,8 +3,8 @@
     <button
       type="button"
       class="connection-summary"
-      :aria-expanded="expandedProviders.has(provider.id)"
-      @click="toggle(expandedProviders, provider.id)"
+      :aria-expanded="expandedProviderIds.has(provider.id)"
+      @click="toggle(expandedProviderIds, provider.id)"
     >
       <Icon
         :icon="providerIcon(provider)"
@@ -22,7 +22,7 @@
       </span>
       <Icon
         :icon="
-          expandedProviders.has(provider.id)
+          expandedProviderIds.has(provider.id)
             ? 'mdi:chevron-up'
             : 'mdi:chevron-down'
         "
@@ -31,7 +31,7 @@
       />
     </button>
 
-    <div v-if="expandedProviders.has(provider.id)" class="connection-body">
+    <div v-if="expandedProviderIds.has(provider.id)" class="connection-body">
       <template v-if="provider.type === 'openai-compatible'">
         <FieldRow :label="t('settings.name')">
           <FieldInput
@@ -77,7 +77,7 @@
             size="sm"
             variant="neutral"
             icon="mdi:plus"
-            @click="addModelTo(provider.id)"
+            @click="addModelToProvider(provider.id)"
           >
             {{ t('settings.addModel') }}
           </Button>
@@ -126,20 +126,20 @@
               size="xs"
               variant="ghost"
               :icon="
-                expandedModels.has(model.id)
+                expandedModelIds.has(model.id)
                   ? 'mdi:chevron-up'
                   : 'mdi:tune-variant'
               "
-              @click="toggle(expandedModels, model.id)"
+              @click="toggle(expandedModelIds, model.id)"
             >
               {{
-                expandedModels.has(model.id)
+                expandedModelIds.has(model.id)
                   ? t('settings.hideAdvanced')
                   : t('settings.showAdvanced')
               }}
             </Button>
           </div>
-          <template v-if="expandedModels.has(model.id)">
+          <template v-if="expandedModelIds.has(model.id)">
             <FieldRow :label="t('settings.vision')">
               <FieldCheckbox
                 :value="supportsImages(model)"
@@ -230,23 +230,25 @@
           size="sm"
           variant="neutral"
           icon="mdi:connection"
-          :disabled="connectionState[provider.id] === 'checking'"
+          :disabled="
+            connectionCheckStatusByProviderId[provider.id] === 'checking'
+          "
           @click="checkConnection(provider)"
         >
           {{
-            connectionState[provider.id] === 'checking'
+            connectionCheckStatusByProviderId[provider.id] === 'checking'
               ? t('settings.checkingConnection')
               : t('settings.checkConnection')
           }}
         </Button>
         <span
-          v-if="connectionState[provider.id] === 'success'"
+          v-if="connectionCheckStatusByProviderId[provider.id] === 'success'"
           class="connection-result success-text"
         >
           {{ t('settings.connectionAvailable') }}
         </span>
         <span
-          v-if="connectionState[provider.id] === 'error'"
+          v-if="connectionCheckStatusByProviderId[provider.id] === 'error'"
           class="connection-result error-text"
         >
           {{ connectionErrors[provider.id] }}
@@ -293,13 +295,13 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const {
   keyDrafts,
-  expandedProviders,
-  expandedModels,
-  connectionState,
+  expandedProviderIds,
+  expandedModelIds,
+  connectionCheckStatusByProviderId,
   connectionErrors,
   saveKey,
   removeKey,
-  addModelTo,
+  addModelToProvider,
   checkConnection,
   setNumber,
   numberDrafts,
@@ -337,7 +339,7 @@ function hasKey(id: string) {
   return Object.hasOwn(props.secrets, id)
 }
 function statusLabel(provider: LlmProvider) {
-  if (connectionState[provider.id] === 'success')
+  if (connectionCheckStatusByProviderId[provider.id] === 'success')
     return t('settings.connectionReady')
   if (provider.type === 'openai-compatible' && !hasKey(provider.id))
     return t('settings.connectionUnchecked')
@@ -346,7 +348,7 @@ function statusLabel(provider: LlmProvider) {
     : t('settings.connectionNotConfigured')
 }
 function statusClass(provider: LlmProvider) {
-  return connectionState[provider.id] === 'success'
+  return connectionCheckStatusByProviderId[provider.id] === 'success'
     ? 'badge-success'
     : 'badge-ghost'
 }

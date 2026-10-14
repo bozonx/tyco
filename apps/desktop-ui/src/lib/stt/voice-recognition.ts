@@ -34,7 +34,7 @@ export interface VoiceRecognitionDependencies {
   ) => void
   onCancelled: () => void
   t: (key: string) => string
-  toast: (key: string, kind: 'warn' | 'error') => void
+  toastKey: (key: string, kind: 'warn' | 'error') => void
   toastText: (text: string, kind: 'error') => void
 }
 
@@ -46,7 +46,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     shouldFormatRecognizedText,
     voiceCorrection,
     t,
-    toast,
+    toastKey,
     toastText,
   } = deps
   const transcript = ref(createLiveTranscriptState())
@@ -93,7 +93,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   const voiceSession = createVoiceSession({
     maxRecordingMs: MAX_RECORDING_MS,
     onLimit: () => {
-      toast('toast.recordingLimitReached', 'warn')
+      toastKey('toast.recordingLimitReached', 'warn')
       void finish()
     },
   })
@@ -131,7 +131,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       } catch (error) {
         const message = describeVoiceError(error)
         if (message) toastText(message, 'error')
-        else toast('toast.voiceRecognitionFailed', 'error')
+        else toastKey('toast.voiceRecognitionFailed', 'error')
       } finally {
         isStarted.value = false
         isTranscribing.value = false
@@ -188,7 +188,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           deps.onCorrected('', '', undefined, 'submit')
           return
         }
-        toast('toast.nothingRecognized', 'warn')
+        toastKey('toast.nothingRecognized', 'warn')
         notifyCancelled()
         return
       }
@@ -204,7 +204,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           sourceId = await deps.saveSource(recognizedText, 'voice-correction')
         } catch {
           // the text is still here; only its copy in the history is missing
-          toast('history.operationFailed', 'error')
+          toastKey('history.operationFailed', 'error')
         }
         if (!isCurrent()) return
         const owner = deps.setPendingModal({
@@ -220,7 +220,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             resultText = formattedText
             correctedText = formattedText
             await deps.saveSourceResult(sourceId, formattedText).catch(() => {
-              toast('history.operationFailed', 'error')
+              toastKey('history.operationFailed', 'error')
             })
           }
         } catch {
@@ -238,7 +238,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       if (!signal?.aborted) {
         const message = describeVoiceError(error)
         if (message) toastText(message, 'error')
-        else toast('toast.voiceRecognitionFailed', 'error')
+        else toastKey('toast.voiceRecognitionFailed', 'error')
       }
       notifyCancelled()
     } finally {
@@ -265,7 +265,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       hasSession = false
       const message = describeVoiceError(error)
       if (message) toastText(message, 'error')
-      else toast('toast.voiceRecognitionFailed', 'error')
+      else toastKey('toast.voiceRecognitionFailed', 'error')
       voiceSession.abort()
       notifyCancelled()
       return
@@ -313,7 +313,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         if (generation !== sessionGeneration) return
         const message = describeVoiceError(error)
         if (message) toastText(message, 'error')
-        else toast('toast.voiceRecognitionFailed', 'error')
+        else toastKey('toast.voiceRecognitionFailed', 'error')
         voiceSession.abort()
         notifyCancelled()
       }

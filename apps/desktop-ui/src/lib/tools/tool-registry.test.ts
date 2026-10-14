@@ -33,7 +33,7 @@ describe('createToolRegistry', () => {
     expect(pluginToolId('Search', 'search')).toBe('Search.search')
     expect(registered).toMatchObject({
       id: 'Search.search',
-      owner: { kind: 'plugin', name: 'Search' },
+      owner: { kind: 'plugin', pluginId: 'Search' },
     })
     expect(registered?.baseConfig?.()).toEqual({ url: 'https://x.test' })
     expect(registry.get('search')).toBeUndefined()

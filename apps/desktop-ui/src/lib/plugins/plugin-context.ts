@@ -44,7 +44,10 @@ export interface PluginContextDependencies {
   replaceEditorInputSelection(value: string): void
   setEditorInputFocus(): void
   toEditor(text?: string): void
-  toast(message: string, type: 'success' | 'error' | 'warn' | 'info'): void
+  toastKey(
+    messageKey: string,
+    type: 'success' | 'error' | 'warn' | 'info'
+  ): void
   toastText(message: string, type: 'success' | 'error' | 'warn' | 'info'): void
   t(key: string, params?: Record<string, string | number>): string
   log: PluginContext['log']
@@ -307,7 +310,7 @@ export function createPluginContext(
     setEditorInputFocus: guard(deps.setEditorInputFocus, 'editor'),
     toEditor: guard(deps.toEditor, 'editor'),
     t: guard((value, params) => deps.t(key(value), params)),
-    toast: guard((value, level) => deps.toast(key(value), level)),
+    toast: guard((value, level) => deps.toastKey(key(value), level)),
     toastText: guard(deps.toastText),
     log: guard(deps.log),
     getMyConfig: guard(() =>

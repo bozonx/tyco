@@ -131,15 +131,15 @@ export function createEditorInputModel() {
     setSelection('', 0, 0)
   }
 
-  const focus = (): void => {
+  const requestFocus = (): void => {
     focusRequestCount.value++
   }
 
-  const selectAll = (): void => {
+  const requestSelectAll = (): void => {
     selectAllRequestCount.value++
   }
 
-  const openSearch = (): void => {
+  const requestSearch = (): void => {
     searchRequestCount.value++
   }
 
@@ -162,15 +162,15 @@ export function createEditorInputModel() {
     actionText,
     setValue,
     replaceValue,
-    focus,
-    selectAll,
+    requestFocus,
+    requestSelectAll,
     setSelection,
     replaceSelection,
     applyResult,
     getSnapshot,
     applySnapshotEdit,
     captureResultSource,
-    openSearch,
+    requestSearch,
     clear,
   }
 }

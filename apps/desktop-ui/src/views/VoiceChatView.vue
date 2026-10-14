@@ -1,7 +1,7 @@
 <template>
   <ContentPadding>
     <VoiceRecognitionMenu
-      v-if="!isInsertMenu"
+      v-if="!isInsertMenuVisible"
       variant="sheet"
       finish-behavior="submitToChat"
       :context="context?.text"
@@ -12,7 +12,7 @@
     <!-- Tab: the user wants another action for the text, not the chat -->
     <InsertMenu
       v-else
-      :text="resText"
+      :text="dictationResultText"
       :allowInsertButton="true"
       :shortcutsDisabled="menuModalsStore.hasOpenModal"
     />
@@ -41,14 +41,14 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 /** The user removed the context of this activation */
 const contextRemoved = ref(false)
 /** The dictated text went to the actions step instead of the chat */
-const isInsertMenu = ref(false)
-const resText = ref('')
+const isInsertMenuVisible = ref(false)
+const dictationResultText = ref('')
 watch(
   () => ipcStore.desktopState.activationId,
   () => {
     contextRemoved.value = false
-    isInsertMenu.value = false
-    resText.value = ''
+    isInsertMenuVisible.value = false
+    dictationResultText.value = ''
   }
 )
 /** What the question is about; it is shown before it goes to the chat */
@@ -63,8 +63,8 @@ async function handleCorrected(
   intent: VoiceFinishIntent
 ) {
   if (intent === 'next') {
-    resText.value = resultText
-    isInsertMenu.value = true
+    dictationResultText.value = resultText
+    isInsertMenuVisible.value = true
     return
   }
 
@@ -82,8 +82,8 @@ async function handleCorrected(
     ipcStore.desktopState.mode === 'voiceChat' &&
     ipcStore.desktopState.isWindowShown
   ) {
-    resText.value = resultText
-    isInsertMenu.value = true
+    dictationResultText.value = resultText
+    isInsertMenuVisible.value = true
   }
 }
 

@@ -28,14 +28,14 @@ const { t } = useI18n()
 // set value from route params and focus
 onMounted(async () => {
   await nextTick()
-  quickInputStore.focus()
+  quickInputStore.requestFocus()
 })
 
 // set focus on close modal
 watch(
   () => menuModalsStore.hasOpenModal,
   (value) => {
-    if (!value) quickInputStore.focus()
+    if (!value) quickInputStore.requestFocus()
   }
 )
 

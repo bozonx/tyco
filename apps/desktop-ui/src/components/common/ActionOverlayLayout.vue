@@ -19,7 +19,7 @@
           class="action-overlay-esc"
           @click="handleEsc"
         >
-          <KeyButton>Esc</KeyButton>
+          <KeyboardKey>Esc</KeyboardKey>
           <span>{{ escLabel }}</span>
         </button>
       </div>
@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { useOverlayNav } from '../../composables/use-overlay-nav'
-import KeyButton from './KeyButton.vue'
+import KeyboardKey from './KeyboardKey.vue'
 
 const props = withDefaults(
   defineProps<{

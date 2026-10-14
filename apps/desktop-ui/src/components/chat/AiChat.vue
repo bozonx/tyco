@@ -1,7 +1,7 @@
 <template>
   <div class="ai-chat">
     <ChatResponseAnnouncer
-      :chat-id="chatStore.currentChatState.id"
+      :chat-id="chatStore.currentChatParams.id"
       :is-generating="chatStore.isGenerating"
       :message="chatStore.messages.at(-1)"
     />
@@ -142,15 +142,15 @@
           >
         </div>
         <div
-          v-if="chatStore.trimmedTurns"
+          v-if="chatStore.trimmedTurnCount"
           class="text-sm text-muted"
           role="status"
         >
-          {{ t('chat.historyTrimmed', { count: chatStore.trimmedTurns }) }}
+          {{ t('chat.historyTrimmed', { count: chatStore.trimmedTurnCount }) }}
         </div>
         <div
           v-if="
-            chatStore.currentChatState.attachments?.some(
+            chatStore.currentChatParams.attachments?.some(
               (item) =>
                 item.mediaType === 'application/pdf' ||
                 item.mediaType?.includes('wordprocessingml')
@@ -268,7 +268,7 @@ const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
 
@@ -364,20 +364,20 @@ async function regenerate(index: number) {
 
 async function branch(index: number) {
   pinnedToBottom.value = true
-  if (await chatStore.branchChat(index)) toast('chat.branchCreated', 'info')
+  if (await chatStore.branchChat(index)) toastKey('chat.branchCreated', 'info')
 }
 
 async function copyMarkdownToPoint(index: number) {
   const slice = chatStore.messages.slice(0, index + 1)
-  const title = chatStore.currentChatState.title || ''
+  const title = chatStore.currentChatParams.title || ''
   const md = formatChatToMarkdown(slice, title ? { title } : undefined)
   try {
     await navigator.clipboard.writeText(md)
   } catch {
-    toast('editor.menu.clipboardUnavailable', 'error')
+    toastKey('editor.menu.clipboardUnavailable', 'error')
     return
   }
-  toast('chat.markdownCopied', 'info')
+  toastKey('chat.markdownCopied', 'info')
 }
 
 function voiceInput() {
@@ -472,7 +472,7 @@ watch(
 )
 
 watch(
-  () => chatStore.currentChatState?.id,
+  () => chatStore.currentChatParams?.id,
   () => {
     chatInputStore.clear()
     pinnedToBottom.value = true

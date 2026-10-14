@@ -9,7 +9,7 @@ import {
   type SessionState,
 } from '@tyco/shared'
 import { ref } from 'vue'
-import type { DesktopInvoker } from './ipc-store'
+import type { DesktopInvoker } from './ipc-model'
 import type { DesktopCall } from './desktop-functions'
 
 export interface DesktopStateDependencies {

@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   cancelDictation: vi.fn().mockResolvedValue(undefined),
   shouldFormatRecognizedText: vi.fn().mockReturnValue(false),
   voiceCorrection: vi.fn(),
-  toast: vi.fn(),
+  toastKey: vi.fn(),
   toastText: vi.fn(),
 }))
 
@@ -33,7 +33,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: mocks.toast, toastText: mocks.toastText }),
+  default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),
 }))
 
 vi.mock('../../lib/desktop/client', () => ({

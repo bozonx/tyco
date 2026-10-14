@@ -9,8 +9,8 @@
 
     <div
       class="surface plugin-card"
-      :class="{ 'is-disabled': !plugin.enabled }"
-      :data-plugin="plugin.name"
+      :class="{ 'is-disabled': !plugin.isEnabled }"
+      :data-plugin="plugin.pluginId"
     >
       <div class="plugin-card-header">
         <div class="plugin-icon">
@@ -19,7 +19,9 @@
         <div class="flex flex-col min-w-0 flex-1">
           <h3 class="font-medium text-sm leading-tight">
             {{
-              plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+              plugin.labelKey
+                ? t(plugin.labelKey)
+                : plugin.label || plugin.pluginId
             }}
           </h3>
           <p
@@ -35,13 +37,13 @@
         </div>
 
         <FieldCheckbox
-          :value="plugin.enabled"
+          :value="plugin.isEnabled"
           :title="
-            plugin.enabled
+            plugin.isEnabled
               ? t('settings.pluginEnabled')
               : t('settings.pluginDisabled')
           "
-          @update:value="setPluginEnabled(plugin.name, $event)"
+          @update:value="setPluginEnabled(plugin.pluginId, $event)"
         />
       </div>
 
@@ -51,11 +53,11 @@
       <p v-if="plugin.error" class="px-4 text-sm text-error">
         {{ t('settings.pluginPackageFailed', { detail: plugin.error }) }}
       </p>
-      <div v-if="plugin.enabled" class="plugin-card-body">
+      <div v-if="plugin.isEnabled" class="plugin-card-body">
         <ConfigFields
           v-if="plugin.fields.length > 0"
           :config="plugin.fields"
-          @update:values="updatePluginConfig(plugin.name, $event)"
+          @update:values="updatePluginConfig(plugin.pluginId, $event)"
         />
         <div v-else class="p-4 text-sm text-muted">
           {{ t('settings.noPluginSettings') }}
@@ -80,22 +82,22 @@ import { Icon } from '@iconify/vue'
 defineProps<{ plugin: InstalledPluginItem }>()
 
 const emit = defineEmits<{
-  'update:pluginEnabled': [pluginName: string, enabled: boolean]
-  'update:pluginConfig': [pluginName: string, values: Record<string, unknown>]
+  'update:pluginEnabled': [pluginId: string, enabled: boolean]
+  'update:pluginConfig': [pluginId: string, values: Record<string, unknown>]
   back: []
 }>()
 
 const { t } = useI18n()
 
-const setPluginEnabled = (pluginName: string, enabled: boolean) => {
-  emit('update:pluginEnabled', pluginName, enabled)
+const setPluginEnabled = (pluginId: string, enabled: boolean) => {
+  emit('update:pluginEnabled', pluginId, enabled)
 }
 
 const updatePluginConfig = (
-  pluginName: string,
+  pluginId: string,
   values: Record<string, unknown>
 ) => {
-  emit('update:pluginConfig', pluginName, values)
+  emit('update:pluginConfig', pluginId, values)
 }
 </script>
 

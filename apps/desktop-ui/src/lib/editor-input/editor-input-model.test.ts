@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createEditorInputModel } from './editor-input-store'
+import { createEditorInputModel } from './editor-input-model'
 
 function createStore() {
   return { store: createEditorInputModel() }
@@ -105,15 +105,15 @@ describe('createEditorInputModel', () => {
     expect(store.lastEditSource.value).toBe('clear')
   })
 
-  it('increments focus and selectAll counters', () => {
+  it('increments requestFocus and requestSelectAll counters', () => {
     const { store } = createStore()
 
     expect(store.focusRequestCount.value).toBe(0)
-    store.focus()
+    store.requestFocus()
     expect(store.focusRequestCount.value).toBe(1)
 
     expect(store.selectAllRequestCount.value).toBe(0)
-    store.selectAll()
+    store.requestSelectAll()
     expect(store.selectAllRequestCount.value).toBe(1)
   })
 

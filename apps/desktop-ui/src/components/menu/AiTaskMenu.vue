@@ -72,7 +72,7 @@ const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const invocations = useInvocationsStore()
 const appConfig = computed(() => ipcStore.desktopState.appConfig)
-const { toast, toastText } = useToast()
+const { toastKey, toastText } = useToast()
 const historyStore = useHistoryStore()
 const { t } = useI18n()
 const chatStore = useChatStore()
@@ -118,7 +118,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 async function runTask(index: number) {
   const task = ipcStore.desktopState.userConfig?.aiTasks?.[index]
   if (!task || !task.rule?.trim()) {
-    toast('toast.desktopCommandFailed', 'error')
+    toastKey('toast.desktopCommandFailed', 'error')
     return
   }
   await makeDiff(task.rule)
@@ -138,7 +138,7 @@ onMounted(() => {
     (task) => task?.id === taskId
   )
   if (index < 0) {
-    toast('toast.desktopCommandFailed', 'error')
+    toastKey('toast.desktopCommandFailed', 'error')
     return
   }
   void runTask(index)
@@ -217,12 +217,12 @@ async function savePromptAsTask() {
     SHORTCUT_SLOT_KEYS.length
   )
   if (!aiTasks) {
-    toast('menu.aiPromptSlotsFull', 'warn')
+    toastKey('menu.aiPromptSlotsFull', 'warn')
     return
   }
 
   const result = await ipcStore.saveUserConfig({ ...userConfig, aiTasks })
-  if (!result.success) toast('toast.desktopCommandFailed', 'error')
+  if (!result.success) toastKey('toast.desktopCommandFailed', 'error')
 }
 
 /** Applies `prompt` to the text with the `core.aiTask` tool, then the diff */
@@ -230,12 +230,12 @@ async function makeDiff(prompt: string) {
   const trimmedText = props.text.trim()
 
   if (!trimmedText) {
-    toast('toast.noTextToProcess', 'warn')
+    toastKey('toast.noTextToProcess', 'warn')
     return
   }
 
   if (trimmedText.length < appConfig.value.minAiTaskLength) {
-    toast('toast.textTooShortToProcess', 'warn')
+    toastKey('toast.textTooShortToProcess', 'warn')
     return
   }
 
@@ -260,11 +260,11 @@ async function makeDiff(prompt: string) {
     }
     const newText = result.content ?? ''
     if (!newText.trim()) {
-      toast('toast.desktopCommandFailed', 'error')
+      toastKey('toast.desktopCommandFailed', 'error')
       return
     }
     await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-      toast('history.operationFailed', 'error')
+      toastKey('history.operationFailed', 'error')
     })
     // closed meanwhile: the result is in the history, not on the screen
     if (controller.signal.aborted) return

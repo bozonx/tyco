@@ -19,7 +19,7 @@ function setup(overrides: Partial<VoiceRecognitionDependencies> = {}) {
     onCorrected: vi.fn(),
     onCancelled: vi.fn(),
     t: (key) => key,
-    toast: vi.fn(),
+    toastKey: vi.fn(),
     toastText: vi.fn(),
     ...overrides,
   }

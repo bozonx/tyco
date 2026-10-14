@@ -5,7 +5,7 @@ import type {
 } from './correction-step'
 import { describe, expect, it, vi } from 'vitest'
 
-import { MenuModals, createMenuModalsModel } from '../modals/menu-modals-store'
+import { MenuModals, createMenuModalsModel } from '../modals/menu-modals-model'
 import { createCorrectionStep } from './correction-step'
 
 function deferred<T>() {

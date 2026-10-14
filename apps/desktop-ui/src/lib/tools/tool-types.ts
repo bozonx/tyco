@@ -22,7 +22,7 @@ export interface ToolDefinition extends Omit<
 }
 
 /** Who provides a tool of the registry */
-export type ToolOwner = { kind: 'core' } | { kind: 'plugin'; name: string }
+export type ToolOwner = { kind: 'core' } | { kind: 'plugin'; pluginId: string }
 
 /** A tool of the registry under its full id */
 export interface RegisteredTool extends ToolDefinition {

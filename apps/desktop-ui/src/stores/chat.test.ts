@@ -99,7 +99,7 @@ it('budgets the actual chat instructions, rules and configured output consistent
   const store = useChatStore()
   const input = useChatInputStore()
   input.setValue('Question')
-  expect(store.contextBudget?.budget).toBe(0)
+  expect(store.contextBudget?.budgetCharacters).toBe(0)
   expect(store.contextBudget?.level).toBe('over')
   expect(await store.sendInput()).toBe(false)
   expect(ai.sendChatMessage).not.toHaveBeenCalled()

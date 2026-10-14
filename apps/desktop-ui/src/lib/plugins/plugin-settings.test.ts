@@ -38,11 +38,11 @@ describe('plugin-settings', () => {
 
     expect(plugins).toHaveLength(2)
     expect(plugins[0]).toMatchObject({
-      name: 'AlphaPlugin',
+      pluginId: 'AlphaPlugin',
       version: '1.0.0',
       canRestore: false,
       labelKey: 'plugin.alpha.label',
-      enabled: false,
+      isEnabled: false,
       fields: [
         {
           type: 'text',
@@ -52,7 +52,7 @@ describe('plugin-settings', () => {
         },
       ],
     })
-    expect(plugins[1].enabled).toBe(false)
+    expect(plugins[1].isEnabled).toBe(false)
     expect(plugins[1].fields).toHaveLength(0)
   })
 
@@ -66,9 +66,9 @@ describe('plugin-settings', () => {
 
     const plugins = resolveInstalledPlugins(samplePlugins, userConfig)
 
-    expect(plugins[0].enabled).toBe(false)
+    expect(plugins[0].isEnabled).toBe(false)
     expect(plugins[0].fields[0].value).toBe('custom-secret')
-    expect(plugins[1].enabled).toBe(true)
+    expect(plugins[1].isEnabled).toBe(true)
   })
 
   it.each(['active', 'disabled'] as const)(

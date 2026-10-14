@@ -31,7 +31,7 @@
         <textarea
           ref="textRef"
           class="launcher-text"
-          :value="launcher.text"
+          :value="launcher.inputText"
           :placeholder="t('commandLauncher.textPlaceholder')"
           :aria-label="t('commandLauncher.textPlaceholder')"
           @input="
@@ -84,11 +84,11 @@
             @mousedown.prevent
             @click="void launcher.submit()"
           >
-            <KeyButton>Enter</KeyButton>
+            <KeyboardKey>Enter</KeyboardKey>
             {{ t('commandLauncher.hintRun') }}
           </button>
           <span class="launcher-hint">
-            <KeyButton>Shift</KeyButton><KeyButton>Enter</KeyButton>
+            <KeyboardKey>Shift</KeyboardKey><KeyboardKey>Enter</KeyboardKey>
             {{ t('commandLauncher.hintNewLine') }}
           </span>
           <button
@@ -97,7 +97,7 @@
             @mousedown.prevent
             @click="launcher.back"
           >
-            <KeyButton>Esc</KeyButton>
+            <KeyboardKey>Esc</KeyboardKey>
             {{ t('common.back') }}
           </button>
         </div>
@@ -124,20 +124,20 @@
               v-for="index in launcher.pageCount"
               :key="index"
               class="launcher-hint"
-              :aria-pressed="launcher.page === index - 1"
+              :aria-pressed="launcher.pageIndex === index - 1"
               :aria-label="t('settings.launcherPage', { page: index })"
               :title="t('settings.launcherPage', { page: index })"
               @click="launcher.setPage(index - 1)"
             >
-              <KeyButton>{{ index === 10 ? 0 : index }}</KeyButton>
+              <KeyboardKey>{{ index === 10 ? 0 : index }}</KeyboardKey>
             </button>
             <span class="launcher-hint launcher-pages-tab"
-              ><KeyButton>PageUp</KeyButton
-              ><KeyButton>PageDown</KeyButton></span
+              ><KeyboardKey>PageUp</KeyboardKey
+              ><KeyboardKey>PageDown</KeyboardKey></span
             >
           </div>
           <ShortcutList
-            :key="launcher.page"
+            :key="launcher.pageIndex"
             :text="selectedText"
             :spaceKey="searchAction"
             :leftLetterKeys="leftLetterKeys"
@@ -169,7 +169,7 @@ import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
-import KeyButton from '../common/KeyButton.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import QueryPanel, {

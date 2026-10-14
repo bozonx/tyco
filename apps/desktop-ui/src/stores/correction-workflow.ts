@@ -19,7 +19,7 @@ import { MenuModals, useMenuModalsStore } from './menu-modals'
 export const useCorrectionWorkflowStore = defineStore(
   'correctionWorkflow',
   () => {
-    const { toast, toastText } = useToast()
+    const { toastKey, toastText } = useToast()
     const menuModalsStore = useMenuModalsStore()
     const historyStore = useHistoryStore()
 
@@ -51,7 +51,7 @@ export const useCorrectionWorkflowStore = defineStore(
           const sourceId = await historyStore.saveSource(text, 'correction')
           await historyStore.saveSourceResult(sourceId, result)
         } catch {
-          toast('history.operationFailed', 'error')
+          toastKey('history.operationFailed', 'error')
         }
       },
       reportError: (error) => {

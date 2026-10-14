@@ -26,7 +26,7 @@ export type SeededConfig = Pick<
 
 function isToolEnabled(tool: RegisteredTool, userConfig: UserConfig) {
   if (tool.owner.kind !== 'plugin') return true
-  const state = userConfig.plugins?.[tool.owner.name] as
+  const state = userConfig.plugins?.[tool.owner.pluginId] as
     { enabled?: boolean } | undefined
   return state?.enabled !== false
 }

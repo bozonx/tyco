@@ -1,17 +1,17 @@
 import { withConfigFieldValue } from '@tyco/plugin-sdk'
-import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
+import { getPluginState, resolvePluginConfig } from './plugin-config'
 import { pluginMessageKey, scopeConfigFields } from './plugin-resources'
 import type { InputConfigItem } from '../../types'
 import type { PluginRuntimeState } from './plugin-manager'
 import type { PluginFactory } from '../../types/plugins'
 
 export interface InstalledPluginItem {
-  name: string
+  pluginId: string
   labelKey?: string
   label?: string
   descriptionKey?: string
   description?: string
-  enabled: boolean
+  isEnabled: boolean
   version?: string
   status?: Exclude<PluginRuntimeState['status'], 'active' | 'disabled'>
   canRestore?: boolean
@@ -26,32 +26,32 @@ export function resolveInstalledPlugins(
 ): InstalledPluginItem[] {
   return factories.map((pluginFactory) => {
     const plugin = pluginFactory()
-    const pluginName = pluginId(plugin)
+    const pluginId = plugin.id
     const pluginState = getPluginState(plugin, userConfig?.plugins)
     let config: Record<string, unknown> = {}
-    let error = plugin._loadError ?? runtime[pluginName]?.error
+    let error = plugin._loadError ?? runtime[pluginId]?.error
     try {
       config = resolvePluginConfig(plugin, pluginState)
     } catch (reason) {
       error = reason instanceof Error ? reason.message : String(reason)
     }
     const isEnabled = pluginState.enabled === true
-    const status = isEnabled ? runtime[pluginName]?.status : undefined
+    const status = isEnabled ? runtime[pluginId]?.status : undefined
     const rawFields = plugin.defaultConfig?.fields || []
 
     return {
-      name: pluginName,
-      labelKey: pluginMessageKey(pluginName, plugin.labelKey),
+      pluginId,
+      labelKey: pluginMessageKey(pluginId, plugin.labelKey),
       label: plugin.label,
-      descriptionKey: pluginMessageKey(pluginName, plugin.descriptionKey),
+      descriptionKey: pluginMessageKey(pluginId, plugin.descriptionKey),
       description: plugin.description,
-      enabled: isEnabled,
+      isEnabled,
       version: plugin.version,
       status: status === 'active' || status === 'disabled' ? undefined : status,
       canRestore: plugin._canRestore ?? false,
       ...(error ? { error } : {}),
-      fields: scopeConfigFields(pluginName, error ? [] : rawFields).map(
-        (field) => withConfigFieldValue(field, config[field.name])
+      fields: scopeConfigFields(pluginId, error ? [] : rawFields).map((field) =>
+        withConfigFieldValue(field, config[field.name])
       ),
     }
   })

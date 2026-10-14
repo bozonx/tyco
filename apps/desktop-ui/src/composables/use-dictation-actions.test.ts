@@ -35,7 +35,7 @@ vi.mock('../lib/stt/live-dictation', () => ({
   }),
 }))
 vi.mock('./use-toast', () => ({
-  default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
+  default: () => ({ toastKey: vi.fn(), toastText: vi.fn() }),
 }))
 
 import { setI18nLocale } from '../lib/i18n/index'

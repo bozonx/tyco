@@ -8,7 +8,7 @@ import useToast from './use-toast'
 export function useTranslationActions() {
   const ipcStore = useIpcStore()
   const translationStore = useTranslationStore()
-  const { toast, toastText } = useToast()
+  const { toastKey, toastText } = useToast()
   const currentUserConfig = () => ipcStore.desktopState.userConfig
   interface TranslateOptions {
     signal?: AbortSignal
@@ -25,7 +25,7 @@ export function useTranslationActions() {
     options: TranslateOptions = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'warn')
+      toastKey('toast.textNotSelected', 'warn')
       return ''
     }
 

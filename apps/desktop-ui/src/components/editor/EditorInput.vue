@@ -61,7 +61,7 @@ const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const editMenuStore = useEditMenuStore()
 const ipcStore = useIpcStore()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const { t } = useI18n()
 const { getLabel, doAction, doEdit } = useEditorActions()
 
@@ -94,8 +94,8 @@ const withClipboard = async (run: () => Promise<void>): Promise<void> => {
     await run()
   } catch (error) {
     if (error instanceof StaleClipboardError)
-      toast('toast.textTransformStale', 'warn')
-    else toast('editor.menu.clipboardUnavailable', 'error')
+      toastKey('toast.textTransformStale', 'warn')
+    else toastKey('editor.menu.clipboardUnavailable', 'error')
   }
 }
 
@@ -214,7 +214,7 @@ onMounted(() => {
     }),
   })
 
-  editorInputStore.focus()
+  editorInputStore.requestFocus()
 })
 
 onUnmounted(() => {
@@ -263,7 +263,7 @@ watch(
 watch(
   () => menuModalsStore.hasOpenModal,
   (value) => {
-    if (!value) editorInputStore.focus()
+    if (!value) editorInputStore.requestFocus()
   }
 )
 

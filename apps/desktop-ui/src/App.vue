@@ -76,7 +76,7 @@ const quickInputStore = useQuickInputStore()
 const routeParamsStore = useEditorNavigation()
 const route = useRoute()
 const isQuickWindow = getDesktopWindowLabel() === 'quick'
-const { toast } = useToast()
+const { toastKey } = useToast()
 const settingsShutdown = createSettingsShutdown({
   flush: async () => {
     await ipcStore.loadDesktopState()
@@ -91,7 +91,7 @@ const settingsShutdown = createSettingsShutdown({
     )
     if (!result.success) throw new Error(result.error)
   },
-  notifyError: () => toast('settings.shutdownCancelled', 'error'),
+  notifyError: () => toastKey('settings.shutdownCancelled', 'error'),
 })
 // The benchmark activates the write mode only. Tauri delivers its events to
 // every window, and an answer from the main window would race the real one
@@ -217,7 +217,7 @@ watch(
 // the text selected in another app when the editor was called goes into it
 const capturedSelection = createCapturedSelection({
   replaceValue: (text) => editorInputStore.replaceValue(text),
-  focus: () => editorInputStore.focus(),
+  focus: () => editorInputStore.requestFocus(),
 })
 // the text selected elsewhere when chat was called goes into chat attachments
 const capturedChatSelection = createCapturedChatSelection({
@@ -303,7 +303,7 @@ onMounted(() => {
       if (autoSend) {
         await chatStore.sendInput()
       } else {
-        chatInputStore.focus()
+        chatInputStore.requestFocus()
       }
     }
   })

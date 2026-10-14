@@ -5,5 +5,5 @@ import { useEditorInputStore } from './editor-input'
 
 export const useMarkupModeStore = defineStore('markupMode', () => {
   const editor = useEditorInputStore()
-  return createMarkupMode(editor.focus)
+  return createMarkupMode(editor.requestFocus)
 })

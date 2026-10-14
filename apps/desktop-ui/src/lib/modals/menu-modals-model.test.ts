@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { MenuModals, createMenuModalsModel } from './menu-modals-store'
+import { MenuModals, createMenuModalsModel } from './menu-modals-model'
 import { blurActiveElement } from '../ui/focus'
 
 describe('createMenuModalsModel', () => {

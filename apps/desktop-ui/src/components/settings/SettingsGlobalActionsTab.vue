@@ -227,7 +227,7 @@ interface HotkeyRow {
 }
 
 const ipcStore = useIpcStore()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
 const editable = computed(() => isEditable(providerState))
@@ -305,7 +305,7 @@ async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text)
   } catch {
-    toast('editor.menu.clipboardUnavailable', 'error')
+    toastKey('editor.menu.clipboardUnavailable', 'error')
   }
 }
 

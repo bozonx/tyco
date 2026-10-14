@@ -7,7 +7,7 @@
     @click="emit('click')"
   >
     <span class="shortcut-keys">
-      <KeyButton v-for="key in keys" :key="key">{{ key }}</KeyButton>
+      <KeyboardKey v-for="key in keys" :key="key">{{ key }}</KeyboardKey>
     </span>
     <Icon v-if="icon" :icon="icon" height="16" class="shortcut-icon" />
     <span class="shortcut-label">
@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import Icon from './AppIcon.vue'
-import KeyButton from './KeyButton.vue'
+import KeyboardKey from './KeyboardKey.vue'
 
 withDefaults(
   defineProps<{

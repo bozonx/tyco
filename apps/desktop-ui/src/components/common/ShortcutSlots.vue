@@ -11,7 +11,7 @@
         'is-drop-target': targetIndex === index,
       }"
     >
-      <KeyButton>{{ key }}</KeyButton>
+      <KeyboardKey>{{ key }}</KeyboardKey>
 
       <template v-if="items[index]">
         <IconButton
@@ -61,7 +61,7 @@ import { nextTick, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
-import KeyButton from './KeyButton.vue'
+import KeyboardKey from './KeyboardKey.vue'
 import ReorderControls from './ReorderControls.vue'
 import { Icon } from '@iconify/vue'
 

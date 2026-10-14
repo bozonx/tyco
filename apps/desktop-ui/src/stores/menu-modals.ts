@@ -5,7 +5,7 @@ import { blurActiveElement } from '../lib/ui/focus'
 import {
   MenuModals,
   createMenuModalsModel,
-} from '../lib/modals/menu-modals-store'
+} from '../lib/modals/menu-modals-model'
 
 export { MenuModals }
 

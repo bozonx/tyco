@@ -4,7 +4,7 @@ import { onScopeDispose } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
 import { createHeldKeys } from '../lib/desktop/held-keys'
 import { translate } from '../lib/i18n'
-import { createIpcModel } from '../lib/ipc/ipc-store'
+import { createIpcModel } from '../lib/ipc/ipc-model'
 import { clientLogger } from '../lib/logger'
 import { useToastStore } from './toast'
 

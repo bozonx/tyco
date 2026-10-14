@@ -124,7 +124,7 @@ const applyToEditorAction: ActionItem = {
     )
       return
     menuModalsStore.closeAll()
-    editorInputStore.focus()
+    editorInputStore.requestFocus()
   },
 }
 const actionsMenu = computed(() => {

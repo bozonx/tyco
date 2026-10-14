@@ -16,7 +16,7 @@ import { APP_CONFIG, type ChatMessage } from '@tyco/shared'
 export const useLlmActions = () => {
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
-  const { toast, toastText } = useToast()
+  const { toastKey, toastText } = useToast()
   const currentUserConfig = () => ipcStore.desktopState.userConfig
   const currentAppConfig = () => ipcStore.desktopState?.appConfig ?? APP_CONFIG
 
@@ -93,7 +93,7 @@ export const useLlmActions = () => {
     options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'warn')
+      toastKey('toast.textNotSelected', 'warn')
       return ''
     }
 
@@ -114,7 +114,7 @@ export const useLlmActions = () => {
     options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
   ) => {
     if (!text?.trim()) {
-      toast('toast.textNotSelected', 'warn')
+      toastKey('toast.textNotSelected', 'warn')
       return ''
     }
     if (!prompt.trim()) return ''

@@ -11,7 +11,7 @@
         @mousedown.prevent
         @click="submitFromHint"
       >
-        <KeyButton>{{ submitShortcutLabel }}</KeyButton>
+        <KeyboardKey>{{ submitShortcutLabel }}</KeyboardKey>
         <span>{{ t('write.correctAndInsert') }}</span>
       </button>
       <span class="opacity-40">•</span>
@@ -21,7 +21,7 @@
         @mousedown.prevent
         @click="nextFromHint"
       >
-        <KeyButton>Tab</KeyButton>
+        <KeyboardKey>Tab</KeyboardKey>
         <span>{{ t('write.next') }}</span>
       </button>
       <span class="opacity-40">•</span>
@@ -31,7 +31,7 @@
         @mousedown.prevent
         @click="insertNewline"
       >
-        <KeyButton>{{ newlineShortcutLabel }}</KeyButton>
+        <KeyboardKey>{{ newlineShortcutLabel }}</KeyboardKey>
         <span>{{ t('write.newLine') }}</span>
       </button>
       <span class="opacity-40">•</span>
@@ -41,7 +41,7 @@
         @mousedown.prevent
         @click="cancelFromHint"
       >
-        <KeyButton>Esc</KeyButton>
+        <KeyboardKey>Esc</KeyboardKey>
         <span>{{ t('write.cancel') }}</span>
       </button>
     </p>
@@ -126,8 +126,9 @@ watch(
       menuModalsStore.closeAll()
       resetNav()
       // a kept text comes back selected: typing replaces it
-      if (quickInputStore.startSession()) quickInputStore.focusAndSelectAll()
-      else quickInputStore.focus()
+      if (quickInputStore.startSession())
+        quickInputStore.requestFocusAndSelectAll()
+      else quickInputStore.requestFocus()
     }
   },
   { immediate: true }

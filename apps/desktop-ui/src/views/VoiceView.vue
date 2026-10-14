@@ -1,6 +1,6 @@
 <template>
   <!-- the bar sits at the bottom like the quick input, without padding -->
-  <div v-if="props.bar && !isInsertMenu" class="voice-bar-layer">
+  <div v-if="props.bar && !isInsertMenuVisible" class="voice-bar-layer">
     <VoiceRecognitionMenu
       variant="bar"
       finish-behavior="insertIntoTarget"
@@ -10,14 +10,14 @@
   </div>
   <ContentPadding v-else>
     <VoiceRecognitionMenu
-      v-if="!isInsertMenu"
+      v-if="!isInsertMenuVisible"
       finish-behavior="insertIntoTarget"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
     <InsertMenu
       v-else
-      :text="resText"
+      :text="dictationResultText"
       :allowInsertButton="true"
       :shortcutsDisabled="menuModalsStore.hasOpenModal"
     />
@@ -53,12 +53,14 @@ const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
-const isInsertMenu = ref(false)
-const resText = ref('')
+const isInsertMenuVisible = ref(false)
+const dictationResultText = ref('')
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 
-watch(isInsertMenu, (shown) => emit('result-shown', shown), { immediate: true })
+watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
+  immediate: true,
+})
 
 watch(
   () => [
@@ -68,8 +70,8 @@ watch(
   ],
   ([isShown, mode, activationId], previous) => {
     if (!isShown || mode !== 'voice' || activationId !== previous?.[2]) {
-      isInsertMenu.value = false
-      resText.value = ''
+      isInsertMenuVisible.value = false
+      dictationResultText.value = ''
     }
   }
 )
@@ -88,8 +90,8 @@ function handleCorrected(
     void insertAction.action(resultText)
     return
   }
-  resText.value = resultText
-  isInsertMenu.value = true
+  dictationResultText.value = resultText
+  isInsertMenuVisible.value = true
 }
 
 function handleCancelled() {

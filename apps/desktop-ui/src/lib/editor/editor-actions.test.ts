@@ -7,7 +7,7 @@ import {
 import { describe, expect, it, vi } from 'vitest'
 import { proxyRefs } from 'vue'
 
-import { createEditorInputModel } from '../editor-input/editor-input-store'
+import { createEditorInputModel } from '../editor-input/editor-input-model'
 import {
   createEditorActions,
   type EditorActionsDependencies,
@@ -19,15 +19,15 @@ function setup() {
   editor.setSelection('selected', 7, 15)
   const openVoice = vi.fn<EditorActionsDependencies['openVoice']>()
   const closeVoice = vi.fn()
-  const toast = vi.fn()
+  const toastKey = vi.fn()
   const actions = createEditorActions({
     editor,
     openVoice,
     closeVoice,
-    toast,
+    toastKey,
     t: (key) => `translated:${key}`,
   })
-  return { actions, editor, openVoice, closeVoice, toast }
+  return { actions, editor, openVoice, closeVoice, toastKey }
 }
 
 describe('editor actions', () => {
@@ -104,27 +104,27 @@ describe('editor actions', () => {
   })
 
   it('applies a formatter result to the selection as an AI edit', async () => {
-    const { actions, editor, toast } = setup()
+    const { actions, editor, toastKey } = setup()
     await actions.doEdit({
       id: 'upper',
       action: async (text) => text.toUpperCase(),
     })
     expect(editor.value).toBe('before SELECTED after')
     expect(editor.lastEditSource).toBe('ai')
-    expect(toast).not.toHaveBeenCalled()
+    expect(toastKey).not.toHaveBeenCalled()
   })
 
   it('reports an empty selection without running the formatter', async () => {
-    const { actions, editor, toast } = setup()
+    const { actions, editor, toastKey } = setup()
     editor.setSelection('', 0, 0)
     const action = vi.fn(async () => 'result')
     await actions.doEdit({ id: 'selection', selectionOnly: true, action })
     expect(action).not.toHaveBeenCalled()
-    expect(toast).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
+    expect(toastKey).toHaveBeenCalledWith('toast.textNotSelected', 'warn')
   })
 
   it('rejects a delayed edit after the document changes', async () => {
-    const { actions, editor, toast } = setup()
+    const { actions, editor, toastKey } = setup()
     let resolve!: (text: string) => void
     const pending = actions.doEdit({
       id: 'slow',
@@ -137,7 +137,7 @@ describe('editor actions', () => {
     resolve('late result')
     await pending
     expect(editor.value).toBe('new draft')
-    expect(toast).toHaveBeenCalledWith('toast.textTransformStale', 'warn')
+    expect(toastKey).toHaveBeenCalledWith('toast.textTransformStale', 'warn')
   })
 
   it.each([
@@ -151,7 +151,7 @@ describe('editor actions', () => {
       expected: ['toast.textTransformFailed', 'error', { detail: 'failed' }],
     },
   ])('handles formatter failure $error', async ({ error, expected }) => {
-    const { actions, editor, toast } = setup()
+    const { actions, editor, toastKey } = setup()
     const item: EditItem = {
       id: 'failing',
       action: async () => {
@@ -160,7 +160,7 @@ describe('editor actions', () => {
     }
     await actions.doEdit(item)
     expect(editor.value).toBe('before selected after')
-    if (expected) expect(toast.mock.calls).toEqual([expected])
-    else expect(toast).not.toHaveBeenCalled()
+    if (expected) expect(toastKey.mock.calls).toEqual([expected])
+    else expect(toastKey).not.toHaveBeenCalled()
   })
 })

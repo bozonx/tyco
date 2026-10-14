@@ -9,7 +9,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
+  default: () => ({ toastKey: vi.fn(), toastText: vi.fn() }),
 }))
 
 vi.mock('../../lib/desktop/client', () => ({

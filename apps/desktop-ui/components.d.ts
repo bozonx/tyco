@@ -58,7 +58,7 @@ declare module 'vue' {
     InfoTooltip: typeof import('./src/components/common/InfoTooltip.vue')['default']
     InProgressMessage: typeof import('./src/components/menu/InProgressMessage.vue')['default']
     InsertMenu: typeof import('./src/components/menu/InsertMenu.vue')['default']
-    KeyButton: typeof import('./src/components/common/KeyButton.vue')['default']
+    KeyboardKey: typeof import('./src/components/common/KeyboardKey.vue')['default']
     LanguageField: typeof import('./src/components/menu/LanguageField.vue')['default']
     LiveTranscript: typeof import('./src/components/voice/LiveTranscript.vue')['default']
     LlmConnectionCard: typeof import('./src/components/settings/LlmConnectionCard.vue')['default']

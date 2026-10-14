@@ -20,7 +20,7 @@ describe('ToastContainer', () => {
     const toastStore = useToastStore()
     toastStore.addToast('Operation finished', 'success', {
       title: 'Success Title',
-      duration: 0,
+      durationMs: 0,
     })
 
     const wrapper = mount(ToastContainer, { global: { stubs: { Icon: true } } })
@@ -39,7 +39,7 @@ describe('ToastContainer', () => {
 
   it('calls pause and resume on hover events', async () => {
     const toastStore = useToastStore()
-    const id = toastStore.addToast('Hover test', 'warn', { duration: 5000 })
+    const id = toastStore.addToast('Hover test', 'warn', { durationMs: 5000 })
 
     const wrapper = mount(ToastContainer, { global: { stubs: { Icon: true } } })
 

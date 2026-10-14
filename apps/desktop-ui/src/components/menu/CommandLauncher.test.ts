@@ -117,20 +117,20 @@ describe('CommandLauncher', () => {
     expect(pageButtons[1].attributes('aria-pressed')).toBe('false')
 
     await pageButtons[1].trigger('click')
-    expect((mocks.store as { page: number }).page).toBe(1)
+    expect((mocks.store as { pageIndex: number }).pageIndex).toBe(1)
 
     for (const shiftKey of [false, true]) {
       expect(press('Tab', shiftKey)).toBe(true)
-      expect((mocks.store as { page: number }).page).toBe(1)
+      expect((mocks.store as { pageIndex: number }).pageIndex).toBe(1)
     }
     press('2')
-    expect((mocks.store as { page: number }).page).toBe(1)
+    expect((mocks.store as { pageIndex: number }).pageIndex).toBe(1)
     press('PageDown')
-    expect((mocks.store as { page: number }).page).toBe(2)
+    expect((mocks.store as { pageIndex: number }).pageIndex).toBe(2)
     press('PageDown')
-    expect((mocks.store as { page: number }).page).toBe(0)
+    expect((mocks.store as { pageIndex: number }).pageIndex).toBe(0)
     press('PageUp')
-    expect((mocks.store as { page: number }).page).toBe(2)
+    expect((mocks.store as { pageIndex: number }).pageIndex).toBe(2)
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })

@@ -9,7 +9,7 @@ import {
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { createDesktopStateModel } from './desktop-state'
-import type { DesktopInvoker } from './ipc-store'
+import type { DesktopInvoker } from './ipc-model'
 import type { DesktopCall } from './desktop-functions'
 
 const view = (

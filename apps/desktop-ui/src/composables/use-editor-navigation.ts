@@ -10,7 +10,7 @@ export function useEditorNavigation() {
   const menuModalsStore = useMenuModalsStore()
   const editorInputStore = useEditorInputStore()
   const ipcStore = useIpcStore()
-  const { toast } = useToast()
+  const { toastKey } = useToast()
 
   function reviewEditorTransfer(text: string) {
     let snapshot = editorInputStore.getSnapshot()
@@ -19,7 +19,7 @@ export function useEditorNavigation() {
       newText: text,
       replaceEditor: () => {
         if (!editorInputStore.applySnapshotEdit(snapshot, text, 'document')) {
-          toast('toast.textTransformStale', 'warn')
+          toastKey('toast.textTransformStale', 'warn')
           snapshot = editorInputStore.getSnapshot()
           menuModalsStore.updateStep(stepId, MenuModals.DIFF, {
             oldText: snapshot.value,
@@ -27,7 +27,7 @@ export function useEditorNavigation() {
           return
         }
         menuModalsStore.closeAll()
-        editorInputStore.focus()
+        editorInputStore.requestFocus()
         void appNavigation.goToEditor()
       },
     })
@@ -43,7 +43,7 @@ export function useEditorNavigation() {
         editorInputStore.replaceValue(text)
       } else {
         if (!editorInputStore.applyResult(text, sourceText)) {
-          toast('toast.textTransformStale', 'warn')
+          toastKey('toast.textTransformStale', 'warn')
           reviewEditorTransfer(text)
           return false
         }

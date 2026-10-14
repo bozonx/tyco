@@ -63,11 +63,11 @@ describe('LLM settings model', () => {
       )
     )
     const pending = f.model.checkConnection(f.provider)
-    expect(f.model.connectionState.local).toBe('checking')
+    expect(f.model.connectionCheckStatusByProviderId.local).toBe('checking')
     f.model.removeProviderById('local')
     resolve()
     await pending
-    expect(f.model.connectionState.local).toBeUndefined()
+    expect(f.model.connectionCheckStatusByProviderId.local).toBeUndefined()
     expect(f.config.models).toEqual([])
     expect(f.providerRemoved).toHaveBeenCalledWith('local')
   })

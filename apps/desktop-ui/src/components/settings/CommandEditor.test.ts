@@ -9,12 +9,14 @@ import type { CommandConfig } from '@tyco/shared'
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-const { callFunction, toast } = vi.hoisted(() => ({
+const { callFunction, toastKey } = vi.hoisted(() => ({
   callFunction: vi.fn(),
-  toast: vi.fn(),
+  toastKey: vi.fn(),
 }))
 vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
-vi.mock('../../composables/use-toast', () => ({ default: () => ({ toast }) }))
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toastKey }),
+}))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()
@@ -45,7 +47,7 @@ const lastUpdate = (wrapper: ReturnType<typeof mountEditor>) =>
 describe('CommandEditor.vue', () => {
   beforeEach(() => {
     callFunction.mockReset()
-    toast.mockReset()
+    toastKey.mockReset()
   })
 
   it('requires a name and takes one from the script when left empty', async () => {
@@ -140,11 +142,11 @@ describe('CommandEditor.vue', () => {
     callFunction.mockResolvedValueOnce({ success: true, result: true })
     await button.trigger('click')
     expect(callFunction).toHaveBeenCalledWith('openActionLog', [])
-    expect(toast).not.toHaveBeenCalled()
+    expect(toastKey).not.toHaveBeenCalled()
 
     callFunction.mockResolvedValueOnce({ success: true, result: false })
     await button.trigger('click')
     await flushPromises()
-    expect(toast).toHaveBeenCalledWith('commands.logEmpty')
+    expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')
   })
 })

@@ -130,7 +130,7 @@ describe('createCommandLauncherModel', () => {
   it('lists only the commands of the overlay', () => {
     const hidden = { ...note, id: 'hidden', enabled: false }
     const { model } = setup([backup, hidden, lights])
-    expect(model.visible.value.map((item) => item.id)).toEqual([
+    expect(model.filteredCommands.value.map((item) => item.id)).toEqual([
       'backup',
       'lights',
     ])
@@ -208,7 +208,7 @@ describe('createCommandLauncherModel', () => {
     await model.pickByKey(2)
     model.setText('typed')
     await model.selectionArrived('late selection')
-    expect(model.text.value).toBe('typed')
+    expect(model.inputText.value).toBe('typed')
   })
 
   it('asks for the text once the selection is dropped', async () => {
@@ -219,7 +219,7 @@ describe('createCommandLauncherModel', () => {
     await model.pickByKey(2)
     expect(deps.run).not.toHaveBeenCalled()
     expect(model.stage.value.kind).toBe('prepare')
-    expect(model.text.value).toBe('')
+    expect(model.inputText.value).toBe('')
 
     await model.selectionArrived('leftover')
     expect(deps.run).not.toHaveBeenCalled()
@@ -244,7 +244,7 @@ describe('createCommandLauncherModel', () => {
       command: note,
       autoRun: false,
     })
-    expect(model.text.value).toBe('text')
+    expect(model.inputText.value).toBe('text')
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ success: false, message: 'HTTP 500' })
     )
@@ -299,7 +299,7 @@ describe('createCommandLauncherModel', () => {
   it('filters with the query and picks by the place in the result', async () => {
     const { deps, model } = setup()
     model.setQuery('свет')
-    expect(model.visible.value).toEqual([lights])
+    expect(model.filteredCommands.value).toEqual([lights])
     await model.pickByKey(1)
     expect(deps.run).toHaveBeenCalledWith(lights, '', expect.anything())
     await model.pickByKey(2)
@@ -309,9 +309,9 @@ describe('createCommandLauncherModel', () => {
   it('moves the highlight around the list', async () => {
     const { deps, model } = setup()
     model.move(-1)
-    expect(model.highlighted.value).toBe(2)
+    expect(model.highlightedCommandIndex.value).toBe(2)
     model.move(1)
-    expect(model.highlighted.value).toBe(0)
+    expect(model.highlightedCommandIndex.value).toBe(0)
     model.move(1)
     deps.selectedText.mockReturnValue('x')
     await model.pickHighlighted()
@@ -360,7 +360,7 @@ describe('external calls', () => {
     expect(deps.run).not.toHaveBeenCalled()
     await model.selectionArrived('late')
     expect(deps.run).not.toHaveBeenCalled()
-    expect(model.text.value).toBe('')
+    expect(model.inputText.value).toBe('')
     model.setText('explicit')
     await model.submit()
     expect(deps.run).toHaveBeenCalledWith(
@@ -415,7 +415,7 @@ describe('cancelling a running command', () => {
     await running
     expect(signal?.aborted).toBe(true)
     expect(model.stage.value.kind).toBe('prepare')
-    expect(model.text.value).toBe('text')
+    expect(model.inputText.value).toBe('text')
   })
 })
 
@@ -578,11 +578,11 @@ describe('launcher pages', () => {
     model.setPage(2)
     expect(model.slotCommands.value[0]?.id).toBe('lights')
     model.setPage(3)
-    expect(model.page.value).toBe(2)
+    expect(model.pageIndex.value).toBe(2)
     model.nextPage()
-    expect(model.page.value).toBe(0)
+    expect(model.pageIndex.value).toBe(0)
     model.nextPage(-1)
-    expect(model.page.value).toBe(2)
+    expect(model.pageIndex.value).toBe(2)
   })
 
   it('runs the commands of a page without text on no selection', async () => {

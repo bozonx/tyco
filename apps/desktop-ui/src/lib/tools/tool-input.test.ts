@@ -28,7 +28,7 @@ const tool = (extra: Partial<RegisteredTool> = {}): RegisteredTool => ({
   id: 'Test.tool',
   description: 'A test tool',
   inputSchema: TEXT_INPUT_SCHEMA,
-  owner: { kind: 'plugin', name: 'Test' },
+  owner: { kind: 'plugin', pluginId: 'Test' },
   run: vi.fn(async () => ({ ok: true })),
   ...extra,
 })

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { createHistoryModel } from '../lib/history/history-store'
+import { createHistoryModel } from '../lib/history/history-model'
 import { useIpcStore } from './ipc'
 
 export const useHistoryStore = defineStore('history', () => {

@@ -25,7 +25,7 @@ vi.mock('../stores/translation', () => ({
   useTranslationStore: mocks.translation,
 }))
 vi.mock('./use-toast', () => ({
-  default: () => ({ toast: vi.fn(), toastText: vi.fn() }),
+  default: () => ({ toastKey: vi.fn(), toastText: vi.fn() }),
 }))
 
 beforeEach(() => vi.clearAllMocks())

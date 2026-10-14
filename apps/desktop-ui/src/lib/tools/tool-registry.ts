@@ -3,8 +3,8 @@ import { shallowRef } from 'vue'
 import type { RegisteredTool, ToolDefinition, ToolOwner } from './tool-types'
 
 /** The full id of a plugin tool */
-export function pluginToolId(pluginName: string, localId: string): string {
-  return `${pluginName}.${localId}`
+export function pluginToolId(pluginId: string, localId: string): string {
+  return `${pluginId}.${localId}`
 }
 
 /**
@@ -35,18 +35,18 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
   }
 
   /**
-   * Adds the tools of a plugin under `<pluginName>.<id>`; `baseConfig` gives
-   * the plugin settings a command falls back to
+   * Adds the tools of a plugin under `<pluginId>.<id>`; `baseConfig` gives the
+   * plugin settings a command falls back to
    */
   const registerPluginTools = (
-    pluginName: string,
+    pluginId: string,
     definitions: readonly ToolDefinition[],
     baseConfig?: () => Record<string, unknown>
   ) => {
-    const owner: ToolOwner = { kind: 'plugin', name: pluginName }
+    const owner: ToolOwner = { kind: 'plugin', pluginId }
     const next = new Map(tools.value)
     for (const tool of definitions) {
-      const id = pluginToolId(pluginName, tool.id)
+      const id = pluginToolId(pluginId, tool.id)
       if (next.has(id)) throw new Error(`Duplicate tool ID: ${id}`)
       next.set(id, { ...tool, id, owner, baseConfig })
     }
@@ -66,7 +66,8 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
     set(
       new Map(
         [...tools.value].filter(
-          ([, tool]) => tool.owner.kind !== 'plugin' || tool.owner.name !== id
+          ([, tool]) =>
+            tool.owner.kind !== 'plugin' || tool.owner.pluginId !== id
         )
       )
     )

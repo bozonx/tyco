@@ -1,4 +1,4 @@
-import type { ToastType } from '../toast/toast-store'
+import type { ToastType } from '../toast/toast-model'
 
 export type CopyTextResult = 'copied' | 'empty' | 'failed'
 

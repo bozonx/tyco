@@ -12,30 +12,36 @@
       <div v-if="installedPlugins.length > 0" class="settings-subnav">
         <button
           v-for="plugin in installedPlugins"
-          :key="plugin.name"
+          :key="plugin.pluginId"
           type="button"
           class="settings-subnav-item"
-          :class="{ 'is-active': currentTab === `plugin:${plugin.name}` }"
+          :class="{ 'is-active': currentTab === `plugin:${plugin.pluginId}` }"
           :title="
-            plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+            plugin.labelKey
+              ? t(plugin.labelKey)
+              : plugin.label || plugin.pluginId
           "
           :aria-label="
-            plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+            plugin.labelKey
+              ? t(plugin.labelKey)
+              : plugin.label || plugin.pluginId
           "
-          @click="currentTab = `plugin:${plugin.name}`"
+          @click="currentTab = `plugin:${plugin.pluginId}`"
         >
           <Icon icon="mdi:puzzle-outline" height="14" class="shrink-0" />
           <span class="truncate">
             {{
-              plugin.labelKey ? t(plugin.labelKey) : plugin.label || plugin.name
+              plugin.labelKey
+                ? t(plugin.labelKey)
+                : plugin.label || plugin.pluginId
             }}
           </span>
           <span
             class="settings-subnav-status"
-            :class="plugin.enabled ? 'is-enabled' : 'is-disabled'"
+            :class="plugin.isEnabled ? 'is-enabled' : 'is-disabled'"
           >
             {{
-              plugin.enabled
+              plugin.isEnabled
                 ? t('settings.pluginStatusOn')
                 : t('settings.pluginStatusOff')
             }}
@@ -373,16 +379,17 @@ const installedPlugins = computed(() =>
   )
 )
 
-const currentPluginName = computed(() =>
+const currentPluginId = computed(() =>
   currentTab.value.startsWith('plugin:')
     ? currentTab.value.slice('plugin:'.length)
     : null
 )
 
 const currentPlugin = computed(() =>
-  currentPluginName.value
-    ? installedPlugins.value.find((p) => p.name === currentPluginName.value) ||
-      null
+  currentPluginId.value
+    ? installedPlugins.value.find(
+        (p) => p.pluginId === currentPluginId.value
+      ) || null
     : null
 )
 
@@ -411,7 +418,7 @@ const availableTabs = computed(
     new Set([
       ...primaryTabs.value.map((tab) => tab.key),
       ...actionTabs.value.map((tab) => tab.key),
-      ...installedPlugins.value.map((plugin) => `plugin:${plugin.name}`),
+      ...installedPlugins.value.map((plugin) => `plugin:${plugin.pluginId}`),
     ])
 )
 watch(
@@ -434,7 +441,7 @@ const currentTabTitle = computed(() => {
     return (
       (currentPlugin.value.labelKey
         ? t(currentPlugin.value.labelKey)
-        : currentPlugin.value.label || currentPlugin.value.name) || ''
+        : currentPlugin.value.label || currentPlugin.value.pluginId) || ''
     )
   }
   return (

@@ -11,7 +11,7 @@ vi.mock('../../composables/use-i18n', () => ({
 const mockToastText = vi.fn()
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn(), toastText: mockToastText }),
+  default: () => ({ toastKey: vi.fn(), toastText: mockToastText }),
 }))
 
 const mockSetSecret = vi.fn().mockResolvedValue(undefined)

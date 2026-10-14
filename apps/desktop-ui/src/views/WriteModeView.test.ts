@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
   writer: {
     value: 'Original text',
     recallText: '',
-    focus: vi.fn(),
-    focusAndSelectAll: vi.fn(),
+    requestFocus: vi.fn(),
+    requestFocusAndSelectAll: vi.fn(),
     startSession: vi.fn(),
     rememberSubmitted: vi.fn(),
     markDismissed: vi.fn(),
@@ -166,13 +166,13 @@ describe('quick input screen', () => {
     mocks.writer.startSession.mockReturnValueOnce(true)
     desktopState.activationId++
     await nextTick()
-    expect(mocks.writer.focusAndSelectAll).toHaveBeenCalledOnce()
-    expect(mocks.writer.focus).not.toHaveBeenCalled()
+    expect(mocks.writer.requestFocusAndSelectAll).toHaveBeenCalledOnce()
+    expect(mocks.writer.requestFocus).not.toHaveBeenCalled()
 
     mocks.writer.startSession.mockReturnValueOnce(false)
     desktopState.activationId++
     await nextTick()
-    expect(mocks.writer.focus).toHaveBeenCalledOnce()
+    expect(mocks.writer.requestFocus).toHaveBeenCalledOnce()
   })
 
   it('brings back the recallable text on ArrowUp in an empty input', () => {

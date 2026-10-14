@@ -5,12 +5,12 @@ import { createChatPersistenceQueue } from './chat-persistence-queue'
 import { prepareGenerationRequest } from './chat-request-preparation'
 import { createChatSessionModel } from './chat-session-model'
 import { createChatState } from './chat-state'
-import type { ChatStoreDependencies } from './chat-store-contracts'
+import type { ChatModelDependencies } from './chat-model-contracts'
 import { createChatTitleController } from './chat-title-controller'
 
 function fixture() {
   const state = createChatState()
-  const deps: ChatStoreDependencies = {
+  const deps: ChatModelDependencies = {
     sendChatMessage: vi.fn(async () => 'Answer'),
     generateChatTitle: vi.fn(async () => 'Generated title'),
     saveChat: vi.fn(),
@@ -34,7 +34,7 @@ function fixture() {
 describe('chat model boundaries', () => {
   it('serializes writes and continues after a failed save', async () => {
     const { state, deps } = fixture()
-    state.currentChatState.value = { id: 'chat' }
+    state.currentChatParams.value = { id: 'chat' }
     let release!: () => void
     const blocked = new Promise<void>((resolve) => {
       release = resolve
@@ -61,7 +61,7 @@ describe('chat model boundaries', () => {
 
   it('does not apply a title after cancellation even if the provider resolves', async () => {
     const { state, deps } = fixture()
-    state.currentChatState.value = { id: 'chat', title: 'Question' }
+    state.currentChatParams.value = { id: 'chat', title: 'Question' }
     state.messages.value = [
       { role: 'user', content: 'Question' },
       { role: 'assistant', content: 'Answer' },
@@ -78,7 +78,7 @@ describe('chat model boundaries', () => {
     title.cancel()
     release('Late title')
     await pending
-    expect(state.currentChatState.value.title).toBe('Question')
+    expect(state.currentChatParams.value.title).toBe('Question')
     expect(deps.renameChat).not.toHaveBeenCalled()
   })
 
@@ -150,7 +150,10 @@ describe('chat model boundaries', () => {
     await session.startChat({ title: 'New' })
     release(null)
     expect(await pending).toBe(false)
-    expect(state.currentChatState.value).toEqual({ id: 'new-id', title: 'New' })
+    expect(state.currentChatParams.value).toEqual({
+      id: 'new-id',
+      title: 'New',
+    })
     expect(deps.notifyError).not.toHaveBeenCalled()
     expect(halt).toHaveBeenCalledWith(true)
   })
@@ -158,7 +161,7 @@ describe('chat model boundaries', () => {
 
 it('keeps a renamed title when an older snapshot is queued behind the rename', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'chat', title: 'Old title' }
+  state.currentChatParams.value = { id: 'chat', title: 'Old title' }
   let release!: () => void
   deps.saveChat = vi.fn().mockImplementationOnce(
     () =>
@@ -177,19 +180,19 @@ it('keeps a renamed title when an older snapshot is queued behind the rename', a
   expect(deps.saveChat).toHaveBeenLastCalledWith(
     expect.objectContaining({ title: 'New title' })
   )
-  expect(state.currentChatState.value.title).toBe('New title')
+  expect(state.currentChatParams.value.title).toBe('New title')
 })
 
 it('continues saving with the original title after a failed rename', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'chat', title: 'Original' }
+  state.currentChatParams.value = { id: 'chat', title: 'Original' }
   deps.renameChat = vi.fn().mockRejectedValue(new Error('Disk full'))
   const queue = createChatPersistenceQueue(deps, state)
   const rename = queue.renameChat('chat', 'Rejected')
   const save = queue.persist([{ role: 'user', content: 'Question' }])
   await expect(rename).rejects.toThrow('Disk full')
   expect(await save).toBe(true)
-  expect(state.currentChatState.value.title).toBe('Original')
+  expect(state.currentChatParams.value.title).toBe('Original')
   expect(deps.saveChat).toHaveBeenCalledWith(
     expect.objectContaining({ title: 'Original' })
   )
@@ -197,7 +200,7 @@ it('continues saving with the original title after a failed rename', async () =>
 
 it('keeps the original session when branch persistence fails', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'original', title: 'Original' }
+  state.currentChatParams.value = { id: 'original', title: 'Original' }
   state.messages.value = [{ role: 'user', content: 'Question' }]
   const session = createChatSessionModel(
     deps,
@@ -206,7 +209,7 @@ it('keeps the original session when branch persistence fails', async () => {
     async () => false
   )
   expect(await session.branchChat(0)).toBe(false)
-  expect(state.currentChatState.value.id).toBe('original')
+  expect(state.currentChatParams.value.id).toBe('original')
   expect(state.messages.value).toEqual([{ role: 'user', content: 'Question' }])
   expect(deps.saveSessionState).not.toHaveBeenCalled()
   expect(deps.navigateTo).not.toHaveBeenCalled()
@@ -214,7 +217,7 @@ it('keeps the original session when branch persistence fails', async () => {
 
 it('does not replace a newer session after a branch finishes saving', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'original', title: 'Original' }
+  state.currentChatParams.value = { id: 'original', title: 'Original' }
   state.messages.value = [{ role: 'user', content: 'Question' }]
   let release!: (saved: boolean) => void
   const session = createChatSessionModel(
@@ -230,13 +233,13 @@ it('does not replace a newer session after a branch finishes saving', async () =
   await session.startChat({ title: 'New session' })
   release(true)
   expect(await pending).toBe(false)
-  expect(state.currentChatState.value.title).toBe('New session')
+  expect(state.currentChatParams.value.title).toBe('New session')
   expect(deps.saveSessionState).not.toHaveBeenCalled()
 })
 
 it('uses the injected localized title when saving a branch', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'original', title: 'Original' }
+  state.currentChatParams.value = { id: 'original', title: 'Original' }
   state.messages.value = [{ role: 'user', content: 'Question' }]
   deps.branchTitle = vi.fn((title) => `Localized: ${title}`)
   const persist = vi.fn(async () => true)
@@ -250,7 +253,7 @@ it('uses the injected localized title when saving a branch', async () => {
 
 it('keeps the draft title when persisting a generated title fails', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'chat', title: 'Question' }
+  state.currentChatParams.value = { id: 'chat', title: 'Question' }
   state.messages.value = [
     { role: 'user', content: 'Question' },
     { role: 'assistant', content: 'Answer' },
@@ -258,12 +261,12 @@ it('keeps the draft title when persisting a generated title fails', async () => 
   deps.renameChat = vi.fn().mockRejectedValue(new Error('Disk full'))
   const title = createChatTitleController(deps, state)
   await title.maybeGenerateTitle('model')
-  expect(state.currentChatState.value.title).toBe('Question')
+  expect(state.currentChatParams.value.title).toBe('Question')
 })
 
 it('keeps a new turn sent while a branch is being saved', async () => {
   const { state, deps } = fixture()
-  state.currentChatState.value = { id: 'original', title: 'Original' }
+  state.currentChatParams.value = { id: 'original', title: 'Original' }
   state.messages.value = [{ role: 'user', content: 'Question' }]
   let release!: (saved: boolean) => void
   const session = createChatSessionModel(
@@ -279,7 +282,7 @@ it('keeps a new turn sent while a branch is being saved', async () => {
   state.messages.value.push({ role: 'user', content: 'New question' })
   release(true)
   expect(await pending).toBe(false)
-  expect(state.currentChatState.value.id).toBe('original')
+  expect(state.currentChatParams.value.id).toBe('original')
   expect(state.messages.value.at(-1)?.content).toBe('New question')
   expect(deps.saveSessionState).not.toHaveBeenCalled()
 })

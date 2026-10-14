@@ -53,6 +53,6 @@ describe('plugin installation', () => {
     await model.inspect()
     await model.install()
     expect(model.preview.value).toEqual(preview)
-    expect(model.busy.value).toBe(false)
+    expect(model.isBusy.value).toBe(false)
   })
 })

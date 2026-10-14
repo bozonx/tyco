@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import {
   type ActionItem,
   createActionMenuModel,
-} from '../lib/action-menu/action-menu-store'
+} from '../lib/action-menu/action-menu-model'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'

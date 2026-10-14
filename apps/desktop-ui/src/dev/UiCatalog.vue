@@ -178,7 +178,7 @@ const tab = ref<string | number>('source')
 const dialogOpen = ref(false)
 const toastStore = useToastStore()
 function notify() {
-  toastStore.addToast('Example notification', 'info', { duration: 5000 })
+  toastStore.addToast('Example notification', 'info', { durationMs: 5000 })
 }
 const html = document.documentElement
 const previous = {

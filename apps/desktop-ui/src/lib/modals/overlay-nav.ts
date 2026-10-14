@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 
-import { MenuModals } from './menu-modals-store'
+import { MenuModals } from './menu-modals-model'
 
 export interface OverlayNavDependencies {
   currentModal: () => MenuModals

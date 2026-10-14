@@ -38,7 +38,7 @@ vi.mock('../../stores/ipc', () => ({
 }))
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({
-    focus: mocks.focus,
+    requestFocus: mocks.focus,
     markDismissed: mocks.markDismissed,
   }),
 }))

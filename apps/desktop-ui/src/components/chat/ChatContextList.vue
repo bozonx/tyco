@@ -48,7 +48,7 @@ const chatStore = useChatStore()
 const { t } = useI18n()
 
 const attachments = computed(
-  () => chatStore.currentChatState?.attachments || []
+  () => chatStore.currentChatParams?.attachments || []
 )
 const attached = computed(() => chatStore.attachedContext)
 const images = computed(() => chatStore.pendingImages)
@@ -61,10 +61,10 @@ const budgetWarning = computed(() => {
     text:
       budget.level === 'over'
         ? t('chat.contextBudgetOver', {
-            used: budget.used.toLocaleString(),
-            budget: budget.budget.toLocaleString(),
+            used: budget.usedCharacters.toLocaleString(),
+            budget: budget.budgetCharacters.toLocaleString(),
           })
-        : t('chat.contextBudgetHigh', { percent: budget.percent }),
+        : t('chat.contextBudgetHigh', { percent: budget.usagePercent }),
   }
 })
 

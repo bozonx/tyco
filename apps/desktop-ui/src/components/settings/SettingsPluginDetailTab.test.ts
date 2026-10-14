@@ -9,9 +9,9 @@ vi.mock('../../composables/use-i18n', () => ({
 
 describe('SettingsPluginDetailTab.vue', () => {
   const pluginWithConfig = {
-    name: 'SamplePlugin',
+    pluginId: 'SamplePlugin',
     labelKey: 'plugin.sample.label',
-    enabled: true,
+    isEnabled: true,
     fields: [{ type: 'text' as const, name: 'token', value: 'secret123' }],
   }
 
@@ -106,7 +106,7 @@ describe('SettingsPluginDetailTab.vue', () => {
 
   it('shows disabled hint when plugin is not enabled', () => {
     const wrapper = mount(SettingsPluginDetailTab, {
-      props: { plugin: { ...pluginWithConfig, enabled: false } },
+      props: { plugin: { ...pluginWithConfig, isEnabled: false } },
       global: {
         stubs: { Button: true, FieldCheckbox: true, ConfigFields: true },
       },

@@ -1,6 +1,6 @@
 import { isPluginCancellation, isPluginError } from '@tyco/plugin-sdk'
-import type { ActionItem } from '../action-menu/action-menu-store'
-import type { EditItem } from '../edit-menu/edit-menu-store'
+import type { ActionItem } from '../action-menu/action-menu-model'
+import type { EditItem } from '../edit-menu/edit-menu-model'
 import type { EditSource } from './edit-source'
 import { createTextEditModel } from '../edit-menu/text-edit'
 
@@ -15,7 +15,7 @@ export interface EditorActionsDependencies {
     replaceSelection: (text: string, source: EditSource) => void
     actionText: () => string
     captureResultSource: (sourceText: string) => void
-    focus: () => void
+    requestFocus: () => void
   }
   openVoice: (params: {
     inline: boolean
@@ -24,7 +24,7 @@ export interface EditorActionsDependencies {
   }) => void
   closeVoice: () => void
   t: (key: string) => string
-  toast: (
+  toastKey: (
     key: string,
     type: 'warn' | 'error',
     params?: Record<string, string | number>
@@ -33,7 +33,7 @@ export interface EditorActionsDependencies {
 
 /** Shared editor actions for the toolbar and context menu. */
 export function createEditorActions(deps: EditorActionsDependencies) {
-  const { editor: editorInputStore, t, toast } = deps
+  const { editor: editorInputStore, t, toastKey } = deps
   const getLabel = (item: ActionItem | EditItem): string =>
     item.labelKey ? t(item.labelKey) : item.name || ''
 
@@ -60,7 +60,7 @@ export function createEditorActions(deps: EditorActionsDependencies) {
         editorInputStore.setValue(newValue, 'voice')
         editorInputStore.setSelection('', newCursorPosition, newCursorPosition)
         deps.closeVoice()
-        editorInputStore.focus()
+        editorInputStore.requestFocus()
       },
       onCancel: () => deps.closeVoice(),
     })
@@ -94,15 +94,15 @@ export function createEditorActions(deps: EditorActionsDependencies) {
   const doEdit = async (item: EditItem): Promise<void> => {
     try {
       const result = await textEdit.run(item)
-      if (result === 'empty') toast('toast.textNotSelected', 'warn')
-      if (result === 'stale') toast('toast.textTransformStale', 'warn')
+      if (result === 'empty') toastKey('toast.textNotSelected', 'warn')
+      if (result === 'stale') toastKey('toast.textTransformStale', 'warn')
     } catch (error) {
       if (isPluginCancellation(error)) return
       const detail = error instanceof Error ? error.message : String(error)
       if (isPluginError(error)) {
-        toast(error.messageKey, 'error')
+        toastKey(error.messageKey, 'error')
       } else {
-        toast('toast.textTransformFailed', 'error', { detail })
+        toastKey('toast.textTransformFailed', 'error', { detail })
       }
     }
   }

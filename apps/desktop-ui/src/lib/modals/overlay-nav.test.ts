@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { MenuModals } from './menu-modals-store'
+import { MenuModals } from './menu-modals-model'
 import {
   createOverlayNavModel,
   type OverlayNavDependencies,

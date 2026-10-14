@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  DEFAULT_TOAST_DURATIONS,
+  DEFAULT_TOAST_DURATIONS_MS,
   MAX_TOASTS,
   createToastModel,
-} from './toast-store'
+} from './toast-model'
 
 describe('createToastModel', () => {
   beforeEach(() => {
@@ -24,15 +24,15 @@ describe('createToastModel', () => {
       id,
       message: 'Operation succeeded',
       type: 'success',
-      duration: DEFAULT_TOAST_DURATIONS.success,
+      durationMs: DEFAULT_TOAST_DURATIONS_MS.success,
     })
   })
 
-  it('supports custom duration and title', () => {
+  it('supports custom durationMs and title', () => {
     const store = createToastModel()
     const id = store.addToast('Custom message', 'error', {
       title: 'Failed',
-      duration: 3000,
+      durationMs: 3000,
     })
 
     expect(store.toasts.value[0]).toMatchObject({
@@ -40,13 +40,13 @@ describe('createToastModel', () => {
       title: 'Failed',
       message: 'Custom message',
       type: 'error',
-      duration: 3000,
+      durationMs: 3000,
     })
   })
 
-  it('auto-dismisses toast after its duration', () => {
+  it('auto-dismisses toast after its durationMs', () => {
     const store = createToastModel()
-    store.addToast('Expiring toast', 'info', { duration: 2000 })
+    store.addToast('Expiring toast', 'info', { durationMs: 2000 })
 
     expect(store.toasts.value).toHaveLength(1)
 
@@ -71,7 +71,7 @@ describe('createToastModel', () => {
     const now = () => currentTime
     const store = createToastModel({ now })
 
-    const id = store.addToast('Hover toast', 'info', { duration: 4000 })
+    const id = store.addToast('Hover toast', 'info', { durationMs: 4000 })
 
     // Advance 1500ms
     currentTime += 1500
@@ -109,7 +109,7 @@ describe('createToastModel', () => {
     const now = () => currentTime
     const store = createToastModel({ now })
 
-    const id = store.addToast('Multi hover toast', 'info', { duration: 4000 })
+    const id = store.addToast('Multi hover toast', 'info', { durationMs: 4000 })
 
     // Pass 1000ms
     currentTime += 1000
@@ -151,20 +151,24 @@ describe('createToastModel', () => {
     expect(store.toasts.value).toHaveLength(0)
   })
 
-  it('deduplicates identical toasts by refreshing duration', () => {
+  it('deduplicates identical toasts by refreshing durationMs', () => {
     const store = createToastModel()
-    const id1 = store.addToast('Duplicate message', 'warn', { duration: 3000 })
+    const id1 = store.addToast('Duplicate message', 'warn', {
+      durationMs: 3000,
+    })
 
     vi.advanceTimersByTime(1500)
     expect(store.toasts.value).toHaveLength(1)
 
     // Add duplicate message
-    const id2 = store.addToast('Duplicate message', 'warn', { duration: 3000 })
+    const id2 = store.addToast('Duplicate message', 'warn', {
+      durationMs: 3000,
+    })
     expect(id2).toBe(id1)
     expect(store.toasts.value).toHaveLength(1)
     expect(store.toasts.value[0]?.remainingMs).toBe(3000)
 
-    // Should stay alive for full new duration (1500 + 2999 = 4499ms total from start)
+    // Should stay alive for full new durationMs (1500 + 2999 = 4499ms total from start)
     vi.advanceTimersByTime(2999)
     expect(store.toasts.value).toHaveLength(1)
 
@@ -176,7 +180,7 @@ describe('createToastModel', () => {
     const store = createToastModel()
 
     for (let i = 1; i <= MAX_TOASTS + 2; i++) {
-      store.addToast(`Toast ${i}`, 'info', { duration: 0 })
+      store.addToast(`Toast ${i}`, 'info', { durationMs: 0 })
     }
 
     expect(store.toasts.value).toHaveLength(MAX_TOASTS)
@@ -186,8 +190,8 @@ describe('createToastModel', () => {
 
   it('clears all toasts', () => {
     const store = createToastModel()
-    store.addToast('Toast 1', 'info', { duration: 10000 })
-    store.addToast('Toast 2', 'error', { duration: 10000 })
+    store.addToast('Toast 1', 'info', { durationMs: 10000 })
+    store.addToast('Toast 2', 'error', { durationMs: 10000 })
 
     expect(store.toasts.value).toHaveLength(2)
     store.clearToasts()

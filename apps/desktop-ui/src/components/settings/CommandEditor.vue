@@ -231,7 +231,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const ipcStore = useIpcStore()
 
 const toolsStore = useToolsStore()
@@ -292,7 +292,7 @@ const origin = computed(() => {
   const label = tool.value ? toolLabel(tool.value, t) : props.command.toolId
   if (!owner) return t('commands.toolInfo', { tool: label })
   return owner.kind === 'plugin'
-    ? t('commands.toolInfoPlugin', { tool: label, name: owner.name })
+    ? t('commands.toolInfoPlugin', { tool: label, name: owner.pluginId })
     : t('commands.toolInfoApp', { tool: label })
 })
 
@@ -329,8 +329,8 @@ async function copyCli() {
 
 async function openLog() {
   const res = await ipcStore.callFunction('openActionLog', [])
-  if (!res.success) toast('commands.openLogFailed', 'error')
-  else if (!res.result) toast('commands.logEmpty')
+  if (!res.success) toastKey('commands.openLogFailed', 'error')
+  else if (!res.result) toastKey('commands.logEmpty')
 }
 
 onUnmounted(() => {

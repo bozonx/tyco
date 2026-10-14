@@ -46,7 +46,7 @@ const { resize } = useTextareaAutosize(
 
 onMounted(async () => {
   await nextTick()
-  chatInputStore.focus()
+  chatInputStore.requestFocus()
   resize()
 })
 

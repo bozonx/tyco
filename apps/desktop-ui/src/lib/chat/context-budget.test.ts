@@ -5,9 +5,9 @@ import { resolveContextBudget } from './context-budget'
 describe('resolveContextBudget', () => {
   it('sums the texts of the next message', () => {
     expect(resolveContextBudget(['abc', 'de'], 100)).toEqual({
-      used: 5,
-      budget: 100,
-      percent: 5,
+      usedCharacters: 5,
+      budgetCharacters: 100,
+      usagePercent: 5,
       level: 'ok',
     })
   })
@@ -21,7 +21,7 @@ describe('resolveContextBudget', () => {
   it('is over once the message does not fit', () => {
     expect(resolveContextBudget(['x'.repeat(101)], 100)).toMatchObject({
       level: 'over',
-      percent: 101,
+      usagePercent: 101,
     })
   })
 
@@ -29,7 +29,7 @@ describe('resolveContextBudget', () => {
     expect(resolveContextBudget([], 0).level).toBe('ok')
     expect(resolveContextBudget(['x'], 0)).toMatchObject({
       level: 'over',
-      percent: 100,
+      usagePercent: 100,
     })
   })
 })

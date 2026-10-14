@@ -20,7 +20,7 @@ export default function usePluginContext() {
   const editor = useEditorInputStore()
   const ipc = useIpcStore()
   const routes = useEditorNavigation()
-  const { toast, toastText } = useToast()
+  const { toastKey, toastText } = useToast()
 
   function createContext(
     id: string,
@@ -42,10 +42,10 @@ export default function usePluginContext() {
       applyEditorInputEdit: editor.applySnapshotEdit,
       setEditorInputValue: (value) => editor.replaceValue(value),
       replaceEditorInputSelection: (value) => editor.replaceSelection(value),
-      setEditorInputFocus: () => editor.focus(),
+      setEditorInputFocus: () => editor.requestFocus(),
       toEditor: (text) => routes.toEditor(text),
       t: translate,
-      toast,
+      toastKey,
       toastText,
       log: (level, message, error) =>
         error === undefined

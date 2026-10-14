@@ -10,11 +10,11 @@ import { createAssistantMessage } from './chat-message'
 import { prepareChatRequest } from './chat-request'
 import { draftChatTitle } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
-import type { ChatStoreDependencies } from './chat-store-contracts'
+import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatGenerationModel(
   deps: Pick<
-    ChatStoreDependencies,
+    ChatModelDependencies,
     | 'sendChatMessage'
     | 'notifyError'
     | 'emptyMessageError'
@@ -36,11 +36,11 @@ export function createChatGenerationModel(
 ) {
   const {
     messages,
-    currentChatState,
+    currentChatParams,
     isGenerating,
     error,
     isStopped,
-    trimmedTurns,
+    trimmedTurnCount,
     lastFailedTurn,
   } = state
   let abortController: AbortController | null = null
@@ -107,7 +107,7 @@ export function createChatGenerationModel(
     if (!request) return ''
     const { model, retrying, prevMessages } = request
     attachments = request.attachments
-    trimmedTurns.value = request.trimmedTurns
+    trimmedTurnCount.value = request.trimmedTurnCount
     if (retrying) messages.value.pop()
     error.value = ''
     isStopped.value = false
@@ -125,16 +125,16 @@ export function createChatGenerationModel(
     const userMessageIndex = messages.value.length
     messages.value.push(userMessage)
 
-    if (!currentChatState.value.id) {
-      currentChatState.value.id = deps.createId()
+    if (!currentChatParams.value.id) {
+      currentChatParams.value.id = deps.createId()
     }
-    if (!currentChatState.value.title) {
-      currentChatState.value.title = message.trim()
+    if (!currentChatParams.value.title) {
+      currentChatParams.value.title = message.trim()
         ? draftChatTitle(message)
         : attachments[0]?.name || deps.imageTitle?.() || 'Image'
     }
-    currentChatState.value.attachments = []
-    currentChatState.value.images = []
+    currentChatParams.value.attachments = []
+    currentChatParams.value.images = []
 
     const assistantMessage = reactive<ChatMessage>(createAssistantMessage(''))
     messages.value.push(assistantMessage)
@@ -144,10 +144,10 @@ export function createChatGenerationModel(
     const currentGenerationId = ++generationId
 
     // the question is kept even when no answer comes
-    const chatId = currentChatState.value.id
+    const chatId = currentChatParams.value.id
     void persist(messages.value.slice(0, userMessageIndex + 1)).then(
       (saved) => {
-        if (saved && chatId && currentChatState.value.id === chatId) {
+        if (saved && chatId && currentChatParams.value.id === chatId) {
           void deps.saveSessionState({ lastChatId: chatId })
         }
       }

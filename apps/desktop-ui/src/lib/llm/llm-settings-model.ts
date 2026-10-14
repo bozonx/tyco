@@ -6,7 +6,7 @@ import { httpOrigin } from '../net/secrets'
 import { addCompatibleProvider, addModel, removeProvider } from './llm-config'
 import { InvalidLlmBaseUrlError } from './llm-connection'
 
-export type ConnectionState = 'checking' | 'success' | 'error'
+export type LlmConnectionCheckStatus = 'checking' | 'success' | 'error'
 
 export function createLlmSettingsModel(deps: {
   getConfig: () => LlmConfig
@@ -20,9 +20,11 @@ export function createLlmSettingsModel(deps: {
   providerRemoved: (id: string) => void
 }) {
   const keyDrafts = reactive<Record<string, string>>({})
-  const expandedProviders = reactive(new Set<string>())
-  const expandedModels = reactive(new Set<string>())
-  const connectionState = reactive<Partial<Record<string, ConnectionState>>>({})
+  const expandedProviderIds = reactive(new Set<string>())
+  const expandedModelIds = reactive(new Set<string>())
+  const connectionCheckStatusByProviderId = reactive<
+    Partial<Record<string, LlmConnectionCheckStatus>>
+  >({})
   const connectionErrors = reactive<Record<string, string>>({})
   const numberDrafts = reactive<Record<string, string>>({})
   const numberErrors = reactive<Record<string, boolean>>({})
@@ -43,7 +45,7 @@ export function createLlmSettingsModel(deps: {
       await deps.setSecret(provider.id, value, origin ? [origin] : undefined)
       requests.delete(provider.id)
       keyDrafts[provider.id] = ''
-      delete connectionState[provider.id]
+      delete connectionCheckStatusByProviderId[provider.id]
       delete connectionErrors[provider.id]
     } catch (error) {
       deps.notifyKeyError(error)
@@ -53,7 +55,7 @@ export function createLlmSettingsModel(deps: {
     try {
       await deps.removeSecret(id)
       requests.delete(id)
-      delete connectionState[id]
+      delete connectionCheckStatusByProviderId[id]
       delete connectionErrors[id]
     } catch (error) {
       deps.notifyKeyError(error)
@@ -61,37 +63,37 @@ export function createLlmSettingsModel(deps: {
   }
   function addProvider() {
     const provider = addCompatibleProvider(deps.getConfig())
-    expandedProviders.add(provider.id)
+    expandedProviderIds.add(provider.id)
   }
   function removeProviderById(id: string) {
     removeProvider(deps.getConfig(), id)
-    expandedProviders.delete(id)
+    expandedProviderIds.delete(id)
     requests.delete(id)
     delete keyDrafts[id]
-    delete connectionState[id]
+    delete connectionCheckStatusByProviderId[id]
     delete connectionErrors[id]
     deps.providerRemoved(id)
   }
-  function addModelTo(id: string) {
-    const model = addModel(deps.getConfig(), id)
-    expandedModels.add(model.id)
+  function addModelToProvider(providerId: string) {
+    const model = addModel(deps.getConfig(), providerId)
+    expandedModelIds.add(model.id)
   }
   async function checkConnection(provider: LlmProvider) {
     const request = Symbol()
     requests.set(provider.id, request)
-    connectionState[provider.id] = 'checking'
+    connectionCheckStatusByProviderId[provider.id] = 'checking'
     delete connectionErrors[provider.id]
     try {
       await deps.checkConnection({ ...provider })
       if (requests.get(provider.id) === request)
-        connectionState[provider.id] = 'success'
+        connectionCheckStatusByProviderId[provider.id] = 'success'
     } catch (error) {
       if (requests.get(provider.id) !== request) return
       if (error instanceof InvalidLlmBaseUrlError) {
-        delete connectionState[provider.id]
+        delete connectionCheckStatusByProviderId[provider.id]
         deps.notifyInvalidUrl()
       } else {
-        connectionState[provider.id] = 'error'
+        connectionCheckStatusByProviderId[provider.id] = 'error'
         connectionErrors[provider.id] = deps.formatConnectionError(error)
       }
     }
@@ -133,9 +135,9 @@ export function createLlmSettingsModel(deps: {
   }
   return {
     keyDrafts,
-    expandedProviders,
-    expandedModels,
-    connectionState,
+    expandedProviderIds,
+    expandedModelIds,
+    connectionCheckStatusByProviderId,
     connectionErrors,
     numberDrafts,
     numberErrors,
@@ -143,7 +145,7 @@ export function createLlmSettingsModel(deps: {
     removeKey,
     addProvider,
     removeProviderById,
-    addModelTo,
+    addModelToProvider,
     checkConnection,
     setNumber,
     nextFallback,

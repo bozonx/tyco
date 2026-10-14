@@ -109,7 +109,7 @@ const routeParamsStore = useEditorNavigation()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const historyStore = useHistoryStore()
-const { toast, toastText } = useToast()
+const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 
 const MIN_TRANSLATE_LENGTH = 2
@@ -281,12 +281,12 @@ const translate = async (targetLanguage: string, source?: string) => {
   const sourceText = props.text
 
   if (!sourceText.trim()) {
-    toast('toast.noTextToTranslate', 'warn')
+    toastKey('toast.noTextToTranslate', 'warn')
     return
   }
 
   if (sourceText.trim().length < MIN_TRANSLATE_LENGTH) {
-    toast('toast.textTooShortToTranslate', 'warn')
+    toastKey('toast.textTooShortToTranslate', 'warn')
     return
   }
 
@@ -327,7 +327,7 @@ const translate = async (targetLanguage: string, source?: string) => {
     }
     const text = result.content
     await historyStore.saveSourceResult(sourceId, text).catch(() => {
-      toast('history.operationFailed', 'error')
+      toastKey('history.operationFailed', 'error')
     })
     // closed meanwhile: the result is in the history, not on the screen
     if (controller.signal.aborted) return

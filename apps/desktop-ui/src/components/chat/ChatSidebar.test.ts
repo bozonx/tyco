@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
     title: string
     lastMessageAt: string
   }>,
-  currentChatState: { id: null as string | null, title: '' },
+  currentChatParams: { id: null as string | null, title: '' },
   isGenerating: false,
   messages: [] as any[],
   startNewChat: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn() }),
+  default: () => ({ toastKey: vi.fn() }),
 }))
 
 vi.mock('../../stores/ipc', () => ({
@@ -44,7 +44,7 @@ vi.mock('../../stores/ipc', () => ({
 vi.mock('../../stores/chat', () => ({
   useChatStore: () => ({
     isGenerating: mocks.isGenerating,
-    currentChatState: mocks.currentChatState,
+    currentChatParams: mocks.currentChatParams,
     messages: mocks.messages,
     startNewChat: mocks.startNewChat,
     openChat: mocks.openChat,
@@ -69,8 +69,8 @@ describe('ChatSidebar.vue', () => {
     vi.clearAllMocks()
     mocks.userConfig.chatHistoryEnabled = true
     mocks.chatHistory.length = 0
-    mocks.currentChatState.id = null
-    mocks.currentChatState.title = ''
+    mocks.currentChatParams.id = null
+    mocks.currentChatParams.title = ''
   })
 
   it('does not display warning banner or disabled hint when history is enabled', () => {

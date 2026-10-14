@@ -5,11 +5,11 @@ import type {
   ChatMessage,
 } from '@tyco/shared'
 import { APP_ROUTES } from '../navigation/routes'
-import type { ChatStoreDependencies } from './chat-store-contracts'
+import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatSessionModel(
   deps: Pick<
-    ChatStoreDependencies,
+    ChatModelDependencies,
     | 'createId'
     | 'saveSessionState'
     | 'navigateTo'
@@ -26,23 +26,23 @@ export function createChatSessionModel(
 ) {
   const {
     messages,
-    currentChatState,
+    currentChatParams,
     isGenerating,
     error,
     isStopped,
     omitHistoryImages,
-    trimmedTurns,
+    trimmedTurnCount,
     lastFailedTurn,
   } = state
   let openRequest = 0
   const stopGeneration = () => halt(true)
   const reset = (chatParams: ChatParams = {}) => {
     messages.value = []
-    currentChatState.value = chatParams
+    currentChatParams.value = chatParams
     error.value = ''
     isStopped.value = false
     omitHistoryImages.value = false
-    trimmedTurns.value = 0
+    trimmedTurnCount.value = 0
     lastFailedTurn.value = null
   }
 
@@ -64,7 +64,7 @@ export function createChatSessionModel(
       .slice(0, messageIndex + 1)
       .map((m) => ({ ...m }))
     if (!slice.length) return false
-    const originalTitle = currentChatState.value.title || ''
+    const originalTitle = currentChatParams.value.title || ''
     const title = deps.branchTitle?.(originalTitle) ?? originalTitle
     const id = deps.createId()
 
@@ -86,20 +86,23 @@ export function createChatSessionModel(
 
   const startChat = async (chatParams: ChatParams) => {
     clearChat()
-    currentChatState.value = { ...chatParams, id: deps.createId() }
+    currentChatParams.value = { ...chatParams, id: deps.createId() }
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 
   const addAttachment = (attachment: ChatAttachment) => {
     const text = attachment.text?.trim()
     if (!text) return
-    const current = currentChatState.value.attachments || []
+    const current = currentChatParams.value.attachments || []
     if (
       !current.some(
         (item) => item.text === text && item.name === attachment.name
       )
     ) {
-      currentChatState.value.attachments = [...current, { ...attachment, text }]
+      currentChatParams.value.attachments = [
+        ...current,
+        { ...attachment, text },
+      ]
     }
   }
 
@@ -114,7 +117,8 @@ export function createChatSessionModel(
       await startChat({ attachments: [{ ...attachment, text }] })
       return
     }
-    if (!currentChatState.value.id) currentChatState.value.id = deps.createId()
+    if (!currentChatParams.value.id)
+      currentChatParams.value.id = deps.createId()
     addAttachment(attachment)
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
@@ -159,7 +163,7 @@ export function createChatSessionModel(
   }
 
   const openLastOrNewChat = async () => {
-    if (currentChatState.value.id) {
+    if (currentChatParams.value.id) {
       await deps.navigateTo(APP_ROUTES.CHAT.path)
       return
     }

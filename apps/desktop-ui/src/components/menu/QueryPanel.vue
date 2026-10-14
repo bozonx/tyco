@@ -24,7 +24,9 @@
           :aria-expanded="props.options.length > 0"
           :aria-controls="props.options.length ? listboxId : undefined"
           :aria-activedescendant="
-            highlighted >= 0 ? `${listboxId}-option-${highlighted}` : undefined
+            highlightedOptionIndex >= 0
+              ? `${listboxId}-option-${highlightedOptionIndex}`
+              : undefined
           "
           spellcheck="false"
           autocomplete="off"
@@ -56,11 +58,11 @@
           role="option"
           class="query-panel-option"
           :class="{
-            'is-highlighted': index === highlighted,
+            'is-highlighted': index === highlightedOptionIndex,
             'is-selected': option.selected,
           }"
-          :aria-selected="index === highlighted"
-          @mouseenter="highlighted = index"
+          :aria-selected="index === highlightedOptionIndex"
+          @mouseenter="highlightedOptionIndex = index"
           @mousedown.prevent
           @click="emit('submit', { option, ctrl: false })"
         >
@@ -100,12 +102,12 @@
         :disabled="
           props.disabled ||
           hint.disabled ||
-          (hint.requireOption && highlighted < 0)
+          (hint.requireOption && highlightedOptionIndex < 0)
         "
         @mousedown.prevent
         @click="activateHint(hint)"
       >
-        <KeyButton v-for="key in hint.keys" :key="key">{{ key }}</KeyButton>
+        <KeyboardKey v-for="key in hint.keys" :key="key">{{ key }}</KeyboardKey>
         <span>{{ hint.label }}</span>
       </button>
     </div>
@@ -120,7 +122,7 @@ import {
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
 import Icon from '../common/AppIcon.vue'
-import KeyButton from '../common/KeyButton.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */
@@ -184,17 +186,19 @@ const emit = defineEmits<{
 
 const listboxId = useId()
 const inputRef = ref<HTMLInputElement | null>(null)
-const highlighted = ref(-1)
+const highlightedOptionIndex = ref(-1)
 
 const resetHighlight = () => {
-  const selected = props.options.findIndex((option) => option.selected)
-  highlighted.value =
-    selected >= 0
-      ? selected
+  const selectedOptionIndex = props.options.findIndex(
+    (option) => option.selected
+  )
+  highlightedOptionIndex.value =
+    selectedOptionIndex >= 0
+      ? selectedOptionIndex
       : props.autoHighlight && props.options.length
         ? 0
         : -1
-  if (highlighted.value >= 0) scrollToHighlighted()
+  if (highlightedOptionIndex.value >= 0) scrollToHighlighted()
 }
 
 watch(() => props.options, resetHighlight, { immediate: true })
@@ -212,7 +216,7 @@ const onInput = (event: Event) => {
 }
 
 function submit(ctrl = false) {
-  emit('submit', { option: props.options[highlighted.value], ctrl })
+  emit('submit', { option: props.options[highlightedOptionIndex.value], ctrl })
 }
 
 function activateHint(hint: QueryPanelHint) {
@@ -225,7 +229,7 @@ function activateHint(hint: QueryPanelHint) {
 function scrollToHighlighted() {
   void nextTick(() =>
     document
-      .getElementById(`${listboxId}-option-${highlighted.value}`)
+      .getElementById(`${listboxId}-option-${highlightedOptionIndex.value}`)
       ?.scrollIntoView?.({ block: 'nearest' })
   )
 }
@@ -237,8 +241,8 @@ const onKeyDown = (event: KeyboardEvent) => {
     case 'ArrowDown':
     case 'ArrowUp':
       event.preventDefault()
-      highlighted.value = moveHighlight(
-        highlighted.value,
+      highlightedOptionIndex.value = moveHighlight(
+        highlightedOptionIndex.value,
         event.key === 'ArrowDown' ? 1 : -1,
         props.options.length
       )

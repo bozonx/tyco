@@ -1,22 +1,22 @@
 import { needsGeneratedTitle } from './chat-title'
-import type { ChatStoreDependencies } from './chat-store-contracts'
+import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatTitleController(
   deps: Pick<
-    ChatStoreDependencies,
+    ChatModelDependencies,
     'generateChatTitle' | 'renameChat' | 'isHistoryEnabled'
   >,
-  state: Pick<ChatState, 'messages' | 'currentChatState'>
+  state: Pick<ChatState, 'messages' | 'currentChatParams'>
 ) {
-  const { messages, currentChatState } = state
+  const { messages, currentChatParams } = state
   let titleController: AbortController | undefined
-  const currentTitle = () => currentChatState.value.title || ''
+  const currentTitle = () => currentChatParams.value.title || ''
   const cancel = () => {
     titleController?.abort()
     titleController = undefined
   }
   const maybeGenerateTitle = async (modelId: string) => {
-    const id = currentChatState.value.id
+    const id = currentChatParams.value.id
     const title = currentTitle()
     if (deps.isHistoryEnabled?.() === false) return
     if (!id || !needsGeneratedTitle(messages.value, title)) return
@@ -41,13 +41,13 @@ export function createChatTitleController(
     }
     if (!generated || controller.signal.aborted) return
 
-    const isCurrent = currentChatState.value.id === id
+    const isCurrent = currentChatParams.value.id === id
     // renamed meanwhile, by the user or in another way
     if (isCurrent && currentTitle() !== title) return
     try {
       await deps.renameChat(id, generated)
-      if (currentChatState.value.id === id && currentTitle() === title)
-        currentChatState.value.title = generated
+      if (currentChatParams.value.id === id && currentTitle() === title)
+        currentChatParams.value.title = generated
     } catch {
       // the dependency reports it; the chat keeps working
     }

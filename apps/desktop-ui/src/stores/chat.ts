@@ -25,8 +25,8 @@ import {
   chatModelOptions,
   chatRequestBudgetCharacters,
   pickChatModel,
-} from '../lib/chat/chat-model'
-import { createChatModel } from '../lib/chat/chat-store'
+} from '../lib/chat/chat-model-selection'
+import { createChatModel } from '../lib/chat/chat-model'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -39,7 +39,7 @@ import { useMenuModalsStore } from './menu-modals'
 import { createRuntimeId } from '@/lib/runtime-id'
 
 export const useChatStore = defineStore('chat', () => {
-  const { toast, toastText } = useToast()
+  const { toastKey, toastText } = useToast()
   const { sendChatMessage, generateChatTitle } = useLlmActions()
   const ipcStore = useIpcStore()
   const saveSessionState = ipcStore.patchSessionState
@@ -83,7 +83,7 @@ export const useChatStore = defineStore('chat', () => {
       try {
         await historyStore.saveChat(item)
       } catch (error) {
-        toast('history.operationFailed', 'error')
+        toastKey('history.operationFailed', 'error')
         throw error
       }
     },
@@ -91,7 +91,7 @@ export const useChatStore = defineStore('chat', () => {
       try {
         await historyStore.renameChat(id, title)
       } catch (error) {
-        toast('history.operationFailed', 'error')
+        toastKey('history.operationFailed', 'error')
         throw error
       }
     },
@@ -155,7 +155,7 @@ export const useChatStore = defineStore('chat', () => {
     memory: 'chat.imageMemoryLimit',
   }
   const files = createChatFileController({
-    getDraft: () => model.currentChatState.value,
+    getDraft: () => model.currentChatParams.value,
     getMessages: () => model.messages.value,
     getSavingImages: () => model.savingImages.value,
     isGenerating: () => model.isGenerating.value,
@@ -178,7 +178,7 @@ export const useChatStore = defineStore('chat', () => {
         }`,
         'warn'
       ),
-    reportSyncError: () => toast('chat.imageUnavailable', 'error'),
+    reportSyncError: () => toastKey('chat.imageUnavailable', 'error'),
   })
   onScopeDispose(files.dispose)
   const controller = createChatController({

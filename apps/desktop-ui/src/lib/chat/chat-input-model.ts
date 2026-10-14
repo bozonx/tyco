@@ -5,7 +5,7 @@ import { insertAtCursor, type TextRange } from './insert-at-cursor'
 export function createChatInputModel() {
   const value = ref<string>('')
   const focusRequestCount = ref<number>(0)
-  /** Selection the input had when it lost the focus */
+  /** Selection the input had when it lost focus */
   const selection = ref<TextRange | null>(null)
   /** Caret to restore on the next focus */
   const pendingCaret = ref<number | null>(null)
@@ -23,7 +23,7 @@ export function createChatInputModel() {
     pendingCaret.value = null
   }
 
-  const focus = (): void => {
+  const requestFocus = (): void => {
     focusRequestCount.value++
   }
 
@@ -37,7 +37,7 @@ export function createChatInputModel() {
     value.value = result.value
     selection.value = { start: result.caret, end: result.caret }
     pendingCaret.value = result.caret
-    focus()
+    requestFocus()
   }
 
   const takePendingCaret = (): number | null => {
@@ -52,7 +52,7 @@ export function createChatInputModel() {
     selection,
     pendingCaret,
     setValue,
-    focus,
+    requestFocus,
     clear,
     rememberSelection,
     insertText,

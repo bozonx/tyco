@@ -71,7 +71,7 @@ import { useNavPanelStore } from '../stores/nav-panel'
 import { Icon } from '@iconify/vue'
 import type { EditorHistoryItem } from '@tyco/shared'
 
-const toast = useToast()
+const { toastKey } = useToast()
 const { t } = useI18n()
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
@@ -84,7 +84,7 @@ const removal = createRemovalUndo<EditorHistoryItem>({
   remove: historyStore.removeFromEditorHistory,
   restore: historyStore.restoreEditorItem,
   clear: historyStore.clearEditorHistory,
-  reportError: () => toast.toast('history.operationFailed', 'error'),
+  reportError: () => toastKey('history.operationFailed', 'error'),
 })
 const removedItem = removal.removed
 const undoRemove = removal.undo

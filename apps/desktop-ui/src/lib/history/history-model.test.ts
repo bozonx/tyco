@@ -1,7 +1,7 @@
 import type { EditorHistoryItem } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createHistoryModel, type HistoryApi } from './history-store'
+import { createHistoryModel, type HistoryApi } from './history-model'
 
 function editorItem(id: string, text: string): EditorHistoryItem {
   return { id, text, kind: 'draft', createdAt: 1 }
@@ -46,7 +46,7 @@ function createApi() {
   }
 }
 
-describe('history-store', () => {
+describe('history-model', () => {
   it('loads editor history into state', async () => {
     const api = createApi()
     const store = createHistoryModel(api as unknown as HistoryApi)

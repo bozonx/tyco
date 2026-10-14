@@ -7,7 +7,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toast: vi.fn() }),
+  default: () => ({ toastKey: vi.fn() }),
 }))
 
 it('offers regeneration only for assistant messages when enabled', async () => {

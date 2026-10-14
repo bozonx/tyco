@@ -6,7 +6,7 @@ import { transformTextCase } from '../lib/edit-menu/text-edit'
 import {
   type EditItem,
   createEditMenuModel,
-} from '../lib/edit-menu/edit-menu-store'
+} from '../lib/edit-menu/edit-menu-model'
 import { stripMarkdown } from '../lib/editor/strip-markdown'
 
 export type { EditItem }

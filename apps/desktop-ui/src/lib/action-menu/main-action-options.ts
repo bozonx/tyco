@@ -70,7 +70,8 @@ export function commandGroup(
   if (command.toolId === 'core.translate') return { kind: 'translation' }
   if (command.toolId === 'core.aiTask') return { kind: 'aiTask' }
   const owner = commandTool(command, tools)?.owner
-  if (owner?.kind === 'plugin') return { kind: 'plugin', plugin: owner.name }
+  if (owner?.kind === 'plugin')
+    return { kind: 'plugin', plugin: owner.pluginId }
   return { kind: 'commands' }
 }
 

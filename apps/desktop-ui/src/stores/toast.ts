@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
-import { type ToastType, createToastModel } from '../lib/toast/toast-store'
+import { type ToastType, createToastModel } from '../lib/toast/toast-model'
 
 export type { ToastType }
 

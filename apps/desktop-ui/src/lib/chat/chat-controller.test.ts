@@ -3,11 +3,11 @@ import { computed, reactive, ref } from 'vue'
 import type { Chat } from '@tyco/shared'
 
 import { createChatController } from './chat-controller'
-import { createChatModel } from './chat-store'
-import type { ChatModelOption } from './chat-model'
+import { createChatModel } from './chat-model'
+import type { ChatLlmOption } from './chat-model-selection'
 
 function setup() {
-  const selectedModel = ref<ChatModelOption | null>({
+  const selectedModel = ref<ChatLlmOption | null>({
     id: 'model',
     name: 'Model',
     providerLabel: 'local',
@@ -24,7 +24,7 @@ function setup() {
     setValue: vi.fn((text: string) => {
       input.value = text
     }),
-    focus: vi.fn(),
+    requestFocus: vi.fn(),
   })
   const sendChatMessage = vi.fn(async () => 'answer')
   const loadChat = vi.fn<(id: string) => Promise<Chat | null>>(async () => null)
@@ -55,7 +55,7 @@ function setup() {
         : null,
   })
   const files = {
-    pendingImages: computed(() => model.currentChatState.value.images || []),
+    pendingImages: computed(() => model.currentChatParams.value.images || []),
     importing: ref(0),
     async whileOpening<T>(open: () => Promise<T>): Promise<T> {
       return open()
@@ -95,11 +95,11 @@ describe('chat controller', () => {
     deps.afterRender.mockImplementation(async () => {
       events.push('render')
     })
-    deps.input.focus.mockImplementation(() => {
+    deps.input.requestFocus.mockImplementation(() => {
       events.push('focus')
     })
     await controller.startChat({ attachments: [{ text: ' context ' }] })
-    expect(model.currentChatState.value.attachments).toEqual([
+    expect(model.currentChatParams.value.attachments).toEqual([
       { text: ' context ' },
     ])
     expect(deps.closeModals).toHaveBeenCalledOnce()
@@ -112,8 +112,8 @@ describe('chat controller', () => {
     state.label = 'quick'
     await controller.startChat({ attachments: [{ text: 'context' }] })
     expect(deps.openMainChat).toHaveBeenCalledWith({ text: 'context' })
-    expect(model.currentChatState.value.id).toBeUndefined()
-    expect(deps.input.focus).not.toHaveBeenCalled()
+    expect(model.currentChatParams.value.id).toBeUndefined()
+    expect(deps.input.requestFocus).not.toHaveBeenCalled()
     expect(deps.closeModals).toHaveBeenCalledOnce()
   })
 
@@ -126,18 +126,18 @@ describe('chat controller', () => {
       text: 'selection',
       source: 'selection',
     })
-    expect(deps.input.focus).not.toHaveBeenCalled()
+    expect(deps.input.requestFocus).not.toHaveBeenCalled()
   })
 
   it('infers attachment sources and preserves an explicit source', async () => {
     const { controller, editor, model } = setup()
     editor.value = 'Draft'
     await controller.attachToChat('Draft')
-    expect(model.currentChatState.value.attachments).toEqual([
+    expect(model.currentChatParams.value.attachments).toEqual([
       { text: 'Draft', source: 'editor-text' },
     ])
     await controller.attachToChat('Another', 'selection')
-    expect(model.currentChatState.value.attachments).toContainEqual({
+    expect(model.currentChatParams.value.attachments).toContainEqual({
       text: 'Another',
       source: 'selection',
     })
@@ -148,7 +148,7 @@ describe('chat controller', () => {
     input.value = ' Question '
     editor.value = 'Draft with a part'
     editor.selectedText = 'a part'
-    model.currentChatState.value.attachments = [{ text: 'pending' }]
+    model.currentChatParams.value.attachments = [{ text: 'pending' }]
     expect(await controller.sendInput()).toBe(true)
     expect(model.messages.value[0]).toMatchObject({
       content: 'Question',
@@ -267,7 +267,7 @@ describe('chat controller', () => {
     })
     await controller.openChat('stored')
     expect(deps.files.whileOpening).toHaveBeenCalledOnce()
-    expect(deps.input.focus).toHaveBeenCalledOnce()
+    expect(deps.input.requestFocus).toHaveBeenCalledOnce()
     expect(controller.voiceChatContext.value).toBeNull()
   })
 
@@ -275,8 +275,8 @@ describe('chat controller', () => {
     const { controller, deps, model } = setup()
     await controller.openLastOrNewChat()
     expect(deps.files.whileOpening).toHaveBeenCalledOnce()
-    expect(model.currentChatState.value.id).toBe('chat-1')
-    expect(deps.input.focus).toHaveBeenCalledOnce()
+    expect(model.currentChatParams.value.id).toBe('chat-1')
+    expect(deps.input.requestFocus).toHaveBeenCalledOnce()
   })
 
   it('delegates model selection', async () => {
@@ -311,8 +311,8 @@ it('uses the request budget for both the composer and history image eligibility'
     requestBudgetCharacters: () => 100,
   })
   expect(controller.contextBudget.value).toMatchObject({
-    budget: 100,
-    used: 101,
+    budgetCharacters: 100,
+    usedCharacters: 101,
     level: 'over',
   })
   expect(controller.imageModelRequired.value).toBe(false)

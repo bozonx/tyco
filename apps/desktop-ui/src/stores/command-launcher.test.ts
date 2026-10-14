@@ -61,7 +61,7 @@ describe('command launcher store wiring', () => {
     await nextTick()
 
     expect(store.query).toBe('')
-    expect(store.page).toBe(1)
+    expect(store.pageIndex).toBe(1)
   })
 
   it('ignores activationId changes when mode is not COMMAND_LAUNCHER', async () => {
@@ -106,7 +106,7 @@ describe('command launcher store wiring', () => {
     })
     await nextTick()
 
-    expect(store.text).toBe('hello selected')
+    expect(store.inputText).toBe('hello selected')
   })
 
   it('dismisses external preparation and resets when window hides', async () => {

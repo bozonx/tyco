@@ -6,7 +6,7 @@ import type {
 
 import { normalizeCommands } from '../commands/command-config'
 import { commandLabel } from '../commands/command-runtime'
-import type { createHistoryModel } from '../history/history-store'
+import type { createHistoryModel } from '../history/history-model'
 import { toolResultMessage } from '../invocation/invocation-result'
 import type { ToolResult } from '../tools/tool-types'
 

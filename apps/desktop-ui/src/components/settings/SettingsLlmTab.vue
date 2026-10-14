@@ -155,7 +155,7 @@ const emit = defineEmits<{
   (event: 'update:imageQuality', value: UserConfig['chatImageQuality']): void
 }>()
 const { t } = useI18n()
-const { toast, toastText } = useToast()
+const { toastKey, toastText } = useToast()
 const llmStore = useLlmStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
@@ -172,7 +172,7 @@ const settings = createLlmSettingsModel({
   checkConnection: checkLlmConnection,
   notifyKeyError: (error) =>
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
-  notifyInvalidUrl: () => toast('settings.invalidBaseUrl', 'error'),
+  notifyInvalidUrl: () => toastKey('settings.invalidBaseUrl', 'error'),
   formatConnectionError: (error) =>
     `${t('settings.connectionFailed')}: ${String(error)}`,
   providerRemoved: (id) => emit('providerRemoved', id),

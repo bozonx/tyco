@@ -7,13 +7,13 @@ import useToast from './use-toast'
 export const useEditorActions = () => {
   const editor = useEditorInputStore()
   const modals = useMenuModalsStore()
-  const { toast } = useToast()
+  const { toastKey } = useToast()
   const { t } = useI18n()
 
   return createEditorActions({
     editor,
     t,
-    toast,
+    toastKey,
     openVoice: (params) =>
       modals.nextModal(MenuModals.VOICE_RECOGNITION, params),
     closeVoice: modals.closeAll,

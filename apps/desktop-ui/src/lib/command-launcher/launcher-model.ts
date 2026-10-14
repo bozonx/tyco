@@ -134,19 +134,19 @@ export interface CommandLauncherDependencies {
 /** The command overlay opened from the keyboard: list, search, keys, input */
 export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   let disposed = false
-  const page = ref(0)
+  const pageIndex = ref(0)
   const pageCount = computed(() => 1 + (deps.launcherPages?.()?.length ?? 0))
   const setPage = (index: number) => {
     if (Number.isInteger(index) && index >= 0 && index < pageCount.value)
-      page.value = index
+      pageIndex.value = index
   }
   const nextPage = (delta = 1) =>
-    setPage((page.value + delta + pageCount.value) % pageCount.value)
+    setPage((pageIndex.value + delta + pageCount.value) % pageCount.value)
   const query = ref('')
-  const highlighted = ref(0)
+  const highlightedCommandIndex = ref(0)
   const stage = shallowRef<LauncherStage>({ kind: 'list' })
   /** The text the prepared command gets */
-  const text = ref('')
+  const inputText = ref('')
   /** The user changed the text, so a selection arriving late keeps off it */
   let textEdited = false
   /** The text is the selection of the window under the overlay */
@@ -159,7 +159,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** The commands take the selection: not dropped, nor on a page without text */
   const selectionAllowed = () =>
     !selectionDropped.value &&
-    !deps.launcherPagesWithoutText?.()?.includes(page.value)
+    !deps.launcherPagesWithoutText?.()?.includes(pageIndex.value)
   /** The selection the commands take, empty when not allowed */
   const currentSelection = () =>
     selectionAllowed() ? (deps.selectedText() ?? '') : ''
@@ -174,13 +174,15 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       isLauncherCommand(command, deps.tools)
     )
   )
-  const visible = computed(() => searchCommands(commands.value, query.value))
+  const filteredCommands = computed(() =>
+    searchCommands(commands.value, query.value)
+  )
 
   const slotCommands = computed<(CommandConfig | null)[]>(() => {
     const rawSlots =
-      page.value === 0
+      pageIndex.value === 0
         ? deps.launcherCommands?.()
-        : deps.launcherPages?.()?.[page.value - 1]
+        : deps.launcherPages?.()?.[pageIndex.value - 1]
     const all = deps.commands() ?? []
     if (rawSlots && rawSlots.length > 0) {
       return Array.from({ length: 15 }, (_, index) => {
@@ -213,10 +215,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     controller?.abort()
     controller = null
     source = 'launcher'
-    page.value = 0
+    pageIndex.value = 0
     query.value = ''
-    highlighted.value = 0
-    text.value = ''
+    highlightedCommandIndex.value = 0
+    inputText.value = ''
     textEdited = false
     fromSelection = false
     selectionDropped.value = false
@@ -230,14 +232,14 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   const setQuery = (value: string) => {
     query.value = value
-    highlighted.value = 0
+    highlightedCommandIndex.value = 0
   }
 
   const move = (delta: number) => {
-    highlighted.value = moveHighlight(
-      highlighted.value,
+    highlightedCommandIndex.value = moveHighlight(
+      highlightedCommandIndex.value,
       delta,
-      visible.value.length
+      filteredCommands.value.length
     )
   }
 
@@ -329,7 +331,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       reset()
     } else if (input !== null) {
       // the text stays for another try
-      text.value = input
+      inputText.value = input
       stage.value = { kind: 'prepare', command, autoRun: false }
     } else {
       stage.value = { kind: 'list' }
@@ -347,7 +349,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const input = takesText ? given : ''
     fromSelection = selection && Boolean(input.trim())
     if (takesText && !input.trim()) {
-      text.value = input
+      inputText.value = input
       textEdited = false
       stage.value = { kind: 'prepare', command, autoRun: true }
       return
@@ -392,19 +394,21 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
 
   const pickHighlighted = () => {
-    const command = visible.value[highlighted.value]
+    const command = filteredCommands.value[highlightedCommandIndex.value]
     return command ? pick(command) : Promise.resolve()
   }
 
   /** `1`–`9`: the command at that place of the list */
   const pickByKey = (key: number) => {
     const command =
-      key >= 1 && key <= LAUNCHER_KEY_COUNT ? visible.value[key - 1] : undefined
+      key >= 1 && key <= LAUNCHER_KEY_COUNT
+        ? filteredCommands.value[key - 1]
+        : undefined
     return command ? pick(command) : Promise.resolve()
   }
 
   const setText = (value: string) => {
-    text.value = value
+    inputText.value = value
     textEdited = true
     fromSelection = false
   }
@@ -415,7 +419,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     if (current.kind !== 'prepare') return false
     return (
       !commandTakesText(current.command, deps.tools) ||
-      Boolean(text.value.trim())
+      Boolean(inputText.value.trim())
     )
   })
 
@@ -424,7 +428,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     if (disposed || current.kind !== 'prepare' || !canSubmit.value) return
     await execute(
       current.command,
-      commandTakesText(current.command, deps.tools) ? text.value : null
+      commandTakesText(current.command, deps.tools) ? inputText.value : null
     )
   }
 
@@ -455,10 +459,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       current.kind === 'prepare' &&
       commandTakesText(current.command, deps.tools) &&
       !textEdited &&
-      !text.value.trim() &&
+      !inputText.value.trim() &&
       arrived?.trim()
     ) {
-      text.value = arrived
+      inputText.value = arrived
       fromSelection = true
       if (current.autoRun) await submit()
     }
@@ -471,19 +475,19 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
   return {
     dispose,
-    page,
+    pageIndex,
     pageCount,
     setPage,
     nextPage,
     query,
-    highlighted,
+    highlightedCommandIndex,
     stage,
-    text,
+    inputText,
     selection,
     selectionDropped,
     dropSelection,
     commands,
-    visible,
+    filteredCommands,
     slotCommands,
     canSubmit,
     reset,

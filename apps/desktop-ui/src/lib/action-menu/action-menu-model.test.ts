@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { createCommand } from '../commands/command-config'
 import { createCoreTools } from '../tools/core-tools'
 import { testTools } from '../tools/testing'
-import { createActionMenuModel } from './action-menu-store'
+import { createActionMenuModel } from './action-menu-model'
 
 /** The core tools the built-in actions run, over mocks of what the app does */
 function coreTools() {

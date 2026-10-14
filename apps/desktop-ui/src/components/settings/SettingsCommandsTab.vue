@@ -167,7 +167,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const llmStore = useLlmStore()
 const toolsStore = useToolsStore()
 
@@ -214,7 +214,7 @@ const launcherSlots = computed(() => {
 async function copyId(command: CommandConfig) {
   try {
     await navigator.clipboard.writeText(command.id)
-    toast('commands.idCopied', 'success')
+    toastKey('commands.idCopied', 'success')
   } catch {
     // clipboard access might be denied
   }

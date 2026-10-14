@@ -75,7 +75,7 @@
                 class="chat-list-item"
                 :disabled="chatStore.isGenerating"
                 :class="{
-                  'is-active': chatStore.currentChatState?.id === item.id,
+                  'is-active': chatStore.currentChatParams?.id === item.id,
                 }"
                 :title="item.title"
                 @click="openChat(item.id)"
@@ -146,7 +146,7 @@ import type { Chat, ChatSummary } from '@tyco/shared'
 
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
-const { toast } = useToast()
+const { toastKey } = useToast()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
@@ -174,7 +174,7 @@ const renameInputs = ref<HTMLInputElement[]>([])
 const chatToDelete = ref<string | null>(null)
 const removal = createRemovalUndo<Chat>({
   remove: async (id) => {
-    const wasOpen = chatStore.currentChatState.id === id
+    const wasOpen = chatStore.currentChatParams.id === id
     if (wasOpen) {
       chatStore.abandonChat()
       await chatStore.whenSaved()
@@ -188,7 +188,7 @@ const removal = createRemovalUndo<Chat>({
   },
   restore: historyStore.restoreChatItem,
   release: (item) => releaseChatImageUndo(item.id),
-  reportError: () => toast('history.operationFailed', 'error'),
+  reportError: () => toastKey('history.operationFailed', 'error'),
 })
 const removedChat = removal.removed
 const undoRemoveChat = removal.undo
@@ -252,10 +252,10 @@ function getRowMenuItems(item: ChatSummary): DropdownMenuItem[] {
 async function copyChatMarkdown(id: string) {
   let targetChat: Chat | null
   // the open chat is newer in memory than in storage
-  if (chatStore.currentChatState?.id === id) {
+  if (chatStore.currentChatParams?.id === id) {
     targetChat = {
       id,
-      title: chatStore.currentChatState.title || '',
+      title: chatStore.currentChatParams.title || '',
       lastMessageAt: '',
       messages: chatStore.messages,
     }
@@ -263,7 +263,7 @@ async function copyChatMarkdown(id: string) {
     try {
       targetChat = await historyStore.loadChat(id)
     } catch {
-      toast('history.operationFailed', 'error')
+      toastKey('history.operationFailed', 'error')
       return
     }
   }
@@ -274,10 +274,10 @@ async function copyChatMarkdown(id: string) {
   try {
     await navigator.clipboard.writeText(md)
   } catch {
-    toast('editor.menu.clipboardUnavailable', 'error')
+    toastKey('editor.menu.clipboardUnavailable', 'error')
     return
   }
-  toast('chat.markdownCopied', 'info')
+  toastKey('chat.markdownCopied', 'info')
 }
 
 async function startChat() {

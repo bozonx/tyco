@@ -27,7 +27,7 @@
             :label="t('editor.search.title')"
             :title="t('editor.search.title')"
             icon="mdi:magnify"
-            @click="editorInputStore.openSearch"
+            @click="editorInputStore.requestSearch"
           />
           <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
           <DropdownMenu
@@ -182,7 +182,7 @@
             <IconButton
               size="sm"
               variant="ghost"
-              @click="editorInputStore.selectAll"
+              @click="editorInputStore.requestSelectAll"
               :title="t('editor.selectAll')"
               :label="t('editor.selectAll')"
               icon="mdi:select-all"

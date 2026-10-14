@@ -36,7 +36,7 @@ function setup(
     replaceEditorInputSelection: vi.fn(),
     setEditorInputFocus: vi.fn(),
     toEditor: vi.fn(),
-    toast: vi.fn(),
+    toastKey: vi.fn(),
     toastText: vi.fn(),
     t: vi.fn((key) => key),
     log: vi.fn(),
@@ -170,7 +170,7 @@ describe('plugin context boundary', () => {
     const { context, deps } = setup()
     context.toast('local.saved', 'success')
     context.toastText('Provider detail', 'error')
-    expect(deps.toast).toHaveBeenCalledWith(
+    expect(deps.toastKey).toHaveBeenCalledWith(
       pluginMessageKey('Example', 'local.saved'),
       'success'
     )
