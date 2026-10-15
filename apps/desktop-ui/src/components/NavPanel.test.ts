@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
     navPanelState: { onEscape: null, escapeButtonLabelKey: '' },
   },
   menuModalsStore: { closeAll: vi.fn() },
+  aiProfilesStore: { profiles: [], loadAll: vi.fn() },
 }))
 
 vi.mock('vue-router', () => ({ useRoute: () => mocks.currentRoute.value }))
@@ -45,6 +46,10 @@ vi.mock('../stores/nav-panel', () => ({
 
 vi.mock('../stores/menu-modals', () => ({
   useMenuModalsStore: () => mocks.menuModalsStore,
+}))
+
+vi.mock('../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => mocks.aiProfilesStore,
 }))
 
 describe('NavPanel.vue', () => {

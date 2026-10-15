@@ -14,9 +14,10 @@ import { LlmError } from '../lib/llm/llm-client'
 import { APP_CONFIG } from '@tyco/shared'
 import { LlmInstructionKind } from '../types'
 import { defineStore } from 'pinia'
-import { computed, nextTick, onScopeDispose, watch } from 'vue'
+import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { useChatInputStore } from './chat-input'
+import { useAiProfilesStore } from './ai-profiles'
 
 import useToast from '../composables/use-toast'
 import {
@@ -47,9 +48,27 @@ export const useChatStore = defineStore('chat', () => {
   const llmStore = useLlmStore()
   const { sendChatMessage, generateChatTitle } = llmStore.actions
   const historyStore = useHistoryStore()
+  const aiProfilesStore = useAiProfilesStore()
   const editorInputStore = useEditorInputStore()
   const chatInputStore = useChatInputStore()
   const menuModalsStore = useMenuModalsStore()
+
+  const currentSoul = ref<string>('')
+  watch(
+    () => aiProfilesStore.activeProfileId,
+    async (profileId) => {
+      if (profileId) {
+        try {
+          currentSoul.value = await aiProfilesStore.readSoul(profileId)
+        } catch {
+          currentSoul.value = ''
+        }
+      } else {
+        currentSoul.value = ''
+      }
+    },
+    { immediate: true }
+  )
 
   const modelOptions = computed(() =>
     chatModelOptions(
@@ -57,17 +76,29 @@ export const useChatStore = defineStore('chat', () => {
       (id) => isSecretUsable(llmStore.secrets, id)
     )
   )
-  const selectedModel = computed(() =>
-    pickChatModel(
-      modelOptions.value,
-      ipcStore.desktopState.sessionState?.lastChatModelId
-    )
+  const selectedModel = computed(() => {
+    const profileModelId = aiProfilesStore.activeProfile?.lastModelId
+    const fallbackModelId = ipcStore.desktopState.sessionState?.lastChatModelId
+    return pickChatModel(modelOptions.value, profileModelId || fallbackModelId)
+  })
+
+  watch(
+    () => [aiProfilesStore.activeProfileId, selectedModel.value?.id] as const,
+    ([profileId, modelId]) => {
+      if (profileId && modelId) {
+        void aiProfilesStore.updateLastModel(profileId, modelId)
+      }
+    }
   )
 
-  const getChatInstructions = () =>
-    (ipcStore.desktopState.appConfig ?? APP_CONFIG).aiInstructions[
+  const getChatInstructions = () => {
+    if (aiProfilesStore.activeProfileId && currentSoul.value) {
+      return currentSoul.value
+    }
+    return (ipcStore.desktopState.appConfig ?? APP_CONFIG).aiInstructions[
       LlmInstructionKind.CHAT
     ]
+  }
   const requestBudgetCharacters = () => {
     const picked = selectedModel.value
     if (!picked) return 0
@@ -83,7 +114,14 @@ export const useChatStore = defineStore('chat', () => {
     generateChatTitle,
     saveChat: async (item) => {
       try {
-        await historyStore.saveChat(item)
+        if (aiProfilesStore.activeProfileId) {
+          const driver = aiProfilesStore.getStorageDriver(
+            aiProfilesStore.activeProfileId
+          )
+          await driver.saveChat(item)
+        } else {
+          await historyStore.saveChat(item)
+        }
       } catch (error) {
         toastKey('history.operationFailed', 'error')
         throw error
@@ -91,13 +129,28 @@ export const useChatStore = defineStore('chat', () => {
     },
     renameChat: async (id, title) => {
       try {
-        await historyStore.renameChat(id, title)
+        if (aiProfilesStore.activeProfileId) {
+          const driver = aiProfilesStore.getStorageDriver(
+            aiProfilesStore.activeProfileId
+          )
+          await driver.renameChat(id, title)
+        } else {
+          await historyStore.renameChat(id, title)
+        }
       } catch (error) {
         toastKey('history.operationFailed', 'error')
         throw error
       }
     },
-    loadChat: loadChatWithImages,
+    loadChat: async (id) => {
+      if (aiProfilesStore.activeProfileId) {
+        const driver = aiProfilesStore.getStorageDriver(
+          aiProfilesStore.activeProfileId
+        )
+        return await driver.getChat(id)
+      }
+      return await loadChatWithImages(id)
+    },
     navigateTo: (path) => appNavigation.push(path),
     notifyError: (message) => {
       toastText(message, 'error')

@@ -7,6 +7,7 @@ import { createHotkeysCommandMap } from './hotkeys-command-map'
 import { createDiagnosticsCommandMap } from './diagnostics-command-map'
 import { createStorageCommandMap } from './storage-command-map'
 import { createExternalCommandMap } from './external-command-map'
+import { createAiProfilesCommandMap } from './ai-profiles-command-map'
 import type { DomainCommandMap } from './command-types'
 import type { DesktopFunctionName } from './desktop-functions'
 export type { CommandEntry } from './command-types'
@@ -22,5 +23,6 @@ export function createCommandMap(): DomainCommandMap<DesktopFunctionName> {
     ...createDiagnosticsCommandMap(),
     ...createStorageCommandMap(),
     ...createExternalCommandMap(),
+    ...createAiProfilesCommandMap(),
   }
 }

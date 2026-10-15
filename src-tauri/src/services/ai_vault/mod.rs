@@ -1,6 +1,12 @@
 #[cfg(test)]
 mod tests;
 
+pub mod operations;
+pub mod types;
+
+pub use operations::*;
+pub use types::*;
+
 use serde_json::Value;
 use std::path::PathBuf;
 use tauri::AppHandle;

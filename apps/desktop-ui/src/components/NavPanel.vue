@@ -25,7 +25,7 @@
         <Icon icon="mdi:chat-processing-outline" height="16" />
         {{ t('nav.aiChat') }}
       </button>
-      <template v-if="props.profiles.length > 0">
+      <template v-if="activeProfiles.length > 0">
         <div class="topbar-divider h-4 w-px bg-base-content/20 mx-1" />
         <div
           ref="profilesContainerRef"
@@ -33,7 +33,7 @@
           @wheel.passive="handleProfilesWheel"
         >
           <button
-            v-for="profile in props.profiles"
+            v-for="profile in activeProfiles"
             :key="profile.id"
             type="button"
             class="topbar-tab shrink-0"
@@ -86,13 +86,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatStore } from '../stores/chat'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
@@ -111,9 +112,19 @@ const props = withDefaults(defineProps<{ profiles?: NavProfileTab[] }>(), {
 
 const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()
+const aiProfilesStore = useAiProfilesStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
+
+onMounted(() => {
+  void aiProfilesStore.loadAll()
+})
+
+const activeProfiles = computed(() => {
+  if (props.profiles && props.profiles.length > 0) return props.profiles
+  return aiProfilesStore.profiles
+})
 
 const profilesContainerRef = ref<HTMLElement | null>(null)
 
@@ -155,8 +166,12 @@ function openSettings() {
 
 function openChat() {
   menuModalsStore.closeAll()
-  // the editor text stays out: the editor toolbar sends it to the chat
-  void chatStore.openLastOrNewChat()
+  if (appNavigation.isCurrent(APP_ROUTES.CHAT.path) && currentProfileId.value) {
+    void appNavigation.goToChat()
+  } else {
+    // the editor text stays out: the editor toolbar sends it to the chat
+    void chatStore.openLastOrNewChat()
+  }
 }
 
 function openProfileChat(profileId: string) {

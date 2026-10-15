@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   deleteChat: vi.fn(),
   restoreChatItem: vi.fn(),
   releaseUndo: vi.fn(async () => undefined),
+  aiProfilesStore: { getStorageDriver: vi.fn() },
 }))
 
 vi.mock('../../lib/chat/chat-image-storage', () => ({
@@ -56,11 +57,16 @@ vi.mock('../../stores/chat', () => ({
 vi.mock('../../stores/history', () => ({
   useHistoryStore: () => ({
     chatHistory: reactive(mocks.chatHistory),
+    loadChatHistory: vi.fn(),
     searchChats: mocks.searchChats,
     clearChats: mocks.clearChats,
     deleteChat: mocks.deleteChat,
     restoreChatItem: mocks.restoreChatItem,
   }),
+}))
+
+vi.mock('../../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => mocks.aiProfilesStore,
 }))
 
 describe('ChatSidebar.vue', () => {

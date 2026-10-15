@@ -283,3 +283,18 @@ export interface AiVaultConfig {
    - Тесты файловых операций хранилища выполняются успешно.
 3. **Итоговый сквозной прогон**:
    `pnpm validate:all`
+
+---
+
+## 4. Статус реализации
+
+- [x] **Фаза 1: Подготовка из существующего кодовой базы (Refactoring & Preparation)** — Завершена на 100%.
+- [x] **Фаза 2: Новый функционал (Implementation of AI Profiles & Projects)** — Завершена на 100%.
+  - [x] 2.1 Контракты и интерфейсы (`packages/shared`)
+  - [x] 2.2 Бэкенд на Rust (`src-tauri/src/services/ai_vault/` и IPC команды)
+  - [x] 2.3 DI-модели и сторы (`apps/desktop-ui/src/lib/ai-profiles/`, `stores/ai-profiles.ts`)
+  - [x] 2.4 Интерфейс управления в Настройках (`SettingsAiProfilesTab.vue`, `SettingsProfileDetailTab.vue`, `SettingsProjectDetailTab.vue`, интеграция в `Settings.vue`)
+  - [x] 2.5 Топбар и навигация (`NavPanel.vue`, поддержка горизонтального скролла, переключение табов)
+  - [x] 2.6 Интеграция с чатом и Vercel AI SDK (`chat.ts`, изолированная история, инъекция `SOUL.md`, сохранение `lastModelId`)
+  - [x] 2.7 Полная синхронизация i18n ключей во всех 4 поддерживаемых локалях (`ru_RU`, `en_US`, `es_AR`, `tr_TR`)
+- [x] **Итоговая верификация**: `pnpm validate:all` успешно завершен (0 ошибок, 0 предупреждений, все тесты зеленые).

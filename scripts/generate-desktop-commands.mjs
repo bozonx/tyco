@@ -43,6 +43,8 @@ const aliases = {
   PluginPreview: 'PluginPackagePreview',
   InstalledPlugin: 'InstalledPluginPackage',
   PluginManifest: 'PluginManifest',
+  AiProfile: 'AiProfile',
+  AiProject: 'AiProject',
 }
 
 /** Split only at top-level commas, including nested Rust generic arguments. */

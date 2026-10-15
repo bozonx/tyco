@@ -12,6 +12,7 @@ import type { HotkeysFunctions } from './functions/hotkeys'
 import type { DiagnosticsFunctions } from './functions/diagnostics'
 import type { StorageFunctions } from './functions/storage'
 import type { ExternalFunctions } from './functions/external'
+import type { AiProfilesFunctions } from './functions/ai-profiles'
 
 export interface DesktopFunctions
   extends
@@ -23,7 +24,8 @@ export interface DesktopFunctions
     HotkeysFunctions,
     DiagnosticsFunctions,
     StorageFunctions,
-    ExternalFunctions {}
+    ExternalFunctions,
+    AiProfilesFunctions {}
 
 export type DesktopFunctionName = keyof DesktopFunctions
 

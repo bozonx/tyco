@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, toValue, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
@@ -137,7 +137,9 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
+import { createChatHistoryModel } from '../../lib/history/chat-history'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore } from '../../stores/chat'
 import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
@@ -151,7 +153,7 @@ import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 
-const _props = withDefaults(defineProps<{ profileId?: string | null }>(), {
+const props = withDefaults(defineProps<{ profileId?: string | null }>(), {
   profileId: null,
 })
 
@@ -160,7 +162,25 @@ const { t } = useI18n()
 const { toastKey } = useToast()
 const chatStore = useChatStore()
 const historyStore = useHistoryStore()
+const aiProfilesStore = useAiProfilesStore()
 const ipcStore = useIpcStore()
+
+const profileHistoryModel = computed(() => {
+  if (!props.profileId) return null
+  const driver = aiProfilesStore.getStorageDriver(props.profileId)
+  return createChatHistoryModel(driver)
+})
+
+const activeHistory = computed(() => profileHistoryModel.value || historyStore)
+
+watch(
+  () => props.profileId,
+  () => {
+    void activeHistory.value.loadChatHistory?.()
+  },
+  { immediate: true }
+)
+
 const isSearchOpen = ref(false)
 const searchInputRef = ref<{ focus(): void } | null>(null)
 const query = ref('')
@@ -191,13 +211,13 @@ const removal = createRemovalUndo<Chat>({
       await chatStore.whenSaved()
     }
     try {
-      return await historyStore.deleteChat(id)
+      return await activeHistory.value.deleteChat(id)
     } catch (error) {
       if (wasOpen) await chatStore.openChat(id, { silent: true })
       throw error
     }
   },
-  restore: historyStore.restoreChatItem,
+  restore: (item) => activeHistory.value.restoreChatItem(item),
   release: (item) => releaseChatImageUndo(item.id),
   reportError: () => toastKey('history.operationFailed', 'error'),
 })
@@ -214,7 +234,7 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchRun = 0
 
 watch(
-  [query, () => historyStore.chatHistory],
+  [query, () => activeHistory.value.chatHistory],
   ([value]) => {
     clearTimeout(searchTimer)
     matchedIds.value = null
@@ -222,7 +242,7 @@ watch(
     if (!value.trim()) return
     searchTimer = setTimeout(async () => {
       try {
-        const ids = await historyStore.searchChats(value)
+        const ids = await activeHistory.value.searchChats(value)
         if (run === searchRun) matchedIds.value = new Set(ids)
       } catch {
         // the titles are still matched
@@ -234,7 +254,11 @@ watch(
 
 const groups = computed(() =>
   groupChatHistory(
-    filterChatHistory(historyStore.chatHistory, query.value, matchedIds.value)
+    filterChatHistory(
+      toValue(activeHistory.value.chatHistory),
+      query.value,
+      matchedIds.value
+    )
   )
 )
 
@@ -272,7 +296,7 @@ async function copyChatMarkdown(id: string) {
     }
   } else {
     try {
-      targetChat = await historyStore.loadChat(id)
+      targetChat = await activeHistory.value.loadChat(id)
     } catch {
       toastKey('history.operationFailed', 'error')
       return

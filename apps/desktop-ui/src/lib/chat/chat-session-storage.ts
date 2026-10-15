@@ -61,3 +61,35 @@ export function createIpcChatSessionStorageDriver(
     },
   }
 }
+
+export function createProfileIpcChatSessionStorageDriver(
+  historyApi: HistoryApi,
+  profileId: string
+): ChatSessionStorageDriver {
+  const call = createHistoryCall(historyApi)
+
+  return {
+    async listChats(): Promise<ChatSummary[]> {
+      const result = await call('listProfileChats', [profileId])
+      return result || []
+    },
+    async getChat(id: string): Promise<Chat | null> {
+      const result = await call('getProfileChat', [profileId, id])
+      return result || null
+    },
+    async saveChat(chat: Chat): Promise<void> {
+      await call('saveProfileChat', [profileId, chat])
+    },
+    async renameChat(id: string, title: string): Promise<void> {
+      await call('renameProfileChat', [profileId, id, title])
+    },
+    async deleteChat(id: string): Promise<Chat | null> {
+      const removed = await call('getProfileChat', [profileId, id])
+      await call('deleteProfileChat', [profileId, id])
+      return removed || null
+    },
+    async clearChats(): Promise<void> {
+      await call('clearProfileChats', [profileId])
+    },
+  }
+}

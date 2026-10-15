@@ -141,6 +141,30 @@
             @update:plugin-config="updatePluginConfig"
             @update:plugin-enabled="updatePluginEnabled"
           />
+
+          <SettingsAiProfilesTab
+            v-else-if="
+              currentTab === 'ai-profiles' ||
+              currentTab === 'ai-profiles:overview'
+            "
+            @navigate="currentTab = $event"
+          />
+
+          <SettingsProfileDetailTab
+            v-else-if="currentTab.startsWith('ai-profile:')"
+            :key="currentTab"
+            :profile-id="currentTab.slice('ai-profile:'.length)"
+            @back="currentTab = 'ai-profiles:overview'"
+            @saved="currentTab = `ai-profile:${$event}`"
+          />
+
+          <SettingsProjectDetailTab
+            v-else-if="currentTab.startsWith('ai-project:')"
+            :key="currentTab"
+            :project-id="currentTab.slice('ai-project:'.length)"
+            @back="currentTab = 'ai-profiles:overview'"
+            @saved="currentTab = `ai-project:${$event}`"
+          />
         </fieldset>
       </div>
     </div>
@@ -164,11 +188,13 @@ import {
 } from '../lib/locale/language'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { createSettingsOperations } from '../lib/settings/settings-operations'
+import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useLlmStore } from '../stores/llm'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import NavigationList from './common/NavigationList.vue'
 import SettingsAccessibilityTab from './settings/SettingsAccessibilityTab.vue'
+import SettingsAiProfilesTab from './settings/SettingsAiProfilesTab.vue'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGeneralTab from './settings/SettingsGeneralTab.vue'
@@ -180,6 +206,8 @@ import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
+import SettingsProfileDetailTab from './settings/SettingsProfileDetailTab.vue'
+import SettingsProjectDetailTab from './settings/SettingsProjectDetailTab.vue'
 import SettingsSaveStatus from './settings/SettingsSaveStatus.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
@@ -195,8 +223,13 @@ import {
 
 const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()
 const llmStore = useLlmStore()
+const aiProfilesStore = useAiProfilesStore()
 const { t } = useI18n()
 const { toastText } = useToast()
+
+onMounted(() => {
+  void aiProfilesStore.loadAll()
+})
 
 const route = useRoute()
 // another page may open the settings on a tab of its own
@@ -252,6 +285,11 @@ const primaryTabs = computed(() => [
     icon: 'mdi:human-handsup',
   },
   { name: t('settings.pluginsTab'), id: 'plugins', icon: 'mdi:puzzle-outline' },
+  {
+    name: t('settings.aiProfilesTab'),
+    id: 'ai-profiles',
+    icon: 'mdi:account-group-outline',
+  },
 ])
 
 const installedPlugins = computed(() =>
@@ -277,10 +315,55 @@ const currentPlugin = computed(() =>
 )
 
 const primaryNavigationItems = computed(() =>
-  primaryTabs.value.flatMap((item) => [
-    item,
-    ...(item.id === 'plugins'
-      ? installedPlugins.value.map((plugin) => ({
+  primaryTabs.value.flatMap((item) => {
+    if (item.id === 'ai-profiles') {
+      const isExpanded =
+        currentTab.value === 'ai-profiles' ||
+        currentTab.value.startsWith('ai-profile') ||
+        currentTab.value.startsWith('ai-project')
+      if (!isExpanded) {
+        return [item]
+      }
+      return [
+        item,
+        {
+          id: 'ai-profiles:overview',
+          name: t('settings.aiProfilesOverview'),
+          icon: 'mdi:folder-outline',
+          nested: true,
+        },
+        ...(aiProfilesStore.profiles ?? []).map((p) => ({
+          id: `ai-profile:${p.id}`,
+          name: p.name,
+          icon: p.icon || 'mdi:account-outline',
+          nested: true,
+        })),
+        {
+          id: 'ai-profile:new',
+          name: `+ ${t('settings.newProfile')}`,
+          icon: 'mdi:plus',
+          nested: true,
+        },
+        ...(aiProfilesStore.projects ?? []).map((proj) => ({
+          id: `ai-project:${proj.id}`,
+          name: proj.name,
+          icon: proj.isExternal
+            ? 'mdi:folder-open-outline'
+            : 'mdi:folder-table-outline',
+          nested: true,
+        })),
+        {
+          id: 'ai-project:new',
+          name: `+ ${t('settings.newProject')}`,
+          icon: 'mdi:plus',
+          nested: true,
+        },
+      ]
+    }
+    if (item.id === 'plugins') {
+      return [
+        item,
+        ...installedPlugins.value.map((plugin) => ({
           id: `plugin:${plugin.pluginId}`,
           name: plugin.labelKey
             ? t(plugin.labelKey)
@@ -293,9 +376,11 @@ const primaryNavigationItems = computed(() =>
               : 'settings.pluginStatusOff'
           ),
           isEnabled: plugin.isEnabled,
-        }))
-      : []),
-  ])
+        })),
+      ]
+    }
+    return [item]
+  })
 )
 
 const actionTabs = computed(() => [
@@ -320,6 +405,11 @@ const availableTabs = computed(
       ...primaryTabs.value.map((tab) => tab.id),
       ...actionTabs.value.map((tab) => tab.id),
       ...installedPlugins.value.map((plugin) => `plugin:${plugin.pluginId}`),
+      'ai-profiles:overview',
+      'ai-profile:new',
+      'ai-project:new',
+      ...(aiProfilesStore.profiles ?? []).map((p) => `ai-profile:${p.id}`),
+      ...(aiProfilesStore.projects ?? []).map((p) => `ai-project:${p.id}`),
     ])
 )
 watch(
@@ -344,6 +434,24 @@ const currentTabTitle = computed(() => {
         ? t(currentPlugin.value.labelKey)
         : currentPlugin.value.label || currentPlugin.value.pluginId) || ''
     )
+  }
+  if (currentTab.value.startsWith('ai-profile:')) {
+    const id = currentTab.value.slice('ai-profile:'.length)
+    if (id === 'new') return t('settings.newProfile')
+    return aiProfilesStore.getProfile(id)?.name || t('settings.aiProfilesTab')
+  }
+  if (currentTab.value.startsWith('ai-project:')) {
+    const id = currentTab.value.slice('ai-project:'.length)
+    if (id === 'new') return t('settings.newProject')
+    return (
+      aiProfilesStore.getProject(id)?.name || t('settings.projectPermissions')
+    )
+  }
+  if (
+    currentTab.value === 'ai-profiles' ||
+    currentTab.value === 'ai-profiles:overview'
+  ) {
+    return t('settings.aiProfilesTab')
   }
   return (
     [...primaryTabs.value, ...actionTabs.value].find(
