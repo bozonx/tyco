@@ -179,8 +179,14 @@ mod tests {
     fn accepts_web_urls_only() {
         assert!(web_url("https://duckduckgo.com/?q=a%20b&hl=en").is_ok());
         assert!(web_url(" http://example.com ").is_ok());
+        assert!(web_url("http://localhost:8080/path?key=val#hash").is_ok());
         assert!(web_url("file:///etc/passwd").is_err());
         assert!(web_url("javascript:alert(1)").is_err());
+        assert!(web_url("data:text/html,<b>hi</b>").is_err());
+        assert!(web_url("ftp://example.com/file").is_err());
+        assert!(web_url("ws://example.com/socket").is_err());
+        assert!(web_url("").is_err());
+        assert!(web_url("   ").is_err());
         assert!(web_url("not a url").is_err());
     }
 }

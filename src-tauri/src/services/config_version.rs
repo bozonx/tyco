@@ -36,3 +36,39 @@ pub fn config_version(user_config: &Value) -> u64 {
 pub fn is_newer_than_supported(user_config: &Value) -> bool {
     config_version(user_config) > CONFIG_VERSION
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn shared_config_version_is_positive() {
+        const { assert!(CONFIG_VERSION > 0) };
+    }
+
+    #[test]
+    fn config_version_reads_numbers_and_falls_back_to_zero() {
+        assert_eq!(config_version(&json!({ "configVersion": 10 })), 10);
+        assert_eq!(config_version(&json!({ "configVersion": 0 })), 0);
+        assert_eq!(config_version(&json!({ "configVersion": "10" })), 0);
+        assert_eq!(config_version(&json!({ "configVersion": -5 })), 0);
+        assert_eq!(config_version(&json!({ "configVersion": null })), 0);
+        assert_eq!(config_version(&json!({})), 0);
+        assert_eq!(config_version(&json!("not an object")), 0);
+    }
+
+    #[test]
+    fn detects_future_versions() {
+        assert!(is_newer_than_supported(
+            &json!({ "configVersion": CONFIG_VERSION + 1 })
+        ));
+        assert!(!is_newer_than_supported(
+            &json!({ "configVersion": CONFIG_VERSION })
+        ));
+        assert!(!is_newer_than_supported(
+            &json!({ "configVersion": CONFIG_VERSION - 1 })
+        ));
+        assert!(!is_newer_than_supported(&json!({})));
+    }
+}

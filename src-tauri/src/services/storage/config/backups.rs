@@ -44,4 +44,36 @@ mod tests {
         assert!(!raw.contains("sk-secret"));
         assert!(raw.contains("x.example"));
     }
+
+    #[test]
+    fn without_api_keys_removes_credentials_at_any_depth() {
+        let original = json!({
+            "service": {
+                "apiKey": "secret1",
+                "CUSTOM_APIKEY": "secret2",
+                "headers": { "Authorization": "Bearer token" },
+                "safeField": "value",
+                "nestedList": [
+                    { "deepApiKey": "secret3", "keep": 42 },
+                    { "headers": "should_be_removed", "name": "item" }
+                ]
+            },
+            "rootKey": "rootVal"
+        });
+
+        let scrubbed = without_api_keys(&original);
+        assert_eq!(
+            scrubbed,
+            json!({
+                "service": {
+                    "safeField": "value",
+                    "nestedList": [
+                        { "keep": 42 },
+                        { "name": "item" }
+                    ]
+                },
+                "rootKey": "rootVal"
+            })
+        );
+    }
 }

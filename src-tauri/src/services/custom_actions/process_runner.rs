@@ -472,9 +472,14 @@ mod tests {
             .parse()
             .unwrap();
         let _ = fs::remove_file(&pid_file);
-        thread::sleep(Duration::from_millis(100));
-        // SAFETY: signal 0 only probes whether the process exists
-        assert_ne!(unsafe { libc::kill(pid, 0) }, 0, "the child still runs");
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while unsafe { libc::kill(pid, 0) } == 0 {
+            assert!(
+                Instant::now() < deadline,
+                "the child process still runs after the timeout deadline"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
     }
 
     #[test]
