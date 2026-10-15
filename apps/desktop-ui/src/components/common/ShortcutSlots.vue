@@ -14,13 +14,7 @@
       <KeyboardKey>{{ key }}</KeyboardKey>
 
       <template v-if="items[index]">
-        <IconButton
-          class="drag-handle"
-          :title="t('settings.dragToReorder')"
-          @pointerdown="startDrag(index, $event)"
-          :label="t('settings.dragToReorder')"
-          icon="mdi:drag-vertical"
-        />
+        <DragHandle @drag="startDrag(index, $event)" />
         <ReorderControls
           :name="String(key)"
           :can-move-up="index > 0"
@@ -62,6 +56,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import Icon from './AppIcon.vue'
+import DragHandle from './DragHandle.vue'
 import KeyboardKey from './KeyboardKey.vue'
 import ReorderControls from './ReorderControls.vue'
 
@@ -124,22 +119,6 @@ async function moveSlot(from: number, to: number, direction: number) {
 
 .shortcut-slot.is-dragged {
   opacity: 0.45;
-}
-
-.drag-handle {
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  align-self: stretch;
-  border: 0;
-  background: transparent;
-  color: var(--app-text-faint);
-  cursor: grab;
-  touch-action: none;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
 }
 
 .slot-content {

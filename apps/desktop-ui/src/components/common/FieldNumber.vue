@@ -1,6 +1,7 @@
 <template>
   <input
     v-bind="controlAttrs()"
+    :data-size="size ?? 'md'"
     type="number"
     :value="String(props.modelValue ?? '')"
     :placeholder="placeholder"
@@ -19,12 +20,14 @@
 import { ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import type { ControlSize } from '../../lib/ui/control-types'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl()
 
 const props = withDefaults(
   defineProps<{
+    size?: ControlSize
     modelValue?: string | number
     placeholder?: string
     min?: string | number

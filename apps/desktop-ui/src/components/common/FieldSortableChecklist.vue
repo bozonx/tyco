@@ -15,13 +15,7 @@
         }"
         :style="itemStyle(index)"
       >
-        <div
-          class="drag-handle"
-          :title="t('settings.dragToReorder')"
-          @pointerdown="startDrag(index, $event)"
-        >
-          <Icon icon="mdi:drag-vertical" width="18" height="18" />
-        </div>
+        <DragHandle @drag="startDrag(index, $event)" />
 
         <ReorderControls
           :name="getOptionLabel(item.id)"
@@ -30,22 +24,12 @@
           @move="reorderItem(index, index + $event)"
         />
 
-        <label
-          class="checklist-item-label flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer py-1.5 pr-2.5 select-none"
-        >
-          <input
-            type="checkbox"
-            :checked="item.enabled"
-            class="checkbox checkbox-primary checkbox-sm shrink-0"
-            @change="toggleItem(index)"
-          />
-          <span
-            class="text-sm truncate"
-            :class="{ 'opacity-60': !item.enabled }"
-          >
-            {{ getOptionLabel(item.id) }}
-          </span>
-        </label>
+        <FieldCheckbox
+          class="checklist-item-label flex-1 min-w-0"
+          :model-value="item.enabled"
+          :label="getOptionLabel(item.id)"
+          @update:model-value="toggleItem(index)"
+        />
       </div>
     </div>
   </fieldset>
@@ -59,7 +43,8 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
-import Icon from './AppIcon.vue'
+import DragHandle from './DragHandle.vue'
+import FieldCheckbox from './FieldCheckbox.vue'
 import ReorderControls from './ReorderControls.vue'
 import {
   type SortableChecklistItem,
@@ -173,29 +158,5 @@ const getOptionLabel = (id: string): string => {
   border-color: var(--color-primary);
   box-shadow: var(--app-shadow-lg);
   transition: none;
-}
-
-.drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 2.25rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  cursor: grab;
-  touch-action: none;
-  opacity: 0.6;
-  transition:
-    color var(--transition-fast),
-    opacity var(--transition-fast);
-}
-
-.drag-handle:hover,
-.checklist-item-card:hover .drag-handle,
-.checklist-item-card.is-sorting .drag-handle,
-.checklist-item-card.is-dragged .drag-handle {
-  color: var(--color-base-content);
-  opacity: 1;
 }
 </style>

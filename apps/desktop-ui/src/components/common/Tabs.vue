@@ -11,28 +11,28 @@
       role="tab"
       class="app-tab"
       v-for="(tab, index) in tabs"
-      :key="tab.key"
-      :aria-selected="tab.key === activeTab"
-      :class="{ 'is-active': tab.key === activeTab }"
-      :aria-label="tab.text"
-      :title="tab.text"
+      :key="tab.id"
+      :aria-selected="tab.id === activeTab"
+      :class="{ 'is-active': tab.id === activeTab }"
+      :aria-label="tab.name"
+      :title="tab.name"
       :id="`${id}-tab-${index}`"
-      :tabindex="tab.key === activeTab ? 0 : -1"
+      :tabindex="tab.id === activeTab ? 0 : -1"
       :aria-controls="panelId ?? `${id}-panel`"
-      @click="onTabClick(tab.key)"
+      @click="onTabClick(tab.id)"
     >
       <Icon v-if="tab.icon" :icon="tab.icon" height="16" class="shrink-0" />
-      <span class="truncate">{{ tab.text }}</span>
-      <span v-if="tab.badge !== undefined" class="app-tabs-badge">
+      <span class="truncate">{{ tab.name }}</span>
+      <Badge v-if="tab.badge !== undefined" size="xs">
         {{ tab.badge }}
-      </span>
+      </Badge>
     </button>
   </div>
   <div
     v-if="$slots.panel"
     :id="panelId ?? `${id}-panel`"
     role="tabpanel"
-    :aria-labelledby="`${id}-tab-${tabs.findIndex((tab) => tab.key === activeTab)}`"
+    :aria-labelledby="`${id}-tab-${tabs.findIndex((tab) => tab.id === activeTab)}`"
     tabindex="0"
   >
     <slot name="panel" :value="activeTab" />
@@ -42,7 +42,9 @@
 <script setup lang="ts">
 import { computed, nextTick, useId } from 'vue'
 
+import type { ControlOption } from '../../lib/ui/control-option'
 import Icon from './AppIcon.vue'
+import Badge from './Badge.vue'
 
 const emit = defineEmits<{
   (e: 'update:modelValue', key: string | number): void
@@ -50,12 +52,7 @@ const emit = defineEmits<{
 
 const props = withDefaults(
   defineProps<{
-    tabs: {
-      text: string
-      key: string | number
-      icon?: string
-      badge?: string | number
-    }[]
+    tabs: (ControlOption & { badge?: string | number })[]
     label: string
     panelId?: string
 
@@ -65,7 +62,7 @@ const props = withDefaults(
 )
 
 const id = useId()
-const activeTab = computed(() => props.modelValue ?? props.tabs[0]?.key ?? '')
+const activeTab = computed(() => props.modelValue ?? props.tabs[0]?.id ?? '')
 
 const onTabClick = (key: string | number) => {
   emit('update:modelValue', key)
@@ -77,7 +74,7 @@ async function onKeydown(event: KeyboardEvent) {
   if (![previous, next, 'Home', 'End'].includes(event.key)) return
   event.preventDefault()
   event.stopPropagation()
-  const current = props.tabs.findIndex((tab) => tab.key === activeTab.value)
+  const current = props.tabs.findIndex((tab) => tab.id === activeTab.value)
   const index =
     event.key === 'Home'
       ? 0
@@ -86,7 +83,7 @@ async function onKeydown(event: KeyboardEvent) {
         : (current + (event.key === previous ? -1 : 1) + props.tabs.length) %
           props.tabs.length
 
-  emit('update:modelValue', props.tabs[index].key)
+  emit('update:modelValue', props.tabs[index].id)
   await nextTick()
   document.getElementById(`${id}-tab-${index}`)?.focus()
 }
@@ -131,15 +128,5 @@ async function onKeydown(event: KeyboardEvent) {
 .app-tabs .app-tab.is-active {
   color: var(--color-base-content);
   border-bottom-color: var(--color-primary);
-}
-
-.app-tabs-badge {
-  padding: 0 0.375rem;
-  border-radius: 999px;
-  background-color: var(--app-active);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  line-height: 1.125rem;
-  color: var(--app-text-muted);
 }
 </style>

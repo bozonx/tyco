@@ -19,7 +19,7 @@
         :label="t('settings.markdownIncrementListMarker')"
         :info="t('settings.markdownIncrementListMarkerInfo')"
       >
-        <FieldCheckbox v-model="markdown.incrementListMarker" />
+        <FieldSwitch v-model="markdown.incrementListMarker" />
       </FieldRow>
     </SettingsSection>
 
@@ -58,13 +58,13 @@
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepInlineCode')">
-        <FieldCheckbox v-model="markdownClean.keepInlineCode" />
+        <FieldSwitch v-model="markdownClean.keepInlineCode" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepHorizontalRules')">
-        <FieldCheckbox v-model="markdownClean.keepThematicBreaks" />
+        <FieldSwitch v-model="markdownClean.keepThematicBreaks" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepTaskCheckboxes')">
-        <FieldCheckbox v-model="markdownClean.keepTaskCheckboxes" />
+        <FieldSwitch v-model="markdownClean.keepTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
   </div>
@@ -74,9 +74,9 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import type { MarkdownSettings, UserConfig } from '@tyco/shared'
 import { normalizeMarkdownSettings } from '@tyco/shared'

@@ -72,7 +72,7 @@ describe('SettingsHistoryTab.vue', () => {
             template:
               '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
-          FieldCheckbox: {
+          FieldSwitch: {
             props: ['modelValue'],
             template:
               '<input type="checkbox" class="field-checkbox-stub" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)" />',

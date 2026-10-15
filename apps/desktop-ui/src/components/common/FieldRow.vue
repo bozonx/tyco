@@ -23,22 +23,14 @@
         <slot name="info" />
       </div>
       <div v-if="hint" :id="hintId" class="field-row-hint">{{ hint }}</div>
-      <div
-        v-if="errors.length"
-        :id="errorId"
-        class="field-row-error"
-        role="alert"
-      >
-        <p v-for="(message, index) in errors" :key="index">{{ message }}</p>
-      </div>
-      <div
-        v-if="warnings.length || $slots.messages"
-        :id="warningId"
-        class="field-row-warning"
-      >
-        <p v-for="(message, index) in warnings" :key="index">{{ message }}</p>
-        <slot name="messages" />
-      </div>
+      <FieldMessages
+        :errors="errors"
+        :warnings="warnings"
+        :error-id="errorId"
+        :warning-id="warningId"
+        ><template v-if="$slots.messages" #default
+          ><slot name="messages" /></template
+      ></FieldMessages>
     </div>
     <div class="field-row-control">
       <slot />
@@ -47,9 +39,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, provide, ref, useId, useSlots } from 'vue'
+import { useSlots } from 'vue'
 
-import { fieldContextKey } from '../../lib/ui/field-context'
+import { useFieldContext } from '../../composables/use-field-context'
+import FieldMessages from './FieldMessages.vue'
 import InfoTooltip from './InfoTooltip.vue'
 
 const props = withDefaults(
@@ -71,45 +64,8 @@ const props = withDefaults(
 )
 
 const slots = useSlots()
-const errors = computed(() =>
-  typeof props.error === 'string'
-    ? [props.error].filter(Boolean)
-    : (props.error ?? [])
-)
-const warnings = computed(() =>
-  typeof props.warning === 'string'
-    ? [props.warning].filter(Boolean)
-    : (props.warning ?? [])
-)
-const warningId = useId()
-const labelId = useId()
-const hintId = useId()
-const errorId = useId()
-const controlId = ref<string>()
-const controls = new Set<string>()
-provide(fieldContextKey, {
-  labelId,
-  descriptionIds: computed(() =>
-    [
-      props.hint ? hintId : '',
-      errors.value.length ? errorId : '',
-      warnings.value.length || slots.messages ? warningId : '',
-    ]
-      .filter(Boolean)
-      .join(' ')
-  ),
-  invalid: computed(() => errors.value.length > 0),
-  disabled: computed(() => Boolean(props.disabled)),
-  required: computed(() => Boolean(props.required)),
-  register(id) {
-    controls.add(id)
-    controlId.value = controls.values().next().value
-    return () => {
-      controls.delete(id)
-      controlId.value = controls.values().next().value
-    }
-  },
-})
+const { errors, warnings, labelId, hintId, errorId, warningId, controlId } =
+  useFieldContext(props, () => Boolean(slots.messages))
 </script>
 
 <style scoped>
@@ -159,11 +115,6 @@ provide(fieldContextKey, {
   color: var(--app-text-muted);
 }
 
-.field-row-error {
-  color: var(--color-error);
-  font-size: var(--text-caption);
-}
-
 .field-row-control {
   display: flex;
   align-items: center;
@@ -192,14 +143,6 @@ provide(fieldContextKey, {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);
   }
-}
-.field-row-warning {
-  color: var(--color-warning);
-  font-size: var(--text-caption);
-}
-.field-row-error p,
-.field-row-warning p {
-  margin: 0;
 }
 .field-row--compact {
   padding: 0;

@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import NavigationList from './NavigationList.vue'
 const tabs = [
-  { key: 'one', text: 'One' },
-  { key: 'two', text: 'Two' },
+  { id: 'one', name: 'One' },
+  { id: 'two', name: 'Two' },
 ]
 describe('NavigationList', () => {
   it('uses ordinary buttons for navigation without advertising tab semantics', () => {
@@ -25,10 +25,10 @@ describe('NavigationList', () => {
         label: 'Settings',
         modelValue: 'general',
         items: [
-          { key: 'general', text: 'General' },
+          { id: 'general', name: 'General' },
           {
-            key: 'plugin:example',
-            text: 'Example plugin',
+            id: 'plugin:example',
+            name: 'Example plugin',
             nested: true,
             status: 'Enabled',
             isEnabled: true,

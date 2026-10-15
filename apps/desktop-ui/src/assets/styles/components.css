@@ -182,3 +182,23 @@
   min-height: var(--control-size-md);
   height: var(--control-size-md);
 }
+
+/* Explicit sizes apply to native controls and wrappers such as SearchInput. */
+.input[data-size='xs'],
+.select[data-size='xs'] {
+  min-height: var(--control-size-xs);
+  height: var(--control-size-xs);
+  font-size: var(--text-caption);
+}
+.input[data-size='sm'],
+.select[data-size='sm'] {
+  min-height: var(--control-size-sm);
+  height: var(--control-size-sm);
+  font-size: var(--text-control);
+}
+.textarea[data-size='xs'] {
+  font-size: var(--text-caption);
+}
+.textarea[data-size='sm'] {
+  font-size: var(--text-control);
+}

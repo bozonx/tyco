@@ -79,7 +79,7 @@ describe('SettingsPluginsTab.vue', () => {
       props: { userConfig },
       global: {
         stubs: {
-          FieldCheckbox: {
+          FieldSwitch: {
             props: ['modelValue', 'label'],
             template:
               '<button class="checkbox-stub" :data-enabled="modelValue" @click="$emit(\'update:modelValue\', !value)">{{ label }}</button>',
@@ -104,7 +104,7 @@ describe('SettingsPluginsTab.vue', () => {
       props: { userConfig },
       global: {
         stubs: {
-          FieldCheckbox: {
+          FieldSwitch: {
             props: ['modelValue', 'label'],
             template:
               '<button class="checkbox-stub" @click.stop="$emit(\'update:modelValue\', false)">toggle</button>',
@@ -131,7 +131,7 @@ describe('SettingsPluginsTab.vue', () => {
 
     const wrapper = mount(SettingsPluginsTab, {
       props: { userConfig },
-      global: { stubs: { FieldCheckbox: true } },
+      global: { stubs: { FieldSwitch: true } },
     })
 
     const card = wrapper.find('[data-plugin="PluginWithConfig"]')

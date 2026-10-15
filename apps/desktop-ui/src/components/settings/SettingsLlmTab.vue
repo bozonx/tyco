@@ -249,7 +249,7 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-sm);
 }
-@media (max-width: 640px) {
+@container (max-width: 40rem) {
   .assignment-row {
     grid-template-columns: minmax(0, 1fr) auto;
   }

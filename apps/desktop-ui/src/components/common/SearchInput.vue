@@ -2,13 +2,8 @@
   <label
     :style="$attrs.style"
     class="input search-input"
-    :class="[
-      $attrs.class,
-      {
-        'search-input--compact': density === 'compact',
-        'search-input--quiet': quiet,
-      },
-    ]"
+    :data-size="size ?? 'md'"
+    :class="[$attrs.class, { 'search-input--quiet': quiet }]"
   >
     <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
     <input
@@ -27,6 +22,7 @@
 import { ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import type { ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
@@ -35,7 +31,7 @@ const controlAttrs = useFieldControl({ wrapped: true })
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 const props = defineProps<{
-  density?: 'default' | 'compact'
+  size?: ControlSize
   quiet?: boolean
   placeholder?: string
 
@@ -63,11 +59,7 @@ const onInput = (event: Event) => {
 .search-input {
   width: 100%;
 }
-.search-input--compact {
-  min-height: var(--control-size-sm);
-  height: var(--control-size-sm);
-  font-size: var(--text-control);
-}
+
 .search-input--quiet:not(:focus-within) {
   border-color: transparent;
 }

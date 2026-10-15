@@ -1,7 +1,13 @@
 <template>
   <div
     class="ui-state"
-    :class="[`ui-state--${kind}`, { 'ui-state--inline': inline }]"
+    :class="[
+      `ui-state--${kind}`,
+      {
+        'ui-state--inline': inline,
+        'ui-state--compact': density === 'compact',
+      },
+    ]"
     :role="
       kind === 'error' ? 'alert' : kind === 'loading' ? 'status' : undefined
     "
@@ -37,6 +43,7 @@ withDefaults(
     message?: string
     icon?: string
     inline?: boolean
+    density?: 'default' | 'compact'
   }>(),
   { kind: 'empty' }
 )
@@ -83,5 +90,8 @@ withDefaults(
 }
 .ui-state--inline .ui-state-actions {
   margin-inline-start: auto;
+}
+.ui-state--compact {
+  padding: var(--space-lg) var(--space-sm);
 }
 </style>

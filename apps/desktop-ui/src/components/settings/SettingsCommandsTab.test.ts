@@ -72,7 +72,31 @@ async function pickMenuItem(
 }
 
 describe('SettingsCommandsTab.vue', () => {
-  it('does not show header move buttons and reorders commands by dragging handle', async () => {
+  it('preserves the moved command controls and blocks boundary moves', async () => {
+    const wrapper = mountTab()
+    const first = wrapper.findAll('.command-card')[0]
+    const up = first.get('[aria-label^="common.moveUp"]')
+    const down = first.get('[aria-label^="common.moveDown"]')
+    await up.trigger('click')
+    expect(wrapper.emitted('update:commands')).toBeUndefined()
+    await down.trigger('click')
+    const next = wrapper
+      .emitted('update:commands')!
+      .at(-1)![0] as CommandConfig[]
+    expect(next.map((command) => command.id)).toEqual(['sc1', 'wh1'])
+    await wrapper.setProps({
+      userConfig: { ...wrapper.props('userConfig'), commands: next },
+    })
+    expect(
+      wrapper.findAll('.command-card')[1].get('[aria-label^="common.moveDown"]')
+        .element
+    ).toBe(down.element)
+    expect(down.attributes('aria-disabled')).toBe('true')
+    await down.trigger('click')
+    expect(wrapper.emitted('update:commands')).toHaveLength(1)
+  })
+
+  it('offers keyboard reorder controls and reorders commands by dragging the shared handle', async () => {
     const wrapper = mount(SettingsCommandsTab, {
       props: {
         userConfig: {
@@ -85,8 +109,8 @@ describe('SettingsCommandsTab.vue', () => {
       global: { stubs: { CommandEditor: true, Icon: true } },
     })
 
-    expect(wrapper.find('[aria-label^="common.moveUp"]').exists()).toBe(false)
-    expect(wrapper.find('[aria-label^="common.moveDown"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label^="common.moveUp"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label^="common.moveDown"]').exists()).toBe(true)
 
     const cards = wrapper.findAll('.command-card')
     cards.forEach(({ element }, index) => {

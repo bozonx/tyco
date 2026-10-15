@@ -298,32 +298,28 @@ function keepLocalChanges() {
 }
 
 const primaryTabs = computed(() => [
-  { text: t('settings.generalTab'), key: 'general', icon: 'mdi:tune-variant' },
-  { text: t('settings.editorTab'), key: 'editor', icon: 'mdi:pencil-outline' },
-  { text: t('settings.historyTab'), key: 'history', icon: 'mdi:history' },
+  { name: t('settings.generalTab'), id: 'general', icon: 'mdi:tune-variant' },
+  { name: t('settings.editorTab'), id: 'editor', icon: 'mdi:pencil-outline' },
+  { name: t('settings.historyTab'), id: 'history', icon: 'mdi:history' },
   {
-    text: t('settings.hotkeysTab'),
-    key: 'global-actions',
+    name: t('settings.hotkeysTab'),
+    id: 'global-actions',
     icon: 'mdi:keyboard-outline',
   },
-  { text: t('settings.sttTab'), key: 'stt', icon: 'mdi:microphone-outline' },
-  { text: t('settings.llmTab'), key: 'llm', icon: 'mdi:cube-outline' },
+  { name: t('settings.sttTab'), id: 'stt', icon: 'mdi:microphone-outline' },
+  { name: t('settings.llmTab'), id: 'llm', icon: 'mdi:cube-outline' },
   {
-    text: t('settings.translationsTab'),
+    name: t('settings.translationsTab'),
 
-    key: 'translations',
+    id: 'translations',
     icon: 'mdi:translate',
   },
   {
-    text: t('settings.sectionAccessibility'),
-    key: 'accessibility',
+    name: t('settings.sectionAccessibility'),
+    id: 'accessibility',
     icon: 'mdi:human-handsup',
   },
-  {
-    text: t('settings.pluginsTab'),
-    key: 'plugins',
-    icon: 'mdi:puzzle-outline',
-  },
+  { name: t('settings.pluginsTab'), id: 'plugins', icon: 'mdi:puzzle-outline' },
 ])
 
 const installedPlugins = computed(() =>
@@ -351,10 +347,10 @@ const currentPlugin = computed(() =>
 const primaryNavigationItems = computed(() =>
   primaryTabs.value.flatMap((item) => [
     item,
-    ...(item.key === 'plugins'
+    ...(item.id === 'plugins'
       ? installedPlugins.value.map((plugin) => ({
-          key: `plugin:${plugin.pluginId}`,
-          text: plugin.labelKey
+          id: `plugin:${plugin.pluginId}`,
+          name: plugin.labelKey
             ? t(plugin.labelKey)
             : plugin.label || plugin.pluginId,
           icon: 'mdi:puzzle-outline',
@@ -372,29 +368,25 @@ const primaryNavigationItems = computed(() =>
 
 const actionTabs = computed(() => [
   {
-    text: t('settings.mainActionsTab'),
-    key: 'main-actions',
+    name: t('settings.mainActionsTab'),
+    id: 'main-actions',
     icon: 'mdi:gesture-tap-button',
   },
-  { text: t('settings.tasksTab'), key: 'tasks', icon: 'mdi:robot-outline' },
-  { text: t('settings.languagesTab'), key: 'languages', icon: 'mdi:web' },
+  { name: t('settings.tasksTab'), id: 'tasks', icon: 'mdi:robot-outline' },
+  { name: t('settings.languagesTab'), id: 'languages', icon: 'mdi:web' },
   {
-    text: t('settings.launcherCommandsTab'),
-    key: 'launcher-commands',
+    name: t('settings.launcherCommandsTab'),
+    id: 'launcher-commands',
     icon: 'mdi:console',
   },
-  {
-    text: t('settings.commandsTab'),
-    key: 'commands',
-    icon: 'mdi:console-line',
-  },
+  { name: t('settings.commandsTab'), id: 'commands', icon: 'mdi:console-line' },
 ])
 
 const availableTabs = computed(
   () =>
     new Set([
-      ...primaryTabs.value.map((tab) => tab.key),
-      ...actionTabs.value.map((tab) => tab.key),
+      ...primaryTabs.value.map((tab) => tab.id),
+      ...actionTabs.value.map((tab) => tab.id),
       ...installedPlugins.value.map((plugin) => `plugin:${plugin.pluginId}`),
     ])
 )
@@ -423,8 +415,8 @@ const currentTabTitle = computed(() => {
   }
   return (
     [...primaryTabs.value, ...actionTabs.value].find(
-      (tab) => tab.key === currentTab.value
-    )?.text || ''
+      (tab) => tab.id === currentTab.value
+    )?.name || ''
   )
 })
 

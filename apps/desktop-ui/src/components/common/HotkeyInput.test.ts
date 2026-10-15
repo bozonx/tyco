@@ -14,7 +14,7 @@ describe('HotkeyInput.vue', () => {
 
   it('renders configured shortcut keys', () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+Shift+K', placeholder: 'No shortcut' },
+      props: { modelValue: 'Ctrl+Shift+K', placeholder: 'No shortcut' },
       global: {
         stubs: {
           Icon: true,
@@ -30,7 +30,7 @@ describe('HotkeyInput.vue', () => {
 
   it('renders placeholder when value is empty', () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: '', placeholder: 'Press keys...' },
+      props: { modelValue: '', placeholder: 'Press keys...' },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -39,7 +39,7 @@ describe('HotkeyInput.vue', () => {
 
   it('starts recording on click when not readonly', async () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+K' },
+      props: { modelValue: 'Ctrl+K' },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -51,7 +51,7 @@ describe('HotkeyInput.vue', () => {
 
   it('does not start recording when readonly is true', async () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+K', readonly: true },
+      props: { modelValue: 'Ctrl+K', readonly: true },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -61,9 +61,9 @@ describe('HotkeyInput.vue', () => {
     expect(wrapper.emitted('recording')).toBeUndefined()
   })
 
-  it('records valid shortcut on keydown and emits record', async () => {
+  it('records valid shortcut on keydown and emits the model value', async () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+K' },
+      props: { modelValue: 'Ctrl+K' },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -77,12 +77,12 @@ describe('HotkeyInput.vue', () => {
       shiftKey: true,
     })
 
-    expect(wrapper.emitted('record')?.[0]).toEqual(['Ctrl+Shift+P'])
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['Ctrl+Shift+P'])
   })
 
   it('shows invalid hint on non-modifier single key', async () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+K' },
+      props: { modelValue: 'Ctrl+K' },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -99,7 +99,7 @@ describe('HotkeyInput.vue', () => {
 
   it('cancels recording on Escape', async () => {
     const wrapper = mount(HotkeyInput, {
-      props: { value: 'Ctrl+K' },
+      props: { modelValue: 'Ctrl+K' },
       global: { stubs: { Icon: true, KeyboardKey: true } },
     })
 
@@ -110,6 +110,6 @@ describe('HotkeyInput.vue', () => {
     await wrapper.trigger('blur')
 
     expect(wrapper.classes()).not.toContain('is-recording')
-    expect(wrapper.emitted('record')).toBeUndefined()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
   })
 })

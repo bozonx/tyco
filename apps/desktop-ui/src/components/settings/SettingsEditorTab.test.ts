@@ -50,7 +50,7 @@ describe('SettingsEditorTab.vue', () => {
             template:
               '<select class="field-select-stub" :data-val="modelValue" />',
           },
-          FieldCheckbox: {
+          FieldSwitch: {
             props: ['modelValue'],
             template: '<input type="checkbox" class="field-checkbox-stub" />',
           },
@@ -129,7 +129,7 @@ describe('SettingsEditorTab.vue', () => {
           SettingsSection: true,
           FieldRow: true,
           FieldSelect: true,
-          FieldCheckbox: true,
+          FieldSwitch: true,
         },
       },
     })

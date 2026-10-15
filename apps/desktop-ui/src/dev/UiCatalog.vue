@@ -10,10 +10,10 @@
         ><SegmentedControl v-model="theme" label="Theme" :options="themes"
       /></FieldRow>
       <FieldRow label="High contrast"
-        ><FieldCheckbox v-model="contrast"
+        ><FieldSwitch v-model="contrast"
       /></FieldRow>
       <FieldRow label="Reduced motion"
-        ><FieldCheckbox v-model="reducedMotion"
+        ><FieldSwitch v-model="reducedMotion"
       /></FieldRow>
       <FieldRow label="Interface scale"
         ><FieldSelect
@@ -24,6 +24,62 @@
             { id: 1.5, name: '150%' },
           ]"
       /></FieldRow>
+    </section>
+    <section
+      class="surface catalog-section catalog-standard-controls ui-form-container"
+    >
+      <h2>Standard controls</h2>
+      <div class="catalog-row">
+        <Badge>Neutral</Badge><Badge tone="accent">Active</Badge
+        ><Badge tone="success">Ready</Badge><Badge tone="warning">Warning</Badge
+        ><Badge tone="error">Error</Badge>
+        <Badge interactive @click="badgeClicks++"
+          >Configure {{ badgeClicks }}</Badge
+        >
+      </div>
+      <FieldRow label="Select this item"
+        ><FieldCheckbox v-model="itemSelected"
+      /></FieldRow>
+      <FieldRow label="Enable this feature"
+        ><FieldSwitch v-model="featureEnabled"
+      /></FieldRow>
+      <div class="catalog-row">
+        <FieldInput
+          size="xs"
+          aria-label="Extra small input"
+          model-value="Extra small"
+        />
+        <FieldInput size="sm" aria-label="Small input" model-value="Small" />
+        <SearchInput size="sm" placeholder="Small search" />
+        <FieldSelect
+          size="sm"
+          aria-label="Small select"
+          model-value="one"
+          :options="[{ id: 'one', name: 'One' }]"
+        />
+      </div>
+      <div class="catalog-row">
+        <ShortcutHint :keys="['Shift', 'Enter']">New line</ShortcutHint>
+        <ShortcutHint :keys="['Enter']" interactive @click="hintClicks++"
+          >Run {{ hintClicks }}</ShortcutHint
+        >
+        <ShortcutHint :keys="['Esc']" interactive disabled
+          >Unavailable</ShortcutHint
+        >
+        <DragHandle />
+        <InfoTooltip
+          text="A text-only explanation"
+          aria-label="Text explanation"
+        />
+        <InfoPopover aria-label="Interactive help"
+          ><p>Copy an activation command</p>
+          <Button size="sm" @click="helpClicks++"
+            >Copy command {{ helpClicks }}</Button
+          ></InfoPopover
+        >
+        <Button variant="neutral" size="sm">After help</Button>
+      </div>
+      <StateMessage density="compact" message="No configured models" />
     </section>
     <section class="surface catalog-section ui-form-container">
       <h2>Buttons</h2>
@@ -148,7 +204,7 @@
       /></FieldRow>
       <SearchInput
         v-model="catalogSearch"
-        density="compact"
+        size="sm"
         quiet
         placeholder="Search example"
       />
@@ -167,7 +223,7 @@
         <SegmentedControl
           v-model="tab"
           label="Value selection"
-          :options="tabs.map((item) => ({ id: item.key, name: item.text }))"
+          :options="tabs"
         />
         <DropdownMenu
           label="Actions"
@@ -279,19 +335,24 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 
+import Badge from '../components/common/Badge.vue'
 import BaseDialog from '../components/common/BaseDialog.vue'
 import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import Diff from '../components/common/Diff.vue'
 import DisclosureHeader from '../components/common/DisclosureHeader.vue'
+import DragHandle from '../components/common/DragHandle.vue'
 import DropdownMenu from '../components/common/DropdownMenu.vue'
 import FieldCheckbox from '../components/common/FieldCheckbox.vue'
 import FieldInput from '../components/common/FieldInput.vue'
 import FieldNumber from '../components/common/FieldNumber.vue'
 import FieldRow from '../components/common/FieldRow.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
+import FieldSwitch from '../components/common/FieldSwitch.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import IconButton from '../components/common/IconButton.vue'
+import InfoPopover from '../components/common/InfoPopover.vue'
+import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineAction from '../components/common/InlineAction.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import NavigationList from '../components/common/NavigationList.vue'
@@ -299,6 +360,7 @@ import ParallelTextPreview from '../components/common/ParallelTextPreview.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
 import ShortcutButton from '../components/common/ShortcutButton.vue'
+import ShortcutHint from '../components/common/ShortcutHint.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import Tabs from '../components/common/Tabs.vue'
 import TextPreview from '../components/common/TextPreview.vue'
@@ -320,8 +382,8 @@ const variants = [
   'danger-ghost',
 ] as const
 const tabs = [
-  { key: 'source', text: 'Source' },
-  { key: 'result', text: 'Result' },
+  { id: 'source', name: 'Source' },
+  { id: 'result', name: 'Result' },
 ]
 const previewText = Array.from(
   { length: 20 },
@@ -329,6 +391,11 @@ const previewText = Array.from(
 ).join('\n')
 
 const theme = ref('light')
+const itemSelected = ref(false)
+const featureEnabled = ref(false)
+const badgeClicks = ref(0)
+const hintClicks = ref(0)
+const helpClicks = ref(0)
 const contrast = ref(false)
 const reducedMotion = ref(false)
 const scale = ref<string | number | undefined>(1)
@@ -338,11 +405,11 @@ const selected = ref<string | number | undefined>(1)
 const query = ref('')
 const navigation = ref<string | number>('general')
 const navigationItems = [
-  { key: 'general', text: 'General', icon: 'mdi:tune-variant' },
-  { key: 'plugins', text: 'Plugins', icon: 'mdi:puzzle-outline' },
+  { id: 'general', name: 'General', icon: 'mdi:tune-variant' },
+  { id: 'plugins', name: 'Plugins', icon: 'mdi:puzzle-outline' },
   {
-    key: 'plugin:example',
-    text: 'Example plugin',
+    id: 'plugin:example',
+    name: 'Example plugin',
     icon: 'mdi:puzzle-outline',
     nested: true,
     status: 'Enabled',

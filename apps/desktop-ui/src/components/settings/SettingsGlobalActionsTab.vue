@@ -24,18 +24,20 @@
           {{ t('settings.configureGlobalHotkeys') }}
         </Button>
       </template>
-      <div v-if="missing.length > 0" class="provider-note missing-note">
-        <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
-        <p>{{ t('settings.hotkeysMissing') }}</p>
-      </div>
-      <div v-if="portalError" class="provider-note">
-        <Icon icon="mdi:information-outline" height="16" class="shrink-0" />
-        <div>
-          <p class="portal-error">
-            {{ portalError }}
-          </p>
-        </div>
-      </div>
+      <InlineNotice
+        v-if="missing.length > 0"
+        class="provider-note"
+        kind="warning"
+        icon="mdi:alert-outline"
+        :message="t('settings.hotkeysMissing')"
+      />
+      <InlineNotice
+        v-if="portalError"
+        class="provider-note"
+        kind="error"
+        icon="mdi:information-outline"
+        :message="portalError"
+      />
       <FieldRow
         v-for="row in rows"
         :key="row.id"
@@ -47,7 +49,7 @@
         "
       >
         <template #info>
-          <InfoTooltip
+          <InfoPopover
             :aria-label="t('settings.externalMethods')"
             align="start"
           >
@@ -68,16 +70,16 @@
                 />
               </div>
             </div>
-          </InfoTooltip>
+          </InfoPopover>
         </template>
         <div class="hotkey-control">
           <HotkeyInput
-            :value="row.value"
+            :model-value="row.value"
             :aria-label="row.label"
             :placeholder="t('settings.hotkeyNotAssigned')"
             :readonly="!isEditable"
             :platform="providerState.platform"
-            @record="setShortcut(row.id, $event)"
+            @update:model-value="setShortcut(row.id, $event)"
             @recording="suspendHotkeys"
           />
           <IconButton
@@ -169,13 +171,13 @@ import {
 } from '../../lib/hotkeys/hotkey-settings'
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
 import { useIpcStore } from '../../stores/ipc'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import HotkeyInput from '../common/HotkeyInput.vue'
 import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
+import InfoPopover from '../common/InfoPopover.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_SUBMIT_KEY,
@@ -373,29 +375,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .provider-note {
-  display: flex;
-  gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--app-border-subtle);
-  color: var(--app-text-muted);
-  font-size: var(--text-control);
-  line-height: 1.45;
-}
-
-.provider-note p {
-  margin: 0;
-}
-
-.portal-error {
-  color: var(--app-error);
-}
-
-.missing-note {
-  color: var(--color-warning);
-}
-
-.missing-note p {
-  margin: 0;
 }
 
 .hotkey-control {

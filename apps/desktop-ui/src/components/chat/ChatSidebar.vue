@@ -42,7 +42,7 @@
       ref="searchInputRef"
       v-model="query"
       class="sidebar-search"
-      density="compact"
+      size="sm"
       quiet
       :placeholder="t('chat.searchChats')"
       @keydown.esc="closeSearch"

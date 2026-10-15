@@ -56,7 +56,7 @@ describe('FieldSortableChecklist.vue', () => {
       attachTo: document.body,
       global: { stubs: { Icon: true } },
     })
-    const buttons = wrapper.findAll('button')
+    const buttons = wrapper.findAll<HTMLButtonElement>('button[aria-disabled]')
     await buttons[0].trigger('click')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     buttons[1].element.focus()

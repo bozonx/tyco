@@ -1,12 +1,12 @@
 <template>
   <div class="command-header">
-    <div
-      class="drag-handle"
-      :title="t('settings.dragToReorder')"
-      @pointerdown="emit('drag', $event)"
-    >
-      <Icon icon="mdi:drag-vertical" width="18" height="18" />
-    </div>
+    <DragHandle @drag="emit('drag', $event)" />
+    <ReorderControls
+      :name="command.name || t('commands.unnamed')"
+      :can-move-up="canMoveUp"
+      :can-move-down="canMoveDown"
+      @move="emit('move', $event)"
+    />
     <DisclosureHeader
       class="command-summary"
       density="compact"
@@ -24,39 +24,37 @@
       >
         {{ command.name || t('commands.unnamed') }}
       </span>
-      <span v-if="!commandTakesText(command, toolsStore)" class="command-badge">
+      <Badge v-if="!commandTakesText(command, toolsStore)">
         {{ t('commands.badgeNoText') }}
-      </span>
-      <span
+      </Badge>
+      <Badge
         v-if="command.enabled && unavailableReasonKey"
-        class="command-badge is-muted"
+        tone="muted"
         :title="t(unavailableReasonKey!)"
       >
         {{ t('commands.badgeUnavailable') }}
-      </span>
-      <span
+      </Badge>
+      <Badge
         v-if="hasIssues"
-        class="command-badge is-warning"
+        tone="warning"
         :title="t('commands.badgeIssuesHint')"
       >
         <Icon icon="mdi:alert-outline" width="14" height="14" />
-      </span>
+      </Badge>
     </DisclosureHeader>
     <div class="command-placements">
-      <button
+      <Badge
+        interactive
         v-if="menuSlot !== undefined"
-        type="button"
-        class="command-badge"
         :title="t('commands.placeConfigure')"
         @click="emit('navigate', 'main-actions')"
       >
         {{ t('commands.badgeInMenu', { key: slotKey(menuSlot!) }) }}
-      </button>
-      <button
+      </Badge>
+      <Badge
+        interactive
         v-for="slot in launcherSlots"
         :key="`${slot.page}:${slot.index}`"
-        type="button"
-        class="command-badge"
         :title="t('commands.placeConfigure')"
         @click="emit('navigate', 'launcher-commands')"
       >
@@ -66,9 +64,9 @@
             key: slotKey(slot.index),
           })
         }}
-      </button>
+      </Badge>
     </div>
-    <FieldCheckbox
+    <FieldSwitch
       :key="command.id"
       class="enabled-switch"
       :model-value="command.enabled"
@@ -111,9 +109,12 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import Icon from '../common/AppIcon.vue'
+import Badge from '../common/Badge.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
+import DragHandle from '../common/DragHandle.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
+import ReorderControls from '../common/ReorderControls.vue'
 import CommandEditor from './CommandEditor.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
@@ -121,6 +122,8 @@ const props = defineProps<{
   command: CommandConfig
   userConfig: UserConfig
   expanded: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
   menuSlot?: number
   launcherSlots: { page: number; index: number }[]
   nameConflicts: CommandConfig[]
@@ -128,6 +131,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'toggle'): void
   (event: 'drag', value: PointerEvent): void
+  (event: 'move', offset: number): void
   (event: 'update', value: CommandConfig): void
   (event: 'navigate', tab: string): void
   (event: 'copy-id'): void
@@ -192,63 +196,10 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   max-width: 50%;
 }
 
-.command-placements .command-badge {
-  cursor: pointer;
-}
-
-.command-placements .command-badge:hover {
-  background: var(--app-hover);
-}
-
-.command-badge {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 0 var(--space-xs);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-micro);
-  color: var(--app-text-muted);
-}
-
-.command-badge.is-muted {
-  color: var(--app-text-faint);
-}
-
-.command-badge.is-warning {
-  border-color: transparent;
-  color: var(--color-warning);
-}
-
 .command-body {
   padding: var(--space-sm) var(--space-md) var(--space-md)
     calc(var(--space-xs) + 1.25rem + var(--space-xs));
   border-top: 1px solid var(--app-border);
-}
-
-.drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-faint);
-  cursor: grab;
-  opacity: 0.6;
-  /* Touch and pen drags must not scroll the page instead */
-  touch-action: none;
-  transition:
-    color var(--transition-fast),
-    opacity var(--transition-fast);
-}
-
-.command-header:hover .drag-handle,
-.command-header:focus-within .drag-handle,
-.drag-handle:hover {
-  opacity: 1;
-  color: var(--color-base-content);
 }
 
 .enabled-switch {

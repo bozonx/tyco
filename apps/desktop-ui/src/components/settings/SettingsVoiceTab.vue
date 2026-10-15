@@ -40,7 +40,7 @@
       <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
         <SecretKeyField
           :key="secretId(currentSttModel)"
-          v-model:value="sttKeyDraft"
+          v-model:model-value="sttKeyDraft"
           :has-key="hasSttKey"
           :save="saveSttKey"
           :remove="removeSttKey"
@@ -50,7 +50,7 @@
 
     <SettingsSection :title="t('settings.sttLlmFormatting')">
       <FieldRow :label="t('settings.formatWithLlm')">
-        <FieldCheckbox
+        <FieldSwitch
           :key="currentSttModel.id"
           :model-value="Boolean(currentSttModel.formatWithLlm)"
           @update:model-value="setSttFormatWithLlm"

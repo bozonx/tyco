@@ -6,7 +6,7 @@
       ref="fieldRef"
       class="textarea template-field-control"
       rows="3"
-      :value="value"
+      :value="modelValue"
       :placeholder="placeholder"
       spellcheck="false"
       @input="emitValue"
@@ -16,7 +16,7 @@
       v-else
       ref="fieldRef"
       class="input template-field-control"
-      :value="value"
+      :value="modelValue"
       :placeholder="placeholder"
       spellcheck="false"
       @input="emitValue"
@@ -53,29 +53,29 @@ import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ wrapped: true })
 const props = defineProps<{
-  value?: string
+  modelValue?: string
   placeholder?: string
   info?: string
   multiline?: boolean
 }>()
 
-const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 const { t } = useI18n()
 const fieldRef = ref<HTMLInputElement | HTMLTextAreaElement | null>(null)
 
 function emitValue(event: Event) {
-  emit('update:value', (event.target as HTMLInputElement).value)
+  emit('update:modelValue', (event.target as HTMLInputElement).value)
 }
 
 /** Puts `snippet` in place of the selection, or at the end without focus. */
 async function insert(snippet: string) {
   const el = fieldRef.value
-  const value = props.value ?? ''
+  const value = props.modelValue ?? ''
   const focused = el !== null && document.activeElement === el
   const start = focused ? (el.selectionStart ?? value.length) : value.length
   const end = focused ? (el.selectionEnd ?? start) : value.length
-  emit('update:value', value.slice(0, start) + snippet + value.slice(end))
+  emit('update:modelValue', value.slice(0, start) + snippet + value.slice(end))
   await nextTick()
   el?.focus()
   el?.setSelectionRange(start + snippet.length, start + snippet.length)

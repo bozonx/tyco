@@ -46,12 +46,7 @@
         <div class="flex flex-col gap-2 w-full">
           <SegmentedControl
             :label="t('settings.windowInsertion')"
-            :options="
-              windowInsertionTabs.map((tab) => ({
-                id: tab.key,
-                name: tab.text,
-              }))
-            "
+            :options="windowInsertionOptions"
             :model-value="userConfig.windowInsertion.method"
             @update:model-value="updateWindowInsertionMethod"
           />
@@ -113,9 +108,9 @@ const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   ]
 )
 
-const windowInsertionTabs = computed(() => [
-  { text: 'xdotool', key: 'xdotool' },
-  { text: 'ydotool', key: 'ydotool' },
+const windowInsertionOptions = computed(() => [
+  { id: 'xdotool', name: 'xdotool' },
+  { id: 'ydotool', name: 'ydotool' },
 ])
 
 const isAppLanguageManual = computed(

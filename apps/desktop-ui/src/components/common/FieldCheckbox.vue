@@ -1,54 +1,14 @@
 <template>
-  <label
-    :class="$attrs.class"
-    :style="$attrs.style"
-    class="field-checkbox"
-    :title="title"
-  >
-    <input
-      v-bind="controlAttrs()"
-      type="checkbox"
-      :checked="props.modelValue"
-      :title="title"
-      @change="handleChange"
-      class="toggle toggle-primary toggle-sm"
-    />
-    <span v-if="label" class="field-checkbox-label">{{ label }}</span>
-  </label>
+  <BooleanControl
+    v-bind="props"
+    kind="checkbox"
+    @update:model-value="emit('update:modelValue', $event)"
+  />
 </template>
-
 <script setup lang="ts">
-import { useFieldControl } from '../../composables/use-field-control'
+import type { BooleanControlProps } from '../../lib/ui/boolean-control'
+import BooleanControl from './BooleanControl.vue'
 
-defineOptions({ inheritAttrs: false })
-const controlAttrs = useFieldControl({ wrapped: true })
-
-const props = withDefaults(
-  defineProps<{ modelValue?: boolean; label?: string; title?: string }>(),
-  { modelValue: false }
-)
-
-const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void }>()
-
-function handleChange(event?: Event) {
-  const target = event?.target as HTMLInputElement | undefined
-  const next = target ? target.checked : !props.modelValue
-
-  emit('update:modelValue', next)
-}
+const props = defineProps<BooleanControlProps>()
+const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 </script>
-
-<style scoped>
-.field-checkbox {
-  display: inline-flex;
-  min-height: var(--control-size-sm);
-  align-items: center;
-  gap: 0.625rem;
-  cursor: pointer;
-  font-size: var(--text-body);
-}
-
-.field-checkbox-label {
-  color: var(--app-text-muted);
-}
-</style>

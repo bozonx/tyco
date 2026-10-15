@@ -19,7 +19,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-4 mb-3">
       <div class="flex items-center gap-2">
-        <FieldCheckbox
+        <FieldSwitch
           :key="props.userConfig.launcherPages[page]?.id ?? page"
           :model-value="takesText"
           :label="t('settings.launcherPageTakesText')"
@@ -76,8 +76,8 @@ import {
 import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'

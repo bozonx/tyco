@@ -190,7 +190,7 @@ describe('TranslateMenu', () => {
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
-    const button = wrapper.find('.query-panel-hint')
+    const button = wrapper.find('button.shortcut-hint')
     expect(button.attributes('disabled')).toBeDefined()
     await wrapper.find('input').trigger('keydown', { key: 'ArrowDown' })
     expect(button.attributes('disabled')).toBeUndefined()

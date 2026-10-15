@@ -57,7 +57,7 @@
               nested
               :separator="false"
             >
-              <FieldCheckbox
+              <FieldSwitch
                 :model-value="userConfig.editorHistory.sanitizeSecrets ?? false"
                 @update:model-value="
                   userConfig.editorHistory.sanitizeSecrets = $event
@@ -86,7 +86,7 @@
           :label="t('settings.chatHistoryEnabled')"
           :info="t('settings.chatHistoryEnabledHint')"
         >
-          <FieldCheckbox
+          <FieldSwitch
             :model-value="chatHistoryChecked"
             @update:model-value="setChatHistoryEnabled"
           />
@@ -158,10 +158,10 @@ import {
 import { useHistoryStore } from '../../stores/history'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import type { UserConfig } from '@tyco/shared'
 

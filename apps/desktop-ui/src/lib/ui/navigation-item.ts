@@ -1,7 +1,6 @@
-export interface NavigationItem {
-  key: string | number
-  text: string
-  icon?: string
+import type { ControlOption } from './control-option'
+
+export interface NavigationItem extends ControlOption {
   nested?: boolean
   status?: string
   isEnabled?: boolean

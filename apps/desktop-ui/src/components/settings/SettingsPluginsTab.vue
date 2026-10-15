@@ -121,7 +121,7 @@
           {{ t('settings.removePluginPackage') }}
         </Button>
         <div class="plugin-toggle" @click.stop>
-          <FieldCheckbox
+          <FieldSwitch
             :key="plugin.pluginId"
             :model-value="plugin.isEnabled"
             :title="
@@ -155,7 +155,7 @@ import { useIpcStore } from '../../stores/ipc'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import StateMessage from '../common/StateMessage.vue'
 
 const plugins = usePluginRuntimeStore()

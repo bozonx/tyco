@@ -15,7 +15,7 @@ in `assets/styles/tokens.css`. Assets must remain bundled and work offline.
 - `DropdownMenu`: use the same size/variant names as `Button`; default ghost/sm.
 - `IconButton`: provide a localized `label` and an `icon`. The label supplies the
   accessible name and native tooltip. Use this for icon-only actions.
-- Form controls use the named `v-model:value` contract. `FieldSelect` preserves
+- Editable controls use `modelValue` and `update:modelValue` (`v-model`). `FieldSelect` preserves
   the selected option's original ID type; callers must not depend on DOM string
   coercion. `FieldNumber` returns a string so empty/intermediate input remains
   representable; business models parse and validate it.
@@ -24,7 +24,7 @@ in `assets/styles/tokens.css`. Assets must remain bundled and work offline.
   Composite controls must forward native attributes to their actual control.
 - `Tabs` represents panels: provide a localized label and the `panel` slot, or
   supply `panelId` and a corresponding external `tabpanel` with `aria-labelledby`.
-  It uses a single Tab stop and arrow/Home/End navigation. `kind="navigation"`
+  It uses a single Tab stop and arrow/Home/End navigation. `NavigationList`
   uses ordinary buttons and `aria-current` for section navigation.
 - `SegmentedControl` selects a value through native radios. Share segment tokens
   with tabs, but preserve radio semantics.
@@ -54,9 +54,9 @@ page headings.
 
 `FieldRow` adapts at a container width of 40rem; `ui-form-container` and settings sections
 provide size containers. The field label width is in rem and scales with the
-interface. Settings navigation collapses at 45rem; chat navigation at 47.5rem,
-reflecting their different content needs. Keep CSS and matchMedia thresholds
-synchronized. Section headers should wrap when actions compete with long titles.
+interface. Settings navigation labels collapse when their container is below 8rem; the
+settings shell still controls its rail layout. Chat navigation collapses at
+47.5rem. Keep shell CSS and matchMedia thresholds synchronized. Section headers should wrap when actions compete with long titles.
 
 A component-specific dimension is allowed where it represents actual content,
 such as image previews. Do not replace every dimension with an arbitrary token.
@@ -85,8 +85,9 @@ The suite verifies tabs, menus, submenus, Tab exit, native dialog focus containm
 Escape, and nested dialog focus restoration. It also checks layout at 480px and
 1000px, 150% scale, high contrast and reduced motion across all three themes.
 Each appearance case writes `catalog.png` under `apps/desktop-ui/test-results`;
-failing tests retain screenshots and traces. These are review artifacts, not
-pixel baselines. Native Tauri smoke tests remain necessary for webview-specific
+failing tests retain screenshots and traces. The standard-controls section also has reviewed pixel baselines in
+`browser-tests/ui-catalog.spec.ts-snapshots`. Refresh intentional changes with
+`pnpm --filter @tyco/desktop-ui exec playwright test --update-snapshots`. Native Tauri smoke tests remain necessary for webview-specific
 behavior.
 
 ## Settings models
@@ -95,3 +96,65 @@ Keep business edits and validation in tested DI models. Command editing and
 undoable removal live in `lib/commands/*-model.ts`; LLM key operations, connection
 state and numeric edits live in `lib/llm/llm-settings-model.ts`. Components retain
 translation, rendering, focus, and dependency wiring.
+
+## Shared control conventions
+
+UI options use `id` and `name` (`ControlOption`); plugin SDK serialization is
+adapted explicitly. `size="xs|sm|md"` controls dimensions; `density="default|compact"`
+controls layout spacing. `NavigationList.isCollapsed` describes rail visibility.
+
+## Choosing a component
+
+| Requirement                                | Component                              |
+| ------------------------------------------ | -------------------------------------- |
+| Select an item or acknowledge a condition  | `FieldCheckbox`                        |
+| Enable or disable a feature                | `FieldSwitch`                          |
+| Choose one value                           | `FieldSelect` or `SegmentedControl`    |
+| Switch between content panels              | `Tabs`                                 |
+| Navigate between settings pages            | `NavigationList`                       |
+| Show noninteractive explanatory text       | `InfoTooltip`                          |
+| Show help containing buttons or links      | `InfoPopover`                          |
+| Label a state or count                     | `Badge`                                |
+| Activate a compact labeled marker          | `Badge interactive`                    |
+| Show a keyboard hint, optionally clickable | `ShortcutHint`                         |
+| Show a full action with keyboard keys      | `ShortcutButton`                       |
+| Show an inline notification                | `InlineNotice`                         |
+| Show an empty, loading or error state      | `StateMessage`                         |
+| Display a modal dialog                     | `BaseDialog` and domain dialog content |
+| Display the action window surface          | `Overlay`                              |
+
+`BooleanControl` and `InfoBubble` are implementation components. Screens use
+`FieldCheckbox`/`FieldSwitch` and `InfoTooltip`/`InfoPopover` respectively.
+
+`InfoPopover` opens from click or ArrowDown, focuses its first action, closes on
+Escape and restores the trigger focus. Tab leaves the panel through the normal
+page order. Text tooltips keep focus on their trigger.
+
+## Fields and domain adapters
+
+`FieldRow` owns field layout. `useFieldContext` owns generated IDs, control
+registration and inherited accessible state. `FieldMessages` owns message
+presentation. Supply translated strings through `error` and `warning`; use the
+`messages` slot only for additional structured content. Multiple related
+controls use `group` and each control supplies its own accessible name.
+
+`ConfigFieldControl` renders a normalized control description. `ConfigFields`
+adapts plugin settings. `PluginToolFields` adapts command overrides, preserving
+inheritance and explicit `false`. These value semantics must stay separate.
+`TranslationToolFields` and `AiTaskToolFields` own the built-in tool forms;
+`ToolConfigFields` selects the form.
+
+Keep parsing and asynchronous settings behavior in injected models under
+`src/lib/`, with focused unit tests. Views wire dependencies and translate
+messages. The translation settings model follows this arrangement.
+
+## Sorting and responsive layout
+
+Use `DragHandle` with `useSortableList` and `ReorderControls`. Dragging must have
+a keyboard-accessible alternative; the handle does not implement reordering.
+
+Reusable controls respond to their available container width. Navigation uses
+a named container, split previews stack below 40rem, and result controls
+hide their labels below a 40rem ancestor container. Field rows stack below 40rem. These thresholds
+represent different content constraints, not different global device categories.
+Viewport queries remain appropriate for application-level window layout.

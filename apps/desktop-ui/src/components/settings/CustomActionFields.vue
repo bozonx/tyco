@@ -6,15 +6,16 @@
         vertical
         density="compact"
         :label="t('settings.actionCommandLabel')"
+        :warning="warningsOf('command')"
       >
         <ActionTemplateField
           ref="commandRef"
           multiline
-          :value="script.command"
+          :model-value="script.command"
           :placeholder="
             t('settings.actionCommandPlaceholder', { placeholder: TEXT })
           "
-          @update:value="update('command', $event)"
+          @update:model-value="update('command', $event)"
         >
           <IconButton
             variant="ghost"
@@ -25,9 +26,6 @@
             icon="mdi:file-code-outline"
           />
         </ActionTemplateField>
-        <template #messages
-          ><FieldIssues :issues="issuesOf('command')"
-        /></template>
 
         <template #info
           ><InfoTooltip
@@ -71,6 +69,7 @@
         vertical
         density="compact"
         :label="t('settings.actionWebhookUrlLabel')"
+        :warning="warningsOf('url')"
       >
         <div class="action-field-row">
           <SegmentedControl
@@ -83,13 +82,12 @@
             @update:model-value="update('method', $event)"
           />
           <ActionTemplateField
-            :value="webhook.url"
+            :model-value="webhook.url"
             placeholder="https://"
             :info="t('settings.actionWebhookUrlInfo', { placeholder: TEXT })"
-            @update:value="update('url', $event)"
+            @update:model-value="update('url', $event)"
           />
         </div>
-        <template #messages><FieldIssues :issues="issuesOf('url')" /></template>
       </FieldRow>
 
       <FieldRow
@@ -98,17 +96,15 @@
         vertical
         density="compact"
         :label="t('settings.actionWebhookBodyLabel')"
+        :warning="warningsOf('payloadTemplate')"
       >
         <ActionTemplateField
           multiline
-          :value="webhook.payloadTemplate"
+          :model-value="webhook.payloadTemplate"
           :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
           :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
-          @update:value="update('payloadTemplate', $event)"
+          @update:model-value="update('payloadTemplate', $event)"
         />
-        <template #messages
-          ><FieldIssues :issues="issuesOf('payloadTemplate')"
-        /></template>
       </FieldRow>
 
       <FieldRow
@@ -226,7 +222,6 @@ import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
-import FieldIssues from './FieldIssues.vue'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
@@ -250,8 +245,10 @@ const script = computed(() => scriptToolConfig(props.command))
 const webhook = computed(() => webhookToolConfig(props.command))
 const issues = computed(() => validateCommand(props.command, toolsStore))
 
-const issuesOf = (field: string) =>
-  issues.value.filter((issue) => issue.field === field)
+const warningsOf = (field: string) =>
+  issues.value
+    .filter((issue) => issue.field === field)
+    .map((issue) => t(issue.messageKey, { placeholder: TEXT }))
 
 const commandRef = ref<InstanceType<typeof ActionTemplateField> | null>(null)
 const authDraft = ref('')

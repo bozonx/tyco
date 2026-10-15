@@ -1,29 +1,31 @@
 <template>
-  <div class="split-panes">
-    <div class="split-column">
-      <div class="column-header">
-        <span class="column-title">{{ leftTitle }}</span>
+  <div class="split-preview-container">
+    <div class="split-panes">
+      <div class="split-column">
+        <div class="column-header">
+          <span class="column-title">{{ leftTitle }}</span>
+        </div>
+        <div
+          ref="leftPane"
+          class="column-body"
+          :class="{ 'is-flush': flushLeft }"
+          @scroll.capture="syncScroll($event, 'left')"
+        >
+          <slot name="left" />
+        </div>
       </div>
-      <div
-        ref="leftPane"
-        class="column-body"
-        :class="{ 'is-flush': flushLeft }"
-        @scroll.capture="syncScroll($event, 'left')"
-      >
-        <slot name="left" />
-      </div>
-    </div>
-    <div class="split-column">
-      <div class="column-header">
-        <span class="column-title">{{ rightTitle }}</span>
-      </div>
-      <div
-        ref="rightPane"
-        class="column-body"
-        :class="{ 'is-flush': flushRight }"
-        @scroll.capture="syncScroll($event, 'right')"
-      >
-        <slot name="right" />
+      <div class="split-column">
+        <div class="column-header">
+          <span class="column-title">{{ rightTitle }}</span>
+        </div>
+        <div
+          ref="rightPane"
+          class="column-body"
+          :class="{ 'is-flush': flushRight }"
+          @scroll.capture="syncScroll($event, 'right')"
+        >
+          <slot name="right" />
+        </div>
       </div>
     </div>
   </div>
@@ -56,6 +58,15 @@ onUnmounted(() => {
 })
 </script>
 <style scoped>
+.split-preview-container {
+  container: split-preview / inline-size;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
 .split-panes {
   display: flex;
   gap: var(--space-xs);
@@ -108,7 +119,7 @@ onUnmounted(() => {
   flex-direction: column;
   padding: 0;
 }
-@media (max-width: 640px) {
+@container split-preview (max-width: 40rem) {
   .split-panes {
     flex-direction: column;
   }

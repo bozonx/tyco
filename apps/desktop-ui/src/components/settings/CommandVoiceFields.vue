@@ -1,7 +1,7 @@
 <template>
   <section class="command-group">
     <h4 class="command-group-title">{{ t('voiceCommands.title') }}</h4>
-    <FieldCheckbox
+    <FieldSwitch
       :model-value="command.isVoiceEnabled"
       :label="t('voiceCommands.enabled')"
       @update:model-value="emit('update', { isVoiceEnabled: $event })"
@@ -51,9 +51,9 @@ import {
 } from '../../lib/voice-commands/voice-resolver'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'

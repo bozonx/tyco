@@ -3,7 +3,7 @@
     <FieldInput
       class="flex-1"
       type="password"
-      :model-value="value"
+      :model-value="modelValue"
       :disabled="isBusy"
       :aria-label="t('settings.apiKey')"
       :placeholder="
@@ -11,11 +11,14 @@
           ? t('settings.apiKeyReplacePlaceholder')
           : t('settings.apiKeyPlaceholder')
       "
-      @update:model-value="emit('update:value', $event)"
+      @update:model-value="emit('update:modelValue', $event)"
     />
-    <Button size="sm" :disabled="isBusy || !value.trim()" @click="run(save)">{{
-      t('settings.saveKey')
-    }}</Button>
+    <Button
+      size="sm"
+      :disabled="isBusy || !modelValue.trim()"
+      @click="run(save)"
+      >{{ t('settings.saveKey') }}</Button
+    >
     <Button
       v-if="hasKey"
       size="sm"
@@ -34,12 +37,12 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 
 defineProps<{
-  value: string
+  modelValue: string
   hasKey: boolean
   save: () => Promise<void>
   remove: () => Promise<void>
 }>()
-const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const { t } = useI18n()
 const isBusy = ref(false)
 async function run(action: () => Promise<void>) {

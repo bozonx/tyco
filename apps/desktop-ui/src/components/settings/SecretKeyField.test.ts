@@ -15,7 +15,7 @@ describe('secret key field', () => {
     )
     const remove = vi.fn().mockResolvedValue(undefined)
     const wrapper = mount(SecretKeyField, {
-      props: { value: 'new-key', hasKey: true, save, remove },
+      props: { modelValue: 'new-key', hasKey: true, save, remove },
     })
     const buttons = wrapper.findAll('button')
     await buttons[0].trigger('click')

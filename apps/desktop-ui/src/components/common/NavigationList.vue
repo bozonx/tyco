@@ -1,22 +1,22 @@
 <template>
   <nav
     class="navigation-list"
-    :class="{ 'navigation-list--compact': compact }"
+    :class="{ 'navigation-list--collapsed': isCollapsed }"
     :aria-label="label"
   >
     <ul>
-      <li v-for="item in items" :key="item.key">
+      <li v-for="item in items" :key="item.id">
         <button
           type="button"
           class="navigation-item"
           :class="{
-            'is-active': item.key === modelValue,
+            'is-active': item.id === modelValue,
             'is-nested': item.nested,
           }"
-          :aria-current="item.key === modelValue ? 'page' : undefined"
-          :aria-label="item.text"
-          :title="item.text"
-          @click="emit('update:modelValue', item.key)"
+          :aria-current="item.id === modelValue ? 'page' : undefined"
+          :aria-label="item.name"
+          :title="item.name"
+          @click="emit('update:modelValue', item.id)"
         >
           <Icon
             v-if="item.icon"
@@ -25,12 +25,12 @@
             class="shrink-0"
             aria-hidden="true"
           />
-          <span class="navigation-label truncate">{{ item.text }}</span>
-          <span
+          <span class="navigation-label truncate">{{ item.name }}</span>
+          <Badge
             v-if="item.status"
             class="navigation-status"
-            :class="{ 'is-enabled': item.isEnabled }"
-            >{{ item.status }}</span
+            :tone="item.isEnabled ? 'accent' : 'muted'"
+            >{{ item.status }}</Badge
           >
         </button>
       </li>
@@ -40,16 +40,20 @@
 <script setup lang="ts">
 import type { NavigationItem } from '../../lib/ui/navigation-item'
 import Icon from './AppIcon.vue'
+import Badge from './Badge.vue'
 
 defineProps<{
   items: NavigationItem[]
   modelValue: string | number
   label: string
-  compact?: boolean
+  isCollapsed?: boolean
 }>()
 const emit = defineEmits<{ 'update:modelValue': [key: string | number] }>()
 </script>
 <style scoped>
+.navigation-list {
+  container: navigation / inline-size;
+}
 .navigation-list ul {
   display: flex;
   flex-direction: column;
@@ -90,27 +94,17 @@ const emit = defineEmits<{ 'update:modelValue': [key: string | number] }>()
 }
 .navigation-status {
   margin-left: auto;
-  padding: 0.0625rem 0.3125rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  line-height: 1.2;
-  background-color: var(--app-hover);
-  color: var(--app-text-faint);
 }
-.navigation-status.is-enabled {
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
-}
-.navigation-list--compact .navigation-label,
-.navigation-list--compact .navigation-status {
+
+.navigation-list--collapsed .navigation-label,
+.navigation-list--collapsed .navigation-status {
   display: none;
 }
-.navigation-list--compact .navigation-item {
+.navigation-list--collapsed .navigation-item {
   justify-content: center;
   padding-inline: var(--space-sm);
 }
-@media (max-width: 45rem) {
+@container navigation (max-width: 8rem) {
   .navigation-label,
   .navigation-status {
     display: none;

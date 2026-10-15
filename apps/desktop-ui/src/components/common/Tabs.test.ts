@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import Tabs from './Tabs.vue'
 
 const tabs = [
-  { key: 'one', text: 'One' },
-  { key: 'two', text: 'Two' },
+  { id: 'one', name: 'One' },
+  { id: 'two', name: 'Two' },
 ]
 describe('Tabs', () => {
   it('links tabs and panel and moves focus with arrow keys, Home and End', async () => {

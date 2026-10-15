@@ -65,29 +65,19 @@
     <template #actions>
       <template v-if="stage.kind === 'prepare'">
         <div class="launcher-hints">
-          <button
-            type="button"
-            class="launcher-hint"
+          <ShortcutHint
+            :keys="['Enter']"
+            interactive
             :disabled="!launcher.canSubmit"
-            @mousedown.prevent
             @click="void launcher.submit()"
+            >{{ t('commandLauncher.hintRun') }}</ShortcutHint
           >
-            <KeyboardKey>Enter</KeyboardKey>
-            {{ t('commandLauncher.hintRun') }}
-          </button>
-          <span class="launcher-hint">
-            <KeyboardKey>Shift</KeyboardKey><KeyboardKey>Enter</KeyboardKey>
-            {{ t('commandLauncher.hintNewLine') }}
-          </span>
-          <button
-            type="button"
-            class="launcher-hint"
-            @mousedown.prevent
-            @click="launcher.back"
-          >
-            <KeyboardKey>Esc</KeyboardKey>
-            {{ t('common.back') }}
-          </button>
+          <ShortcutHint :keys="['Shift', 'Enter']">{{
+            t('commandLauncher.hintNewLine')
+          }}</ShortcutHint>
+          <ShortcutHint :keys="['Esc']" interactive @click="launcher.back">{{
+            t('common.back')
+          }}</ShortcutHint>
         </div>
       </template>
 
@@ -108,21 +98,20 @@
             <span class="launcher-pages-label">{{
               t('commandLauncher.pages')
             }}</span>
-            <button
+            <ShortcutHint
               v-for="index in launcher.pageCount"
               :key="index"
-              class="launcher-hint"
+              :keys="[String(index === 10 ? 0 : index)]"
+              interactive
               :aria-pressed="launcher.pageIndex === index - 1"
               :aria-label="t('settings.launcherPage', { page: index })"
               :title="t('settings.launcherPage', { page: index })"
               @click="launcher.setPage(index - 1)"
-            >
-              <KeyboardKey>{{ index === 10 ? 0 : index }}</KeyboardKey>
-            </button>
-            <span class="launcher-hint launcher-pages-tab"
-              ><KeyboardKey>PageUp</KeyboardKey
-              ><KeyboardKey>PageDown</KeyboardKey></span
-            >
+            />
+            <ShortcutHint
+              :keys="['PageUp', 'PageDown']"
+              class="launcher-pages-tab"
+            />
           </div>
           <ShortcutList
             :key="launcher.pageIndex"
@@ -156,8 +145,8 @@ import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
 import SelectionContextPreview from '../common/SelectionContextPreview.vue'
+import ShortcutHint from '../common/ShortcutHint.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import QueryPanel, {
   type QueryPanelHint,
@@ -374,20 +363,6 @@ onUnmounted(() => {
   margin-right: 0.125rem;
 }
 
-.launcher-pages button.launcher-hint {
-  padding: 0;
-}
-
-.launcher-pages button.launcher-hint:hover:not(:disabled) {
-  background-color: transparent;
-
-  --key-border-color: color-mix(
-    in oklab,
-    var(--color-primary) 50%,
-    transparent
-  );
-}
-
 .launcher-pages button[aria-pressed='true'] {
   background-color: transparent;
 
@@ -477,31 +452,5 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs) var(--space-md);
   min-height: 2rem;
-}
-
-.launcher-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.25rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--app-text-muted);
-  font-size: var(--text-control);
-}
-
-button.launcher-hint {
-  cursor: pointer;
-}
-
-button.launcher-hint:hover:not(:disabled) {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
-button.launcher-hint:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 </style>

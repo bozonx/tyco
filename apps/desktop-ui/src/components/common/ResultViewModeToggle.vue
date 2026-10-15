@@ -3,7 +3,7 @@
     :model-value="modelValue"
     :label="resolvedLabel"
     :options="options"
-    compact
+    size="sm"
     hide-labels-on-small-screens
     @update:model-value="selectMode"
   />

@@ -25,7 +25,7 @@
       >
         <SecretKeyField
           :key="providerSecretId"
-          v-model:value="keyDraft"
+          v-model:model-value="keyDraft"
           :has-key="hasProviderKey"
           :save="saveProviderKey"
           :remove="removeProviderKey"
@@ -96,7 +96,7 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { normalizeTranslationConfig } from '../../lib/translation/translation-config'
+import { createTranslationSettingsModel } from '../../lib/translation/translation-settings-model'
 import { useLlmStore } from '../../stores/llm'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -117,17 +117,33 @@ const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
 const { t } = useI18n()
 const { toastText } = useToast()
 const llmStore = useLlmStore()
-const keyDraft = ref('')
-const translation = computed(() => props.userConfig.translation)
-// Not persisted: an empty prompt starts collapsed every time the page opens.
+const {
+  translation,
+  keyDraft,
+  providerSecretId,
+  hasProviderKey,
+  glossaryText,
+  usesTranslationRules,
+  updateProvider,
+  updateQualityGate,
+  updateCorrectionPrompt,
+  updateGlossary,
+  saveProviderKey,
+  removeProviderKey,
+} = createTranslationSettingsModel({
+  getConfig: () => props.userConfig.translation,
+  setConfig: (config) => {
+    props.userConfig.translation = config
+  },
+  hasSecret: (id) => Object.hasOwn(llmStore.secrets, id),
+  setSecret: (id, value) => llmStore.setSecret(id, value),
+  removeSecret: (id) => llmStore.removeSecret(id),
+  notifyKeyError: (error) =>
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+})
+// An empty prompt starts collapsed each time the page opens.
 const correctionPromptOpen = ref(
-  Boolean(props.userConfig.translation.correctionPrompt?.trim())
-)
-const providerSecretId = computed(() =>
-  translation.value.provider === 'google' ? 'google-translate' : 'deepl'
-)
-const hasProviderKey = computed(() =>
-  Object.hasOwn(llmStore.secrets, providerSecretId.value)
+  Boolean(translation.value.correctionPrompt?.trim())
 )
 const providerOptions = computed(() => [
   { id: 'deepl', name: t('settings.translationProviderDeepl') },
@@ -139,12 +155,6 @@ const qualityOptions = computed(() => [
   { id: 'onProblems', name: t('settings.translationCorrectionOnProblems') },
   { id: 'always', name: t('settings.translationCorrectionAlways') },
 ])
-// DeepL and Google ignore the rules; only the AI correction pass reads them.
-const usesTranslationRules = computed(
-  () =>
-    translation.value.provider === 'llm' ||
-    translation.value.qualityGate !== 'off'
-)
 // Without the AI correction pass, `term = use` rules are only checked,
 // never applied, by DeepL and Google.
 const glossaryHint = computed(() =>
@@ -153,77 +163,4 @@ const glossaryHint = computed(() =>
     ? t('settings.translationGlossaryMachineHint')
     : ''
 )
-
-const glossaryText = computed(() =>
-  translation.value.glossary
-    .map((entry: { term: string; use: string; doNotTranslate: boolean }) =>
-      entry.doNotTranslate ? `!${entry.term}` : `${entry.term} = ${entry.use}`
-    )
-    .join('\n')
-)
-
-function updateProvider(value: string | number | undefined) {
-  props.userConfig.translation = normalizeTranslationConfig({
-    ...translation.value,
-    provider: value,
-  })
-  keyDraft.value = ''
-}
-
-function updateQualityGate(value: string | number | undefined) {
-  props.userConfig.translation = normalizeTranslationConfig({
-    ...translation.value,
-    qualityGate: value,
-  })
-}
-
-function updateCorrectionPrompt(value: string) {
-  props.userConfig.translation.correctionPrompt = value
-}
-
-function updateGlossary(value: string) {
-  const entries: { term: string; use: string; doNotTranslate: boolean }[] = []
-  for (const line of value.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    if (trimmed.startsWith('!')) {
-      const term = trimmed.slice(1).trim()
-      if (term) entries.push({ term, use: term, doNotTranslate: true })
-      continue
-    }
-    const [termPart, ...useParts] = trimmed.split('=')
-    const term = termPart?.trim()
-    const use = useParts.join('=').trim()
-    if (term && use) entries.push({ term, use, doNotTranslate: false })
-  }
-  props.userConfig.translation.glossary = entries
-}
-
-async function saveProviderKey() {
-  const trimmed = keyDraft.value.trim()
-  if (!trimmed) return
-  try {
-    await llmStore.setSecret(providerSecretId.value, trimmed)
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-    return
-  }
-  if (providerSecretId.value === 'deepl') {
-    props.userConfig.translation = normalizeTranslationConfig({
-      ...translation.value,
-      deeplEndpoint: trimmed.endsWith(':fx') ? 'free' : 'pro',
-    })
-  }
-  keyDraft.value = ''
-}
-
-async function removeProviderKey() {
-  try {
-    await llmStore.removeSecret(providerSecretId.value)
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
 </script>
-
-<style scoped></style>

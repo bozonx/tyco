@@ -10,13 +10,13 @@
       density="compact"
       required
       :label="t('commands.nameLabel')"
+      :warning="nameWarnings"
     >
       <FieldInput
         :model-value="command.name"
         :placeholder="t('commands.namePlaceholder')"
         @update:model-value="update({ name: $event })"
       />
-      <template #messages><FieldIssues :issues="nameIssues" /></template>
     </FieldRow>
 
     <CommandVoiceFields
@@ -129,7 +129,7 @@
         </FieldRow>
         <div class="command-field-row">
           <template v-if="tool?.logsOutput">
-            <FieldCheckbox
+            <FieldSwitch
               :model-value="command.logOutput"
               :label="t('settings.actionLogOutput')"
               @update:model-value="update({ logOutput: $event })"
@@ -147,7 +147,7 @@
           </Button>
         </div>
         <div class="command-field-row">
-          <FieldCheckbox
+          <FieldSwitch
             :model-value="command.availableIn.external"
             :label="t('commands.external')"
             @update:model-value="
@@ -212,18 +212,17 @@ import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CommandVoiceFields from './CommandVoiceFields.vue'
 import CustomActionFields from './CustomActionFields.vue'
-import FieldIssues from './FieldIssues.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
 import {
   type CommandConfig,
@@ -266,10 +265,10 @@ const scriptConfig = computed(() => scriptToolConfig(props.command))
 const unavailableReason = computed(() =>
   tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
 )
-const nameIssues = computed(() =>
-  validateCommand(props.command, toolsStore).filter(
-    (issue) => issue.field === 'name'
-  )
+const nameWarnings = computed(() =>
+  validateCommand(props.command, toolsStore)
+    .filter((issue) => issue.field === 'name')
+    .map((issue) => t(issue.messageKey))
 )
 
 const {

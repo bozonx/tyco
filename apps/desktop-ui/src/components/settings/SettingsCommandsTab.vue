@@ -76,6 +76,9 @@
             :command="command"
             :user-config="userConfig"
             :expanded="isExpanded(command.id)"
+            :can-move-up="index > 0"
+            :can-move-down="index < commands.length - 1"
+            @move="moveCommand(index, index + $event)"
             :menu-slot="menuSlots.get(command.id)"
             :launcher-slots="launcherSlots.get(command.id) ?? []"
             :name-conflicts="
@@ -101,7 +104,7 @@
       :label="t('commands.externalSelection')"
       :info="t('commands.externalSelectionInfo')"
     >
-      <FieldCheckbox
+      <FieldSwitch
         :model-value="externalAccess.selection"
         :title="t('commands.externalSelection')"
         @update:model-value="setExternalAccess('selection', $event)"
@@ -137,8 +140,8 @@ import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
@@ -264,11 +267,13 @@ const tools = computed(() =>
 const listRef = ref<HTMLElement | null>(null)
 const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
   listRef,
-  (from, to) => {
-    emit('update:commands', moveItem(commands.value, from, to))
-  },
+  moveCommand,
   { getItemKeys: () => commands.value.map((command) => command.id) }
 )
+
+function moveCommand(from: number, to: number) {
+  emit('update:commands', moveItem(commands.value, from, to))
+}
 
 const itemStyle = (index: number) => {
   const offset = itemOffset(index)

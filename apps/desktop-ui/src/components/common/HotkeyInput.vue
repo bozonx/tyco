@@ -81,7 +81,7 @@ defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl()
 const props = withDefaults(
   defineProps<{
-    value: string
+    modelValue: string
     ariaLabel?: string
     placeholder?: string
     /** Shows a shortcut that is changed elsewhere, e.g. by the desktop */
@@ -92,7 +92,7 @@ const props = withDefaults(
   { ariaLabel: undefined, placeholder: '', readonly: false, platform: 'linux' }
 )
 const emit = defineEmits<{
-  (event: 'record', shortcut: string): void
+  (event: 'update:modelValue', shortcut: string): void
   (event: 'recording', active: boolean): void
 }>()
 const { t } = useI18n()
@@ -111,7 +111,7 @@ let savedTimer: ReturnType<typeof setTimeout> | null = null
 const displayGroups = computed(() =>
   (isRecording.value
     ? [heldKeys.value]
-    : shortcutAlternatives(props.value).map(shortcutKeys)
+    : shortcutAlternatives(props.modelValue).map(shortcutKeys)
   )
     .filter((keys) => keys.length > 0)
     .map((keys) => keys.map((key) => keyLabelFor(key, props.platform)))
@@ -160,8 +160,8 @@ function onKeyDown(event: KeyboardEvent) {
     case 'done':
       recorded = step.shortcut
       buttonRef.value?.blur()
-      if (step.shortcut === props.value) flashSaved()
-      else emit('record', step.shortcut)
+      if (step.shortcut === props.modelValue) flashSaved()
+      else emit('update:modelValue', step.shortcut)
   }
 }
 
@@ -172,7 +172,7 @@ function onKeyUp(event: KeyboardEvent) {
 
 // the parent may reject a shortcut, so only a value that came back confirms it
 watch(
-  () => props.value,
+  () => props.modelValue,
   (value) => {
     if (recorded && value === recorded) flashSaved()
     recorded = null

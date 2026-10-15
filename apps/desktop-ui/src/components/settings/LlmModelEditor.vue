@@ -44,7 +44,7 @@
     </div>
     <template v-if="expandedModelIds.has(model.id)">
       <FieldRow :label="t('settings.vision')">
-        <FieldCheckbox
+        <FieldSwitch
           :model-value="supportsImages(model)"
           @update:model-value="emit('update', { canUseImages: $event })"
         />
@@ -127,10 +127,10 @@ import { modelLabel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import type { LlmModel } from '@tyco/shared'
 

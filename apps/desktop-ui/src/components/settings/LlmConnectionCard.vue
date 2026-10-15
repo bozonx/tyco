@@ -9,9 +9,9 @@
       @toggle="emit('toggle')"
     >
       <template #status
-        ><span class="badge badge-sm shrink-0" :class="statusClass(provider)">{{
+        ><Badge :tone="statusTone(provider)">{{
           statusLabel(provider)
-        }}</span></template
+        }}</Badge></template
       >
     </DisclosureHeader>
 
@@ -39,11 +39,11 @@
         vertical
       >
         <SecretKeyField
-          :value="keyDrafts[provider.id] || ''"
+          :model-value="keyDrafts[provider.id] || ''"
           :has-key="hasKey(provider.id)"
           :save="() => saveKey(provider)"
           :remove="() => removeKey(provider.id)"
-          @update:value="keyDrafts[provider.id] = $event"
+          @update:model-value="keyDrafts[provider.id] = $event"
         />
       </FieldRow>
 
@@ -66,12 +66,11 @@
             {{ t('settings.addModel') }}
           </Button>
         </div>
-        <div
+        <StateMessage
           v-if="!modelsFor(provider.id).length"
-          class="empty-models text-muted"
-        >
-          {{ t('settings.noConnectionModels') }}
-        </div>
+          density="compact"
+          :message="t('settings.noConnectionModels')"
+        />
         <LlmModelEditor
           v-for="model in modelsFor(provider.id)"
           :key="model.id"
@@ -133,10 +132,12 @@ import { useI18n } from '../../composables/use-i18n'
 import { removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
+import Badge from '../common/Badge.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import StateMessage from '../common/StateMessage.vue'
 import LlmModelEditor from './LlmModelEditor.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import type { LlmConfig, LlmProvider } from '@tyco/shared'
@@ -205,10 +206,10 @@ function statusLabel(provider: LlmProvider) {
     ? t('settings.connectionConfigured')
     : t('settings.connectionNotConfigured')
 }
-function statusClass(provider: LlmProvider) {
+function statusTone(provider: LlmProvider) {
   return connectionCheckStatusByProviderId[provider.id] === 'success'
-    ? 'badge-success'
-    : 'badge-ghost'
+    ? 'success'
+    : 'neutral'
 }
 function keyHint(provider: LlmProvider) {
   if (provider.type !== 'openai-compatible') return undefined
@@ -246,11 +247,7 @@ function keyHint(provider: LlmProvider) {
   font-size: var(--text-body);
   font-weight: 600;
 }
-.empty-models {
-  padding: var(--space-xl) 0 var(--space-sm);
-  font-size: var(--text-control);
-  text-align: center;
-}
+
 .connection-actions {
   justify-content: flex-start;
   padding: var(--space-md) var(--space-lg);

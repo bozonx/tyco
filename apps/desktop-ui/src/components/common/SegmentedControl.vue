@@ -2,7 +2,8 @@
   <div
     v-bind="groupAttrs()"
     class="segmented-control"
-    :class="{ compact, 'hide-labels': hideLabelsOnSmallScreens }"
+    :class="{ 'hide-labels': hideLabelsOnSmallScreens }"
+    :data-size="size ?? 'md'"
     role="radiogroup"
     :aria-label="label"
   >
@@ -34,14 +35,16 @@
 import { useId } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import type { ControlOption } from '../../lib/ui/control-option'
+import type { ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
 const props = defineProps<{
   modelValue?: T
   label: string
-  options: { id: T; name: string; icon?: string; title?: string }[]
-  compact?: boolean
+  options: ControlOption<T>[]
+  size?: ControlSize
   hideLabelsOnSmallScreens?: boolean
 }>()
 const controlAttrs = useFieldControl({
@@ -119,21 +122,25 @@ const name = useId()
   outline: var(--app-focus-outline-width) solid var(--color-primary);
   outline-offset: 1px;
 }
-.compact {
+.segmented-control[data-size='sm'] {
   padding: 2px;
   border: 1px solid var(--app-border-subtle);
 }
-.compact .segmented-option {
+.segmented-control[data-size='sm'] .segmented-option {
   padding: 0.25rem 0.5rem;
   font-size: var(--text-caption);
   line-height: 1;
 }
-@media (max-width: 640px) {
+@container (max-width: 40rem) {
   .hide-labels .option-label {
     display: none;
   }
-  .compact.hide-labels .segmented-option {
+  .segmented-control[data-size='sm'].hide-labels .segmented-option {
     padding: 0.3rem 0.4rem;
   }
+}
+.segmented-control[data-size='xs'] .segmented-option {
+  padding: 0.125rem 0.375rem;
+  font-size: var(--text-caption);
 }
 </style>

@@ -36,7 +36,7 @@
           </p>
         </div>
 
-        <FieldCheckbox
+        <FieldSwitch
           :key="plugin.pluginId"
           :model-value="plugin.isEnabled"
           :title="
@@ -82,7 +82,7 @@ import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfigFields from '../common/ConfigFields.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import StateMessage from '../common/StateMessage.vue'
 
 defineProps<{ plugin: InstalledPluginItem }>()

@@ -126,7 +126,7 @@ describe('ChatSidebar.vue', () => {
           },
           Icon: true,
           SearchInput: {
-            props: ['modelValue'],
+            props: ['modelValue', 'size'],
             template: '<input class="sidebar-search" :value="modelValue" />',
             methods: { focus: vi.fn() },
           },
@@ -257,7 +257,7 @@ it('refreshes message search when chat history changes without changing the quer
         Icon: true,
         SearchInput: {
           name: 'SearchInput',
-          props: ['modelValue'],
+          props: ['modelValue', 'size'],
           emits: ['update:modelValue'],
           template: '<input />',
         },

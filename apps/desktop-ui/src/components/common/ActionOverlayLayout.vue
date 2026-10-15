@@ -73,6 +73,7 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
 
 <style scoped>
 .action-overlay-layout {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);

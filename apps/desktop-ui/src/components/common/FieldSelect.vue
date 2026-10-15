@@ -4,6 +4,7 @@
     :value="props.options.findIndex((option) => option.id === props.modelValue)"
     :title="title"
     class="select"
+    :data-size="size ?? 'md'"
     @change="handleChange"
   >
     <template v-for="(section, index) in sections" :key="index">
@@ -33,13 +34,16 @@
 import { computed } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import type { ControlOption } from '../../lib/ui/control-option'
+import type { ControlSize } from '../../lib/ui/control-types'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl()
 
-type Option = { id: number | string; name: string; group?: string }
+type Option = ControlOption & { group?: string }
 
 const props = defineProps<{
+  size?: ControlSize
   modelValue?: number | string
   title?: string
   /** Options of one `group` go under its heading; keep them next to each other */

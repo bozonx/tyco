@@ -94,22 +94,19 @@
     </p>
 
     <div class="query-panel-hints">
-      <button
+      <ShortcutHint
         v-for="hint in props.hints"
         :key="hint.keys.join('+')"
-        type="button"
-        class="query-panel-hint"
+        :keys="hint.keys"
+        interactive
         :disabled="
           props.disabled ||
           hint.disabled ||
           (hint.requireOption && highlightedOptionIndex < 0)
         "
-        @mousedown.prevent
         @click="activateHint(hint)"
+        >{{ hint.label }}</ShortcutHint
       >
-        <KeyboardKey v-for="key in hint.keys" :key="key">{{ key }}</KeyboardKey>
-        <span>{{ hint.label }}</span>
-      </button>
     </div>
   </div>
 </template>
@@ -122,7 +119,7 @@ import {
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
 import Icon from '../common/AppIcon.vue'
-import KeyboardKey from '../common/KeyboardKey.vue'
+import ShortcutHint from '../common/ShortcutHint.vue'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */
@@ -418,28 +415,5 @@ defineExpose({ focus })
   gap: var(--space-xs) var(--space-md);
   padding-top: var(--space-xs);
   border-top: 1px solid var(--app-border-subtle);
-}
-
-.query-panel-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.25rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--app-text-muted);
-  font-size: var(--text-control);
-  cursor: pointer;
-}
-
-.query-panel-hint:hover:not(:disabled) {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
-.query-panel-hint:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 </style>

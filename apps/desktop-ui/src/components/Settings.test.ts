@@ -207,8 +207,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -237,8 +237,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -267,8 +267,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -297,8 +297,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -350,8 +350,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -375,8 +375,8 @@ describe('Settings.vue', () => {
             props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
-                  {{ tab.text }}
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
                 </button>
               </div>
             `,
@@ -445,14 +445,14 @@ describe('Settings.vue', () => {
     expect(subnavItems).toHaveLength(2)
 
     expect(subnavItems[0].text()).toContain('plugin.a.label')
-    expect(subnavItems[0].find('.navigation-status.is-enabled').exists()).toBe(
-      true
-    )
+    expect(
+      subnavItems[0].find('.navigation-status.ui-badge--accent').exists()
+    ).toBe(true)
     expect(subnavItems[0].text()).toContain('settings.pluginStatusOn')
 
     expect(subnavItems[1].text()).toContain('Plugin B')
     expect(
-      subnavItems[1].find('.navigation-status:not(.is-enabled)').exists()
+      subnavItems[1].find('.navigation-status.ui-badge--muted').exists()
     ).toBe(true)
     expect(subnavItems[1].text()).toContain('settings.pluginStatusOff')
   })
@@ -552,7 +552,7 @@ describe('Settings.vue', () => {
           },
           FieldSelect: true,
           FieldInput: true,
-          FieldCheckbox: true,
+          FieldSwitch: true,
           FieldTextArea: true,
           Button: true,
         },

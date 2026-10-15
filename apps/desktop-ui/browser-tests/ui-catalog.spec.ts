@@ -115,6 +115,9 @@ for (const theme of ['Light', 'Dark', 'E-ink']) {
             .evaluate((el) => getComputedStyle(el).backdropFilter)
         ).toBe('none')
       }
+      await expect(page.locator('.catalog-standard-controls')).toHaveScreenshot(
+        `standard-controls-${theme.toLowerCase()}-${width}.png`
+      )
       const sections = page.locator('.catalog-section')
       for (let index = 0; index < (await sections.count()); index++) {
         await sections
@@ -210,4 +213,92 @@ test('grouped fields, compact notices and preview scroll ownership', async ({
   await expect(page.locator('.audio-waveform-container.is-inline')).toHaveCount(
     2
   )
+})
+
+test('standard controls distinguish selection, switching and interactive help', async ({
+  page,
+}) => {
+  const section = page.locator('.catalog-standard-controls')
+  await section.getByRole('checkbox', { name: 'Select this item' }).check()
+  await expect(
+    section.getByRole('checkbox', { name: 'Select this item' })
+  ).toBeChecked()
+  await section.getByRole('switch', { name: 'Enable this feature' }).check()
+  await expect(
+    section.getByRole('switch', { name: 'Enable this feature' })
+  ).toBeChecked()
+
+  const input = section.getByRole('textbox', {
+    name: 'Small input',
+    exact: true,
+  })
+  await input.focus()
+  await section
+    .getByRole('button', { name: 'Enter Run 0', exact: true })
+    .click()
+  await expect(input).toBeFocused()
+  await expect(
+    section.getByRole('button', { name: 'Enter Run 1', exact: true })
+  ).toBeVisible()
+
+  const help = section.getByRole('button', {
+    name: 'Interactive help',
+    exact: true,
+  })
+  await help.focus()
+  await page.keyboard.press('Enter')
+  const panel = page.getByRole('dialog', { name: 'Interactive help' })
+  const copy = panel.getByRole('button', { name: 'Copy command 0' })
+  await expect(panel).toBeVisible()
+  await expect(copy).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(
+    panel.getByRole('button', { name: 'Copy command 1' })
+  ).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(panel).not.toBeVisible()
+  await expect(help).toBeFocused()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Shift+Tab')
+  await expect(help).toBeFocused()
+  await expect(panel).not.toBeVisible()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Tab')
+  await expect(
+    section.getByRole('button', { name: 'After help' })
+  ).toBeFocused()
+  await expect(panel).not.toBeVisible()
+})
+
+test('embedded controls adapt to container width on a wide viewport', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 1000 })
+  const section = page
+    .locator('.catalog-section')
+    .filter({
+      has: page.getByRole('heading', { name: 'Navigation and menus' }),
+    })
+  const navigation = page.getByRole('navigation', {
+    name: 'Example navigation',
+  })
+  await navigation.evaluate((el) => {
+    ;(el as HTMLElement).style.width = '100px'
+  })
+  await expect(navigation.locator('.navigation-label').first()).toBeHidden()
+  await navigation.evaluate((el) => {
+    ;(el as HTMLElement).style.width = '300px'
+  })
+  await expect(navigation.locator('.navigation-label').first()).toBeVisible()
+  const segmented = section.getByRole('radiogroup', { name: 'Value selection' })
+  await expect(segmented).toBeVisible()
+  const preview = page.locator('.split-preview-container').first()
+  await preview.evaluate((el) => {
+    ;(el as HTMLElement).style.width = '300px'
+  })
+  expect(
+    await preview
+      .locator('.split-panes')
+      .evaluate((el) => getComputedStyle(el).flexDirection)
+  ).toBe('column')
 })
