@@ -99,6 +99,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     const current = generation
     const text = inputText.value
     controller = new AbortController()
+    error.value = ''
     stage.value = 'running'
     try {
       const result = await deps.run(target, text, controller.signal)
@@ -180,7 +181,9 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
           generation += 1
           error.value = cause.message
           stage.value = 'review'
-          void deps.cancelDictation().catch(() => undefined)
+          stopping = stopping
+            .then(() => deps.cancelDictation())
+            .catch(() => undefined)
         },
       })
     })()

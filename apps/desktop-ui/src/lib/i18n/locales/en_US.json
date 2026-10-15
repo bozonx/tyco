@@ -932,16 +932,12 @@
     "input": "Command input",
     "cancel": "Cancel",
     "confirmationHint": "Exact, unambiguous calls may run automatically when confirmation is disabled.",
-    "incomplete": "Incomplete phrase or parameter. Continue speaking or edit the transcript."
+    "incomplete": "Incomplete phrase or parameter. Continue speaking or edit the transcript.",
+    "parameterChoiceHint": "Choose an available parameter, then check the input. Unrecognized words are preserved for editing."
   },
   "voiceGrammar": {
     "translate": "translate to",
-    "actions": {
-      "insert": "insert",
-      "copy": "copy",
-      "askInChat": "ask in chat",
-      "correct": "correct"
-    },
+    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "en_US": "English;American English",
       "en_GB": "British English",

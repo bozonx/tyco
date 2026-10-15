@@ -149,4 +149,27 @@ describe('CommandEditor.vue', () => {
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')
   })
+  it('distinguishes incomplete and unknown phrases and names ambiguous candidates', async () => {
+    const command = script(
+      { command: 'echo {{TEXT}}' },
+      { name: 'Work note', isVoiceEnabled: true, phrases: ['save note'] }
+    )
+    const other = { ...command, id: 'other', name: 'Personal note' }
+    const wrapper = mountEditor(command, {
+      userConfig: { commands: [command, other] },
+    })
+    const trial = wrapper
+      .findAll('input')
+      .find((input) =>
+        input.element.parentElement?.textContent?.includes('voiceCommands.try')
+      )!
+    await trial.setValue('save')
+    expect(wrapper.text()).toContain('voiceCommands.incomplete')
+    await trial.setValue('unrelated')
+    expect(wrapper.text()).toContain('voiceCommands.none')
+    await trial.setValue('save note Hello!')
+    expect(wrapper.text()).toContain('voiceCommands.choose')
+    expect(wrapper.text()).toContain('Work note: Hello!')
+    expect(wrapper.text()).toContain('Personal note: Hello!')
+  })
 })

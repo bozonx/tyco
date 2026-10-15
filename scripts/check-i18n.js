@@ -112,9 +112,7 @@ function walkDir(dir) {
 const DYNAMIC_KEYS = new Set([
   // Declarative voice grammar is compiled from every locale, not translated.
   'voiceGrammar.translate',
-  ...['insert', 'copy', 'askInChat', 'correct'].map(
-    (id) => `voiceGrammar.actions.${id}`
-  ),
+  'voiceGrammar.actions.askInChat',
   ...[
     'en_US',
     'en_GB',

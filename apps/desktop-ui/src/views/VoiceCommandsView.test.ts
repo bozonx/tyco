@@ -4,6 +4,7 @@ import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
 import { i18n } from '../lib/i18n'
 import VoiceCommandsView from './VoiceCommandsView.vue'
+import type { VoiceResolution } from '../lib/voice-commands/voice-resolver'
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(),
@@ -31,7 +32,7 @@ const voice = reactive({
   inputText: '',
   selected: undefined,
   error: '',
-  resolution: { kind: 'none', candidates: [] },
+  resolution: { kind: 'none', candidates: [] } as VoiceResolution,
   command: undefined,
   canRun: false,
   inputIssue: undefined,
@@ -67,6 +68,7 @@ describe('separate voice command overlay', () => {
     vi.clearAllMocks()
     state.isWindowShown = true
     voice.stage = 'recording'
+    voice.resolution = { kind: 'none', candidates: [] }
   })
   it('shows the full catalog with phrases and descriptions and starts recording', () => {
     const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
@@ -101,6 +103,30 @@ describe('separate voice command overlay', () => {
     await flushPromises()
     await button.trigger('click')
     expect(mocks.chooseCommand).toHaveBeenCalledWith('command-0')
+    wrapper.unmount()
+  })
+  it('offers explicit parameter recovery without running or discarding unknown input', async () => {
+    const candidate = {
+      commandId: commands[0]!.id,
+      text: 'Klingon Hello!',
+      parameters: { language: 'en_US' },
+      consumedWordCount: 2,
+      textOffset: 13,
+    }
+    voice.stage = 'review'
+    voice.resolution = {
+      kind: 'parameter-error',
+      candidates: [],
+      parameterChoices: [candidate],
+    }
+    const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
+    expect(wrapper.text()).toContain('en_US')
+    const button = wrapper
+      .findAll('.voice-input button')
+      .find((item) => item.text().includes('en_US'))!
+    await button.trigger('click')
+    expect(mocks.choose).toHaveBeenCalledWith(candidate)
+    expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

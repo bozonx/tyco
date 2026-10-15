@@ -123,3 +123,116 @@ describe('voice command session', () => {
     expect(deps.run).toHaveBeenCalledOnce()
   })
 })
+
+it('clears the previous execution error when retrying successfully', async () => {
+  const { model, deps } = setup()
+  deps.run = vi
+    .fn()
+    .mockResolvedValueOnce({ success: false, message: 'Failed' })
+    .mockResolvedValueOnce({ success: true })
+  await model.start()
+  await model.finish()
+  await model.run()
+  expect(model.error.value).toBe('Failed')
+  await model.run()
+  expect(model.error.value).toBe('')
+})
+
+it('preserves text on STT start and finish failures and allows a fresh recording', async () => {
+  const { model, deps, partial } = setup()
+  await model.start()
+  partial('save note Keep this')
+  deps.finishDictation = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('STT finish failed'))
+    .mockResolvedValueOnce('save note Recovered')
+  await model.finish()
+  expect(model.error.value).toBe('STT finish failed')
+  expect(model.transcript.value).toBe('save note Keep this')
+  deps.startDictation = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('Microphone unavailable'))
+    .mockResolvedValueOnce(undefined)
+  await model.start()
+  expect(model.stage.value).toBe('review')
+  expect(model.transcript.value).toBe('save note Keep this')
+  await model.start()
+  await model.finish()
+  expect(model.inputText.value).toBe('Recovered')
+  expect(deps.run).not.toHaveBeenCalled()
+})
+
+it('serializes a new activation behind cancellation of a pending microphone start', async () => {
+  const { model, deps } = setup()
+  let release!: () => void
+  deps.startDictation = vi
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve
+        })
+    )
+    .mockResolvedValueOnce(undefined)
+  const first = model.start()
+  await Promise.resolve()
+  const cancellation = model.cancel()
+  const second = model.start()
+  await Promise.resolve()
+  expect(deps.startDictation).toHaveBeenCalledOnce()
+  release()
+  await Promise.all([first, cancellation, second])
+  expect(deps.startDictation).toHaveBeenCalledTimes(2)
+  expect(model.stage.value).toBe('recording')
+  expect(deps.run).not.toHaveBeenCalled()
+})
+
+it('waits for cleanup after recognition failure before starting another recording', async () => {
+  const { model, deps } = setup()
+  let handlers!: Parameters<VoiceCommandDependencies['startDictation']>[0]
+  deps.startDictation = vi.fn(async (next) => {
+    handlers = next
+  })
+  await model.start()
+  const oldHandlers = handlers
+  let release!: () => void
+  deps.cancelDictation = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        release = resolve
+      })
+  )
+  oldHandlers.onText({ committed: '', draft: 'save note Keep this' })
+  oldHandlers.onError(new Error('Connection lost'))
+  const restarting = model.start()
+  await Promise.resolve()
+  expect(deps.startDictation).toHaveBeenCalledOnce()
+  release()
+  await restarting
+  expect(deps.startDictation).toHaveBeenCalledTimes(2)
+  oldHandlers.onText({ committed: '', draft: 'save note Stale' })
+  oldHandlers.onError(new Error('Stale failure'))
+  expect(model.transcript.value).toBe('save note Keep this')
+  expect(model.error.value).toBe('')
+  expect(model.stage.value).toBe('recording')
+  expect(deps.run).not.toHaveBeenCalled()
+})
+
+it('does not automatically execute a manually recovered parameter', async () => {
+  const { model, deps, commands } = setup()
+  commands[0]!.voiceConfirmation = 'auto'
+  deps.finishDictation = vi.fn(async () => 'unknown input')
+  await model.start()
+  await model.finish()
+  model.choose({
+    commandId: commands[0]!.id,
+    parameters: { language: 'en_US' },
+    text: 'Hello!',
+    consumedWordCount: 0,
+    textOffset: 0,
+  })
+  expect(deps.run).not.toHaveBeenCalled()
+  expect(model.canRun.value).toBe(true)
+  await model.run()
+  expect(deps.run).toHaveBeenCalledOnce()
+})

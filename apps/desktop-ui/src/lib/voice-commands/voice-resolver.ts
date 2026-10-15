@@ -29,6 +29,7 @@ export interface VoiceCandidate {
 export interface VoiceResolution {
   kind: 'none' | 'incomplete' | 'parameter-error' | 'match' | 'ambiguous'
   candidates: VoiceCandidate[]
+  parameterChoices?: VoiceCandidate[]
 }
 
 interface Token {
@@ -56,7 +57,9 @@ const startsWith = (input: readonly string[], prefix: readonly string[]) =>
  * Quotes, brackets, signs and the punctuation inside the argument survive.
  */
 function argumentOffset(text: string, end: number): number {
-  const separator = text.slice(end).match(/^[\s,.:;!?…—–-]*/u)?.[0] ?? ''
+  const separator =
+    text.slice(end).match(/^(?:[,.:;!?…]+(?=\s|$)|[—–-](?=\s|$))?\s*/u)?.[0] ??
+    ''
   return end + separator.length
 }
 
@@ -67,6 +70,7 @@ export function resolveVoice(
   const tokens = tokenize(transcript)
   const input = tokens.map((token) => token.word)
   const candidates: VoiceCandidate[] = []
+  const parameterChoices: VoiceCandidate[] = []
   let incomplete = false
   let incompleteDepth = 0
   let parameterError = false
@@ -98,6 +102,19 @@ export function resolveVoice(
         }
       }
       if (!next.length) {
+        for (const offset of offsets) {
+          const textOffset = argumentOffset(
+            transcript,
+            tokens[offset - 1]?.end ?? 0
+          )
+          parameterChoices.push({
+            commandId: route.commandId,
+            parameters: { ...parameters, [parameter.name]: parameter.value },
+            consumedWordCount: offset,
+            textOffset,
+            text: transcript.slice(textOffset).trimEnd(),
+          })
+        }
         if (offsets.some((offset) => input.length > offset)) {
           parameterError = true
           parameterErrorDepth = Math.max(parameterErrorDepth, ...offsets)
@@ -130,9 +147,10 @@ export function resolveVoice(
     parameterErrorDepth >= longest &&
     parameterErrorDepth > incompleteDepth
   ) {
-    return { kind: 'parameter-error', candidates: [] }
+    return { kind: 'parameter-error', candidates: [], parameterChoices }
   }
-  if (incompleteDepth > longest) return { kind: 'incomplete', candidates: [] }
+  if (incompleteDepth > longest)
+    return { kind: 'incomplete', candidates: [], parameterChoices }
   const unique = new Map<string, VoiceCandidate>()
   for (const candidate of candidates) {
     if (candidate.consumedWordCount !== longest) continue
@@ -158,6 +176,7 @@ export function resolveVoice(
               ? 'parameter-error'
               : 'none',
     candidates: result,
+    parameterChoices: result.length ? undefined : parameterChoices,
   }
 }
 
@@ -207,16 +226,12 @@ export function compileVoiceRoutes(
               },
             ],
           })
-      } else {
-        const key = command.toolId.replace(
-          'core.',
-          ''
-        ) as keyof typeof grammar.actions
-        const phrase = command.toolId.startsWith('core.')
-          ? grammar.actions[key]
-          : undefined
-        if (phrase)
-          routes.push({ commandId: command.id, phrase, parameters: [] })
+      } else if (command.toolId === 'core.askInChat') {
+        routes.push({
+          commandId: command.id,
+          phrase: grammar.actions.askInChat,
+          parameters: [],
+        })
       }
     }
   }

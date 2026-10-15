@@ -932,16 +932,12 @@
     "input": "Texto del comando",
     "cancel": "Cancelar",
     "confirmationHint": "Las invocaciones exactas y sin ambigüedad pueden ejecutarse automáticamente si desactivás la confirmación.",
-    "incomplete": "La frase o el parámetro están incompletos. Seguí hablando o editá la transcripción."
+    "incomplete": "La frase o el parámetro están incompletos. Seguí hablando o editá la transcripción.",
+    "parameterChoiceHint": "Elegí un parámetro disponible y revisá el texto. Las palabras no reconocidas se conservan para editarlas."
   },
   "voiceGrammar": {
     "translate": "traducí al",
-    "actions": {
-      "insert": "insertá",
-      "copy": "copiá",
-      "askInChat": "preguntá en el chat",
-      "correct": "corregí"
-    },
+    "actions": { "askInChat": "preguntá en el chat" },
     "languages": {
       "en_US": "inglés;inglés americano",
       "en_GB": "inglés británico",

@@ -59,9 +59,7 @@ function walkDir(dir: string): string[] {
 /** Known dynamically generated key families */
 const DYNAMIC_KEYS = new Set([
   'voiceGrammar.translate',
-  ...['insert', 'copy', 'askInChat', 'correct'].map(
-    (id) => `voiceGrammar.actions.${id}`
-  ),
+  'voiceGrammar.actions.askInChat',
   ...[
     'en_US',
     'en_GB',

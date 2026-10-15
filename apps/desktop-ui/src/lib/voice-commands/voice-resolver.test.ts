@@ -156,3 +156,54 @@ describe('voice resolver', () => {
     expect(first).toEqual(before)
   })
 })
+
+it.each(['-42', '.env', '--help', '!important', '…text', '- item', '**bold**'])(
+  'preserves meaningful argument prefix %s',
+  (text) => {
+    expect(
+      resolveVoice([route('a', 'copy')], `copy ${text}`).candidates[0]?.text
+    ).toBe(text)
+  }
+)
+
+it('offers explicit parameter recovery without guessing which unknown words to remove', () => {
+  const routes: VoiceRoute[] = [
+    {
+      commandId: 'en',
+      phrase: 'translate to',
+      parameters: [{ name: 'language', value: 'en_US', variants: ['English'] }],
+    },
+  ]
+  expect(resolveVoice(routes, 'translate to Klingon Hello!')).toMatchObject({
+    kind: 'parameter-error',
+    parameterChoices: [
+      {
+        commandId: 'en',
+        parameters: { language: 'en_US' },
+        text: 'Klingon Hello!',
+      },
+    ],
+  })
+  expect(resolveVoice(routes, 'translate to').parameterChoices?.[0]?.text).toBe(
+    ''
+  )
+})
+
+it('provides built-in phrases only for translation and chat while retaining user phrases', () => {
+  const tools = { get: () => testTools().get('script') }
+  const commands = [
+    'core.copy',
+    'core.insert',
+    'core.correct',
+    'core.askInChat',
+  ].map((toolId) => ({ ...script(toolId, []), toolId }))
+  const routes = compileVoiceRoutes(commands, tools)
+  expect(new Set(routes.map((item) => item.commandId))).toEqual(
+    new Set(['core.askInChat'])
+  )
+  commands[0]!.phrases = ['my clipboard']
+  expect(
+    resolveVoice(compileVoiceRoutes(commands, tools), 'my clipboard Hello')
+      .candidates[0]?.commandId
+  ).toBe('core.copy')
+})

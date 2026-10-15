@@ -310,10 +310,23 @@ const voiceConflicts = computed(() =>
 )
 const voiceTrialResult = computed(() => {
   const result = resolveVoice(voiceRoutes.value, voiceTrial.value)
-  if (!result.candidates.length) return t('voiceCommands.none')
-  return result.candidates
-    .map((candidate) => `${candidate.commandId}: ${candidate.text}`)
+  if (result.kind === 'parameter-error')
+    return t('voiceCommands.parameterError')
+  if (result.kind === 'incomplete') return t('voiceCommands.incomplete')
+  if (result.kind === 'none') return t('voiceCommands.none')
+  const candidates = result.candidates
+    .map((candidate) => {
+      const command = (
+        props.userConfig?.commands ?? ipcStore.desktopState.userConfig.commands
+      ).find((item) => item.id === candidate.commandId)
+      const label = command ? commandLabel(command) : candidate.commandId
+      const parameters = Object.values(candidate.parameters).join(', ')
+      return `${label}${parameters ? ` (${parameters})` : ''}: ${candidate.text}`
+    })
     .join(' / ')
+  return result.kind === 'ambiguous'
+    ? `${t('voiceCommands.choose')}: ${candidates}`
+    : candidates
 })
 const tool = computed(() => commandTool(props.command, toolsStore))
 /** A script or a webhook: its settings have an editor of their own */

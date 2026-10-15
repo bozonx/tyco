@@ -33,6 +33,20 @@
             </button>
             <p>{{ candidate.text }}</p>
           </div>
+          <div v-if="voice.resolution.parameterChoices?.length">
+            <p>{{ t('voiceCommands.parameterChoiceHint') }}</p>
+            <button
+              v-for="candidate in voice.resolution.parameterChoices"
+              :key="`${candidate.commandId}:${candidate.textOffset}`"
+              :disabled="voice.stage !== 'review'"
+              @click="voice.choose(candidate)"
+            >
+              {{ label(candidate.commandId) }}
+              <span v-for="(value, name) in candidate.parameters" :key="name">
+                · {{ value }}
+              </span>
+            </button>
+          </div>
           <template v-if="voice.command && voice.selected">
             <strong>{{ commandLabel(voice.command) }}</strong>
             <code v-if="commandTarget(voice.command)">{{
