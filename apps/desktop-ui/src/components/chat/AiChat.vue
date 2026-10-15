@@ -19,6 +19,7 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
+          :profile-id="props.profileId"
           :can-regenerate="!chatStore.isGenerating"
           :streaming="
             chatStore.isGenerating && index === chatStore.messages.length - 1
@@ -132,6 +133,10 @@ import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import ChatComposer from './ChatComposer.vue'
 import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import type { ChatMessage } from '@tyco/shared'
+
+const props = withDefaults(defineProps<{ profileId?: string | null }>(), {
+  profileId: null,
+})
 
 const chatInputStore = useChatInputStore()
 const llmStore = useLlmStore()

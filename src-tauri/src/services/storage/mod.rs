@@ -45,7 +45,7 @@ pub fn app_data_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(dir)
 }
 
-fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
+pub fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
     let dir = app_data_dir(app)?.join(sub);
     create_private_dir(&dir)?;
     Ok(dir)

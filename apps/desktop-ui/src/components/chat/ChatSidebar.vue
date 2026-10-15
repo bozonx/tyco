@@ -151,6 +151,10 @@ import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 
+const _props = withDefaults(defineProps<{ profileId?: string | null }>(), {
+  profileId: null,
+})
+
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
 const { toastKey } = useToast()

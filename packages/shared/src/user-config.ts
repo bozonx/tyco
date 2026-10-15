@@ -413,6 +413,11 @@ export interface UserConfig {
   markdown: MarkdownSettings
   markdownClean: MarkdownCleanSettings
   plugins: Record<string, unknown>
+  aiProfiles?: AiProfilesConfig
+}
+
+export interface AiProfilesConfig {
+  vaultPath?: string
 }
 
 /** Untrusted serialized input; normalize before reading any field. */

@@ -24,26 +24,30 @@
     />
     <ChatSidebar
       v-if="sidebarOpen"
+      :profile-id="profileId"
       class="chat-sidebar-panel"
       @collapse="sidebarOpen = false"
       @navigate="closeMobileSidebar"
     />
     <div class="chat-main">
-      <AiChat />
+      <AiChat :profile-id="profileId" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
 import IconButton from '../components/common/IconButton.vue'
 import { useI18n } from '../composables/use-i18n'
+import { appNavigation } from '../lib/navigation/navigation'
 import { useChatStore } from '../stores/chat'
 import { useHistoryStore } from '../stores/history'
 import { useNavPanelStore } from '../stores/nav-panel'
+
+const profileId = computed(() => appNavigation.currentProfileId?.() || null)
 
 const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()

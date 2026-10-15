@@ -5,6 +5,7 @@ pub mod activation;
 pub(crate) mod activation_coordinator;
 pub mod activation_metrics;
 pub mod activation_socket;
+pub mod ai_vault;
 pub mod app_paths;
 pub mod atomic_file;
 pub mod background;

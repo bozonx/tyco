@@ -484,6 +484,12 @@
       "additionalProperties": true,
       "defaultPath": "plugins"
     },
+    "aiProfiles": {
+      "type": "object",
+      "properties": { "vaultPath": { "type": "string" } },
+      "additionalProperties": false,
+      "default": {}
+    },
     "markdown": {
       "type": "object",
       "properties": {

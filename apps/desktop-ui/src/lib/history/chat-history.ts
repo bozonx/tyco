@@ -1,10 +1,18 @@
 import { ref } from 'vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 import type { HistoryApi } from './history-call'
-import { createHistoryCall } from './history-call'
+import {
+  type ChatSessionStorageDriver,
+  createIpcChatSessionStorageDriver,
+  isChatSessionStorageDriver,
+} from '../chat/chat-session-storage'
 
-export function createChatHistoryModel(historyApi: HistoryApi) {
-  const call = createHistoryCall(historyApi)
+export function createChatHistoryModel(
+  storage: ChatSessionStorageDriver | HistoryApi
+) {
+  const driver: ChatSessionStorageDriver = isChatSessionStorageDriver(storage)
+    ? storage
+    : createIpcChatSessionStorageDriver(storage)
 
   const chatHistory = ref<ChatSummary[]>([])
 
@@ -14,7 +22,7 @@ export function createChatHistoryModel(historyApi: HistoryApi) {
 
   const loadChatHistory = async (): Promise<void> => {
     const version = ++chatListVersion
-    const loadedHistory = await call('listChats')
+    const loadedHistory = await driver.listChats()
     if (version === chatListVersion) chatHistory.value = loadedHistory || []
   }
 
@@ -22,18 +30,18 @@ export function createChatHistoryModel(historyApi: HistoryApi) {
   const refreshChatHistory = () => loadChatHistory().catch(() => {})
 
   const loadChat = async (id: string): Promise<Chat | null> => {
-    const loadedChat = await call('getChat', [id])
+    const loadedChat = await driver.getChat(id)
     return loadedChat || null
   }
 
   const saveChat = async (chat: Chat) => {
-    await call('saveChat', [chat])
+    await driver.saveChat(chat)
     await refreshChatHistory()
   }
 
   /** Gives a chat another title, keeping its messages and its place */
   const renameChat = async (id: string, title: string) => {
-    await call('renameChat', [id, title])
+    await driver.renameChat(id, title)
     chatListVersion += 1
     chatHistory.value = chatHistory.value.map((item) =>
       item.id === id ? { ...item, title } : item
@@ -42,13 +50,11 @@ export function createChatHistoryModel(historyApi: HistoryApi) {
 
   /** Ids of the chats whose title or messages contain the query */
   const searchChats = async (query: string): Promise<string[]> => {
-    return (await call('searchChats', [query])) || []
+    return driver.searchChats ? (await driver.searchChats(query)) || [] : []
   }
 
   const deleteChat = async (id: string): Promise<Chat | null> => {
-    const removed = await loadChat(id)
-
-    await call('deleteChat', [id])
+    const removed = await driver.deleteChat(id)
     chatListVersion += 1
     chatHistory.value = chatHistory.value.filter((item) => item.id !== id)
 
@@ -56,12 +62,14 @@ export function createChatHistoryModel(historyApi: HistoryApi) {
   }
 
   const restoreChatItem = async (item: Chat): Promise<void> => {
-    await call('saveChat', [item])
+    await driver.saveChat(item)
     await refreshChatHistory()
   }
 
   const clearChats = async (): Promise<void> => {
-    await call('clearChats')
+    if (driver.clearChats) {
+      await driver.clearChats()
+    }
     chatListVersion += 1
     chatHistory.value = []
   }

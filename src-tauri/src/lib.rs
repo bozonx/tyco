@@ -293,6 +293,8 @@ pub fn run() {
             get_user_config,
             get_storage_info,
             open_storage_location,
+            commands::ai_vault::get_ai_vault_path,
+            commands::ai_vault::open_folder_in_os,
             apply_hotkey,
             configure_hotkeys,
             rebind_hotkeys,

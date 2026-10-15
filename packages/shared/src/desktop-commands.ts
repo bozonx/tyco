@@ -54,6 +54,7 @@ export const DESKTOP_COMMANDS = {
   EXECUTE_SCRIPT_ACTION: 'execute_script_action',
   FINISH_EXTERNAL_JOB: 'finish_external_job',
   FINISH_SELECTION_RUN: 'finish_selection_run',
+  GET_AI_VAULT_PATH: 'get_ai_vault_path',
   GET_CHAT: 'get_chat',
   GET_CHAT_IMAGE: 'get_chat_image',
   GET_DESKTOP_STATE: 'get_desktop_state',
@@ -79,6 +80,7 @@ export const DESKTOP_COMMANDS = {
   NET_SOCKET_SEND_TEXT: 'net_socket_send_text',
   NOTIFY_DESKTOP: 'notify_desktop',
   OPEN_ACTION_LOG: 'open_action_log',
+  OPEN_FOLDER_IN_OS: 'open_folder_in_os',
   OPEN_IN_BROWSER: 'open_in_browser',
   OPEN_IN_BROWSER_AND_HIDE: 'open_in_browser_and_hide',
   OPEN_MAIN_CHAT: 'open_main_chat',
@@ -158,6 +160,7 @@ export interface DesktopCommands {
     args: { runId: number; text?: string | null }
     result: SelectionFinishStatus
   }
+  get_ai_vault_path: { args: undefined; result: string }
   get_chat: { args: { id: string; lease?: string | null }; result: Chat | null }
   get_chat_image: { args: { id: string }; result: ArrayBuffer | number[] }
   get_desktop_state: { args: undefined; result: DesktopSnapshot }
@@ -207,6 +210,7 @@ export interface DesktopCommands {
   net_socket_send_text: { args: { id: number; text: string }; result: void }
   notify_desktop: { args: { summary: string; body: string }; result: void }
   open_action_log: { args: undefined; result: boolean }
+  open_folder_in_os: { args: { path: string }; result: void }
   open_in_browser: { args: { url: string }; result: void }
   open_in_browser_and_hide: {
     args: { url: string; activationId: number }

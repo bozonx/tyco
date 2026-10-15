@@ -4,12 +4,14 @@ import { APP_ROUTES, type AppRoutePath } from './routes'
 export interface NavigationApi {
   push: (path: AppRoutePath) => Promise<void>
   currentPath: () => AppRoutePath
+  currentProfileId: () => string | null
   isCurrent: (path: AppRoutePath) => boolean
   goToEditor: () => Promise<void>
   goToHistory: () => Promise<void>
   /** Opens the settings, on `tab` when given */
   goToConfig: (tab?: string) => Promise<void>
   goToChat: () => Promise<void>
+  goToProfileChat: (profileId: string) => Promise<void>
 }
 
 export const appNavigation: NavigationApi = {
@@ -18,6 +20,9 @@ export const appNavigation: NavigationApi = {
   },
   currentPath() {
     return router.currentRoute.value.path as AppRoutePath
+  },
+  currentProfileId() {
+    return (router.currentRoute.value.query?.profile as string) || null
   },
   isCurrent(path: AppRoutePath) {
     return router.currentRoute.value.path === path
@@ -37,5 +42,11 @@ export const appNavigation: NavigationApi = {
   },
   async goToChat() {
     await router.push(APP_ROUTES.CHAT.path)
+  },
+  async goToProfileChat(profileId: string) {
+    await router.push({
+      path: APP_ROUTES.CHAT.path,
+      query: { profile: profileId },
+    })
   },
 }

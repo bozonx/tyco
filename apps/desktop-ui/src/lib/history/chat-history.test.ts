@@ -51,3 +51,27 @@ it('keeps a persisted chat successful when refreshing its summary list fails', a
     })
   ).resolves.toBeUndefined()
 })
+
+it('uses a custom ChatSessionStorageDriver directly', async () => {
+  const driver = {
+    listChats: vi.fn().mockResolvedValue([{ id: 'c1', title: 'Custom' }]),
+    getChat: vi
+      .fn()
+      .mockResolvedValue({ id: 'c1', title: 'Custom', messages: [] }),
+    saveChat: vi.fn().mockResolvedValue(undefined),
+    renameChat: vi.fn().mockResolvedValue(undefined),
+    deleteChat: vi
+      .fn()
+      .mockResolvedValue({ id: 'c1', title: 'Custom', messages: [] }),
+  }
+  const model = createChatHistoryModel(driver)
+  await model.loadChatHistory()
+  expect(model.chatHistory.value).toEqual([{ id: 'c1', title: 'Custom' }])
+
+  const chat = await model.loadChat('c1')
+  expect(chat?.id).toBe('c1')
+
+  await model.deleteChat('c1')
+  expect(driver.deleteChat).toHaveBeenCalledWith('c1')
+  expect(model.chatHistory.value).toEqual([])
+})
