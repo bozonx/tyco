@@ -2,7 +2,7 @@ import type { InputConfigItem } from './config.js'
 import type { EditorInputSnapshot } from './plugin.js'
 
 export type CommandRunSource =
-  'menu' | 'toolbar' | 'launcher' | 'external' | 'chat' | 'selection'
+  'menu' | 'toolbar' | 'launcher' | 'voice' | 'external' | 'chat' | 'selection'
 export type CustomActionAfterRun =
   'none' | 'showMenu' | 'insertIntoWindow' | 'copy'
 

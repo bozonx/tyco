@@ -12,12 +12,18 @@ import HomeView from '../views/HomeView.vue'
 import SelectionView from '../views/SelectionView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import TranslateView from '../views/TranslateView.vue'
+import VoiceCommandsView from '../views/VoiceCommandsView.vue'
 import VoiceView from '../views/VoiceView.vue'
 import WriteView from '../views/WriteView.vue'
 
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
+    {
+      path: APP_ROUTES.VOICE_COMMANDS.path,
+      name: APP_ROUTES.VOICE_COMMANDS.name,
+      component: VoiceCommandsView,
+    },
     {
       path: APP_ROUTES.HOME.path,
       name: APP_ROUTES.HOME.name,

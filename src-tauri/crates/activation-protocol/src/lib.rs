@@ -10,6 +10,7 @@ pub const START_MODES: &[&str] = &[
     "write",
     "chat",
     "voiceChat",
+    "voiceCommands",
     "voice",
     "select",
     "aiTasks",
@@ -22,6 +23,7 @@ pub const START_MODES: &[&str] = &[
 
 pub fn canonical_mode(value: &str) -> &str {
     match value {
+        "voice-commands" => "voiceCommands",
         "voice-chat" => "voiceChat",
         "ai-tasks" => "aiTasks",
         "command-launcher" => "commandLauncher",
@@ -34,6 +36,7 @@ pub fn canonical_mode(value: &str) -> &str {
 /// `voiceChat`; the inverse of `canonical_mode`.
 pub fn cli_mode(mode: &str) -> &str {
     match mode {
+        "voiceCommands" => "voice-commands",
         "voiceChat" => "voice-chat",
         "aiTasks" => "ai-tasks",
         "commandLauncher" => "command-launcher",

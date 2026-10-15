@@ -211,6 +211,7 @@ const MODE_ORDER = [
   'editor',
   'chat',
   'voiceChat',
+  'voiceCommands',
   'select',
   'aiTasks',
   'correction',

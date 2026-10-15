@@ -568,6 +568,24 @@ mod tests {
     }
 
     #[test]
+    fn voice_permissions_are_opt_in_and_confirmation_is_safe_by_default() {
+        let mut config = serde_json::json!({
+            "commands": [{ "id": "note", "toolId": "script", "phrases": ["save note"] }]
+        });
+        normalize_user_config(&mut config);
+        assert_eq!(config["commands"][0]["isVoiceEnabled"], false);
+        assert_eq!(config["commands"][0]["voiceConfirmation"], "always");
+        config["commands"][0]["isVoiceEnabled"] = serde_json::json!(true);
+        config["commands"][0]["voiceConfirmation"] = serde_json::json!("auto");
+        normalize_user_config(&mut config);
+        assert_eq!(config["commands"][0]["isVoiceEnabled"], true);
+        assert_eq!(config["commands"][0]["voiceConfirmation"], "auto");
+        config["commands"][0]["voiceConfirmation"] = serde_json::json!("invalid");
+        normalize_user_config(&mut config);
+        assert_eq!(config["commands"][0]["voiceConfirmation"], "always");
+    }
+
+    #[test]
     fn defaults_satisfy_the_shared_schema() {
         validate_user_config(&crate::models::default_user_config()).unwrap();
     }

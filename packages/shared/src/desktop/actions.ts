@@ -38,6 +38,7 @@ export type CommandRunSource =
   | 'menu'
   | 'toolbar'
   | 'launcher'
+  | 'voice'
   | 'external'
   | 'chat'
   /** A selection run: the output replaces the selection it got */

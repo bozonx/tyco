@@ -95,11 +95,12 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 10] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 11] = [
     ActivationMode::Editor,
     ActivationMode::Write,
     ActivationMode::Chat,
     ActivationMode::VoiceChat,
+    ActivationMode::VoiceCommands,
     ActivationMode::Voice,
     ActivationMode::Select,
     ActivationMode::AiTasks,
@@ -182,6 +183,7 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         ActivationMode::Editor
         | ActivationMode::Write
         | ActivationMode::Chat
+        | ActivationMode::VoiceCommands
         | ActivationMode::VoiceChat
         | ActivationMode::AiTasks
         | ActivationMode::CommandLauncher
@@ -241,6 +243,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::Editor => "Open quick editor",
         ActivationMode::Write => "Open writing mode",
         ActivationMode::Chat => "Open chat",
+        ActivationMode::VoiceCommands => "Run a command by voice",
         ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
         ActivationMode::Select => "Open selection actions",

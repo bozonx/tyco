@@ -14,7 +14,8 @@
     "commandLauncher4": "",
     "commandLauncher5": "",
     "correction": "",
-    "translate": ""
+    "translate": "",
+    "voiceCommands": ""
   },
   "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
   "submitKey": "enter",

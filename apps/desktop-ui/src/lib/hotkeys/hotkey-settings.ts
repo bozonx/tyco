@@ -115,6 +115,7 @@ export function hasConflict(state: HotkeySettingsState, id: string): boolean {
 /** CLI spellings of the modes whose ids are not already lowercase words */
 const CLI_MODES: Record<string, string> = {
   voiceChat: 'voice-chat',
+  voiceCommands: 'voice-commands',
   aiTasks: 'ai-tasks',
   commandLauncher: 'command-launcher',
   config: 'settings',

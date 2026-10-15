@@ -23,6 +23,7 @@ use gtk::prelude::WidgetExt;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
+pub const VOICE_COMMAND_FINISH_EVENT: &str = "app://voice-command-finish";
 pub const STATE_CHANGED_EVENT: &str = "app://state-changed";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
@@ -141,6 +142,23 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             let _ = sender.send(Err(AppError::ServiceUnavailable(
                 "Application is stopping".into(),
             )));
+            return;
+        }
+        let snapshot = handle.state::<AppState>().snapshot();
+        if activation.mode == ActivationMode::VoiceCommands
+            && activation.source == super::activation::ActivationSource::Hotkey
+            && snapshot.activation.mode == Some(ActivationMode::VoiceCommands)
+            && snapshot.window.is_window_shown
+        {
+            let result = handle
+                .emit_to(
+                    QUICK_WINDOW_LABEL,
+                    VOICE_COMMAND_FINISH_EVENT,
+                    snapshot.activation.activation_id,
+                )
+                .map(|()| None)
+                .map_err(AppError::from);
+            let _ = sender.send(result);
             return;
         }
         let result = handle.state::<ActivationCoordinator>().begin(
@@ -324,6 +342,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::Voice
         | ActivationMode::Select
         | ActivationMode::AiTasks
+        | ActivationMode::VoiceCommands
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
         | ActivationMode::VoiceChat

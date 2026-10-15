@@ -35,7 +35,8 @@
         "commandLauncher4": { "type": "string", "default": "" },
         "commandLauncher5": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
-        "translate": { "type": "string", "default": "" }
+        "translate": { "type": "string", "default": "" },
+        "voiceCommands": { "type": "string", "default": "" }
       },
       "required": [
         "editor",
@@ -51,7 +52,8 @@
         "commandLauncher4",
         "commandLauncher5",
         "correction",
-        "translate"
+        "translate",
+        "voiceCommands"
       ],
       "additionalProperties": false,
       "defaultPath": "hotkeys"
@@ -292,7 +294,12 @@
             "required": ["external", "chat"],
             "additionalProperties": false
           },
-          "enabled": { "type": "boolean", "default": true }
+          "enabled": { "type": "boolean", "default": true },
+          "isVoiceEnabled": { "type": "boolean", "default": false },
+          "voiceConfirmation": {
+            "enum": ["always", "auto"],
+            "default": "always"
+          }
         },
         "required": [
           "id",
@@ -304,7 +311,9 @@
           "launcherAfterRun",
           "logOutput",
           "availableIn",
-          "enabled"
+          "enabled",
+          "isVoiceEnabled",
+          "voiceConfirmation"
         ],
         "additionalProperties": false
       },

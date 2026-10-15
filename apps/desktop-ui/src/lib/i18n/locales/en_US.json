@@ -595,7 +595,8 @@
       "commandLauncher2": "Quick commands: page 2",
       "commandLauncher3": "Quick commands: page 3",
       "commandLauncher4": "Quick commands: page 4",
-      "commandLauncher5": "Quick commands: page 5"
+      "commandLauncher5": "Quick commands: page 5",
+      "voiceCommands": "Voice commands"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -905,5 +906,57 @@
     "next": "Next",
     "nothingToCorrect": "Nothing to correct",
     "textTooShortForCorrection": "Text is too short for correction"
+  },
+  "voiceCommands": {
+    "title": "Voice commands",
+    "enabled": "Enable voice invocation",
+    "confirm": "Always confirm",
+    "phrases": "One literal phrase per line. The display name is not matched.",
+    "try": "Try an utterance",
+    "conflicts": "Conflicting or nested phrases",
+    "none": "No matching command. Edit the transcript or choose a command below.",
+    "hint": "Say a command, then its text. Press the shortcut again to finish.",
+    "stop": "Stop recording",
+    "record": "Record again",
+    "run": "Run",
+    "listening": "Listening…",
+    "finishing": "Finishing transcription…",
+    "choose": "Choose a command",
+    "missingText": "Text is required.",
+    "extraText": "This command takes no text. Clear the extra text before running.",
+    "parameterError": "Choose a supported translation language or edit the transcript.",
+    "failed": "Command failed or is no longer available. Your input is preserved.",
+    "catalog": "Registered voice commands",
+    "empty": "No voice commands enabled. Enable voice in the command settings.",
+    "transcript": "Transcript",
+    "input": "Command input",
+    "cancel": "Cancel",
+    "confirmationHint": "Exact, unambiguous calls may run automatically when confirmation is disabled.",
+    "incomplete": "Incomplete phrase or parameter. Continue speaking or edit the transcript."
+  },
+  "voiceGrammar": {
+    "translate": "translate to",
+    "actions": {
+      "insert": "insert",
+      "copy": "copy",
+      "askInChat": "ask in chat",
+      "correct": "correct"
+    },
+    "languages": {
+      "en_US": "English;American English",
+      "en_GB": "British English",
+      "es_AR": "Spanish;Argentinian Spanish",
+      "es_ES": "Spanish;European Spanish",
+      "ru_RU": "Russian",
+      "tr_TR": "Turkish",
+      "de_DE": "German",
+      "fr_FR": "French",
+      "it_IT": "Italian",
+      "pt_BR": "Portuguese;Brazilian Portuguese",
+      "pt_PT": "Portuguese;European Portuguese",
+      "uk_UA": "Ukrainian",
+      "zh_CN": "Chinese",
+      "ja_JP": "Japanese"
+    }
   }
 }

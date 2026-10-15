@@ -101,6 +101,8 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
   const command: CommandConfig = {
     id,
     name: stringOr(value.name),
+    isVoiceEnabled: value.isVoiceEnabled === true,
+    voiceConfirmation: value.voiceConfirmation === 'auto' ? 'auto' : 'always',
     phrases: Array.isArray(value.phrases)
       ? value.phrases.filter((item): item is string => typeof item === 'string')
       : [],
@@ -190,6 +192,8 @@ export function createCommand(
     id,
     name: '',
     phrases: [],
+    isVoiceEnabled: false,
+    voiceConfirmation: 'always',
     toolId,
     toolConfig: defaultToolConfig(toolId),
     isLlmArgumentParsingEnabled: false,

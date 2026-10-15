@@ -249,11 +249,10 @@ export interface CommandConfig {
   name: string
   /** Tells the LLM what the command does; the agent and LLM parsing use it */
   description?: string
-  /**
-   * Phrases that select this command by voice, with `(a|b)` alternatives and
-   * `[optional]` words; the name is matched as well
-   */
+  /** Explicit literal voice phrases; the display name is never matched. */
   phrases: string[]
+  isVoiceEnabled: boolean
+  voiceConfirmation: 'always' | 'auto'
   /**
    * `script`, `webhook`, `core.<tool>`, `<pluginName>.<toolId>` or
    * `mcp:<server>.<tool>`

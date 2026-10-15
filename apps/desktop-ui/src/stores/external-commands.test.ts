@@ -51,6 +51,8 @@ describe('external commands store wiring', () => {
       toolConfig: {},
       phrases: [],
       isLlmArgumentParsingEnabled: false,
+      isVoiceEnabled: false,
+      voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
       logOutput: false,
       availableIn: { external: true, chat: false },

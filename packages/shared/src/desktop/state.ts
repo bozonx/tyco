@@ -6,6 +6,7 @@ export enum StartMode {
   SELECT = 'select',
   VOICE = 'voice',
   AI_TASKS = 'aiTasks',
+  VOICE_COMMANDS = 'voiceCommands',
   COMMAND_LAUNCHER = 'commandLauncher',
   CORRECTION = 'correction',
   TRANSLATE = 'translate',

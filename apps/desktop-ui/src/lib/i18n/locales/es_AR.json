@@ -595,7 +595,8 @@
       "commandLauncher2": "Comandos rápidos: página 2",
       "commandLauncher3": "Comandos rápidos: página 3",
       "commandLauncher4": "Comandos rápidos: página 4",
-      "commandLauncher5": "Comandos rápidos: página 5"
+      "commandLauncher5": "Comandos rápidos: página 5",
+      "voiceCommands": "Comandos de voz"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -905,5 +906,57 @@
     "next": "Siguiente",
     "nothingToCorrect": "Nada que corregir",
     "textTooShortForCorrection": "El texto es demasiado corto para corregir"
+  },
+  "voiceCommands": {
+    "title": "Comandos de voz",
+    "enabled": "Habilitar invocación por voz",
+    "confirm": "Confirmar siempre",
+    "phrases": "Una frase literal por línea. El nombre no se usa para reconocer.",
+    "try": "Probar una frase",
+    "conflicts": "Frases coincidentes o anidadas",
+    "none": "No se encontró el comando. Editá la transcripción o elegí uno abajo.",
+    "hint": "Decí el comando y después el texto. Repetí el atajo para terminar.",
+    "stop": "Terminar grabación",
+    "record": "Grabar de nuevo",
+    "run": "Ejecutar",
+    "listening": "Grabando…",
+    "finishing": "Terminando transcripción…",
+    "choose": "Elegí un comando",
+    "missingText": "Se requiere texto.",
+    "extraText": "Este comando no acepta texto. Borrá el texto adicional antes de ejecutarlo.",
+    "parameterError": "Elegí un idioma de traducción disponible o editá la transcripción.",
+    "failed": "El comando falló o ya no está disponible. Se conservó el texto.",
+    "catalog": "Comandos de voz registrados",
+    "empty": "No hay comandos de voz habilitados. Habilitalos en la configuración del comando.",
+    "transcript": "Transcripción",
+    "input": "Texto del comando",
+    "cancel": "Cancelar",
+    "confirmationHint": "Las invocaciones exactas y sin ambigüedad pueden ejecutarse automáticamente si desactivás la confirmación.",
+    "incomplete": "La frase o el parámetro están incompletos. Seguí hablando o editá la transcripción."
+  },
+  "voiceGrammar": {
+    "translate": "traducí al",
+    "actions": {
+      "insert": "insertá",
+      "copy": "copiá",
+      "askInChat": "preguntá en el chat",
+      "correct": "corregí"
+    },
+    "languages": {
+      "en_US": "inglés;inglés americano",
+      "en_GB": "inglés británico",
+      "es_AR": "español;español argentino",
+      "es_ES": "español;español europeo",
+      "ru_RU": "ruso",
+      "tr_TR": "turco",
+      "de_DE": "alemán",
+      "fr_FR": "francés",
+      "it_IT": "italiano",
+      "pt_BR": "portugués;portugués brasileño",
+      "pt_PT": "portugués;portugués europeo",
+      "uk_UA": "ucraniano",
+      "zh_CN": "chino",
+      "ja_JP": "japonés"
+    }
   }
 }

@@ -15,6 +15,7 @@ export const DESKTOP_EVENTS = {
   MAIN_WINDOW_CLOSED: 'app://main-window-closed',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
+  VOICE_COMMAND_FINISH: 'app://voice-command-finish',
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
   SELECTION_RUN: 'app://selection-run',
   SELECTION_CANCEL: 'app://selection-cancel',
@@ -33,6 +34,7 @@ export interface AppEventPayloads {
   [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
   [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
   [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
+  [DESKTOP_EVENTS.VOICE_COMMAND_FINISH]: number
   [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
   [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
   [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }

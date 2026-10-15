@@ -66,6 +66,8 @@ describe('normalizeCommand', () => {
       toolId: 'script',
       toolConfig: { command: 'echo', workingDirectory: '' },
       isLlmArgumentParsingEnabled: false,
+      isVoiceEnabled: false,
+      voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
       logOutput: false,
       availableIn: { external: false, chat: false },

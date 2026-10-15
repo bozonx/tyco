@@ -16,6 +16,7 @@ export function resolveSink(
   if (options.output === 'return') return 'return'
   const source = options.source ?? 'menu'
   if (source === 'external') return 'return'
-  if (source !== 'launcher' || !invocation.launcherSink) return 'showMenu'
+  if ((source !== 'launcher' && source !== 'voice') || !invocation.launcherSink)
+    return 'showMenu'
   return invocation.launcherSink.action
 }

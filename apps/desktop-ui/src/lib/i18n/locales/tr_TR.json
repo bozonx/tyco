@@ -592,7 +592,8 @@
       "commandLauncher2": "Hızlı komutlar: sayfa 2",
       "commandLauncher3": "Hızlı komutlar: sayfa 3",
       "commandLauncher4": "Hızlı komutlar: sayfa 4",
-      "commandLauncher5": "Hızlı komutlar: sayfa 5"
+      "commandLauncher5": "Hızlı komutlar: sayfa 5",
+      "voiceCommands": "Sesli komutlar"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -902,5 +903,57 @@
     "next": "Devam",
     "nothingToCorrect": "Düzeltilecek bir şey yok",
     "textTooShortForCorrection": "Metin düzeltme için çok kısa"
+  },
+  "voiceCommands": {
+    "title": "Sesli komutlar",
+    "enabled": "Sesle çağırmayı etkinleştir",
+    "confirm": "Her zaman onayla",
+    "phrases": "Her satıra tam bir ifade yazın. Görünen ad eşleştirilmez.",
+    "try": "Bir ifade deneyin",
+    "conflicts": "Çakışan veya iç içe ifadeler",
+    "none": "Komut bulunamadı. Metni düzenleyin veya aşağıdan bir komut seçin.",
+    "hint": "Komutu ve ardından metni söyleyin. Bitirmek için kısayola tekrar basın.",
+    "stop": "Kaydı bitir",
+    "record": "Yeniden kaydet",
+    "run": "Çalıştır",
+    "listening": "Kaydediliyor…",
+    "finishing": "Metne dönüştürme tamamlanıyor…",
+    "choose": "Bir komut seçin",
+    "missingText": "Metin gerekli.",
+    "extraText": "Bu komut metin kabul etmiyor. Çalıştırmadan önce fazla metni silin.",
+    "parameterError": "Kullanılabilir bir çeviri dili seçin veya metni düzenleyin.",
+    "failed": "Komut başarısız oldu veya artık kullanılamıyor. Metniniz korundu.",
+    "catalog": "Kayıtlı sesli komutlar",
+    "empty": "Etkin sesli komut yok. Komut ayarlarından sesi etkinleştirin.",
+    "transcript": "Döküm",
+    "input": "Komut metni",
+    "cancel": "İptal",
+    "confirmationHint": "Onay kapatıldığında tam ve kesin eşleşmeler otomatik çalışabilir.",
+    "incomplete": "İfade veya parametre eksik. Konuşmaya devam edin veya metni düzenleyin."
+  },
+  "voiceGrammar": {
+    "translate": "çevir",
+    "actions": {
+      "insert": "ekle",
+      "copy": "kopyala",
+      "askInChat": "sohbette sor",
+      "correct": "düzelt"
+    },
+    "languages": {
+      "en_US": "İngilizce;Amerikan İngilizcesi",
+      "en_GB": "Britanya İngilizcesi",
+      "es_AR": "İspanyolca;Arjantin İspanyolcası",
+      "es_ES": "İspanyolca;Avrupa İspanyolcası",
+      "ru_RU": "Rusça",
+      "tr_TR": "Türkçe",
+      "de_DE": "Almanca",
+      "fr_FR": "Fransızca",
+      "it_IT": "İtalyanca",
+      "pt_BR": "Portekizce;Brezilya Portekizcesi",
+      "pt_PT": "Portekizce;Avrupa Portekizcesi",
+      "uk_UA": "Ukraynaca",
+      "zh_CN": "Çince",
+      "ja_JP": "Japonca"
+    }
   }
 }

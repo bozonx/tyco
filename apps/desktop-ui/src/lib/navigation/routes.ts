@@ -11,6 +11,7 @@ const APP_ROUTE_NAMES = {
   AI_TASKS: 'aiTasks',
   SELECT: 'select',
   COMMAND_LAUNCHER: 'commandLauncher',
+  VOICE_COMMANDS: 'voiceCommands',
   CORRECTION: 'correction',
   TRANSLATE: 'translate',
 } as const
@@ -29,6 +30,10 @@ export const APP_ROUTES = {
     name: APP_ROUTE_NAMES.COMMAND_LAUNCHER,
     path: '/commandLauncher',
   },
+  VOICE_COMMANDS: {
+    name: APP_ROUTE_NAMES.VOICE_COMMANDS,
+    path: '/voiceCommands',
+  },
   CORRECTION: { name: APP_ROUTE_NAMES.CORRECTION, path: '/correction' },
   TRANSLATE: { name: APP_ROUTE_NAMES.TRANSLATE, path: '/translate' },
 } as const
@@ -39,6 +44,7 @@ export const MODE_ROUTE_MAP: Record<StartMode, AppRoutePath> = {
   [StartMode.SELECT]: APP_ROUTES.SELECT.path,
   [StartMode.VOICE]: APP_ROUTES.VOICE.path,
   [StartMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
+  [StartMode.VOICE_COMMANDS]: APP_ROUTES.VOICE_COMMANDS.path,
   [StartMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [StartMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
   [StartMode.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
@@ -61,6 +67,7 @@ const QUICK_WINDOW_MODES: ReadonlySet<StartMode> = new Set([
   StartMode.VOICE,
   StartMode.SELECT,
   StartMode.AI_TASKS,
+  StartMode.VOICE_COMMANDS,
   StartMode.COMMAND_LAUNCHER,
   StartMode.CORRECTION,
   StartMode.VOICE_CHAT,

@@ -240,6 +240,15 @@
         <Button
           size="sm"
           variant="neutral"
+          @click="openQuick(StartMode.VOICE_COMMANDS)"
+          title="Open Quick Voice Commands"
+        >
+          <Icon icon="mdi:microphone-message" height="15" />
+          Voice Commands
+        </Button>
+        <Button
+          size="sm"
+          variant="neutral"
           @click="openQuick(StartMode.WRITE)"
           title="Open Quick Write"
         >

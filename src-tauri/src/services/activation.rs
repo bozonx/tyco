@@ -11,6 +11,7 @@ pub enum ActivationMode {
     Write,
     Chat,
     VoiceChat,
+    VoiceCommands,
     Voice,
     Select,
     AiTasks,
@@ -26,11 +27,12 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     #[cfg(test)]
-    pub const PUBLIC_MODES: [Self; 12] = [
+    pub const PUBLIC_MODES: [Self; 13] = [
         Self::Editor,
         Self::Write,
         Self::Chat,
         Self::VoiceChat,
+        Self::VoiceCommands,
         Self::Voice,
         Self::Select,
         Self::AiTasks,
@@ -46,6 +48,7 @@ impl ActivationMode {
             "editor" => Ok(Self::Editor),
             "write" => Ok(Self::Write),
             "chat" => Ok(Self::Chat),
+            "voiceCommands" => Ok(Self::VoiceCommands),
             "voiceChat" => Ok(Self::VoiceChat),
             "voice" => Ok(Self::Voice),
             "select" => Ok(Self::Select),
@@ -66,6 +69,7 @@ impl ActivationMode {
             Self::Editor => "editor",
             Self::Write => "write",
             Self::Chat => "chat",
+            Self::VoiceCommands => "voiceCommands",
             Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
             Self::Select => "select",
@@ -158,6 +162,9 @@ impl Activation {
     /// from: not a page of the command overlay the user set to run without
     /// text, see `launcherPages[].inputMode` of the config.
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
+        if self.mode == ActivationMode::VoiceCommands {
+            return false;
+        }
         if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
             return true;
         }
@@ -190,6 +197,7 @@ mod tests {
     fn a_command_page_set_without_text_takes_no_selection() {
         let config = json!({ "launcherPages": [{"id":"main","inputMode":"none"},{"id":"second","inputMode":"selection"},{"id":"third","inputMode":"none"}] });
         let page = |mode: &str| Activation::from_mode(mode, ActivationSource::Ui).unwrap();
+        assert!(!page("voiceCommands").can_take_selection(&config));
         assert!(!page("commandLauncher").can_take_selection(&config));
         assert!(page("commandLauncher2").can_take_selection(&config));
         assert!(!page("commandLauncher3").can_take_selection(&config));

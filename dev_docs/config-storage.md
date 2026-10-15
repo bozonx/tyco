@@ -82,6 +82,13 @@ Script tools use `workingDirectory`; webhook tools use `isAuthEnabled` and
 action is `insertIntoWindow`. SDK-specific enum spellings are converted only at
 the SDK boundary.
 
+Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
+`voiceConfirmation` is `always` by default; `auto` permits only exact, unambiguous
+final recognition with valid input. `phrases` are literal strings, one synonym per
+entry. `hotkeys.voiceCommands` opens the separate voice command overlay and is
+unassigned by default. The voice catalog is independent of `launcherPages` and
+`availableIn.external`.
+
 The portable `registrationState` ledger has separate `reviewedMainActionIds`,
 `seededCommandIds`, and `seededToolIds`; it travels with the user's configuration
 so deleted defaults do not return on another installation.

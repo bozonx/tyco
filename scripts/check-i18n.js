@@ -110,6 +110,27 @@ function walkDir(dir) {
 
 /** Known dynamically generated key families for desktop-ui */
 const DYNAMIC_KEYS = new Set([
+  // Declarative voice grammar is compiled from every locale, not translated.
+  'voiceGrammar.translate',
+  ...['insert', 'copy', 'askInChat', 'correct'].map(
+    (id) => `voiceGrammar.actions.${id}`
+  ),
+  ...[
+    'en_US',
+    'en_GB',
+    'es_AR',
+    'es_ES',
+    'ru_RU',
+    'tr_TR',
+    'de_DE',
+    'fr_FR',
+    'it_IT',
+    'pt_BR',
+    'pt_PT',
+    'uk_UA',
+    'zh_CN',
+    'ja_JP',
+  ].map((id) => `voiceGrammar.languages.${id}`),
   ...[
     'auto',
     'ru_RU',
@@ -164,6 +185,7 @@ const DYNAMIC_KEYS = new Set([
     'editor',
     'chat',
     'voiceChat',
+    'voiceCommands',
     'select',
     'aiTasks',
     'commandLauncher',

@@ -17,6 +17,43 @@
       <FieldIssues :issues="nameIssues" />
     </label>
 
+    <section class="command-group">
+      <h4 class="command-group-title">{{ t('voiceCommands.title') }}</h4>
+      <FieldCheckbox
+        :value="command.isVoiceEnabled"
+        :label="t('voiceCommands.enabled')"
+        @update:value="update({ isVoiceEnabled: $event })"
+      />
+      <template v-if="command.isVoiceEnabled">
+        <FieldCheckbox
+          :value="command.voiceConfirmation !== 'auto'"
+          :label="t('voiceCommands.confirm')"
+          @update:value="
+            update({ voiceConfirmation: $event ? 'always' : 'auto' })
+          "
+        />
+        <p class="command-hint">{{ t('voiceCommands.confirmationHint') }}</p>
+        <label class="command-field">
+          <span>{{ t('voiceCommands.phrases') }}</span>
+          <FieldTextArea
+            :value="command.phrases.join('\n')"
+            @update:value="update({ phrases: $event.split('\n') })"
+          />
+        </label>
+        <p v-for="phrase in voicePhrases" :key="phrase" class="command-hint">
+          {{ phrase }}
+        </p>
+        <p v-if="voiceConflicts.length" class="command-warning">
+          {{ t('voiceCommands.conflicts') }}: {{ voiceConflicts.join(', ') }}
+        </p>
+        <label class="command-field">
+          <span>{{ t('voiceCommands.try') }}</span>
+          <FieldInput v-model:value="voiceTrial" />
+        </label>
+        <p v-if="voiceTrial" class="command-hint">{{ voiceTrialResult }}</p>
+      </template>
+    </section>
+
     <!-- focusout: a command left without a name takes one from what it runs -->
     <div class="command-tool-fields" @focusout="suggestName">
       <CustomActionFields
@@ -190,6 +227,11 @@ import {
 } from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
+import {
+  compileVoiceRoutes,
+  findVoiceConflicts,
+  resolveVoice,
+} from '../../lib/voice-commands/voice-resolver'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
@@ -235,6 +277,44 @@ const { toastKey } = useToast()
 const ipcStore = useIpcStore()
 
 const toolsStore = useToolsStore()
+const voiceTrial = ref('')
+const voiceRoutes = computed(() =>
+  compileVoiceRoutes(
+    [
+      ...(
+        props.userConfig?.commands ??
+        ipcStore.desktopState.userConfig.commands ??
+        []
+      ).filter((item) => item.id !== props.command.id),
+      props.command,
+    ],
+    toolsStore
+  )
+)
+const voicePhrases = computed(() => [
+  ...new Set(
+    voiceRoutes.value
+      .filter((route) => route.commandId === props.command.id)
+      .map((route) =>
+        [
+          route.phrase,
+          ...route.parameters.map((parameter) =>
+            parameter.variants.join(' / ')
+          ),
+        ].join(' ')
+      )
+  ),
+])
+const voiceConflicts = computed(() =>
+  findVoiceConflicts(voiceRoutes.value, props.command.id)
+)
+const voiceTrialResult = computed(() => {
+  const result = resolveVoice(voiceRoutes.value, voiceTrial.value)
+  if (!result.candidates.length) return t('voiceCommands.none')
+  return result.candidates
+    .map((candidate) => `${candidate.commandId}: ${candidate.text}`)
+    .join(' / ')
+})
 const tool = computed(() => commandTool(props.command, toolsStore))
 /** A script or a webhook: its settings have an editor of their own */
 const customActionTool = computed(

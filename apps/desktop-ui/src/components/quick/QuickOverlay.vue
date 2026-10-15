@@ -38,6 +38,14 @@
           :key="activationId"
         />
       </div>
+      <div
+        v-if="
+          currentMode === 'voiceCommands' && ipcStore.desktopState.isWindowShown
+        "
+        class="quick-mode-layer"
+      >
+        <VoiceCommandsView :key="activationId" />
+      </div>
       <div v-show="currentMode === 'correction'" class="quick-mode-layer">
         <CorrectionView
           v-if="currentMode === 'correction'"
@@ -88,6 +96,7 @@ import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import SelectionView from '../../views/SelectionView.vue'
 import TranslateView from '../../views/TranslateView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
+import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
 

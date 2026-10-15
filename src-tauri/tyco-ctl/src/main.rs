@@ -16,7 +16,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
        tyco-ctl quit
 
-Modes: editor, write, chat, voice-chat, voice, select, ai-tasks,
+Modes: editor, write, chat, voice-chat, voice-commands, voice, select, ai-tasks,
        command-launcher, correction, translate, history, settings.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
