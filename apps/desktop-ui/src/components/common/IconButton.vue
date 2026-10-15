@@ -2,6 +2,7 @@
   <Button
     :size="size"
     :variant="variant"
+    :tone="tone"
     :aria-label="label"
     :title="label"
     square
@@ -10,7 +11,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
+import type {
+  ButtonTone,
+  ButtonVariant,
+  ControlSize,
+} from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 import Button from './Button.vue'
 
@@ -20,6 +25,7 @@ withDefaults(
     icon: string
     size?: ControlSize
     variant?: ButtonVariant
+    tone?: ButtonTone
   }>(),
   { size: 'sm', variant: 'ghost' }
 )

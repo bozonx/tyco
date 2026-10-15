@@ -99,9 +99,9 @@
                     v-for="action in visibleActions(item)"
                     :key="action.id"
                     size="xs"
-                    variant="ghost"
                     :title="action.title"
-                    :class="action.danger ? 'danger-action' : undefined"
+                    :variant="action.danger ? 'danger-ghost' : 'ghost'"
+                    tone="muted"
                     @click="emit('action', action.id, item)"
                     :label="action.title"
                     :icon="action.icon"
@@ -556,20 +556,14 @@ function confirmClear() {
 }
 
 .history-original-actions {
+  --button-ghost-color: var(--app-text-muted);
   display: flex;
   gap: 2px;
   flex-shrink: 0;
 }
 
-.history-original-actions :deep(.btn) {
-  color: var(--app-text-muted);
-}
-
-.history-original-actions :deep(.btn:hover) {
-  color: var(--color-base-content);
-}
-
 .history-item-actions {
+  --button-ghost-color: var(--app-text-muted);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -584,18 +578,6 @@ function confirmClear() {
 .history-item:focus-within .history-item-actions {
   opacity: 1;
   pointer-events: auto;
-}
-
-.history-item-actions :deep(.btn) {
-  color: var(--app-text-muted);
-}
-
-.history-item-actions :deep(.btn:hover) {
-  color: var(--color-base-content);
-}
-
-.danger-action:hover {
-  color: var(--color-error) !important;
 }
 
 @media (hover: none) {

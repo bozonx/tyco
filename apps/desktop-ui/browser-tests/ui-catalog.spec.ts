@@ -168,3 +168,46 @@ test('navigation, disclosures and field messages retain their accessible relatio
     page.getByRole('textbox', { name: 'Disabled compact field', exact: true })
   ).toBeDisabled()
 })
+
+test('grouped fields, compact notices and preview scroll ownership', async ({
+  page,
+}) => {
+  const group = page.getByRole('group', { name: 'Connection endpoints' })
+  await expect(group).toBeVisible()
+  await expect(
+    group.getByRole('textbox', { name: 'Primary endpoint' })
+  ).toBeDisabled()
+  await expect(
+    group.getByRole('textbox', { name: 'Secondary endpoint' })
+  ).toBeDisabled()
+  await expect(
+    group.getByRole('textbox', { name: 'Primary endpoint' })
+  ).toHaveAccessibleDescription('Both addresses are required')
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Connection verified' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Attachment needs attention' })
+  ).toBeVisible()
+  await expect(page.getByText('Passive guidance')).not.toHaveAttribute('role')
+
+  const preview = page.locator('.catalog-preview pre.is-plain')
+  expect(
+    await preview.evaluate((el) => getComputedStyle(el).borderTopWidth)
+  ).toBe('0px')
+  expect(
+    await preview.evaluate((el) => el.scrollHeight > el.clientHeight)
+  ).toBe(true)
+  await preview.evaluate((el) => {
+    el.scrollTop = 100
+  })
+  expect(await preview.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+  expect(
+    await page
+      .locator('.catalog-preview pre:not(.is-plain)')
+      .evaluate((el) => getComputedStyle(el).borderTopWidth)
+  ).toBe('1px')
+  await expect(page.locator('.audio-waveform-container.is-inline')).toHaveCount(
+    2
+  )
+})

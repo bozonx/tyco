@@ -10,6 +10,7 @@
     <div class="voice-bar-footer">
       <div class="voice-bar-wave">
         <AudioWaveform
+          layout="inline"
           :level="audioLevel"
           :peak="audioPeak"
           :duration-ms="recordingDurationMs"
@@ -72,35 +73,6 @@ defineProps<VoiceRecordingProps>()
   min-width: 0;
 }
 
-.voice-bar-wave :deep(.audio-waveform-container) {
-  padding: 0;
-  border-bottom: none;
-  background-color: transparent;
-}
-
-.voice-bar-wave :deep(.listening-state) {
-  flex-direction: row;
-  gap: var(--space-sm);
-}
-
-.voice-bar-wave :deep(.waveform-visualizer) {
-  flex: 1 1 0%;
-  min-width: 0;
-  height: 28px;
-  gap: 2px;
-}
-
-.voice-bar-wave :deep(.waveform-meta) {
-  width: auto;
-  flex-shrink: 0;
-  gap: var(--space-sm);
-}
-
-.voice-bar-wave :deep(.transcribing-state) {
-  min-height: 0;
-  padding: 0;
-}
-
 .voice-bar-actions {
   display: flex;
   align-items: center;
@@ -110,8 +82,8 @@ defineProps<VoiceRecordingProps>()
 }
 
 /* In a row the buttons take their content width, not an equal share */
-.voice-bar-actions :deep(.shortcut) {
-  flex: 0 0 auto;
-  width: auto;
+.voice-bar-actions {
+  --shortcut-flex: 0 0 auto;
+  --shortcut-width: auto;
 }
 </style>

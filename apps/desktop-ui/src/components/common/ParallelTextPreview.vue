@@ -59,8 +59,8 @@ function handleInput(event: Event) {
   background: transparent;
   color: var(--color-base-content);
   font-family: var(--font-sans);
-  font-size: var(--text-title);
-  line-height: 1.6;
+  font-size: var(--preview-font-size);
+  line-height: var(--preview-line-height);
   padding: var(--space-sm) var(--space-md);
   box-sizing: border-box;
   resize: none;

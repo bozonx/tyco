@@ -94,4 +94,40 @@ describe('FieldRow', () => {
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(wrapper.get('[role="alert"]').findAll('p')).toHaveLength(2)
   })
+  it('names a fieldset without binding its group label to the first input', async () => {
+    const wrapper = mount(FieldRow, {
+      props: {
+        group: true,
+        label: 'Endpoints',
+        hint: 'Required addresses',
+        disabled: true,
+        required: true,
+      },
+      slots: {
+        default:
+          '<FieldInput aria-label="Primary" /><FieldInput aria-label="Secondary" />',
+      },
+      global: { components: { FieldInput } },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.element.tagName).toBe('FIELDSET')
+    const labelId = wrapper.attributes('aria-labelledby')
+    expect(wrapper.get(`[id="${labelId}"]`).text()).toBe('Endpoints')
+    expect(wrapper.find('label[for]').exists()).toBe(false)
+    const inputs = wrapper.findAll('input')
+    expect(inputs.map((input) => input.attributes('aria-label'))).toEqual([
+      'Primary',
+      'Secondary',
+    ])
+    for (const input of inputs) {
+      expect(input.attributes('disabled')).toBeDefined()
+      expect(input.attributes('required')).toBeDefined()
+      expect(input.attributes('aria-describedby')).toBe(
+        wrapper.get('.field-row-hint').attributes('id')
+      )
+    }
+    await wrapper.setProps({ disabled: false })
+    expect(wrapper.attributes('disabled')).toBeUndefined()
+    expect(inputs[0].attributes('disabled')).toBeUndefined()
+  })
 })

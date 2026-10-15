@@ -1,4 +1,8 @@
 import { mount } from '@vue/test-utils'
+import { h } from 'vue'
+
+import TextPreview from './TextPreview.vue'
+import Diff from './Diff.vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ActionOverlayLayout from './ActionOverlayLayout.vue'
@@ -113,5 +117,21 @@ describe('ActionOverlayLayout', () => {
     )
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
+  })
+  it('provides a plain preview default while preserving explicit frames', () => {
+    const wrapper = mount(ActionOverlayLayout, {
+      slots: {
+        preview: () => [
+          h(TextPreview, { text: 'Embedded text' }),
+          h(Diff, { oldText: 'Old', newText: 'New' }),
+          h(TextPreview, { text: 'Explicit frame', appearance: 'framed' }),
+        ],
+      },
+    })
+    const previews = wrapper.findAllComponents(TextPreview)
+    expect(previews[0].classes()).toContain('is-plain')
+    expect(wrapper.getComponent(Diff).classes()).toContain('is-plain')
+    expect(previews[1].classes()).not.toContain('is-plain')
+    wrapper.unmount()
   })
 })

@@ -1,5 +1,11 @@
 <template>
-  <div class="diff-container" :class="`mode-${effectiveMode}`">
+  <div
+    class="diff-container"
+    :class="[
+      `mode-${effectiveMode}`,
+      { 'is-plain': resolvedAppearance === 'plain' },
+    ]"
+  >
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
@@ -60,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -71,14 +77,23 @@ import {
   resolveDiffMode,
   splitDiffParts,
 } from '../../lib/diff/diff-model'
+import {
+  type PreviewAppearance,
+  previewAppearanceKey,
+} from '../../lib/ui/preview-context'
 import SplitPanePreview from './SplitPanePreview.vue'
 
 const props = defineProps<{
   oldText: string
   newText: string
+  appearance?: PreviewAppearance
   mode?: DiffViewMode
 }>()
 
+const inheritedAppearance = inject(previewAppearanceKey, 'framed')
+const resolvedAppearance = computed(
+  () => props.appearance ?? inheritedAppearance
+)
 const { t } = useI18n()
 
 const effectiveMode = computed<DiffViewMode>(() => {
@@ -126,8 +141,8 @@ function getPartClass(part: DiffPart): string {
 
 <style scoped>
 .diff-container {
-  font-size: var(--text-title);
-  line-height: 1.6;
+  font-size: var(--preview-font-size);
+  line-height: var(--preview-line-height);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-lg);
   background-color: var(--app-surface-raised);
@@ -202,5 +217,11 @@ function getPartClass(part: DiffPart): string {
 
 .unchanged {
   color: var(--color-base-content);
+}
+
+.is-plain {
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
 }
 </style>

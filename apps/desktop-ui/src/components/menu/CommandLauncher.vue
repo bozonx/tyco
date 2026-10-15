@@ -380,20 +380,24 @@ onUnmounted(() => {
 
 .launcher-pages button.launcher-hint:hover:not(:disabled) {
   background-color: transparent;
-}
 
-.launcher-pages button.launcher-hint:hover:not(:disabled) :deep(.kbd) {
-  border-color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+  --key-border-color: color-mix(
+    in oklab,
+    var(--color-primary) 50%,
+    transparent
+  );
 }
 
 .launcher-pages button[aria-pressed='true'] {
   background-color: transparent;
-}
 
-.launcher-pages button[aria-pressed='true'] :deep(.kbd) {
-  border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
-  color: var(--color-primary);
-  background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+  --key-border-color: color-mix(
+    in oklab,
+    var(--color-primary) 60%,
+    transparent
+  );
+  --key-color: var(--color-primary);
+  --key-background: color-mix(in oklab, var(--color-primary) 14%, transparent);
 }
 
 .launcher-pages-tab {

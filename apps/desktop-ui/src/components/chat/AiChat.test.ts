@@ -99,6 +99,7 @@ describe('AiChat.vue', () => {
             template:
               '<button class="icon-btn-stub" :data-icon="icon" :disabled="disabled"><slot /></button>',
           },
+          ChatComposer: false,
           ChatInput: true,
           DropdownMenu: true,
           ChatContextList: true,
@@ -142,6 +143,17 @@ describe('AiChat.vue', () => {
     await flushPromises()
 
     expect(mocks.chatState.sendInput).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
+  it('rejects an empty submission from the composer', async () => {
+    mocks.input.value = '  '
+    const wrapper = mountChat()
+    const composer = wrapper.getComponent({ name: 'ChatComposer' })
+    expect(composer.props('canSend')).toBe(false)
+    wrapper.getComponent({ name: 'ChatInput' }).vm.$emit('send')
+    await flushPromises()
+    expect(mocks.chatState.sendInput).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 

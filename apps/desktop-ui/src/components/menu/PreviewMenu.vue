@@ -19,13 +19,12 @@
 
     <template #preview>
       <div class="preview-menu-content">
-        <div
+        <InlineNotice
           v-if="qualityStatusText"
           class="translation-quality-alert"
-          :class="qualityStatusClass"
-        >
-          {{ qualityStatusText }}
-        </div>
+          :kind="qualityStatusKind"
+          :message="qualityStatusText"
+        />
         <div class="flex-1 min-h-0">
           <ParallelTextPreview
             v-if="viewMode === 'split' && props.sourceText"
@@ -62,6 +61,7 @@ import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
@@ -152,20 +152,20 @@ const qualityStatusText = computed(() => {
   return ''
 })
 
-const qualityStatusClass = computed(() => {
+const qualityStatusKind = computed<'info' | 'warning' | 'success'>(() => {
   const quality = props.translationMeta?.quality
-  if (!quality) return ''
+  if (!quality) return 'info'
   if (
     quality.repairFailed ||
     quality.remainingProblems.length ||
     quality.problems.length
   ) {
-    return 'is-warning'
+    return 'warning'
   }
   if (quality.repaired) {
-    return 'is-info'
+    return 'info'
   }
-  return 'is-success'
+  return 'success'
 })
 
 const { leftLetterKeys, spaceKey } = useResultActions()
@@ -177,6 +177,7 @@ const { leftLetterKeys, spaceKey } = useResultActions()
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
 .translation-header-tools {
@@ -201,20 +202,5 @@ const { leftLetterKeys, spaceKey } = useResultActions()
   padding: var(--space-xs) var(--space-md);
   font-size: var(--text-control);
   border-bottom: 1px solid var(--app-border-subtle);
-}
-
-.translation-quality-alert.is-warning {
-  color: var(--color-warning);
-  background-color: color-mix(in oklab, var(--color-warning) 10%, transparent);
-}
-
-.translation-quality-alert.is-info {
-  color: var(--color-info);
-  background-color: color-mix(in oklab, var(--color-info) 10%, transparent);
-}
-
-.translation-quality-alert.is-success {
-  color: var(--color-success);
-  background-color: color-mix(in oklab, var(--color-success) 10%, transparent);
 }
 </style>

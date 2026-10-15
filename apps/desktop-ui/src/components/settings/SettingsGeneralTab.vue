@@ -1,7 +1,7 @@
 <template>
   <div>
     <SettingsSection :title="t('settings.sectionAppearance')">
-      <FieldRow :label="t('settings.theme')">
+      <FieldRow group :label="t('settings.theme')">
         <SegmentedControl
           v-model="userConfig.appearance.theme"
           :label="t('settings.theme')"
@@ -39,6 +39,7 @@
 
     <SettingsSection :title="t('settings.sectionWindowInsertion')">
       <FieldRow
+        group
         :label="t('settings.windowInsertion')"
         :info="t('settings.windowInsertionHint')"
       >

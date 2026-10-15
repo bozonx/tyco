@@ -4,8 +4,7 @@
     :aria-label="label"
     @keydown="onKeydown"
     class="app-tabs"
-    :class="`app-tabs--${variant}`"
-    :aria-orientation="variant === 'vertical' ? 'vertical' : 'horizontal'"
+    aria-orientation="horizontal"
   >
     <button
       type="button"
@@ -61,9 +60,8 @@ const props = withDefaults(
     panelId?: string
 
     modelValue?: string | number
-    variant?: 'underline' | 'segmented' | 'vertical'
   }>(),
-  { modelValue: undefined, variant: 'underline' }
+  { modelValue: undefined }
 )
 
 const id = useId()
@@ -74,8 +72,8 @@ const onTabClick = (key: string | number) => {
 }
 async function onKeydown(event: KeyboardEvent) {
   if (!props.tabs.length) return
-  const previous = props.variant === 'vertical' ? 'ArrowUp' : 'ArrowLeft'
-  const next = props.variant === 'vertical' ? 'ArrowDown' : 'ArrowRight'
+  const previous = 'ArrowLeft'
+  const next = 'ArrowRight'
   if (![previous, next, 'Home', 'End'].includes(event.key)) return
   event.preventDefault()
   event.stopPropagation()
@@ -98,6 +96,10 @@ async function onKeydown(event: KeyboardEvent) {
 .app-tabs {
   display: flex;
   min-width: 0;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--app-border);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .app-tabs .app-tab {
@@ -117,6 +119,9 @@ async function onKeydown(event: KeyboardEvent) {
     background-color var(--transition-fast),
     box-shadow var(--transition-fast),
     border-color var(--transition-fast);
+  padding: 0.625rem 0.125rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
 }
 
 .app-tabs .app-tab:hover {
@@ -125,6 +130,7 @@ async function onKeydown(event: KeyboardEvent) {
 
 .app-tabs .app-tab.is-active {
   color: var(--color-base-content);
+  border-bottom-color: var(--color-primary);
 }
 
 .app-tabs-badge {
@@ -135,72 +141,5 @@ async function onKeydown(event: KeyboardEvent) {
   font-weight: 600;
   line-height: 1.125rem;
   color: var(--app-text-muted);
-}
-
-/* ── underline ─────────────────────────────── */
-
-.app-tabs--underline {
-  gap: var(--space-lg);
-  border-bottom: 1px solid var(--app-border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.app-tabs--underline .app-tab {
-  padding: 0.625rem 0.125rem;
-  margin-bottom: -1px;
-  border-bottom: 2px solid transparent;
-}
-
-.app-tabs--underline .app-tab.is-active {
-  border-bottom-color: var(--color-primary);
-}
-
-/* ── segmented ─────────────────────────────── */
-
-.app-tabs--segmented {
-  display: inline-flex;
-  align-self: flex-start;
-  gap: var(--segment-gap);
-  padding: var(--segment-padding);
-  max-width: 100%;
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.app-tabs--segmented .app-tab {
-  justify-content: center;
-  padding: var(--segment-option-padding);
-  border-radius: calc(var(--radius-md) - 2px);
-  font-size: var(--text-control);
-}
-
-.app-tabs--segmented .app-tab.is-active {
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-segment);
-}
-
-/* ── vertical (sidebar navigation) ─────────── */
-
-.app-tabs--vertical {
-  flex-direction: column;
-  gap: var(--segment-gap);
-}
-
-.app-tabs--vertical .app-tab {
-  width: 100%;
-  padding: 0.4375rem 0.625rem;
-  border-radius: var(--radius-md);
-}
-
-.app-tabs--vertical .app-tab:hover {
-  background-color: var(--app-hover);
-}
-
-.app-tabs--vertical .app-tab.is-active {
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
 }
 </style>

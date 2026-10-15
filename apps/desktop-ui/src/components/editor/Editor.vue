@@ -12,6 +12,7 @@
             size="sm"
             variant="ghost"
             class="view-mode-toggle"
+            :tone="showMarkup ? 'accent' : 'muted'"
             :active="showMarkup"
             :aria-pressed="showMarkup"
             :title="viewModeTitle"
@@ -143,8 +144,7 @@
           <template v-if="compact">
             <IconButton
               size="sm"
-              variant="ghost"
-              class="rail-danger"
+              variant="danger-ghost"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
               :label="t('editor.clear')"
@@ -155,7 +155,7 @@
             <IconButton
               size="sm"
               variant="ghost"
-              class="rail-accent"
+              tone="accent"
               @click="voiceRecognition"
               :title="t('editor.voiceInput')"
               :label="t('editor.voiceInput')"
@@ -164,7 +164,7 @@
             <IconButton
               size="sm"
               variant="ghost"
-              class="rail-accent"
+              tone="accent"
               @click="handleCorrection"
               :title="scoped(t('action.correction'))"
               :label="scoped(t('action.correction'))"
@@ -189,8 +189,7 @@
             />
             <IconButton
               size="sm"
-              variant="ghost"
-              class="rail-danger"
+              variant="danger-ghost"
               @click="editorInputStore.clear"
               :title="t('editor.clear')"
               :label="t('editor.clear')"
@@ -503,6 +502,7 @@ const handleCopy = async () => {
 
 <style scoped>
 .editor-root {
+  --button-ghost-color: var(--app-text-muted);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -568,13 +568,6 @@ const handleCopy = async () => {
   min-height: 0;
 }
 
-.editor-body :deep(.main-input) {
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  background-color: transparent;
-}
-
 .editor-input-area {
   position: relative;
   flex: 1;
@@ -612,34 +605,6 @@ const handleCopy = async () => {
   height: 1px;
   margin: 0.25rem 0;
   background-color: var(--app-border);
-}
-
-.editor-root :deep(.btn-ghost) {
-  color: var(--app-text-muted);
-}
-
-.editor-root :deep(.btn-ghost:hover),
-.editor-root :deep(.btn-ghost.btn-active) {
-  color: var(--color-base-content);
-}
-
-.editor-root :deep(.btn-ghost.rail-accent) {
-  color: var(--color-primary);
-}
-
-.editor-root :deep(.btn-ghost.rail-accent:hover) {
-  --btn-bg: var(--app-accent-soft);
-}
-
-.editor-root :deep(.btn-ghost.view-mode-toggle.btn-active) {
-  --btn-bg: var(--app-accent-soft);
-  color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--color-primary) 25%, transparent);
-}
-
-.editor-root :deep(.btn-ghost.rail-danger:hover) {
-  color: var(--color-error);
 }
 
 .editor-footer {

@@ -6,7 +6,7 @@
       appearance.
     </p>
     <section class="catalog-options surface ui-form-container">
-      <FieldRow label="Theme"
+      <FieldRow group label="Theme"
         ><SegmentedControl v-model="theme" label="Theme" :options="themes"
       /></FieldRow>
       <FieldRow label="High contrast"
@@ -38,6 +38,11 @@
         <Button size="sm" loading>Saving</Button>
         <Button size="xs">Extra small</Button><Button disabled>Disabled</Button>
         <IconButton label="Close" icon="mdi:close" />
+        <Button variant="ghost" tone="muted">Muted action</Button>
+        <Button variant="ghost" tone="accent" active>Active accent</Button>
+        <ShortcutButton :keys="['Enter']" size="xs" disabled variant="primary"
+          >Unavailable shortcut</ShortcutButton
+        >
       </div>
     </section>
     <section class="surface catalog-section ui-form-container">
@@ -82,6 +87,18 @@
             { id: 'text', name: 'String value', group: 'Strings' },
           ]"
       /></FieldRow>
+      <FieldRow
+        group
+        label="Connection endpoints"
+        hint="Both addresses are required"
+        disabled
+        required
+      >
+        <div class="flex flex-col gap-2 w-full">
+          <FieldInput aria-label="Primary endpoint" model-value="primary" />
+          <FieldInput aria-label="Secondary endpoint" model-value="secondary" />
+        </div>
+      </FieldRow>
       <FieldRow label="Multiline" vertical
         ><FieldTextArea v-model="text" auto-resize
       /></FieldRow>
@@ -176,6 +193,20 @@
     </section>
     <section class="surface catalog-section ui-form-container">
       <h2>States</h2>
+      <InlineNotice message="Passive guidance" />
+      <InlineNotice
+        kind="success"
+        announcement="polite"
+        message="Connection verified"
+      />
+      <InlineNotice
+        kind="error"
+        announcement="assertive"
+        message="Attachment needs attention"
+        ><Button size="xs" variant="ghost"
+          >Review attachment</Button
+        ></InlineNotice
+      >
       <StateMessage
         title="No items"
         message="Add an item to get started."
@@ -194,6 +225,30 @@
         inline
         ><Button size="xs" variant="ghost">Retry</Button></StateMessage
       >
+    </section>
+    <section class="surface catalog-section ui-form-container">
+      <h2>Previews and recording</h2>
+      <div class="catalog-preview"><TextPreview :text="previewText" /></div>
+      <div class="catalog-preview surface">
+        <TextPreview appearance="plain" :text="previewText" />
+      </div>
+      <div class="catalog-preview surface">
+        <Diff
+          appearance="plain"
+          old-text="Original text"
+          new-text="Modified text"
+          mode="unified"
+        />
+      </div>
+      <div class="catalog-preview">
+        <ParallelTextPreview
+          :left-text="previewText"
+          :right-text="previewText"
+          :editable="false"
+        />
+      </div>
+      <AudioWaveform layout="inline" :duration-ms="45000" />
+      <AudioWaveform layout="inline" is-transcribing />
     </section>
     <ConfirmModal
       :open="dialogOpen"
@@ -227,6 +282,7 @@ import { onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import BaseDialog from '../components/common/BaseDialog.vue'
 import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import Diff from '../components/common/Diff.vue'
 import DisclosureHeader from '../components/common/DisclosureHeader.vue'
 import DropdownMenu from '../components/common/DropdownMenu.vue'
 import FieldCheckbox from '../components/common/FieldCheckbox.vue'
@@ -237,14 +293,18 @@ import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import IconButton from '../components/common/IconButton.vue'
 import InlineAction from '../components/common/InlineAction.vue'
+import InlineNotice from '../components/common/InlineNotice.vue'
 import NavigationList from '../components/common/NavigationList.vue'
+import ParallelTextPreview from '../components/common/ParallelTextPreview.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
 import ShortcutButton from '../components/common/ShortcutButton.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import Tabs from '../components/common/Tabs.vue'
+import TextPreview from '../components/common/TextPreview.vue'
 import ToastContainer from '../components/common/ToastContainer.vue'
 import EditorContextMenu from '../components/editor/EditorContextMenu.vue'
+import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import { useToastStore } from '../stores/toast'
 
 const themes = [
@@ -263,6 +323,11 @@ const tabs = [
   { key: 'source', text: 'Source' },
   { key: 'result', text: 'Result' },
 ]
+const previewText = Array.from(
+  { length: 20 },
+  (_, index) => `Preview line ${index + 1}`
+).join('\n')
+
 const theme = ref('light')
 const contrast = ref(false)
 const reducedMotion = ref(false)
@@ -335,9 +400,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.ui-catalog {
-  height: 100dvh;
+:global(body:has(.ui-catalog)) {
   overflow: auto;
+}
+.ui-catalog {
+  min-height: 100dvh;
   padding: var(--space-2xl);
   background: var(--app-surface);
 }
@@ -362,5 +429,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: var(--space-sm);
   margin-block: var(--space-lg);
+}
+
+.catalog-preview {
+  height: 12rem;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

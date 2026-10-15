@@ -1,5 +1,8 @@
 <template>
-  <div
+  <component
+    :is="group ? 'fieldset' : 'div'"
+    :aria-labelledby="group ? labelId : undefined"
+    :disabled="group ? disabled : undefined"
     class="field-row"
     :class="{
       vertical,
@@ -10,7 +13,12 @@
   >
     <div class="field-row-label">
       <div class="field-row-title">
-        <label :id="labelId" :for="controlId">{{ label }}</label>
+        <component
+          :is="group ? 'span' : 'label'"
+          :id="labelId"
+          :for="group ? undefined : controlId"
+          >{{ label }}</component
+        >
         <InfoTooltip v-if="info" :text="info" />
         <slot name="info" />
       </div>
@@ -35,7 +43,7 @@
     <div class="field-row-control">
       <slot />
     </div>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -46,6 +54,7 @@ import InfoTooltip from './InfoTooltip.vue'
 
 const props = withDefaults(
   defineProps<{
+    group?: boolean
     label: string
     hint?: string
     error?: string | string[]
@@ -105,6 +114,9 @@ provide(fieldContextKey, {
 
 <style scoped>
 .field-row {
+  min-width: 0;
+  margin: 0;
+  border: 0;
   display: grid;
   grid-template-columns: var(--field-label-width) minmax(0, 1fr);
   align-items: start;

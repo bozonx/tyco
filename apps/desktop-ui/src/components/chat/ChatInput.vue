@@ -4,6 +4,7 @@
     class="main-input"
     rows="1"
     :placeholder="placeholder"
+    :aria-label="placeholder"
     :value="chatInputStore.value"
     @paste="handlePaste"
     @input="handleInput"

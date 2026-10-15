@@ -32,7 +32,12 @@
       icon="mdi:code-braces"
     />
     <slot />
-    <InfoTooltip v-if="info" :text="info" align="end" />
+    <InfoTooltip
+      v-if="info"
+      class="template-field-info"
+      :text="info"
+      align="end"
+    />
   </div>
 </template>
 
@@ -87,7 +92,7 @@ defineExpose({ insert })
   width: 100%;
 }
 
-.template-field > :deep(.info-tooltip-container) {
+.template-field-info {
   align-self: center;
 }
 

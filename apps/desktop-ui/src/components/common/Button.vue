@@ -25,7 +25,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
+import type {
+  ButtonTone,
+  ButtonVariant,
+  ControlSize,
+} from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
 const props = defineProps<{
@@ -37,6 +41,7 @@ const props = defineProps<{
   disabled?: boolean
   loading?: boolean
   square?: boolean
+  tone?: ButtonTone
 }>()
 
 const buttonClass = computed(() => {
@@ -53,6 +58,8 @@ const buttonClass = computed(() => {
     'btn-active': props.active,
     'btn-disabled': props.disabled || props.loading,
     'btn-square': props.square,
+    'btn-muted': props.tone === 'muted',
+    'btn-accent-soft': props.tone === 'accent',
   }
 })
 
@@ -80,5 +87,35 @@ const onClick = (event: MouseEvent) => {
 }
 .btn-danger-ghost:not(:disabled):hover {
   --btn-bg: color-mix(in oklab, var(--color-error) 12%, transparent);
+}
+
+.btn-ghost:not(.btn-danger-ghost) {
+  color: var(--button-ghost-color, var(--color-base-content));
+}
+.btn-ghost.btn-muted:not(.btn-danger-ghost) {
+  color: var(--app-text-muted);
+}
+.btn-ghost:not(.btn-danger-ghost):hover,
+.btn-ghost:not(.btn-danger-ghost).btn-active {
+  color: var(--color-base-content);
+}
+.btn-ghost.btn-accent-soft,
+.btn-ghost.btn-accent-soft:hover,
+.btn-ghost.btn-accent-soft.btn-active {
+  color: var(--color-primary);
+}
+.btn-accent-soft:hover,
+.btn-accent-soft.btn-active {
+  --btn-bg: var(--app-accent-soft);
+}
+.btn-accent-soft.btn-active {
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--color-primary) 25%, transparent);
+}
+.btn-ghost:disabled,
+.btn-ghost.btn-muted:disabled,
+.btn-ghost.btn-accent-soft:disabled,
+.btn-ghost.btn-danger-ghost:disabled {
+  color: var(--app-text-faint);
 }
 </style>

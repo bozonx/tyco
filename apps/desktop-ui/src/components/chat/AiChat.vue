@@ -92,176 +92,53 @@
         @cancelled="menuModalsStore.closeAll()"
         @corrected="menuModalsStore.closeAll()"
       />
-      <div v-else-if="!chatStore.selectedModel" class="chat-no-models">
-        <Icon icon="mdi:key-alert-outline" height="18" class="shrink-0" />
-        <span>{{ t('chat.noModelsHint') }}</span>
+      <InlineNotice
+        v-else-if="!chatStore.selectedModel"
+        class="chat-no-models"
+        icon="mdi:key-alert-outline"
+        :message="t('chat.noModelsHint')"
+      >
         <Button size="xs" icon="mdi:cog-outline" @click="openModelSettings">
           {{ t('chat.configureModels') }}
         </Button>
-      </div>
-      <div v-else class="chat-composer">
-        <ChatContextList />
-
-        <div
-          v-if="chatStore.importingImages"
-          class="text-sm text-muted"
-          role="status"
-        >
-          {{ t('chat.fileProcessing') }}
-        </div>
-        <div
-          v-if="chatStore.imageModelRequired"
-          class="text-sm text-error"
-          role="alert"
-        >
-          {{ t('chat.imageModelRequired') }}
-        </div>
-        <Button
-          v-if="
-            !chatStore.omitHistoryImages &&
-            !chatStore.pendingImages.length &&
-            chatStore.messages.some((message) => message.images?.length)
-          "
-          size="xs"
-          variant="ghost"
-          @click="chatStore.omitHistoryImages = true"
-        >
-          {{ t('chat.continueWithoutImages') }}
-        </Button>
-        <div
-          v-if="chatStore.omitHistoryImages"
-          class="text-sm text-muted"
-          role="status"
-        >
-          {{ t('chat.historyImagesOmitted') }}
-          <Button
-            size="xs"
-            variant="ghost"
-            @click="chatStore.omitHistoryImages = false"
-            >{{ t('chat.restoreHistoryImages') }}</Button
-          >
-        </div>
-        <div
-          v-if="chatStore.trimmedTurnCount"
-          class="text-sm text-muted"
-          role="status"
-        >
-          {{ t('chat.historyTrimmed', { count: chatStore.trimmedTurnCount }) }}
-        </div>
-        <div
-          v-if="
-            chatStore.currentChatParams.attachments?.some(
-              (item) =>
-                item.mediaType === 'application/pdf' ||
-                item.mediaType?.includes('wordprocessingml')
-            )
-          "
-          class="text-sm text-muted"
-        >
-          {{ t('chat.documentTextHint') }}
-        </div>
-        <ChatInput @send="sendMessage" />
-        <input
-          ref="filePicker"
-          type="file"
-          multiple
-          class="hidden"
-          @change="pickFiles"
-        />
-
-        <div class="chat-composer-bar">
-          <IconButton
-            size="sm"
-            variant="ghost"
-            :disabled="
-              chatStore.isGenerating || Boolean(chatStore.importingImages)
-            "
-            :title="t('chat.addFile')"
-            @click="filePicker?.click()"
-            :label="t('chat.addFile')"
-            icon="mdi:paperclip"
-          />
-          <DropdownMenu
-            size="xs"
-            class="model-picker"
-            muted
-            max-trigger-width="16rem"
-            icon="mdi:creation-outline"
-            placement="top"
-            :label="chatStore.selectedModel.name"
-            :title="t('chat.selectModel')"
-            :items="modelMenuItems"
-          />
-          <span class="composer-hint">{{ inputHint }}</span>
-          <div class="composer-actions">
-            <IconButton
-              size="sm"
-              variant="ghost"
-              :title="t('chat.voiceInput')"
-              @click="voiceInput"
-              :label="t('chat.voiceInput')"
-              icon="mdi:microphone-outline"
-            />
-            <IconButton
-              v-if="!chatStore.isGenerating"
-              size="sm"
-              :disabled="!canSend"
-              :title="t('chat.sendMessage')"
-              @click="sendMessage"
-              :label="t('chat.sendMessage')"
-              icon="mdi:arrow-up"
-            />
-            <IconButton
-              v-else
-              size="sm"
-              :title="t('chat.stop')"
-              @click="chatStore.stopGeneration()"
-              :label="t('chat.stop')"
-              icon="mdi:stop"
-            />
-          </div>
-        </div>
-      </div>
+      </InlineNotice>
+      <ChatComposer
+        v-else
+        :can-send="canSend"
+        :dragging-files="draggingFiles"
+        @send="sendMessage"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, toRaw } from 'vue'
+import { computed, onMounted, toRaw } from 'vue'
 
 import { useChatFileDrop } from '../../composables/use-chat-file-drop'
 import { useChatScroll } from '../../composables/use-chat-scroll'
-import { useChatVoiceInput } from '../../composables/use-chat-voice-input'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
-import {
-  newlineShortcut,
-  resolveSubmitKey,
-  submitShortcut,
-} from '../../lib/input-keys/input-keys'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
-import { useIpcStore } from '../../stores/ipc'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Icon from '../common/AppIcon.vue'
-import type { DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
-import ChatContextList from './ChatContextList.vue'
+import ChatComposer from './ChatComposer.vue'
 import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import type { ChatMessage } from '@tyco/shared'
 
 const chatInputStore = useChatInputStore()
-const ipcStore = useIpcStore()
 const llmStore = useLlmStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
 const { toastKey } = useToast()
-const { openChatVoiceInput } = useChatVoiceInput()
 const { t } = useI18n()
 
 const voiceParams = computed(() => {
@@ -270,15 +147,6 @@ const voiceParams = computed(() => {
 })
 const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
 
-const inputHint = computed(() => {
-  const submitKey = resolveSubmitKey(
-    ipcStore.desktopState?.userConfig?.submitKey
-  )
-  return t('chat.inputHint', {
-    send: submitShortcut(submitKey),
-    newline: newlineShortcut(submitKey),
-  })
-})
 const {
   scroller,
   pinnedToBottom,
@@ -294,12 +162,6 @@ const {
   ],
   clearInput: chatInputStore.clear,
 })
-const filePicker = ref<HTMLInputElement | null>(null)
-function pickFiles(event: Event) {
-  const input = event.target as HTMLInputElement
-  void chatStore.addFiles(Array.from(input.files || []))
-  input.value = ''
-}
 const canSend = computed(
   () =>
     (Boolean(chatInputStore.value.trim()) ||
@@ -319,19 +181,6 @@ const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
   return last?.role === 'assistant' && Boolean(last.content)
 })
-
-const modelMenuItems = computed<DropdownMenuItem[]>(() => [
-  ...chatStore.modelOptions.map((option) => ({
-    label: `${option.name} · ${option.providerLabel}${option.canUseImages ? ` · ${t('settings.vision')}` : ''}`,
-    icon: option.id === chatStore.selectedModel?.id ? 'mdi:check' : undefined,
-    action: () => chatStore.selectModel(option.id),
-  })),
-  {
-    label: t('chat.configureModels'),
-    icon: 'mdi:cog-outline',
-    action: openModelSettings,
-  },
-])
 
 // messages have no ids of their own; the object is the identity
 const messageKeys = new WeakMap<ChatMessage, number>()
@@ -382,10 +231,6 @@ async function copyMarkdownToPoint(index: number) {
     return
   }
   toastKey('chat.markdownCopied', 'info')
-}
-
-function voiceInput() {
-  openChatVoiceInput({ finishBehavior: 'confirm' })
 }
 
 const { composerRef, draggingFiles } = useChatFileDrop({
@@ -463,62 +308,13 @@ onMounted(() => {
   margin: 0 auto;
   padding: var(--space-sm) var(--space-lg) var(--space-md);
 }
-.composer-wrap.is-dragging .chat-composer {
-  outline: 2px dashed var(--color-primary);
-  outline-offset: 2px;
-}
 .drop-hint {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-xs);
   margin-bottom: var(--space-xs);
   color: var(--color-primary);
-  font-size: 0.8rem;
-}
-.chat-composer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  border: 1px solid var(--app-border);
-  border-radius: 1rem;
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-md);
-}
-.chat-composer:focus-within {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
-  box-shadow: var(--app-focus-ring);
-}
-.chat-composer-bar,
-.composer-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-.chat-composer-bar {
-  justify-content: space-between;
-}
-.model-picker {
-  min-width: 0;
-}
-.composer-actions {
-  flex-shrink: 0;
-}
-/* shown only while typing, in the space the bar has anyway */
-.composer-hint {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  color: var(--app-text-faint);
-  font-size: var(--text-micro);
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 150ms ease;
-}
-.chat-composer:focus-within .composer-hint {
-  opacity: 1;
+  font-size: var(--text-control);
 }
 .chat-no-models {
   display: flex;
@@ -529,9 +325,6 @@ onMounted(() => {
   border-radius: 1rem;
   color: var(--app-text-muted);
   font-size: var(--text-control);
-}
-.chat-no-models span {
-  flex: 1;
 }
 .scroll-to-bottom {
   position: absolute;
@@ -571,9 +364,6 @@ onMounted(() => {
   .composer-wrap {
     padding-right: var(--space-md);
     padding-left: var(--space-md);
-  }
-  .composer-hint {
-    visibility: hidden;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -66,6 +66,7 @@
 
     <template v-else-if="command.toolId === 'webhook'">
       <FieldRow
+        group
         class="action-field"
         vertical
         density="compact"

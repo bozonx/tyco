@@ -100,7 +100,7 @@ describe('PreviewMenu', () => {
 
     const alert = wrapper.find('.translation-quality-alert')
     expect(alert.exists()).toBe(true)
-    expect(alert.classes()).toContain('is-warning')
+    expect(alert.classes()).toContain('inline-notice--warning')
   })
 
   it('reads translation view mode preference from sessionState', async () => {

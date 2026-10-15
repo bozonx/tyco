@@ -39,8 +39,13 @@
 </template>
 
 <script setup lang="ts">
+import { provide } from 'vue'
+
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { previewAppearanceKey } from '../../lib/ui/preview-context'
 import KeyboardKey from './KeyboardKey.vue'
+
+provide(previewAppearanceKey, 'plain')
 
 const props = withDefaults(
   defineProps<{
@@ -148,18 +153,7 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
   border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
   background-color: var(--app-surface);
-  overflow-y: auto;
-}
-
-/* Ensure inner TextPreview or Diff expands smoothly without double frames */
-.action-overlay-preview-box :deep(pre),
-.action-overlay-preview-box :deep(.diff-container) {
-  border: none;
-  border-radius: 0;
-  background-color: transparent;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .action-overlay-bottom {

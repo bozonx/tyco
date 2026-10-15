@@ -13,7 +13,7 @@
       :variant="variant"
       :active="isOpen"
       :square="square"
-      :class="{ 'dropdown-trigger--muted': muted }"
+      :tone="tone"
       :style="{ maxWidth: maxTriggerWidth }"
       :title="title"
       :aria-expanded="isOpen"
@@ -67,7 +67,11 @@ import { nextTick, useId } from 'vue'
 
 import { usePopover } from '../../composables/use-popover'
 import { translate } from '../../lib/i18n'
-import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
+import type {
+  ButtonTone,
+  ButtonVariant,
+  ControlSize,
+} from '../../lib/ui/control-types'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
 import Icon from './AppIcon.vue'
 import Button from './Button.vue'
@@ -83,7 +87,7 @@ export interface DropdownMenuItem {
 
 withDefaults(
   defineProps<{
-    muted?: boolean
+    tone?: ButtonTone
     maxTriggerWidth?: string
     label?: string
     icon?: string
@@ -124,9 +128,3 @@ const selectItem = async (item: DropdownMenuItem) => {
   await item.action()
 }
 </script>
-
-<style scoped>
-.dropdown-trigger--muted {
-  color: var(--app-text-muted);
-}
-</style>

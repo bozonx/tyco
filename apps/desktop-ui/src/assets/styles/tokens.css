@@ -57,6 +57,8 @@
   --text-control: 0.8125rem;
   --text-body: 0.875rem;
   --text-title: 1rem;
+  --preview-font-size: var(--text-title);
+  --preview-line-height: 1.6;
   --control-size-xs: 1.5rem;
   --control-size-sm: 2rem;
   --control-size-md: 2.5rem;

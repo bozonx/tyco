@@ -59,6 +59,33 @@ describe('LLM settings cards', () => {
     )
   })
 
+  it('updates model fields through the model editor and preserves invalid numeric drafts', async () => {
+    const { llm, localCard, wrapper } = setup()
+    const model = llm.models.find((item) => item.providerId === 'local')!
+    const card = localCard()
+    await card.get('.disclosure-header').trigger('click')
+    const row = card.get('.model-row')
+    const inputs = row.findAll('input')
+    await inputs[0].setValue('Local chat model')
+    await inputs[1].setValue('custom-model')
+    expect(model.name).toBe('Local chat model')
+    expect(model.providerModelId).toBe('custom-model')
+    await row.get('.advanced-toggle button').trigger('click')
+    await row.get('input[type="checkbox"]').setValue(true)
+    expect(model.canUseImages).toBe(true)
+    const temperature = row.get('input[type="number"]')
+    const previousTemperature = model.temperature
+    await temperature.setValue('3')
+    expect(temperature.attributes('aria-invalid')).toBe('true')
+    expect(model.temperature).toBe(previousTemperature)
+    await temperature.setValue('0.7')
+    expect(model.temperature).toBe(0.7)
+    expect(temperature.attributes('aria-invalid')).toBeUndefined()
+    await temperature.setValue('')
+    expect(model.temperature).toBeUndefined()
+    wrapper.unmount()
+  })
+
   it('saves a key using the updated provider origin and clears its draft', async () => {
     const { localCard } = setup()
     const card = localCard()

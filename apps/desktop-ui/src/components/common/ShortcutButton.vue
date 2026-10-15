@@ -41,10 +41,12 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 
 <style scoped>
 .shortcut {
+  --key-size: 1.75rem;
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  width: 100%;
+  width: var(--shortcut-width, 100%);
+  flex: var(--shortcut-flex, initial);
   max-width: var(--shortcut-max-width, 20rem);
   min-width: 0;
   padding: 0.375rem 0.625rem 0.375rem 0.375rem;
@@ -72,22 +74,15 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 .shortcut.is-primary:disabled {
   border-color: var(--app-border-subtle);
   background-color: color-mix(in oklab, var(--app-surface) 60%, transparent);
-}
 
-.shortcut.is-primary:disabled .shortcut-keys :deep(.kbd) {
-  border-color: var(--app-border);
-  color: var(--app-text-muted);
+  --key-border-color: var(--app-border);
+  --key-color: var(--app-text-muted);
 }
 
 .shortcut-keys {
   display: inline-flex;
   gap: 0.25rem;
   flex-shrink: 0;
-}
-
-.shortcut-keys :deep(.kbd) {
-  min-width: 1.75rem;
-  height: 1.75rem;
 }
 
 .shortcut-icon {
@@ -104,6 +99,13 @@ const emit = defineEmits<{ (e: 'click'): void }>()
 .shortcut.is-primary {
   border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
   background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+
+  --key-border-color: color-mix(
+    in oklab,
+    var(--color-primary) 60%,
+    transparent
+  );
+  --key-color: var(--color-primary);
 }
 
 .shortcut.is-primary:hover:not(:disabled) {
@@ -111,30 +113,20 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
 }
 
-.shortcut.is-primary .shortcut-keys :deep(.kbd) {
-  border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
-  color: var(--color-primary);
-}
-
 .shortcut.is-sm {
   gap: 0.375rem;
   padding: 0.2rem 0.375rem;
   font-size: var(--text-control);
   max-width: none;
-}
 
-.shortcut.is-sm .shortcut-keys :deep(.kbd) {
-  min-width: 1.4rem;
-  height: 1.4rem;
-  font-size: var(--text-caption);
+  --key-size: 1.4rem;
+  --key-font-size: var(--text-caption);
 }
 
 .shortcut.is-xs {
   padding: var(--space-xs);
   font-size: var(--text-caption);
-}
-.shortcut.is-xs .shortcut-keys :deep(.kbd) {
-  min-width: var(--control-size-xs);
-  height: var(--control-size-xs);
+
+  --key-size: var(--control-size-xs);
 }
 </style>

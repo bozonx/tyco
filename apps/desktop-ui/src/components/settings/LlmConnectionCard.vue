@@ -72,142 +72,15 @@
         >
           {{ t('settings.noConnectionModels') }}
         </div>
-        <div
+        <LlmModelEditor
           v-for="model in modelsFor(provider.id)"
           :key="model.id"
-          class="model-row"
-        >
-          <div class="model-row-header">
-            <div class="flex items-center gap-2 min-w-0">
-              <Icon icon="mdi:cube-outline" height="17" class="text-muted" />
-              <span class="font-medium truncate">{{ modelLabel(model) }}</span>
-            </div>
-            <IconButton
-              size="sm"
-              variant="danger-ghost"
-              icon="mdi:trash-can-outline"
-              :label="t('settings.removeModel')"
-              @click="removeModel(llm, model.id)"
-            />
-          </div>
-          <FieldRow :label="t('settings.name')">
-            <FieldInput
-              :model-value="model.name || ''"
-              @update:model-value="model.name = $event"
-            />
-          </FieldRow>
-          <FieldRow :label="t('settings.modelId')">
-            <FieldInput
-              :model-value="model.providerModelId"
-              :placeholder="modelPlaceholder(model.providerId)"
-              @update:model-value="model.providerModelId = $event"
-            />
-          </FieldRow>
-          <div class="advanced-toggle">
-            <Button
-              size="xs"
-              variant="ghost"
-              :icon="
-                expandedModelIds.has(model.id)
-                  ? 'mdi:chevron-up'
-                  : 'mdi:tune-variant'
-              "
-              @click="toggle(expandedModelIds, model.id)"
-            >
-              {{
-                expandedModelIds.has(model.id)
-                  ? t('settings.hideAdvanced')
-                  : t('settings.showAdvanced')
-              }}
-            </Button>
-          </div>
-          <template v-if="expandedModelIds.has(model.id)">
-            <FieldRow :label="t('settings.vision')">
-              <FieldCheckbox
-                :model-value="supportsImages(model)"
-                @update:model-value="model.canUseImages = $event"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.temperature')"
-              :error="
-                numberErrors[`${model.id}:temperature`]
-                  ? t('settings.numberTemperatureInvalid')
-                  : undefined
-              "
-            >
-              <FieldNumber
-                min="0"
-                max="2"
-                step="0.1"
-                :model-value="
-                  numberDrafts[`${model.id}:temperature`] ??
-                  model.temperature ??
-                  ''
-                "
-                :aria-invalid="
-                  numberErrors[`${model.id}:temperature`] || undefined
-                "
-                @update:model-value="setNumber(model, 'temperature', $event)"
-                @invalid-input="numberErrors[`${model.id}:temperature`] = true"
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.maxTokens')"
-              :error="
-                numberErrors[`${model.id}:maxOutputTokens`]
-                  ? t('settings.numberTokensInvalid')
-                  : undefined
-              "
-            >
-              <FieldNumber
-                min="1"
-                :model-value="
-                  numberDrafts[`${model.id}:maxOutputTokens`] ??
-                  model.maxOutputTokens ??
-                  ''
-                "
-                :aria-invalid="
-                  numberErrors[`${model.id}:maxOutputTokens`] || undefined
-                "
-                :placeholder="t('settings.providerDefault')"
-                @update:model-value="
-                  setNumber(model, 'maxOutputTokens', $event)
-                "
-                @invalid-input="
-                  numberErrors[`${model.id}:maxOutputTokens`] = true
-                "
-              />
-            </FieldRow>
-            <FieldRow
-              :label="t('settings.contextSize')"
-              :error="
-                numberErrors[`${model.id}:contextWindowTokens`]
-                  ? t('settings.numberTokensInvalid')
-                  : undefined
-              "
-            >
-              <FieldNumber
-                min="1"
-                :model-value="
-                  numberDrafts[`${model.id}:contextWindowTokens`] ??
-                  model.contextWindowTokens ??
-                  ''
-                "
-                :aria-invalid="
-                  numberErrors[`${model.id}:contextWindowTokens`] || undefined
-                "
-                :placeholder="t('settings.providerDefault')"
-                @update:model-value="
-                  setNumber(model, 'contextWindowTokens', $event)
-                "
-                @invalid-input="
-                  numberErrors[`${model.id}:contextWindowTokens`] = true
-                "
-              />
-            </FieldRow>
-          </template>
-        </div>
+          :model="model"
+          :placeholder="modelPlaceholder(model.providerId)"
+          :settings="settings"
+          @remove="removeModel(llm, $event)"
+          @update="Object.assign(model, $event)"
+        />
       </div>
 
       <div class="connection-actions">
@@ -227,18 +100,18 @@
               : t('settings.checkConnection')
           }}
         </Button>
-        <span
+        <InlineNotice
           v-if="connectionCheckStatusByProviderId[provider.id] === 'success'"
-          class="connection-result success-text"
-        >
-          {{ t('settings.connectionAvailable') }}
-        </span>
-        <span
+          kind="success"
+          announcement="polite"
+          :message="t('settings.connectionAvailable')"
+        />
+        <InlineNotice
           v-if="connectionCheckStatusByProviderId[provider.id] === 'error'"
-          class="connection-result error-text"
-        >
-          {{ connectionErrors[provider.id] }}
-        </span>
+          kind="error"
+          announcement="polite"
+          :message="connectionErrors[provider.id]"
+        />
         <Button
           v-if="provider.type === 'openai-compatible'"
           size="sm"
@@ -257,17 +130,14 @@
 import { useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { supportsImages } from '../../lib/llm/llm-catalog'
-import { modelLabel, removeModel } from '../../lib/llm/llm-config'
+import { removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
-import Icon from '../common/AppIcon.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
-import IconButton from '../common/IconButton.vue'
+import InlineNotice from '../common/InlineNotice.vue'
+import LlmModelEditor from './LlmModelEditor.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import type { LlmConfig, LlmProvider } from '@tyco/shared'
 
@@ -288,16 +158,12 @@ const { t } = useI18n()
 const bodyId = useId()
 const {
   keyDrafts,
-  expandedModelIds,
   connectionCheckStatusByProviderId,
   connectionErrors,
   saveKey,
   removeKey,
   addModelToProvider,
   checkConnection,
-  setNumber,
-  numberDrafts,
-  numberErrors,
 } = props.settings
 const MODEL_PLACEHOLDERS: Record<string, string> = {
   google: 'gemini-2.5-flash',
@@ -352,10 +218,6 @@ function keyHint(provider: LlmProvider) {
     ? t('settings.apiKeyBoundTo', { origin: origins.join(', ') })
     : t('settings.apiKeyOptional')
 }
-function toggle(set: Set<string>, id: string) {
-  if (set.has(id)) set.delete(id)
-  else set.add(id)
-}
 </script>
 <style scoped>
 .connection-card {
@@ -374,7 +236,6 @@ function toggle(set: Set<string>, id: string) {
   border-top: 1px solid var(--app-border-subtle);
 }
 .models-header,
-.model-row-header,
 .connection-actions {
   display: flex;
   align-items: center;
@@ -390,33 +251,9 @@ function toggle(set: Set<string>, id: string) {
   font-size: var(--text-control);
   text-align: center;
 }
-.model-row {
-  overflow: hidden;
-  margin-top: var(--space-md);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
-}
-.model-row-header {
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--app-border-subtle);
-  background: var(--app-surface-raised);
-}
-.advanced-toggle {
-  padding: var(--space-xs) var(--space-md) var(--space-sm);
-  text-align: right;
-}
 .connection-actions {
   justify-content: flex-start;
   padding: var(--space-md) var(--space-lg);
   border-top: 1px solid var(--app-border-subtle);
-}
-.connection-result {
-  font-size: var(--text-caption);
-}
-.success-text {
-  color: var(--color-success);
-}
-.error-text {
-  color: var(--color-error);
 }
 </style>

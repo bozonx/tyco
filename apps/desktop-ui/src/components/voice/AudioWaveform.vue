@@ -1,7 +1,7 @@
 <template>
   <div
     class="audio-waveform-container"
-    :class="{ compact }"
+    :class="{ compact, 'is-inline': layout === 'inline' }"
     data-testid="audio-waveform"
   >
     <!-- Transcribing mode -->
@@ -50,6 +50,7 @@ const props = withDefaults(
     peak?: number
     durationMs?: number
     isTranscribing?: boolean
+    layout?: 'stacked' | 'inline'
     compact?: boolean
   }>(),
   { level: 0, peak: 0, durationMs: 0, isTranscribing: false, compact: true }
@@ -277,5 +278,30 @@ onUnmounted(() => {
 
 .audio-waveform-container:not(.compact) .transcribing-label {
   font-size: var(--text-title);
+}
+
+.audio-waveform-container.is-inline {
+  padding: 0;
+  border-bottom: none;
+  background-color: transparent;
+}
+.is-inline .listening-state {
+  flex-direction: row;
+  gap: var(--space-sm);
+}
+.is-inline .waveform-visualizer {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 28px;
+  gap: 2px;
+}
+.is-inline .waveform-meta {
+  width: auto;
+  flex-shrink: 0;
+  gap: var(--space-sm);
+}
+.is-inline .transcribing-state {
+  min-height: 0;
+  padding: 0;
 }
 </style>

@@ -19,42 +19,11 @@
       <template #messages><FieldIssues :issues="nameIssues" /></template>
     </FieldRow>
 
-    <section class="command-group">
-      <h4 class="command-group-title">{{ t('voiceCommands.title') }}</h4>
-      <FieldCheckbox
-        :model-value="command.isVoiceEnabled"
-        :label="t('voiceCommands.enabled')"
-        @update:model-value="update({ isVoiceEnabled: $event })"
-      />
-      <template v-if="command.isVoiceEnabled">
-        <FieldRow
-          class="command-field"
-          vertical
-          density="compact"
-          :label="t('voiceCommands.phrases')"
-        >
-          <FieldTextArea
-            :model-value="command.phrases.join('\n')"
-            @update:model-value="update({ phrases: $event.split('\n') })"
-          />
-        </FieldRow>
-        <p v-for="phrase in voicePhrases" :key="phrase" class="command-hint">
-          {{ phrase }}
-        </p>
-        <p v-if="voiceConflicts.length" class="command-warning">
-          {{ t('voiceCommands.conflicts') }}: {{ voiceConflicts.join(', ') }}
-        </p>
-        <FieldRow
-          class="command-field"
-          vertical
-          density="compact"
-          :label="t('voiceCommands.try')"
-        >
-          <FieldInput v-model="voiceTrial" />
-        </FieldRow>
-        <p v-if="voiceTrial" class="command-hint">{{ voiceTrialResult }}</p>
-      </template>
-    </section>
+    <CommandVoiceFields
+      :command="command"
+      :user-config="userConfig"
+      @update="update"
+    />
 
     <!-- focusout: a command left without a name takes one from what it runs -->
     <div class="command-tool-fields" @focusout="suggestName">
@@ -239,12 +208,6 @@ import {
 } from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
-import { createBuiltInVoiceCommands } from '../../lib/voice-commands/built-in-voice-commands'
-import {
-  compileVoiceRoutes,
-  findVoiceConflicts,
-  resolveVoice,
-} from '../../lib/voice-commands/voice-resolver'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
@@ -258,6 +221,7 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandTestRun from './CommandTestRun.vue'
+import CommandVoiceFields from './CommandVoiceFields.vue'
 import CustomActionFields from './CustomActionFields.vue'
 import FieldIssues from './FieldIssues.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
@@ -291,65 +255,6 @@ const { toastKey } = useToast()
 const ipcStore = useIpcStore()
 
 const toolsStore = useToolsStore()
-const voiceTrial = ref('')
-const voiceRoutes = computed(() =>
-  compileVoiceRoutes(
-    [
-      ...createBuiltInVoiceCommands(toolsStore, t),
-      ...(
-        props.userConfig?.commands ??
-        ipcStore.desktopState.userConfig.commands ??
-        []
-      ).filter((item) => item.id !== props.command.id),
-      props.command,
-    ],
-    toolsStore
-  )
-)
-const voicePhrases = computed(() => [
-  ...new Set(
-    voiceRoutes.value
-      .filter((route) => route.commandId === props.command.id)
-      .map((route) =>
-        [
-          route.phrase,
-          ...route.parameters.map((parameter) =>
-            parameter.variants.join(' / ')
-          ),
-        ].join(' ')
-      )
-  ),
-])
-const voiceConflicts = computed(() =>
-  findVoiceConflicts(voiceRoutes.value, props.command.id)
-)
-const voiceTrialResult = computed(() => {
-  const result = resolveVoice(voiceRoutes.value, voiceTrial.value)
-  if (result.kind === 'parameter-error')
-    return t('voiceCommands.parameterError')
-  if (result.kind === 'incomplete') return t('voiceCommands.incomplete')
-  if (result.kind === 'none') return t('voiceCommands.none')
-  const candidates = result.candidates
-    .map((candidate) => {
-      const command = (
-        props.userConfig?.commands ?? ipcStore.desktopState.userConfig.commands
-      ).find((item) => item.id === candidate.commandId)
-      const builtIn = createBuiltInVoiceCommands(toolsStore, t).find(
-        (item) => item.id === candidate.commandId
-      )
-      const label = command
-        ? commandLabel(command)
-        : builtIn
-          ? commandLabel(builtIn)
-          : candidate.commandId
-      const parameters = Object.values(candidate.parameters).join(', ')
-      return `${label}${parameters ? ` (${parameters})` : ''}: ${candidate.text}`
-    })
-    .join(' / ')
-  return result.kind === 'ambiguous'
-    ? `${t('voiceCommands.choose')}: ${candidates}`
-    : candidates
-})
 const tool = computed(() => commandTool(props.command, toolsStore))
 /** A script or a webhook: its settings have an editor of their own */
 const customActionTool = computed(

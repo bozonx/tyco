@@ -113,6 +113,7 @@ function openHistory() {
 
 <style scoped>
 .app-topbar {
+  --button-ghost-color: var(--app-text-muted);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -154,14 +155,5 @@ function openHistory() {
   color: var(--color-base-content);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-segment);
-}
-
-.app-topbar :deep(.btn-ghost) {
-  color: var(--app-text-muted);
-}
-
-.app-topbar :deep(.btn-ghost:hover),
-.app-topbar :deep(.btn-ghost.btn-active) {
-  color: var(--color-base-content);
 }
 </style>

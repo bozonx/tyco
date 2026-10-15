@@ -56,6 +56,7 @@
       <FieldRow
         v-for="field in tool.configFields ?? []"
         :key="field.name"
+        :group="field.type === 'sortable-checklist'"
         :label="fieldLabel(field)"
         vertical
         density="compact"

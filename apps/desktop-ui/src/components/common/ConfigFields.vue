@@ -3,6 +3,7 @@
     <FieldRow
       v-for="item in fields"
       :key="item.name"
+      :group="item.type === 'sortable-checklist'"
       :label="configFieldLabel(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >

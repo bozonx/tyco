@@ -1,6 +1,6 @@
 <template>
   <div
-    v-bind="controlAttrs()"
+    v-bind="groupAttrs()"
     class="segmented-control"
     :class="{ compact, 'hide-labels': hideLabelsOnSmallScreens }"
     role="radiogroup"
@@ -50,6 +50,15 @@ const controlAttrs = useFieldControl({
 })
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: T): void }>()
+
+function groupAttrs() {
+  const { disabled, required, ...attrs } = controlAttrs()
+  return {
+    ...attrs,
+    'aria-disabled': disabled || undefined,
+    'aria-required': required || undefined,
+  }
+}
 
 function selectOption(id: T) {
   emit('update:modelValue', id)
