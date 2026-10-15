@@ -1,13 +1,15 @@
 <template>
-  <textarea
+  <FieldTextArea
     ref="textareaRef"
     class="main-input"
-    rows="1"
+    appearance="plain"
+    auto-resize
+    :max-auto-height="192"
     :placeholder="placeholder"
     :aria-label="placeholder"
-    :value="chatInputStore.value"
+    :model-value="chatInputStore.value"
     @paste="handlePaste"
-    @input="handleInput"
+    @update:model-value="handleInput"
     @keydown="handleKeydown"
     @blur="handleBlur"
   />
@@ -17,19 +19,20 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { useTextareaAutosize } from '../../composables/use-textarea-autosize'
 import {
   resolveInputKeyAction,
   resolveSubmitKey,
 } from '../../lib/input-keys/input-keys'
+import type { TextControl } from '../../lib/ui/text-control'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
 import { useIpcStore } from '../../stores/ipc'
+import FieldTextArea from '../common/FieldTextArea.vue'
 
 const emit = defineEmits<{ (e: 'send'): void }>()
 const chatInputStore = useChatInputStore()
 const ipcStore = useIpcStore()
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const textareaRef = ref<TextControl | null>(null)
 const { t } = useI18n()
 const chatStore = useChatStore()
 /** Tells that the question will be about the attached text */
@@ -39,16 +42,9 @@ const placeholder = computed(() =>
     : t('input.textPlaceholder')
 )
 
-const { resize } = useTextareaAutosize(
-  textareaRef,
-  () => chatInputStore.value,
-  () => ({ enabled: true, maxHeight: 192 })
-)
-
 onMounted(async () => {
   await nextTick()
   chatInputStore.requestFocus()
-  resize()
 })
 
 watch(
@@ -61,7 +57,7 @@ watch(
     const caret = chatInputStore.takePendingCaret()
     if (caret !== null) {
       // the value watcher has not updated the textarea yet
-      void nextTick(() => textarea.setSelectionRange(caret, caret))
+      void nextTick(() => textarea.select(caret, caret))
     }
   }
 )
@@ -78,9 +74,8 @@ function handlePaste(event: ClipboardEvent) {
   void chatStore.addFiles(files)
 }
 
-function handleInput(event: Event) {
-  chatInputStore.setValue((event.target as HTMLTextAreaElement).value)
-  resize()
+function handleInput(value: string) {
+  chatInputStore.setValue(value)
 }
 
 // a click on the voice button takes the focus away; its text goes here
@@ -113,7 +108,6 @@ function handleKeydown(event: KeyboardEvent) {
   resize: none;
   overflow-y: auto;
   border: 0;
-  outline: 0;
   background: transparent;
   color: var(--color-base-content);
   font: inherit;

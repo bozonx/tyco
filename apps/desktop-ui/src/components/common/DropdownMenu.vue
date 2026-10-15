@@ -37,34 +37,37 @@
       />
     </Button>
 
-    <MenuSurface
-      v-if="isOpen"
-      class="dropdown-panel absolute min-w-44 max-w-80 max-h-72 overflow-y-auto"
-      :id="menuId"
-      role="menu"
-      :aria-label="label ?? title ?? translate('common.more')"
-      @keydown="onMenuKeydown"
-      :class="[
-        placement === 'top' ? 'bottom-full top-auto mb-1' : 'top-full mt-1',
-        align === 'right' ? 'right-0 left-auto' : 'left-0',
-      ]"
-    >
-      <MenuItem
-        v-for="(item, index) in items"
-        :key="index"
-        class="dropdown-item"
-        :label="item.label"
-        :icon="item.icon"
-        :danger="item.danger"
-        @click="selectItem(item)"
-      />
-    </MenuSurface>
+    <Teleport to="body" :disabled="!canTeleport">
+      <MenuSurface
+        v-if="isOpen"
+        ref="surfaceRef"
+        :style="panelStyle"
+        :data-theme="panelTheme"
+        @focusout="onFocusout"
+        class="dropdown-panel min-w-44 max-w-80 max-h-72 overflow-y-auto"
+        :id="menuId"
+        role="menu"
+        :aria-label="label ?? title ?? translate('common.more')"
+        @keydown="onMenuKeydown"
+      >
+        <MenuItem
+          v-for="(item, index) in items"
+          :key="index"
+          class="dropdown-item"
+          :label="item.label"
+          :icon="item.icon"
+          :danger="item.danger"
+          @click="selectItem(item)"
+        />
+      </MenuSurface>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, useId } from 'vue'
+import { computed, nextTick, ref, useId, watchEffect } from 'vue'
 
+import { useAnchoredPanel } from '../../composables/use-anchored-panel'
 import { usePopover } from '../../composables/use-popover'
 import { translate } from '../../lib/i18n'
 import type {
@@ -72,6 +75,7 @@ import type {
   ButtonVariant,
   ControlSize,
 } from '../../lib/ui/control-types'
+import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
 import Icon from './AppIcon.vue'
 import Button from './Button.vue'
@@ -85,7 +89,7 @@ export interface DropdownMenuItem {
   action: () => void | Promise<void>
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     tone?: ButtonTone
     maxTriggerWidth?: string
@@ -104,13 +108,40 @@ withDefaults(
 )
 
 const menuId = useId()
-const { isOpen, containerRef, triggerRef, close, onFocusout, onEscape } =
-  usePopover()
+const {
+  isOpen,
+  containerRef,
+  triggerRef,
+  panelRef,
+  close,
+  onFocusout,
+  onEscape,
+} = usePopover()
+
+const surfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
+watchEffect(() => {
+  panelRef.value = surfaceRef.value?.element ?? null
+})
+const canTeleport = computed(() => !containerRef.value?.closest('dialog'))
+const {
+  style: panelStyle,
+  theme: panelTheme,
+  updatePosition,
+} = useAnchoredPanel({
+  isOpen: () => isOpen.value,
+  anchor: () => containerRef.value?.querySelector('button') ?? null,
+  panel: () => panelRef.value,
+  placement: () => props.placement ?? 'bottom',
+  align: () => (props.align === 'right' ? 'end' : 'start'),
+})
 
 async function openAndFocus(index: number) {
   isOpen.value = true
   await nextTick()
-  const items = menuButtons(containerRef.value)
+  panelRef.value = surfaceRef.value?.element ?? null
+  updatePosition()
+  await nextTick()
+  const items = menuButtons(panelRef.value)
   items[index]?.focus()
 }
 function toggleMenu() {
@@ -118,7 +149,17 @@ function toggleMenu() {
   else void openAndFocus(0)
 }
 function onMenuKeydown(event: KeyboardEvent) {
-  if (focusMenuItem(containerRef.value, event.key)) {
+  if (event.key === 'Tab') {
+    event.preventDefault()
+    const trigger = containerRef.value?.querySelector('button')
+    if (event.shiftKey) close(true)
+    else {
+      if (trigger) focusAfterTrigger(trigger, panelRef.value)
+      close()
+    }
+    return
+  }
+  if (focusMenuItem(panelRef.value, event.key)) {
     event.preventDefault()
     event.stopPropagation()
   }
@@ -128,3 +169,10 @@ const selectItem = async (item: DropdownMenuItem) => {
   await item.action()
 }
 </script>
+
+<style scoped>
+.dropdown-panel {
+  max-width: min(20rem, calc(100vw - 1rem));
+  max-height: min(18rem, calc(100dvh - 1rem));
+}
+</style>

@@ -7,35 +7,7 @@
         <slot name="search" />
       </div>
       <div v-if="items.length > 0" class="history-toolbar-col">
-        <template v-if="confirmingClear">
-          <span class="text-sm">
-            {{ t('history.clearConfirm', { count: totalCount }) }}
-          </span>
-          <span class="history-toolbar-buttons">
-            <Button size="xs" variant="ghost" @click="confirmingClear = false">
-              {{ t('common.cancel') }}
-            </Button>
-            <Button
-              size="xs"
-              icon="mdi:trash-can-outline"
-              class="confirm-clear-btn"
-              @click="confirmClear"
-            >
-              {{ t('history.clearConfirmButton') }}
-            </Button>
-          </span>
-        </template>
-        <template v-else>
-          <Button
-            size="xs"
-            variant="ghost"
-            icon="mdi:trash-can-outline"
-            class="clear-btn"
-            @click="confirmingClear = true"
-          >
-            {{ t('history.clear') }}
-          </Button>
-        </template>
+        <HistoryClearActions :total-count="totalCount" @clear="emit('clear')" />
       </div>
     </div>
 
@@ -54,136 +26,18 @@
             {{ group.labelKey ? t(group.labelKey) : group.label }}
           </h3>
           <div class="history-group-items">
-            <div
+            <HistoryListItemView
               v-for="item in group.items"
               :key="item.id"
-              class="history-item"
-              :data-history-id="item.id"
-            >
-              <div
-                v-if="item.meta || item.time || visibleActions(item).length"
-                class="history-item-header"
-              >
-                <div v-if="item.meta || item.time" class="history-meta">
-                  <template v-if="item.meta">
-                    <span class="history-meta-badge">
-                      <Icon :icon="item.meta.icon" height="14" />
-                      <span>{{ item.meta.label }}</span>
-                    </span>
-                    <span v-if="item.meta.note" class="history-meta-note">
-                      <Icon icon="mdi:check" height="12" />
-                      {{ item.meta.note }}
-                    </span>
-                  </template>
-                  <span v-if="item.time" class="history-date">
-                    <span
-                      v-if="item.meta"
-                      class="history-meta-divider"
-                      aria-hidden="true"
-                      >•</span
-                    >
-                    <time
-                      :datetime="new Date(item.time).toISOString()"
-                      :title="formatHistoryDateTime(item.time, locale)"
-                    >
-                      {{ formatHistoryTime(item.time, locale) }}
-                    </time>
-                  </span>
-                </div>
-
-                <div
-                  v-if="visibleActions(item).length"
-                  class="history-item-actions"
-                >
-                  <IconButton
-                    v-for="action in visibleActions(item)"
-                    :key="action.id"
-                    size="xs"
-                    :title="action.title"
-                    :variant="action.danger ? 'danger-ghost' : 'ghost'"
-                    tone="muted"
-                    @click="emit('action', action.id, item)"
-                    :label="action.title"
-                    :icon="action.icon"
-                  />
-                </div>
-              </div>
-
-              <div class="history-content">
-                <div
-                  v-if="item.value"
-                  class="history-text-value"
-                  :class="{ expanded: expanded.has(item.id) }"
-                >
-                  {{ item.value }}
-                </div>
-                <div v-else class="text-faint italic">
-                  {{ t('common.empty') }}
-                </div>
-
-                <button
-                  v-if="isLong(item)"
-                  type="button"
-                  class="history-expand-toggle"
-                  @click="toggleExpanded(item)"
-                >
-                  <span>
-                    {{
-                      expanded.has(item.id)
-                        ? t('history.collapse')
-                        : t('history.expand')
-                    }}
-                  </span>
-                  <Icon
-                    :icon="
-                      expanded.has(item.id)
-                        ? 'mdi:chevron-up'
-                        : 'mdi:chevron-down'
-                    "
-                    height="14"
-                  />
-                </button>
-
-                <div v-if="item.original" class="history-original">
-                  <button
-                    type="button"
-                    class="history-original-toggle"
-                    :aria-expanded="originalShown.has(item.id)"
-                    @click="toggleOriginal(item)"
-                  >
-                    <Icon
-                      :icon="
-                        originalShown.has(item.id)
-                          ? 'mdi:chevron-down'
-                          : 'mdi:chevron-right'
-                      "
-                      height="14"
-                    />
-                    <span>{{ item.original.label }}</span>
-                  </button>
-                  <div
-                    v-if="originalShown.has(item.id)"
-                    class="history-original-body"
-                  >
-                    <div class="history-original-text">
-                      {{ item.original.text }}
-                    </div>
-                    <div class="history-original-actions">
-                      <IconButton
-                        v-for="action in originalActions"
-                        :key="action.id"
-                        size="xs"
-                        variant="ghost"
-                        :title="action.title"
-                        @click="emit('action', action.id, item)"
-                        :label="action.title"
-                        :icon="action.icon"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              :item="item"
+              :expanded="expandedIds.has(item.id)"
+              :original-shown="originalShownIds.has(item.id)"
+              @toggle-expanded="toggleItem(expandedIds, item.id)"
+              @toggle-original="toggleItem(originalShownIds, item.id)"
+              :actions="actions"
+              :original-actions="originalActions"
+              @action="(actionId, item) => emit('action', actionId, item)"
+            />
           </div>
         </section>
       </div>
@@ -192,41 +46,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import {
-  formatHistoryDateTime,
-  formatHistoryTime,
-  groupByDay,
-} from '../../lib/history/history-list'
-import Icon from '../common/AppIcon.vue'
-import Button from '../common/Button.vue'
-import IconButton from '../common/IconButton.vue'
+import { groupByDay } from '../../lib/history/history-list'
+import type {
+  HistoryListAction,
+  HistoryListItem,
+} from '../../lib/history/history-list-types'
 import StateMessage from '../common/StateMessage.vue'
+import HistoryClearActions from './HistoryClearActions.vue'
+import HistoryListItemView from './HistoryListItem.vue'
 
 const { t, locale } = useI18n()
 
-export interface HistoryListItem {
-  id: string
-  value: string
-  /** Why the entry is in the history, shown above the text. */
-  meta?: { icon: string; label: string; note?: string }
-  /** The text `value` was made from, shown collapsed under it. */
-  original?: { label: string; text: string }
-  /** Unix time in milliseconds; 0 or missing when unknown. */
-  time?: number
-  /** Additional localized terms included in search. */
-  searchText?: string
-}
-
-export interface HistoryListAction {
-  id: string
-  icon: string
-  title: string
-  danger?: boolean
-  isVisible?: (item: HistoryListItem) => boolean
-}
+export type {
+  HistoryListItem,
+  HistoryListAction,
+} from '../../lib/history/history-list-types'
 
 const emit = defineEmits<{
   (e: 'open', item: HistoryListItem): void
@@ -257,9 +94,12 @@ const props = withDefaults(
 )
 
 const scroller = ref<HTMLElement | null>(null)
-const confirmingClear = ref(false)
-const expanded = ref(new Set<string>())
-const originalShown = ref(new Set<string>())
+const expandedIds = ref(new Set<string>())
+const originalShownIds = ref(new Set<string>())
+function toggleItem(items: Set<string>, id: string) {
+  if (items.has(id)) items.delete(id)
+  else items.add(id)
+}
 
 const filtered = computed(() => {
   const query = props.searchQuery?.trim().toLowerCase()
@@ -277,44 +117,6 @@ const filtered = computed(() => {
 const groups = computed(() =>
   groupByDay(filtered.value, (item) => item.time ?? 0, Date.now(), locale.value)
 )
-
-watch(
-  () => props.items.length,
-  (length) => {
-    if (length === 0) confirmingClear.value = false
-  }
-)
-
-function visibleActions(item: HistoryListItem) {
-  return props.actions.filter((action) => action.isVisible?.(item) ?? true)
-}
-
-function isLong(item: HistoryListItem) {
-  if (!item.value) return false
-  return item.value.length > 200 || item.value.split('\n').length > 3
-}
-
-function toggled(set: Set<string>, id: string) {
-  const next = new Set(set)
-
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-
-  return next
-}
-
-function toggleExpanded(item: HistoryListItem) {
-  expanded.value = toggled(expanded.value, item.id)
-}
-
-function toggleOriginal(item: HistoryListItem) {
-  originalShown.value = toggled(originalShown.value, item.id)
-}
-
-function confirmClear() {
-  confirmingClear.value = false
-  emit('clear')
-}
 </script>
 
 <style scoped>
@@ -348,25 +150,6 @@ function confirmClear() {
   margin-left: auto;
 }
 
-.history-toolbar-buttons {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.clear-btn {
-  color: var(--app-text-muted);
-}
-
-.clear-btn:hover {
-  color: var(--color-error);
-}
-
-.confirm-clear-btn {
-  color: var(--color-error-content);
-  background-color: var(--color-error);
-  border-color: var(--color-error);
-}
-
 .history-items {
   flex: 1;
   min-height: 0;
@@ -393,197 +176,5 @@ function confirmClear() {
   gap: var(--space-xs);
   margin: 0;
   padding: 0;
-}
-
-.history-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--app-border-subtle);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.history-item:hover {
-  background-color: var(--app-hover);
-  border-color: var(--app-border);
-}
-
-.history-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  min-height: 1.5rem;
-  margin-bottom: var(--space-2xs);
-}
-
-.history-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  user-select: none;
-}
-
-.history-meta-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 500;
-}
-
-.history-meta-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  color: var(--color-success);
-}
-
-.history-meta-divider {
-  color: var(--app-text-faint);
-  opacity: 0.6;
-}
-
-.history-date {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--app-text-faint);
-}
-
-.history-content {
-  flex: 1;
-  min-width: 0;
-  cursor: default;
-}
-
-.history-text-value {
-  font-size: var(--text-body);
-  line-height: 1.5;
-  color: var(--color-base-content);
-  white-space: pre-line;
-  word-break: break-word;
-  user-select: text;
-  cursor: text;
-}
-
-.history-text-value:not(.expanded) {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-}
-
-.history-text-value.expanded {
-  display: block;
-  white-space: pre-wrap;
-}
-
-.history-expand-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-top: var(--space-xs);
-  padding: 2px 6px;
-  font-size: var(--text-caption);
-  font-weight: 500;
-  color: var(--color-primary);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color var(--transition-fast);
-}
-
-.history-expand-toggle:hover {
-  background-color: var(--app-hover);
-  text-decoration: underline;
-}
-
-.history-original {
-  margin-top: var(--space-xs);
-}
-
-.history-original-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 2px 6px 2px 2px;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color var(--transition-fast);
-}
-
-.history-original-toggle:hover {
-  color: var(--color-base-content);
-  background-color: var(--app-hover);
-}
-
-.history-original-body {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  margin-top: var(--space-2xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-left: 2px solid var(--app-border);
-  background-color: var(--app-surface-sunken);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
-
-.history-original-text {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--text-control);
-  line-height: 1.5;
-  color: var(--app-text-muted);
-  white-space: pre-wrap;
-  word-break: break-word;
-  user-select: text;
-  cursor: text;
-}
-
-.history-original-actions {
-  --button-ghost-color: var(--app-text-muted);
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.history-item-actions {
-  --button-ghost-color: var(--app-text-muted);
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
-  flex-shrink: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
-}
-
-.history-item:hover .history-item-actions,
-.history-item:focus-within .history-item-actions {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (hover: none) {
-  .history-item-actions {
-    opacity: 1;
-    pointer-events: auto;
-  }
 }
 </style>

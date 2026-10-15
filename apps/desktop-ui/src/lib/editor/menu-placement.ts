@@ -1,3 +1,5 @@
+import { constrainPosition } from '../ui/floating-position'
+
 import type { MenuPlacement } from './menu-item'
 
 /** Gap from the window edge, so a menu does not stick to the border */
@@ -27,9 +29,6 @@ export interface Rect {
   bottom: number
 }
 
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(value, max))
-
 /** Top-left corner of a menu next to its anchor, kept inside the viewport */
 export const placeMenu = (
   anchor: PlacementAnchor,
@@ -40,14 +39,7 @@ export const placeMenu = (
   const y =
     placement === 'below' ? (anchor.bottom ?? anchor.y) + ANCHOR_GAP : anchor.y
 
-  return {
-    x: clamp(
-      anchor.x,
-      VIEWPORT_GAP,
-      viewport.width - size.width - VIEWPORT_GAP
-    ),
-    y: clamp(y, VIEWPORT_GAP, viewport.height - size.height - VIEWPORT_GAP),
-  }
+  return constrainPosition({ x: anchor.x, y }, size, viewport, VIEWPORT_GAP)
 }
 
 /**
@@ -65,12 +57,5 @@ export const placeSubmenu = (
       ? right
       : parent.left - size.width - 2
 
-  return {
-    x: clamp(x, VIEWPORT_GAP, viewport.width - size.width - VIEWPORT_GAP),
-    y: clamp(
-      parent.top,
-      VIEWPORT_GAP,
-      viewport.height - size.height - VIEWPORT_GAP
-    ),
-  }
+  return constrainPosition({ x, y: parent.top }, size, viewport, VIEWPORT_GAP)
 }

@@ -14,7 +14,6 @@
         size="sm"
         variant="ghost"
         :active="isSearchOpen"
-        :title="t('chat.searchChats')"
         @click="toggleSearch"
         :label="t('chat.searchChats')"
         icon="mdi:magnify"
@@ -22,20 +21,25 @@
       <IconButton
         size="sm"
         variant="ghost"
-        :title="t('chat.collapseSidebar')"
         @click="emit('collapse')"
         :label="t('chat.collapseSidebar')"
         icon="mdi:dock-left"
       />
     </div>
 
-    <div v-if="removedChat" class="sidebar-notice">
-      <Icon icon="mdi:trash-can-outline" height="15" class="shrink-0" />
-      <span class="truncate flex-1">{{ t('history.itemRemoved') }}</span>
+    <InlineNotice
+      v-if="removedChat"
+      class="sidebar-notice"
+      announcement="polite"
+      icon="mdi:trash-can-outline"
+      :message="t('history.itemRemoved')"
+      appearance="surface"
+      density="compact"
+    >
       <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemoveChat">
         {{ t('history.undo') }}
       </Button>
-    </div>
+    </InlineNotice>
 
     <SearchInput
       v-if="isSearchOpen"
@@ -142,6 +146,7 @@ import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
@@ -359,15 +364,7 @@ onUnmounted(() => {
   line-height: 1.3;
 }
 .sidebar-notice {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface);
+  margin-bottom: var(--space-sm);
 }
 .chat-list-scroll {
   flex: 1;

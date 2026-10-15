@@ -18,7 +18,6 @@
             v-if="item.type === 'command'"
             variant="ghost"
             size="sm"
-            :title="t('commands.editCommand')"
             @click="emit('editCommand', item.commandId)"
             :label="t('commands.editCommand')"
             icon="mdi:pencil-outline"

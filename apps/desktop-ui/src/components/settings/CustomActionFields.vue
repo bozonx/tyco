@@ -20,7 +20,6 @@
           <IconButton
             variant="ghost"
             size="sm"
-            :title="t('settings.actionInsertScript')"
             @click="browseScript"
             :label="t('settings.actionInsertScript')"
             icon="mdi:file-code-outline"
@@ -49,7 +48,6 @@
           <IconButton
             variant="ghost"
             size="sm"
-            :title="t('settings.browseWorkingDir')"
             @click="browseWorkingDir"
             :label="t('settings.browseWorkingDir')"
             icon="mdi:folder-open-outline"
@@ -140,7 +138,6 @@
           <IconButton
             variant="ghost"
             size="sm"
-            :title="t('common.remove')"
             @click="removeHeader(headerIndex)"
             :label="t('common.remove')"
             icon="mdi:close"

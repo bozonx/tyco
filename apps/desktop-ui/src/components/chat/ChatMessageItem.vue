@@ -41,7 +41,6 @@
         <IconButton
           v-if="message.content"
           class="message-action"
-          :title="isCopied ? t('chat.copied') : t('chat.copy')"
           @click="copyMessage"
           :label="isCopied ? t('chat.copied') : t('chat.copy')"
           :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"

@@ -88,6 +88,7 @@ describe('AiChat.vue', () => {
     return shallowMount(AiChat, {
       global: {
         stubs: {
+          InlineNotice: false,
           StateMessage: {
             props: ['title', 'message', 'kind'],
             template:

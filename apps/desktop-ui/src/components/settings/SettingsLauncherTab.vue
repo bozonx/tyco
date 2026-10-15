@@ -50,7 +50,6 @@
             v-if="item"
             variant="ghost"
             size="sm"
-            :title="t('commands.editCommand')"
             @click="emit('editCommand', item)"
             :label="t('commands.editCommand')"
             icon="mdi:pencil-outline"

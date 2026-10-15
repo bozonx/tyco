@@ -65,7 +65,6 @@
         size="sm"
         variant="ghost"
         :disabled="chatStore.isGenerating || Boolean(chatStore.importingImages)"
-        :title="t('chat.addFile')"
         @click="filePicker?.click()"
         :label="t('chat.addFile')"
         icon="mdi:paperclip"
@@ -86,7 +85,6 @@
         <IconButton
           size="sm"
           variant="ghost"
-          :title="t('chat.voiceInput')"
           @click="voiceInput"
           :label="t('chat.voiceInput')"
           icon="mdi:microphone-outline"
@@ -95,7 +93,6 @@
           v-if="!chatStore.isGenerating"
           size="sm"
           :disabled="!canSend"
-          :title="t('chat.sendMessage')"
           @click="emit('send')"
           :label="t('chat.sendMessage')"
           icon="mdi:arrow-up"
@@ -103,7 +100,6 @@
         <IconButton
           v-else
           size="sm"
-          :title="t('chat.stop')"
           @click="chatStore.stopGeneration()"
           :label="t('chat.stop')"
           icon="mdi:stop"
@@ -180,7 +176,7 @@ function voiceInput() {
   gap: var(--space-sm);
   padding: var(--space-sm);
   border: 1px solid var(--app-border);
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   background: var(--app-surface);
   box-shadow: var(--app-shadow-md);
 }
@@ -214,7 +210,7 @@ function voiceInput() {
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity var(--transition-fast);
 }
 .chat-composer:focus-within .composer-hint {
   opacity: 1;

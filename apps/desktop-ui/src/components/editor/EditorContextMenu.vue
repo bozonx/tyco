@@ -71,6 +71,7 @@
 import type { CSSProperties } from 'vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import { placeMenu, placeSubmenu } from '../../lib/editor/menu-placement'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
@@ -219,14 +220,6 @@ const select = async (item: EditorMenuItem, index?: number): Promise<void> => {
   await item.action?.()
 }
 
-const onPointerDown = (event: MouseEvent): void => {
-  const target = event.target as Node
-
-  if (menuRef.value?.contains(target) || subRef.value?.contains(target)) return
-
-  emit('close', false)
-}
-
 const inSubmenu = (): boolean =>
   Boolean(subRef.value?.contains(document.activeElement))
 
@@ -308,19 +301,23 @@ const onScroll = (event: Event): void => {
   close()
 }
 
+useDismissibleLayer({
+  isOpen: () => true,
+  elements: () => [menuRef.value, subRef.value],
+  dismiss: () => emit('close', false),
+  keydown: onKeyDown,
+  outsideEvent: 'mousedown',
+})
+
 onMounted(() => {
   place()
 
-  window.addEventListener('mousedown', onPointerDown, true)
-  window.addEventListener('keydown', onKeyDown, true)
   window.addEventListener('resize', close)
   // scrolling the editor moves the menu away from its anchor — simpler to close
   window.addEventListener('scroll', onScroll, true)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('mousedown', onPointerDown, true)
-  window.removeEventListener('keydown', onKeyDown, true)
   window.removeEventListener('resize', close)
   window.removeEventListener('scroll', onScroll, true)
 })

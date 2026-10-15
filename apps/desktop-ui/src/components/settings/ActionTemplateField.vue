@@ -1,31 +1,30 @@
 <template>
   <div :class="$attrs.class" :style="$attrs.style" class="template-field">
-    <textarea
-      v-bind="controlAttrs()"
+    <FieldTextArea
+      v-bind="fieldAttrs()"
       v-if="multiline"
       ref="fieldRef"
       class="textarea template-field-control"
-      rows="3"
-      :value="modelValue"
+      :rows="3"
+      :model-value="modelValue"
       :placeholder="placeholder"
       spellcheck="false"
-      @input="emitValue"
+      @update:model-value="emit('update:modelValue', $event)"
     />
-    <input
-      v-bind="controlAttrs()"
+    <FieldInput
+      v-bind="fieldAttrs()"
       v-else
       ref="fieldRef"
       class="input template-field-control"
-      :value="modelValue"
+      :model-value="modelValue"
       :placeholder="placeholder"
       spellcheck="false"
-      @input="emitValue"
+      @update:model-value="emit('update:modelValue', $event)"
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
     <IconButton
       variant="ghost"
       size="sm"
-      :title="t('settings.actionInsertText', { placeholder: TEXT })"
       @mousedown.prevent
       @click="insert(TEXT)"
       :label="t('settings.actionInsertText', { placeholder: TEXT })"
@@ -42,16 +41,22 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, useAttrs } from 'vue'
 
-import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
+import type { TextControl } from '../../lib/ui/text-control'
+import FieldInput from '../common/FieldInput.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 
 defineOptions({ inheritAttrs: false })
-const controlAttrs = useFieldControl({ wrapped: true })
+const attrs = useAttrs()
+const fieldAttrs = () =>
+  Object.fromEntries(
+    Object.entries(attrs).filter(([key]) => key !== 'class' && key !== 'style')
+  )
 const props = defineProps<{
   modelValue?: string
   placeholder?: string
@@ -62,23 +67,21 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 const { t } = useI18n()
-const fieldRef = ref<HTMLInputElement | HTMLTextAreaElement | null>(null)
-
-function emitValue(event: Event) {
-  emit('update:modelValue', (event.target as HTMLInputElement).value)
-}
+const fieldRef = ref<TextControl | null>(null)
 
 /** Puts `snippet` in place of the selection, or at the end without focus. */
 async function insert(snippet: string) {
   const el = fieldRef.value
   const value = props.modelValue ?? ''
-  const focused = el !== null && document.activeElement === el
-  const start = focused ? (el.selectionStart ?? value.length) : value.length
-  const end = focused ? (el.selectionEnd ?? start) : value.length
+  const focused = el?.isFocused() ?? false
+  const start = focused
+    ? (el?.getSelection()?.start ?? value.length)
+    : value.length
+  const end = focused ? (el?.getSelection()?.end ?? start) : value.length
   emit('update:modelValue', value.slice(0, start) + snippet + value.slice(end))
   await nextTick()
   el?.focus()
-  el?.setSelectionRange(start + snippet.length, start + snippet.length)
+  el?.select(start + snippet.length, start + snippet.length)
 }
 
 defineExpose({ insert })

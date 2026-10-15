@@ -28,7 +28,6 @@
           class="delete-btn"
           size="xs"
           variant="ghost"
-          :title="t('common.delete')"
           @click="$emit('remove', index)"
           :label="t('common.delete')"
           icon="mdi:trash-can-outline"

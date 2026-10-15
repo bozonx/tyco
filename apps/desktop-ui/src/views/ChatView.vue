@@ -3,14 +3,12 @@
     <div v-if="!sidebarOpen" class="sidebar-closed-tools">
       <IconButton
         class="sidebar-tool"
-        :title="t('chat.openSidebar')"
         @click="sidebarOpen = true"
         :label="t('chat.openSidebar')"
         icon="mdi:dock-left"
       />
       <IconButton
         class="sidebar-tool"
-        :title="t('chat.newChat')"
         :disabled="chatStore.isGenerating"
         @click="chatStore.startNewChat()"
         :label="t('chat.newChat')"

@@ -202,3 +202,18 @@
 .textarea[data-size='sm'] {
   font-size: var(--text-control);
 }
+
+/* Plain text controls keep native behavior inside composers and previews. */
+.input.is-plain,
+.textarea.is-plain {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.input.is-plain:focus,
+.textarea.is-plain:focus {
+  box-shadow: none;
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
+  outline-offset: -2px;
+}

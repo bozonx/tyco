@@ -39,18 +39,20 @@
           </span>
         </button>
       </div>
-      <StateMessage
+      <InlineNotice
         v-if="removed"
         class="commands-notice"
         kind="info"
-        inline
+        announcement="polite"
         icon="mdi:trash-can-outline"
         :message="t('commands.removed', { name: removedName })"
+        appearance="surface"
+        density="compact"
       >
         <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
           {{ t('commands.undo') }}
         </Button>
-      </StateMessage>
+      </InlineNotice>
       <StateMessage
         v-if="!commands.length"
         class="commands-empty"
@@ -142,6 +144,7 @@ import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
@@ -378,22 +381,7 @@ onBeforeUnmount(finishRemoval)
 }
 
 .commands-notice {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md, var(--radius-sm));
-  background-color: var(--app-surface);
-  font-size: var(--text-control);
-  color: var(--app-text-muted);
-}
-
-.commands-notice-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-bottom: var(--space-sm);
 }
 
 .commands-list {
@@ -405,17 +393,12 @@ onBeforeUnmount(finishRemoval)
 .command-card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--app-border);
   border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
   transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
+    transform var(--transition-base),
     opacity var(--transition-fast);
 }
-
-.command-card:hover {
+.command-card:hover :deep(.disclosure-panel) {
   border-color: var(--app-border-strong);
 }
 
@@ -430,8 +413,10 @@ onBeforeUnmount(finishRemoval)
 .command-card.is-dragged {
   position: relative;
   z-index: 1;
-  border-color: var(--color-primary);
   box-shadow: var(--app-shadow-lg);
   transition: none;
+}
+.command-card.is-dragged :deep(.disclosure-panel) {
+  border-color: var(--color-primary);
 }
 </style>

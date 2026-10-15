@@ -38,6 +38,7 @@
             alignClass,
           ]"
           :style="popoverStyle"
+          :data-theme="panelTheme"
           :id="tooltipId"
           :role="interactive ? 'dialog' : 'tooltip'"
           :aria-label="
@@ -57,17 +58,15 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type CSSProperties,
-  computed,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  ref,
-  useId,
-} from 'vue'
+import { computed, nextTick, onUnmounted, ref, useId } from 'vue'
 
+import { useAnchoredPanel } from '../../composables/use-anchored-panel'
+import {
+  isWithinDismissibleLayer,
+  useDismissibleLayer,
+} from '../../composables/use-dismissible-layer'
 import { translate } from '../../lib/i18n'
+import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import Icon from './AppIcon.vue'
 
 const props = withDefaults(
@@ -86,11 +85,9 @@ const props = withDefaults(
 const tooltipId = useId()
 const isOpen = ref(false)
 const isPinned = ref(false)
-const currentPlacement = ref<'top' | 'bottom'>('top')
 const containerRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const popoverRef = ref<HTMLElement | null>(null)
-const popoverStyle = ref<CSSProperties>({})
 
 const shouldTeleport = computed(
   () => props.teleport && !containerRef.value?.closest('dialog')
@@ -113,73 +110,19 @@ function clearCloseTimeout() {
   }
 }
 
-function updatePosition() {
-  if (!triggerRef.value) return
-
-  if (!shouldTeleport.value) {
-    currentPlacement.value = props.placement
-    popoverStyle.value = {}
-    return
-  }
-
-  const rect = triggerRef.value.getBoundingClientRect()
-  const spaceAbove = rect.top
-  const spaceBelow = window.innerHeight - rect.bottom
-  const gap = 6
-  const margin = 8
-
-  const popoverEl = popoverRef.value
-  const tooltipWidth = popoverEl?.offsetWidth || 280
-  const tooltipHeight = popoverEl?.offsetHeight || 60
-
-  let effectivePlacement = props.placement
-  if (
-    effectivePlacement === 'top' &&
-    spaceAbove < tooltipHeight + gap &&
-    spaceBelow > spaceAbove
-  ) {
-    effectivePlacement = 'bottom'
-  } else if (
-    effectivePlacement === 'bottom' &&
-    spaceBelow < tooltipHeight + gap &&
-    spaceAbove > spaceBelow
-  ) {
-    effectivePlacement = 'top'
-  }
-
-  currentPlacement.value = effectivePlacement
-
-  let top: number
-  if (effectivePlacement === 'top') {
-    top = Math.max(margin, rect.top - tooltipHeight - gap)
-  } else {
-    top = Math.min(
-      rect.bottom + gap,
-      Math.max(margin, window.innerHeight - tooltipHeight - margin)
-    )
-  }
-
-  let left: number
-  if (props.align === 'center') {
-    left = rect.left + rect.width / 2 - tooltipWidth / 2
-  } else if (props.align === 'end') {
-    left = rect.right - tooltipWidth
-  } else {
-    left = rect.left
-  }
-
-  const maxLeft = Math.max(margin, window.innerWidth - tooltipWidth - margin)
-  left = Math.max(margin, Math.min(left, maxLeft))
-
-  popoverStyle.value = {
-    position: 'fixed',
-    top: `${Math.round(top)}px`,
-    left: `${Math.round(left)}px`,
-    bottom: 'auto',
-    right: 'auto',
-    zIndex: 'var(--z-tooltip)',
-  }
-}
+const {
+  style: popoverStyle,
+  placement: currentPlacement,
+  theme: panelTheme,
+  updatePosition,
+} = useAnchoredPanel({
+  isOpen: () => isOpen.value,
+  anchor: () => triggerRef.value,
+  panel: () => popoverRef.value,
+  placement: () => props.placement,
+  align: () => props.align,
+  enabled: () => shouldTeleport.value,
+})
 
 async function openTooltip() {
   clearCloseTimeout()
@@ -271,7 +214,7 @@ async function onPanelFocusout() {
   if (!props.interactive) return
   await nextTick()
   const active = document.activeElement
-  if (active !== triggerRef.value && !popoverRef.value?.contains(active))
+  if (!isWithinDismissibleLayer([containerRef.value, popoverRef.value], active))
     close()
 }
 
@@ -286,67 +229,17 @@ function onPanelKeydown(event: KeyboardEvent) {
     close()
   } else if (!event.shiftKey && document.activeElement === last) {
     event.preventDefault()
-    const scope = triggerRef.value?.closest('dialog') ?? document
-    const candidates = Array.from(
-      scope.querySelectorAll<HTMLElement>(
-        'button, a[href], input, select, textarea, [tabindex]'
-      )
-    ).filter(
-      (element) =>
-        element.tabIndex >= 0 &&
-        !element.matches(':disabled') &&
-        !element.closest('[inert]') &&
-        element.getClientRects().length > 0 &&
-        !popoverRef.value?.contains(element)
-    )
-    const index = candidates.findIndex(
-      (element) => element === triggerRef.value
-    )
-    close()
-    ;(candidates[index + 1] ?? candidates[0])?.focus()
-  }
-}
-
-function onDocumentClick(event: MouseEvent) {
-  const target = event.target as Node
-  if (
-    isOpen.value &&
-    containerRef.value &&
-    !containerRef.value.contains(target) &&
-    (!popoverRef.value || !popoverRef.value.contains(target))
-  ) {
+    if (triggerRef.value) focusAfterTrigger(triggerRef.value, popoverRef.value)
     close()
   }
 }
 
-function onDocumentKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOpen.value) {
-    event.preventDefault()
-    event.stopPropagation()
-    dismiss()
-  }
-}
-
-function onScrollOrResize() {
-  if (isOpen.value) {
-    updatePosition()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', onDocumentClick, true)
-  document.addEventListener('keydown', onDocumentKeydown)
-  window.addEventListener('scroll', onScrollOrResize, true)
-  window.addEventListener('resize', onScrollOrResize)
+useDismissibleLayer({
+  isOpen: () => isOpen.value,
+  elements: () => [containerRef.value, popoverRef.value],
+  dismiss,
 })
-
-onUnmounted(() => {
-  clearCloseTimeout()
-  document.removeEventListener('click', onDocumentClick, true)
-  document.removeEventListener('keydown', onDocumentKeydown)
-  window.removeEventListener('scroll', onScrollOrResize, true)
-  window.removeEventListener('resize', onScrollOrResize)
-})
+onUnmounted(clearCloseTimeout)
 
 defineExpose({ isOpen, isPinned, close, updatePosition })
 </script>
@@ -396,7 +289,7 @@ defineExpose({ isOpen, isPinned, close, updatePosition })
   position: absolute;
   z-index: var(--z-tooltip);
   width: max-content;
-  max-width: 18rem;
+  max-width: min(18rem, calc(100vw - 1rem));
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
   background-color: var(--app-surface-raised);

@@ -1,21 +1,22 @@
 <template>
-  <div class="command-header">
-    <DragHandle @drag="emit('drag', $event)" />
-    <ReorderControls
-      :name="command.name || t('commands.unnamed')"
-      :can-move-up="canMoveUp"
-      :can-move-down="canMoveDown"
-      @move="emit('move', $event)"
-    />
-    <DisclosureHeader
-      class="command-summary"
-      density="compact"
-      :expanded="expanded"
-      :controls="bodyId"
-      :icon="commandIcon(command, toolsStore)"
-      :icon-title="toolName"
-      @toggle="emit('toggle')"
-    >
+  <DisclosurePanel
+    class="command-panel"
+    :expanded="expanded"
+    density="compact"
+    :icon="commandIcon(command, toolsStore)"
+    :icon-title="toolName"
+    @toggle="emit('toggle')"
+  >
+    <template #before>
+      <DragHandle @drag="emit('drag', $event)" />
+      <ReorderControls
+        :name="command.name || t('commands.unnamed')"
+        :can-move-up="canMoveUp"
+        :can-move-down="canMoveDown"
+        @move="emit('move', $event)"
+      />
+    </template>
+    <template #summary>
       <span
         class="command-name"
         :class="{
@@ -41,62 +42,63 @@
       >
         <Icon icon="mdi:alert-outline" width="14" height="14" />
       </Badge>
-    </DisclosureHeader>
-    <div class="command-placements">
-      <Badge
-        interactive
-        v-if="menuSlot !== undefined"
-        :title="t('commands.placeConfigure')"
-        @click="emit('navigate', 'main-actions')"
-      >
-        {{ t('commands.badgeInMenu', { key: slotKey(menuSlot!) }) }}
-      </Badge>
-      <Badge
-        interactive
-        v-for="slot in launcherSlots"
-        :key="`${slot.page}:${slot.index}`"
-        :title="t('commands.placeConfigure')"
-        @click="emit('navigate', 'launcher-commands')"
-      >
-        {{
-          t('commands.badgeInLauncher', {
-            page: slot.page + 1,
-            key: slotKey(slot.index),
-          })
-        }}
-      </Badge>
+    </template>
+    <template #actions>
+      <div class="command-placements">
+        <Badge
+          interactive
+          v-if="menuSlot !== undefined"
+          :title="t('commands.placeConfigure')"
+          @click="emit('navigate', 'main-actions')"
+        >
+          {{ t('commands.badgeInMenu', { key: slotKey(menuSlot!) }) }}
+        </Badge>
+        <Badge
+          interactive
+          v-for="slot in launcherSlots"
+          :key="`${slot.page}:${slot.index}`"
+          :title="t('commands.placeConfigure')"
+          @click="emit('navigate', 'launcher-commands')"
+        >
+          {{
+            t('commands.badgeInLauncher', {
+              page: slot.page + 1,
+              key: slotKey(slot.index),
+            })
+          }}
+        </Badge>
+      </div>
+      <FieldSwitch
+        :key="command.id"
+        class="enabled-switch"
+        :model-value="command.enabled"
+        :title="t(command.enabled ? 'commands.disable' : 'commands.enable')"
+        @update:model-value="emit('update', { ...command, enabled: $event })"
+      />
+      <DropdownMenu
+        size="xs"
+        square
+        hide-chevron
+        align="right"
+        icon="mdi:dots-vertical"
+        :title="t('commands.moreActions')"
+        :items="menuItems"
+      />
+    </template>
+    <div class="command-body">
+      <CommandEditor
+        :key="command.id"
+        :command="command"
+        :user-config="userConfig"
+        :name-conflicts="nameConflicts"
+        @update="emit('update', $event)"
+        @navigate="emit('navigate', $event)"
+      />
     </div>
-    <FieldSwitch
-      :key="command.id"
-      class="enabled-switch"
-      :model-value="command.enabled"
-      :title="t(command.enabled ? 'commands.disable' : 'commands.enable')"
-      @update:model-value="emit('update', { ...command, enabled: $event })"
-    />
-    <DropdownMenu
-      size="xs"
-      square
-      hide-chevron
-      align="right"
-      icon="mdi:dots-vertical"
-      :title="t('commands.moreActions')"
-      :items="menuItems"
-    />
-  </div>
-
-  <div v-if="expanded" :id="bodyId" class="command-body">
-    <CommandEditor
-      :key="command.id"
-      :command="command"
-      :user-config="userConfig"
-      :name-conflicts="nameConflicts"
-      @update="emit('update', $event)"
-      @navigate="emit('navigate', $event)"
-    />
-  </div>
+  </DisclosurePanel>
 </template>
 <script setup lang="ts">
-import { computed, useId } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -110,7 +112,7 @@ import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import Icon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
-import DisclosureHeader from '../common/DisclosureHeader.vue'
+import DisclosurePanel from '../common/DisclosurePanel.vue'
 import DragHandle from '../common/DragHandle.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -138,7 +140,6 @@ const emit = defineEmits<{
   (event: 'remove'): void
 }>()
 const { t } = useI18n()
-const bodyId = useId()
 const toolsStore = useToolsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
@@ -169,7 +170,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 ])
 </script>
 <style scoped>
-.command-header {
+.command-panel :deep(.disclosure-panel-header) {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -199,7 +200,6 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 .command-body {
   padding: var(--space-sm) var(--space-md) var(--space-md)
     calc(var(--space-xs) + 1.25rem + var(--space-xs));
-  border-top: 1px solid var(--app-border);
 }
 
 .enabled-switch {

@@ -7,7 +7,6 @@
         class="context-preview-remove"
         size="xs"
         variant="ghost"
-        :title="removeTitle"
         :label="removeTitle"
         icon="mdi:close"
         @mousedown.prevent

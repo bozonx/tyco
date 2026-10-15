@@ -164,7 +164,6 @@
             <IconButton
               variant="ghost"
               size="sm"
-              :title="isCopied ? t('commands.idCopied') : t('commands.copyCli')"
               @click="copyCli"
               :label="isCopied ? t('commands.idCopied') : t('commands.copyCli')"
               :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"

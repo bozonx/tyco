@@ -1,7 +1,11 @@
 <template>
   <div
     class="inline-notice"
-    :class="`inline-notice--${kind}`"
+    :class="[
+      `inline-notice--${kind}`,
+      `inline-notice--${appearance}`,
+      { 'inline-notice--compact': density === 'compact' },
+    ]"
     :role="
       announcement === 'assertive'
         ? 'alert'
@@ -26,12 +30,14 @@ import Icon from './AppIcon.vue'
 
 withDefaults(
   defineProps<{
+    appearance?: 'plain' | 'surface' | 'sunken'
+    density?: 'default' | 'compact'
     message?: string
     kind?: 'info' | 'success' | 'warning' | 'error'
     announcement?: 'off' | 'polite' | 'assertive'
     icon?: string
   }>(),
-  { kind: 'info', announcement: 'off' }
+  { kind: 'info', announcement: 'off', appearance: 'plain', density: 'default' }
 )
 </script>
 <style scoped>
@@ -62,5 +68,18 @@ withDefaults(
 }
 .inline-notice--error {
   color: var(--color-error);
+}
+.inline-notice--surface,
+.inline-notice--sunken {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--app-border);
+  border-radius: var(--radius-md);
+  background-color: var(--app-surface);
+}
+.inline-notice--sunken {
+  background-color: var(--app-surface-sunken);
+}
+.inline-notice--compact {
+  font-size: var(--text-control);
 }
 </style>

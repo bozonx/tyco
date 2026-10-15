@@ -7,15 +7,7 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible()
 })
 
-test('menus, tabs and native dialogs preserve keyboard focus', async ({
-  page,
-}) => {
-  const tabs = page.getByRole('tab')
-  await tabs.first().focus()
-  await page.keyboard.press('End')
-  await expect(tabs.last()).toBeFocused()
-  await expect(tabs.last()).toHaveAttribute('aria-selected', 'true')
-
+test('menus and native dialogs preserve keyboard focus', async ({ page }) => {
   const trigger = page.getByRole('button', { name: 'Actions', exact: true })
   await trigger.focus()
   await page.keyboard.press('ArrowDown')
@@ -301,4 +293,99 @@ test('embedded controls adapt to container width on a wide viewport', async ({
       .locator('.split-panes')
       .evaluate((el) => getComputedStyle(el).flexDirection)
   ).toBe('column')
+})
+
+test('floating menus stay in the viewport and resume the trigger Tab order', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 480, height: 900 })
+  const trigger = page.getByRole('button', {
+    name: 'Edge actions',
+    exact: true,
+  })
+  await trigger.click()
+  const menu = page.getByRole('menu', { name: 'Edge actions' })
+  await expect(menu).toBeVisible()
+  const bounds = await menu.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds!.x).toBeGreaterThanOrEqual(0)
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(480)
+  expect(bounds!.y).toBeGreaterThanOrEqual(0)
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900)
+  await page.keyboard.press('Tab')
+  await expect(
+    page.getByRole('button', { name: 'After edge menu', exact: true })
+  ).toBeFocused()
+  await expect(menu).not.toBeVisible()
+  await trigger.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Shift+Tab')
+  await expect(trigger).toBeFocused()
+})
+
+test('a menu in a native dialog stays interactive and Escape closes one layer', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'Open nested dialogs' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Outer dialog', exact: true })
+  const trigger = dialog.getByRole('button', { name: 'Dialog actions' })
+  await trigger.click()
+  await expect(
+    dialog.getByRole('menuitem', { name: 'Dialog action', exact: true })
+  ).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeVisible()
+  await expect(trigger).toBeFocused()
+  await expect(dialog.getByRole('menu')).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(dialog).not.toBeVisible()
+})
+
+test('disclosure panels link their body and shared text controls preserve selection', async ({
+  page,
+}) => {
+  const trigger = page.getByRole('button', {
+    name: 'Connection with a long descriptive name',
+  })
+  await trigger.click()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  const bodyId = await trigger.getAttribute('aria-controls')
+  await expect(page.locator(`[id="${bodyId}"]`)).toBeVisible()
+  const invalid = page.getByRole('textbox', { name: 'Connection URL' })
+  await expect(invalid).toHaveAttribute('aria-invalid', 'true')
+  await expect(invalid).toHaveAccessibleDescription(
+    'The connection URL is invalid'
+  )
+  await trigger.click()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  const draft = page.getByRole('textbox', { name: 'Plain draft' })
+  await draft.fill('Hello world')
+  await draft.focus()
+  await page.keyboard.press('Home')
+  await page.keyboard.press('Shift+ArrowRight')
+  await page.keyboard.type('Y')
+  await expect(draft).toHaveValue('Yello world')
+})
+
+test('a teleported child menu keeps its parent popover open', async ({
+  page,
+}) => {
+  const help = page.getByRole('button', { name: 'Nested help', exact: true })
+  await help.click()
+  const popover = page.getByRole('dialog', { name: 'Nested help' })
+  const trigger = popover.getByRole('button', {
+    name: 'Help actions',
+    exact: true,
+  })
+  await trigger.click()
+  await expect(
+    page.getByRole('menuitem', { name: 'Help action', exact: true })
+  ).toBeFocused()
+  await expect(popover).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(trigger).toBeFocused()
+  await expect(popover).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(popover).not.toBeVisible()
+  await expect(help).toBeFocused()
 })

@@ -82,10 +82,10 @@
               · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span
             >
           </p>
-          <StateMessage
+          <InlineNotice
             v-if="plugin.error"
             kind="error"
-            inline
+            announcement="assertive"
             :message="
               t('settings.pluginPackageFailed', { detail: plugin.error })
             "
@@ -156,7 +156,7 @@ import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import StateMessage from '../common/StateMessage.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 
 const plugins = usePluginRuntimeStore()
 const { pluginFactories, pluginRuntimeStates } = plugins

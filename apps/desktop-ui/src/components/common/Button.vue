@@ -25,24 +25,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type {
-  ButtonTone,
-  ButtonVariant,
-  ControlSize,
-} from '../../lib/ui/control-types'
+import type { ButtonProps } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
-const props = defineProps<{
-  type?: 'button' | 'submit' | 'reset'
-  variant?: ButtonVariant
-  size?: ControlSize
-  icon?: string
-  active?: boolean
-  disabled?: boolean
-  loading?: boolean
-  square?: boolean
-  tone?: ButtonTone
-}>()
+const props = defineProps<ButtonProps>()
 
 const buttonClass = computed(() => {
   const variant = props.variant ?? 'primary'

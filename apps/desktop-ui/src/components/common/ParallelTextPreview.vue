@@ -8,13 +8,14 @@
       ><div class="column-text selectable">{{ leftText }}</div></template
     >
     <template #right>
-      <textarea
+      <FieldTextArea
         v-if="editable"
         class="column-textarea"
-        :value="rightText"
+        appearance="plain"
+        :model-value="rightText"
         :aria-label="rightTitle || t('diff.modified')"
         :placeholder="t('diff.modified')"
-        @input="handleInput"
+        @update:model-value="emit('update:rightText', $event)"
       />
       <div v-else class="column-text readonly-text selectable">
         {{ rightText }}
@@ -24,6 +25,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
+import FieldTextArea from './FieldTextArea.vue'
 import SplitPanePreview from './SplitPanePreview.vue'
 
 withDefaults(
@@ -38,9 +40,6 @@ withDefaults(
 )
 const emit = defineEmits<{ (e: 'update:rightText', value: string): void }>()
 const { t } = useI18n()
-function handleInput(event: Event) {
-  emit('update:rightText', (event.target as HTMLTextAreaElement).value)
-}
 </script>
 <style scoped>
 .column-text {
@@ -55,7 +54,6 @@ function handleInput(event: Event) {
   height: 100%;
   min-height: 0;
   border: none;
-  outline: none;
   background: transparent;
   color: var(--color-base-content);
   font-family: var(--font-sans);
@@ -64,10 +62,6 @@ function handleInput(event: Event) {
   padding: var(--space-sm) var(--space-md);
   box-sizing: border-box;
   resize: none;
-}
-
-.column-textarea:focus {
-  outline: none;
 }
 
 .readonly-text {

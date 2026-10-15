@@ -15,7 +15,6 @@
             :tone="showMarkup ? 'accent' : 'muted'"
             :active="showMarkup"
             :aria-pressed="showMarkup"
-            :title="viewModeTitle"
             @click="toggleShowMarkup"
             :label="viewModeTitle"
             :icon="
@@ -26,7 +25,6 @@
             size="sm"
             variant="ghost"
             :label="t('editor.search.title')"
-            :title="t('editor.search.title')"
             icon="mdi:magnify"
             @click="editorInputStore.requestSearch"
           />
@@ -89,7 +87,6 @@
             class="ask-ai"
             :disabled="!editorInputStore.value.trim()"
             @click="handleAskAi"
-            :title="scoped(t('editor.askAi'))"
             :label="scoped(t('editor.askAi'))"
             icon="mdi:chat-question-outline"
           />
@@ -97,7 +94,6 @@
             size="sm"
             variant="ghost"
             @click="handleAiTask"
-            :title="scoped(t('action.aiTask'))"
             :label="scoped(t('action.aiTask'))"
             icon="mdi:robot-outline"
           />
@@ -105,7 +101,6 @@
             size="sm"
             variant="ghost"
             @click="handleTranslation"
-            :title="scoped(t('action.translation'))"
             :label="scoped(t('action.translation'))"
             icon="mdi:translate"
           />
@@ -114,7 +109,6 @@
             variant="ghost"
             :disabled="!ipcStore.desktopState.windowId"
             @click="handleInsertToWindow"
-            :title="scoped(t('action.insertIntoWindow'))"
             :label="scoped(t('action.insertIntoWindow'))"
             icon="mdi:application-export"
           />
@@ -146,7 +140,6 @@
               size="sm"
               variant="danger-ghost"
               @click="editorInputStore.clear"
-              :title="t('editor.clear')"
               :label="t('editor.clear')"
               icon="mdi:eraser"
             />
@@ -157,7 +150,6 @@
               variant="ghost"
               tone="accent"
               @click="voiceRecognition"
-              :title="t('editor.voiceInput')"
               :label="t('editor.voiceInput')"
               icon="mdi:microphone-outline"
             />
@@ -166,7 +158,6 @@
               variant="ghost"
               tone="accent"
               @click="handleCorrection"
-              :title="scoped(t('action.correction'))"
               :label="scoped(t('action.correction'))"
               icon="mdi:auto-fix"
             />
@@ -175,7 +166,6 @@
               size="sm"
               variant="ghost"
               @click="handleCopy"
-              :title="scoped(t('action.copy'))"
               :label="scoped(t('action.copy'))"
               icon="mdi:content-copy"
             />
@@ -183,7 +173,6 @@
               size="sm"
               variant="ghost"
               @click="editorInputStore.requestSelectAll"
-              :title="t('editor.selectAll')"
               :label="t('editor.selectAll')"
               icon="mdi:select-all"
             />
@@ -191,7 +180,6 @@
               size="sm"
               variant="danger-ghost"
               @click="editorInputStore.clear"
-              :title="t('editor.clear')"
               :label="t('editor.clear')"
               icon="mdi:eraser"
             />

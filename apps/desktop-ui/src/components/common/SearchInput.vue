@@ -22,6 +22,7 @@
 import { ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import { useTextControl } from '../../composables/use-text-control'
 import type { ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
 
@@ -40,13 +41,7 @@ const props = defineProps<{
 
 const searchInput = ref<HTMLInputElement | null>(null)
 
-const focus = () => {
-  if (searchInput.value) {
-    searchInput.value.focus()
-  }
-}
-
-defineExpose({ focus })
+defineExpose(useTextControl(searchInput))
 
 const onInput = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).value

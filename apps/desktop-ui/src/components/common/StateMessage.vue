@@ -3,10 +3,7 @@
     class="ui-state"
     :class="[
       `ui-state--${kind}`,
-      {
-        'ui-state--inline': inline,
-        'ui-state--compact': density === 'compact',
-      },
+      { 'ui-state--compact': density === 'compact' },
     ]"
     :role="
       kind === 'error' ? 'alert' : kind === 'loading' ? 'status' : undefined
@@ -21,7 +18,7 @@
     <Icon
       v-else-if="icon"
       :icon="icon"
-      :height="inline ? 18 : 28"
+      height="28"
       class="ui-state-icon"
       :aria-hidden="true"
     />
@@ -42,7 +39,6 @@ withDefaults(
     title?: string
     message?: string
     icon?: string
-    inline?: boolean
     density?: 'default' | 'compact'
   }>(),
   { kind: 'empty' }
@@ -78,18 +74,9 @@ withDefaults(
 .ui-state--error .ui-state-icon {
   color: var(--color-error);
 }
-.ui-state--inline {
-  flex-direction: row;
-  justify-content: flex-start;
-  padding: var(--space-sm) var(--space-md);
-  text-align: start;
-}
 .ui-state-actions {
   display: flex;
   gap: var(--space-sm);
-}
-.ui-state--inline .ui-state-actions {
-  margin-inline-start: auto;
 }
 .ui-state--compact {
   padding: var(--space-lg) var(--space-sm);

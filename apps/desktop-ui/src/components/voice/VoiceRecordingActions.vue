@@ -14,7 +14,6 @@
       <IconButton
         :size="compact ? 'sm' : undefined"
         variant="ghost"
-        :title="t('chat.voiceCancelHint')"
         :disabled="isFinishing"
         @click="cancel"
         :label="t('chat.voiceCancelHint')"

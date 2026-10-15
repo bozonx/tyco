@@ -57,7 +57,7 @@ const mountTab = (focusCommandId?: string) =>
       } as unknown as UserConfig,
       focusCommandId,
     },
-    global: { stubs: { CommandEditor: true } },
+    global: { stubs: { Teleport: true, CommandEditor: true } },
   })
 
 /** Picks an item of the menu of the card, e.g. the danger one: delete */
@@ -66,7 +66,7 @@ async function pickMenuItem(
   card: number,
   selector: string
 ) {
-  const header = wrapper.findAll('.command-header')[card]
+  const header = wrapper.findAll('.disclosure-panel-header')[card]
   await header.find('.dropdown-trigger').trigger('click')
   await header.find(selector).trigger('click')
 }

@@ -1,21 +1,18 @@
 <template>
-  <div class="surface connection-card">
-    <DisclosureHeader
-      :expanded="expanded"
-      :controls="bodyId"
-      :title="label"
-      :description="providerSummary(provider)"
-      :icon="providerIcon(provider)"
-      @toggle="emit('toggle')"
+  <DisclosurePanel
+    class="connection-card"
+    :expanded="expanded"
+    :title="label"
+    :description="providerSummary(provider)"
+    :icon="providerIcon(provider)"
+    @toggle="emit('toggle')"
+  >
+    <template #status
+      ><Badge :tone="statusTone(provider)">{{
+        statusLabel(provider)
+      }}</Badge></template
     >
-      <template #status
-        ><Badge :tone="statusTone(provider)">{{
-          statusLabel(provider)
-        }}</Badge></template
-      >
-    </DisclosureHeader>
-
-    <div v-if="expanded" :id="bodyId" class="connection-body">
+    <div class="connection-body">
       <template v-if="provider.type === 'openai-compatible'">
         <FieldRow :label="t('settings.name')">
           <FieldInput
@@ -123,17 +120,15 @@
         </Button>
       </div>
     </div>
-  </div>
+  </DisclosurePanel>
 </template>
 <script setup lang="ts">
-import { useId } from 'vue'
-
 import { useI18n } from '../../composables/use-i18n'
 import { removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
 import Badge from '../common/Badge.vue'
-import DisclosureHeader from '../common/DisclosureHeader.vue'
+import DisclosurePanel from '../common/DisclosurePanel.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -156,7 +151,6 @@ const emit = defineEmits<{
   (event: 'update', patch: Partial<Pick<LlmProvider, 'name' | 'baseUrl'>>): void
 }>()
 const { t } = useI18n()
-const bodyId = useId()
 const {
   keyDrafts,
   connectionCheckStatusByProviderId,
@@ -221,16 +215,9 @@ function keyHint(provider: LlmProvider) {
 }
 </script>
 <style scoped>
-.connection-card {
-  overflow: hidden;
-  box-shadow: var(--app-shadow-sm);
-}
 .models-hint {
   font-size: var(--text-caption);
   line-height: 1.35;
-}
-.connection-body {
-  border-top: 1px solid var(--app-border-subtle);
 }
 .models-block {
   padding: var(--space-lg);

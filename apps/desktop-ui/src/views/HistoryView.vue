@@ -21,13 +21,15 @@
       </template>
 
       <template #notice>
-        <StateMessage
+        <InlineNotice
           v-if="hasEditorLoadError"
           class="history-notice is-error"
           kind="error"
-          inline
+          announcement="assertive"
           icon="mdi:alert-circle-outline"
           :message="t('history.loadFailed')"
+          appearance="sunken"
+          density="compact"
         >
           <Button
             size="xs"
@@ -37,26 +39,30 @@
           >
             {{ t('history.retry') }}
           </Button>
-        </StateMessage>
-        <StateMessage
+        </InlineNotice>
+        <InlineNotice
           v-if="removedItem"
           class="history-notice"
           kind="info"
-          inline
+          announcement="polite"
           icon="mdi:trash-can-outline"
           :message="t('history.itemRemoved')"
+          appearance="sunken"
+          density="compact"
         >
           <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
             {{ t('history.undo') }}
           </Button>
-        </StateMessage>
-        <StateMessage
+        </InlineNotice>
+        <InlineNotice
           v-if="isEditorHistoryDisabled"
           class="history-notice"
           kind="info"
-          inline
+          announcement="polite"
           icon="mdi:information-outline"
           :message="t('history.textsDisabled')"
+          appearance="sunken"
+          density="compact"
         />
       </template>
     </HistoryList>
@@ -67,8 +73,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Button from '../components/common/Button.vue'
+import InlineNotice from '../components/common/InlineNotice.vue'
 import SearchInput from '../components/common/SearchInput.vue'
-import StateMessage from '../components/common/StateMessage.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
@@ -224,20 +230,7 @@ const toEditor = (item: HistoryListItem) => {
 }
 
 .history-notice {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
   margin-bottom: var(--space-sm);
-  padding: var(--space-xs) var(--space-md);
-  font-size: 0.8125rem;
-  color: var(--app-text-muted);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-md);
-  background-color: var(--app-surface-sunken);
-}
-
-.history-notice :deep(.btn) {
-  margin-left: auto;
 }
 
 .history-notice.is-error {

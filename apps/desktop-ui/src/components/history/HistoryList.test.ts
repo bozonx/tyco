@@ -146,10 +146,15 @@ describe('HistoryList.vue', () => {
     const toggleBtn = longItem.find('.history-expand-toggle')
     expect(toggleBtn.exists()).toBe(true)
     expect(toggleBtn.text()).toContain('history.expand')
+    expect(toggleBtn.attributes('aria-expanded')).toBe('false')
 
     await toggleBtn.trigger('click')
     expect(longItem.find('.history-text-value').classes()).toContain('expanded')
     expect(toggleBtn.text()).toContain('history.collapse')
+    expect(toggleBtn.attributes('aria-expanded')).toBe('true')
+    expect(toggleBtn.attributes('aria-controls')).toBe(
+      longItem.get('.history-text-value').attributes('id')
+    )
   })
 
   it('emits action event when action button is clicked', async () => {

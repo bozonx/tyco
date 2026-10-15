@@ -23,11 +23,6 @@
           <div class="storage-path-actions">
             <IconButton
               class="storage-copy-btn"
-              :title="
-                copiedStorageKey === item.key
-                  ? t('settings.storagePathCopied')
-                  : t('settings.storageCopyPath')
-              "
               @click="copyStoragePath(item.value, item.key)"
               :label="
                 copiedStorageKey === item.key
@@ -40,7 +35,6 @@
             />
             <IconButton
               class="storage-copy-btn"
-              :title="t('settings.storageOpenFolder')"
               @click="openStorageLocation(item.kind)"
               :label="t('settings.storageOpenFolder')"
               icon="mdi:folder-open-outline"

@@ -39,36 +39,35 @@
         </div>
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
-        <StateMessage
+        <InlineNotice
           v-if="chatStore.isStopped && !chatStore.error"
           class="chat-error"
           kind="info"
-          inline
+          announcement="polite"
           :message="t('chat.stopped')"
         >
           <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
             t('chat.retry')
           }}</Button>
-        </StateMessage>
-        <StateMessage
+        </InlineNotice>
+        <InlineNotice
           v-if="chatStore.error"
           class="chat-error"
           kind="error"
-          inline
+          announcement="assertive"
           :message="chatStore.error"
           icon="mdi:alert-circle-outline"
         >
           <Button size="xs" variant="ghost" icon="mdi:reload" @click="retry">{{
             t('chat.retry')
           }}</Button>
-        </StateMessage>
+        </InlineNotice>
       </div>
     </div>
 
     <IconButton
       v-if="showScrollButton"
       class="scroll-to-bottom"
-      :title="t('chat.scrollToBottom')"
       @click="scrollToBottom('smooth')"
       :label="t('chat.scrollToBottom')"
       icon="mdi:arrow-down"
@@ -322,7 +321,7 @@ onMounted(() => {
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   border: 1px dashed var(--app-border);
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   color: var(--app-text-muted);
   font-size: var(--text-control);
 }

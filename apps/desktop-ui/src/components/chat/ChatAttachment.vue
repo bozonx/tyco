@@ -26,7 +26,6 @@
     <IconButton
       v-if="removable"
       class="chat-attachment-remove"
-      :title="t('chat.removeAttachment')"
       @click="emit('remove')"
       :label="t('chat.removeAttachment')"
       icon="mdi:close"

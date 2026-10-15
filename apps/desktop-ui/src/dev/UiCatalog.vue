@@ -214,11 +214,7 @@
     </section>
     <section class="surface catalog-section ui-form-container">
       <h2>Navigation and menus</h2>
-      <Tabs v-model="tab" label="Preview tabs" :tabs="tabs"
-        ><template #panel="{ value }"
-          ><p>Panel: {{ value }}</p></template
-        ></Tabs
-      >
+
       <div class="catalog-row">
         <SegmentedControl
           v-model="tab"
@@ -248,6 +244,50 @@
       </div>
     </section>
     <section class="surface catalog-section ui-form-container">
+      <h2>Shared composition patterns</h2>
+      <DisclosurePanel
+        :expanded="sampleExpanded"
+        title="Connection with a long descriptive name"
+        @toggle="sampleExpanded = !sampleExpanded"
+      >
+        <FieldRow label="Connection URL" error="The connection URL is invalid"
+          ><FieldInput model-value="invalid URL"
+        /></FieldRow>
+        <InlineNotice
+          appearance="sunken"
+          density="compact"
+          announcement="polite"
+          message="An item was removed. You can restore it before leaving this page."
+        >
+          <Button size="xs" variant="ghost">Undo removal</Button>
+        </InlineNotice>
+      </DisclosurePanel>
+      <FieldTextArea
+        appearance="plain"
+        aria-label="Plain draft"
+        model-value="A plain text control uses the same focus and selection contract."
+      />
+      <InfoPopover aria-label="Nested help">
+        <DropdownMenu
+          label="Help actions"
+          :items="[{ label: 'Help action', action: () => {} }]"
+        />
+      </InfoPopover>
+      <div class="catalog-edge-menu">
+        <DropdownMenu
+          label="Edge actions"
+          :items="[
+            {
+              label:
+                'A long action label that should remain inside the viewport even near a window edge',
+              action: () => {},
+            },
+          ]"
+        />
+        <Button size="sm" variant="neutral">After edge menu</Button>
+      </div>
+    </section>
+    <section class="surface catalog-section ui-form-container">
       <h2>States</h2>
       <InlineNotice message="Passive guidance" />
       <InlineNotice
@@ -272,13 +312,11 @@
         kind="loading"
         message="Loading items…"
         icon="mdi:progress-clock"
-        inline
       />
       <StateMessage
         kind="error"
         message="Could not load items."
         icon="mdi:alert-circle-outline"
-        inline
         ><Button size="xs" variant="ghost">Retry</Button></StateMessage
       >
     </section>
@@ -320,6 +358,10 @@
       @close="outerDialogOpen = false"
     >
       <Button autofocus @click="dialogOpen = true">Open confirmation</Button>
+      <DropdownMenu
+        label="Dialog actions"
+        :items="[{ label: 'Dialog action', action: () => {} }]"
+      />
     </BaseDialog>
     <EditorContextMenu
       v-if="contextMenuOpen"
@@ -341,6 +383,7 @@ import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import Diff from '../components/common/Diff.vue'
 import DisclosureHeader from '../components/common/DisclosureHeader.vue'
+import DisclosurePanel from '../components/common/DisclosurePanel.vue'
 import DragHandle from '../components/common/DragHandle.vue'
 import DropdownMenu from '../components/common/DropdownMenu.vue'
 import FieldCheckbox from '../components/common/FieldCheckbox.vue'
@@ -362,7 +405,6 @@ import SegmentedControl from '../components/common/SegmentedControl.vue'
 import ShortcutButton from '../components/common/ShortcutButton.vue'
 import ShortcutHint from '../components/common/ShortcutHint.vue'
 import StateMessage from '../components/common/StateMessage.vue'
-import Tabs from '../components/common/Tabs.vue'
 import TextPreview from '../components/common/TextPreview.vue'
 import ToastContainer from '../components/common/ToastContainer.vue'
 import EditorContextMenu from '../components/editor/EditorContextMenu.vue'
@@ -416,6 +458,7 @@ const navigationItems = [
     isEnabled: true,
   },
 ]
+const sampleExpanded = ref(false)
 const detailsOpen = ref(false)
 const catalogSearch = ref('')
 const tab = ref<string | number>('source')
@@ -501,6 +544,12 @@ onBeforeUnmount(() => {
 .catalog-preview {
   height: 12rem;
   min-height: 0;
+  overflow: hidden;
+}
+.catalog-edge-menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
   overflow: hidden;
 }
 </style>

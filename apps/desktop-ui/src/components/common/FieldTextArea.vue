@@ -3,8 +3,11 @@
     v-bind="controlAttrs()"
     :data-size="size ?? 'md'"
     class="textarea"
-    :class="{ 'is-auto-resize': autoResize }"
-    :rows="autoResize ? 1 : undefined"
+    :class="{
+      'is-auto-resize': autoResize,
+      'is-plain': appearance === 'plain',
+    }"
+    :rows="autoResize ? 1 : rows"
     :placeholder="placeholder"
     :value="value"
     @input="handleInput"
@@ -19,6 +22,7 @@
 import { computed, ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
+import { useTextControl } from '../../composables/use-text-control'
 import { useTextareaAutosize } from '../../composables/use-textarea-autosize'
 import type { ControlSize } from '../../lib/ui/control-types'
 
@@ -26,9 +30,11 @@ defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl()
 
 const props = defineProps<{
+  appearance?: 'default' | 'plain'
   size?: ControlSize
   modelValue?: string
   placeholder?: string
+  rows?: number
   autoResize?: boolean
   maxAutoHeight?: number
 }>()
@@ -70,17 +76,7 @@ const handleSelect = () => {
   emit('select', textarea.value.substring(start, end), start, end)
 }
 
-// Expose focus and selection for input adapters.
-defineExpose({
-  focus: () => textareaRef.value?.focus(),
-  select: (start?: number, end?: number) => {
-    if (typeof start === 'undefined' && typeof end === 'undefined') {
-      textareaRef.value?.select()
-    } else {
-      textareaRef.value?.setSelectionRange(start ?? 0, end ?? start ?? 0)
-    }
-  },
-})
+defineExpose(useTextControl(textareaRef))
 </script>
 
 <style scoped>

@@ -51,7 +51,6 @@
         variant="ghost"
         :active="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"
         @click="openHistory"
-        :title="t('nav.history')"
         :label="t('nav.history')"
         icon="mdi:history"
       />
@@ -60,7 +59,6 @@
         variant="ghost"
         :active="appNavigation.isCurrent(APP_ROUTES.CONFIG.path)"
         @click="openSettings"
-        :title="t('nav.settings')"
         :label="t('nav.settings')"
         icon="mdi:cog-outline"
       />

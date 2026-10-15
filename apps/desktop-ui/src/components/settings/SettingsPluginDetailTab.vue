@@ -51,10 +51,10 @@
       <p v-if="plugin.status" class="px-4 text-sm text-muted">
         {{ t(`settings.pluginStatus.${plugin.status}`) }}
       </p>
-      <StateMessage
+      <InlineNotice
         v-if="plugin.error"
         kind="error"
-        inline
+        announcement="assertive"
         :message="t('settings.pluginPackageFailed', { detail: plugin.error })"
       />
       <div v-if="plugin.isEnabled" class="plugin-card-body">
@@ -83,7 +83,7 @@ import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfigFields from '../common/ConfigFields.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import StateMessage from '../common/StateMessage.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 
 defineProps<{ plugin: InstalledPluginItem }>()
 

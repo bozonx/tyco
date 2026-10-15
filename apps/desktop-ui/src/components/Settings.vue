@@ -23,55 +23,17 @@
           <span>{{ currentTabTitle }}</span>
         </h1>
 
-        <p v-if="configIsNewer" class="settings-config-warning" role="alert">
-          <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
-          <span>{{ t('settings.configNewerWarning') }}</span>
-          <Button
-            size="sm"
-            :disabled="isSaving || isReloading"
-            @click="reloadSettings"
-            >{{ t('settings.saveReload') }}</Button
-          >
-        </p>
-
-        <div
-          v-else
-          class="settings-save-status"
-          role="status"
-          aria-live="polite"
-        >
-          <span>{{
-            t(
-              isSaving
-                ? 'settings.saveSaving'
-                : saveError || conflicts.length
-                  ? 'settings.saveFailed'
-                  : hasUnsavedChanges
-                    ? 'settings.savePending'
-                    : 'settings.saveSaved'
-            )
-          }}</span>
-          <template v-if="conflicts.length">
-            <p>
-              {{ t('settings.saveConflict', { fields: conflicts.join(', ') }) }}
-            </p>
-            <Button size="sm" :disabled="isSaving" @click="keepLocalChanges">{{
-              t('settings.saveKeepLocal')
-            }}</Button>
-            <Button size="sm" :disabled="isSaving" @click="reloadSettings">{{
-              t('settings.saveReload')
-            }}</Button>
-          </template>
-          <template v-else-if="saveError">
-            <p>{{ saveError }}</p>
-            <Button size="sm" :loading="isSaving" @click="session.persist()">{{
-              t('settings.saveRetry')
-            }}</Button>
-            <Button size="sm" :disabled="isSaving" @click="reloadSettings">{{
-              t('settings.saveReload')
-            }}</Button>
-          </template>
-        </div>
+        <SettingsSaveStatus
+          :config-is-newer="configIsNewer"
+          :is-saving="isSaving"
+          :is-reloading="isReloading"
+          :save-error="saveError"
+          :conflicts="conflicts"
+          :has-unsaved-changes="hasUnsavedChanges"
+          @reload="reloadSettings"
+          @keep-local="keepLocalChanges"
+          @retry="session.persist()"
+        />
 
         <fieldset
           :key="`${session.reloadCount}:${configIsNewer}`"
@@ -95,37 +57,10 @@
             :effective-app-language="effectiveAppLanguage"
           />
 
-          <template v-else-if="currentTab === 'accessibility'">
-            <SettingsSection :title="t('settings.sectionAccessibility')">
-              <FieldRow
-                :label="t('settings.contrast')"
-                :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-              >
-                <FieldSelect
-                  v-model="userConfig.appearance.contrast"
-                  :disabled="isEInkTheme"
-                  :options="contrastOptions"
-                />
-              </FieldRow>
-              <FieldRow
-                :label="t('settings.motion')"
-                :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
-              >
-                <FieldSelect
-                  v-model="userConfig.appearance.motion"
-                  :disabled="isEInkTheme"
-                  :options="motionOptions"
-                />
-              </FieldRow>
-              <FieldRow :label="t('settings.uiScale')">
-                <FieldSelect
-                  :model-value="userConfig.appearance.uiScale"
-                  :options="uiScaleOptions"
-                  @update:model-value="updateUiScale"
-                />
-              </FieldRow>
-            </SettingsSection>
-          </template>
+          <SettingsAccessibilityTab
+            v-else-if="currentTab === 'accessibility'"
+            v-model:appearance="userConfig.appearance"
+          />
 
           <SettingsGlobalActionsTab
             v-else-if="currentTab === 'global-actions'"
@@ -232,8 +167,8 @@ import { createSettingsOperations } from '../lib/settings/settings-operations'
 import { useLlmStore } from '../stores/llm'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useSettingsSessionStore } from '../stores/settings-session'
-import Icon from './common/AppIcon.vue'
 import NavigationList from './common/NavigationList.vue'
+import SettingsAccessibilityTab from './settings/SettingsAccessibilityTab.vue'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGeneralTab from './settings/SettingsGeneralTab.vue'
@@ -245,6 +180,7 @@ import SettingsLlmTab from './settings/SettingsLlmTab.vue'
 import SettingsMainActionsTab from './settings/SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './settings/SettingsPluginDetailTab.vue'
 import SettingsPluginsTab from './settings/SettingsPluginsTab.vue'
+import SettingsSaveStatus from './settings/SettingsSaveStatus.vue'
 import SettingsTasksTab from './settings/SettingsTasksTab.vue'
 import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import SettingsVoiceTab from './settings/SettingsVoiceTab.vue'
@@ -253,12 +189,8 @@ import {
   type BuiltinToolId,
   CONFIG_VERSION,
   type CommandConfig,
-  type ContrastMode,
   type MainActionConfig,
-  type MotionMode,
   SELECTION_HOTKEY_PREFIX,
-  UI_SCALES,
-  isUiScale,
 } from '@tyco/shared'
 
 const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()
@@ -420,27 +352,6 @@ const currentTabTitle = computed(() => {
   )
 })
 
-const contrastOptions = computed<{ id: ContrastMode; name: string }[]>(() => [
-  { id: 'auto', name: t('settings.contrastAuto') },
-  { id: 'normal', name: t('settings.contrastNormal') },
-  { id: 'more', name: t('settings.contrastMore') },
-])
-
-const motionOptions = computed<{ id: MotionMode; name: string }[]>(() => [
-  { id: 'auto', name: t('settings.motionAuto') },
-  { id: 'normal', name: t('settings.motionNormal') },
-  { id: 'reduce', name: t('settings.motionReduce') },
-])
-
-const uiScaleOptions = UI_SCALES.map((scale) => ({
-  id: scale,
-  name: `${scale}%`,
-}))
-
-const isEInkTheme = computed(
-  () => userConfig.value.appearance.theme === 'e-ink'
-)
-
 const navigatorLanguages = computed(() => getNavigatorLanguages())
 
 const effectiveAppLanguage = computed(() =>
@@ -530,15 +441,6 @@ const updateHotkey = (mode: string, shortcut: string) => {
   userConfig.value.hotkeys[mode] = shortcut
 }
 
-// <select> reports option values as strings
-const updateUiScale = (value: string | number | undefined) => {
-  const scale = Number(value)
-
-  if (isUiScale(scale)) {
-    userConfig.value.appearance.uiScale = scale
-  }
-}
-
 watch(
   () => userConfig.value.userLanguage,
   (userLanguage) => {
@@ -580,19 +482,6 @@ onUnmounted(() => {
 }
 .settings-fields:disabled {
   pointer-events: none;
-}
-.settings-save-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-.settings-save-status p {
-  flex-basis: 100%;
-  overflow-wrap: anywhere;
 }
 
 .settings-nav {
@@ -644,15 +533,6 @@ onUnmounted(() => {
   margin: 0 0 var(--space-xl);
   font-size: var(--text-heading);
   font-weight: 600;
-}
-
-.settings-config-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  margin: 0 0 var(--space-xl);
-  font-size: var(--text-body);
-  color: var(--color-warning);
 }
 
 @media (max-width: 45rem) {

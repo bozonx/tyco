@@ -28,15 +28,13 @@
         >
           {{ target }}
         </code>
-        <textarea
+        <FieldTextArea
           ref="textRef"
           class="launcher-text"
-          :value="launcher.inputText"
+          :model-value="launcher.inputText"
           :placeholder="t('commandLauncher.textPlaceholder')"
           :aria-label="t('commandLauncher.textPlaceholder')"
-          @input="
-            launcher.setText(($event.target as HTMLTextAreaElement).value)
-          "
+          @update:model-value="launcher.setText"
           @keydown="onTextKeyDown"
         />
       </div>
@@ -138,6 +136,7 @@ import {
   commandTarget,
   isCommandAvailable,
 } from '../../lib/commands/command-runtime'
+import type { TextControl } from '../../lib/ui/text-control'
 import { type ActionItem } from '../../stores/action-menu'
 import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useIpcStore } from '../../stores/ipc'
@@ -145,6 +144,7 @@ import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import SelectionContextPreview from '../common/SelectionContextPreview.vue'
 import ShortcutHint from '../common/ShortcutHint.vue'
 import InProgressMessage from './InProgressMessage.vue'
@@ -198,7 +198,7 @@ const { handleEsc } = useOverlayNav(() => {
   return {}
 })
 
-const textRef = ref<HTMLTextAreaElement | null>(null)
+const textRef = ref<TextControl | null>(null)
 
 const focusStage = () => {
   void nextTick(() => {
