@@ -1,13 +1,12 @@
 <template>
   <div class="custom-action-fields">
     <template v-if="command.toolId === 'script'">
-      <div class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionCommandLabel') }}
-          <InfoTooltip
-            :text="t('settings.actionCommandInfo', { placeholder: TEXT })"
-          />
-        </span>
+      <FieldRow
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionCommandLabel')"
+      >
         <ActionTemplateField
           ref="commandRef"
           multiline
@@ -26,20 +25,28 @@
             icon="mdi:file-code-outline"
           />
         </ActionTemplateField>
-        <FieldIssues :issues="issuesOf('command')" />
-      </div>
+        <template #messages
+          ><FieldIssues :issues="issuesOf('command')"
+        /></template>
 
-      <div class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionWorkingDirLabel') }}
-          <InfoTooltip :text="t('settings.actionWorkingDirInfo')" />
-        </span>
+        <template #info
+          ><InfoTooltip
+            :text="t('settings.actionCommandInfo', { placeholder: TEXT })"
+        /></template>
+      </FieldRow>
+
+      <FieldRow
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionWorkingDirLabel')"
+      >
         <div class="action-field-row">
           <FieldInput
             class="flex-1"
-            :value="script.workingDirectory"
+            :model-value="script.workingDirectory"
             :placeholder="t('settings.actionWorkingDirPlaceholder')"
-            @update:value="update('workingDirectory', $event)"
+            @update:model-value="update('workingDirectory', $event)"
           />
           <IconButton
             variant="ghost"
@@ -50,23 +57,29 @@
             icon="mdi:folder-open-outline"
           />
         </div>
-      </div>
+
+        <template #info
+          ><InfoTooltip :text="t('settings.actionWorkingDirInfo')"
+        /></template>
+      </FieldRow>
     </template>
 
     <template v-else-if="command.toolId === 'webhook'">
-      <div class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionWebhookUrlLabel') }}
-        </span>
+      <FieldRow
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionWebhookUrlLabel')"
+      >
         <div class="action-field-row">
           <SegmentedControl
-            :value="webhook.method || 'POST'"
+            :model-value="webhook.method || 'POST'"
             :label="t('settings.actionWebhookMethod')"
             :options="[
               { id: 'POST', name: 'POST' },
               { id: 'GET', name: 'GET' },
             ]"
-            @update:value="update('method', $event)"
+            @update:model-value="update('method', $event)"
           />
           <ActionTemplateField
             :value="webhook.url"
@@ -75,13 +88,16 @@
             @update:value="update('url', $event)"
           />
         </div>
-        <FieldIssues :issues="issuesOf('url')" />
-      </div>
+        <template #messages><FieldIssues :issues="issuesOf('url')" /></template>
+      </FieldRow>
 
-      <div v-if="(webhook.method || 'POST') === 'POST'" class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionWebhookBodyLabel') }}
-        </span>
+      <FieldRow
+        v-if="(webhook.method || 'POST') === 'POST'"
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionWebhookBodyLabel')"
+      >
         <ActionTemplateField
           multiline
           :value="webhook.payloadTemplate"
@@ -89,13 +105,17 @@
           :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
           @update:value="update('payloadTemplate', $event)"
         />
-        <FieldIssues :issues="issuesOf('payloadTemplate')" />
-      </div>
+        <template #messages
+          ><FieldIssues :issues="issuesOf('payloadTemplate')"
+        /></template>
+      </FieldRow>
 
-      <div class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionWebhookHeadersLabel') }}
-        </span>
+      <FieldRow
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionWebhookHeadersLabel')"
+      >
         <div
           v-for="(header, headerIndex) in headerRows"
           :key="headerIndex"
@@ -103,20 +123,22 @@
         >
           <FieldInput
             class="header-name"
-            :value="header[0]"
+            :aria-label="t('settings.actionWebhookHeaderName')"
+            :model-value="header[0]"
             :placeholder="t('settings.actionWebhookHeaderName')"
-            @update:value="updateHeader(headerIndex, 0, $event)"
+            @update:model-value="updateHeader(headerIndex, 0, $event)"
           />
           <FieldInput
             class="flex-1"
+            :aria-label="t('settings.actionWebhookHeaderValue')"
             :type="header[1].includes('tyco-secret:') ? 'password' : 'text'"
-            :value="header[1].includes('tyco-secret:') ? '' : header[1]"
+            :model-value="header[1].includes('tyco-secret:') ? '' : header[1]"
             :placeholder="
               header[1].includes('tyco-secret:')
                 ? t('settings.actionWebhookAuthReplacePlaceholder')
                 : t('settings.actionWebhookHeaderValue')
             "
-            @update:value="updateHeader(headerIndex, 1, $event)"
+            @update:model-value="updateHeader(headerIndex, 1, $event)"
           />
           <IconButton
             variant="ghost"
@@ -138,24 +160,25 @@
             {{ t('common.add') }}
           </Button>
         </div>
-      </div>
+      </FieldRow>
 
-      <div class="action-field">
-        <span class="action-field-label">
-          {{ t('settings.actionWebhookAuthLabel') }}
-          <InfoTooltip :text="t('settings.actionWebhookAuthInfo')" />
-        </span>
+      <FieldRow
+        class="action-field"
+        vertical
+        density="compact"
+        :label="t('settings.actionWebhookAuthLabel')"
+      >
         <div class="action-field-row">
           <FieldInput
             class="flex-1"
             type="password"
-            :value="authDraft"
+            :model-value="authDraft"
             :placeholder="
               hasAuth
                 ? t('settings.actionWebhookAuthReplacePlaceholder')
                 : t('settings.actionWebhookAuthPlaceholder')
             "
-            @update:value="authDraft = $event"
+            @update:model-value="authDraft = $event"
           />
           <Button size="sm" :disabled="!authDraft.trim()" @click="saveAuth">
             {{ t('common.save') }}
@@ -163,8 +186,7 @@
           <Button
             v-if="hasAuth"
             size="sm"
-            variant="ghost"
-            class="danger-ghost"
+            variant="danger-ghost"
             @click="removeAuth"
           >
             {{ t('common.remove') }}
@@ -173,7 +195,11 @@
         <p v-if="authBoundElsewhere" class="action-field-warning">
           {{ t('settings.apiKeyBoundTo', { origin: authOrigins.join(', ') }) }}
         </p>
-      </div>
+
+        <template #info
+          ><InfoTooltip :text="t('settings.actionWebhookAuthInfo')"
+        /></template>
+      </FieldRow>
     </template>
   </div>
 </template>
@@ -195,8 +221,8 @@ import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
 import FieldIssues from './FieldIssues.vue'
@@ -334,21 +360,6 @@ if (props.command.toolId === 'webhook' && webhook.value.isAuthEnabled) {
   flex-direction: column;
   gap: var(--space-md, 0.75rem);
   width: 100%;
-}
-
-.action-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs, 0.25rem);
-}
-
-.action-field-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  color: var(--app-text-muted);
 }
 
 .action-field-row {

@@ -46,11 +46,12 @@ describe('SettingsEditorTab.vue', () => {
               '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
           },
           FieldSelect: {
-            props: ['value', 'options'],
-            template: '<select class="field-select-stub" :data-val="value" />',
+            props: ['modelValue', 'options'],
+            template:
+              '<select class="field-select-stub" :data-val="modelValue" />',
           },
           FieldCheckbox: {
-            props: ['value'],
+            props: ['modelValue'],
             template: '<input type="checkbox" class="field-checkbox-stub" />',
           },
         },

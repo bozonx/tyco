@@ -69,27 +69,32 @@ import {
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ register: false })
 const props = defineProps<{
-  value?: unknown
+  modelValue?: unknown
+
   options?: InputConfigOption[]
   defaultValue?: unknown
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:value', value: SortableChecklistItem[]): void
+  'update:modelValue': [value: SortableChecklistItem[]]
 }>()
 
 const { t } = useI18n()
 const listRef = ref<HTMLElement | null>(null)
 
 const localItems = ref<SortableChecklistItem[]>(
-  resolveSortableChecklist(props.value, props.options ?? [], props.defaultValue)
+  resolveSortableChecklist(
+    props.modelValue,
+    props.options ?? [],
+    props.defaultValue
+  )
 )
 
 watch(
-  () => [props.value, props.options, props.defaultValue],
+  () => [props.modelValue, props.options, props.defaultValue],
   () => {
     localItems.value = resolveSortableChecklist(
-      props.value,
+      props.modelValue,
       props.options ?? [],
       props.defaultValue
     )
@@ -99,7 +104,7 @@ watch(
 
 const syncItems = () => {
   emit(
-    'update:value',
+    'update:modelValue',
     localItems.value.map((i: SortableChecklistItem) => ({ ...i }))
   )
 }

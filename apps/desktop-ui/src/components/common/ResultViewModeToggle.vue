@@ -1,11 +1,11 @@
 <template>
   <SegmentedControl
-    :value="value"
+    :model-value="modelValue"
     :label="resolvedLabel"
     :options="options"
     compact
     hide-labels-on-small-screens
-    @update:value="selectMode"
+    @update:model-value="selectMode"
   />
 </template>
 <script setup lang="ts" generic="T extends DiffViewMode">
@@ -19,14 +19,14 @@ export type ResultViewPreset = 'diff' | 'parallel'
 
 const props = withDefaults(
   defineProps<{
-    value: T
+    modelValue: T
     label?: string
     modes?: T[]
     preset?: ResultViewPreset
   }>(),
   { label: undefined, modes: undefined, preset: 'diff' }
 )
-const emit = defineEmits<{ (e: 'update:value', value: T): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: T): void }>()
 const { t } = useI18n()
 const MODE_OPTIONS = {
   unified: { labelKey: 'diff.modeUnified', icon: 'mdi:view-agenda-outline' },
@@ -58,6 +58,6 @@ const options = computed(() =>
   }))
 )
 function selectMode(mode: T) {
-  if (props.value !== mode) emit('update:value', mode)
+  if (props.modelValue !== mode) emit('update:modelValue', mode)
 }
 </script>

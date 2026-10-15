@@ -10,16 +10,16 @@
         :label="t(field.labelKey)"
       >
         <FieldSelect
-          :value="markdown[field.name]"
+          :model-value="markdown[field.name]"
           :options="field.options"
-          @update:value="updateMarkdown(field.name, $event)"
+          @update:model-value="updateMarkdown(field.name, $event)"
         />
       </FieldRow>
       <FieldRow
         :label="t('settings.markdownIncrementListMarker')"
         :info="t('settings.markdownIncrementListMarkerInfo')"
       >
-        <FieldCheckbox v-model:value="markdown.incrementListMarker" />
+        <FieldCheckbox v-model="markdown.incrementListMarker" />
       </FieldRow>
     </SettingsSection>
 
@@ -29,42 +29,42 @@
     >
       <FieldRow :label="t('settings.markdownCleanBullet')">
         <FieldSelect
-          v-model:value="markdownClean.bullet"
+          v-model="markdownClean.bullet"
           :options="cleanBulletOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanCodeBlockIndent')">
         <FieldSelect
-          v-model:value="markdownClean.codeBlockIndent"
+          v-model="markdownClean.codeBlockIndent"
           :options="cleanCodeBlockIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanBlockquoteIndent')">
         <FieldSelect
-          v-model:value="markdownClean.blockquoteIndent"
+          v-model="markdownClean.blockquoteIndent"
           :options="cleanBlockquoteIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanLinkFormat')">
         <FieldSelect
-          v-model:value="markdownClean.linkFormat"
+          v-model="markdownClean.linkFormat"
           :options="cleanLinkFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanImageFormat')">
         <FieldSelect
-          v-model:value="markdownClean.imageFormat"
+          v-model="markdownClean.imageFormat"
           :options="cleanImageFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepInlineCode')">
-        <FieldCheckbox v-model:value="markdownClean.keepInlineCode" />
+        <FieldCheckbox v-model="markdownClean.keepInlineCode" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepHorizontalRules')">
-        <FieldCheckbox v-model:value="markdownClean.keepThematicBreaks" />
+        <FieldCheckbox v-model="markdownClean.keepThematicBreaks" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepTaskCheckboxes')">
-        <FieldCheckbox v-model:value="markdownClean.keepTaskCheckboxes" />
+        <FieldCheckbox v-model="markdownClean.keepTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
   </div>

@@ -10,8 +10,8 @@ const Form = defineComponent({
   components: { FieldRow, FieldInput, FieldCheckbox },
   props: { hint: String, error: String, disabled: Boolean },
   template: `<FieldRow label="Setting" :hint="hint" :error="error" :disabled="disabled" required>
-    <FieldInput value="Text" />
-    <FieldCheckbox :value="false" />
+    <FieldInput model-value="Text" />
+    <FieldCheckbox :model-value="false" />
   </FieldRow>`,
 })
 
@@ -66,5 +66,32 @@ describe('FieldRow', () => {
     expect(wrapper.find('.info-tooltip-trigger').exists()).toBe(true)
     expect(wrapper.classes()).toContain('vertical')
     expect(wrapper.classes()).toContain('nested')
+    expect(wrapper.classes()).not.toContain('field-row--no-divider')
+    expect(
+      mount(FieldRow, {
+        props: { label: 'No separator', separator: false },
+      }).classes()
+    ).toContain('field-row--no-divider')
+  })
+  it('links multiple warnings and domain messages without marking a valid control invalid', async () => {
+    const wrapper = mount(FieldRow, {
+      props: {
+        label: 'Command',
+        warning: ['First warning', 'Second warning'],
+        density: 'compact',
+        vertical: true,
+      },
+      slots: { default: FieldInput, messages: '<p>Domain warning</p>' },
+    })
+    await wrapper.vm.$nextTick()
+    const input = wrapper.get('input')
+    const messages = wrapper.get('.field-row-warning')
+    expect(input.attributes('aria-describedby')).toBe(messages.attributes('id'))
+    expect(messages.text()).toContain('Domain warning')
+    expect(messages.findAll('p')).toHaveLength(3)
+    expect(input.attributes('aria-invalid')).toBeUndefined()
+    await wrapper.setProps({ error: ['Missing value', 'Duplicate value'] })
+    expect(input.attributes('aria-invalid')).toBe('true')
+    expect(wrapper.get('[role="alert"]').findAll('p')).toHaveLength(2)
   })
 })

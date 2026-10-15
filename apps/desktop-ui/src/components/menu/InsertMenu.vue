@@ -6,9 +6,10 @@
       v-if="statusVisible || (hasDiff && !props.correctionError)"
       #header-extra
     >
-      <DiffModeToggle
+      <ResultViewModeToggle
+        preset="diff"
         v-if="hasDiff && !props.correctionError"
-        v-model:value="diffMode"
+        v-model="diffMode"
       />
       <span
         v-if="statusVisible"
@@ -79,7 +80,7 @@ import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
 import Diff from '../common/Diff.vue'
-import DiffModeToggle from '../common/DiffModeToggle.vue'
+import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
 

@@ -18,7 +18,7 @@
           :info="t('settings.editorHistoryStorageHint')"
         >
           <FieldSelect
-            v-model:value="userConfig.editorHistory.storage"
+            v-model="userConfig.editorHistory.storage"
             :options="editorHistoryStorageOptions"
           />
         </FieldRow>
@@ -26,12 +26,16 @@
           v-if="userConfig.editorHistory.storage !== 'off'"
           class="editor-history-nested"
         >
-          <FieldRow :label="t('settings.editorHistoryMaxItems')" nested>
+          <FieldRow
+            :label="t('settings.editorHistoryMaxItems')"
+            nested
+            :separator="false"
+          >
             <FieldNumber
               :min="1"
               :step="1"
-              :value="userConfig.editorHistory.maxItems"
-              @update:value="setEditorHistoryLimit"
+              :model-value="userConfig.editorHistory.maxItems"
+              @update:model-value="setEditorHistoryLimit"
             />
           </FieldRow>
           <template v-if="userConfig.editorHistory.storage === 'disk'">
@@ -39,21 +43,23 @@
               :label="t('settings.editorHistoryRetentionDays')"
               :info="t('settings.editorHistoryRetentionDaysHint')"
               nested
+              :separator="false"
             >
               <FieldSelect
-                :value="userConfig.editorHistory.retentionDays ?? 0"
+                :model-value="userConfig.editorHistory.retentionDays ?? 0"
                 :options="editorHistoryRetentionOptions"
-                @update:value="setEditorHistoryRetentionDays"
+                @update:model-value="setEditorHistoryRetentionDays"
               />
             </FieldRow>
             <FieldRow
               :label="t('settings.sanitizeSecretsInEditorHistory')"
               :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
               nested
+              :separator="false"
             >
               <FieldCheckbox
-                :value="userConfig.editorHistory.sanitizeSecrets ?? false"
-                @update:value="
+                :model-value="userConfig.editorHistory.sanitizeSecrets ?? false"
+                @update:model-value="
                   userConfig.editorHistory.sanitizeSecrets = $event
                 "
               />
@@ -81,8 +87,8 @@
           :info="t('settings.chatHistoryEnabledHint')"
         >
           <FieldCheckbox
-            :value="chatHistoryChecked"
-            @update:value="setChatHistoryEnabled"
+            :model-value="chatHistoryChecked"
+            @update:model-value="setChatHistoryEnabled"
           />
         </FieldRow>
         <div v-if="chatHistoryChecked" class="editor-history-nested">
@@ -90,11 +96,12 @@
             :label="t('settings.chatHistoryRetentionDays')"
             :info="t('settings.chatHistoryRetentionDaysHint')"
             nested
+            :separator="false"
           >
             <FieldSelect
-              :value="userConfig.chat.historyRetentionDays ?? 0"
+              :model-value="userConfig.chat.historyRetentionDays ?? 0"
               :options="chatHistoryRetentionOptions"
-              @update:value="setChatHistoryRetentionDays"
+              @update:model-value="setChatHistoryRetentionDays"
             />
           </FieldRow>
         </div>
@@ -274,9 +281,5 @@ const chatHistoryRetentionOptions = computed(() =>
   background-color: var(--app-surface-sunken);
   border-top: 1px solid var(--app-border-subtle);
   border-left: 2px solid var(--app-border-strong);
-}
-
-.editor-history-nested :deep(.field-row + .field-row) {
-  border-top: none;
 }
 </style>

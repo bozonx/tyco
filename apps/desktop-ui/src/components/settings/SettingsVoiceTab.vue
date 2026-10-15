@@ -3,9 +3,9 @@
     <SettingsSection>
       <FieldRow :label="t('settings.sttProvider')">
         <FieldSelect
-          :value="currentSttModel.provider"
+          :model-value="currentSttModel.provider"
           :options="sttProviderOptions"
-          @update:value="setSttProvider"
+          @update:model-value="setSttProvider"
         />
       </FieldRow>
       <FieldRow
@@ -14,16 +14,16 @@
         :hint="t('settings.sttServerUrlHint')"
       >
         <FieldInput
-          :value="currentSttModel.baseUrl || ''"
+          :model-value="currentSttModel.baseUrl || ''"
           placeholder="ws://localhost:6006"
-          @update:value="setSttServerUrl"
+          @update:model-value="setSttServerUrl"
         />
       </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
         <FieldInput
-          :value="currentSttModel.providerModelId || ''"
+          :model-value="currentSttModel.providerModelId || ''"
           placeholder="nova-3"
-          @update:value="setSttModelName"
+          @update:model-value="setSttModelName"
         />
       </FieldRow>
       <FieldRow
@@ -32,9 +32,9 @@
         :hint="t('settings.sttLanguageHint')"
       >
         <FieldSelect
-          :value="currentSttModel.language || DICTATION_LANGUAGE_USER"
+          :model-value="currentSttModel.language || DICTATION_LANGUAGE_USER"
           :options="sttLanguageOptions"
-          @update:value="setSttLanguage"
+          @update:model-value="setSttLanguage"
         />
       </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
@@ -52,8 +52,8 @@
       <FieldRow :label="t('settings.formatWithLlm')">
         <FieldCheckbox
           :key="currentSttModel.id"
-          :value="Boolean(currentSttModel.formatWithLlm)"
-          @update:value="setSttFormatWithLlm"
+          :model-value="Boolean(currentSttModel.formatWithLlm)"
+          @update:model-value="setSttFormatWithLlm"
         />
       </FieldRow>
       <FieldRow
@@ -61,7 +61,7 @@
         :label="t('settings.sttLlmRules')"
         vertical
       >
-        <FieldTextArea v-model:value="userConfig.aiRules.voiceCorrection" />
+        <FieldTextArea v-model="userConfig.aiRules.voiceCorrection" />
       </FieldRow>
     </SettingsSection>
   </div>

@@ -6,7 +6,7 @@
     escMode="back"
   >
     <template #header-extra>
-      <DiffModeToggle v-model:value="diffMode" />
+      <ResultViewModeToggle preset="diff" v-model="diffMode" />
     </template>
 
     <template #preview>
@@ -41,7 +41,7 @@ import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
-import DiffModeToggle from '../common/DiffModeToggle.vue'
+import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import type { ActionItem } from '@tyco/plugin-sdk'
 
 const props = defineProps<DiffMenuParams>()

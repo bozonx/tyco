@@ -42,7 +42,7 @@ describe('LLM settings cards', () => {
   it('edits the shared provider draft and updates the card summary', async () => {
     const { llm, localCard } = setup()
     const card = localCard()
-    await card.get('.connection-summary').trigger('click')
+    await card.get('.disclosure-header').trigger('click')
     await card.get('input[placeholder="Ollama"]').setValue('Local model server')
     await card
       .get('input[placeholder="http://localhost:11434/v1"]')
@@ -53,8 +53,8 @@ describe('LLM settings cards', () => {
       name: 'Local model server',
       baseUrl: 'http://models.lan/v1',
     })
-    expect(card.get('.connection-title').text()).toContain('Local model server')
-    expect(card.get('.connection-meta').text()).toContain(
+    expect(card.get('.disclosure-title').text()).toContain('Local model server')
+    expect(card.get('.disclosure-description').text()).toContain(
       'http://models.lan/v1'
     )
   })
@@ -62,7 +62,7 @@ describe('LLM settings cards', () => {
   it('saves a key using the updated provider origin and clears its draft', async () => {
     const { localCard } = setup()
     const card = localCard()
-    await card.get('.connection-summary').trigger('click')
+    await card.get('.disclosure-header').trigger('click')
     await card
       .get('input[placeholder="http://localhost:11434/v1"]')
       .setValue('http://models.lan/v1')
@@ -79,7 +79,7 @@ describe('LLM settings cards', () => {
   it('adds a model through the card and keeps removal behind the parent confirmation', async () => {
     const { llm, wrapper, localCard } = setup()
     const card = localCard()
-    await card.get('.connection-summary').trigger('click')
+    await card.get('.disclosure-header').trigger('click')
     const count = llm.models.length
     await card.get('.models-header button').trigger('click')
     expect(llm.models).toHaveLength(count + 1)
@@ -145,8 +145,8 @@ describe('SettingsLlmTab.vue', () => {
             `,
           },
           FieldTextArea: {
-            props: ['value'],
-            template: '<textarea class="textarea-stub" :value="value" />',
+            props: ['modelValue'],
+            template: '<textarea class="textarea-stub" :value="modelValue" />',
           },
           FieldInput: true,
           FieldSelect: true,

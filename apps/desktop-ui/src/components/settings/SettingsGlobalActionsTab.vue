@@ -59,13 +59,11 @@
               <p>{{ row.externalHint }}</p>
               <div class="external-command">
                 <code>{{ row.command }}</code>
-                <Button
+                <IconButton
                   size="sm"
                   variant="ghost"
-                  square
                   icon="mdi:content-copy"
-                  :title="t('settings.copyActivationCommand')"
-                  :aria-label="t('settings.copyActivationCommand')"
+                  :label="t('settings.copyActivationCommand')"
                   @click="copyText(row.command)"
                 />
               </div>
@@ -82,26 +80,22 @@
             @record="setShortcut(row.id, $event)"
             @recording="suspendHotkeys"
           />
-          <Button
+          <IconButton
             v-if="isEditable && row.value"
             size="sm"
             variant="ghost"
-            square
             icon="mdi:close"
-            :title="t('settings.unassignHotkey')"
-            :aria-label="t('settings.unassignHotkey')"
+            :label="t('settings.unassignHotkey')"
             @click="setShortcut(row.id, '')"
           />
-          <Button
+          <IconButton
             v-if="
               isEditable && row.defaultValue && row.value !== row.defaultValue
             "
             size="sm"
             variant="ghost"
-            square
             icon="mdi:restore"
-            :title="t('settings.resetToDefault')"
-            :aria-label="t('settings.resetToDefault')"
+            :label="t('settings.resetToDefault')"
             @click="setShortcut(row.id, row.defaultValue)"
           />
           <p v-if="row.inline && injection.ok === false" class="hotkey-error">
@@ -124,13 +118,11 @@
             class="external-command"
           >
             <code>{{ providerState.statuses[row.id].externalCommand }}</code>
-            <Button
+            <IconButton
               size="sm"
               variant="ghost"
-              square
               icon="mdi:content-copy"
-              :title="t('settings.copyHotkeyCommand')"
-              :aria-label="t('settings.copyHotkeyCommand')"
+              :label="t('settings.copyHotkeyCommand')"
               @click="
                 copyText(providerState.statuses[row.id].externalCommand ?? '')
               "
@@ -146,9 +138,11 @@
     >
       <FieldRow :label="t('settings.submitKey.label')">
         <FieldSelect
-          :value="userConfig.submitKey ?? DEFAULT_SUBMIT_KEY"
+          :model-value="userConfig.submitKey ?? DEFAULT_SUBMIT_KEY"
           :options="submitKeyOptions"
-          @update:value="emit('update:submit-key', resolveSubmitKey($event))"
+          @update:model-value="
+            emit('update:submit-key', resolveSubmitKey($event))
+          "
         />
       </FieldRow>
     </SettingsSection>
@@ -180,6 +174,7 @@ import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import HotkeyInput from '../common/HotkeyInput.vue'
+import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import {

@@ -1,5 +1,6 @@
 <template>
   <button
+    ref="buttonRef"
     :class="['btn', buttonClass]"
     :type="props.type ?? 'button'"
     :disabled="props.disabled || props.loading"
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
 import Icon from './AppIcon.vue'
@@ -44,7 +45,8 @@ const buttonClass = computed(() => {
   return {
     'btn-neutral': variant === 'neutral',
     'btn-primary': variant === 'primary',
-    'btn-ghost': variant === 'ghost',
+    'btn-ghost': variant === 'ghost' || variant === 'danger-ghost',
+    'btn-danger-ghost': variant === 'danger-ghost',
     'btn-error': variant === 'danger',
     'btn-xs': size === 'xs',
     'btn-sm': size === 'sm',
@@ -53,6 +55,9 @@ const buttonClass = computed(() => {
     'btn-square': props.square,
   }
 })
+
+const buttonRef = ref<HTMLButtonElement | null>(null)
+defineExpose({ focus: () => buttonRef.value?.focus() })
 
 const emit = defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
@@ -69,5 +74,11 @@ const onClick = (event: MouseEvent) => {
 }
 .btn-error:hover {
   filter: brightness(0.9);
+}
+.btn-danger-ghost {
+  color: var(--color-error);
+}
+.btn-danger-ghost:not(:disabled):hover {
+  --btn-bg: color-mix(in oklab, var(--color-error) 12%, transparent);
 }
 </style>

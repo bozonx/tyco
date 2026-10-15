@@ -80,9 +80,9 @@ describe('SettingsPluginsTab.vue', () => {
       global: {
         stubs: {
           FieldCheckbox: {
-            props: ['value', 'label'],
+            props: ['modelValue', 'label'],
             template:
-              '<button class="checkbox-stub" :data-enabled="value" @click="$emit(\'update:value\', !value)">{{ label }}</button>',
+              '<button class="checkbox-stub" :data-enabled="modelValue" @click="$emit(\'update:modelValue\', !value)">{{ label }}</button>',
           },
         },
       },
@@ -105,9 +105,9 @@ describe('SettingsPluginsTab.vue', () => {
       global: {
         stubs: {
           FieldCheckbox: {
-            props: ['value', 'label'],
+            props: ['modelValue', 'label'],
             template:
-              '<button class="checkbox-stub" @click.stop="$emit(\'update:value\', false)">toggle</button>',
+              '<button class="checkbox-stub" @click.stop="$emit(\'update:modelValue\', false)">toggle</button>',
           },
         },
       },

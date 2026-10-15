@@ -27,7 +27,7 @@ describe('FieldSortableChecklist.vue', () => {
     expect(inputs[1].element.checked).toBe(false)
   })
 
-  it('toggles checkbox and emits update:value', async () => {
+  it('toggles checkbox and emits update:modelValue', async () => {
     const wrapper = mount(FieldSortableChecklist, {
       props: { options, defaultValue: [{ id: 'acute', enabled: true }] },
       global: { stubs: { Icon: true } },
@@ -36,8 +36,8 @@ describe('FieldSortableChecklist.vue', () => {
     const inputs = wrapper.findAll('input[type="checkbox"]')
     await inputs[1].trigger('change')
 
-    expect(wrapper.emitted('update:value')).toBeTruthy()
-    const emitted = wrapper.emitted('update:value')![0][0]
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    const emitted = wrapper.emitted('update:modelValue')![0][0]
     expect(emitted).toEqual([
       { id: 'acute', enabled: true },
       { id: 'grave', enabled: true },
@@ -48,7 +48,7 @@ describe('FieldSortableChecklist.vue', () => {
     const wrapper = mount(FieldSortableChecklist, {
       props: {
         options,
-        value: [
+        modelValue: [
           { id: 'acute', enabled: true },
           { id: 'grave', enabled: false },
         ],
@@ -58,19 +58,19 @@ describe('FieldSortableChecklist.vue', () => {
     })
     const buttons = wrapper.findAll('button')
     await buttons[0].trigger('click')
-    expect(wrapper.emitted('update:value')).toBeUndefined()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     buttons[1].element.focus()
     await buttons[1].trigger('click')
-    expect(wrapper.emitted('update:value')![0][0]).toEqual([
+    expect(wrapper.emitted('update:modelValue')![0][0]).toEqual([
       { id: 'grave', enabled: false },
       { id: 'acute', enabled: true },
     ])
     expect(document.activeElement).toBe(buttons[1].element)
     expect(buttons[1].attributes('aria-disabled')).toBe('true')
     await buttons[1].trigger('click')
-    expect(wrapper.emitted('update:value')).toHaveLength(1)
+    expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
     await buttons[0].trigger('click')
-    expect(wrapper.emitted('update:value')![1][0]).toEqual([
+    expect(wrapper.emitted('update:modelValue')![1][0]).toEqual([
       { id: 'acute', enabled: true },
       { id: 'grave', enabled: false },
     ])
@@ -81,7 +81,7 @@ describe('FieldSortableChecklist.vue', () => {
     const wrapper = mount(FieldSortableChecklist, {
       props: {
         options,
-        value: [
+        modelValue: [
           { id: 'acute', enabled: true },
           { id: 'grave', enabled: false },
         ],
@@ -107,8 +107,8 @@ describe('FieldSortableChecklist.vue', () => {
     await wrapper.vm.$nextTick()
 
     expect(document.body.classList.contains('is-sorting')).toBe(false)
-    expect(wrapper.emitted('update:value')).toBeTruthy()
-    const emitted = wrapper.emitted('update:value')![0][0]
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    const emitted = wrapper.emitted('update:modelValue')![0][0]
     expect(emitted).toEqual([
       { id: 'grave', enabled: false },
       { id: 'acute', enabled: true },

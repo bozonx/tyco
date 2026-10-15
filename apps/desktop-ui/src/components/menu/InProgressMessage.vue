@@ -69,10 +69,4 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
-
-.in-progress-label {
-  font-size: var(--text-title);
-  font-weight: 500;
-  color: var(--app-text-muted);
-}
 </style>

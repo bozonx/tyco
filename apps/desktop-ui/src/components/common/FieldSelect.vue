@@ -1,7 +1,7 @@
 <template>
   <select
     v-bind="controlAttrs()"
-    :value="props.options.findIndex((option) => option.id === currentValue)"
+    :value="props.options.findIndex((option) => option.id === props.modelValue)"
     :title="title"
     class="select"
     @change="handleChange"
@@ -40,7 +40,6 @@ const controlAttrs = useFieldControl()
 type Option = { id: number | string; name: string; group?: string }
 
 const props = defineProps<{
-  value?: number | string
   modelValue?: number | string
   title?: string
   /** Options of one `group` go under its heading; keep them next to each other */
@@ -48,13 +47,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:value', value: number | string | undefined): void
   (e: 'update:modelValue', value: number | string | undefined): void
 }>()
-
-const currentValue = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : props.value
-)
 
 const sections = computed(() => {
   const result: { label?: string; options: Option[] }[] = []
@@ -69,7 +63,7 @@ const sections = computed(() => {
 function handleChange(event: Event) {
   const select = event.target as HTMLSelectElement
   const option = props.options[select.selectedIndex]
-  emit('update:value', option?.id)
+
   emit('update:modelValue', option?.id)
 }
 </script>

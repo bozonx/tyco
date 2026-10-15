@@ -22,7 +22,7 @@ const mountMenu = (replaceEditor?: () => void) =>
       stubs: {
         ShortcutList: true,
         Diff: true,
-        DiffModeToggle: true,
+        ResultViewModeToggle: true,
         ActionOverlayLayout: {
           props: ['title'],
           template: '<div :data-title="title"><slot name="actions" /></div>',

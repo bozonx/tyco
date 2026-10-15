@@ -52,7 +52,7 @@ describe('SettingsLanguagesTab.vue', () => {
   it('links to the translation settings tab', async () => {
     const wrapper = mountTab()
 
-    await wrapper.find('.settings-inline-link').trigger('click')
+    await wrapper.find('.inline-action').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([['translations']])
   })

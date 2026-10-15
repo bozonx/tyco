@@ -161,7 +161,9 @@ describe('CommandEditor.vue', () => {
     const trial = wrapper
       .findAll('input')
       .find((input) =>
-        input.element.parentElement?.textContent?.includes('voiceCommands.try')
+        input.element
+          .closest('.field-row')
+          ?.textContent?.includes('voiceCommands.try')
       )!
     await trial.setValue('save')
     expect(wrapper.text()).toContain('voiceCommands.incomplete')

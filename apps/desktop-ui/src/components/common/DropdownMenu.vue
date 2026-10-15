@@ -5,20 +5,16 @@
     @focusout="onFocusout"
     @keydown.esc="onEscape"
   >
-    <button
+    <Button
       ref="triggerRef"
       type="button"
-      class="btn dropdown-trigger flex items-center gap-1"
-      :class="{
-        'btn-xs': size === 'xs',
-        'btn-sm': size === 'sm',
-        'btn-primary': variant === 'primary',
-        'btn-neutral': variant === 'neutral',
-        'btn-ghost': variant === 'ghost',
-        'btn-error': variant === 'danger',
-        'btn-active': isOpen,
-        'btn-square': square,
-      }"
+      class="dropdown-trigger flex items-center gap-1"
+      :size="size"
+      :variant="variant"
+      :active="isOpen"
+      :square="square"
+      :class="{ 'dropdown-trigger--muted': muted }"
+      :style="{ maxWidth: maxTriggerWidth }"
       :title="title"
       :aria-expanded="isOpen"
       aria-haspopup="menu"
@@ -39,9 +35,9 @@
         class="opacity-70 transition-transform duration-150 shrink-0"
         :class="{ 'rotate-180': isOpen }"
       />
-    </button>
+    </Button>
 
-    <div
+    <MenuSurface
       v-if="isOpen"
       class="dropdown-panel absolute min-w-44 max-w-80 max-h-72 overflow-y-auto"
       :id="menuId"
@@ -53,25 +49,16 @@
         align === 'right' ? 'right-0 left-auto' : 'left-0',
       ]"
     >
-      <button
-        v-for="(item, idx) in items"
-        :key="idx"
-        type="button"
+      <MenuItem
+        v-for="(item, index) in items"
+        :key="index"
         class="dropdown-item"
-        role="menuitem"
-        tabindex="-1"
-        :class="{ 'is-danger': item.danger }"
+        :label="item.label"
+        :icon="item.icon"
+        :danger="item.danger"
         @click="selectItem(item)"
-      >
-        <Icon
-          v-if="item.icon"
-          :icon="item.icon"
-          height="16"
-          class="shrink-0 opacity-70"
-        />
-        <span class="truncate">{{ item.label }}</span>
-      </button>
-    </div>
+      />
+    </MenuSurface>
   </div>
 </template>
 
@@ -83,6 +70,9 @@ import { translate } from '../../lib/i18n'
 import type { ButtonVariant, ControlSize } from '../../lib/ui/control-types'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
 import Icon from './AppIcon.vue'
+import Button from './Button.vue'
+import MenuItem from './MenuItem.vue'
+import MenuSurface from './MenuSurface.vue'
 
 export interface DropdownMenuItem {
   label: string
@@ -93,6 +83,8 @@ export interface DropdownMenuItem {
 
 withDefaults(
   defineProps<{
+    muted?: boolean
+    maxTriggerWidth?: string
     label?: string
     icon?: string
     title?: string
@@ -134,49 +126,7 @@ const selectItem = async (item: DropdownMenuItem) => {
 </script>
 
 <style scoped>
-.dropdown-trigger {
-  font-weight: 500;
-}
-
-.dropdown-panel {
-  z-index: var(--z-popover);
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-xs);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--app-surface);
-  box-shadow: var(--app-shadow-lg);
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-  padding: 0.375rem var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-control);
-  text-align: left;
-  color: var(--color-base-content);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.dropdown-item:hover,
-.dropdown-item:focus-visible {
-  background-color: var(--app-hover);
-}
-
-.dropdown-item.is-danger {
-  color: var(--color-error);
-}
-
-.dropdown-item.is-danger:hover,
-.dropdown-item.is-danger:focus-visible {
-  background-color: var(--color-error);
-  color: var(--color-error-content);
+.dropdown-trigger--muted {
+  color: var(--app-text-muted);
 }
 </style>

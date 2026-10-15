@@ -54,13 +54,13 @@ describe('SettingsGlobalActionsTab.vue', () => {
     },
     FieldSelect: {
       name: 'FieldSelect',
-      props: ['value', 'options'],
-      emits: ['update:value'],
+      props: ['modelValue', 'options'],
+      emits: ['update:modelValue'],
       template: `
         <select
           class="field-select-stub"
-          :value="value"
-          @change="$emit('update:value', $event.target.value)"
+          :value="modelValue"
+          @change="$emit('update:modelValue', $event.target.value)"
         >
           <option v-for="opt in options" :key="opt.id" :value="opt.id">
             {{ opt.name }}
@@ -113,9 +113,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
     const select = submitKeyRow.findComponent({ name: 'FieldSelect' })
     expect(select.exists()).toBe(true)
-    expect(select.props('value')).toBe('enter')
+    expect(select.props('modelValue')).toBe('enter')
 
-    await select.vm.$emit('update:value', 'ctrlEnter')
+    await select.vm.$emit('update:modelValue', 'ctrlEnter')
 
     expect(wrapper.emitted('update:submit-key')).toBeTruthy()
     expect(wrapper.emitted('update:submit-key')![0]).toEqual(['ctrlEnter'])

@@ -1,2 +1,3 @@
 export type ControlSize = 'xs' | 'sm' | 'md'
-export type ButtonVariant = 'primary' | 'neutral' | 'ghost' | 'danger'
+export type ButtonVariant =
+  'primary' | 'neutral' | 'ghost' | 'danger' | 'danger-ghost'

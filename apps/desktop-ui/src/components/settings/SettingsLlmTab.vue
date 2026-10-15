@@ -6,13 +6,13 @@
       vertical
     >
       <FieldSelect
-        :value="imageQuality || 'balanced'"
+        :model-value="imageQuality || 'balanced'"
         :options="[
           { id: 'economy', name: t('settings.imageQualityEconomy') },
           { id: 'balanced', name: t('settings.imageQualityBalanced') },
           { id: 'original', name: t('settings.imageQualityOriginal') },
         ]"
-        @update:value="
+        @update:model-value="
           emit(
             'update:imageQuality',
             $event as UserConfig['chat']['imageQuality']
@@ -38,6 +38,8 @@
         v-for="provider in llm.providers"
         :key="provider.id"
         :provider="provider"
+        :expanded="settings.expandedProviderIds.has(provider.id)"
+        @toggle="toggleProvider(provider.id)"
         :label="providerLabel(provider)"
         :llm="llm"
         :settings="settings"
@@ -73,16 +75,17 @@
           </span>
           <FieldSelect
             class="flex-1"
-            :value="modelId"
+            :model-value="modelId"
             :options="modelOptions"
-            @update:value="llm.taskModelChains[task][index] = String($event)"
+            @update:model-value="
+              llm.taskModelChains[task][index] = String($event)
+            "
           />
-          <Button
+          <IconButton
             size="sm"
             variant="ghost"
-            square
             icon="mdi:close"
-            :title="t('settings.removeFallback')"
+            :label="t('settings.removeFallback')"
             @click="llm.taskModelChains[task].splice(index, 1)"
           />
         </div>
@@ -107,10 +110,10 @@
 
   <SettingsSection v-if="aiRules" :title="t('settings.aiRules')">
     <FieldRow :label="t('settings.chatRules')" vertical>
-      <FieldTextArea v-model:value="aiRules.chat" />
+      <FieldTextArea v-model="aiRules.chat" />
     </FieldRow>
     <FieldRow :label="t('settings.textCorrection')" vertical>
-      <FieldTextArea v-model:value="aiRules.correction" />
+      <FieldTextArea v-model="aiRules.correction" />
     </FieldRow>
   </SettingsSection>
   <ConfirmModal
@@ -138,6 +141,7 @@ import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import IconButton from '../common/IconButton.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
@@ -187,6 +191,11 @@ const { addProvider, removeProviderById, nextFallback, addFallback, dispose } =
   settings
 onBeforeUnmount(dispose)
 const pendingProviderId = ref<string | null>(null)
+function toggleProvider(providerId: string) {
+  const expanded = settings.expandedProviderIds
+  if (expanded.has(providerId)) expanded.delete(providerId)
+  else expanded.add(providerId)
+}
 function confirmProviderRemoval() {
   if (pendingProviderId.value) removeProviderById(pendingProviderId.value)
   pendingProviderId.value = null
@@ -233,9 +242,6 @@ onMounted(() => {
 <style scoped>
 .assignment-label {
   font-size: var(--text-caption);
-}
-.danger-ghost:not(:disabled):hover {
-  color: var(--color-error);
 }
 .assignment-row {
   display: grid;

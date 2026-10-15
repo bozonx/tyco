@@ -4,44 +4,54 @@
       {{ t(unavailableReason) }}
     </p>
 
-    <label class="command-field">
-      <span class="command-field-label">
-        {{ t('commands.nameLabel') }}
-        <span class="command-required" aria-hidden="true">*</span>
-      </span>
+    <FieldRow
+      class="command-field"
+      vertical
+      density="compact"
+      required
+      :label="t('commands.nameLabel')"
+    >
       <FieldInput
-        :value="command.name"
+        :model-value="command.name"
         :placeholder="t('commands.namePlaceholder')"
-        @update:value="update({ name: $event })"
+        @update:model-value="update({ name: $event })"
       />
-      <FieldIssues :issues="nameIssues" />
-    </label>
+      <template #messages><FieldIssues :issues="nameIssues" /></template>
+    </FieldRow>
 
     <section class="command-group">
       <h4 class="command-group-title">{{ t('voiceCommands.title') }}</h4>
       <FieldCheckbox
-        :value="command.isVoiceEnabled"
+        :model-value="command.isVoiceEnabled"
         :label="t('voiceCommands.enabled')"
-        @update:value="update({ isVoiceEnabled: $event })"
+        @update:model-value="update({ isVoiceEnabled: $event })"
       />
       <template v-if="command.isVoiceEnabled">
-        <label class="command-field">
-          <span>{{ t('voiceCommands.phrases') }}</span>
+        <FieldRow
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('voiceCommands.phrases')"
+        >
           <FieldTextArea
-            :value="command.phrases.join('\n')"
-            @update:value="update({ phrases: $event.split('\n') })"
+            :model-value="command.phrases.join('\n')"
+            @update:model-value="update({ phrases: $event.split('\n') })"
           />
-        </label>
+        </FieldRow>
         <p v-for="phrase in voicePhrases" :key="phrase" class="command-hint">
           {{ phrase }}
         </p>
         <p v-if="voiceConflicts.length" class="command-warning">
           {{ t('voiceCommands.conflicts') }}: {{ voiceConflicts.join(', ') }}
         </p>
-        <label class="command-field">
-          <span>{{ t('voiceCommands.try') }}</span>
-          <FieldInput v-model:value="voiceTrial" />
-        </label>
+        <FieldRow
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('voiceCommands.try')"
+        >
+          <FieldInput v-model="voiceTrial" />
+        </FieldRow>
         <p v-if="voiceTrial" class="command-hint">{{ voiceTrialResult }}</p>
       </template>
     </section>
@@ -93,10 +103,10 @@
               t('commands.launcherResult')
             }}</span>
             <FieldSelect
-              :value="command.launcherAfterRun.action"
+              :model-value="command.launcherAfterRun.action"
               :title="t('commands.launcherResult')"
               :options="afterRunOptions"
-              @update:value="
+              @update:model-value="
                 updateLauncherAfterRun($event as CustomActionAfterRun)
               "
             />
@@ -105,45 +115,55 @@
             {{ t('commands.afterRunNoneScriptHint') }}
           </p>
         </section>
-        <label class="command-field">
-          <span class="command-field-label">
-            {{ t('commands.descriptionLabel') }}
-            <InfoTooltip :text="t('commands.descriptionInfo')" />
-          </span>
+        <FieldRow
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('commands.descriptionLabel')"
+        >
           <FieldTextArea
             class="command-description"
-            :value="command.description ?? ''"
+            :model-value="command.description ?? ''"
             :placeholder="t('commands.descriptionPlaceholder')"
-            @update:value="updateDescription"
+            @update:model-value="updateDescription"
           />
-        </label>
-        <label v-if="command.toolId === 'script'" class="command-field">
-          <span class="command-field-label">
-            {{ t('commands.timeoutLabel') }}
-            <InfoTooltip
+
+          <template #info
+            ><InfoTooltip :text="t('commands.descriptionInfo')"
+          /></template>
+        </FieldRow>
+        <FieldRow
+          v-if="command.toolId === 'script'"
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('commands.timeoutLabel')"
+        >
+          <FieldNumber
+            :min="1"
+            :max="SCRIPT_MAX_TIMEOUT_SEC"
+            :step="1"
+            :model-value="scriptConfig.timeoutSec ?? ''"
+            :placeholder="String(SCRIPT_OUTPUT_TIMEOUT_SEC)"
+            @update:model-value="updateTimeout"
+          />
+
+          <template #info
+            ><InfoTooltip
               :text="
                 t('commands.timeoutInfo', {
                   seconds: SCRIPT_OUTPUT_TIMEOUT_SEC,
                   max: SCRIPT_MAX_TIMEOUT_SEC,
                 })
               "
-            />
-          </span>
-          <FieldNumber
-            :min="1"
-            :max="SCRIPT_MAX_TIMEOUT_SEC"
-            :step="1"
-            :value="scriptConfig.timeoutSec ?? ''"
-            :placeholder="String(SCRIPT_OUTPUT_TIMEOUT_SEC)"
-            @update:value="updateTimeout"
-          />
-        </label>
+          /></template>
+        </FieldRow>
         <div class="command-field-row">
           <template v-if="tool?.logsOutput">
             <FieldCheckbox
-              :value="command.logOutput"
+              :model-value="command.logOutput"
               :label="t('settings.actionLogOutput')"
-              @update:value="update({ logOutput: $event })"
+              @update:model-value="update({ logOutput: $event })"
             />
             <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
           </template>
@@ -159,9 +179,9 @@
         </div>
         <div class="command-field-row">
           <FieldCheckbox
-            :value="command.availableIn.external"
+            :model-value="command.availableIn.external"
             :label="t('commands.external')"
-            @update:value="
+            @update:model-value="
               update({
                 availableIn: { ...command.availableIn, external: $event },
               })
@@ -232,6 +252,7 @@ import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
+import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
@@ -438,25 +459,6 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--space-lg, 1rem);
   width: 100%;
-}
-
-.command-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs, 0.25rem);
-}
-
-.command-field-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  color: var(--app-text-muted);
-}
-
-.command-required {
-  color: var(--color-error);
 }
 
 .command-field-row {

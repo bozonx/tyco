@@ -63,18 +63,19 @@ describe('SettingsHistoryTab.vue', () => {
               '<div class="field-row-stub" :data-label="label"><slot /></div>',
           },
           FieldSelect: {
-            props: ['value', 'options'],
-            template: '<select class="field-select-stub" :data-val="value" />',
+            props: ['modelValue', 'options'],
+            template:
+              '<select class="field-select-stub" :data-val="modelValue" />',
           },
           FieldNumber: {
-            props: ['value'],
+            props: ['modelValue'],
             template:
-              '<input class="field-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+              '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           FieldCheckbox: {
-            props: ['value'],
+            props: ['modelValue'],
             template:
-              '<input type="checkbox" class="field-checkbox-stub" :checked="value" @change="$emit(\'update:value\', $event.target.checked)" />',
+              '<input type="checkbox" class="field-checkbox-stub" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)" />',
           },
           Button: {
             template:

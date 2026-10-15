@@ -3,9 +3,9 @@
     <FieldTextArea
       v-if="takesText"
       class="test-run-text"
-      :value="text"
+      :model-value="text"
       :placeholder="t('commands.testTextPlaceholder')"
-      @update:value="text = $event"
+      @update:model-value="text = $event"
     />
     <div class="test-run-actions">
       <Button

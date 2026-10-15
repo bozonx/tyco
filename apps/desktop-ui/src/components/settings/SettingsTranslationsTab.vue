@@ -4,21 +4,17 @@
       <template #description>
         <span>{{ t('settings.translationsPageHint') }}</span
         >{{ ' ' }}
-        <button
-          type="button"
-          class="settings-inline-link"
-          @click="emit('navigate', 'languages')"
-        >
-          {{ t('settings.languagesTab') }}</button
+        <InlineAction @click="emit('navigate', 'languages')">
+          {{ t('settings.languagesTab') }}</InlineAction
         >.
       </template>
 
       <FieldRow :label="t('settings.translationProvider')">
         <FieldSelect
           class="w-full"
-          :value="translation.provider"
+          :model-value="translation.provider"
           :options="providerOptions"
-          @update:value="updateProvider"
+          @update:model-value="updateProvider"
         />
       </FieldRow>
 
@@ -44,9 +40,9 @@
         <div class="flex w-full flex-col items-start gap-2">
           <FieldSelect
             class="w-full"
-            :value="translation.qualityGate"
+            :model-value="translation.qualityGate"
             :options="qualityOptions"
-            @update:value="updateQualityGate"
+            @update:model-value="updateQualityGate"
           />
           <Button
             v-if="translation.qualityGate === 'always' && !correctionPromptOpen"
@@ -67,8 +63,8 @@
         vertical
       >
         <FieldTextArea
-          :value="translation.correctionPrompt"
-          @update:value="updateCorrectionPrompt"
+          :model-value="translation.correctionPrompt"
+          @update:model-value="updateCorrectionPrompt"
         />
       </FieldRow>
     </SettingsSection>
@@ -78,7 +74,7 @@
       :title="t('settings.translationRules')"
       :info="t('settings.translationRulesInfo')"
     >
-      <FieldTextArea v-model:value="userConfig.aiRules.translate" />
+      <FieldTextArea v-model="userConfig.aiRules.translate" />
     </SettingsSection>
 
     <SettingsSection
@@ -87,9 +83,9 @@
       :description="glossaryHint"
     >
       <FieldTextArea
-        :value="glossaryText"
+        :model-value="glossaryText"
         :placeholder="t('settings.translationGlossaryPlaceholder')"
-        @update:value="updateGlossary"
+        @update:model-value="updateGlossary"
       />
     </SettingsSection>
   </div>
@@ -106,6 +102,7 @@ import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
@@ -229,21 +226,4 @@ async function removeProviderKey() {
 }
 </script>
 
-<style scoped>
-.settings-inline-link {
-  display: inline;
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  font-weight: 500;
-}
-
-.settings-inline-link:hover {
-  filter: brightness(1.15);
-}
-</style>
+<style scoped></style>

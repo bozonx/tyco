@@ -2,7 +2,7 @@
   <input
     v-bind="controlAttrs()"
     type="number"
-    :value="String(currentValue ?? '')"
+    :value="String(props.modelValue ?? '')"
     :placeholder="placeholder"
     :min="min"
     :max="max"
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 
@@ -25,7 +25,6 @@ const controlAttrs = useFieldControl()
 
 const props = withDefaults(
   defineProps<{
-    value?: string | number
     modelValue?: string | number
     placeholder?: string
     min?: string | number
@@ -36,15 +35,10 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'update:value', value: string): void
   (e: 'update:modelValue', value: string): void
   (e: 'invalid-input'): void
 }>()
 const isHovered = ref(false)
-
-const currentValue = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : props.value
-)
 
 function handleInput(event: Event) {
   const input = event.target as HTMLInputElement
@@ -54,7 +48,7 @@ function handleInput(event: Event) {
     emit('invalid-input')
     return
   }
-  emit('update:value', input.value)
+
   emit('update:modelValue', input.value)
 }
 

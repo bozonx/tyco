@@ -10,7 +10,7 @@
       v-for="option in options"
       :key="option.id"
       class="segmented-option"
-      :class="{ active: option.id === currentValue }"
+      :class="{ active: option.id === props.modelValue }"
       :title="option.title ?? option.name"
     >
       <input
@@ -21,7 +21,7 @@
         :name="name"
         :value="option.id"
         :aria-label="option.name"
-        :checked="option.id === currentValue"
+        :checked="option.id === props.modelValue"
         @change="selectOption(option.id)"
       />
       <Icon v-if="option.icon" :icon="option.icon" height="15" />
@@ -31,33 +31,27 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number">
-import { computed, useId } from 'vue'
+import { useId } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import Icon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
-const controlAttrs = useFieldControl({ register: false })
 const props = defineProps<{
-  value?: T
   modelValue?: T
   label: string
   options: { id: T; name: string; icon?: string; title?: string }[]
   compact?: boolean
   hideLabelsOnSmallScreens?: boolean
 }>()
+const controlAttrs = useFieldControl({
+  register: false,
+  getLabel: () => props.label,
+})
 
-const emit = defineEmits<{
-  (e: 'update:value', value: T): void
-  (e: 'update:modelValue', value: T): void
-}>()
-
-const currentValue = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : props.value
-)
+const emit = defineEmits<{ (e: 'update:modelValue', value: T): void }>()
 
 function selectOption(id: T) {
-  emit('update:value', id)
   emit('update:modelValue', id)
 }
 

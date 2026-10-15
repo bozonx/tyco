@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
-    <div
-      ref="menuRef"
+    <MenuSurface
+      ref="menuSurfaceRef"
       class="editor-context-menu"
       :style="style"
       role="menu"
@@ -15,40 +15,30 @@
           class="editor-context-menu__separator"
           role="separator"
         />
-        <button
-          type="button"
-          role="menuitem"
-          tabindex="-1"
+        <MenuItem
           class="editor-context-menu__item"
-          :class="{
-            'is-accent': item.accent,
-            'is-open': subIndex === Number(index),
-          }"
-          :data-index="index"
+          :label="item.label"
+          :icon="item.icon"
+          :reserve-icon="hasIcons"
+          :accent="item.accent"
+          :active="subIndex === Number(index)"
           :disabled="item.disabled"
+          :has-submenu="Boolean(item.children)"
+          :shortcut="item.shortcut"
+          :data-index="index"
           :aria-haspopup="item.children ? 'menu' : undefined"
           :aria-expanded="
             item.children ? subIndex === Number(index) : undefined
           "
           @mouseenter="onItemHover(Number(index))"
           @click="select(item, Number(index))"
-        >
-          <Icon v-if="item.icon" :icon="item.icon" height="16" />
-          <span v-else-if="hasIcons" class="editor-context-menu__icon-gap" />
-          <span class="editor-context-menu__label">{{ item.label }}</span>
-          <Icon
-            v-if="item.children"
-            icon="mdi:chevron-right"
-            height="16"
-            class="editor-context-menu__chevron"
-          />
-        </button>
+        />
       </template>
-    </div>
+    </MenuSurface>
 
-    <div
+    <MenuSurface
       v-if="subItems"
-      ref="subRef"
+      ref="subSurfaceRef"
       class="editor-context-menu"
       :style="subStyle"
       role="menu"
@@ -62,24 +52,18 @@
           class="editor-context-menu__separator"
           role="separator"
         />
-        <button
-          type="button"
-          role="menuitem"
-          tabindex="-1"
+        <MenuItem
           class="editor-context-menu__item"
-          :class="{ 'is-accent': item.accent }"
+          :label="item.label"
+          :icon="item.icon"
+          :reserve-icon="subHasIcons"
+          :accent="item.accent"
           :disabled="item.disabled"
+          :shortcut="item.shortcut"
           @click="select(item)"
-        >
-          <Icon v-if="item.icon" :icon="item.icon" height="16" />
-          <span v-else-if="subHasIcons" class="editor-context-menu__icon-gap" />
-          <span class="editor-context-menu__label">{{ item.label }}</span>
-          <span v-if="item.shortcut" class="editor-context-menu__shortcut">{{
-            item.shortcut
-          }}</span>
-        </button>
+        />
       </template>
-    </div>
+    </MenuSurface>
   </Teleport>
 </template>
 
@@ -90,7 +74,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import { placeMenu, placeSubmenu } from '../../lib/editor/menu-placement'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
-import Icon from '../common/AppIcon.vue'
+import MenuItem from '../common/MenuItem.vue'
+import MenuSurface from '../common/MenuSurface.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -107,8 +92,10 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'close', restoreFocus: boolean): void }>()
 
-const menuRef = ref<HTMLElement | null>(null)
-const subRef = ref<HTMLElement | null>(null)
+const menuSurfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
+const subSurfaceRef = ref<InstanceType<typeof MenuSurface> | null>(null)
+const menuRef = computed(() => menuSurfaceRef.value?.element ?? null)
+const subRef = computed(() => subSurfaceRef.value?.element ?? null)
 const position = ref({ x: props.x, y: props.y })
 const isPlaced = ref(false)
 const subIndex = ref<number | null>(null)
@@ -343,81 +330,10 @@ onUnmounted(() => {
 .editor-context-menu {
   position: fixed;
   z-index: var(--z-modal);
-  display: flex;
-  flex-direction: column;
   min-width: 11rem;
   max-width: 20rem;
   max-height: calc(100vh - 1rem);
-  padding: var(--space-xs);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background-color: var(--app-surface);
-  border: 1px solid var(--app-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--app-shadow-lg);
 }
-
-.editor-context-menu__item {
-  display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-  padding: 0.375rem var(--space-sm);
-  font-size: var(--text-control);
-  color: var(--color-base-content);
-  text-align: left;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.editor-context-menu__item:hover:not(:disabled),
-.editor-context-menu__item.is-open {
-  background-color: var(--app-hover);
-}
-
-.editor-context-menu__item:focus-visible {
-  background-color: var(--app-hover);
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-
-.editor-context-menu__item:disabled {
-  color: var(--app-text-faint);
-  cursor: default;
-}
-
-.editor-context-menu__item.is-accent {
-  font-weight: 600;
-}
-
-/* keeps labels aligned when some items of the menu have icons */
-.editor-context-menu__icon-gap {
-  flex-shrink: 0;
-  width: 16px;
-}
-
-.editor-context-menu__label {
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.editor-context-menu__shortcut {
-  flex-shrink: 0;
-  padding-left: 1rem;
-  font-size: var(--text-caption);
-  color: var(--app-text-faint);
-}
-
-.editor-context-menu__chevron {
-  flex-shrink: 0;
-  margin-right: -0.25rem;
-  color: var(--app-text-faint);
-}
-
 .editor-context-menu__separator {
   height: 1px;
   margin: var(--space-xs) 0;

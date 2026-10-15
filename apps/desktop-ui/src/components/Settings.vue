@@ -2,61 +2,18 @@
   <div class="settings-panel">
     <aside class="settings-nav">
       <div class="settings-nav-title">{{ t('nav.settings') }}</div>
-      <Tabs
-        kind="navigation"
+      <NavigationList
         :label="t('nav.settings')"
-        :tabs="primaryTabs"
-        v-model:value="currentTab"
-        variant="vertical"
+        :items="primaryNavigationItems"
+        v-model="currentTab"
       />
-      <div v-if="installedPlugins.length > 0" class="settings-subnav">
-        <button
-          v-for="plugin in installedPlugins"
-          :key="plugin.pluginId"
-          type="button"
-          class="settings-subnav-item"
-          :class="{ 'is-active': currentTab === `plugin:${plugin.pluginId}` }"
-          :title="
-            plugin.labelKey
-              ? t(plugin.labelKey)
-              : plugin.label || plugin.pluginId
-          "
-          :aria-label="
-            plugin.labelKey
-              ? t(plugin.labelKey)
-              : plugin.label || plugin.pluginId
-          "
-          @click="currentTab = `plugin:${plugin.pluginId}`"
-        >
-          <Icon icon="mdi:puzzle-outline" height="14" class="shrink-0" />
-          <span class="truncate">
-            {{
-              plugin.labelKey
-                ? t(plugin.labelKey)
-                : plugin.label || plugin.pluginId
-            }}
-          </span>
-          <span
-            class="settings-subnav-status"
-            :class="plugin.isEnabled ? 'is-enabled' : 'is-disabled'"
-          >
-            {{
-              plugin.isEnabled
-                ? t('settings.pluginStatusOn')
-                : t('settings.pluginStatusOff')
-            }}
-          </span>
-        </button>
-      </div>
       <div class="settings-nav-category">
         {{ t('settings.actionsCategory') }}
       </div>
-      <Tabs
-        kind="navigation"
+      <NavigationList
         :label="t('settings.actionsCategory')"
-        :tabs="actionTabs"
-        v-model:value="currentTab"
-        variant="vertical"
+        :items="actionTabs"
+        v-model="currentTab"
       />
     </aside>
 
@@ -145,7 +102,7 @@
                 :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
               >
                 <FieldSelect
-                  v-model:value="userConfig.appearance.contrast"
+                  v-model="userConfig.appearance.contrast"
                   :disabled="isEInkTheme"
                   :options="contrastOptions"
                 />
@@ -155,16 +112,16 @@
                 :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"
               >
                 <FieldSelect
-                  v-model:value="userConfig.appearance.motion"
+                  v-model="userConfig.appearance.motion"
                   :disabled="isEInkTheme"
                   :options="motionOptions"
                 />
               </FieldRow>
               <FieldRow :label="t('settings.uiScale')">
                 <FieldSelect
-                  :value="userConfig.appearance.uiScale"
+                  :model-value="userConfig.appearance.uiScale"
                   :options="uiScaleOptions"
-                  @update:value="updateUiScale"
+                  @update:model-value="updateUiScale"
                 />
               </FieldRow>
             </SettingsSection>
@@ -276,6 +233,7 @@ import { useLlmStore } from '../stores/llm'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import Icon from './common/AppIcon.vue'
+import NavigationList from './common/NavigationList.vue'
 import SettingsCommandsTab from './settings/SettingsCommandsTab.vue'
 import SettingsEditorTab from './settings/SettingsEditorTab.vue'
 import SettingsGeneralTab from './settings/SettingsGeneralTab.vue'
@@ -388,6 +346,28 @@ const currentPlugin = computed(() =>
         (p) => p.pluginId === currentPluginId.value
       ) || null
     : null
+)
+
+const primaryNavigationItems = computed(() =>
+  primaryTabs.value.flatMap((item) => [
+    item,
+    ...(item.key === 'plugins'
+      ? installedPlugins.value.map((plugin) => ({
+          key: `plugin:${plugin.pluginId}`,
+          text: plugin.labelKey
+            ? t(plugin.labelKey)
+            : plugin.label || plugin.pluginId,
+          icon: 'mdi:puzzle-outline',
+          nested: true,
+          status: t(
+            plugin.isEnabled
+              ? 'settings.pluginStatusOn'
+              : 'settings.pluginStatusOff'
+          ),
+          isEnabled: plugin.isEnabled,
+        }))
+      : []),
+  ])
 )
 
 const actionTabs = computed(() => [
@@ -593,6 +573,7 @@ onUnmounted(() => {
 
 <style scoped>
 .settings-panel {
+  container-type: inline-size;
   display: flex;
   width: 100%;
   height: 100%;
@@ -682,69 +663,6 @@ onUnmounted(() => {
   color: var(--color-warning);
 }
 
-.settings-subnav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: -2px;
-  margin-left: var(--space-md);
-  padding-left: var(--space-xs);
-  border-left: 1px solid var(--app-border-subtle);
-}
-
-.settings-subnav-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4375rem;
-  width: 100%;
-  padding: 0.375rem 0.5rem;
-  border-radius: var(--radius-md);
-  font-size: var(--text-control);
-  font-weight: 500;
-  line-height: 1.25;
-  color: var(--app-text-muted);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-  background: transparent;
-  border: none;
-  text-align: left;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.settings-subnav-item:hover {
-  background-color: var(--app-hover);
-  color: var(--color-base-content);
-}
-
-.settings-subnav-item.is-active {
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
-}
-
-.settings-subnav-status {
-  margin-left: auto;
-  padding: 0.0625rem 0.3125rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.settings-subnav-status.is-enabled {
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
-}
-
-.settings-subnav-status.is-disabled {
-  background-color: var(--app-hover);
-  color: var(--app-text-faint);
-}
-
 @media (max-width: 45rem) {
   .settings-nav {
     width: 64px;
@@ -752,22 +670,8 @@ onUnmounted(() => {
   }
 
   .settings-nav-title,
-  .settings-nav-category,
-  .settings-nav :deep(.app-tab .truncate),
-  .settings-subnav-item .truncate,
-  .settings-subnav-status {
+  .settings-nav-category {
     display: none;
-  }
-
-  .settings-subnav {
-    margin-left: 0;
-    padding-left: 0;
-    border-left: none;
-  }
-
-  .settings-nav :deep(.app-tab),
-  .settings-subnav-item {
-    justify-content: center;
   }
 }
 </style>

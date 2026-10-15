@@ -8,7 +8,7 @@
     <input
       v-bind="controlAttrs()"
       type="checkbox"
-      :checked="isChecked"
+      :checked="props.modelValue"
       :title="title"
       @change="handleChange"
       class="toggle toggle-primary toggle-sm"
@@ -18,36 +18,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import { useFieldControl } from '../../composables/use-field-control'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ wrapped: true })
 
 const props = withDefaults(
-  defineProps<{
-    value?: boolean
-    modelValue?: boolean
-    label?: string
-    title?: string
-  }>(),
-  { value: false, modelValue: undefined }
+  defineProps<{ modelValue?: boolean; label?: string; title?: string }>(),
+  { modelValue: false }
 )
 
-const emit = defineEmits<{
-  (e: 'update:value', value: boolean): void
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
-const isChecked = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : props.value
-)
+const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void }>()
 
 function handleChange(event?: Event) {
   const target = event?.target as HTMLInputElement | undefined
-  const next = target ? target.checked : !isChecked.value
-  emit('update:value', next)
+  const next = target ? target.checked : !props.modelValue
+
   emit('update:modelValue', next)
 }
 </script>

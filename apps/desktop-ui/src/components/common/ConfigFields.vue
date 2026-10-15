@@ -6,35 +6,9 @@
       :label="configFieldLabel(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
-      <FieldInput
-        v-if="item.type === 'text'"
-        :value="item.value"
-        @update:value="updateValue(item.name, $event)"
-      />
-      <FieldTextArea
-        v-else-if="item.type === 'textarea'"
-        :value="item.value"
-        @update:value="updateValue(item.name, $event)"
-      />
-      <FieldSelect
-        v-else-if="item.type === 'select'"
-        class="w-full"
-        :value="item.value"
-        :options="configFieldOptions(item, t)"
-        @update:value="updateValue(item.name, $event)"
-      />
-      <FieldCheckbox
-        v-else-if="item.type === 'checkbox'"
-        :key="item.name"
-        :value="item.value ?? false"
-        @update:value="updateValue(item.name, $event)"
-      />
-      <FieldSortableChecklist
-        v-else-if="item.type === 'sortable-checklist'"
-        :value="item.value"
-        :options="item.options || []"
-        :default-value="item.defaultValue"
-        @update:value="updateValue(item.name, $event)"
+      <ConfigFieldControl
+        :control="controlFor(item)"
+        @update:model-value="updateValue(item.name, $event)"
       />
     </FieldRow>
   </div>
@@ -48,12 +22,9 @@ import {
   configFieldLabel,
   configFieldOptions,
 } from '../../lib/config-fields/config-field-labels'
-import FieldCheckbox from './FieldCheckbox.vue'
-import FieldInput from './FieldInput.vue'
+import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
+import ConfigFieldControl from './ConfigFieldControl.vue'
 import FieldRow from './FieldRow.vue'
-import FieldSelect from './FieldSelect.vue'
-import FieldSortableChecklist from './FieldSortableChecklist.vue'
-import FieldTextArea from './FieldTextArea.vue'
 import type { InputConfigItem } from '@/types'
 import { withConfigFieldValue } from '@tyco/plugin-sdk'
 
@@ -89,6 +60,27 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+function controlFor(item: InputConfigItem): Control {
+  if (item.type === 'select')
+    return {
+      type: 'select',
+      value: item.value,
+      options: configFieldOptions(item, t),
+    }
+  if (item.type === 'checkbox') return { type: 'checkbox', value: item.value }
+  if (item.type === 'sortable-checklist')
+    return {
+      type: item.type,
+      value: item.value,
+      options: item.options,
+      defaultValue: item.defaultValue,
+    }
+  return {
+    type: item.type,
+    value: item.value === undefined ? undefined : String(item.value),
+  }
+}
 
 function updateValue(name: string, value: unknown) {
   const field = props.config.find((item) => item.name === name)

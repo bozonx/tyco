@@ -127,7 +127,7 @@ describe('SettingsLauncherTab.vue', () => {
     const select = wrapper
       .find('.shortcut-slot')
       .findComponent({ name: 'FieldSelect' })
-    select.vm.$emit('update:value', 'new:script')
+    select.vm.$emit('update:modelValue', 'new:script')
 
     expect(wrapper.emitted('createCommand')?.[0]).toEqual([0, 'script', 0])
   })

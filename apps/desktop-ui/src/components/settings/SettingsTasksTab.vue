@@ -9,15 +9,15 @@
       <template #item="{ item, index }">
         <div class="flex flex-col gap-2 w-full">
           <FieldInput
-            :value="item.name"
+            :model-value="item.name"
             :placeholder="t('settings.name')"
             class="font-medium"
-            @update:value="updateTask(index, 'name', $event)"
+            @update:model-value="updateTask(index, 'name', $event)"
           />
           <FieldTextArea
-            :value="item.rule"
+            :model-value="item.rule"
             :placeholder="t('settings.rule')"
-            @update:value="updateTask(index, 'rule', $event)"
+            @update:model-value="updateTask(index, 'rule', $event)"
           />
         </div>
       </template>

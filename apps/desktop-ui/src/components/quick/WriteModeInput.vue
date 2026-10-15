@@ -5,8 +5,8 @@
     auto-resize
     :max-auto-height="maxHeight"
     :placeholder="t('input.textPlaceholder')"
-    :value="quickInputStore.value"
-    @update:value="handleInput"
+    :model-value="quickInputStore.value"
+    @update:model-value="handleInput"
   />
 </template>
 

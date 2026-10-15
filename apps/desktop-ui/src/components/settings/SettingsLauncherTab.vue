@@ -21,9 +21,9 @@
       <div class="flex items-center gap-2">
         <FieldCheckbox
           :key="props.userConfig.launcherPages[page]?.id ?? page"
-          :value="takesText"
+          :model-value="takesText"
           :label="t('settings.launcherPageTakesText')"
-          @update:value="setTakesText"
+          @update:model-value="setTakesText"
         />
         <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
       </div>
@@ -42,9 +42,9 @@
         <div class="flex items-center gap-2 w-full">
           <FieldSelect
             class="flex-1 min-w-0"
-            :value="item ?? ''"
+            :model-value="item ?? ''"
             :options="commandOptions"
-            @update:value="updateSlot(index, $event)"
+            @update:model-value="updateSlot(index, $event)"
           />
           <IconButton
             v-if="item"

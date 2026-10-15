@@ -1,9 +1,19 @@
 <template>
-  <label :class="$attrs.class" :style="$attrs.style" class="input search-input">
+  <label
+    :style="$attrs.style"
+    class="input search-input"
+    :class="[
+      $attrs.class,
+      {
+        'search-input--compact': density === 'compact',
+        'search-input--quiet': quiet,
+      },
+    ]"
+  >
     <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
     <input
       v-bind="controlAttrs()"
-      :value="currentValue"
+      :value="props.modelValue"
       ref="searchInput"
       type="search"
       :placeholder="props.placeholder"
@@ -14,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import Icon from './AppIcon.vue'
@@ -22,20 +32,15 @@ import Icon from './AppIcon.vue'
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ wrapped: true })
 
-const emit = defineEmits<{
-  (e: 'update:value', value: string): void
-  (e: 'update:modelValue', value: string): void
-}>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 const props = defineProps<{
+  density?: 'default' | 'compact'
+  quiet?: boolean
   placeholder?: string
-  value?: string
+
   modelValue?: string
 }>()
-
-const currentValue = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : props.value
-)
 
 const searchInput = ref<HTMLInputElement | null>(null)
 
@@ -49,7 +54,7 @@ defineExpose({ focus })
 
 const onInput = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).value
-  emit('update:value', newValue)
+
   emit('update:modelValue', newValue)
 }
 </script>
@@ -57,5 +62,13 @@ const onInput = (event: Event) => {
 <style scoped>
 .search-input {
   width: 100%;
+}
+.search-input--compact {
+  min-height: var(--control-size-sm);
+  height: var(--control-size-sm);
+  font-size: var(--text-control);
+}
+.search-input--quiet:not(:focus-within) {
+  border-color: transparent;
 }
 </style>

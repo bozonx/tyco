@@ -9,7 +9,11 @@ vi.mock('../../composables/use-i18n', () => ({
 describe('result view mode toggle', () => {
   it('uses the provided label and modes, and ignores an unchanged selection', async () => {
     const wrapper = mount(ResultViewModeToggle, {
-      props: { value: 'split', label: 'Review', modes: ['split', 'result'] },
+      props: {
+        modelValue: 'split',
+        label: 'Review',
+        modes: ['split', 'result'],
+      },
       global: { stubs: { Icon: true } },
     })
     expect(wrapper.get('[role=radiogroup]').attributes('aria-label')).toBe(
@@ -21,10 +25,23 @@ describe('result view mode toggle', () => {
       'diff.modeResult',
     ])
     await inputs[0].trigger('change')
-    expect(wrapper.emitted('update:value')).toBeUndefined()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     await inputs[1].setValue(true)
-    expect(wrapper.emitted('update:value')).toEqual([['result']])
-    await wrapper.setProps({ value: 'result' })
+    expect(wrapper.emitted('update:modelValue')).toEqual([['result']])
+    await wrapper.setProps({ modelValue: 'result' })
     expect((inputs[1].element as HTMLInputElement).checked).toBe(true)
+  })
+  it.each([
+    ['diff', ['diff.modeUnified', 'diff.modeSplit', 'diff.modeResult']],
+    ['parallel', ['diff.modeSplit', 'diff.modeResult']],
+  ] as const)('renders the %s preset', (preset, labels) => {
+    const wrapper = mount(ResultViewModeToggle, {
+      props: { modelValue: 'split', preset },
+    })
+    expect(
+      wrapper
+        .findAll('input[type=radio]')
+        .map((input) => input.attributes('aria-label'))
+    ).toEqual(labels)
   })
 })

@@ -3,7 +3,7 @@
     <FieldInput
       class="flex-1"
       type="password"
-      :value="value"
+      :model-value="value"
       :disabled="isBusy"
       :aria-label="t('settings.apiKey')"
       :placeholder="
@@ -11,7 +11,7 @@
           ? t('settings.apiKeyReplacePlaceholder')
           : t('settings.apiKeyPlaceholder')
       "
-      @update:value="emit('update:value', $event)"
+      @update:model-value="emit('update:value', $event)"
     />
     <Button size="sm" :disabled="isBusy || !value.trim()" @click="run(save)">{{
       t('settings.saveKey')

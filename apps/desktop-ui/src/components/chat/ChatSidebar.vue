@@ -40,8 +40,10 @@
     <SearchInput
       v-if="isSearchOpen"
       ref="searchInputRef"
-      v-model:value="query"
+      v-model="query"
       class="sidebar-search"
+      density="compact"
+      quiet
       :placeholder="t('chat.searchChats')"
       @keydown.esc="closeSearch"
     />
@@ -366,12 +368,6 @@ onUnmounted(() => {
   border: 1px solid var(--app-border);
   border-radius: var(--radius-md);
   background-color: var(--app-surface);
-}
-.sidebar-search :deep(.input) {
-  height: 2.25rem;
-  border-color: transparent;
-  background: var(--app-surface);
-  font-size: var(--text-control);
 }
 .chat-list-scroll {
   flex: 1;

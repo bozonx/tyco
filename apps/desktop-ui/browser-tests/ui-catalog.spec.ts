@@ -128,3 +128,43 @@ for (const theme of ['Light', 'Dark', 'E-ink']) {
     })
   }
 }
+
+test('navigation, disclosures and field messages retain their accessible relationships', async ({
+  page,
+}) => {
+  const navigation = page.getByRole('navigation', {
+    name: 'Example navigation',
+  })
+  const plugin = navigation.getByRole('button', { name: 'Example plugin' })
+  await plugin.click()
+  await expect(plugin).toHaveAttribute('aria-current', 'page')
+  await expect(
+    navigation.getByRole('button', { name: 'General' })
+  ).not.toHaveAttribute('aria-current')
+
+  const disclosure = page.getByRole('button', { name: /Connection settings/ })
+  await disclosure.focus()
+  await page.keyboard.press('Enter')
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.locator('#catalog-details')).toBeVisible()
+  await page.keyboard.press('Space')
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.locator('#catalog-details')).toHaveCount(0)
+
+  const field = page.getByRole('textbox', {
+    name: 'Multiple errors',
+    exact: true,
+  })
+  await expect(field).toHaveAttribute('aria-invalid', 'true')
+  await expect(field).toHaveAccessibleDescription(
+    'A value is required The value must be unique'
+  )
+  await expect(
+    page.getByRole('textbox', { name: 'Warnings', exact: true })
+  ).toHaveAccessibleDescription(
+    'Inherited from plugin settings Check the selected value'
+  )
+  await expect(
+    page.getByRole('textbox', { name: 'Disabled compact field', exact: true })
+  ).toBeDisabled()
+})

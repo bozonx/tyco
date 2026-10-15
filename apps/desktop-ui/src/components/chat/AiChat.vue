@@ -122,8 +122,8 @@
             !chatStore.pendingImages.length &&
             chatStore.messages.some((message) => message.images?.length)
           "
-          xs
-          ghost
+          size="xs"
+          variant="ghost"
           @click="chatStore.omitHistoryImages = true"
         >
           {{ t('chat.continueWithoutImages') }}
@@ -184,6 +184,8 @@
           <DropdownMenu
             size="xs"
             class="model-picker"
+            muted
+            max-trigger-width="16rem"
             icon="mdi:creation-outline"
             placement="top"
             :label="chatStore.selectedModel.name"
@@ -498,11 +500,6 @@ onMounted(() => {
 }
 .model-picker {
   min-width: 0;
-}
-.model-picker :deep(.dropdown-trigger) {
-  max-width: 16rem;
-  color: var(--app-text-muted);
-  font-weight: 500;
 }
 .composer-actions {
   flex-shrink: 0;

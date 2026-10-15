@@ -7,20 +7,21 @@
     >
       <Icon icon="mdi:drag-vertical" width="18" height="18" />
     </div>
-    <button
-      type="button"
+    <DisclosureHeader
       class="command-summary"
-      :aria-expanded="expanded"
-      @click="emit('toggle')"
+      density="compact"
+      :expanded="expanded"
+      :controls="bodyId"
+      :icon="commandIcon(command, toolsStore)"
+      :icon-title="toolName"
+      @toggle="emit('toggle')"
     >
-      <Icon
-        :icon="commandIcon(command, toolsStore)"
-        width="18"
-        height="18"
-        class="shrink-0"
-        :title="toolName"
-      />
-      <span class="command-name" :class="{ 'is-empty': !command.name }">
+      <span
+        class="command-name"
+        :class="{
+          'is-empty': !command.name || !command.enabled || unavailableReasonKey,
+        }"
+      >
         {{ command.name || t('commands.unnamed') }}
       </span>
       <span v-if="!commandTakesText(command, toolsStore)" class="command-badge">
@@ -40,14 +41,7 @@
       >
         <Icon icon="mdi:alert-outline" width="14" height="14" />
       </span>
-      <Icon
-        icon="mdi:chevron-down"
-        width="18"
-        height="18"
-        class="command-chevron"
-        :class="{ 'rotate-180': expanded }"
-      />
-    </button>
+    </DisclosureHeader>
     <div class="command-placements">
       <button
         v-if="menuSlot !== undefined"
@@ -77,9 +71,9 @@
     <FieldCheckbox
       :key="command.id"
       class="enabled-switch"
-      :value="command.enabled"
+      :model-value="command.enabled"
       :title="t(command.enabled ? 'commands.disable' : 'commands.enable')"
-      @update:value="emit('update', { ...command, enabled: $event })"
+      @update:model-value="emit('update', { ...command, enabled: $event })"
     />
     <DropdownMenu
       size="xs"
@@ -92,7 +86,7 @@
     />
   </div>
 
-  <div v-if="expanded" class="command-body">
+  <div v-if="expanded" :id="bodyId" class="command-body">
     <CommandEditor
       :key="command.id"
       :command="command"
@@ -104,7 +98,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -117,6 +111,7 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import Icon from '../common/AppIcon.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import CommandEditor from './CommandEditor.vue'
@@ -139,6 +134,7 @@ const emit = defineEmits<{
   (event: 'remove'): void
 }>()
 const { t } = useI18n()
+const bodyId = useId()
 const toolsStore = useToolsStore()
 const slotKey = (index: number) =>
   SHORTCUT_SLOT_KEYS[index]?.toUpperCase() ?? ''
@@ -174,17 +170,6 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-xs);
-}
-
-.command-summary {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-xs) 0;
-  text-align: left;
-  cursor: pointer;
 }
 
 .command-name {
@@ -235,13 +220,6 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   color: var(--color-warning);
 }
 
-.command-chevron {
-  flex-shrink: 0;
-  margin-left: auto;
-  opacity: 0.7;
-  transition: transform var(--transition-fast);
-}
-
 .command-body {
   padding: var(--space-sm) var(--space-md) var(--space-md)
     calc(var(--space-xs) + 1.25rem + var(--space-xs));
@@ -258,8 +236,7 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   border-radius: var(--radius-sm);
   color: var(--app-text-faint);
   cursor: grab;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.6;
   /* Touch and pen drags must not scroll the page instead */
   touch-action: none;
   transition:
@@ -267,7 +244,10 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
     opacity var(--transition-fast);
 }
 
+.command-header:hover .drag-handle,
+.command-header:focus-within .drag-handle,
 .drag-handle:hover {
+  opacity: 1;
   color: var(--color-base-content);
 }
 

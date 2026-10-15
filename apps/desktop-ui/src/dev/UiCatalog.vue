@@ -7,20 +7,17 @@
     </p>
     <section class="catalog-options surface ui-form-container">
       <FieldRow label="Theme"
-        ><SegmentedControl
-          v-model:value="theme"
-          label="Theme"
-          :options="themes"
+        ><SegmentedControl v-model="theme" label="Theme" :options="themes"
       /></FieldRow>
       <FieldRow label="High contrast"
-        ><FieldCheckbox v-model:value="contrast"
+        ><FieldCheckbox v-model="contrast"
       /></FieldRow>
       <FieldRow label="Reduced motion"
-        ><FieldCheckbox v-model:value="reducedMotion"
+        ><FieldCheckbox v-model="reducedMotion"
       /></FieldRow>
       <FieldRow label="Interface scale"
         ><FieldSelect
-          v-model:value="scale"
+          v-model="scale"
           :options="[
             { id: 1, name: '100%' },
             { id: 1.25, name: '125%' },
@@ -46,7 +43,10 @@
     <section class="surface catalog-section ui-form-container">
       <h2>Quick surfaces and long content</h2>
       <div class="catalog-quick-surface">
-        <FieldInput aria-label="Quick input" value="Theme-aware quick input" />
+        <FieldInput
+          aria-label="Quick input"
+          model-value="Theme-aware quick input"
+        />
       </div>
       <ShortcutButton :keys="['Enter']" variant="primary" size="sm"
         >A deliberately long action label that should remain readable at
@@ -54,7 +54,7 @@
       >
       <FieldRow
         label="A deliberately long translated field label spanning several words"
-        ><FieldInput value="Long content"
+        ><FieldInput model-value="Long content"
       /></FieldRow>
     </section>
     <section class="surface catalog-section ui-form-container">
@@ -63,42 +63,92 @@
         label="Text"
         hint="Hint linked to the control"
         info="Keyboard and screen reader accessible information"
-        ><FieldInput v-model:value="text"
+        ><FieldInput v-model="text"
       /></FieldRow>
       <FieldRow label="Invalid field" error="Enter a value" required
-        ><FieldInput value=""
+        ><FieldInput model-value=""
       /></FieldRow>
       <FieldRow label="Disabled field" disabled
-        ><FieldInput value="Unavailable"
+        ><FieldInput model-value="Unavailable"
       /></FieldRow>
       <FieldRow label="Number"
-        ><FieldNumber v-model:value="number" min="0" max="10"
+        ><FieldNumber v-model="number" min="0" max="10"
       /></FieldRow>
       <FieldRow label="Selection"
         ><FieldSelect
-          v-model:value="selected"
+          v-model="selected"
           :options="[
             { id: 1, name: 'Numeric value', group: 'Numbers' },
             { id: 'text', name: 'String value', group: 'Strings' },
           ]"
       /></FieldRow>
       <FieldRow label="Multiline" vertical
-        ><FieldTextArea v-model:value="text" auto-resize
+        ><FieldTextArea v-model="text" auto-resize
       /></FieldRow>
       <FieldRow label="Search"
-        ><SearchInput v-model:value="query" placeholder="Search components"
+        ><SearchInput v-model="query" placeholder="Search components"
       /></FieldRow>
     </section>
     <section class="surface catalog-section ui-form-container">
+      <h2>Navigation and disclosure</h2>
+      <NavigationList
+        v-model="navigation"
+        label="Example navigation"
+        :items="navigationItems"
+      />
+      <DisclosureHeader
+        :expanded="detailsOpen"
+        controls="catalog-details"
+        title="Connection settings"
+        description="A long provider description that can be truncated"
+        icon="mdi:server-network"
+        @toggle="detailsOpen = !detailsOpen"
+      />
+      <div v-if="detailsOpen" id="catalog-details">Connection details</div>
+      <FieldRow
+        label="Warnings"
+        vertical
+        density="compact"
+        :warning="[
+          'Inherited from plugin settings',
+          'Check the selected value',
+        ]"
+      >
+        <FieldInput model-value="Inherited value" />
+      </FieldRow>
+      <FieldRow
+        label="Multiple errors"
+        :error="['A value is required', 'The value must be unique']"
+      >
+        <FieldInput model-value="" />
+      </FieldRow>
+      <FieldRow
+        label="Disabled compact field"
+        vertical
+        density="compact"
+        disabled
+        ><FieldInput model-value="Unavailable"
+      /></FieldRow>
+      <SearchInput
+        v-model="catalogSearch"
+        density="compact"
+        quiet
+        placeholder="Search example"
+      />
+      <InlineAction @click="detailsOpen = true"
+        >Show connection details</InlineAction
+      >
+    </section>
+    <section class="surface catalog-section ui-form-container">
       <h2>Navigation and menus</h2>
-      <Tabs v-model:value="tab" label="Preview tabs" :tabs="tabs"
+      <Tabs v-model="tab" label="Preview tabs" :tabs="tabs"
         ><template #panel="{ value }"
           ><p>Panel: {{ value }}</p></template
         ></Tabs
       >
       <div class="catalog-row">
         <SegmentedControl
-          v-model:value="tab"
+          v-model="tab"
           label="Value selection"
           :options="tabs.map((item) => ({ id: item.key, name: item.text }))"
         />
@@ -177,6 +227,7 @@ import { onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import BaseDialog from '../components/common/BaseDialog.vue'
 import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import DisclosureHeader from '../components/common/DisclosureHeader.vue'
 import DropdownMenu from '../components/common/DropdownMenu.vue'
 import FieldCheckbox from '../components/common/FieldCheckbox.vue'
 import FieldInput from '../components/common/FieldInput.vue'
@@ -185,6 +236,8 @@ import FieldRow from '../components/common/FieldRow.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import IconButton from '../components/common/IconButton.vue'
+import InlineAction from '../components/common/InlineAction.vue'
+import NavigationList from '../components/common/NavigationList.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
 import ShortcutButton from '../components/common/ShortcutButton.vue'
@@ -199,7 +252,13 @@ const themes = [
   { id: 'dark', name: 'Dark' },
   { id: 'e-ink', name: 'E-ink' },
 ]
-const variants = ['primary', 'neutral', 'ghost', 'danger'] as const
+const variants = [
+  'primary',
+  'neutral',
+  'ghost',
+  'danger',
+  'danger-ghost',
+] as const
 const tabs = [
   { key: 'source', text: 'Source' },
   { key: 'result', text: 'Result' },
@@ -212,6 +271,21 @@ const text = ref('Example text')
 const number = ref('3')
 const selected = ref<string | number | undefined>(1)
 const query = ref('')
+const navigation = ref<string | number>('general')
+const navigationItems = [
+  { key: 'general', text: 'General', icon: 'mdi:tune-variant' },
+  { key: 'plugins', text: 'Plugins', icon: 'mdi:puzzle-outline' },
+  {
+    key: 'plugin:example',
+    text: 'Example plugin',
+    icon: 'mdi:puzzle-outline',
+    nested: true,
+    status: 'Enabled',
+    isEnabled: true,
+  },
+]
+const detailsOpen = ref(false)
+const catalogSearch = ref('')
 const tab = ref<string | number>('source')
 const dialogOpen = ref(false)
 const outerDialogOpen = ref(false)

@@ -1,80 +1,71 @@
 <template>
   <div class="tool-config-fields">
     <template v-if="command.toolId === 'core.translate'">
-      <div class="tool-field">
-        <span class="tool-field-label">
-          {{ t('commands.languageLabel') }}
-          <InfoTooltip :text="t('commands.languageInfo')" />
-        </span>
+      <FieldRow
+        vertical
+        density="compact"
+        :label="t('commands.languageLabel')"
+        :info="t('commands.languageInfo')"
+      >
         <FieldSelect
-          :value="stringValue('language')"
+          :model-value="stringValue('language')"
           :options="languageOptions"
-          @update:value="emit('update', 'language', $event ?? '')"
+          @update:model-value="emit('update', 'language', $event ?? '')"
         />
-        <FieldIssues :issues="issuesOf('language')" />
-      </div>
+        <template #messages
+          ><FieldIssues :issues="issuesOf('language')"
+        /></template>
+      </FieldRow>
     </template>
 
     <template v-else-if="command.toolId === 'core.aiTask'">
-      <div class="tool-field">
-        <span class="tool-field-label">
-          {{ t('commands.promptLabel') }}
-          <InfoTooltip :text="t('commands.promptInfo')" />
-        </span>
+      <FieldRow
+        vertical
+        density="compact"
+        :label="t('commands.promptLabel')"
+        :info="t('commands.promptInfo')"
+      >
         <FieldTextArea
-          :value="stringValue('prompt')"
+          :model-value="stringValue('prompt')"
           :placeholder="t('commands.promptPlaceholder')"
           auto-resize
-          @update:value="emit('update', 'prompt', $event)"
+          @update:model-value="emit('update', 'prompt', $event)"
         />
-        <FieldIssues :issues="issuesOf('prompt')" />
-      </div>
-      <div v-if="aiTaskOptions.length" class="tool-field">
-        <span class="tool-field-label">{{ t('commands.promptFromTask') }}</span>
+        <template #messages
+          ><FieldIssues :issues="issuesOf('prompt')"
+        /></template>
+      </FieldRow>
+      <FieldRow
+        v-if="aiTaskOptions.length"
+        vertical
+        density="compact"
+        :label="t('commands.promptFromTask')"
+      >
         <FieldSelect
-          value=""
+          model-value=""
           :options="[
             { id: '', name: t('commands.promptFromTaskPlaceholder') },
             ...aiTaskOptions,
           ]"
-          @update:value="takeTaskRule"
+          @update:model-value="takeTaskRule"
         />
-      </div>
+      </FieldRow>
     </template>
 
     <template v-else>
-      <div
+      <FieldRow
         v-for="field in tool.configFields ?? []"
         :key="field.name"
-        class="tool-field"
+        :label="fieldLabel(field)"
+        vertical
+        density="compact"
       >
-        <span class="tool-field-label">{{ fieldLabel(field) }}</span>
-        <FieldInput
-          v-if="field.type === 'text'"
-          :value="stringValue(field.name)"
-          :placeholder="inherited(field)"
-          @update:value="emit('update', field.name, $event)"
-        />
-        <FieldTextArea
-          v-else-if="field.type === 'textarea'"
-          :value="stringValue(field.name)"
-          :placeholder="inherited(field)"
+        <ConfigFieldControl
+          :control="controlFor(field)"
           auto-resize
-          @update:value="emit('update', field.name, $event)"
+          @update:model-value="updateField(field, $event)"
         />
-        <FieldSelect
-          v-else-if="field.type === 'select'"
-          :value="stringValue(field.name)"
-          :options="selectOptions(field)"
-          @update:value="emit('update', field.name, $event ?? '')"
-        />
-        <FieldSelect
-          v-else-if="field.type === 'checkbox'"
-          :value="checkboxValue(field.name)"
-          :options="checkboxOptions(field)"
-          @update:value="updateCheckbox(field.name, $event)"
-        />
-      </div>
+      </FieldRow>
       <p
         v-if="tool.owner.kind === 'plugin' && tool.configFields?.length"
         class="tool-field-hint"
@@ -96,12 +87,13 @@ import {
 } from '../../lib/config-fields/config-field-labels'
 import { buildLanguageOptions } from '../../lib/locale/language'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
+import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import { useToolsStore } from '../../stores/tools'
 import type { InputConfigItem } from '../../types'
-import FieldInput from '../common/FieldInput.vue'
+import ConfigFieldControl from '../common/ConfigFieldControl.vue'
+import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import FieldIssues from './FieldIssues.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
@@ -220,8 +212,43 @@ function checkboxOptions(field: InputConfigItem) {
   ]
 }
 
-function updateCheckbox(name: string, value: string | number | undefined) {
-  emit('update', name, value === '' ? undefined : value === 'true')
+function controlFor(field: InputConfigItem): Control {
+  if (field.type === 'checkbox')
+    return {
+      type: 'select',
+      value: checkboxValue(field.name),
+      options: checkboxOptions(field),
+    }
+  if (field.type === 'select')
+    return {
+      type: 'select',
+      value: stringValue(field.name),
+      options: selectOptions(field),
+    }
+  if (field.type === 'sortable-checklist')
+    return {
+      type: field.type,
+      value: props.command.toolConfig[field.name],
+      options: field.options,
+      defaultValue: pluginSetting(field.name) ?? field.defaultValue,
+    }
+  return {
+    type: field.type,
+    value: stringValue(field.name),
+    placeholder: inherited(field),
+  }
+}
+
+function updateField(field: InputConfigItem, value: unknown) {
+  emit(
+    'update',
+    field.name,
+    field.type === 'checkbox'
+      ? value === ''
+        ? undefined
+        : value === 'true'
+      : value
+  )
 }
 </script>
 
@@ -231,21 +258,6 @@ function updateCheckbox(name: string, value: string | number | undefined) {
   flex-direction: column;
   gap: var(--space-md, 0.75rem);
   width: 100%;
-}
-
-.tool-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs, 0.25rem);
-}
-
-.tool-field-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  color: var(--app-text-muted);
 }
 
 .tool-field-hint {

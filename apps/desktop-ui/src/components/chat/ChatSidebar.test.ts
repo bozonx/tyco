@@ -126,8 +126,8 @@ describe('ChatSidebar.vue', () => {
           },
           Icon: true,
           SearchInput: {
-            props: ['value'],
-            template: '<input class="sidebar-search" :value="value" />',
+            props: ['modelValue'],
+            template: '<input class="sidebar-search" :value="modelValue" />',
             methods: { focus: vi.fn() },
           },
           DropdownMenu: true,
@@ -257,8 +257,8 @@ it('refreshes message search when chat history changes without changing the quer
         Icon: true,
         SearchInput: {
           name: 'SearchInput',
-          props: ['value'],
-          emits: ['update:value'],
+          props: ['modelValue'],
+          emits: ['update:modelValue'],
           template: '<input />',
         },
         DropdownMenu: true,
@@ -269,7 +269,7 @@ it('refreshes message search when chat history changes without changing the quer
   await wrapper.get('button[title="chat.searchChats"]').trigger('click')
   wrapper
     .findComponent({ name: 'SearchInput' })
-    .vm.$emit('update:value', 'needle')
+    .vm.$emit('update:modelValue', 'needle')
   await flushPromises()
   await vi.advanceTimersByTimeAsync(200)
   expect(wrapper.find('.chat-list-item').exists()).toBe(false)

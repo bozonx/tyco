@@ -2,7 +2,11 @@
   <ActionOverlayLayout :title="t('menu.reviewResult')" escMode="back">
     <template #header-extra>
       <div class="translation-header-tools">
-        <ParallelModeToggle v-if="props.sourceText" v-model:value="viewMode" />
+        <ResultViewModeToggle
+          preset="parallel"
+          v-if="props.sourceText"
+          v-model="viewMode"
+        />
         <div v-if="props.translationMeta" class="translation-provider-badge">
           <Icon icon="mdi:translate" height="14" class="opacity-70" />
           <span>{{ providerLabel }}</span>
@@ -52,15 +56,14 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
+import type { ParallelViewMode } from '../../lib/diff/diff-model'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
-import ParallelModeToggle, {
-  type ParallelViewMode,
-} from '../common/ParallelModeToggle.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
+import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
 
 const props = defineProps<PreviewMenuParams>()

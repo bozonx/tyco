@@ -3,14 +3,14 @@
     <SettingsSection :title="t('settings.sectionAppearance')">
       <FieldRow :label="t('settings.theme')">
         <SegmentedControl
-          v-model:value="userConfig.appearance.theme"
+          v-model="userConfig.appearance.theme"
           :label="t('settings.theme')"
           :options="themeOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.userLanguage')">
         <FieldSelect
-          v-model:value="userConfig.userLanguage"
+          v-model="userConfig.userLanguage"
           :options="userLanguageOptions"
         />
       </FieldRow>
@@ -19,9 +19,9 @@
           <FieldSelect
             v-if="isAppLanguageManual"
             class="flex-1"
-            :value="effectiveAppLanguage"
+            :model-value="effectiveAppLanguage"
             :options="appLanguageOptions"
-            @update:value="updateAppLanguage"
+            @update:model-value="updateAppLanguage"
           />
           <span v-else class="flex-1 text-sm text-muted">
             {{ getLanguageName(effectiveAppLanguage) }}
@@ -51,16 +51,16 @@
                 name: tab.text,
               }))
             "
-            :value="userConfig.windowInsertion.method"
-            @update:value="updateWindowInsertionMethod"
+            :model-value="userConfig.windowInsertion.method"
+            @update:model-value="updateWindowInsertionMethod"
           />
           <FieldInput
             v-if="userConfig.windowInsertion.method === 'xdotool'"
-            v-model:value="userConfig.windowInsertion.xdotoolBin"
+            v-model="userConfig.windowInsertion.xdotoolBin"
           />
           <FieldInput
             v-if="userConfig.windowInsertion.method === 'ydotool'"
-            v-model:value="userConfig.windowInsertion.ydotoolBin"
+            v-model="userConfig.windowInsertion.ydotoolBin"
           />
         </div>
       </FieldRow>
@@ -69,7 +69,7 @@
         :info="t('settings.pasteShortcutHint')"
       >
         <FieldSelect
-          v-model:value="userConfig.windowInsertion.pasteShortcut"
+          v-model="userConfig.windowInsertion.pasteShortcut"
           :options="pasteShortcutOptions"
         />
       </FieldRow>

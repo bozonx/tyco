@@ -1,50 +1,34 @@
 <template>
   <div class="surface connection-card">
-    <button
-      type="button"
-      class="connection-summary"
-      :aria-expanded="expandedProviderIds.has(provider.id)"
-      @click="toggle(expandedProviderIds, provider.id)"
+    <DisclosureHeader
+      :expanded="expanded"
+      :controls="bodyId"
+      :title="label"
+      :description="providerSummary(provider)"
+      :icon="providerIcon(provider)"
+      @toggle="emit('toggle')"
     >
-      <Icon
-        :icon="providerIcon(provider)"
-        height="18"
-        class="text-muted shrink-0"
-      />
-      <span class="connection-title">
-        <span class="font-medium truncate">{{ label }}</span>
-        <span class="connection-meta text-muted truncate">
-          {{ providerSummary(provider) }}
-        </span>
-      </span>
-      <span class="badge badge-sm shrink-0" :class="statusClass(provider)">
-        {{ statusLabel(provider) }}
-      </span>
-      <Icon
-        :icon="
-          expandedProviderIds.has(provider.id)
-            ? 'mdi:chevron-up'
-            : 'mdi:chevron-down'
-        "
-        height="18"
-        class="text-muted shrink-0"
-      />
-    </button>
+      <template #status
+        ><span class="badge badge-sm shrink-0" :class="statusClass(provider)">{{
+          statusLabel(provider)
+        }}</span></template
+      >
+    </DisclosureHeader>
 
-    <div v-if="expandedProviderIds.has(provider.id)" class="connection-body">
+    <div v-if="expanded" :id="bodyId" class="connection-body">
       <template v-if="provider.type === 'openai-compatible'">
         <FieldRow :label="t('settings.name')">
           <FieldInput
-            :value="provider.name || ''"
+            :model-value="provider.name || ''"
             placeholder="Ollama"
-            @update:value="emit('update', { name: $event })"
+            @update:model-value="emit('update', { name: $event })"
           />
         </FieldRow>
         <FieldRow :label="t('settings.baseUrl')">
           <FieldInput
-            :value="provider.baseUrl || ''"
+            :model-value="provider.baseUrl || ''"
             placeholder="http://localhost:11434/v1"
-            @update:value="emit('update', { baseUrl: $event })"
+            @update:model-value="emit('update', { baseUrl: $event })"
           />
         </FieldRow>
       </template>
@@ -98,27 +82,25 @@
               <Icon icon="mdi:cube-outline" height="17" class="text-muted" />
               <span class="font-medium truncate">{{ modelLabel(model) }}</span>
             </div>
-            <Button
+            <IconButton
               size="sm"
-              variant="ghost"
-              square
+              variant="danger-ghost"
               icon="mdi:trash-can-outline"
-              class="danger-ghost"
-              :title="t('settings.removeModel')"
+              :label="t('settings.removeModel')"
               @click="removeModel(llm, model.id)"
             />
           </div>
           <FieldRow :label="t('settings.name')">
             <FieldInput
-              :value="model.name || ''"
-              @update:value="model.name = $event"
+              :model-value="model.name || ''"
+              @update:model-value="model.name = $event"
             />
           </FieldRow>
           <FieldRow :label="t('settings.modelId')">
             <FieldInput
-              :value="model.providerModelId"
+              :model-value="model.providerModelId"
               :placeholder="modelPlaceholder(model.providerId)"
-              @update:value="model.providerModelId = $event"
+              @update:model-value="model.providerModelId = $event"
             />
           </FieldRow>
           <div class="advanced-toggle">
@@ -142,8 +124,8 @@
           <template v-if="expandedModelIds.has(model.id)">
             <FieldRow :label="t('settings.vision')">
               <FieldCheckbox
-                :value="supportsImages(model)"
-                @update:value="model.canUseImages = $event"
+                :model-value="supportsImages(model)"
+                @update:model-value="model.canUseImages = $event"
               />
             </FieldRow>
             <FieldRow
@@ -158,7 +140,7 @@
                 min="0"
                 max="2"
                 step="0.1"
-                :value="
+                :model-value="
                   numberDrafts[`${model.id}:temperature`] ??
                   model.temperature ??
                   ''
@@ -166,7 +148,7 @@
                 :aria-invalid="
                   numberErrors[`${model.id}:temperature`] || undefined
                 "
-                @update:value="setNumber(model, 'temperature', $event)"
+                @update:model-value="setNumber(model, 'temperature', $event)"
                 @invalid-input="numberErrors[`${model.id}:temperature`] = true"
               />
             </FieldRow>
@@ -180,7 +162,7 @@
             >
               <FieldNumber
                 min="1"
-                :value="
+                :model-value="
                   numberDrafts[`${model.id}:maxOutputTokens`] ??
                   model.maxOutputTokens ??
                   ''
@@ -189,7 +171,9 @@
                   numberErrors[`${model.id}:maxOutputTokens`] || undefined
                 "
                 :placeholder="t('settings.providerDefault')"
-                @update:value="setNumber(model, 'maxOutputTokens', $event)"
+                @update:model-value="
+                  setNumber(model, 'maxOutputTokens', $event)
+                "
                 @invalid-input="
                   numberErrors[`${model.id}:maxOutputTokens`] = true
                 "
@@ -205,7 +189,7 @@
             >
               <FieldNumber
                 min="1"
-                :value="
+                :model-value="
                   numberDrafts[`${model.id}:contextWindowTokens`] ??
                   model.contextWindowTokens ??
                   ''
@@ -214,7 +198,9 @@
                   numberErrors[`${model.id}:contextWindowTokens`] || undefined
                 "
                 :placeholder="t('settings.providerDefault')"
-                @update:value="setNumber(model, 'contextWindowTokens', $event)"
+                @update:model-value="
+                  setNumber(model, 'contextWindowTokens', $event)
+                "
                 @invalid-input="
                   numberErrors[`${model.id}:contextWindowTokens`] = true
                 "
@@ -256,9 +242,9 @@
         <Button
           v-if="provider.type === 'openai-compatible'"
           size="sm"
-          variant="ghost"
+          variant="danger-ghost"
           icon="mdi:trash-can-outline"
-          class="danger-ghost ml-auto"
+          class="ml-auto"
           @click="emit('remove', provider.id)"
         >
           {{ t('settings.removeProvider') }}
@@ -268,20 +254,25 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useId } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import { supportsImages } from '../../lib/llm/llm-catalog'
 import { modelLabel, removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
 import Icon from '../common/AppIcon.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
+import IconButton from '../common/IconButton.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import type { LlmConfig, LlmProvider } from '@tyco/shared'
 
 const props = defineProps<{
+  expanded: boolean
   provider: LlmProvider
   label: string
   llm: LlmConfig
@@ -289,13 +280,14 @@ const props = defineProps<{
   secrets: SecretsStatus
 }>()
 const emit = defineEmits<{
+  (event: 'toggle'): void
   (event: 'remove', id: string): void
   (event: 'update', patch: Partial<Pick<LlmProvider, 'name' | 'baseUrl'>>): void
 }>()
 const { t } = useI18n()
+const bodyId = useId()
 const {
   keyDrafts,
-  expandedProviderIds,
   expandedModelIds,
   connectionCheckStatusByProviderId,
   connectionErrors,
@@ -370,27 +362,6 @@ function toggle(set: Set<string>, id: string) {
   overflow: hidden;
   box-shadow: var(--app-shadow-sm);
 }
-.connection-summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  background: var(--app-surface-raised);
-}
-.connection-summary:hover {
-  background-color: var(--app-surface-sunken);
-}
-.connection-title {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-.connection-meta,
 .models-hint {
   font-size: var(--text-caption);
   line-height: 1.35;
@@ -445,8 +416,7 @@ function toggle(set: Set<string>, id: string) {
 .success-text {
   color: var(--color-success);
 }
-.error-text,
-.danger-ghost:not(:disabled):hover {
+.error-text {
   color: var(--color-error);
 }
 </style>

@@ -4,7 +4,7 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 export function usePopover() {
   const isOpen = ref(false)
   const containerRef = ref<HTMLElement | null>(null)
-  const triggerRef = ref<HTMLButtonElement | null>(null)
+  const triggerRef = ref<{ focus: () => void } | null>(null)
 
   function close(restoreFocus = false) {
     isOpen.value = false

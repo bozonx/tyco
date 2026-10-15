@@ -1,30 +1,25 @@
 <template>
   <div
-    :role="kind === 'navigation' ? 'navigation' : 'tablist'"
+    role="tablist"
     :aria-label="label"
     @keydown="onKeydown"
     class="app-tabs"
     :class="`app-tabs--${variant}`"
-    :aria-orientation="
-      kind === 'navigation'
-        ? undefined
-        : variant === 'vertical'
-          ? 'vertical'
-          : 'horizontal'
-    "
+    :aria-orientation="variant === 'vertical' ? 'vertical' : 'horizontal'"
   >
-    <TabItem
+    <button
+      type="button"
+      role="tab"
+      class="app-tab"
       v-for="(tab, index) in tabs"
       :key="tab.key"
-      :active="tab.key === activeTab"
-      :navigation="kind === 'navigation'"
+      :aria-selected="tab.key === activeTab"
+      :class="{ 'is-active': tab.key === activeTab }"
       :aria-label="tab.text"
       :title="tab.text"
       :id="`${id}-tab-${index}`"
-      :tabindex="kind === 'navigation' || tab.key === activeTab ? 0 : -1"
-      :aria-controls="
-        kind === 'navigation' ? undefined : (panelId ?? `${id}-panel`)
-      "
+      :tabindex="tab.key === activeTab ? 0 : -1"
+      :aria-controls="panelId ?? `${id}-panel`"
       @click="onTabClick(tab.key)"
     >
       <Icon v-if="tab.icon" :icon="tab.icon" height="16" class="shrink-0" />
@@ -32,10 +27,10 @@
       <span v-if="tab.badge !== undefined" class="app-tabs-badge">
         {{ tab.badge }}
       </span>
-    </TabItem>
+    </button>
   </div>
   <div
-    v-if="$slots.panel && kind !== 'navigation'"
+    v-if="$slots.panel"
     :id="panelId ?? `${id}-panel`"
     role="tabpanel"
     :aria-labelledby="`${id}-tab-${tabs.findIndex((tab) => tab.key === activeTab)}`"
@@ -49,10 +44,8 @@
 import { computed, nextTick, useId } from 'vue'
 
 import Icon from './AppIcon.vue'
-import TabItem from './TabItem.vue'
 
 const emit = defineEmits<{
-  (e: 'update:value', key: string | number): void
   (e: 'update:modelValue', key: string | number): void
 }>()
 
@@ -65,34 +58,22 @@ const props = withDefaults(
       badge?: string | number
     }[]
     label: string
-    kind?: 'tabs' | 'navigation'
     panelId?: string
-    value?: string | number
+
     modelValue?: string | number
     variant?: 'underline' | 'segmented' | 'vertical'
   }>(),
-  {
-    value: undefined,
-    modelValue: undefined,
-    variant: 'underline',
-    kind: 'tabs',
-  }
+  { modelValue: undefined, variant: 'underline' }
 )
 
 const id = useId()
-const activeTab = computed(
-  () =>
-    (props.modelValue !== undefined ? props.modelValue : props.value) ??
-    props.tabs[0]?.key ??
-    ''
-)
+const activeTab = computed(() => props.modelValue ?? props.tabs[0]?.key ?? '')
 
 const onTabClick = (key: string | number) => {
-  emit('update:value', key)
   emit('update:modelValue', key)
 }
 async function onKeydown(event: KeyboardEvent) {
-  if (props.kind === 'navigation' || !props.tabs.length) return
+  if (!props.tabs.length) return
   const previous = props.variant === 'vertical' ? 'ArrowUp' : 'ArrowLeft'
   const next = props.variant === 'vertical' ? 'ArrowDown' : 'ArrowRight'
   if (![previous, next, 'Home', 'End'].includes(event.key)) return
@@ -106,7 +87,7 @@ async function onKeydown(event: KeyboardEvent) {
         ? props.tabs.length - 1
         : (current + (event.key === previous ? -1 : 1) + props.tabs.length) %
           props.tabs.length
-  emit('update:value', props.tabs[index].key)
+
   emit('update:modelValue', props.tabs[index].key)
   await nextTick()
   document.getElementById(`${id}-tab-${index}`)?.focus()
@@ -119,7 +100,7 @@ async function onKeydown(event: KeyboardEvent) {
   min-width: 0;
 }
 
-.app-tabs :deep(.app-tab) {
+.app-tabs .app-tab {
   display: inline-flex;
   align-items: center;
   gap: 0.4375rem;
@@ -138,11 +119,11 @@ async function onKeydown(event: KeyboardEvent) {
     border-color var(--transition-fast);
 }
 
-.app-tabs :deep(.app-tab:hover) {
+.app-tabs .app-tab:hover {
   color: var(--color-base-content);
 }
 
-.app-tabs :deep(.app-tab.is-active) {
+.app-tabs .app-tab.is-active {
   color: var(--color-base-content);
 }
 
@@ -165,13 +146,13 @@ async function onKeydown(event: KeyboardEvent) {
   scrollbar-width: none;
 }
 
-.app-tabs--underline :deep(.app-tab) {
+.app-tabs--underline .app-tab {
   padding: 0.625rem 0.125rem;
   margin-bottom: -1px;
   border-bottom: 2px solid transparent;
 }
 
-.app-tabs--underline :deep(.app-tab.is-active) {
+.app-tabs--underline .app-tab.is-active {
   border-bottom-color: var(--color-primary);
 }
 
@@ -189,14 +170,14 @@ async function onKeydown(event: KeyboardEvent) {
   scrollbar-width: none;
 }
 
-.app-tabs--segmented :deep(.app-tab) {
+.app-tabs--segmented .app-tab {
   justify-content: center;
   padding: var(--segment-option-padding);
   border-radius: calc(var(--radius-md) - 2px);
   font-size: var(--text-control);
 }
 
-.app-tabs--segmented :deep(.app-tab.is-active) {
+.app-tabs--segmented .app-tab.is-active {
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-segment);
 }
@@ -208,17 +189,17 @@ async function onKeydown(event: KeyboardEvent) {
   gap: var(--segment-gap);
 }
 
-.app-tabs--vertical :deep(.app-tab) {
+.app-tabs--vertical .app-tab {
   width: 100%;
   padding: 0.4375rem 0.625rem;
   border-radius: var(--radius-md);
 }
 
-.app-tabs--vertical :deep(.app-tab:hover) {
+.app-tabs--vertical .app-tab:hover {
   background-color: var(--app-hover);
 }
 
-.app-tabs--vertical :deep(.app-tab.is-active) {
+.app-tabs--vertical .app-tab.is-active {
   background-color: var(--app-accent-soft);
   color: var(--color-primary);
 }

@@ -57,9 +57,9 @@ describe('PreviewMenu', () => {
 
     expect(wrapper.find('.translation-quality-alert').exists()).toBe(false)
     expect(wrapper.text()).toContain('gpt-4o-mini')
-    expect(wrapper.findComponent({ name: 'ParallelModeToggle' }).exists()).toBe(
-      true
-    )
+    expect(
+      wrapper.findComponent({ name: 'ResultViewModeToggle' }).exists()
+    ).toBe(true)
     expect(
       wrapper.findComponent({ name: 'ParallelTextPreview' }).exists()
     ).toBe(true)

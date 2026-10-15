@@ -61,8 +61,9 @@ describe('SettingsTranslationsTab.vue', () => {
               '<div class="field-row-stub" :data-label="label" :data-info="info" :data-hint="hint"><slot /></div>',
           },
           FieldSelect: {
-            props: ['value', 'options'],
-            template: '<select class="field-select-stub" :data-val="value" />',
+            props: ['modelValue', 'options'],
+            template:
+              '<select class="field-select-stub" :data-val="modelValue" />',
           },
           FieldInput: true,
           FieldTextArea: true,
@@ -114,10 +115,10 @@ describe('SettingsTranslationsTab.vue', () => {
           FieldSelect: true,
           FieldInput: true,
           FieldTextArea: {
-            props: ['value'],
-            emits: ['update:value'],
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
             template:
-              '<textarea class="text-area-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+              '<textarea class="text-area-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
         },
       },
@@ -141,10 +142,10 @@ describe('SettingsTranslationsTab.vue', () => {
           FieldRow: { template: '<div><slot /></div>' },
           FieldSelect: true,
           FieldInput: {
-            props: ['value'],
-            emits: ['update:value'],
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
             template:
-              '<input class="key-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+              '<input class="key-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           FieldTextArea: true,
         },
@@ -178,10 +179,10 @@ describe('SettingsTranslationsTab.vue', () => {
           FieldRow: { template: '<div><slot /></div>' },
           FieldSelect: true,
           FieldInput: {
-            props: ['value'],
-            emits: ['update:value'],
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
             template:
-              '<input class="key-input-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+              '<input class="key-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           FieldTextArea: true,
         },
@@ -248,7 +249,7 @@ describe('SettingsTranslationsTab.vue', () => {
       },
     })
 
-    await wrapper.find('.settings-inline-link').trigger('click')
+    await wrapper.find('.inline-action').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([['languages']])
   })
@@ -319,8 +320,9 @@ describe('SettingsTranslationsTab.vue', () => {
               '<div class="field-row-stub" :data-label="label"><slot /></div>',
           },
           FieldSelect: {
-            props: ['value', 'options'],
-            template: '<select class="field-select-stub" :data-val="value" />',
+            props: ['modelValue', 'options'],
+            template:
+              '<select class="field-select-stub" :data-val="modelValue" />',
           },
           FieldInput: true,
           FieldTextArea: true,
@@ -348,10 +350,10 @@ describe('SettingsTranslationsTab.vue', () => {
           FieldSelect: true,
           FieldInput: true,
           FieldTextArea: {
-            props: ['value'],
-            emits: ['update:value'],
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
             template:
-              '<textarea class="text-area-stub" :value="value" @input="$emit(\'update:value\', $event.target.value)" />',
+              '<textarea class="text-area-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
         },
       },

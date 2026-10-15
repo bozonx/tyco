@@ -102,9 +102,9 @@
       :info="t('commands.externalSelectionInfo')"
     >
       <FieldCheckbox
-        :value="externalAccess.selection"
+        :model-value="externalAccess.selection"
         :title="t('commands.externalSelection')"
-        @update:value="setExternalAccess('selection', $event)"
+        @update:model-value="setExternalAccess('selection', $event)"
       />
     </FieldRow>
   </SettingsSection>
@@ -428,17 +428,5 @@ onBeforeUnmount(finishRemoval)
   border-color: var(--color-primary);
   box-shadow: var(--app-shadow-lg);
   transition: none;
-}
-
-.command-card.is-disabled :deep(.command-name) {
-  color: var(--app-text-muted);
-}
-
-.command-card:hover :deep(.drag-handle),
-.command-card:focus-within :deep(.drag-handle),
-.command-card.is-sorting :deep(.drag-handle),
-.command-card.is-dragged :deep(.drag-handle) {
-  opacity: 1;
-  pointer-events: auto;
 }
 </style>

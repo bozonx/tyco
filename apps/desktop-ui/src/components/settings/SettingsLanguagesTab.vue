@@ -5,12 +5,8 @@
         <span>{{ t('settings.translationsHint') }}</span
         >{{ ' ' }} <span>{{ t('settings.translationsMethodHint') }}</span
         >{{ ' ' }}
-        <button
-          type="button"
-          class="settings-inline-link"
-          @click="emit('navigate', 'translations')"
-        >
-          {{ t('settings.translationsTab') }}</button
+        <InlineAction @click="emit('navigate', 'translations')">
+          {{ t('settings.translationsTab') }}</InlineAction
         >.
       </template>
       <ShortcutSlots
@@ -22,9 +18,9 @@
         <template #item="{ item, index }">
           <FieldSelect
             class="w-full"
-            :value="item"
+            :model-value="item"
             :options="translateLanguageOptions"
-            @update:value="updateLanguage(index, $event)"
+            @update:model-value="updateLanguage(index, $event)"
           />
         </template>
       </ShortcutSlots>
@@ -45,6 +41,7 @@ import {
   normalizeShortcutSlots,
 } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldSelect from '../common/FieldSelect.vue'
+import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from '../common/SettingsSection.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
 import type { UserConfig } from '@tyco/shared'
@@ -101,21 +98,4 @@ function updateLanguage(index: number, value: string | number | undefined) {
 }
 </script>
 
-<style scoped>
-.settings-inline-link {
-  display: inline;
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  font-weight: 500;
-}
-
-.settings-inline-link:hover {
-  filter: brightness(1.15);
-}
-</style>
+<style scoped></style>

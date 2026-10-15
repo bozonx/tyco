@@ -15,9 +15,9 @@ describe('Tabs', () => {
       props: {
         tabs,
         label: 'Preview',
-        value: 'one',
-        'onUpdate:value': (value) => {
-          void wrapper.setProps({ value })
+        modelValue: 'one',
+        'onUpdate:modelValue': (value) => {
+          void wrapper.setProps({ modelValue: value })
         },
       },
       slots: { panel: 'Content' },
@@ -39,26 +39,5 @@ describe('Tabs', () => {
     expect(document.activeElement).toBe(buttons[0].element)
     await buttons[0].trigger('keydown', { key: 'End' })
     expect(document.activeElement).toBe(buttons[1].element)
-  })
-  it('uses ordinary buttons for navigation without advertising tab semantics', () => {
-    const wrapper = mount(Tabs, {
-      props: {
-        tabs,
-        label: 'Settings',
-        kind: 'navigation',
-        value: 'two',
-        variant: 'vertical',
-      },
-    })
-    expect(wrapper.get('[role="navigation"]').attributes('aria-label')).toBe(
-      'Settings'
-    )
-    expect(wrapper.find('[role="tab"]').exists()).toBe(false)
-    expect(wrapper.findAll('button')[1].attributes('aria-current')).toBe('page')
-    expect(
-      wrapper
-        .findAll('button')
-        .every((button) => button.attributes('tabindex') === '0')
-    ).toBe(true)
   })
 })

@@ -25,9 +25,9 @@ describe('SettingsPluginDetailTab.vue', () => {
               '<button class="btn-stub" @click="$emit(\'click\')"><slot /></button>',
           },
           FieldCheckbox: {
-            props: ['value', 'label'],
+            props: ['modelValue', 'label'],
             template:
-              '<button class="checkbox-stub" :data-enabled="value" @click="$emit(\'update:value\', !value)">{{ label }}</button>',
+              '<button class="checkbox-stub" :data-enabled="modelValue" @click="$emit(\'update:modelValue\', !value)">{{ label }}</button>',
           },
           ConfigFields: {
             props: ['config'],
@@ -67,9 +67,9 @@ describe('SettingsPluginDetailTab.vue', () => {
         stubs: {
           Button: true,
           FieldCheckbox: {
-            props: ['value', 'label'],
+            props: ['modelValue', 'label'],
             template:
-              '<button class="checkbox-stub" @click="$emit(\'update:value\', false)">toggle</button>',
+              '<button class="checkbox-stub" @click="$emit(\'update:modelValue\', false)">toggle</button>',
           },
           ConfigFields: true,
         },

@@ -125,7 +125,7 @@ describe('Settings.vue', () => {
   it('falls back from unknown routes and reacts to query changes', async () => {
     useRoute().query.tab = 'unknown'
     const wrapper = mount(Settings, {
-      global: { stubs: { Tabs: true, SettingsHistoryTab: true } },
+      global: { stubs: { NavigationList: true, SettingsHistoryTab: true } },
     })
     expect((wrapper.vm as any).currentTab).toBe('general')
     useRoute().query.tab = 'history'
@@ -140,7 +140,7 @@ describe('Settings.vue', () => {
   it('disables settings written by a newer version', () => {
     settingsMocks.configVersion = CONFIG_VERSION + 1
     const wrapper = mount(Settings, {
-      global: { stubs: { Tabs: true, Button: true } },
+      global: { stubs: { NavigationList: true, Button: true } },
     })
     expect(wrapper.get('fieldset').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[role="alert"]').text()).toContain(
@@ -153,7 +153,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: true,
           Button: { template: '<button><slot /></button>' },
         },
       },
@@ -180,7 +180,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: true,
           SettingsLlmTab: {
             data: () => ({ keyDraft: '' }),
             template: '<input class="key-draft" v-model="keyDraft" />',
@@ -203,11 +203,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -233,11 +233,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -263,11 +263,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -293,11 +293,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -326,7 +326,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: true,
           SettingsHistoryTab: {
             props: ['userConfig', 'effectiveAppLanguage'],
             template: '<div class="history-tab-stub" />',
@@ -346,11 +346,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -371,11 +371,11 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: {
-            props: ['tabs'],
+          NavigationList: {
+            props: ['items'],
             template: `
               <div class="tabs-stub">
-                <button v-for="tab in tabs" :key="tab.key" :data-key="tab.key">
+                <button v-for="tab in items" :key="tab.key" :data-key="tab.key">
                   {{ tab.text }}
                 </button>
               </div>
@@ -404,7 +404,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: true,
           SettingsSection: {
             props: ['title'],
             template:
@@ -416,8 +416,9 @@ describe('Settings.vue', () => {
               '<div class="field-row-stub" :data-label="label"><slot /></div>',
           },
           FieldSelect: {
-            props: ['value', 'options'],
-            template: '<select class="field-select-stub" :data-val="value" />',
+            props: ['modelValue', 'options'],
+            template:
+              '<select class="field-select-stub" :data-val="modelValue" />',
           },
         },
       },
@@ -436,20 +437,22 @@ describe('Settings.vue', () => {
   })
 
   it('renders subnav list with plugin items and status badges under plugins tab', () => {
-    const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
+    const wrapper = mount(Settings, {
+      global: { stubs: { NavigationList: false } },
+    })
 
-    const subnavItems = wrapper.findAll('.settings-subnav-item')
+    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
     expect(subnavItems).toHaveLength(2)
 
     expect(subnavItems[0].text()).toContain('plugin.a.label')
-    expect(
-      subnavItems[0].find('.settings-subnav-status.is-enabled').exists()
-    ).toBe(true)
+    expect(subnavItems[0].find('.navigation-status.is-enabled').exists()).toBe(
+      true
+    )
     expect(subnavItems[0].text()).toContain('settings.pluginStatusOn')
 
     expect(subnavItems[1].text()).toContain('Plugin B')
     expect(
-      subnavItems[1].find('.settings-subnav-status.is-disabled').exists()
+      subnavItems[1].find('.navigation-status:not(.is-enabled)').exists()
     ).toBe(true)
     expect(subnavItems[1].text()).toContain('settings.pluginStatusOff')
   })
@@ -458,7 +461,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: false,
           SettingsPluginDetailTab: {
             props: ['plugin'],
             template:
@@ -468,7 +471,7 @@ describe('Settings.vue', () => {
       },
     })
 
-    const subnavItems = wrapper.findAll('.settings-subnav-item')
+    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
     await subnavItems[0].trigger('click')
 
     const vm = wrapper.vm as any
@@ -478,9 +481,11 @@ describe('Settings.vue', () => {
   })
 
   it('remounts SettingsPluginDetailTab with pluginId key when switching plugins', async () => {
-    const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
+    const wrapper = mount(Settings, {
+      global: { stubs: { NavigationList: false } },
+    })
 
-    const subnavItems = wrapper.findAll('.settings-subnav-item')
+    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
     // Click on Plugin A (enabled: true)
     await subnavItems[0].trigger('click')
     await wrapper.vm.$nextTick()
@@ -499,7 +504,9 @@ describe('Settings.vue', () => {
   })
 
   it('renders a row per storage root when storage info is loaded', async () => {
-    const wrapper = mount(Settings, { global: { stubs: { Tabs: true } } })
+    const wrapper = mount(Settings, {
+      global: { stubs: { NavigationList: true } },
+    })
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 0))
     await wrapper.vm.$nextTick()
@@ -532,7 +539,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          Tabs: true,
+          NavigationList: true,
           SettingsSection: {
             props: ['title'],
             template:

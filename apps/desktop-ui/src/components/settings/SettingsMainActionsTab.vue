@@ -10,9 +10,9 @@
         <div class="flex items-center gap-2 w-full">
           <FieldSelect
             class="flex-1 min-w-0"
-            :value="optionId(item)"
+            :model-value="optionId(item)"
             :options="actionOptions"
-            @update:value="updateAction(index, $event)"
+            @update:model-value="updateAction(index, $event)"
           />
           <IconButton
             v-if="item.type === 'command'"

@@ -38,13 +38,13 @@
 
         <FieldCheckbox
           :key="plugin.pluginId"
-          :value="plugin.isEnabled"
+          :model-value="plugin.isEnabled"
           :title="
             plugin.isEnabled
               ? t('settings.pluginEnabled')
               : t('settings.pluginDisabled')
           "
-          @update:value="setPluginEnabled(plugin.pluginId, $event)"
+          @update:model-value="setPluginEnabled(plugin.pluginId, $event)"
         />
       </div>
 

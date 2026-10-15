@@ -83,3 +83,5 @@ export function splitDiffParts(parts: readonly DiffPart[]): SplitDiffResult {
 export function hasDifferences(parts: DiffPart[]): boolean {
   return parts.some((p) => p.added || p.removed)
 }
+
+export type ParallelViewMode = 'split' | 'result'

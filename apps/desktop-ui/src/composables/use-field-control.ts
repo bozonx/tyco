@@ -15,7 +15,11 @@ import { fieldContextKey } from '../lib/ui/field-context'
  * wrapper.
  */
 export function useFieldControl(
-  options: { wrapped?: boolean; register?: boolean } = {}
+  options: {
+    wrapped?: boolean
+    register?: boolean
+    getLabel?: () => string | undefined
+  } = {}
 ) {
   const attrs = useAttrs() as InputHTMLAttributes
   const field = inject(fieldContextKey, undefined)
@@ -37,9 +41,12 @@ export function useFieldControl(
     ...attrs,
     ...(options.wrapped ? { class: undefined, style: undefined } : {}),
     id: getId(),
+    'aria-label': attrs['aria-label'] ?? options.getLabel?.(),
     'aria-labelledby':
       attrs['aria-labelledby'] ??
-      (attrs['aria-label'] ? undefined : field?.labelId),
+      (attrs['aria-label'] || options.getLabel?.()
+        ? undefined
+        : field?.labelId),
     'aria-describedby':
       [attrs['aria-describedby'], field?.descriptionIds.value]
         .filter(Boolean)
