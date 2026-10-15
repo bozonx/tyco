@@ -39,15 +39,18 @@
           </span>
         </button>
       </div>
-      <div v-if="removed" class="commands-notice" role="status">
-        <Icon icon="mdi:trash-can-outline" width="16" height="16" />
-        <span class="commands-notice-text">
-          {{ t('commands.removed', { name: removedName }) }}
-        </span>
+      <StateMessage
+        v-if="removed"
+        class="commands-notice"
+        kind="info"
+        inline
+        icon="mdi:trash-can-outline"
+        :message="t('commands.removed', { name: removedName })"
+      >
         <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
           {{ t('commands.undo') }}
         </Button>
-      </div>
+      </StateMessage>
       <StateMessage
         v-if="!commands.length"
         class="commands-empty"

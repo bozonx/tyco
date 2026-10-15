@@ -21,9 +21,14 @@
       </template>
 
       <template #notice>
-        <div v-if="hasEditorLoadError" class="history-notice is-error">
-          <Icon icon="mdi:alert-circle-outline" height="16" />
-          <span>{{ t('history.loadFailed') }}</span>
+        <StateMessage
+          v-if="hasEditorLoadError"
+          class="history-notice is-error"
+          kind="error"
+          inline
+          icon="mdi:alert-circle-outline"
+          :message="t('history.loadFailed')"
+        >
           <Button
             size="xs"
             variant="ghost"
@@ -32,18 +37,27 @@
           >
             {{ t('history.retry') }}
           </Button>
-        </div>
-        <div v-if="removedItem" class="history-notice">
-          <Icon icon="mdi:trash-can-outline" height="16" />
-          <span>{{ t('history.itemRemoved') }}</span>
+        </StateMessage>
+        <StateMessage
+          v-if="removedItem"
+          class="history-notice"
+          kind="info"
+          inline
+          icon="mdi:trash-can-outline"
+          :message="t('history.itemRemoved')"
+        >
           <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
             {{ t('history.undo') }}
           </Button>
-        </div>
-        <div v-if="isEditorHistoryDisabled" class="history-notice">
-          <Icon icon="mdi:information-outline" height="16" />
-          <span>{{ t('history.textsDisabled') }}</span>
-        </div>
+        </StateMessage>
+        <StateMessage
+          v-if="isEditorHistoryDisabled"
+          class="history-notice"
+          kind="info"
+          inline
+          icon="mdi:information-outline"
+          :message="t('history.textsDisabled')"
+        />
       </template>
     </HistoryList>
   </div>
@@ -54,6 +68,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Button from '../components/common/Button.vue'
 import SearchInput from '../components/common/SearchInput.vue'
+import StateMessage from '../components/common/StateMessage.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
@@ -68,7 +83,6 @@ import { createRemovalUndo } from '../lib/history/removal-undo'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { Icon } from '@iconify/vue'
 import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()

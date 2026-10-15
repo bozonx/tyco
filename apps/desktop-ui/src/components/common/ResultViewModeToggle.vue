@@ -1,7 +1,7 @@
 <template>
   <SegmentedControl
     :value="value"
-    :label="label"
+    :label="resolvedLabel"
     :options="options"
     compact
     hide-labels-on-small-screens
@@ -15,7 +15,17 @@ import { useI18n } from '../../composables/use-i18n'
 import type { DiffViewMode } from '../../lib/diff/diff-model'
 import SegmentedControl from './SegmentedControl.vue'
 
-const props = defineProps<{ value: T; label: string; modes: T[] }>()
+export type ResultViewPreset = 'diff' | 'parallel'
+
+const props = withDefaults(
+  defineProps<{
+    value: T
+    label?: string
+    modes?: T[]
+    preset?: ResultViewPreset
+  }>(),
+  { label: undefined, modes: undefined, preset: 'diff' }
+)
 const emit = defineEmits<{ (e: 'update:value', value: T): void }>()
 const { t } = useI18n()
 const MODE_OPTIONS = {
@@ -23,8 +33,25 @@ const MODE_OPTIONS = {
   split: { labelKey: 'diff.modeSplit', icon: 'mdi:view-split-vertical' },
   result: { labelKey: 'diff.modeResult', icon: 'mdi:file-document-outline' },
 } as const
+
+const resolvedLabel = computed(
+  () =>
+    props.label ??
+    (props.preset === 'parallel'
+      ? t('menu.reviewResult')
+      : t('menu.compareResult'))
+)
+
+const resolvedModes = computed<T[]>(
+  () =>
+    props.modes ??
+    (props.preset === 'parallel'
+      ? (['split', 'result'] as T[])
+      : (['unified', 'split', 'result'] as T[]))
+)
+
 const options = computed(() =>
-  props.modes.map((id) => ({
+  resolvedModes.value.map((id) => ({
     id,
     name: t(MODE_OPTIONS[id].labelKey),
     icon: MODE_OPTIONS[id].icon,

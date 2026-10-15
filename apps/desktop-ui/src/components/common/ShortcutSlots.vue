@@ -61,9 +61,9 @@ import { nextTick, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
+import Icon from './AppIcon.vue'
 import KeyboardKey from './KeyboardKey.vue'
 import ReorderControls from './ReorderControls.vue'
-import { Icon } from '@iconify/vue'
 
 const props = defineProps<{ items: readonly (T | null | undefined)[] }>()
 

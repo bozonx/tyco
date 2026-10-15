@@ -77,6 +77,7 @@ declare module 'vue' {
     SecretKeyField: typeof import('./src/components/settings/SecretKeyField.vue')['default']
     SecretStorageNotice: typeof import('./src/components/settings/SecretStorageNotice.vue')['default']
     SegmentedControl: typeof import('./src/components/common/SegmentedControl.vue')['default']
+    SelectionContextPreview: typeof import('./src/components/common/SelectionContextPreview.vue')['default']
     Settings: typeof import('./src/components/Settings.vue')['default']
     SettingsCommandsTab: typeof import('./src/components/settings/SettingsCommandsTab.vue')['default']
     SettingsEditorTab: typeof import('./src/components/settings/SettingsEditorTab.vue')['default']

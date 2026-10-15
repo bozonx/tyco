@@ -51,7 +51,10 @@ import { computed, nextTick, useId } from 'vue'
 import Icon from './AppIcon.vue'
 import TabItem from './TabItem.vue'
 
-const emit = defineEmits<{ (e: 'update:value', key: string | number): void }>()
+const emit = defineEmits<{
+  (e: 'update:value', key: string | number): void
+  (e: 'update:modelValue', key: string | number): void
+}>()
 
 const props = withDefaults(
   defineProps<{
@@ -65,16 +68,28 @@ const props = withDefaults(
     kind?: 'tabs' | 'navigation'
     panelId?: string
     value?: string | number
+    modelValue?: string | number
     variant?: 'underline' | 'segmented' | 'vertical'
   }>(),
-  { value: undefined, variant: 'underline', kind: 'tabs' }
+  {
+    value: undefined,
+    modelValue: undefined,
+    variant: 'underline',
+    kind: 'tabs',
+  }
 )
 
 const id = useId()
-const activeTab = computed(() => props.value ?? props.tabs[0]?.key ?? '')
+const activeTab = computed(
+  () =>
+    (props.modelValue !== undefined ? props.modelValue : props.value) ??
+    props.tabs[0]?.key ??
+    ''
+)
 
 const onTabClick = (key: string | number) => {
   emit('update:value', key)
+  emit('update:modelValue', key)
 }
 async function onKeydown(event: KeyboardEvent) {
   if (props.kind === 'navigation' || !props.tabs.length) return
@@ -92,6 +107,7 @@ async function onKeydown(event: KeyboardEvent) {
         : (current + (event.key === previous ? -1 : 1) + props.tabs.length) %
           props.tabs.length
   emit('update:value', props.tabs[index].key)
+  emit('update:modelValue', props.tabs[index].key)
   await nextTick()
   document.getElementById(`${id}-tab-${index}`)?.focus()
 }

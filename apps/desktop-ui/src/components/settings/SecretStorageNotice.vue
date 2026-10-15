@@ -10,7 +10,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useLlmStore } from '../../stores/llm'
-import { Icon } from '@iconify/vue'
+import Icon from '../common/AppIcon.vue'
 
 const { t } = useI18n()
 const llmStore = useLlmStore()

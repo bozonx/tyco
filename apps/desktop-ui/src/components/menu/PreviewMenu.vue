@@ -56,12 +56,12 @@ import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Icon from '../common/AppIcon.vue'
 import ParallelModeToggle, {
   type ParallelViewMode,
 } from '../common/ParallelModeToggle.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
 import TextPreview from '../common/TextPreview.vue'
-import { Icon } from '@iconify/vue'
 
 const props = defineProps<PreviewMenuParams>()
 const ipcStore = useIpcStore()

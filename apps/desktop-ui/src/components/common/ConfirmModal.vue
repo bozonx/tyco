@@ -42,9 +42,9 @@
 import { useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import Icon from './AppIcon.vue'
 import BaseDialog from './BaseDialog.vue'
 import Button from './Button.vue'
-import { Icon } from '@iconify/vue'
 
 defineProps<{
   open: boolean

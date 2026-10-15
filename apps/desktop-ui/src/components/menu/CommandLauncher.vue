@@ -51,27 +51,15 @@
 
       <!-- the selection may be a leftover of an earlier one: the user sees it
            and can drop it before running a command -->
-      <div v-else-if="hasSelection" class="launcher-selection">
-        <div class="launcher-selection-header">
-          <Icon
-            icon="mdi:format-quote-open"
-            height="14"
-            class="shrink-0 text-primary"
-          />
-          <span class="launcher-selection-title">
-            {{ t('commandLauncher.selection', { count: selectedText.length }) }}
-          </span>
-          <IconButton
-            class="launcher-selection-drop"
-            :title="t('commandLauncher.dropSelection')"
-            @mousedown.prevent
-            @click="launcher.dropSelection"
-            :label="t('commandLauncher.dropSelection')"
-            icon="mdi:close"
-          />
-        </div>
-        <TextPreview :text="selectedText" />
-      </div>
+      <SelectionContextPreview
+        v-else-if="hasSelection"
+        class="launcher-selection"
+        icon="mdi:format-quote-open"
+        :text="selectedText"
+        :title="t('commandLauncher.selection', { count: selectedText.length })"
+        :remove-title="t('commandLauncher.dropSelection')"
+        @remove="launcher.dropSelection"
+      />
     </template>
 
     <template #actions>
@@ -168,9 +156,8 @@ import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
-import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
-import TextPreview from '../common/TextPreview.vue'
+import SelectionContextPreview from '../common/SelectionContextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import QueryPanel, {
   type QueryPanelHint,
@@ -478,39 +465,6 @@ onUnmounted(() => {
   gap: var(--space-xs);
   min-height: 0;
   height: 100%;
-}
-
-.launcher-selection-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--app-text-muted);
-  font-size: var(--text-caption);
-}
-
-.launcher-selection-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.launcher-selection-drop {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 0.25rem;
-  padding: 0.15rem;
-  border-radius: var(--radius-sm);
-  color: var(--app-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.launcher-selection-drop:hover {
-  background: var(--app-hover);
-  color: var(--color-error);
 }
 
 .launcher-hints {

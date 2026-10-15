@@ -25,6 +25,7 @@ const controlAttrs = useFieldControl()
 
 const props = defineProps<{
   value?: string
+  modelValue?: string
   placeholder?: string
   autoResize?: boolean
   maxAutoHeight?: number
@@ -32,16 +33,19 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:value', value: string): void
+  (e: 'update:modelValue', value: string): void
   (e: 'select', value: string, start: number, end: number): void
 }>()
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
-const value = computed(() => props.value || '')
+const value = computed(
+  () => (props.modelValue !== undefined ? props.modelValue : props.value) || ''
+)
 
 const { resize: adjustHeight } = useTextareaAutosize(
   textareaRef,
-  () => props.value,
+  () => value.value,
   () => ({
     enabled: Boolean(props.autoResize),
     maxHeight: props.maxAutoHeight ?? 200,
@@ -49,7 +53,9 @@ const { resize: adjustHeight } = useTextareaAutosize(
 )
 
 function handleInput(event: Event) {
-  emit('update:value', (event.target as HTMLTextAreaElement).value)
+  const next = (event.target as HTMLTextAreaElement).value
+  emit('update:value', next)
+  emit('update:modelValue', next)
   if (props.autoResize) {
     adjustHeight()
   }

@@ -8,8 +8,10 @@ import { computed } from 'vue'
 import { pluginIcons } from '../../lib/plugins/plugin-icons'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{ icon: string }>()
+const props = defineProps<{ icon?: string }>()
 const resolvedIcon = computed(() =>
-  props.icon.startsWith('tyco-p') ? pluginIcons.resolve(props.icon) : props.icon
+  props.icon?.startsWith('tyco-p')
+    ? pluginIcons.resolve(props.icon)
+    : props.icon
 )
 </script>

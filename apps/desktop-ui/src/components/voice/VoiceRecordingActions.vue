@@ -20,15 +20,15 @@
         :label="t('chat.voiceCancelHint')"
         icon="mdi:close"
       />
-      <Button
+      <IconButton
         :size="compact ? 'sm' : undefined"
-        square
+        variant="primary"
         :title="t('chat.voiceSendHint')"
         :disabled="isFinishing"
         @click="() => finish('submit')"
-      >
-        <Icon icon="mdi:arrow-up" height="19" />
-      </Button>
+        :label="t('chat.voiceSendHint')"
+        icon="mdi:arrow-up"
+      />
     </template>
     <template v-else>
       <template v-if="finishBehavior === 'submitToChat'">
@@ -103,8 +103,6 @@ import type {
   VoiceFinishBehavior,
   VoiceFinishIntent,
 } from '../../lib/stt/voice-finish-intent'
-import Icon from '../common/AppIcon.vue'
-import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
 import ShortcutButton from '../common/ShortcutButton.vue'
 

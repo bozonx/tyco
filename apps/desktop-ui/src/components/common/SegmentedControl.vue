@@ -10,7 +10,7 @@
       v-for="option in options"
       :key="option.id"
       class="segmented-option"
-      :class="{ active: option.id === props.value }"
+      :class="{ active: option.id === currentValue }"
       :title="option.title ?? option.name"
     >
       <input
@@ -21,8 +21,8 @@
         :name="name"
         :value="option.id"
         :aria-label="option.name"
-        :checked="option.id === props.value"
-        @change="emit('update:value', option.id)"
+        :checked="option.id === currentValue"
+        @change="selectOption(option.id)"
       />
       <Icon v-if="option.icon" :icon="option.icon" height="15" />
       <span class="option-label">{{ option.name }}</span>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number">
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import Icon from './AppIcon.vue'
@@ -39,14 +39,27 @@ import Icon from './AppIcon.vue'
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ register: false })
 const props = defineProps<{
-  value: T
+  value?: T
+  modelValue?: T
   label: string
   options: { id: T; name: string; icon?: string; title?: string }[]
   compact?: boolean
   hideLabelsOnSmallScreens?: boolean
 }>()
 
-const emit = defineEmits<{ (e: 'update:value', value: T): void }>()
+const emit = defineEmits<{
+  (e: 'update:value', value: T): void
+  (e: 'update:modelValue', value: T): void
+}>()
+
+const currentValue = computed(() =>
+  props.modelValue !== undefined ? props.modelValue : props.value
+)
+
+function selectOption(id: T) {
+  emit('update:value', id)
+  emit('update:modelValue', id)
+}
 
 // Radio groups need a unique name for arrow-key navigation within the group.
 const name = useId()

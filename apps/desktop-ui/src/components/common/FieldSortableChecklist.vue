@@ -59,8 +59,8 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
+import Icon from './AppIcon.vue'
 import ReorderControls from './ReorderControls.vue'
-import { Icon } from '@iconify/vue'
 import {
   type SortableChecklistItem,
   resolveSortableChecklist,

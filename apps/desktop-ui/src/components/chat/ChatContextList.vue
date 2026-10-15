@@ -39,9 +39,9 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useChatStore } from '../../stores/chat'
+import Icon from '../common/AppIcon.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
-import { Icon } from '@iconify/vue'
 
 /** What goes to the next chat message along with it: images and texts in one row */
 const chatStore = useChatStore()

@@ -153,10 +153,10 @@ import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { useIpcStore } from '../../stores/ipc'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import StateMessage from '../common/StateMessage.vue'
-import { Icon } from '@iconify/vue'
 
 const plugins = usePluginRuntimeStore()
 const { pluginFactories, pluginRuntimeStates } = plugins

@@ -79,8 +79,8 @@ import { APP_ROUTES } from '../lib/navigation/routes'
 import { useChatStore } from '../stores/chat'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import Icon from './common/AppIcon.vue'
 import IconButton from './common/IconButton.vue'
-import { Icon } from '@iconify/vue'
 
 const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()

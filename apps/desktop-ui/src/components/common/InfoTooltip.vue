@@ -59,7 +59,7 @@ import {
 } from 'vue'
 
 import { translate } from '../../lib/i18n'
-import { Icon } from '@iconify/vue'
+import Icon from './AppIcon.vue'
 
 const props = withDefaults(
   defineProps<{

@@ -77,11 +77,11 @@ import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
+import Icon from '../common/AppIcon.vue'
 import Diff from '../common/Diff.vue'
 import DiffModeToggle from '../common/DiffModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
 import InProgressMessage from './InProgressMessage.vue'
-import { Icon } from '@iconify/vue'
 
 const editorNavigation = useEditorNavigation()
 

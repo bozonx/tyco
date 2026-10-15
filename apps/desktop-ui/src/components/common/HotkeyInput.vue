@@ -73,8 +73,8 @@ import {
   shortcutAlternatives,
   shortcutKeys,
 } from '../../lib/hotkeys/hotkey-recorder'
+import Icon from './AppIcon.vue'
 import KeyboardKey from './KeyboardKey.vue'
-import { Icon } from '@iconify/vue'
 import type { HotkeyPlatform } from '@tyco/shared'
 
 defineOptions({ inheritAttrs: false })

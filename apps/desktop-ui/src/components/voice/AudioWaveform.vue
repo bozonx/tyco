@@ -36,7 +36,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { Icon } from '@iconify/vue'
+import Icon from '../common/AppIcon.vue'
 
 const BAR_COUNT = 32
 const MIN_BAR_HEIGHT = 4

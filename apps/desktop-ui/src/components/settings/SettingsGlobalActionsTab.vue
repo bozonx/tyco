@@ -175,13 +175,13 @@ import {
 } from '../../lib/hotkeys/hotkey-settings'
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
 import { useIpcStore } from '../../stores/ipc'
+import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import HotkeyInput from '../common/HotkeyInput.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from '../common/SettingsSection.vue'
-import { Icon } from '@iconify/vue'
 import {
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,

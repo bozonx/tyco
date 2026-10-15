@@ -3,7 +3,7 @@
     <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
     <input
       v-bind="controlAttrs()"
-      :value="value"
+      :value="currentValue"
       ref="searchInput"
       type="search"
       :placeholder="props.placeholder"
@@ -14,17 +14,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
-import { Icon } from '@iconify/vue'
+import Icon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ wrapped: true })
 
-const emit = defineEmits<{ (e: 'update:value', value: string): void }>()
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+  (e: 'update:modelValue', value: string): void
+}>()
 
-const props = defineProps<{ placeholder?: string; value?: string }>()
+const props = defineProps<{
+  placeholder?: string
+  value?: string
+  modelValue?: string
+}>()
+
+const currentValue = computed(() =>
+  props.modelValue !== undefined ? props.modelValue : props.value
+)
 
 const searchInput = ref<HTMLInputElement | null>(null)
 
@@ -39,6 +50,7 @@ defineExpose({ focus })
 const onInput = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).value
   emit('update:value', newValue)
+  emit('update:modelValue', newValue)
 }
 </script>
 

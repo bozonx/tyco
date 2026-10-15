@@ -58,13 +58,13 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
+import Icon from '../components/common/AppIcon.vue'
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import { useI18n } from '../composables/use-i18n'
 import { createAccessPrompt } from '../lib/external-access/access-prompt'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
-import { Icon } from '@iconify/vue'
 import type { AccessDecision } from '@tyco/shared'
 
 const { t } = useI18n()
