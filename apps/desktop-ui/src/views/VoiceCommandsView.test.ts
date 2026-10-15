@@ -2,6 +2,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
+import { createBuiltInVoiceCommands } from '../lib/voice-commands/built-in-voice-commands'
+import { testTools } from '../lib/tools/testing'
+import { translate } from '../lib/i18n'
 import { i18n } from '../lib/i18n'
 import VoiceCommandsView from './VoiceCommandsView.vue'
 import type { VoiceResolution } from '../lib/voice-commands/voice-resolver'
@@ -37,7 +40,9 @@ const voice = reactive({
   canRun: false,
   inputIssue: undefined,
   catalog: commands,
-  unavailableReason: () => undefined,
+  customCatalog: commands,
+  builtInCatalog: createBuiltInVoiceCommands(testTools(), translate),
+  unavailableReason: vi.fn<() => string | undefined>(() => undefined),
   catalogRoutes: commands.map((command) => ({
     commandId: command.id,
     phrase: command.phrases[0],
@@ -66,13 +71,15 @@ vi.mock('../components/common/ActionOverlayLayout.vue', () => ({
 describe('separate voice command overlay', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    voice.unavailableReason.mockReturnValue(undefined)
     state.isWindowShown = true
     voice.stage = 'recording'
     voice.resolution = { kind: 'none', candidates: [] }
+    voice.customCatalog = commands
   })
   it('shows the full catalog with phrases and descriptions and starts recording', () => {
     const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
-    expect(wrapper.findAll('.voice-catalog article')).toHaveLength(40)
+    expect(wrapper.findAll('.voice-custom-command')).toHaveLength(40)
     expect(wrapper.find('.voice-catalog').attributes('tabindex')).toBe('0')
     expect(wrapper.text()).toContain('save note 39')
     expect(wrapper.text()).toContain('Description 39')
@@ -97,7 +104,7 @@ describe('separate voice command overlay', () => {
   })
   it('offers manual selection only after recording is finished', async () => {
     const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
-    const button = wrapper.find('.voice-catalog article button')
+    const button = wrapper.find('.voice-custom-command button')
     expect(button.attributes('disabled')).toBeDefined()
     voice.stage = 'review'
     await flushPromises()
@@ -127,6 +134,45 @@ describe('separate voice command overlay', () => {
     await button.trigger('click')
     expect(mocks.choose).toHaveBeenCalledWith(candidate)
     expect(mocks.run).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('always shows the two standard functions even when no user commands are enabled', () => {
+    voice.customCatalog = []
+    const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
+    expect(wrapper.findAll('.voice-built-in')).toHaveLength(2)
+    expect(wrapper.text()).toContain(translate('tools.askInChat'))
+    expect(wrapper.text()).toContain(translate('tools.translate'))
+    expect(wrapper.text()).toContain(translate('voiceCommands.builtInHint'))
+    expect(wrapper.text()).toContain(translate('voiceCommands.empty'))
+    expect(
+      wrapper.findAll('.voice-built-in input[type="checkbox"]')
+    ).toHaveLength(0)
+    wrapper.unmount()
+  })
+  it('selects a standard translation language for manual review', async () => {
+    voice.stage = 'review'
+    const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
+    await wrapper
+      .find('.voice-language select')
+      .setValue('builtin:voice:translate:es_AR')
+    await wrapper.findAll('.voice-built-in')[1]!.find('button').trigger('click')
+    expect(mocks.chooseCommand).toHaveBeenCalledWith(
+      'builtin:voice:translate:es_AR'
+    )
+    expect(mocks.run).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('shows why standard functions are unavailable and prevents manual execution', () => {
+    voice.unavailableReason.mockReturnValue('tools.noTranslator')
+    voice.stage = 'review'
+    const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
+    expect(wrapper.findAll('.voice-built-in')).toHaveLength(2)
+    for (const article of wrapper.findAll('.voice-built-in')) {
+      expect(article.find('[role="status"]').text()).toBe(
+        translate('tools.noTranslator')
+      )
+      expect(article.find('button').attributes('disabled')).toBeDefined()
+    }
     wrapper.unmount()
   })
 })

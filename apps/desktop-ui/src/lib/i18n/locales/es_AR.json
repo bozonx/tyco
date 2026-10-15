@@ -927,13 +927,19 @@
     "parameterError": "Elegí un idioma de traducción disponible o editá la transcripción.",
     "failed": "El comando falló o ya no está disponible. Se conservó el texto.",
     "catalog": "Comandos de voz registrados",
-    "empty": "No hay comandos de voz habilitados. Habilitalos en la configuración del comando.",
+    "empty": "No hay comandos de voz personalizados habilitados. Activá la voz en la configuración de un comando para agregarlo.",
     "transcript": "Transcripción",
     "input": "Texto del comando",
     "cancel": "Cancelar",
     "confirmationHint": "Las invocaciones exactas y sin ambigüedad pueden ejecutarse automáticamente si desactivás la confirmación.",
     "incomplete": "La frase o el parámetro están incompletos. Seguí hablando o editá la transcripción.",
-    "parameterChoiceHint": "Elegí un parámetro disponible y revisá el texto. Las palabras no reconocidas se conservan para editarlas."
+    "parameterChoiceHint": "Elegí un parámetro disponible y revisá el texto. Las palabras no reconocidas se conservan para editarlas.",
+    "builtInCatalog": "Funciones estándar",
+    "customCatalog": "Comandos personalizados",
+    "builtInHint": "Siempre activas. Cada ejecución requiere confirmación.",
+    "translateHint": "Usa el traductor configurado. Decí el idioma de destino y después el texto.",
+    "translateExample": "traducí al inglés Voy a llegar pronto",
+    "textPlaceholder": "tu texto"
   },
   "voiceGrammar": {
     "translate": "traducí al",

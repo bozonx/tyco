@@ -104,9 +104,70 @@
           :aria-label="t('voiceCommands.catalog')"
           tabindex="0"
         >
-          <h2>{{ t('voiceCommands.catalog') }}</h2>
-          <p v-if="!voice.catalog.length">{{ t('voiceCommands.empty') }}</p>
-          <article v-for="command in voice.catalog" :key="command.id">
+          <h2>{{ t('voiceCommands.builtInCatalog') }}</h2>
+          <p class="voice-catalog-hint">{{ t('voiceCommands.builtInHint') }}</p>
+          <article v-if="chatCommand" class="voice-built-in">
+            <button
+              :disabled="
+                voice.stage !== 'review' ||
+                Boolean(voice.unavailableReason(chatCommand))
+              "
+              @click="voice.chooseCommand(chatCommand.id)"
+            >
+              {{ t('tools.askInChat') }}
+            </button>
+            <p>{{ t('tools.askInChatDescription') }}</p>
+            <code
+              >{{ t('voiceGrammar.actions.askInChat') }}
+              {{ t('voiceCommands.textPlaceholder') }}</code
+            >
+            <p v-if="voice.unavailableReason(chatCommand)" role="status">
+              {{ t(voice.unavailableReason(chatCommand)!) }}
+            </p>
+          </article>
+          <article v-if="translationCommand" class="voice-built-in">
+            <h3>{{ t('tools.translate') }}</h3>
+            <p>{{ t('voiceCommands.translateHint') }}</p>
+            <code>{{ t('voiceCommands.translateExample') }}</code>
+            <p v-if="voice.unavailableReason(translationCommand)" role="status">
+              {{ t(voice.unavailableReason(translationCommand)!) }}
+            </p>
+            <label class="voice-language">
+              <span>{{ t('commands.languageLabel') }}</span>
+              <select
+                v-model="translationCommandId"
+                :disabled="voice.stage === 'running'"
+              >
+                <option
+                  v-for="command in translationCommands"
+                  :key="command.id"
+                  :value="command.id"
+                >
+                  {{ languageLabel(command) }}
+                </option>
+              </select>
+            </label>
+            <button
+              :disabled="
+                voice.stage !== 'review' ||
+                Boolean(voice.unavailableReason(translationCommand))
+              "
+              @click="voice.chooseCommand(translationCommand.id)"
+            >
+              {{ commandLabel(translationCommand) }}
+            </button>
+          </article>
+          <h2 class="voice-custom-heading">
+            {{ t('voiceCommands.customCatalog') }}
+          </h2>
+          <p v-if="!voice.customCatalog.length">
+            {{ t('voiceCommands.empty') }}
+          </p>
+          <article
+            v-for="command in voice.customCatalog"
+            :key="command.id"
+            class="voice-custom-command"
+          >
             <button
               :disabled="
                 voice.stage !== 'review' ||
@@ -133,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
@@ -141,14 +202,31 @@ import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
 import { commandLabel, commandTarget } from '../lib/commands/command-runtime'
 import { desktopClient } from '../lib/desktop/client'
+import { getLanguageLabelKey } from '../lib/locale/language'
 import { useIpcStore } from '../stores/ipc'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
+import type { CommandConfig } from '@tyco/shared'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const { t } = useI18n()
 const ipc = useIpcStore()
 const voice = useVoiceCommandsStore()
+const chatCommand = computed(() =>
+  voice.builtInCatalog.find((item) => item.toolId === 'core.askInChat')
+)
+const translationCommands = computed(() =>
+  voice.builtInCatalog.filter((item) => item.toolId === 'core.translate')
+)
+const translationCommandId = ref('builtin:voice:translate:en_US')
+const translationCommand = computed(
+  () =>
+    translationCommands.value.find(
+      (item) => item.id === translationCommandId.value
+    ) ?? translationCommands.value[0]
+)
+const languageLabel = (command: CommandConfig) =>
+  t(getLanguageLabelKey(String(command.toolConfig.language)))
 const releaseHold = useQuickDismissStore().hold()
 const { handleEsc } = useOverlayNav(() => ({ escMode: 'close' }))
 const close = () => {
@@ -280,8 +358,33 @@ button:disabled {
   padding: var(--space-sm) 0;
 }
 .voice-catalog h2,
+.voice-catalog h3,
 .voice-catalog article > button {
   font-weight: 600;
+}
+.voice-built-in {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+.voice-language {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.voice-language select {
+  max-width: 100%;
+  background: var(--app-surface);
+  border: 1px solid var(--app-text-muted);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+}
+.voice-catalog-hint {
+  font-size: var(--text-caption);
+}
+.voice-custom-heading {
+  margin-top: var(--space-md);
 }
 .voice-catalog p,
 .voice-candidate p {

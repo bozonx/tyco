@@ -1,3 +1,4 @@
+import { isBuiltInVoiceCommand } from './built-in-voice-commands'
 import { commandUnavailableReason } from '../commands/command-runtime'
 import { computed, ref, shallowRef } from 'vue'
 import type { CommandConfig } from '@tyco/shared'
@@ -15,6 +16,7 @@ import {
 
 export interface VoiceCommandDependencies {
   commands: () => readonly CommandConfig[]
+  builtInCommands?: () => readonly CommandConfig[]
   tools: ToolLookup
   startDictation: (handlers: DictationHandlers) => Promise<void>
   finishDictation: () => Promise<string>
@@ -40,23 +42,25 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   let starting: Promise<void> | undefined
   let stopping = Promise.resolve()
   let controller: AbortController | undefined
-  const routes = computed(() => compileVoiceRoutes(deps.commands(), deps.tools))
+  const commands = computed(() => [
+    ...(deps.builtInCommands?.() ?? []),
+    ...deps.commands().filter((item) => !isBuiltInVoiceCommand(item)),
+  ])
+  const findCommand = (id: string | undefined) =>
+    commands.value.find((item) => item.id === id)
+  const routes = computed(() => compileVoiceRoutes(commands.value, deps.tools))
   const resolution = computed(() =>
     resolveVoice(routes.value, transcript.value)
   )
   const catalogRoutes = computed(() =>
-    compileVoiceRoutes(deps.commands(), deps.tools, true)
+    compileVoiceRoutes(commands.value, deps.tools, true)
   )
   const catalog = computed(() =>
-    deps
-      .commands()
-      .filter((command) =>
-        catalogRoutes.value.some((route) => route.commandId === command.id)
-      )
+    commands.value.filter((command) =>
+      catalogRoutes.value.some((route) => route.commandId === command.id)
+    )
   )
-  const command = computed(() =>
-    deps.commands().find((item) => item.id === selected.value?.commandId)
-  )
+  const command = computed(() => findCommand(selected.value?.commandId))
   const inputIssue = computed(() =>
     command.value
       ? voiceInputIssue(command.value, inputText.value, deps.tools)
@@ -86,9 +90,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     })
 
   const run = async () => {
-    const target = deps
-      .commands()
-      .find((item) => item.id === selected.value?.commandId)
+    const target = findCommand(selected.value?.commandId)
     if (
       stage.value !== 'review' ||
       !target ||
@@ -136,7 +138,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       transcript.value = finalText
       stage.value = 'review'
       const result = resolveVoice(
-        compileVoiceRoutes(deps.commands(), deps.tools),
+        compileVoiceRoutes(commands.value, deps.tools),
         finalText
       )
       if (result.kind === 'match') {
@@ -225,6 +227,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       commandUnavailableReason(command, deps.tools),
     resolution,
     catalog,
+    builtInCatalog: computed(() => catalog.value.filter(isBuiltInVoiceCommand)),
+    customCatalog: computed(() =>
+      catalog.value.filter((item) => !isBuiltInVoiceCommand(item))
+    ),
     command,
     inputIssue,
     canRun,

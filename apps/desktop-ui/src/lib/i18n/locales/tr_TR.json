@@ -924,13 +924,19 @@
     "parameterError": "Kullanılabilir bir çeviri dili seçin veya metni düzenleyin.",
     "failed": "Komut başarısız oldu veya artık kullanılamıyor. Metniniz korundu.",
     "catalog": "Kayıtlı sesli komutlar",
-    "empty": "Etkin sesli komut yok. Komut ayarlarından sesi etkinleştirin.",
+    "empty": "Etkin özel sesli komut yok. Eklemek için komut ayarlarında sesli çağrıyı etkinleştirin.",
     "transcript": "Döküm",
     "input": "Komut metni",
     "cancel": "İptal",
     "confirmationHint": "Onay kapatıldığında tam ve kesin eşleşmeler otomatik çalışabilir.",
     "incomplete": "İfade veya parametre eksik. Konuşmaya devam edin veya metni düzenleyin.",
-    "parameterChoiceHint": "Kullanılabilir bir parametre seçin ve metni kontrol edin. Tanınmayan sözcükler düzenleme için korunur."
+    "parameterChoiceHint": "Kullanılabilir bir parametre seçin ve metni kontrol edin. Tanınmayan sözcükler düzenleme için korunur.",
+    "builtInCatalog": "Standart işlevler",
+    "customCatalog": "Özel komutlar",
+    "builtInHint": "Her zaman etkin. Her çalıştırma onay gerektirir.",
+    "translateHint": "Yapılandırılmış çevirmeni kullanır. Önce hedef dili, ardından metni söyleyin.",
+    "translateExample": "çevir İngilizce Yakında orada olacağım",
+    "textPlaceholder": "metniniz"
   },
   "voiceGrammar": {
     "translate": "çevir",

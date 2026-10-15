@@ -5,6 +5,7 @@ import {
   isCommandAvailable,
 } from '../commands/command-runtime'
 import type { ToolLookup } from '../tools/tool-types'
+import { isBuiltInVoiceCommand } from './built-in-voice-commands'
 
 export interface VoiceParameter {
   name: string
@@ -208,6 +209,7 @@ export function compileVoiceRoutes(
       if (words(phrase).length)
         routes.push({ commandId: command.id, phrase, parameters: [] })
     }
+    if (!isBuiltInVoiceCommand(command)) continue
     for (const locale of Object.values(messages)) {
       const grammar = locale.voiceGrammar
       if (command.toolId === 'core.translate') {

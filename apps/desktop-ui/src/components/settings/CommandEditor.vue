@@ -227,6 +227,7 @@ import {
 } from '../../lib/commands/command-runtime'
 import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
+import { createBuiltInVoiceCommands } from '../../lib/voice-commands/built-in-voice-commands'
 import {
   compileVoiceRoutes,
   findVoiceConflicts,
@@ -281,6 +282,7 @@ const voiceTrial = ref('')
 const voiceRoutes = computed(() =>
   compileVoiceRoutes(
     [
+      ...createBuiltInVoiceCommands(toolsStore, t),
       ...(
         props.userConfig?.commands ??
         ipcStore.desktopState.userConfig.commands ??
@@ -319,7 +321,14 @@ const voiceTrialResult = computed(() => {
       const command = (
         props.userConfig?.commands ?? ipcStore.desktopState.userConfig.commands
       ).find((item) => item.id === candidate.commandId)
-      const label = command ? commandLabel(command) : candidate.commandId
+      const builtIn = createBuiltInVoiceCommands(toolsStore, t).find(
+        (item) => item.id === candidate.commandId
+      )
+      const label = command
+        ? commandLabel(command)
+        : builtIn
+          ? commandLabel(builtIn)
+          : candidate.commandId
       const parameters = Object.values(candidate.parameters).join(', ')
       return `${label}${parameters ? ` (${parameters})` : ''}: ${candidate.text}`
     })

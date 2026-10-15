@@ -129,30 +129,29 @@ describe('voice resolver', () => {
       )
     ).toBe('extra-text')
   })
-  it('maps translation parameters to saved commands and keeps duplicate languages ambiguous', () => {
+  it('uses explicit phrases for saved translations without adding built-in routes', () => {
     const tool = { ...testTools().get('script')!, id: 'core.translate' }
     const tools = { get: () => tool }
     const first = {
-      ...script('first', []),
+      ...script('first', ['my translation']),
       toolId: 'core.translate',
       toolConfig: { language: 'en_US' },
     }
     const second = { ...first, id: 'second' }
     const before = structuredClone(first)
     const routes = compileVoiceRoutes([first, second], tools)
-    expect(resolveVoice(routes, 'translate to English I am late').kind).toBe(
+    expect(resolveVoice(routes, 'my translation I am late').kind).toBe(
       'ambiguous'
     )
     expect(
       resolveVoice(
         compileVoiceRoutes([first], tools),
-        'translate to English I am late'
+        'my translation I am late'
       ).candidates[0]
-    ).toMatchObject({
-      commandId: 'first',
-      text: 'I am late',
-      parameters: { language: 'en_US' },
-    })
+    ).toMatchObject({ commandId: 'first', text: 'I am late', parameters: {} })
+    expect(resolveVoice(routes, 'translate to English I am late').kind).toBe(
+      'none'
+    )
     expect(first).toEqual(before)
   })
 })
@@ -189,7 +188,7 @@ it('offers explicit parameter recovery without guessing which unknown words to r
   )
 })
 
-it('provides built-in phrases only for translation and chat while retaining user phrases', () => {
+it('does not add hidden phrases to user commands', () => {
   const tools = { get: () => testTools().get('script') }
   const commands = [
     'core.copy',
@@ -198,9 +197,7 @@ it('provides built-in phrases only for translation and chat while retaining user
     'core.askInChat',
   ].map((toolId) => ({ ...script(toolId, []), toolId }))
   const routes = compileVoiceRoutes(commands, tools)
-  expect(new Set(routes.map((item) => item.commandId))).toEqual(
-    new Set(['core.askInChat'])
-  )
+  expect(new Set(routes.map((item) => item.commandId))).toEqual(new Set())
   commands[0]!.phrases = ['my clipboard']
   expect(
     resolveVoice(compileVoiceRoutes(commands, tools), 'my clipboard Hello')

@@ -927,13 +927,19 @@
     "parameterError": "Choose a supported translation language or edit the transcript.",
     "failed": "Command failed or is no longer available. Your input is preserved.",
     "catalog": "Registered voice commands",
-    "empty": "No voice commands enabled. Enable voice in the command settings.",
+    "empty": "No custom voice commands enabled. Enable voice in a command’s settings to add one.",
     "transcript": "Transcript",
     "input": "Command input",
     "cancel": "Cancel",
     "confirmationHint": "Exact, unambiguous calls may run automatically when confirmation is disabled.",
     "incomplete": "Incomplete phrase or parameter. Continue speaking or edit the transcript.",
-    "parameterChoiceHint": "Choose an available parameter, then check the input. Unrecognized words are preserved for editing."
+    "parameterChoiceHint": "Choose an available parameter, then check the input. Unrecognized words are preserved for editing.",
+    "builtInCatalog": "Standard functions",
+    "customCatalog": "Custom commands",
+    "builtInHint": "Always enabled. Each run requires confirmation.",
+    "translateHint": "Translates with your configured translator. Say the target language before the text.",
+    "translateExample": "translate to English I will be there soon",
+    "textPlaceholder": "your text"
   },
   "voiceGrammar": {
     "translate": "translate to",
