@@ -7,15 +7,19 @@ import type {
 /**
  * Where the output of a run goes. The context decides: an external caller gets
  * it back, the menu and the toolbar show it in the menu; only quick commands
- * follow the preference of the invocation
+ * follow the preference of the invocation. Voice translations always open the
+ * result menu so the user chooses what to do with the translated text.
  */
 export function resolveSink(
-  invocation: Pick<Invocation, 'launcherSink'>,
+  invocation: Pick<Invocation, 'launcherSink'> &
+    Partial<Pick<Invocation, 'toolId'>>,
   options: Pick<InvocationOptions, 'output' | 'source'> = {}
 ): ResultSink {
   if (options.output === 'return') return 'return'
   const source = options.source ?? 'menu'
   if (source === 'external') return 'return'
+  if (source === 'voice' && invocation.toolId === 'core.translate')
+    return 'showMenu'
   if ((source !== 'launcher' && source !== 'voice') || !invocation.launcherSink)
     return 'showMenu'
   return invocation.launcherSink.action

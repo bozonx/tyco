@@ -655,3 +655,35 @@ describe('external returned output', () => {
     )
   })
 })
+
+it('opens a result menu for a voice translation without inserting or copying the output', async () => {
+  const insertText = vi.fn(async () => {})
+  const copyText = vi.fn(async () => {})
+  const { runner, deps } = setup({ insertText, copyText }, [
+    {
+      id: 'core.translate',
+      labelKey: 'tools.translate',
+      description: 'Translates input text',
+      inputSchema: TEXT_INPUT_SCHEMA,
+      defaultAfterRun: 'insertIntoWindow',
+      run: async () => ({ ok: true, content: 'Hello, how are you?' }),
+    },
+  ])
+  const command = createCommand(
+    'core.translate',
+    'translation',
+    deps.tools.get('core.translate')
+  )
+  command.toolConfig = { language: 'en_US' }
+  const outcome = await runner.run(command, 'Original text', {
+    source: 'voice',
+  })
+  expect(outcome.success).toBe(true)
+  expect(deps.showResultMenu).toHaveBeenCalledExactlyOnceWith(
+    'Hello, how are you?',
+    'Original text'
+  )
+  expect(insertText).not.toHaveBeenCalled()
+  expect(copyText).not.toHaveBeenCalled()
+  expect(deps.hideWindow).not.toHaveBeenCalled()
+})

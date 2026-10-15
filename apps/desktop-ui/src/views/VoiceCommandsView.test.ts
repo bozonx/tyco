@@ -31,6 +31,7 @@ const commands = Array.from({ length: 40 }, (_, index) => ({
 const voice = reactive({
   ...mocks,
   stage: 'recording',
+  isAutoRunEnabled: true,
   transcript: '',
   inputText: '',
   selected: undefined,
@@ -74,6 +75,7 @@ describe('separate voice command overlay', () => {
     voice.unavailableReason.mockReturnValue(undefined)
     state.isWindowShown = true
     voice.stage = 'recording'
+    voice.isAutoRunEnabled = true
     voice.resolution = { kind: 'none', candidates: [] }
     voice.customCatalog = commands
   })
@@ -173,6 +175,18 @@ describe('separate voice command overlay', () => {
       )
       expect(article.find('button').attributes('disabled')).toBeDefined()
     }
+    wrapper.unmount()
+  })
+  it('shows automatic execution enabled and lets the user turn it off while recording', async () => {
+    const wrapper = mount(VoiceCommandsView, { global: { plugins: [i18n] } })
+    const checkbox = wrapper.find<HTMLInputElement>('.voice-auto-run input')
+    expect(checkbox.element.checked).toBe(true)
+    expect(wrapper.find('.voice-auto-run').text()).toBe(
+      translate('voiceCommands.autoRun')
+    )
+    await checkbox.setValue(false)
+    expect(voice.isAutoRunEnabled).toBe(false)
+    expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

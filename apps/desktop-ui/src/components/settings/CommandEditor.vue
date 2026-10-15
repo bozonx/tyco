@@ -25,14 +25,6 @@
         @update:value="update({ isVoiceEnabled: $event })"
       />
       <template v-if="command.isVoiceEnabled">
-        <FieldCheckbox
-          :value="command.voiceConfirmation !== 'auto'"
-          :label="t('voiceCommands.confirm')"
-          @update:value="
-            update({ voiceConfirmation: $event ? 'always' : 'auto' })
-          "
-        />
-        <p class="command-hint">{{ t('voiceCommands.confirmationHint') }}</p>
         <label class="command-field">
           <span>{{ t('voiceCommands.phrases') }}</span>
           <FieldTextArea

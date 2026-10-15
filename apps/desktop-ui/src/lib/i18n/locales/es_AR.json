@@ -910,7 +910,6 @@
   "voiceCommands": {
     "title": "Comandos de voz",
     "enabled": "Habilitar invocación por voz",
-    "confirm": "Confirmar siempre",
     "phrases": "Una frase literal por línea. El nombre no se usa para reconocer.",
     "try": "Probar una frase",
     "conflicts": "Frases coincidentes o anidadas",
@@ -931,15 +930,17 @@
     "transcript": "Transcripción",
     "input": "Texto del comando",
     "cancel": "Cancelar",
-    "confirmationHint": "Las invocaciones exactas y sin ambigüedad pueden ejecutarse automáticamente si desactivás la confirmación.",
     "incomplete": "La frase o el parámetro están incompletos. Seguí hablando o editá la transcripción.",
     "parameterChoiceHint": "Elegí un parámetro disponible y revisá el texto. Las palabras no reconocidas se conservan para editarlas.",
     "builtInCatalog": "Funciones estándar",
     "customCatalog": "Comandos personalizados",
-    "builtInHint": "Siempre activas. Cada ejecución requiere confirmación.",
+    "builtInHint": "Siempre activas. La casilla controla la ejecución automática después del dictado.",
     "translateHint": "Usa el traductor configurado. Decí el idioma de destino y después el texto.",
     "translateExample": "traducí al inglés Voy a llegar pronto",
-    "textPlaceholder": "tu texto"
+    "textPlaceholder": "tu texto",
+    "autoRun": "Ejecutar el comando después del dictado",
+    "preview": "Reconocimiento preliminar",
+    "reviewReady": "Revisá el texto y ejecutá el comando."
   },
   "voiceGrammar": {
     "translate": "traducí al",

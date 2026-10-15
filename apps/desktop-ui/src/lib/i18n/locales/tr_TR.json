@@ -907,7 +907,6 @@
   "voiceCommands": {
     "title": "Sesli komutlar",
     "enabled": "Sesle çağırmayı etkinleştir",
-    "confirm": "Her zaman onayla",
     "phrases": "Her satıra tam bir ifade yazın. Görünen ad eşleştirilmez.",
     "try": "Bir ifade deneyin",
     "conflicts": "Çakışan veya iç içe ifadeler",
@@ -928,15 +927,17 @@
     "transcript": "Döküm",
     "input": "Komut metni",
     "cancel": "İptal",
-    "confirmationHint": "Onay kapatıldığında tam ve kesin eşleşmeler otomatik çalışabilir.",
     "incomplete": "İfade veya parametre eksik. Konuşmaya devam edin veya metni düzenleyin.",
     "parameterChoiceHint": "Kullanılabilir bir parametre seçin ve metni kontrol edin. Tanınmayan sözcükler düzenleme için korunur.",
     "builtInCatalog": "Standart işlevler",
     "customCatalog": "Özel komutlar",
-    "builtInHint": "Her zaman etkin. Her çalıştırma onay gerektirir.",
+    "builtInHint": "Her zaman etkin. Dikteden sonra otomatik çalıştırmayı onay kutusu belirler.",
     "translateHint": "Yapılandırılmış çevirmeni kullanır. Önce hedef dili, ardından metni söyleyin.",
     "translateExample": "çevir İngilizce Yakında orada olacağım",
-    "textPlaceholder": "metniniz"
+    "textPlaceholder": "metniniz",
+    "autoRun": "Dikteden sonra komutu çalıştır",
+    "preview": "Ön tanıma sonucu",
+    "reviewReady": "Metni kontrol edin ve komutu çalıştırın."
   },
   "voiceGrammar": {
     "translate": "çevir",

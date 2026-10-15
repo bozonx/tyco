@@ -910,7 +910,6 @@
   "voiceCommands": {
     "title": "Voice commands",
     "enabled": "Enable voice invocation",
-    "confirm": "Always confirm",
     "phrases": "One literal phrase per line. The display name is not matched.",
     "try": "Try an utterance",
     "conflicts": "Conflicting or nested phrases",
@@ -931,15 +930,17 @@
     "transcript": "Transcript",
     "input": "Command input",
     "cancel": "Cancel",
-    "confirmationHint": "Exact, unambiguous calls may run automatically when confirmation is disabled.",
     "incomplete": "Incomplete phrase or parameter. Continue speaking or edit the transcript.",
     "parameterChoiceHint": "Choose an available parameter, then check the input. Unrecognized words are preserved for editing.",
     "builtInCatalog": "Standard functions",
     "customCatalog": "Custom commands",
-    "builtInHint": "Always enabled. Each run requires confirmation.",
+    "builtInHint": "Always enabled. Automatic execution after dictation is controlled by the checkbox.",
     "translateHint": "Translates with your configured translator. Say the target language before the text.",
     "translateExample": "translate to English I will be there soon",
-    "textPlaceholder": "your text"
+    "textPlaceholder": "your text",
+    "autoRun": "Run command after dictation",
+    "preview": "Preliminary recognition",
+    "reviewReady": "Check the input, then run the command."
   },
   "voiceGrammar": {
     "translate": "translate to",

@@ -33,6 +33,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const stage = ref<'idle' | 'recording' | 'finishing' | 'review' | 'running'>(
     'idle'
   )
+  const isAutoRunEnabled = ref(true)
   const transcript = ref('')
   const inputText = ref('')
   const selected = shallowRef<VoiceCandidate>()
@@ -143,8 +144,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       )
       if (result.kind === 'match') {
         choose(result.candidates[0]!)
-        if (command.value?.voiceConfirmation === 'auto' && canRun.value)
-          await run()
+        if (isAutoRunEnabled.value && canRun.value) await run()
       }
     } catch (cause) {
       if (current !== generation || disposed) return
@@ -217,6 +217,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   }
   return {
     stage,
+    isAutoRunEnabled,
     transcript,
     inputText,
     selected,

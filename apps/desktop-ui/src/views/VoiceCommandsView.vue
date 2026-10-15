@@ -4,6 +4,16 @@
       <div class="voice-commands">
         <section class="voice-input">
           <p>{{ t('voiceCommands.hint') }}</p>
+          <label class="voice-auto-run">
+            <input
+              v-model="voice.isAutoRunEnabled"
+              type="checkbox"
+              :disabled="
+                voice.stage === 'finishing' || voice.stage === 'running'
+              "
+            />
+            <span>{{ t('voiceCommands.autoRun') }}</span>
+          </label>
           <p role="status" aria-live="polite">{{ status }}</p>
           <label>
             {{ t('voiceCommands.transcript') }}
@@ -17,8 +27,16 @@
               "
             />
           </label>
+          <p
+            v-if="
+              voice.stage === 'recording' && voice.resolution.candidates.length
+            "
+            class="voice-preview-label"
+          >
+            {{ t('voiceCommands.preview') }}
+          </p>
           <div
-            v-for="candidate in voice.resolution.candidates"
+            v-for="candidate in visibleCandidates"
             :key="`${candidate.commandId}:${candidate.textOffset}`"
             class="voice-candidate"
           >
@@ -251,6 +269,9 @@ const phrases = (id: string) => [
       )
   ),
 ]
+const visibleCandidates = computed(() =>
+  voice.selected ? [] : voice.resolution.candidates
+)
 const status = computed(() => {
   if (voice.stage === 'recording') return t('voiceCommands.listening')
   if (voice.stage === 'finishing') return t('voiceCommands.finishing')
@@ -258,6 +279,8 @@ const status = computed(() => {
     return t('commandLauncher.running', {
       name: voice.command ? commandLabel(voice.command) : '',
     })
+  if (voice.stage === 'review' && voice.selected)
+    return t('voiceCommands.reviewReady')
   if (voice.resolution.kind === 'parameter-error')
     return t('voiceCommands.parameterError')
   if (voice.resolution.kind === 'none') return t('voiceCommands.none')
@@ -338,6 +361,16 @@ textarea {
   background: var(--app-surface);
   border: 1px solid var(--app-text-muted);
   border-radius: var(--radius-sm);
+}
+.voice-input .voice-auto-run {
+  flex-direction: row;
+  align-items: center;
+}
+.voice-auto-run input {
+  flex-shrink: 0;
+}
+.voice-preview-label {
+  font-size: var(--text-caption);
 }
 .voice-controls {
   display: flex;

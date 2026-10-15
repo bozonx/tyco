@@ -62,7 +62,7 @@ describe('built-in voice commands', () => {
       ).toBe('match')
     }
   )
-  it('requires confirmation and runs with the built-in language config even with a disabled saved command', async () => {
+  it('runs after final dictation with the built-in language config even with a disabled saved command', async () => {
     const saved = {
       ...createCommand('core.translate', 'saved'),
       enabled: false,
@@ -82,10 +82,8 @@ describe('built-in voice commands', () => {
     })
     await model.start()
     await model.finish()
-    expect(run).not.toHaveBeenCalled()
-    expect(model.command.value?.toolConfig).toEqual({ language: 'en_US' })
-    await model.run()
     expect(run).toHaveBeenCalledOnce()
+    expect(model.command.value?.toolConfig).toEqual({ language: 'en_US' })
     expect(saved).toEqual(before)
   })
   it('keeps unavailable standard functions visible and rechecks availability before running', async () => {
@@ -106,6 +104,7 @@ describe('built-in voice commands', () => {
       cancelDictation: async () => {},
       run,
     })
+    model.isAutoRunEnabled.value = false
     await model.start()
     await model.finish()
     availability.reason = 'tools.noLlm'

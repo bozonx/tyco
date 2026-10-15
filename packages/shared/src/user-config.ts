@@ -252,6 +252,10 @@ export interface CommandConfig {
   /** Explicit literal voice phrases; the display name is never matched. */
   phrases: string[]
   isVoiceEnabled: boolean
+  /**
+   * Legacy serialized preference; the voice overlay now controls automatic
+   * execution.
+   */
   voiceConfirmation: 'always' | 'auto'
   /**
    * `script`, `webhook`, `core.<tool>`, `<pluginName>.<toolId>` or

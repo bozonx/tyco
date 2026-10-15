@@ -30,3 +30,15 @@ describe('resolveSink', () => {
     expect(resolveSink({}, { source: 'launcher' })).toBe('showMenu')
   })
 })
+
+it.each(['insertIntoWindow', 'copy', 'none', 'showMenu'] as const)(
+  'shows voice translations in the result menu instead of %s',
+  (action) => {
+    const invocation = { toolId: 'core.translate', launcherSink: { action } }
+    expect(resolveSink(invocation, { source: 'voice' })).toBe('showMenu')
+    expect(resolveSink(invocation, { source: 'launcher' })).toBe(action)
+    expect(resolveSink(invocation, { source: 'voice', output: 'return' })).toBe(
+      'return'
+    )
+  }
+)
