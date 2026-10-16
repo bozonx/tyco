@@ -84,6 +84,7 @@ const candidate = (commandId: string, text = 'Hello') => ({
   parameters: {},
   consumedWordCount: 1,
   textOffset: 0,
+  commandOffset: 0,
 })
 const mountView = () =>
   mount(VoiceCommandsView, {

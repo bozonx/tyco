@@ -100,6 +100,60 @@ describe('voice resolver', () => {
     )
     expect(resolveVoice(routes, 'unrelated').kind).toBe('none')
   })
+  it('finds a command repeated in a new sentence and drops the failed attempt', () => {
+    const transcript = 'Copi this, hello. Copy this: Hello. How are you?'
+    const result = resolveVoice([route('copy', 'copy this')], transcript)
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      text: 'Hello. How are you?',
+      commandOffset: transcript.indexOf('Copy'),
+      consumedWordCount: 2,
+    })
+    expect(
+      resolveVoice([route('copy', 'copy this')], 'copy this Hello')
+        .candidates[0]?.commandOffset
+    ).toBe(0)
+  })
+  it('locks the first recognized command and keeps later command phrases as text', () => {
+    const routes = [route('copy', 'copy this'), route('ask', 'ask chat')]
+    expect(
+      resolveVoice(routes, 'copy this Hi. Ask chat why?').candidates[0]
+    ).toMatchObject({ commandId: 'copy', text: 'Hi. Ask chat why?' })
+    expect(
+      resolveVoice(routes, 'Noise. Copy this Hi. Ask chat why?').candidates[0]
+    ).toMatchObject({ commandId: 'copy', text: 'Hi. Ask chat why?' })
+  })
+  it('looks for a repeated command only at sentence boundaries', () => {
+    expect(
+      resolveVoice([route('copy', 'copy this')], 'well copy this Hello').kind
+    ).toBe('none')
+    expect(
+      resolveVoice([route('copy', 'copy this')], 'well, copy this Hello').kind
+    ).toBe('none')
+    expect(
+      resolveVoice([route('copy', 'copy this')], 'Well! Copy this Hello')
+        .candidates[0]?.text
+    ).toBe('Hello')
+  })
+  it('lets a repeated command correct an unknown or unfinished parameter', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'en',
+        phrase: 'translate to',
+        parameters: [
+          { name: 'language', value: 'en_US', variants: ['English'] },
+        ],
+      },
+    ]
+    expect(
+      resolveVoice(routes, 'Translate to Klingon. Translate to English: Hi')
+        .candidates[0]
+    ).toMatchObject({ commandId: 'en', text: 'Hi' })
+    expect(resolveVoice(routes, 'Translate to Klingon. Hi').kind).toBe(
+      'parameter-error'
+    )
+    expect(resolveVoice(routes, 'Noise. Translate to').kind).toBe('incomplete')
+  })
   it('compiles only opted-in available commands across the entire library', () => {
     const tools = testTools()
     const enabled = script('a', ['save note'])

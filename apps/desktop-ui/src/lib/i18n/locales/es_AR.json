@@ -950,7 +950,7 @@
     "try": "Probar una frase",
     "conflicts": "Frases coincidentes o anidadas",
     "none": "No se encontró el comando. Editá la transcripción o elegí uno abajo.",
-    "hint": "Decí la frase del comando y después el texto. Al presionar el atajo de nuevo, termina la grabación y se ejecuta el comando. Las funciones estándar están siempre activas; la traducción usa el traductor configurado.",
+    "hint": "Decí la frase del comando y después el texto. Si el comando no se reconoció, hacé una pausa y repetilo desde el principio. Al presionar el atajo de nuevo, termina la grabación y se ejecuta el comando. Las funciones estándar están siempre activas; la traducción usa el traductor configurado.",
     "record": "Grabar de nuevo",
     "run": "Ejecutar",
     "choose": "Elegí un comando",
@@ -969,7 +969,8 @@
     "noMatch": "No se reconoció ningún comando. Elegí uno de la lista.",
     "ambiguous": "Coinciden varios comandos. Elegí el correcto de la lista.",
     "languageMissing": "No se reconoció el idioma. Elegí traducir en la lista e indicá el idioma.",
-    "nothingHeard": "No se reconoció la voz. Grabá de nuevo."
+    "nothingHeard": "No se reconoció la voz. Grabá de nuevo.",
+    "discarded": "Descartado antes del comando"
   },
   "voiceGrammar": {
     "translate": "traducí al",

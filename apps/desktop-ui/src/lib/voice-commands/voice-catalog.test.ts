@@ -16,6 +16,7 @@ const candidate = (commandId: string) => ({
   parameters: {},
   consumedWordCount: 1,
   textOffset: 0,
+  commandOffset: 0,
 })
 
 describe('voice catalog', () => {

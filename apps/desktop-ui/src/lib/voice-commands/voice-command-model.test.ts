@@ -67,6 +67,18 @@ describe('voice command session', () => {
     await model.finish()
     expect(deps.run).toHaveBeenCalledOnce()
   })
+  it('shows speech dropped before a repeated command and waits for confirmation', async () => {
+    const { model, deps } = setup()
+    deps.finishDictation = vi.fn(async () => 'save mote Hi. Save note Hello!')
+    await model.start()
+    await model.finish()
+    expect(model.selected.value?.commandId).toBe('note')
+    expect(model.inputText.value).toBe('Hello!')
+    expect(model.discardedText.value).toBe('save mote Hi.')
+    expect(deps.run).not.toHaveBeenCalled()
+    model.chooseCommand('note')
+    expect(model.discardedText.value).toBe('')
+  })
   it('does not run after cancellation or when an old final response arrives', async () => {
     const { model, deps } = setup()
     let resolve!: (text: string) => void
@@ -230,6 +242,7 @@ it('does not automatically execute a manually recovered parameter', async () => 
     text: 'Hello!',
     consumedWordCount: 0,
     textOffset: 0,
+    commandOffset: 0,
   })
   expect(deps.run).not.toHaveBeenCalled()
   expect(model.canRun.value).toBe(true)

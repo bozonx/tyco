@@ -54,6 +54,12 @@
                 />
               </div>
               <code v-if="target" class="voice-target">{{ target }}</code>
+              <p v-if="voice.discardedText" class="voice-discarded">
+                <span class="voice-discarded-label">{{
+                  t('voiceCommands.discarded')
+                }}</span>
+                <del>{{ voice.discardedText }}</del>
+              </p>
               <InlineNotice
                 v-if="notice"
                 :kind="notice.kind"
@@ -568,6 +574,21 @@ onUnmounted(() => {
   font-size: var(--text-caption);
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.voice-discarded {
+  flex-shrink: 0;
+  max-height: 4.5rem;
+  margin: 0;
+  overflow-y: auto;
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.voice-discarded-label {
+  margin-right: var(--space-xs);
+  font-weight: 600;
 }
 
 .voice-text {

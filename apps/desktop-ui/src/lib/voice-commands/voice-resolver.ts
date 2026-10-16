@@ -23,8 +23,14 @@ export interface VoiceCandidate {
   commandId: string
   text: string
   parameters: Record<string, string>
+  /** Words of the command and its parameters, counted from `commandOffset` */
   consumedWordCount: number
   textOffset: number
+  /**
+   * Where the command phrase starts. Anything before it is a failed attempt the
+   * user spoke over by starting a new sentence; 0 means nothing was dropped.
+   */
+  commandOffset: number
 }
 
 export interface VoiceResolution {
@@ -35,6 +41,7 @@ export interface VoiceResolution {
 
 interface Token {
   word: string
+  start: number
   end: number
 }
 
@@ -45,6 +52,7 @@ function tokenize(text: string): Token[] {
       .toLowerCase()
       .replace(/\u0307/g, '')
       .replace(/\u0451/g, '\u0435'),
+    start: match.index,
     end: match.index + match[0].length,
   }))
 }
@@ -64,11 +72,52 @@ function argumentOffset(text: string, end: number): number {
   return end + separator.length
 }
 
+/** Token indices that open a sentence: the first one, then after . ! ? … */
+function sentenceStarts(
+  transcript: string,
+  tokens: readonly Token[]
+): number[] {
+  const starts = [0]
+  for (let index = 1; index < tokens.length; index++) {
+    const gap = transcript.slice(tokens[index - 1]!.end, tokens[index]!.start)
+    if (/[.!?…]/u.test(gap)) starts.push(index)
+  }
+  return starts
+}
+
+/**
+ * A command is looked for at the start of the transcript first. When it is not
+ * there, the user may have spoken over a failed attempt, so every later
+ * sentence is tried in order. The first recognized command wins and the rest of
+ * the transcript is its text, even if it repeats a command phrase. An
+ * incomplete or unknown parameter does not stop the search: the user may be
+ * correcting it.
+ */
 export function resolveVoice(
   routes: readonly VoiceRoute[],
   transcript: string
 ): VoiceResolution {
   const tokens = tokenize(transcript)
+  let fallback: VoiceResolution | undefined
+  for (const start of sentenceStarts(transcript, tokens)) {
+    const result = resolveFrom(
+      routes,
+      transcript,
+      tokens.slice(start),
+      start ? tokens[start]!.start : 0
+    )
+    if (result.kind === 'match' || result.kind === 'ambiguous') return result
+    if (result.kind !== 'none') fallback ??= result
+  }
+  return fallback ?? { kind: 'none', candidates: [], parameterChoices: [] }
+}
+
+function resolveFrom(
+  routes: readonly VoiceRoute[],
+  transcript: string,
+  tokens: readonly Token[],
+  commandOffset: number
+): VoiceResolution {
   const input = tokens.map((token) => token.word)
   const candidates: VoiceCandidate[] = []
   const parameterChoices: VoiceCandidate[] = []
@@ -106,13 +155,14 @@ export function resolveVoice(
         for (const offset of offsets) {
           const textOffset = argumentOffset(
             transcript,
-            tokens[offset - 1]?.end ?? 0
+            tokens[offset - 1]?.end ?? commandOffset
           )
           parameterChoices.push({
             commandId: route.commandId,
             parameters: { ...parameters, [parameter.name]: parameter.value },
             consumedWordCount: offset,
             textOffset,
+            commandOffset,
             text: transcript.slice(textOffset).trimEnd(),
           })
         }
@@ -128,13 +178,14 @@ export function resolveVoice(
       parameters[parameter.name] = parameter.value
     }
     for (const offset of offsets) {
-      const end = tokens[offset - 1]?.end ?? 0
+      const end = tokens[offset - 1]?.end ?? commandOffset
       const textOffset = argumentOffset(transcript, end)
       candidates.push({
         commandId: route.commandId,
         parameters,
         consumedWordCount: offset,
         textOffset,
+        commandOffset,
         text: transcript.slice(textOffset).trimEnd(),
       })
     }

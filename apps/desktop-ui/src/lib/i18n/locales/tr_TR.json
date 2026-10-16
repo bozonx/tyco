@@ -947,7 +947,7 @@
     "try": "Bir ifade deneyin",
     "conflicts": "Çakışan veya iç içe ifadeler",
     "none": "Komut bulunamadı. Metni düzenleyin veya aşağıdan bir komut seçin.",
-    "hint": "Önce komut ifadesini, ardından metni söyleyin. Kısayola tekrar basmak kaydı bitirir ve komutu çalıştırır. Standart işlevler her zaman açıktır; çeviri ayarlı çevirmeni kullanır.",
+    "hint": "Önce komut ifadesini, ardından metni söyleyin. Komut tanınmadıysa durup baştan tekrar söyleyin. Kısayola tekrar basmak kaydı bitirir ve komutu çalıştırır. Standart işlevler her zaman açıktır; çeviri ayarlı çevirmeni kullanır.",
     "record": "Yeniden kaydet",
     "run": "Çalıştır",
     "choose": "Bir komut seçin",
@@ -966,7 +966,8 @@
     "noMatch": "Komut tanınmadı. Listeden birini seçin.",
     "ambiguous": "Birden fazla komut eşleşiyor. Listeden doğru olanı seçin.",
     "languageMissing": "Dil tanınmadı. Listeden çeviriyi seçin ve dili belirtin.",
-    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin."
+    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin.",
+    "discarded": "Komuttan önce atılan"
   },
   "voiceGrammar": {
     "translate": "çevir",

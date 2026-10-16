@@ -77,6 +77,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       ? voiceInputIssue(command.value, inputText.value, deps.tools)
       : undefined
   )
+  /** Speech before the recognized command, dropped as a failed attempt */
+  const discardedText = computed(() =>
+    transcript.value.slice(0, selected.value?.commandOffset ?? 0).trim()
+  )
   const canRun = computed(
     () =>
       stage.value === 'review' &&
@@ -99,6 +103,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       parameters: {},
       consumedWordCount: 0,
       textOffset: 0,
+      commandOffset: 0,
     })
 
   const run = async () => {
@@ -163,8 +168,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
         finalText
       )
       if (result.kind === 'match') {
-        choose(result.candidates[0]!)
-        if (intent === 'run' && canRun.value) await run()
+        const candidate = result.candidates[0]!
+        choose(candidate)
+        // dropped speech is shown for review before anything runs
+        if (intent === 'run' && !candidate.commandOffset && canRun.value)
+          await run()
       }
     } catch (cause) {
       if (current !== generation || disposed) return
@@ -257,6 +265,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     ),
     command,
     inputIssue,
+    discardedText,
     canRun,
     choose,
     chooseCommand,

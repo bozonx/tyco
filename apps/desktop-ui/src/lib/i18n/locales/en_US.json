@@ -950,7 +950,7 @@
     "try": "Try an utterance",
     "conflicts": "Conflicting or nested phrases",
     "none": "No matching command. Edit the transcript or choose a command below.",
-    "hint": "Say the command phrase, then the text. Pressing the hotkey again finishes recording and runs the command. Standard functions are always on; translation uses the configured translator.",
+    "hint": "Say the command phrase, then the text. If the command was not recognized, pause and say it again from the start. Pressing the hotkey again finishes recording and runs the command. Standard functions are always on; translation uses the configured translator.",
     "record": "Record again",
     "run": "Run",
     "choose": "Choose a command",
@@ -969,7 +969,8 @@
     "noMatch": "No command recognized. Pick one from the list.",
     "ambiguous": "Several commands match. Pick the right one from the list.",
     "languageMissing": "Language not recognized. Pick translation from the list and choose a language.",
-    "nothingHeard": "No speech recognized. Record again."
+    "nothingHeard": "No speech recognized. Record again.",
+    "discarded": "Dropped before the command"
   },
   "voiceGrammar": {
     "translate": "translate to",
