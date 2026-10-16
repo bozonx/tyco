@@ -1,10 +1,10 @@
 import type { ModelMessage } from '@bozonx/ai-kit'
+import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 
 type AssistantContent = Exclude<
   Extract<ModelMessage, { role: 'assistant' }>['content'],
   string
 >
-import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 
 type ToolCallPart = Extract<ChatMessagePart, { type: 'tool-call' }>
 type ToolResultPart = Extract<ChatMessagePart, { type: 'tool-result' }>

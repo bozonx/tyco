@@ -28,6 +28,12 @@ export interface ChatToolDefinition {
   name: string
   /** The group whose settings decide whether it is offered and how freely */
   groupId: string
+  /** The name the chat shows: an i18n key for a core tool */
+  labelKey?: string
+  /** The name the chat shows when it comes from a plugin or MCP server */
+  label?: string
+  /** An Iconify name shown next to the call */
+  icon?: string
   /** Shown to the model, in English: what the tool does, when to use it */
   description: string
   inputSchema: JsonSchema

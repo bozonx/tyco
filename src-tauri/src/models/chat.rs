@@ -53,66 +53,14 @@ pub struct ChatMessage {
 }
 
 /// One piece of an assistant message; mirrored by ChatMessagePart in shared.
-/// Tool input stays opaque JSON: the backend stores it, the webview reads it.
+/// The backend only stores parts, so it keeps them as the webview wrote them:
+/// a part of a kind this version does not know yet still loads and saves.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(
-    tag = "type",
-    rename_all = "kebab-case",
-    rename_all_fields = "camelCase"
-)]
-pub enum ChatMessagePart {
-    Text {
-        text: String,
-    },
-    Reasoning {
-        text: String,
-    },
-    ToolCall {
-        tool_call_id: String,
-        tool_name: String,
-        #[serde(default)]
-        input: serde_json::Value,
-        state: ChatToolCallState,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        approval_id: Option<String>,
-    },
-    ToolResult {
-        tool_call_id: String,
-        tool_name: String,
-        output: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        is_error: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        is_truncated: Option<bool>,
-    },
-    File {
-        file_id: String,
-        media_type: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        name: Option<String>,
-    },
-    Sources {
-        sources: Vec<ChatSource>,
-    },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum ChatToolCallState {
-    Pending,
-    AwaitingApproval,
-    Denied,
-    Done,
-    Error,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ChatSource {
-    pub url: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub snippet: Option<String>,
+pub struct ChatMessagePart {
+    #[serde(rename = "type")]
+    pub kind: String,
+    #[serde(flatten)]
+    pub fields: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -251,10 +199,16 @@ mod validation_tests {
     }
 
     #[test]
-    fn message_parts_reject_unknown_kinds_and_states() {
+    fn message_parts_keep_unknown_kinds_and_need_a_type() {
+        let part = serde_json::json!({"type": "video", "fileId": "v1", "extra": {"a": 1}});
+        let parsed: ChatMessagePart = serde_json::from_value(part.clone()).unwrap();
+        assert_eq!(parsed.kind, "video");
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), part);
+
         for part in [
-            serde_json::json!({"type": "video", "text": "x"}),
-            serde_json::json!({"type": "tool-call", "toolCallId": "c", "toolName": "t", "state": "running"}),
+            serde_json::json!({"text": "x"}),
+            serde_json::json!({"type": 1}),
+            serde_json::json!("text"),
         ] {
             assert!(serde_json::from_value::<ChatMessagePart>(part).is_err());
         }

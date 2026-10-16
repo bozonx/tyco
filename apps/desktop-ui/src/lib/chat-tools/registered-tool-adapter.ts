@@ -37,6 +37,9 @@ export function adaptRegisteredTool(
   return {
     name: chatToolName(tool.id),
     groupId: options.groupId,
+    ...(tool.labelKey ? { labelKey: tool.labelKey } : {}),
+    ...(tool.label ? { label: tool.label } : {}),
+    ...(tool.icon ? { icon: tool.icon } : {}),
     description: tool.description,
     inputSchema: tool.inputSchema,
     async execute(input, { signal }) {

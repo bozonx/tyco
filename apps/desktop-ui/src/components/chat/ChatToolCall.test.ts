@@ -19,6 +19,19 @@ const call = {
 }
 
 describe('ChatToolCall', () => {
+  it('names the call as its tool does', () => {
+    const named = (extra: object) =>
+      mount(ChatToolCall, { props: { call: { ...call, ...extra } } })
+        .get('.tool-call-name')
+        .text()
+
+    expect(named({})).toBe('read_file')
+    expect(named({ label: 'Read file' })).toBe('Read file')
+    expect(named({ labelKey: 'tools.readFile', label: 'Read file' })).toBe(
+      'tools.readFile'
+    )
+  })
+
   it('shows the call collapsed and its arguments and result expanded', async () => {
     const wrapper = mount(ChatToolCall, {
       props: {
@@ -35,7 +48,7 @@ describe('ChatToolCall', () => {
 
     expect(wrapper.text()).toContain('read_file')
     expect(wrapper.text()).toContain('{"path":"notes/todo.md"}')
-    expect(wrapper.text()).toContain('chat.toolState.done')
+    expect(wrapper.get('.tool-call-status').text()).toBe('chat.toolState.done')
     expect(wrapper.text()).not.toContain('Buy milk')
 
     await wrapper.get('button').trigger('click')
@@ -55,6 +68,11 @@ describe('ChatToolCall', () => {
 
     expect(wrapper.text()).toContain(
       'chat.toolApprovalQuestion:{"tool":"read_file"}'
+    )
+    // what is to be allowed is in view without a click
+    expect(wrapper.find('.tool-call-details').exists()).toBe(true)
+    expect(wrapper.get('.tool-call-status').text()).toBe(
+      'chat.toolState.awaitingApproval'
     )
     const buttons = wrapper.findAll('.tool-approval button')
     expect(buttons.map((button) => button.text())).toEqual([

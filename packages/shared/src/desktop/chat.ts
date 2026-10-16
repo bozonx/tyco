@@ -51,6 +51,14 @@ export type ChatMessagePart =
       type: 'tool-call'
       toolCallId: string
       toolName: string
+      /**
+       * How the chat names the tool: an i18n key of a core tool, or the text a
+       * plugin or MCP server gave. The tool's name when neither is set
+       */
+      labelKey?: string
+      label?: string
+      /** An Iconify name, e.g. `mdi:clock-outline` */
+      icon?: string
       input: unknown
       state: ChatToolCallState
       /** Set while the call waits for the user's decision */

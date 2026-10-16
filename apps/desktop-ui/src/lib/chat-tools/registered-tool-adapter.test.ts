@@ -42,6 +42,8 @@ describe('registered-tool-adapter', () => {
     }))
     const tool: RegisteredTool = {
       id: 'text.upper',
+      labelKey: 'tools.upper',
+      icon: 'mdi:format-letter-case-upper',
       owner: { kind: 'core' },
       description: 'Upper-cases a text',
       inputSchema: { type: 'object', properties: { text: { type: 'string' } } },
@@ -57,6 +59,8 @@ describe('registered-tool-adapter', () => {
     expect(definition).toMatchObject({
       name: 'text_upper',
       groupId: 'commands',
+      labelKey: 'tools.upper',
+      icon: 'mdi:format-letter-case-upper',
       description: 'Upper-cases a text',
       inputSchema: tool.inputSchema,
     })

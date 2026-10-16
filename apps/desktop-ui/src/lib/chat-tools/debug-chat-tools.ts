@@ -18,6 +18,7 @@ export function isDebugChatToolsEnabled(
 export const CURRENT_TIME_TOOL: RegisteredTool = {
   id: 'get_current_time',
   label: 'Current time',
+  icon: 'mdi:clock-outline',
   owner: { kind: 'core' },
   description:
     'Returns the current date and time. Use it when the answer depends on the current time.',

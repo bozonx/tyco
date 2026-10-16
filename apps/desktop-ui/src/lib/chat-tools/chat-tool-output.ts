@@ -9,7 +9,8 @@ export interface ToolOutput {
   totalCharacters: number
 }
 
-function stringify(value: unknown): string {
+/** A tool's output as the text the chat keeps, uncut */
+export function toolOutputText(value: unknown): string {
   if (value === undefined || value === null) return ''
   if (typeof value === 'string') return value
   if (value instanceof Error) return value.message
@@ -29,7 +30,7 @@ export function normalizeToolOutput(
   value: unknown,
   limitCharacters = TOOL_OUTPUT_CHARACTERS
 ): ToolOutput {
-  const full = stringify(value)
+  const full = toolOutputText(value)
   if (full.length <= limitCharacters) {
     return { text: full, isTruncated: false, totalCharacters: full.length }
   }

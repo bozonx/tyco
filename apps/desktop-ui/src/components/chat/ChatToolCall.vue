@@ -7,18 +7,23 @@
       @click="isExpanded = !isExpanded"
     >
       <Icon
-        :icon="stateIcon"
+        :icon="call.icon || 'mdi:tools'"
         height="16"
-        class="tool-call-state shrink-0"
-        :class="{ 'is-running': call.state === 'pending' }"
+        class="shrink-0 text-muted"
       />
-      <span class="tool-call-name">{{ call.toolName }}</span>
+      <span class="tool-call-name" :title="call.toolName">{{ label }}</span>
       <span v-if="argumentsPreview" class="tool-call-args">
         {{ argumentsPreview }}
       </span>
-      <span class="tool-call-status">{{
-        t(`chat.toolState.${stateKey}`)
-      }}</span>
+      <span class="tool-call-status">
+        <Icon
+          :icon="stateIcon"
+          height="14"
+          class="tool-call-state shrink-0"
+          :class="{ 'is-running': call.state === 'pending' }"
+        />
+        {{ t(stateKey) }}
+      </span>
       <Icon
         :icon="isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'"
         height="16"
@@ -47,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
@@ -67,6 +72,21 @@ const props = defineProps<{
 const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
 const { t } = useI18n()
 const isExpanded = ref(false)
+// the user decides on what the call does, so its arguments are in view
+watch(
+  () => props.isAwaitingAnswer,
+  (isAwaiting) => {
+    if (isAwaiting) isExpanded.value = true
+  },
+  { immediate: true }
+)
+
+const label = computed(
+  () =>
+    (props.call.labelKey && t(props.call.labelKey)) ||
+    props.call.label ||
+    props.call.toolName
+)
 
 const STATE_ICONS = {
   pending: 'mdi:progress-clock',
@@ -123,7 +143,6 @@ const argumentsPreview = computed(() => {
   background: var(--app-hover);
 }
 .tool-call-name {
-  font-family: var(--font-mono, monospace);
   font-weight: 500;
 }
 .tool-call-args {
@@ -136,8 +155,12 @@ const argumentsPreview = computed(() => {
   text-overflow: ellipsis;
 }
 .tool-call-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
   color: var(--app-text-faint);
+  white-space: nowrap;
 }
 .tool-call.is-done .tool-call-state {
   color: var(--color-success);

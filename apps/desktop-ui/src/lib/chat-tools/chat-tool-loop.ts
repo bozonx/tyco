@@ -11,7 +11,7 @@ import {
   type LlmStreamOptions,
 } from '../llm/llm-client'
 import type { LlmPrompt } from '../llm/llm-prompt'
-import { normalizeToolOutput } from './chat-tool-output'
+import { toolOutputText } from './chat-tool-output'
 import type { ChatToolDecision, ChatToolPolicy } from './chat-tool-policy'
 import type { ChatToolSet } from './chat-tool-registry'
 
@@ -93,10 +93,9 @@ export async function runChatToolLoop(
   let messages: ModelMessage[] = input.prompt.messages
   let stepsUsed = 0
   // a new text part begins after anything that is not text
-  const open: {
-    text: Extract<ChatMessagePart, { type: 'text' }> | null
-    reasoning: Extract<ChatMessagePart, { type: 'reasoning' }> | null
-  } = { text: null, reasoning: null }
+  const open: { text: Extract<ChatMessagePart, { type: 'text' }> | null } = {
+    text: null,
+  }
 
   const publish = () => {
     state.content = state.parts
@@ -109,7 +108,6 @@ export async function runChatToolLoop(
   const push = (part: ChatMessagePart) => {
     state.parts.push(part)
     open.text = part.type === 'text' ? part : null
-    open.reasoning = part.type === 'reasoning' ? part : null
   }
 
   const setCallState = (toolCallId: string, callState: ChatToolCallState) => {
@@ -158,14 +156,18 @@ export async function runChatToolLoop(
           else push({ type: 'text', text: event.text })
           break
         case 'reasoning':
-          if (open.reasoning) open.reasoning.text += event.text
-          else push({ type: 'reasoning', text: event.text })
-          break
+          // Not kept until the chat can show it: stored unseen, it only grows
+          // the history, and the model is not sent it back
+          continue
         case 'tool-call': {
+          const tool = input.tools?.definitions.get(event.toolName)
           const call: ToolCallPart = {
             type: 'tool-call',
             toolCallId: event.toolCallId,
             toolName: event.toolName,
+            ...(tool?.labelKey ? { labelKey: tool.labelKey } : {}),
+            ...(tool?.label ? { label: tool.label } : {}),
+            ...(tool?.icon ? { icon: tool.icon } : {}),
             input: event.input,
             state: 'pending',
           }
@@ -174,16 +176,15 @@ export async function runChatToolLoop(
           break
         }
         case 'tool-result': {
-          const output = normalizeToolOutput(event.output)
           setCallState(event.toolCallId, event.isError ? 'error' : 'done')
           push({
             type: 'tool-result',
             toolCallId: event.toolCallId,
             toolName: event.toolName,
-            output: output.text,
+            // already cut to the tool's limit when it ran: kept as the model saw it
+            output: toolOutputText(event.output),
             ...(event.isError ? { isError: true } : {}),
-            ...(output.isTruncated ||
-            input.tools?.truncatedCallIds.has(event.toolCallId)
+            ...(input.tools?.truncatedCallIds.has(event.toolCallId)
               ? { isTruncated: true }
               : {}),
           })
@@ -227,7 +228,10 @@ export async function runChatToolLoop(
 
     const responses: ModelMessage[] = []
     for (const request of requests) {
-      const decision = await deps.requestApproval(request, input.signal)
+      // allowed for the session by an answer to an earlier call of this batch
+      const decision = deps.policy.isAllowedForSession(request.toolName)
+        ? 'allow-once'
+        : await deps.requestApproval(request, input.signal)
       if (input.signal.aborted) return state
       const isApproved = deps.policy.answer(request.toolName, decision)
       setCallState(request.toolCallId, isApproved ? 'pending' : 'denied')

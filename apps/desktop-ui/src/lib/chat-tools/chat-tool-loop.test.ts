@@ -189,6 +189,106 @@ describe('chat-tool-loop', () => {
     expect(policy.isAllowedForSession('now')).toBe(true)
   })
 
+  it('asks once for a batch of calls allowed for the session', async () => {
+    const batch: LlmStreamEvent[] = [
+      { type: 'model', provider: 'fake', model: 'fake-model' },
+      ...(['1', '2'] as const).flatMap((id): LlmStreamEvent[] => [
+        { type: 'tool-call', toolCallId: `c${id}`, toolName: 'now', input: {} },
+        {
+          type: 'approval-request',
+          approvalId: `a${id}`,
+          toolCallId: `c${id}`,
+          toolName: 'now',
+          input: {},
+        },
+      ]),
+      { type: 'step-finish', step: 0, finishReason: 'tool-calls' },
+      {
+        type: 'finish',
+        finishReason: 'tool-calls',
+        text: '',
+        responseMessages: [],
+      },
+    ]
+    const { deps, input, fake, requestApproval } = setup(
+      [batch, textAnswer('Noon')],
+      'allow-session'
+    )
+
+    await runChatToolLoop(deps, input)
+
+    expect(requestApproval).toHaveBeenCalledTimes(1)
+    expect(fake.calls[1].prompt.messages.slice(-2)).toEqual(
+      ['a1', 'a2'].map((approvalId) => ({
+        role: 'tool',
+        content: [
+          { type: 'tool-approval-response', approvalId, approved: true },
+        ],
+      }))
+    )
+  })
+
+  it('keeps no reasoning and names the call as its tool does', async () => {
+    const { deps, input } = setup([
+      [
+        { type: 'reasoning', text: 'The user wants the time.' },
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'now', input: {} },
+        ...textAnswer('Noon').slice(1),
+      ],
+    ])
+    const definitions = new Map([
+      [
+        'now',
+        {
+          name: 'now',
+          groupId: 'debug',
+          label: 'Current time',
+          icon: 'mdi:clock-outline',
+          description: 'Tells the time',
+          inputSchema: { type: 'object' as const },
+          execute: async () => '12:00',
+        },
+      ],
+    ])
+
+    const result = await runChatToolLoop(deps, {
+      ...input,
+      tools: { ...toolSet, definitions },
+    })
+
+    expect(result.parts.map((part) => part.type)).toEqual(['tool-call', 'text'])
+    expect(result.parts[0]).toMatchObject({
+      label: 'Current time',
+      icon: 'mdi:clock-outline',
+    })
+  })
+
+  it('keeps an output as long as the tool allowed it', async () => {
+    const long = 'x'.repeat(30_000)
+    const { deps, input } = setup([
+      [
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'read', input: {} },
+        {
+          type: 'tool-result',
+          toolCallId: 'c1',
+          toolName: 'read',
+          output: long,
+          isError: false,
+        },
+        ...textAnswer('Done').slice(1),
+      ],
+    ])
+
+    const result = await runChatToolLoop(deps, input)
+
+    expect(result.parts[1]).toEqual({
+      type: 'tool-result',
+      toolCallId: 'c1',
+      toolName: 'read',
+      output: long,
+    })
+  })
+
   it('offers no tools on the last step', async () => {
     const { deps, input, fake } = setup([textAnswer('Done')])
 
