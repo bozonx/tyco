@@ -120,6 +120,7 @@ export const DESKTOP_COMMANDS = {
   SAVE_PROFILE_CHAT: 'save_profile_chat',
   SAVE_USER_CONFIG: 'save_user_config',
   SEARCH_CHATS: 'search_chats',
+  SEARCH_PROFILE_CHATS: 'search_profile_chats',
   SECRETS_REMOVE: 'secrets_remove',
   SECRETS_SET: 'secrets_set',
   SECRETS_STATUS: 'secrets_status',
@@ -310,6 +311,10 @@ export interface DesktopCommands {
     result: DesktopSnapshot
   }
   search_chats: { args: { query: string }; result: Array<string> }
+  search_profile_chats: {
+    args: { profileId: string; query: string }
+    result: Array<string>
+  }
   secrets_remove: { args: { id: string }; result: void }
   secrets_set: {
     args: { id: string; value: string; origins?: Array<string> | null }

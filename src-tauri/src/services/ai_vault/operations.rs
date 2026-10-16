@@ -342,3 +342,33 @@ pub fn clear_profile_chats(vault_root: &Path, profile_id: &str) -> Result<(), Ap
     write_private(&index_file, "[]")?;
     Ok(())
 }
+
+pub fn search_profile_chats(
+    vault_root: &Path,
+    profile_id: &str,
+    query: &str,
+) -> Result<Vec<String>, AppError> {
+    let summaries = list_profile_chats(vault_root, profile_id)?;
+    let query_lower = query.trim().to_lowercase();
+    if query_lower.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let mut found = Vec::new();
+    for item in summaries {
+        let matches = match get_profile_chat(vault_root, profile_id, &item.id) {
+            Ok(Some(chat)) => {
+                chat.title.to_lowercase().contains(&query_lower)
+                    || chat
+                        .messages
+                        .iter()
+                        .any(|m| m.content.to_lowercase().contains(&query_lower))
+            }
+            _ => item.title.to_lowercase().contains(&query_lower),
+        };
+        if matches {
+            found.push(item.id);
+        }
+    }
+    Ok(found)
+}

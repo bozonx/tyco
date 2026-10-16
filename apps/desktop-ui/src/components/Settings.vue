@@ -147,6 +147,8 @@
               currentTab === 'ai-profiles' ||
               currentTab === 'ai-profiles:overview'
             "
+            :user-config="userConfig"
+            @update:vault-path="updateVaultPath"
             @navigate="currentTab = $event"
           />
 
@@ -561,6 +563,17 @@ watch(
 
 const updateAiTasks = (items: UserConfig['aiTasks']) => {
   userConfig.value.aiTasks = items
+}
+
+const updateVaultPath = (vaultPath: string | undefined) => {
+  if (vaultPath) {
+    userConfig.value.aiProfiles = {
+      ...(userConfig.value.aiProfiles || {}),
+      vaultPath,
+    }
+  } else if (userConfig.value.aiProfiles) {
+    delete userConfig.value.aiProfiles.vaultPath
+  }
 }
 
 onMounted(() => {

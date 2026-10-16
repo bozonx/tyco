@@ -198,6 +198,15 @@ fn test_profile_chat_history() {
     let renamed = get_profile_chat(&vault_root, "coder", "chat-1").unwrap();
     assert_eq!(renamed.unwrap().title, "Renamed");
 
+    let found_by_title = search_profile_chats(&vault_root, "coder", "rename").unwrap();
+    assert_eq!(found_by_title, vec!["chat-1"]);
+
+    let found_by_msg = search_profile_chats(&vault_root, "coder", "Hi").unwrap();
+    assert_eq!(found_by_msg, vec!["chat-1"]);
+
+    let found_none = search_profile_chats(&vault_root, "coder", "nonexistent").unwrap();
+    assert!(found_none.is_empty());
+
     delete_profile_chat(&vault_root, "coder", "chat-1").unwrap();
     assert_eq!(list_profile_chats(&vault_root, "coder").unwrap().len(), 0);
 }

@@ -16,4 +16,5 @@ export interface AiProfilesFunctions {
   renameProfileChat: { args: [profileId: string, id: string, title: string] }
   deleteProfileChat: { args: [profileId: string, id: string] }
   clearProfileChats: { args: [profileId: string] }
+  searchProfileChats: { args: [profileId: string, query: string] }
 }

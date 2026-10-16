@@ -178,6 +178,17 @@ pub async fn clear_profile_chats(
     run_blocking(move || ai_vault::clear_profile_chats(&dir, &profile_id)).await?
 }
 
+#[tauri::command]
+pub async fn search_profile_chats(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    profile_id: String,
+    query: String,
+) -> Result<Vec<String>, AppError> {
+    let dir = vault_dir(&app, &state)?;
+    run_blocking(move || ai_vault::search_profile_chats(&dir, &profile_id, &query)).await?
+}
+
 #[cfg(test)]
 mod tests {
     use super::open_folder_in_os;

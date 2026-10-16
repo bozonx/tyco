@@ -75,5 +75,13 @@ export function createAiProfilesCommandMap(): DomainCommandMap<
       buildArgs: ([profileId]) =>
         ({ profileId }) satisfies DesktopCommandArgs<'clear_profile_chats'>,
     },
+    searchProfileChats: {
+      command: DESKTOP_COMMANDS.SEARCH_PROFILE_CHATS,
+      buildArgs: ([profileId, query]) =>
+        ({
+          profileId,
+          query,
+        }) satisfies DesktopCommandArgs<'search_profile_chats'>,
+    },
   }
 }

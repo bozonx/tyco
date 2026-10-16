@@ -91,5 +91,9 @@ export function createProfileIpcChatSessionStorageDriver(
     async clearChats(): Promise<void> {
       await call('clearProfileChats', [profileId])
     },
+    async searchChats(query: string): Promise<string[]> {
+      const result = await call('searchProfileChats', [profileId, query])
+      return result || []
+    },
   }
 }

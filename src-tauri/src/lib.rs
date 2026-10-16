@@ -310,6 +310,7 @@ pub fn run() {
             commands::ai_vault::rename_profile_chat,
             commands::ai_vault::delete_profile_chat,
             commands::ai_vault::clear_profile_chats,
+            commands::ai_vault::search_profile_chats,
             apply_hotkey,
             configure_hotkeys,
             rebind_hotkeys,

@@ -111,3 +111,30 @@ it('budgets the actual chat instructions, rules and configured output consistent
   expect(ai.sendChatMessage).not.toHaveBeenCalled()
   expect(input.value).toBe('Question')
 })
+
+it('updates profile lastModelId when selecting a model within an active profile', async () => {
+  const { useAiProfilesStore } = await import('./ai-profiles')
+  const profilesStore = useAiProfilesStore()
+  vi.spyOn(profilesStore, 'activeProfileId', 'get').mockReturnValue('writer')
+  const updateSpy = vi
+    .spyOn(profilesStore, 'updateLastModel')
+    .mockResolvedValue()
+
+  const store = useChatStore()
+  await store.selectModel('google:gemini-pro')
+  expect(updateSpy).toHaveBeenCalledWith('writer', 'google:gemini-pro')
+})
+
+it('preserves active profile query when navigating to chat from inside a profile', async () => {
+  const { useAiProfilesStore } = await import('./ai-profiles')
+  const profilesStore = useAiProfilesStore()
+  vi.spyOn(profilesStore, 'activeProfileId', 'get').mockReturnValue('writer')
+  vi.spyOn(appNavigation, 'isCurrent').mockReturnValue(false)
+  const profileChatSpy = vi
+    .spyOn(appNavigation, 'goToProfileChat')
+    .mockResolvedValue()
+
+  const store = useChatStore()
+  await store.startNewChat()
+  expect(profileChatSpy).toHaveBeenCalledWith('writer')
+})

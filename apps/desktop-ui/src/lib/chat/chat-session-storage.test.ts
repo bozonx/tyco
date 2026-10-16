@@ -68,4 +68,64 @@ describe('chat-session-storage', () => {
     expect(await driver.searchChats!('query')).toEqual(['c1'])
     await expect(driver.clearChats!()).resolves.toBeUndefined()
   })
+
+  it('delegates profile operations with profileId parameter', async () => {
+    const callFunction = vi
+      .fn<DesktopCall>()
+      .mockImplementation(async (name) => {
+        if (name === 'listProfileChats') return { success: true, result: [] }
+        if (name === 'getProfileChat') {
+          return {
+            success: true,
+            result: {
+              id: 'p1',
+              title: 'Profile Chat',
+              lastMessageAt: '',
+              messages: [],
+            },
+          }
+        }
+        if (name === 'saveProfileChat')
+          return { success: true, result: undefined }
+        if (name === 'renameProfileChat')
+          return { success: true, result: undefined }
+        if (name === 'deleteProfileChat')
+          return { success: true, result: undefined }
+        if (name === 'searchProfileChats')
+          return { success: true, result: ['p1'] }
+        if (name === 'clearProfileChats')
+          return { success: true, result: undefined }
+        return { success: false, error: 'Unknown' }
+      })
+
+    const { createProfileIpcChatSessionStorageDriver } =
+      await import('./chat-session-storage')
+    const driver = createProfileIpcChatSessionStorageDriver(
+      { callFunction: callFunction as DesktopCall },
+      'writer'
+    )
+
+    expect(await driver.listChats()).toEqual([])
+    expect(callFunction).toHaveBeenCalledWith('listProfileChats', ['writer'])
+
+    expect(await driver.getChat('p1')).toEqual({
+      id: 'p1',
+      title: 'Profile Chat',
+      lastMessageAt: '',
+      messages: [],
+    })
+    expect(callFunction).toHaveBeenCalledWith('getProfileChat', [
+      'writer',
+      'p1',
+    ])
+
+    expect(await driver.searchChats!('word')).toEqual(['p1'])
+    expect(callFunction).toHaveBeenCalledWith('searchProfileChats', [
+      'writer',
+      'word',
+    ])
+
+    await driver.clearChats!()
+    expect(callFunction).toHaveBeenCalledWith('clearProfileChats', ['writer'])
+  })
 })

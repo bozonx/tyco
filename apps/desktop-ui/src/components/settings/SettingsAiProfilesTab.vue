@@ -14,6 +14,23 @@
           >
             {{ t('settings.openInFileManager') }}
           </Button>
+          <Button
+            size="sm"
+            variant="neutral"
+            icon="mdi:folder-edit-outline"
+            @click="handlePickVaultFolder"
+          >
+            {{ t('settings.selectFolder') }}
+          </Button>
+          <Button
+            v-if="userConfig?.aiProfiles?.vaultPath"
+            size="sm"
+            variant="ghost"
+            icon="mdi:restore"
+            @click="handleResetVaultFolder"
+          >
+            {{ t('settings.resetToDefault') }}
+          </Button>
         </div>
       </FieldRow>
     </SettingsSection>
@@ -125,8 +142,13 @@ import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import type { UserConfig } from '@tyco/shared'
 
-const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
+defineProps<{ userConfig?: UserConfig }>()
+const emit = defineEmits<{
+  (e: 'navigate', tab: string): void
+  (e: 'update:vaultPath', path: string | undefined): void
+}>()
 const { t } = useI18n()
 const aiProfilesStore = useAiProfilesStore()
 
@@ -142,5 +164,20 @@ async function handleOpenVault() {
   if (vaultPath.value) {
     await aiProfilesStore.openFolder(vaultPath.value)
   }
+}
+
+async function handlePickVaultFolder() {
+  const selected = await aiProfilesStore.pickExternalFolder()
+  if (selected) {
+    emit('update:vaultPath', selected)
+    vaultPath.value = selected
+    await aiProfilesStore.loadAll()
+  }
+}
+
+async function handleResetVaultFolder() {
+  emit('update:vaultPath', undefined)
+  vaultPath.value = await aiProfilesStore.getVaultPath()
+  await aiProfilesStore.loadAll()
 }
 </script>

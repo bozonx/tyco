@@ -41,6 +41,7 @@ fn main() {
             "save_ai_profile",
             "save_ai_project",
             "save_profile_chat",
+            "search_profile_chats",
             "write_profile_soul",
             "get_chat_image",
             "get_editor_history",

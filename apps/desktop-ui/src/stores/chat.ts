@@ -30,6 +30,7 @@ import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { appNavigation } from '../lib/navigation/navigation'
+import { APP_ROUTES } from '../lib/navigation/routes'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
@@ -54,21 +55,6 @@ export const useChatStore = defineStore('chat', () => {
   const menuModalsStore = useMenuModalsStore()
 
   const currentSoul = ref<string>('')
-  watch(
-    () => aiProfilesStore.activeProfileId,
-    async (profileId) => {
-      if (profileId) {
-        try {
-          currentSoul.value = await aiProfilesStore.readSoul(profileId)
-        } catch {
-          currentSoul.value = ''
-        }
-      } else {
-        currentSoul.value = ''
-      }
-    },
-    { immediate: true }
-  )
 
   const modelOptions = computed(() =>
     chatModelOptions(
@@ -151,7 +137,26 @@ export const useChatStore = defineStore('chat', () => {
       }
       return await loadChatWithImages(id)
     },
-    navigateTo: (path) => appNavigation.push(path),
+    navigateTo: async (path) => {
+      if (path === APP_ROUTES.CHAT.path) {
+        const targetProfile = aiProfilesStore.activeProfileId
+        const currentProfile = appNavigation.currentProfileId?.() || null
+        if (targetProfile) {
+          if (
+            appNavigation.isCurrent(APP_ROUTES.CHAT.path) &&
+            currentProfile === targetProfile
+          ) {
+            return
+          }
+          await appNavigation.goToProfileChat(targetProfile)
+          return
+        }
+        if (appNavigation.isCurrent(APP_ROUTES.CHAT.path) && !currentProfile) {
+          return
+        }
+      }
+      await appNavigation.push(path)
+    },
     notifyError: (message) => {
       toastText(message, 'error')
     },
@@ -173,6 +178,9 @@ export const useChatStore = defineStore('chat', () => {
     nowIso: () => new Date().toISOString(),
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {
+      if (aiProfilesStore.activeProfileId && patch.lastChatId) {
+        return
+      }
       const result = await saveSessionState(patch)
       if (!result.success)
         clientLogger.warn(
@@ -251,6 +259,12 @@ export const useChatStore = defineStore('chat', () => {
     afterRender: nextTick,
     // the picked model is read back from the state: unsaved, it is not picked
     selectModel: async (id) => {
+      if (aiProfilesStore.activeProfileId) {
+        await aiProfilesStore.updateLastModel(
+          aiProfilesStore.activeProfileId,
+          id
+        )
+      }
       const result = await saveSessionState({ lastChatModelId: id })
       if (!result.success)
         toastText(
@@ -259,6 +273,41 @@ export const useChatStore = defineStore('chat', () => {
         )
     },
   })
+
+  watch(
+    () => aiProfilesStore.activeProfileId,
+    async (profileId, oldProfileId) => {
+      if (profileId) {
+        try {
+          currentSoul.value = await aiProfilesStore.readSoul(profileId)
+        } catch {
+          currentSoul.value = ''
+        }
+      } else {
+        currentSoul.value = ''
+      }
+
+      if (profileId !== oldProfileId) {
+        model.stopGeneration()
+        if (profileId) {
+          try {
+            const driver = aiProfilesStore.getStorageDriver(profileId)
+            const list = await driver.listChats()
+            if (list.length > 0) {
+              await model.openChat(list[0].id, { silent: true })
+            } else {
+              model.clearChat()
+            }
+          } catch {
+            model.clearChat()
+          }
+        } else if (oldProfileId !== undefined) {
+          await model.openLastOrNewChat()
+        }
+      }
+    },
+    { immediate: true }
+  )
   watch(
     () => ipcStore.desktopState.isWindowShown,
     (isShown) => {

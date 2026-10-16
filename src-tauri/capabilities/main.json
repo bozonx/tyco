@@ -32,6 +32,7 @@
     "allow-save-ai-profile",
     "allow-save-ai-project",
     "allow-save-profile-chat",
+    "allow-search-profile-chats",
     "allow-secrets-remove",
     "allow-secrets-set",
     "allow-suspend-hotkeys",
