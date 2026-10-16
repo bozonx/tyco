@@ -131,7 +131,6 @@
       </SettingsSection>
 
       <SettingsSection
-        v-if="IS_AI_PROJECTS_ENABLED"
         :title="t('settings.projectPermissions')"
         :info="t('settings.projectPermissionsHint')"
       >
@@ -237,7 +236,6 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { IS_AI_PROJECTS_ENABLED } from '../../lib/ai-profiles/ai-projects-feature'
 import {
   parseProfileMaxOutputTokens,
   parseProfileTemperature,

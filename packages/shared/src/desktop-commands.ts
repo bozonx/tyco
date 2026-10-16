@@ -2,6 +2,10 @@
 // Do not edit: run pnpm generate:desktop.
 import type {
   AccessDecision,
+  AiFileChangePreview,
+  AiFileRoot,
+  AiFileToolOutput,
+  AiFileToolRequest,
   AiProfile,
   AiProject,
   Chat,
@@ -72,6 +76,7 @@ export const DESKTOP_COMMANDS = {
   HIDE_WINDOW: 'hide_window',
   INSPECT_PLUGIN_PACKAGE: 'inspect_plugin_package',
   INSTALL_PLUGIN_PACKAGE: 'install_plugin_package',
+  LIST_AI_FILE_ROOTS: 'list_ai_file_roots',
   LIST_AI_PROFILES: 'list_ai_profiles',
   LIST_AI_PROJECTS: 'list_ai_projects',
   LIST_CHATS: 'list_chats',
@@ -99,6 +104,8 @@ export const DESKTOP_COMMANDS = {
   PATCH_SESSION_STATE: 'patch_session_state',
   PICK_DIRECTORY: 'pick_directory',
   PICK_SCRIPT_FILE: 'pick_script_file',
+  PREVIEW_AI_FILE_CHANGE: 'preview_ai_file_change',
+  READ_AI_FILE_BYTES: 'read_ai_file_bytes',
   READ_CHAT_FILE: 'read_chat_file',
   READ_PROFILE_SOUL: 'read_profile_soul',
   REBIND_HOTKEYS: 'rebind_hotkeys',
@@ -109,8 +116,10 @@ export const DESKTOP_COMMANDS = {
   REPLACE_SELECTION_WITH_COMMAND: 'replace_selection_with_command',
   RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',
   RESTORE_PLUGIN_PACKAGE: 'restore_plugin_package',
+  RUN_AI_FILE_TOOL: 'run_ai_file_tool',
   SAVE_AI_PROFILE: 'save_ai_profile',
   SAVE_AI_PROJECT: 'save_ai_project',
+  SAVE_AI_UPLOAD: 'save_ai_upload',
   SAVE_CHAT: 'save_chat',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
   SAVE_NOTE: 'save_note',
@@ -204,6 +213,7 @@ export interface DesktopCommands {
     args: { path: string; manifest: PluginManifest; digest: string }
     result: InstalledPluginPackage
   }
+  list_ai_file_roots: { args: { profileId: string }; result: Array<AiFileRoot> }
   list_ai_profiles: { args: undefined; result: Array<AiProfile> }
   list_ai_projects: { args: undefined; result: Array<AiProject> }
   list_chats: {
@@ -276,6 +286,14 @@ export interface DesktopCommands {
   }
   pick_directory: { args: undefined; result: string | null }
   pick_script_file: { args: undefined; result: string | null }
+  preview_ai_file_change: {
+    args: { profileId: string; request: AiFileToolRequest }
+    result: AiFileChangePreview
+  }
+  read_ai_file_bytes: {
+    args: { profileId: string; path: string }
+    result: ArrayBuffer | number[]
+  }
   read_chat_file: { args: { path: string }; result: ArrayBuffer | number[] }
   read_profile_soul: { args: { id: string }; result: string }
   rebind_hotkeys: { args: undefined; result: void }
@@ -292,8 +310,13 @@ export interface DesktopCommands {
     result: void
   }
   restore_plugin_package: { args: { id: string }; result: void }
+  run_ai_file_tool: {
+    args: { profileId: string; request: AiFileToolRequest }
+    result: AiFileToolOutput
+  }
   save_ai_profile: { args: { profile: AiProfile }; result: void }
   save_ai_project: { args: { project: AiProject }; result: void }
+  save_ai_upload: { args: Uint8Array; result: string }
   save_chat: { args: { chat: Chat; profileId?: string | null }; result: void }
   save_editor_history: {
     args: { entry: EditorHistoryEntry }

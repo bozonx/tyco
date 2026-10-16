@@ -16,11 +16,20 @@ export interface ChatToolGroup {
   defaultAccess: ProjectAccessMode
 }
 
-/**
- * The groups the profile settings offer. Empty until the first group of tools
- * arrives, and the settings hide the block until then
- */
-export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = []
+/** The file tools; mirrors FILES_TOOL_GROUP in Rust, which checks it too */
+export const FILES_TOOL_GROUP_ID = 'files'
+
+/** The groups the profile settings offer */
+export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
+  {
+    id: FILES_TOOL_GROUP_ID,
+    labelKey: 'chatTools.files.group',
+    descriptionKey: 'chatTools.files.groupHint',
+    icon: 'mdi:folder-outline',
+    // the permissions of each project decide; `ask` asks before every call
+    defaultAccess: 'allow',
+  },
+]
 
 /** A group's settings in a profile; off when the profile never set them */
 export function toolGroupSettings(

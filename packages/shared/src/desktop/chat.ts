@@ -11,6 +11,11 @@ export interface ChatAttachment {
   source?: ChatAttachmentSource
   name?: string
   mediaType?: string
+  /**
+   * Where a file dropped into a profile chat is kept for the file tools, e.g.
+   * `workspace/uploads/report.pdf`
+   */
+  workspacePath?: string
 }
 
 /**

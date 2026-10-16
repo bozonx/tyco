@@ -7,6 +7,7 @@ const request = (approvalId: string) => ({
   toolCallId: `call-${approvalId}`,
   toolName: 'now',
   input: {},
+  approvalKey: 'now',
 })
 
 describe('chat-tool-approvals', () => {

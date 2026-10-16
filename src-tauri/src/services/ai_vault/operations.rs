@@ -6,7 +6,8 @@ use crate::errors::AppError;
 use crate::services::atomic_file::{create_private_dir, write_private};
 
 const PROFILE_FILE: &str = "profile.json";
-const PROJECT_FILE: &str = "project.json";
+/// What an internal project keeps its settings in, next to its files.
+pub const PROJECT_FILE: &str = "project.json";
 const SOUL_FILE: &str = "SOUL.md";
 const MAX_TEMPERATURE: f64 = 2.0;
 /// Mirrors MAX_TOOL_STEP_COUNT in shared.
@@ -204,6 +205,13 @@ pub fn profile_history_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppEr
     Ok(dir)
 }
 
+/// The folder of the profile's own files, the one its file tools always reach.
+pub fn profile_workspace_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    let dir = existing_profile_dir(vault_root, id)?.join("workspace");
+    create_private_dir(&dir)?;
+    Ok(dir)
+}
+
 /// The folder to show the user: the vault, or one profile in it.
 pub fn vault_dir_to_open(vault_root: &Path, profile_id: Option<&str>) -> Result<PathBuf, AppError> {
     ensure_vault_dirs(vault_root)?;
@@ -253,6 +261,19 @@ fn write_project_file(dir: &Path, project: &AiProject) -> Result<(), AppError> {
         &dir.join(PROJECT_FILE),
         &serde_json::to_string_pretty(project)?,
     )
+}
+
+/// Where the files of a project are: its own folder in the vault, or the
+/// folder an external project links to.
+pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathBuf, AppError> {
+    match project.target_path.as_deref().map(str::trim) {
+        Some(target) if project.is_external && !target.is_empty() => Ok(PathBuf::from(target)),
+        _ if project.is_external => Err(AppError::InvalidInput(format!(
+            "External project {} has no target path",
+            project.id
+        ))),
+        _ => project_dir(vault_root, &project.id),
+    }
 }
 
 pub fn list_projects(vault_root: &Path) -> Result<Vec<AiProject>, AppError> {

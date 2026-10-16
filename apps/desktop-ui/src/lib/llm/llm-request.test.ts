@@ -2,7 +2,9 @@ import type { ChatImage, ChatMessage } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { LlmError } from './llm-client'
+import { createChatToolPolicy } from '../chat-tools/chat-tool-policy'
 import { createLlmRequest } from './llm-request'
+import { createFakeLlmStream, textAnswer } from './testing'
 
 function setup() {
   const deps = {
@@ -143,5 +145,33 @@ describe('LLM request', () => {
     ).toBe('')
     expect(deps.logError).not.toHaveBeenCalled()
     expect(deps.notifyError).not.toHaveBeenCalled()
+  })
+
+  it('tells the model what its tools need it to know', async () => {
+    const { deps, request } = setup()
+    const fake = createFakeLlmStream([textAnswer('Done')])
+    deps.client.stream.mockImplementation((_task, prompt, options) =>
+      fake.stream(prompt, options)
+    )
+
+    await request.chatTurn([{ role: 'user', content: 'List my files' }], {
+      instructions: 'Be kind',
+      onUpdate: vi.fn(),
+      tools: {
+        tools: {
+          tools: {},
+          toolApproval: () => 'approved',
+          definitions: new Map(),
+          truncatedCallIds: new Set(),
+          approvalKey: (toolName) => toolName,
+          instructions: 'Roots: workspace/',
+        },
+        maxStepCount: 2,
+        policy: createChatToolPolicy({ canAsk: false }),
+        requestApproval: async () => 'deny',
+      },
+    })
+
+    expect(fake.calls[0].prompt.system).toBe('Be kind\n\nRoots: workspace/')
   })
 })

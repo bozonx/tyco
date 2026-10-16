@@ -25,6 +25,11 @@ function messageCharacters(message: ChatMessage): number {
   )
 }
 
+/** The characters the messages add to a request */
+export function chatContextCharacters(messages: readonly ChatMessage[]) {
+  return messages.reduce((sum, message) => sum + messageCharacters(message), 0)
+}
+
 const hasToolResults = (message: ChatMessage) =>
   message.parts?.some(
     (part) => part.type === 'tool-result' && part.output !== OMITTED_TOOL_RESULT

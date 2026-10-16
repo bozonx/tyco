@@ -1,6 +1,7 @@
 import type { ProfileToolSettings } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
+import { MIN_TOOL_OUTPUT_CHARACTERS } from './chat-tool-output'
 import { createChatToolPolicy } from './chat-tool-policy'
 import {
   createChatToolRegistry,
@@ -108,6 +109,78 @@ describe('chat-tool-registry', () => {
       true
     )
     expect(set.truncatedCallIds.has('c1')).toBe(true)
+  })
+
+  it('gives later calls less once the turn budget runs low', async () => {
+    const limits: number[] = []
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({
+            execute: async (_input, { outputLimitCharacters }) => {
+              limits.push(outputLimitCharacters)
+              return 'x'.repeat(4_000)
+            },
+          }),
+        ]),
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve({
+      ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
+      outputBudgetCharacters: 7_000,
+    }))!
+
+    await run(set, 'read_note', {})
+    const second = String(await run(set, 'read_note', {}))
+    await run(set, 'read_note', {})
+
+    expect(limits).toEqual([7_000, 3_000, MIN_TOOL_OUTPUT_CHARACTERS])
+    expect(second).toContain('[Output truncated')
+  })
+
+  it('remembers a session permission within the scope of the call', async () => {
+    const policy = createChatToolPolicy({ canAsk: true })
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({ approvalScope: (input) => (input as { root?: string }).root }),
+        ]),
+      ],
+      policy,
+    })
+    const set = (await registry.resolve(
+      context(settings({ notes: { isEnabled: true, access: 'ask' } }))
+    ))!
+    const decide = (input: unknown) =>
+      (set.toolApproval as (options: unknown) => unknown)({
+        toolCall: { toolName: 'read_note', input },
+      })
+
+    policy.answer(set.approvalKey('read_note', { root: 'a' }), 'allow-session')
+
+    expect(decide({ root: 'a' })).toBe('approved')
+    expect(decide({ root: 'b' })).toBe('user-approval')
+  })
+
+  it('collects the instructions of providers that offered a tool', async () => {
+    const registry = createChatToolRegistry({
+      providers: () => [
+        { ...provider([tool()]), instructions: () => 'Roots: workspace/' },
+        {
+          id: 'off',
+          tools: () => [tool({ name: 'other', groupId: 'off' })],
+          instructions: () => 'Never shown',
+        },
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+
+    const set = (await registry.resolve(
+      context(settings({ notes: { isEnabled: true, access: 'allow' } }))
+    ))!
+
+    expect(set.instructions).toBe('Roots: workspace/')
   })
 
   it('decides approval by the group or by the call', async () => {

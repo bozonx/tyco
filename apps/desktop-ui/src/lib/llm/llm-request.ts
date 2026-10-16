@@ -143,8 +143,16 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
     options: AiChatTurnOptions
   ): Promise<ChatToolLoopState> {
     const tools = options.tools ?? NO_TOOLS
+    // what the tools need the model to know, e.g. the folders they reach
+    const instructions = [options.instructions, tools.tools?.instructions]
+      .map((text) => text?.trim())
+      .filter(Boolean)
+      .join('\n\n')
     try {
-      const prompt = await preparePrompt(messages, options)
+      const prompt = await preparePrompt(messages, {
+        ...options,
+        instructions: instructions || options.instructions,
+      })
       if (!prompt) return { content: '', parts: [] }
       return await runChatToolLoop(
         {

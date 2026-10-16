@@ -122,6 +122,23 @@
       "error": "Falló"
     }
   },
+  "chatTools": {
+    "files": {
+      "group": "Archivos",
+      "groupHint": "Leer, buscar y cambiar archivos en la carpeta de trabajo del perfil y en los proyectos de abajo, según sus permisos. «Preguntar» pide confirmación antes de cada llamada.",
+      "listFiles": "Listar archivos",
+      "readFile": "Leer archivo",
+      "searchFiles": "Buscar en archivos",
+      "writeFile": "Escribir archivo",
+      "editFile": "Editar archivo",
+      "movePath": "Mover",
+      "deletePath": "Mover a la papelera",
+      "newFile": "archivo nuevo",
+      "changeLabel": "Cambios en {path}",
+      "unchangedLines": "… líneas sin cambios: {count}",
+      "hiddenLines": "… más líneas cambiadas: {count}"
+    }
+  },
   "commandLauncher": {
     "allCommands": "Todos los comandos",
     "commandMissing": "El comando {id} no está en la biblioteca.",

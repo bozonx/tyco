@@ -13,7 +13,7 @@ import {
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { toolOutputText } from './chat-tool-output'
 import type { ChatToolDecision, ChatToolPolicy } from './chat-tool-policy'
-import type { ChatToolSet } from './chat-tool-registry'
+import type { ChatToolPreview, ChatToolSet } from './chat-tool-registry'
 
 /** A call the model made that waits for the user */
 export interface ChatToolApprovalRequest {
@@ -21,6 +21,10 @@ export interface ChatToolApprovalRequest {
   toolCallId: string
   toolName: string
   input: unknown
+  /** What "allow in this session" of the call is remembered by */
+  approvalKey: string
+  /** What the call would change, when the tool can tell */
+  preview?: ChatToolPreview
 }
 
 /** Told to the model about a call the user refused */
@@ -204,6 +208,9 @@ export async function runChatToolLoop(
             toolCallId: event.toolCallId,
             toolName: event.toolName,
             input: event.input,
+            approvalKey:
+              input.tools?.approvalKey(event.toolName, event.input) ??
+              event.toolName,
           })
           break
         }
@@ -229,11 +236,11 @@ export async function runChatToolLoop(
     const responses: ModelMessage[] = []
     for (const request of requests) {
       // allowed for the session by an answer to an earlier call of this batch
-      const decision = deps.policy.isAllowedForSession(request.toolName)
+      const decision = deps.policy.isAllowedForSession(request.approvalKey)
         ? 'allow-once'
         : await deps.requestApproval(request, input.signal)
       if (input.signal.aborted) return state
-      const isApproved = deps.policy.answer(request.toolName, decision)
+      const isApproved = deps.policy.answer(request.approvalKey, decision)
       setCallState(request.toolCallId, isApproved ? 'pending' : 'denied')
       publish()
       responses.push(

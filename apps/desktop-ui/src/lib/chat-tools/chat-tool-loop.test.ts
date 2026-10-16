@@ -16,6 +16,7 @@ const toolSet: ChatToolSet = {
   toolApproval: () => 'approved',
   definitions: new Map(),
   truncatedCallIds: new Set(),
+  approvalKey: (toolName) => toolName,
 }
 
 const assistantCall: ModelMessage = {
@@ -111,7 +112,13 @@ describe('chat-tool-loop', () => {
     const result = await runChatToolLoop(deps, input)
 
     expect(requestApproval).toHaveBeenCalledWith(
-      { approvalId: 'a1', toolCallId: 'c1', toolName: 'now', input: {} },
+      {
+        approvalId: 'a1',
+        toolCallId: 'c1',
+        toolName: 'now',
+        input: {},
+        approvalKey: 'now',
+      },
       input.signal
     )
     expect(stateWhileAsking).toMatchObject({
@@ -189,27 +196,57 @@ describe('chat-tool-loop', () => {
     expect(policy.isAllowedForSession('now')).toBe(true)
   })
 
-  it('asks once for a batch of calls allowed for the session', async () => {
-    const batch: LlmStreamEvent[] = [
-      { type: 'model', provider: 'fake', model: 'fake-model' },
-      ...(['1', '2'] as const).flatMap((id): LlmStreamEvent[] => [
-        { type: 'tool-call', toolCallId: `c${id}`, toolName: 'now', input: {} },
-        {
-          type: 'approval-request',
-          approvalId: `a${id}`,
-          toolCallId: `c${id}`,
-          toolName: 'now',
-          input: {},
-        },
-      ]),
-      { type: 'step-finish', step: 0, finishReason: 'tool-calls' },
+  const batchOf = (inputs: unknown[]): LlmStreamEvent[] => [
+    { type: 'model', provider: 'fake', model: 'fake-model' },
+    ...inputs.flatMap((callInput, index): LlmStreamEvent[] => [
       {
-        type: 'finish',
-        finishReason: 'tool-calls',
-        text: '',
-        responseMessages: [],
+        type: 'tool-call',
+        toolCallId: `c${index + 1}`,
+        toolName: 'now',
+        input: callInput,
       },
-    ]
+      {
+        type: 'approval-request',
+        approvalId: `a${index + 1}`,
+        toolCallId: `c${index + 1}`,
+        toolName: 'now',
+        input: callInput,
+      },
+    ]),
+    { type: 'step-finish', step: 0, finishReason: 'tool-calls' },
+    {
+      type: 'finish',
+      finishReason: 'tool-calls',
+      text: '',
+      responseMessages: [],
+    },
+  ]
+
+  it('asks again for a call of another scope in the batch', async () => {
+    const { deps, input, requestApproval, policy } = setup(
+      [
+        batchOf([{ root: 'a' }, { root: 'b' }, { root: 'a' }]),
+        textAnswer('Ok'),
+      ],
+      'allow-session'
+    )
+
+    await runChatToolLoop(deps, {
+      ...input,
+      tools: {
+        ...toolSet,
+        approvalKey: (toolName, callInput) =>
+          `${toolName}:${(callInput as { root: string }).root}`,
+      },
+    })
+
+    expect(requestApproval).toHaveBeenCalledTimes(2)
+    expect(policy.isAllowedForSession('now:a')).toBe(true)
+    expect(policy.isAllowedForSession('now')).toBe(false)
+  })
+
+  it('asks once for a batch of calls allowed for the session', async () => {
+    const batch = batchOf([{}, {}])
     const { deps, input, fake, requestApproval } = setup(
       [batch, textAnswer('Noon')],
       'allow-session'

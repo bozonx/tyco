@@ -24,6 +24,7 @@ pub async fn run_blocking<T: Send + 'static>(
 }
 
 pub mod activation;
+pub mod ai_files;
 pub mod ai_vault;
 pub mod desktop_state;
 pub mod diagnostics;

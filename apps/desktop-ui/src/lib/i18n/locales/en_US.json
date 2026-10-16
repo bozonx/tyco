@@ -122,6 +122,23 @@
       "error": "Failed"
     }
   },
+  "chatTools": {
+    "files": {
+      "group": "Files",
+      "groupHint": "Read, search and change files in the profile's workspace and in the projects below, as their permissions allow. “Ask” asks before every call.",
+      "listFiles": "List files",
+      "readFile": "Read file",
+      "searchFiles": "Search files",
+      "writeFile": "Write file",
+      "editFile": "Edit file",
+      "movePath": "Move",
+      "deletePath": "Move to trash",
+      "newFile": "new file",
+      "changeLabel": "Changes to {path}",
+      "unchangedLines": "… unchanged lines: {count}",
+      "hiddenLines": "… more changed lines: {count}"
+    }
+  },
   "commandLauncher": {
     "allCommands": "All commands",
     "commandMissing": "The command {id} is not in the library.",

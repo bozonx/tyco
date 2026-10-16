@@ -33,11 +33,8 @@
             v-else
             :call="step.call"
             :result="step.result"
-            :is-awaiting-answer="
-              step.call.state === 'awaiting-approval' &&
-              Boolean(step.call.approvalId) &&
-              pendingApprovalIds?.has(step.call.approvalId!)
-            "
+            :is-awaiting-answer="Boolean(pendingApproval(step.call))"
+            :preview="pendingApproval(step.call)?.preview"
             @decide="emit('tool-approval', step.call.approvalId!, $event)"
           />
         </template>
@@ -88,6 +85,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
+import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
@@ -95,14 +93,14 @@ import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import ChatMarkdown from './ChatMarkdown.vue'
 import ChatToolCall from './ChatToolCall.vue'
-import type { ChatMessage } from '@tyco/shared'
+import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 
 const props = defineProps<{
   message: ChatMessage
   streaming?: boolean
   canRegenerate?: boolean
-  /** The approvals of tool calls that wait for the user's answer now */
-  pendingApprovalIds?: ReadonlySet<string>
+  /** The tool calls that wait for the user's answer now, by approval */
+  pendingApprovals?: ReadonlyMap<string, ChatToolApprovalRequest>
 }>()
 const emit = defineEmits<{
   (e: 'branch'): void
@@ -111,6 +109,14 @@ const emit = defineEmits<{
   (e: 'content-resized'): void
   (e: 'tool-approval', approvalId: string, decision: ChatToolDecision): void
 }>()
+
+/** The request a call of the answer waits on, if it waits now */
+const pendingApproval = (
+  call: Extract<ChatMessagePart, { type: 'tool-call' }>
+) =>
+  call.state === 'awaiting-approval' && call.approvalId
+    ? props.pendingApprovals?.get(call.approvalId)
+    : undefined
 
 /** The answer's text and tool calls in order; null for a plain answer */
 const steps = computed(() => messageSteps(props.message))

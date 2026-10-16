@@ -1,5 +1,5 @@
 import type { ChatAttachment, ChatImage } from '@tyco/shared'
-import { trimChatContext } from './chat-context'
+import { chatContextCharacters, trimChatContext } from './chat-context'
 import { imageBudgetCharacters, MAX_CHAT_IMAGES } from './chat-image-input'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
@@ -103,5 +103,16 @@ export function prepareGenerationRequest(
   const trimmedTurnCount =
     requestHistory.filter((item) => item.role === 'user').length -
     prevMessages.filter((item) => item.role === 'user').length
-  return { model, attachments, retrying, prevMessages, trimmedTurnCount }
+  // what the history left over is for the results of the turn's own steps
+  const toolOutputBudgetCharacters = model.reservesToolSteps
+    ? Math.max(0, historyBudget - chatContextCharacters(prevMessages))
+    : undefined
+  return {
+    model,
+    attachments,
+    retrying,
+    prevMessages,
+    trimmedTurnCount,
+    toolOutputBudgetCharacters,
+  }
 }

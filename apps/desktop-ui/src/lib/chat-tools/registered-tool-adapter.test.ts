@@ -65,7 +65,10 @@ describe('registered-tool-adapter', () => {
       inputSchema: tool.inputSchema,
     })
     expect(
-      await definition.execute({ text: 'hello' }, { signal, toolCallId: 'c1' })
+      await definition.execute(
+        { text: 'hello' },
+        { signal, toolCallId: 'c1', outputLimitCharacters: 20_000 }
+      )
     ).toBe('HELLO')
     expect(run).toHaveBeenCalledWith({
       input: { text: 'hello' },
@@ -96,10 +99,16 @@ describe('debug-chat-tools', () => {
     })
     expect(tool.name).toBe('get_current_time')
     expect(
-      await tool.execute({ timeZone: 'UTC' }, { signal, toolCallId: 'c1' })
+      await tool.execute(
+        { timeZone: 'UTC' },
+        { signal, toolCallId: 'c1', outputLimitCharacters: 20_000 }
+      )
     ).toMatch(/UTC|Coordinated Universal Time/)
     await expect(
-      tool.execute({ timeZone: 'Mars/Olympus' }, { signal, toolCallId: 'c2' })
+      tool.execute(
+        { timeZone: 'Mars/Olympus' },
+        { signal, toolCallId: 'c2', outputLimitCharacters: 20_000 }
+      )
     ).rejects.toThrow('Unknown time zone')
     expect(CURRENT_TIME_TOOL.inputSchema.type).toBe('object')
   })

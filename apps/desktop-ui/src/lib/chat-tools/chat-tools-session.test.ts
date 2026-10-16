@@ -1,21 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import type { ChatToolProvider } from './chat-tool-registry'
+import type { ChatToolDefinition, ChatToolProvider } from './chat-tool-registry'
 import { createChatToolsSession } from './chat-tools-session'
 import { createDebugChatToolProvider } from './debug-chat-tools'
 
-const notes: ChatToolProvider = {
-  id: 'notes',
-  tools: () => [
-    {
-      name: 'read_note',
-      groupId: 'notes',
-      description: 'Reads a note',
-      inputSchema: { type: 'object', properties: {} },
-      execute: async () => 'text',
-    },
-  ],
+const readNote: ChatToolDefinition = {
+  name: 'read_note',
+  groupId: 'notes',
+  description: 'Reads a note',
+  inputSchema: { type: 'object', properties: {} },
+  execute: async () => 'text',
 }
+
+const notes: ChatToolProvider = { id: 'notes', tools: () => [readNote] }
 
 const request = {
   profileId: 'writer',
@@ -78,12 +75,53 @@ describe('chat-tools-session', () => {
     expect(tools.policy.decide('read_note', 'ask')).toBe('user-approval')
 
     const waiting = tools.requestApproval(
-      { approvalId: 'a1', toolCallId: 'c1', toolName: 'read_note', input: {} },
+      {
+        approvalId: 'a1',
+        toolCallId: 'c1',
+        toolName: 'read_note',
+        input: {},
+        approvalKey: 'read_note',
+      },
       new AbortController().signal
     )
-    expect(session.pendingApprovals.value).toHaveLength(1)
+    await vi.waitFor(() =>
+      expect(session.pendingApprovals.value).toHaveLength(1)
+    )
     session.dispose()
     expect(await waiting).toBe('deny')
+  })
+
+  it('shows what a call would change with its approval request', async () => {
+    const preview = {
+      kind: 'file-change' as const,
+      path: 'workspace/a.md',
+      before: null,
+      after: 'New',
+    }
+    const session = createChatToolsSession({
+      providers: () => [
+        {
+          id: 'files',
+          tools: () => [{ ...readNote, preview: async () => preview }],
+        },
+      ],
+    })
+    const tools = (await session.toolsFor(request))!
+
+    void tools.requestApproval(
+      {
+        approvalId: 'a1',
+        toolCallId: 'c1',
+        toolName: 'read_note',
+        input: {},
+        approvalKey: 'read_note',
+      },
+      new AbortController().signal
+    )
+    await vi.waitFor(() =>
+      expect(session.pendingApprovals.value[0]?.preview).toEqual(preview)
+    )
+    session.dispose()
   })
 })
 

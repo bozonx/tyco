@@ -86,10 +86,7 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection
-      v-if="IS_AI_PROJECTS_ENABLED"
-      :title="t('settings.projectPermissions')"
-    >
+    <SettingsSection :title="t('settings.projectPermissions')">
       <div class="flex flex-col gap-3">
         <div class="text-sm text-base-content/70">
           {{ t('settings.projectsCount', { count: projects.length }) }}
@@ -146,7 +143,6 @@ import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { IS_AI_PROJECTS_ENABLED } from '../../lib/ai-profiles/ai-projects-feature'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'

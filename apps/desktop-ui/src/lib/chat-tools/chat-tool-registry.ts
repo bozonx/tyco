@@ -11,8 +11,12 @@ import type {
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
-import { normalizeToolOutput, TOOL_OUTPUT_CHARACTERS } from './chat-tool-output'
-import type { ChatToolPolicy } from './chat-tool-policy'
+import {
+  MIN_TOOL_OUTPUT_CHARACTERS,
+  normalizeToolOutput,
+  TOOL_OUTPUT_CHARACTERS,
+} from './chat-tool-output'
+import { chatToolApprovalKey, type ChatToolPolicy } from './chat-tool-policy'
 
 /** Names the AI providers accept for a tool */
 const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/
@@ -20,6 +24,21 @@ const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/
 export interface ChatToolExecuteOptions {
   signal: AbortSignal
   toolCallId: string
+  /**
+   * How much of the output the model is given: the tool's own limit, or less
+   * when the turn's steps have used up most of the context. A tool that pages
+   * its output fits a page into it
+   */
+  outputLimitCharacters: number
+}
+
+/** What the user is shown of a call before deciding on it */
+export interface ChatToolPreview {
+  kind: 'file-change'
+  path: string
+  /** Null for a file the call creates */
+  before: string | null
+  after: string
 }
 
 /** One tool the model may call */
@@ -42,6 +61,16 @@ export interface ChatToolDefinition {
    * read-only project, say. The group's access when absent or undefined
    */
   accessFor?(input: unknown): ProjectAccessMode | undefined
+  /**
+   * What "allow in this session" covers besides the tool, e.g. the project a
+   * path is in. The whole tool when absent
+   */
+  approvalScope?(input: unknown): string | undefined
+  /** Shown with the approval request; a failure only leaves it out */
+  preview?(
+    input: unknown,
+    signal: AbortSignal
+  ): Promise<ChatToolPreview | undefined>
   /** How much of the output the model is given */
   outputLimitCharacters?: number
   /**
@@ -57,6 +86,11 @@ export interface ChatToolContext {
   profileId: string | null
   modelId: string
   settings: ProfileToolSettings | undefined
+  /**
+   * How much the outputs of the turn's tools may add to the request in all;
+   * unlimited when absent
+   */
+  outputBudgetCharacters?: number
 }
 
 /**
@@ -68,6 +102,12 @@ export interface ChatToolProvider {
   tools(
     context: ChatToolContext
   ): ChatToolDefinition[] | Promise<ChatToolDefinition[]>
+  /**
+   * What the model is told besides the tools' descriptions, e.g. the folders it
+   * can reach. Asked after `tools`, with the same context, only when the
+   * provider offered a tool
+   */
+  instructions?(context: ChatToolContext): string | undefined
 }
 
 /** The tools of one request, ready for the model */
@@ -77,6 +117,10 @@ export interface ChatToolSet {
   definitions: ReadonlyMap<string, ChatToolDefinition>
   /** The calls whose output was cut, so the chat can mark them */
   truncatedCallIds: ReadonlySet<string>
+  /** What "allow in this session" of a call is remembered by */
+  approvalKey(toolName: string, input: unknown): string
+  /** Added to the system instructions; absent when no provider has any */
+  instructions?: string
 }
 
 export interface ChatToolRegistryDependencies {
@@ -101,7 +145,9 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
     context: ChatToolContext
   ): Promise<ChatToolSet | null> {
     const definitions = new Map<string, ChatToolDefinition>()
+    const instructions: string[] = []
     for (const provider of deps.providers()) {
+      let isOffered = false
       for (const tool of await provider.tools(context)) {
         const group = groupOf(context.settings, tool.groupId)
         if (!group?.isEnabled || group.access === 'deny') continue
@@ -110,11 +156,17 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           continue
         }
         definitions.set(tool.name, tool)
+        isOffered = true
       }
+      const text = isOffered ? provider.instructions?.(context)?.trim() : ''
+      if (text) instructions.push(text)
     }
     if (definitions.size === 0) return null
 
     const truncatedCallIds = new Set<string>()
+    // what the outputs of the turn may still add; each call takes from it
+    let remainingCharacters =
+      context.outputBudgetCharacters ?? Number.POSITIVE_INFINITY
     const tools: ToolSet = {}
     for (const tool of definitions.values()) {
       tools[tool.name] = dynamicTool({
@@ -123,12 +175,21 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           tool.inputSchema as Parameters<typeof jsonSchema>[0]
         ),
         execute: async (input, { abortSignal, toolCallId }) => {
+          const limitCharacters = Math.min(
+            tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS,
+            Math.max(MIN_TOOL_OUTPUT_CHARACTERS, remainingCharacters)
+          )
           const output = normalizeToolOutput(
             await tool.execute(input, {
               signal: abortSignal ?? new AbortController().signal,
               toolCallId,
+              outputLimitCharacters: limitCharacters,
             }),
-            tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS
+            limitCharacters
+          )
+          remainingCharacters = Math.max(
+            0,
+            remainingCharacters - output.text.length
           )
           if (output.isTruncated) truncatedCallIds.add(toolCallId)
           return output.text
@@ -136,18 +197,33 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
       })
     }
 
+    const approvalKey = (toolName: string, input: unknown) =>
+      chatToolApprovalKey(
+        toolName,
+        definitions.get(toolName)?.approvalScope?.(input)
+      )
+
     const toolApproval: ToolApproval = ({ toolCall }) => {
       const tool = definitions.get(toolCall.toolName)
       if (!tool) return 'denied'
       const groupAccess =
         groupOf(context.settings, tool.groupId)?.access ?? 'deny'
       return deps.policy.decide(
-        tool.name,
+        approvalKey(tool.name, toolCall.input),
         tool.accessFor?.(toolCall.input) ?? groupAccess
       )
     }
 
-    return { tools, toolApproval, definitions, truncatedCallIds }
+    return {
+      tools,
+      toolApproval,
+      definitions,
+      truncatedCallIds,
+      approvalKey,
+      ...(instructions.length
+        ? { instructions: instructions.join('\n\n') }
+        : {}),
+    }
   }
 
   return { resolve }

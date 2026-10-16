@@ -20,7 +20,7 @@
           :key="messageKey(message)"
           :message="message"
           :can-regenerate="!chatStore.isGenerating"
-          :pending-approval-ids="pendingApprovalIds"
+          :pending-approvals="pendingApprovals"
           :streaming="
             chatStore.isGenerating && index === chatStore.messages.length - 1
           "
@@ -184,9 +184,14 @@ const streamHasContent = computed(() => {
     (Boolean(last.content) || Boolean(last.parts?.length))
   )
 })
-const pendingApprovalIds = computed(
+const pendingApprovals = computed(
   () =>
-    new Set(chatStore.pendingToolApprovals.map((request) => request.approvalId))
+    new Map(
+      chatStore.pendingToolApprovals.map((request) => [
+        request.approvalId,
+        request,
+      ])
+    )
 )
 
 // messages have no ids of their own; the object is the identity

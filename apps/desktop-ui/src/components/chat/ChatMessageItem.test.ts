@@ -56,7 +56,18 @@ it('shows an answer with tool calls step by step and passes the decision on', as
         ],
       },
       streaming: true,
-      pendingApprovalIds: new Set(['a1']),
+      pendingApprovals: new Map([
+        [
+          'a1',
+          {
+            approvalId: 'a1',
+            toolCallId: 'c1',
+            toolName: 'get_current_time',
+            input: {},
+            approvalKey: 'get_current_time',
+          },
+        ],
+      ]),
     },
   })
 
@@ -72,7 +83,7 @@ it('shows an answer with tool calls step by step and passes the decision on', as
   call.vm.$emit('decide', 'allow-session')
   expect(wrapper.emitted('tool-approval')).toEqual([['a1', 'allow-session']])
 
-  await wrapper.setProps({ pendingApprovalIds: new Set() })
+  await wrapper.setProps({ pendingApprovals: new Map() })
   expect(
     wrapper.findComponent({ name: 'ChatToolCall' }).props('isAwaitingAnswer')
   ).toBe(false)

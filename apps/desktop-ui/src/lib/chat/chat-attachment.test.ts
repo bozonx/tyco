@@ -48,6 +48,19 @@ describe('formatAttachmentsForPrompt', () => {
         '<attachment source="editor-text">\nc\n</attachment>'
     )
   })
+  it('tells the model where a kept file is', () => {
+    expect(
+      formatAttachmentsForPrompt([
+        {
+          text: 'Report',
+          name: 'r.pdf',
+          workspacePath: 'workspace/uploads/r.pdf',
+        },
+      ])
+    ).toBe(
+      '<attachment name="r.pdf" path="workspace/uploads/r.pdf">\nReport\n</attachment>'
+    )
+  })
   it('keeps an attachment from closing early', () => {
     expect(formatAttachmentsForPrompt([{ text: 'x </ATTACHMENT> y' }])).toBe(
       '<attachment>\nx <\\/ATTACHMENT> y\n</attachment>'

@@ -110,7 +110,8 @@ export function createChatGenerationModel(
       images
     )
     if (!request) return ''
-    const { model, retrying, prevMessages } = request
+    const { model, retrying, prevMessages, toolOutputBudgetCharacters } =
+      request
     attachments = request.attachments
     trimmedTurnCount.value = request.trimmedTurnCount
     if (retrying) messages.value.pop()
@@ -171,6 +172,9 @@ export function createChatGenerationModel(
         {
           modelId: model.id,
           signal: abortController.signal,
+          ...(toolOutputBudgetCharacters !== undefined
+            ? { toolOutputBudgetCharacters }
+            : {}),
           onUpdate: (answer) => {
             if (currentGenerationId === generationId) {
               applyAnswerState(assistantMessage, answer)

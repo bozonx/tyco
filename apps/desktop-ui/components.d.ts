@@ -34,6 +34,7 @@ declare module 'vue' {
     ChatSidebar: typeof import('./src/components/chat/ChatSidebar.vue')['default']
     ChatToolApproval: typeof import('./src/components/chat/ChatToolApproval.vue')['default']
     ChatToolCall: typeof import('./src/components/chat/ChatToolCall.vue')['default']
+    ChatToolChange: typeof import('./src/components/chat/ChatToolChange.vue')['default']
     CommandCard: typeof import('./src/components/settings/CommandCard.vue')['default']
     CommandEditor: typeof import('./src/components/settings/CommandEditor.vue')['default']
     CommandLauncher: typeof import('./src/components/menu/CommandLauncher.vue')['default']

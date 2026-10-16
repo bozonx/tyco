@@ -20,6 +20,13 @@ pub struct ChatAttachment {
     pub name: Option<String>,
     #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
     pub media_type: Option<String>,
+    /// Where a file dropped into a profile chat is kept for the file tools.
+    #[serde(
+        default,
+        rename = "workspacePath",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub workspace_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -161,9 +161,7 @@
           />
 
           <SettingsProjectDetailTab
-            v-else-if="
-              IS_AI_PROJECTS_ENABLED && currentTab.startsWith('ai-project:')
-            "
+            v-else-if="currentTab.startsWith('ai-project:')"
             :key="currentTab"
             :project-id="currentTab.slice('ai-project:'.length)"
             @back="currentTab = 'ai-profiles:overview'"
@@ -182,7 +180,6 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
-import { IS_AI_PROJECTS_ENABLED } from '../lib/ai-profiles/ai-projects-feature'
 import { createCommand } from '../lib/commands/command-config'
 import { syncI18nLocale } from '../lib/i18n'
 import {
@@ -349,24 +346,20 @@ const primaryNavigationItems = computed(() =>
           icon: 'mdi:plus',
           nested: true,
         },
-        ...(IS_AI_PROJECTS_ENABLED
-          ? [
-              ...aiProfilesStore.projects.map((proj) => ({
-                id: `ai-project:${proj.id}`,
-                name: proj.name,
-                icon: proj.isExternal
-                  ? 'mdi:folder-open-outline'
-                  : 'mdi:folder-table-outline',
-                nested: true,
-              })),
-              {
-                id: 'ai-project:new',
-                name: `+ ${t('settings.newProject')}`,
-                icon: 'mdi:plus',
-                nested: true,
-              },
-            ]
-          : []),
+        ...aiProfilesStore.projects.map((proj) => ({
+          id: `ai-project:${proj.id}`,
+          name: proj.name,
+          icon: proj.isExternal
+            ? 'mdi:folder-open-outline'
+            : 'mdi:folder-table-outline',
+          nested: true,
+        })),
+        {
+          id: 'ai-project:new',
+          name: `+ ${t('settings.newProject')}`,
+          icon: 'mdi:plus',
+          nested: true,
+        },
       ]
     }
     if (item.id === 'plugins') {
@@ -417,12 +410,8 @@ const availableTabs = computed(
       'ai-profiles:overview',
       'ai-profile:new',
       ...aiProfilesStore.profiles.map((p) => `ai-profile:${p.id}`),
-      ...(IS_AI_PROJECTS_ENABLED
-        ? [
-            'ai-project:new',
-            ...aiProfilesStore.projects.map((p) => `ai-project:${p.id}`),
-          ]
-        : []),
+      'ai-project:new',
+      ...aiProfilesStore.projects.map((p) => `ai-project:${p.id}`),
     ])
 )
 /** A profile tab opened before the vault is read is not known yet */

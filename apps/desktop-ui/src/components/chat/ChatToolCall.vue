@@ -31,8 +31,14 @@
       />
     </button>
     <div v-if="isExpanded" class="tool-call-details selectable">
-      <div class="tool-call-label">{{ t('chat.toolArguments') }}</div>
-      <pre>{{ argumentsText }}</pre>
+      <ChatToolChange
+        v-if="isAwaitingAnswer && preview?.kind === 'file-change'"
+        :change="preview"
+      />
+      <template v-else>
+        <div class="tool-call-label">{{ t('chat.toolArguments') }}</div>
+        <pre>{{ argumentsText }}</pre>
+      </template>
       <template v-if="result">
         <div class="tool-call-label">
           {{ t('chat.toolResult') }}
@@ -56,8 +62,10 @@ import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import type { ChatToolPreview } from '../../lib/chat-tools/chat-tool-registry'
 import Icon from '../common/AppIcon.vue'
 import ChatToolApproval from './ChatToolApproval.vue'
+import ChatToolChange from './ChatToolChange.vue'
 import type { ChatMessagePart } from '@tyco/shared'
 
 /** How long the arguments are in the collapsed card */
@@ -68,6 +76,8 @@ const props = defineProps<{
   result?: Extract<ChatMessagePart, { type: 'tool-result' }>
   /** The call waits for the user's answer right now */
   isAwaitingAnswer?: boolean
+  /** What the waiting call would change, shown instead of its arguments */
+  preview?: ChatToolPreview
 }>()
 const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
 const { t } = useI18n()

@@ -25,6 +25,8 @@ export interface ChatToolsRequest {
   canUseTools: boolean
   /** The profile's settings; "Ask AI" has none, and so no tools */
   settings: ProfileToolSettings | undefined
+  /** How much the outputs of the turn's tools may add to the request */
+  outputBudgetCharacters?: number
 }
 
 /**
@@ -52,13 +54,24 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
       profileId: request.profileId,
       modelId: request.modelId,
       settings,
+      outputBudgetCharacters: request.outputBudgetCharacters,
     })
     if (!tools) return undefined
     return {
       tools,
       maxStepCount: settings?.maxStepCount ?? DEFAULT_TOOL_STEP_COUNT,
       policy,
-      requestApproval: approvals.request,
+      // the user decides on what the call would change, when the tool can tell
+      requestApproval: async (approval, signal) => {
+        const preview = await tools.definitions
+          .get(approval.toolName)
+          ?.preview?.(approval.input, signal)
+          .catch(() => undefined)
+        return approvals.request(
+          preview ? { ...approval, preview } : approval,
+          signal
+        )
+      },
     }
   }
 

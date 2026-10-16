@@ -25,6 +25,11 @@ export interface ChatModelDependencies {
       /** The answer so far: its text and, with tools, its steps */
       onUpdate: (state: ChatToolLoopState) => void
       signal?: AbortSignal
+      /**
+       * What the outputs of the turn's tools may add to the request: the part
+       * of the context the history left; absent for a turn without tools
+       */
+      toolOutputBudgetCharacters?: number
     }
   ) => Promise<ChatToolLoopState>
   /** A short title for the conversation; empty when none came out */

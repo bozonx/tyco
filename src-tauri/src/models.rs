@@ -42,6 +42,7 @@ mod tests {
             source: None,
             name: None,
             media_type: None,
+            workspace_path: None,
         };
 
         assert_eq!(
@@ -68,6 +69,7 @@ mod desktop_contract_tests {
                 source: Some(ChatAttachmentSource::Selection),
                 name: Some("selection.txt".into()),
                 media_type: Some("text/plain".into()),
+                workspace_path: None,
             }),
             question: Some("Explain this text".into()),
             auto_send: true,

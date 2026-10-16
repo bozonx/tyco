@@ -122,6 +122,23 @@
       "error": "Başarısız"
     }
   },
+  "chatTools": {
+    "files": {
+      "group": "Dosyalar",
+      "groupHint": "Profilin çalışma klasöründeki ve aşağıdaki projelerdeki dosyaları izinlerin elverdiği ölçüde okuma, arama ve değiştirme. “Sor” her çağrıdan önce onay ister.",
+      "listFiles": "Dosyaları listele",
+      "readFile": "Dosya oku",
+      "searchFiles": "Dosyalarda ara",
+      "writeFile": "Dosya yaz",
+      "editFile": "Dosya düzenle",
+      "movePath": "Taşı",
+      "deletePath": "Çöp kutusuna taşı",
+      "newFile": "yeni dosya",
+      "changeLabel": "{path} değişiklikleri",
+      "unchangedLines": "… değişmeyen satır: {count}",
+      "hiddenLines": "… daha fazla değişen satır: {count}"
+    }
+  },
   "commandLauncher": {
     "allCommands": "Tüm komutlar",
     "commandMissing": "{id} komutu kitaplıkta yok.",

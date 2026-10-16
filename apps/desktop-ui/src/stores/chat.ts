@@ -14,7 +14,11 @@ import { createChatHistoryModel } from '../lib/history/chat-history'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
-import { APP_CONFIG, type ProfileToolSettings } from '@tyco/shared'
+import {
+  APP_CONFIG,
+  DESKTOP_COMMANDS,
+  type ProfileToolSettings,
+} from '@tyco/shared'
 import { LlmInstructionKind } from '../types'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
@@ -30,7 +34,11 @@ import {
   type ChatLlmOption,
 } from '../lib/chat/chat-llm-selection'
 import { createChatModel } from '../lib/chat/chat-model'
+import { FILES_TOOL_GROUP_ID } from '../lib/chat-tools/chat-tool-groups'
 import { createChatToolsSession } from '../lib/chat-tools/chat-tools-session'
+import { readDocumentText } from '../lib/chat-tools/file-document-text'
+import { createFileToolProvider } from '../lib/chat-tools/file-tools'
+import { withWorkspaceUploads } from '../lib/chat/chat-workspace-uploads'
 import {
   createDebugChatToolProvider,
   isDebugChatToolsEnabled,
@@ -159,16 +167,47 @@ function createChatStoreSetup(profileId: string | null) {
       })
     }
 
+    const warnTools = (message: string) => clientLogger.warn(message, 'chat')
     const debugToolProvider = createDebugChatToolProvider()
+    const fileToolProvider = createFileToolProvider({
+      listRoots: (id) =>
+        invokeDesktop(DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS, { profileId: id }),
+      run: (id, request) =>
+        invokeDesktop(DESKTOP_COMMANDS.RUN_AI_FILE_TOOL, {
+          profileId: id,
+          request,
+        }),
+      preview: (id, request) =>
+        invokeDesktop(DESKTOP_COMMANDS.PREVIEW_AI_FILE_CHANGE, {
+          profileId: id,
+          request,
+        }),
+      readDocumentText: async (id, path, mediaType) =>
+        readDocumentText(
+          new Uint8Array(
+            await invokeDesktop(DESKTOP_COMMANDS.READ_AI_FILE_BYTES, {
+              profileId: id,
+              path,
+            })
+          ),
+          path,
+          mediaType
+        ),
+      warn: warnTools,
+    })
     const chatTools = createChatToolsSession({
-      providers: () => (isDebugChatToolsEnabled() ? [debugToolProvider] : []),
+      providers: () =>
+        isDebugChatToolsEnabled()
+          ? [fileToolProvider, debugToolProvider]
+          : [fileToolProvider],
       isDebugEnabled: () => isDebugChatToolsEnabled(),
-      warn: (message) => clientLogger.warn(message, 'chat'),
+      warn: warnTools,
     })
     onScopeDispose(chatTools.dispose)
     /** The tools of a turn on the model picked in the chat */
     const turnTools = async (
       modelId: string,
+      outputBudgetCharacters: number | undefined,
       profileTools?: ProfileToolSettings
     ) => {
       const canUseTools = selectedModel.value?.canUseTools ?? false
@@ -179,23 +218,33 @@ function createChatStoreSetup(profileId: string | null) {
           modelId,
           canUseTools,
           settings: profileTools,
+          outputBudgetCharacters,
         }),
       }
     }
 
     const model = createChatModel({
-      sendChatMessage: async (message, prevMessages, instructions, options) => {
+      sendChatMessage: async (
+        message,
+        prevMessages,
+        instructions,
+        { toolOutputBudgetCharacters, ...options }
+      ) => {
         if (!profileId) {
           return sendChatMessage(message, prevMessages, instructions, {
             ...options,
-            ...(await turnTools(options.modelId)),
+            ...(await turnTools(options.modelId, toolOutputBudgetCharacters)),
             rules: getChatRules(),
           })
         }
         const stored = await refreshProfile()
         return sendChatMessage(message, prevMessages, soul.value, {
           ...options,
-          ...(await turnTools(options.modelId, stored?.tools)),
+          ...(await turnTools(
+            options.modelId,
+            toolOutputBudgetCharacters,
+            stored?.tools
+          )),
           temperature: stored?.temperature,
           maxOutputTokens: stored?.maxOutputTokens,
           loadImage: (id) => getChatImage(id, profileId),
@@ -308,11 +357,33 @@ function createChatStoreSetup(profileId: string | null) {
       getMessages: () => model.messages.value,
       getSavingImages: () => model.savingImages.value,
       isGenerating: () => model.isGenerating.value,
-      prepare: createChatFileReader({
-        quality: () =>
-          ipcStore.desktopState.userConfig?.chat.imageQuality || 'balanced',
-        storeImage: storeChatImage,
-      }),
+      prepare: withWorkspaceUploads(
+        createChatFileReader({
+          quality: () =>
+            ipcStore.desktopState.userConfig?.chat.imageQuality || 'balanced',
+          storeImage: storeChatImage,
+        }),
+        {
+          // only where the file tools could reach the kept file
+          shouldKeep: () => {
+            const group = profile.value?.tools?.groups[FILES_TOOL_GROUP_ID]
+            return Boolean(group?.isEnabled && group.access !== 'deny')
+          },
+          saveUpload: async (file) =>
+            invokeDesktop(
+              DESKTOP_COMMANDS.SAVE_AI_UPLOAD,
+              new Uint8Array(await file.arrayBuffer()),
+              {
+                headers: {
+                  'x-ai-upload-profile': encodeURIComponent(profileId ?? ''),
+                  // headers are ASCII; names are not
+                  'x-ai-upload-name': encodeURIComponent(file.name),
+                },
+              }
+            ),
+          warn: warnTools,
+        }
+      ),
       addAttachment: model.addAttachment,
       readDroppedFile: readDroppedChatFile,
       syncImages: syncChatImages,

@@ -45,6 +45,10 @@ const aliases = {
   PluginManifest: 'PluginManifest',
   AiProfile: 'AiProfile',
   AiProject: 'AiProject',
+  FileRoot: 'AiFileRoot',
+  FileToolRequest: 'AiFileToolRequest',
+  FileToolOutput: 'AiFileToolOutput',
+  FileChangePreview: 'AiFileChangePreview',
 }
 
 /** Split only at top-level commas, including nested Rust generic arguments. */

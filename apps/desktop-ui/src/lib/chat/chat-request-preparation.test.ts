@@ -39,4 +39,10 @@ describe('chat-request-preparation', () => {
     expect(prepare(true).prevMessages).toHaveLength(6)
     expect(prepare(true).trimmedTurnCount).toBe(1)
   })
+
+  it('gives the steps what the history left of the budget', () => {
+    expect(prepare(false).toolOutputBudgetCharacters).toBeUndefined()
+    // 80 for the history, 60 of it taken by three turns
+    expect(prepare(true).toolOutputBudgetCharacters).toBe(20)
+  })
 })

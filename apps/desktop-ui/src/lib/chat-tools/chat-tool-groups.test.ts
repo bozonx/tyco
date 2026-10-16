@@ -11,8 +11,8 @@ import {
 const web = { id: 'web', defaultAccess: 'allow' as const }
 
 describe('chat-tool-groups', () => {
-  it('offers no group yet', () => {
-    expect(CHAT_TOOL_GROUPS).toEqual([])
+  it('offers the file tools', () => {
+    expect(CHAT_TOOL_GROUPS.map((group) => group.id)).toEqual(['files'])
   })
 
   it('reads a group as off until the profile sets it', () => {

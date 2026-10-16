@@ -74,11 +74,13 @@ export function formatAttachmentsForPrompt(
   attachments: ChatAttachment[] = []
 ): string {
   return attachments
-    .map(({ text, source, name, mediaType }) => {
+    .map(({ text, source, name, mediaType, workspacePath }) => {
       const attribute =
         (source ? ` source="${escapeAttribute(source)}"` : '') +
         (name ? ` name="${escapeAttribute(name)}"` : '') +
-        (mediaType ? ` media-type="${escapeAttribute(mediaType)}"` : '')
+        (mediaType ? ` media-type="${escapeAttribute(mediaType)}"` : '') +
+        // the file tools reach the file itself by this path
+        (workspacePath ? ` path="${escapeAttribute(workspacePath)}"` : '')
       const body = text.replace(/<(\/attachment)/gi, '<\\$1')
       return `<attachment${attribute}>\n${body}\n</attachment>`
     })

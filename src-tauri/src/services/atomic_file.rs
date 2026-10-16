@@ -18,6 +18,28 @@ pub fn write_private(path: &Path, raw: &str) -> Result<(), AppError> {
 
 /// Atomically writes private binary data.
 pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
+    write_atomic(path, raw, 0o600, None)
+}
+
+/// Atomically writes a file of the user's own, e.g. one in a project: an
+/// existing file keeps its permissions, a new one gets the usual ones.
+pub fn write_user_file(path: &Path, raw: &[u8]) -> Result<(), AppError> {
+    let permissions = match fs::metadata(path) {
+        Ok(meta) => Some(meta.permissions()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    write_atomic(path, raw, 0o666, permissions)
+}
+
+/// `mode` applies to a new temporary file on Unix, before the umask;
+/// `permissions`, when given, replace it before the rename.
+fn write_atomic(
+    path: &Path,
+    raw: &[u8],
+    #[cfg_attr(not(unix), allow(unused_variables))] mode: u32,
+    permissions: Option<fs::Permissions>,
+) -> Result<(), AppError> {
     static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
     let (temporary, mut file) = loop {
         let mut name = path.file_name().unwrap_or_default().to_os_string();
@@ -32,7 +54,7 @@ pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
+            options.mode(mode);
         }
         match options.open(&temporary_path) {
             Ok(file) => break (TemporaryFile(temporary_path), file),
@@ -41,6 +63,9 @@ pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
         }
     };
     file.write_all(raw)?;
+    if let Some(permissions) = permissions {
+        file.set_permissions(permissions)?;
+    }
     file.sync_all()?;
     drop(file);
     fs::rename(&temporary.0, path)?;
@@ -199,6 +224,28 @@ mod tests {
             use std::os::unix::fs::PermissionsExt;
             let mode = fs::metadata(&path).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o600);
+        }
+    }
+
+    #[test]
+    fn a_user_file_keeps_its_permissions() {
+        let dir = TestDir::new("user_file");
+        let path = dir.join("notes.md");
+        fs::write(&path, "old").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).unwrap();
+        }
+
+        write_user_file(&path, b"new").unwrap();
+
+        assert_eq!(fs::read_to_string(&path).unwrap(), "new");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = fs::metadata(&path).unwrap().permissions().mode();
+            assert_eq!(mode & 0o777, 0o640);
         }
     }
 

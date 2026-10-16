@@ -11,3 +11,4 @@ export * from './desktop-transport'
 
 export * from './config-schema'
 export * from './ai-profiles'
+export * from './ai-files'

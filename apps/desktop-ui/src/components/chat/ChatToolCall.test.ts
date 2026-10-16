@@ -86,4 +86,31 @@ describe('ChatToolCall', () => {
     await wrapper.setProps({ isAwaitingAnswer: false })
     expect(wrapper.find('.tool-approval').exists()).toBe(false)
   })
+
+  it('shows what a waiting write would change instead of its arguments', () => {
+    const wrapper = mount(ChatToolCall, {
+      props: {
+        call: {
+          ...call,
+          toolName: 'edit_file',
+          state: 'awaiting-approval',
+          approvalId: 'a1',
+        },
+        isAwaitingAnswer: true,
+        preview: {
+          kind: 'file-change',
+          path: 'workspace/todo.md',
+          before: 'Buy milk\n',
+          after: 'Buy bread\n',
+        },
+      },
+    })
+
+    const lines = wrapper.findAll('.tool-change-lines .line')
+    expect(lines.map((line) => line.text())).toEqual([
+      '− Buy milk',
+      '+ Buy bread',
+    ])
+    expect(wrapper.text()).not.toContain('chat.toolArguments')
+  })
 })
