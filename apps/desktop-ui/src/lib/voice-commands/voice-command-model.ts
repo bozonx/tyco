@@ -4,7 +4,11 @@ import { computed, ref, shallowRef } from 'vue'
 import type { CommandConfig } from '@tyco/shared'
 import type { InvocationOutcome } from '../invocation/invocation-types'
 import type { DictationHandlers } from '../stt/dictation-controller'
-import { liveTranscriptText } from '../stt/live-transcript'
+import {
+  createLiveTranscriptState,
+  liveTranscriptText,
+  type LiveTranscriptState,
+} from '../stt/live-transcript'
 import type { ToolLookup } from '../tools/tool-types'
 import {
   compileVoiceRoutes,
@@ -28,13 +32,19 @@ export interface VoiceCommandDependencies {
   ) => Promise<InvocationOutcome>
 }
 
+/** Whether a finished recording runs its command at once or waits for review */
+export type VoiceCommandFinishIntent = 'run' | 'review'
+
 /** One activation owns recognition and execution; partial text can never run. */
 export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const stage = ref<'idle' | 'recording' | 'finishing' | 'review' | 'running'>(
     'idle'
   )
-  const isAutoRunEnabled = ref(true)
   const transcript = ref('')
+  /** What the recognizer has heard so far, split for the live display */
+  const liveTranscript = shallowRef<LiveTranscriptState>(
+    createLiveTranscriptState()
+  )
   const inputText = ref('')
   const selected = shallowRef<VoiceCandidate>()
   const error = ref('')
@@ -81,10 +91,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     inputText.value = candidate.text
     error.value = ''
   }
+  // the field holds the text the user sees, possibly edited: it is kept
   const chooseCommand = (commandId: string) =>
     choose({
       commandId,
-      text: transcript.value,
+      text: inputText.value,
       parameters: {},
       consumedWordCount: 0,
       textOffset: 0,
@@ -121,7 +132,14 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     }
   }
 
-  const finish = async () => {
+  /** Swaps the chosen command for a sibling, such as another language */
+  const switchCommand = (commandId: string) => {
+    if (stage.value !== 'review' || !selected.value) return
+    selected.value = { ...selected.value, commandId }
+    error.value = ''
+  }
+
+  const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
     stage.value = 'finishing'
     const current = generation
@@ -132,11 +150,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       const finalText = await deps.finishDictation()
       if (current !== generation || disposed) return
       if (!finalText.trim()) {
-        error.value = 'voiceCommands.none'
+        error.value = 'voiceCommands.nothingHeard'
         stage.value = 'review'
         return
       }
       transcript.value = finalText
+      liveTranscript.value = { committed: finalText, draft: '' }
+      inputText.value = finalText
       stage.value = 'review'
       const result = resolveVoice(
         compileVoiceRoutes(commands.value, deps.tools),
@@ -144,7 +164,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       )
       if (result.kind === 'match') {
         choose(result.candidates[0]!)
-        if (isAutoRunEnabled.value && canRun.value) await run()
+        if (intent === 'run' && canRun.value) await run()
       }
     } catch (cause) {
       if (current !== generation || disposed) return
@@ -166,6 +186,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
+    liveTranscript.value = createLiveTranscriptState()
     const pending = (async () => {
       await stopping
       if (current !== generation || disposed) return
@@ -175,8 +196,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
             current === generation &&
             !disposed &&
             stage.value === 'recording'
-          )
+          ) {
+            liveTranscript.value = state
             transcript.value = liveTranscriptText(state)
+          }
         },
         onError: (cause) => {
           if (current !== generation || disposed) return
@@ -217,8 +240,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   }
   return {
     stage,
-    isAutoRunEnabled,
     transcript,
+    liveTranscript,
     inputText,
     selected,
     error,
@@ -237,15 +260,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     canRun,
     choose,
     chooseCommand,
+    switchCommand,
     run,
     start,
     finish,
-    editTranscript(value: string) {
-      if (stage.value !== 'review') return
-      transcript.value = value
-      selected.value = undefined
-      error.value = ''
-    },
     cancel,
     dispose() {
       disposed = true

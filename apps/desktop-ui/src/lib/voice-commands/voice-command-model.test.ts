@@ -6,7 +6,7 @@ import {
   type VoiceCommandDependencies,
 } from './voice-command-model'
 
-function setup(isAutoRunEnabled = false) {
+function setup() {
   const commands = [
     {
       ...createCommand('script', 'note'),
@@ -28,7 +28,6 @@ function setup(isAutoRunEnabled = false) {
     run: vi.fn(async () => ({ success: true })),
   }
   const model = createVoiceCommandModel(deps)
-  if (!isAutoRunEnabled) model.isAutoRunEnabled.value = false
   return {
     commands,
     deps,
@@ -38,15 +37,19 @@ function setup(isAutoRunEnabled = false) {
 }
 
 describe('voice command session', () => {
-  it('previews revised partials, waits for final STT and requires confirmation when automatic execution is disabled', async () => {
+  it('previews revised partials, waits for final STT and requires confirmation when finished for review', async () => {
     const { model, deps, partial } = setup()
     await model.start()
     partial('save note Early')
     expect(model.resolution.value.kind).toBe('match')
+    expect(model.liveTranscript.value).toEqual({
+      committed: '',
+      draft: 'save note Early',
+    })
     partial('unrelated')
     expect(model.resolution.value.kind).toBe('none')
     expect(deps.run).not.toHaveBeenCalled()
-    await model.finish()
+    await model.finish('review')
     expect(model.inputText.value).toBe('Hello!')
     expect(deps.run).not.toHaveBeenCalled()
     await model.run()
@@ -56,9 +59,8 @@ describe('voice command session', () => {
       expect.any(AbortSignal)
     )
   })
-  it('runs only exact final valid input when the user allows automatic execution', async () => {
+  it('runs only exact final valid input when finished to run', async () => {
     const { model, deps, partial } = setup()
-    model.isAutoRunEnabled.value = true
     await model.start()
     partial('save note Early')
     expect(deps.run).not.toHaveBeenCalled()
@@ -67,7 +69,6 @@ describe('voice command session', () => {
   })
   it('does not run after cancellation or when an old final response arrives', async () => {
     const { model, deps } = setup()
-    model.isAutoRunEnabled.value = true
     let resolve!: (text: string) => void
     deps.finishDictation = vi.fn(
       () =>
@@ -85,7 +86,7 @@ describe('voice command session', () => {
     expect(model.stage.value).toBe('idle')
   })
   it('requires choosing an ambiguous candidate and preserves the entire manual input', async () => {
-    const { model, deps, commands } = setup(true)
+    const { model, deps, commands } = setup()
     commands.push({ ...commands[0]!, id: 'second' })
     await model.start()
     await model.finish()
@@ -96,7 +97,6 @@ describe('voice command session', () => {
   })
   it('rejects missing or extra input without substituting a selection', async () => {
     const { model, deps, commands } = setup()
-    model.isAutoRunEnabled.value = true
     deps.finishDictation = vi.fn(async () => 'save note')
     await model.start()
     await model.finish()
@@ -111,7 +111,7 @@ describe('voice command session', () => {
   it('rechecks permissions on submission and retains input on failure', async () => {
     const { model, deps, commands } = setup()
     await model.start()
-    await model.finish()
+    await model.finish('review')
     commands[0]!.isVoiceEnabled = false
     await model.run()
     expect(deps.run).not.toHaveBeenCalled()
@@ -132,7 +132,7 @@ it('clears the previous execution error when retrying successfully', async () =>
     .mockResolvedValueOnce({ success: false, message: 'Failed' })
     .mockResolvedValueOnce({ success: true })
   await model.start()
-  await model.finish()
+  await model.finish('review')
   await model.run()
   expect(model.error.value).toBe('Failed')
   await model.run()
@@ -158,7 +158,7 @@ it('preserves text on STT start and finish failures and allows a fresh recording
   expect(model.stage.value).toBe('review')
   expect(model.transcript.value).toBe('save note Keep this')
   await model.start()
-  await model.finish()
+  await model.finish('review')
   expect(model.inputText.value).toBe('Recovered')
   expect(deps.run).not.toHaveBeenCalled()
 })
@@ -221,7 +221,6 @@ it('waits for cleanup after recognition failure before starting another recordin
 
 it('does not automatically execute a manually recovered parameter', async () => {
   const { model, deps, commands } = setup()
-  model.isAutoRunEnabled.value = true
   deps.finishDictation = vi.fn(async () => 'unknown input')
   await model.start()
   await model.finish()
@@ -239,8 +238,7 @@ it('does not automatically execute a manually recovered parameter', async () => 
 })
 
 it('automatically runs the final exact command by default regardless of the legacy confirmation setting', async () => {
-  const { model, deps, partial } = setup(true)
-  expect(model.isAutoRunEnabled.value).toBe(true)
+  const { model, deps, partial } = setup()
   await model.start()
   partial('save note Draft')
   expect(deps.run).not.toHaveBeenCalled()
@@ -252,15 +250,44 @@ it('automatically runs the final exact command by default regardless of the lega
   )
 })
 
-it('waits for manual execution when the checkbox is disabled even for a legacy automatic command', async () => {
+it('waits for manual execution when finished for review even for a legacy automatic command', async () => {
   const { model, deps, commands } = setup()
   commands[0]!.voiceConfirmation = 'auto'
   await model.start()
-  await model.finish()
+  await model.finish('review')
   expect(deps.run).not.toHaveBeenCalled()
   await model.run()
   expect(deps.run).toHaveBeenCalledOnce()
-  await model.cancel()
+})
+
+it('keeps the whole unmatched transcript in the field for a manual choice', async () => {
+  const { model, deps } = setup()
+  deps.finishDictation = vi.fn(async () => 'unknown input')
   await model.start()
-  expect(model.isAutoRunEnabled.value).toBe(false)
+  await model.finish()
+  expect(model.inputText.value).toBe('unknown input')
+  model.inputText.value = 'edited input'
+  model.chooseCommand('note')
+  expect(model.inputText.value).toBe('edited input')
+  expect(deps.run).not.toHaveBeenCalled()
+})
+
+it('reports an empty recording without choosing a command', async () => {
+  const { model, deps } = setup()
+  deps.finishDictation = vi.fn(async () => '  ')
+  await model.start()
+  await model.finish()
+  expect(model.error.value).toBe('voiceCommands.nothingHeard')
+  expect(model.selected.value).toBeUndefined()
+})
+
+it('switches the chosen command without losing the edited text', async () => {
+  const { model, commands } = setup()
+  commands.push({ ...commands[0]!, id: 'sibling', phrases: ['other'] })
+  await model.start()
+  await model.finish('review')
+  model.inputText.value = 'Edited'
+  model.switchCommand('sibling')
+  expect(model.command.value?.id).toBe('sibling')
+  expect(model.inputText.value).toBe('Edited')
 })

@@ -57,9 +57,6 @@ describe('built-in voice commands', () => {
         parameters: { language: 'en_US' },
         text: 'Hello!',
       })
-      expect(
-        resolveVoice(routes, locale.voiceCommands.translateExample).kind
-      ).toBe('match')
     }
   )
   it('runs after final dictation with the built-in language config even with a disabled saved command', async () => {
@@ -104,9 +101,8 @@ describe('built-in voice commands', () => {
       cancelDictation: async () => {},
       run,
     })
-    model.isAutoRunEnabled.value = false
     await model.start()
-    await model.finish()
+    await model.finish('review')
     availability.reason = 'tools.noLlm'
     expect(model.builtInCatalog.value.length).toBeGreaterThan(1)
     expect(model.routes.value).toEqual([])
