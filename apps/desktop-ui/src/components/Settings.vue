@@ -161,7 +161,9 @@
           />
 
           <SettingsProjectDetailTab
-            v-else-if="currentTab.startsWith('ai-project:')"
+            v-else-if="
+              IS_AI_PROJECTS_ENABLED && currentTab.startsWith('ai-project:')
+            "
             :key="currentTab"
             :project-id="currentTab.slice('ai-project:'.length)"
             @back="currentTab = 'ai-profiles:overview'"
@@ -180,6 +182,7 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
+import { IS_AI_PROJECTS_ENABLED } from '../lib/ai-profiles/ai-projects-feature'
 import { createCommand } from '../lib/commands/command-config'
 import { syncI18nLocale } from '../lib/i18n'
 import {
@@ -334,10 +337,10 @@ const primaryNavigationItems = computed(() =>
           icon: 'mdi:folder-outline',
           nested: true,
         },
-        ...(aiProfilesStore.profiles ?? []).map((p) => ({
+        ...aiProfilesStore.profiles.map((p) => ({
           id: `ai-profile:${p.id}`,
           name: p.name,
-          icon: p.icon || 'mdi:account-outline',
+          icon: 'mdi:account-outline',
           nested: true,
         })),
         {
@@ -346,20 +349,24 @@ const primaryNavigationItems = computed(() =>
           icon: 'mdi:plus',
           nested: true,
         },
-        ...(aiProfilesStore.projects ?? []).map((proj) => ({
-          id: `ai-project:${proj.id}`,
-          name: proj.name,
-          icon: proj.isExternal
-            ? 'mdi:folder-open-outline'
-            : 'mdi:folder-table-outline',
-          nested: true,
-        })),
-        {
-          id: 'ai-project:new',
-          name: `+ ${t('settings.newProject')}`,
-          icon: 'mdi:plus',
-          nested: true,
-        },
+        ...(IS_AI_PROJECTS_ENABLED
+          ? [
+              ...aiProfilesStore.projects.map((proj) => ({
+                id: `ai-project:${proj.id}`,
+                name: proj.name,
+                icon: proj.isExternal
+                  ? 'mdi:folder-open-outline'
+                  : 'mdi:folder-table-outline',
+                nested: true,
+              })),
+              {
+                id: 'ai-project:new',
+                name: `+ ${t('settings.newProject')}`,
+                icon: 'mdi:plus',
+                nested: true,
+              },
+            ]
+          : []),
       ]
     }
     if (item.id === 'plugins') {
@@ -409,22 +416,33 @@ const availableTabs = computed(
       ...installedPlugins.value.map((plugin) => `plugin:${plugin.pluginId}`),
       'ai-profiles:overview',
       'ai-profile:new',
-      'ai-project:new',
-      ...(aiProfilesStore.profiles ?? []).map((p) => `ai-profile:${p.id}`),
-      ...(aiProfilesStore.projects ?? []).map((p) => `ai-project:${p.id}`),
+      ...aiProfilesStore.profiles.map((p) => `ai-profile:${p.id}`),
+      ...(IS_AI_PROJECTS_ENABLED
+        ? [
+            'ai-project:new',
+            ...aiProfilesStore.projects.map((p) => `ai-project:${p.id}`),
+          ]
+        : []),
     ])
 )
+/** A profile tab opened before the vault is read is not known yet */
+const isPendingVaultTab = (tab: string) =>
+  !aiProfilesStore.isLoaded && tab.startsWith('ai-profile:')
 watch(
   () => route?.query.tab,
   (tab) => {
     currentTab.value =
-      typeof tab === 'string' && availableTabs.value.has(tab) ? tab : 'general'
+      typeof tab === 'string' &&
+      (availableTabs.value.has(tab) || isPendingVaultTab(tab))
+        ? tab
+        : 'general'
   }
 )
 watch(
-  [currentTab, availableTabs],
+  [currentTab, availableTabs, () => aiProfilesStore.isLoaded],
   ([tab, available]) => {
-    if (!available.has(tab)) currentTab.value = 'general'
+    if (!available.has(tab) && !isPendingVaultTab(tab))
+      currentTab.value = 'general'
   },
   { immediate: true }
 )

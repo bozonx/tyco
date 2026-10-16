@@ -17,11 +17,17 @@ const mocks = vi.hoisted(() => ({
   },
   editorNavigation: { toEditor: vi.fn() },
   chatStore: { openLastOrNewChat: vi.fn() },
+  profileChatStore: { openLastOrNewChat: vi.fn() },
+  useProfileChatStore: vi.fn(),
   navPanelStore: {
     navPanelState: { onEscape: null, escapeButtonLabelKey: '' },
   },
   menuModalsStore: { closeAll: vi.fn() },
-  aiProfilesStore: { profiles: [], loadAll: vi.fn() },
+  aiProfilesStore: {
+    profiles: [] as { id: string; name: string }[],
+    isLoaded: true,
+    loadAll: vi.fn(),
+  },
 }))
 
 vi.mock('vue-router', () => ({ useRoute: () => mocks.currentRoute.value }))
@@ -38,7 +44,13 @@ vi.mock('../lib/navigation/navigation', () => ({
   appNavigation: mocks.appNavigation,
 }))
 
-vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chatStore }))
+vi.mock('../stores/chat', () => ({
+  useChatStore: () => mocks.chatStore,
+  useProfileChatStore: (id: string) => {
+    mocks.useProfileChatStore(id)
+    return mocks.profileChatStore
+  },
+}))
 
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanelStore,
@@ -56,6 +68,7 @@ describe('NavPanel.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.currentRoute.value = { path: '/chat', query: {} }
+    mocks.aiProfilesStore.profiles = []
     mocks.appNavigation.isCurrent.mockImplementation(
       (path: string) => path === '/chat'
     )
@@ -67,18 +80,18 @@ describe('NavPanel.vue', () => {
     expect(wrapper.text()).toContain('nav.aiChat')
   })
 
-  it('does not render profile container or divider when profiles prop is empty', () => {
-    const wrapper = shallowMount(NavPanel, { props: { profiles: [] } })
+  it('does not render profile container or divider without profiles', () => {
+    const wrapper = shallowMount(NavPanel)
     expect(wrapper.find('.topbar-divider').exists()).toBe(false)
     expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
   })
 
   it('renders divider and profile tabs when profiles are provided', async () => {
-    const profiles = [
-      { id: 'writer', name: 'Writer', icon: 'mdi:feather' },
+    mocks.aiProfilesStore.profiles = [
+      { id: 'writer', name: 'Writer' },
       { id: 'coder', name: 'Coder' },
     ]
-    const wrapper = shallowMount(NavPanel, { props: { profiles } })
+    const wrapper = shallowMount(NavPanel)
 
     expect(wrapper.find('.topbar-divider').exists()).toBe(true)
     const container = wrapper.find('.profiles-tabs-container')
@@ -92,9 +105,8 @@ describe('NavPanel.vue', () => {
 
   it('marks base chat as active when no profile query is present', () => {
     mocks.appNavigation.currentProfileId.mockReturnValue(null)
-    const wrapper = shallowMount(NavPanel, {
-      props: { profiles: [{ id: 'writer', name: 'Writer' }] },
-    })
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
 
     const buttons = wrapper.findAll('.topbar-tab')
     // buttons[0] is Editor, buttons[1] is Ask AI, buttons[2] is Writer
@@ -104,9 +116,8 @@ describe('NavPanel.vue', () => {
 
   it('marks profile tab as active when query profile matches', () => {
     mocks.appNavigation.currentProfileId.mockReturnValue('writer')
-    const wrapper = shallowMount(NavPanel, {
-      props: { profiles: [{ id: 'writer', name: 'Writer' }] },
-    })
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
 
     const buttons = wrapper.findAll('.topbar-tab')
     expect(buttons[1].classes()).not.toContain('is-active')
@@ -114,21 +125,32 @@ describe('NavPanel.vue', () => {
   })
 
   it('navigates to profile chat when profile tab is clicked', async () => {
-    const wrapper = shallowMount(NavPanel, {
-      props: { profiles: [{ id: 'writer', name: 'Writer' }] },
-    })
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
 
     const profileTab = wrapper.find('.profiles-tabs-container button')
     await profileTab.trigger('click')
 
     expect(mocks.menuModalsStore.closeAll).toHaveBeenCalled()
-    expect(mocks.appNavigation.goToProfileChat).toHaveBeenCalledWith('writer')
+    expect(mocks.useProfileChatStore).toHaveBeenCalledWith('writer')
+    expect(mocks.profileChatStore.openLastOrNewChat).toHaveBeenCalled()
+    expect(mocks.chatStore.openLastOrNewChat).not.toHaveBeenCalled()
+  })
+
+  it('opens the "Ask AI" chat from a profile chat', async () => {
+    mocks.appNavigation.currentProfileId.mockReturnValue('writer')
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
+
+    await wrapper.findAll('.topbar-tab')[1].trigger('click')
+
+    expect(mocks.chatStore.openLastOrNewChat).toHaveBeenCalled()
+    expect(mocks.profileChatStore.openLastOrNewChat).not.toHaveBeenCalled()
   })
 
   it('handles wheel scroll horizontally on profiles container', async () => {
-    const wrapper = shallowMount(NavPanel, {
-      props: { profiles: [{ id: 'writer', name: 'Writer' }] },
-    })
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
 
     const container = wrapper.find('.profiles-tabs-container')
     const element = container.element as HTMLElement

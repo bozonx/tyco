@@ -3,7 +3,7 @@ use crate::{
     errors::AppError,
     services::{
         chat_images::{ChatFileError, ChatFileErrorKind, ChatImageStore},
-        storage,
+        storage::{self, ChatScope},
     },
     state::AppState,
 };
@@ -50,8 +50,26 @@ pub async fn store_chat_image(
 }
 
 #[tauri::command]
-pub async fn get_chat_image(app: AppHandle, id: String) -> Result<tauri::ipc::Response, AppError> {
-    run_blocking(move || storage::read_chat_image(&app, &id).map(tauri::ipc::Response::new)).await?
+pub async fn get_chat_image(
+    app: AppHandle,
+    id: String,
+    profile_id: Option<String>,
+) -> Result<tauri::ipc::Response, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::read_chat_image(&app, &scope, &id).map(tauri::ipc::Response::new))
+        .await?
+}
+
+/// Each chat of a window holds its own images: "Ask AI" under the window
+/// label, a profile chat under a key of its own below it.
+fn image_owner(window: &WebviewWindow, profile_id: Option<&str>) -> Result<String, AppError> {
+    match profile_id {
+        None => Ok(window.label().to_string()),
+        Some(id) => {
+            crate::services::ai_vault::validate_id(id)?;
+            Ok(format!("{}/profile/{id}", window.label()))
+        }
+    }
 }
 
 #[tauri::command]
@@ -60,11 +78,13 @@ pub async fn sync_chat_images(
     app: AppHandle,
     ids: Vec<String>,
     leases: Vec<String>,
+    profile_id: Option<String>,
 ) -> Result<(), AppError> {
+    let owner = image_owner(&window, profile_id.as_deref())?;
     run_blocking(move || {
         let state = app.state::<AppState>();
         let mut images = chat_images(&state);
-        images.sync(window.label(), &ids)?;
+        images.sync(&owner, &ids)?;
         for lease in leases {
             images.release_owner(&format!("{}/import/{lease}", window.label()));
         }

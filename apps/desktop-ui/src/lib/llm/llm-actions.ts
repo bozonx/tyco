@@ -27,13 +27,20 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     })
   }
 
+  /**
+   * A chat turn. The chat decides its instructions and rules: "Ask AI" and a
+   * profile follow different ones
+   */
   const sendChatMessage = async (
     message: string | ChatMessage,
     prevMessages: ChatMessage[],
     devInstructions: string | undefined,
-    options: Omit<AiRequestOptions, 'models'> & { modelId: string }
+    options: Omit<AiRequestOptions, 'models'> & {
+      modelId: string
+      rules?: string
+    }
   ) => {
-    const { modelId, ...rest } = options
+    const { modelId, rules, ...rest } = options
     return await aiRequest(
       LlmInstructionKind.CHAT,
       [
@@ -49,7 +56,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
         instructions:
           devInstructions ??
           deps.getAppConfig().aiInstructions[LlmInstructionKind.CHAT],
-        rules: deps.getUserConfig().aiRules?.chat,
+        rules,
       }
     )
   }

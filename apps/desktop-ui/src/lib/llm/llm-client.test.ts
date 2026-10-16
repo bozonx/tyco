@@ -203,6 +203,39 @@ describe('llm-client', () => {
     })
   })
 
+  it('lets the request override the temperature and cap the output', async () => {
+    const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    llm.models = [
+      {
+        id: 'chosen',
+        providerId: 'local',
+        providerModelId: 'chosen-model',
+        temperature: 0.9,
+        maxOutputTokens: 300,
+      },
+    ]
+    const { client } = setup(fetch, llm)
+
+    await client.run('chat', prompt, {
+      models: ['chosen'],
+      onChunk: () => undefined,
+      temperature: 0.2,
+      maxOutputTokens: 100,
+    })
+    await client.run('chat', prompt, {
+      models: ['chosen'],
+      onChunk: () => undefined,
+      maxOutputTokens: 5000,
+    })
+
+    const bodies = fetch.mock.calls.map((call) =>
+      JSON.parse(String(call[1]?.body))
+    )
+    expect(bodies[0]).toMatchObject({ temperature: 0.2, max_tokens: 100 })
+    expect(bodies[1]).toMatchObject({ temperature: 0.9, max_tokens: 300 })
+  })
+
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)

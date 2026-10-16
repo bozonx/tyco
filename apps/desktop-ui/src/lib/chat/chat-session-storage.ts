@@ -27,73 +27,45 @@ export function isChatSessionStorageDriver(
   )
 }
 
+/**
+ * The chats of "Ask AI", or with `profileId` those of that profile; both live
+ * behind the same history commands
+ */
 export function createIpcChatSessionStorageDriver(
-  historyApi: HistoryApi
-): ChatSessionStorageDriver {
-  const call = createHistoryCall(historyApi)
-
-  return {
-    async listChats(): Promise<ChatSummary[]> {
-      const result = await call('listChats')
-      return result || []
-    },
-    async getChat(id: string): Promise<Chat | null> {
-      const result = await call('getChat', [id])
-      return result || null
-    },
-    async saveChat(chat: Chat): Promise<void> {
-      await call('saveChat', [chat])
-    },
-    async renameChat(id: string, title: string): Promise<void> {
-      await call('renameChat', [id, title])
-    },
-    async deleteChat(id: string): Promise<Chat | null> {
-      const removed = await call('getChat', [id])
-      await call('deleteChat', [id])
-      return removed || null
-    },
-    async searchChats(query: string): Promise<string[]> {
-      const result = await call('searchChats', [query])
-      return result || []
-    },
-    async clearChats(): Promise<void> {
-      await call('clearChats')
-    },
-  }
-}
-
-export function createProfileIpcChatSessionStorageDriver(
   historyApi: HistoryApi,
-  profileId: string
+  profileId?: string
 ): ChatSessionStorageDriver {
   const call = createHistoryCall(historyApi)
+  // "Ask AI" calls carry no profile argument at all
+  const scoped = <T extends unknown[]>(...args: T): [...T, string?] =>
+    profileId ? [...args, profileId] : [...args]
 
   return {
     async listChats(): Promise<ChatSummary[]> {
-      const result = await call('listProfileChats', [profileId])
+      const result = await call('listChats', scoped())
       return result || []
     },
     async getChat(id: string): Promise<Chat | null> {
-      const result = await call('getProfileChat', [profileId, id])
+      const result = await call('getChat', scoped(id))
       return result || null
     },
     async saveChat(chat: Chat): Promise<void> {
-      await call('saveProfileChat', [profileId, chat])
+      await call('saveChat', scoped(chat))
     },
     async renameChat(id: string, title: string): Promise<void> {
-      await call('renameProfileChat', [profileId, id, title])
+      await call('renameChat', scoped(id, title))
     },
     async deleteChat(id: string): Promise<Chat | null> {
-      const removed = await call('getProfileChat', [profileId, id])
-      await call('deleteProfileChat', [profileId, id])
+      const removed = await call('getChat', scoped(id))
+      await call('deleteChat', scoped(id))
       return removed || null
     },
-    async clearChats(): Promise<void> {
-      await call('clearProfileChats', [profileId])
-    },
     async searchChats(query: string): Promise<string[]> {
-      const result = await call('searchProfileChats', [profileId, query])
+      const result = await call('searchChats', scoped(query))
       return result || []
+    },
+    async clearChats(): Promise<void> {
+      await call('clearChats', scoped())
     },
   }
 }

@@ -24,46 +24,96 @@
     />
     <ChatSidebar
       v-if="sidebarOpen"
-      :profile-id="profileId"
+      :key="scopeKey"
       class="chat-sidebar-panel"
       @collapse="sidebarOpen = false"
       @navigate="closeMobileSidebar"
     />
     <div class="chat-main">
-      <AiChat :profile-id="profileId" />
+      <div v-if="profile" class="profile-header">
+        <Icon icon="mdi:account-outline" height="16" class="shrink-0" />
+        <span class="profile-name">{{ profile.name }}</span>
+        <IconButton
+          class="profile-settings"
+          :label="t('chat.profileSettings')"
+          icon="mdi:cog-outline"
+          @click="openProfileSettings"
+        />
+      </div>
+      <AiChat :key="scopeKey" class="chat-body" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
+import Icon from '../components/common/AppIcon.vue'
 import IconButton from '../components/common/IconButton.vue'
+import {
+  provideChatScope,
+  resolveChatScope,
+} from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
 import { appNavigation } from '../lib/navigation/navigation'
-import { useChatStore } from '../stores/chat'
-import { useHistoryStore } from '../stores/history'
+import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useNavPanelStore } from '../stores/nav-panel'
 
-const profileId = computed(() => appNavigation.currentProfileId?.() || null)
-
 const navPanelStore = useNavPanelStore()
-const historyStore = useHistoryStore()
-const chatStore = useChatStore()
+const aiProfilesStore = useAiProfilesStore()
 const { t } = useI18n()
 const sidebarOpen = ref(true)
+
+/** "Ask AI" without a profile in the route, that profile's chat with one */
+const profileId = computed(() => appNavigation.currentProfileId())
+const scope = computed(() => resolveChatScope(profileId.value))
+const scopeKey = computed(() => profileId.value ?? 'ask-ai')
+const chatStore = computed(() => scope.value.chat)
+provideChatScope(() => scope.value)
+
+const profile = computed(() =>
+  profileId.value ? aiProfilesStore.getProfile(profileId.value) : undefined
+)
 
 function closeMobileSidebar() {
   if (window.matchMedia('(max-width: 47.5rem)').matches)
     sidebarOpen.value = false
 }
 
+function openProfileSettings() {
+  if (profileId.value)
+    void appNavigation.goToConfig(`ai-profile:${profileId.value}`)
+}
+
 navPanelStore.resetNavPanelState({})
 
-onMounted(async () => {
-  await historyStore.loadChatHistory()
+// a profile chat opened by its route starts on its last chat
+watch(
+  scope,
+  ({ chat }) => {
+    if (chat.profileId && !chat.currentChatParams.id)
+      void chat.openLastOrNewChat()
+  },
+  { immediate: true }
+)
+
+// a removed profile, or one of another vault, has no chat to show
+watch(
+  () =>
+    aiProfilesStore.isLoaded &&
+    Boolean(profileId.value) &&
+    !profile.value &&
+    !aiProfilesStore.vaultError,
+  (isGone) => {
+    if (isGone) void appNavigation.goToChat()
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  if (!aiProfilesStore.isLoaded) void aiProfilesStore.loadAll()
 })
 </script>
 
@@ -75,10 +125,36 @@ onMounted(async () => {
   overflow: hidden;
 }
 .chat-main {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
   height: 100%;
   overflow: hidden;
+}
+.chat-body {
+  flex: 1;
+  min-height: 0;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-bottom: 1px solid var(--app-border-subtle);
+  color: var(--app-text-muted);
+  font-size: var(--text-control);
+}
+.profile-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-base-content);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-settings {
+  margin-left: auto;
 }
 .sidebar-closed-tools {
   position: absolute;

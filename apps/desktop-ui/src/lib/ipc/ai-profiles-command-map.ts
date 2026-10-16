@@ -6,7 +6,23 @@ export function createAiProfilesCommandMap(): DomainCommandMap<
   keyof AiProfilesFunctions
 > {
   return {
+    getAiVaultPath: { command: DESKTOP_COMMANDS.GET_AI_VAULT_PATH },
+    openAiVaultDir: {
+      command: DESKTOP_COMMANDS.OPEN_AI_VAULT_DIR,
+      buildArgs: ([profileId]) =>
+        ({ profileId }) satisfies DesktopCommandArgs<'open_ai_vault_dir'>,
+    },
     listAiProfiles: { command: DESKTOP_COMMANDS.LIST_AI_PROFILES },
+    getAiProfile: {
+      command: DESKTOP_COMMANDS.GET_AI_PROFILE,
+      buildArgs: ([id]) =>
+        ({ id }) satisfies DesktopCommandArgs<'get_ai_profile'>,
+    },
+    createAiProfile: {
+      command: DESKTOP_COMMANDS.CREATE_AI_PROFILE,
+      buildArgs: ([profile, soul]) =>
+        ({ profile, soul }) satisfies DesktopCommandArgs<'create_ai_profile'>,
+    },
     saveAiProfile: {
       command: DESKTOP_COMMANDS.SAVE_AI_PROFILE,
       buildArgs: ([profile]) =>
@@ -28,6 +44,11 @@ export function createAiProfilesCommandMap(): DomainCommandMap<
         ({ id, content }) satisfies DesktopCommandArgs<'write_profile_soul'>,
     },
     listAiProjects: { command: DESKTOP_COMMANDS.LIST_AI_PROJECTS },
+    createAiProject: {
+      command: DESKTOP_COMMANDS.CREATE_AI_PROJECT,
+      buildArgs: ([project]) =>
+        ({ project }) satisfies DesktopCommandArgs<'create_ai_project'>,
+    },
     saveAiProject: {
       command: DESKTOP_COMMANDS.SAVE_AI_PROJECT,
       buildArgs: ([project]) =>
@@ -37,51 +58,6 @@ export function createAiProfilesCommandMap(): DomainCommandMap<
       command: DESKTOP_COMMANDS.DELETE_AI_PROJECT,
       buildArgs: ([id]) =>
         ({ id }) satisfies DesktopCommandArgs<'delete_ai_project'>,
-    },
-    pickExternalProjectFolder: {
-      command: DESKTOP_COMMANDS.PICK_EXTERNAL_PROJECT_FOLDER,
-    },
-    listProfileChats: {
-      command: DESKTOP_COMMANDS.LIST_PROFILE_CHATS,
-      buildArgs: ([profileId]) =>
-        ({ profileId }) satisfies DesktopCommandArgs<'list_profile_chats'>,
-    },
-    getProfileChat: {
-      command: DESKTOP_COMMANDS.GET_PROFILE_CHAT,
-      buildArgs: ([profileId, id]) =>
-        ({ profileId, id }) satisfies DesktopCommandArgs<'get_profile_chat'>,
-    },
-    saveProfileChat: {
-      command: DESKTOP_COMMANDS.SAVE_PROFILE_CHAT,
-      buildArgs: ([profileId, chat]) =>
-        ({ profileId, chat }) satisfies DesktopCommandArgs<'save_profile_chat'>,
-    },
-    renameProfileChat: {
-      command: DESKTOP_COMMANDS.RENAME_PROFILE_CHAT,
-      buildArgs: ([profileId, id, title]) =>
-        ({
-          profileId,
-          id,
-          title,
-        }) satisfies DesktopCommandArgs<'rename_profile_chat'>,
-    },
-    deleteProfileChat: {
-      command: DESKTOP_COMMANDS.DELETE_PROFILE_CHAT,
-      buildArgs: ([profileId, id]) =>
-        ({ profileId, id }) satisfies DesktopCommandArgs<'delete_profile_chat'>,
-    },
-    clearProfileChats: {
-      command: DESKTOP_COMMANDS.CLEAR_PROFILE_CHATS,
-      buildArgs: ([profileId]) =>
-        ({ profileId }) satisfies DesktopCommandArgs<'clear_profile_chats'>,
-    },
-    searchProfileChats: {
-      command: DESKTOP_COMMANDS.SEARCH_PROFILE_CHATS,
-      buildArgs: ([profileId, query]) =>
-        ({
-          profileId,
-          query,
-        }) satisfies DesktopCommandArgs<'search_profile_chats'>,
     },
   }
 }

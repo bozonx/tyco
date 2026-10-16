@@ -75,6 +75,10 @@ interface LlmRunOptions {
   onChunk?: (text: string) => void
   signal?: AbortSignal
   onModel?: (model: { provider: string; model: string }) => void
+  /** Replaces the temperature of every model tried */
+  temperature?: number
+  /** Caps the answer below each model's own output limit */
+  maxOutputTokens?: number
 }
 
 export interface LlmClient {
@@ -158,6 +162,11 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
             config.providers.find(
               (provider) => provider.id === model.providerId
             )?.type === 'deepseek'
+          const temperature = options.temperature ?? model.temperature
+          const modelOutputTokens = modelMaxOutputTokens(
+            model,
+            config.providers
+          )
           const isThinkingEnabled =
             model.isThinkingEnabled === true ||
             model.providerModelId === 'deepseek-reasoner'
@@ -176,11 +185,13 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
                   },
                 }
               : {}),
-            ...(model.temperature === undefined ||
-            (isDeepSeek && isThinkingEnabled)
+            ...(temperature === undefined || (isDeepSeek && isThinkingEnabled)
               ? {}
-              : { temperature: model.temperature }),
-            maxOutputTokens: modelMaxOutputTokens(model, config.providers),
+              : { temperature }),
+            maxOutputTokens:
+              options.maxOutputTokens === undefined
+                ? modelOutputTokens
+                : Math.min(options.maxOutputTokens, modelOutputTokens),
             abortSignal: signal,
             totalTimeoutMs: Math.max(1, deadline - Date.now()),
           }

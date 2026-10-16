@@ -4,8 +4,8 @@ use tauri::{AppHandle, State};
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    models::{Chat, ChatSummary},
     services::ai_vault::{self, AiProfile, AiProject},
+    services::storage,
     state::AppState,
 };
 
@@ -20,11 +20,18 @@ pub fn get_ai_vault_path(app: AppHandle, state: State<'_, AppState>) -> Result<S
     Ok(vault_dir.to_string_lossy().into_owned())
 }
 
+/// Shows the vault, or one profile folder in it, in the file manager. The
+/// path is built here: the webview never names a folder to open.
 #[tauri::command]
-pub async fn open_folder_in_os(path: String) -> Result<(), AppError> {
+pub async fn open_ai_vault_dir(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    profile_id: Option<String>,
+) -> Result<(), AppError> {
+    let dir = vault_dir(&app, &state)?;
     run_blocking(move || {
-        let path_buf = PathBuf::from(&path);
-        crate::services::platform::open_dir(&path_buf)
+        let target = ai_vault::vault_dir_to_open(&dir, profile_id.as_deref())?;
+        crate::services::platform::open_dir(&target)
     })
     .await?
 }
@@ -39,6 +46,27 @@ pub async fn list_ai_profiles(
 }
 
 #[tauri::command]
+pub async fn get_ai_profile(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<AiProfile, AppError> {
+    let dir = vault_dir(&app, &state)?;
+    run_blocking(move || ai_vault::get_profile(&dir, &id)).await?
+}
+
+#[tauri::command]
+pub async fn create_ai_profile(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    profile: AiProfile,
+    soul: String,
+) -> Result<(), AppError> {
+    let dir = vault_dir(&app, &state)?;
+    run_blocking(move || ai_vault::create_profile(&dir, profile, &soul)).await?
+}
+
+#[tauri::command]
 pub async fn save_ai_profile(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -48,6 +76,7 @@ pub async fn save_ai_profile(
     run_blocking(move || ai_vault::save_profile(&dir, profile)).await?
 }
 
+/// The profile goes with its chats, so no chat of it is being written meanwhile.
 #[tauri::command]
 pub async fn delete_ai_profile(
     app: AppHandle,
@@ -55,7 +84,8 @@ pub async fn delete_ai_profile(
     id: String,
 ) -> Result<(), AppError> {
     let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::delete_profile(&dir, &id)).await?
+    run_blocking(move || storage::while_chats_locked(&app, || ai_vault::delete_profile(&dir, &id)))
+        .await?
 }
 
 #[tauri::command]
@@ -89,6 +119,16 @@ pub async fn list_ai_projects(
 }
 
 #[tauri::command]
+pub async fn create_ai_project(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    project: AiProject,
+) -> Result<(), AppError> {
+    let dir = vault_dir(&app, &state)?;
+    run_blocking(move || ai_vault::create_project(&dir, project)).await?
+}
+
+#[tauri::command]
 pub async fn save_ai_project(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -106,96 +146,4 @@ pub async fn delete_ai_project(
 ) -> Result<(), AppError> {
     let dir = vault_dir(&app, &state)?;
     run_blocking(move || ai_vault::delete_project(&dir, &id)).await?
-}
-
-#[tauri::command]
-pub async fn pick_external_project_folder(app: AppHandle) -> Result<Option<String>, AppError> {
-    run_blocking(move || Ok(crate::services::custom_actions::pick_directory(&app))).await?
-}
-
-#[tauri::command]
-pub async fn list_profile_chats(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-) -> Result<Vec<ChatSummary>, AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::list_profile_chats(&dir, &profile_id)).await?
-}
-
-#[tauri::command]
-pub async fn get_profile_chat(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-    id: String,
-) -> Result<Option<Chat>, AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::get_profile_chat(&dir, &profile_id, &id)).await?
-}
-
-#[tauri::command]
-pub async fn save_profile_chat(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-    chat: Chat,
-) -> Result<(), AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::save_profile_chat(&dir, &profile_id, chat)).await?
-}
-
-#[tauri::command]
-pub async fn rename_profile_chat(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-    id: String,
-    title: String,
-) -> Result<(), AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::rename_profile_chat(&dir, &profile_id, &id, &title)).await?
-}
-
-#[tauri::command]
-pub async fn delete_profile_chat(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-    id: String,
-) -> Result<(), AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::delete_profile_chat(&dir, &profile_id, &id)).await?
-}
-
-#[tauri::command]
-pub async fn clear_profile_chats(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-) -> Result<(), AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::clear_profile_chats(&dir, &profile_id)).await?
-}
-
-#[tauri::command]
-pub async fn search_profile_chats(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    profile_id: String,
-    query: String,
-) -> Result<Vec<String>, AppError> {
-    let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ai_vault::search_profile_chats(&dir, &profile_id, &query)).await?
-}
-
-#[cfg(test)]
-mod tests {
-    use super::open_folder_in_os;
-
-    #[test]
-    fn open_folder_in_os_rejects_non_existent_path() {
-        let missing = "/path/that/definitely/does/not/exist/ai_vault_test";
-        assert!(tauri::async_runtime::block_on(open_folder_in_os(missing.into())).is_err());
-    }
 }

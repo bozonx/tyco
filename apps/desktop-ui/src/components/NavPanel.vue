@@ -25,23 +25,29 @@
         <Icon icon="mdi:chat-processing-outline" height="16" />
         {{ t('nav.aiChat') }}
       </button>
-      <template v-if="activeProfiles.length > 0">
+      <template v-if="profiles.length > 0">
         <div class="topbar-divider h-4 w-px bg-base-content/20 mx-1" />
         <div
           ref="profilesContainerRef"
-          class="profiles-tabs-container overflow-x-auto no-scrollbar flex items-center gap-1 max-w-[calc(100vw-350px)]"
+          class="profiles-tabs-container overflow-x-auto no-scrollbar flex items-center gap-1 min-w-0"
+          :class="{
+            'has-hidden-start': hasHiddenTabs.start,
+            'has-hidden-end': hasHiddenTabs.end,
+          }"
           @wheel.passive="handleProfilesWheel"
+          @scroll.passive="updateHiddenTabs"
         >
           <button
-            v-for="profile in activeProfiles"
+            v-for="profile in profiles"
             :key="profile.id"
             type="button"
             class="topbar-tab shrink-0"
             :aria-current="isProfileActive(profile.id) ? 'page' : undefined"
             :class="{ 'is-active': isProfileActive(profile.id) }"
+            :title="profile.name"
             @click="openProfileChat(profile.id)"
           >
-            <Icon :icon="profile.icon || 'mdi:account-outline'" height="16" />
+            <Icon icon="mdi:account-outline" height="16" />
             <span class="truncate max-w-[120px]">{{ profile.name }}</span>
           </button>
         </div>
@@ -86,7 +92,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
@@ -94,21 +108,11 @@ import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useAiProfilesStore } from '../stores/ai-profiles'
-import { useChatStore } from '../stores/chat'
+import { useChatStore, useProfileChatStore } from '../stores/chat'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import Icon from './common/AppIcon.vue'
 import IconButton from './common/IconButton.vue'
-
-export interface NavProfileTab {
-  id: string
-  name: string
-  icon?: string
-}
-
-const props = withDefaults(defineProps<{ profiles?: NavProfileTab[] }>(), {
-  profiles: () => [],
-})
 
 const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()
@@ -117,16 +121,37 @@ const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
-onMounted(() => {
-  void aiProfilesStore.loadAll()
-})
-
-const activeProfiles = computed(() => {
-  if (props.profiles && props.profiles.length > 0) return props.profiles
-  return aiProfilesStore.profiles
-})
+const profiles = computed(() => aiProfilesStore.profiles)
 
 const profilesContainerRef = ref<HTMLElement | null>(null)
+/** Which edges of the profile tabs hide tabs behind them */
+const hasHiddenTabs = reactive({ start: false, end: false })
+
+function updateHiddenTabs() {
+  const element = profilesContainerRef.value
+  if (!element) return
+  hasHiddenTabs.start = element.scrollLeft > 0
+  hasHiddenTabs.end =
+    element.scrollLeft + element.clientWidth < element.scrollWidth - 1
+}
+
+const resizeObserver =
+  typeof ResizeObserver === 'undefined'
+    ? null
+    : new ResizeObserver(updateHiddenTabs)
+watch(profilesContainerRef, (element, previous) => {
+  if (previous) resizeObserver?.unobserve(previous)
+  if (element) resizeObserver?.observe(element)
+})
+watch(
+  () => profiles.value.length,
+  () => void nextTick(updateHiddenTabs)
+)
+
+onMounted(() => {
+  if (!aiProfilesStore.isLoaded) void aiProfilesStore.loadAll()
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
 
 const actionsShortcut = EDITOR_ACTIONS_SHORTCUT.toUpperCase()
 
@@ -156,6 +181,7 @@ function handleProfilesWheel(event: WheelEvent) {
   if (!profilesContainerRef.value) return
   if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
     profilesContainerRef.value.scrollLeft += event.deltaY
+    updateHiddenTabs()
   }
 }
 
@@ -166,17 +192,14 @@ function openSettings() {
 
 function openChat() {
   menuModalsStore.closeAll()
-  if (appNavigation.isCurrent(APP_ROUTES.CHAT.path) && currentProfileId.value) {
-    void appNavigation.goToChat()
-  } else {
-    // the editor text stays out: the editor toolbar sends it to the chat
-    void chatStore.openLastOrNewChat()
-  }
+  // the editor text stays out: the editor toolbar sends it to the chat
+  void chatStore.openLastOrNewChat()
 }
 
+/** A profile chat comes back as it was left, or on its last chat */
 function openProfileChat(profileId: string) {
   menuModalsStore.closeAll()
-  void appNavigation.goToProfileChat(profileId)
+  void useProfileChatStore(profileId).openLastOrNewChat()
 }
 
 function openHistory() {
@@ -202,6 +225,7 @@ function openHistory() {
   display: flex;
   align-items: center;
   gap: 2px;
+  min-width: 0;
 }
 
 .topbar-tab {
@@ -229,6 +253,26 @@ function openHistory() {
   color: var(--color-base-content);
   background-color: var(--app-surface);
   box-shadow: var(--app-shadow-segment);
+}
+
+.profiles-tabs-container {
+  --fade-start: 0px;
+  --fade-end: 0px;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent
+  );
+}
+
+.profiles-tabs-container.has-hidden-start {
+  --fade-start: 1.5rem;
+}
+
+.profiles-tabs-container.has-hidden-end {
+  --fade-end: 1.5rem;
 }
 
 .no-scrollbar::-webkit-scrollbar {

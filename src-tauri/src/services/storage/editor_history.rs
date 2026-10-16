@@ -246,7 +246,7 @@ pub(super) fn retry_history_cleanup(
     } else {
         enforce_editor_history_file(&path, policy, now_ms())?;
     }
-    enforce_chat_history_policy(app, chat_policy)
+    enforce_chat_history_policy(&super::chat_history::app_chats_dir(app)?, chat_policy)
 }
 
 fn enforce_editor_history_file(

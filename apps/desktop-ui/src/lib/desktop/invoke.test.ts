@@ -26,7 +26,7 @@ describe('native invoke boundary', () => {
       code: 'ioError',
       message: 'Permission denied',
     })
-    await expect(invokeDesktop('clear_chats')).rejects.toBeInstanceOf(
+    await expect(invokeDesktop('clear_chats', {})).rejects.toBeInstanceOf(
       DesktopIpcError
     )
     const specialized = { kind: 'memory', message: 'Too many images' }

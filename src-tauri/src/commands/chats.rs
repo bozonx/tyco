@@ -2,12 +2,20 @@ use super::run_blocking;
 use crate::{
     errors::AppError,
     models::{Chat, ChatSummary},
-    services::storage,
+    services::storage::{self, ChatScope},
 };
 use tauri::{AppHandle, WebviewWindow};
+
+// Without `profile_id` a command works on the chats of "Ask AI", with it on
+// the chats of that profile.
+
 #[tauri::command]
-pub async fn list_chats(app: AppHandle) -> Result<Vec<ChatSummary>, AppError> {
-    run_blocking(move || storage::list_chats(&app)).await?
+pub async fn list_chats(
+    app: AppHandle,
+    profile_id: Option<String>,
+) -> Result<Vec<ChatSummary>, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::list_chats(&app, &scope)).await?
 }
 
 #[tauri::command]
@@ -16,24 +24,42 @@ pub async fn get_chat(
     app: AppHandle,
     id: String,
     lease: Option<String>,
+    profile_id: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
     let owner = lease.map(|lease| format!("{}/import/{lease}", window.label()));
-    run_blocking(move || storage::read_chat(&app, id, owner)).await?
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::read_chat(&app, &scope, id, owner)).await?
 }
 
 #[tauri::command]
-pub async fn save_chat(app: AppHandle, chat: Chat) -> Result<(), AppError> {
-    run_blocking(move || storage::save_chat(&app, chat)).await?
+pub async fn save_chat(
+    app: AppHandle,
+    chat: Chat,
+    profile_id: Option<String>,
+) -> Result<(), AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::save_chat(&app, &scope, chat)).await?
 }
 
 #[tauri::command]
-pub async fn rename_chat(app: AppHandle, id: String, title: String) -> Result<(), AppError> {
-    run_blocking(move || storage::rename_chat(&app, id, title)).await?
+pub async fn rename_chat(
+    app: AppHandle,
+    id: String,
+    title: String,
+    profile_id: Option<String>,
+) -> Result<(), AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::rename_chat(&app, &scope, id, title)).await?
 }
 
 #[tauri::command]
-pub async fn search_chats(app: AppHandle, query: String) -> Result<Vec<String>, AppError> {
-    run_blocking(move || storage::search_chats(&app, query)).await?
+pub async fn search_chats(
+    app: AppHandle,
+    query: String,
+    profile_id: Option<String>,
+) -> Result<Vec<String>, AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::search_chats(&app, &scope, query)).await?
 }
 
 #[tauri::command]
@@ -41,12 +67,15 @@ pub async fn delete_chat(
     window: WebviewWindow,
     app: AppHandle,
     id: String,
+    profile_id: Option<String>,
 ) -> Result<(), AppError> {
     let owner = format!("{}/undo/{id}", window.label());
-    run_blocking(move || storage::delete_chat(&app, id, owner)).await?
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::delete_chat(&app, &scope, id, owner)).await?
 }
 
 #[tauri::command]
-pub async fn clear_chats(app: AppHandle) -> Result<(), AppError> {
-    run_blocking(move || storage::clear_chats(&app)).await?
+pub async fn clear_chats(app: AppHandle, profile_id: Option<String>) -> Result<(), AppError> {
+    let scope = ChatScope::from_profile_id(profile_id);
+    run_blocking(move || storage::clear_chats(&app, &scope)).await?
 }

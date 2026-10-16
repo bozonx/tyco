@@ -1,110 +1,113 @@
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
+import type { IpcResult } from '@tyco/shared'
+
 import { createAiProfilesModel } from '../lib/ai-profiles/ai-profiles-model'
 import { createAiProjectsModel } from '../lib/ai-profiles/ai-projects-model'
-import {
-  createIpcChatSessionStorageDriver,
-  createProfileIpcChatSessionStorageDriver,
-  type ChatSessionStorageDriver,
-} from '../lib/chat/chat-session-storage'
-import { appNavigation } from '../lib/navigation/navigation'
 import { useIpcStore } from './ipc'
+
+function resultOf<T>(response: IpcResult<T>): T {
+  if (!response.success) throw new Error(response.error)
+  return response.result as T
+}
 
 export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const ipcStore = useIpcStore()
+  const call = ipcStore.callFunction
 
   const profilesModel = createAiProfilesModel({
-    listProfiles: async () => {
-      const res = await ipcStore.callFunction('listAiProfiles')
-      return res.success && Array.isArray(res.result) ? res.result : []
+    listProfiles: async () => resultOf(await call('listAiProfiles')),
+    getProfile: async (id) => resultOf(await call('getAiProfile', [id])),
+    createProfile: async (profile, soul) => {
+      resultOf(await call('createAiProfile', [profile, soul]))
     },
     saveProfile: async (profile) => {
-      const res = await ipcStore.callFunction('saveAiProfile', [profile])
-      if (!res.success) throw new Error(res.error)
+      resultOf(await call('saveAiProfile', [profile]))
     },
     deleteProfile: async (id) => {
-      const res = await ipcStore.callFunction('deleteAiProfile', [id])
-      if (!res.success) throw new Error(res.error)
+      resultOf(await call('deleteAiProfile', [id]))
     },
-    readSoul: async (id) => {
-      const res = await ipcStore.callFunction('readProfileSoul', [id])
-      return res.success ? res.result : ''
-    },
+    readSoul: async (id) => resultOf(await call('readProfileSoul', [id])),
     writeSoul: async (id, content) => {
-      const res = await ipcStore.callFunction('writeProfileSoul', [id, content])
-      if (!res.success) throw new Error(res.error)
+      resultOf(await call('writeProfileSoul', [id, content]))
     },
   })
 
   const projectsModel = createAiProjectsModel({
-    listProjects: async () => {
-      const res = await ipcStore.callFunction('listAiProjects')
-      return res.success && Array.isArray(res.result) ? res.result : []
+    listProjects: async () => resultOf(await call('listAiProjects')),
+    createProject: async (project) => {
+      resultOf(await call('createAiProject', [project]))
     },
     saveProject: async (project) => {
-      const res = await ipcStore.callFunction('saveAiProject', [project])
-      if (!res.success) throw new Error(res.error)
+      resultOf(await call('saveAiProject', [project]))
     },
     deleteProject: async (id) => {
-      const res = await ipcStore.callFunction('deleteAiProject', [id])
-      if (!res.success) throw new Error(res.error)
+      resultOf(await call('deleteAiProject', [id]))
     },
-    pickExternalFolder: async () => {
-      const res = await ipcStore.callFunction('pickExternalProjectFolder')
-      return res.success ? res.result : null
-    },
+    pickExternalFolder: async () => resultOf(await call('pickDirectory')),
   })
 
-  const activeProfileId = computed(
-    () => appNavigation.currentProfileId?.() || null
+  const vaultPath = ref('')
+  /** Why the vault cannot be read, e.g. its configured folder is unavailable */
+  const vaultError = ref('')
+  const isLoaded = ref(false)
+
+  let loadRequest = 0
+  /** Reads the vault anew; a load started later wins */
+  const loadAll = async (): Promise<void> => {
+    const request = ++loadRequest
+    try {
+      const path = resultOf(await call('getAiVaultPath'))
+      await Promise.all([
+        profilesModel.loadProfiles(),
+        projectsModel.loadProjects(),
+      ])
+      if (request !== loadRequest) return
+      vaultPath.value = path
+      vaultError.value = ''
+    } catch (error) {
+      if (request !== loadRequest) return
+      profilesModel.profiles.value = []
+      projectsModel.projects.value = []
+      vaultError.value = error instanceof Error ? error.message : String(error)
+    } finally {
+      if (request === loadRequest) isLoaded.value = true
+    }
+  }
+
+  // the vault moves once the settings with its new path are stored
+  watch(
+    () => ipcStore.desktopState.userConfig?.aiProfiles?.vaultPath,
+    (path, previous) => {
+      if (path !== previous) void loadAll()
+    }
   )
 
-  const activeProfile = computed(() => {
-    if (!activeProfileId.value) return null
-    return profilesModel.getProfile(activeProfileId.value) || null
-  })
-
-  const loadAll = async () => {
-    await Promise.all([
-      profilesModel.loadProfiles(),
-      projectsModel.loadProjects(),
-    ])
+  const openVaultDir = async (profileId?: string): Promise<void> => {
+    resultOf(await call('openAiVaultDir', profileId ? [profileId] : []))
   }
 
-  const getVaultPath = async (): Promise<string> => {
-    const res = await ipcStore.callFunction('getAiVaultPath')
-    return res.success ? res.result : ''
-  }
-
-  const openFolder = async (path: string): Promise<void> => {
-    const res = await ipcStore.callFunction('openFolderInOs', [path])
-    if (!res.success) throw new Error(res.error)
-  }
-
-  const getStorageDriver = (
-    profileId?: string | null
-  ): ChatSessionStorageDriver => {
-    if (profileId) {
-      return createProfileIpcChatSessionStorageDriver(ipcStore, profileId)
-    }
-    return createIpcChatSessionStorageDriver(ipcStore)
+  /** Removing a project removes the profiles' permissions for it as well */
+  const deleteProject = async (id: string): Promise<void> => {
+    await projectsModel.deleteProject(id)
+    await profilesModel.loadProfiles()
   }
 
   return {
     profiles: profilesModel.profiles,
     projects: projectsModel.projects,
-    activeProfileId,
-    activeProfile,
+    vaultPath,
+    vaultError,
+    isLoaded,
     loadAll,
-    getVaultPath,
-    openFolder,
-    getStorageDriver,
+    openVaultDir,
+    pickFolder: projectsModel.pickExternalFolder,
     // Profiles
     getProfile: profilesModel.getProfile,
     createProfile: profilesModel.createProfile,
-    saveProfile: profilesModel.saveProfile,
+    updateProfile: profilesModel.updateProfile,
+    refreshProfile: profilesModel.refreshProfile,
     deleteProfile: profilesModel.deleteProfile,
-    updateLastModel: profilesModel.updateLastModel,
     setProjectPermission: profilesModel.setProjectPermission,
     readSoul: profilesModel.readSoul,
     writeSoul: profilesModel.writeSoul,
@@ -112,7 +115,6 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     getProject: projectsModel.getProject,
     createProject: projectsModel.createProject,
     saveProject: projectsModel.saveProject,
-    deleteProject: projectsModel.deleteProject,
-    pickExternalFolder: projectsModel.pickExternalFolder,
+    deleteProject,
   }
 })

@@ -37,14 +37,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
-import { useChatStore } from '../../stores/chat'
 import Icon from '../common/AppIcon.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 
 /** What goes to the next chat message along with it: images and texts in one row */
-const chatStore = useChatStore()
+const { chat: chatStore } = useChatScope()
 const { t } = useI18n()
 
 const attachments = computed(

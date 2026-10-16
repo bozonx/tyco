@@ -1,4 +1,5 @@
 //! Storage owns synchronization; IPC callers never take history locks.
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 
@@ -71,7 +72,8 @@ impl HistoryStorageCoordinator {
         )?;
         // Retry on every settings save, even if the policy itself is unchanged.
         // A previous cleanup may have failed after its config was committed.
-        let chat_cleanup = chats::enforce_chat_history_policy(app, after.chat);
+        let chat_cleanup = chats::app_chats_dir(app)
+            .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, after.chat));
         self.cleanup_pending.store(
             result.is_cleanup_pending || chat_cleanup.is_err(),
             Ordering::SeqCst,
@@ -108,13 +110,58 @@ fn with_editor<T>(
     operation(&state.snapshot().settings.user_config, &mut memory)
 }
 
+/// Whose chat history an operation works on: the chats of "Ask AI" or a
+/// profile's own, kept in the profile folder of the AI vault.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ChatScope {
+    AskAi,
+    Profile(String),
+}
+
+impl ChatScope {
+    pub fn from_profile_id(profile_id: Option<String>) -> Self {
+        profile_id.map_or(Self::AskAi, Self::Profile)
+    }
+}
+
+fn scope_chats_dir(
+    app: &AppHandle,
+    state: &AppState,
+    scope: &ChatScope,
+) -> Result<std::path::PathBuf, AppError> {
+    match scope {
+        ChatScope::AskAi => chats::app_chats_dir(app),
+        ChatScope::Profile(profile_id) => {
+            let vault_root = crate::services::ai_vault::resolve_vault_path(
+                app,
+                &state.snapshot().settings.user_config,
+            )?;
+            crate::services::ai_vault::profile_history_dir(&vault_root, profile_id)
+        }
+    }
+}
+
+/// Every chat history shares one lock: chat images are shared by them all.
 fn with_chats<T>(
     app: &AppHandle,
-    operation: impl FnOnce(&AppState) -> Result<T, AppError>,
+    scope: &ChatScope,
+    operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
-    operation(&state)
+    let chats_dir = scope_chats_dir(app, &state, scope)?;
+    operation(&state, &chats_dir)
+}
+
+/// Runs `operation` while no chat history is written, e.g. to remove a profile
+/// together with its chats.
+pub fn while_chats_locked<T>(
+    app: &AppHandle,
+    operation: impl FnOnce() -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<AppState>();
+    let _guard = state.history.lock_chat_history();
+    operation()
 }
 
 pub fn read_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
@@ -161,59 +208,84 @@ pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
     with_editor(app, |_, memory| editor::clear_editor_history(app, memory))
 }
 
-pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
-    with_chats(app, |_| chats::list_chats(app))
+pub fn list_chats(app: &AppHandle, scope: &ChatScope) -> Result<Vec<ChatSummary>, AppError> {
+    with_chats(app, scope, |_, chats_dir| chats::list_chats(chats_dir))
 }
 
 /// Import leases and image loading are protected against concurrent cleanup.
 pub fn read_chat(
     app: &AppHandle,
+    scope: &ChatScope,
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    with_chats(app, |state| {
-        chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
-        let chat = chats::read_chat(app, id)?;
+    with_chats(app, scope, |state, chats_dir| {
+        chats::recover_chat_transaction(chats_dir)?;
+        let chat = chats::read_chat(chats_dir, id)?;
         if let Some(chat) = &chat {
-            load_chat_images(app, state, chat, ImageRetention::Active(owner.as_deref()))?;
+            load_chat_images(
+                state,
+                chats_dir,
+                chat,
+                ImageRetention::Active(owner.as_deref()),
+            )?;
         }
         Ok(chat)
     })
 }
 
-pub fn save_chat(app: &AppHandle, item: Chat) -> Result<(), AppError> {
-    with_chats(app, |state| {
-        chats::save_chat(app, &state.snapshot().settings.user_config, item)
+pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
+    with_chats(app, scope, |state, chats_dir| {
+        let policy = chats::ChatHistoryPolicy::from_config(&state.snapshot().settings.user_config);
+        chats::save_chat(chats_dir, policy, &state.chat_images, item)
     })
 }
 
-pub fn rename_chat(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
-    with_chats(app, |_| chats::rename_chat(app, id, title))
+pub fn rename_chat(
+    app: &AppHandle,
+    scope: &ChatScope,
+    id: String,
+    title: String,
+) -> Result<(), AppError> {
+    with_chats(app, scope, |_, chats_dir| {
+        chats::rename_chat(chats_dir, id, title)
+    })
 }
 
-pub fn search_chats(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
+pub fn search_chats(
+    app: &AppHandle,
+    scope: &ChatScope,
+    query: String,
+) -> Result<Vec<String>, AppError> {
     // The index is a snapshot. Atomic file replacements allow searching each
     // chat without holding up unrelated saves or editor history operations.
-    let history = list_chats(app)?;
-    chats::search_chats(app, history, query)
+    let (chats_dir, history) = with_chats(app, scope, |_, chats_dir| {
+        Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
+    })?;
+    chats::search_chats(&chats_dir, history, query)
 }
 
-pub fn delete_chat(app: &AppHandle, id: String, owner: String) -> Result<(), AppError> {
-    with_chats(app, |state| {
-        chats::recover_chat_transaction(&super::app_data_sub_dir(app, "chats")?)?;
-        match chats::read_chat(app, id.clone()) {
+pub fn delete_chat(
+    app: &AppHandle,
+    scope: &ChatScope,
+    id: String,
+    owner: String,
+) -> Result<(), AppError> {
+    with_chats(app, scope, |state, chats_dir| {
+        chats::recover_chat_transaction(chats_dir)?;
+        match chats::read_chat(chats_dir, id.clone()) {
             Ok(Some(chat)) => {
-                load_chat_images(app, state, &chat, ImageRetention::Undo(&owner))?;
+                load_chat_images(state, chats_dir, &chat, ImageRetention::Undo(&owner))?;
             }
             Ok(None) => {}
             Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
         }
-        chats::delete_chat(app, id)
+        chats::delete_chat(chats_dir, id)
     })
 }
 
-pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
-    with_chats(app, |_| chats::clear_chats(app))
+pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
+    with_chats(app, scope, |_, chats_dir| chats::clear_chats(chats_dir))
 }
 
 enum ImageRetention<'a> {
@@ -222,12 +294,12 @@ enum ImageRetention<'a> {
 }
 
 fn load_chat_images(
-    app: &AppHandle,
     state: &AppState,
+    chats_dir: &Path,
     chat: &Chat,
     retention: ImageRetention<'_>,
 ) -> Result<(), AppError> {
-    let directory = chats::chat_image_directory(app)?;
+    let directory = chats::chat_image_directory(chats_dir);
     let mut images = state.chat_images.lock().expect("chat image lock poisoned");
     for image in chat.messages.iter().flat_map(|message| &message.images) {
         match retention {
@@ -245,13 +317,13 @@ fn load_chat_images(
     Ok(())
 }
 
-pub fn read_chat_image(app: &AppHandle, id: &str) -> Result<Vec<u8>, AppError> {
-    with_chats(app, |state| {
+pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
+    with_chats(app, scope, |state, chats_dir| {
         state
             .chat_images
             .lock()
             .expect("chat image lock poisoned")
-            .get(&chats::chat_image_directory(app)?, id)
+            .get(&chats::chat_image_directory(chats_dir), id)
     })
 }
 

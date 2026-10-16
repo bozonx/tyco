@@ -69,7 +69,7 @@
         >
           <div class="flex items-center gap-2">
             <Icon
-              :icon="profile.icon || 'mdi:account-outline'"
+              icon="mdi:account-outline"
               height="18"
               class="text-primary shrink-0"
             />
@@ -136,7 +136,10 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from '../common/SettingsSection.vue'
-import type { ProjectAccessMode } from '@tyco/shared'
+import {
+  DEFAULT_PROJECT_PERMISSION,
+  type ProjectAccessMode,
+} from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
 const emit = defineEmits<{
@@ -155,17 +158,20 @@ const isExternal = ref(false)
 const targetPath = ref('')
 const showDeleteConfirm = ref(false)
 
-const profiles = aiProfilesStore.profiles
+const profiles = computed(() => aiProfilesStore.profiles)
 
 const projectTypeOptions = computed(() => [
   { id: 'internal', name: t('settings.projectTypeInternal') },
   { id: 'external', name: t('settings.projectTypeExternal') },
 ])
 
-function formatAccess(mode?: ProjectAccessMode): string {
-  if (mode === 'deny') return t('settings.accessDeny')
+/** A profile without an entry for the project has no access to it */
+function formatAccess(
+  mode: ProjectAccessMode = DEFAULT_PROJECT_PERMISSION.read
+): string {
+  if (mode === 'allow') return t('settings.accessAllow')
   if (mode === 'ask') return t('settings.accessAsk')
-  return t('settings.accessAllow')
+  return t('settings.accessDeny')
 }
 
 function loadProjectData() {
@@ -190,7 +196,7 @@ watch(() => props.projectId, loadProjectData)
 
 async function handlePickFolder() {
   try {
-    const picked = await aiProfilesStore.pickExternalFolder()
+    const picked = await aiProfilesStore.pickFolder()
     if (picked) {
       targetPath.value = picked
     }

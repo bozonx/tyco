@@ -6,15 +6,34 @@ import ChatView from './ChatView.vue'
 
 const mocks = vi.hoisted(() => ({
   navPanel: { resetNavPanelState: vi.fn() },
-  history: { loadChatHistory: vi.fn(async () => {}) },
   startNewChat: vi.fn(),
+  openLastOrNewChat: vi.fn(),
   mediaMatches: false,
+  profileId: null as string | null,
+  goToChat: vi.fn(),
+  goToConfig: vi.fn(),
+  aiProfiles: {
+    isLoaded: true,
+    vaultError: '',
+    profiles: [{ id: 'writer', name: 'Writer' }],
+    loadAll: vi.fn(),
+    getProfile(id: string) {
+      return this.profiles.find((profile) => profile.id === id)
+    },
+  },
 }))
 
-const chatState = reactive({
-  isGenerating: false,
-  startNewChat: () => mocks.startNewChat(),
-})
+function chatFor(profileId: string | null) {
+  return reactive({
+    profileId,
+    isGenerating: false,
+    currentChatParams: { id: null as string | null },
+    startNewChat: () => mocks.startNewChat(profileId),
+    openLastOrNewChat: () => mocks.openLastOrNewChat(profileId),
+  })
+}
+const chatState = chatFor(null)
+const profileChatState = chatFor('writer')
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -24,9 +43,29 @@ vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
 
-vi.mock('../stores/history', () => ({ useHistoryStore: () => mocks.history }))
+vi.mock('../composables/use-chat-scope', () => ({
+  resolveChatScope: (profileId: string | null) => ({
+    chat: profileId ? profileChatState : chatState,
+    input: {},
+  }),
+  provideChatScope: vi.fn(),
+}))
 
-vi.mock('../stores/chat', () => ({ useChatStore: () => chatState }))
+vi.mock('../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => mocks.aiProfiles,
+}))
+
+vi.mock('../lib/navigation/navigation', () => ({
+  appNavigation: {
+    currentProfileId: () => mocks.profileId,
+    goToChat: mocks.goToChat,
+    goToConfig: mocks.goToConfig,
+  },
+}))
+
+vi.mock('../components/common/AppIcon.vue', () => ({
+  default: { name: 'AppIcon', template: '<i />' },
+}))
 
 vi.mock('../components/chat/AiChat.vue', () => ({
   default: { name: 'AiChat', template: '<div class="ai-chat-stub" />' },
@@ -55,6 +94,8 @@ describe('ChatView.vue', () => {
     vi.clearAllMocks()
     chatState.isGenerating = false
     mocks.mediaMatches = false
+    mocks.profileId = null
+    mocks.aiProfiles.profiles = [{ id: 'writer', name: 'Writer' }]
     vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
       matches: mocks.mediaMatches,
       media: query,
@@ -67,12 +108,11 @@ describe('ChatView.vue', () => {
     }))
   })
 
-  it('resets nav panel and loads chat history on mount', async () => {
+  it('resets nav panel and shows the sidebar and the chat on mount', async () => {
     const wrapper = mount(ChatView)
     await flushPromises()
 
     expect(mocks.navPanel.resetNavPanelState).toHaveBeenCalledWith({})
-    expect(mocks.history.loadChatHistory).toHaveBeenCalledOnce()
     expect(wrapper.findComponent({ name: 'ChatSidebar' }).exists()).toBe(true)
     expect(wrapper.findComponent({ name: 'AiChat' }).exists()).toBe(true)
     expect(wrapper.find('.sidebar-closed-tools').exists()).toBe(false)
@@ -112,7 +152,7 @@ describe('ChatView.vue', () => {
     expect(newChatBtn?.props('disabled')).toBe(false)
 
     await newChatBtn!.trigger('click')
-    expect(mocks.startNewChat).toHaveBeenCalledOnce()
+    expect(mocks.startNewChat).toHaveBeenCalledWith(null)
 
     chatState.isGenerating = true
     await flushPromises()
@@ -145,5 +185,51 @@ describe('ChatView.vue', () => {
     sidebar.vm.$emit('navigate')
     await flushPromises()
     expect(wrapper.findComponent({ name: 'ChatSidebar' }).exists()).toBe(false)
+  })
+
+  it('shows the chat of the profile in the route with its name', async () => {
+    mocks.profileId = 'writer'
+    const wrapper = mount(ChatView)
+    await flushPromises()
+
+    expect(wrapper.find('.profile-header').text()).toContain('Writer')
+    expect(mocks.openLastOrNewChat).toHaveBeenCalledWith('writer')
+
+    wrapper.findComponent({ name: 'ChatSidebar' }).vm.$emit('collapse')
+    await flushPromises()
+    const newChatBtn = wrapper
+      .findAllComponents({ name: 'IconButton' })
+      .find((btn) => btn.props('icon') === 'mdi:plus')
+    await newChatBtn!.trigger('click')
+    expect(mocks.startNewChat).toHaveBeenCalledWith('writer')
+  })
+
+  it('opens the settings of the shown profile', async () => {
+    mocks.profileId = 'writer'
+    const wrapper = mount(ChatView)
+    await flushPromises()
+
+    const settings = wrapper
+      .findAllComponents({ name: 'IconButton' })
+      .find((btn) => btn.props('icon') === 'mdi:cog-outline')
+    await settings!.trigger('click')
+
+    expect(mocks.goToConfig).toHaveBeenCalledWith('ai-profile:writer')
+  })
+
+  it('leaves for "Ask AI" when the profile is gone', async () => {
+    mocks.profileId = 'removed'
+    mount(ChatView)
+    await flushPromises()
+
+    expect(mocks.goToChat).toHaveBeenCalled()
+  })
+
+  it('shows no profile header in "Ask AI"', async () => {
+    const wrapper = mount(ChatView)
+    await flushPromises()
+
+    expect(wrapper.find('.profile-header').exists()).toBe(false)
+    expect(mocks.openLastOrNewChat).not.toHaveBeenCalled()
   })
 })

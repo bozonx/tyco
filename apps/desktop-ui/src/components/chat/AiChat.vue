@@ -19,7 +19,6 @@
           v-for="(message, index) in chatStore.messages"
           :key="messageKey(message)"
           :message="message"
-          :profile-id="props.profileId"
           :can-regenerate="!chatStore.isGenerating"
           :streaming="
             chatStore.isGenerating && index === chatStore.messages.length - 1
@@ -116,13 +115,12 @@
 import { computed, onMounted, toRaw } from 'vue'
 
 import { useChatFileDrop } from '../../composables/use-chat-file-drop'
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatScroll } from '../../composables/use-chat-scroll'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { useChatStore } from '../../stores/chat'
-import { useChatInputStore } from '../../stores/chat-input'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Icon from '../common/AppIcon.vue'
@@ -134,13 +132,8 @@ import ChatComposer from './ChatComposer.vue'
 import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import type { ChatMessage } from '@tyco/shared'
 
-const props = withDefaults(defineProps<{ profileId?: string | null }>(), {
-  profileId: null,
-})
-
-const chatInputStore = useChatInputStore()
+const { chat: chatStore, input: chatInputStore } = useChatScope()
 const llmStore = useLlmStore()
-const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
 const { toastKey } = useToast()
 const { t } = useI18n()

@@ -49,24 +49,24 @@ export const DESKTOP_COMMANDS = {
   CLAIM_EXTERNAL_JOB: 'claim_external_job',
   CLEAR_CHATS: 'clear_chats',
   CLEAR_EDITOR_HISTORY: 'clear_editor_history',
-  CLEAR_PROFILE_CHATS: 'clear_profile_chats',
   CONFIGURE_HOTKEYS: 'configure_hotkeys',
   COPY_TEXT: 'copy_text',
+  CREATE_AI_PROFILE: 'create_ai_profile',
+  CREATE_AI_PROJECT: 'create_ai_project',
   DELETE_AI_PROFILE: 'delete_ai_profile',
   DELETE_AI_PROJECT: 'delete_ai_project',
   DELETE_CHAT: 'delete_chat',
-  DELETE_PROFILE_CHAT: 'delete_profile_chat',
   DISMISS_QUICK_WINDOW: 'dismiss_quick_window',
   EXECUTE_SCRIPT_ACTION: 'execute_script_action',
   FINISH_EXTERNAL_JOB: 'finish_external_job',
   FINISH_SELECTION_RUN: 'finish_selection_run',
+  GET_AI_PROFILE: 'get_ai_profile',
   GET_AI_VAULT_PATH: 'get_ai_vault_path',
   GET_CHAT: 'get_chat',
   GET_CHAT_IMAGE: 'get_chat_image',
   GET_DESKTOP_STATE: 'get_desktop_state',
   GET_EDITOR_HISTORY: 'get_editor_history',
   GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
-  GET_PROFILE_CHAT: 'get_profile_chat',
   GET_STORAGE_INFO: 'get_storage_info',
   GET_USER_CONFIG: 'get_user_config',
   HIDE_WINDOW: 'hide_window',
@@ -76,7 +76,6 @@ export const DESKTOP_COMMANDS = {
   LIST_AI_PROJECTS: 'list_ai_projects',
   LIST_CHATS: 'list_chats',
   LIST_INSTALLED_PLUGINS: 'list_installed_plugins',
-  LIST_PROFILE_CHATS: 'list_profile_chats',
   LOG_CLIENT_MESSAGE: 'log_client_message',
   LOG_COMMAND_RUN: 'log_command_run',
   LOG_CUSTOM_ACTION: 'log_custom_action',
@@ -90,7 +89,7 @@ export const DESKTOP_COMMANDS = {
   NET_SOCKET_SEND_TEXT: 'net_socket_send_text',
   NOTIFY_DESKTOP: 'notify_desktop',
   OPEN_ACTION_LOG: 'open_action_log',
-  OPEN_FOLDER_IN_OS: 'open_folder_in_os',
+  OPEN_AI_VAULT_DIR: 'open_ai_vault_dir',
   OPEN_IN_BROWSER: 'open_in_browser',
   OPEN_IN_BROWSER_AND_HIDE: 'open_in_browser_and_hide',
   OPEN_MAIN_CHAT: 'open_main_chat',
@@ -99,7 +98,6 @@ export const DESKTOP_COMMANDS = {
   PASTE_INTO_TARGET_AND_HIDE: 'paste_into_target_and_hide',
   PATCH_SESSION_STATE: 'patch_session_state',
   PICK_DIRECTORY: 'pick_directory',
-  PICK_EXTERNAL_PROJECT_FOLDER: 'pick_external_project_folder',
   PICK_SCRIPT_FILE: 'pick_script_file',
   READ_CHAT_FILE: 'read_chat_file',
   READ_PROFILE_SOUL: 'read_profile_soul',
@@ -108,7 +106,6 @@ export const DESKTOP_COMMANDS = {
   REMOVE_FROM_EDITOR_HISTORY: 'remove_from_editor_history',
   REMOVE_PLUGIN_PACKAGE: 'remove_plugin_package',
   RENAME_CHAT: 'rename_chat',
-  RENAME_PROFILE_CHAT: 'rename_profile_chat',
   REPLACE_SELECTION_WITH_COMMAND: 'replace_selection_with_command',
   RESTORE_EDITOR_HISTORY_ITEM: 'restore_editor_history_item',
   RESTORE_PLUGIN_PACKAGE: 'restore_plugin_package',
@@ -117,10 +114,8 @@ export const DESKTOP_COMMANDS = {
   SAVE_CHAT: 'save_chat',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
   SAVE_NOTE: 'save_note',
-  SAVE_PROFILE_CHAT: 'save_profile_chat',
   SAVE_USER_CONFIG: 'save_user_config',
   SEARCH_CHATS: 'search_chats',
-  SEARCH_PROFILE_CHATS: 'search_profile_chats',
   SECRETS_REMOVE: 'secrets_remove',
   SECRETS_SET: 'secrets_set',
   SECRETS_STATUS: 'secrets_status',
@@ -160,15 +155,18 @@ export interface DesktopCommands {
   cancel_script_action: { args: { runId: string }; result: boolean }
   check_text_injection: { args: undefined; result: void }
   claim_external_job: { args: { id: string }; result: boolean }
-  clear_chats: { args: undefined; result: void }
+  clear_chats: { args: { profileId?: string | null }; result: void }
   clear_editor_history: { args: undefined; result: void }
-  clear_profile_chats: { args: { profileId: string }; result: void }
   configure_hotkeys: { args: undefined; result: void }
   copy_text: { args: { text: string }; result: void }
+  create_ai_profile: {
+    args: { profile: AiProfile; soul: string }
+    result: void
+  }
+  create_ai_project: { args: { project: AiProject }; result: void }
   delete_ai_profile: { args: { id: string }; result: void }
   delete_ai_project: { args: { id: string }; result: void }
-  delete_chat: { args: { id: string }; result: void }
-  delete_profile_chat: { args: { profileId: string; id: string }; result: void }
+  delete_chat: { args: { id: string; profileId?: string | null }; result: void }
   dismiss_quick_window: { args: { activationId: number }; result: void }
   execute_script_action: {
     args: { request: ScriptActionRequest }
@@ -182,16 +180,19 @@ export interface DesktopCommands {
     args: { runId: number; text?: string | null }
     result: SelectionFinishStatus
   }
+  get_ai_profile: { args: { id: string }; result: AiProfile }
   get_ai_vault_path: { args: undefined; result: string }
-  get_chat: { args: { id: string; lease?: string | null }; result: Chat | null }
-  get_chat_image: { args: { id: string }; result: ArrayBuffer | number[] }
+  get_chat: {
+    args: { id: string; lease?: string | null; profileId?: string | null }
+    result: Chat | null
+  }
+  get_chat_image: {
+    args: { id: string; profileId?: string | null }
+    result: ArrayBuffer | number[]
+  }
   get_desktop_state: { args: undefined; result: DesktopSnapshot }
   get_editor_history: { args: undefined; result: Array<EditorHistoryItem> }
   get_hotkey_provider_info: { args: undefined; result: HotkeyProviderInfo }
-  get_profile_chat: {
-    args: { profileId: string; id: string }
-    result: Chat | null
-  }
   get_storage_info: { args: undefined; result: StorageInfo }
   get_user_config: { args: undefined; result: UserConfig }
   hide_window: { args: { activationId: number }; result: void }
@@ -205,14 +206,13 @@ export interface DesktopCommands {
   }
   list_ai_profiles: { args: undefined; result: Array<AiProfile> }
   list_ai_projects: { args: undefined; result: Array<AiProject> }
-  list_chats: { args: undefined; result: Array<ChatSummary> }
+  list_chats: {
+    args: { profileId?: string | null }
+    result: Array<ChatSummary>
+  }
   list_installed_plugins: {
     args: undefined
     result: Array<InstalledPluginPackage>
-  }
-  list_profile_chats: {
-    args: { profileId: string }
-    result: Array<ChatSummary>
   }
   log_client_message: {
     args: { level: string; message: string; context?: string | null }
@@ -242,7 +242,7 @@ export interface DesktopCommands {
   net_socket_send_text: { args: { id: number; text: string }; result: void }
   notify_desktop: { args: { summary: string; body: string }; result: void }
   open_action_log: { args: undefined; result: boolean }
-  open_folder_in_os: { args: { path: string }; result: void }
+  open_ai_vault_dir: { args: { profileId?: string | null }; result: void }
   open_in_browser: { args: { url: string }; result: void }
   open_in_browser_and_hide: {
     args: { url: string; activationId: number }
@@ -275,7 +275,6 @@ export interface DesktopCommands {
     result: DesktopSnapshot
   }
   pick_directory: { args: undefined; result: string | null }
-  pick_external_project_folder: { args: undefined; result: string | null }
   pick_script_file: { args: undefined; result: string | null }
   read_chat_file: { args: { path: string }; result: ArrayBuffer | number[] }
   read_profile_soul: { args: { id: string }; result: string }
@@ -283,9 +282,8 @@ export interface DesktopCommands {
   release_chat_image_undo: { args: { id: string }; result: void }
   remove_from_editor_history: { args: { id: string }; result: void }
   remove_plugin_package: { args: { id: string }; result: void }
-  rename_chat: { args: { id: string; title: string }; result: void }
-  rename_profile_chat: {
-    args: { profileId: string; id: string; title: string }
+  rename_chat: {
+    args: { id: string; title: string; profileId?: string | null }
     result: void
   }
   replace_selection_with_command: { args: { commandId: string }; result: void }
@@ -296,7 +294,7 @@ export interface DesktopCommands {
   restore_plugin_package: { args: { id: string }; result: void }
   save_ai_profile: { args: { profile: AiProfile }; result: void }
   save_ai_project: { args: { project: AiProject }; result: void }
-  save_chat: { args: { chat: Chat }; result: void }
+  save_chat: { args: { chat: Chat; profileId?: string | null }; result: void }
   save_editor_history: {
     args: { entry: EditorHistoryEntry }
     result: string | null
@@ -305,14 +303,12 @@ export interface DesktopCommands {
     args: { dir: string; fileName: string; text: string }
     result: string
   }
-  save_profile_chat: { args: { profileId: string; chat: Chat }; result: void }
   save_user_config: {
     args: { userConfig: UserConfig; baseConfig: UserConfig }
     result: DesktopSnapshot
   }
-  search_chats: { args: { query: string }; result: Array<string> }
-  search_profile_chats: {
-    args: { profileId: string; query: string }
+  search_chats: {
+    args: { query: string; profileId?: string | null }
     result: Array<string>
   }
   secrets_remove: { args: { id: string }; result: void }
@@ -347,7 +343,11 @@ export interface DesktopCommands {
   }
   suspend_hotkeys: { args: { suspended: boolean }; result: void }
   sync_chat_images: {
-    args: { ids: Array<string>; leases: Array<string> }
+    args: {
+      ids: Array<string>
+      leases: Array<string>
+      profileId?: string | null
+    }
     result: void
   }
   write_plugin_note: {

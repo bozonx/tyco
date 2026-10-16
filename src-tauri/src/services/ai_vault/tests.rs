@@ -1,8 +1,32 @@
 use std::collections::HashMap;
 
 use super::*;
-use crate::models::{Chat, ChatMessage, ChatRole};
 use crate::services::test_support::TestDir;
+
+fn profile(id: &str, created_at: u64) -> AiProfile {
+    AiProfile {
+        id: id.to_string(),
+        name: format!("Profile {id}"),
+        model_id: None,
+        temperature: None,
+        max_output_tokens: None,
+        project_permissions: HashMap::new(),
+        created_at,
+        updated_at: created_at,
+    }
+}
+
+fn project(id: &str, created_at: u64) -> AiProject {
+    AiProject {
+        id: id.to_string(),
+        name: format!("Project {id}"),
+        description: None,
+        is_external: false,
+        target_path: None,
+        created_at,
+        updated_at: created_at,
+    }
+}
 
 #[test]
 fn resolve_vault_path_uses_fallback_when_unconfigured_or_empty() {
@@ -21,14 +45,26 @@ fn resolve_vault_path_uses_fallback_when_unconfigured_or_empty() {
 }
 
 #[test]
-fn resolve_vault_path_rejects_relative_path_and_uses_fallback() {
+fn resolve_vault_path_rejects_a_relative_path_instead_of_falling_back() {
     let test_dir = TestDir::new("ai_vault_relative");
     let fallback_path = test_dir.join("default-ai-vault");
-    let fallback = || Ok(fallback_path.clone());
 
     let resolved =
-        resolve_vault_path_from_config(Some("relative/path/to/vault"), fallback).unwrap();
-    assert_eq!(resolved, fallback_path);
+        resolve_vault_path_from_config(Some("relative/path/to/vault"), || Ok(fallback_path));
+    assert!(resolved.is_err());
+}
+
+#[test]
+fn resolve_vault_path_rejects_an_unusable_folder_instead_of_falling_back() {
+    let test_dir = TestDir::new("ai_vault_unusable");
+    let blocker = test_dir.join("file");
+    std::fs::write(&blocker, "not a folder").unwrap();
+    let configured = blocker.join("vault");
+    let fallback_path = test_dir.join("default-ai-vault");
+
+    let resolved =
+        resolve_vault_path_from_config(Some(configured.to_str().unwrap()), || Ok(fallback_path));
+    assert!(resolved.is_err());
 }
 
 #[test]
@@ -42,6 +78,21 @@ fn resolve_vault_path_accepts_valid_absolute_path() {
         resolve_vault_path_from_config(Some(custom_vault.to_str().unwrap()), fallback).unwrap();
     assert_eq!(resolved, custom_vault);
     assert!(custom_vault.is_dir());
+}
+
+#[cfg(unix)]
+#[test]
+fn the_vault_root_keeps_the_permissions_of_the_users_folder() {
+    use std::os::unix::fs::PermissionsExt;
+    let test_dir = TestDir::new("ai_vault_root_mode");
+    let vault_root = test_dir.join("documents");
+    std::fs::create_dir_all(&vault_root).unwrap();
+    std::fs::set_permissions(&vault_root, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+    ensure_vault_dirs(&vault_root).unwrap();
+
+    let mode = std::fs::metadata(&vault_root).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o755);
 }
 
 #[test]
@@ -59,47 +110,150 @@ fn test_validate_id() {
 }
 
 #[test]
-fn test_profile_crud_and_soul() {
-    let test_dir = TestDir::new("ai_vault_profile_crud");
+fn a_created_profile_has_its_folders_and_soul() {
+    let test_dir = TestDir::new("ai_vault_profile_create");
     let vault_root = test_dir.join("vault");
 
-    let profile = AiProfile {
-        id: "writer".to_string(),
-        name: "Technical Writer".to_string(),
-        icon: Some("mdi:fountain-pen-tip".to_string()),
-        last_model_id: Some("gpt-4o".to_string()),
-        project_permissions: HashMap::new(),
-        created_at: 1000,
-        updated_at: 1000,
-    };
+    create_profile(&vault_root, profile("writer", 1000), "# Writer\n").unwrap();
 
-    save_profile(&vault_root, profile.clone()).unwrap();
+    let dir = vault_root.join("profiles").join("writer");
+    assert!(dir.join("history").is_dir());
+    for sub in ["uploads", "generated", "downloads"] {
+        assert!(dir.join("workspace").join(sub).is_dir());
+    }
+    assert_eq!(
+        read_profile_soul(&vault_root, "writer").unwrap(),
+        "# Writer\n"
+    );
+    assert_eq!(
+        list_profiles(&vault_root).unwrap(),
+        vec![profile("writer", 1000)]
+    );
+}
 
-    let profiles = list_profiles(&vault_root).unwrap();
-    assert_eq!(profiles.len(), 1);
-    assert_eq!(profiles[0].id, "writer");
-    assert_eq!(profiles[0].name, "Technical Writer");
+#[test]
+fn creating_never_overwrites_an_existing_profile() {
+    let test_dir = TestDir::new("ai_vault_profile_duplicate");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "original").unwrap();
 
-    // Check workspace dirs created
-    let profile_dir = vault_root.join("profiles").join("writer");
-    assert!(profile_dir.join("history").is_dir());
-    assert!(profile_dir.join("workspace").join("uploads").is_dir());
-    assert!(profile_dir.join("workspace").join("generated").is_dir());
-    assert!(profile_dir.join("workspace").join("downloads").is_dir());
+    let mut other = profile("writer", 2000);
+    other.name = "Other".into();
+    assert!(create_profile(&vault_root, other, "replaced").is_err());
 
-    // Check default SOUL.md
-    let soul = read_profile_soul(&vault_root, "writer").unwrap();
-    assert!(soul.contains("System Prompt"));
+    assert_eq!(
+        get_profile(&vault_root, "writer").unwrap().name,
+        "Profile writer"
+    );
+    assert_eq!(
+        read_profile_soul(&vault_root, "writer").unwrap(),
+        "original"
+    );
+}
 
-    // Write custom SOUL.md
-    write_profile_soul(&vault_root, "writer", "# Custom Persona").unwrap();
-    let updated_soul = read_profile_soul(&vault_root, "writer").unwrap();
-    assert_eq!(updated_soul, "# Custom Persona");
-
-    // Delete profile
+#[test]
+fn saving_never_brings_back_a_deleted_profile() {
+    let test_dir = TestDir::new("ai_vault_profile_resurrect");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
     delete_profile(&vault_root, "writer").unwrap();
-    assert!(!profile_dir.exists());
-    assert_eq!(list_profiles(&vault_root).unwrap().len(), 0);
+
+    assert!(save_profile(&vault_root, profile("writer", 1000)).is_err());
+    assert!(write_profile_soul(&vault_root, "writer", "soul").is_err());
+    assert!(profile_history_dir(&vault_root, "writer").is_err());
+    assert!(!vault_root.join("profiles").join("writer").exists());
+}
+
+#[test]
+fn profile_settings_round_trip_and_are_validated() {
+    let test_dir = TestDir::new("ai_vault_profile_settings");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    let mut updated = profile("writer", 1000);
+    updated.model_id = Some("model-a".into());
+    updated.temperature = Some(0.4);
+    updated.max_output_tokens = Some(2048);
+    save_profile(&vault_root, updated.clone()).unwrap();
+    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+
+    let mut hot = updated.clone();
+    hot.temperature = Some(2.5);
+    assert!(save_profile(&vault_root, hot).is_err());
+    let mut empty = updated.clone();
+    empty.max_output_tokens = Some(0);
+    assert!(save_profile(&vault_root, empty).is_err());
+    let mut unnamed = updated;
+    unnamed.name = "  ".into();
+    assert!(save_profile(&vault_root, unnamed).is_err());
+}
+
+#[test]
+fn a_profile_written_with_the_last_used_model_keeps_it() {
+    let test_dir = TestDir::new("ai_vault_profile_legacy");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+    std::fs::write(
+        vault_root.join("profiles/writer/profile.json"),
+        r#"{"id":"writer","name":"Writer","icon":"mdi:pen","lastModelId":"model-a","projectPermissions":{},"createdAt":1,"updatedAt":1}"#,
+    )
+    .unwrap();
+
+    let loaded = get_profile(&vault_root, "writer").unwrap();
+    assert_eq!(loaded.model_id.as_deref(), Some("model-a"));
+}
+
+#[test]
+fn a_missing_soul_is_an_empty_instruction() {
+    let test_dir = TestDir::new("ai_vault_soul_missing");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "soul").unwrap();
+    std::fs::remove_file(vault_root.join("profiles/writer/SOUL.md")).unwrap();
+
+    assert_eq!(read_profile_soul(&vault_root, "writer").unwrap(), "");
+}
+
+#[test]
+fn an_unreadable_profile_file_is_skipped() {
+    let test_dir = TestDir::new("ai_vault_profile_broken");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+    create_profile(&vault_root, profile("broken", 2000), "").unwrap();
+    std::fs::write(vault_root.join("profiles/broken/profile.json"), "{").unwrap();
+
+    let ids: Vec<_> = list_profiles(&vault_root)
+        .unwrap()
+        .into_iter()
+        .map(|p| p.id)
+        .collect();
+    assert_eq!(ids, vec!["writer"]);
+}
+
+#[test]
+fn deleting_a_profile_removes_its_folder() {
+    let test_dir = TestDir::new("ai_vault_profile_delete");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    delete_profile(&vault_root, "writer").unwrap();
+
+    assert!(!vault_root.join("profiles").join("writer").exists());
+    assert!(list_profiles(&vault_root).unwrap().is_empty());
+}
+
+#[test]
+fn the_folder_to_open_is_the_vault_or_an_existing_profile() {
+    let test_dir = TestDir::new("ai_vault_open_dir");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    assert_eq!(vault_dir_to_open(&vault_root, None).unwrap(), vault_root);
+    assert_eq!(
+        vault_dir_to_open(&vault_root, Some("writer")).unwrap(),
+        vault_root.join("profiles").join("writer")
+    );
+    assert!(vault_dir_to_open(&vault_root, Some("missing")).is_err());
+    assert!(vault_dir_to_open(&vault_root, Some("../writer")).is_err());
 }
 
 #[test]
@@ -109,44 +263,26 @@ fn test_project_crud() {
     let ext_dir = test_dir.join("external_folder");
     std::fs::create_dir_all(&ext_dir).unwrap();
 
-    let internal_proj = AiProject {
-        id: "internal".to_string(),
-        name: "Internal Project".to_string(),
-        description: Some("Description".to_string()),
-        is_external: false,
-        target_path: None,
-        created_at: 1000,
-        updated_at: 1000,
-    };
-    save_project(&vault_root, internal_proj).unwrap();
+    create_project(&vault_root, project("internal", 1000)).unwrap();
+    assert!(create_project(&vault_root, project("internal", 1500)).is_err());
 
-    let external_proj = AiProject {
-        id: "external".to_string(),
-        name: "External Project".to_string(),
-        description: None,
-        is_external: true,
-        target_path: Some(ext_dir.to_str().unwrap().to_string()),
-        created_at: 2000,
-        updated_at: 2000,
-    };
-    save_project(&vault_root, external_proj).unwrap();
+    let mut external = project("external", 2000);
+    external.is_external = true;
+    external.target_path = Some(ext_dir.to_str().unwrap().to_string());
+    create_project(&vault_root, external).unwrap();
 
-    let projects = list_projects(&vault_root).unwrap();
-    assert_eq!(projects.len(), 2);
-    assert_eq!(projects[0].id, "internal");
-    assert_eq!(projects[1].id, "external");
+    let ids: Vec<_> = list_projects(&vault_root)
+        .unwrap()
+        .into_iter()
+        .map(|p| p.id)
+        .collect();
+    assert_eq!(ids, vec!["internal", "external"]);
 
-    // Reject external project with non-existent or relative path
-    let bad_ext = AiProject {
-        id: "bad_ext".to_string(),
-        name: "Bad".to_string(),
-        description: None,
-        is_external: true,
-        target_path: Some("non_existent_folder".to_string()),
-        created_at: 3000,
-        updated_at: 3000,
-    };
-    assert!(save_project(&vault_root, bad_ext).is_err());
+    let mut bad_ext = project("bad_ext", 3000);
+    bad_ext.is_external = true;
+    bad_ext.target_path = Some("non_existent_folder".to_string());
+    assert!(create_project(&vault_root, bad_ext).is_err());
+    assert!(save_project(&vault_root, project("missing", 3000)).is_err());
 
     // Delete external project does not delete target_path
     delete_project(&vault_root, "external").unwrap();
@@ -155,58 +291,24 @@ fn test_project_crud() {
 }
 
 #[test]
-fn test_profile_chat_history() {
-    let test_dir = TestDir::new("ai_vault_profile_chats");
+fn deleting_a_project_removes_the_permissions_for_it() {
+    let test_dir = TestDir::new("ai_vault_project_permissions");
     let vault_root = test_dir.join("vault");
+    create_project(&vault_root, project("docs", 1000)).unwrap();
+    let mut writer = profile("writer", 1000);
+    writer.project_permissions.insert(
+        "docs".into(),
+        ProjectPermission {
+            read: ProjectAccessMode::Allow,
+            write: ProjectAccessMode::Deny,
+        },
+    );
+    create_profile(&vault_root, writer, "").unwrap();
 
-    let profile = AiProfile {
-        id: "coder".to_string(),
-        name: "Coder".to_string(),
-        icon: None,
-        last_model_id: None,
-        project_permissions: HashMap::new(),
-        created_at: 1000,
-        updated_at: 1000,
-    };
-    save_profile(&vault_root, profile).unwrap();
+    delete_project(&vault_root, "docs").unwrap();
 
-    let chat = Chat {
-        id: "chat-1".to_string(),
-        title: "Hello world".to_string(),
-        last_message_at: "2026-10-15T12:00:00Z".to_string(),
-        messages: vec![ChatMessage {
-            role: ChatRole::User,
-            content: "Hi".to_string(),
-            attachments: vec![],
-            images: vec![],
-            status: None,
-        }],
-    };
-
-    save_profile_chat(&vault_root, "coder", chat.clone()).unwrap();
-
-    let chats = list_profile_chats(&vault_root, "coder").unwrap();
-    assert_eq!(chats.len(), 1);
-    assert_eq!(chats[0].id, "chat-1");
-    assert_eq!(chats[0].title, "Hello world");
-
-    let loaded = get_profile_chat(&vault_root, "coder", "chat-1").unwrap();
-    assert!(loaded.is_some());
-    assert_eq!(loaded.unwrap().title, "Hello world");
-
-    rename_profile_chat(&vault_root, "coder", "chat-1", "Renamed").unwrap();
-    let renamed = get_profile_chat(&vault_root, "coder", "chat-1").unwrap();
-    assert_eq!(renamed.unwrap().title, "Renamed");
-
-    let found_by_title = search_profile_chats(&vault_root, "coder", "rename").unwrap();
-    assert_eq!(found_by_title, vec!["chat-1"]);
-
-    let found_by_msg = search_profile_chats(&vault_root, "coder", "Hi").unwrap();
-    assert_eq!(found_by_msg, vec!["chat-1"]);
-
-    let found_none = search_profile_chats(&vault_root, "coder", "nonexistent").unwrap();
-    assert!(found_none.is_empty());
-
-    delete_profile_chat(&vault_root, "coder", "chat-1").unwrap();
-    assert_eq!(list_profile_chats(&vault_root, "coder").unwrap().len(), 0);
+    assert!(get_profile(&vault_root, "writer")
+        .unwrap()
+        .project_permissions
+        .is_empty());
 }

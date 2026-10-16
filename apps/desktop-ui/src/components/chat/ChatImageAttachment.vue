@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 
+import { useChatScopeProfileId } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
 import BaseDialog from '../common/BaseDialog.vue'
@@ -57,6 +58,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ remove: []; loaded: [] }>()
 const { t } = useI18n()
+const profileId = useChatScopeProfileId()
 const url = ref('')
 const hasFailed = ref(false)
 const isViewerOpen = ref(false)
@@ -70,7 +72,7 @@ async function load() {
   release()
   hasFailed.value = false
   try {
-    const bytes = await getChatImage(props.image.id)
+    const bytes = await getChatImage(props.image.id, profileId)
     if (current === version)
       url.value = URL.createObjectURL(
         new Blob([bytes], { type: props.image.mediaType })

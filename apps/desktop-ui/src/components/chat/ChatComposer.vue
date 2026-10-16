@@ -111,6 +111,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatVoiceInput } from '../../composables/use-chat-voice-input'
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -119,7 +120,6 @@ import {
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { useChatStore } from '../../stores/chat'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
@@ -130,7 +130,7 @@ import ChatInput from './ChatInput.vue'
 
 defineProps<{ canSend: boolean; draggingFiles: boolean }>()
 const emit = defineEmits<{ send: [] }>()
-const chatStore = useChatStore()
+const { chat: chatStore } = useChatScope()
 const ipcStore = useIpcStore()
 const { t } = useI18n()
 const { openChatVoiceInput } = useChatVoiceInput()

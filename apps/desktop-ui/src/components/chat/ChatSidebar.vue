@@ -126,8 +126,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, toValue, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
@@ -137,11 +138,7 @@ import {
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
-import { createChatHistoryModel } from '../../lib/history/chat-history'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
-import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useChatStore } from '../../stores/chat'
-import { useHistoryStore } from '../../stores/history'
 import { useIpcStore } from '../../stores/ipc'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -153,33 +150,17 @@ import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 
-const props = withDefaults(defineProps<{ profileId?: string | null }>(), {
-  profileId: null,
-})
-
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
 const { toastKey } = useToast()
-const chatStore = useChatStore()
-const historyStore = useHistoryStore()
-const aiProfilesStore = useAiProfilesStore()
+const { chat: chatStore } = useChatScope()
+/** The chats of the shown chat only: "Ask AI" or one profile */
+const history = chatStore.history
 const ipcStore = useIpcStore()
 
-const profileHistoryModel = computed(() => {
-  if (!props.profileId) return null
-  const driver = aiProfilesStore.getStorageDriver(props.profileId)
-  return createChatHistoryModel(driver)
-})
-
-const activeHistory = computed(() => profileHistoryModel.value || historyStore)
-
-watch(
-  () => props.profileId,
-  () => {
-    void activeHistory.value.loadChatHistory?.()
-  },
-  { immediate: true }
-)
+void history
+  .loadChatHistory()
+  .catch(() => toastKey('history.operationFailed', 'error'))
 
 const isSearchOpen = ref(false)
 const searchInputRef = ref<{ focus(): void } | null>(null)
@@ -211,13 +192,13 @@ const removal = createRemovalUndo<Chat>({
       await chatStore.whenSaved()
     }
     try {
-      return await activeHistory.value.deleteChat(id)
+      return await history.deleteChat(id)
     } catch (error) {
       if (wasOpen) await chatStore.openChat(id, { silent: true })
       throw error
     }
   },
-  restore: (item) => activeHistory.value.restoreChatItem(item),
+  restore: (item) => history.restoreChatItem(item),
   release: (item) => releaseChatImageUndo(item.id),
   reportError: () => toastKey('history.operationFailed', 'error'),
 })
@@ -234,7 +215,7 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchRun = 0
 
 watch(
-  [query, () => activeHistory.value.chatHistory],
+  [query, () => history.chatHistory],
   ([value]) => {
     clearTimeout(searchTimer)
     matchedIds.value = null
@@ -242,7 +223,7 @@ watch(
     if (!value.trim()) return
     searchTimer = setTimeout(async () => {
       try {
-        const ids = await activeHistory.value.searchChats(value)
+        const ids = await history.searchChats(value)
         if (run === searchRun) matchedIds.value = new Set(ids)
       } catch {
         // the titles are still matched
@@ -254,11 +235,7 @@ watch(
 
 const groups = computed(() =>
   groupChatHistory(
-    filterChatHistory(
-      toValue(activeHistory.value.chatHistory),
-      query.value,
-      matchedIds.value
-    )
+    filterChatHistory(history.chatHistory, query.value, matchedIds.value)
   )
 )
 
@@ -296,7 +273,7 @@ async function copyChatMarkdown(id: string) {
     }
   } else {
     try {
-      targetChat = await activeHistory.value.loadChat(id)
+      targetChat = await history.loadChat(id)
     } catch {
       toastKey('history.operationFailed', 'error')
       return

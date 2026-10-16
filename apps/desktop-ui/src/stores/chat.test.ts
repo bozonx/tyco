@@ -1,11 +1,17 @@
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import { DEFAULT_LLM_CONFIG } from '@tyco/shared'
+import { APP_CONFIG, DEFAULT_LLM_CONFIG, type AiProfile } from '@tyco/shared'
 
+import type { DesktopCall } from '../lib/ipc/desktop-functions'
 import { appNavigation } from '../lib/navigation/navigation'
-import { useChatStore } from './chat'
-import { useChatInputStore } from './chat-input'
+import { useAiProfilesStore } from './ai-profiles'
+import {
+  disposeProfileChatStore,
+  useChatStore,
+  useProfileChatStore,
+} from './chat'
+import { useChatInputStore, useProfileChatInputStore } from './chat-input'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
@@ -112,29 +118,176 @@ it('budgets the actual chat instructions, rules and configured output consistent
   expect(input.value).toBe('Question')
 })
 
-it('updates profile lastModelId when selecting a model within an active profile', async () => {
-  const { useAiProfilesStore } = await import('./ai-profiles')
-  const profilesStore = useAiProfilesStore()
-  vi.spyOn(profilesStore, 'activeProfileId', 'get').mockReturnValue('writer')
-  const updateSpy = vi
-    .spyOn(profilesStore, 'updateLastModel')
-    .mockResolvedValue()
+describe('profile chats', () => {
+  const writer: AiProfile = {
+    id: 'writer',
+    name: 'Writer',
+    temperature: 0.3,
+    maxOutputTokens: 500,
+    projectPermissions: {},
+    createdAt: 1,
+    updatedAt: 1,
+  }
 
-  const store = useChatStore()
-  await store.selectModel('google:gemini-pro')
-  expect(updateSpy).toHaveBeenCalledWith('writer', 'google:gemini-pro')
-})
+  /** The vault holds one profile; its files may change between requests */
+  function mockVault(files: { soul: string; profile: AiProfile }) {
+    const ipc = useIpcStore()
+    return vi.spyOn(ipc, 'callFunction').mockImplementation((async (
+      name: string
+    ) => {
+      switch (name) {
+        case 'getAiVaultPath':
+          return { success: true, result: '/vault' }
+        case 'listAiProfiles':
+          return { success: true, result: [files.profile] }
+        case 'listAiProjects':
+          return { success: true, result: [] }
+        case 'getAiProfile':
+          return { success: true, result: files.profile }
+        case 'readProfileSoul':
+          return { success: true, result: files.soul }
+        case 'listChats':
+          return { success: true, result: [] }
+        default:
+          return { success: true, result: undefined }
+      }
+    }) as DesktopCall)
+  }
 
-it('preserves active profile query when navigating to chat from inside a profile', async () => {
-  const { useAiProfilesStore } = await import('./ai-profiles')
-  const profilesStore = useAiProfilesStore()
-  vi.spyOn(profilesStore, 'activeProfileId', 'get').mockReturnValue('writer')
-  vi.spyOn(appNavigation, 'isCurrent').mockReturnValue(false)
-  const profileChatSpy = vi
-    .spyOn(appNavigation, 'goToProfileChat')
-    .mockResolvedValue()
+  async function sendIn(
+    store: ReturnType<typeof useChatStore>,
+    input: { setValue: (text: string) => void },
+    text: string
+  ) {
+    input.setValue(text)
+    expect(await store.sendInput()).toBe(true)
+    await vi.waitFor(() => expect(store.isGenerating).toBe(false))
+  }
 
-  const store = useChatStore()
-  await store.startNewChat()
-  expect(profileChatSpy).toHaveBeenCalledWith('writer')
+  it('keeps the conversation of a profile apart from "Ask AI"', async () => {
+    const call = mockVault({ soul: '# Writer', profile: writer })
+    await useAiProfilesStore().loadAll()
+    const profileChat = useProfileChatStore('writer')
+
+    await sendIn(profileChat, useProfileChatInputStore('writer'), 'Hello')
+
+    expect(profileChat.messages.map((m) => m.content)).toEqual([
+      'Hello',
+      'answer',
+    ])
+    expect(useChatStore().messages).toEqual([])
+    expect(useChatInputStore().value).toBe('')
+    expect(useHistoryStore().saveChat).not.toHaveBeenCalled()
+    expect(call).toHaveBeenCalledWith('saveChat', [
+      expect.objectContaining({ id: profileChat.currentChatParams.id }),
+      'writer',
+    ])
+  })
+
+  it('asks with the SOUL.md and settings read just before the request', async () => {
+    const files = { soul: '# Old', profile: writer }
+    mockVault(files)
+    await useAiProfilesStore().loadAll()
+    const ipc = useIpcStore()
+    ipc.desktopState.userConfig.aiRules = {
+      ...ipc.desktopState.userConfig.aiRules,
+      chat: 'Ask AI rules',
+    }
+    const profileChat = useProfileChatStore('writer')
+    files.soul = '# Edited by hand'
+    files.profile = { ...writer, temperature: 1.1 }
+
+    await sendIn(profileChat, useProfileChatInputStore('writer'), 'Hello')
+
+    expect(ai.sendChatMessage).toHaveBeenCalledWith(
+      'Hello',
+      [],
+      '# Edited by hand',
+      expect.objectContaining({ temperature: 1.1, maxOutputTokens: 500 })
+    )
+    const [, , , options] = ai.sendChatMessage.mock.calls[0] as unknown[]
+    expect(options).not.toHaveProperty('rules')
+  })
+
+  it('gives "Ask AI" its own instructions and the user chat rules', async () => {
+    const ipc = useIpcStore()
+    ipc.desktopState.userConfig.aiRules = {
+      ...ipc.desktopState.userConfig.aiRules,
+      chat: 'Ask AI rules',
+    }
+    const store = useChatStore()
+
+    await sendIn(store, useChatInputStore(), 'Question')
+
+    expect(ai.sendChatMessage).toHaveBeenCalledWith(
+      'Question',
+      [],
+      APP_CONFIG.aiInstructions.chat,
+      expect.objectContaining({ rules: 'Ask AI rules' })
+    )
+  })
+
+  it('keeps answering in a profile while "Ask AI" is opened', async () => {
+    mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    let finish!: (text: string) => void
+    ai.sendChatMessage.mockImplementationOnce(
+      () => new Promise<string>((resolve) => (finish = resolve))
+    )
+    const profileChat = useProfileChatStore('writer')
+    const input = useProfileChatInputStore('writer')
+    input.setValue('Long question')
+    await profileChat.sendInput()
+    await vi.waitFor(() => expect(ai.sendChatMessage).toHaveBeenCalled())
+
+    await useChatStore().openLastOrNewChat()
+
+    expect(profileChat.isGenerating).toBe(true)
+    finish('long answer')
+    await vi.waitFor(() => expect(profileChat.isGenerating).toBe(false))
+    expect(profileChat.messages.at(-1)?.content).toBe('long answer')
+    expect(useChatStore().messages).toEqual([])
+  })
+
+  it('keeps the model picked in a profile in the profile', async () => {
+    const call = mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    const ipc = useIpcStore()
+    const profileChat = useProfileChatStore('writer')
+    const modelId = profileChat.modelOptions[0]!.id
+
+    await profileChat.selectModel(modelId)
+
+    expect(call).toHaveBeenCalledWith('saveAiProfile', [
+      expect.objectContaining({ id: 'writer', modelId }),
+    ])
+    expect(ipc.patchSessionState).not.toHaveBeenCalled()
+  })
+
+  it('opens a profile chat on the profile route', async () => {
+    mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    vi.spyOn(appNavigation, 'isCurrent').mockReturnValue(false)
+    const goToProfileChat = vi
+      .spyOn(appNavigation, 'goToProfileChat')
+      .mockResolvedValue()
+
+    await useProfileChatStore('writer').startNewChat()
+
+    expect(goToProfileChat).toHaveBeenCalledWith('writer')
+    expect(appNavigation.push).not.toHaveBeenCalled()
+  })
+
+  it('forgets the chat of a removed profile', async () => {
+    mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    const before = useProfileChatStore('writer')
+    before.currentChatParams.title = 'Draft'
+
+    disposeProfileChatStore('writer')
+
+    expect(useProfileChatStore('writer').currentChatParams.title).toBe(
+      undefined
+    )
+  })
 })

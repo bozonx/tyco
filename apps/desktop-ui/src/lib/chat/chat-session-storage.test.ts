@@ -69,63 +69,65 @@ describe('chat-session-storage', () => {
     await expect(driver.clearChats!()).resolves.toBeUndefined()
   })
 
-  it('delegates profile operations with profileId parameter', async () => {
+  it('adds the profile id to every call of a profile chat', async () => {
     const callFunction = vi
       .fn<DesktopCall>()
       .mockImplementation(async (name) => {
-        if (name === 'listProfileChats') return { success: true, result: [] }
-        if (name === 'getProfileChat') {
+        if (name === 'getChat') {
           return {
             success: true,
             result: {
               id: 'p1',
-              title: 'Profile Chat',
+              title: 'Profile',
               lastMessageAt: '',
               messages: [],
             },
           }
         }
-        if (name === 'saveProfileChat')
-          return { success: true, result: undefined }
-        if (name === 'renameProfileChat')
-          return { success: true, result: undefined }
-        if (name === 'deleteProfileChat')
-          return { success: true, result: undefined }
-        if (name === 'searchProfileChats')
-          return { success: true, result: ['p1'] }
-        if (name === 'clearProfileChats')
-          return { success: true, result: undefined }
-        return { success: false, error: 'Unknown' }
+        if (name === 'searchChats') return { success: true, result: ['p1'] }
+        if (name === 'listChats') return { success: true, result: [] }
+        return { success: true, result: undefined }
       })
-
-    const { createProfileIpcChatSessionStorageDriver } =
-      await import('./chat-session-storage')
-    const driver = createProfileIpcChatSessionStorageDriver(
+    const driver = createIpcChatSessionStorageDriver(
       { callFunction: callFunction as DesktopCall },
       'writer'
     )
+    const chat = { id: 'p1', title: 'Profile', lastMessageAt: '', messages: [] }
 
-    expect(await driver.listChats()).toEqual([])
-    expect(callFunction).toHaveBeenCalledWith('listProfileChats', ['writer'])
-
-    expect(await driver.getChat('p1')).toEqual({
-      id: 'p1',
-      title: 'Profile Chat',
-      lastMessageAt: '',
-      messages: [],
-    })
-    expect(callFunction).toHaveBeenCalledWith('getProfileChat', [
-      'writer',
-      'p1',
-    ])
-
-    expect(await driver.searchChats!('word')).toEqual(['p1'])
-    expect(callFunction).toHaveBeenCalledWith('searchProfileChats', [
-      'writer',
-      'word',
-    ])
-
+    await driver.listChats()
+    await driver.getChat('p1')
+    await driver.saveChat(chat)
+    await driver.renameChat('p1', 'Renamed')
+    await driver.deleteChat('p1')
+    await driver.searchChats!('word')
     await driver.clearChats!()
-    expect(callFunction).toHaveBeenCalledWith('clearProfileChats', ['writer'])
+
+    expect(callFunction.mock.calls).toEqual([
+      ['listChats', ['writer']],
+      ['getChat', ['p1', 'writer']],
+      ['saveChat', [chat, 'writer']],
+      ['renameChat', ['p1', 'Renamed', 'writer']],
+      ['getChat', ['p1', 'writer']],
+      ['deleteChat', ['p1', 'writer']],
+      ['searchChats', ['word', 'writer']],
+      ['clearChats', ['writer']],
+    ])
+  })
+
+  it('calls the "Ask AI" chats without a profile argument', async () => {
+    const callFunction = vi
+      .fn<DesktopCall>()
+      .mockResolvedValue({ success: true, result: [] })
+    const driver = createIpcChatSessionStorageDriver({
+      callFunction: callFunction as DesktopCall,
+    })
+
+    await driver.listChats()
+    await driver.renameChat('c1', 'Title')
+
+    expect(callFunction.mock.calls).toEqual([
+      ['listChats', []],
+      ['renameChat', ['c1', 'Title']],
+    ])
   })
 })

@@ -15,6 +15,7 @@ describe('ai-projects-model', () => {
 
   const createDeps = () => ({
     listProjects: vi.fn().mockResolvedValue([mockProject]),
+    createProject: vi.fn().mockResolvedValue(undefined),
     saveProject: vi.fn().mockResolvedValue(undefined),
     deleteProject: vi.fn().mockResolvedValue(undefined),
     pickExternalFolder: vi.fn().mockResolvedValue('/path/to/folder'),
@@ -45,7 +46,7 @@ describe('ai-projects-model', () => {
     expect(created.id).toBe('backend-api')
     expect(created.isExternal).toBe(false)
     expect(created.targetPath).toBeNull()
-    expect(deps.saveProject).toHaveBeenCalledWith(created)
+    expect(deps.createProject).toHaveBeenCalledWith(created)
     expect(model.projects.value).toContainEqual(created)
   })
 
@@ -61,7 +62,7 @@ describe('ai-projects-model', () => {
 
     expect(created.isExternal).toBe(true)
     expect(created.targetPath).toBe('/home/user/docs')
-    expect(deps.saveProject).toHaveBeenCalledWith(created)
+    expect(deps.createProject).toHaveBeenCalledWith(created)
   })
 
   it('updates an existing project', async () => {

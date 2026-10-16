@@ -16,15 +16,26 @@ pub struct ProjectPermission {
     pub write: ProjectAccessMode,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// A profile; its root instruction lives next to it in `SOUL.md`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct AiProfile {
     pub id: String,
     pub name: String,
+    /// The model the profile's chats run on; the first usable one when unset.
+    /// Profiles written before the setting kept the last picked model.
+    #[serde(
+        default,
+        alias = "lastModelId",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub model_id: Option<String>,
+    /// Overrides the temperature of the model; the model's own when unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
+    pub temperature: Option<f64>,
+    /// Caps the answer length below the model's own limit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_model_id: Option<String>,
+    pub max_output_tokens: Option<u32>,
     #[serde(default)]
     pub project_permissions: HashMap<String, ProjectPermission>,
     pub created_at: u64,

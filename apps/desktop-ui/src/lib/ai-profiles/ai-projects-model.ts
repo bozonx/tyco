@@ -1,16 +1,19 @@
 import { ref, type Ref } from 'vue'
 import type { AiProject } from '@tyco/shared'
 
+import { createVaultId } from './vault-id'
+
 export interface AiProjectsModelDependencies {
   listProjects: () => Promise<AiProject[]>
+  createProject: (project: AiProject) => Promise<void>
   saveProject: (project: AiProject) => Promise<void>
   deleteProject: (id: string) => Promise<void>
   pickExternalFolder: () => Promise<string | null>
   now?: () => number
+  randomSuffix?: () => string
 }
 
 export interface CreateProjectData {
-  id?: string
   name: string
   description?: string
   isExternal: boolean
@@ -29,23 +32,13 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     return projects.value.find((p) => p.id === id)
   }
 
-  const generateProjectId = (name: string): string => {
-    const slug = name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9_-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-    const base = slug || 'project'
-    let candidate = base
-    let counter = 1
-    while (projects.value.some((p) => p.id === candidate)) {
-      candidate = `${base}-${counter++}`
-    }
-    return candidate
-  }
-
   const createProject = async (data: CreateProjectData): Promise<AiProject> => {
-    const id = data.id?.trim() || generateProjectId(data.name)
+    const id = createVaultId(
+      data.name,
+      'project',
+      projects.value.map((p) => p.id),
+      deps.randomSuffix
+    )
     const timestamp = now()
     const newProject: AiProject = {
       id,
@@ -57,7 +50,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
       updatedAt: timestamp,
     }
 
-    await deps.saveProject(newProject)
+    await deps.createProject(newProject)
     projects.value = [...projects.value, newProject]
     return newProject
   }

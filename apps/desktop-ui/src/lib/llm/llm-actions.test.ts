@@ -53,9 +53,9 @@ describe('LLM application actions', () => {
     const f = fixture()
     const history: ChatMessage[] = [{ role: 'assistant', content: 'Previous' }]
     const onChunk = vi.fn()
-    f.userConfig.aiRules.chat = 'Chat rules'
     await f.actions.sendChatMessage('Question', history, undefined, {
       modelId: 'chosen',
+      rules: 'Chat rules',
       onChunk,
     })
     expect(history).toEqual([{ role: 'assistant', content: 'Previous' }])

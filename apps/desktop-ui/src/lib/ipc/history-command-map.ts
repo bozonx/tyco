@@ -7,10 +7,15 @@ export function createHistoryCommandMap(): DomainCommandMap<
 > {
   return {
     getEditorHistory: { command: DESKTOP_COMMANDS.GET_EDITOR_HISTORY },
-    listChats: { command: DESKTOP_COMMANDS.LIST_CHATS },
+    listChats: {
+      command: DESKTOP_COMMANDS.LIST_CHATS,
+      buildArgs: ([profileId]) =>
+        ({ profileId }) satisfies DesktopCommandArgs<'list_chats'>,
+    },
     getChat: {
       command: DESKTOP_COMMANDS.GET_CHAT,
-      buildArgs: ([id]) => ({ id }) satisfies DesktopCommandArgs<'get_chat'>,
+      buildArgs: ([id, profileId]) =>
+        ({ id, profileId }) satisfies DesktopCommandArgs<'get_chat'>,
     },
     saveEditorHistory: {
       command: DESKTOP_COMMANDS.SAVE_EDITOR_HISTORY,
@@ -32,18 +37,18 @@ export function createHistoryCommandMap(): DomainCommandMap<
     },
     saveChat: {
       command: DESKTOP_COMMANDS.SAVE_CHAT,
-      buildArgs: ([chat]) =>
-        ({ chat }) satisfies DesktopCommandArgs<'save_chat'>,
+      buildArgs: ([chat, profileId]) =>
+        ({ chat, profileId }) satisfies DesktopCommandArgs<'save_chat'>,
     },
     renameChat: {
       command: DESKTOP_COMMANDS.RENAME_CHAT,
-      buildArgs: ([id, title]) =>
-        ({ id, title }) satisfies DesktopCommandArgs<'rename_chat'>,
+      buildArgs: ([id, title, profileId]) =>
+        ({ id, title, profileId }) satisfies DesktopCommandArgs<'rename_chat'>,
     },
     searchChats: {
       command: DESKTOP_COMMANDS.SEARCH_CHATS,
-      buildArgs: ([query]) =>
-        ({ query }) satisfies DesktopCommandArgs<'search_chats'>,
+      buildArgs: ([query, profileId]) =>
+        ({ query, profileId }) satisfies DesktopCommandArgs<'search_chats'>,
     },
     removeFromEditorHistory: {
       command: DESKTOP_COMMANDS.REMOVE_FROM_EDITOR_HISTORY,
@@ -52,9 +57,14 @@ export function createHistoryCommandMap(): DomainCommandMap<
     },
     deleteChat: {
       command: DESKTOP_COMMANDS.DELETE_CHAT,
-      buildArgs: ([id]) => ({ id }) satisfies DesktopCommandArgs<'delete_chat'>,
+      buildArgs: ([id, profileId]) =>
+        ({ id, profileId }) satisfies DesktopCommandArgs<'delete_chat'>,
     },
     clearEditorHistory: { command: DESKTOP_COMMANDS.CLEAR_EDITOR_HISTORY },
-    clearChats: { command: DESKTOP_COMMANDS.CLEAR_CHATS },
+    clearChats: {
+      command: DESKTOP_COMMANDS.CLEAR_CHATS,
+      buildArgs: ([profileId]) =>
+        ({ profileId }) satisfies DesktopCommandArgs<'clear_chats'>,
+    },
   }
 }

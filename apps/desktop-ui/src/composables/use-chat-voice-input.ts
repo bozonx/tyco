@@ -2,8 +2,7 @@ import type {
   VoiceFinishBehavior,
   VoiceFinishIntent,
 } from '../lib/stt/voice-finish-intent'
-import { useChatStore } from '../stores/chat'
-import { useChatInputStore } from '../stores/chat-input'
+import { useChatScope } from './use-chat-scope'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 
 /**
@@ -11,8 +10,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
  * quick variant, opened by the voice chat hotkey, sends it right away.
  */
 export function useChatVoiceInput() {
-  const chatStore = useChatStore()
-  const chatInputStore = useChatInputStore()
+  const { chat: chatStore, input: chatInputStore } = useChatScope()
   const menuModalsStore = useMenuModalsStore()
 
   const openChatVoiceInput = (options: {

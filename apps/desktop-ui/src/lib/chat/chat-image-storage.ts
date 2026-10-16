@@ -6,11 +6,16 @@ import {
   type DesktopInvoke,
 } from '@tyco/shared'
 
-/** Owns pending image leases for one window's storage adapter. */
+/**
+ * Owns pending image leases for one chat of a window: "Ask AI", or the profile
+ * `profileId`
+ */
 export function createChatImageStorage(deps: {
   invoke: DesktopInvoke
   createId: () => string
+  profileId?: string
 }) {
+  const { profileId } = deps
   const completedImports: string[] = []
 
   /** The PNG goes as the raw IPC body, not as base64 inside JSON */
@@ -33,7 +38,7 @@ export function createChatImageStorage(deps: {
   function syncChatImages(ids: string[]): Promise<void> {
     const leases = completedImports.splice(0)
     return deps
-      .invoke(DESKTOP_COMMANDS.SYNC_CHAT_IMAGES, { ids, leases })
+      .invoke(DESKTOP_COMMANDS.SYNC_CHAT_IMAGES, { ids, leases, profileId })
       .catch((error) => {
         completedImports.push(...leases)
         throw error
@@ -42,7 +47,11 @@ export function createChatImageStorage(deps: {
 
   async function loadChatWithImages(id: string): Promise<Chat | null> {
     const lease = deps.createId()
-    const chat = await deps.invoke(DESKTOP_COMMANDS.GET_CHAT, { id, lease })
+    const chat = await deps.invoke(DESKTOP_COMMANDS.GET_CHAT, {
+      id,
+      lease,
+      profileId,
+    })
     completedImports.push(lease)
     return chat
   }
@@ -50,10 +59,15 @@ export function createChatImageStorage(deps: {
   return { storeChatImage, syncChatImages, loadChatWithImages }
 }
 
+/** The bytes of a chat image; a profile chat keeps its images itself */
 export async function getChatImage(
-  id: string
+  id: string,
+  profileId?: string
 ): Promise<Uint8Array<ArrayBuffer>> {
-  const response = await invoke(DESKTOP_COMMANDS.GET_CHAT_IMAGE, { id })
+  const response = await invoke(DESKTOP_COMMANDS.GET_CHAT_IMAGE, {
+    id,
+    profileId,
+  })
   return new Uint8Array(response)
 }
 

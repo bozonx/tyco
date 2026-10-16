@@ -18,23 +18,21 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
+import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
 import {
   resolveInputKeyAction,
   resolveSubmitKey,
 } from '../../lib/input-keys/input-keys'
 import type { TextControl } from '../../lib/ui/text-control'
-import { useChatStore } from '../../stores/chat'
-import { useChatInputStore } from '../../stores/chat-input'
 import { useIpcStore } from '../../stores/ipc'
 import FieldTextArea from '../common/FieldTextArea.vue'
 
 const emit = defineEmits<{ (e: 'send'): void }>()
-const chatInputStore = useChatInputStore()
+const { chat: chatStore, input: chatInputStore } = useChatScope()
 const ipcStore = useIpcStore()
 const textareaRef = ref<TextControl | null>(null)
 const { t } = useI18n()
-const chatStore = useChatStore()
 /** Tells that the question will be about the attached text */
 const placeholder = computed(() =>
   chatStore.attachedContext.length > 0

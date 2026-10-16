@@ -1,4 +1,7 @@
+use std::sync::Mutex;
+
 use super::*;
+use crate::services::chat_images::ChatImageStore;
 
 const CHAT_INDEX_FILE: &str = "index.json";
 const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
@@ -50,8 +53,13 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     crate::services::atomic_file::sync_parent(&journal)
 }
 
-pub fn list_chats(app: &AppHandle) -> Result<Vec<ChatSummary>, AppError> {
-    load_chat_index(&app_data_sub_dir(app, "chats")?)
+/// The directory of the chats of "Ask AI"; a profile keeps its own.
+pub fn app_chats_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    app_data_sub_dir(app, "chats")
+}
+
+pub fn list_chats(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
+    load_chat_index(chats_dir)
 }
 
 /// The index of the chats in `chats_dir`. An index that is missing or cannot
@@ -133,31 +141,32 @@ fn validate_stored_chat_id(path: &Path, chat: &Chat) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn chat_image_directory(app: &AppHandle) -> Result<PathBuf, AppError> {
-    Ok(app_data_sub_dir(app, "chats")?.join("images"))
+pub fn chat_image_directory(chats_dir: &Path) -> PathBuf {
+    chats_dir.join("images")
 }
 
-pub fn save_chat(app: &AppHandle, user_config: &Value, chat: Chat) -> Result<(), AppError> {
-    let policy = ChatHistoryPolicy::from_config(user_config);
-
+pub fn save_chat(
+    chats_dir: &Path,
+    policy: ChatHistoryPolicy,
+    images: &Mutex<ChatImageStore>,
+    chat: Chat,
+) -> Result<(), AppError> {
     if !policy.enabled {
         return Ok(());
     }
 
     validate_chat_id(&chat.id)?;
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = list_chats(app)?;
+    let mut history = list_chats(chats_dir)?;
 
-    app.state::<crate::state::AppState>()
-        .chat_images
+    images
         .lock()
         .expect("chat image lock poisoned")
-        .persist(&chats_dir.join("images"), &chat)?;
+        .persist(&chat_image_directory(chats_dir), &chat)?;
 
     upsert_chat_index(&mut history, &chat);
     policy.drop_expired(&mut history, now_ms());
     commit_chat_transaction(
-        &chats_dir,
+        chats_dir,
         PendingChatTransaction {
             history,
             chat: Some(chat),
@@ -174,8 +183,7 @@ fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
     history.insert(0, index_item);
 }
 
-pub fn read_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> {
-    let chats_dir = app_data_sub_dir(app, "chats")?;
+pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
     let chat_file_path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
 
     if !chat_file_path.exists() {
@@ -197,16 +205,15 @@ pub fn read_chat(app: &AppHandle, id: String) -> Result<Option<Chat>, AppError> 
 
 /// Gives a stored chat another title. Neither its messages nor its place in
 /// the index change: a rename is not activity in the chat.
-pub fn rename_chat(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = list_chats(app)?;
-    let Some(mut chat) = read_chat(app, id.clone())? else {
+pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), AppError> {
+    let mut history = list_chats(chats_dir)?;
+    let Some(mut chat) = read_chat(chats_dir, id.clone())? else {
         return Err(AppError::Message(String::from("Chat not found")));
     };
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);
     commit_chat_transaction(
-        &chats_dir,
+        chats_dir,
         PendingChatTransaction {
             history,
             chat: Some(chat),
@@ -223,14 +230,14 @@ fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
 /// Ids of the chats whose title or messages contain `query`, in index order.
 /// The index holds no messages, so each chat file is read.
 pub(super) fn search_chats(
-    app: &AppHandle,
+    chats_dir: &Path,
     history: Vec<ChatSummary>,
     query: String,
 ) -> Result<Vec<String>, AppError> {
     let mut found = Vec::new();
 
     for item in history {
-        let matches = match read_chat(app, item.id.clone()) {
+        let matches = match read_chat(chats_dir, item.id.clone()) {
             Ok(Some(chat)) => chat_matches(&chat, &query),
             _ => item
                 .title
@@ -258,13 +265,12 @@ fn chat_matches(chat: &Chat, query: &str) -> bool {
             .any(|message| message.content.to_lowercase().contains(&query))
 }
 
-pub fn delete_chat(app: &AppHandle, id: String) -> Result<(), AppError> {
+pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
     validate_chat_id(&id)?;
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    let mut history = list_chats(app)?;
+    let mut history = list_chats(chats_dir)?;
     history.retain(|item| item.id != id);
     commit_chat_transaction(
-        &chats_dir,
+        chats_dir,
         PendingChatTransaction {
             history,
             chat: None,
@@ -362,23 +368,22 @@ fn parse_iso_utc_ms(value: &str) -> Option<u64> {
 /// Brings the stored chats in line with the settings: all of them go when the
 /// history is off, the expired ones otherwise.
 pub(super) fn enforce_chat_history_policy(
-    app: &AppHandle,
+    chats_dir: &Path,
     policy: ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     if !policy.enabled {
-        return clear_chats(app);
+        return clear_chats(chats_dir);
     }
 
-    let mut history = list_chats(app)?;
+    let mut history = list_chats(chats_dir)?;
     let count = history.len();
     policy.drop_expired(&mut history, now_ms());
     if history.len() == count {
         return Ok(());
     }
 
-    let chats_dir = app_data_sub_dir(app, "chats")?;
     commit_chat_transaction(
-        &chats_dir,
+        chats_dir,
         PendingChatTransaction {
             history,
             chat: None,
@@ -387,11 +392,10 @@ pub(super) fn enforce_chat_history_policy(
 }
 
 /// Removes the index, chat files, and persisted image bytes.
-pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
-    let chats_dir = app_data_sub_dir(app, "chats")?;
-    recover_chat_transaction(&chats_dir)?;
+pub fn clear_chats(chats_dir: &Path) -> Result<(), AppError> {
+    recover_chat_transaction(chats_dir)?;
     commit_chat_transaction(
-        &chats_dir,
+        chats_dir,
         PendingChatTransaction {
             history: Vec::new(),
             chat: None,
@@ -402,7 +406,7 @@ pub fn clear_chats(app: &AppHandle) -> Result<(), AppError> {
         fs::remove_dir_all(images_dir)?;
     }
 
-    for entry in fs::read_dir(&chats_dir)?.flatten() {
+    for entry in fs::read_dir(chats_dir)?.flatten() {
         let path = entry.path();
         if path.is_file() {
             remove_file_if_exists(&path)?;
@@ -459,6 +463,68 @@ mod tests {
             last_message_at: String::from("0"),
             messages: Vec::new(),
         }
+    }
+
+    fn enabled_policy() -> ChatHistoryPolicy {
+        ChatHistoryPolicy {
+            enabled: true,
+            retention_days: 0,
+        }
+    }
+
+    #[test]
+    fn any_folder_keeps_its_own_chat_history() {
+        let dir = TestDir::new("chat-history-folder");
+        let ask_dir = dir.join("chats");
+        let profile_dir = dir.join("profile-history");
+        fs::create_dir_all(&ask_dir).unwrap();
+        fs::create_dir_all(&profile_dir).unwrap();
+        let images = Mutex::new(ChatImageStore::default());
+
+        save_chat(
+            &profile_dir,
+            enabled_policy(),
+            &images,
+            chat_item("profile"),
+        )
+        .unwrap();
+
+        assert!(list_chats(&ask_dir).unwrap().is_empty());
+        let history = list_chats(&profile_dir).unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].id, "profile");
+
+        rename_chat(&profile_dir, "profile".into(), "Renamed".into()).unwrap();
+        let chat = read_chat(&profile_dir, "profile".into()).unwrap().unwrap();
+        assert_eq!(chat.title, "Renamed");
+        assert_eq!(
+            search_chats(
+                &profile_dir,
+                list_chats(&profile_dir).unwrap(),
+                "renamed".into()
+            )
+            .unwrap(),
+            vec!["profile"]
+        );
+
+        delete_chat(&profile_dir, "profile".into()).unwrap();
+        assert!(list_chats(&profile_dir).unwrap().is_empty());
+        assert!(!profile_dir.join("profile.json").exists());
+    }
+
+    #[test]
+    fn a_disabled_history_stores_no_chat_in_any_folder() {
+        let dir = TestDir::new("chat-history-disabled");
+        let images = Mutex::new(ChatImageStore::default());
+        let policy = ChatHistoryPolicy {
+            enabled: false,
+            retention_days: 0,
+        };
+
+        save_chat(&dir, policy, &images, chat_item("chat")).unwrap();
+
+        assert!(list_chats(&dir).unwrap().is_empty());
+        assert!(!dir.join("chat.json").exists());
     }
 
     #[test]

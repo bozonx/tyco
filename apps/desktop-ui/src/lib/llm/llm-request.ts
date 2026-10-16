@@ -13,6 +13,10 @@ export interface AiRequestOptions {
   notifyError?: boolean
   /** Models to run on instead of the task's chain */
   models?: string[]
+  temperature?: number
+  maxOutputTokens?: number
+  /** Reads the bytes of a message image; the "Ask AI" images by default */
+  loadImage?: (id: string) => Promise<Uint8Array<ArrayBuffer>>
 }
 
 export interface LlmRequestDependencies extends LlmRequestErrorDependencies {
@@ -30,6 +34,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
   ) {
     try {
       const imageBytes = new Map<string, Uint8Array<ArrayBuffer>>()
+      const loadImage = options.loadImage ?? deps.getImage
       if (typeof messages !== 'string') {
         for (const message of messages) {
           for (const image of message.images || []) {
@@ -37,7 +42,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
             if (!imageBytes.has(image.id))
               imageBytes.set(
                 image.id,
-                await deps.getImage(image.id).catch(() => {
+                await loadImage(image.id).catch(() => {
                   throw new LlmError(
                     'unknown',
                     deps.translate('chat.imageUnavailable')
@@ -60,6 +65,8 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
         onChunk: options.onChunk,
         signal: options.signal,
         onModel: options.onModel,
+        temperature: options.temperature,
+        maxOutputTokens: options.maxOutputTokens,
       })
     } catch (error) {
       return handleLlmRequestError(

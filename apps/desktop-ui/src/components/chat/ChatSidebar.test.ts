@@ -21,8 +21,17 @@ const mocks = vi.hoisted(() => ({
   deleteChat: vi.fn(),
   restoreChatItem: vi.fn(),
   releaseUndo: vi.fn(async () => undefined),
-  aiProfilesStore: { getStorageDriver: vi.fn() },
+  history: null as unknown,
 }))
+
+mocks.history = reactive({
+  chatHistory: mocks.chatHistory,
+  loadChatHistory: vi.fn(async () => {}),
+  searchChats: mocks.searchChats,
+  clearChats: mocks.clearChats,
+  deleteChat: mocks.deleteChat,
+  restoreChatItem: mocks.restoreChatItem,
+})
 
 vi.mock('../../lib/chat/chat-image-storage', () => ({
   releaseChatImageUndo: mocks.releaseUndo,
@@ -42,31 +51,19 @@ vi.mock('../../stores/ipc', () => ({
   }),
 }))
 
-vi.mock('../../stores/chat', () => ({
-  useChatStore: () => ({
-    isGenerating: mocks.isGenerating,
-    currentChatParams: mocks.currentChatParams,
-    messages: mocks.messages,
-    startNewChat: mocks.startNewChat,
-    openChat: mocks.openChat,
-    abandonChat: vi.fn(),
-    whenSaved: vi.fn().mockResolvedValue(undefined),
+vi.mock('../../composables/use-chat-scope', () => ({
+  useChatScope: () => ({
+    chat: {
+      isGenerating: mocks.isGenerating,
+      currentChatParams: mocks.currentChatParams,
+      messages: mocks.messages,
+      startNewChat: mocks.startNewChat,
+      openChat: mocks.openChat,
+      abandonChat: vi.fn(),
+      whenSaved: vi.fn().mockResolvedValue(undefined),
+      history: mocks.history,
+    },
   }),
-}))
-
-vi.mock('../../stores/history', () => ({
-  useHistoryStore: () => ({
-    chatHistory: reactive(mocks.chatHistory),
-    loadChatHistory: vi.fn(),
-    searchChats: mocks.searchChats,
-    clearChats: mocks.clearChats,
-    deleteChat: mocks.deleteChat,
-    restoreChatItem: mocks.restoreChatItem,
-  }),
-}))
-
-vi.mock('../../stores/ai-profiles', () => ({
-  useAiProfilesStore: () => mocks.aiProfilesStore,
 }))
 
 describe('ChatSidebar.vue', () => {

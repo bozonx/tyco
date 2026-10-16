@@ -1,20 +1,17 @@
-import type { AiProfile, AiProject, Chat } from '@tyco/shared'
+import type { AiProfile, AiProject } from '@tyco/shared'
 
 export interface AiProfilesFunctions {
+  getAiVaultPath: { args: [] }
+  openAiVaultDir: { args: [profileId?: string] }
   listAiProfiles: { args: [] }
+  getAiProfile: { args: [id: string] }
+  createAiProfile: { args: [profile: AiProfile, soul: string] }
   saveAiProfile: { args: [profile: AiProfile] }
   deleteAiProfile: { args: [id: string] }
   readProfileSoul: { args: [id: string] }
   writeProfileSoul: { args: [id: string, content: string] }
   listAiProjects: { args: [] }
+  createAiProject: { args: [project: AiProject] }
   saveAiProject: { args: [project: AiProject] }
   deleteAiProject: { args: [id: string] }
-  pickExternalProjectFolder: { args: [] }
-  listProfileChats: { args: [profileId: string] }
-  getProfileChat: { args: [profileId: string, id: string] }
-  saveProfileChat: { args: [profileId: string, chat: Chat] }
-  renameProfileChat: { args: [profileId: string, id: string, title: string] }
-  deleteProfileChat: { args: [profileId: string, id: string] }
-  clearProfileChats: { args: [profileId: string] }
-  searchProfileChats: { args: [profileId: string, query: string] }
 }

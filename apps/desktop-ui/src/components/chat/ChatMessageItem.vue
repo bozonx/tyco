@@ -76,7 +76,6 @@ const props = defineProps<{
   message: ChatMessage
   streaming?: boolean
   canRegenerate?: boolean
-  profileId?: string | null
 }>()
 const emit = defineEmits<{
   (e: 'branch'): void

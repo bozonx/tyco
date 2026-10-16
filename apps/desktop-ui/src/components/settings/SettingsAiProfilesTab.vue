@@ -4,7 +4,12 @@
       :title="t('settings.aiProfilesOverview')"
       :info="t('settings.aiVaultPathHint')"
     >
-      <FieldRow :label="t('settings.aiVaultPath')" :info="vaultPath">
+      <FieldRow
+        :label="t('settings.aiVaultPath')"
+        :hint="t('settings.aiVaultPathNotMoved')"
+        :error="vaultError || undefined"
+        :info="vaultPath"
+      >
         <div class="flex items-center gap-2">
           <Button
             size="sm"
@@ -55,7 +60,7 @@
           >
             <div class="flex items-center gap-2.5 truncate">
               <Icon
-                :icon="profile.icon || 'mdi:account-outline'"
+                icon="mdi:account-outline"
                 height="18"
                 class="text-primary shrink-0"
               />
@@ -81,7 +86,10 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.projectPermissions')">
+    <SettingsSection
+      v-if="IS_AI_PROJECTS_ENABLED"
+      :title="t('settings.projectPermissions')"
+    >
       <div class="flex flex-col gap-3">
         <div class="text-sm text-base-content/70">
           {{ t('settings.projectsCount', { count: projects.length }) }}
@@ -134,9 +142,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import useToast from '../../composables/use-toast'
+import { IS_AI_PROJECTS_ENABLED } from '../../lib/ai-profiles/ai-projects-feature'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -150,34 +160,37 @@ const emit = defineEmits<{
   (e: 'update:vaultPath', path: string | undefined): void
 }>()
 const { t } = useI18n()
+const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
-const vaultPath = ref('')
-const { profiles, projects } = aiProfilesStore
+const profiles = computed(() => aiProfilesStore.profiles)
+const projects = computed(() => aiProfilesStore.projects)
+const vaultPath = computed(() => aiProfilesStore.vaultPath)
+const vaultError = computed(() => aiProfilesStore.vaultError)
 
-onMounted(async () => {
-  await aiProfilesStore.loadAll()
-  vaultPath.value = await aiProfilesStore.getVaultPath()
+onMounted(() => {
+  void aiProfilesStore.loadAll()
 })
 
 async function handleOpenVault() {
-  if (vaultPath.value) {
-    await aiProfilesStore.openFolder(vaultPath.value)
+  try {
+    await aiProfilesStore.openVaultDir()
+  } catch (error) {
+    toastText(String(error), 'error')
   }
 }
 
+// the store reads the vault anew once the settings with the path are stored
 async function handlePickVaultFolder() {
-  const selected = await aiProfilesStore.pickExternalFolder()
-  if (selected) {
-    emit('update:vaultPath', selected)
-    vaultPath.value = selected
-    await aiProfilesStore.loadAll()
+  try {
+    const selected = await aiProfilesStore.pickFolder()
+    if (selected) emit('update:vaultPath', selected)
+  } catch (error) {
+    toastText(String(error), 'error')
   }
 }
 
-async function handleResetVaultFolder() {
+function handleResetVaultFolder() {
   emit('update:vaultPath', undefined)
-  vaultPath.value = await aiProfilesStore.getVaultPath()
-  await aiProfilesStore.loadAll()
 }
 </script>
