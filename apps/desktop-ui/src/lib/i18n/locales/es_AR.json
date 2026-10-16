@@ -106,7 +106,21 @@
     "imageOmitted": "[Imágenes anteriores excluidas por el usuario]",
     "documentTextHint": "Los documentos se envían como texto extraído; se omiten el diseño y las imágenes incrustadas. Las páginas PDF escaneadas se envían como imágenes.",
     "fileProcessing": "Procesando archivos…",
-    "profileSettings": "Ajustes del perfil"
+    "profileSettings": "Ajustes del perfil",
+    "toolAllow": "Permitir",
+    "toolAllowSession": "Permitir en esta sesión",
+    "toolDeny": "Denegar",
+    "toolApprovalQuestion": "¿Permitir que se ejecute {tool}?",
+    "toolArguments": "Argumentos",
+    "toolResult": "Resultado",
+    "toolResultTruncated": "acortado para el modelo",
+    "toolState": {
+      "pending": "En curso",
+      "awaitingApproval": "Esperando aprobación",
+      "denied": "No permitido",
+      "done": "Listo",
+      "error": "Falló"
+    }
   },
   "commandLauncher": {
     "allCommands": "Todos los comandos",
@@ -401,7 +415,9 @@
     "unavailable": "No se puede conectar con el proveedor",
     "unknown": "La solicitud a la IA falló",
     "imageUnsupported": "El proveedor rechazó una solicitud con imágenes. Revisá la compatibilidad con vision y la configuración del modelo, o continuá sin imágenes. A continuación se muestran los detalles del servidor.",
-    "outputTruncated": "La respuesta alcanzó el límite de tokens. Aumentá el límite de salida o acortá la solicitud."
+    "outputTruncated": "La respuesta alcanzó el límite de tokens. Aumentá el límite de salida o acortá la solicitud.",
+    "toolsUnsupported": "El modelo no puede usar herramientas. Desactivá “Llamada a herramientas” en su configuración o elegí otro modelo.",
+    "stepLimit": "El modelo agotó sus pasos de herramientas sin terminar la respuesta. Pedile que continúe o aumentá el límite de pasos del perfil."
   },
   "menu": {
     "actions": "Acciones",
@@ -502,6 +518,12 @@
     "profileName": "Nombre del perfil",
     "profileSoulPrompt": "Instrucción raíz (SOUL.md)",
     "profileSoulPromptHint": "La persona, el rol, el tono y las reglas de este asistente. Es lo único que sigue el perfil: las instrucciones y reglas de Preguntar a la IA no se aplican. Se vuelve a leer antes de cada pedido, así que también cuentan los cambios en el disco.",
+    "profileTools": "Herramientas",
+    "profileToolsHint": "Lo que el modelo del perfil puede hacer por su cuenta en el chat. Las llamadas en “Preguntar” esperan tu aprobación en el mensaje.",
+    "profileToolAccess": "acceso",
+    "profileToolSteps": "Pasos por respuesta",
+    "profileToolStepsHint": "Cuántas veces el modelo puede llamar herramientas antes de tener que responder.",
+    "profileToolStepsInvalid": "Ingresá un número entero de 1 a 50",
     "profilesCount": "Cantidad de perfiles: {count}",
     "projectDescription": "Descripción del proyecto",
     "projectName": "Nombre del proyecto",
@@ -826,6 +848,8 @@
     "windowInsertion": "Método de inserción",
     "windowInsertionHint": "Utilidad para simular pulsaciones y pegar texto en otras aplicaciones: xdotool (en sesiones X11) o ydotool (en Wayland). Especifique la ruta al ejecutable a continuación.",
     "vision": "Entrada de imágenes",
+    "toolUse": "Llamada a herramientas",
+    "toolUseHint": "Permite que el modelo use herramientas en el chat. Desactivalo si el modelo o su servidor no pueden llamar herramientas.",
     "launcherPage": "Comandos rápidos: página {page}",
     "addLauncherPage": "Agregar página",
     "removeLauncherPage": "Eliminar página",

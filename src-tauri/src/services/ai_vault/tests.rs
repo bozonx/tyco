@@ -11,6 +11,7 @@ fn profile(id: &str, created_at: u64) -> AiProfile {
         temperature: None,
         max_output_tokens: None,
         project_permissions: HashMap::new(),
+        tools: None,
         created_at,
         updated_at: created_at,
     }
@@ -186,6 +187,41 @@ fn profile_settings_round_trip_and_are_validated() {
     let mut unnamed = updated;
     unnamed.name = "  ".into();
     assert!(save_profile(&vault_root, unnamed).is_err());
+}
+
+#[test]
+fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
+    let test_dir = TestDir::new("ai_vault_profile_tools");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    let mut updated = profile("writer", 1000);
+    updated.tools = Some(ProfileToolSettings {
+        groups: HashMap::from([(
+            "debug".to_string(),
+            ToolGroupSettings {
+                is_enabled: true,
+                access: ProjectAccessMode::Ask,
+            },
+        )]),
+        max_step_count: Some(8),
+    });
+    save_profile(&vault_root, updated.clone()).unwrap();
+    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    let stored: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(vault_root.join("profiles/writer/profile.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        stored["tools"],
+        serde_json::json!({"groups": {"debug": {"isEnabled": true, "access": "ask"}}, "maxStepCount": 8})
+    );
+
+    for count in [0, 51] {
+        let mut invalid = updated.clone();
+        invalid.tools.as_mut().unwrap().max_step_count = Some(count);
+        assert!(save_profile(&vault_root, invalid).is_err());
+    }
 }
 
 #[test]

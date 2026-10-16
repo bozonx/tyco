@@ -26,11 +26,61 @@ export interface ChatImage {
   name?: string
 }
 
+/**
+ * Where a tool call stands: running, waiting for the user's decision, not
+ * allowed to run, finished, or failed
+ */
+export type ChatToolCallState =
+  'pending' | 'awaiting-approval' | 'denied' | 'done' | 'error'
+
+/** A source the answer drew on */
+export interface ChatSource {
+  url: string
+  title?: string
+  snippet?: string
+}
+
+/**
+ * One piece of an assistant message, in the order it was produced. `content`
+ * stays the answer's text; the parts add the reasoning and the tool steps
+ */
+export type ChatMessagePart =
+  | { type: 'text'; text: string }
+  | { type: 'reasoning'; text: string }
+  | {
+      type: 'tool-call'
+      toolCallId: string
+      toolName: string
+      input: unknown
+      state: ChatToolCallState
+      /** Set while the call waits for the user's decision */
+      approvalId?: string
+    }
+  | {
+      type: 'tool-result'
+      toolCallId: string
+      toolName: string
+      /** What the model was given, already cut to the output limit */
+      output: string
+      isError?: boolean
+      isTruncated?: boolean
+    }
+  | {
+      type: 'file'
+      /** The id of the file in the chat's storage; never the bytes */
+      fileId: string
+      mediaType: string
+      name?: string
+    }
+  | { type: 'sources'; sources: ChatSource[] }
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'developer'
   content: string
   images?: ChatImage[]
   attachments?: ChatAttachment[]
+  /** The steps of an answer that used tools; absent in plain answers */
+  parts?: ChatMessagePart[]
   status?: 'complete' | 'stopped'
 }
 

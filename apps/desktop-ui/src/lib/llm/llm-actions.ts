@@ -5,7 +5,11 @@ import {
   chatTitleSource,
   cleanGeneratedTitle,
 } from '../chat/chat-title'
-import type { createLlmRequest, AiRequestOptions } from './llm-request'
+import type {
+  createLlmRequest,
+  AiChatTurnOptions,
+  AiRequestOptions,
+} from './llm-request'
 
 export interface LlmActionsDependencies {
   aiRequest: ReturnType<typeof createLlmRequest>
@@ -35,14 +39,13 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     message: string | ChatMessage,
     prevMessages: ChatMessage[],
     devInstructions: string | undefined,
-    options: Omit<AiRequestOptions, 'models'> & {
+    options: Omit<AiChatTurnOptions, 'models' | 'instructions' | 'rules'> & {
       modelId: string
       rules?: string
     }
   ) => {
     const { modelId, rules, ...rest } = options
-    return await aiRequest(
-      LlmInstructionKind.CHAT,
+    return await aiRequest.chatTurn(
       [
         ...prevMessages,
         typeof message === 'string'

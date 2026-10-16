@@ -32,6 +32,7 @@ export type AiProfilePatch = Partial<
     | 'temperature'
     | 'maxOutputTokens'
     | 'projectPermissions'
+    | 'tools'
   >
 >
 

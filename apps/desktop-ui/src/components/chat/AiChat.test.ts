@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
     isGenerating: false,
     pendingImages: [] as any[],
     attachedContext: [] as any[],
+    pendingToolApprovals: [] as any[],
+    answerToolApproval: vi.fn(),
     modelOptions: [] as any[],
     selectedModel: { id: 'm1', name: 'Model 1' } as any,
     retryLastTurn: vi.fn(async () => 'Retried answer'),

@@ -43,6 +43,11 @@ export interface LlmModel {
   maxOutputTokens?: number
   contextWindowTokens?: number
   canUseImages?: boolean
+  /**
+   * Whether the model can call tools in the chat. Unset: yes for the built-in
+   * cloud providers, no for a custom endpoint, where local models often cannot
+   */
+  canUseTools?: boolean
   /** DeepSeek thinking mode */
   isThinkingEnabled?: boolean
 }

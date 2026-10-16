@@ -14,7 +14,7 @@ import { createChatHistoryModel } from '../lib/history/chat-history'
 import { formatLlmError } from '../lib/llm/llm-errors'
 import { isSecretUsable } from '../lib/net/secrets'
 import { LlmError } from '../lib/llm/llm-client'
-import { APP_CONFIG } from '@tyco/shared'
+import { APP_CONFIG, type ProfileToolSettings } from '@tyco/shared'
 import { LlmInstructionKind } from '../types'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
@@ -30,6 +30,11 @@ import {
   type ChatLlmOption,
 } from '../lib/chat/chat-llm-selection'
 import { createChatModel } from '../lib/chat/chat-model'
+import { createChatToolsSession } from '../lib/chat-tools/chat-tools-session'
+import {
+  createDebugChatToolProvider,
+  isDebugChatToolsEnabled,
+} from '../lib/chat-tools/debug-chat-tools'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
@@ -154,17 +159,43 @@ function createChatStoreSetup(profileId: string | null) {
       })
     }
 
+    const debugToolProvider = createDebugChatToolProvider()
+    const chatTools = createChatToolsSession({
+      providers: () => (isDebugChatToolsEnabled() ? [debugToolProvider] : []),
+      isDebugEnabled: () => isDebugChatToolsEnabled(),
+      warn: (message) => clientLogger.warn(message, 'chat'),
+    })
+    onScopeDispose(chatTools.dispose)
+    /** The tools of a turn on the model picked in the chat */
+    const turnTools = async (
+      modelId: string,
+      profileTools?: ProfileToolSettings
+    ) => {
+      const canUseTools = selectedModel.value?.canUseTools ?? false
+      return {
+        canUseTools,
+        tools: await chatTools.toolsFor({
+          profileId,
+          modelId,
+          canUseTools,
+          settings: profileTools,
+        }),
+      }
+    }
+
     const model = createChatModel({
       sendChatMessage: async (message, prevMessages, instructions, options) => {
         if (!profileId) {
           return sendChatMessage(message, prevMessages, instructions, {
             ...options,
+            ...(await turnTools(options.modelId)),
             rules: getChatRules(),
           })
         }
         const stored = await refreshProfile()
         return sendChatMessage(message, prevMessages, soul.value, {
           ...options,
+          ...(await turnTools(options.modelId, stored?.tools)),
           temperature: stored?.temperature,
           maxOutputTokens: stored?.maxOutputTokens,
           loadImage: (id) => getChatImage(id, profileId),
@@ -244,12 +275,21 @@ function createChatStoreSetup(profileId: string | null) {
               id: picked.id,
               canUseImages: picked.canUseImages,
               budgetCharacters: requestBudgetCharacters(),
+              reservesToolSteps: chatTools.mayOfferTools({
+                canUseTools: picked.canUseTools,
+                settings: profileId ? profile.value?.tools : undefined,
+              }),
             }
           : null
       },
     })
 
     onScopeDispose(model.stopGeneration)
+    // permissions given "for this session" end with the conversation
+    watch(
+      () => model.currentChatParams.value.id,
+      () => chatTools.resetPermissions()
+    )
 
     const fileErrorKeys: Record<ChatFileErrorKind, string> = {
       unsupported: 'chat.fileUnsupported',
@@ -347,6 +387,9 @@ function createChatStoreSetup(profileId: string | null) {
       removeImage: files.removeImage,
       modelOptions,
       selectedModel,
+      /** The tool calls of the answer that wait for the user */
+      pendingToolApprovals: chatTools.pendingApprovals,
+      answerToolApproval: chatTools.answerApproval,
       /** The profile this chat belongs to; null for "Ask AI" */
       profileId,
       /** The chats listed in the sidebar */

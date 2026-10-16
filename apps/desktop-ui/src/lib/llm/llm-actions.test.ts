@@ -2,10 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { APP_CONFIG, DEFAULT_USER_CONFIG, type ChatMessage } from '@tyco/shared'
 import { createLlmActions } from './llm-actions'
 import { CHAT_TITLE_INSTRUCTIONS } from '../chat/chat-title'
+import { chatAnswer } from '../chat/testing'
 
 function fixture() {
   const userConfig = structuredClone(DEFAULT_USER_CONFIG)
-  const aiRequest = vi.fn(async () => 'Answer')
+  const aiRequest = Object.assign(
+    vi.fn(async () => 'Answer'),
+    { chatTurn: vi.fn(async () => chatAnswer('Answer')) }
+  )
   const notifyEmptyText = vi.fn()
   const actions = createLlmActions({
     aiRequest,
@@ -52,19 +56,18 @@ describe('LLM application actions', () => {
   it('preserves chat history, model and streaming options without mutating messages', async () => {
     const f = fixture()
     const history: ChatMessage[] = [{ role: 'assistant', content: 'Previous' }]
-    const onChunk = vi.fn()
+    const onUpdate = vi.fn()
     await f.actions.sendChatMessage('Question', history, undefined, {
       modelId: 'chosen',
       rules: 'Chat rules',
-      onChunk,
+      onUpdate,
     })
     expect(history).toEqual([{ role: 'assistant', content: 'Previous' }])
-    expect(f.aiRequest).toHaveBeenCalledWith(
-      'chat',
+    expect(f.aiRequest.chatTurn).toHaveBeenCalledWith(
       [...history, { role: 'user', content: 'Question' }],
       {
         models: ['chosen'],
-        onChunk,
+        onUpdate,
         notifyError: false,
         instructions: APP_CONFIG.aiInstructions.chat,
         rules: 'Chat rules',
@@ -79,9 +82,9 @@ describe('LLM application actions', () => {
     }
     await f.actions.sendChatMessage(message, [], 'Custom instructions', {
       modelId: 'chosen',
+      onUpdate,
     })
-    expect(f.aiRequest).toHaveBeenLastCalledWith(
-      'chat',
+    expect(f.aiRequest.chatTurn).toHaveBeenLastCalledWith(
       [message],
       expect.objectContaining({ instructions: 'Custom instructions' })
     )

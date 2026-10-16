@@ -7,6 +7,10 @@ export function llmErrorKey(kind: LlmErrorKind): string {
       return 'llmErrors.outputTruncated'
     case 'image_unsupported':
       return 'llmErrors.imageUnsupported'
+    case 'tools_unsupported':
+      return 'llmErrors.toolsUnsupported'
+    case 'step_limit':
+      return 'llmErrors.stepLimit'
     case 'auth':
       return 'llmErrors.auth'
     case 'rate_limit':

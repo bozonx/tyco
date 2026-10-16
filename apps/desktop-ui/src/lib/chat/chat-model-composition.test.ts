@@ -7,11 +7,13 @@ import { createChatSessionModel } from './chat-session-model'
 import { createChatState } from './chat-state'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import { createChatTitleController } from './chat-title-controller'
+import { chatAnswer, streamChunk } from './testing'
+import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 
 function fixture() {
   const state = createChatState()
   const deps: ChatModelDependencies = {
-    sendChatMessage: vi.fn(async () => 'Answer'),
+    sendChatMessage: vi.fn(async () => chatAnswer('Answer')),
     generateChatTitle: vi.fn(async () => 'Generated title'),
     saveChat: vi.fn(),
     renameChat: vi.fn(),
@@ -104,9 +106,9 @@ describe('chat model boundaries', () => {
     let chunk!: (text: string) => void
     deps.sendChatMessage = vi.fn(
       (_message, _history, _instructions, options) => {
-        chunk = options.onChunk!
-        return new Promise<string>((resolve) => {
-          release = resolve
+        chunk = (text) => streamChunk(options, text)
+        return new Promise<ChatToolLoopState>((resolve) => {
+          release = (answer) => resolve(chatAnswer(answer))
         })
       }
     )

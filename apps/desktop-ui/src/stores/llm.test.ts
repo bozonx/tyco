@@ -6,6 +6,15 @@ import { useIpcStore } from './ipc'
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(async () => 'Answer'),
+  stream: vi.fn(async function* () {
+    yield { type: 'text', text: 'Answer' }
+    yield {
+      type: 'finish',
+      finishReason: 'stop',
+      text: 'Answer',
+      responseMessages: [],
+    }
+  }),
   dictation: vi.fn(() => {
     throw new Error('Dictation must not be initialized')
   }),
@@ -15,7 +24,8 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock(import('../lib/llm/llm-client'), async (importOriginal) => ({
   ...(await importOriginal()),
-  createLlmClient: () => ({ run: mocks.run }) as unknown as LlmClient,
+  createLlmClient: () =>
+    ({ run: mocks.run, stream: mocks.stream }) as unknown as LlmClient,
 }))
 vi.mock('./dictation', () => ({ useDictationStore: mocks.dictation }))
 vi.mock('./translation', () => ({ useTranslationStore: mocks.translation }))
@@ -31,11 +41,14 @@ describe('LLM store service wiring', () => {
       expect(await store.actions.correctText('Sample')).toBe('Answer')
       ipc.desktopState.userConfig.aiRules.chat = 'Current chat rules'
       expect(
-        await store.actions.sendChatMessage('Question', [], undefined, {
-          modelId: 'chosen',
-        })
+        (
+          await store.actions.sendChatMessage('Question', [], undefined, {
+            modelId: 'chosen',
+            onUpdate: () => undefined,
+          })
+        ).content
       ).toBe('Answer')
-      expect(mocks.run).toHaveBeenLastCalledWith(
+      expect(mocks.stream).toHaveBeenLastCalledWith(
         'chat',
         expect.objectContaining({ messages: expect.any(Array) }),
         expect.objectContaining({ models: ['chosen'] })

@@ -15,9 +15,10 @@ import { useChatInputStore, useProfileChatInputStore } from './chat-input'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
+import { chatAnswer } from '../lib/chat/testing'
 
 const ai = vi.hoisted(() => ({
-  sendChatMessage: vi.fn(async () => 'answer'),
+  sendChatMessage: vi.fn(async () => chatAnswer('answer')),
   generateChatTitle: vi.fn(async () => ''),
 }))
 
@@ -232,7 +233,8 @@ describe('profile chats', () => {
     await useAiProfilesStore().loadAll()
     let finish!: (text: string) => void
     ai.sendChatMessage.mockImplementationOnce(
-      () => new Promise<string>((resolve) => (finish = resolve))
+      () =>
+        new Promise((resolve) => (finish = (text) => resolve(chatAnswer(text))))
     )
     const profileChat = useProfileChatStore('writer')
     const input = useProfileChatInputStore('writer')

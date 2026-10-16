@@ -5,6 +5,7 @@ import type { Chat } from '@tyco/shared'
 import { createChatController } from './chat-controller'
 import { createChatModel } from './chat-model'
 import type { ChatLlmOption } from './chat-llm-selection'
+import { chatAnswer } from './testing'
 
 function setup() {
   const selectedModel = ref<ChatLlmOption | null>({
@@ -12,6 +13,7 @@ function setup() {
     name: 'Model',
     providerLabel: 'local',
     canUseImages: true,
+    canUseTools: false,
     contextWindowTokens: 100_000,
   })
   const state = reactive({ label: 'main', externalSelection: '' })
@@ -26,7 +28,7 @@ function setup() {
     }),
     requestFocus: vi.fn(),
   })
-  const sendChatMessage = vi.fn(async () => 'answer')
+  const sendChatMessage = vi.fn(async () => chatAnswer('answer'))
   const loadChat = vi.fn<(id: string) => Promise<Chat | null>>(async () => null)
   let id = 0
   const model = createChatModel({

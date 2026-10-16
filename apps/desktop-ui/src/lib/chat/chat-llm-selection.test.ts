@@ -87,6 +87,7 @@ it('subtracts assembled instructions and rules from the chat input budget', () =
     name: 'Model',
     providerLabel: 'Provider',
     canUseImages: false,
+    canUseTools: false,
     contextWindowTokens: 4096,
     maxOutputTokens: 3000,
   }

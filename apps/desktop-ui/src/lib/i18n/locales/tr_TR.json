@@ -106,7 +106,21 @@
     "imageOmitted": "[Önceki görseller kullanıcı tarafından çıkarıldı]",
     "documentTextHint": "Belgeler çıkarılan metin olarak gönderilir; düzen ve gömülü resimler gönderilmez. Taranmış PDF sayfaları görsel olarak gönderilir.",
     "fileProcessing": "Dosyalar işleniyor…",
-    "profileSettings": "Profil ayarları"
+    "profileSettings": "Profil ayarları",
+    "toolAllow": "İzin ver",
+    "toolAllowSession": "Bu oturumda izin ver",
+    "toolDeny": "Reddet",
+    "toolApprovalQuestion": "{tool} çalıştırılsın mı?",
+    "toolArguments": "Argümanlar",
+    "toolResult": "Sonuç",
+    "toolResultTruncated": "model için kısaltıldı",
+    "toolState": {
+      "pending": "Çalışıyor",
+      "awaitingApproval": "Onay bekliyor",
+      "denied": "İzin verilmedi",
+      "done": "Tamamlandı",
+      "error": "Başarısız"
+    }
   },
   "commandLauncher": {
     "allCommands": "Tüm komutlar",
@@ -401,7 +415,9 @@
     "unavailable": "Sağlayıcıya ulaşılamıyor",
     "unknown": "Yapay zekâ isteği başarısız oldu",
     "imageUnsupported": "Sağlayıcı görsel içeren isteği reddetti. Vision desteğini ve model ayarlarını kontrol edin veya görselsiz devam edin. Sunucu ayrıntıları aşağıdadır.",
-    "outputTruncated": "Yanıt token sınırına ulaştı. Çıktı sınırını artırın veya isteği kısaltın."
+    "outputTruncated": "Yanıt token sınırına ulaştı. Çıktı sınırını artırın veya isteği kısaltın.",
+    "toolsUnsupported": "Model araç kullanamıyor. Ayarlarında “Araç çağırma”yı kapatın veya başka bir model seçin.",
+    "stepLimit": "Model, yanıtı bitirmeden araç adımlarını tüketti. Devam etmesini isteyin veya profilin adım sınırını artırın."
   },
   "menu": {
     "actions": "Eylemler",
@@ -499,6 +515,12 @@
     "profileName": "Profil Adı",
     "profileSoulPrompt": "Kök talimat (SOUL.md)",
     "profileSoulPromptHint": "Bu asistanın kişiliği, rolü, üslubu ve kuralları. Profil yalnızca buna uyar: Yapay Zekâya Sor talimatları ve kuralları uygulanmaz. Her istekten önce yeniden okunur, bu yüzden diskteki düzenlemeler de geçerlidir.",
+    "profileTools": "Araçlar",
+    "profileToolsHint": "Profil modelinin sohbette kendi başına yapabilecekleri. “Sor” olarak ayarlanan çağrılar mesajda onayınızı bekler.",
+    "profileToolAccess": "erişim",
+    "profileToolSteps": "Yanıt başına adım",
+    "profileToolStepsHint": "Modelin yanıt vermeden önce kaç kez araç çağırabileceği.",
+    "profileToolStepsInvalid": "1 ile 50 arasında bir tam sayı girin",
     "profilesCount": "Profil sayısı: {count}",
     "projectDescription": "Proje Açıklaması",
     "projectName": "Proje Adı",
@@ -823,6 +845,8 @@
     "windowInsertion": "Ekleme yöntemi",
     "windowInsertionHint": "Diğer uygulamalara tuş simülasyonu ve metin yapıştırmak için kullanılan yardımcı program: xdotool (X11 oturumlarında) veya ydotool (Wayland'de). Aşağıda yürütülebilir dosya yolunu belirtin.",
     "vision": "Görsel desteği",
+    "toolUse": "Araç çağırma",
+    "toolUseHint": "Modelin sohbette araç kullanmasını sağlar. Model veya sunucusu araç çağıramıyorsa kapatın.",
     "launcherPage": "Hızlı komutlar: sayfa {page}",
     "addLauncherPage": "Sayfa ekle",
     "removeLauncherPage": "Sayfayı sil",

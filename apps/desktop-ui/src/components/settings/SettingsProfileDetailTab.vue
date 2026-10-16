@@ -97,6 +97,13 @@
         </FieldRow>
       </SettingsSection>
 
+      <SettingsProfileToolsSection
+        v-if="CHAT_TOOL_GROUPS.length > 0"
+        :groups="CHAT_TOOL_GROUPS"
+        :tools="profile.tools"
+        @update="changeTools"
+      />
+
       <SettingsSection
         :title="t('settings.profileSoulPrompt')"
         :info="t('settings.profileSoulPromptHint')"
@@ -235,6 +242,7 @@ import {
   parseProfileMaxOutputTokens,
   parseProfileTemperature,
 } from '../../lib/ai-profiles/profile-generation'
+import { CHAT_TOOL_GROUPS } from '../../lib/chat-tools/chat-tool-groups'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { createIpcChatSessionStorageDriver } from '../../lib/chat/chat-session-storage'
 import { normalizeLlmConfig } from '../../lib/llm/llm-config'
@@ -254,9 +262,11 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from '../common/SettingsSection.vue'
+import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import {
   DEFAULT_PROJECT_PERMISSION,
   MAX_PROFILE_TEMPERATURE,
+  type ProfileToolSettings,
   type ProjectAccessMode,
   type ProjectPermission,
 } from '@tyco/shared'
@@ -383,6 +393,12 @@ function changeModel(value: string | number | undefined) {
   const modelId = value ? String(value) : undefined
   void aiProfilesStore
     .updateProfile(props.profileId, { modelId })
+    .catch((error: unknown) => toastText(String(error), 'error'))
+}
+
+function changeTools(tools: ProfileToolSettings) {
+  void aiProfilesStore
+    .updateProfile(props.profileId, { tools })
     .catch((error: unknown) => toastText(String(error), 'error'))
 }
 

@@ -72,6 +72,7 @@
           v-for="model in modelsFor(provider.id)"
           :key="model.id"
           :model="model"
+          :providers="llm.providers"
           :placeholder="modelPlaceholder(model.providerId)"
           :settings="settings"
           @remove="removeModel(llm, $event)"

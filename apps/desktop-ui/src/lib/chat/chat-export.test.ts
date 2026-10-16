@@ -59,3 +59,38 @@ it('marks images omitted from text export without leaking internal paths', () =>
   expect(markdown).toContain('[Image omitted: 32 × 24, image/webp]')
   expect(markdown).not.toContain('internal-id')
 })
+
+it('lists the tool calls of an answer in a short block', () => {
+  const markdown = formatChatToMarkdown([
+    {
+      role: 'assistant',
+      content: 'It is noon.',
+      parts: [
+        {
+          type: 'tool-call',
+          toolCallId: 'c1',
+          toolName: 'get_current_time',
+          input: {},
+          state: 'done',
+        },
+        {
+          type: 'tool-result',
+          toolCallId: 'c1',
+          toolName: 'get_current_time',
+          output: '12:00',
+        },
+        {
+          type: 'tool-call',
+          toolCallId: 'c2',
+          toolName: 'delete_file',
+          input: {},
+          state: 'denied',
+        },
+      ],
+    },
+  ])
+
+  expect(markdown).toBe(
+    '### Assistant\n\n> Tool `get_current_time`: done\n> Tool `delete_file`: denied\n\nIt is noon.'
+  )
+})

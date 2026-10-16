@@ -4,6 +4,8 @@ import type { ChatMessage } from '@tyco/shared'
 import { createChatGenerationModel } from './chat-generation-model'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
+import { chatAnswer, streamChunk } from './testing'
+import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 
 type ChatRequestModel = NonNullable<
   ReturnType<ChatModelDependencies['getChatModel']>
@@ -37,11 +39,11 @@ describe('createChatGenerationModel', () => {
           _msg,
           _history,
           _instructions,
-          options?: { onChunk?: (c: string) => void }
+          options?: Parameters<ChatModelDependencies['sendChatMessage']>[3]
         ) => {
-          options?.onChunk?.('Hello ')
-          options?.onChunk?.('world!')
-          return 'Hello world!'
+          streamChunk(options, 'Hello ')
+          streamChunk(options, 'world!')
+          return chatAnswer('Hello world!')
         }
       ),
       notifyError: vi.fn(),
@@ -124,9 +126,9 @@ describe('createChatGenerationModel', () => {
           _msg,
           _hist,
           _inst,
-          options?: { onChunk?: (c: string) => void }
+          options?: Parameters<ChatModelDependencies['sendChatMessage']>[3]
         ) => {
-          options?.onChunk?.('Partial answer')
+          streamChunk(options, 'Partial answer')
           throw new Error('Connection reset')
         }
       )
@@ -208,6 +210,118 @@ describe('createChatGenerationModel', () => {
       const res = await generation.regenerateMessage(1)
       expect(res).toBe('Hello world!')
       expect(state.messages.value[1].content).toBe('Hello world!')
+    })
+  })
+
+  describe('tool steps', () => {
+    const waitingCall: ChatToolLoopState = {
+      content: 'Let me check.',
+      parts: [
+        { type: 'text', text: 'Let me check.' },
+        {
+          type: 'tool-call',
+          toolCallId: 'c1',
+          toolName: 'now',
+          input: {},
+          state: 'awaiting-approval',
+          approvalId: 'a1',
+        },
+      ],
+    }
+
+    it('keeps the steps of an answer and none of a plain one', async () => {
+      const { generation, state, deps, persist } = setup()
+      const answer: ChatToolLoopState = {
+        content: 'It is noon.',
+        parts: [
+          {
+            type: 'tool-call',
+            toolCallId: 'c1',
+            toolName: 'now',
+            input: {},
+            state: 'done',
+          },
+          {
+            type: 'tool-result',
+            toolCallId: 'c1',
+            toolName: 'now',
+            output: '12:00',
+          },
+          { type: 'text', text: 'It is noon.' },
+        ],
+      }
+      deps.sendChatMessage.mockImplementationOnce(
+        async (_m, _h, _i, options) => {
+          options?.onUpdate(answer)
+          return answer
+        }
+      )
+
+      await generation.sendMessage('Time?')
+
+      expect(state.messages.value.at(-1)).toEqual({
+        role: 'assistant',
+        content: 'It is noon.',
+        parts: answer.parts,
+      })
+      expect(persist).toHaveBeenLastCalledWith(state.messages.value)
+
+      await generation.sendMessage('Thanks')
+      expect(state.messages.value.at(-1)).toEqual({
+        role: 'assistant',
+        content: 'Hello world!',
+      })
+    })
+
+    it('closes a call that waited for approval when stopped', async () => {
+      const { generation, state, deps, persist } = setup()
+      let finish!: () => void
+      deps.sendChatMessage.mockImplementationOnce(
+        (_m, _h, _i, options) =>
+          new Promise((resolve) => {
+            options?.onUpdate(structuredClone(waitingCall))
+            finish = () => resolve(waitingCall)
+          })
+      )
+
+      const pending = generation.sendMessage('Time?')
+      await vi.waitFor(() =>
+        expect(state.messages.value.at(-1)?.parts).toHaveLength(2)
+      )
+      generation.stopGeneration()
+      finish()
+      await pending
+
+      expect(state.messages.value.at(-1)).toMatchObject({
+        status: 'stopped',
+        parts: [{ type: 'text' }, { type: 'tool-call', state: 'denied' }],
+      })
+      expect(state.messages.value.at(-1)?.parts?.[1]).not.toHaveProperty(
+        'approvalId'
+      )
+      expect(persist).toHaveBeenCalled()
+    })
+
+    it('keeps an answer that has steps but no text yet when it fails', async () => {
+      const { generation, state, deps } = setup()
+      const onlyCall: ChatToolLoopState = {
+        content: '',
+        parts: [waitingCall.parts[1]],
+      }
+      deps.sendChatMessage.mockImplementationOnce(
+        async (_m, _h, _i, options) => {
+          options?.onUpdate(structuredClone(onlyCall))
+          throw new Error('Network error')
+        }
+      )
+
+      await generation.sendMessage('Time?')
+
+      expect(state.messages.value).toHaveLength(2)
+      expect(state.messages.value.at(-1)).toMatchObject({
+        status: 'stopped',
+        parts: [{ type: 'tool-call', state: 'denied' }],
+      })
     })
   })
 })

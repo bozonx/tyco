@@ -113,6 +113,19 @@ export function supportsImages(model: LlmModel): boolean {
   )
 }
 
+/**
+ * Whether the chat may offer the model tools. Local models served through a
+ * custom endpoint often cannot call them, so those opt in
+ */
+export function supportsTools(
+  model: LlmModel,
+  providers: readonly LlmProvider[]
+): boolean {
+  if (model.canUseTools !== undefined) return model.canUseTools
+  const provider = providers.find((item) => item.id === model.providerId)
+  return provider !== undefined && provider.type !== 'openai-compatible'
+}
+
 function toDefinition(
   model: LlmModel,
   provider: LlmProvider
@@ -133,6 +146,7 @@ function toDefinition(
       input: supportsImages(model) ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
+    capabilities: { tools: supportsTools(model, [provider]) },
     contextSize: modelContextWindowTokens(model, [provider]),
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,

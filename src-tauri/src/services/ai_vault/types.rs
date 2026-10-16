@@ -16,6 +16,24 @@ pub struct ProjectPermission {
     pub write: ProjectAccessMode,
 }
 
+/// Whether a group of tools is offered to the model, and how freely.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolGroupSettings {
+    pub is_enabled: bool,
+    pub access: ProjectAccessMode,
+}
+
+/// The tools a profile's chat may use; mirrored by ProfileToolSettings in shared.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileToolSettings {
+    #[serde(default)]
+    pub groups: HashMap<String, ToolGroupSettings>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_step_count: Option<u32>,
+}
+
 /// A profile; its root instruction lives next to it in `SOUL.md`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -38,6 +56,9 @@ pub struct AiProfile {
     pub max_output_tokens: Option<u32>,
     #[serde(default)]
     pub project_permissions: HashMap<String, ProjectPermission>,
+    /// No tools when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tools: Option<ProfileToolSettings>,
     pub created_at: u64,
     pub updated_at: u64,
 }

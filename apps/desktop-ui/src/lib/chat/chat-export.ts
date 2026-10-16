@@ -40,6 +40,17 @@ export function formatChatToMarkdown(
       )
     }
 
+    const toolCalls = (message.parts || []).filter(
+      (part) => part.type === 'tool-call'
+    )
+    if (toolCalls.length) {
+      section.push(
+        toolCalls
+          .map((call) => `> Tool \`${call.toolName}\`: ${call.state}`)
+          .join('\n')
+      )
+    }
+
     if (message.content?.trim()) {
       section.push(message.content.trim())
     }

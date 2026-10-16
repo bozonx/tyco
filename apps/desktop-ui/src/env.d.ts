@@ -16,3 +16,8 @@ declare module 'virtual:offline-icons' {
   const collection: IconifyJSON
   export default collection
 }
+
+interface ImportMetaEnv {
+  /** `true` offers the debug chat tools in a development build */
+  readonly VITE_DEBUG_CHAT_TOOLS?: string
+}

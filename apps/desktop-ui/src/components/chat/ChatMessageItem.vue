@@ -20,8 +20,30 @@
           @loaded="emit('content-resized')"
         />
       </div>
+      <template v-if="message.role === 'assistant' && steps">
+        <template v-for="(step, index) in steps" :key="index">
+          <ChatMarkdown
+            v-if="step.type === 'text'"
+            :content="step.text"
+            :streaming="streaming && index === steps.length - 1"
+            @copy-code="copyText"
+            @content-resized="emit('content-resized')"
+          />
+          <ChatToolCall
+            v-else
+            :call="step.call"
+            :result="step.result"
+            :is-awaiting-answer="
+              step.call.state === 'awaiting-approval' &&
+              Boolean(step.call.approvalId) &&
+              pendingApprovalIds?.has(step.call.approvalId!)
+            "
+            @decide="emit('tool-approval', step.call.approvalId!, $event)"
+          />
+        </template>
+      </template>
       <ChatMarkdown
-        v-if="message.role === 'assistant'"
+        v-else-if="message.role === 'assistant'"
         :content="message.content"
         :streaming="streaming"
         @copy-code="copyText"
@@ -32,7 +54,7 @@
       </div>
 
       <div
-        v-if="message.content || message.images?.length"
+        v-if="message.content || message.images?.length || steps"
         class="message-actions"
       >
         <span v-if="message.status === 'stopped'" class="message-status">
@@ -65,24 +87,33 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
+import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
+import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import ChatMarkdown from './ChatMarkdown.vue'
+import ChatToolCall from './ChatToolCall.vue'
 import type { ChatMessage } from '@tyco/shared'
 
 const props = defineProps<{
   message: ChatMessage
   streaming?: boolean
   canRegenerate?: boolean
+  /** The approvals of tool calls that wait for the user's answer now */
+  pendingApprovalIds?: ReadonlySet<string>
 }>()
 const emit = defineEmits<{
   (e: 'branch'): void
   (e: 'regenerate'): void
   (e: 'copy-markdown-to-point'): void
   (e: 'content-resized'): void
+  (e: 'tool-approval', approvalId: string, decision: ChatToolDecision): void
 }>()
+
+/** The answer's text and tool calls in order; null for a plain answer */
+const steps = computed(() => messageSteps(props.message))
 const { t } = useI18n()
 const { toastKey } = useToast()
 const isCopied = ref(false)

@@ -6,7 +6,7 @@ import { createLlmRequest } from './llm-request'
 
 function setup() {
   const deps = {
-    client: { run: vi.fn().mockResolvedValue('answer') },
+    client: { run: vi.fn().mockResolvedValue('answer'), stream: vi.fn() },
     getImage: vi.fn(async () => new Uint8Array([1, 2, 3])),
     rulePrefix: () => 'Rules',
     translate: (key: string) => key,

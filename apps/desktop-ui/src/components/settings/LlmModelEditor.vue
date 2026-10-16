@@ -50,6 +50,15 @@
         />
       </FieldRow>
       <FieldRow
+        :label="t('settings.toolUse')"
+        :hint="t('settings.toolUseHint')"
+      >
+        <FieldSwitch
+          :model-value="supportsTools(model, providers)"
+          @update:model-value="emit('update', { canUseTools: $event })"
+        />
+      </FieldRow>
+      <FieldRow
         :label="t('settings.temperature')"
         :error="
           numberErrors[`${model.id}:temperature`]
@@ -122,7 +131,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import { supportsImages } from '../../lib/llm/llm-catalog'
+import { supportsImages, supportsTools } from '../../lib/llm/llm-catalog'
 import { modelLabel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import Icon from '../common/AppIcon.vue'
@@ -132,10 +141,12 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
-import type { LlmModel } from '@tyco/shared'
+import type { LlmModel, LlmProvider } from '@tyco/shared'
 
 const props = defineProps<{
   model: LlmModel
+  /** The configured providers; whether a model calls tools depends on its own */
+  providers: LlmProvider[]
   placeholder: string
   settings: ReturnType<typeof createLlmSettingsModel>
 }>()

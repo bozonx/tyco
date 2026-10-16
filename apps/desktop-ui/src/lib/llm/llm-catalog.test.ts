@@ -6,6 +6,7 @@ import {
   OUTPUT_TOKENS_CEILING,
   buildLlmCatalog,
   buildProviderFactories,
+  supportsTools,
 } from './llm-catalog'
 
 const names = (models: readonly { name: string }[]) =>
@@ -29,6 +30,25 @@ describe('llm-catalog', () => {
     expect(local.contextSize).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
     expect(local.provider).toBe('local')
     expect(local.baseUrl).toBe('http://localhost:11434/v1')
+  })
+
+  it('lets cloud models call tools and a custom endpoint only when told', () => {
+    const base = config()
+    const catalog = buildLlmCatalog(base)!
+    expect(catalog.require('gemini-flash').capabilities.tools).toBe(true)
+    expect(catalog.require('local-qwen').capabilities.tools).toBe(false)
+
+    const local = base.models.find((model) => model.id === 'local-qwen')!
+    expect(supportsTools({ ...local, canUseTools: true }, base.providers)).toBe(
+      true
+    )
+    const gemini = base.models.find((model) => model.id === 'gemini-flash')!
+    expect(
+      supportsTools({ ...gemini, canUseTools: false }, base.providers)
+    ).toBe(false)
+    expect(
+      supportsTools({ ...gemini, providerId: 'missing' }, base.providers)
+    ).toBe(false)
   })
 
   it('turns task chains into task classes', () => {

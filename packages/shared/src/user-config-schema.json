@@ -402,6 +402,7 @@
                 "maximum": 9007199254740991
               },
               "canUseImages": { "type": "boolean", "default": false },
+              "canUseTools": { "type": "boolean", "default": false },
               "isThinkingEnabled": { "type": "boolean", "default": false }
             },
             "required": ["id", "providerId", "providerModelId"],

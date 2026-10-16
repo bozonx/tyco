@@ -45,8 +45,74 @@ pub struct ChatMessage {
     pub attachments: Vec<ChatAttachment>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub images: Vec<ChatImage>,
+    /// The steps of an answer that used tools; chats saved before them have none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parts: Vec<ChatMessagePart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<ChatMessageStatus>,
+}
+
+/// One piece of an assistant message; mirrored by ChatMessagePart in shared.
+/// Tool input stays opaque JSON: the backend stores it, the webview reads it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum ChatMessagePart {
+    Text {
+        text: String,
+    },
+    Reasoning {
+        text: String,
+    },
+    ToolCall {
+        tool_call_id: String,
+        tool_name: String,
+        #[serde(default)]
+        input: serde_json::Value,
+        state: ChatToolCallState,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        approval_id: Option<String>,
+    },
+    ToolResult {
+        tool_call_id: String,
+        tool_name: String,
+        output: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        is_error: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        is_truncated: Option<bool>,
+    },
+    File {
+        file_id: String,
+        media_type: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    Sources {
+        sources: Vec<ChatSource>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ChatToolCallState {
+    Pending,
+    AwaitingApproval,
+    Denied,
+    Done,
+    Error,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ChatSource {
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snippet: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,6 +224,41 @@ mod tests {
 #[cfg(test)]
 mod validation_tests {
     use super::*;
+
+    #[test]
+    fn message_parts_keep_the_wire_names_and_old_chats_read_without_them() {
+        let old: ChatMessage =
+            serde_json::from_value(serde_json::json!({"role": "assistant", "content": "hi"}))
+                .unwrap();
+        assert!(old.parts.is_empty());
+        assert!(serde_json::to_value(&old).unwrap().get("parts").is_none());
+
+        let value = serde_json::json!({
+            "role": "assistant",
+            "content": "It is noon.",
+            "parts": [
+                {"type": "reasoning", "text": "The user asks for the time."},
+                {"type": "tool-call", "toolCallId": "c1", "toolName": "get_current_time", "input": {"zone": "UTC"}, "state": "done"},
+                {"type": "tool-result", "toolCallId": "c1", "toolName": "get_current_time", "output": "12:00", "isTruncated": true},
+                {"type": "file", "fileId": "f1", "mediaType": "image/png"},
+                {"type": "sources", "sources": [{"url": "https://example.com", "title": "Example"}]},
+                {"type": "text", "text": "It is noon."}
+            ]
+        });
+        let message: ChatMessage = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(message.parts.len(), 6);
+        assert_eq!(serde_json::to_value(&message).unwrap(), value);
+    }
+
+    #[test]
+    fn message_parts_reject_unknown_kinds_and_states() {
+        for part in [
+            serde_json::json!({"type": "video", "text": "x"}),
+            serde_json::json!({"type": "tool-call", "toolCallId": "c", "toolName": "t", "state": "running"}),
+        ] {
+            assert!(serde_json::from_value::<ChatMessagePart>(part).is_err());
+        }
+    }
 
     #[test]
     fn wire_enums_reject_values_the_frontend_cannot_handle() {

@@ -1,4 +1,5 @@
 import type { Chat, ChatMessage, SessionState } from '@tyco/shared'
+import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 import type { AppRoutePath } from '../navigation/routes'
 
 /** The model a chat request runs on */
@@ -7,6 +8,11 @@ interface ChatRequestModel {
   canUseImages?: boolean
   /** How many characters the request may carry */
   budgetCharacters: number
+  /**
+   * Whether the turn may call tools: part of the budget is then kept for the
+   * results its steps bring
+   */
+  reservesToolSteps?: boolean
 }
 
 export interface ChatModelDependencies {
@@ -16,10 +22,11 @@ export interface ChatModelDependencies {
     devInstructions: string | undefined,
     options: {
       modelId: string
-      onChunk?: (chunk: string) => void
+      /** The answer so far: its text and, with tools, its steps */
+      onUpdate: (state: ChatToolLoopState) => void
       signal?: AbortSignal
     }
-  ) => Promise<string>
+  ) => Promise<ChatToolLoopState>
   /** A short title for the conversation; empty when none came out */
   generateChatTitle: (
     question: string,

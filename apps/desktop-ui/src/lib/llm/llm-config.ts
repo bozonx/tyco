@@ -101,6 +101,8 @@ function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
     if (typeof item.name === 'string') model.name = item.name
     if (typeof item.canUseImages === 'boolean')
       model.canUseImages = item.canUseImages
+    if (typeof item.canUseTools === 'boolean')
+      model.canUseTools = item.canUseTools
     if (typeof item.isThinkingEnabled === 'boolean')
       model.isThinkingEnabled = item.isThinkingEnabled
     const temperature = finiteNumber(item.temperature)

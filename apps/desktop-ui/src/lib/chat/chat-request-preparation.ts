@@ -3,6 +3,12 @@ import { trimChatContext } from './chat-context'
 import { imageBudgetCharacters, MAX_CHAT_IMAGES } from './chat-image-input'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
+/**
+ * The share of the history budget kept for the results of the turn's own tool
+ * steps, which arrive after the request is sized
+ */
+export const TOOL_STEP_RESERVE_RATIO = 0.25
+
 /** The same text attached twice goes once, with the source it came first */
 const uniqueAttachments = (attachments: ChatAttachment[]) =>
   attachments.filter(
@@ -83,9 +89,12 @@ export function prepareGenerationRequest(
           : item
       )
     : history
+  const historyBudget = Math.max(0, model.budgetCharacters - inputSize)
   const prevMessages = trimChatContext(
     requestHistory,
-    Math.max(0, model.budgetCharacters - inputSize)
+    model.reservesToolSteps
+      ? Math.floor(historyBudget * (1 - TOOL_STEP_RESERVE_RATIO))
+      : historyBudget
   )
   if (!model.canUseImages && prevMessages.some((item) => item.images?.length)) {
     deps.notifyError(deps.imageModelError?.() || deps.noModelError())

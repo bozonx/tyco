@@ -20,12 +20,13 @@ import { useChatInputStore } from '../../stores/chat-input'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { appNavigation } from '../navigation/navigation'
+import { chatAnswer } from '../chat/testing'
 
 vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({
     secrets: {},
     actions: {
-      sendChatMessage: async () => 'Answer',
+      sendChatMessage: async () => chatAnswer('Answer'),
       generateChatTitle: async () => '',
     },
   }),

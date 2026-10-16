@@ -1,9 +1,20 @@
-import type { FetchFunction, Transport } from '@bozonx/ai-kit'
+import {
+  dynamicTool,
+  jsonSchema,
+  toolApprovalResponse,
+  type FetchFunction,
+  type Transport,
+} from '@bozonx/ai-kit'
 import { DEFAULT_LLM_CONFIG, type LlmConfig } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createSecretKeyProvider } from '../net/secrets'
-import { LlmError, createLlmClient, isKeylessProvider } from './llm-client'
+import {
+  LlmError,
+  createLlmClient,
+  isKeylessProvider,
+  type LlmStreamEvent,
+} from './llm-client'
 import { llmErrorKey } from './llm-errors'
 
 const encoder = new TextEncoder()
@@ -539,4 +550,191 @@ it('sends the preserved DeepSeek thinking mode to the provider', async () => {
   const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
   expect(body.model).toBe('deepseek-flash')
   expect(body.thinking).toEqual({ type: 'enabled' })
+})
+
+function toolCallChunks(name: string) {
+  return [
+    `data: ${JSON.stringify({
+      id: '1',
+      object: 'chat.completion.chunk',
+      created: 1,
+      model: 'm',
+      choices: [
+        {
+          index: 0,
+          delta: {
+            tool_calls: [
+              {
+                index: 0,
+                id: 'call-1',
+                type: 'function',
+                function: { name, arguments: '{}' },
+              },
+            ],
+          },
+          finish_reason: 'tool_calls',
+        },
+      ],
+    })}\n\n`,
+    'data: [DONE]\n\n',
+  ]
+}
+
+/** The default config with its local model able to call tools */
+function toolConfig() {
+  const llm = structuredClone(DEFAULT_LLM_CONFIG)
+  for (const model of llm.models) model.canUseTools = true
+  return llm
+}
+
+const clock = () => ({
+  now: dynamicTool({
+    description: 'The current time',
+    inputSchema: jsonSchema({ type: 'object', properties: {} }),
+    execute: async () => '12:00',
+  }),
+})
+
+async function collect(events: AsyncIterable<LlmStreamEvent>) {
+  const out: LlmStreamEvent[] = []
+  for await (const event of events) out.push(event)
+  return out
+}
+
+/** Answers with a tool call first and with text once a tool result is sent */
+function toolServer() {
+  return vi.fn<FetchFunction>(async (_input, init) => {
+    const body = JSON.parse(String(init?.body))
+    const answered = body.messages.some(
+      (message: { role: string }) => message.role === 'tool'
+    )
+    return streamResponse(
+      answered ? sse(['It is ', 'noon.']) : toolCallChunks('now')
+    )
+  })
+}
+
+describe('llm-client stream', () => {
+  it('runs the tool loop and reports every step', async () => {
+    const fetch = toolServer()
+    const { client } = setup(fetch, toolConfig())
+
+    const events = await collect(
+      client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 3 })
+    )
+
+    expect(events.map((event) => event.type)).toEqual([
+      'model',
+      'tool-call',
+      'tool-result',
+      'step-finish',
+      'text',
+      'text',
+      'step-finish',
+      'finish',
+    ])
+    expect(events.find((event) => event.type === 'tool-result')).toMatchObject({
+      toolName: 'now',
+      output: '12:00',
+      isError: false,
+    })
+    const finish = events.at(-1)
+    expect(finish).toMatchObject({ finishReason: 'stop', text: 'It is noon.' })
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
+    expect(body.tools[0].function.name).toBe('now')
+  })
+
+  it('stops at an approval request and continues after the decision', async () => {
+    const fetch = toolServer()
+    const { client } = setup(fetch, toolConfig())
+    const options = {
+      tools: clock(),
+      maxSteps: 3,
+      toolApproval: { now: 'user-approval' as const },
+    }
+
+    const first = await collect(client.stream('aiTasks', prompt, options))
+    const request = first.find((event) => event.type === 'approval-request')
+    const finish = first.at(-1)
+    expect(request).toMatchObject({ toolName: 'now', input: {} })
+    expect(finish).toMatchObject({ finishReason: 'tool-calls' })
+    if (request?.type !== 'approval-request' || finish?.type !== 'finish')
+      throw new Error('unreachable')
+
+    const second = await collect(
+      client.stream(
+        'aiTasks',
+        {
+          messages: [
+            ...prompt.messages,
+            ...finish.responseMessages,
+            toolApprovalResponse({
+              approvalId: request.approvalId,
+              approved: true,
+            }),
+          ],
+        },
+        options
+      )
+    )
+    expect(second.at(-1)).toMatchObject({
+      finishReason: 'stop',
+      text: 'It is noon.',
+    })
+  })
+
+  it('fails as a step limit when the steps run out on tool calls', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      streamResponse(toolCallChunks('now'))
+    )
+    const { client } = setup(fetch, toolConfig())
+
+    await expect(
+      collect(client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 1 }))
+    ).rejects.toMatchObject({ kind: 'step_limit' })
+  })
+
+  it('reports a model that refuses tools', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      jsonResponse(400, {
+        error: { message: 'qwen2.5:7b does not support tools' },
+      })
+    )
+    const { client } = setup(fetch, toolConfig())
+
+    const error = await collect(
+      client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 2 })
+    ).catch((caught: unknown) => caught)
+
+    expect(error).toMatchObject({ kind: 'tools_unsupported' })
+  })
+
+  it('ends without a finish when aborted', async () => {
+    const controller = new AbortController()
+    const fetch = vi.fn<FetchFunction>(
+      async (_input, init) =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(stream) {
+              stream.enqueue(encoder.encode(sse(['partial'])[0]))
+              init?.signal?.addEventListener('abort', () =>
+                stream.error(init.signal?.reason)
+              )
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'text/event-stream' } }
+        )
+    )
+    const { client } = setup(fetch)
+    const events: LlmStreamEvent[] = []
+
+    for await (const event of client.stream('aiTasks', prompt, {
+      signal: controller.signal,
+    })) {
+      events.push(event)
+      if (event.type === 'text') controller.abort()
+    }
+
+    expect(events.map((event) => event.type)).toEqual(['model', 'text'])
+  })
 })

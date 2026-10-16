@@ -20,6 +20,7 @@
           :key="messageKey(message)"
           :message="message"
           :can-regenerate="!chatStore.isGenerating"
+          :pending-approval-ids="pendingApprovalIds"
           :streaming="
             chatStore.isGenerating && index === chatStore.messages.length - 1
           "
@@ -27,6 +28,7 @@
           @regenerate="regenerate(index)"
           @copy-markdown-to-point="copyMarkdownToPoint(index)"
           @content-resized="handleContentResized"
+          @tool-approval="chatStore.answerToolApproval"
         />
 
         <div
@@ -156,6 +158,7 @@ const {
   getStreamRevision: () => [
     chatStore.messages.length,
     chatStore.messages.at(-1)?.content.length,
+    chatStore.messages.at(-1)?.parts?.length,
   ],
   clearInput: chatInputStore.clear,
 })
@@ -176,8 +179,15 @@ const emptyHint = computed(() =>
 )
 const streamHasContent = computed(() => {
   const last = chatStore.messages.at(-1)
-  return last?.role === 'assistant' && Boolean(last.content)
+  return (
+    last?.role === 'assistant' &&
+    (Boolean(last.content) || Boolean(last.parts?.length))
+  )
 })
+const pendingApprovalIds = computed(
+  () =>
+    new Set(chatStore.pendingToolApprovals.map((request) => request.approvalId))
+)
 
 // messages have no ids of their own; the object is the identity
 const messageKeys = new WeakMap<ChatMessage, number>()

@@ -11,6 +11,11 @@ import { draftChatTitle } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
+import {
+  applyAnswerState,
+  hasAnswer,
+  settleUnfinishedToolCalls,
+} from '../chat-tools/chat-message-steps'
 export function createChatGenerationModel(
   deps: Pick<
     ChatModelDependencies,
@@ -56,7 +61,8 @@ export function createChatGenerationModel(
     isGenerating.value = false
     isStopped.value = true
     const last = messages.value.at(-1)
-    if (last?.role === 'assistant' && !last.content) {
+    if (last?.role === 'assistant') settleUnfinishedToolCalls(last)
+    if (last?.role === 'assistant' && !hasAnswer(last)) {
       messages.value.pop()
       const user = messages.value.at(-1)
       if (user?.role === 'user') {
@@ -155,7 +161,7 @@ export function createChatGenerationModel(
       }
     )
 
-    let result: string
+    let result: Awaited<ReturnType<typeof deps.sendChatMessage>>
 
     try {
       result = await deps.sendChatMessage(
@@ -165,9 +171,9 @@ export function createChatGenerationModel(
         {
           modelId: model.id,
           signal: abortController.signal,
-          onChunk: (chunk) => {
+          onUpdate: (answer) => {
             if (currentGenerationId === generationId) {
-              assistantMessage.content += chunk
+              applyAnswerState(assistantMessage, answer)
             }
           },
         }
@@ -175,15 +181,16 @@ export function createChatGenerationModel(
 
       if (currentGenerationId !== generationId) return ''
 
-      if (!assistantMessage.content && result) {
+      if (!hasAnswer(assistantMessage) && hasAnswer(result)) {
         // Fallback if streamer wasn't used but we got a full text result
-        assistantMessage.content = result
+        applyAnswerState(assistantMessage, result)
       }
     } catch (e) {
       if (currentGenerationId === generationId) {
         error.value =
           deps.formatError?.(e) || (e instanceof Error ? e.message : String(e))
-        if (!assistantMessage.content) {
+        settleUnfinishedToolCalls(assistantMessage)
+        if (!hasAnswer(assistantMessage)) {
           messages.value.splice(userMessageIndex + 1, 1)
           lastFailedTurn.value = { message, attachments, images }
           isGenerating.value = false
@@ -202,7 +209,8 @@ export function createChatGenerationModel(
 
     if (currentGenerationId !== generationId) return ''
 
-    if (!assistantMessage.content) {
+    settleUnfinishedToolCalls(assistantMessage)
+    if (!hasAnswer(assistantMessage)) {
       messages.value.splice(userMessageIndex, 2)
       return ''
     }

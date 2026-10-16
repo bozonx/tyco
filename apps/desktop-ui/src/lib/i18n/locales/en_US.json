@@ -106,7 +106,21 @@
     "imageOmitted": "[Previous images excluded by the user]",
     "documentTextHint": "Documents are sent as extracted text; layout and embedded pictures are excluded. Scanned PDF pages are sent as images.",
     "fileProcessing": "Processing files…",
-    "profileSettings": "Profile settings"
+    "profileSettings": "Profile settings",
+    "toolAllow": "Allow",
+    "toolAllowSession": "Allow in this session",
+    "toolDeny": "Deny",
+    "toolApprovalQuestion": "Allow {tool} to run?",
+    "toolArguments": "Arguments",
+    "toolResult": "Result",
+    "toolResultTruncated": "shortened for the model",
+    "toolState": {
+      "pending": "Running",
+      "awaitingApproval": "Waiting for approval",
+      "denied": "Not allowed",
+      "done": "Done",
+      "error": "Failed"
+    }
   },
   "commandLauncher": {
     "allCommands": "All commands",
@@ -401,7 +415,9 @@
     "unavailable": "The provider is not reachable",
     "unknown": "The AI request failed",
     "imageUnsupported": "The provider rejected a request with images. Check vision support and model settings, or continue without images. Server details follow.",
-    "outputTruncated": "The answer reached its token limit. Increase the output limit or shorten the request."
+    "outputTruncated": "The answer reached its token limit. Increase the output limit or shorten the request.",
+    "toolsUnsupported": "The model cannot use tools. Turn off “Tool calling” in its settings or pick another model.",
+    "stepLimit": "The model used up its tool steps without finishing the answer. Ask it to continue or raise the step limit of the profile."
   },
   "menu": {
     "actions": "Actions",
@@ -502,6 +518,12 @@
     "profileName": "Profile Name",
     "profileSoulPrompt": "Root Instruction (SOUL.md)",
     "profileSoulPromptHint": "The persona, role, tone and rules of this assistant. It is all the profile follows: the instructions and rules of Ask AI do not apply. Read anew before every request, so edits on disk count too.",
+    "profileTools": "Tools",
+    "profileToolsHint": "What the profile's model may do in the chat on its own. Calls set to “Ask” wait for your approval in the message.",
+    "profileToolAccess": "access",
+    "profileToolSteps": "Steps per answer",
+    "profileToolStepsHint": "How many times the model may call tools before it has to answer.",
+    "profileToolStepsInvalid": "Enter a whole number from 1 to 50",
     "profilesCount": "Profiles count: {count}",
     "projectDescription": "Project Description",
     "projectName": "Project Name",
@@ -826,6 +848,8 @@
     "windowInsertion": "Insertion method",
     "windowInsertionHint": "Utility used to simulate keystrokes and paste text into other applications: xdotool (in X11 sessions) or ydotool (in Wayland). Specify the executable path below.",
     "vision": "Image input",
+    "toolUse": "Tool calling",
+    "toolUseHint": "Lets the model use tools in the chat. Turn it off if the model or its server cannot call tools.",
     "launcherPage": "Quick commands: page {page}",
     "addLauncherPage": "Add page",
     "removeLauncherPage": "Delete page",

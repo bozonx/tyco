@@ -9,6 +9,8 @@ const PROFILE_FILE: &str = "profile.json";
 const PROJECT_FILE: &str = "project.json";
 const SOUL_FILE: &str = "SOUL.md";
 const MAX_TEMPERATURE: f64 = 2.0;
+/// Mirrors MAX_TOOL_STEP_COUNT in shared.
+const MAX_TOOL_STEP_COUNT: u32 = 50;
 
 pub fn validate_id(id: &str) -> Result<(), AppError> {
     if id.is_empty() {
@@ -101,6 +103,16 @@ fn validate_profile(profile: &AiProfile) -> Result<(), AppError> {
         return Err(AppError::InvalidInput(
             "Temperature must be between 0 and 2".into(),
         ));
+    }
+    if profile
+        .tools
+        .as_ref()
+        .and_then(|tools| tools.max_step_count)
+        .is_some_and(|count| !(1..=MAX_TOOL_STEP_COUNT).contains(&count))
+    {
+        return Err(AppError::InvalidInput(format!(
+            "Tool step count must be between 1 and {MAX_TOOL_STEP_COUNT}"
+        )));
     }
     if profile.max_output_tokens == Some(0) {
         return Err(AppError::InvalidInput(

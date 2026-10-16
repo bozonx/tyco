@@ -14,6 +14,27 @@ export const DEFAULT_PROJECT_PERMISSION: Readonly<ProjectPermission> = {
 /** The highest temperature a profile may set */
 export const MAX_PROFILE_TEMPERATURE = 2
 
+/** Model steps a profile's chat may take in one turn by default */
+export const DEFAULT_TOOL_STEP_COUNT = 8
+
+/** The most model steps a profile may allow in one turn */
+export const MAX_TOOL_STEP_COUNT = 50
+
+/** Whether a group of tools is offered to the model, and how freely */
+export interface ToolGroupSettings {
+  isEnabled: boolean
+  /** `ask` waits for the user before each call; with no UI it means `deny` */
+  access: ProjectAccessMode
+}
+
+/** The tools a profile's chat may use */
+export interface ProfileToolSettings {
+  /** By tool group id; a group that is not listed is off */
+  groups: Record<string, ToolGroupSettings>
+  /** Model steps per turn; `DEFAULT_TOOL_STEP_COUNT` when unset */
+  maxStepCount?: number
+}
+
 /** A profile; its root instruction lives next to it in `SOUL.md` */
 export interface AiProfile {
   id: string
@@ -25,6 +46,8 @@ export interface AiProfile {
   /** Caps the answer below the model's own output limit */
   maxOutputTokens?: number
   projectPermissions: Record<string, ProjectPermission>
+  /** No tools when unset */
+  tools?: ProfileToolSettings
   createdAt: number
   updatedAt: number
 }

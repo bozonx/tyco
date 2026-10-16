@@ -2,12 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { APP_ROUTES } from '../navigation/routes'
 import { type ChatModelDependencies, createChatModel } from './chat-model'
+import { chatAnswer, streamChunk } from './testing'
+import type { ChatToolLoopState } from '../chat-tools/chat-tool-loop'
 
 function createDeps(
   overrides: Partial<ChatModelDependencies> = {}
 ): ChatModelDependencies {
   return {
-    sendChatMessage: vi.fn(async () => 'Assistant reply'),
+    sendChatMessage: vi.fn(async () => chatAnswer('Assistant reply')),
     generateChatTitle: vi.fn(async () => ''),
     saveChat: vi.fn(),
     renameChat: vi.fn(),
@@ -83,7 +85,7 @@ describe('chat-model', () => {
       expect.objectContaining({
         modelId: 'model-1',
         signal: expect.any(AbortSignal),
-        onChunk: expect.any(Function),
+        onUpdate: expect.any(Function),
       })
     )
   })
@@ -116,9 +118,9 @@ describe('chat-model', () => {
     const deps = createDeps({
       sendChatMessage: vi.fn(
         async (_message, _prevMessages, _devInstructions, options) => {
-          options?.onChunk?.('Hello')
-          options?.onChunk?.('!')
-          return 'Hello!'
+          streamChunk(options, 'Hello')
+          streamChunk(options, '!')
+          return chatAnswer('Hello!')
         }
       ),
     })
@@ -145,7 +147,9 @@ describe('chat-model', () => {
   })
 
   it('rolls back optimistic user message when request returns no content', async () => {
-    const deps = createDeps({ sendChatMessage: vi.fn(async () => '') })
+    const deps = createDeps({
+      sendChatMessage: vi.fn(async () => chatAnswer('')),
+    })
     const store = createChatModel(deps)
 
     const result = await store.sendMessage('Hello')
@@ -158,7 +162,7 @@ describe('chat-model', () => {
     const sendChatMessage = vi
       .fn()
       .mockRejectedValueOnce(new Error('Provider unavailable'))
-      .mockResolvedValueOnce('Recovered answer')
+      .mockResolvedValueOnce(chatAnswer('Recovered answer'))
     const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Keep this question')
@@ -179,11 +183,11 @@ describe('chat-model', () => {
       .fn()
       .mockImplementationOnce(
         async (_message, _previous, _instructions, options) => {
-          options?.onChunk?.('Partial')
+          streamChunk(options, 'Partial')
           throw new Error('Stream interrupted')
         }
       )
-      .mockResolvedValueOnce('Complete answer')
+      .mockResolvedValueOnce(chatAnswer('Complete answer'))
     const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Question')
@@ -270,7 +274,10 @@ describe('chat-model', () => {
   it('ignores a late answer after starting another chat', async () => {
     let resolveRequest!: (value: string) => void
     const sendChatMessage = vi.fn(
-      () => new Promise<string>((resolve) => (resolveRequest = resolve))
+      () =>
+        new Promise<ChatToolLoopState>(
+          (resolve) => (resolveRequest = (text) => resolve(chatAnswer(text)))
+        )
     )
     const deps = createDeps({ sendChatMessage })
     const store = createChatModel(deps)
@@ -396,7 +403,7 @@ describe('chat-model', () => {
     const sendChatMessage = vi
       .fn()
       .mockRejectedValueOnce(new Error('Offline'))
-      .mockResolvedValueOnce('Answer')
+      .mockResolvedValueOnce(chatAnswer('Answer'))
     const store = createChatModel(createDeps({ sendChatMessage }))
 
     await store.sendMessage('Question', [{ text: 'context' }])
@@ -448,8 +455,10 @@ describe('chat-model', () => {
     const deps = createDeps({
       sendChatMessage: vi.fn(
         async (_message, _previous, _instructions, options) => {
-          options?.onChunk?.('Part')
-          return new Promise<string>((resolve) => (resolveRequest = resolve))
+          streamChunk(options, 'Part')
+          return new Promise<ChatToolLoopState>(
+            (resolve) => (resolveRequest = (text) => resolve(chatAnswer(text)))
+          )
         }
       ),
     })
@@ -526,18 +535,18 @@ describe('chat-model', () => {
         .mockImplementationOnce((_text, _previous, _instructions, input) => {
           options = input
           return new Promise((done) => {
-            resolve = done
+            resolve = (text) => done(chatAnswer(text))
           })
         })
-        .mockResolvedValue('Complete')
+        .mockResolvedValue(chatAnswer('Complete'))
       const store = createChatModel(createDeps({ sendChatMessage: send }))
       const pending = store.sendMessage('Question')
-      if (partial) options.onChunk?.(partial)
+      if (partial) streamChunk(options, partial)
       store.stopGeneration()
       expect(options.signal?.aborted).toBe(true)
       expect(store.isGenerating.value).toBe(false)
       expect(store.isStopped.value).toBe(true)
-      options.onChunk?.('Late')
+      streamChunk(options, 'Late')
       resolve('Late')
       await pending
       expect(store.messages.value.at(-1)?.content).toBe(partial || 'Question')
@@ -556,7 +565,7 @@ describe('chat-model', () => {
       createDeps({
         sendChatMessage: () =>
           new Promise((done) => {
-            resolve = done
+            resolve = (text) => done(chatAnswer(text))
           }),
       })
     )
@@ -606,7 +615,7 @@ describe('image turns', () => {
     const send = vi
       .fn()
       .mockRejectedValueOnce(new Error('Offline'))
-      .mockResolvedValue('Answer')
+      .mockResolvedValue(chatAnswer('Answer'))
     const deps = createDeps({
       sendChatMessage: send,
       imageTitle: () => 'Image',
@@ -867,9 +876,11 @@ describe('file and image context policies', () => {
     const deps = createDeps({
       sendChatMessage: vi.fn(
         (_message, _previous, _instructions, options) =>
-          new Promise<string>((resolve) => {
-            options.onChunk?.('Partial')
-            options.signal?.addEventListener('abort', () => resolve('Partial'))
+          new Promise<ChatToolLoopState>((resolve) => {
+            streamChunk(options, 'Partial')
+            options.signal?.addEventListener('abort', () =>
+              resolve(chatAnswer('Partial'))
+            )
           })
       ),
       createId: vi.fn(() => 'chat-id-1'),

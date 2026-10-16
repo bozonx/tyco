@@ -5,6 +5,7 @@ import {
   modelContextWindowTokens,
   modelMaxOutputTokens,
   supportsImages,
+  supportsTools,
   usableModels,
 } from '../llm/llm-catalog'
 
@@ -13,6 +14,7 @@ export interface ChatLlmOption {
   name: string
   providerLabel: string
   canUseImages: boolean
+  canUseTools: boolean
   contextWindowTokens: number
   maxOutputTokens?: number
 }
@@ -35,6 +37,7 @@ export function chatModelOptions(
       name: model.name?.trim() || model.providerModelId.trim(),
       providerLabel: provider.name?.trim() || provider.type,
       canUseImages: supportsImages(model),
+      canUseTools: supportsTools(model, config.providers),
       contextWindowTokens: modelContextWindowTokens(model, config.providers),
       maxOutputTokens: modelMaxOutputTokens(model, config.providers),
     }))

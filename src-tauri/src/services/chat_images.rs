@@ -504,6 +504,7 @@ mod tests {
                 content: String::new(),
                 attachments: vec![],
                 images: vec![image.clone()],
+                parts: vec![],
                 status: None,
             }],
         };
@@ -541,6 +542,7 @@ mod tests {
                 content: String::new(),
                 attachments: vec![],
                 images: vec![image],
+                parts: vec![],
                 status: None,
             }],
         };

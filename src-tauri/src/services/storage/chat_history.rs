@@ -657,6 +657,7 @@ mod tests {
             content: String::from("Где купить БИЛЕТЫ?"),
             attachments: Vec::new(),
             images: Vec::new(),
+            parts: vec![],
             status: None,
         }];
 
