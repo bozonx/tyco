@@ -11,16 +11,17 @@ const image = {
   height: 1,
   size: 1,
 }
-function setup() {
+function setup(isGenerating = false) {
   const draft = ref<ChatParams>({})
   const syncImages = vi.fn(async () => undefined)
   const prepare = vi.fn(async () => ({ attachments: [], images: [image] }))
   const report = vi.fn()
+  const reportBusy = vi.fn()
   const controller = createChatFileController({
     getDraft: () => draft.value,
     getMessages: () => [],
     getSavingImages: () => [],
-    isGenerating: () => false,
+    isGenerating: () => isGenerating,
     prepare,
     addAttachment: vi.fn(),
     readDroppedFile: async () => new File(['file'], 'a.png'),
@@ -28,8 +29,9 @@ function setup() {
     report,
     notify: vi.fn(),
     reportSyncError: vi.fn(),
+    reportBusy,
   })
-  return { controller, draft, syncImages, prepare, report }
+  return { controller, draft, syncImages, prepare, report, reportBusy }
 }
 
 describe('chat file controller ownership', () => {
@@ -99,6 +101,7 @@ describe('chat file controller ownership', () => {
       report: vi.fn(),
       notify: vi.fn(),
       reportSyncError: vi.fn(),
+      reportBusy: vi.fn(),
     })
     const importing = controller.addDroppedFiles(['/tmp/a.png'])
     expect(controller.importing.value).toBe(1)
@@ -107,6 +110,14 @@ describe('chat file controller ownership', () => {
     await importing
     expect(prepare).not.toHaveBeenCalled()
     expect(controller.importing.value).toBe(0)
+    controller.dispose()
+  })
+  it('tells why files are not taken while an answer is generated', async () => {
+    const { controller, prepare, reportBusy } = setup(true)
+    await controller.addFiles([new File(['file'], 'a.png')])
+    await controller.addDroppedFiles(['/tmp/a.png'])
+    expect(reportBusy).toHaveBeenCalledTimes(2)
+    expect(prepare).not.toHaveBeenCalled()
     controller.dispose()
   })
 })

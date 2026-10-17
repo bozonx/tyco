@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-chat">
+  <div ref="dropZoneRef" class="ai-chat">
     <ChatResponseAnnouncer
       :chat-id="chatStore.currentChatParams.id"
       :is-generating="chatStore.isGenerating"
@@ -75,12 +75,9 @@
       icon="mdi:arrow-down"
     />
 
-    <!-- files arrive through the native drag-and-drop event of the webview -->
-    <div
-      ref="composerRef"
-      class="composer-wrap"
-      :class="{ 'is-dragging': draggingFiles }"
-    >
+    <!-- files dropped anywhere on the chat arrive through the native
+      drag-and-drop event of the webview -->
+    <div class="composer-wrap" :class="{ 'is-dragging': draggingFiles }">
       <div v-if="draggingFiles" class="drop-hint" role="status">
         <Icon icon="mdi:paperclip" height="16" class="shrink-0" />
         {{ t('chat.dropFiles') }}
@@ -245,16 +242,14 @@ async function copyMarkdownToPoint(index: number) {
   toastKey('chat.markdownCopied', 'info')
 }
 
-const { composerRef, draggingFiles } = useChatFileDrop({
+const { dropZoneRef, draggingFiles } = useChatFileDrop({
   getContext: () => [
     chatStore.isGenerating,
     chatStore.selectedModel,
     isInlineVoice.value,
   ],
-  canAccept: () =>
-    !chatStore.isGenerating &&
-    Boolean(chatStore.selectedModel) &&
-    !isInlineVoice.value,
+  // a drop during generation reaches the store, which tells why it is refused
+  canAccept: () => Boolean(chatStore.selectedModel) && !isInlineVoice.value,
   accept: (paths) => chatStore.addDroppedFiles(paths),
 })
 onMounted(() => {

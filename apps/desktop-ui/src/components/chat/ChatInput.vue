@@ -20,6 +20,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
+import { clipboardChatFiles } from '../../lib/chat/chat-clipboard-files'
 import {
   resolveInputKeyAction,
   resolveSubmitKey,
@@ -60,16 +61,13 @@ watch(
   }
 )
 
-/**
- * Office apps put a picture of copied text next to the text itself: a paste
- * with text stays a text paste, and only a clipboard without text attaches its
- * files
- */
 function handlePaste(event: ClipboardEvent) {
-  const files = Array.from(event.clipboardData?.files || [])
-  if (!files.length || event.clipboardData?.getData('text/plain')) return
+  const pasted = clipboardChatFiles(event.clipboardData)
+  if (!pasted) return
   event.preventDefault()
-  void chatStore.addFiles(files)
+  void (pasted.kind === 'files'
+    ? chatStore.addFiles(pasted.files)
+    : chatStore.addDroppedFiles(pasted.paths))
 }
 
 function handleInput(value: string) {

@@ -1,12 +1,30 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../commands/command-config'
 import { testTools } from '../tools/testing'
+import { createBuiltInVoiceCommands } from './built-in-voice-commands'
+import { translate } from '../i18n'
 import {
   createVoiceCommandModel,
   type VoiceCommandDependencies,
 } from './voice-command-model'
 
 function setup() {
+  const baseTools = testTools()
+  const scriptTool = baseTools.get('script')!
+  const tools = {
+    get: (id: string) =>
+      baseTools.get(id) ?? {
+        ...scriptTool,
+        id,
+        inputSchemaFor: undefined,
+        inputSchema: {
+          type: 'object' as const,
+          properties: { text: { type: 'string' as const } },
+          required: ['text'],
+        },
+      },
+  }
+  const builtInCommands = createBuiltInVoiceCommands(tools, translate)
   const commands = [
     {
       ...createCommand('script', 'note'),
@@ -19,7 +37,8 @@ function setup() {
     Parameters<VoiceCommandDependencies['startDictation']>[0] | undefined
   const deps: VoiceCommandDependencies = {
     commands: () => commands,
-    tools: testTools(),
+    builtInCommands: () => builtInCommands,
+    tools,
     startDictation: vi.fn(async (next) => {
       handlers = next
     }),
@@ -325,4 +344,17 @@ it('progresses from awaiting-command to capturing-args when command is spoken or
   expect(model.recordingPhase.value).toBe('capturing-args')
   expect(model.hasMatchedCommand.value).toBe(true)
   expect(model.activeCandidate.value?.text).toBe('Buy milk and bread')
+})
+
+it('considers command recognized during recording even when a parameter has an error', async () => {
+  const { model, partial } = setup()
+  await model.start()
+  expect(model.hasMatchedCommand.value).toBe(false)
+
+  // Spoken phrase matches translate, but language parameter is unrecognized
+  partial('translate to Klingon Hello!')
+  expect(model.resolution.value.kind).toBe('parameter-error')
+  expect(model.hasMatchedCommand.value).toBe(true)
+  expect(model.recordingPhase.value).toBe('capturing-args')
+  expect(model.activeCommand.value).toBeDefined()
 })

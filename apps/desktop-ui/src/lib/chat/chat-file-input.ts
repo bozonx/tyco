@@ -6,6 +6,7 @@ import {
   type ChatFileErrorKind,
   type ChatFileNotice,
 } from './chat-file-error'
+import { chatImageType } from './chat-image-format'
 import { MAX_CHAT_IMAGES } from './chat-image-input'
 
 export const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
@@ -19,14 +20,46 @@ export interface PreparedChatFile {
   notices?: ChatFileNotice[]
 }
 
+const IMAGE_EXTENSIONS = [
+  'png',
+  'jpg',
+  'jpeg',
+  'webp',
+  'gif',
+  'bmp',
+  'tif',
+  'tiff',
+  'avif',
+  'heic',
+  'heif',
+]
+
 /**
- * Any other file is tried as text: the content, not the extension, tells a text
- * file from a binary one.
+ * The content decides first: a pasted file may have no extension, and a renamed
+ * one keeps its bytes. The name and media type only route files whose bytes are
+ * not recognised, so a broken image is reported as one. Any other file is tried
+ * as text: the content, not the extension, tells a text file from a binary
+ * one.
  */
-export function chatFileKind(name: string): 'image' | 'text' | 'pdf' | 'docx' {
-  const extension = name.split('.').at(-1)?.toLowerCase() || ''
-  if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) return 'image'
-  if (extension === 'pdf' || extension === 'docx') return extension
+export function chatFileKind(
+  name: string,
+  bytes: Uint8Array = new Uint8Array(),
+  mediaType = ''
+): 'image' | 'text' | 'pdf' | 'docx' {
+  if (chatImageType(bytes)) return 'image'
+  if (String.fromCharCode(...bytes.subarray(0, 5)) === '%PDF-') return 'pdf'
+  const extension = name.includes('.')
+    ? name.split('.').at(-1)?.toLowerCase() || ''
+    : ''
+  // SVG is XML text, attached as it is
+  if (
+    IMAGE_EXTENSIONS.includes(extension) ||
+    (mediaType.startsWith('image/') && mediaType !== 'image/svg+xml')
+  )
+    return 'image'
+  if (extension === 'pdf' || mediaType === 'application/pdf') return 'pdf'
+  if (extension === 'docx' || mediaType.includes('wordprocessingml'))
+    return 'docx'
   return 'text'
 }
 

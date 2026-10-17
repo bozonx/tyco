@@ -8,11 +8,11 @@ export function useChatFileDrop(deps: {
   canAccept: () => boolean
   accept: (paths: string[]) => Promise<void>
 }) {
-  const composerRef = ref<HTMLElement | null>(null)
+  const dropZoneRef = ref<HTMLElement | null>(null)
   const draggingFiles = ref(false)
   const listener = createChatFileDropListener({
     ...deps,
-    getBounds: () => composerRef.value?.getBoundingClientRect() ?? null,
+    getBounds: () => dropZoneRef.value?.getBoundingClientRect() ?? null,
     getScale: () => window.devicePixelRatio,
     setDragging: (value) => {
       draggingFiles.value = value
@@ -28,5 +28,5 @@ export function useChatFileDrop(deps: {
     void listener.start()
   })
   onBeforeUnmount(listener.dispose)
-  return { composerRef, draggingFiles }
+  return { dropZoneRef, draggingFiles }
 }

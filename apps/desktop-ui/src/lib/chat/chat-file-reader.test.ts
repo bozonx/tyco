@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(async () => new Uint8Array([1])),
+  prepare: vi.fn(async () => ({
+    bytes: new Uint8Array([1]),
+    isAnimated: false,
+  })),
   pdf: vi.fn(),
 }))
 vi.mock('./chat-image-input', () => ({ prepareChatImage: mocks.prepare }))
@@ -50,12 +53,27 @@ describe('chat file reader', () => {
     const storeImage = vi.fn()
     mocks.prepare.mockImplementationOnce(async () => {
       current = false
-      return new Uint8Array([1])
+      return { bytes: new Uint8Array([1]), isAnimated: false }
     })
     const read = createChatFileReader({ quality: () => 'balanced', storeImage })
     expect(await read(new File(['source'], 'a.png'), 4, () => current)).toEqual(
       { attachments: [], images: [] }
     )
     expect(storeImage).not.toHaveBeenCalled()
+  })
+  it('tells that only the first frame of an animated image is attached', async () => {
+    mocks.prepare.mockResolvedValueOnce({
+      bytes: new Uint8Array([1]),
+      isAnimated: true,
+    })
+    const read = createChatFileReader({
+      quality: () => 'balanced',
+      storeImage: async () => image,
+    })
+    expect(await read(new File(['GIF89a'], 'a.gif'), 4, () => true)).toEqual({
+      attachments: [],
+      images: [image],
+      notices: [{ kind: 'animatedFirstFrame' }],
+    })
   })
 })

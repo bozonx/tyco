@@ -17,8 +17,23 @@ describe('chat files', () => {
     expect(chatFileKind('PHOTO.JPEG')).toBe('image')
     expect(chatFileKind('report.PDF')).toBe('pdf')
     expect(chatFileKind('report.docx')).toBe('docx')
+    expect(chatFileKind('photo.HEIC')).toBe('image')
     for (const name of ['code.ts', 'Dockerfile', 'image.svg', 'notes.adoc'])
       expect(chatFileKind(name)).toBe('text')
+  })
+  it('lets the content decide before the name and the media type', () => {
+    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+    expect(chatFileKind('image', png)).toBe('image')
+    expect(chatFileKind('notes.txt', png)).toBe('image')
+    expect(chatFileKind('scan', new TextEncoder().encode('%PDF-1.7'))).toBe(
+      'pdf'
+    )
+    expect(chatFileKind('clipboard', new Uint8Array([1]), 'image/png')).toBe(
+      'image'
+    )
+    expect(chatFileKind('logo', new Uint8Array([60]), 'image/svg+xml')).toBe(
+      'text'
+    )
   })
   it('rejects binary content whatever the extension says', () => {
     expect(() =>

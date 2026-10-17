@@ -351,6 +351,7 @@ function createChatStoreSetup(profileId: string | null) {
       pdfPages: 'chat.pdfPageLimit',
       password: 'chat.pdfPassword',
       memory: 'chat.imageMemoryLimit',
+      imageFormat: 'chat.imageFormatUnavailable',
     }
     const files = createChatFileController({
       getDraft: () => model.currentChatParams.value,
@@ -394,11 +395,14 @@ function createChatStoreSetup(profileId: string | null) {
           `${name}: ${
             notice.kind === 'secrets'
               ? translate('chat.fileSecretsWarning')
-              : translate('chat.pdfPagesSkipped', { count: notice.count })
+              : notice.kind === 'animatedFirstFrame'
+                ? translate('chat.animatedImageFirstFrame')
+                : translate('chat.pdfPagesSkipped', { count: notice.count })
           }`,
           'warn'
         ),
       reportSyncError: () => toastKey('chat.imageUnavailable', 'error'),
+      reportBusy: () => toastKey('chat.filesWhileGenerating', 'warn'),
     })
     onScopeDispose(files.dispose)
     const controller = createChatController({

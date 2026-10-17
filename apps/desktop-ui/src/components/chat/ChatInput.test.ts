@@ -10,7 +10,11 @@ const mocks = vi.hoisted(() => ({
   focus: vi.fn(),
   rememberSelection: vi.fn(),
   takePendingCaret: vi.fn(() => null),
-  chatState: { attachedContext: [] as any[], addFiles: vi.fn() },
+  chatState: {
+    attachedContext: [] as any[],
+    addFiles: vi.fn(),
+    addDroppedFiles: vi.fn(),
+  },
   ipcState: { desktopState: { userConfig: {} as any } },
 }))
 
@@ -65,6 +69,24 @@ describe('ChatInput.vue', () => {
       wrapper.get('textarea').element.dispatchEvent(event)
       expect(event.defaultPrevented).toBe(false)
       expect(mocks.addFiles).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
+    it('attaches files copied in a file manager by their paths', () => {
+      const wrapper = mount(ChatInput)
+      const event = new Event('paste', { cancelable: true })
+      const types: Record<string, string> = {
+        'text/plain': '/home/me/shot.png',
+        'text/uri-list': 'file:///home/me/shot.png',
+      }
+      Object.defineProperty(event, 'clipboardData', {
+        value: { files: [], getData: (type: string) => types[type] || '' },
+      })
+      wrapper.get('textarea').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+      expect(mocks.chatState.addDroppedFiles).toHaveBeenCalledWith([
+        '/home/me/shot.png',
+      ])
       wrapper.unmount()
     })
 

@@ -30,6 +30,8 @@ export interface ChatFileControllerDependencies {
   report: (name: string, kind: ChatFileErrorKind) => void
   notify: (name: string, notice: ChatFileNotice) => void
   reportSyncError: () => void
+  /** Files given while an answer is being generated are not taken */
+  reportBusy: () => void
 }
 
 /** Owns import queues and image lifetimes independently of Pinia and native IO. */
@@ -61,7 +63,8 @@ export function createChatFileController(deps: ChatFileControllerDependencies) {
   )
 
   async function addFiles(files: File[]) {
-    if (!files.length || deps.isGenerating() || disposed) return
+    if (!files.length || disposed) return
+    if (deps.isGenerating()) return deps.reportBusy()
     const draft = deps.getDraft()
     importing.value++
     const isCurrent = () =>
@@ -100,7 +103,8 @@ export function createChatFileController(deps: ChatFileControllerDependencies) {
   }
 
   async function addDroppedFiles(paths: string[]) {
-    if (deps.isGenerating() || disposed) return
+    if (!paths.length || disposed) return
+    if (deps.isGenerating()) return deps.reportBusy()
     const draft = deps.getDraft()
     importing.value++
     try {

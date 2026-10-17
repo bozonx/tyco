@@ -30,7 +30,7 @@ it('clears an active drag when the selected model changes while dropping stays a
           canAccept: () => true,
           accept,
         }),
-      template: '<div ref="composerRef" :data-dragging="draggingFiles" />',
+      template: '<div ref="dropZoneRef" :data-dragging="draggingFiles" />',
     })
   )
   try {

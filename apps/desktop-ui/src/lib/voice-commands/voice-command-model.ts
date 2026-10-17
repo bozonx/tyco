@@ -63,25 +63,20 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const resolution = computed(() =>
     resolveVoice(routes.value, transcript.value)
   )
-  const recordingPhase = computed<'awaiting-command' | 'capturing-args'>(() => {
-    if (stage.value !== 'recording' && stage.value !== 'finishing') {
-      return 'awaiting-command'
-    }
-    return resolution.value.kind === 'match'
-      ? 'capturing-args'
-      : 'awaiting-command'
-  })
-  const hasMatchedCommand = computed(
-    () => recordingPhase.value === 'capturing-args'
-  )
   const activeCandidate = computed<VoiceCandidate | undefined>(() => {
     if (stage.value === 'review' || stage.value === 'running') {
       return selected.value
     }
-    if (resolution.value.kind === 'match') {
-      return resolution.value.candidates[0]
+    return (
+      resolution.value.candidates[0] ?? resolution.value.parameterChoices?.[0]
+    )
+  })
+  const hasMatchedCommand = computed(() => Boolean(activeCandidate.value))
+  const recordingPhase = computed<'awaiting-command' | 'capturing-args'>(() => {
+    if (stage.value !== 'recording' && stage.value !== 'finishing') {
+      return 'awaiting-command'
     }
-    return undefined
+    return hasMatchedCommand.value ? 'capturing-args' : 'awaiting-command'
   })
   const catalogRoutes = computed(() =>
     compileVoiceRoutes(commands.value, deps.tools, true)

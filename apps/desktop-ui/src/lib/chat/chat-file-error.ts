@@ -9,6 +9,8 @@ export type ChatFileErrorKind =
   | 'pdfPages'
   | 'password'
   | 'memory'
+  /** A known image format the system decoder cannot read */
+  | 'imageFormat'
 
 export class ChatFileError extends Error {
   constructor(readonly kind: ChatFileErrorKind) {
@@ -35,4 +37,6 @@ export function chatFileErrorKind(error: unknown): ChatFileErrorKind {
 
 /** Accepted files the user should still know something about */
 export type ChatFileNotice =
-  { kind: 'secrets' } | { kind: 'pdfPagesSkipped'; count: number }
+  | { kind: 'secrets' }
+  | { kind: 'pdfPagesSkipped'; count: number }
+  | { kind: 'animatedFirstFrame' }
