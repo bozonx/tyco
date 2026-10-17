@@ -318,7 +318,6 @@
       "all": "Seleccionar todas las coincidencias",
       "matchCase": "Distinguir mayúsculas",
       "regexp": "Expresión regular",
-      "wholeWord": "Palabra completa",
       "replaceAll": "Reemplazar todo",
       "close": "Cerrar búsqueda",
       "currentMatch": "Coincidencia actual",

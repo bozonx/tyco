@@ -318,7 +318,6 @@
       "all": "Tüm eşleşmeleri seç",
       "matchCase": "Büyük/küçük harf duyarlı",
       "regexp": "Düzenli ifade",
-      "wholeWord": "Tam sözcük",
       "replaceAll": "Tümünü değiştir",
       "close": "Aramayı kapat",
       "currentMatch": "Geçerli eşleşme",

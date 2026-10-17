@@ -86,6 +86,38 @@ describe('editor search and replace', () => {
     expect(searchPanelOpen(view.state)).toBe(false)
   })
 
+  it('toggles replacement controls and returns to compact search with Ctrl+F', () => {
+    mount()
+    openEditorSearch(view)
+    const replacement = view.dom.querySelector<HTMLElement>(
+      '.cm-search-replacement'
+    )!
+    expect(replacement.hidden).toBe(true)
+    expect(view.dom.querySelector('input[name="word"]')).toBeNull()
+    const toggle = view.dom.querySelector<HTMLButtonElement>(
+      '[name="toggleReplace"]'
+    )!
+    toggle.click()
+    expect(replacement.hidden).toBe(false)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    const field = view.dom.querySelector<HTMLInputElement>(
+      'input[name="search"]'
+    )!
+    field.value = 'cat'
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(getSearchQuery(view.state).search).toBe('cat')
+    press('f', 70, { ctrlKey: true })
+    expect(replacement.hidden).toBe(true)
+    expect(getSearchQuery(view.state).search).toBe('cat')
+    for (const name of ['prev', 'next']) {
+      const button = view.dom.querySelector<HTMLButtonElement>(
+        `button[name="${name}"]`
+      )!
+      expect(button.title).toBeTruthy()
+      expect(button.getAttribute('aria-label')).toBe(button.title)
+    }
+  })
+
   it('navigates matches forward and backward across the document', () => {
     mount()
     view.dispatch({
@@ -200,5 +232,102 @@ describe('editor search and replace', () => {
     setMarkdownPreview(view, false)
     expect(view.contentDOM.querySelector('span')).not.toBeNull()
     expect(view.state.doc.toString()).toBe('**bold**')
+  })
+
+  it('provides case and regexp options in search row and filters matches accordingly', () => {
+    view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc: 'Hello hello\nnumber 42' }),
+    })
+    openEditorSearch(view)
+    const row = view.dom.querySelector<HTMLElement>('.cm-search-row')!
+    const caseInput = row.querySelector<HTMLInputElement>('input[name="case"]')!
+    const regexpInput = row.querySelector<HTMLInputElement>('input[name="re"]')!
+    const searchInput = row.querySelector<HTMLInputElement>(
+      'input[name="search"]'
+    )!
+    expect(caseInput).not.toBeNull()
+    expect(regexpInput).not.toBeNull()
+
+    // Case insensitive by default
+    searchInput.value = 'Hello'
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }))
+    findNext(view)
+    expect(view.state.selection.main.from).toBe(0)
+    findNext(view)
+    expect(view.state.selection.main.from).toBe(6)
+
+    // Enable match case
+    caseInput.checked = true
+    caseInput.dispatchEvent(new Event('change', { bubbles: true }))
+    findNext(view)
+    expect(view.state.selection.main.from).toBe(0)
+    findNext(view)
+    // wraps back to 0 because 'hello' at 6 does not match case
+    expect(view.state.selection.main.from).toBe(0)
+
+    // Enable regexp
+    searchInput.value = '\\d+'
+    regexpInput.checked = true
+    regexpInput.dispatchEvent(new Event('change', { bubbles: true }))
+    findNext(view)
+    expect(
+      view.state.sliceDoc(
+        view.state.selection.main.from,
+        view.state.selection.main.to
+      )
+    ).toBe('42')
+  })
+
+  it('dispatches scroll effect when navigating matches and replacing one by one', () => {
+    mount()
+    openEditorReplace(view)
+    const searchInput = view.dom.querySelector<HTMLInputElement>(
+      'input[name="search"]'
+    )!
+    const replaceInput = view.dom.querySelector<HTMLInputElement>(
+      'input[name="replace"]'
+    )!
+    searchInput.value = 'cat'
+    replaceInput.value = 'dog'
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }))
+    replaceInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+    let hadScrollEffect = false
+    const origDispatch = view.dispatch.bind(view)
+    view.dispatch = ((tr: Parameters<typeof origDispatch>[0]) => {
+      const effects = Array.isArray(tr.effects)
+        ? tr.effects
+        : tr.effects
+          ? [tr.effects]
+          : []
+      if (effects.some((eff) => eff.value && typeof eff.value === 'object')) {
+        hadScrollEffect = true
+      }
+      return origDispatch(tr)
+    }) as typeof view.dispatch
+
+    findNext(view)
+    expect(hadScrollEffect).toBe(true)
+
+    hadScrollEffect = false
+    findPrevious(view)
+    expect(hadScrollEffect).toBe(true)
+
+    hadScrollEffect = false
+    replaceNext(view)
+    expect(hadScrollEffect).toBe(true)
+  })
+
+  it('closes search panel when close button is clicked', () => {
+    mount()
+    openEditorSearch(view)
+    expect(searchPanelOpen(view.state)).toBe(true)
+    const closeBtn = view.dom.querySelector<HTMLButtonElement>(
+      'button[name="close"]'
+    )!
+    expect(closeBtn).not.toBeNull()
+    closeBtn.click()
+    expect(searchPanelOpen(view.state)).toBe(false)
   })
 })

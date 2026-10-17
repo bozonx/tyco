@@ -318,7 +318,6 @@
       "all": "Select all matches",
       "matchCase": "Match case",
       "regexp": "Regular expression",
-      "wholeWord": "Whole word",
       "replaceAll": "Replace all",
       "close": "Close search",
       "currentMatch": "Current match",
