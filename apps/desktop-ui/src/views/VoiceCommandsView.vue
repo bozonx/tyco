@@ -9,6 +9,21 @@
         <div class="voice-commands">
           <section class="voice-main">
             <template v-if="isListening">
+              <div v-if="voice.activeCommand" class="voice-chosen">
+                <Icon
+                  :icon="commandIcon(voice.activeCommand, tools)"
+                  height="20"
+                  aria-hidden="true"
+                />
+                <span class="voice-chosen-name">{{ liveChosenName }}</span>
+                <Badge v-if="liveLanguageBadge" tone="accent">{{
+                  liveLanguageBadge
+                }}</Badge>
+              </div>
+              <p v-else class="voice-phase-hint">
+                <Icon icon="mdi:microphone" height="16" aria-hidden="true" />
+                <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
+              </p>
               <AudioWaveform
                 :level="audioLevel"
                 :peak="audioPeak"
@@ -151,7 +166,7 @@
               :keys="['Space', 'Enter']"
               icon="mdi:play"
               variant="primary"
-              :disabled="voice.stage === 'finishing'"
+              :disabled="!hasMatchedCommand || voice.stage === 'finishing'"
               @click="void voice.finish('run')"
             >
               {{
@@ -162,11 +177,11 @@
             </ShortcutButton>
             <ShortcutButton
               :keys="['Tab']"
-              icon="mdi:text-box-check-outline"
-              :disabled="voice.stage === 'finishing'"
+              icon="mdi:pencil-outline"
+              :disabled="!hasMatchedCommand || voice.stage === 'finishing'"
               @click="void voice.finish('review')"
             >
-              {{ t('voiceCommands.check') }}
+              {{ t('voiceCommands.edit') }}
             </ShortcutButton>
           </template>
           <template v-else>
@@ -334,6 +349,19 @@ const unavailable = (entry: VoiceCatalogEntry) =>
 const canPick = (entry: VoiceCatalogEntry) =>
   voice.stage === 'review' && !unavailable(entry)
 
+const hasMatchedCommand = computed(() => Boolean(voice.hasMatchedCommand))
+
+const liveChosenName = computed(() => {
+  const command = voice.activeCommand
+  if (!command) return ''
+  return isTranslation(command) ? t('tools.translate') : commandLabel(command)
+})
+const liveLanguageBadge = computed(() => {
+  const command = voice.activeCommand
+  if (!command || !isTranslation(command)) return ''
+  return languageLabel(command)
+})
+
 const chosenName = computed(() => {
   const command = voice.command
   if (!command) return ''
@@ -457,10 +485,14 @@ const onKeyDown = (event: KeyboardEvent) => {
   if (voice.stage === 'recording') {
     if (event.code === 'Tab') {
       event.preventDefault()
-      void voice.finish('review')
+      if (hasMatchedCommand.value) {
+        void voice.finish('review')
+      }
     } else if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault()
-      void voice.finish('run')
+      if (hasMatchedCommand.value) {
+        void voice.finish('run')
+      }
     }
     return
   }
@@ -533,6 +565,15 @@ onUnmounted(() => {
   gap: var(--space-sm);
   min-height: 0;
   padding: var(--space-sm);
+}
+
+.voice-phase-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
 }
 
 .voice-live {

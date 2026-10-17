@@ -304,3 +304,25 @@ it('switches the chosen command without losing the edited text', async () => {
   expect(model.command.value?.id).toBe('sibling')
   expect(model.inputText.value).toBe('Edited')
 })
+
+it('progresses from awaiting-command to capturing-args when command is spoken or repeated', async () => {
+  const { model, partial } = setup()
+  await model.start()
+  expect(model.recordingPhase.value).toBe('awaiting-command')
+  expect(model.hasMatchedCommand.value).toBe(false)
+  expect(model.activeCommand.value).toBeUndefined()
+
+  partial('something incomplete')
+  expect(model.recordingPhase.value).toBe('awaiting-command')
+  expect(model.hasMatchedCommand.value).toBe(false)
+
+  partial('save note')
+  expect(model.recordingPhase.value).toBe('capturing-args')
+  expect(model.hasMatchedCommand.value).toBe(true)
+  expect(model.activeCommand.value?.id).toBe('note')
+
+  partial('save note Buy milk and bread')
+  expect(model.recordingPhase.value).toBe('capturing-args')
+  expect(model.hasMatchedCommand.value).toBe(true)
+  expect(model.activeCandidate.value?.text).toBe('Buy milk and bread')
+})

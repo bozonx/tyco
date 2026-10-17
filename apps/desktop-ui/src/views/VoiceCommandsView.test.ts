@@ -44,6 +44,8 @@ const voice = reactive({
   selected: undefined as VoiceCandidate | undefined,
   error: '',
   resolution: { kind: 'none', candidates: [] } as VoiceResolution,
+  hasMatchedCommand: false,
+  activeCommand: undefined as CommandConfig | undefined,
   command: undefined as CommandConfig | undefined,
   canRun: false,
   inputIssue: undefined,
@@ -107,6 +109,8 @@ describe('separate voice command overlay', () => {
     voice.error = ''
     voice.inputText = ''
     voice.resolution = { kind: 'none', candidates: [] }
+    voice.hasMatchedCommand = false
+    voice.activeCommand = undefined
     voice.catalog = [...builtInCommands, ...commands]
   })
   it('lists the standard functions and user commands in one feed and starts recording', () => {
@@ -145,8 +149,15 @@ describe('separate voice command overlay', () => {
     expect(mocks.cancel).toHaveBeenCalled()
     wrapper.unmount()
   })
-  it('finishes to run on Space and for review on Tab', async () => {
+  it('disables shortcuts while awaiting command and finishes on Space/Tab once recognized', async () => {
     const wrapper = mountView()
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
+    expect(mocks.finish).not.toHaveBeenCalled()
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
+    expect(mocks.finish).not.toHaveBeenCalled()
+
+    voice.hasMatchedCommand = true
+    await flushPromises()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).toHaveBeenLastCalledWith('run')
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
