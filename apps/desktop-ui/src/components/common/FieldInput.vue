@@ -6,6 +6,7 @@
     :type="type"
     :value="String(props.modelValue ?? '')"
     :placeholder="placeholder"
+    :autofocus="autofocus"
     class="input"
     :class="{ 'is-plain': appearance === 'plain' }"
     @input="handleInput"
@@ -13,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import { useTextControl } from '../../composables/use-text-control'
@@ -29,12 +30,21 @@ const props = withDefaults(
     modelValue?: string | number
     placeholder?: string
     type?: string
+    autofocus?: boolean
   }>(),
   { type: 'text' }
 )
 
 const inputRef = ref<HTMLInputElement | null>(null)
 defineExpose(useTextControl(inputRef))
+
+onMounted(() => {
+  if (props.autofocus) {
+    void nextTick(() => {
+      inputRef.value?.focus()
+    })
+  }
+})
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 

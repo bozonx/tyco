@@ -78,9 +78,7 @@
             :command="command"
             :user-config="userConfig"
             :expanded="isExpanded(command.id)"
-            :can-move-up="index > 0"
-            :can-move-down="index < commands.length - 1"
-            @move="moveCommand(index, index + $event)"
+            :autofocus-name="focusedCommandId === command.id"
             :menu-slot="menuSlots.get(command.id)"
             :launcher-slots="launcherSlots.get(command.id) ?? []"
             :name-conflicts="
@@ -221,12 +219,17 @@ async function copyId(command: CommandConfig) {
   }
 }
 
+const focusedCommandId = ref<string | null>(props.focusCommandId ?? null)
+
 const expanded = ref(
   new Set<string>(props.focusCommandId ? [props.focusCommandId] : [])
 )
 const isExpanded = (id: string) => expanded.value.has(id)
 
 function toggle(id: string) {
+  if (focusedCommandId.value === id) {
+    focusedCommandId.value = null
+  }
   const next = new Set(expanded.value)
   if (next.has(id)) next.delete(id)
   else next.add(id)
@@ -286,8 +289,9 @@ const itemStyle = (index: number) => {
 function addCommand(toolId: string) {
   pickingTool.value = false
   const command = createCommand(toolId, undefined, toolsStore.get(toolId))
-  emit('update:commands', [...commands.value, command])
-  expanded.value = new Set([...expanded.value, command.id])
+  focusedCommandId.value = command.id
+  emit('update:commands', [command, ...commands.value])
+  expanded.value = new Set([command.id, ...expanded.value])
   void reveal(command.id)
 }
 

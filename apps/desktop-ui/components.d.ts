@@ -91,7 +91,6 @@ declare module 'vue' {
     PreviewMenu: typeof import('./src/components/menu/PreviewMenu.vue')['default']
     QueryPanel: typeof import('./src/components/menu/QueryPanel.vue')['default']
     QuickOverlay: typeof import('./src/components/quick/QuickOverlay.vue')['default']
-    ReorderControls: typeof import('./src/components/common/ReorderControls.vue')['default']
     ResultViewModeToggle: typeof import('./src/components/common/ResultViewModeToggle.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

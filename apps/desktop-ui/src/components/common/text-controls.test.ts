@@ -24,6 +24,16 @@ describe('text control adapters', () => {
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['Edited'])
     })
   }
+
+  it('focuses FieldInput on mount when autofocus is true', async () => {
+    const wrapper = mount(FieldInput, {
+      attachTo: document.body,
+      props: { autofocus: true },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.isFocused()).toBe(true)
+    wrapper.unmount()
+  })
   it('keeps icon button focus and its accessible name while loading', async () => {
     const wrapper = mount(IconButton, {
       attachTo: document.body,

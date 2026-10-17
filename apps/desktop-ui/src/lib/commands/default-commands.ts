@@ -37,9 +37,10 @@ function toCommand(
   preset: DefaultCommand
 ): CommandConfig {
   const base = createCommand(tool.id, id, tool)
+  const name = preset.name?.trim() || preset.id
   const command: CommandConfig = {
     ...base,
-    name: preset.name,
+    name,
     phrases: preset.phrases ?? [],
     toolConfig: { ...base.toolConfig, ...preset.toolConfig },
     launcherAfterRun:

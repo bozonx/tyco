@@ -64,6 +64,12 @@ describe('CommandEditor.vue', () => {
     expect(wrapper.emitted('update')).toBeUndefined()
   })
 
+  it('forwards autofocusName to the name input', () => {
+    const wrapper = mountEditor(script(), { autofocusName: true })
+    const nameInput = wrapper.findComponent({ name: 'FieldInput' })
+    expect(nameInput.props('autofocus')).toBe(true)
+  })
+
   const optionValue = (select: DOMWrapper<Element>, text: string) =>
     select
       .findAll('option')

@@ -80,27 +80,14 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import ShortcutSlots from '../common/ShortcutSlots.vue'
-import type {
-  BuiltinToolId,
-  LauncherPageConfig,
-  UserConfig,
-} from '@tyco/shared'
+import type { LauncherPageConfig, UserConfig } from '@tyco/shared'
 
 const props = defineProps<{ userConfig: UserConfig }>()
 
 const emit = defineEmits<{
   (event: 'update:launcherPages', value: LauncherPageConfig[]): void
-  /** A new command of the library goes to the slot at `index` */
-  (
-    event: 'createCommand',
-    index: number,
-    toolId: BuiltinToolId,
-    page: number
-  ): void
   (event: 'editCommand', commandId: string): void
 }>()
-
-const NEW_COMMAND_PREFIX = 'new:'
 
 const { t } = useI18n()
 const toolsStore = useToolsStore()
@@ -176,8 +163,6 @@ function unavailableName(commandId: string): string {
 const commandOptions = computed(() => {
   const options = [
     ...availableCommands.value.map(({ id, name }) => ({ id, name })),
-    { id: `${NEW_COMMAND_PREFIX}script`, name: t('commands.newScript') },
-    { id: `${NEW_COMMAND_PREFIX}webhook`, name: t('commands.newWebhook') },
   ]
   for (const commandId of launcherSlots.value) {
     if (commandId && !options.some((option) => option.id === commandId)) {
@@ -209,15 +194,6 @@ function removeSlot(index: number) {
 function updateSlot(index: number, value: string | number | undefined) {
   const current = launcherSlots.value[index]
   if (value === current) return
-
-  if (value === `${NEW_COMMAND_PREFIX}script`) {
-    emit('createCommand', index, 'script', page.value)
-    return
-  }
-  if (value === `${NEW_COMMAND_PREFIX}webhook`) {
-    emit('createCommand', index, 'webhook', page.value)
-    return
-  }
 
   setSlot(index, typeof value === 'string' && value ? value : null)
 }

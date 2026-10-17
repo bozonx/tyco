@@ -122,14 +122,14 @@ describe('SettingsLauncherTab.vue', () => {
     expect(emitted[0].slots[0]).toBeNull()
   })
 
-  it('emits createCommand when choosing new script', async () => {
+  it('does not include new script or new webhook in command options', () => {
     const wrapper = mountTab()
     const select = wrapper
       .find('.shortcut-slot')
       .findComponent({ name: 'FieldSelect' })
-    select.vm.$emit('update:modelValue', 'new:script')
-
-    expect(wrapper.emitted('createCommand')?.[0]).toEqual([0, 'script', 0])
+    const options = select.props('options') as { id: string }[]
+    expect(options.some((o) => o.id === 'new:script')).toBe(false)
+    expect(options.some((o) => o.id === 'new:webhook')).toBe(false)
   })
 
   it('renders page buttons with numbers and switches pages on click', async () => {

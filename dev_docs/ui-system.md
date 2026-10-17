@@ -150,8 +150,7 @@ messages. The translation settings model follows this arrangement.
 
 ## Sorting and responsive layout
 
-Use `DragHandle` with `useSortableList` and `ReorderControls`. Dragging must have
-a keyboard-accessible alternative; the handle does not implement reordering.
+Use `DragHandle` with `useSortableList`. Reordering is handled via drag-and-drop.
 
 Reusable controls respond to their available container width. Navigation uses
 a named container, split previews stack below 40rem, and result controls

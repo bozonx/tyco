@@ -9,12 +9,6 @@
   >
     <template #before>
       <DragHandle @drag="emit('drag', $event)" />
-      <ReorderControls
-        :name="command.name || t('commands.unnamed')"
-        :can-move-up="canMoveUp"
-        :can-move-down="canMoveDown"
-        @move="emit('move', $event)"
-      />
     </template>
     <template #summary>
       <span
@@ -91,6 +85,7 @@
         :command="command"
         :user-config="userConfig"
         :name-conflicts="nameConflicts"
+        :autofocus-name="autofocusName"
         @update="emit('update', $event)"
         @navigate="emit('navigate', $event)"
       />
@@ -116,7 +111,6 @@ import DisclosurePanel from '../common/DisclosurePanel.vue'
 import DragHandle from '../common/DragHandle.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import ReorderControls from '../common/ReorderControls.vue'
 import CommandEditor from './CommandEditor.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
@@ -124,8 +118,7 @@ const props = defineProps<{
   command: CommandConfig
   userConfig: UserConfig
   expanded: boolean
-  canMoveUp: boolean
-  canMoveDown: boolean
+  autofocusName?: boolean
   menuSlot?: number
   launcherSlots: { page: number; index: number }[]
   nameConflicts: CommandConfig[]
@@ -133,7 +126,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'toggle'): void
   (event: 'drag', value: PointerEvent): void
-  (event: 'move', offset: number): void
   (event: 'update', value: CommandConfig): void
   (event: 'navigate', tab: string): void
   (event: 'copy-id'): void

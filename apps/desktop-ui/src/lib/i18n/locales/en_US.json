@@ -202,8 +202,6 @@
     "moreActions": "More",
     "nameLabel": "Name",
     "namePlaceholder": "How the command is called in the menu",
-    "newScript": "New script…",
-    "newWebhook": "New webhook…",
     "pickTool": "What should the command do?",
     "placeConfigure": "Configure",
     "pluginFieldsHint": "Empty fields take their value from the plugin settings.",
@@ -242,8 +240,6 @@
     "launcherResultGroup": "Quick command result"
   },
   "common": {
-    "moveUp": "Move {name} up",
-    "moveDown": "Move {name} down",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",
@@ -1007,7 +1003,6 @@
     "conflicts": "Conflicting or nested phrases",
     "none": "No matching command. Edit the transcript or choose a command below.",
     "hint": "Say the command phrase, then the text. If the command was not recognized, pause and say it again from the start. Pressing the hotkey again finishes recording and runs the command. Standard functions are always on; translation uses the configured translator.",
-    "record": "Record again",
     "run": "Run",
     "choose": "Choose a command",
     "missingText": "Text is required.",
@@ -1026,8 +1021,7 @@
     "noMatch": "No command recognized. Pick one from the list.",
     "ambiguous": "Several commands match. Pick the right one from the list.",
     "languageMissing": "Language not recognized. Pick translation from the list and choose a language.",
-    "nothingHeard": "No speech recognized. Record again.",
-    "discarded": "Dropped before the command"
+    "nothingHeard": "No speech recognized. Record again."
   },
   "voiceGrammar": {
     "translate": "translate to",

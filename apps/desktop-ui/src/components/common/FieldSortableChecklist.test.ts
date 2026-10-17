@@ -44,39 +44,6 @@ describe('FieldSortableChecklist.vue', () => {
     ])
   })
 
-  it('reorders with focus preserved on the same item and prevents boundary moves', async () => {
-    const wrapper = mount(FieldSortableChecklist, {
-      props: {
-        options,
-        modelValue: [
-          { id: 'acute', enabled: true },
-          { id: 'grave', enabled: false },
-        ],
-      },
-      attachTo: document.body,
-      global: { stubs: { Icon: true } },
-    })
-    const buttons = wrapper.findAll<HTMLButtonElement>('button[aria-disabled]')
-    await buttons[0].trigger('click')
-    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
-    buttons[1].element.focus()
-    await buttons[1].trigger('click')
-    expect(wrapper.emitted('update:modelValue')![0][0]).toEqual([
-      { id: 'grave', enabled: false },
-      { id: 'acute', enabled: true },
-    ])
-    expect(document.activeElement).toBe(buttons[1].element)
-    expect(buttons[1].attributes('aria-disabled')).toBe('true')
-    await buttons[1].trigger('click')
-    expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
-    await buttons[0].trigger('click')
-    expect(wrapper.emitted('update:modelValue')![1][0]).toEqual([
-      { id: 'acute', enabled: true },
-      { id: 'grave', enabled: false },
-    ])
-    wrapper.unmount()
-  })
-
   it('reorders items by dragging handle', async () => {
     const wrapper = mount(FieldSortableChecklist, {
       props: {

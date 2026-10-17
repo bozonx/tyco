@@ -15,12 +15,6 @@
 
       <template v-if="items[index]">
         <DragHandle @drag="startDrag(index, $event)" />
-        <ReorderControls
-          :name="String(key)"
-          :can-move-up="index > 0"
-          :can-move-down="index < SHORTCUT_SLOT_KEYS.length - 1"
-          @move="moveSlot(index, index + $event, $event)"
-        />
         <div class="slot-content">
           <slot name="item" :item="items[index]" :index="index" />
         </div>
@@ -49,15 +43,15 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { nextTick, ref } from 'vue'
+import { ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import Icon from './AppIcon.vue'
 import DragHandle from './DragHandle.vue'
+import IconButton from './IconButton.vue'
 import KeyboardKey from './KeyboardKey.vue'
-import ReorderControls from './ReorderControls.vue'
 
 const props = defineProps<{ items: readonly (T | null | undefined)[] }>()
 
@@ -74,16 +68,6 @@ const { draggedIndex, targetIndex, startDrag } = useSortableList(
   (from, to) => emit('move', from, to),
   { mode: 'swap', getItemKeys: () => props.items }
 )
-async function moveSlot(from: number, to: number, direction: number) {
-  emit('move', from, to)
-  await nextTick()
-  const slot = listRef.value?.querySelectorAll<HTMLElement>(
-    '[data-sortable-item]'
-  )[to]
-  slot
-    ?.querySelectorAll<HTMLButtonElement>('[aria-disabled]')
-    [direction < 0 ? 0 : 1]?.focus()
-}
 </script>
 
 <style scoped>

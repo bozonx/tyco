@@ -92,7 +92,6 @@
             v-else-if="currentTab === 'launcher-commands'"
             :user-config="userConfig"
             @update:launcher-pages="updateLauncherPages"
-            @create-command="createLauncherCommand"
             @edit-command="editCommand"
           />
 
@@ -216,7 +215,6 @@ import SettingsTranslationsTab from './settings/SettingsTranslationsTab.vue'
 import SettingsVoiceTab from './settings/SettingsVoiceTab.vue'
 import type { UserConfig } from '@tyco/shared'
 import {
-  type BuiltinToolId,
   CONFIG_VERSION,
   type CommandConfig,
   type MainActionConfig,
@@ -527,14 +525,6 @@ watch(currentTab, (tab) => {
 const editCommand = (commandId: string) => {
   focusCommandId.value = commandId
   currentTab.value = 'commands'
-}
-
-const createLauncherCommand = (
-  index: number,
-  toolId: BuiltinToolId,
-  page = 0
-) => {
-  editCommand(operations.createLauncherCommand(index, toolId, page))
 }
 
 /** A newer build wrote the config: it is shown but never written over */

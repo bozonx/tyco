@@ -69,12 +69,6 @@
                 />
               </div>
               <code v-if="target" class="voice-target">{{ target }}</code>
-              <p v-if="voice.discardedText" class="voice-discarded">
-                <span class="voice-discarded-label">{{
-                  t('voiceCommands.discarded')
-                }}</span>
-                <del>{{ voice.discardedText }}</del>
-              </p>
               <InlineNotice
                 v-if="notice"
                 :kind="notice.kind"
@@ -166,7 +160,7 @@
               :keys="['Space', 'Enter']"
               icon="mdi:play"
               variant="primary"
-              :disabled="!hasMatchedCommand || voice.stage === 'finishing'"
+              :disabled="!canRunLive || voice.stage === 'finishing'"
               @click="void voice.finish('run')"
             >
               {{
@@ -193,14 +187,6 @@
               @click="void voice.run()"
             >
               {{ t('voiceCommands.run') }}
-            </ShortcutButton>
-            <ShortcutButton
-              :keys="['Ctrl', 'R']"
-              icon="mdi:microphone"
-              :disabled="voice.stage === 'running'"
-              @click="void voice.start()"
-            >
-              {{ t('voiceCommands.record') }}
             </ShortcutButton>
           </template>
         </div>
@@ -350,6 +336,7 @@ const canPick = (entry: VoiceCatalogEntry) =>
   voice.stage === 'review' && !unavailable(entry)
 
 const hasMatchedCommand = computed(() => Boolean(voice.hasMatchedCommand))
+const canRunLive = computed(() => Boolean(voice.canRunLive))
 
 const liveChosenName = computed(() => {
   const command = voice.activeCommand
@@ -490,18 +477,13 @@ const onKeyDown = (event: KeyboardEvent) => {
       }
     } else if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault()
-      if (hasMatchedCommand.value) {
+      if (canRunLive.value) {
         void voice.finish('run')
       }
     }
     return
   }
   if (voice.stage !== 'review') return
-  if ((event.ctrlKey || event.metaKey) && event.code === 'KeyR') {
-    event.preventDefault()
-    void voice.start()
-    return
-  }
   // a focused row takes Enter itself; Shift+Enter starts a new line
   const isOnRow = (event.target as HTMLElement | null)?.closest?.(
     '.voice-entry'
@@ -615,21 +597,6 @@ onUnmounted(() => {
   font-size: var(--text-caption);
   white-space: pre-wrap;
   word-break: break-all;
-}
-
-.voice-discarded {
-  flex-shrink: 0;
-  max-height: 4.5rem;
-  margin: 0;
-  overflow-y: auto;
-  font-size: var(--text-caption);
-  color: var(--app-text-muted);
-  overflow-wrap: anywhere;
-}
-
-.voice-discarded-label {
-  margin-right: var(--space-xs);
-  font-weight: 600;
 }
 
 .voice-text {

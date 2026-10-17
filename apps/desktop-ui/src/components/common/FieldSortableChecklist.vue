@@ -17,13 +17,6 @@
       >
         <DragHandle @drag="startDrag(index, $event)" />
 
-        <ReorderControls
-          :name="getOptionLabel(item.id)"
-          :can-move-up="index > 0"
-          :can-move-down="index < localItems.length - 1"
-          @move="reorderItem(index, index + $event)"
-        />
-
         <FieldCheckbox
           class="checklist-item-label flex-1 min-w-0"
           :model-value="item.enabled"
@@ -45,7 +38,6 @@ import { moveItem } from '../../lib/sortable/sortable-list'
 import type { InputConfigOption } from '../../types'
 import DragHandle from './DragHandle.vue'
 import FieldCheckbox from './FieldCheckbox.vue'
-import ReorderControls from './ReorderControls.vue'
 import {
   type SortableChecklistItem,
   resolveSortableChecklist,

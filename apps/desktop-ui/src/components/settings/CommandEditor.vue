@@ -15,6 +15,7 @@
       <FieldInput
         :model-value="command.name"
         :placeholder="t('commands.namePlaceholder')"
+        :autofocus="autofocusName"
         @update:model-value="update({ name: $event })"
       />
     </FieldRow>
@@ -238,6 +239,7 @@ const props = withDefaults(
     nameConflicts?: CommandConfig[]
     /** For the settings of the tool: translation languages, AI tasks */
     userConfig?: UserConfig
+    autofocusName?: boolean
   }>(),
   { nameConflicts: () => [] }
 )

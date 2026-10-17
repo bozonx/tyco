@@ -60,8 +60,14 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const findCommand = (id: string | undefined) =>
     commands.value.find((item) => item.id === id)
   const routes = computed(() => compileVoiceRoutes(commands.value, deps.tools))
+  const activeTranscriptText = computed(() => {
+    if (stage.value === 'recording' || stage.value === 'finishing') {
+      return liveTranscriptText(liveTranscript.value)
+    }
+    return transcript.value
+  })
   const resolution = computed(() =>
-    resolveVoice(routes.value, transcript.value)
+    resolveVoice(routes.value, activeTranscriptText.value)
   )
   const activeCandidate = computed<VoiceCandidate | undefined>(() => {
     if (stage.value === 'review' || stage.value === 'running') {
@@ -106,6 +112,23 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       isVoiceCommand(command.value, deps.tools) &&
       !inputIssue.value
   )
+  const canRunLive = computed(() => {
+    if (stage.value !== 'recording' && stage.value !== 'finishing') {
+      return false
+    }
+    if (!activeCommand.value || !activeCandidate.value) {
+      return false
+    }
+    if (!isVoiceCommand(activeCommand.value, deps.tools)) {
+      return false
+    }
+    const issue = voiceInputIssue(
+      activeCommand.value,
+      activeCandidate.value.text,
+      deps.tools
+    )
+    return !issue
+  })
 
   const choose = (candidate: VoiceCandidate) => {
     if (stage.value !== 'review') return
@@ -191,6 +214,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
         // dropped speech is shown for review before anything runs
         if (intent === 'run' && !candidate.commandOffset && canRun.value)
           await run()
+      } else if (result.parameterChoices?.[0]) {
+        choose(result.parameterChoices[0])
       }
     } catch (cause) {
       if (current !== generation || disposed) return
@@ -254,6 +279,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     generation += 1
     controller?.abort()
     stage.value = 'idle'
+    transcript.value = ''
+    inputText.value = ''
+    selected.value = undefined
+    liveTranscript.value = createLiveTranscriptState()
     const pending = starting
     stopping = stopping
       .then(async () => {
@@ -289,6 +318,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     inputIssue,
     discardedText,
     canRun,
+    canRunLive,
     choose,
     chooseCommand,
     switchCommand,

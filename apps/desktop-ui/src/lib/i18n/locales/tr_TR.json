@@ -202,8 +202,6 @@
     "moreActions": "Diğer",
     "nameLabel": "Ad",
     "namePlaceholder": "Komutun menüdeki adı",
-    "newScript": "Yeni betik…",
-    "newWebhook": "Yeni webhook…",
     "pickTool": "Komut ne yapsın?",
     "placeConfigure": "Yapılandır",
     "pluginFieldsHint": "Boş alanlar değerini eklenti ayarlarından alır.",
@@ -242,8 +240,6 @@
     "launcherResultGroup": "Hızlı komut sonucu"
   },
   "common": {
-    "moveUp": "{name} öğesini yukarı taşı",
-    "moveDown": "{name} öğesini aşağı taşı",
     "add": "Ekle",
     "back": "Geri",
     "cancel": "İptal",
@@ -1004,7 +1000,6 @@
     "conflicts": "Çakışan veya iç içe ifadeler",
     "none": "Komut bulunamadı. Metni düzenleyin veya aşağıdan bir komut seçin.",
     "hint": "Önce komut ifadesini, ardından metni söyleyin. Komut tanınmadıysa durup baştan tekrar söyleyin. Kısayola tekrar basmak kaydı bitirir ve komutu çalıştırır. Standart işlevler her zaman açıktır; çeviri ayarlı çevirmeni kullanır.",
-    "record": "Yeniden kaydet",
     "run": "Çalıştır",
     "choose": "Bir komut seçin",
     "missingText": "Metin gerekli.",
@@ -1023,8 +1018,7 @@
     "noMatch": "Komut tanınmadı. Listeden birini seçin.",
     "ambiguous": "Birden fazla komut eşleşiyor. Listeden doğru olanı seçin.",
     "languageMissing": "Dil tanınmadı. Listeden çeviriyi seçin ve dili belirtin.",
-    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin.",
-    "discarded": "Komuttan önce atılan"
+    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin."
   },
   "voiceGrammar": {
     "translate": "çevir",

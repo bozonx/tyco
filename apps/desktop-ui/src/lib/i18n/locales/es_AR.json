@@ -202,8 +202,6 @@
     "moreActions": "Más",
     "nameLabel": "Nombre",
     "namePlaceholder": "Cómo se llama el comando en el menú",
-    "newScript": "Nuevo script…",
-    "newWebhook": "Nuevo webhook…",
     "pickTool": "¿Qué debe hacer el comando?",
     "placeConfigure": "Configurar",
     "pluginFieldsHint": "Los campos vacíos toman su valor de los ajustes del plugin.",
@@ -242,8 +240,6 @@
     "launcherResultGroup": "Resultado de comandos rápidos"
   },
   "common": {
-    "moveUp": "Mover {name} hacia arriba",
-    "moveDown": "Mover {name} hacia abajo",
     "add": "Agregar",
     "back": "Atrás",
     "cancel": "Cancelar",
@@ -1007,7 +1003,6 @@
     "conflicts": "Frases coincidentes o anidadas",
     "none": "No se encontró el comando. Editá la transcripción o elegí uno abajo.",
     "hint": "Decí la frase del comando y después el texto. Si el comando no se reconoció, hacé una pausa y repetilo desde el principio. Al presionar el atajo de nuevo, termina la grabación y se ejecuta el comando. Las funciones estándar están siempre activas; la traducción usa el traductor configurado.",
-    "record": "Grabar de nuevo",
     "run": "Ejecutar",
     "choose": "Elegí un comando",
     "missingText": "Se requiere texto.",
@@ -1026,8 +1021,7 @@
     "noMatch": "No se reconoció ningún comando. Elegí uno de la lista.",
     "ambiguous": "Coinciden varios comandos. Elegí el correcto de la lista.",
     "languageMissing": "No se reconoció el idioma. Elegí traducir en la lista e indicá el idioma.",
-    "nothingHeard": "No se reconoció la voz. Grabá de nuevo.",
-    "discarded": "Descartado antes del comando"
+    "nothingHeard": "No se reconoció la voz. Grabá de nuevo."
   },
   "voiceGrammar": {
     "translate": "traducí al",

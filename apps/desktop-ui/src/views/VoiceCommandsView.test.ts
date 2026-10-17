@@ -45,6 +45,7 @@ const voice = reactive({
   error: '',
   resolution: { kind: 'none', candidates: [] } as VoiceResolution,
   hasMatchedCommand: false,
+  canRunLive: false,
   activeCommand: undefined as CommandConfig | undefined,
   command: undefined as CommandConfig | undefined,
   canRun: false,
@@ -110,6 +111,7 @@ describe('separate voice command overlay', () => {
     voice.inputText = ''
     voice.resolution = { kind: 'none', candidates: [] }
     voice.hasMatchedCommand = false
+    voice.canRunLive = false
     voice.activeCommand = undefined
     voice.catalog = [...builtInCommands, ...commands]
   })
@@ -157,6 +159,7 @@ describe('separate voice command overlay', () => {
     expect(mocks.finish).not.toHaveBeenCalled()
 
     voice.hasMatchedCommand = true
+    voice.canRunLive = true
     await flushPromises()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).toHaveBeenLastCalledWith('run')
@@ -249,10 +252,6 @@ describe('separate voice command overlay', () => {
     expect(mocks.run).not.toHaveBeenCalled()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }))
     expect(mocks.run).toHaveBeenCalledOnce()
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { code: 'KeyR', ctrlKey: true })
-    )
-    expect(mocks.start).toHaveBeenCalledTimes(2)
     wrapper.unmount()
   })
   it('shows a short hint when no user commands are enabled', () => {

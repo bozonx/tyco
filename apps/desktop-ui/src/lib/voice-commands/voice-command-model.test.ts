@@ -339,10 +339,12 @@ it('progresses from awaiting-command to capturing-args when command is spoken or
   expect(model.recordingPhase.value).toBe('capturing-args')
   expect(model.hasMatchedCommand.value).toBe(true)
   expect(model.activeCommand.value?.id).toBe('note')
+  expect(model.canRunLive.value).toBe(false)
 
   partial('save note Buy milk and bread')
   expect(model.recordingPhase.value).toBe('capturing-args')
   expect(model.hasMatchedCommand.value).toBe(true)
+  expect(model.canRunLive.value).toBe(true)
   expect(model.activeCandidate.value?.text).toBe('Buy milk and bread')
 })
 
@@ -350,6 +352,7 @@ it('considers command recognized during recording even when a parameter has an e
   const { model, partial } = setup()
   await model.start()
   expect(model.hasMatchedCommand.value).toBe(false)
+  expect(model.canRunLive.value).toBe(false)
 
   // Spoken phrase matches translate, but language parameter is unrecognized
   partial('translate to Klingon Hello!')
@@ -357,4 +360,23 @@ it('considers command recognized during recording even when a parameter has an e
   expect(model.hasMatchedCommand.value).toBe(true)
   expect(model.recordingPhase.value).toBe('capturing-args')
   expect(model.activeCommand.value).toBeDefined()
+  expect(model.canRunLive.value).toBe(true)
+})
+
+it('clears previous session transcript on cancel so reopening starts without active command', async () => {
+  const { model, partial } = setup()
+  await model.start()
+  partial('save note Hello!')
+  expect(model.hasMatchedCommand.value).toBe(true)
+  expect(model.canRunLive.value).toBe(true)
+
+  await model.cancel()
+  expect(model.transcript.value).toBe('')
+  expect(model.hasMatchedCommand.value).toBe(false)
+  expect(model.canRunLive.value).toBe(false)
+
+  await model.start()
+  expect(model.hasMatchedCommand.value).toBe(false)
+  expect(model.canRunLive.value).toBe(false)
+  expect(model.recordingPhase.value).toBe('awaiting-command')
 })
